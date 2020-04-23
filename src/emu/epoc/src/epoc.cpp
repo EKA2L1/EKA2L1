@@ -78,8 +78,8 @@ namespace eka2l1 {
         hle::lib_manager hlelibmngr;
 
         //! The cpu
-        arm::jitter cpu;
-        arm_emulator_type jit_type;
+        arm::cpu cpu;
+        arm_emulator_type cpu_type;
 
         drivers::graphics_driver *gdriver;
         drivers::audio_driver *adriver;
@@ -161,8 +161,8 @@ namespace eka2l1 {
             return true;
         }
 
-        void set_jit_type(const arm_emulator_type type) {
-            jit_type = type;
+        void set_cpu_executor_type(const arm_emulator_type type) {
+            cpu_type = type;
         }
 
         manager::config_state *get_config() {
@@ -267,7 +267,7 @@ namespace eka2l1 {
             return adriver;
         }
 
-        arm::jitter &get_cpu() {
+        arm::cpu &get_cpu() {
             return cpu;
         }
 
@@ -346,7 +346,7 @@ namespace eka2l1 {
 
         rom_fs_id = io.add_filesystem(rom_fs);
 
-        cpu = arm::create_jitter(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, debugger, jit_type);
+        cpu = arm::create_cpu(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
 
         mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
         kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
@@ -365,9 +365,9 @@ namespace eka2l1 {
         , gdriver(graphics_driver)
         , adriver(audio_driver) {
         if (conf->cpu_backend == unicorn_jit_backend_name) {
-            jit_type = arm_emulator_type::unicorn;
+            cpu_type = arm_emulator_type::unicorn;
         } else if (conf->cpu_backend == dynarmic_jit_backend_name) {
-            jit_type = arm_emulator_type::dynarmic;
+            cpu_type = arm_emulator_type::dynarmic;
         } else {
             assert(false && "JIT backend config name is invalid");
         }
@@ -578,8 +578,8 @@ namespace eka2l1 {
         return impl->set_symbian_version_use(ever);
     }
 
-    void system::set_jit_type(const arm_emulator_type type) {
-        return impl->set_jit_type(type);
+    void system::set_cpu_executor_type(const arm_emulator_type type) {
+        return impl->set_cpu_executor_type(type);
     }
 
     loader::rom *system::get_rom_info() {
@@ -649,7 +649,7 @@ namespace eka2l1 {
         return impl->get_audio_driver();
     }
 
-    arm::jitter &system::get_cpu() {
+    arm::cpu &system::get_cpu() {
         return impl->get_cpu();
     }
 

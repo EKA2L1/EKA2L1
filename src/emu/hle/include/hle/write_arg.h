@@ -28,23 +28,23 @@
 namespace eka2l1 {
     namespace hle {
         template <typename T>
-        std::enable_if_t<sizeof(T) <= 4> write_to_gpr(arm::jitter &cpu, const arg_layout &arg, const T &data) {
+        std::enable_if_t<sizeof(T) <= 4> write_to_gpr(arm::cpu &cpu, const arg_layout &arg, const T &data) {
             cpu->set_reg(arg.offset, *reinterpret_cast<const uint32_t *>(&data));
         }
 
         template <typename T>
-        std::enable_if_t<sizeof(T) == 8> read_from_gpr(arm::jitter &cpu, const arg_layout &arg, const T &data) {
+        std::enable_if_t<sizeof(T) == 8> read_from_gpr(arm::cpu &cpu, const arg_layout &arg, const T &data) {
             cpu->set_reg(arg.offset, *reinterpret_cast<const uint32_t *>(&data));
             cpu->set_reg(arg.offset + 1, *reinterpret_cast<const uint64_t *>(&data) >> 32);
         }
 
         template <typename T>
-        void write_to_fpr(arm::jitter &cpu, const arg_layout &arg) {
+        void write_to_fpr(arm::cpu &cpu, const arg_layout &arg) {
             LOG_WARN("Writing to FPR unimplemented");
         }
 
         template <typename T>
-        void write_to_stack(arm::jitter &cpu, const arg_layout &layout, memory_system *mem, const T &data) {
+        void write_to_stack(arm::cpu &cpu, const arg_layout &layout, memory_system *mem, const T &data) {
             const address sp = cpu->get_stack_top();
             const address stack_arg_offset = sp - sizeof(T);
 
@@ -53,7 +53,7 @@ namespace eka2l1 {
         }
 
         template <typename T>
-        void write(arm::jitter &cpu, const arg_layout &layout, memory_system *mem, const T &val) {
+        void write(arm::cpu &cpu, const arg_layout &layout, memory_system *mem, const T &val) {
             switch (layout.loc) {
             case arg_where::stack:
                 write_to_stack<T>(cpu, layout, mem, val);
@@ -70,7 +70,7 @@ namespace eka2l1 {
         }
 
         template <typename arg, size_t idx, typename... args>
-        void write(arm::jitter &cpu, const args_layout<args...> &margs, memory_system *mem, arg val) {
+        void write(arm::cpu &cpu, const args_layout<args...> &margs, memory_system *mem, arg val) {
             write<arg>(cpu, margs[idx], mem, bridge_type<arg>::host_to_arm(val, mem));
         }
     }

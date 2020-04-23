@@ -32,7 +32,7 @@ namespace eka2l1 {
 		 * \param arg The layout of that argument.
 		*/
         template <typename T>
-        std::enable_if_t<sizeof(T) <= 4, T> read_from_gpr(arm::jitter &cpu, const arg_layout &arg) {
+        std::enable_if_t<sizeof(T) <= 4, T> read_from_gpr(arm::cpu &cpu, const arg_layout &arg) {
             const uint32_t reg = cpu->get_reg(arg.offset);
             return *reinterpret_cast<const T *>(&reg);
         }
@@ -42,7 +42,7 @@ namespace eka2l1 {
 		 * \param arg The layout of that argument.
 		*/
         template <typename T>
-        std::enable_if_t<sizeof(T) == 8, T> read_from_gpr(arm::jitter &cpu, const arg_layout &arg) {
+        std::enable_if_t<sizeof(T) == 8, T> read_from_gpr(arm::cpu &cpu, const arg_layout &arg) {
             const uint64_t low = cpu->get_reg(arg.offset - 1);
             const uint64_t high = cpu->get_reg(arg.offset);
 
@@ -56,7 +56,7 @@ namespace eka2l1 {
 		 * \param arg The layout of that argument.
 		*/
         template <typename T>
-        T read_from_fpr(arm::jitter &cpu, const arg_layout &arg) {
+        T read_from_fpr(arm::cpu &cpu, const arg_layout &arg) {
             LOG_WARN("Reading from FPR unimplemented");
             return T{};
         }
@@ -67,7 +67,7 @@ namespace eka2l1 {
 		 * \param mem The memory system.
 		*/
         template <typename T>
-        T read_from_stack(arm::jitter &cpu, const arg_layout &layout, memory_system *mem) {
+        T read_from_stack(arm::cpu &cpu, const arg_layout &layout, memory_system *mem) {
             const address sp = cpu->get_stack_top();
             const address stack_arg_offset = sp + static_cast<address>(layout.offset);
 
@@ -80,7 +80,7 @@ namespace eka2l1 {
 		 * \param mem The memory system.
 		*/
         template <typename T>
-        T read(arm::jitter &cpu, const arg_layout &layout, memory_system *mem) {
+        T read(arm::cpu &cpu, const arg_layout &layout, memory_system *mem) {
             switch (layout.loc) {
             case arg_where::stack:
                 return read_from_stack<T>(cpu, layout, mem);
@@ -101,7 +101,7 @@ namespace eka2l1 {
 		 * \param mem The memory system.
 		*/
         template <typename arg, size_t idx, typename... args>
-        arg read(arm::jitter &cpu, const args_layout<args...> &margs, memory_system *mem) {
+        arg read(arm::cpu &cpu, const args_layout<args...> &margs, memory_system *mem) {
             using arm_type = typename bridge_type<arg>::arm_type;
 
             const arm_type bridged = read<arm_type>(cpu, margs[idx], mem);

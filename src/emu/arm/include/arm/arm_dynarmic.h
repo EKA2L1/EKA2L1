@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +39,10 @@ namespace eka2l1 {
         class lib_manager;
     }
 
+    namespace manager {
+        class script_manager;
+    }
+
     namespace arm {
         class arm_dynarmic_callback;
 
@@ -60,7 +63,6 @@ namespace eka2l1 {
             hle::lib_manager *lib_mngr;
 
             gdbstub *stub;
-            debugger_base *debugger;
 
             std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
                 page_dyn;
@@ -85,9 +87,9 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+            explicit arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr,
-                gdbstub *stub, debugger_base *debugger);
+                gdbstub *stub);
 
             ~arm_dynarmic();
 

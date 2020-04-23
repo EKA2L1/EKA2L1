@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,8 +108,8 @@ static void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user
 
 #ifdef ENABLE_SCRIPTING
     if (jit->conf->enable_breakpoint_script) {
-        jit->get_manager_sys()->get_script_manager()->call_breakpoints(address);
-        jit->get_manager_sys()->get_script_manager()->call_breakpoints(address + 1);
+        eka2l1::manager::script_manager *scripter = jit->get_manager_sys()->get_script_manager();
+        scripter->call_breakpoints(address);
     }
 #endif
 

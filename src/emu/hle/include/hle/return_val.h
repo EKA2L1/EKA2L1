@@ -29,13 +29,13 @@ namespace eka2l1 {
 		 * \param cpu The CPU.
 		*/
         template <typename ret>
-        void write_return_value(arm::jitter &cpu, ret r);
+        void write_return_value(arm::cpu &cpu, ret r);
 
         /*! \brief Writing the return value to r0. 
 		 * \param cpu The CPU.
 		*/
         template <typename pointee>
-        void write_return_value(arm::jitter &cpu, ptr<pointee> ret) {
+        void write_return_value(arm::cpu &cpu, ptr<pointee> ret) {
             write_return_value(cpu, ret.ptr_address());
         }
 
@@ -43,6 +43,6 @@ namespace eka2l1 {
 		 * \param cpu The CPU.
 		*/
         template <typename ret>
-        ret read_return_value(arm::jitter &cpu);
+        ret read_return_value(arm::cpu &cpu);
     }
 }
