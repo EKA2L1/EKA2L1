@@ -27,6 +27,7 @@
 #include <common/time.h>
 
 #include <epoc/timing.h>
+#include <thread>
 
 namespace eka2l1::epoc {
     struct window_drawer_walker : public window_tree_walker {
