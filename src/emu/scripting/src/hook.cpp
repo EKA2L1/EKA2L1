@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,12 +38,12 @@ namespace eka2l1::scripting {
         get_current_instance()->get_manager_system()->get_script_manager()->register_reschedule(ifunc);
     }
 
-    void register_lib_invokement(const std::string &lib_name, const std::uint32_t ord, pybind11::function func) {
-        get_current_instance()->get_manager_system()->get_script_manager()->register_library_hook(lib_name, ord, func);
+    void register_lib_invokement(const std::string &lib_name, const std::uint32_t ord, const std::uint32_t process_uid, pybind11::function func) {
+        get_current_instance()->get_manager_system()->get_script_manager()->register_library_hook(lib_name, ord, process_uid, func);
     }
 
-    void register_breakpoint_invokement(const uint32_t addr, pybind11::function func) {
-        get_current_instance()->get_manager_system()->get_script_manager()->register_breakpoint(addr, func);
+    void register_breakpoint_invokement(const std::string &image_name, const uint32_t addr, const std::uint32_t process_uid,  pybind11::function func) {
+        get_current_instance()->get_manager_system()->get_script_manager()->register_breakpoint(image_name, addr, process_uid, func);
     }
 
     void register_ipc_invokement(const std::string &server_name, const int opcode, const int when, pybind11::function func) {

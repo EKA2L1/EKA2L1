@@ -1,8 +1,7 @@
 /*
 * Copyright (c) 2018 EKA2L1 Team
 *
-* This file is part of EKA2L1 project
-* (see bentokun.github.com/EKA2L1).
+* This file is part of EKA2L1 project.
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -48,6 +47,13 @@ namespace fs = std::filesystem;
 #endif
 
 namespace eka2l1::manager {
+    breakpoint_info::breakpoint_info()
+        : addr_(0)
+        , flags_(0) 
+        , attached_process_(0) {
+
+    }
+
     script_manager::script_manager(system *sys)
         : sys(sys)
         , interpreter() {
@@ -157,24 +163,96 @@ namespace eka2l1::manager {
         ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
     }
 
-    void script_manager::register_library_hook(const std::string &name, const uint32_t ord, pybind11::function &func) {
-        std::string lib_name_lower = common::lowercase_string(name);
-        breakpoints_patch[lib_name_lower][ord].push_back(func);
+    void script_manager::write_breakpoint_block(kernel::process *pr, const vaddress target) {
+        const vaddress aligned = target & ~1;
+
+        std::uint32_t *data = reinterpret_cast<std::uint32_t*>(pr->get_ptr_on_addr_space(aligned));
+        breakpoints[aligned].source_insts_[pr->get_uid()] = data[0];
+
+        if (target & 1) {
+            // The target destination is thumb
+            *reinterpret_cast<std::uint16_t*>(data) = 0xBE00;
+        } else {
+            data[0] = 0xE1200070;       // bkpt #0
+        }
     }
 
-    void script_manager::register_breakpoint(const uint32_t addr, pybind11::function &func) {
-        breakpoints[addr & ~0x1].push_back(func);
-    }
+    bool script_manager::write_back_breakpoint(kernel::process *pr, const vaddress target) {
+        auto &sources = breakpoints[target & ~1].source_insts_;
+        auto source_value = sources.find(pr->get_uid());
 
-    void script_manager::patch_library_hook(const std::string &name, const std::vector<vaddress> exports) {
-        std::string lib_name_lower = common::lowercase_string(name);
-
-        for (auto &[ord, func_list] : breakpoints_patch[lib_name_lower]) {
-            auto &funcs = breakpoints[exports[ord - 1]];
-            funcs.insert(funcs.end(), func_list.begin(), func_list.end());
+        if (source_value == sources.end()) {
+            return false;
         }
 
-        breakpoints_patch.erase(lib_name_lower);
+        std::uint32_t *data = reinterpret_cast<std::uint32_t*>(pr->get_ptr_on_addr_space(target & ~1));
+        data[0] = source_value->second;
+
+        return true;
+    }
+
+    void script_manager::write_breakpoint_blocks(kernel::process *pr) {
+        for (const auto &[addr, info]: breakpoints) {
+            // The address on the info contains information about Thumb/ARM mode
+            write_breakpoint_block(pr, info.list_[0].addr_);
+        }
+    }
+
+    void script_manager::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, pybind11::function &func) {
+        const std::string lib_name_lower = common::lowercase_string(name);
+
+        breakpoint_info info;
+        info.lib_name_ = lib_name_lower;
+        info.flags_ = breakpoint_info::FLAG_IS_ORDINAL;
+        info.addr_ = ord;
+        info.invoke_ = func;
+        info.attached_process_ = process_uid;
+
+        breakpoint_wait_patch.push_back(info);
+    }
+
+    void script_manager::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, pybind11::function &func) {
+        const std::string lib_name_lower = common::lowercase_string(lib_name);
+
+        breakpoint_info info;
+        info.lib_name_ = lib_name_lower;
+        info.flags_ = breakpoint_info::FLAG_BASED_IMAGE;
+        info.addr_ = addr;
+        info.invoke_ = func;
+        info.attached_process_ = process_uid;
+
+        breakpoint_wait_patch.push_back(info);
+    }
+
+    void script_manager::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {
+        const std::string lib_name_lower = common::lowercase_string(name);
+
+        for (auto &breakpoint: breakpoint_wait_patch) {
+            if ((breakpoint.flags_ & breakpoint_info::FLAG_IS_ORDINAL) && (breakpoint.lib_name_ == lib_name_lower)) {
+                breakpoint.addr_ = exports[breakpoint.addr_ - 1];
+
+                // It's now based on image. Only need rebase
+                breakpoint.flags_ &= ~breakpoint_info::FLAG_IS_ORDINAL;
+                breakpoint.flags_ |= breakpoint_info::FLAG_BASED_IMAGE;
+            }
+        }
+    }
+    
+    void script_manager::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
+       const std::string lib_name_lower = common::lowercase_string(name);
+
+        common::erase_elements(breakpoint_wait_patch, [&](breakpoint_info &breakpoint) {
+            if (((process_uid == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
+                && (breakpoint.flags_ & breakpoint_info::FLAG_BASED_IMAGE)) {
+                breakpoint.addr_ += new_code_addr;
+                breakpoint.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
+
+                breakpoints[breakpoint.addr_ & ~1].list_.push_back(breakpoint);
+                return true;
+            }
+
+            return false;
+        });
     }
 
     void script_manager::call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0, const std::uint32_t arg1,
@@ -232,19 +310,25 @@ namespace eka2l1::manager {
         scripting::set_current_instance(crr_instance);
     }
 
-    void script_manager::call_breakpoints(const uint32_t addr) {
-        if (breakpoints.find(addr) == breakpoints.end()) {
-            return;
+    bool script_manager::call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid) {
+        if (breakpoints.find(addr & ~1) == breakpoints.end()) {
+            return false;
         }
 
-        func_list &list = breakpoints[addr];
+        breakpoint_info_list &list = breakpoints[addr & ~1].list_;
 
-        for (const auto &func : list) {
+        for (const auto &info : list) {
+            if ((info.attached_process_ !=0) && (info.attached_process_ != process_uid)) {
+                continue;
+            }
+
             try {
-                func();
+                info.invoke_();
             } catch (py::error_already_set &exec) {
                 LOG_WARN("Script interpreted error: {}", exec.what());
             }
         }
+
+        return true;
     }
 }
