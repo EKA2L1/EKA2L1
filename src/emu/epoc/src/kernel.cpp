@@ -26,6 +26,7 @@
 #include <arm/arm_interface.h>
 
 #include <common/buffer.h>
+#include <common/configure.h>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
@@ -52,15 +53,22 @@
 #include <common/time.h>
 #include <manager/manager.h>
 
+#if ENABLE_SCRIPTING
+#include <manager/config.h>
+#include <manager/script_manager.h>
+#endif
+
 namespace eka2l1 {
     void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
-        memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::arm_interface *cpu) {
+        memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, manager::config_state *old_conf,
+        arm::arm_interface *cpu) {
         timing = timing_sys;
         mngr = mngrsys;
         mem = mem_sys;
         libmngr = lib_sys;
         io = io_sys;
         sys = esys;
+        conf = old_conf;
 
         base_time = common::get_current_time_in_microseconds_since_1ad();
 
@@ -228,6 +236,7 @@ namespace eka2l1 {
             heap_min = imgs.first->header.heap_size_min;
             heap_max = imgs.first->header.heap_size_max;
 
+            pr->puid = imgs.first->header.uid3; 
             cs = libmngr->load_as_e32img(*eimg, &(*pr), path);
         }
 
@@ -247,6 +256,7 @@ namespace eka2l1 {
             heap_min = imgs.second->header.heap_minimum_size;
             heap_max = imgs.second->header.heap_maximum_size;
 
+            pr->puid = imgs.second->header.uid3;
             cs = libmngr->load_as_romimg(*imgs.second, &(*pr), path);
         }
 
@@ -258,6 +268,15 @@ namespace eka2l1 {
         LOG_TRACE("Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
 
         pr->construct_with_codeseg(cs, new_stack_size, heap_min, heap_max, pri);
+
+#if ENABLE_SCRIPTING
+        manager::script_manager *scripter = mngr->get_script_manager();
+
+        if (conf->enable_breakpoint_script) {
+            scripter->write_breakpoint_blocks(pr);
+        }
+#endif
+
         return pr;
     }
 

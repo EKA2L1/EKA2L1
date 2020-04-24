@@ -349,7 +349,7 @@ namespace eka2l1 {
         cpu = arm::create_cpu(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
 
         mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
-        kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
+        kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
 
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
