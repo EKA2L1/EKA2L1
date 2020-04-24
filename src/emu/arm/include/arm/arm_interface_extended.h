@@ -21,6 +21,7 @@
 
 #include <arm/arm_interface.h>
 #include <cstdint>
+#include <map>
 
 namespace eka2l1 {
     class gdbstub;
@@ -31,6 +32,10 @@ namespace eka2l1 {
     }
 
     class kernel_system;
+
+    namespace kernel {
+        class thread;
+    }
 }
 
 namespace eka2l1::arm {
@@ -39,12 +44,22 @@ namespace eka2l1::arm {
         gdbstub *stub_;
         manager_system *mngr_;
 
-        bool last_breakpoint_script_hit_;
-        std::uint32_t breakpoint_addr_;
+        struct breakpoint_hit_info {
+            bool hit_;
+            std::uint32_t addr_;
+        };
+
+        std::map<std::uint32_t, breakpoint_hit_info> last_breakpoint_script_hits_;
 
     public:
         explicit arm_interface_extended(gdbstub *stub, manager_system *mngr);
 
         virtual void handle_breakpoint(kernel_system *kern, manager::config_state *conf);
+        virtual bool last_script_breakpoint_hit(kernel::thread *thr);
+        virtual void reset_breakpoint_hit(kernel_system *kern);
+
+        bool is_extended() const override {
+            return true;
+        }
     };
 }

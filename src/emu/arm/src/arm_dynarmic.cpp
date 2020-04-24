@@ -114,7 +114,16 @@ namespace eka2l1::arm {
         }
 
         std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
-            return MemoryRead32(addr);
+            void *data = parent.kern->crr_process()->get_ptr_on_addr_space(addr);
+            if (!data) {
+                invalid_memory_read(addr);
+                return 0;
+            }
+
+            std::uint32_t code = 0;
+            std::memcpy(&code, data, sizeof(std::uint32_t));
+
+            return code;
         }
 
         uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {
@@ -293,21 +302,7 @@ namespace eka2l1::arm {
 
     void arm_dynarmic::run() {
         ticks_executed = 0;
-
-        if (!last_breakpoint_script_hit_) {
-            jit->Run();
-        } else {
-            jit->Step();
-
-#if ENABLE_SCRIPTING
-            manager::script_manager *scripter = mngr_->get_script_manager();
-            scripter->write_breakpoint_block(kern->crr_process(), breakpoint_addr_);
-
-            imb_range(breakpoint_addr_, 4);
-#endif
-
-            last_breakpoint_script_hit_ = false;
-        }
+        jit->Run();
     }
 
     void arm_dynarmic::stop() {

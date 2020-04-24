@@ -111,6 +111,10 @@ namespace eka2l1::arm {
             return true;
         }
 
+        virtual bool is_extended() const {
+            return false;
+        }
+
         virtual std::uint32_t get_num_instruction_executed() = 0;
     };
 }

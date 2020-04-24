@@ -33,9 +33,7 @@
 namespace eka2l1::arm {
     arm_interface_extended::arm_interface_extended(gdbstub *stub, manager_system *mngr)
         : stub_(stub)
-        , mngr_(mngr)
-        , last_breakpoint_script_hit_(false)
-        , breakpoint_addr_(0) {
+        , mngr_(mngr) {
 
     }
     
@@ -51,20 +49,21 @@ namespace eka2l1::arm {
             stop();
     
             manager::script_manager *scripter = mngr_->get_script_manager();
-            
-            // Try to execute the real instruction, and put a breakpoint next to our instruction.
-            // Later when we hit the next instruction, rewrite the bkpt
-            const vaddress cur_addr = get_pc() | ((get_cpsr() & 0x20) >> 5);
 
-            if (scripter->call_breakpoints(cur_addr, crr_thread->owning_process()->get_uid())) {
-                last_breakpoint_script_hit_ = true;
-                const std::uint32_t last_breakpoint_script_size_ = (get_cpsr() & 0x20) ? 2 : 4;
-                breakpoint_addr_ = cur_addr;
+            if (!last_breakpoint_script_hits_[crr_thread->unique_id()].hit_) {
+                // Try to execute the real instruction, and put a breakpoint next to our instruction.
+                // Later when we hit the next instruction, rewrite the bkpt
+                const vaddress cur_addr = get_pc() | ((get_cpsr() & 0x20) >> 5);
 
-                scripter->write_back_breakpoint(pr, cur_addr);
-                imb_range(breakpoint_addr_, 4);
+                if (scripter->call_breakpoints(cur_addr, crr_thread->owning_process()->get_uid())) {
+                    breakpoint_hit_info &info = last_breakpoint_script_hits_[crr_thread->unique_id()];
+                    info.hit_ = true;
+                    const std::uint32_t last_breakpoint_script_size_ = (get_cpsr() & 0x20) ? 2 : 4;
+                    info.addr_ = cur_addr;
 
-                set_pc(cur_addr);
+                    scripter->write_back_breakpoint(pr, cur_addr);
+                    imb_range(cur_addr, 4);
+                }
             }
         }
 #endif
@@ -76,5 +75,23 @@ namespace eka2l1::arm {
             stub_->break_exec();
             stub_->send_trap_gdb(crr_thread, 5);
         }
+    }
+
+    bool arm_interface_extended::last_script_breakpoint_hit(kernel::thread *thr) {
+        if (!thr) {
+            return false;
+        }
+
+        return last_breakpoint_script_hits_[thr->unique_id()].hit_;
+    }
+
+    void arm_interface_extended::reset_breakpoint_hit(kernel_system *kern) {
+        breakpoint_hit_info &info = last_breakpoint_script_hits_[kern->crr_thread()->unique_id()];
+ 
+        manager::script_manager *scripter = mngr_->get_script_manager();
+        scripter->write_breakpoint_block(kern->crr_process(), info.addr_);
+
+        imb_range(info.addr_, 4);
+        info.hit_ = false;
     }
 }
