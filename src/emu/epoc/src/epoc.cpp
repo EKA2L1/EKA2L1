@@ -62,6 +62,7 @@
 #include <epoc/vfs.h>
 
 #include <arm/arm_factory.h>
+#include <arm/arm_interface_extended.h>
 #include <manager/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
@@ -315,7 +316,7 @@ namespace eka2l1 {
         while (scripts_dir.next_entry(scripts_entry) == 0) {
             if ((scripts_entry.type == common::FILE_REGULAR) && path_extension(scripts_entry.name) == ".py") {
                 auto module_name = replace_extension(filename(scripts_entry.name), "");
-                mngr.get_script_manager()->import_module("scripts/" + module_name);
+                mngr.get_script_manager()->import_module(".//scripts//" + module_name);
             }
         }
 
@@ -400,6 +401,7 @@ namespace eka2l1 {
 
     int system_impl::loop() {
         bool should_step = false;
+        bool script_hits_the_feels = false;
 
         if (gdb_stub.is_server_enabled()) {
             gdb_stub.handle_packet();
@@ -412,6 +414,13 @@ namespace eka2l1 {
                 }
             }
         } else {
+            if (cpu->is_extended()) {
+                arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
+                if (extended.last_script_breakpoint_hit(kern.crr_thread())) {
+                    should_step = true;
+                    script_hits_the_feels = true;
+                }
+            }
         }
 
         if (kern.crr_thread() == nullptr) {
@@ -425,6 +434,11 @@ namespace eka2l1 {
                 cpu->run();
             } else {
                 cpu->step();
+
+                if (script_hits_the_feels) {
+                    arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
+                    extended.reset_breakpoint_hit(&kern);
+                }
             }
 
             kern.crr_thread()->add_ticks(static_cast<int>(cpu->get_num_instruction_executed()));

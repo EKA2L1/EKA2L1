@@ -51,10 +51,10 @@
 #include <epoc/services/init.h>
 
 #include <common/time.h>
-#include <manager/manager.h>
 
 #if ENABLE_SCRIPTING
 #include <manager/config.h>
+#include <manager/manager.h>
 #include <manager/script_manager.h>
 #endif
 
@@ -72,7 +72,14 @@ namespace eka2l1 {
 
         base_time = common::get_current_time_in_microseconds_since_1ad();
 
-        thr_sch = std::make_shared<kernel::thread_scheduler>(this, timing, *cpu);
+        thr_sch = std::make_shared<kernel::thread_scheduler>(this, timing,
+#if ENABLE_SCRIPTING
+            conf->enable_breakpoint_script ? mngrsys->get_script_manager() : nullptr,
+#else
+            nullptr,
+#endif
+            *cpu);
+
         rom_map = nullptr;
 
         kernel_handles = kernel::object_ix(this, kernel::handle_array_owner::kernel);
@@ -268,14 +275,6 @@ namespace eka2l1 {
         LOG_TRACE("Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
 
         pr->construct_with_codeseg(cs, new_stack_size, heap_min, heap_max, pri);
-
-#if ENABLE_SCRIPTING
-        manager::script_manager *scripter = mngr->get_script_manager();
-
-        if (conf->enable_breakpoint_script) {
-            scripter->write_breakpoint_blocks(pr);
-        }
-#endif
 
         return pr;
     }
