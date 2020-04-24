@@ -2358,16 +2358,6 @@ namespace eka2l1::epoc {
         kernel::thread *thr = sys->get_kernel_system()->crr_thread();
         sys->get_cpu()->save_context(thr->get_thread_context());
 
-        char *game_log = 
-            eka2l1::ptr<char>(thr->get_thread_context().cpu_registers[0]).get(thr->owning_process());
-
-        LOG_TRACE("{} (thread {})", game_log, thr->name());
-
-        thr->get_thread_context().pc = thr->get_thread_context().lr;
-        sys->get_cpu()->load_context(thr->get_thread_context());
-
-        return;
-
         reality_func to_call = reinterpret_cast<reality_func>(*data++);
         void *userdata = reinterpret_cast<void *>(*data++);
 
