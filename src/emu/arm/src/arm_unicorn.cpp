@@ -108,19 +108,13 @@ static void code_hook(uc_engine *uc, uint32_t address, uint32_t size, void *user
 
 #ifdef ENABLE_SCRIPTING
     if (jit->conf->enable_breakpoint_script) {
+        eka2l1::kernel_system *kern = jit->get_kernel_system();
+        eka2l1::kernel::process *pr = kern->crr_process();
+
         eka2l1::manager::script_manager *scripter = jit->get_manager_sys()->get_script_manager();
-        scripter->call_breakpoints(address);
+        scripter->call_breakpoints(address, pr->get_uid());
     }
 #endif
-
-    if (jit->conf->log_passed && mngr) {
-        // Get the name of function at this address
-        auto res = mngr->get_symbol(address & ~0x1);
-
-        if (res) {
-            LOG_INFO("Passing through: {} addr = 0x{:x}", *res, address);
-        }
-    }
 
     if (jit->conf->log_code) {
         const uint8_t *code = eka2l1::ptr<const uint8_t>(address).get(jit->get_memory_sys());

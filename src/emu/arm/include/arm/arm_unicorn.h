@@ -90,6 +90,10 @@ namespace eka2l1 {
                 return mngr;
             }
 
+            kernel_system *get_kernel_system() {
+                return kern;
+            }
+
             std::uint32_t get_num_instruction_executed() override {
                 return num_insts_runned;
             }
@@ -107,7 +111,7 @@ namespace eka2l1 {
                 breakpoint_hit_addr = addr;
             }
 
-            arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+            explicit arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf,
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
 
             ~arm_unicorn();

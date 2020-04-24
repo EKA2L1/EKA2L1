@@ -231,26 +231,7 @@ namespace eka2l1::arm {
             }
 
             case Dynarmic::A32::Exception::Breakpoint: {
-                kernel::thread *crr_thread = parent.kern->crr_thread();
-                parent.save_context(crr_thread->get_thread_context());
-
-#if ENABLE_SCRIPTING
-                if (parent.conf->enable_breakpoint_script) {
-                    // Call scripts first
-                    manager::script_manager *scripter = parent.mngr->get_script_manager();
-                    scripter->call_breakpoints(parent.jit->Regs()[15]);
-                }
-#endif
-                gdbstub *stub = parent.stub;
-
-                if (stub && stub->is_connected()) {
-                    parent.jit->HaltExecution();
-                    parent.set_pc(pc);
-
-                    stub->break_exec();
-                    stub->send_trap_gdb(crr_thread, 5);
-                }
-
+                parent.handle_breakpoint(parent.kern, parent.conf);
                 return;
             }
 
@@ -265,7 +246,7 @@ namespace eka2l1::arm {
             handle_thread_exception();
         }
 
-        void CallSVC(uint32_t svc) override {
+        void CallSVC(std::uint32_t svc) override {
             hle::lib_manager *mngr = parent.get_lib_manager();
             bool res = mngr->call_svc(svc);
 
@@ -296,14 +277,13 @@ namespace eka2l1::arm {
 
     arm_dynarmic::arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
         manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
-        : timing(sys)
+        : arm_interface_extended(stub, mngr)
+        , timing(sys)
         , mem(mem)
         , asmdis(asmdis)
         , lib_mngr(lmngr)
         , conf(conf)
-        , stub(stub)
         , kern(kern)
-        , mngr(mngr)
         , fallback_jit(kern, sys, conf, mngr, mem, asmdis, lmngr, stub)
         , cb(std::make_unique<arm_dynarmic_callback>(*this)) {
         jit = make_jit(cb, &page_dyn);
@@ -313,7 +293,21 @@ namespace eka2l1::arm {
 
     void arm_dynarmic::run() {
         ticks_executed = 0;
-        jit->Run();
+
+        if (!last_breakpoint_script_hit_) {
+            jit->Run();
+        } else {
+            jit->Step();
+
+#if ENABLE_SCRIPTING
+            manager::script_manager *scripter = mngr_->get_script_manager();
+            scripter->write_breakpoint_block(kern->crr_process(), breakpoint_addr_);
+
+            imb_range(breakpoint_addr_, 4);
+#endif
+
+            last_breakpoint_script_hit_ = false;
+        }
     }
 
     void arm_dynarmic::stop() {
@@ -421,10 +415,6 @@ namespace eka2l1::arm {
 
     bool arm_dynarmic::is_thumb_mode() {
         return get_cpsr() & 0x20;
-    }
-
-    void arm_dynarmic::imb_range(address start, uint32_t len) {
-        jit->InvalidateCacheRange(start, len);
     }
 
     void arm_dynarmic::page_table_changed() {

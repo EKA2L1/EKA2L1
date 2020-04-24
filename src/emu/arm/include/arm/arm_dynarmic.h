@@ -17,7 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arm/arm_interface.h>
+#pragma once
+
+#include <arm/arm_interface_extended.h>
 #include <arm/arm_unicorn.h>
 
 #include <dynarmic/A32/a32.h>
@@ -46,7 +48,7 @@ namespace eka2l1 {
     namespace arm {
         class arm_dynarmic_callback;
 
-        class arm_dynarmic : public arm_interface {
+        class arm_dynarmic : public arm_interface_extended {
             friend class arm_dynarmic_callback;
 
             arm_unicorn fallback_jit;
@@ -56,13 +58,10 @@ namespace eka2l1 {
 
             disasm *asmdis;
             timing_system *timing;
-            manager_system *mngr;
             memory_system *mem;
             kernel_system *kern;
 
             hle::lib_manager *lib_mngr;
-
-            gdbstub *stub;
 
             std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
                 page_dyn;
@@ -125,8 +124,6 @@ namespace eka2l1 {
             void prepare_rescheduling() override;
 
             bool is_thumb_mode() override;
-
-            void imb_range(address start, uint32_t len);
 
             void page_table_changed() override;
 
