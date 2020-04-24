@@ -88,8 +88,10 @@ namespace eka2l1::arm {
     void arm_interface_extended::reset_breakpoint_hit(kernel_system *kern) {
         breakpoint_hit_info &info = last_breakpoint_script_hits_[kern->crr_thread()->unique_id()];
  
+#if ENABLE_SCRIPTING
         manager::script_manager *scripter = mngr_->get_script_manager();
         scripter->write_breakpoint_block(kern->crr_process(), info.addr_);
+#endif
 
         imb_range(info.addr_, 4);
         info.hit_ = false;
