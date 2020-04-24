@@ -21,6 +21,7 @@
 #include <common/flate.h>
 #include <common/log.h>
 
+#include <array>
 #include <miniz.h>
 
 namespace eka2l1 {
