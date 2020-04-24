@@ -46,6 +46,7 @@ namespace eka2l1::drivers {
 
     public:
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);
+        ~dsp_output_stream_shared() override;
 
         virtual void decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) = 0;
         std::size_t data_callback(std::int16_t *buffer, const std::size_t frame_count);

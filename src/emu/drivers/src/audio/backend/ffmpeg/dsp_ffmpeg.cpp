@@ -35,8 +35,15 @@ namespace eka2l1::drivers {
     };
 
     dsp_output_stream_ffmpeg::dsp_output_stream_ffmpeg(drivers::audio_driver *aud)
-        : dsp_output_stream_shared(aud) {
+        : dsp_output_stream_shared(aud)
+        , codec_(nullptr) {
         format(PCM16_FOUR_CC_CODE);
+    }
+
+    dsp_output_stream_ffmpeg::~dsp_output_stream_ffmpeg() {
+        if (codec_) {
+            avcodec_free_context(&codec_);
+        }
     }
 
     void dsp_output_stream_ffmpeg::get_supported_formats(std::vector<four_cc> &cc_list) {
