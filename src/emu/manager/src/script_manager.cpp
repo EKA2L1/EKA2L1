@@ -167,7 +167,16 @@ namespace eka2l1::manager {
         const vaddress aligned = target & ~1;
 
         std::uint32_t *data = reinterpret_cast<std::uint32_t*>(pr->get_ptr_on_addr_space(aligned));
-        breakpoints[aligned].source_insts_[pr->get_uid()] = data[0];
+        auto ite = std::find_if(breakpoints[aligned].list_.begin(), breakpoints[aligned].list_.end(),
+            [=](const breakpoint_info &info) { return (info.attached_process_ == 0) || (info.attached_process_ == pr->get_uid()); });
+
+        auto &source_insts = breakpoints[aligned].source_insts_;
+
+        if (ite == breakpoints[aligned].list_.end() || source_insts.find(pr->get_uid()) != source_insts.end()) {
+            return;
+        }
+    
+        source_insts[pr->get_uid()] = data[0];
 
         if (target & 1) {
             // The target destination is thumb
@@ -188,13 +197,23 @@ namespace eka2l1::manager {
         std::uint32_t *data = reinterpret_cast<std::uint32_t*>(pr->get_ptr_on_addr_space(target & ~1));
         data[0] = source_value->second;
 
+        sources.erase(source_value);
         return true;
+    }
+
+    void script_manager::write_back_breakpoints(kernel::process *pr) {
+        for (const auto &[addr, info]: breakpoints) {
+            if (!info.list_.empty()) {
+                write_back_breakpoint(pr, info.list_[0].addr_);
+            }
+        }
     }
 
     void script_manager::write_breakpoint_blocks(kernel::process *pr) {
         for (const auto &[addr, info]: breakpoints) {
             // The address on the info contains information about Thumb/ARM mode
-            write_breakpoint_block(pr, info.list_[0].addr_);
+            if (!info.list_.empty())
+                write_breakpoint_block(pr, info.list_[0].addr_);
         }
     }
 

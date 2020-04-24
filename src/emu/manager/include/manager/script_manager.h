@@ -148,6 +148,13 @@ namespace eka2l1::manager {
         void write_breakpoint_block(kernel::process *pr, const vaddress target);
 
         /**
+         * \brief Write back all instructions that was overwritted by bkpt.
+         * 
+         * \param pr        The target process we want to give back the instruction.
+         */
+        void write_back_breakpoints(kernel::process *pr);
+
+        /**
          * \brief Write back instruction that was overwritted by bkpt.
          * 
          * \param pr        The target process we want to give back the instruction.
