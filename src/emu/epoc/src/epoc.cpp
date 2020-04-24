@@ -307,7 +307,7 @@ namespace eka2l1 {
         std::string cur_dir;
         get_current_directory(cur_dir);
 
-        common::dir_iterator scripts_dir("scripts");
+        common::dir_iterator scripts_dir(".//scripts//");
         scripts_dir.detail = true;
 
         common::dir_entry scripts_entry;
@@ -411,6 +411,7 @@ namespace eka2l1 {
                     return 1;
                 }
             }
+        } else {
         }
 
         if (kern.crr_thread() == nullptr) {
