@@ -359,7 +359,6 @@ namespace eka2l1::loader {
         if (read_reloc) {
             read_relocations(reinterpret_cast<common::ro_stream *>(&decompressed_stream),
                 img.code_reloc_section, img.header.code_reloc_offset);
-
             read_relocations(reinterpret_cast<common::ro_stream *>(&decompressed_stream),
                 img.data_reloc_section, img.header.data_reloc_offset);
         }

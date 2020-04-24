@@ -83,9 +83,6 @@ namespace eka2l1 {
             kernel_system *kern;
             system *sys;
 
-            std::unordered_map<address, std::string> addr_symbols;
-            std::unordered_map<std::string, symbols> lib_symbols;
-
             bool log_svc{ false };
 
         protected:
@@ -94,11 +91,13 @@ namespace eka2l1 {
         public:
             std::unordered_map<sid, epoc_import_func> svc_funcs;
 
-            lib_manager(){};
+            explicit lib_manager();
 
-            bool register_exports(const std::string &lib_name, export_table table);
+            bool patch_scripts(const std::string &lib_name, kernel::process *pr, codeseg_ptr seg);
 
-            /*! \brief Intialize the library manager. 
+            /**
+             * \brief Intialize the library manager. 
+             * 
 			 * \param ver The EPOC version to import HLE functions.
 			*/
             void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
@@ -129,14 +128,6 @@ namespace eka2l1 {
 
             codeseg_ptr load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path = u"");
             codeseg_ptr load_as_romimg(loader::romimg &img, kernel::process *pr, const std::u16string &path = u"");
-
-            std::optional<std::string> get_symbol(const address addr) {
-                auto res = addr_symbols.find(addr);
-                if (res != addr_symbols.end()) {
-                    return res->second;
-                }
-                return std::nullopt;
-            }
 
             system *get_sys() {
                 return sys;

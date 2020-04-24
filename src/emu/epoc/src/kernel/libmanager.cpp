@@ -206,7 +206,8 @@ namespace eka2l1::hle {
         uint32_t rtcode_addr = cs->get_code_run_addr(pr, &code_base);
         uint32_t rtdata_addr = cs->get_data_run_addr(pr, &data_base);
 
-        LOG_INFO("Runtime code: 0x{:x}", rtcode_addr);
+        LOG_INFO("{} runtime code: 0x{:x}", cs->name(), rtcode_addr);
+        LOG_INFO("{} runtime data: 0x{:x}", cs->name(), rtdata_addr);
 
         img->rt_code_addr = rtcode_addr;
 
@@ -216,7 +217,7 @@ namespace eka2l1::hle {
 
         relocate(img->code_reloc_section.entries, code_base, code_delta, data_delta);
 
-        if (img->header.data_size) {
+        if (img->header.bss_size) {
             img->rt_data_addr = rtdata_addr;
             relocate(img->data_reloc_section.entries, data_base, code_delta, data_delta);
         }
@@ -274,12 +275,11 @@ namespace eka2l1::hle {
             info.code_load_addr = force_code_addr;
         }
 
-        codeseg_ptr cs = kern->create<kernel::codeseg>("codeseg", info);
+        codeseg_ptr cs = kern->create<kernel::codeseg>(common::ucs2_to_utf8(eka2l1::filename(path)), info);
         cs->attach(pr);
 
-        mngr.register_exports(
-            common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
-            cs->get_export_table(pr));
+        mngr.patch_scripts(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
+            pr, cs);
 
         relocate_e32img(img, pr, mem, mngr, cs);
         LOG_INFO("Load e32img success");
@@ -491,8 +491,10 @@ namespace eka2l1::hle {
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
         if (auto seg = kern->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
                 img.header.uid2, img.header.uid3)) {
-            if (seg->attach(pr))
+            if (seg->attach(pr)) {
                 relocate_e32img(&img, pr, kern->get_memory_system(), *this, seg);
+                patch_scripts(seg->name(), pr, seg);
+            }
 
             return seg;
         }
@@ -531,9 +533,8 @@ namespace eka2l1::hle {
         auto cs = kern->create<kernel::codeseg>("codeseg", info);
         cs->attach(pr);
 
-        register_exports(
-            common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
-            cs->get_export_table(pr));
+        patch_scripts(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
+            pr, cs);
 
         struct dll_ref_table {
             uint16_t flags;
@@ -733,24 +734,21 @@ namespace eka2l1::hle {
         return true;
     }
 
-    bool lib_manager::register_exports(const std::string &lib_name, export_table table) {
-        std::string lib_name_lower = common::lowercase_string(lib_name);
-        auto lib_ite = lib_symbols.find(lib_name_lower);
-        if (lib_ite != lib_symbols.end()) {
-            for (std::size_t i = 0; i < common::min(table.size(), lib_ite->second.size()); i++) {
-                addr_symbols.emplace(table[i] & ~0x1, lib_ite->second[i]);
-            }
-
+    bool lib_manager::patch_scripts(const std::string &lib_name, kernel::process *pr, codeseg_ptr seg) {
 #ifndef ENABLE_SCRIPTING
             return true;
-#endif
-        }
-
-#ifdef ENABLE_SCRIPTING
-        sys->get_manager_system()->get_script_manager()->patch_library_hook(lib_name_lower, table);
-        return true;
 #else
-        return false;
+        manager::script_manager *scripter = sys->get_manager_system()->get_script_manager();
+        
+        // These are already rebased, so when we call patch unrelocated hook, give a zero adderss
+        scripter->patch_library_hook(lib_name, seg->get_export_table_raw());
+        scripter->patch_unrelocated_hook(pr ? (pr->get_uid()) : 0, lib_name, seg->is_rom() ? 0 : (seg->get_code_run_addr(pr) - seg->get_code_base()));
+
+        return true;
 #endif
+    }
+
+    lib_manager::lib_manager() {
+
     }
 }
