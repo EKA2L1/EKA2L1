@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +20,7 @@
 #pragma once
 
 #include <arm/arm_factory.h>
+#include <common/configure.h>
 #include <common/queue.h>
 
 #include <algorithm>
@@ -39,6 +39,10 @@ namespace eka2l1 {
     namespace kernel {
         class thread;
         class process;
+    }
+
+    namespace manager {
+        class script_manager;
     }
 
     struct thread_comparator {
@@ -68,13 +72,16 @@ namespace eka2l1 {
             timing_system *timing;
             kernel_system *kern;
 
+            manager::script_manager *scripter;
+
         protected:
             kernel::thread *next_ready_thread();
             void switch_context(kernel::thread *oldt, kernel::thread *newt);
 
         public:
             // The constructor also register all the needed event
-            thread_scheduler(kernel_system *kern, timing_system *sys, arm::arm_interface &jitter);
+            explicit thread_scheduler(kernel_system *kern, timing_system *sys, manager::script_manager *scripter,
+                arm::arm_interface &cpu);
 
             void queue_thread_ready(kernel::thread *thr);
             void dequeue_thread_from_ready(kernel::thread *thr);
