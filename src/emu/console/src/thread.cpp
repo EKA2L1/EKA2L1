@@ -181,7 +181,7 @@ namespace eka2l1::desktop {
             "Having a cyborg as my wife doing dishes and writing the emulator brb",
             "Causing an entire country chaos because of my imagination",
             "Thank you very much for checking out the emulator",
-            "Causually the cause of case files over two centuries while staying first-grade"
+            "Casually the cause of case files over two decades while staying first-grade"
             // You can add more, but probably when the emulator becomes more functional
         };
 
