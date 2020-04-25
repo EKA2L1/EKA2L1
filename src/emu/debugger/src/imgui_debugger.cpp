@@ -857,6 +857,9 @@ namespace eka2l1 {
 
     void imgui_debugger::show_installer_text_popup() {
         ImGui::OpenPopup("Installer Text Popup");
+        ImGuiIO &io = ImGui::GetIO();
+
+        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x / 4, io.DisplaySize.y / 3));
 
         if (ImGui::BeginPopupModal("Installer Text Popup")) {
             ImGui::Text("%s", installer_text);
