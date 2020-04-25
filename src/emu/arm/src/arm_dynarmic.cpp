@@ -240,7 +240,7 @@ namespace eka2l1::arm {
             }
 
             case Dynarmic::A32::Exception::Breakpoint: {
-                parent.handle_breakpoint(parent.kern, parent.conf);
+                parent.handle_breakpoint(parent.kern, parent.conf, pc);
                 return;
             }
 
