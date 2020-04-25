@@ -1523,6 +1523,7 @@ namespace eka2l1 {
                 ImGui::Separator();
                 ImGui::Text("Honors:");
                 ImGui::Text("- florastamine");
+                ImGui::Text("- HadesD (Ichiro)");
                 ImGui::EndChild();
             }
 
