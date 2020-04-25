@@ -261,13 +261,44 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
     )pbdoc");
 
     m.def("registerLibraryInvokement", &scripting::register_lib_invokement, R"pbdoc(
-        Register a function to be called when a library function is called
+        Register a function to be called when a library function is called.
+        
+        Parameters
+        -----------------
+        ord: int
+                     Ordinal of the function we want to hook with.
+
+        process_uid: int
+                     UID of the process we want to hook with.
+
+        func
+                     The function to invoke on breakpoint hit.
     )pbdoc");
 
     m.def("registerBreakpointInvokement", &scripting::register_breakpoint_invokement, R"pbdoc(
         Register a function to be called when a breakpoint is hit.
-        
-        Only works on fallback (Dynarmic) and Unicorn JIT.
+
+        Parameters
+        -----------------
+        image_name: str
+                     Name of the image we want this breakpoint to based on.
+
+                     Use 0 to make the passed address absolute.
+                     Use 'PROCESS' to make the passed address based on the current process.
+
+        addr: int
+                     Address of the breakpoint. An odd address indicates the code at breakpoint is Thumb.
+                     Use the note above to place a thumb breakpoint.
+
+                     It's required to use the ROM address or an address with the base as same as image.
+
+        process_uid: int
+                     The UID of the process we want to attach this breakpoint to.
+
+                     Use 0 to make this invoked with every processes.
+
+        func
+                     The function to invoke on breakpoint hit.
     )pbdoc");
 
     m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement, R"pbdoc(

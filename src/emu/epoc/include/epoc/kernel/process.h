@@ -21,6 +21,7 @@
 
 #include <common/linked.h>
 
+#include <epoc/kernel/common.h>
 #include <epoc/kernel/kernel_obj.h>
 #include <epoc/kernel/mutex.h>
 #include <epoc/kernel/object_ix.h>
@@ -74,13 +75,6 @@ namespace eka2l1::kernel {
         supervisor = 950
     };
 
-    enum class process_exit_type {
-        kill,
-        terminate,
-        panic,
-        pending
-    };
-
     struct memory_info {
         address rt_code_addr;
         address rt_code_size;
@@ -123,7 +117,7 @@ namespace eka2l1::kernel {
         std::uint32_t flags;
         process_priority priority;
         int exit_reason = 0;
-        process_exit_type exit_type;
+        entity_exit_type exit_type;
 
         std::vector<epoc::notify_info> logon_requests;
         std::vector<epoc::notify_info> rendezvous_requests;
@@ -242,11 +236,11 @@ namespace eka2l1::kernel {
          */
         bool has(epoc::capability_set &cap_set);
 
-        process_exit_type get_exit_type() const {
+        entity_exit_type get_exit_type() const {
             return exit_type;
         }
 
-        void set_exit_type(const process_exit_type t) {
+        void set_exit_type(const entity_exit_type t) {
             exit_type = t;
         }
 

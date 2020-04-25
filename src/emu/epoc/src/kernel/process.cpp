@@ -90,7 +90,8 @@ namespace eka2l1::kernel {
 
     process::process(kernel_system *kern, memory_system *mem)
         : kernel_obj(kern)
-        , mem(mem) {
+        , mem(mem)
+        , exit_type(kernel::entity_exit_type::pending) {
         obj_type = kernel::object_type::process;
     }
 
@@ -103,7 +104,8 @@ namespace eka2l1::kernel {
         , exe_path(exe_path)
         , cmd_args(cmd_args)
         , codeseg(nullptr)
-        , process_handles(kern, handle_array_owner::process) {
+        , process_handles(kern, handle_array_owner::process)
+        , exit_type(kernel::entity_exit_type::pending) {
         obj_type = kernel::object_type::process;
 
         if (!process_name.empty() && process_name.back() == '\0') {
@@ -195,7 +197,7 @@ namespace eka2l1::kernel {
 
     void process::rendezvous(int rendezvous_reason) {
         exit_reason = rendezvous_reason;
-        exit_type = process_exit_type::pending;
+        exit_type = entity_exit_type::pending;
 
         for (auto &ren : rendezvous_requests) {
             ren.complete(rendezvous_reason);

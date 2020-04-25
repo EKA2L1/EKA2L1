@@ -36,3 +36,12 @@ namespace eka2l1::hle {
 
     using func_map = std::map<uint32_t, eka2l1::hle::epoc_import_func>;
 }
+
+namespace eka2l1::kernel {
+    enum class entity_exit_type {
+        kill = 0,
+        terminate = 1,
+        panic = 2,
+        pending = 3
+    };
+}

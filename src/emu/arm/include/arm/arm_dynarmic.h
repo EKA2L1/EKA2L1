@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arm/arm_interface.h>
+#pragma once
+
+#include <arm/arm_interface_extended.h>
 #include <arm/arm_unicorn.h>
 
 #include <dynarmic/A32/a32.h>
@@ -40,10 +41,14 @@ namespace eka2l1 {
         class lib_manager;
     }
 
+    namespace manager {
+        class script_manager;
+    }
+
     namespace arm {
         class arm_dynarmic_callback;
 
-        class arm_dynarmic : public arm_interface {
+        class arm_dynarmic : public arm_interface_extended {
             friend class arm_dynarmic_callback;
 
             arm_unicorn fallback_jit;
@@ -53,14 +58,10 @@ namespace eka2l1 {
 
             disasm *asmdis;
             timing_system *timing;
-            manager_system *mngr;
             memory_system *mem;
             kernel_system *kern;
 
             hle::lib_manager *lib_mngr;
-
-            gdbstub *stub;
-            debugger_base *debugger;
 
             std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
                 page_dyn;
@@ -85,9 +86,9 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+            explicit arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr,
-                gdbstub *stub, debugger_base *debugger);
+                gdbstub *stub);
 
             ~arm_dynarmic();
 
@@ -123,8 +124,6 @@ namespace eka2l1 {
             void prepare_rescheduling() override;
 
             bool is_thumb_mode() override;
-
-            void imb_range(address start, uint32_t len);
 
             void page_table_changed() override;
 

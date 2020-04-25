@@ -1,7 +1,6 @@
 # Copyright (c) 2018 EKA2L1 Team.
 # 
-# This file is part of EKA2L1 project 
-# (see bentokun.github.com/EKA2L1).
+# This file is part of EKA2L1 project.
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -55,23 +54,23 @@ def emulatorSystemCallInvoke(svcNum, time = 0):
 
     return invokeDecorator
     
-def emulatorEpocFunctionInvoke(libname, ord):
+def emulatorEpocFunctionInvoke(libname, ord, process_uid):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
             return funcToInvoke
 
-        symemu.registerLibraryInvokement(libname, ord, funcToInvoke)
+        symemu.registerLibraryInvokement(libname, ord, process_uid, funcToInvoke)
 
         return funcWrapper
 
     return invokeDecorator
     
-def emulatorBreakpointInvoke(addr):
+def emulatorBreakpointInvoke(imageName, addr, processUid):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
             return funcToInvoke
 
-        symemu.registerBreakpointInvokement(addr, funcToInvoke)
+        symemu.registerBreakpointInvokement(imageName, addr, processUid, funcToInvoke)
 
         return funcWrapper
 

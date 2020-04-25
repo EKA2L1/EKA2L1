@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2020 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +60,6 @@ namespace eka2l1 {
         bool should_package_manager;
         bool should_show_disassembler;
         bool should_show_logger;
-        bool should_show_breakpoint_list;
         bool should_show_preferences;
 
         bool should_package_manager_display_file_list;
@@ -135,7 +133,6 @@ namespace eka2l1 {
         void show_timers();
         void show_disassembler();
         void show_menu();
-        void show_breakpoint_list();
         void show_preferences();
         void show_package_manager();
         void show_install_device();

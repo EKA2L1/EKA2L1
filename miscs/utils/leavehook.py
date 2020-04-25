@@ -13,8 +13,9 @@ import symemu2.events
 ## Because of that, we don't know what the code of the leave resulted, only
 ## the parent function know it. This is a hook to get the leave code, for debugging
 ## and reversing an app/game or a mechanism.
-
-@symemu2.events.emulatorEpocFunctionInvoke("euser", 649)
+##
+## Hook this with every processes (UID 0)
+@symemu2.events.emulatorEpocFunctionInvoke("euser", 649, 0)
 def leaveHook():
     # r0, when begging the function, contains the leave code. User is a static class
     # Since the code is uint32 from C, it must be converted to signed for the leave code

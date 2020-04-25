@@ -242,7 +242,11 @@ namespace eka2l1 {
             , timeout_sts(0)
             , wait_obj(nullptr)
             , sleep_nof_sts(0)
-            , thread_handles(kern, handle_array_owner::thread) {
+            , thread_handles(kern, handle_array_owner::thread)
+            , rendezvous_reason(0) 
+            , exit_reason(0)
+            , exit_type(entity_exit_type::pending)
+            , create_time(0) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = caculate_thread_priority(owning_process(), pri);

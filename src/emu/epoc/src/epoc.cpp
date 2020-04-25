@@ -62,6 +62,7 @@
 #include <epoc/vfs.h>
 
 #include <arm/arm_factory.h>
+#include <arm/arm_interface_extended.h>
 #include <manager/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
@@ -78,8 +79,8 @@ namespace eka2l1 {
         hle::lib_manager hlelibmngr;
 
         //! The cpu
-        arm::jitter cpu;
-        arm_emulator_type jit_type;
+        arm::cpu cpu;
+        arm_emulator_type cpu_type;
 
         drivers::graphics_driver *gdriver;
         drivers::audio_driver *adriver;
@@ -161,8 +162,8 @@ namespace eka2l1 {
             return true;
         }
 
-        void set_jit_type(const arm_emulator_type type) {
-            jit_type = type;
+        void set_cpu_executor_type(const arm_emulator_type type) {
+            cpu_type = type;
         }
 
         manager::config_state *get_config() {
@@ -267,7 +268,7 @@ namespace eka2l1 {
             return adriver;
         }
 
-        arm::jitter &get_cpu() {
+        arm::cpu &get_cpu() {
             return cpu;
         }
 
@@ -307,7 +308,7 @@ namespace eka2l1 {
         std::string cur_dir;
         get_current_directory(cur_dir);
 
-        common::dir_iterator scripts_dir("scripts");
+        common::dir_iterator scripts_dir(".//scripts//");
         scripts_dir.detail = true;
 
         common::dir_entry scripts_entry;
@@ -315,7 +316,7 @@ namespace eka2l1 {
         while (scripts_dir.next_entry(scripts_entry) == 0) {
             if ((scripts_entry.type == common::FILE_REGULAR) && path_extension(scripts_entry.name) == ".py") {
                 auto module_name = replace_extension(filename(scripts_entry.name), "");
-                mngr.get_script_manager()->import_module("scripts/" + module_name);
+                mngr.get_script_manager()->import_module(".//scripts//" + module_name);
             }
         }
 
@@ -346,10 +347,10 @@ namespace eka2l1 {
 
         rom_fs_id = io.add_filesystem(rom_fs);
 
-        cpu = arm::create_jitter(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, debugger, jit_type);
+        cpu = arm::create_cpu(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
 
         mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
-        kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, cpu.get());
+        kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
 
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
@@ -365,9 +366,9 @@ namespace eka2l1 {
         , gdriver(graphics_driver)
         , adriver(audio_driver) {
         if (conf->cpu_backend == unicorn_jit_backend_name) {
-            jit_type = arm_emulator_type::unicorn;
+            cpu_type = arm_emulator_type::unicorn;
         } else if (conf->cpu_backend == dynarmic_jit_backend_name) {
-            jit_type = arm_emulator_type::dynarmic;
+            cpu_type = arm_emulator_type::dynarmic;
         } else {
             assert(false && "JIT backend config name is invalid");
         }
@@ -400,6 +401,7 @@ namespace eka2l1 {
 
     int system_impl::loop() {
         bool should_step = false;
+        bool script_hits_the_feels = false;
 
         if (gdb_stub.is_server_enabled()) {
             gdb_stub.handle_packet();
@@ -409,6 +411,14 @@ namespace eka2l1 {
                     should_step = true;
                 } else {
                     return 1;
+                }
+            }
+        } else {
+            if (cpu->is_extended()) {
+                arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
+                if (extended.last_script_breakpoint_hit(kern.crr_thread())) {
+                    should_step = true;
+                    script_hits_the_feels = true;
                 }
             }
         }
@@ -424,6 +434,11 @@ namespace eka2l1 {
                 cpu->run();
             } else {
                 cpu->step();
+
+                if (script_hits_the_feels) {
+                    arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
+                    extended.reset_breakpoint_hit(&kern);
+                }
             }
 
             kern.crr_thread()->add_ticks(static_cast<int>(cpu->get_num_instruction_executed()));
@@ -578,8 +593,8 @@ namespace eka2l1 {
         return impl->set_symbian_version_use(ever);
     }
 
-    void system::set_jit_type(const arm_emulator_type type) {
-        return impl->set_jit_type(type);
+    void system::set_cpu_executor_type(const arm_emulator_type type) {
+        return impl->set_cpu_executor_type(type);
     }
 
     loader::rom *system::get_rom_info() {
@@ -649,7 +664,7 @@ namespace eka2l1 {
         return impl->get_audio_driver();
     }
 
-    arm::jitter &system::get_cpu() {
+    arm::cpu &system::get_cpu() {
         return impl->get_cpu();
     }
 

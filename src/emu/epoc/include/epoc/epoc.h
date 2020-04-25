@@ -57,7 +57,7 @@ namespace eka2l1 {
 
     namespace arm {
         class arm_interface;
-        using jitter = std::unique_ptr<arm_interface>;
+        using cpu = std::unique_ptr<arm_interface>;
     }
 
     class debugger_base;
@@ -101,7 +101,7 @@ namespace eka2l1 {
         void set_audio_driver(drivers::audio_driver *driver);
         void set_debugger(debugger_base *new_debugger);
         void set_symbian_version_use(const epocver ever);
-        void set_jit_type(const arm_emulator_type type);
+        void set_cpu_executor_type(const arm_emulator_type type);
 
         loader::rom *get_rom_info();
         epocver get_symbian_version_use() const;
@@ -126,7 +126,7 @@ namespace eka2l1 {
         gdbstub *get_gdb_stub();
         drivers::graphics_driver *get_graphics_driver();
         drivers::audio_driver *get_audio_driver();
-        arm::jitter &get_cpu();
+        arm::cpu &get_cpu();
         manager::config_state *get_config();
         dispatch::dispatcher *get_dispatcher();
 

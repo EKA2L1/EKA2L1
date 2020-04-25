@@ -32,6 +32,7 @@ namespace eka2l1::drivers {
 
     public:
         explicit dsp_output_stream_ffmpeg(drivers::audio_driver *aud);
+        ~dsp_output_stream_ffmpeg() override;
 
         bool format(const four_cc fmt) override;
 

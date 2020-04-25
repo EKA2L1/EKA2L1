@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
 #include <arm/arm_interface.h>
@@ -41,10 +41,17 @@ namespace eka2l1 {
 
     namespace arm {
         class arm_interface;
-        using jitter = std::unique_ptr<arm_interface>;
+        using cpu = std::unique_ptr<arm_interface>;
 
-        /*! Create a jitter. A JITter is unique by itself. */
-        jitter create_jitter(kernel_system *kern, timing_system *timing, manager::config_state *conf, manager_system *mngr,
-            memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_base *debugger, arm_emulator_type arm_type);
+        /**
+         * \brief Create a new ARM CPU executor.
+         * 
+         * This factory methods provide various CPU translator backend for you to choose. The CPU must accompanies
+         * with other system like kernel or timing, in order to help for emulation.
+         * 
+         * \returns An instance to the CPU executor.
+         */
+        cpu create_cpu(kernel_system *kern, timing_system *timing, manager::config_state *conf, manager_system *mngr,
+            memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, arm_emulator_type arm_type);
     }
 }

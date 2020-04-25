@@ -28,6 +28,8 @@
 #if EKA2L1_PLATFORM(IOS)
 #include <libkern/OSCacheControl.h>
 #include <sys/mman.h>
+#elif EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
 #endif
 
 #include <common/armemitter.h>

@@ -64,6 +64,10 @@ namespace eka2l1 {
         using uid = std::uint32_t;
     }
 
+    namespace manager {
+        struct config_state;
+    }
+
     using thread_ptr = kernel::thread *;
     using process_ptr = kernel::process *;
     using chunk_ptr = kernel::chunk *;
@@ -179,6 +183,8 @@ namespace eka2l1 {
         std::uint64_t base_time;
         int realtime_ipc_signal_evt;
 
+        manager::config_state *conf;
+
         void setup_new_process(process_ptr pr);
 
     public:
@@ -213,7 +219,8 @@ namespace eka2l1 {
         std::uint64_t home_time();
 
         void init(system *esys, timing_system *sys, manager_system *mngrsys,
-            memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, arm::arm_interface *cpu);
+            memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys,
+            manager::config_state *conf, arm::arm_interface *cpu);
 
         void shutdown();
 

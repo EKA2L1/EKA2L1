@@ -19,8 +19,11 @@
  */
 
 #include <algorithm>
+
 #include <common/algorithm.h>
+#include <common/configure.h>
 #include <common/log.h>
+
 #include <epoc/kernel.h>
 #include <epoc/kernel/scheduler.h>
 #include <epoc/kernel/thread.h>
@@ -30,11 +33,17 @@
 #include <epoc/timing.h>
 #include <functional>
 
+#if ENABLE_SCRIPTING
+#include <manager/script_manager.h>
+#endif
+
 namespace eka2l1::kernel {
-    thread_scheduler::thread_scheduler(kernel_system *kern, timing_system *timing, arm::arm_interface &jit)
+    thread_scheduler::thread_scheduler(kernel_system *kern, timing_system *timing, manager::script_manager *scripter,
+        arm::arm_interface &cpu)
         : kern(kern)
         , timing(timing)
-        , jitter(&jit)
+        , jitter(&cpu)
+        , scripter(scripter)
         , crr_thread(nullptr)
         , crr_process(nullptr) {
         wakeup_evt = timing->get_register_event("SchedulerWakeUpThread");
@@ -75,6 +84,11 @@ namespace eka2l1::kernel {
             if (crr_process != newt->owning_process()) {
                 if (crr_process) {
                     crr_process->get_mem_model()->unmap_locals_from_cpu();
+
+#if ENABLE_SCRIPTING
+                    if (scripter)
+                        scripter->write_back_breakpoints(crr_process);
+#endif
                 }
 
                 crr_process = newt->owning_process();
@@ -83,6 +97,11 @@ namespace eka2l1::kernel {
                 mem->get_mmu()->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
 
                 crr_process->get_mem_model()->remap_locals_to_cpu();
+                
+#if ENABLE_SCRIPTING
+                if (scripter)
+                    scripter->write_breakpoint_blocks(crr_process);
+#endif
             }
 
             jitter->load_context(crr_thread->ctx);

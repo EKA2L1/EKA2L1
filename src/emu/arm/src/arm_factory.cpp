@@ -23,19 +23,19 @@
 
 #include <epoc/timing.h>
 
-namespace eka2l1 {
-    namespace arm {
-        jitter create_jitter(kernel_system *kern, timing_system *timing, manager::config_state *conf,
-            manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, debugger_base *debugger,
-            arm_emulator_type arm_type) {
-            switch (arm_type) {
-            case unicorn:
-                return std::make_unique<arm_unicorn>(kern, timing, conf, mngr, mem, asmdis, lmngr, stub);
-            case dynarmic:
-                return std::make_unique<arm_dynarmic>(kern, timing, conf, mngr, mem, asmdis, lmngr, stub, debugger);
-            default:
-                return jitter(nullptr);
-            }
+namespace eka2l1::arm {
+    cpu create_cpu(kernel_system *kern, timing_system *timing, manager::config_state *conf,
+        manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub,
+        arm_emulator_type arm_type) {
+        switch (arm_type) {
+        case unicorn:
+            return std::make_unique<arm_unicorn>(kern, timing, conf, mngr, mem, asmdis, lmngr, stub);
+        case dynarmic:
+            return std::make_unique<arm_dynarmic>(kern, timing, conf, mngr, mem, asmdis, lmngr, stub);
+        default:
+            break;
         }
+
+        return nullptr;
     }
 }

@@ -27,6 +27,8 @@
 #include <string>
 #include <thread>
 
+#include <gdbstub/gdbstub.h>
+
 #include <common/arghandler.h>
 #include <common/configure.h>
 #include <common/cvt.h>
@@ -54,7 +56,6 @@
 #include <eh.h>
 #endif
 
-#include <gdbstub/gdbstub.h>
 #include <imgui.h>
 #include <yaml-cpp/yaml.h>
 

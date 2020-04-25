@@ -178,7 +178,10 @@ namespace eka2l1::desktop {
             "Uchiha with his brother go to clothes shop in prepare of his real estate job",
             "Living inside the sewer as a clown",
             "Me and the boys discovering this emulator and a bunch of Russians opening another dimension",
-            "Having a cyborg as my wife doing dishes and writing the emulator brb"
+            "Having a cyborg as my wife doing dishes and writing the emulator brb",
+            "Causing an entire country chaos because of my imagination",
+            "Thank you very much for checking out the emulator",
+            "Causually the cause of case files over two centuries while staying first-grade"
             // You can add more, but probably when the emulator becomes more functional
         };
 

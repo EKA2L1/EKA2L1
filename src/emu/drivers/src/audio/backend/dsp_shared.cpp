@@ -28,6 +28,12 @@ namespace eka2l1::drivers {
         last_frame_[1] = 0;
     }
 
+    dsp_output_stream_shared::~dsp_output_stream_shared() {
+        if (stream_) {
+            stream_->stop();
+        }
+    }
+
     bool dsp_output_stream_shared::set_properties(const std::uint32_t freq, const std::uint8_t channels) {
         if (stream_ && stream_->is_playing()) {
             return false;
