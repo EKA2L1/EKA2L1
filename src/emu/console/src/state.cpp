@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <console/state.h>
@@ -79,7 +80,8 @@ namespace eka2l1::desktop {
                 return;
             }
 
-            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(dvc->firmware_code, "SYM.ROM"))));
+            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(
+                common::lowercase_string(dvc->firmware_code), "SYM.ROM"))));
 
             if (!res) {
                 return;
