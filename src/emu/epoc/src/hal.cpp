@@ -137,21 +137,25 @@ namespace eka2l1::epoc {
             info.screen_size_ = scr->current_mode().size;
         }
 
-        void get_video_info_from_scr_object(epoc::screen *scr, const epoc::config::screen_mode &mode, epoc::video_info_v1 &info) {
-            info.size_in_pixels_ = mode.size;
+        void get_video_info_from_scr_object(epoc::screen *scr, const epoc::display_mode &mode, epoc::video_info_v1 &info) {
+            if (mode != scr->disp_mode) {
+                LOG_WARN("Trying to get video info with a different display mode {}", static_cast<int>(mode));
+            }
+
+            info.size_in_pixels_ = scr->size();
             info.size_in_twips_ = info.size_in_pixels_ * 15;
-            info.is_mono_ = is_display_mode_mono(scr->disp_mode);
-            info.bits_per_pixel_ = get_bpp_from_display_mode(scr->disp_mode);
-            info.is_pixel_order_rgb_ = (scr->disp_mode >= epoc::display_mode::color4k);
+            info.is_mono_ = is_display_mode_mono(mode);
+            info.bits_per_pixel_ = get_bpp_from_display_mode(mode);
+            info.is_pixel_order_rgb_ = (mode >= epoc::display_mode::color4k);
 
             // TODO: Verify
-            info.is_pixel_order_landspace_ = (mode.size.x > mode.size.y);
-            info.is_palettelized_ = !info.is_mono_ && (scr->disp_mode < epoc::display_mode::color4k);
+            info.is_pixel_order_landspace_ = (info.size_in_pixels_.x > info.size_in_pixels_.y);
+            info.is_palettelized_ = !info.is_mono_ && (mode < epoc::display_mode::color4k);
 
             // Intentional
             info.video_address_ = scr->screen_buffer_chunk->base().ptr_address();
             info.offset_to_first_pixel_ = 0;
-            info.bits_per_pixel_ = static_cast<std::int32_t>(scr->disp_mode);
+            info.bits_per_pixel_ = static_cast<std::int32_t>(mode);
         }
 
         int current_screen_info(int *a1, int *a2, const std::uint16_t device_num) {
@@ -184,7 +188,7 @@ namespace eka2l1::epoc {
                 return epoc::error_not_found;
             }
 
-            get_video_info_from_scr_object(scr, scr->current_mode(), *info_ptr);
+            get_video_info_from_scr_object(scr, scr->disp_mode, *info_ptr);
             return 0;
         }
 
@@ -201,13 +205,7 @@ namespace eka2l1::epoc {
                 return epoc::error_not_found;
             }
 
-            const epoc::config::screen_mode *mode = scr->mode_info(*a1);
-
-            if (!mode) {
-                return epoc::error_not_found;
-            }
-
-            get_video_info_from_scr_object(scr, *mode, *info_ptr);
+            get_video_info_from_scr_object(scr, static_cast<epoc::display_mode>(*a1), *info_ptr);
             return 0;
         }
 
