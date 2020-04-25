@@ -32,6 +32,7 @@
 #include <common/linked.h>
 #include <common/resource.h>
 
+#include <epoc/kernel/common.h>
 #include <epoc/kernel/chunk.h>
 #include <epoc/kernel/object_ix.h>
 
@@ -177,13 +178,15 @@ namespace eka2l1 {
 
             int wakeup_handle;
 
-            int rendezvous_reason = 0;
-            int exit_reason = 0;
+            int rendezvous_reason;
+            int exit_reason;
+
+            entity_exit_type exit_type;
 
             std::vector<epoc::notify_info> logon_requests;
             std::vector<epoc::notify_info> rendezvous_requests;
 
-            std::uint64_t create_time = 0;
+            std::uint64_t create_time;
 
             eka2l1::ptr<epoc::request_status> sleep_nof_sts;
             eka2l1::ptr<epoc::request_status> timeout_sts;
@@ -212,6 +215,14 @@ namespace eka2l1 {
                 return exit_reason;
             }
 
+            void set_exit_type(const entity_exit_type new_exit_type) {
+                exit_type = new_exit_type;
+            }
+
+            entity_exit_type get_exit_type() const {
+                return exit_type;
+            }
+
             std::optional<debug_function_trace> get_top_call() {
                 if (call_stacks.size() == 0) {
                     return std::optional<debug_function_trace>{};
@@ -225,16 +236,16 @@ namespace eka2l1 {
 
             void pop_call();
 
-            thread();
+            explicit thread();
 
-            thread(kernel_system *kern, memory_system *mem, timing_system *timing)
+            explicit thread(kernel_system *kern, memory_system *mem, timing_system *timing)
                 : kernel_obj(kern)
                 , mem(mem)
                 , timing(timing) {
                 obj_type = kernel::object_type::thread;
             }
 
-            thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner, kernel::access_type access,
+            explicit thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 bool initial,
