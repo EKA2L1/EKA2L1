@@ -540,7 +540,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(std::int32_t, message_kill, kernel::handle h, epoc::exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> cage) {
+    BRIDGE_FUNC(std::int32_t, message_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> cage) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -561,18 +561,18 @@ namespace eka2l1::epoc {
             exit_description = get_panic_description(exit_cage, reason);
 
             switch (etype) {
-            case exit_type::panic:
+            case kernel::entity_exit_type::panic:
                 LOG_TRACE("Thread {} paniced by message with cagetory: {} and exit code: {} {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
-            case exit_type::kill:
+            case kernel::entity_exit_type::kill:
                 LOG_TRACE("Thread {} forcefully killed by message with cagetory: {} and exit code: {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
-            case exit_type::terminate:
-            case exit_type::pending:
+            case kernel::entity_exit_type::terminate:
+            case kernel::entity_exit_type::pending:
                 LOG_TRACE("Thread {} terminated peacefully by message with cagetory: {} and exit code: {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
@@ -586,9 +586,16 @@ namespace eka2l1::epoc {
         manager::script_manager *scripter = sys->get_manager_system()->get_script_manager();
         scripter->call_panics(exit_cage, reason);
 #endif
+        process_ptr own_pr = msg->own_thr->owning_process();
+
+        if (own_pr->decrease_thread_count() == 0) {
+            own_pr->set_exit_type(etype);
+        }
 
         kern->get_thread_scheduler()->stop(msg->own_thr);
         kern->prepare_reschedule();
+
+        msg->own_thr->set_exit_type(etype);
 
         return epoc::error_none;
     }
@@ -1635,7 +1642,7 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(thr->unique_id());
     }
 
-    BRIDGE_FUNC(std::int32_t, thread_kill, kernel::handle h, epoc::exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> reason_des) {
+    BRIDGE_FUNC(std::int32_t, thread_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> reason_des) {
         kernel_system *kern = sys->get_kernel_system();
         memory_system *mem = sys->get_memory_system();
 
@@ -1660,18 +1667,18 @@ namespace eka2l1::epoc {
             exit_description = get_panic_description(exit_cage, reason);
 
             switch (etype) {
-            case exit_type::panic:
+            case kernel::entity_exit_type::panic:
                 LOG_TRACE("Thread {} paniced with cagetory: {} and exit code: {} {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
-            case exit_type::kill:
+            case kernel::entity_exit_type::kill:
                 LOG_TRACE("Thread {} forcefully killed with cagetory: {} and exit code: {} {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
-            case exit_type::terminate:
-            case exit_type::pending:
+            case kernel::entity_exit_type::terminate:
+            case kernel::entity_exit_type::pending:
                 LOG_TRACE("Thread {} terminated peacefully with cagetory: {} and exit code: {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
@@ -1682,7 +1689,7 @@ namespace eka2l1::epoc {
         }
 
         if (thr->owning_process()->decrease_thread_count() == 0) {
-            thr->owning_process()->set_exit_type(static_cast<kernel::process_exit_type>(etype));
+            thr->owning_process()->set_exit_type(etype);
         }
 
 #ifdef ENABLE_SCRIPTING
@@ -1692,6 +1699,8 @@ namespace eka2l1::epoc {
 
         kern->get_thread_scheduler()->stop(&(*thr));
         kern->prepare_reschedule();
+
+        thr->set_exit_type(etype);
         
         return epoc::error_none;
     }
@@ -1863,7 +1872,7 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        return thr->get_exit_reason();
+        return static_cast<std::int32_t>(thr->get_exit_type());
     }
 
     /*****************************/

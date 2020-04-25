@@ -64,13 +64,6 @@ namespace eka2l1::epoc {
     static constexpr std::int32_t IPC_DIR_READ = 0;
     static constexpr std::int32_t IPC_DIR_WRITE = 0x10000000;
 
-    enum class exit_type {
-        kill,
-        terminate,
-        panic,
-        pending
-    };
-
     enum property_type {
         property_type_int,
         property_type_byte_array,
