@@ -568,21 +568,13 @@ namespace eka2l1 {
                 }
             }
 
-            std::u16string new_path = eka2l1::add_path(map_path, vert_path_copy.substr(root.size()));
-            auto sep_char = eka2l1::get_separator();
+            std::u16string vert_path_no_root = vert_path_copy.substr(root.size());
 
             if (!common::is_system_case_insensitive()) {
-                // Make it case-insensitive
-                for (auto &c : new_path) {
-                    c = std::towlower(c);
-
-                    if (eka2l1::is_separator(c)) {
-                        c = sep_char;
-                    }
-                }
+                vert_path_no_root = common::lowercase_ucs2_string(vert_path_no_root);
             }
-
-            return new_path;
+    
+            return eka2l1::add_path(map_path, vert_path_no_root);
         }
 
     public:
