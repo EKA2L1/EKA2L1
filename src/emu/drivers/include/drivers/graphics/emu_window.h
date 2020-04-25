@@ -45,6 +45,9 @@
 #define KEY_ENTER 257
 #define KEY_ESCAPE 256
 
+#define KEY_F1 290
+#define KEY_F2 291
+
 #define KEY_A 65
 #define KEY_H 73
 #define KEY_I 74

@@ -23,6 +23,7 @@
 
 #include <common/time.h>
 #include <epoc/services/window/common.h>
+#include <drivers/graphics/emu_window.h>
 
 namespace eka2l1::epoc {
     // TODO: Use emulated time
@@ -103,5 +104,36 @@ namespace eka2l1::epoc {
             return keymap[scan_code - 67];
         }
         return EKeyNull;
+    }
+
+    TStdScanCode map_inputcode_to_scancode(int input_code) {
+        TStdScanCode scancode;
+        switch (input_code) {
+        case KEY_RIGHT:
+            scancode = EStdKeyRightArrow;
+            break;
+        case KEY_LEFT:
+            scancode = EStdKeyLeftArrow;
+            break;
+        case KEY_DOWN:
+            scancode = EStdKeyDownArrow;
+            break;
+        case KEY_UP:
+            scancode = EStdKeyUpArrow;
+            break;
+        case KEY_F1:
+            scancode = EStdKeyDevice0;
+            break;
+        case KEY_F2:
+            scancode = EStdKeyDevice1;
+            break;
+        case KEY_ENTER:
+            scancode = EStdKeyDevice3;
+            break;
+        default:
+            scancode = EStdKeyNull;
+            break;
+        }
+        return scancode;
     }
 }
