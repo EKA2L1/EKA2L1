@@ -26,7 +26,7 @@
 
 #include <common/log.h>
 
-#if EKA2L1_PLATFORM(UNIX)
+#if EKA2L1_PLATFORM(UNIX) || EKA2L1_PLATFORM(DARWIN)
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
