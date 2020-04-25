@@ -633,4 +633,6 @@ namespace eka2l1::epoc {
     };
 
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
+
+    TStdScanCode map_inputcode_to_scancode(int input_code);
 }
