@@ -37,23 +37,23 @@ namespace eka2l1::arm {
 
     }
     
-    void arm_interface_extended::handle_breakpoint(kernel_system *kern, manager::config_state *conf) {
+    void arm_interface_extended::handle_breakpoint(kernel_system *kern, manager::config_state *conf,
+        const std::uint32_t addr) {
         kernel::thread *crr_thread = kern->crr_thread();
-        save_context(crr_thread->get_thread_context());
-
         kernel::process *pr = crr_thread->owning_process();
 
 #if ENABLE_SCRIPTING
         // Call scripts first
         if (conf->enable_breakpoint_script) {
             stop();
+            save_context(crr_thread->get_thread_context());
     
             manager::script_manager *scripter = mngr_->get_script_manager();
 
             if (!last_breakpoint_script_hits_[crr_thread->unique_id()].hit_) {
                 // Try to execute the real instruction, and put a breakpoint next to our instruction.
                 // Later when we hit the next instruction, rewrite the bkpt
-                const vaddress cur_addr = get_pc() | ((get_cpsr() & 0x20) >> 5);
+                const vaddress cur_addr = addr | ((get_cpsr() & 0x20) >> 5);
 
                 if (scripter->call_breakpoints(cur_addr, crr_thread->owning_process()->get_uid())) {
                     breakpoint_hit_info &info = last_breakpoint_script_hits_[crr_thread->unique_id()];
@@ -70,7 +70,9 @@ namespace eka2l1::arm {
 
         if (stub_ && stub_->is_connected()) {
             stop();
-            set_pc(get_pc());
+            set_pc(addr);
+
+            save_context(crr_thread->get_thread_context());
 
             stub_->break_exec();
             stub_->send_trap_gdb(crr_thread, 5);

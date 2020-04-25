@@ -54,7 +54,8 @@ namespace eka2l1::arm {
     public:
         explicit arm_interface_extended(gdbstub *stub, manager_system *mngr);
 
-        virtual void handle_breakpoint(kernel_system *kern, manager::config_state *conf);
+        virtual void handle_breakpoint(kernel_system *kern, manager::config_state *conf,
+            const std::uint32_t addr);
         virtual bool last_script_breakpoint_hit(kernel::thread *thr);
         virtual void reset_breakpoint_hit(kernel_system *kern);
 
