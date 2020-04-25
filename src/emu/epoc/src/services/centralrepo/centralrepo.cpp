@@ -213,6 +213,7 @@ namespace eka2l1 {
         eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), mngr, repo_uid);
 
         if (!repo) {
+            LOG_TRACE("Repository not found with UID 0x{:X}", repo_uid);
             ctx->set_request_status(epoc::error_not_found);
             return;
         }
@@ -309,31 +310,21 @@ namespace eka2l1 {
         std::u16string repocre = keystr + u".CRE";
         std::u16string repoini = keystr + u".TXT";
 
-        std::u16string private_dir = u":\\Private\\10202be9\\";
+        const std::u16string private_dir_persists = u":\\Private\\10202be9\\";
+        const std::u16string firmcode = common::utf8_to_ucs2(common::lowercase_string(mngr->get_current()->firmware_code));
+        const std::u16string private_dir_persists_separate_firm = private_dir_persists +
+            u"persists\\" + firmcode + u"\\";
 
-        // Check for internal first, than fallback to ROM
-        // Check if file exists on ROM first. If it's than it should resides in persists folder of internal drive
-        std::u16string rom_persists_dir{ drive_to_char16(rom_drv) };
-        rom_persists_dir += private_dir + repoini;
-
-        bool one_on_rom = false;
-
-        if (io->exist(rom_persists_dir)) {
-            one_on_rom = true;
-        }
-
-        std::u16string private_dir_persists = u":\\Private\\10202be9\\persists\\";
-        std::u16string firmcode = common::utf8_to_ucs2(common::lowercase_string(mngr->get_current()->firmware_code));
-
-        private_dir_persists += firmcode + u"\\";
+        // Temporary push rom drive so scan works
+        avail_drives.push_back(rom_drv);
 
         // Internal should only contains CRE
         for (auto &drv : avail_drives) {
-            if (drv == rom_drv)
-                continue;
-
             std::u16string repo_dir{ drive_to_char16(drv) };
-            std::u16string repo_folder = repo_dir + private_dir_persists;
+
+            // Don't add separate firmware code on rom drive (it already did itself)
+            std::u16string repo_folder = repo_dir + ((drv == rom_drv) ? private_dir_persists :
+                private_dir_persists_separate_firm);
 
             if (is_first_repo && !io->exist(repo_folder)) {
                 // Create one if it doesn't exist, for the future
@@ -348,6 +339,8 @@ namespace eka2l1 {
 
                     if (!repofile) {
                         LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
+                        avail_drives.pop_back();
+
                         return -1;
                     }
 
@@ -361,34 +354,38 @@ namespace eka2l1 {
 
                     if (int err = do_state_for_cre(seri, *repo)) {
                         LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
+                        avail_drives.pop_back();
+                        
                         return -1;
                     }
 
                     repo->reside_place = drv;
                     repo->access_count = 1;
 
+                    avail_drives.pop_back();
+                    return 0;
+                }
+
+                // Try to load the INI
+                auto path = io->get_raw_path(repo_folder + repoini);
+
+                if (!path) {
+                    avail_drives.pop_back();
+                    return -1;
+                }
+
+                repo->uid = key;
+                if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), *repo)) {
+                    repo->reside_place = avail_drives[0];
+                    repo->access_count = 1;
+                    avail_drives.pop_back();
+
                     return 0;
                 }
             }
         }
 
-        if (one_on_rom) {
-            // TODO: Make this kind of stuff rely in-memory
-            auto path = io->get_raw_path(rom_persists_dir);
-
-            if (!path) {
-                LOG_ERROR("Can't get real path of {}!", common::ucs2_to_utf8(rom_persists_dir));
-                return -1;
-            }
-
-            repo->uid = key;
-            if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), *repo)) {
-                repo->reside_place = avail_drives[0];
-                repo->access_count = 1;
-                return 0;
-            }
-        }
-
+        avail_drives.pop_back();
         return -1;
     }
 
