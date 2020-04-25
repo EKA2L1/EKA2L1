@@ -62,7 +62,7 @@ namespace eka2l1::arm {
                     info.addr_ = cur_addr;
 
                     scripter->write_back_breakpoint(pr, cur_addr);
-                    imb_range(cur_addr, 4);
+                    clear_instruction_cache();
                 }
             }
         }
@@ -93,7 +93,7 @@ namespace eka2l1::arm {
         scripter->write_breakpoint_block(kern->crr_process(), info.addr_);
 #endif
 
-        imb_range(info.addr_, 4);
+        clear_instruction_cache();
         info.hit_ = false;
     }
 }
