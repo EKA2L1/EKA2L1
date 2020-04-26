@@ -258,6 +258,21 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
     
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_stop, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!stream->stop()) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_none;
+    }
+    
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_write, eka2l1::ptr<void> handle, const std::uint8_t *data, const std::uint32_t data_size) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
@@ -338,6 +353,18 @@ namespace eka2l1::dispatch {
         }
 
         out_stream.volume(vol);
+        return epoc::error_none;
+    }
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_bytes_rendered, eka2l1::ptr<void> handle, std::uint64_t *bytes) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        *bytes = stream->bytes_rendered();
         return epoc::error_none;
     }
 }
