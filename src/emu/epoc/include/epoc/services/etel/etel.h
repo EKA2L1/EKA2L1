@@ -21,36 +21,28 @@
 
 #include <epoc/services/etel/common.h>
 #include <epoc/services/etel/etel.h>
+#include <epoc/services/etel/modmngr.h>
+#include <epoc/services/etel/subsess.h>
 #include <epoc/services/framework.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace eka2l1 {
-    enum etel_entry_type {
-        etel_entry_call = 0,
-        etel_entry_phone = 1
-    };
-
-    struct etel_module_entry {
-        std::string tsy_name_;
-        etel_entry_type type_;
-
-        epoc::etel_phone_info phone_;
-    };
+    using etel_subsession_instance = std::unique_ptr<etel_subsession>;
 
     struct etel_session: public service::typical_session {
-        std::vector<etel_module_entry> entries_;
-
-    protected:
-        std::optional<std::uint32_t> get_entry(const std::uint32_t org_index, const etel_entry_type type);
+        epoc::etel::module_manager mngr_;
+        std::vector<etel_subsession_instance> subsessions_;
 
     public:
         void load_phone_module(service::ipc_context *ctx);
         void enumerate_phones(service::ipc_context *ctx);
         void get_phone_info_by_index(service::ipc_context *ctx);
         void get_tsy_name(service::ipc_context *ctx);
+        void query_tsy_functionality(service::ipc_context *ctx);
 
         void open_from_session(service::ipc_context *ctx);
         void open_from_subsession(service::ipc_context *ctx);
@@ -63,7 +55,6 @@ namespace eka2l1 {
     class etel_server: public service::typical_server {
     public:
         explicit etel_server(eka2l1::system *sys);
-
         void connect(service::ipc_context &ctx) override;
     };
 }

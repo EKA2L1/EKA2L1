@@ -130,6 +130,10 @@ add_library(epocservs
     include/epoc/services/ecom/plugin.h
     include/epoc/services/etel/common.h
     include/epoc/services/etel/etel.h
+    include/epoc/services/etel/line.h
+    include/epoc/services/etel/modmngr.h
+    include/epoc/services/etel/phone.h
+    include/epoc/services/etel/subsess.h
     include/epoc/services/fbs/adapter/font_adapter.h
     include/epoc/services/fbs/adapter/stb_font_adapter.h
     include/epoc/services/fbs/bitmap.h
@@ -210,6 +214,10 @@ add_library(epocservs
     src/services/ecom/instantiate.cpp
     src/services/ecom/plugin.cpp
     src/services/etel/etel.cpp
+    src/services/etel/line.cpp
+    src/services/etel/modmngr.cpp
+    src/services/etel/phone.cpp
+    src/services/etel/subsess.cpp
     src/services/fbs/adapter/font_adapter.cpp
     src/services/fbs/adapter/stb_font_adapter.cpp
     src/services/fbs/compress_queue.cpp
