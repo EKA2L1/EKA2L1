@@ -39,6 +39,10 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
         return;
     }
 
+    if (iCopied == NULL) {    
+        iStream->StartRaw();
+    }
+
     TMMFMdaBufferNode *node = iBufferNodes.First();
 
     // Register the notifcation for the buffer we are gonna sent
@@ -85,8 +89,6 @@ static TInt OpenCompleteCallback(void *aUserdata) {
     CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream*>(aUserdata);
 
     stream->iCallback.MaoscOpenComplete(KErrNone);
-    stream->StartRaw();
-
     return 0;
 }
 
