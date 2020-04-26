@@ -61,9 +61,14 @@ namespace eka2l1::drivers {
         dsp_stream_userdata buffer_copied_userdata_;
 
     public:
+        explicit dsp_stream();
         virtual ~dsp_stream() = default;
         virtual const std::uint32_t samples_played() const {
             return static_cast<std::uint32_t>(samples_played_);
+        }
+
+        const std::uint64_t bytes_rendered() const {
+            return samples_played_ * channels_ * sizeof(std::uint16_t);
         }
 
         const std::size_t position() const {

@@ -70,7 +70,9 @@ namespace eka2l1::drivers {
             return true;
 
         // Call the finish callback
-        complete_callback_(complete_userdata_);
+        if (complete_callback_)
+            complete_callback_(complete_userdata_);
+
         return stream_->stop();
     }
 
