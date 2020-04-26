@@ -1,11 +1,7 @@
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * Initial contributor: pent0
- * Contributors:
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,7 +201,13 @@ namespace eka2l1 {
         int reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key);
         void write_changes(eka2l1::io_system *io, manager::device_manager *mngr);
 
-        void find_eq(service::ipc_context *ctx);
+        void find(service::ipc_context *ctx);
+        void reset(service::ipc_context *ctx);
+        void set_value(service::ipc_context *ctx);
+        void get_value(service::ipc_context *ctx);
+        void notify_nof_check(service::ipc_context *ctx);
+        void notify(service::ipc_context *ctx);
+        void notify_cancel(service::ipc_context *ctx);
 
         /**
          * \brief Append new key to find equal list.

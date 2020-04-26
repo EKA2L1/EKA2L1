@@ -202,6 +202,7 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req_check, "CenRep::NofReqCheck");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_eq_int, "CenRep::FindEqInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_neq_int, "CenRep::FindNeqInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find, "CenRep::Find");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel, "CenRep::NofCancel");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel_all, "CenRep::NofCancelAll");
     }
@@ -359,7 +360,7 @@ namespace eka2l1 {
                         return -1;
                     }
 
-                    repo->reside_place = drv;
+                    repo->reside_place = avail_drives[0];
                     repo->access_count = 1;
 
                     avail_drives.pop_back();
@@ -436,30 +437,6 @@ namespace eka2l1 {
         return repo;
     }
 
-    int central_repo_client_subsession::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
-        // In transacton, fail
-        if (is_active()) {
-            return -1;
-        }
-
-        central_repo_entry *e = attach_repo->find_entry(key);
-
-        if (!e) {
-            return -2;
-        }
-
-        central_repo_entry *source_e = init_repo->find_entry(key);
-
-        if (!source_e) {
-            return -2;
-        }
-
-        e->data = source_e->data;
-        e->metadata_val = source_e->metadata_val;
-
-        return 0;
-    }
-
     void central_repo_client_session::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case cen_rep_init: {
@@ -493,216 +470,48 @@ namespace eka2l1 {
     void central_repo_client_subsession::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         // TODO: Faster way
-        case cen_rep_notify_req_check: {
-            epoc::notify_info holder;
-            holder.sts = 0;
-
-            // Pass a test notify info. Add notify request will not add this, but will check for request existence.
-            if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_arg<std::int32_t>(0)) == 0) {
-                ctx->set_request_status(epoc::error_none);
-                break;
-            }
-
-            ctx->set_request_status(epoc::error_already_exists);
+        case cen_rep_notify_req_check:
+            notify_nof_check(ctx);
             break;
-        }
 
         case cen_rep_group_nof_cancel:
-        case cen_rep_notify_cancel: {
-            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_cancel) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
-            const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
-
-            cancel_notify_request(partial_key, mask);
-
-            ctx->set_request_status(epoc::error_none);
+        case cen_rep_notify_cancel:
+            notify_cancel(ctx);
             break;
-        }
 
-        case cen_rep_notify_cancel_all: {
+        case cen_rep_notify_cancel_all:
             cancel_all_notify_requests();
-
             ctx->set_request_status(epoc::error_none);
             break;
-        }
 
         case cen_rep_group_nof_req:
-        case cen_rep_notify_req: {
-            const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
-            const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
-
-            epoc::notify_info info{ ctx->msg->request_sts, ctx->msg->own_thr };
-            const int err = add_notify_request(info, mask, partial_key);
-
-            switch (err) {
-            case 0: {
-                break;
-            }
-
-            case -1: {
-                ctx->set_request_status(epoc::error_already_exists);
-                break;
-            }
-
-            default: {
-                LOG_TRACE("Unknown returns code {} from add_notify_request, set status to epoc::error_none", err);
-                ctx->set_request_status(epoc::error_none);
-
-                break;
-            }
-            }
-
+        case cen_rep_notify_req:
+            notify(ctx);
             break;
-        }
 
         case cen_rep_get_int:
         case cen_rep_get_real:
-        case cen_rep_get_string: {
-            // We get the entry.
-            // Use mode 0 (write) to get the entry, since we are modifying data.
-            central_repo_entry *entry = get_entry(*ctx->get_arg<std::uint32_t>(0), 0);
-
-            if (!entry) {
-                ctx->set_request_status(epoc::error_not_found);
-                break;
-            }
-
-            switch (ctx->msg->function) {
-            case cen_rep_get_int: {
-                if (entry->data.etype != central_repo_entry_type::integer) {
-                    ctx->set_request_status(epoc::error_argument);
-                    return;
-                }
-
-                int result = static_cast<int>(entry->data.intd);
-
-                ctx->write_arg_pkg<int>(1, result);
-                break;
-            }
-
-            case cen_rep_get_real: {
-                if (entry->data.etype != central_repo_entry_type::real) {
-                    ctx->set_request_status(epoc::error_argument);
-                    return;
-                }
-
-                float result = static_cast<float>(entry->data.reald);
-
-                ctx->write_arg_pkg<float>(1, result);
-                break;
-            }
-
-            case cen_rep_get_string: {
-                if (entry->data.etype != central_repo_entry_type::string) {
-                    ctx->set_request_status(epoc::error_argument);
-                    return;
-                }
-
-                ctx->write_arg_pkg(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
-                    static_cast<std::uint32_t>(entry->data.strd.length()));
-                break;
-            }
-            }
-
-            ctx->set_request_status(epoc::error_none);
-            break;
-        }
+        case cen_rep_get_string:
+            get_value(ctx);
 
         case cen_rep_set_int:
         case cen_rep_set_string:
-        case cen_rep_set_real: {
-            // We get the entry.
-            // Use mode 1 (write) to get the entry, since we are modifying data.
-            central_repo_entry *entry = get_entry(*ctx->get_arg<std::uint32_t>(0), 1);
-
-            // If it does not exist, or it is in different type, discard.
-            // Depends on the invalid type, we set error code
-            if (!entry) {
-                ctx->set_request_status(epoc::error_not_found);
-                break;
-            }
-
-            // TODO: Capability supply (+Policy)
-            // This is really bad... We are not really care about accuracy right now
-            // Assuming programs did right things, and accept the rules
-            switch (ctx->msg->function) {
-            case cen_rep_set_int: {
-                if (entry->data.etype != central_repo_entry_type::integer) {
-                    ctx->set_request_status(epoc::error_argument);
-                    break;
-                }
-
-                entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<std::uint32_t>(1));
-                break;
-            }
-
-            case cen_rep_set_real: {
-                if (entry->data.etype != central_repo_entry_type::real) {
-                    ctx->set_request_status(epoc::error_argument);
-                    break;
-                }
-
-                entry->data.reald = *ctx->get_arg<float>(1);
-                break;
-            }
-
-            case cen_rep_set_string: {
-                if (entry->data.etype != central_repo_entry_type::string) {
-                    ctx->set_request_status(epoc::error_argument);
-                    break;
-                }
-
-                entry->data.strd = *ctx->get_arg<std::string>(1);
-                break;
-            }
-
-            default: {
-                // Unreachable
-                break;
-            }
-            }
-
-            // Success in modifying
-            modification_success(entry->key);
-
-            ctx->set_request_status(epoc::error_none);
-
+        case cen_rep_set_real: 
+            set_value(ctx);
             break;
-        }
 
-        case cen_rep_reset: {
-            io_system *io = ctx->sys->get_io_system();
-            manager::device_manager *mngr = ctx->sys->get_manager_system()->get_device_manager();
-
-            eka2l1::central_repo *init_repo = server->get_initial_repo(io, mngr, attach_repo->uid);
-
-            // Reset the keys
-            const std::uint32_t key = *ctx->get_arg<std::uint32_t>(0);
-            int err = reset_key(init_repo, key);
-
-            // In transaction
-            if (err == -1) {
-                ctx->set_request_status(epoc::error_not_supported);
-                break;
-            }
-
-            if (err == -2) {
-                ctx->set_request_status(epoc::error_not_found);
-                break;
-            }
-
-            // Write committed changes to disk
-            write_changes(io, mngr);
-            modification_success(key);
-
-            ctx->set_request_status(epoc::error_none);
-
+        case cen_rep_reset:
+            reset(ctx);
             break;
-        }
 
         case cen_rep_find_eq_int:
         case cen_rep_find_eq_real:
-        case cen_rep_find_eq_string: {
-            find_eq(ctx);
+        case cen_rep_find_eq_string:
+        case cen_rep_find_neq_int:
+        case cen_rep_find_neq_real:
+        case cen_rep_find_neq_string:
+        case cen_rep_find: {
+            find(ctx);
             break;
         }
 
@@ -711,95 +520,6 @@ namespace eka2l1 {
             break;
         }
         }
-    }
-
-    void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key) {
-        // We have to push it to the temporary array, since this array can be retrieve anytime before another FindEq call
-        // Even if the provided array is not full
-        key_found_result.push_back(key);
-
-        if (array[0] < MAX_FOUND_UID_BUF_LENGTH) {
-            // Increase the length, than add the keey
-            array[++array[0]] = key;
-        }
-    }
-
-    void central_repo_client_subsession::find_eq(service::ipc_context *ctx) {
-        // Clear found result
-        // TODO: Should we?
-        key_found_result.clear();
-
-        // Get the filter
-        std::optional<central_repo_key_filter> filter = ctx->get_arg_packed<central_repo_key_filter>(0);
-        std::uint32_t *found_uid_result_array = ptr<std::uint32_t>(*ctx->get_arg<kernel::address>(2)).get(ctx->msg->own_thr->owning_process());
-
-        if (!filter || !found_uid_result_array) {
-            LOG_ERROR("Trying to find equal value in cenrep, but arguments are invalid!");
-            ctx->set_request_status(epoc::error_argument);
-            return;
-        }
-
-        // Set found count to 0
-        found_uid_result_array[0] = 0;
-
-        for (auto &entry : attach_repo->entries) {
-            // Try to match the key first
-            if ((entry.key & filter->id_mask) != (filter->partial_key & filter->id_mask)) {
-                // Mask doesn't match, abadon this entry
-                continue;
-            }
-
-            std::uint32_t key_found = 0;
-            bool find_not_eq = false;
-
-            switch (ctx->msg->function) {
-            case cen_rep_find_neq_int:
-            case cen_rep_find_neq_real:
-            case cen_rep_find_neq_string:
-                find_not_eq = true;
-                break;
-
-            default:
-                break;
-            }
-
-            // Depends on the opcode, we try to match the value
-            switch (ctx->msg->function) {
-            case cen_rep_find_eq_int:
-            case cen_rep_find_neq_int: {
-                if (entry.data.etype != central_repo_entry_type::integer) {
-                    // It must be integer type
-                    break;
-                }
-
-                // Index 1 argument contains the value we should look for
-                // TODO: Signed/unsigned is dangerous
-                if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_arg<std::int32_t>(1)) {
-                    if (!find_not_eq) {
-                        key_found = entry.key;
-                    }
-                } else {
-                    if (find_not_eq) {
-                        key_found = entry.key;
-                    }
-                }
-
-                break;
-            }
-
-            default: {
-                LOG_ERROR("Unimplement Cenrep's find function for opcode {}", ctx->msg->function);
-                break;
-            }
-            }
-
-            // If we found the key, append it
-            if (key_found != 0) {
-                append_new_key_to_found_eq_list(found_uid_result_array, key_found);
-            }
-        }
-
-        ctx->set_request_status(epoc::error_none);
     }
 
     int central_repo_client_session::closerep(io_system *io, manager::device_manager *mngr, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
