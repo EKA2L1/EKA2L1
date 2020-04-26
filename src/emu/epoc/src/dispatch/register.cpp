@@ -40,10 +40,12 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER(0x41, eaudio_dsp_out_stream_write),
         BRIDGE_REGISTER(0x42, eaudio_dsp_stream_set_properties),
         BRIDGE_REGISTER(0x43, eaudio_dsp_stream_start),
+        BRIDGE_REGISTER(0x44, eaudio_dsp_stream_stop),
         BRIDGE_REGISTER(0x47, eaudio_dsp_out_stream_set_volume),
         BRIDGE_REGISTER(0x48, eaudio_dsp_out_stream_max_volume),
         BRIDGE_REGISTER(0x49, eaudio_dsp_stream_notify_buffer_ready),
         BRIDGE_REGISTER(0x4B, eaudio_dsp_stream_destroy),
-        BRIDGE_REGISTER(0x4C, eaudio_dsp_out_stream_volume)
+        BRIDGE_REGISTER(0x4C, eaudio_dsp_out_stream_volume),
+        BRIDGE_REGISTER(0x4F, eaudio_dsp_stream_bytes_rendered)
     };
 }
