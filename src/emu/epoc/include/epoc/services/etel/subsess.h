@@ -30,6 +30,7 @@ namespace eka2l1 {
     };
 
     struct etel_phone;
+    struct etel_session;
 
     enum etel_subsession_type {
         etel_subsession_type_phone = 0,
