@@ -20,6 +20,8 @@
 #include <epoc/kernel.h>
 #include <epoc/kernel/msgqueue.h>
 
+#include <epoc/utils/err.h>
+
 namespace eka2l1::kernel {
     msg_queue::msg_queue(eka2l1::kernel_system *kern, const std::string &name,
         const std::uint32_t max_message_size, const std::uint32_t max_length)
@@ -45,6 +47,28 @@ namespace eka2l1::kernel {
 
     void msg_queue::clear_available_callback() {
         avail_callback_.first = nullptr;
+    }
+
+    void msg_queue::cancel_data_available(kernel::thread *requester) {
+        kern->lock();
+        
+        auto find_res = std::find_if(avail_notifies_.begin(), avail_notifies_.end(),
+            [=](const epoc::notify_info &target_info) {
+                return target_info.requester == requester;
+        });
+
+        if (find_res == avail_notifies_.end()) {
+            kern->unlock();
+            return;
+        }
+
+        kern->unlock();
+        find_res->complete(epoc::error_cancel);
+        kern->lock();
+
+        avail_notifies_.erase(find_res);
+
+        kern->unlock();
     }
 
     bool msg_queue::notify_available(epoc::notify_info &info) {

@@ -2263,6 +2263,19 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(void, message_queue_cancel_notify_available, kernel::handle h) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel::thread *request_thread = kern->crr_thread();
+
+        kernel::msg_queue *queue = kern->get<kernel::msg_queue>(h);
+
+        if (!queue) {
+            return;
+        }
+
+        queue->cancel_data_available(request_thread);
+    }
+
     BRIDGE_FUNC(std::int32_t, message_queue_send, kernel::handle h, void *data, const std::int32_t length) {
         kernel_system *kern = sys->get_kernel_system(); 
         kernel::msg_queue *queue = kern->get<kernel::msg_queue>(h);
@@ -2490,6 +2503,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xB5, message_queue_send),
         BRIDGE_REGISTER(0xB6, message_queue_receive),
         BRIDGE_REGISTER(0xB9, message_queue_notify_data_available),
+        BRIDGE_REGISTER(0xBA, message_queue_cancel_notify_available),
         BRIDGE_REGISTER(0xBC, property_define),
         BRIDGE_REGISTER(0xBE, property_attach),
         BRIDGE_REGISTER(0xBF, property_subscribe),
