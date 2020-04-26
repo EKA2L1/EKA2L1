@@ -110,6 +110,11 @@ namespace eka2l1::epoc {
         ctx.set_request_status(1);
     }
 
+    void dsa::cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        state_ = state_completed;
+        ctx.set_request_status(epoc::error_none);
+    }
+
     void dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -132,6 +137,10 @@ namespace eka2l1::epoc {
 
         case ws_dsa_get_region:
             get_region(ctx, cmd);
+            break;
+
+        case ws_dsa_cancel:
+            cancel(ctx, cmd);
             break;
 
         default: {
