@@ -32,7 +32,7 @@ namespace eka2l1::dispatch {
 
     void dispatcher::init(kernel_system *kern, timing_system *timing) {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
-        nof_complete_evt_ = timing->register_event("DispatcherNofComplete", [](std::uint64_t userdata, std::uint64_t late) {
+        nof_complete_evt_ = timing->register_event("DispatcherNofComplete", [](std::uint64_t userdata, std::uint64_t late) {  
             epoc::notify_info *info = reinterpret_cast<epoc::notify_info*>(userdata);
             info->complete(epoc::error_none);
 

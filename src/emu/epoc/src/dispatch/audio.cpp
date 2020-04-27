@@ -320,6 +320,30 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_notify_buffer_ready_cancel, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream);
+        timing_system *timing = sys->get_timing_system();
+
+        void *userdata = out_stream.get_userdata(drivers::dsp_stream_notification_buffer_copied);
+
+        if (userdata) {
+            reinterpret_cast<epoc::notify_info*>(userdata)->complete(epoc::error_cancel);
+            delete userdata;
+
+            // Deregister the callback
+            out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, nullptr, nullptr);
+        }
+
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_max_volume, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::dsp_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
