@@ -481,6 +481,7 @@ namespace eka2l1::epoc {
         ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec
     };
 
+    // TODO (pent0): kernel's home time is currently not accurate enough.
     BRIDGE_FUNC(std::int32_t, time_now, eka2l1::ptr<std::uint64_t> time_ptr, eka2l1::ptr<std::int32_t> utc_offset_ptr) {
         kernel_system *kern = sys->get_kernel_system();
 
@@ -488,7 +489,7 @@ namespace eka2l1::epoc {
         std::int32_t *offset = utc_offset_ptr.get(kern->crr_process());
 
         // The time is since EPOC, we need to convert it to first of AD
-        *time = kern->home_time();
+        *time = common::get_current_time_in_microseconds_since_1ad();
         *offset = common::get_current_utc_offset();
 
         return epoc::error_none;
@@ -2193,7 +2194,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        timer->after(kern->crr_thread(), req_sts.get(kern->crr_process()), us_at - kern->home_time());
+        timer->after(kern->crr_thread(), req_sts.get(kern->crr_process()), us_at - 
+            common::get_current_time_in_microseconds_since_1ad());
     }
 
     BRIDGE_FUNC(void, timer_cancel, kernel::handle h) {
