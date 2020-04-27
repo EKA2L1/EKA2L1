@@ -32,6 +32,8 @@
 namespace eka2l1 {
     /*! \brief Contains functions that use frequently in the emulator */
     namespace common {
+        static constexpr double PI = 3.14159265358979323846;
+
         using addition_callback_func = std::function<void(const std::size_t)>;
         using remove_callback_func = addition_callback_func;
 
