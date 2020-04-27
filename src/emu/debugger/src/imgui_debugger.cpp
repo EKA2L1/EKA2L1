@@ -1243,21 +1243,28 @@ namespace eka2l1 {
         return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
     }
 
+    static inline ImVec2 operator-(const ImVec2 &lhs, const ImVec2 &rhs) {
+        return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y);
+    }
+
     // Taken from https://github.com/ocornut/imgui/issues/1982
     void imgui_image_rotate(ImTextureID tex_id, ImVec2 center, ImVec2 size, float angle) {
         ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
+        angle = angle * 3.14f / 180.0f;
+
         float cos_a = cosf(angle);
         float sin_a = sinf(angle);
 
-        center = center + ImGui::GetWindowPos();
-        center = center + ImGui::GetWindowContentRegionMin();
+        ImVec2 base_pos = ImGui::GetWindowPos() +ImGui::GetWindowContentRegionMin();
+
+        center = ImVec2(-center.x, -center.y);
 
         ImVec2 pos[4] = {
-            center + ImRotate(ImVec2(-size.x * 0.5f, -size.y * 0.5f), cos_a, sin_a),
-            center + ImRotate(ImVec2(+size.x * 0.5f, -size.y * 0.5f), cos_a, sin_a),
-            center + ImRotate(ImVec2(+size.x * 0.5f, +size.y * 0.5f), cos_a, sin_a),
-            center + ImRotate(ImVec2(-size.x * 0.5f, +size.y * 0.5f), cos_a, sin_a)
+            base_pos + ImRotate(ImVec2(center), cos_a, sin_a),
+            base_pos + ImRotate(ImVec2(center.x + size.x, center.y), cos_a, sin_a),
+            base_pos + ImRotate(ImVec2(center.x + size.x, center.y + size.y), cos_a, sin_a),
+            base_pos + ImRotate(ImVec2(center.x, center.y + size.y), cos_a, sin_a)
         };
 
         ImVec2 uvs[4] = {
@@ -1320,11 +1327,31 @@ namespace eka2l1 {
 
             if (scr->dsa_texture) {
                 const eka2l1::vec2 size_dsa = scr->size();
+                const int rotation = scr->current_mode().rotation;
+                ImVec2 origin(0.0f, 0.0f);
+
+                switch (rotation) {
+                case 90:
+                    origin.y = static_cast<float>(size_dsa.y);
+                    break;
+
+                case 180:
+                    origin.x = static_cast<float>(size_dsa.x);
+                    origin.y = static_cast<float>(size_dsa.y);
+                    break;
+
+                case 270:
+                    origin.x = static_cast<float>(size_dsa.x);
+                    break;
+
+                default:
+                    break;
+                }
 
                 imgui_image_rotate(reinterpret_cast<ImTextureID>(scr->dsa_texture),
-                    ImVec2(static_cast<float>(size_dsa.x / 2), static_cast<float>(size_dsa.y / 2)),
+                    origin,
                     ImVec2(static_cast<float>(size_dsa.x), static_cast<float>(size_dsa.y)),
-                    static_cast<float>(scr->current_mode().rotation));
+                    static_cast<float>(rotation));
             }
 
             scr->screen_mutex.unlock();
