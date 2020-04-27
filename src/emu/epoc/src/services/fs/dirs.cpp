@@ -201,9 +201,11 @@ namespace eka2l1 {
             if (info->has_raw_attribute) {
                 entry.attrib = info->raw_attribute;
             } else {
+                entry.attrib = epoc::fs::entry_att_normal;
+
                 switch (info->attribute) {
                 case io_attrib::hidden: {
-                    entry.attrib = epoc::fs::entry_att_hidden;
+                    entry.attrib |= epoc::fs::entry_att_hidden;
                     break;
                 }
 
@@ -212,9 +214,9 @@ namespace eka2l1 {
                 }
 
                 if (info->type == io_component_type::dir) {
-                    entry.attrib &= epoc::fs::entry_att_dir;
+                    entry.attrib |= epoc::fs::entry_att_dir;
                 } else {
-                    entry.attrib &= epoc::fs::entry_att_archive;
+                    entry.attrib |= epoc::fs::entry_att_archive;
                 }
             }
 
