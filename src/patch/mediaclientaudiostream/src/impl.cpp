@@ -35,9 +35,7 @@ CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aSt
 
 void CMMFMdaOutputBufferQueue::WriteAndWait() {
     if (iBufferNodes.IsEmpty()) {
-        // NOTE: Symbian SDL 1.2 dont check error code and just stop the stream.
-        // So just never call this.
-        //iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
+        iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
         return;
     }
 
@@ -52,7 +50,6 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
     iStream->WriteL(*node->iBuffer);
 
     iCopied = node;
-    //LogOut(MCA_CAT, _L("Waiting for u"));
 
     SetActive();
 }
@@ -69,8 +66,6 @@ void CMMFMdaOutputBufferQueue::RunL() {
 
         iCopied->Deque();
         delete iCopied;
-        
-        //LogOut(MCA_CAT, _L("Running! %d %d"), iStatus.Int(), iBufferNodes.IsEmpty());
     }
 
     if (iStatus != KErrAbort) {
@@ -89,6 +84,8 @@ void CMMFMdaOutputBufferQueue::CleanQueue() {
 
         delete node;
     }
+
+    iCopied = NULL;
 }
 
 void CMMFMdaOutputBufferQueue::DoCancel() {
@@ -192,7 +189,7 @@ void CMMFMdaAudioOutputStream::WriteWithQueueL(const TDesC8 &aData) {
     TBool isFirst = iBufferQueue.iBufferNodes.IsEmpty();
     iBufferQueue.iBufferNodes.AddLast(*node);
 
-    if (isFirst || !iBufferQueue.IsActive()) {
+    if (isFirst) {
         iBufferQueue.StartTransfer();
     }
 }
