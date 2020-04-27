@@ -77,11 +77,13 @@ namespace eka2l1 {
             } else {
                 assert(!holding->wait_obj);
 
-                waits.push(holding);
-                holding->get_scheduler()->wait(holding);
-                holding->state = thread_state::wait_mutex;
+                kernel::thread *calm_down = kern->crr_thread();
+                waits.push(calm_down);
+                
+                calm_down->get_scheduler()->wait(calm_down);
+                calm_down->state = thread_state::wait_mutex;
 
-                holding->wait_obj = this;
+                calm_down->wait_obj = this;
             }
 
             kern->unlock();
@@ -174,26 +176,62 @@ namespace eka2l1 {
 
             --lock_count;
 
-            if (!lock_count) {
-                if (waits.empty()) {
-                    holding = nullptr;
+            auto put_top_wait_to_pending = [&]() {
+                // Take it from top of the wait queue
+                kernel::thread *top_wait = std::move(waits.top());
+                pendings.push(&top_wait->suspend_link);
+
+                assert(top_wait->wait_obj == this);
+                timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(top_wait));
+                
+                waits.pop();
+                top_wait->state = kernel::thread_state::hold_mutex_pending;
+            };
+
+            if (lock_count <= 0) {
+                if (!pendings.empty()) {
+                    // Make the pending thread hold the mutex
+                    auto elem = pendings.first();
+                    kernel::thread *thr = E_LOFF(elem->deque(), thread, pending_link);
+
+                    // Resume from wait, directly use scheduler
+                    thr->get_scheduler()->resume(thr);
+                    thr->state = thread_state::ready;
+                    thr->wait_obj = nullptr;
+
+                    holding = thr;
+
+                    // Try to get a thread to be in a mutex holding ready state (mutex hold pending)
+                    if (pendings.empty()) {
+                        put_top_wait_to_pending();
+                    }
+
                     kern->unlock();
                     return true;
                 }
 
-                kernel::thread *ready_thread = std::move(waits.top());
-                assert(ready_thread->wait_obj == this);
+                if (waits.empty()) {
+                    // Nothing nothing nothing nothing....
+                    holding = nullptr;
 
-                timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(ready_thread));
+                    kern->unlock();
+                    return true;
+                }
+
+                // The pending queue is currently empty, we might need to kickstart it
+                kernel::thread *ready_thread = std::move(waits.top());
                 waits.pop();
 
                 ready_thread->get_scheduler()->resume(ready_thread);
-                ready_thread->state = thread_state::hold_mutex_pending;
-                ready_thread->wait_obj = this;
+                ready_thread->state = thread_state::ready;
+                ready_thread->wait_obj = nullptr;
 
-                pendings.push(&ready_thread->pending_link);
+                // Push the next thread in wait queue to the pending queue 
+                holding = ready_thread;
 
-                holding = nullptr;
+                if (!waits.empty()) {
+                    put_top_wait_to_pending();
+                }
             }
 
             kern->unlock();
