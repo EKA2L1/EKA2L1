@@ -488,8 +488,10 @@ namespace eka2l1::epoc {
         std::uint64_t *time = time_ptr.get(kern->crr_process());
         std::int32_t *offset = utc_offset_ptr.get(kern->crr_process());
 
+        const bool accurate_timing = sys->get_config()->accurate_ipc_timing;
+
         // The time is since EPOC, we need to convert it to first of AD
-        *time = common::get_current_time_in_microseconds_since_1ad();
+        *time = accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad();
         *offset = common::get_current_utc_offset();
 
         return epoc::error_none;
@@ -2194,8 +2196,10 @@ namespace eka2l1::epoc {
             return;
         }
 
+        const bool accurate_timing = sys->get_config()->accurate_ipc_timing;
+
         timer->after(kern->crr_thread(), req_sts.get(kern->crr_process()), us_at - 
-            common::get_current_time_in_microseconds_since_1ad());
+            (accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad()));
     }
 
     BRIDGE_FUNC(void, timer_cancel, kernel::handle h) {
