@@ -36,7 +36,6 @@ protected:
     TUint8 iWhiteMap;
     TSize iSize;
     TDisplayMode iDisplayMode;
-    TOrientation iOrientation;
 
 public:
     explicit CFbsDrawDeviceBuffer();

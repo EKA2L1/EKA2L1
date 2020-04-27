@@ -27,8 +27,7 @@ CFbsDrawDeviceBuffer::CFbsDrawDeviceBuffer()
     , iBlackMap(128)
     , iWhiteMap(255)
     , iSize(0, 0)
-    , iDisplayMode(ERgb)
-    , iOrientation(EOrientationNormal) {
+    , iDisplayMode(ERgb) {
 }
 
 CFbsDrawDeviceBuffer::~CFbsDrawDeviceBuffer() {
