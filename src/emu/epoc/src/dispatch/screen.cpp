@@ -87,7 +87,7 @@ namespace eka2l1::dispatch {
 
         for (int y = 0; y < info->src_blit_rect.size.y; y++) {
             std::memcpy(dest_blt + (info->dest_point.y + y) * info->dest_stride + info->dest_point.x * bytes_per_pixel,
-                src_blt + +(info->src_blit_rect.top.y + y) * info->src_stride + info->src_blit_rect.top.x * bytes_per_pixel,
+                src_blt + (info->src_blit_rect.top.y + y) * info->src_stride + info->src_blit_rect.top.x * bytes_per_pixel,
                 bytes_to_copy_per_line);
         }
     }
