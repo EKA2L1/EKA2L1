@@ -73,7 +73,13 @@ namespace eka2l1::drivers {
         if (complete_callback_)
             complete_callback_(complete_userdata_);
 
-        return stream_->stop();
+        const bool stop_result = stream_->stop();
+        
+        // Discard all buffers
+        while (auto buffer = buffers_.pop()) {
+        }
+
+        return stop_result;
     }
 
     void dsp_output_stream_shared::register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
@@ -95,6 +101,22 @@ namespace eka2l1::drivers {
             LOG_ERROR("Unsupport notification type!");
             break;
         }
+    }
+
+    void *dsp_output_stream_shared::get_userdata(dsp_stream_notification_type nof_type) {
+        switch (nof_type) {
+        case dsp_stream_notification_done:
+            return complete_userdata_;
+
+        case dsp_stream_notification_buffer_copied:
+            return buffer_copied_userdata_;
+
+        default:
+            LOG_ERROR("Unsupport notification type!");
+            break;
+        }
+
+        return nullptr;
     }
 
     bool dsp_output_stream_shared::write(const std::uint8_t *data, const std::uint32_t data_size) {

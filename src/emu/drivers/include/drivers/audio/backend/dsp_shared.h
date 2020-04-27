@@ -59,6 +59,8 @@ namespace eka2l1::drivers {
         void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
             void *userdata) override;
 
+        void *get_userdata(dsp_stream_notification_type nof_type) override;
+
         virtual bool start();
         virtual bool stop();
     };

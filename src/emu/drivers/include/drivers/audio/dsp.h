@@ -94,6 +94,8 @@ namespace eka2l1::drivers {
 
         virtual void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
             void *userdata) = 0;
+
+        virtual void *get_userdata(dsp_stream_notification_type nof_type) = 0;
     };
 
     struct dsp_output_stream : public dsp_stream {
