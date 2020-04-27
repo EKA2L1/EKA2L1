@@ -84,6 +84,8 @@ namespace eka2l1 {
         bool should_show_install_device_wizard;
         bool should_show_about;
 
+        bool should_show_screen_options[20];
+
         struct device_wizard {
             enum device_wizard_stage {
                 WELCOME_MESSAGE = 0,

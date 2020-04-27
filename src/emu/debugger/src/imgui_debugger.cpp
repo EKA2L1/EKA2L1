@@ -49,6 +49,7 @@
 #include <manager/manager.h>
 #include <manager/rpkg.h>
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/language.h>
@@ -106,6 +107,9 @@ namespace eka2l1 {
         , selected_callback(nullptr)
         , selected_callback_data(nullptr)
         , phony_icon(0) {
+        std::fill(should_show_screen_options, should_show_screen_options + sizeof(should_show_screen_options) / sizeof(bool),
+            false);
+
         // Setup hook
         manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
 
@@ -1248,15 +1252,13 @@ namespace eka2l1 {
     }
 
     // Taken from https://github.com/ocornut/imgui/issues/1982
-    void imgui_image_rotate(ImTextureID tex_id, ImVec2 center, ImVec2 size, float angle) {
+    void imgui_image_rotate(ImTextureID tex_id, ImVec2 base_pos, ImVec2 center, ImVec2 size, float angle) {
         ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
-        angle = angle * 3.14f / 180.0f;
+        angle = angle * common::PI / 180.0f;
 
         float cos_a = cosf(angle);
         float sin_a = sinf(angle);
-
-        ImVec2 base_pos = ImGui::GetWindowPos() +ImGui::GetWindowContentRegionMin();
 
         center = ImVec2(-center.x, -center.y);
 
@@ -1304,6 +1306,29 @@ namespace eka2l1 {
         }
     }
 
+    static void draw_a_screen(ImTextureID id, ImVec2 base, ImVec2 size, const int rotation) {
+        ImVec2 origin(0.0f, 0.0f);
+
+        switch (rotation) {
+        case 90:
+            origin.y = size.y;
+            break;
+
+        case 180:
+            origin = size;
+            break;
+
+        case 270:
+            origin.x = size.x;
+            break;
+
+        default:
+            break;
+        }
+
+        imgui_image_rotate(id, base, origin, size, static_cast<float>(rotation));
+    }
+
     void imgui_debugger::show_screens() {
         // Iterate through all screen from window server
         if (!winserv) {
@@ -1315,43 +1340,73 @@ namespace eka2l1 {
         for (int i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
             const std::string name = fmt::format("Screen {}", i);
             const eka2l1::vec2 size = scr->current_mode().size;
+            
+            scr->screen_mutex.lock();
+            ImVec2 rotated_size(size.x + 15.0f, size.y + 35.0f);
 
-            ImGui::SetNextWindowSize(ImVec2(size.x + 15.0f, size.y + 35.0f));
+            if (scr->ui_rotation % 180 == 90) {
+                rotated_size.x = size.y + 15.0f;
+                rotated_size.y = size.x + 35.0f;
+            }
+
+            ImGui::SetNextWindowSize(rotated_size);
             ImGui::Begin(name.c_str());
+
+            ImVec2 winpos = ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin();
+
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+                should_show_screen_options[i] = !should_show_screen_options[i];
+            }
+
+            if (should_show_screen_options[i]) {
+                if (ImGui::BeginPopupContextItem()) {
+                    bool orientation_lock = scr->orientation_lock;
+                    if (ImGui::BeginMenu("Orientation lock", false)) {
+                        orientation_lock = !orientation_lock;
+                        ImGui::EndMenu();
+                    }
+
+                    scr->set_orientation_lock(sys->get_graphics_driver(), orientation_lock);
+
+                    if (ImGui::BeginMenu("Rotation")) {
+                        bool selected[4] = { (scr->ui_rotation == 0),
+                            (scr->ui_rotation == 90),
+                            (scr->ui_rotation == 180),
+                            (scr->ui_rotation == 270) };
+
+                        ImGui::MenuItem("0", nullptr, &selected[0]);
+                        ImGui::MenuItem("90", nullptr, &selected[1]);
+                        ImGui::MenuItem("180", nullptr, &selected[2]);
+                        ImGui::MenuItem("270", nullptr, &selected[3]);
+
+                        for (std::uint32_t i = 0; i <= 3; i++) {
+                            if (selected[i] && (i != scr->ui_rotation / 90)) {
+                                scr->set_rotation(sys->get_graphics_driver(), i * 90);
+                                break;
+                            }
+                        }
+
+                        ImGui::EndMenu();
+                    }
+
+                    ImGui::EndPopup();
+                }
+            }
+
             const auto window_pos = ImGui::GetWindowPos();
             const auto content_pos = ImGui::GetWindowContentRegionMin();
-            scr->screen_mutex.lock();
             scr->absolute_pos.x = static_cast<int>(window_pos.x + content_pos.x);
             scr->absolute_pos.y = static_cast<int>(window_pos.y + content_pos.y);
-            ImGui::Image(reinterpret_cast<ImTextureID>(scr->screen_texture), ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)));
+            
+            draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos,
+                ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scr->ui_rotation);
 
             if (scr->dsa_texture) {
                 const eka2l1::vec2 size_dsa = scr->size();
-                const int rotation = scr->current_mode().rotation;
-                ImVec2 origin(0.0f, 0.0f);
+                const int rotation = (scr->current_mode().rotation + scr->ui_rotation) % 360;
 
-                switch (rotation) {
-                case 90:
-                    origin.y = static_cast<float>(size_dsa.y);
-                    break;
-
-                case 180:
-                    origin.x = static_cast<float>(size_dsa.x);
-                    origin.y = static_cast<float>(size_dsa.y);
-                    break;
-
-                case 270:
-                    origin.x = static_cast<float>(size_dsa.x);
-                    break;
-
-                default:
-                    break;
-                }
-
-                imgui_image_rotate(reinterpret_cast<ImTextureID>(scr->dsa_texture),
-                    origin,
-                    ImVec2(static_cast<float>(size_dsa.x), static_cast<float>(size_dsa.y)),
-                    static_cast<float>(rotation));
+                draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos,
+                    ImVec2(static_cast<float>(size_dsa.x), static_cast<float>(size_dsa.y)), rotation);
             }
 
             scr->screen_mutex.unlock();
