@@ -49,6 +49,8 @@ namespace eka2l1::epoc {
 
     struct screen {
         int number;
+        int ui_rotation;            ///< Rotation for UI display. So nikita can skip neck day.
+        bool orientation_lock;      ///< If this is true. Rotate the screen won't change the orientation.
 
         // The root window, used to traverse window tree
         // Draw order will be child in front of parent, newer in front of older.
@@ -86,6 +88,9 @@ namespace eka2l1::epoc {
         void vsync(timing_system *timing);
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
+
+        void set_rotation(drivers::graphics_driver *drv, int rot);
+        void set_orientation_lock(drivers::graphics_driver *drv, const bool lock);
 
         // ========================= UTILITIES FUNCTIONS ===========================
         /**

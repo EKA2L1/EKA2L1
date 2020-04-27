@@ -908,6 +908,33 @@ namespace eka2l1 {
         scr->screen_mutex.lock();
         guest_evt_.adv_pointer_evt_.pos.x = driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x;
         guest_evt_.adv_pointer_evt_.pos.y = driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y;
+
+        const int orgx = guest_evt_.adv_pointer_evt_.pos.x;
+        const int orgy = guest_evt_.adv_pointer_evt_.pos.y;
+
+        switch (scr->ui_rotation) {
+        case 90:
+            guest_evt_.adv_pointer_evt_.pos.y = scr->current_mode().size.y - orgx - 1;
+            guest_evt_.adv_pointer_evt_.pos.x = orgy;
+
+            break;
+
+        case 180:
+            guest_evt_.adv_pointer_evt_.pos.y = scr->current_mode().size.y - orgy - 1;
+            guest_evt_.adv_pointer_evt_.pos.x = scr->current_mode().size.x - orgx - 1;
+
+            break;
+
+        case 270:
+            guest_evt_.adv_pointer_evt_.pos.y = orgx;
+            guest_evt_.adv_pointer_evt_.pos.x = scr->current_mode().size.x - orgy - 1;
+
+            break;
+
+        default:
+            break;
+        }
+
         scr->screen_mutex.unlock();
     }
 

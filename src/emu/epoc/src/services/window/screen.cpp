@@ -78,6 +78,8 @@ namespace eka2l1::epoc {
 
     screen::screen(const int number, epoc::config::screen &scr_conf)
         : number(number)
+        , ui_rotation(0)
+        , orientation_lock(true)
         , screen_texture(0)
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
@@ -279,5 +281,37 @@ namespace eka2l1::epoc {
 
     const int screen::total_screen_mode() const {
         return static_cast<int>(scr_config.modes.size());
+    }
+    
+    void screen::set_rotation(drivers::graphics_driver *drv, const int rot) {
+        if (orientation_lock) {
+            // Feel like we are at home
+            ui_rotation = rot;
+        } else {
+            // We need to confirm this rotation exists
+            for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
+                if (scr_config.modes[i].rotation == rot) {
+                    // Reset the UI rotation
+                    ui_rotation = 0;
+                    set_screen_mode(drv, i);
+                }
+            }
+        }
+    }
+    
+    void screen::set_orientation_lock(drivers::graphics_driver *drv, const bool lock) {
+        if (orientation_lock == lock) {
+            return;
+        }
+
+        if (orientation_lock && !lock) {
+            // Transitioning to wild mode
+            orientation_lock = false;
+            return;
+        }
+
+        // Abadon our UI rotation
+        ui_rotation = 0;
+        orientation_lock = true;
     }
 }
