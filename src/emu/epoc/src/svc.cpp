@@ -2159,6 +2159,9 @@ namespace eka2l1::epoc {
     /**********************/
     /* TIMER */
     /*********************/
+    BRIDGE_FUNC(void, clear_inactivity_time) {
+    }
+
     BRIDGE_FUNC(std::int32_t, timer_create) {
         return sys->get_kernel_system()->create_and_add<kernel::timer>(
                                            kernel::owner_type::process, sys->get_timing_system(),
@@ -2456,6 +2459,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x4E, dll_tls),
         BRIDGE_REGISTER(0x4F, hal_function),
         BRIDGE_REGISTER(0x52, process_command_line_length),
+        BRIDGE_REGISTER(0x55, clear_inactivity_time),
         BRIDGE_REGISTER(0x56, debug_print),
         // BRIDGE_REGISTER(0x5E, is_exception_handled),
         BRIDGE_REGISTER(0x5F, process_get_memory_info),
