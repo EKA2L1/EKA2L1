@@ -32,16 +32,11 @@ namespace eka2l1::kernel {
     }
 
     void msg_queue::set_available_callback(msg_queue_callback callback, void *userdata) {
-        kern->lock();
-
         avail_callback_.first = callback;
         avail_callback_.second = userdata;
 
         if (!msgs_.empty()) {
-            kern->unlock();
             callback(userdata);
-        } else {
-            kern->unlock();
         }
     }
 
@@ -50,35 +45,23 @@ namespace eka2l1::kernel {
     }
 
     void msg_queue::cancel_data_available(kernel::thread *requester) {
-        kern->lock();
-        
         auto find_res = std::find_if(avail_notifies_.begin(), avail_notifies_.end(),
             [=](const epoc::notify_info &target_info) {
                 return target_info.requester == requester;
         });
 
         if (find_res == avail_notifies_.end()) {
-            kern->unlock();
             return;
         }
 
-        kern->unlock();
         find_res->complete(epoc::error_cancel);
-        kern->lock();
-
         avail_notifies_.erase(find_res);
-
-        kern->unlock();
     }
 
     bool msg_queue::notify_available(epoc::notify_info &info) {
-        kern->lock();
-
         if (!msgs_.empty()) {
             // Complete the request right away
             info.complete(0);
-            kern->unlock();
-
             return true;
         }
 
@@ -90,23 +73,16 @@ namespace eka2l1::kernel {
 
         if (find_res == avail_notifies_.end()) {
             avail_notifies_.push_back(info);
-            kern->unlock();
-
             return true;
         }
 
-        kern->unlock();
         return false;
     }
 
     bool msg_queue::notify_full(epoc::notify_info &info) {
-        kern->lock();
-
         if (msgs_.size() == max_length_) {
             // Complete the request right away
             info.complete(0);
-            kern->unlock();
-
             return true;
         }
 
@@ -118,12 +94,9 @@ namespace eka2l1::kernel {
 
         if (find_res == full_notifies_.end()) {
             full_notifies_.push_back(info);
-            kern->unlock();
-
             return true;
         }
 
-        kern->unlock();
         return false;
     }
 
@@ -132,18 +105,13 @@ namespace eka2l1::kernel {
             return false;
         }
 
-        kern->lock();
-
         if (msgs_.empty()) {
-            kern->unlock();
             return false;
         }
 
         msg_data &data = msgs_.front();
         std::copy(data.begin(), data.end(), reinterpret_cast<std::uint8_t *>(target_buffer));
         msgs_.pop();
-
-        kern->unlock();
 
         return true;
     }
@@ -153,16 +121,11 @@ namespace eka2l1::kernel {
             return false;
         }
 
-        kern->lock();
-
         if (msgs_.size() == max_length_) {
-            kern->unlock();
             return false;
         }
 
         if (msgs_.empty()) {
-            kern->unlock();
-
             // Notify all available data
             for (auto &notify : avail_notifies_) {
                 notify.complete(0);
@@ -171,8 +134,6 @@ namespace eka2l1::kernel {
             if (avail_callback_.first) {
                 avail_callback_.first(avail_callback_.second);
             }
-
-            kern->lock();
         }
 
         // Push new message
@@ -187,17 +148,11 @@ namespace eka2l1::kernel {
 
         // Check if full, then notify
         if (msgs_.size() == max_length_) {
-            kern->unlock();
-            
             // Notify all available data
             for (auto &notify : full_notifies_) {
                 notify.complete(0);
             }
-
-            kern->lock();
         }
-
-        kern->unlock();
 
         return true;
     }

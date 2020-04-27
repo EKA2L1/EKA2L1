@@ -160,7 +160,13 @@ namespace eka2l1::dispatch {
         info.sts = sts;
 
         if (!eplayer->notify_any_done([eplayer](std::uint8_t *data) {
-                reinterpret_cast<epoc::notify_info *>(data)->complete(epoc::error_none);
+                epoc::notify_info *info = reinterpret_cast<epoc::notify_info *>(data);
+                kernel_system *kern = info->requester->get_kernel_object_owner();
+
+                kern->lock();
+                info->complete(epoc::error_none);
+                kern->unlock();
+
                 eplayer->clear_notify_done();
             },
                 reinterpret_cast<std::uint8_t *>(&info), sizeof(epoc::notify_info))) {

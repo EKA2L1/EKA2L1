@@ -160,8 +160,6 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
-        SYNCHRONIZE_ACCESS;
-
         switch (obj->get_object_type()) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                                                         \
     case kernel::object_type::obj_type: {                                                                        \
@@ -333,8 +331,6 @@ namespace eka2l1 {
     }
 
     property_ptr kernel_system::get_prop(int cagetory, int key) {
-        SYNCHRONIZE_ACCESS;
-
         auto prop_res = std::find_if(props.begin(), props.end(),
             [=](const auto &prop_obj) {
                 property_ptr prop = reinterpret_cast<property_ptr>(prop_obj.get());
@@ -485,7 +481,6 @@ namespace eka2l1 {
 
     std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name) {
         find_handle handle_find_info;
-        SYNCHRONIZE_ACCESS;
 
         switch (type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                                       \

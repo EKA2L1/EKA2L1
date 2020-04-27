@@ -143,8 +143,6 @@ namespace eka2l1::kernel {
 #endif
 
     void thread_scheduler::reschedule() {
-        kern->lock();
-
         kernel::thread *crr_thread = current_thread();
         kernel::thread *next_thread = next_ready_thread();
 
@@ -167,7 +165,6 @@ namespace eka2l1::kernel {
         }
 
         switch_context(crr_thread, next_thread);
-        kern->unlock();
     }
 
     void thread_scheduler::queue_thread_ready(kernel::thread *thr) {

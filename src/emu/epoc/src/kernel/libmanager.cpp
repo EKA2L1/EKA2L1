@@ -709,9 +709,12 @@ namespace eka2l1::hle {
     }
 
     bool lib_manager::call_svc(sid svcnum) {
+        // Lock the kernel so SVC call can operate in safety
+        kern->lock();
         auto res = svc_funcs.find(svcnum);
 
         if (res == svc_funcs.end()) {
+            kern->unlock();
             return false;
         }
 
@@ -731,6 +734,7 @@ namespace eka2l1::hle {
         sys->get_manager_system()->get_script_manager()->call_svcs(svcnum, 1);
 #endif
 
+        kern->unlock();
         return true;
     }
 

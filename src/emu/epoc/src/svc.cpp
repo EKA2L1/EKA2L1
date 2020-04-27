@@ -1340,9 +1340,7 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        kern->lock();
         const bool result = (mut->holder() == kern->crr_thread());
-        kern->unlock();
 
         return result;
     }

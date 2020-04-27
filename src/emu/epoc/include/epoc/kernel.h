@@ -273,7 +273,6 @@ namespace eka2l1 {
                 return;
             }
 
-            SYNCHRONIZE_ACCESS;
             servers.push_back(std::move(svr));
         }
 
@@ -364,8 +363,6 @@ namespace eka2l1 {
         */
         template <typename T>
         T *get_by_name(const std::string &name) {
-            SYNCHRONIZE_ACCESS;
-
             const kernel::object_type obj_type = get_object_type<T>();
             return get_by_name_and_type<T>(name, obj_type);
         }
@@ -374,8 +371,6 @@ namespace eka2l1 {
         */
         template <typename T>
         T *get_by_id(const kernel::uid uid) {
-            SYNCHRONIZE_ACCESS;
-
             const kernel::object_type obj_type = get_object_type<T>();
 
             switch (obj_type) {

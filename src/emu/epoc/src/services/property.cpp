@@ -58,40 +58,29 @@ namespace eka2l1 {
         }
 
         bool property::set_int(int val) {
-            kern->lock();
-
             if (data_type == service::property_type::int_data) {
                 data.ndata = val;
                 notify_request(epoc::error_none);
 
                 fire_data_change_callbacks();
 
-                kern->unlock();
                 return true;
             }
 
-            kern->unlock();
             return false;
         }
 
         bool property::set(uint8_t *bdata, uint32_t arr_length) {
-            kern->lock();
-
             if (arr_length > data_len) {
-                kern->unlock();
                 return false;
             }
 
             memcpy(data.bindata.data(), bdata, arr_length);
             bin_data_len = arr_length;
 
-            kern->unlock();
             notify_request(epoc::error_none);
-            kern->lock();
-
             fire_data_change_callbacks();
 
-            kern->unlock();
             return true;
         }
 
