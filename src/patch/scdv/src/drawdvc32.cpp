@@ -249,16 +249,14 @@ TInt CFbsThirtyTwoBitsDrawDevice::Construct(TSize aSize, TInt aDataStride) {
     iDisplayMode = EColor16MA;
     SetSize(aSize);
 
-    if (aDataStride == -1) {
-        return KErrNone;
-    }
+    if (aDataStride != -1) {
+        if (aDataStride % 4 != 0) {
+            return KErrArgument;
+        }
 
-    if (aDataStride % 4 != 0) {
-        return KErrArgument;
+        iScanLineWords = aDataStride >> 2;
+        iLongWidth = aDataStride >> 2;
     }
-
-    iScanLineWords = aDataStride >> 2;
-    iLongWidth = aDataStride >> 2;
 
     TInt scanLineBufferSize = Max(iSize.iHeight, iSize.iWidth) * 4;
     iScanLineBuffer = User::Alloc(scanLineBufferSize);

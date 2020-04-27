@@ -34,7 +34,7 @@ struct TScreenInfo {
 
 static const TInt KScalingInterfaceID = 1;
 static const TInt KOrientationInterfaceID = 6;
-static const TInt KFastBlit2InterfaceID = 9;
+static const TInt KFastBlit2InterfaceID = 5;
 
 class CFbsDrawDevice : public CBase {
 public:

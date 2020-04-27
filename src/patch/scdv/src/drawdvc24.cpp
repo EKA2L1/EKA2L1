@@ -112,7 +112,6 @@ void CFbsTwentyfourBitDrawDevice::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraph
 }
 
 void CFbsTwentyfourBitDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
-    Scdv::Log("Writing binary!");
     TUint8 *pixelAddress = NULL;
     TInt increment = GetPixelIncrementUnit() * 3;
 
@@ -211,16 +210,14 @@ TInt CFbsTwentyfourBitDrawDevice::Construct(TSize aSize, TInt aDataStride) {
     iDisplayMode = EColor16M;
     SetSize(aSize);
 
-    if (aDataStride == -1) {
-        return KErrNone;
-    }
+    if (aDataStride != -1) {
+        if (aDataStride % 12 != 0) {
+            return KErrArgument;
+        }
 
-    if (aDataStride % 12 != 0) {
-        return KErrArgument;
+        iScanLineWords = aDataStride >> 2;
+        iLongWidth = aDataStride / 3;
     }
-
-    iScanLineWords = aDataStride >> 2;
-    iLongWidth = aDataStride / 3;
 
     TInt scanLineBufferSize = (((Max(iSize.iHeight, iSize.iWidth) * 3) + 11) / 12) * 12;
     iScanLineBuffer = User::Alloc(scanLineBufferSize);

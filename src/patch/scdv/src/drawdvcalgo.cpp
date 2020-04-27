@@ -63,7 +63,8 @@ static TInt GetBppFromDisplayMode(TDisplayMode aMode) {
 
 CFbsDrawDeviceAlgorithm::CFbsDrawDeviceAlgorithm()
     : iScanLineWords(0)
-    , iLongWidth(0) {
+    , iLongWidth(0)
+    , iOrientation(EOrientationNormal) {
 }
 
 void CFbsDrawDeviceAlgorithm::MapColors(const TRect &aRect, const TRgb *aColors, TInt aNumPairs, TBool aMapForwards) {
@@ -161,6 +162,11 @@ void CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(TInt aX, TInt aY, TI
     case EOrientationRotate270:
         aNewY = aX;
         aNewX = SizeInPixels().iWidth - aY - 1;
+        break;
+
+    case EOrientationNormal:
+        aNewX = aX;
+        aNewY = aY;
         break;
 
     default:
