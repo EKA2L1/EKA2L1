@@ -753,14 +753,15 @@ namespace eka2l1 {
         //======================= DO OPEN AND FILL ==========================
 
         if (real_mode & epoc::fs::file_write) {
-            if (overwrite) {
-                access_mode |= WRITE_MODE;
-            } else {
+            if (!overwrite) {
                 access_mode |= APPEND_MODE;
+            } else {
+                access_mode |= WRITE_MODE;
             }
         } else {
             // Since EFileRead = 0, they default to read mode if nothing is specified more
-            access_mode |= READ_MODE;
+            // Note also the document said mode is automatically set to write with Filereplace (overwrite boolean)
+            access_mode |= (overwrite ? WRITE_MODE : READ_MODE);
         }
 
         if ((access_mode & WRITE_MODE) && (share_mode == epoc::fs::file_share_readers_only)) {
