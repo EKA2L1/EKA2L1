@@ -39,7 +39,7 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
         return;
     }
 
-    if (iCopied == NULL) {    
+    if (iCopied == NULL) {
         iStream->StartRaw();
     }
 
@@ -80,7 +80,7 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
-    : CIdle(CActive::EPriorityIdle) {
+    : CIdle(CActive::EPriorityHigh) {
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
@@ -144,9 +144,7 @@ void CMMFMdaAudioOutputStream::StartRaw() {
 void CMMFMdaAudioOutputStream::Play() {
     // Simulates that buffer has been written to server
     iState = EMdaStatePlay;
-
     iOpen.Open(this);
-    iBufferQueue.StartTransfer();
 }
 
 void CMMFMdaAudioOutputStream::Stop() {
