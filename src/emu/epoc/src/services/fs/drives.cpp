@@ -227,10 +227,14 @@ namespace eka2l1 {
 
         if (!io_drive) {
             info->drv_info.type = epoc::fs::media_unknown;
-        } else {
-            fill_drive_info(&info->drv_info, *io_drive);
-        }
 
+            ctx->write_arg_pkg<epoc::fs::volume_info>(0, *info);
+            ctx->set_request_status(epoc::error_not_ready);
+
+            return;
+        }
+        
+        fill_drive_info(&info->drv_info, *io_drive);
         info->uid = drv;
 
         LOG_WARN("Volume size stubbed with 1GB");
