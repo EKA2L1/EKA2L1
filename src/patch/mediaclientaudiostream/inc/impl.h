@@ -48,6 +48,7 @@ struct CMMFMdaOutputBufferQueue: public CActive {
     ~CMMFMdaOutputBufferQueue();
 
     void StartTransfer();
+    void CleanQueue();
 
     virtual void RunL();
     virtual void DoCancel();

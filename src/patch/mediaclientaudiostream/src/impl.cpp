@@ -35,7 +35,9 @@ CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aSt
 
 void CMMFMdaOutputBufferQueue::WriteAndWait() {
     if (iBufferNodes.IsEmpty()) {
-        iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
+        // NOTE: Symbian SDL 1.2 dont check error code and just stop the stream.
+        // So just never call this.
+        //iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
         return;
     }
 
@@ -50,6 +52,7 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
     iStream->WriteL(*node->iBuffer);
 
     iCopied = node;
+    //LogOut(MCA_CAT, _L("Waiting for u"));
 
     SetActive();
 }
@@ -61,14 +64,31 @@ CMMFMdaOutputBufferQueue::~CMMFMdaOutputBufferQueue() {
 void CMMFMdaOutputBufferQueue::RunL() {
     // Notify that last buffer has been copied
     if (iCopied) {
-        iStream->iCallback.MaoscBufferCopied(KErrNone, *iCopied->iBuffer);
+        if (iStatus == KErrNone)
+            iStream->iCallback.MaoscBufferCopied(KErrNone, *iCopied->iBuffer);
 
         iCopied->Deque();
         delete iCopied;
+        
+        //LogOut(MCA_CAT, _L("Running! %d %d"), iStatus.Int(), iBufferNodes.IsEmpty());
     }
 
-    iStatus = KRequestPending;
-    WriteAndWait();
+    if (iStatus != KErrAbort) {
+        iStatus = KRequestPending;
+        WriteAndWait();
+    }
+}
+
+void CMMFMdaOutputBufferQueue::CleanQueue() {
+    iStream->iCallback.MaoscBufferCopied(KErrAbort, *iCopied->iBuffer);
+
+    // Flush all stored buffers
+    while (!iBufferNodes.IsEmpty()) {
+        TMMFMdaBufferNode *node = iBufferNodes.First();
+        node->Deque();
+
+        delete node;
+    }
 }
 
 void CMMFMdaOutputBufferQueue::DoCancel() {
@@ -151,6 +171,9 @@ void CMMFMdaAudioOutputStream::Stop() {
     if (EAudioDspStreamStop(0, iDispatchInstance) != KErrNone) {
         LogOut(MCA_CAT, _L("Failed to stop audio output stream"));
     } else {
+        iBufferQueue.CleanQueue();
+        iBufferQueue.Cancel();
+
         iState = EMdaStateReady;
     }
 }
@@ -169,7 +192,7 @@ void CMMFMdaAudioOutputStream::WriteWithQueueL(const TDesC8 &aData) {
     TBool isFirst = iBufferQueue.iBufferNodes.IsEmpty();
     iBufferQueue.iBufferNodes.AddLast(*node);
 
-    if (isFirst) {
+    if (isFirst || !iBufferQueue.IsActive()) {
         iBufferQueue.StartTransfer();
     }
 }
@@ -343,5 +366,5 @@ void CMMFMdaAudioOutputStream::RegisterNotifyBufferSent(TRequestStatus &aStatus)
 }
 
 void CMMFMdaAudioOutputStream::CancelRegisterNotifyBufferSent() {
-    LogOut(MCA_CAT, _L("INFO:: Cancel buffer sent notifcation todo"));
+    EAudioDspStreamCancelNotifyBufferSentToDriver(0, iDispatchInstance);
 }

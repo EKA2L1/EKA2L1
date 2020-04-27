@@ -29,6 +29,7 @@ HLE_DISPATCH_FUNC(TInt, EAudioDspOutStreamGetVolume, TAny *aInstance);
 // Notify that a frame has been wrote to the audio driver's buffer on HLE side.
 HLE_DISPATCH_FUNC(TInt, EAudioDspStreamNotifyBufferSentToDriver, TAny *aInstance, TRequestStatus &aStatus);
 HLE_DISPATCH_FUNC(TInt, EAudioDspStreamNotifyEnd, TAny *aInstance, TRequestStatus &aStatus);
+HLE_DISPATCH_FUNC(TInt, EAudioDspStreamCancelNotifyBufferSentToDriver, TAny *aInstance);
 
 HLE_DISPATCH_FUNC(TInt, EAudioDspStreamDestroy, TAny *aInstance);
 

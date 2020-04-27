@@ -134,3 +134,8 @@ HLE_DISPATCH_FUNC(TInt, EAudioDspStreamGetFormat, TAny *aInstance, TUint32 &aFou
 
     CALL_HLE_DISPATCH(0x51);
 }
+
+HLE_DISPATCH_FUNC(TInt, EAudioDspStreamCancelNotifyBufferSentToDriver, TAny *aInstance) {
+    (void)aInstance;
+    CALL_HLE_DISPATCH(0x52);
+}
