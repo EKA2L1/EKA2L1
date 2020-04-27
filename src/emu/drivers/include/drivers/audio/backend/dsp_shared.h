@@ -36,6 +36,8 @@ namespace eka2l1::drivers {
         std::unique_ptr<drivers::audio_output_stream> stream_;
 
         std::uint8_t channels_;
+        std::uint16_t freq_;
+
         threadsafe_cn_queue<dsp_buffer> buffers_;
 
         dsp_buffer decoded_;
@@ -43,6 +45,8 @@ namespace eka2l1::drivers {
 
         std::int16_t last_frame_[2];
         std::mutex callback_lock_;
+
+        bool virtual_stop;
 
     public:
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);

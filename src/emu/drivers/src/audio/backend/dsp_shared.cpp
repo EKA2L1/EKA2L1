@@ -23,7 +23,8 @@
 namespace eka2l1::drivers {
     dsp_output_stream_shared::dsp_output_stream_shared(drivers::audio_driver *aud)
         : aud_(aud)
-        , pointer_(0) {
+        , pointer_(0)
+        , virtual_stop(true) {
         last_frame_[0] = 0;
         last_frame_[1] = 0;
     }
@@ -35,11 +36,21 @@ namespace eka2l1::drivers {
     }
 
     bool dsp_output_stream_shared::set_properties(const std::uint32_t freq, const std::uint8_t channels) {
-        if (stream_ && stream_->is_playing()) {
+        if (!virtual_stop) {
             return false;
         }
 
+        if ((channels_ == channels) && (freq_ == freq)) {
+            return true;
+        }
+
+        if (stream_) {
+            stream_->stop();
+            stream_.reset();
+        }
+
         channels_ = channels;
+        freq_ = freq;
 
         stream_ = aud_->new_output_stream(freq, channels, [this](std::int16_t *buffer, const std::size_t nb_frames) {
             return data_callback(buffer, nb_frames);
@@ -62,24 +73,36 @@ namespace eka2l1::drivers {
         if (!stream_)
             return true;
 
-        return stream_->start();
+        if (virtual_stop) {
+            if (!stream_->start()) {
+                return false;
+            }
+
+            virtual_stop = false;
+        }
+
+        return true;
     }
 
     bool dsp_output_stream_shared::stop() {
         if (!stream_)
             return true;
 
+        const std::lock_guard<std::mutex> guard(callback_lock_);
+
         // Call the finish callback
         if (complete_callback_)
             complete_callback_(complete_userdata_);
 
-        const bool stop_result = stream_->stop();
+        // Clear the callback
+        buffer_copied_callback_ = nullptr;
+        virtual_stop = true;
         
         // Discard all buffers
         while (auto buffer = buffers_.pop()) {
         }
 
-        return stop_result;
+        return true;
     }
 
     void dsp_output_stream_shared::register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
