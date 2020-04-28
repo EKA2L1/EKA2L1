@@ -343,6 +343,10 @@ namespace eka2l1 {
                 return leave_depth;
             }
 
+            std::size_t get_total_open_handles() const {
+                return thread_handles.total_open();
+            }
+
             std::uint32_t last_handle() {
                 return thread_handles.last_handle();
             }

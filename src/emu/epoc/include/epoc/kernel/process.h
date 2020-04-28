@@ -220,6 +220,10 @@ namespace eka2l1::kernel {
             return exit_reason;
         }
 
+        std::size_t get_total_open_handles() const {
+            return process_handles.total_open();
+        }
+
         /**
          * \brief Check if the process's security sastify the given security policy.
          * 

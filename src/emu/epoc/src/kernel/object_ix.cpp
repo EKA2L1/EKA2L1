@@ -94,6 +94,7 @@ namespace eka2l1 {
 
                 obj->increase_access_count();
 
+                totals++;
                 return ret_handle;
             }
 
@@ -153,6 +154,8 @@ namespace eka2l1 {
                 obj->decrease_access_count();
                 obj->close();
 
+                totals--;
+
                 if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process && obj->get_object_type() != object_type::thread) {
                     if (obj->get_object_type() == object_type::chunk) {
                         chunk_ptr c = reinterpret_cast<kernel::chunk *>(obj);
@@ -179,7 +182,8 @@ namespace eka2l1 {
             : kern(kern)
             , owner(owner)
             , next_instance(0)
-            , uid(kern->next_uid()) {}
+            , uid(kern->next_uid())
+            , totals(0) {}
 
         void object_ix::do_state(common::chunkyseri &seri) {
             auto s = seri.section("ObjectIx", 1);

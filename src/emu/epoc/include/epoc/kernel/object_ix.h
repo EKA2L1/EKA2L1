@@ -55,6 +55,7 @@ namespace eka2l1 {
             std::vector<std::uint32_t> handles;
 
             handle_array_owner owner;
+            size_t totals;
 
             uint32_t make_handle(size_t index);
 
@@ -83,8 +84,12 @@ namespace eka2l1 {
 
             int close(uint32_t handle);
 
-            uint64_t unique_id() {
+            std::uint64_t unique_id() const {
                 return uid;
+            }
+
+            std::size_t total_open() const {
+                return totals;
             }
 
             /*! \brief Get the last handle created. 0 if none left */

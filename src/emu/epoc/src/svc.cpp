@@ -1468,6 +1468,18 @@ namespace eka2l1::epoc {
         desname->assign(pr, full_name);
     }
 
+    BRIDGE_FUNC(void, handle_count, kernel::handle h, std::uint32_t *total_handle_process, std::uint32_t *total_handle_thread) {
+        kernel_system *kern = sys->get_kernel_system();
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            return;
+        }
+
+        *total_handle_thread = static_cast<std::uint32_t>(thr->get_total_open_handles());
+        *total_handle_process = static_cast<std::uint32_t>(thr->owning_process()->get_total_open_handles());
+    }
+
     /******************************/
     /* CODE SEGMENT */
     /*****************************/
@@ -2478,6 +2490,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3B, request_signal),
         BRIDGE_REGISTER(0x3C, handle_name),
         BRIDGE_REGISTER(0x3D, handle_full_name),
+        BRIDGE_REGISTER(0x3F, handle_count),
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
         BRIDGE_REGISTER(0x44, time_now),
