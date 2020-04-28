@@ -145,7 +145,7 @@ namespace eka2l1 {
             while (true && !install_thread_should_stop) {
                 while (auto result = install_list.pop()) {
                     if (!install_thread_should_stop) {
-                        get_sys()->install_package(common::utf8_to_ucs2(result.value()), drive_c);
+                        get_sys()->install_package(common::utf8_to_ucs2(result.value()), drive_e);
                     }
                 }
 
