@@ -19,6 +19,7 @@
 
 #include <epoc/dispatch/dispatcher.h>
 #include <epoc/dispatch/register.h>
+#include <epoc/dispatch/screen.h>
 #include <epoc/kernel.h>
 #include <epoc/services/window/window.h>
 #include <epoc/utils/err.h>
@@ -49,5 +50,18 @@ namespace eka2l1::dispatch {
         }
 
         dispatch_find_result->second.func(sys);
+    }
+
+    void dispatcher::update_all_screens(eka2l1::system *sys) {
+        epoc::screen *scr = winserv_->get_screens();
+
+        while (scr != nullptr) {
+            eka2l1::rect up_rect;
+            up_rect.top = { 0, 0 };
+            up_rect.size = scr->size();
+
+            dispatch::update_screen(sys, 0, scr->number, 1, &up_rect);
+            scr = scr->next;
+        }
     }
 }

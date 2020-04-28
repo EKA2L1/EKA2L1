@@ -27,10 +27,14 @@
 #include <epoc/utils/tl.h>
 #include <epoc/utils/uid.h>
 
+#include <epoc/dispatch/dispatcher.h>
+#include <epoc/dispatch/screen.h>
+
 #include <common/configure.h>
 #include <epoc/dispatch/dispatcher.h>
 #include <epoc/hal.h>
 #include <epoc/svc.h>
+#include <epoc/common.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -2215,9 +2219,12 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::uint32_t, ntick_count) {
         timing_system *timing = sys->get_timing_system();
-        static constexpr std::uint64_t NANOKERNEL_HZ = 1000;
+        return static_cast<std::uint32_t>(timing->ticks() * epoc::NANOKERNEL_HZ / 1000000 / timing->get_clock_frequency_mhz());
+    }
 
-        return static_cast<std::uint32_t>(timing->ticks() * NANOKERNEL_HZ / 1000000 / timing->get_clock_frequency_mhz());
+    BRIDGE_FUNC(std::uint32_t, tick_count) {
+        timing_system *timing = sys->get_timing_system();
+        return static_cast<std::uint32_t>(timing->ticks());
     }
 
     /**********************/
@@ -2399,6 +2406,20 @@ namespace eka2l1::epoc {
         return eka2l1::random();
     }
 
+    BRIDGE_FUNC(void, add_event, raw_event *evt) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+
+        switch (evt->type_) {
+        case raw_event_type_redraw:
+            dispatcher->update_all_screens(sys);
+            break;
+
+        default:
+            LOG_WARN("Unhandled raw event {}", static_cast<int>(evt->type_));
+            break;
+        }
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),
@@ -2422,7 +2443,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
-        BRIDGE_REGISTER(0x05, ntick_count),     // Actually tick count
+        BRIDGE_REGISTER(0x05, tick_count),
         BRIDGE_REGISTER(0x0B, math_rand),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
@@ -2590,10 +2611,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x42, message_complete),
         BRIDGE_REGISTER(0x44, time_now),
 
+        BRIDGE_REGISTER(0x4B, add_event),
         BRIDGE_REGISTER(0x4C, session_send_sync),
         BRIDGE_REGISTER(0x4D, dll_tls),
         BRIDGE_REGISTER(0x4E, hal_function),
         BRIDGE_REGISTER(0x51, process_command_line_length),
+        BRIDGE_REGISTER(0x54, clear_inactivity_time),
         BRIDGE_REGISTER(0x55, debug_print),
         BRIDGE_REGISTER(0x63, process_type),
         BRIDGE_REGISTER(0x67, thread_create),

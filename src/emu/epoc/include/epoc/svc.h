@@ -82,6 +82,14 @@ namespace eka2l1::epoc {
         epoc::security_policy write_policy;
     };
 
+    enum raw_event_type {
+        raw_event_type_redraw = 5
+    };
+
+    struct raw_event {
+        raw_event_type type_;
+    };
+    
     //! The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;
 
