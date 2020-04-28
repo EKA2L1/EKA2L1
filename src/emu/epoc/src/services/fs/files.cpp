@@ -428,10 +428,9 @@ namespace eka2l1 {
         read_data.resize(read_len);
 
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
+        ctx->write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), static_cast<std::uint32_t>(read_finish_len));
 
-        ctx->write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), read_len);
-
-        // LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
+        //LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
         ctx->set_request_status(epoc::error_none);
     }
 
@@ -481,7 +480,8 @@ namespace eka2l1 {
 
         // Don't open file if it doesn't exist
         if (!ctx->sys->get_io_system()->exist(*name_res)) {
-            LOG_TRACE("IO component not exists: {}", common::ucs2_to_utf8(*name_res));
+            LOG_TRACE("IO component not exists: {} {}", common::ucs2_to_utf8(*name_res)
+                , ctx->msg->function);
 
             ctx->set_request_status(epoc::error_not_found);
             return;
