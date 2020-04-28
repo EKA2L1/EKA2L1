@@ -117,7 +117,7 @@ namespace eka2l1::epoc {
                 evt.key_evt_.scancode));
 
             epoc::event extra_event = evt;
-            extra_event.type = epoc::event_code::key_down;
+            extra_event.type = epoc::event_code::key;
 
             evt.handle = focus->get_client_handle();
             extra_event.handle = focus->get_client_handle();
