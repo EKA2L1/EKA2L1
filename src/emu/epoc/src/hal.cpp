@@ -27,6 +27,7 @@
 #include <common/log.h>
 
 #include <epoc/utils/err.h>
+#include <epoc/common.h>
 
 #include <drivers/graphics/graphics.h>
 #include <epoc/utils/des.h>
@@ -97,10 +98,18 @@ namespace eka2l1::epoc {
             return epoc::error_none;
         }
 
+        int tick_period(int *a1, int *a2, const std::uint16_t device_num) {
+            std::uint64_t *tick_period_in_microsecs = reinterpret_cast<std::uint64_t*>(a1);
+            *tick_period_in_microsecs = 1000000 / epoc::NANOKERNEL_HZ;
+
+            return epoc::error_none;
+        }
+
         explicit kern_hal(eka2l1::system *sys)
             : hal(sys) {
-            REGISTER_HAL_FUNC(EKernelHalPageSizeInBytes, kern_hal, page_size);
             REGISTER_HAL_FUNC(EKernelHalMemoryInfo, kern_hal, memory_info);
+            REGISTER_HAL_FUNC(EKernelHalPageSizeInBytes, kern_hal, page_size);
+            REGISTER_HAL_FUNC(EKernelHalTickPeriod, kern_hal, tick_period);
         }
     };
 

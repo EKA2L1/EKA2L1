@@ -46,5 +46,6 @@ namespace eka2l1::dispatch {
         void init(kernel_system *kern, timing_system *timing);
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);
+        void update_all_screens(eka2l1::system *sys);
     };
 }
