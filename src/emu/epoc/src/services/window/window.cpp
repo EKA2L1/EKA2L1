@@ -1032,7 +1032,9 @@ namespace eka2l1 {
     static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
         // Try to create memory chunk at kernel mapping, for DSA
         const std::string chunk_name = fmt::format("ScreenBuffer{}", scr->number);
-        const std::size_t max_chunk_size = scr->size().x * scr->size().y * 4;
+
+        // Add more size to prevent crashing.
+        const std::size_t max_chunk_size = (scr->size().x + 100) * scr->size().y * 4;
 
         // Create chunk with maximum size (32-bit)
         kernel::chunk *buffer = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, chunk_name, 0,
