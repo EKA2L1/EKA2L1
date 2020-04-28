@@ -40,8 +40,10 @@ namespace eka2l1::epoc {
     };
 
     dsa::~dsa() {
-        husband_->set_dsa_active(false);
-        husband_->direct = nullptr;
+        if (husband_) {
+            husband_->set_dsa_active(false);
+            husband_->direct = nullptr;
+        }
     }
 
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
