@@ -164,7 +164,7 @@ namespace eka2l1::kernel {
     }
 
     address codeseg::get_data_run_addr(kernel::process *pr, std::uint8_t **base) {
-        if (data_size == 0) {
+        if ((data_size == 0) && (bss_size == 0)) {
             return 0;
         }
 
