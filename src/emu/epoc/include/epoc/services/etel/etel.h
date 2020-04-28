@@ -37,6 +37,9 @@ namespace eka2l1 {
         epoc::etel::module_manager mngr_;
         std::vector<etel_subsession_instance> subsessions_;
 
+    protected:
+        void add_new_subsession(service::ipc_context *ctx, etel_subsession_instance &instance);
+
     public:
         void load_phone_module(service::ipc_context *ctx);
         void enumerate_phones(service::ipc_context *ctx);

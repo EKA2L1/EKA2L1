@@ -44,6 +44,7 @@ namespace eka2l1::epoc {
         etel_open_from_session = 0,
         etel_open_from_subsession = 1,
         etel_close = 4,
+        etel_line_get_status = 39,
         etel_phone_enumerate_lines = 46,
         etel_phone_get_line_info = 49,
         etel_enumerate_phones = 54,

@@ -98,6 +98,19 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    void etel_session::add_new_subsession(service::ipc_context *ctx, etel_subsession_instance &instance) {
+        auto empty_slot = std::find(subsessions_.begin(), subsessions_.end(), nullptr);
+        
+        if (empty_slot == subsessions_.end()) {
+            subsessions_.push_back(std::move(instance));
+            ctx->write_arg_pkg<std::uint32_t>(3, static_cast<std::uint32_t>(subsessions_.size()));
+        } else {
+            *empty_slot = std::move(instance);
+            ctx->write_arg_pkg<std::uint32_t>(3, static_cast<std::uint32_t>(std::distance(subsessions_.begin(),
+                empty_slot) + 1));
+        }
+    }
+
     void etel_session::open_from_session(service::ipc_context *ctx) {
         std::optional<std::u16string> name_of_object = ctx->get_arg<std::u16string>(0);
 
@@ -115,7 +128,6 @@ namespace eka2l1 {
         }
 
         // Check for empty slot in the subessions array
-        auto empty_slot = std::find(subsessions_.begin(), subsessions_.end(), nullptr);
         std::unique_ptr<etel_subsession> subsession;
 
         switch (entry->entity_->type()) {
@@ -131,23 +143,61 @@ namespace eka2l1 {
             return;
         }
 
-        if (empty_slot == subsessions_.end()) {
-            subsessions_.push_back(std::move(subsession));
-            ctx->write_arg_pkg<std::uint32_t>(3, static_cast<std::uint32_t>(subsessions_.size()));
-        } else {
-            *empty_slot = std::move(subsession);
-            ctx->write_arg_pkg<std::uint32_t>(3, static_cast<std::uint32_t>(std::distance(subsessions_.begin(),
-                empty_slot) + 1));
-        }
-
+        add_new_subsession(ctx, subsession);
         ctx->set_request_status(epoc::error_none);
     }
 
     void etel_session::open_from_subsession(service::ipc_context *ctx) {
-        LOG_TRACE("Open from etel subsession stubbed");
+        std::optional<std::u16string> name_of_object = ctx->get_arg<std::u16string>(0);
 
-        const std::uint32_t dummy_handle = 0x43210;
-        ctx->write_arg_pkg<std::uint32_t>(3, dummy_handle);
+        if (!name_of_object) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        LOG_TRACE("Opening {} from session", common::ucs2_to_utf8(name_of_object.value()));
+
+        // Try to get the subsession
+        std::optional<std::uint32_t> subsession_handle = ctx->get_arg<std::uint32_t>(2);
+
+        if (!subsession_handle || subsession_handle.value() > subsessions_.size()) {
+            LOG_ERROR("Subsession handle not available");
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        etel_subsession_instance &sub = subsessions_[subsession_handle.value() - 1];
+        etel_subsession_instance new_sub = nullptr;
+
+        if (!sub) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        if (sub->type() == etel_subsession_type_phone) {
+            etel_phone *phone = reinterpret_cast<etel_phone_subsession*>(sub.get())->phone_;
+            
+            // First, try to find the line
+            auto line_ite = std::find_if(phone->lines_.begin(), phone->lines_.end(), [=](const etel_line *line) {
+                return common::compare_ignore_case(common::utf8_to_ucs2(line->name_), name_of_object.value()) == 0;
+            });
+
+            if (line_ite != phone->lines_.end()) {
+                // Create the subsession
+                new_sub = std::make_unique<etel_line_subsession>(this, *line_ite);
+            } else {
+                LOG_ERROR("Unable to open subsession with object name {}", common::ucs2_to_utf8(name_of_object.value()));
+            }
+        } else {
+            LOG_ERROR("Unhandled subsession type to open from {}", static_cast<int>(sub->type()));
+        }
+
+        if (!new_sub) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        add_new_subsession(ctx, new_sub);
         ctx->set_request_status(epoc::error_none);
     }
 

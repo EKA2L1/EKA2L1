@@ -30,6 +30,7 @@ namespace eka2l1 {
     };
 
     struct etel_phone;
+    struct etel_line;
     struct etel_session;
 
     enum etel_subsession_type {
@@ -71,6 +72,22 @@ namespace eka2l1 {
 
         etel_subsession_type type() const override {
             return etel_subsession_type_phone;
+        }
+    };
+
+    struct etel_line_subsession: public etel_subsession {
+        etel_line *line_;
+
+    protected:
+        void get_status(service::ipc_context *ctx);
+
+    public:
+        explicit etel_line_subsession(etel_session *session, etel_line *line);
+        
+        void dispatch(service::ipc_context *ctx) override;
+
+        etel_subsession_type type() const override {
+            return etel_subsession_type_line;
         }
     };
 };
