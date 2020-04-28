@@ -421,7 +421,7 @@ namespace eka2l1 {
         uint64_t size = vfs_file->size();
 
         if (size - read_pos < read_len) {
-            read_len = static_cast<int>(size - last_pos);
+            read_len = static_cast<int>(size - read_pos);
         }
 
         std::vector<char> read_data;
@@ -430,7 +430,7 @@ namespace eka2l1 {
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
         ctx->write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), static_cast<std::uint32_t>(read_finish_len));
 
-        //LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
+        // LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
         ctx->set_request_status(epoc::error_none);
     }
 
