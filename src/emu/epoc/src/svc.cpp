@@ -2549,6 +2549,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x0080000D, debug_mask),
         BRIDGE_REGISTER(0x00800013, user_svr_rom_header_address),
         BRIDGE_REGISTER(0x00800014, user_svr_rom_root_dir_address),
+        BRIDGE_REGISTER(0x00800015, safe_inc_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
         /* SLOW EXECUTIVE CALL */
@@ -2583,6 +2584,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x39, change_notifier_logon),
         BRIDGE_REGISTER(0x3B, request_signal),
         BRIDGE_REGISTER(0x3C, handle_name),
+        BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
         BRIDGE_REGISTER(0x44, time_now),
 
