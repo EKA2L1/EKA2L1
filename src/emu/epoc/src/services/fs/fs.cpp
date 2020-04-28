@@ -69,6 +69,14 @@ namespace eka2l1 {
     }
 
     void fs_server_client::fetch(service::ipc_context *ctx) {
+        const epocver version = server<fs_server>()->sys->get_symbian_version_use();
+
+        if (version <= epocver::epoc93) {
+            // FileWriteDirty does not exist
+            if (ctx->msg->function >= epoc::fs_msg_file_write_dirty)
+                ctx->msg->function++;
+        }
+
         switch (ctx->msg->function & 0xFF) {
 // For debug purpose, uncomment the log
 #define HANDLE_CLIENT_IPC(name, op, debug_func_str)     \
