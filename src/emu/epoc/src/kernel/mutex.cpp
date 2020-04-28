@@ -167,7 +167,7 @@ namespace eka2l1 {
             auto put_top_wait_to_pending = [&]() {
                 // Take it from top of the wait queue
                 kernel::thread *top_wait = std::move(waits.top());
-                pendings.push(&top_wait->suspend_link);
+                pendings.push(&top_wait->pending_link);
 
                 assert(top_wait->wait_obj == this);
                 timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(top_wait));
