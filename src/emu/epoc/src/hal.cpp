@@ -79,21 +79,18 @@ namespace eka2l1::epoc {
 
         int memory_info(int *a1, int *a2, const std::uint16_t device_num) {
             des8 *buf = reinterpret_cast<des8 *>(a1);
-            TMemoryInfoV1 memInfo;
+            epoc::memory_info_v1 mem_info;
 
-            memInfo.iTotalRamInBytes = static_cast<int>(common::MB(256));
-            memInfo.iRomIsReprogrammable = false;
-            memInfo.iMaxFreeRamInBytes = static_cast<int>(common::MB(256));
-            memInfo.iFreeRamInBytes = static_cast<int>(common::MB(256));
-            memInfo.iTotalRomInBytes = sys->get_rom_info()->header.rom_size;
-            memInfo.iInternalDiskRamInBytes = memInfo.iTotalRomInBytes; // This value is appr. the same as rom.
+            mem_info.total_ram_in_bytes_ = static_cast<int>(common::MB(256));
+            mem_info.rom_is_reprogrammable_ = false;
+            mem_info.max_free_ram_in_bytes_ = static_cast<int>(common::MB(256));
+            mem_info.free_ram_in_bytes_ = static_cast<int>(common::MB(256));
+            mem_info.total_rom_in_bytes_ = sys->get_rom_info()->header.rom_size;
 
-            std::string dat;
-            dat.resize(sizeof(memInfo));
+            // This value is appr. the same as rom.
+            mem_info.internal_disk_ram_in_bytes_ = mem_info.total_rom_in_bytes_;
 
-            memcpy(dat.data(), &memInfo, sizeof(memInfo));
-
-            buf->assign(sys->get_kernel_system()->crr_process(), dat);
+            buf->assign(sys->get_kernel_system()->crr_process(), reinterpret_cast<std::uint8_t*>(&mem_info), sizeof(mem_info));
 
             return epoc::error_none;
         }
@@ -107,32 +104,31 @@ namespace eka2l1::epoc {
 
         explicit kern_hal(eka2l1::system *sys)
             : hal(sys) {
-            REGISTER_HAL_FUNC(EKernelHalMemoryInfo, kern_hal, memory_info);
-            REGISTER_HAL_FUNC(EKernelHalPageSizeInBytes, kern_hal, page_size);
-            REGISTER_HAL_FUNC(EKernelHalTickPeriod, kern_hal, tick_period);
+            REGISTER_HAL_FUNC(kernel_hal_memory_info, kern_hal, memory_info);
+            REGISTER_HAL_FUNC(kernel_hal_page_size_in_bytes, kern_hal, page_size);
+            REGISTER_HAL_FUNC(kernel_hal_tick_period, kern_hal, tick_period);
         }
     };
 
     struct variant_hal : public eka2l1::epoc::hal {
         int get_variant_info(int *a1, int *a2, const std::uint16_t device_num) {
             epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
-            epoc::TVariantInfoV1 *info_ptr = reinterpret_cast<epoc::TVariantInfoV1 *>(
-                package->get_pointer(sys->get_kernel_system()->crr_process()));
+            epoc::variant_info_v1 *info_ptr = reinterpret_cast<epoc::variant_info_v1 *>(package->get_pointer(sys->get_kernel_system()->crr_process()));
 
             loader::rom &rom_info = *(sys->get_rom_info());
-            info_ptr->iMajor = rom_info.header.major;
-            info_ptr->iMinor = rom_info.header.minor;
-            info_ptr->iBuild = rom_info.header.build;
+            info_ptr->major_ = rom_info.header.major;
+            info_ptr->minor_ = rom_info.header.minor;
+            info_ptr->build_ = rom_info.header.build;
 
-            info_ptr->iProessorClockInMhz = sys->get_timing_system()->get_clock_frequency_mhz();
-            info_ptr->iMachineUid = 0x70000001;
+            info_ptr->processor_clock_in_mhz_ = sys->get_timing_system()->get_clock_frequency_mhz();
+            info_ptr->machine_uid_ = 0x70000001;
 
             return 0;
         }
 
         variant_hal(eka2l1::system *sys)
             : hal(sys) {
-            REGISTER_HAL_FUNC(EVariantHalVariantInfo, variant_hal, get_variant_info);
+            REGISTER_HAL_FUNC(variant_hal_variant_info, variant_hal, get_variant_info);
         }
     };
 
@@ -234,10 +230,10 @@ namespace eka2l1::epoc {
         explicit display_hal(system *sys)
             : hal(sys)
             , winserv_(nullptr) {
-            REGISTER_HAL_FUNC(EDisplayHalScreenInfo, display_hal, current_screen_info);
-            REGISTER_HAL_FUNC(EDisplayHalCurrentModeInfo, display_hal, current_mode_info);
-            REGISTER_HAL_FUNC(EDisplayHalSpecifiedModeInfo, display_hal, specified_mode_info);
-            REGISTER_HAL_FUNC(EDisplayHalColors, display_hal, color_count);
+            REGISTER_HAL_FUNC(display_hal_screen_info, display_hal, current_screen_info);
+            REGISTER_HAL_FUNC(display_hal_current_mode_info, display_hal, current_mode_info);
+            REGISTER_HAL_FUNC(display_hal_specified_mode_info, display_hal, specified_mode_info);
+            REGISTER_HAL_FUNC(display_hal_colors, display_hal, color_count);
 
             winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()
                                                              ->get_by_name<service::server>(WINDOW_SERVER_NAME));
