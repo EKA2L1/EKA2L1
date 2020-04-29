@@ -26,6 +26,7 @@
 
 #include <common/vecx.h>
 #include <cstdint>
+#include <unordered_map>
 
 #include <common/e32inc.h>
 #include <e32keys.h>
