@@ -50,7 +50,6 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
     iStream->WriteL(*node->iBuffer);
 
     iCopied = node;
-
     SetActive();
 }
 
@@ -68,7 +67,7 @@ void CMMFMdaOutputBufferQueue::RunL() {
         delete iCopied;
     }
 
-    if (iStatus != KErrAbort) {
+    if (iStatus != KErrAbort) {    
         iStatus = KRequestPending;
         WriteAndWait();
     }
@@ -97,15 +96,15 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
-    : CIdle(CActive::EPriorityHigh) {
+    : CIdle(CActive::EPriorityStandard) {
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
     LogOut(MCA_CAT, _L("Open complete"));
    
     CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream*>(aUserdata);
-
     stream->iCallback.MaoscOpenComplete(KErrNone);
+
     return 0;
 }
 
@@ -148,8 +147,7 @@ void CMMFMdaAudioOutputStream::ConstructL() {
 }
 
 void CMMFMdaAudioOutputStream::NotifyOpenComplete() {
-    TRequestStatus *sts = &iOpen.iStatus;
-    User::RequestComplete(sts, KErrNone);
+    // TODO: Do something
 }
 
 void CMMFMdaAudioOutputStream::StartRaw() {
