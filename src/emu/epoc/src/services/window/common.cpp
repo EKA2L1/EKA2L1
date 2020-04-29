@@ -23,7 +23,6 @@
 
 #include <common/time.h>
 #include <epoc/services/window/common.h>
-#include <drivers/graphics/emu_window.h>
 
 namespace eka2l1::epoc {
     // TODO: Use emulated time
@@ -98,8 +97,10 @@ namespace eka2l1::epoc {
     }
 
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code) {
-        if (scan_code < EStdKeyF1) {
+        if (scan_code <= EStdKeyScrollLock) {
             return keymap[scan_code];
+        } else if (scan_code > EStdKeyScrollLock && scan_code < EStdKeyF1) {
+            return static_cast<TKeyCode>(scan_code);
         } else if (scan_code >= EStdKeyF1 && scan_code <= EStdKeyApplication27) {
             return keymap[scan_code - 67];
         }
@@ -107,33 +108,9 @@ namespace eka2l1::epoc {
     }
 
     TStdScanCode map_inputcode_to_scancode(int input_code) {
-        TStdScanCode scancode;
-        switch (input_code) {
-        case KEY_RIGHT:
-            scancode = EStdKeyRightArrow;
-            break;
-        case KEY_LEFT:
-            scancode = EStdKeyLeftArrow;
-            break;
-        case KEY_DOWN:
-            scancode = EStdKeyDownArrow;
-            break;
-        case KEY_UP:
-            scancode = EStdKeyUpArrow;
-            break;
-        case KEY_F1:
-            scancode = EStdKeyDevice0;
-            break;
-        case KEY_F2:
-            scancode = EStdKeyDevice1;
-            break;
-        case KEY_ENTER:
-            scancode = EStdKeyDevice3;
-            break;
-        default:
-            scancode = EStdKeyNull;
-            break;
-        }
-        return scancode;
+        auto it = scanmap.find(input_code);
+        if (it == scanmap.end())
+            return EStdKeyNull;
+        return static_cast<TStdScanCode>(it->second);
     }
 }

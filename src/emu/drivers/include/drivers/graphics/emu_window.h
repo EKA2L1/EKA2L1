@@ -45,6 +45,19 @@
 #define KEY_ENTER 257
 #define KEY_ESCAPE 256
 
+#define KEY_NUM0 320
+#define KEY_NUM1 321
+#define KEY_NUM2 322
+#define KEY_NUM3 323
+#define KEY_NUM4 324
+#define KEY_NUM5 325
+#define KEY_NUM6 326
+#define KEY_NUM7 327
+#define KEY_NUM8 328
+#define KEY_NUM9 329
+#define KEY_SLASH 331
+#define KEY_STAR 332
+
 #define KEY_F1 290
 #define KEY_F2 291
 
