@@ -102,7 +102,9 @@ static void WriteRgb32ToAddressANDNOT(TUint8 *aAddress, TUint8 aRed, TUint8 aGre
 }
 
 static void WriteRgb32ToAddressBlend(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-    if (aAlpha == 255) {
+    // NOTE (pent0): Some games gives zero alpha, because alpha blending was not documented before.
+    // So if we see a zero alpha, we should only write RGB. This is a hack.
+    if (aAlpha == 255 || aAlpha == 0) {
         WriteRgb32ToAddressAlpha(aAddress, aRed, aGreen, aBlue, 255);
         return;
     }
