@@ -81,6 +81,7 @@ namespace eka2l1 {
         bool should_package_manager_display_language_choose;
 
         bool should_show_app_launch;
+        bool should_still_focus_on_keyboard;
         bool should_show_install_device_wizard;
         bool should_show_about;
 

@@ -101,6 +101,7 @@ namespace eka2l1 {
         , should_package_manager_display_language_choose(false)
         , should_install_package(false)
         , should_show_app_launch(false)
+        , should_still_focus_on_keyboard(true)
         , should_show_install_device_wizard(false)
         , should_show_about(false)
         , selected_package_index(0xFFFFFFFF)
@@ -1096,7 +1097,13 @@ namespace eka2l1 {
 
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
+
+                bool last_show_launch = should_show_app_launch;
                 ImGui::MenuItem("Launch apps", "CTRL+R", &should_show_app_launch);
+
+                if ((last_show_launch != should_show_app_launch) && last_show_launch == false) {
+                    should_still_focus_on_keyboard = true;
+                }
 
                 if (ImGui::BeginMenu("Packages")) {
                     ImGui::MenuItem("Install", nullptr, &should_install_package);
@@ -1180,7 +1187,13 @@ namespace eka2l1 {
             {
                 ImGui::Text("Search ");
                 ImGui::SameLine();
+
                 app_search_box.Draw("##AppSearchBox");
+
+                if (should_still_focus_on_keyboard) {
+                    ImGui::SetKeyboardFocusHere(-1);
+                    should_still_focus_on_keyboard = false;
+                }
 
                 ImGui::Columns(2);
 
@@ -1224,6 +1237,7 @@ namespace eka2l1 {
                         if (ImGui::IsItemClicked()) {
                             // Launch app!
                             should_show_app_launch = false;
+                            should_still_focus_on_keyboard = true;
                             app_launch(registerations[i].mandatory_info.app_path.to_std_string(nullptr));
                         }
                     }
