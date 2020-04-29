@@ -50,7 +50,7 @@ namespace eka2l1::manager {
         bool enable_breakpoint_script{ false };
 
         std::vector<std::string> force_load_modules;
-        std::string cpu_backend{ "unicorn" };
+        std::string cpu_backend{ "dynarmic" };
         int device{ 0 };
         int language{ -1 };
 
