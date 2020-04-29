@@ -35,6 +35,7 @@ namespace eka2l1 {
 
     public:
         explicit etel_phone(const epoc::etel_phone_info &info);
+        ~etel_phone() override;
 
         bool init();
         

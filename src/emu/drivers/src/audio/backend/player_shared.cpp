@@ -159,4 +159,10 @@ namespace eka2l1::drivers {
     player_shared::player_shared(audio_driver *driver)
         : aud_(driver) {
     }
+
+    player_shared::~player_shared() {
+        if (output_stream_) {
+            output_stream_->stop();
+        }
+    }
 }

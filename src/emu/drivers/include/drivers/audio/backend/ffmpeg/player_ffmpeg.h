@@ -45,6 +45,7 @@ namespace eka2l1::drivers {
     struct player_ffmpeg : public player_shared {
     public:
         explicit player_ffmpeg(audio_driver *driver);
+        ~player_ffmpeg() override;
 
         void reset_request(player_request_instance &request) override;
         void get_more_data(player_request_instance &request) override;

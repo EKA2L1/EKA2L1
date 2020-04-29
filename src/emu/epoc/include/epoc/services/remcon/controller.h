@@ -28,6 +28,7 @@ namespace eka2l1::service {
 namespace eka2l1::epoc::remcon {
     class controller_session : public base_detail_session {
     public:
+        ~controller_session() override;
         void register_interested_apis(service::ipc_context *ctx) override;
     };
 }

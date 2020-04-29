@@ -35,6 +35,7 @@ namespace eka2l1 {
     
     struct etel_entity {
     public:
+        virtual ~etel_entity() = default;
         virtual epoc::etel_entry_type type() const = 0;
     };
 }

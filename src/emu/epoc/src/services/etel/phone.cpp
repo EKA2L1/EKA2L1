@@ -138,6 +138,9 @@ namespace eka2l1 {
         status_.mode_ = epoc::etel_phone_mode_idle;
     }
 
+    etel_phone::~etel_phone() {
+    }
+
     bool etel_phone::init() {
         status_.detect_ = epoc::etel_modem_detect_present;
         return true;

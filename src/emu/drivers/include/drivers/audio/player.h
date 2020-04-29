@@ -50,6 +50,8 @@ namespace eka2l1::drivers {
             , callback_(nullptr) {
         }
 
+        virtual ~player() = default;
+
         virtual bool play() = 0;
         virtual bool stop() = 0;
 

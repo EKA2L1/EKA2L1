@@ -31,6 +31,10 @@ namespace eka2l1 {
         , name_(name) {
     }
 
+    etel_line::~etel_line() {
+
+    }
+
     etel_line_subsession::etel_line_subsession(etel_session *session, etel_line *line)
         : etel_subsession(session)
         , line_(line) {

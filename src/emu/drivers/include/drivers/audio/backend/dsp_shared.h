@@ -57,8 +57,8 @@ namespace eka2l1::drivers {
 
         bool write(const std::uint8_t *data, const std::uint32_t data_size) override;
 
-        virtual void volume(const std::uint32_t new_volume);
-        virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels);
+        void volume(const std::uint32_t new_volume) override;
+        bool set_properties(const std::uint32_t freq, const std::uint8_t channels) override;
 
         void register_callback(dsp_stream_notification_type nof_type, dsp_stream_notification_callback callback,
             void *userdata) override;

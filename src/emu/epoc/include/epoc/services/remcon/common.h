@@ -60,6 +60,7 @@ namespace eka2l1::epoc::remcon {
 
     class base_detail_session {
     public:
+        virtual ~base_detail_session() = default;
         virtual void register_interested_apis(service::ipc_context *ctx) = 0;
     };
 

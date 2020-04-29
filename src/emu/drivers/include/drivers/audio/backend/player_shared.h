@@ -72,6 +72,7 @@ namespace eka2l1::drivers {
 
     public:
         explicit player_shared(audio_driver *driver);
+        ~player_shared() override;
 
         virtual void reset_request(player_request_instance &request) = 0;
         virtual void get_more_data(player_request_instance &request) = 0;

@@ -24,6 +24,9 @@
 #include <common/log.h>
 
 namespace eka2l1::epoc::remcon {
+    target_session::~target_session() {
+    }
+
     void target_session::register_interested_apis(service::ipc_context *ctx) {
         LOG_TRACE("Register interested APIs for target session stubbed");
         ctx->set_request_status(epoc::error_none);
