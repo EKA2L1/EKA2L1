@@ -111,8 +111,11 @@ namespace eka2l1::epoc {
         }
 
         epoc::window_group *focus = serv_->get_focus();
+        int ui_rotation = focus->scr->ui_rotation;
 
         for (auto &evt: evts_) {
+            evt.key_evt_.scancode = epoc::map_inputcode_to_scancode(evt.key_evt_.scancode,
+                ui_rotation);
             evt.key_evt_.code =  epoc::map_scancode_to_keycode(static_cast<TStdScanCode>(
                 evt.key_evt_.scancode));
 

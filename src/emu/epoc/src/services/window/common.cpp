@@ -107,9 +107,22 @@ namespace eka2l1::epoc {
         return EKeyNull;
     }
 
-    TStdScanCode map_inputcode_to_scancode(int input_code) {
-        auto it = scanmap.find(input_code);
-        if (it == scanmap.end())
+    TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation) {
+        auto scanmap = &scanmap_0;
+        switch (ui_rotation) {
+        case 90:
+            scanmap = &scanmap_90;
+            break;
+        case 180:
+            scanmap = &scanmap_180;
+            break;
+        case 270:
+            scanmap = &scanmap_270;
+            break;
+        }
+
+        auto it = scanmap->find(input_code);
+        if (it == scanmap->end())
             return EStdKeyNull;
         return static_cast<TStdScanCode>(it->second);
     }

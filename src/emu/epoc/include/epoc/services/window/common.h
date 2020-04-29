@@ -634,7 +634,7 @@ namespace eka2l1::epoc {
         EKeyApplication27
     };
 
-    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap = {
+    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_0 = {
         { KEY_RIGHT, EStdKeyRightArrow },
         { KEY_LEFT, EStdKeyLeftArrow },
         { KEY_DOWN, EStdKeyDownArrow },
@@ -656,7 +656,73 @@ namespace eka2l1::epoc {
         { KEY_NUM9, '9' }
     };
 
+    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_90 = {
+        { KEY_RIGHT, EStdKeyUpArrow },
+        { KEY_LEFT, EStdKeyDownArrow },
+        { KEY_DOWN, EStdKeyRightArrow },
+        { KEY_UP, EStdKeyLeftArrow },
+        { KEY_F1, EStdKeyDevice0 },
+        { KEY_F2, EStdKeyDevice1 },
+        { KEY_ENTER, EStdKeyDevice3 },
+        { KEY_SLASH, EStdKeyHash },
+        { KEY_STAR, '*' },
+        { KEY_NUM0, '0' },
+        { KEY_NUM1, '1' },
+        { KEY_NUM2, '2' },
+        { KEY_NUM3, '3' },
+        { KEY_NUM4, '4' },
+        { KEY_NUM5, '5' },
+        { KEY_NUM6, '6' },
+        { KEY_NUM7, '7' },
+        { KEY_NUM8, '8' },
+        { KEY_NUM9, '9' }
+    };
+
+    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_180 = {
+        { KEY_RIGHT, EStdKeyLeftArrow },
+        { KEY_LEFT, EStdKeyRightArrow },
+        { KEY_DOWN, EStdKeyUpArrow },
+        { KEY_UP, EStdKeyDownArrow },
+        { KEY_F1, EStdKeyDevice0 },
+        { KEY_F2, EStdKeyDevice1 },
+        { KEY_ENTER, EStdKeyDevice3 },
+        { KEY_SLASH, EStdKeyHash },
+        { KEY_STAR, '*' },
+        { KEY_NUM0, '0' },
+        { KEY_NUM1, '1' },
+        { KEY_NUM2, '2' },
+        { KEY_NUM3, '3' },
+        { KEY_NUM4, '4' },
+        { KEY_NUM5, '5' },
+        { KEY_NUM6, '6' },
+        { KEY_NUM7, '7' },
+        { KEY_NUM8, '8' },
+        { KEY_NUM9, '9' }
+    };
+
+    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_270 = {
+        { KEY_RIGHT, EStdKeyDownArrow },
+        { KEY_LEFT, EStdKeyUpArrow },
+        { KEY_DOWN, EStdKeyLeftArrow },
+        { KEY_UP, EStdKeyRightArrow },
+        { KEY_F1, EStdKeyDevice0 },
+        { KEY_F2, EStdKeyDevice1 },
+        { KEY_ENTER, EStdKeyDevice3 },
+        { KEY_SLASH, EStdKeyHash },
+        { KEY_STAR, '*' },
+        { KEY_NUM0, '0' },
+        { KEY_NUM1, '1' },
+        { KEY_NUM2, '2' },
+        { KEY_NUM3, '3' },
+        { KEY_NUM4, '4' },
+        { KEY_NUM5, '5' },
+        { KEY_NUM6, '6' },
+        { KEY_NUM7, '7' },
+        { KEY_NUM8, '8' },
+        { KEY_NUM9, '9' }
+    };
+
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
 
-    TStdScanCode map_inputcode_to_scancode(int input_code);
+    TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation);
 }
