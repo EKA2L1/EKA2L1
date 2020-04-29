@@ -87,21 +87,22 @@ namespace eka2l1 {
         bool should_show_about;
 
         bool should_show_screen_options[20];
+        bool should_show_empty_device_warn;
 
         struct device_wizard {
             enum device_wizard_stage {
                 WELCOME_MESSAGE = 0,
-                SPECIFY_RPKG = 1,
-                SPECIFY_ROM = 2,
-                INSTALL = 3,
-                ENDING = 4,
-                FINAL_FOR_REAL = 5
+                SPECIFY_FILES = 1,
+                INSTALL = 2,
+                ENDING = 3,
+                FINAL_FOR_REAL = 4
             } stage;
 
             std::string current_rom_path;
             std::string current_rpkg_path;
 
             bool should_continue;
+            bool should_continue_temps[2];
 
             std::atomic<bool> extract_rpkg_done;
             std::atomic<bool> copy_rom_done;
@@ -130,6 +131,7 @@ namespace eka2l1 {
         void *selected_callback_data;
 
         void show_app_launch();
+        void show_empty_device_warn();
 
         void show_threads();
         void show_mutexs();

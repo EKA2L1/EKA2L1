@@ -105,6 +105,7 @@ namespace eka2l1 {
         , should_still_focus_on_keyboard(true)
         , should_show_install_device_wizard(false)
         , should_show_about(false)
+        , should_show_empty_device_warn(false)
         , selected_package_index(0xFFFFFFFF)
         , debug_thread_id(0)
         , app_launch(app_launch)
@@ -114,8 +115,19 @@ namespace eka2l1 {
         std::fill(should_show_screen_options, should_show_screen_options + sizeof(should_show_screen_options) / sizeof(bool),
             false);
 
+        std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
+            false);
+
+        manager_system *mngr = sys->get_manager_system();
+
+        // Check if no device is installed
+        manager::device_manager *dvc_mngr = mngr->get_device_manager();
+        if (dvc_mngr->get_devices().empty()) {
+            should_show_empty_device_warn = true;
+        }
+
         // Setup hook
-        manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
+        manager::package_manager *pkg_mngr = mngr->get_package_manager();
 
         pkg_mngr->show_text = [&](const char *text_buf, const bool one_button) -> bool {
             installer_text = text_buf;
@@ -945,11 +957,15 @@ namespace eka2l1 {
         if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
             device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
             should_show_install_device_wizard = false;
+
+            std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
+                false);
+    
             return;
         }
 
         ImGui::OpenPopup("Install device wizard");
-        ImGui::SetNextWindowSize(ImVec2(640, 140), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(640, 180), ImGuiCond_Once);
 
         if (ImGui::BeginPopupModal("Install device wizard")) {
             switch (device_wizard_state.stage) {
@@ -958,41 +974,43 @@ namespace eka2l1 {
                 device_wizard_state.should_continue = true;
                 break;
 
-            case device_wizard::SPECIFY_RPKG: {
+            case device_wizard::SPECIFY_FILES: {
                 ImGui::TextWrapped("Please specify the repackage file (RPKG):");
                 ImGui::InputText("##RPKGPath", device_wizard_state.current_rpkg_path.data(),
                     device_wizard_state.current_rpkg_path.size(), ImGuiInputTextFlags_ReadOnly);
 
                 ImGui::SameLine();
 
-                if (ImGui::Button("Change")) {
+                if (ImGui::Button("Change##1")) {
                     on_pause_toogle(true);
 
                     file_dialog("rpkg", [&](const char *result) {
                         device_wizard_state.current_rpkg_path = result;
-                        device_wizard_state.should_continue = eka2l1::exists(result);
+                        device_wizard_state.should_continue_temps[0] = eka2l1::exists(result);
+                        device_wizard_state.should_continue = (device_wizard_state.should_continue_temps[1]
+                            && eka2l1::exists(result));
                     });
 
                     should_pause = false;
                     on_pause_toogle(false);
                 }
 
-                break;
-            }
-
-            case device_wizard::SPECIFY_ROM: {
+                ImGui::Separator();
+                
                 ImGui::TextWrapped("Please specify the ROM file:");
                 ImGui::InputText("##ROMPath", device_wizard_state.current_rom_path.data(),
                     device_wizard_state.current_rom_path.size(), ImGuiInputTextFlags_ReadOnly);
 
                 ImGui::SameLine();
 
-                if (ImGui::Button("Change")) {
+                if (ImGui::Button("Change##2")) {
                     on_pause_toogle(true);
 
                     file_dialog("rom", [&](const char *result) {
                         device_wizard_state.current_rom_path = result;
-                        device_wizard_state.should_continue = eka2l1::exists(result);
+                        device_wizard_state.should_continue_temps[1] = eka2l1::exists(result);
+                        device_wizard_state.should_continue = (device_wizard_state.should_continue_temps[0]
+                            && eka2l1::exists(result));
                     });
 
                     should_pause = false;
@@ -1649,11 +1667,34 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::show_empty_device_warn() {
+        ImGui::OpenPopup("##NoDevicePresent");
+        if (ImGui::BeginPopupModal("##NoDevicePresent", &should_show_empty_device_warn)) {
+            ImGui::Text("You have not installed any device. Please follow the installation instructions on EKA2L1's wiki page.");
+
+            ImGui::NewLine();
+            ImGui::SameLine((ImGui::GetWindowSize().x - 30.0f) / 2);
+
+            ImGui::SetNextItemWidth(30.0f);
+            
+            if (ImGui::Button("OK")) {
+                should_show_empty_device_warn = false;
+            }
+            
+            ImGui::EndPopup();
+        }
+    }
+
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
         handle_shortcuts();
         show_screens();
         show_errors();
+
+        if (should_show_empty_device_warn) {
+            show_empty_device_warn();
+            return;
+        }
 
         if (should_package_manager) {
             show_package_manager();
