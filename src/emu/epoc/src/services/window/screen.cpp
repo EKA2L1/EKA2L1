@@ -80,6 +80,7 @@ namespace eka2l1::epoc {
         : number(number)
         , ui_rotation(0)
         , orientation_lock(true)
+        , refresh_rate(60)
         , screen_texture(0)
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
@@ -245,13 +246,11 @@ namespace eka2l1::epoc {
         resize(drv, mode_info(mode)->size);
     }
 
-    static constexpr std::uint32_t SCREEN_HZ = 60;
-
     void screen::vsync(timing_system *timing) {
         const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
         std::uint64_t delta = tnow - last_vsync;
 
-        const std::uint64_t microsecs_a_frame = 1000000 / SCREEN_HZ;
+        const std::uint64_t microsecs_a_frame = 1000000 / refresh_rate;
 
         if (delta < microsecs_a_frame) {
             std::this_thread::sleep_for(std::chrono::microseconds(microsecs_a_frame - delta));

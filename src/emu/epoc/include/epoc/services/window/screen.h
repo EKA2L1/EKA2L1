@@ -52,6 +52,8 @@ namespace eka2l1::epoc {
         int ui_rotation;            ///< Rotation for UI display. So nikita can skip neck day.
         bool orientation_lock;      ///< If this is true. Rotate the screen won't change the orientation.
 
+        std::uint8_t refresh_rate;
+
         // The root window, used to traverse window tree
         // Draw order will be child in front of parent, newer in front of older.
         std::unique_ptr<epoc::window> root;
