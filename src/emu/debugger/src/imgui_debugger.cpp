@@ -98,6 +98,7 @@ namespace eka2l1 {
         , should_package_manager_display_file_list(false)
         , should_package_manager_remove(false)
         , should_package_manager_display_installer_text(false)
+        , should_package_manager_display_one_button_only(false)
         , should_package_manager_display_language_choose(false)
         , should_install_package(false)
         , should_show_app_launch(false)
@@ -116,9 +117,10 @@ namespace eka2l1 {
         // Setup hook
         manager::package_manager *pkg_mngr = sys->get_manager_system()->get_package_manager();
 
-        pkg_mngr->show_text = [&](const char *text_buf) -> bool {
+        pkg_mngr->show_text = [&](const char *text_buf, const bool one_button) -> bool {
             installer_text = text_buf;
             should_package_manager_display_installer_text = true;
+            should_package_manager_display_one_button_only = one_button;
 
             std::unique_lock<std::mutex> ul(installer_mut);
             installer_cond.wait(ul);
@@ -882,7 +884,7 @@ namespace eka2l1 {
 
             ImGui::SameLine();
 
-            if (ImGui::Button("No")) {
+            if (!should_package_manager_display_one_button_only && ImGui::Button("No")) {
                 installer_text_result = false;
                 installer_cond.notify_one();
 
@@ -1633,7 +1635,7 @@ namespace eka2l1 {
                 ImGui::Text("EKA2L1 - SYMBIAN OS EMULATOR");
                 ImGui::Separator();
                 ImGui::Text("(C) 2018- EKA2L1 Team.");
-                ImGui::Text("Thank you for using!");
+                ImGui::Text("Thank you for using the emulator!");
                 ImGui::Separator();
                 ImGui::Text("Honors:");
                 ImGui::Text("- florastamine");

@@ -78,6 +78,7 @@ namespace eka2l1 {
         int installer_current_lang_idx{ -1 };
 
         bool should_package_manager_display_installer_text;
+        bool should_package_manager_display_one_button_only;
         bool should_package_manager_display_language_choose;
 
         bool should_show_app_launch;

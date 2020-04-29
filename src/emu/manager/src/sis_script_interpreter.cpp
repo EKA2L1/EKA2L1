@@ -387,7 +387,7 @@ namespace eka2l1 {
                     LOG_ERROR("{}", error_string);
 
                     if (show_text) {
-                        show_text(error_string.c_str());
+                        show_text(error_string.c_str(), true);
                     }
 
                     return false;
@@ -421,7 +421,7 @@ namespace eka2l1 {
                         bool yes_choosen = true;
 
                         if (show_text) {
-                            yes_choosen = show_text(reinterpret_cast<const char *>(buf.data()));
+                            yes_choosen = show_text(reinterpret_cast<const char *>(buf.data()), false);
                         }
 
                         LOG_INFO("EOpText: {}", reinterpret_cast<const char *>(buf.data()));
@@ -440,7 +440,7 @@ namespace eka2l1 {
                             LOG_ERROR("{}", err_string);
 
                             if (show_text) {
-                                show_text(err_string.c_str());
+                                show_text(err_string.c_str(), true);
                             }
 
                             break;

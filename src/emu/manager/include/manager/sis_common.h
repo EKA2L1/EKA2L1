@@ -9,6 +9,6 @@ namespace eka2l1::loader {
         epoc6 = 0x10003A12
     };
 
-    using show_text_func = std::function<bool(const char *)>;
+    using show_text_func = std::function<bool(const char *, const bool)>;
     using choose_lang_func = std::function<int(const int *langs, const int count)>;
 }

@@ -262,7 +262,7 @@ namespace eka2l1 {
             write_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
 
             if (show_text) {
-                show_text("Installation done!");
+                show_text("Installation done!", true);
             }
 
             LOG_TRACE("Installation done!");
