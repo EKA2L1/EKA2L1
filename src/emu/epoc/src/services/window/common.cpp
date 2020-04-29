@@ -122,8 +122,12 @@ namespace eka2l1::epoc {
         }
 
         auto it = scanmap->find(input_code);
-        if (it == scanmap->end())
-            return EStdKeyNull;
+        if (it == scanmap->end()) {
+            scanmap = &scanmap_all;
+            it = scanmap->find(input_code);
+            if (it == scanmap->end())
+                return EStdKeyNull;
+        }
         return static_cast<TStdScanCode>(it->second);
     }
 }
