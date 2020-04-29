@@ -20,13 +20,15 @@
 #include <epoc/services/context.h>
 #include <epoc/services/hwrm/op.h>
 #include <epoc/services/hwrm/vibration/vibration.h>
+#include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
+    vibration_resource::vibration_resource(kernel_system *kern)
+        : kern_(kern) {
+    }
+
     void vibration_resource::execute_command(service::ipc_context &ctx) {
-        switch (ctx.msg->function) {
-        default:
-            LOG_ERROR("Unimplemented operation for vibration resource: ({})", ctx.msg->function);
-            break;
-        }
+        LOG_ERROR("Unimplemented operation for vibration resource: ({})", ctx.msg->function);
+        ctx.set_request_status(epoc::error_none);
     }
 }

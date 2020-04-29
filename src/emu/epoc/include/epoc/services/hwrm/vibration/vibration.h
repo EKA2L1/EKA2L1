@@ -19,6 +19,10 @@
 
 #include <epoc/services/hwrm/resource.h>
 
+namespace eka2l1 {
+    class kernel_system;
+}
+
 namespace eka2l1::epoc {
     /**
      * \brief The vibration resource.
@@ -26,6 +30,9 @@ namespace eka2l1::epoc {
      * The class manages Symbian's vibration high-levely by mapping vibration to the host.
      */
     struct vibration_resource : public resource_interface {
+        kernel_system *kern_;
+
+        explicit vibration_resource(kernel_system *kern);
         void execute_command(service::ipc_context &ctx) override;
     };
 }
