@@ -141,7 +141,7 @@ namespace eka2l1 {
 
         void show_pref_personalisation();
         void show_pref_general();
-        void show_pref_mounting();
+        void show_pref_system();
         void show_pref_hal();
 
         void show_installer_text_popup();

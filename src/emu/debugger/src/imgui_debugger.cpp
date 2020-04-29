@@ -544,7 +544,7 @@ namespace eka2l1 {
         }
     }
 
-    void imgui_debugger::show_pref_mounting() {
+    void imgui_debugger::show_pref_system() {
         const float col2 = ImGui::GetWindowSize().x / 3;
 
         auto draw_path_change = [&](const char *title, const char *button, std::string &dat) {
@@ -660,7 +660,7 @@ namespace eka2l1 {
         using show_func = std::function<void(imgui_debugger *)>;
         static std::vector<std::pair<std::string, show_func>> all_prefs = {
             { "General", &imgui_debugger::show_pref_general },
-            { "Mounting", &imgui_debugger::show_pref_mounting },
+            { "System", &imgui_debugger::show_pref_system },
             { "Personalisation", &imgui_debugger::show_pref_personalisation },
             { "HAL", &imgui_debugger::show_pref_hal }
         };
@@ -1255,7 +1255,7 @@ namespace eka2l1 {
     void imgui_image_rotate(ImTextureID tex_id, ImVec2 base_pos, ImVec2 center, ImVec2 size, float angle) {
         ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
-        angle = angle * common::PI / 180.0f;
+        angle = angle * static_cast<float>(common::PI) / 180.0f;
 
         float cos_a = cosf(angle);
         float sin_a = sinf(angle);
@@ -1384,6 +1384,17 @@ namespace eka2l1 {
                                 scr->set_rotation(sys->get_graphics_driver(), i * 90);
                                 break;
                             }
+                        }
+
+                        ImGui::EndMenu();
+                    }
+
+                    if (ImGui::BeginMenu("Refresh rate")) {
+                        int current_refresh_rate = scr->refresh_rate;
+                        ImGui::SliderInt("##RefreshRate", &current_refresh_rate, 0, 120);
+
+                        if (current_refresh_rate != scr->refresh_rate) {
+                            scr->refresh_rate = static_cast<std::uint8_t>(current_refresh_rate);
                         }
 
                         ImGui::EndMenu();
