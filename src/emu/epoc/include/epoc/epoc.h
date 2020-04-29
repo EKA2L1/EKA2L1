@@ -102,6 +102,8 @@ namespace eka2l1 {
         void set_debugger(debugger_base *new_debugger);
         void set_symbian_version_use(const epocver ever);
         void set_cpu_executor_type(const arm_emulator_type type);
+        
+        const arm_emulator_type get_cpu_executor_type() const;
 
         loader::rom *get_rom_info();
         epocver get_symbian_version_use() const;

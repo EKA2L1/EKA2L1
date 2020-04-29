@@ -63,6 +63,8 @@
 
 #include <arm/arm_factory.h>
 #include <arm/arm_interface_extended.h>
+#include <arm/arm_utils.h>
+
 #include <manager/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
@@ -164,6 +166,10 @@ namespace eka2l1 {
 
         void set_cpu_executor_type(const arm_emulator_type type) {
             cpu_type = type;
+        }
+
+        const arm_emulator_type get_cpu_executor_type() const {
+            return cpu_type;
         }
 
         manager::config_state *get_config() {
@@ -365,13 +371,7 @@ namespace eka2l1 {
         , debugger(nullptr)
         , gdriver(graphics_driver)
         , adriver(audio_driver) {
-        if (conf->cpu_backend == unicorn_jit_backend_name) {
-            cpu_type = arm_emulator_type::unicorn;
-        } else if (conf->cpu_backend == dynarmic_jit_backend_name) {
-            cpu_type = arm_emulator_type::dynarmic;
-        } else {
-            assert(false && "JIT backend config name is invalid");
-        }
+        cpu_type = arm::string_to_arm_emulator_type(conf->cpu_backend);
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
@@ -595,6 +595,10 @@ namespace eka2l1 {
 
     void system::set_cpu_executor_type(const arm_emulator_type type) {
         return impl->set_cpu_executor_type(type);
+    }
+
+    const arm_emulator_type system::get_cpu_executor_type() const {
+        return impl->get_cpu_executor_type();
     }
 
     loader::rom *system::get_rom_info() {

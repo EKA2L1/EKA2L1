@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <arm/arm_utils.h>
+
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
 #include <debugger/renderer/common.h>
@@ -472,14 +474,16 @@ namespace eka2l1 {
         ImGui::SameLine(col2);
         ImGui::PushItemWidth(col2 - 10);
 
-        if (ImGui::BeginCombo("##CPUCombo", (conf->cpu_backend == eka2l1::unicorn_jit_backend_name) ? "Unicorn" : "Dynarmic")) {
+        if (ImGui::BeginCombo("##CPUCombo", arm::arm_emulator_type_to_string(sys->get_cpu_executor_type()))) {
             if (ImGui::Selectable("Unicorn")) {
-                conf->cpu_backend = eka2l1::unicorn_jit_backend_name;
+                conf->cpu_backend = "Unicorn";
+                sys->set_cpu_executor_type(arm_emulator_type::unicorn);
                 conf->serialize();
             }
 
             if (ImGui::Selectable("Dynarmic")) {
-                conf->cpu_backend = eka2l1::dynarmic_jit_backend_name;
+                conf->cpu_backend = "Dynarmic";
+                sys->set_cpu_executor_type(arm_emulator_type::dynarmic);
                 conf->serialize();
             }
 
