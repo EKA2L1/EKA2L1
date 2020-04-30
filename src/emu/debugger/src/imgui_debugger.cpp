@@ -886,6 +886,16 @@ namespace eka2l1 {
 
         if (ImGui::BeginPopupModal("Installer Text Popup")) {
             ImGui::Text("%s", installer_text);
+            ImGui::NewLine();
+
+            const float button_size = 30.0f;
+            float total_width_button_occupied = button_size;
+
+            if (!should_package_manager_display_one_button_only) {
+                total_width_button_occupied += button_size + 4.0f;
+            }
+
+            ImGui::SameLine((ImGui::GetWindowWidth() - total_width_button_occupied) / 2);
 
             if (ImGui::Button("Yes")) {
                 installer_text_result = true;
@@ -910,12 +920,22 @@ namespace eka2l1 {
     void imgui_debugger::show_installer_choose_lang_popup() {
         ImGui::OpenPopup("Choose the language for this package");
 
+        ImGuiIO &io = ImGui::GetIO();
+        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x / 4, io.DisplaySize.y / 3));
+
         if (ImGui::BeginPopupModal("Choose the language for this package")) {
             for (int i = 0; i < installer_lang_size; i++) {
                 if (ImGui::Selectable(num_to_lang(installer_langs[i]), installer_current_lang_idx == i)) {
                     installer_current_lang_idx = i;
                 }
             }
+
+            ImGui::NewLine();
+
+            const float button_size = 30.0f;
+            float total_width_button_occupied = button_size * 2 + 4.0f;
+
+            ImGui::SameLine((ImGui::GetWindowWidth() - total_width_button_occupied) / 2);
 
             if (ImGui::Button("OK")) {
                 installer_lang_choose_result = installer_langs[installer_current_lang_idx];
