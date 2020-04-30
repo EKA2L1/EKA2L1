@@ -68,6 +68,7 @@ namespace eka2l1 {
             connection_id_ = server<fbs_server>()->init();
 
             if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
+                connection_id_ = ctx->msg->msg_session->get_associated_handle();
                 ctx->set_request_status(epoc::error_none);
             } else {
                 ctx->set_request_status(connection_id_);
