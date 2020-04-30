@@ -2374,11 +2374,20 @@ namespace eka2l1::epoc {
         std::uint32_t i2;
     };
 
-    BRIDGE_FUNC(std::int32_t, safe_inc_32, eka2l1::ptr<std::int32_t> aVal) {
+    BRIDGE_FUNC(std::int32_t, safe_inc_32, eka2l1::ptr<std::int32_t> val_ptr) {
         kernel_system *kern = sys->get_kernel_system();
-        std::int32_t *val = aVal.get(kern->crr_process());
+        std::int32_t *val = val_ptr.get(kern->crr_process());
         std::int32_t org_val = *val;
         *val > 0 ? val++ : 0;
+
+        return org_val;
+    }
+
+    BRIDGE_FUNC(std::int32_t, safe_dec_32, eka2l1::ptr<std::int32_t> val_ptr) {
+        kernel_system *kern = sys->get_kernel_system();
+        std::int32_t *val = val_ptr.get(kern->crr_process());
+        std::int32_t org_val = *val;
+        *val > 0 ? val-- : 0;
 
         return org_val;
     }
@@ -2585,6 +2594,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800013, user_svr_rom_header_address),
         BRIDGE_REGISTER(0x00800014, user_svr_rom_root_dir_address),
         BRIDGE_REGISTER(0x00800015, safe_inc_32),
+        BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
         /* SLOW EXECUTIVE CALL */
