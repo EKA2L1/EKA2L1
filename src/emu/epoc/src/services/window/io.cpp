@@ -116,20 +116,32 @@ namespace eka2l1::epoc {
         for (auto &evt: evts_) {
             evt.key_evt_.scancode = epoc::map_inputcode_to_scancode(evt.key_evt_.scancode,
                 ui_rotation);
-            evt.key_evt_.code =  epoc::map_scancode_to_keycode(static_cast<TStdScanCode>(
-                evt.key_evt_.scancode));
+
+            bool dont_send_extra_key_event = false;
+
+            if (!serv_->key_block_active) {
+                // Don't block simultaneous key presses.
+                // Also looks like the ::key event are ignored. TODO(pent0): Only these buttons?
+                dont_send_extra_key_event = true;
+            } else {
+                dont_send_extra_key_event = (evt.type != epoc::event_code::key_down);
+            }
 
             epoc::event extra_event = evt;
             extra_event.type = epoc::event_code::key;
+
+            if (!dont_send_extra_key_event) {
+                extra_event.key_evt_.code =  epoc::map_scancode_to_keycode(static_cast<TStdScanCode>(
+                    evt.key_evt_.scancode));
+            }
 
             evt.handle = focus->get_client_handle();
             extra_event.handle = focus->get_client_handle();
 
             focus->queue_event(evt);
 
-            if (evt.type == epoc::event_code::key_down) {
+            if (!dont_send_extra_key_event) {
                 // Give it a single key event also
-                // TODO(pent0): Im not sure but on hardware it does this?
                 focus->queue_event(extra_event);
             }
 

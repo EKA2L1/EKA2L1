@@ -877,6 +877,7 @@ namespace eka2l1 {
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
         guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
         guest_evt_.key_evt_.repeats = 0; // TODO?
+        guest_evt_.key_evt_.modifiers = 0;
     }
 
     /**

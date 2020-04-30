@@ -119,6 +119,8 @@ namespace eka2l1::epoc {
             ws_cmd_capture_key *capture_key_cmd = reinterpret_cast<decltype(capture_key_cmd)>(cmd.data_ptr);
 
             epoc::event_capture_key_notifier capture_key_notify;
+            
+            capture_key_notify.user = this;
             capture_key_notify.keycode_ = capture_key_cmd->key;
             capture_key_notify.modifiers_ = capture_key_cmd->modifiers;
             capture_key_notify.modifiers_mask_ = capture_key_cmd->modifier_mask;
