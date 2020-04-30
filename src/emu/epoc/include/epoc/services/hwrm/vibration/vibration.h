@@ -31,6 +31,9 @@ namespace eka2l1::epoc {
      */
     struct vibration_resource : public resource_interface {
         kernel_system *kern_;
+        std::uint32_t intensity_;
+
+        void vibrate_with_default_intensity(service::ipc_context &ctx);
 
         explicit vibration_resource(kernel_system *kern);
         void execute_command(service::ipc_context &ctx) override;

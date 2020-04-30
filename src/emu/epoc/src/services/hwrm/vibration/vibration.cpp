@@ -24,11 +24,31 @@
 
 namespace eka2l1::epoc {
     vibration_resource::vibration_resource(kernel_system *kern)
-        : kern_(kern) {
+        : kern_(kern)
+        , intensity_(100) {
+    }
+
+    void vibration_resource::vibrate_with_default_intensity(service::ipc_context &ctx) {
+        std::optional<std::uint32_t> duration_in_millis = ctx.get_arg<std::uint32_t>(0);
+        if (!duration_in_millis.has_value()) {
+            ctx.set_request_status(epoc::error_argument);
+            return;
+        }
+
+        LOG_INFO("Vibrating the phone for {} milliseconds //-(o_o)-\\", duration_in_millis.value());
+        ctx.set_request_status(epoc::error_none);
     }
 
     void vibration_resource::execute_command(service::ipc_context &ctx) {
-        LOG_ERROR("Unimplemented operation for vibration resource: ({})", ctx.msg->function);
-        ctx.set_request_status(epoc::error_none);
+        switch (ctx.msg->function) {
+        case hwrm_vibrate_start_with_default_intensity:
+            vibrate_with_default_intensity(ctx);
+            break;
+
+        default:
+            LOG_ERROR("Unimplemented operation for vibration resource: ({})", ctx.msg->function);
+            ctx.set_request_status(epoc::error_none);
+            break;
+        }
     }
 }

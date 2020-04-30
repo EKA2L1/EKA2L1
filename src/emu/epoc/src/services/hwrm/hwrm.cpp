@@ -24,6 +24,8 @@
 #include <epoc/services/hwrm/op.h>
 #include <epoc/utils/err.h>
 
+#include <manager/manager.h>
+
 namespace eka2l1 {
     hwrm_session::hwrm_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version) {
@@ -44,15 +46,7 @@ namespace eka2l1 {
         }
 
         default: {
-            int cmd_num = ctx->msg->function;
-
-            if (cmd_num >= 1000) {
-                // TODO: Check back with later version. For S60v5 light command base is 2000
-                if (cmd_num >= 2000 && cmd_num <= 3000) {
-                    cmd_num -= 1000;
-                }
-
-                ctx->msg->function = cmd_num;
+            if (ctx->msg->function >= 1000) {
                 resource_->execute_command(*ctx);
             } else {
                 LOG_ERROR("Unimplemented opcode for HWMR session 0x{:X}", ctx->msg->function);
@@ -69,7 +63,7 @@ namespace eka2l1 {
     }
 
     void hwrm_server::connect(service::ipc_context &ctx) {
-        if (!light_data_) {
+        if (!light_data_ || !vibration_data_) {
             if (!init()) {
                 LOG_ERROR("Fail to initialise HWRM service shared data!");
             }
@@ -84,7 +78,8 @@ namespace eka2l1 {
         kernel_system *kern = sys->get_kernel_system();
 
         light_data_ = std::make_unique<epoc::hwrm::light::resource_data>(kern);
-        vibration_data_ = std::make_unique<epoc::hwrm::vibration::resource_data>(kern);
+        vibration_data_ = std::make_unique<epoc::hwrm::vibration::resource_data>(kern, sys->get_io_system(),
+            sys->get_manager_system()->get_device_manager());
 
         return true;
     }

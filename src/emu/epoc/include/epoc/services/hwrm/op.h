@@ -37,4 +37,9 @@ namespace eka2l1 {
         hwrm_light_op_supported_targets = 1006,
         hwrm_light_op_set_light_color = 1007
     };
+
+    enum hwrm_vibrate_op {
+        hwrm_vibrate_start_with_default_intensity = 2000,
+        hwrm_vibrate_cleanup = 2006
+    };
 }

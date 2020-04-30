@@ -26,6 +26,13 @@ namespace eka2l1 {
         class property;
     }
 
+    struct central_repo;
+    class io_system;
+
+    namespace manager {
+        class device_manager;
+    }
+
     using property_ptr = service::property *;
 
     class kernel_system;
@@ -34,6 +41,7 @@ namespace eka2l1 {
         struct resource_data {
         private:
             property_ptr status_prop_; ///< Pointer to the property
+            central_repo *vibra_control_repo_;
 
             /**
              * \brief   Initialise internal vibration resource components.
@@ -46,10 +54,20 @@ namespace eka2l1 {
              * 
              * \internal
              */
-            bool initialise_components(kernel_system *kern);
+            bool initialise_components(kernel_system *kern, io_system *io, manager::device_manager *mngr);
+
+            /**
+             * \brief Enable vibration to start.
+             * 
+             * This changes the vibration control variable in central repo to true.
+             * 
+             * \returns True on success.
+             * \internal
+             */
+            bool enable_vibration(io_system *io, manager::device_manager *mngr);
 
         public:
-            explicit resource_data(kernel_system *kern);
+            explicit resource_data(kernel_system *kern, io_system *io, manager::device_manager *mngr);
         };
     }
 }

@@ -75,6 +75,10 @@ namespace eka2l1::epoc {
     }
 
     void light_resource::execute_command(service::ipc_context &ctx) {
+        if ((ctx.msg->function >= 2000) && (ctx.msg->function < 3000)) {
+            ctx.msg->function -= 1000;
+        }
+
         switch (ctx.msg->function) {
         case hwrm_light_op_supported_targets: {
             get_supported_targets(ctx);
