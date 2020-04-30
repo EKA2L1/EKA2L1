@@ -45,50 +45,50 @@ namespace eka2l1 {
     }
 
     enum oom_ui_app_op {
-        EAknSLaunchView = 50, // to avoid collision to notifier related commands
-        EAknSKillApp,
-        EAknSKillAllApps,
-        EAknSUnlockMedia,
-        EAknSEnableTaskList,
-        EAknsLaunchTaskList,
-        EAknSRefreshTaskList,
-        EAknSSuppressAppsKey,
-        EAknSHideApplicationFromFWS,
+        akns_launch_view = 50,
+        akns_kill_app = 51,
+        akns_kill_all_apps = 52,
+        akns_unlock_media = 53,
+        akns_enable_task_list = 54,
+        akns_launch_task_list = 55,
+        akns_refresh_task_list = 56,
+        akns_suppress_apps_key = 57,
+        akns_hide_app_from_fws = 58,
         // sgc
-        EAknEikAppUiSetSgcParams,
-        EAknEikAppUiBlockServerStatusPaneRedraws,
-        EAknEikAppUiRedrawServerStatusPane,
-        EAknEikAppUiPrepareForAppExit,
-        EAknEikAppUiSetSystemFaded,
-        EAknEikAppUiIsSystemFaded,
-        EAknEikAppUiRelinquishPriorityToForegroundApp,
-        EAknEikAppUiLayoutConfigSize,
-        EAknEikAppUiGetLayoutConfig,
-        EAknEikAppUiMoveAppInZOrder,
+        akn_eik_app_ui_set_sgc_params = 59,
+        akn_eik_app_ui_block_server_status_pane_redraws = 60,
+        akn_eik_app_ui_redraw_server_status_pane = 61,
+        akn_eik_app_ui_prepare_for_app_exit = 62,
+        akn_eik_app_ui_set_system_faded = 63,
+        akn_eik_app_ui_is_system_faded = 64,
+        akn_eik_app_ui_relinquish_priority_to_foreground_app = 65,
+        akn_eik_app_ui_layout_config_size = 66,
+        akn_eik_app_ui_get_layout_config = 67,
+        akn_eik_app_ui_move_app_in_z_order = 68,
         // eiksrv support
-        EAknSSetStatusPaneFlags,
-        EAknSSetStatusPaneLayout,
-        EAknSBlankScreen,
-        EAknSUnblankScreen,
-        EAknSSetKeyboardRepeatRate,
-        EAknSUpdateKeyBlockMode,
-        EAknSShowLockedNote,
-        EAknSShutdownApps,
-        EAknSStatusPaneResourceId,
-        EAknSStatusPaneAppResourceId,
-        EAknSSetStatusPaneAppResourceId,
-        EAknSRotateScreen,
-        EAknSAppsKeyBlocked,
-        EAknSShowLongTapAnimation,
-        EAknSHideLongTapAnimation,
-        EAknGetAliasKeyCode,
-        EAknSetFgSpDataSubscriberId,
-        EAknSCancelShutdownApps,
-        EAknSGetPhoneIdleViewId,
-        EAknSPreAllocateDynamicSoftNoteEvent,
-        EAknSNotifyDynamicSoftNoteEvent,
-        EAknSCancelDynamicSoftNoteEventNotification,
-        EAknSDiscreetPopupAction
+        akns_set_status_pane_flags = 69,
+        akns_set_status_pane_layout = 70,
+        akns_blank_screen = 71,
+        akns_unblank_screen = 72,
+        akns_set_keyboard_repeat_rate = 73,
+        akns_update_key_block_mode = 74,
+        akns_show_locked_note = 75,
+        akns_shutdown_apps = 76,
+        akns_status_pane_resource_id = 77,
+        akns_status_pane_app_resource_id = 78,
+        akns_set_status_pane_app_resource_id = 79,
+        akns_rotate_screen = 80,
+        akns_apps_key_blocked = 81,
+        akns_show_long_tap_anim = 82,
+        akns_hide_long_tap_anim = 83,
+        akns_get_alias_key_code = 84,
+        akns_set_fg_sp_data_sub_id = 85,
+        akns_cancel_shutdown_apps = 86,
+        akns_get_phone_idle_view_id = 87,
+        akns_pre_allocate_dynamic_soft_note_evt = 88,
+        akns_notify_dynamic_soft_note_evt = 89,
+        akns_cancel_dynamic_soft_note_evt_nof = 90,
+        akns_discreet_popup_action = 91
     };
 
     // Guess the softkey is the key that displays all shortcuts app?
@@ -160,6 +160,7 @@ namespace eka2l1 {
         void load_screen_mode();
         std::string get_layout_buf();
         void set_sgc_params(service::ipc_context &ctx);
+        void update_key_block_mode(service::ipc_context &ctx);
         void redraw_status_pane();
 
     public:

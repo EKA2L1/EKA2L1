@@ -311,6 +311,8 @@ namespace eka2l1 {
         fbs_server *fbss{ nullptr };
         int input_handler_evt_;
 
+        bool key_block_active{false};
+
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);
 
@@ -369,6 +371,10 @@ namespace eka2l1 {
 
         void set_focus_screen(epoc::screen *scr) {
             focus_screen_ = scr;
+        }
+
+        void set_key_block_active(const bool result) {
+            key_block_active = result;
         }
 
         fbs_server *get_fbs_server();

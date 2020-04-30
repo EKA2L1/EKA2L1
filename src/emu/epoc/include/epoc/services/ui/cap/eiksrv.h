@@ -24,6 +24,7 @@
 // Forward declration
 namespace eka2l1 {
     class kernel_system;
+    class window_server;
 
     namespace service {
         class property;
@@ -103,9 +104,20 @@ namespace eka2l1::epoc::cap {
 
     class eik_server {
         eik_status_pane_maintainer status_pane_maintainer_;
+        window_server *winserv_;
+
+        enum {
+            FLAG_KEY_BLOCK_MODE = 1 << 0
+        };
+
+        std::uint32_t flags_;
 
     public:
         explicit eik_server(kernel_system *kern);
+        void init(kernel_system *kern);
+
+        void key_block_mode(const bool is_on);
+        const bool key_block_mode() const;
 
         eik_status_pane_maintainer *get_pane_maintainer() {
             return &status_pane_maintainer_;

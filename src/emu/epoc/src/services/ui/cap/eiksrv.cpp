@@ -20,6 +20,7 @@
 #include <epoc/kernel.h>
 #include <epoc/services/property.h>
 #include <epoc/services/ui/cap/eiksrv.h>
+#include <epoc/services/window/window.h>
 
 #include <array>
 
@@ -114,6 +115,25 @@ namespace eka2l1::epoc::cap {
     }
 
     eik_server::eik_server(kernel_system *kern)
-        : status_pane_maintainer_(kern) {
+        : status_pane_maintainer_(kern)
+        , flags_(0) {
+    }
+
+    void eik_server::init(kernel_system *kern) {        
+        winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(WINDOW_SERVER_NAME));
+    }
+    
+    void eik_server::key_block_mode(const bool is_on) {
+        flags_ &= ~FLAG_KEY_BLOCK_MODE;
+
+        if (is_on) {
+            flags_ |= FLAG_KEY_BLOCK_MODE;
+        }
+
+        winserv_->set_key_block_active(is_on);
+    }
+    
+    const bool eik_server::key_block_mode() const {
+        return static_cast<bool>(flags_ & FLAG_KEY_BLOCK_MODE);
     }
 }

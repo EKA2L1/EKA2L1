@@ -32,8 +32,6 @@
 namespace eka2l1 {
     oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys)
         : service::typical_server(sys, OOM_APP_UI_SERVER_NAME) {
-        REGISTER_IPC(oom_ui_app_server, get_layout_config_size, EAknEikAppUiLayoutConfigSize, "OOM::GetLayoutConfigSize");
-        REGISTER_IPC(oom_ui_app_server, get_layout_config, EAknEikAppUiGetLayoutConfig, "OOM::GetLayoutConfig");
     }
 
     void oom_ui_app_server::connect(service::ipc_context &ctx) {
@@ -59,28 +57,28 @@ namespace eka2l1 {
     void oom_ui_app_session::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
             // Move app in z order does not exist. Forward to other message
-            if (ctx->msg->function >= EAknEikAppUiMoveAppInZOrder) {
+            if (ctx->msg->function >= akn_eik_app_ui_move_app_in_z_order) {
                 ctx->msg->function++;
             }
         }
 
         switch (ctx->msg->function) {
-        case EAknEikAppUiLayoutConfigSize: {
+        case akn_eik_app_ui_layout_config_size: {
             server<oom_ui_app_server>()->get_layout_config_size(*ctx);
             break;
         }
 
-        case EAknEikAppUiGetLayoutConfig: {
+        case akn_eik_app_ui_get_layout_config: {
             server<oom_ui_app_server>()->get_layout_config(*ctx);
             break;
         }
 
-        case EAknEikAppUiSetSgcParams: {
+        case akn_eik_app_ui_set_sgc_params: {
             server<oom_ui_app_server>()->set_sgc_params(*ctx);
             break;
         }
 
-        case EAknSBlankScreen: {
+        case akns_blank_screen: {
             blank_count++;
 
             if (blank_count == 0) {
@@ -95,7 +93,7 @@ namespace eka2l1 {
             break;
         }
 
-        case EAknSUnblankScreen: {
+        case akns_unblank_screen: {
             blank_count--;
 
             LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
@@ -103,10 +101,14 @@ namespace eka2l1 {
             break;
         }
 
-        case EAknEikAppUiRedrawServerStatusPane: {
+        case akn_eik_app_ui_redraw_server_status_pane: {
             redraw_status_pane(ctx);
             break;
         }
+
+        case akns_update_key_block_mode:
+            server<oom_ui_app_server>()->update_key_block_mode(*ctx);
+            break;
 
         default: {
             LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with epoc::error_none", ctx->msg->function);
@@ -183,9 +185,22 @@ namespace eka2l1 {
 
         if (!params.has_value()) {
             ctx.set_request_status(epoc::error_argument);
+            return;
         }
 
         sgc->change_wg_param(params->window_group_id, *reinterpret_cast<epoc::cap::sgc_server::wg_state::wg_state_flags *>(&(params->bit_flags)), params->sp_layout, params->sp_flag, params->app_screen_mode);
+        ctx.set_request_status(epoc::error_none);
+    }
+
+    void oom_ui_app_server::update_key_block_mode(service::ipc_context &ctx) {
+        std::optional<std::uint32_t> disable_it = ctx.get_arg<std::uint32_t>(0);
+
+        if (!disable_it.has_value()) {
+            ctx.set_request_status(epoc::error_argument);
+            return;
+        }
+
+        eik->key_block_mode(!static_cast<bool>(disable_it.value()));
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -196,5 +211,6 @@ namespace eka2l1 {
         eik = std::make_unique<epoc::cap::eik_server>(kern);
 
         sgc->init(kern, sys->get_graphics_driver());
+        eik->init(kern);
     }
 }
