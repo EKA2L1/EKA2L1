@@ -2361,6 +2361,30 @@ namespace eka2l1::epoc {
         return epoc::get_exception_descriptor_addr(sys, in_addr);
     }
 
+    BRIDGE_FUNC(address, exception_handler, kernel::handle h) {
+        kernel::thread_local_data &local_data = current_local_data(sys);
+
+        return local_data.exception_handler;
+    }
+
+    BRIDGE_FUNC(std::int32_t, set_exception_handler, kernel::handle h, address handler, std::uint32_t mask) {
+        kernel::thread_local_data &local_data = current_local_data(sys);
+        local_data.exception_handler = handler;
+        local_data.exception_mask = mask;
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, is_exception_handled, kernel::handle h, std::int32_t type, bool aSwExcInProgress) {
+        LOG_ERROR("Exception with type {} is thrown", type);
+        kernel::thread_local_data &local_data = current_local_data(sys);
+
+        if (local_data.exception_handler == 0) {
+            return 0;
+        }
+        return 1;
+    }
+
     /* ATOMIC OPERATION */
     /* TODO: Use host atomic function when multi-core available */
     struct SAtomicOpInfo32 {
@@ -2509,7 +2533,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x52, process_command_line_length),
         BRIDGE_REGISTER(0x55, clear_inactivity_time),
         BRIDGE_REGISTER(0x56, debug_print),
-        // BRIDGE_REGISTER(0x5E, is_exception_handled),
+        BRIDGE_REGISTER(0x5A, exception_handler),
+        BRIDGE_REGISTER(0x5B, set_exception_handler),
+        BRIDGE_REGISTER(0x5E, is_exception_handled),
         BRIDGE_REGISTER(0x5F, process_get_memory_info),
         BRIDGE_REGISTER(0x6A, handle_close),
         BRIDGE_REGISTER(0x64, process_type),
@@ -2642,6 +2668,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x51, process_command_line_length),
         BRIDGE_REGISTER(0x54, clear_inactivity_time),
         BRIDGE_REGISTER(0x55, debug_print),
+        BRIDGE_REGISTER(0x59, exception_handler),
+        BRIDGE_REGISTER(0x5A, set_exception_handler),
+        BRIDGE_REGISTER(0x5D, is_exception_handled),
         BRIDGE_REGISTER(0x63, process_type),
         BRIDGE_REGISTER(0x67, thread_create),
         BRIDGE_REGISTER(0x69, handle_close),

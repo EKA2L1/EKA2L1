@@ -110,6 +110,8 @@ namespace eka2l1 {
             ptr<void> heap;
             ptr<void> scheduler;
             ptr<void> trap_handler;
+            address exception_handler = 0;
+            std::uint32_t exception_mask;
             std::uint32_t thread_id;
 
             // We don't use this. We use our own heap
