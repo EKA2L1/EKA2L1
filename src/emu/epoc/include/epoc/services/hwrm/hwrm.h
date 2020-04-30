@@ -21,6 +21,7 @@
 
 #include <epoc/services/framework.h>
 #include <epoc/services/hwrm/light/light_data.h>
+#include <epoc/services/hwrm/vibration/vibration_data.h>
 #include <epoc/services/hwrm/resource.h>
 
 #include <memory>
@@ -37,6 +38,7 @@ namespace eka2l1 {
 
     class hwrm_server : public service::typical_server {
         std::unique_ptr<epoc::hwrm::light::resource_data> light_data_;
+        std::unique_ptr<epoc::hwrm::vibration::resource_data> vibration_data_;
 
         /**
          * \brief       Initialise all shared service data.

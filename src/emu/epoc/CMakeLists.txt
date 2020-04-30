@@ -151,6 +151,8 @@ add_library(epocservs
     include/epoc/services/hwrm/light/light_data.h
     include/epoc/services/hwrm/light/light_def.h
     include/epoc/services/hwrm/light/light.h
+    include/epoc/services/hwrm/vibration/vibration_def.h
+    include/epoc/services/hwrm/vibration/vibration_data.h
     include/epoc/services/hwrm/vibration/vibration.h
     include/epoc/services/loader/loader.h
     include/epoc/services/install/install.h
@@ -234,6 +236,7 @@ add_library(epocservs
     src/services/hwrm/hwrm.cpp
     src/services/hwrm/light/light_data.cpp
     src/services/hwrm/light/light.cpp
+    src/services/hwrm/vibration/vibration_data.cpp
     src/services/hwrm/vibration/vibration.cpp
     src/services/install/install.cpp
     src/services/loader/loader.cpp

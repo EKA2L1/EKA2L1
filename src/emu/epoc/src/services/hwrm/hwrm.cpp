@@ -81,7 +81,11 @@ namespace eka2l1 {
 
     bool hwrm_server::init() {
         // Initialise light common data
-        light_data_ = std::make_unique<epoc::hwrm::light::resource_data>(sys->get_kernel_system());
+        kernel_system *kern = sys->get_kernel_system();
+
+        light_data_ = std::make_unique<epoc::hwrm::light::resource_data>(kern);
+        vibration_data_ = std::make_unique<epoc::hwrm::vibration::resource_data>(kern);
+
         return true;
     }
 }
