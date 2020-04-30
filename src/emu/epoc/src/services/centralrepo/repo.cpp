@@ -345,10 +345,20 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
     void central_repo_client_subsession::get_value(service::ipc_context *ctx) {
         // We get the entry.
         // Use mode 0 (write) to get the entry, since we are modifying data.
-        central_repo_entry *entry = get_entry(*ctx->get_arg<std::uint32_t>(0), 0);
+        std::optional<std::uint32_t> the_key = ctx->get_arg<std::uint32_t>(0);
+
+        if (!the_key.has_value()) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+    
+        central_repo_entry *entry = get_entry(the_key.value(), 0);
 
         if (!entry) {
             ctx->set_request_status(epoc::error_not_found);
@@ -362,9 +372,9 @@ namespace eka2l1 {
                 return;
             }
 
-            int result = static_cast<int>(entry->data.intd);
+            const std::uint32_t result_int = static_cast<std::uint32_t>(entry->data.intd);
+            ctx->write_arg_pkg<std::uint32_t>(1, result_int);
 
-            ctx->write_arg_pkg<int>(1, result);
             break;
         }
 
@@ -374,9 +384,9 @@ namespace eka2l1 {
                 return;
             }
 
-            float result = static_cast<float>(entry->data.reald);
+            const float result_fl = static_cast<float>(entry->data.reald);
+            ctx->write_arg_pkg<float>(1, result_fl);
 
-            ctx->write_arg_pkg<float>(1, result);
             break;
         }
 
@@ -400,7 +410,10 @@ namespace eka2l1 {
 
         ctx->set_request_status(epoc::error_none);
     }
-    
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
+
     void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key) {
         // We have to push it to the temporary array, since this array can be retrieve anytime before another FindEq call
         // Even if the provided array is not full
