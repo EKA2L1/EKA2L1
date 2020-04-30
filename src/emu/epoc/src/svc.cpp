@@ -863,17 +863,17 @@ namespace eka2l1::epoc {
 
     static std::int32_t do_create_session_from_server(system *sys, server_ptr server, std::int32_t msg_slot_count, eka2l1::ptr<void> sec, std::int32_t mode) {
         kernel_system *kern = sys->get_kernel_system();
-        const kernel::handle h = kern->create_and_add<service::session>(
-                                              kernel::owner_type::process, server, msg_slot_count)
-                                          .first;
+        auto session_and_handle = kern->create_and_add<service::session>(
+                                              kernel::owner_type::process, server, msg_slot_count);
 
-        if (h == INVALID_HANDLE) {
+        if (session_and_handle.first == INVALID_HANDLE) {
             return epoc::error_general;
         }
 
-        LOG_TRACE("New session connected to {} with handle {}", server->name(), h);
+        LOG_TRACE("New session connected to {} with handle {}", server->name(), session_and_handle.first);
+        session_and_handle.second->set_associated_handle(session_and_handle.first);
 
-        return h;
+        return session_and_handle.first;
     }
 
     BRIDGE_FUNC(std::int32_t, session_create, eka2l1::ptr<desc8> server_name_des, std::int32_t msg_slot, eka2l1::ptr<void> sec, std::int32_t mode) {

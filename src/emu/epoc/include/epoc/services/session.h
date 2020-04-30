@@ -51,14 +51,16 @@ namespace eka2l1 {
             server_ptr svr;
 
             std::vector<std::pair<bool, ipc_msg_ptr>> msgs_pool;
-            uint32_t cookie_address;
+            
+            kernel::address cookie_address;
+            kernel::handle associated_handle;
 
         protected:
             int send(ipc_msg_ptr &msg);
             ipc_msg_ptr get_free_msg();
 
         public:
-            session(kernel_system *kern, server_ptr svr, int async_slot_count);
+            explicit session(kernel_system *kern, server_ptr svr, int async_slot_count);
             ~session() override;
 
             server_ptr get_server() {
@@ -72,6 +74,14 @@ namespace eka2l1 {
 
             void set_cookie_address(const uint32_t addr) {
                 cookie_address = addr;
+            }
+
+            void set_associated_handle(const kernel::handle h) {
+                associated_handle = h;
+            }
+
+            const kernel::handle get_associated_handle() const {
+                return associated_handle;
             }
 
             void set_slot_free(ipc_msg_ptr &msg);
