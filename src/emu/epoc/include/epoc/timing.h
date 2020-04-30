@@ -91,7 +91,7 @@ namespace eka2l1 {
         void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata,
             const bool thr_safe = false);
 
-        void unschedule_event(int event_type, uint64_t userdata);
+        bool unschedule_event(int event_type, uint64_t userdata);
     };
 
     class timing_system {
@@ -178,7 +178,7 @@ namespace eka2l1 {
         void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata = 0,
             const bool thr_safe = false);
 
-        void unschedule_event(int event_type, uint64_t userdata);
+        bool unschedule_event(int event_type, uint64_t userdata);
 
         void register_mhz_change_callback(mhz_change_callback change_callback);
         void set_clock_frequency_mhz(int cpu_mhz);

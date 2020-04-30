@@ -160,7 +160,7 @@ namespace eka2l1 {
         }
     }
 
-    void ntimer::unschedule_event(int event_type, uint64_t userdata) {
+    bool ntimer::unschedule_event(int event_type, uint64_t userdata) {
         auto res = std::find_if(events_.begin(), events_.end(),
             [&](auto evt) { return (evt.event_type == event_type) && (evt.event_user_data == userdata); });
 
@@ -170,9 +170,20 @@ namespace eka2l1 {
             std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
                 return lhs.event_time > rhs.event_time;
             });
+
+            return true;
         } else {
-            // TODO(pent0): Unschedule thread-safe events
+            const std::lock_guard guard(ts_events_.lock);
+            
+            for (decltype(ts_events_)::iterator ite = ts_events_.begin(); ite != ts_events_.end(); ite++) {
+                if (ite->event_user_data == userdata) {
+                    ts_events_.erase(ite);
+                    return true;
+                }
+            }
         }
+
+        return false;
     }
 
     void timing_system::fire_mhz_changes() {
@@ -280,8 +291,8 @@ namespace eka2l1 {
         current_timer()->schedule_event(cycles_into_future, event_type, userdata, thr_safe);
     }
 
-    void timing_system::unschedule_event(int event_type, uint64_t usrdata) {
-        current_timer()->unschedule_event(event_type, usrdata);
+    bool timing_system::unschedule_event(int event_type, uint64_t usrdata) {
+        return current_timer()->unschedule_event(event_type, usrdata);
     }
 
     void timing_system::register_mhz_change_callback(mhz_change_callback change_callback) {
