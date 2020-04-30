@@ -74,6 +74,10 @@ namespace eka2l1 {
         const_iterator end() const {
             return this->c.end();
         }
+
+        void erase(iterator ite) {
+            this->c.erase(ite);
+        }
     };
 
     template <typename T, typename Container = std::deque<T>>
@@ -122,6 +126,10 @@ namespace eka2l1 {
 
         const_iterator end() const {
             return queue.end();
+        }
+
+        void erase(iterator ite) {
+            queue.erase(ite);
         }
 
         T &front() const {
