@@ -334,8 +334,12 @@ namespace eka2l1::dispatch {
         void *userdata = out_stream.get_userdata(drivers::dsp_stream_notification_buffer_copied);
 
         if (userdata) {
-            reinterpret_cast<epoc::notify_info*>(userdata)->complete(epoc::error_cancel);
-            delete userdata;
+            const bool unschedule_ok = timing->unschedule_event(dispatcher->nof_complete_evt_, (std::uint64_t)userdata);
+
+            if (unschedule_ok) {
+                reinterpret_cast<epoc::notify_info*>(userdata)->complete(epoc::error_cancel);
+                delete userdata;
+            }
 
             // Deregister the callback
             out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, nullptr, nullptr);
