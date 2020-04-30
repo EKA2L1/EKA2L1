@@ -166,6 +166,10 @@ namespace eka2l1 {
 
         if (res != events_.end()) {
             events_.erase(res);
+
+            std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
+                return lhs.event_time > rhs.event_time;
+            });
         } else {
             // TODO(pent0): Unschedule thread-safe events
         }
