@@ -20,6 +20,7 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/version.h>
 #include <console/state.h>
 #include <gdbstub/gdbstub.h>
 
@@ -38,6 +39,8 @@ namespace eka2l1::desktop {
         // Initialize the logger
         logger = std::make_shared<imgui_logger>();
         log::setup_log(logger);
+
+        LOG_INFO("EKA2L1 v0.0.1 ({}-{})", GIT_BRANCH, GIT_COMMIT_HASH);
 
         // Start to read the configs
         conf.deserialize();
