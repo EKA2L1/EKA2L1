@@ -104,6 +104,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(file_name, epoc::fs_msg_filename, "Fs::FileName");
             HANDLE_CLIENT_IPC(file_full_name, epoc::fs_msg_file_fullname, "Fs::FileFullName");
             HANDLE_CLIENT_IPC(file_att, epoc::fs_msg_file_att, "Fs::FileAtt");
+            HANDLE_CLIENT_IPC(file_modified, epoc::fs_msg_file_modified, "Fs::FileModified");
             HANDLE_CLIENT_IPC(is_file_in_rom, epoc::fs_msg_is_file_in_rom, "Fs::IsFileInRom");
             HANDLE_CLIENT_IPC(open_dir, epoc::fs_msg_dir_open, "Fs::OpenDir");
             HANDLE_CLIENT_IPC(close_dir, epoc::fs_msg_dir_subclose, "Fs::CloseDir");
@@ -389,7 +390,7 @@ namespace eka2l1 {
     }
 
     std::uint32_t build_attribute_from_entry_info(entry_info &info) {
-        std::uint32_t attrib = 0;
+        std::uint32_t attrib = epoc::fs::entry_att_normal;
 
         if (info.has_raw_attribute) {
             attrib = info.raw_attribute;
@@ -397,7 +398,7 @@ namespace eka2l1 {
             bool dir = (info.type == io_component_type::dir);
 
             if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib::internal)) {
-                attrib = epoc::fs::entry_att_read_only | epoc::fs::entry_att_system;
+                attrib |= epoc::fs::entry_att_read_only | epoc::fs::entry_att_system;
             }
 
             // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).

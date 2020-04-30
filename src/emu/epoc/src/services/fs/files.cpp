@@ -78,6 +78,28 @@ namespace eka2l1 {
         return reinterpret_cast<eka2l1::file *>(ss->get_file_node(static_cast<int>(handle))->vfs_node.get());
     }
 
+    void fs_server_client::file_modified(service::ipc_context *ctx) {
+        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+
+        if (!handle_res) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx->set_request_status(epoc::error_bad_handle);
+            return;
+        }
+
+        file *the_file = reinterpret_cast<file *>(node->vfs_node.get());
+        epoc::time last_modified { the_file->last_modify_since_1ad() };
+
+        ctx->write_arg_pkg<epoc::time>(0, last_modified);
+        ctx->set_request_status(epoc::error_none);
+    }
+
     void fs_server_client::file_size(service::ipc_context *ctx) {
         std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
 
@@ -583,7 +605,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_att(service::ipc_context *ctx) {
-        std::int32_t target_handle = *ctx->get_arg<std::int32_t>(0);
+        std::int32_t target_handle = *ctx->get_arg<std::int32_t>(3);
         fs_node *node = get_file_node(target_handle);
 
         if (!node) {

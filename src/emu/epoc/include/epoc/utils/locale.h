@@ -22,6 +22,8 @@
 #include <epoc/ptr.h>
 
 namespace eka2l1::epoc {
+    using time = std::uint64_t;
+
     enum language {
         lang_test = 0,
 

@@ -21,12 +21,11 @@
 #pragma once
 
 #include <cstdint>
+
 #include <epoc/utils/des.h>
+#include <epoc/utils/locale.h>
 
 namespace eka2l1::epoc {
-    struct time {
-        std::uint64_t time_encoded;
-    };
 }
 
 namespace eka2l1::epoc::fs {
