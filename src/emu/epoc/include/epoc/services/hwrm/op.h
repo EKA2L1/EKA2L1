@@ -40,6 +40,6 @@ namespace eka2l1 {
 
     enum hwrm_vibrate_op {
         hwrm_vibrate_start_with_default_intensity = 2000,
-        hwrm_vibrate_cleanup = 2006
+        hwrm_vibrate_cleanup = 2003
     };
 }
