@@ -303,23 +303,23 @@ namespace eka2l1 {
         return 0;
     }
 
-    void central_repo_client_subsession::write_changes(eka2l1::io_system *io, manager::device_manager *mngr) {
+    void central_repo::write_changes(eka2l1::io_system *io, manager::device_manager *mngr) {
         std::vector<std::uint8_t> bufs;
 
         {
             common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-            do_state_for_cre(seri, *attach_repo);
+            do_state_for_cre(seri, *this);
 
             bufs.resize(seri.size());
         }
 
         common::chunkyseri seri(&bufs[0], bufs.size(), common::SERI_MODE_WRITE);
-        do_state_for_cre(seri, *attach_repo);
+        do_state_for_cre(seri, *this);
 
-        std::u16string p{ drive_to_char16(attach_repo->reside_place) };
+        std::u16string p{ drive_to_char16(reside_place) };
         std::u16string firm_code = common::utf8_to_ucs2(common::lowercase_string(mngr->get_current()->firmware_code));
 
-        p += u":\\Private\\10202BE9\\persists\\" + firm_code + u"\\" + common::utf8_to_ucs2(common::to_string(attach_repo->uid, std::hex)) + u".cre";
+        p += u":\\Private\\10202BE9\\persists\\" + firm_code + u"\\" + common::utf8_to_ucs2(common::to_string(uid, std::hex)) + u".cre";
 
         symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
 
@@ -330,5 +330,9 @@ namespace eka2l1 {
 
         f->write_file(&bufs[0], 1, static_cast<std::uint32_t>(bufs.size()));
         f->close();
+    }
+
+    void central_repo_client_subsession::write_changes(eka2l1::io_system *io, manager::device_manager *mngr) {
+        attach_repo->write_changes(io, mngr);
     }
 }

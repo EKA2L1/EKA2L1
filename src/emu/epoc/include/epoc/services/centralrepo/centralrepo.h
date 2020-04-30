@@ -28,6 +28,7 @@
 #include <unordered_map>
 
 #define CENTRAL_REPO_UID_STRING "10202be9"
+#define CENTRAL_REPO_SERVER_NAME "!CentralRepository"
 
 namespace eka2l1 {
     class io_system;

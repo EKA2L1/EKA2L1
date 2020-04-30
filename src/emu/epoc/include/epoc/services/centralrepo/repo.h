@@ -109,6 +109,7 @@ namespace eka2l1 {
 
         std::vector<std::uint32_t> deleted_settings;
 
+        void write_changes(eka2l1::io_system *io, manager::device_manager *mngr);
         central_repo_entry *find_entry(const std::uint32_t key);
 
         std::uint32_t get_default_meta_for_new_key(const std::uint32_t key);
