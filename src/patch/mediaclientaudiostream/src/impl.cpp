@@ -67,7 +67,7 @@ void CMMFMdaOutputBufferQueue::RunL() {
         delete iCopied;
     }
 
-    if (iStatus != KErrAbort) {    
+    if (iStatus != KErrAbort) {
         iStatus = KRequestPending;
         WriteAndWait();
     }
@@ -151,6 +151,8 @@ void CMMFMdaAudioOutputStream::NotifyOpenComplete() {
 }
 
 void CMMFMdaAudioOutputStream::StartRaw() {
+    iState = EMdaStatePlay;
+
     if (EAudioDspStreamStart(0, iDispatchInstance) != KErrNone) {
         LogOut(MCA_CAT, _L("Failed to start audio output stream"));
     }
@@ -158,17 +160,19 @@ void CMMFMdaAudioOutputStream::StartRaw() {
 
 void CMMFMdaAudioOutputStream::Play() {
     // Simulates that buffer has been written to server
-    iState = EMdaStatePlay;
     iOpen.Open(this);
 }
 
 void CMMFMdaAudioOutputStream::Stop() {
+    if (iState != EMdaStatePlay)
+        return;
+
+    iBufferQueue.CleanQueue();
+    iBufferQueue.Cancel();
+
     if (EAudioDspStreamStop(0, iDispatchInstance) != KErrNone) {
         LogOut(MCA_CAT, _L("Failed to stop audio output stream"));
     } else {
-        iBufferQueue.CleanQueue();
-        iBufferQueue.Cancel();
-
         iState = EMdaStateReady;
     }
 }
