@@ -546,7 +546,9 @@ namespace eka2l1 {
                     const std::string lang_name = common::get_language_name_by_code(dvc.languages[i]);
                     if (ImGui::Selectable(lang_name.c_str())) {
                         conf->language = dvc.languages[i];
+                        sys->set_system_language(static_cast<language>(dvc.languages[i]));
                         set_language_to_property(static_cast<language>(dvc.languages[i]));
+
                         conf->serialize();
                     }
                 }
@@ -1264,7 +1266,14 @@ namespace eka2l1 {
                 const int clip_end = (app_search_box.Filters.empty()) ? clipper.DisplayEnd : static_cast<int>(registerations.size());
 
                 for (int i = clip_start; i < clip_end; i++) {
-                    const std::string name = " " + common::ucs2_to_utf8(registerations[i].mandatory_info.long_caption.to_std_string(nullptr));
+                    std::string name = " ";
+                    
+                    if (registerations[i].mandatory_info.long_caption.get_length() != 0) {
+                        name += common::ucs2_to_utf8(registerations[i].mandatory_info.long_caption.to_std_string(nullptr));
+                    } else {
+                        name += common::ucs2_to_utf8(registerations[i].mandatory_info.short_caption.to_std_string(nullptr));
+                    }
+
                     const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
 
                     if (app_search_box.PassFilter(name.c_str())) {
