@@ -26,6 +26,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/pystr.h>
 
 #include <epoc/services/ecom/ecom.h>
 #include <epoc/vfs.h>
@@ -36,6 +37,8 @@
 
 #include <common/wildcard.h>
 #include <epoc/services/ecom/common.h>
+
+#include <epoc/utils/bafl.h>
 #include <epoc/utils/err.h>
 
 namespace eka2l1 {
@@ -93,7 +96,9 @@ namespace eka2l1 {
         std::vector<std::string> results;
 
         while (auto entry = ecom_private_dir->get_next_entry()) {
-            results.push_back(entry->full_path);
+            if (utils::is_file_compatible_with_language(entry->full_path, ".spi", sys->get_system_language())) {
+                results.push_back(entry->full_path);
+            }
         }
 
         return results;
