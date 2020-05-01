@@ -24,7 +24,7 @@
 #include <epoc/kernel.h>
 
 namespace eka2l1::epoc {
-    eka2l1::kernel::thread_local_data &current_local_data(eka2l1::system *sys) {
+    eka2l1::kernel::thread_local_data *current_local_data(eka2l1::system *sys) {
         return sys->get_kernel_system()->crr_thread()->get_local_data();
     }
 

@@ -89,44 +89,44 @@ namespace eka2l1::epoc {
 
     /*! \brief Get the current heap allocator */
     BRIDGE_FUNC(eka2l1::ptr<void>, heap) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
+        kernel::thread_local_data *local_data = current_local_data(sys);
 
-        if (local_data.heap.ptr_address() == 0) {
+        if (local_data->heap.ptr_address() == 0) {
             LOG_WARN("Allocator is not available.");
         }
 
-        return local_data.heap;
+        return local_data->heap;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, heap_switch, eka2l1::ptr<void> new_heap) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
-        eka2l1::ptr<void> old_heap = local_data.heap;
-        local_data.heap = new_heap;
+        kernel::thread_local_data *local_data = current_local_data(sys);
+        eka2l1::ptr<void> old_heap = local_data->heap;
+        local_data->heap = new_heap;
 
         return old_heap;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, trap_handler) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
-        return local_data.trap_handler;
+        kernel::thread_local_data *local_data = current_local_data(sys);
+        return local_data->trap_handler;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, set_trap_handler, eka2l1::ptr<void> new_handler) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
-        eka2l1::ptr<void> old_handler = local_data.trap_handler;
-        local_data.trap_handler = new_handler;
+        kernel::thread_local_data *local_data = current_local_data(sys);
+        eka2l1::ptr<void> old_handler = local_data->trap_handler;
+        local_data->trap_handler = new_handler;
 
-        return local_data.trap_handler;
+        return local_data->trap_handler;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, active_scheduler) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
-        return local_data.scheduler;
+        kernel::thread_local_data *local_data = current_local_data(sys);
+        return local_data->scheduler;
     }
 
     BRIDGE_FUNC(void, set_active_scheduler, eka2l1::ptr<void> new_scheduler) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
-        local_data.scheduler = new_scheduler;
+        kernel::thread_local_data *local_data = current_local_data(sys);
+        local_data->scheduler = new_scheduler;
     }
 
     BRIDGE_FUNC(void, after, std::int32_t micro_secs, eka2l1::ptr<epoc::request_status> status) {
@@ -413,10 +413,10 @@ namespace eka2l1::epoc {
     /*******************/
 
     BRIDGE_FUNC(eka2l1::ptr<void>, dll_tls, kernel::handle h, std::int32_t dll_uid) {
-        eka2l1::kernel::thread_local_data dat = current_local_data(sys);
         kernel::thread *thr = sys->get_kernel_system()->crr_thread();
+        kernel::thread_local_data *dat = thr->get_local_data();
 
-        for (const auto &tls : dat.tls_slots) {
+        for (const auto &tls : dat->tls_slots) {
             if (tls.handle == h) {
                 return tls.pointer;
             }
@@ -1044,7 +1044,7 @@ namespace eka2l1::epoc {
 
         thr->increase_leave_depth();
 
-        return current_local_data(sys).trap_handler;
+        return current_local_data(sys)->trap_handler;
     }
 
     BRIDGE_FUNC(void, leave_end) {
@@ -2362,26 +2362,40 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(address, exception_handler, kernel::handle h) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
+        kernel::thread *thr = sys->get_kernel_system()->get<kernel::thread>(h);
 
-        return local_data.exception_handler;
+        if (!thr) {
+            return 0;
+        }
+        
+        return thr->get_exception_handler();
     }
 
     BRIDGE_FUNC(std::int32_t, set_exception_handler, kernel::handle h, address handler, std::uint32_t mask) {
-        kernel::thread_local_data &local_data = current_local_data(sys);
-        local_data.exception_handler = handler;
-        local_data.exception_mask = mask;
+        kernel::thread *thr = sys->get_kernel_system()->get<kernel::thread>(h);
+
+        if (!thr) {
+            return epoc::error_bad_handle;
+        }
+
+        thr->set_exception_handler(handler);
+        thr->set_exception_mask(mask);
 
         return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, is_exception_handled, kernel::handle h, std::int32_t type, bool aSwExcInProgress) {
         LOG_ERROR("Exception with type {} is thrown", type);
-        kernel::thread_local_data &local_data = current_local_data(sys);
+         kernel::thread *thr = sys->get_kernel_system()->get<kernel::thread>(h);
 
-        if (local_data.exception_handler == 0) {
+        if (!thr) {
+            return epoc::error_bad_handle;
+        }
+
+        if (thr->get_exception_handler() == 0) {
             return 0;
         }
+
         return 1;
     }
 

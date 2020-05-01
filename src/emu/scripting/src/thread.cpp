@@ -44,7 +44,7 @@ namespace eka2l1::scripting {
     }
 
     std::uint32_t thread::get_heap_base() {
-        return thread_handle->get_local_data().heap.ptr_address();
+        return thread_handle->get_local_data()->heap.ptr_address();
     }
 
     uint32_t thread::get_register(uint8_t index) {
