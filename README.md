@@ -5,7 +5,7 @@
 
 Experimental Symbian OS emulator, written in C++ 17.
 
-The emulator *emulates* Symbian OS's EKA1 and EKA2 behavior, and *reimplement* most of its critical app servers. For more discussion and support, please visit our [**Discord server**](https://discord.gg/5Bm5SJ9).
+The emulator currently *emulates* Symbian OS's EKA2 behavior (with planned EKA1 support), and *reimplement* most of its critical app servers. For more discussion and support, please visit our [**Discord server**](https://discord.gg/5Bm5SJ9).
 
 ### Artifacts:
   * Artifacts for Windows is provided through CI. Click the status badge to get to EKA2L1's Appveyor CI
