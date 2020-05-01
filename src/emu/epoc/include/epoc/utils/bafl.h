@@ -30,5 +30,8 @@ namespace eka2l1 {
          */
         std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path,
             const language prefered_lang, const drive_number on_drive);
+
+        bool is_file_compatible_with_language(const std::string &path, const std::string &target_ext,
+            const language ideal_lang);
     }
 }

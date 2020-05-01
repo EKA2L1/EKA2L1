@@ -24,6 +24,7 @@
 #include <common/benchmark.h>
 #include <common/cvt.h>
 #include <common/path.h>
+#include <common/pystr.h>
 
 namespace eka2l1::utils {
     std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path,
@@ -99,5 +100,24 @@ namespace eka2l1::utils {
         }
 
         return common::utf8_to_ucs2(first_res->full_path);
+    }
+
+    bool is_file_compatible_with_language(const std::string &path, const std::string &target_ext, const language ideal_lang) {
+        const std::string curr_extension = common::lowercase_string(eka2l1::path_extension(path));
+        const std::string ext_low = target_ext;
+
+        if (curr_extension == ext_low) {
+            return true;
+        } else {
+            // Depend on the current language
+            common::pystr lang_region(curr_extension.substr(2));
+            const std::int32_t lang_int = lang_region.as_int<std::int32_t>();
+
+            if (static_cast<language>(lang_int) == ideal_lang) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
