@@ -361,6 +361,9 @@ namespace eka2l1 {
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
 
+        // Try to set system language
+        set_system_language(static_cast<language>(conf->language));
+
         // Initialize HLE finally
         dispatcher.init(&kern, &timing);
     }
