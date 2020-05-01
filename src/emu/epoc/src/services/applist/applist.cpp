@@ -25,6 +25,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/pystr.h>
 #include <common/types.h>
 
 #include <epoc/common.h>
@@ -57,6 +58,9 @@ namespace eka2l1 {
     bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
         const language ideal_lang) {
         // common::benchmarker marker(__FUNCTION__);
+        // Validate the path fits our current system
+        if (!utils::is_file_compatible_with_language(common::ucs2_to_utf8(path), ".rsc", sys->get_system_language()))
+            return false;
 
         apa_app_registry reg;
         reg.rsc_path = path;
