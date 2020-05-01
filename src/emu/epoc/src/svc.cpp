@@ -763,6 +763,18 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, message_client, kernel::handle h, kernel::owner_type owner) {
+        kernel_system *kern = sys->get_kernel_system();
+
+        eka2l1::ipc_msg_ptr msg = kern->get_msg(h);
+        if (!msg) {
+            return epoc::error_bad_handle;
+        }
+
+        kernel::thread *msg_thr = msg->own_thr;
+        return kern->open_handle(msg_thr, owner);
+    }
+
     static void query_security_info(kernel::process *process, epoc::security_info *info) {
         assert(process);
 
@@ -2265,6 +2277,25 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, change_notifier_logoff, kernel::handle h) {
+        kernel_system *kern = sys->get_kernel_system();
+        memory_system *mem = sys->get_memory_system();
+
+        change_notifier_ptr cnot = kern->get<kernel::change_notifier>(h);
+
+        if (!cnot) {
+            return epoc::error_bad_handle;
+        }
+
+        bool res = cnot->logon_cancel();
+
+        if (!res) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_none;
+    }
+
     /* MESSAGE QUEUE */
     BRIDGE_FUNC(std::int32_t, message_queue_notify_data_available, const kernel::handle h, eka2l1::ptr<epoc::request_status> sts) {
         kernel_system *kern = sys->get_kernel_system();
@@ -2631,6 +2662,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800008, trap_handler),
         BRIDGE_REGISTER(0x00800009, set_trap_handler),
         BRIDGE_REGISTER(0x0080000D, debug_mask),
+        BRIDGE_REGISTER(0x00800010, ntick_count),
         BRIDGE_REGISTER(0x00800013, user_svr_rom_header_address),
         BRIDGE_REGISTER(0x00800014, user_svr_rom_root_dir_address),
         BRIDGE_REGISTER(0x00800015, safe_inc_32),
@@ -2648,10 +2680,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x11, mutex_wait),
         BRIDGE_REGISTER(0x12, mutex_signal),
         BRIDGE_REGISTER(0x13, process_get_id),
+        BRIDGE_REGISTER(0x14, dll_filename),
         BRIDGE_REGISTER(0x15, process_resume),
         BRIDGE_REGISTER(0x16, process_filename),
         BRIDGE_REGISTER(0x17, process_command_line),
         BRIDGE_REGISTER(0x18, process_exit_type),
+        BRIDGE_REGISTER(0x1C, process_set_priority),
         BRIDGE_REGISTER(0x1E, process_set_flags),
         BRIDGE_REGISTER(0x1F, semaphore_wait),
         BRIDGE_REGISTER(0x20, semaphore_signal),
@@ -2669,6 +2703,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x35, timer_cancel),
         BRIDGE_REGISTER(0x36, timer_after),
         BRIDGE_REGISTER(0x39, change_notifier_logon),
+        BRIDGE_REGISTER(0x3A, change_notifier_logoff),
         BRIDGE_REGISTER(0x3B, request_signal),
         BRIDGE_REGISTER(0x3C, handle_name),
         BRIDGE_REGISTER(0x40, after),
@@ -2714,8 +2749,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA2, last_thread_handle),
         BRIDGE_REGISTER(0xA4, process_rendezvous),
         BRIDGE_REGISTER(0xA7, message_ipc_copy),
+        BRIDGE_REGISTER(0xA8, message_client),
         BRIDGE_REGISTER(0xAD, process_security_info),
         BRIDGE_REGISTER(0xAE, thread_security_info),
+        BRIDGE_REGISTER(0xAF, message_security_info),
         BRIDGE_REGISTER(0xB8, message_queue_notify_data_available),
         BRIDGE_REGISTER(0xB4, message_queue_send),
         BRIDGE_REGISTER(0xB5, message_queue_receive),
