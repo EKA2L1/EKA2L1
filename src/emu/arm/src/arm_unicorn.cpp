@@ -170,6 +170,7 @@ static void intr_hook(uc_engine *uc, uint32_t int_no, void *user_data) {
     }
 
     default:
+        LOG_WARN("Unknown interrupt {}", int_no);
         break;
     }
 }
@@ -528,6 +529,8 @@ namespace eka2l1 {
             ctx.lr = get_lr();
             ctx.pc = get_pc();
             ctx.cpsr = get_cpsr();
+            
+            uc_reg_read(engine, UC_ARM_REG_C13_C0_2, &ctx.wrwr);
         }
 
         void arm_unicorn::load_context(const thread_context &ctx) {
@@ -545,6 +548,8 @@ namespace eka2l1 {
             set_lr(ctx.lr);
             set_pc(ctx.pc);
             set_cpsr(ctx.cpsr);
+
+            uc_reg_write(engine, UC_ARM_REG_C13_C0_2, &ctx.wrwr);
         }
 
         void arm_unicorn::prepare_rescheduling() {

@@ -43,13 +43,81 @@
 #endif
 
 namespace eka2l1::arm {
-    class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
-        arm_dynarmic &parent;
-        uint64_t interpreted = 0;
+    class arm_dynarmic_cp15 : public Dynarmic::A32::Coprocessor {
+        std::uint32_t wrwr;
 
     public:
-        explicit arm_dynarmic_callback(arm_dynarmic &parent)
-            : parent(parent) {}
+        using coproc_reg = Dynarmic::A32::CoprocReg;
+
+        explicit arm_dynarmic_cp15()
+            : wrwr(0) {
+        }
+
+        ~arm_dynarmic_cp15() override {
+        }
+
+        void set_wrwr(const std::uint32_t wrwr_val) {
+            wrwr = wrwr_val;
+        }
+
+        const std::uint32_t get_wrwr() const {
+            return wrwr;
+        }
+
+        std::optional<Callback> CompileInternalOperation(bool two, unsigned opc1, coproc_reg CRd,
+            coproc_reg CRn, coproc_reg CRm,
+            unsigned opc2) override {
+            return std::nullopt;
+        }
+
+        CallbackOrAccessOneWord CompileSendOneWord(bool two, unsigned opc1, coproc_reg CRn,
+            coproc_reg CRm, unsigned opc2) override {
+            return CallbackOrAccessOneWord{};
+        }
+
+        CallbackOrAccessTwoWords CompileSendTwoWords(bool two, unsigned opc, coproc_reg CRm) override {
+            return CallbackOrAccessTwoWords{};
+        }
+
+        CallbackOrAccessOneWord CompileGetOneWord(bool two, unsigned opc1, coproc_reg CRn, coproc_reg CRm,
+            unsigned opc2) override {
+            if ((CRn == coproc_reg::C13) && (CRm == coproc_reg::C0) && (opc1 == 0) && (opc2 == 2)) {
+                return &wrwr;
+            }
+
+            return CallbackOrAccessOneWord{};
+        }
+
+        CallbackOrAccessTwoWords CompileGetTwoWords(bool two, unsigned opc, coproc_reg CRm) override {
+            return CallbackOrAccessTwoWords{};
+        }
+
+        std::optional<Callback> CompileLoadWords(bool two, bool long_transfer, coproc_reg CRd,
+            std::optional<std::uint8_t> option) override {
+            return std::nullopt;
+        }
+
+        std::optional<Callback> CompileStoreWords(bool two, bool long_transfer, coproc_reg CRd,
+            std::optional<std::uint8_t> option) override {
+            return std::nullopt;
+        }
+    };
+    
+    class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
+        std::shared_ptr<arm_dynarmic_cp15> cp15;
+
+        arm_dynarmic &parent;
+        std::uint64_t interpreted;
+
+    public:
+        explicit arm_dynarmic_callback(arm_dynarmic &parent, std::shared_ptr<arm_dynarmic_cp15> cp15)
+            : cp15(cp15)
+            , parent(parent)
+            , interpreted(0) {}
+
+        arm_dynarmic_cp15 *get_cp15() {
+            return cp15.get();
+        }
 
         void handle_thread_exception() {
             kernel::thread *crr_thread = parent.kern->crr_thread();
@@ -276,9 +344,11 @@ namespace eka2l1::arm {
         }
     };
 
-    std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::unique_ptr<arm_dynarmic_callback> &callback, void *table) {
+    std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::unique_ptr<arm_dynarmic_callback> &callback, void *table,
+        std::shared_ptr<arm_dynarmic_cp15> cp15) {
         Dynarmic::A32::UserConfig config;
         config.callbacks = callback.get();
+        config.coprocessors[15] = cp15;
         config.page_table = reinterpret_cast<decltype(config.page_table)>(table);
 
         return std::make_unique<Dynarmic::A32::Jit>(config);
@@ -293,9 +363,11 @@ namespace eka2l1::arm {
         , lib_mngr(lmngr)
         , conf(conf)
         , kern(kern)
-        , fallback_jit(kern, sys, conf, mngr, mem, asmdis, lmngr, stub)
-        , cb(std::make_unique<arm_dynarmic_callback>(*this)) {
-        jit = make_jit(cb, &page_dyn);
+        , fallback_jit(kern, sys, conf, mngr, mem, asmdis, lmngr, stub) {
+        std::shared_ptr<arm_dynarmic_cp15> cp15 = std::make_shared<arm_dynarmic_cp15>();
+        cb = std::make_unique<arm_dynarmic_callback>(*this, cp15);
+
+        jit = make_jit(cb, &page_dyn, cp15);
     }
 
     arm_dynarmic::~arm_dynarmic() {}
@@ -374,6 +446,8 @@ namespace eka2l1::arm {
         if (!ctx.pc) {
             LOG_WARN("Dynarmic save context with PC = 0");
         }
+
+        ctx.wrwr = cb->get_cp15()->get_wrwr();
     }
 
     void arm_dynarmic::load_context(const thread_context &ctx) {
@@ -385,6 +459,8 @@ namespace eka2l1::arm {
         set_pc(ctx.pc);
         set_lr(ctx.lr);
         set_cpsr(ctx.cpsr);
+
+        cb->get_cp15()->set_wrwr(ctx.wrwr);
     }
 
     void arm_dynarmic::set_entry_point(address ep) {

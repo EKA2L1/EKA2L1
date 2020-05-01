@@ -32,12 +32,13 @@ namespace eka2l1::arm {
         */
         struct thread_context {
             std::array<uint32_t, 31> cpu_registers;
-            uint32_t sp;
-            uint32_t pc;
-            uint32_t lr;
-            uint32_t cpsr;
+            std::uint32_t sp;
+            std::uint32_t pc;
+            std::uint32_t lr;
+            std::uint32_t cpsr;
             std::array<uint64_t, 32> fpu_registers;
-            uint32_t fpscr;
+            std::uint32_t fpscr;
+            std::uint32_t wrwr;
         };
 
         virtual ~arm_interface() {}
