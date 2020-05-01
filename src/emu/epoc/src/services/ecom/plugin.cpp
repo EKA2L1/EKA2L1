@@ -286,6 +286,10 @@ namespace eka2l1 {
             // TODO(pent0): Disable flag check
             std::uint32_t disabled = 0;
             seri.absorb(disabled);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                flags |= FLAG_DISABLED;
+            }
         }
 
         seri.absorb(display_name);
@@ -335,9 +339,17 @@ namespace eka2l1 {
                 absorb_flags |= 0b10;
             }
 
+            if (flags & FLAG_DISABLED) {
+                absorb_flags |= 0b100;
+            }
+
             seri.absorb(absorb_flags);
-            if (seri.get_seri_mode() == common::SERI_MODE_READ || (absorb_flags & 0b10 || absorb_flags & 0b01)) {
-                flags |= FLAG_ROM_ONLY | FLAG_ROM_BASED;
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                if ((absorb_flags & 0b10) || (absorb_flags & 0b01))
+                    flags |= FLAG_ROM_ONLY | FLAG_ROM_BASED;
+
+                if (absorb_flags & 0b100)
+                    flags |= FLAG_DISABLED;
             }
         }
 
