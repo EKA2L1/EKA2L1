@@ -110,12 +110,14 @@ namespace eka2l1 {
             ptr<void> heap;
             ptr<void> scheduler;
             ptr<void> trap_handler;
-            address exception_handler = 0;
-            std::uint32_t exception_mask;
             std::uint32_t thread_id;
 
-            // We don't use this. We use our own heap
+            // Exists two mode compiled with kernel: Kernel manages thread local data or thread
+            // manages the local data itself.
+            // So this is fine for both mode.
             ptr<void> tls_heap;
+
+            // On real phone this is a RArray. 
             std::array<tls_slot, 50> tls_slots;
         };
 
@@ -159,9 +161,9 @@ namespace eka2l1 {
 
             chunk_ptr stack_chunk;
             chunk_ptr name_chunk;
-            chunk_ptr tls_chunk;
+            chunk_ptr local_data_chunk;
 
-            thread_local_data ldata;
+            thread_local_data *ldata;
 
             std::shared_ptr<thread_scheduler> scheduler;
             std::stack<debug_function_trace> call_stacks;
@@ -170,7 +172,8 @@ namespace eka2l1 {
             std::uint32_t flags;
             ipc_msg_ptr sync_msg;
 
-            void reset_thread_ctx(std::uint32_t entry_point, std::uint32_t stack_top, bool inital);
+            void reset_thread_ctx(const std::uint32_t entry_point, const std::uint32_t stack_top, const std::uint32_t thr_local_addr,
+                const bool inital);
             void create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator_ptr,
                 std::uint32_t name_len, address name_ptr, address epa);
 
@@ -198,6 +201,9 @@ namespace eka2l1 {
             common::double_linked_queue_element suspend_link;
             common::double_linked_queue_element process_thread_link;
 
+            address exception_handler;
+            std::uint32_t exception_mask;
+
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);
             kernel_obj *wait_obj;
@@ -208,6 +214,22 @@ namespace eka2l1 {
             void rendezvous(int rendezvous_reason);
 
             void finish_logons();
+
+            const address get_exception_handler() const {
+                return exception_handler;
+            }
+
+            void set_exception_handler(const address addr) {
+                exception_handler = addr;
+            }
+
+            const std::uint32_t get_exception_mask() const {
+                return exception_mask;
+            }
+
+            void set_exception_mask(const std::uint32_t mask) {
+                exception_mask = mask;
+            }
 
             void set_exit_reason(int reason) {
                 exit_reason = reason;
@@ -295,7 +317,7 @@ namespace eka2l1 {
                 flags = new_flags;
             }
 
-            thread_local_data &get_local_data() {
+            thread_local_data *get_local_data() {
                 return ldata;
             }
 

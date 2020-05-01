@@ -171,7 +171,8 @@ namespace eka2l1 {
             call_stacks.pop();
         }
 
-        void thread::reset_thread_ctx(uint32_t entry_point, uint32_t stack_top, bool inital) {
+        void thread::reset_thread_ctx(const std::uint32_t entry_point, const std::uint32_t stack_top, const std::uint32_t thr_local_data_ptr,
+            const bool inital) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
 
@@ -193,6 +194,8 @@ namespace eka2l1 {
                 // Thread initalization, not process
                 ctx.cpu_registers[4] = 1;
             }
+
+            ctx.wrwr = thr_local_data_ptr;
         }
 
         void thread::create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator,
@@ -246,7 +249,9 @@ namespace eka2l1 {
             , rendezvous_reason(0) 
             , exit_reason(0)
             , exit_type(entity_exit_type::pending)
-            , create_time(0) {
+            , create_time(0)
+            , exception_handler(0)
+            , exception_mask(0) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = caculate_thread_priority(owning_process(), pri);
@@ -292,7 +297,25 @@ namespace eka2l1 {
             create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
                 name_chunk->base().ptr_address(), epa);
 
-            reset_thread_ctx(epa, stack_top, inital);
+            // Create local data chunk
+            // Alloc extra the size of thread local data to avoid dealing with binary compability (size changed etc...)
+            local_data_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, 0x1000, 0x1000,
+                prot::read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
+
+            if (local_data_chunk) {
+                std::uint8_t *data = reinterpret_cast<std::uint8_t*>(local_data_chunk->host_base());
+
+                ldata = reinterpret_cast<thread_local_data*>(data);
+                new (ldata) thread_local_data();
+                
+                ldata->heap = 0;
+                ldata->scheduler = 0;
+                ldata->trap_handler = 0;
+                ldata->thread_id = 0;
+                ldata->tls_heap = 0;
+            }
+
+            reset_thread_ctx(epa, stack_top, local_data_chunk->base().ptr_address(), inital);
             scheduler = kern->get_thread_scheduler();
 
             // Add thread to process's thread list
@@ -306,18 +329,18 @@ namespace eka2l1 {
         }
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
-            for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
-                if (ldata.tls_slots[i].handle != -1 && ldata.tls_slots[i].handle == handle) {
-                    return &ldata.tls_slots[i];
+            for (uint32_t i = 0; i < ldata->tls_slots.size(); i++) {
+                if (ldata->tls_slots[i].handle != -1 && ldata->tls_slots[i].handle == handle) {
+                    return &ldata->tls_slots[i];
                 }
             }
 
-            for (uint32_t i = 0; i < ldata.tls_slots.size(); i++) {
-                if (ldata.tls_slots[i].handle == -1) {
-                    ldata.tls_slots[i].handle = handle;
-                    ldata.tls_slots[i].uid = dll_uid;
+            for (uint32_t i = 0; i < ldata->tls_slots.size(); i++) {
+                if (ldata->tls_slots[i].handle == -1) {
+                    ldata->tls_slots[i].handle = handle;
+                    ldata->tls_slots[i].uid = dll_uid;
 
-                    return &ldata.tls_slots[i];
+                    return &ldata->tls_slots[i];
                 }
             }
 
