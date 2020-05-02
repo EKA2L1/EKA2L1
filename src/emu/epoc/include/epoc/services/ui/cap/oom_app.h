@@ -99,24 +99,24 @@ namespace eka2l1 {
     };
 
     struct akn_screen_mode_info {
-        int mode_num;
+        std::int32_t mode_num;
         epoc::pixel_twips_and_rot info;
         akn_softkey_loc loc;
-        int screen_style_hash;
+        std::uint32_t screen_style_hash;
         epoc::display_mode dmode;
     };
 
     struct akn_hardware_info {
-        int state_num;
-        int key_mode;
-        int screen_mode;
-        int alt_screen_mode;
+        std::int32_t state_num;
+        std::int32_t key_mode;
+        std::int32_t screen_mode;
+        std::int32_t alt_screen_mode;
     };
 
     struct akn_layout_config {
-        int num_screen_mode;
+        std::int32_t num_screen_mode;
         eka2l1::ptr<akn_screen_mode_info> screen_modes;
-        int num_hardware_mode;
+        std::int32_t num_hardware_mode;
         eka2l1::ptr<akn_hardware_info> hardware_infos;
     };
 

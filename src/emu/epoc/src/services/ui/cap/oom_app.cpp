@@ -121,6 +121,18 @@ namespace eka2l1 {
         LOG_TRACE("Status pane redrawed");
     }
 
+    static std::uint32_t calculate_screen_style_hash(const std::string &style) {
+        std::uint64_t hash = 0;
+        static constexpr std::uint8_t HASH_MULT = 131;
+
+        for (const char c: style) {
+            hash *= HASH_MULT;
+            hash += c;
+        }
+
+        return static_cast<std::uint32_t>(hash);
+    }
+
     std::string oom_ui_app_server::get_layout_buf() {
         if (!winsrv) {
             winsrv = reinterpret_cast<window_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Windowserver")));
@@ -131,7 +143,7 @@ namespace eka2l1 {
 
         akn_layout_config akn_config;
 
-        akn_config.num_screen_mode = static_cast<int>(scr_config->modes.size());
+        akn_config.num_screen_mode = 1;
 
         // TODO: Find out what this really does
         akn_config.num_hardware_mode = 0;
@@ -143,7 +155,7 @@ namespace eka2l1 {
         std::string result;
         result.append(reinterpret_cast<char *>(&akn_config), sizeof(akn_layout_config));
 
-        for (std::size_t i = 0; i < scr_config->modes.size(); i++) {
+        for (std::size_t i = 0; i < 1; i++) {
             akn_screen_mode_info mode_info;
 
             // TODO: Change this based on user settings
@@ -153,6 +165,7 @@ namespace eka2l1 {
             mode_info.info.orientation = epoc::number_to_orientation(scr_config->modes[i].rotation);
             mode_info.info.pixel_size = scr_config->modes[i].size;
             mode_info.info.twips_size = mode_info.info.pixel_size * twips_mul;
+            mode_info.screen_style_hash = calculate_screen_style_hash(scr_config->modes[i].style);
 
             result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));
         }
