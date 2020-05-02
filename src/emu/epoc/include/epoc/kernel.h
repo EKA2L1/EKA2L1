@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <epoc/kernel/btrace.h>
 #include <epoc/kernel/change_notifier.h>
 #include <epoc/kernel/chunk.h>
 #include <epoc/kernel/codeseg.h>
@@ -163,6 +164,8 @@ namespace eka2l1 {
         std::vector<kernel_obj_unq_ptr> timers;
         std::vector<kernel_obj_unq_ptr> message_queues;
 
+        std::unique_ptr<kernel::btrace> btrace_inst;
+
         timing_system *timing;
         manager_system *mngr;
         memory_system *mem;
@@ -214,6 +217,10 @@ namespace eka2l1 {
 
         system *get_system() {
             return sys;
+        }
+
+        kernel::btrace *get_btrace() {
+            return btrace_inst.get();
         }
 
         std::uint64_t home_time();

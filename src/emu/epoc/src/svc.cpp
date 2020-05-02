@@ -2347,6 +2347,19 @@ namespace eka2l1::epoc {
             aDes.get(sys->get_memory_system())->to_std_string(sys->get_kernel_system()->crr_process()));
     }
 
+    BRIDGE_FUNC(std::int32_t, btrace_out, const std::uint32_t a0, const std::uint32_t a1, const std::uint32_t a2,
+        const std::uint32_t a3) {
+        kernel_system *kern = sys->get_kernel_system();
+        manager::config_state *conf = sys->get_config();
+
+        if (!conf->enable_btrace) {
+            // Passed
+            return 1;
+        }
+
+        return static_cast<std::int32_t>(kern->get_btrace()->out(a0, a1, a2, a3));
+    }
+
     // Let all pass for now
     BRIDGE_FUNC(std::int32_t, plat_sec_diagnostic, eka2l1::ptr<void> plat_sec_info) {
         return epoc::error_none;
@@ -2736,6 +2749,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDC, thread_request_signal),
         BRIDGE_REGISTER(0xDE, leave_start),
         BRIDGE_REGISTER(0xDF, leave_end),
+        BRIDGE_REGISTER(0xE7, btrace_out),
         BRIDGE_REGISTER(0xFE, hle_dispatch)
     };
 }

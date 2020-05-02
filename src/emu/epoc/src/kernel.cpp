@@ -82,6 +82,9 @@ namespace eka2l1 {
 
         rom_map = nullptr;
 
+        // Instantiate btrace
+        btrace_inst = std::make_unique<kernel::btrace>(this, io);
+
         kernel_handles = kernel::object_ix(this, kernel::handle_array_owner::kernel);
         service::init_services(sys);
 
@@ -117,6 +120,8 @@ namespace eka2l1 {
         libraries.clear();
         codesegs.clear();
         message_queues.clear();
+        
+        btrace_inst->close_trace_session();
     }
 
     kernel::thread *kernel_system::crr_thread() {
