@@ -20,6 +20,7 @@ add_library(epockern
     include/epoc/kernel/smp/balancer.h
     include/epoc/kernel/smp/core.h
     include/epoc/kernel/smp/scheduler.h
+    include/epoc/kernel/btrace.h
     include/epoc/kernel/change_notifier.h
     include/epoc/kernel/chunk.h
     include/epoc/kernel/codeseg.h
@@ -42,6 +43,7 @@ add_library(epockern
     include/epoc/svc.h
     include/epoc/ptr.h
     src/kernel/smp/avail.cpp
+    src/kernel/btrace.cpp
     src/kernel/change_notifier.cpp
     src/kernel/chunk.cpp
     src/kernel/codeseg.cpp

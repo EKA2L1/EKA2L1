@@ -464,7 +464,7 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_pref_general() {
-        ImGui::Text("Logging");
+        ImGui::Text("Debugging");
         ImGui::Separator();
 
         const float col2 = ImGui::GetWindowSize().x / 2;
@@ -480,6 +480,18 @@ namespace eka2l1 {
         ImGui::Checkbox("Symbian API", &conf->log_passed);
         ImGui::SameLine(col2);
         ImGui::Checkbox("System calls", &conf->log_svc);
+
+        ImGui::Checkbox("Accurate IPC timing", &conf->accurate_ipc_timing);
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Improve the accuracy of system, but may results in slowdown.");
+        }
+
+        ImGui::SameLine(col2);
+        ImGui::Checkbox("Enable btrace", &conf->enable_btrace);
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Enable kernel tracing that is used in driver. Slowdown expected on enable");
+        }
 
         ImGui::NewLine();
         ImGui::Text("System");
@@ -557,11 +569,6 @@ namespace eka2l1 {
             }
 
             ImGui::PopItemWidth();
-        }
-
-        ImGui::Checkbox("Accurate IPC timing", &conf->accurate_ipc_timing);
-        if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Improve the accuracy of system, but may results in slowdown.");
         }
     }
 
