@@ -104,47 +104,40 @@ namespace eka2l1::epoc {
         eka2l1::vecx<int, 4> color;
 
         switch (to_set) {
-        case set_color_type::brush: {
-            // Don't bother even sending any draw command
-            switch (fill_mode) {
-            case brush_style::null:
-                return false;
+        case set_color_type::brush:
+            color = common::rgb_to_vec(brush_color);
+            break;
 
-            case brush_style::solid:
+        case set_color_type::pen:
+            color = common::rgb_to_vec(pen_color);
+            break;
+
+        default:
+            return false;
+        }
+
+        // Don't bother even sending any draw command
+        switch (fill_mode) {
+        case brush_style::null:
+            return false;
+
+        case brush_style::solid:
+            if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
+                if (color[0] == 0) {
+                    // Nothing, dont draw
+                    return false;
+                }
+
+                cmd_builder->set_brush_color_detail({ color[1], color[2], color[3], color[0] });
+            } else {
                 cmd_builder->set_brush_color({ color[1], color[2], color[3] });
-                break;
-
-            default:
-                LOG_WARN("Unhandled brush style {}", static_cast<std::int32_t>(fill_mode));
-                break;
             }
-
+            
             break;
-        }
 
-        case set_color_type::pen: {
-            // Don't bother even sending any draw command
-            switch (line_mode) {
-            case pen_style::null:
-                return false;
-
-            case pen_style::solid:
-                color = common::rgb_to_vec(pen_color);
-                cmd_builder->set_brush_color({ color[1], color[2], color[3] });
-                break;
-
-            default:
-                LOG_WARN("Unhandled pen style {}", static_cast<std::int32_t>(fill_mode));
-                break;
-            }
-
-            break;
-        }
-
-        default: {
-            LOG_ERROR("Unhandle support for setting color for type {}", static_cast<int>(to_set));
-            break;
-        }
+        default:
+            LOG_WARN("Unhandled brush style {}", static_cast<std::int32_t>(fill_mode));
+            return false;
         }
 
         return true;
@@ -300,7 +293,7 @@ namespace eka2l1::epoc {
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
         // Symbian rectangle second vector is the bottom right, not the size
-        area.size = area.size - area.top;
+        area.transform_from_symbian_rectangle();
 
         if (do_command_set_color(set_color_type::pen)) {
             // We want to draw the rectangle that backup the real rectangle, to create borders.
@@ -323,25 +316,18 @@ namespace eka2l1::epoc {
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
         // Symbian rectangle second vector is the bottom right, not the size
-        area.size = area.size - area.top;
+        area.transform_from_symbian_rectangle();
 
-        eka2l1::vecx<int, 4> color;
-        color = common::rgb_to_vec(brush_color);
+        const auto previous_brush_type = fill_mode;
+        fill_mode = brush_style::solid;
 
-        if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
-            if (color[0] == 0) {
-                // Nothing, dont draw
-                context.set_request_status(epoc::error_none);
-                return;
-            }
-
-            cmd_builder->set_brush_color_detail({ color[1], color[2], color[3], color[0] });
-        } else {
-            cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+        if (do_command_set_color(set_color_type::brush)) {
+            cmd_builder->draw_rectangle(area);
         }
 
+        fill_mode = previous_brush_type;
+
         // Draw rectangle
-        cmd_builder->draw_rectangle(area);
         context.set_request_status(epoc::error_none);
     }
 
