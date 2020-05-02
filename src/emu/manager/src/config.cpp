@@ -89,6 +89,7 @@ namespace eka2l1::manager {
         config_file_emit_single(emitter, "enable-srv-cdl", enable_srv_cdl);
         config_file_emit_single(emitter, "fbs-enable-compression-queue", fbs_enable_compression_queue);
         config_file_emit_single(emitter, "accurate-ipc-timing", accurate_ipc_timing);
+        config_file_emit_single(emitter, "enable-btrace", enable_btrace);
 
         emitter << YAML::EndMap;
 
@@ -140,6 +141,7 @@ namespace eka2l1::manager {
         get_yaml_value(node, "enable-srv-cdl", &enable_srv_cdl, true);
         get_yaml_value(node, "fbs-enable-compression-queue", &fbs_enable_compression_queue, false);
         get_yaml_value(node, "accurate-ipc-timing", &accurate_ipc_timing, false);
+        get_yaml_value(node, "enable-btrace", &enable_btrace, false);
 
         try {
             YAML::Node force_loads_node = node["force-load"];
