@@ -789,8 +789,9 @@ namespace eka2l1 {
             int total_mode = 0;
 
             do {
+                std::string current_mode_str = std::to_string(total_mode + 1);  
                 std::string screen_mode_width_key = "SCR_WIDTH";
-                screen_mode_width_key += std::to_string(total_mode + 1);
+                screen_mode_width_key += current_mode_str;
 
                 common::ini_node_ptr mode_width = screen_node->get_as<common::ini_section>()->find(screen_mode_width_key.c_str());
 
@@ -799,7 +800,7 @@ namespace eka2l1 {
                 }
 
                 std::string screen_mode_height_key = "SCR_HEIGHT";
-                screen_mode_height_key += std::to_string(total_mode + 1);
+                screen_mode_height_key +=current_mode_str;
 
                 common::ini_node_ptr mode_height = screen_node->get_as<common::ini_section>()->find(screen_mode_height_key.c_str());
 
@@ -814,13 +815,30 @@ namespace eka2l1 {
                 mode_height->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.y),
                     1, 0);
 
+                current_mode_str = std::to_string(total_mode);
+
                 std::string screen_mode_rot_key = "SCR_ROTATION";
-                screen_mode_rot_key += std::to_string(total_mode);
+                screen_mode_rot_key += current_mode_str;
 
                 common::ini_node_ptr mode_rot = screen_node->get_as<common::ini_section>()->find(screen_mode_rot_key.c_str());
 
                 mode_rot->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.rotation),
                     1, 0);
+
+                std::string screen_style_s60_key = "S60_SCR_STYLE_NAME";
+                screen_style_s60_key += current_mode_str;
+
+                common::ini_node_ptr style_node = screen_node->get_as<common::ini_section>()->find(screen_style_s60_key.c_str());
+
+                if (style_node) {
+                    std::vector<std::string> styles;
+                    styles.resize(1);
+
+                    style_node->get_as<common::ini_pair>()->get(styles);
+                    scr_mode.style = styles[0];
+                } else {
+                    scr_mode.style = "";
+                }
 
                 scr.modes.push_back(scr_mode);
             } while (true);

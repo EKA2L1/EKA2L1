@@ -31,6 +31,8 @@ namespace eka2l1::epoc {
 
             eka2l1::vec2 size;
             int rotation;
+
+            std::string style;
         };
 
         struct screen {
