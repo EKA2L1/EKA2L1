@@ -33,12 +33,15 @@ namespace eka2l1::dispatch {
 
     void dispatcher::init(kernel_system *kern, timing_system *timing) {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
-        nof_complete_evt_ = timing->register_event("DispatcherNofComplete", [](std::uint64_t userdata, std::uint64_t late) {  
-            epoc::notify_info *info = reinterpret_cast<epoc::notify_info*>(userdata);
-            info->complete(epoc::error_none);
-
-            delete info;
+        
+        audio_nof_complete_evt_ = timing->register_event("DispatchAudio", [this, kern, timing](std::uint64_t userdata, std::uint64_t late) {  
+            dsp_epoc_stream *stream = reinterpret_cast<dsp_epoc_stream*>(userdata);
+            stream->deliver_audio_events(kern, timing);
+            timing->schedule_event(20000 - late, audio_nof_complete_evt_, userdata);
         });
+
+        // Set global variables
+        timing_ = timing;
     }
 
     void dispatcher::resolve(eka2l1::system *sys, const std::uint32_t function_ord) {
@@ -50,6 +53,10 @@ namespace eka2l1::dispatch {
         }
 
         dispatch_find_result->second.func(sys);
+    }
+
+    void dispatcher::shutdown() {
+        // TODO:
     }
 
     void dispatcher::update_all_screens(eka2l1::system *sys) {
