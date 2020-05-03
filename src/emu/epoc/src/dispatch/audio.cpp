@@ -29,6 +29,8 @@
 #include <common/log.h>
 #include <common/path.h>
 
+#include <common/time.h>
+
 namespace eka2l1::dispatch {
     dsp_epoc_stream::dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream)
         : ll_stream_(std::move(stream)) {
@@ -82,7 +84,11 @@ namespace eka2l1::dispatch {
         while (evt != nullptr) {
             if (evt->flags_ & audio_event::FLAG_COMPLETED) {
                 const std::uint64_t delta = timing->ticks() - evt->start_ticks_;
-                timing->add_ticks(static_cast<std::uint32_t>(delta));
+                const std::uint64_t ticks_target = timing->us_to_cycles(common::get_current_time_in_microseconds_since_epoch()
+                    - evt->start_host_);
+
+                if (delta < ticks_target)
+                    timing->add_ticks(static_cast<std::uint32_t>(ticks_target - delta));
 
                 kern->lock();
                 evt->info_.complete(epoc::error_none);
@@ -289,6 +295,8 @@ namespace eka2l1::dispatch {
         drivers::dsp_stream *ll_stream_ptr = ll_stream.get();
         auto stream_new = std::make_unique<dsp_epoc_stream>(ll_stream);
 
+        timing->schedule_event(40000, dispatcher->audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream_new.get()));
+
         return dispatcher->dsp_streams_.add_object(stream_new);
     }
 
@@ -303,6 +311,7 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        timing->unschedule_event(dispatcher->audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream));
         dispatcher->dsp_streams_.remove_object(handle.ptr_address());
 
         return epoc::error_none;
@@ -332,8 +341,6 @@ namespace eka2l1::dispatch {
         if (!stream) {
             return epoc::error_bad_handle;
         }
-
-        timing->schedule_event(20000, dispatcher->audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream));
 
         if (!stream->ll_stream_->start()) {
             return epoc::error_general;
@@ -398,6 +405,7 @@ namespace eka2l1::dispatch {
         evt->info_.requester = sys->get_kernel_system()->crr_thread();
         evt->info_.sts = req;
         evt->start_ticks_ = timing->ticks();
+        evt->start_host_ = common::get_current_time_in_microseconds_since_epoch();
 
         out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, [dispatcher](void *userdata) {
             dsp_epoc_stream *epoc_stream = reinterpret_cast<dsp_epoc_stream*>(userdata);
@@ -424,8 +432,6 @@ namespace eka2l1::dispatch {
         }
 
         timing_system *timing = sys->get_timing_system();
-
-        timing->unschedule_event(dispatcher->audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream));
         
         {
             const std::lock_guard<std::mutex> guard(stream->lock_);

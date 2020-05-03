@@ -40,6 +40,7 @@ namespace eka2l1::dispatch {
     struct audio_event {
         epoc::notify_info info_;
         std::uint64_t start_ticks_;
+        std::uint64_t start_host_;
         audio_event *next_;
 
         enum {
