@@ -69,6 +69,9 @@ namespace eka2l1::epoc {
 
         int shadow_height;
 
+        std::uint32_t max_pointer_buffer_;
+        std::vector<epoc::event> pointer_buffer_;
+
         enum {
             flags_shadow_disable = 1 << 0,
             flags_active = 1 << 1,
@@ -79,7 +82,8 @@ namespace eka2l1::epoc {
             flags_faded = 1 << 6,
             flags_faded_default_param = 1 << 7,
             flags_faded_also_children = 1 << 8,
-            flags_dsa = 1 << 9
+            flags_dsa = 1 << 9,
+            flags_enable_pbe = 1 << 10
         };
 
         std::uint32_t flags;
@@ -145,6 +149,7 @@ namespace eka2l1::epoc {
         void set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd);
         bool clear_redraw_store();
         void store_draw_commands(service::ipc_context &context, ws_cmd &cmd);
+        void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
         void free(service::ipc_context &context, ws_cmd &cmd);
 
         epoc::window_group *get_group() {
