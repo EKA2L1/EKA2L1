@@ -147,7 +147,7 @@ CFbsThirtyTwoBitsDrawDevice::PWriteRgbToAddressFunc CFbsThirtyTwoBitsDrawDevice:
         return WriteRgb32ToAddressANDNOT;
 
     case CGraphicsContext::EDrawModePEN:
-        return WriteRgb32ToAddressBlend;
+        return (DisplayMode() == EColor16MA) ? WriteRgb32ToAddressBlend : WriteRgb32ToAddressAlpha;
 
     default:
         Scdv::Log("Unimplemented graphics drawing mode: %d", (TInt)aDrawMode);
@@ -247,8 +247,7 @@ void CFbsThirtyTwoBitsDrawDevice::SetSize(TSize aSize) {
     iLongWidth = iSize.iWidth;
 }
 
-TInt CFbsThirtyTwoBitsDrawDevice::Construct(TSize aSize, TInt aDataStride) {
-    iDisplayMode = EColor16MA;
+TInt CFbsThirtyTwoBitsDrawDevice::ConstructInner(TSize aSize, TInt aDataStride) {
     SetSize(aSize);
 
     if (aDataStride != -1) {
@@ -270,24 +269,39 @@ TInt CFbsThirtyTwoBitsDrawDevice::Construct(TSize aSize, TInt aDataStride) {
     return KErrNone;
 }
 
-///////////////////////////////////////////////
-//
-//	RGBA screen draw device
-//
-//////////////////////////////////////////////
-TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY) {
+TInt CFbsTwentyfourBitAlphaDrawDevice::Construct(TSize aSize, TInt aDataStride) {
+    const TInt result = ConstructInner(aSize, aDataStride);
+    if (result != KErrNone) {
+        return result;
+    }
+
+    iDisplayMode = EColor16MA;
+    return KErrNone;
+}
+
+TInt CFbsTwentyfourBitUnsignedByteDrawDevice::Construct(TSize aSize, TInt aDataStride) {
+    const TInt result = ConstructInner(aSize, aDataStride);
+    if (result != KErrNone) {
+        return result;
+    }
+
+    iDisplayMode = EColor16MU;
+    return KErrNone;
+}
+
+TInt CFbsThirtyTwoBitsDrawDevice::Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY) {
     Scdv::Log("Set called with %d %d, unimplemented", aFactorX, aFactorY);
     return KErrNone;
 }
 
-void CFbsTwentyfourBitAlphaScreenDrawDevice::Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY) {
+void CFbsThirtyTwoBitsDrawDevice::Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY) {
 }
 
-TBool CFbsTwentyfourBitAlphaScreenDrawDevice::IsScalingOff() {
+TBool CFbsThirtyTwoBitsDrawDevice::IsScalingOff() {
     return ETrue;
 }
 
-TInt CFbsTwentyfourBitAlphaScreenDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterface) {
+TInt CFbsThirtyTwoBitsDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterface) {
     switch (aInterfaceId) {
     case KScalingInterfaceID:
         aInterface = static_cast<Scdv::MScalingSettings *>(this);
@@ -309,9 +323,23 @@ TInt CFbsTwentyfourBitAlphaScreenDrawDevice::GetInterface(TInt aInterfaceId, TAn
     return KErrNotSupported;
 }
 
+///////////////////////////////////////////////
+//
+//	RGBA screen draw device
+//
+//////////////////////////////////////////////
+
+void CFbsEKA2L1ScreenDevice::Update(const TRegion &aRegion) {
+    UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());
+}
+
+void CFbsEKA2L1ScreenDevice::UpdateRegion(const TRect &aRect) {
+    UpdateScreen(1, iScreenNumber, 1, &aRect);
+}
+
 TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {
     iScreenNumber = aScreenNumber;
-    return CFbsThirtyTwoBitsDrawDevice::Construct(aSize, aDataStride);
+    return CFbsTwentyfourBitAlphaDrawDevice::Construct(aSize, aDataStride);
 }
 
 void CFbsTwentyfourBitAlphaScreenDrawDevice::Update() {
@@ -322,10 +350,15 @@ void CFbsTwentyfourBitAlphaScreenDrawDevice::Update() {
     UpdateScreen(1, iScreenNumber, 1, &updateRect);
 }
 
-void CFbsTwentyfourBitAlphaScreenDrawDevice::Update(const TRegion &aRegion) {
-    UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());
+TInt CFbsTwentyfourBitUnsignedByteScreenDrawDevice::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {
+    iScreenNumber = aScreenNumber;
+    return CFbsTwentyfourBitUnsignedByteDrawDevice::Construct(aSize, aDataStride);
 }
 
-void CFbsTwentyfourBitAlphaScreenDrawDevice::UpdateRegion(const TRect &aRect) {
-    UpdateScreen(1, iScreenNumber, 1, &aRect);
+void CFbsTwentyfourBitUnsignedByteScreenDrawDevice::Update() {
+    TRect updateRect;
+    updateRect.iTl = TPoint(0, 0);
+    updateRect.iBr = updateRect.iTl + iSize;
+
+    UpdateScreen(1, iScreenNumber, 1, &updateRect);
 }

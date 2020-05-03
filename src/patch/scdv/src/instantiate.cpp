@@ -47,9 +47,9 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         break;
 
     case EColor16MU:
-        newDevice = new (ELeave) CFbsThirtyTwoBitsDrawDevice;
+        newDevice = new (ELeave) CFbsTwentyfourBitUnsignedByteDrawDevice;
         CleanupStack::PushL(newDevice);
-        User::LeaveIfError(reinterpret_cast<CFbsThirtyTwoBitsDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
+        User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitUnsignedByteDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
         Scdv::Log("INFO:: A new 32 bit bitmap device has been instantiated!");
 
@@ -72,6 +72,15 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
     CFbsDrawDevice *device = NULL;
 
     switch (aMode) {
+    case EColor16MU:
+        device = new (ELeave) CFbsTwentyfourBitUnsignedByteScreenDrawDevice;
+        CleanupStack::PushL(device);
+        User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitUnsignedByteScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
+
+        Scdv::Log("INFO:: A new 24 bit unsigned byte screen device has been instantiated!");
+
+        break;
+
     case EColor16MA:
         device = new (ELeave) CFbsTwentyfourBitAlphaScreenDrawDevice;
         CleanupStack::PushL(device);

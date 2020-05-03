@@ -24,9 +24,9 @@
 #include <scdv/blit.h>
 #include <scdv/scale.h>
 
-class CFbsThirtyTwoBitsDrawDevice : public CFbsDrawDeviceBuffer {
+class CFbsThirtyTwoBitsDrawDevice : public CFbsDrawDeviceBuffer, public Scdv::MScalingSettings {
 public:
-    TInt Construct(TSize aSize, TInt aDataStride);
+    TInt ConstructInner(TSize aSize, TInt aDataStride);
     void SetSize(TSize aSize);
 
     virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const;
@@ -42,27 +42,46 @@ public:
     virtual TRgb ReadPixel(TInt aX, TInt aY) const;
     virtual void WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
     virtual void WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
+    
+    virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY);
+    virtual void Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY);
+    virtual TBool IsScalingOff();
+    
+    virtual TInt GetInterface(TInt aInterfaceId, TAny *&aInterface);
 };
 
 class CFbsTwentyfourBitAlphaDrawDevice : public CFbsThirtyTwoBitsDrawDevice {
+public:
+    TInt Construct(TSize aSize, TInt aDataStride);
 };
 
-class CFbsTwentyfourBitAlphaScreenDrawDevice : public CFbsTwentyfourBitAlphaDrawDevice, public Scdv::MScalingSettings {
+class CFbsTwentyfourBitUnsignedByteDrawDevice : public CFbsThirtyTwoBitsDrawDevice {
+public:
+    TInt Construct(TSize aSize, TInt aDataStride);
+};
+
+class CFbsEKA2L1ScreenDevice {
+protected:
     TUint32 iScreenNumber;
 
+public:
+    virtual void Update(const TRegion &aRegion);
+    virtual void UpdateRegion(const TRect &aRect);
+
+};
+
+class CFbsTwentyfourBitAlphaScreenDrawDevice : public CFbsTwentyfourBitAlphaDrawDevice, public CFbsEKA2L1ScreenDevice {
 public:
     TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);
 
     virtual void Update();
-    virtual void Update(const TRegion &aRegion);
-    virtual void UpdateRegion(const TRect &aRect);
-
-    virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY);
-    virtual void Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY);
-    virtual TBool IsScalingOff();
-
-    virtual TInt GetInterface(TInt aInterfaceId, TAny *&aInterface);
 };
-;
+
+class CFbsTwentyfourBitUnsignedByteScreenDrawDevice : public CFbsTwentyfourBitUnsignedByteDrawDevice, public CFbsEKA2L1ScreenDevice {
+public:
+    TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);
+
+    virtual void Update();
+};
 
 #endif
