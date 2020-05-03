@@ -414,14 +414,16 @@ namespace eka2l1 {
 #pragma optimize("", on)
 #endif
 
-    void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key) {
+    void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key, const std::uint32_t max_uids_buf) {
         // We have to push it to the temporary array, since this array can be retrieve anytime before another FindEq call
         // Even if the provided array is not full
-        key_found_result.push_back(key);
+        array[0]++;
 
-        if (array[0] < MAX_FOUND_UID_BUF_LENGTH) {
+        if (array[0] <= max_uids_buf) {
             // Increase the length, than add the keey
-            array[++array[0]] = key;
+            array[array[0]] = key;
+        } else {
+            key_found_result.push_back(key);
         }
     }
 
@@ -433,6 +435,7 @@ namespace eka2l1 {
         // Get the filter
         std::optional<central_repo_key_filter> filter = ctx->get_arg_packed<central_repo_key_filter>(0);
         std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t*>(ctx->get_arg_ptr(2));
+        const std::size_t found_uid_max_uids = (ctx->get_arg_max_size(2) / sizeof(std::uint32_t)) - 1;
 
         if (!filter || !found_uid_result_array) {
             LOG_ERROR("Trying to find equal value in cenrep, but arguments are invalid!");
@@ -500,9 +503,25 @@ namespace eka2l1 {
 
             // If we found the key, append it
             if (key_found != 0) {
-                append_new_key_to_found_eq_list(found_uid_result_array, key_found);
+                append_new_key_to_found_eq_list(found_uid_result_array, key_found, static_cast<std::uint32_t>(found_uid_max_uids));
             }
         }
+
+        if (found_uid_result_array[0] == 0) {
+            // NOTHING! NOTHING! omg no
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void central_repo_client_subsession::get_find_result(service::ipc_context *ctx) {
+        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t*>(ctx->get_arg_ptr(0));
+        const std::size_t found_uid_max_uids = (ctx->get_arg_max_size(0) / sizeof(std::uint32_t));
+
+        ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&key_found_result[0]), static_cast<std::uint32_t>(common::min(
+            found_uid_max_uids, key_found_result.size()) * sizeof(std::uint32_t)));
 
         ctx->set_request_status(epoc::error_none);
     }

@@ -209,6 +209,7 @@ namespace eka2l1 {
         void notify_nof_check(service::ipc_context *ctx);
         void notify(service::ipc_context *ctx);
         void notify_cancel(service::ipc_context *ctx);
+        void get_find_result(service::ipc_context *ctx);
 
         /**
          * \brief Append new key to find equal list.
@@ -219,7 +220,8 @@ namespace eka2l1 {
          * \param array The target array to append. First element contains the count
          * \param key   The key to append.
          */
-        void append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key);
+        void append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key,
+            const std::uint32_t max_uids_buf);
 
         void handle_message(service::ipc_context *ctx);
 

@@ -118,6 +118,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
             HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
             HANDLE_CLIENT_IPC(delete_entry, epoc::fs_msg_delete, "Fs::Delete");
+            HANDLE_CLIENT_IPC(set_entry, epoc::fs_msg_set_entry, "Fs::SetEntry");
             HANDLE_CLIENT_IPC(rename, epoc::fs_msg_rename, "Fs::Rename(Move)");
             HANDLE_CLIENT_IPC(replace, epoc::fs_msg_replace, "Fs::Replace");
             HANDLE_CLIENT_IPC(read_file_section, epoc::fs_msg_read_file_section, "Fs::ReadFileSection");
@@ -446,6 +447,34 @@ namespace eka2l1 {
         entry.modified = epoc::time{ entry_hle->last_write };
 
         ctx->write_arg_pkg<epoc::fs::entry>(1, entry);
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void fs_server_client::set_entry(service::ipc_context *ctx) {
+        std::optional<std::u16string> fname_op = ctx->get_arg<std::u16string>(0);
+        std::optional<epoc::time> time = ctx->get_arg_packed<epoc::time>(1);
+        std::uint32_t set_att_mask = *ctx->get_arg<std::uint32_t>(2);
+        std::uint32_t clear_att_mask = *ctx->get_arg<std::uint32_t>(3);
+
+        if (!fname_op) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        std::u16string fname = std::move(*fname_op);
+        fname = eka2l1::absolute_path(fname, ss_path, true);
+
+        LOG_INFO("Set entry of: {}", common::ucs2_to_utf8(fname));
+
+        io_system *io = ctx->sys->get_io_system();
+
+        std::optional<entry_info> entry_hle = io->get_entry_info(fname);
+
+        if (!entry_hle) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
         ctx->set_request_status(epoc::error_none);
     }
 

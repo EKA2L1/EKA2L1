@@ -58,8 +58,20 @@ namespace eka2l1::epoc {
         }
 
         epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
+        
+        std::optional<eka2l1::rect> contain_area;
+        auto contain_rect_this_mode_ite = user->scr->pointer_areas_.find(user->scr->crr_mode);
+
+        if (contain_rect_this_mode_ite != user->scr->pointer_areas_.end()) {
+            contain_area = contain_rect_this_mode_ite->second;
+        }
 
         for (auto &[evt, sended_to_highest_z]: evts_) {
+            // Is this event really in the pointer area, if area exists. If not, pass
+            if (contain_area && !contain_area->contains(evt.adv_pointer_evt_.pos)) {
+                continue;
+            }
+
             const bool filter_enter_exit = ((evt.type == epoc::event_code::touch_enter) || (evt.type == epoc::event_code::touch_exit))
                 && (user->filter & epoc::pointer_filter_type::pointer_enter);
 

@@ -173,7 +173,6 @@ namespace eka2l1::drivers {
                     const std::lock_guard<std::mutex> guard(callback_lock_);
                     if (buffer_copied_callback_) {
                         buffer_copied_callback_(buffer_copied_userdata_);
-                        buffer_copied_callback_ = nullptr;
                     }
                 }
 

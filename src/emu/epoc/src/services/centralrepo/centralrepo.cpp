@@ -203,6 +203,7 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_eq_int, "CenRep::FindEqInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_neq_int, "CenRep::FindNeqInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find, "CenRep::Find");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_find_res, "CenRep::GetFindResult");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel, "CenRep::NofCancel");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel_all, "CenRep::NofCancelAll");
     }
@@ -514,6 +515,10 @@ namespace eka2l1 {
             find(ctx);
             break;
         }
+
+        case cen_rep_get_find_res:
+            get_find_result(ctx);
+            break;
 
         default: {
             LOG_ERROR("Unhandled message opcode for cenrep 0x{:X]", ctx->msg->function);

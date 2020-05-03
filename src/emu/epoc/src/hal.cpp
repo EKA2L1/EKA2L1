@@ -240,10 +240,46 @@ namespace eka2l1::epoc {
         }
     };
 
+    struct digitiser_hal: public hal  {
+        window_server *winserv_; 
+
+        int get_xy_info(int *a1, int *a2, const std::uint16_t device_num) {
+            assert(winserv_);
+
+            epoc::screen *scr = winserv_->get_screen(device_num);
+
+            if (!scr) {
+                return epoc::error_not_found;
+            }
+
+            epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
+            kernel::process *crr = sys->get_kernel_system()->crr_process();
+            
+            if (package->get_length() == sizeof(digitiser_info_v1)) {
+                digitiser_info_v1 *info = reinterpret_cast<digitiser_info_v1*>(package->get_pointer(crr));
+                info->offset_to_first_useable_ = { 0, 0 };
+                info->size_usable_ = scr->size();
+
+                return epoc::error_none;
+            }
+
+            return epoc::error_general;
+        }
+        
+        explicit digitiser_hal(system *sys)
+            : hal(sys)
+            , winserv_(nullptr) {
+            REGISTER_HAL_FUNC(digitiser_hal_hal_xy_info, digitiser_hal, get_xy_info);
+            winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()
+                                                             ->get_by_name<service::server>(WINDOW_SERVER_NAME));
+        }
+    };
+
     void init_hal(eka2l1::system *sys) {
         REGISTER_HAL_D(sys, 0, kern_hal);
         REGISTER_HAL(sys, 1, variant_hal);
         REGISTER_HAL(sys, 4, display_hal);
+        REGISTER_HAL(sys, 5, digitiser_hal);
     }
 
     int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2) {

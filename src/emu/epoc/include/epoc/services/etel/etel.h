@@ -46,6 +46,7 @@ namespace eka2l1 {
         void get_phone_info_by_index(service::ipc_context *ctx);
         void get_tsy_name(service::ipc_context *ctx);
         void query_tsy_functionality(service::ipc_context *ctx);
+        void line_enumerate_call(service::ipc_context *ctx);
 
         void open_from_session(service::ipc_context *ctx);
         void open_from_subsession(service::ipc_context *ctx);

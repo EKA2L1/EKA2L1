@@ -216,6 +216,13 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    void etel_session::line_enumerate_call(service::ipc_context *ctx) {
+        std::uint32_t total_call = static_cast<std::uint32_t>(mngr_.total_entries(epoc::etel_entry_call));
+
+        ctx->write_arg_pkg(0, total_call);
+        ctx->set_request_status(epoc::error_none);
+    }
+
     void etel_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::etel_open_from_session:
@@ -248,6 +255,10 @@ namespace eka2l1 {
 
         case epoc::etel_query_tsy_functionality:
             query_tsy_functionality(ctx);
+            break;
+
+        case epoc::etel_line_enumerate_call:
+            line_enumerate_call(ctx);
             break;
 
         default:

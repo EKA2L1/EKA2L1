@@ -96,7 +96,7 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
-    : CIdle(CActive::EPriorityStandard) {
+    : CIdle(CActive::EPriorityIdle) {
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {

@@ -159,6 +159,7 @@ add_library(epocservs
     include/epoc/services/loader/loader.h
     include/epoc/services/install/install.h
     include/epoc/services/loader/op.h
+    include/epoc/services/msv/msv.h
     include/epoc/services/notifier/notifier.h
     include/epoc/services/posix/posix.h
     include/epoc/services/posix/op.h
@@ -242,6 +243,7 @@ add_library(epocservs
     src/services/hwrm/vibration/vibration.cpp
     src/services/install/install.cpp
     src/services/loader/loader.cpp
+    src/services/msv/msv.cpp
     src/services/notifier/notifier.cpp
     src/services/posix/posix.cpp
     src/services/remcon/common.cpp

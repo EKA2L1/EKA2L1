@@ -25,6 +25,7 @@
 #include <epoc/services/window/common.h>
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -78,6 +79,9 @@ namespace eka2l1::epoc {
         // update in graphics driver thread and read in os thread
         std::mutex screen_mutex;
         eka2l1::vec2 absolute_pos;
+
+        std::map<std::int32_t, eka2l1::rect> pointer_areas_;
+        eka2l1::vec2 pointer_cursor_pos_;
 
         typedef void (*focus_change_callback_handler)(void *userdata, epoc::window_group *focus);
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;

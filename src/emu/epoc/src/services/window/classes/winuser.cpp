@@ -80,6 +80,7 @@ namespace eka2l1::epoc {
         , redraw_evt_id(0)
         , driver_win_id(0)
         , shadow_height(0)
+        , max_pointer_buffer_(0)
         , flags(flags_visible) {
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
             LOG_ERROR("Parent is not a window client type!");
@@ -346,6 +347,21 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
+    void window_user::alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_alloc_pointer_buffer *alloc_params = reinterpret_cast<ws_cmd_alloc_pointer_buffer*>(cmd.data_ptr);
+
+        if ((alloc_params->max_points >= 100) || (alloc_params->max_points == 0)) {
+            LOG_ERROR("Suspicous alloc pointer buffer max points detected ({})", alloc_params->max_points);
+            context.set_request_status(epoc::error_argument);
+
+            return;
+        }
+
+        // Resize the buffers
+        max_pointer_buffer_ = alloc_params->max_points;
+        context.set_request_status(epoc::error_none);
+    }
+
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
 
@@ -575,6 +591,10 @@ namespace eka2l1::epoc {
 
         case EWsWinOpStoreDrawCommands:
             store_draw_commands(ctx, cmd);
+            break;
+
+        case EWsWinOpAllocPointerMoveBuffer:
+            alloc_pointer_buffer(ctx, cmd);
             break;
 
         default: {

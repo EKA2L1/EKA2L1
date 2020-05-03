@@ -116,6 +116,21 @@ namespace eka2l1::epoc {
         display_hal_get_state_spinner = 35
     };
 
+    enum digitiser_hal_function {
+        digitiser_hal_set_xy_input_calibration = 0,
+        digitiser_hal_calibration_points = 1,
+        digitiser_hal_save_xy_input_calibration = 2,
+        digitiser_hal_restore_xy_input_calibration = 3,
+        digitiser_hal_hal_xy_info = 4,
+        digitiser_hal_xy_state = 5,
+        digitiser_hal_hal_set_xy_state = 6,
+        digitiser_hal_3d_pointer = 7,
+        digitiser_hal_set_z_range = 8,
+        digitiser_hal_set_number_of_pointers = 9,
+        digitiser_hal_3d_info = 10,
+        digitiser_hal_orientation = 11
+    };
+
     struct memory_info_v1 {
         std::uint32_t total_ram_in_bytes_;
         std::uint32_t total_rom_in_bytes_;
@@ -165,6 +180,11 @@ namespace eka2l1::epoc {
         std::int32_t screen_address_valid_;
         eka2l1::ptr<void> screen_address_;
         eka2l1::vec2 screen_size_;
+    };
+
+    struct digitiser_info_v1 {
+        eka2l1::vec2 offset_to_first_useable_;
+        eka2l1::vec2 size_usable_;
     };
 
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */

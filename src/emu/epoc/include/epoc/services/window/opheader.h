@@ -187,4 +187,14 @@ namespace eka2l1 {
         std::uint8_t flags;
         std::uint8_t imheretoalignthestruct; ///< Yes.
     };
+
+    struct ws_cmd_set_pointer_cursor_area {
+        std::int32_t mode;
+        eka2l1::rect pointer_area;
+    };
+
+    struct ws_cmd_alloc_pointer_buffer {
+        std::uint32_t max_points;
+        std::uint32_t flags;
+    };
 }
