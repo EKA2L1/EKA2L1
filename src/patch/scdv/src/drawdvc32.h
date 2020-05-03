@@ -60,28 +60,20 @@ public:
     TInt Construct(TSize aSize, TInt aDataStride);
 };
 
-class CFbsEKA2L1ScreenDevice {
-protected:
-    TUint32 iScreenNumber;
+#define SCRDVC_DECL()                                                       \
+    TUint32 iScreenNumber;                                                  \
+public:                                                                     \
+    TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);   \
+    virtual void Update();                                                  \
+    virtual void Update(const TRegion &aRegion);                            \
+    virtual void UpdateRegion(const TRect &aRect)                          
 
-public:
-    virtual void Update(const TRegion &aRegion);
-    virtual void UpdateRegion(const TRect &aRect);
-
+class CFbsTwentyfourBitAlphaScreenDrawDevice : public CFbsTwentyfourBitAlphaDrawDevice {
+    SCRDVC_DECL();
 };
 
-class CFbsTwentyfourBitAlphaScreenDrawDevice : public CFbsTwentyfourBitAlphaDrawDevice, public CFbsEKA2L1ScreenDevice {
-public:
-    TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);
-
-    virtual void Update();
-};
-
-class CFbsTwentyfourBitUnsignedByteScreenDrawDevice : public CFbsTwentyfourBitUnsignedByteDrawDevice, public CFbsEKA2L1ScreenDevice {
-public:
-    TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);
-
-    virtual void Update();
+class CFbsTwentyfourBitUnsignedByteScreenDrawDevice : public CFbsTwentyfourBitUnsignedByteDrawDevice {
+    SCRDVC_DECL();
 };
 
 #endif

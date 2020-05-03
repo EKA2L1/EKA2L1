@@ -329,36 +329,23 @@ TInt CFbsThirtyTwoBitsDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterf
 //
 //////////////////////////////////////////////
 
-void CFbsEKA2L1ScreenDevice::Update(const TRegion &aRegion) {
-    UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());
-}
+#define SCRDVC_IMPL(name, base)                                                     \
+    void name::Update(const TRegion &aRegion) {                                     \
+        UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());   \
+    }                                                                               \
+    void name::UpdateRegion(const TRect &aRect) {                                   \
+        UpdateScreen(1, iScreenNumber, 1, &aRect);                                  \
+    }                                                                               \
+    TInt name::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {    \
+        iScreenNumber = aScreenNumber;                                              \
+        return base::Construct(aSize, aDataStride);                                 \
+    }                                                                               \
+    void name::Update() {                                                           \
+        TRect updateRect;                                                           \
+        updateRect.iTl = TPoint(0, 0);                                              \
+        updateRect.iBr = updateRect.iTl + iSize;                                    \
+        UpdateScreen(1, iScreenNumber, 1, &updateRect);                             \
+    }
 
-void CFbsEKA2L1ScreenDevice::UpdateRegion(const TRect &aRect) {
-    UpdateScreen(1, iScreenNumber, 1, &aRect);
-}
-
-TInt CFbsTwentyfourBitAlphaScreenDrawDevice::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {
-    iScreenNumber = aScreenNumber;
-    return CFbsTwentyfourBitAlphaDrawDevice::Construct(aSize, aDataStride);
-}
-
-void CFbsTwentyfourBitAlphaScreenDrawDevice::Update() {
-    TRect updateRect;
-    updateRect.iTl = TPoint(0, 0);
-    updateRect.iBr = updateRect.iTl + iSize;
-
-    UpdateScreen(1, iScreenNumber, 1, &updateRect);
-}
-
-TInt CFbsTwentyfourBitUnsignedByteScreenDrawDevice::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {
-    iScreenNumber = aScreenNumber;
-    return CFbsTwentyfourBitUnsignedByteDrawDevice::Construct(aSize, aDataStride);
-}
-
-void CFbsTwentyfourBitUnsignedByteScreenDrawDevice::Update() {
-    TRect updateRect;
-    updateRect.iTl = TPoint(0, 0);
-    updateRect.iBr = updateRect.iTl + iSize;
-
-    UpdateScreen(1, iScreenNumber, 1, &updateRect);
-}
+SCRDVC_IMPL(CFbsTwentyfourBitAlphaScreenDrawDevice, CFbsTwentyfourBitAlphaDrawDevice)
+SCRDVC_IMPL(CFbsTwentyfourBitUnsignedByteScreenDrawDevice, CFbsTwentyfourBitUnsignedByteDrawDevice)
