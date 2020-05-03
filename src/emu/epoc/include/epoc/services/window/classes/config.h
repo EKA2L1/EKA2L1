@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <string>
 #include <vector>
 
 namespace eka2l1::epoc {
