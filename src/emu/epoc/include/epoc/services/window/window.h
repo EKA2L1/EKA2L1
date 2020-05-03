@@ -189,6 +189,8 @@ namespace eka2l1::epoc {
         void set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd);
         void get_def_mode_max_num_colors(service::ipc_context &ctx, ws_cmd &cmd);
         void get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd);
+        void set_pointer_area(service::ipc_context &ctx, ws_cmd &cmd);
+        void set_pointer_cursor_position(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         void add_redraw_listener(notify_info nof) {

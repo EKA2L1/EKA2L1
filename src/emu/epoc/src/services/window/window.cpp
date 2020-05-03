@@ -571,6 +571,29 @@ namespace eka2l1::epoc {
         ctx.set_request_status(1 << (static_cast<std::uint8_t>(scr->disp_mode) - 1));
     }
 
+    void window_server_client::set_pointer_area(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_set_pointer_cursor_area *area_info = reinterpret_cast<ws_cmd_set_pointer_cursor_area*>(cmd.data_ptr);
+        area_info->pointer_area.transform_from_symbian_rectangle();
+
+        // Set for the default screen
+        epoc::screen *scr = get_ws().get_screen(0); 
+        assert(scr);
+
+        scr->pointer_areas_[area_info->mode] = area_info->pointer_area;
+
+        ctx.set_request_status(epoc::error_none);
+    }
+
+    void window_server_client::set_pointer_cursor_position(service::ipc_context &ctx, ws_cmd &cmd) {
+        eka2l1::vec2 *pos = reinterpret_cast<eka2l1::vec2*>(cmd.data_ptr);
+        // Set for the default screen
+        epoc::screen *scr = get_ws().get_screen(0); 
+        assert(scr);
+
+        scr->pointer_cursor_pos_ = *pos;
+        ctx.set_request_status(epoc::error_none);
+    }
+
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
@@ -703,6 +726,14 @@ namespace eka2l1::epoc {
             create_wsbmp(ctx, cmd);
             break;
         }
+
+        case ws_cl_op_set_pointer_cursor_area:
+            set_pointer_area(ctx, cmd);
+            break;
+
+        case ws_cl_op_set_pointer_cursor_position:
+            set_pointer_cursor_position(ctx, cmd);
+            break;
 
         default:
             LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
