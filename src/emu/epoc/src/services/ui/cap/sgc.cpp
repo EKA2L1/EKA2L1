@@ -170,6 +170,7 @@ namespace eka2l1::epoc::cap {
                 if (((screen_mode->size.x > screen_mode->size.y) && landspace_bit)
                     || ((screen_mode->size.x < screen_mode->size.y) && !landspace_bit)) {
                     group->scr->set_screen_mode(graphics_driver_, mode);
+                    break;
                 }
             }
         }
