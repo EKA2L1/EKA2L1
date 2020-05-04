@@ -43,6 +43,7 @@
 #include <epoc/services/msv/msv.h>
 #include <epoc/services/notifier/notifier.h>
 #include <epoc/services/remcon/remcon.h>
+#include <epoc/services/sensor/sensor.h>
 #include <epoc/services/sms/sa/sa.h>
 #include <epoc/services/ui/cap/oom_app.h>
 #include <epoc/services/ui/eikappui.h>
@@ -187,6 +188,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, etel_server);
             CREATE_SERVER(sys, notifier_server);
             CREATE_SERVER(sys, msv_server);
+            CREATE_SERVER(sys, sensor_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
