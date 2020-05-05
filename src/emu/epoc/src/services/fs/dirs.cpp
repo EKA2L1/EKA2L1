@@ -44,7 +44,7 @@ namespace eka2l1 {
         }
 
         const std::int32_t attrib_raw = *ctx->get_arg<std::int32_t>(1);
-        io_attrib attrib = io_attrib::none;
+        io_attrib attrib = io_attrib::include_file;
 
         if (attrib_raw & epoc::fs::entry_att_dir) {
             attrib = attrib | io_attrib::include_dir;

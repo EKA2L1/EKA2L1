@@ -93,11 +93,12 @@ inline drive_number operator--(drive_number &drv, int) {
 
 enum class io_attrib {
     none,
-    include_dir = 0x50,
-    hidden = 0x100,
-    write_protected = 0x200,
-    internal = 0x400,
-    removeable = 0x800
+    include_file = 1 << 0,
+    include_dir = 1 << 1,
+    hidden = 1 << 2,
+    write_protected = 1 << 3,
+    internal = 1 << 4,
+    removeable = 1 << 5
 };
 
 inline io_attrib operator|(io_attrib a, io_attrib b) {

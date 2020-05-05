@@ -452,6 +452,10 @@ namespace eka2l1 {
                     continue;
                 }
 
+                if (!static_cast<int>(attrib & io_attrib::include_file) && entry.type == common::FILE_REGULAR) {
+                    continue;
+                }
+
                 // Quick hack: Regex dumb with null-terminated string
                 if (name.back() == '\0') {
                     name.erase(name.length() - 1);
