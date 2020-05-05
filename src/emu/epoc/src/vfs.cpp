@@ -115,7 +115,7 @@ namespace eka2l1 {
             return READ_MODE;
         }
 
-        size_t write_file(void *data, uint32_t size, uint32_t count) override {
+        size_t write_file(const void *data, uint32_t size, uint32_t count) override {
             LOG_ERROR("Can't write into ROM!");
             return -1;
         }
@@ -192,7 +192,6 @@ namespace eka2l1 {
 
         int fmode;
 
-        size_t file_size;
         bool closed;
 
         const char *translate_mode(int mode) {
@@ -294,14 +293,6 @@ namespace eka2l1 {
 
             input_name = vfs_path;
             fmode = mode;
-
-            if (file) {
-                auto crr_pos = ftell(file);
-                fseek(file, 0, SEEK_END);
-
-                file_size = ftell(file);
-                fseek(file, crr_pos, SEEK_SET);
-            }
         }
 
         void shutdown() {
@@ -310,7 +301,7 @@ namespace eka2l1 {
             }
         }
 
-        size_t write_file(void *data, uint32_t size, uint32_t count) override {
+        size_t write_file(const void *data, uint32_t size, uint32_t count) override {
             WARN_CLOSE
 
             return fwrite(data, size, count, file);
@@ -322,8 +313,14 @@ namespace eka2l1 {
             return fread(data, size, count, file) * size;
         }
 
-        uint64_t size() const override {
+        std::uint64_t size() const override {
             WARN_CLOSE
+
+            auto crr_pos = ftell(file);
+            fseek(file, 0, SEEK_END);
+
+            const std::uint64_t file_size = ftell(file);
+            fseek(file, crr_pos, SEEK_SET);
 
             return file_size;
         }
@@ -1228,5 +1225,29 @@ namespace eka2l1 {
         }
 
         return result;
+    }
+
+    void wo_file_stream::seek(const std::int64_t amount, common::seek_where wh) {
+        f_->seek(amount, static_cast<file_seek_mode>(wh));
+    }
+    
+    bool wo_file_stream::valid() {
+        return f_->valid();
+    }
+
+    std::uint64_t wo_file_stream::left() {
+        return f_->size() - f_->tell();
+    }
+
+    std::uint64_t wo_file_stream::tell() const {
+        return f_->tell();
+    }
+
+    std::uint64_t wo_file_stream::size() {
+        return f_->size();
+    }
+
+    void wo_file_stream::write(const void *buf, const std::uint32_t write_size) {
+        f_->write_file(buf, write_size, 1);
     }
 }
