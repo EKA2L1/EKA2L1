@@ -27,6 +27,7 @@
 
 #include <epoc/services/centralrepo/cre.h>
 #include <epoc/vfs.h>
+#include <epoc/utils/des.h>
 
 #include <manager/device_manager.h>
 
@@ -42,69 +43,6 @@ namespace eka2l1 {
      * |      9              |       4       |    Entry count           |
      * 
     */
-    void absorb_des_string(std::string &str, common::chunkyseri &seri) {
-        std::uint32_t len = static_cast<std::uint32_t>(str.length());
-
-        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
-            len = (len << 1) + 1;
-
-            if (len <= (0xFF >> 1)) {
-                std::uint8_t b = static_cast<std::uint8_t>(len << 1);
-                seri.absorb(b);
-            } else {
-                if (len <= (0xFFFF >> 2)) {
-                    std::uint16_t b = static_cast<std::uint16_t>(len << 2) + 0x1;
-                    seri.absorb(b);
-                } else {
-                    std::uint32_t b = (len << 4) + 0x3;
-                    seri.absorb(b);
-                }
-            }
-
-            len = static_cast<std::uint32_t>(str.length());
-        } else {
-            std::uint8_t b1 = 0;
-            seri.absorb(b1);
-
-            if ((b1 & 1) == 0) {
-                len = (b1 >> 1);
-            } else {
-                if ((b1 & 2) == 0) {
-                    len = b1;
-                    seri.absorb(b1);
-                    len += b1 << 8;
-                    len >>= 2;
-                } else if ((b1 & 4) == 0) {
-                    std::uint16_t b2 = 0;
-                    seri.absorb(b2);
-                    len = b1 + (b2 << 8);
-                    len >>= 4;
-                }
-            }
-
-            len >>= 1;
-            str.resize(len);
-        }
-
-        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len);
-    }
-
-    template <typename T>
-    void absorb_des(T *data, common::chunkyseri &seri) {
-        std::string dat;
-        dat.resize(sizeof(T));
-
-        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
-            dat.copy(reinterpret_cast<char *>(data), sizeof(T));
-        }
-
-        absorb_des_string(dat, seri);
-
-        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
-            *data = *reinterpret_cast<T *>(&dat[0]);
-        }
-    }
-
     int do_state_for_cre(common::chunkyseri &seri, eka2l1::central_repo &repo) {
         std::uint32_t uid1 = 0x10000037; // Direct file store UID
         std::uint32_t uid2 = 0;
@@ -146,8 +84,8 @@ namespace eka2l1 {
             seri.absorb(policy.high_key);
             seri.absorb(policy.key_mask);
 
-            absorb_des(&policy.read_access, seri);
-            absorb_des(&policy.write_access, seri);
+            epoc::absorb_des(&policy.read_access, seri);
+            epoc::absorb_des(&policy.write_access, seri);
         };
 
         for (auto &pol : repo.single_policies) {
@@ -165,8 +103,8 @@ namespace eka2l1 {
             state_for_a_policy(pol);
         }
 
-        absorb_des(&repo.default_policy.read_access, seri);
-        absorb_des(&repo.default_policy.write_access, seri);
+        epoc::absorb_des(&repo.default_policy.read_access, seri);
+        epoc::absorb_des(&repo.default_policy.write_access, seri);
 
         if (repo.ver >= 2) {
             seri.absorb(repo.default_policy.high_key);
@@ -276,7 +214,7 @@ namespace eka2l1 {
             }
 
             case central_repo_entry_type::string: {
-                absorb_des_string(entry.data.strd, seri);
+                epoc::absorb_des_string(entry.data.strd, seri);
                 break;
             }
 
