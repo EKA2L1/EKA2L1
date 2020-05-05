@@ -26,11 +26,13 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace eka2l1 {
     namespace common {
         class ro_stream;
+        class chunkyseri;
     }
 }
 
@@ -95,4 +97,6 @@ namespace eka2l1::loader {
 
         bool confirm_signature();
     };
+
+    void absorb_resource_string(common::chunkyseri &seri, std::u16string &str);
 }
