@@ -23,6 +23,7 @@
 #include <epoc/services/msv/msv.h>
 
 #include <epoc/utils/err.h>
+#include <epoc/utils/consts.h>
 #include <epoc/vfs.h>
 
 #include <epoc/utils/bafl.h>
@@ -176,6 +177,10 @@ namespace eka2l1 {
             cancel_notify_session_event(ctx);
             break;
 
+        case msv_mtm_group_ref:
+            ref_mtm_group(ctx);
+            break;
+
         case msv_fill_registered_mtm_dll_array:
             fill_registered_mtm_dll_array(ctx);
             break;
@@ -249,6 +254,24 @@ namespace eka2l1 {
             flags_ |= FLAG_RECEIVE_ENTRY_EVENTS; 
         }
 
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void msv_client_session::ref_mtm_group(service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_arg<epoc::uid>(0);
+
+        if (!uid.value()) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::mtm_group *group = server<msv_server>()->reg_.query_mtm_group(uid.value());
+
+        if (!group) {
+            ctx->set_request_status(epoc::error_not_found);
+        }
+
+        group->ref_count_++;
         ctx->set_request_status(epoc::error_none);
     }
 

@@ -51,6 +51,8 @@ namespace eka2l1::epoc::msv {
         common::chunkyseri info_reader(info.data(), info.size(), common::SERI_MODE_READ);
 
         mtm_group new_group;
+        new_group.ref_count_ = 0;
+
         info_reader.absorb(new_group.mtm_uid_);
         info_reader.absorb(new_group.tech_type_uid_);
 
@@ -124,20 +126,18 @@ namespace eka2l1::epoc::msv {
         return false;
     }
 
-    std::vector<mtm_group*> mtm_registry::query_mtm_groups(const std::uint32_t uid) {
-        std::vector<mtm_group*> groups;
-
+    mtm_group* mtm_registry::query_mtm_group(const epoc::uid the_uid) {
         for (std::size_t i = 0; i < groups_.size(); i++) {
-            if (groups_[i].mtm_uid_ == uid) {
-                groups.push_back(&groups_[i]);
+            if (groups_[i].mtm_uid_ == the_uid) {
+                return &groups_[i];
             }
         }
 
-        return groups;
+        return nullptr;
     }
 
-    std::vector<mtm_component*> &mtm_registry::get_components(const std::uint32_t uid) {
-        return comps_[uid];
+    std::vector<mtm_component*> &mtm_registry::get_components(const epoc::uid the_uid) {
+        return comps_[the_uid];
     }
     
     void mtm_registry::load_mtm_list() {

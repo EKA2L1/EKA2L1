@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <epoc/utils/consts.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -53,6 +55,8 @@ namespace eka2l1::epoc::msv {
         std::uint8_t cap_body_;
 
         mtm_component comps_;
+
+        std::uint32_t ref_count_;
     };
 
     class mtm_registry {
@@ -75,8 +79,8 @@ namespace eka2l1::epoc::msv {
 
         bool install_group(const std::u16string &path);
 
-        std::vector<mtm_group*> query_mtm_groups(const std::uint32_t uid);
-        std::vector<mtm_component*> &get_components(const std::uint32_t uid);
+        mtm_group* query_mtm_group(const epoc::uid the_uid);
+        std::vector<mtm_component*> &get_components(const epoc::uid the_uid);
 
         mtm_group *get_group(const std::uint32_t idx) {
             if (groups_.size() <= idx) {
