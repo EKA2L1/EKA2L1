@@ -33,9 +33,11 @@
 
 namespace eka2l1 {
     enum msv_opcode {
+        msv_get_entry = 0x0,
         msv_notify_session_event = 0xB,
         msv_cancel_notify_session_event = 0xC,
         msv_mtm_group_ref = 0x1C,
+        msv_mtm_group_unref = 0x1D,
         msv_fill_registered_mtm_dll_array = 0x19,
         msv_get_message_directory = 0x25,
         msv_set_receive_entry_events = 0x31,
@@ -98,6 +100,8 @@ namespace eka2l1 {
         void set_receive_entry_events(service::ipc_context *ctx);
         void fill_registered_mtm_dll_array(service::ipc_context *ctx);
         void ref_mtm_group(service::ipc_context *ctx);
+        void unref_mtm_group(service::ipc_context *ctx);
+        void get_entry(service::ipc_context *ctx);
 
         void queue(const msv_event_data &evt);
     };

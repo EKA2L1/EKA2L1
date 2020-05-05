@@ -168,6 +168,10 @@ namespace eka2l1 {
 
     void msv_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case msv_get_entry:
+            get_entry(ctx);
+            break;
+
         case msv_notify_session_event: {
             notify_session_event(ctx);
             break;
@@ -179,6 +183,10 @@ namespace eka2l1 {
 
         case msv_mtm_group_ref:
             ref_mtm_group(ctx);
+            break;
+
+        case msv_mtm_group_unref:
+            unref_mtm_group(ctx);
             break;
 
         case msv_fill_registered_mtm_dll_array:
@@ -257,6 +265,11 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    void msv_client_session::get_entry(service::ipc_context *ctx) {
+        LOG_TRACE("Stubbed with not found");
+        ctx->set_request_status(epoc::error_not_found);
+    }
+
     void msv_client_session::ref_mtm_group(service::ipc_context *ctx) {
         std::optional<epoc::uid> uid = ctx->get_arg<epoc::uid>(0);
 
@@ -269,9 +282,34 @@ namespace eka2l1 {
 
         if (!group) {
             ctx->set_request_status(epoc::error_not_found);
+            return;
         }
 
         group->ref_count_++;
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void msv_client_session::unref_mtm_group(service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_arg<epoc::uid>(0);
+
+        if (!uid.value()) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::mtm_group *group = server<msv_server>()->reg_.query_mtm_group(uid.value());
+
+        if (!group) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        if (group->ref_count_ == 0) {
+            ctx->set_request_status(epoc::error_underflow);
+            return;
+        }
+        
+        group->ref_count_--;
         ctx->set_request_status(epoc::error_none);
     }
 
