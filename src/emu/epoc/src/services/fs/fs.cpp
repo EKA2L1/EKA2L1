@@ -117,6 +117,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(notify_change_ex, epoc::fs_msg_notify_change_ex, "Fs::NotifyChangeEx");
             HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
             HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
+            HANDLE_CLIENT_IPC(rmdir, epoc::fs_msg_rmdir, "Fs::RmDir");
             HANDLE_CLIENT_IPC(delete_entry, epoc::fs_msg_delete, "Fs::Delete");
             HANDLE_CLIENT_IPC(set_entry, epoc::fs_msg_set_entry, "Fs::SetEntry");
             HANDLE_CLIENT_IPC(rename, epoc::fs_msg_rename, "Fs::Rename(Move)");
@@ -386,6 +387,20 @@ namespace eka2l1 {
             ctx->set_request_status(epoc::error_already_exists);
             return;
         }
+
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void fs_server_client::rmdir(service::ipc_context *ctx) {
+        std::optional<std::u16string> dir = ctx->get_arg<std::u16string>(0);
+
+        if (!dir) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        io_system *io = ctx->sys->get_io_system();
+        io->delete_entry(dir.value());
 
         ctx->set_request_status(epoc::error_none);
     }
