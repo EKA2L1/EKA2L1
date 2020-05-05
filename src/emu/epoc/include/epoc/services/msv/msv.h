@@ -20,29 +20,83 @@
 
 #pragma once
 
+#include <epoc/services/msv/common.h>
+#include <epoc/services/msv/registry.h>
+
 #include <epoc/services/framework.h>
 #include <epoc/services/server.h>
 
-namespace eka2l1 {
+#include <epoc/utils/des.h>
+#include <epoc/utils/reqsts.h>
 
+#include <queue>
+
+namespace eka2l1 {
     enum msv_opcode {
-        msv_notify_session_event = 0xB
+        msv_notify_session_event = 0xB,
+        msv_cancel_notify_session_event = 0xC,
+        msv_fill_registered_mtm_dll_array = 0x19,
+        msv_get_message_directory = 0x25,
+        msv_set_receive_entry_events = 0x31,
+        msv_get_message_drive = 0x33
     };
 
     class msv_server : public service::typical_server {
+        friend struct msv_client_session;
+
+        std::u16string message_folder_;
+        epoc::msv::mtm_registry reg_;
+
+        bool inited_;
+
+    protected:
+        void install_rom_mtm_modules();
+        void init();
+
     public:
         explicit msv_server(eka2l1::system *sys);
+
+        const std::u16string message_folder() const {
+            return message_folder_;
+        }
 
         void connect(service::ipc_context &context) override;
     };
 
-    struct msv_client_session : public service::typical_session {
-        epoc::notify_info msv_info;
+    struct msv_event_data {
+        epoc::msv::change_notification_type nof_;
+        std::uint32_t arg1_;
+        std::uint32_t arg2_;
+        std::string selection_;
+    };
 
+    struct msv_client_session : public service::typical_session {
+        epoc::notify_info msv_info_;
+        epoc::des8 *change_;
+        epoc::des8 *selection_;
+
+        std::queue<msv_event_data> events_;
+
+        enum msv_session_flag {
+            FLAG_RECEIVE_ENTRY_EVENTS = 1 << 0
+        };
+
+        std::uint32_t flags_;
+
+    protected:
+        bool listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *sel);
+
+    public:
         explicit msv_client_session(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
         void notify_session_event(service::ipc_context *ctx);
+        void cancel_notify_session_event(service::ipc_context *ctx);
+        void get_message_directory(service::ipc_context *ctx);
+        void get_message_drive(service::ipc_context *ctx);
+        void set_receive_entry_events(service::ipc_context *ctx);
+        void fill_registered_mtm_dll_array(service::ipc_context *ctx);
 
+        void queue(const msv_event_data &evt);
     };
 }

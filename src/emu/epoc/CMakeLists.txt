@@ -244,6 +244,7 @@ add_library(epocservs
     src/services/install/install.cpp
     src/services/loader/loader.cpp
     src/services/msv/msv.cpp
+    src/services/msv/registry.cpp
     src/services/notifier/notifier.cpp
     src/services/posix/posix.cpp
     src/services/remcon/common.cpp

@@ -19,23 +19,150 @@
  */
 
 #include <epoc/epoc.h>
+#include <epoc/vfs.h>
 #include <epoc/services/msv/msv.h>
 
 #include <epoc/utils/err.h>
+#include <epoc/vfs.h>
+
+#include <epoc/utils/bafl.h>
+
+#include <common/cvt.h>
 
 namespace eka2l1 {
+    static const std::u16string DEFAULT_MSG_DATA_DIR = u"C:\\private\\1000484b\\Mail2\\";
+
     msv_server::msv_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!MsvServer") {
+        : service::typical_server(sys, "!MsvServer")
+        , reg_(sys->get_io_system())
+        , inited_(false) {
+        message_folder_ = DEFAULT_MSG_DATA_DIR;
+    }
+
+    void msv_server::install_rom_mtm_modules() {
+        io_system *io = sys->get_io_system();
+        std::u16string DEFAULT_MSG_MTM_FILE_DIR = u"!:\\Resource\\Messaging\\Mtm\\*.r*";
+
+        drive_number drv_target = drive_z;
+
+        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+            auto drv_entry = io->get_drive_entry(drv);
+
+            if (drv_entry && (drv_entry->media_type == drive_media::rom)) {
+                drv_target = drv;
+                break;
+            }
+        }
+
+        DEFAULT_MSG_MTM_FILE_DIR[0] = drive_to_char16(drv_target);
+
+        auto mtm_module_dir = io->open_dir(DEFAULT_MSG_MTM_FILE_DIR, io_attrib::none);
+
+        if (mtm_module_dir) {
+            while (std::optional<entry_info> info = mtm_module_dir->get_next_entry()) {
+                const std::u16string nearest = utils::get_nearest_lang_file(io,
+                    common::utf8_to_ucs2(info->full_path), sys->get_system_language(), drv_target);
+
+                reg_.install_group(nearest);
+            }
+        }
+    }
+
+    void msv_server::init() {
+        io_system *io = sys->get_io_system();
+
+        if (!io->exist(message_folder_)) {
+            io->create_directories(message_folder_);
+        }
+
+        reg_.load_mtm_list();
+        install_rom_mtm_modules();
+
+        inited_ = true;
     }
 
     void msv_server::connect(service::ipc_context &context) {
-        create_session<msv_client_session>(&context);
+        if (!inited_) {
+            init();
+        }
+
+        msv_client_session *sess = create_session<msv_client_session>(&context);
+
+        // Queue a ready event
+        msv_event_data ready;
+        ready.arg1_ = 0;
+        ready.arg2_ = 0;
+        ready.nof_ = epoc::msv::change_notification_type_index_loaded;
+
+        sess->queue(ready);
         context.set_request_status(epoc::error_none);
     }
 
     msv_client_session::msv_client_session(service::typical_server *serv, const std::uint32_t ss_id,
         epoc::version client_version)
-        : service::typical_session(serv, ss_id, client_version) {
+        : service::typical_session(serv, ss_id, client_version)
+        , flags_(0) {
+    }
+
+    static void pack_change_buffer(epoc::des8 *buf, kernel::process *pr, const msv_event_data &data) {
+        std::uint32_t *buffer_raw = reinterpret_cast<std::uint32_t*>(buf->get_pointer_raw(pr));
+
+        if (!buffer_raw) {
+            LOG_ERROR("Can't get change buffer raw pointer!");
+            return;
+        }
+
+        if (buf->get_max_length(pr) < 3 * sizeof(std::uint32_t)) {
+            LOG_ERROR("Insufficent change buffer size");
+            return;
+        }
+
+        buffer_raw[0] = static_cast<std::uint32_t>(data.nof_);
+        buffer_raw[1] = data.arg1_;
+        buffer_raw[2] = data.arg2_;
+
+        buf->set_length(pr, 3 * sizeof(std::uint32_t));
+    }
+
+    bool msv_client_session::listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *sel) {
+        if (!msv_info_.empty()) {
+            return false;
+        }
+
+        if (!events_.empty()) {
+            msv_event_data evt = std::move(events_.front());
+            events_.pop();
+
+            kernel::process *own_pr = info.requester->owning_process();
+
+            // Copy change
+            pack_change_buffer(change, own_pr, evt);
+            sel->assign(own_pr, evt.selection_);
+
+            info.complete(epoc::error_none);
+            return true;
+        }
+
+        msv_info_ = info;
+        change_ = change;
+        selection_ = sel;
+
+        return true;
+    }
+
+    void msv_client_session::queue(const msv_event_data &evt) {
+        if (!msv_info_.empty()) {
+            kernel::process *own_pr = msv_info_.requester->owning_process();
+
+            // Copy change
+            pack_change_buffer(change_, own_pr, evt);
+            selection_->assign(own_pr, evt.selection_);
+
+            msv_info_.complete(epoc::error_none);
+            return;
+        }
+
+        events_.push(std::move(evt));
     }
 
     void msv_client_session::fetch(service::ipc_context *ctx) {
@@ -45,6 +172,26 @@ namespace eka2l1 {
             break;
         }
 
+        case msv_cancel_notify_session_event:
+            cancel_notify_session_event(ctx);
+            break;
+
+        case msv_fill_registered_mtm_dll_array:
+            fill_registered_mtm_dll_array(ctx);
+            break;
+
+        case msv_get_message_directory:
+            get_message_directory(ctx);
+            break;
+
+        case msv_set_receive_entry_events:
+            set_receive_entry_events(ctx);
+            break;
+
+        case msv_get_message_drive:
+            get_message_drive(ctx);
+            break;
+
         default: {
             LOG_ERROR("Unimplemented opcode for MsvServer 0x{:X}", ctx->msg->function);
             break;
@@ -53,8 +200,109 @@ namespace eka2l1 {
     }
 
     void msv_client_session::notify_session_event(service::ipc_context *ctx) {
-        if (msv_info.empty()) {
-            msv_info = epoc::notify_info{ ctx->msg->request_sts, ctx->msg->own_thr };
+        kernel::process *own_pr = ctx->msg->own_thr->owning_process();
+        epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
+        
+        // Remember
+        epoc::des8 *change = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[0]).get(own_pr);
+        epoc::des8 *select = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[1]).get(own_pr);
+
+        if (!listen(info, change, select)) {
+            LOG_ERROR("Request listen on an already-listening MSV session");
+            ctx->set_request_status(epoc::error_in_use);
         }
+    }
+ 
+    void msv_client_session::cancel_notify_session_event(service::ipc_context *ctx) {
+        if (!msv_info_.empty()) {
+            msv_info_.complete(epoc::error_cancel);
+        }
+
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void msv_client_session::get_message_directory(service::ipc_context *ctx) {
+        const std::u16string folder = server<msv_server>()->message_folder();
+
+        ctx->write_arg(0, folder);
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void msv_client_session::get_message_drive(service::ipc_context *ctx) {
+        const std::u16string folder = server<msv_server>()->message_folder();
+        const drive_number drv = char16_to_drive(folder[0]);
+
+        ctx->set_request_status(static_cast<int>(drv));
+    }
+
+    void msv_client_session::set_receive_entry_events(service::ipc_context *ctx) {
+        std::optional<std::int32_t> receive = ctx->get_arg<std::int32_t>(0);
+
+        if (!receive) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        flags_ &= ~FLAG_RECEIVE_ENTRY_EVENTS;
+
+        if (receive.value()) {
+            flags_ |= FLAG_RECEIVE_ENTRY_EVENTS; 
+        }
+
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void msv_client_session::fill_registered_mtm_dll_array(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> mtm_uid = ctx->get_arg<std::uint32_t>(0);
+
+        if (!mtm_uid) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        auto comps = server<msv_server>()->reg_.get_components(mtm_uid.value());
+
+        std::uint8_t *argptr = ctx->get_arg_ptr(1);
+        const std::size_t argsize = ctx->get_arg_max_size(1);
+
+        // Reserves 4 bytes for count
+        common::chunkyseri seri(argptr + 4, argsize - 4, common::SERI_MODE_WRITE);
+
+        std::uint32_t *element_count = reinterpret_cast<std::uint32_t*>(argptr);
+        *element_count = 0;
+
+        for (auto &comp: comps) {
+            // Make a way for break in future
+            (*element_count)++;
+            epoc::msv::mtm_group *group = server<msv_server>()->reg_.get_group(comp->group_idx_);
+
+            seri.absorb(group->mtm_uid_);
+            seri.absorb(group->tech_type_uid_);
+
+            // WARN (pent0): Currently force it to eat all stuffs as UTF8
+            epoc::absorb_des_string(common::ucs2_to_utf8(comp->name_), seri);
+            seri.absorb(group->cap_send_);
+            seri.absorb(group->cap_body_);
+            seri.absorb(group->cap_avail_);
+
+            std::uint32_t dll_uid = 0x10000079;       ///< Dynamic DLL UID
+            seri.absorb(dll_uid);
+            seri.absorb(comp->comp_uid_);
+            seri.absorb(comp->specific_uid_);
+
+            std::uint32_t entry_point = comp->entry_point_;
+            seri.absorb(entry_point);
+
+            // Absorb versions
+            std::uint32_t version = (comp->build_) | ((comp->major_ & 0xFF) << 16) | ((comp->minor_ & 0xFF) << 8);
+            seri.absorb(version);
+
+            if (comp->specific_uid_ == epoc::msv::MTM_DEFAULT_SPECIFIC_UID) {
+                epoc::absorb_des_string(common::ucs2_to_utf8(comp->filename_), seri);
+            }
+        }
+
+        ctx->set_arg_des_len(1, static_cast<std::uint32_t>(seri.size()) + 4);
+        ctx->set_request_status(epoc::error_none);
     }
 }
