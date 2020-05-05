@@ -419,11 +419,6 @@ namespace eka2l1 {
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
-        if (!(node->open_mode & READ_MODE)) {
-            ctx->set_request_status(epoc::error_access_denied);
-            return;
-        }
-
         int read_len = *ctx->get_arg<std::int32_t>(1);
         int read_pos_provided = *ctx->get_arg<std::int32_t>(2);
 
