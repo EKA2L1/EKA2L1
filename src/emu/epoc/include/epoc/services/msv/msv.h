@@ -21,6 +21,7 @@
 #pragma once
 
 #include <epoc/services/msv/common.h>
+#include <epoc/services/msv/entry.h>
 #include <epoc/services/msv/registry.h>
 
 #include <epoc/services/framework.h>
@@ -29,6 +30,7 @@
 #include <epoc/utils/des.h>
 #include <epoc/utils/reqsts.h>
 
+#include <memory>
 #include <queue>
 
 namespace eka2l1 {
@@ -49,6 +51,8 @@ namespace eka2l1 {
 
         std::u16string message_folder_;
         epoc::msv::mtm_registry reg_;
+
+        std::unique_ptr<epoc::msv::entry_indexer> indexer_;
 
         bool inited_;
 

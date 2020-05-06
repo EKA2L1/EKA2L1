@@ -67,6 +67,8 @@ namespace eka2l1 {
                 reg_.install_group(nearest);
             }
         }
+
+        indexer_ = std::make_unique<epoc::msv::entry_indexer>(io, sys->get_system_language());
     }
 
     void msv_server::init() {
