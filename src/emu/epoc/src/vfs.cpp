@@ -304,7 +304,7 @@ namespace eka2l1 {
         size_t write_file(const void *data, uint32_t size, uint32_t count) override {
             WARN_CLOSE
 
-            return fwrite(data, size, count, file);
+            return fwrite(data, size, count, file) * size;
         }
 
         size_t read_file(void *data, uint32_t size, uint32_t count) override {
