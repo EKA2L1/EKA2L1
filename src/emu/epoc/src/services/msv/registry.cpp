@@ -152,7 +152,7 @@ namespace eka2l1::epoc::msv {
         
         while (list_file_stream.valid()) {
             std::string mtm_path;
-            mtm_path = list_file_stream.read_string();
+            mtm_path = list_file_stream.read_string<char>();
 
             install_group(common::utf8_to_ucs2(mtm_path));
         }

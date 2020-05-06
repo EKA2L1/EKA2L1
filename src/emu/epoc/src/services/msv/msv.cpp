@@ -67,8 +67,6 @@ namespace eka2l1 {
                 reg_.install_group(nearest);
             }
         }
-
-        indexer_ = std::make_unique<epoc::msv::entry_indexer>(io, sys->get_system_language());
     }
 
     void msv_server::init() {
@@ -80,6 +78,8 @@ namespace eka2l1 {
 
         reg_.load_mtm_list();
         install_rom_mtm_modules();
+
+        indexer_ = std::make_unique<epoc::msv::entry_indexer>(io, message_folder_, sys->get_system_language());
 
         inited_ = true;
     }

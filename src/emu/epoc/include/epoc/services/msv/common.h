@@ -50,5 +50,6 @@ namespace eka2l1::epoc::msv {
         change_notification_type_unable_to_process_disk_nof = 20
     };
     
-    static constexpr std::uint32_t MTM_DEFAULT_SPECIFIC_UID = 0x10202D51;	
+    static constexpr std::uint32_t MTM_DEFAULT_SPECIFIC_UID = 0x10202D51;
+    static constexpr std::uint32_t MTM_SERVICE_UID_ROOT = 0x10000F67;
 }
