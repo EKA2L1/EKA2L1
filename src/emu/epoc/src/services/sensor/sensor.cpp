@@ -40,6 +40,42 @@ namespace eka2l1 {
 
     void sensor_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case sensor_req_query_channels: {
+            std::optional<channel_info> search_cond = ctx->get_arg_packed<channel_info>(0);
+            channel_info *list = (channel_info *)ctx->get_arg_ptr(1);
+            std::uint32_t *channel_info_count_ptr = reinterpret_cast<std::uint32_t *>(ctx->get_arg_ptr(2));
+
+            std::uint32_t channel_info_count = 0;
+            if (search_cond->channel_type == 0 || search_cond->channel_type == channel_types::accelerometer_xyz_axis_data) {
+                channel_info_count = 1;
+                channel_info info;
+                info.channel_type = channel_types::accelerometer_xyz_axis_data;
+                list[0] = info;
+            }
+            
+            ctx->write_arg_pkg(2, channel_info_count);
+            ctx->write_arg_pkg(1, list);
+            ctx->set_arg_des_len(1, channel_info_count * sizeof(channel_info));
+            ctx->set_request_status(epoc::error_none);
+            break;
+        }
+
+        case sensor_req_open_channel: {
+            std::uint32_t channel_id = *(ctx->get_arg<std::uint16_t>(0));
+            std::uint32_t *maxBufferCount = reinterpret_cast<std::uint32_t *>(ctx->get_arg_ptr(1));
+
+            ctx->set_request_status(epoc::error_none);
+            break;
+        }
+
+        case sensor_req_start_listening: {
+            std::uint32_t channel_id = *(ctx->get_arg<std::uint16_t>(0));
+            std::optional<listening_parameters> params = ctx->get_arg_packed<listening_parameters>(1);
+
+            ctx->set_request_status(epoc::error_none);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented opcode for Sensor server 0x{:X}", ctx->msg->function);
             break;

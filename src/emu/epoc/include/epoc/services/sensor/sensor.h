@@ -22,11 +22,48 @@
 
 #include <epoc/services/framework.h>
 #include <epoc/services/server.h>
+#include <epoc/utils/des.h>
 
 namespace eka2l1 {
 
     enum sensor_opcode {
-        sensor_req_query_channels
+        sensor_req_query_channels,
+        sensor_req_open_channel,
+        sensor_req_close_channel,
+        sensor_req_start_listening,
+        sensor_req_stop_listening,
+        sensor_req_async_channel_data,
+        sensor_req_get_property,
+        sensor_req_async_property_data,
+        sensor_req_stop_property_listening,
+        sensor_req_get_all_properties
+    };
+
+    constexpr std::uint32_t LOCATION_LENGTH = 16;
+    constexpr std::uint32_t VENDOR_ID_LENGTH = 16;
+
+    struct channel_info {
+        std::uint32_t channel_id;
+        std::uint32_t context_type;
+        std::uint32_t quantity;
+        std::uint32_t channel_type;
+        epoc::buf_static<char, LOCATION_LENGTH> location;
+        epoc::buf_static<char, VENDOR_ID_LENGTH> vendor_id;
+        std::uint32_t data_item_size;
+        std::uint32_t reserved3;
+        std::uint32_t channel_data_type_id;
+        std::uint32_t reserved;
+        std::uint32_t reserved2;
+    };
+
+    struct listening_parameters {
+        std::uint32_t desired_buffering_count;
+        std::uint32_t maximum_buffering_count;
+        std::uint32_t buffering_period;
+    };
+
+    enum channel_types {
+        accelerometer_xyz_axis_data = 0x1020507E
     };
 
     class sensor_server : public service::typical_server {
