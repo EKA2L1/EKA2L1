@@ -29,6 +29,7 @@
 #include <epoc/utils/bafl.h>
 
 #include <common/cvt.h>
+#include <common/time.h>
 
 namespace eka2l1 {
     static const std::u16string DEFAULT_MSG_DATA_DIR = u"C:\\private\\1000484b\\Mail2\\";
@@ -57,7 +58,7 @@ namespace eka2l1 {
 
         DEFAULT_MSG_MTM_FILE_DIR[0] = drive_to_char16(drv_target);
 
-        auto mtm_module_dir = io->open_dir(DEFAULT_MSG_MTM_FILE_DIR, io_attrib::none);
+        auto mtm_module_dir = io->open_dir(DEFAULT_MSG_MTM_FILE_DIR, io_attrib::include_file);
 
         if (mtm_module_dir) {
             while (std::optional<entry_info> info = mtm_module_dir->get_next_entry()) {
@@ -267,9 +268,73 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    static void pack_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+        epoc::msv::entry_data data_str;
+        data_str.data_ = ent.data_;
+        data_str.date_ = common::convert_microsecs_epoch_to_1ad(ent.time_);
+        data_str.id_ = ent.id_;
+        data_str.parent_id_ = ent.parent_id_;
+        data_str.service_id_ = ent.service_id_;
+        data_str.mtm_uid_ = ent.mtm_uid_;
+        data_str.type_uid_ = ent.type_uid_;
+        
+        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&data_str), sizeof(epoc::msv::entry_data));
+        std::uint8_t padding[3];
+        
+        // Pad out
+        auto pad_out_data = [&]() {       
+            if (seri.size() % 4 != 0) {
+                seri.absorb_impl(padding, 4 - seri.size() % 4);
+            }
+        };
+
+        pad_out_data();
+        seri.absorb(ent.description_);
+
+        pad_out_data();
+        seri.absorb(ent.details_);
+
+        pad_out_data();
+        seri.absorb(ent.service_id_);
+    }
+
     void msv_client_session::get_entry(service::ipc_context *ctx) {
-        LOG_TRACE("Stubbed with not found");
-        ctx->set_request_status(epoc::error_not_found);
+        epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
+        std::optional<epoc::uid> id = ctx->get_arg<epoc::uid>(0);
+
+        if (!id.has_value()) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry *ent = indexer->get_entry(id.value());
+        if (!ent) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        // Try to serialize this buffer
+        std::uint8_t *buffer = reinterpret_cast<std::uint8_t*>(ctx->get_arg_ptr(1));
+        std::size_t buffer_max_size = ctx->get_arg_max_size(1);
+
+        if (!buffer || !buffer_max_size) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        common::chunkyseri seri(buffer, buffer_max_size, common::SERI_MODE_MEASURE);
+        pack_entry_to_buffer(seri, *ent);
+
+        if (seri.size() > buffer_max_size) {
+            ctx->set_request_status(epoc::error_overflow);
+            return;
+        }
+
+        seri = common::chunkyseri(buffer, buffer_max_size, common::SERI_MODE_WRITE);
+        pack_entry_to_buffer(seri, *ent);
+
+        ctx->set_arg_des_len(1, static_cast<std::uint32_t>(seri.size()));
+        ctx->set_request_status(epoc::error_none);
     }
 
     void msv_client_session::ref_mtm_group(service::ipc_context *ctx) {

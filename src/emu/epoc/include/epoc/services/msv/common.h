@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <epoc/utils/des.h>
 #include <cstdint>
 
 namespace eka2l1::epoc::msv {
@@ -48,6 +49,29 @@ namespace eka2l1::epoc::msv {
         change_notification_type_refresh_msg_view = 18,
         change_notification_type_disk_unavail = 19,
         change_notification_type_unable_to_process_disk_nof = 20
+    };
+
+    struct entry_data {
+        std::uint32_t id_;
+        std::uint32_t parent_id_;
+        std::uint32_t data_;
+        std::int32_t pc_sync_count_;
+        std::int32_t reserved_;
+
+        std::uint32_t service_id_;
+        std::uint32_t related_id_;
+        std::uint32_t type_uid_;
+        std::uint32_t mtm_uid_;
+        std::uint64_t date_;
+
+        std::int32_t size_;
+        std::int32_t error_;
+        std::int32_t bio_type_;
+
+        std::int32_t mtm_datas_[3];
+
+        epoc::ptr_desc16 description_;
+        epoc::ptr_desc16 details_;
     };
     
     static constexpr std::uint32_t MTM_DEFAULT_SPECIFIC_UID = 0x10202D51;
