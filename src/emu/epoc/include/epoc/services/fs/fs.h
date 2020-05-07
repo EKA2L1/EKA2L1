@@ -142,6 +142,7 @@ namespace eka2l1 {
         void notify_change(service::ipc_context *ctx);
 
         void mkdir(service::ipc_context *ctx);
+        void rmdir(service::ipc_context *ctx);
         void rename(service::ipc_context *ctx);
         void replace(service::ipc_context *ctx);
 
@@ -243,6 +244,7 @@ namespace eka2l1 {
         void drive_list(service::ipc_context *ctx);
         void drive(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
+
 
     public:
         explicit fs_server(system *sys);

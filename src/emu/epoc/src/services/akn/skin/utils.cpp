@@ -49,7 +49,7 @@ namespace eka2l1::epoc {
                 // Add filter to find skn files
                 skin_folder_path += u"\\*.skn";
 
-                auto dir = io->open_dir(skin_folder_path);
+                auto dir = io->open_dir(skin_folder_path, io_attrib::include_file);
 
                 if (!dir) {
                     // No skin in this drive. Proceed as usual

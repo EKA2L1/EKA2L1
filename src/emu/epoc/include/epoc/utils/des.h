@@ -20,9 +20,12 @@
 
 #pragma once
 
+#include <common/chunkyseri.h>
+#include <common/log.h>
 #include <epoc/ptr.h>
 
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -243,4 +246,69 @@ namespace eka2l1::epoc {
     static_assert(sizeof(ptr_desc16) == 8);
     static_assert(sizeof(ptr_des8) == 12);
     static_assert(sizeof(ptr_des16) == 12);
+
+    // TODO, IMPORTANT (pent0): UCS2 string absorb needs Unicode compressor.
+    template <typename T>
+    void absorb_des_string(std::basic_string<T> &str, common::chunkyseri &seri) {
+        std::uint32_t len = static_cast<std::uint32_t>(str.length());
+
+        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
+            len = len * 2 + (sizeof(T) % 2);
+
+            if (len <= (0xFF >> 1)) {
+                std::uint8_t b = static_cast<std::uint8_t>(len << 1);
+                seri.absorb(b);
+            } else {
+                if (len <= (0xFFFF >> 2)) {
+                    std::uint16_t b = static_cast<std::uint16_t>(len << 2) + 0x1;
+                    seri.absorb(b);
+                } else {
+                    std::uint32_t b = (len << 3) + 0x3;
+                    seri.absorb(b);
+                }
+            }
+
+            len = static_cast<std::uint32_t>(str.length());
+        } else {
+            std::uint8_t b1 = 0;
+            seri.absorb(b1);
+
+            if ((b1 & 1) == 0) {
+                len = (b1 >> 1);
+            } else {
+                if ((b1 & 2) == 0) {
+                    len = b1;
+                    seri.absorb(b1);
+                    len += b1 << 8;
+                    len >>= 2;
+                } else if ((b1 & 4) == 0) {
+                    std::uint16_t b2 = 0;
+                    seri.absorb(b2);
+                    len = b1 + (b2 << 8);
+                    len >>= 4;
+                }
+            }
+
+            len >>= 1;
+            str.resize(len);
+        }
+
+        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len * sizeof(T));
+    }
+
+    template <typename T>
+    void absorb_des(T *data, common::chunkyseri &seri) {
+        std::string dat;
+        dat.resize(sizeof(T));
+
+        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
+            dat.copy(reinterpret_cast<char *>(data), sizeof(T));
+        }
+
+        absorb_des_string(dat, seri);
+
+        if (seri.get_seri_mode() != common::SERI_MODE_READ) {
+            *data = *reinterpret_cast<T *>(&dat[0]);
+        }
+    }
 }

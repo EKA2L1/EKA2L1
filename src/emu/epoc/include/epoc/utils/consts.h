@@ -17,10 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <cstdint>
 
 namespace eka2l1::epoc {
     static constexpr std::int32_t CINT32_MAX = 0x7FFFFFFF;
     static constexpr std::uint32_t CUINT32_MAX = 0xFFFFFFFF;
     static constexpr std::int32_t CINT32_MIN = static_cast<std::int32_t>(0x80000000);
+
+    using uid = std::uint32_t;
 }

@@ -517,4 +517,20 @@ namespace eka2l1::loader {
         : flags(0) {
         read_header_and_resource_index(buf);
     }
+    
+    void absorb_resource_string(common::chunkyseri &seri, std::u16string &str) {
+        std::uint8_t length = static_cast<std::uint8_t>(str.length());
+        seri.absorb(length);
+
+        if (seri.size() & 0x1) {
+            std::uint8_t padding = 0;
+            seri.absorb(padding);
+        }
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            str.resize(length);
+        }
+
+        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&str[0]), length * sizeof(char16_t));
+    }
 }

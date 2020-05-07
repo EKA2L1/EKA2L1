@@ -56,11 +56,12 @@ namespace eka2l1 {
         public:
             virtual void write(const void *buf, uint32_t size) = 0;
 
-            void write_string(const std::string &str) {
+            template <typename T>
+            void write_string(const std::basic_string<T> &str) {
                 const std::size_t len = str.length();
 
                 write(&len, sizeof(len));
-                write(&str[0], static_cast<std::uint32_t>(len));
+                write(&str[0], static_cast<std::uint32_t>(len) * sizeof(T));
             }
         };
 
@@ -68,14 +69,15 @@ namespace eka2l1 {
         public:
             virtual std::uint64_t read(void *buf, const std::uint64_t read_size) = 0;
 
-            std::string read_string() {
-                std::string str;
+            template <typename T>
+            std::basic_string<T> read_string() {
+                std::basic_string<T> str;
                 std::size_t len;
 
                 read(&len, sizeof(len));
                 str.resize(len);
 
-                read(&str[0], static_cast<std::uint32_t>(len));
+                read(&str[0], static_cast<std::uint32_t>(len) * sizeof(T));
 
                 return str;
             }
