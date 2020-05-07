@@ -165,23 +165,23 @@ namespace eka2l1::epoc::msv {
 
     std::optional<std::u16string> entry_indexer::get_entry_data_file(entry &ent) {
         std::u16string file_path = eka2l1::add_path(msg_dir_, get_folder_name(ent.service_id_, MSV_FOLDER_TYPE_SERVICE));
-        entry &back_trace = ent;
+        entry *back_trace = &ent;
 
         std::u16string parent_dir;
 
-        while (back_trace.parent_id_ != epoc::error_not_found) {
+        while (back_trace->parent_id_ != epoc::error_not_found) {
             parent_dir = get_folder_name(ent.parent_id_, MSV_FOLDER_TYPE_PATH) + u"\\" + parent_dir;
             
             entry my_parent;
-            my_parent.id_ = back_trace.parent_id_;
+            my_parent.id_ = back_trace->parent_id_;
 
             auto ent_ite = std::lower_bound(entries_.begin(), entries_.end(), my_parent, msv_entry_comparisor);
             
-            if ((ent_ite == entries_.end()) || (ent_ite->id_ != back_trace.parent_id_)) {
+            if ((ent_ite == entries_.end()) || (ent_ite->id_ != back_trace->parent_id_)) {
                 break;
             }
             
-            back_trace = *ent_ite;
+            back_trace = &(*ent_ite);
         }
 
         file_path = eka2l1::add_path(file_path, parent_dir);
@@ -261,7 +261,21 @@ namespace eka2l1::epoc::msv {
         return true;
     }
 
+    entry *entry_indexer::get_entry(const std::uint32_t id) {
+        entry ent;
+        ent.id_ = id;
+
+        auto ite_pos = std::lower_bound(entries_.begin(), entries_.end(), ent, msv_entry_comparisor);
+        if ((ite_pos == entries_.end()) || (ite_pos->id_ != id)) {
+            return nullptr;
+        }
+
+        return &(*ite_pos);
+    }
+    
     bool entry_indexer::add_entry(entry &ent) {
+        ent.flags_ = entry::STATUS_PRESENT;
+
         // Find an entry with existing ID, if it exists then this entry will not be added.
         if (std::binary_search(entries_.begin(), entries_.end(), ent, msv_entry_comparisor)) {
             return false;
@@ -273,7 +287,9 @@ namespace eka2l1::epoc::msv {
 
         // Find the entry again in this sort list, and update the entries file from this position.
         auto ite_pos = std::lower_bound(entries_.begin(), entries_.end(), ent, msv_entry_comparisor);
-        if (!update_entries_file(std::distance(entries_.begin(), ite_pos))) {
+        const std::size_t start_update_pos = std::distance(entries_.begin(), ite_pos);
+
+        if (!update_entries_file((start_update_pos == 0) ? 0 : (start_update_pos - 1))) {
             return false;
         }
 
