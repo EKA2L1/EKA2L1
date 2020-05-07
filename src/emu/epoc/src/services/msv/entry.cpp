@@ -272,6 +272,19 @@ namespace eka2l1::epoc::msv {
 
         return &(*ite_pos);
     }
+
+    std::vector<entry*> entry_indexer::get_entries_by_parent(const std::uint32_t parent_id) {
+        // TODO: Build a lookup map to increase speed.
+        std::vector<entry*> ents;
+
+        for (auto &entry: entries_) {
+            if (entry.parent_id_ == parent_id) {
+                ents.push_back(&entry);
+            }
+        }
+
+        return ents;
+    }
     
     bool entry_indexer::add_entry(entry &ent) {
         ent.flags_ = entry::STATUS_PRESENT;

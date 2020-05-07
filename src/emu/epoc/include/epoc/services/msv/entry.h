@@ -89,5 +89,6 @@ namespace eka2l1::epoc::msv {
         bool add_entry(entry &ent);
 
         entry *get_entry(const std::uint32_t id);
+        std::vector<entry*> get_entries_by_parent(const std::uint32_t parent_id);
     };
 }

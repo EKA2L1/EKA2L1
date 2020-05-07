@@ -31,6 +31,11 @@
 #include <common/cvt.h>
 #include <common/time.h>
 
+#include <manager/manager.h>
+#include <manager/device_manager.h>
+
+#include <common/path.h>
+
 namespace eka2l1 {
     static const std::u16string DEFAULT_MSG_DATA_DIR = u"C:\\private\\1000484b\\Mail2\\";
 
@@ -38,7 +43,6 @@ namespace eka2l1 {
         : service::typical_server(sys, "!MsvServer")
         , reg_(sys->get_io_system())
         , inited_(false) {
-        message_folder_ = DEFAULT_MSG_DATA_DIR;
     }
 
     void msv_server::install_rom_mtm_modules() {
@@ -71,6 +75,11 @@ namespace eka2l1 {
     }
 
     void msv_server::init() {
+        // Instantiate the message folder        
+        manager::device_manager *mngr = sys->get_manager_system()->get_device_manager();
+        message_folder_ = eka2l1::add_path(DEFAULT_MSG_DATA_DIR, 
+            common::utf8_to_ucs2(mngr->get_current()->firmware_code) + u"\\");
+
         io_system *io = sys->get_io_system();
 
         if (!io->exist(message_folder_)) {
@@ -105,7 +114,8 @@ namespace eka2l1 {
     msv_client_session::msv_client_session(service::typical_server *serv, const std::uint32_t ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version)
-        , flags_(0) {
+        , flags_(0)
+        , nof_sequence_(0) {
     }
 
     static void pack_change_buffer(epoc::des8 *buf, kernel::process *pr, const msv_event_data &data) {
@@ -154,7 +164,10 @@ namespace eka2l1 {
         return true;
     }
 
-    void msv_client_session::queue(const msv_event_data &evt) {
+    void msv_client_session::queue(msv_event_data &evt) {
+        nof_sequence_++;
+        evt.selection_ = std::string(reinterpret_cast<const char*>(&nof_sequence_), sizeof(std::uint32_t));
+
         if (!msv_info_.empty()) {
             kernel::process *own_pr = msv_info_.requester->owning_process();
 
@@ -173,6 +186,10 @@ namespace eka2l1 {
         switch (ctx->msg->function) {
         case msv_get_entry:
             get_entry(ctx);
+            break;
+
+        case msv_get_children:
+            get_children(ctx);
             break;
 
         case msv_notify_session_event: {
@@ -198,6 +215,10 @@ namespace eka2l1 {
 
         case msv_get_message_directory:
             get_message_directory(ctx);
+            break;
+
+        case msv_get_notify_sequence:
+            get_notify_sequence(ctx);
             break;
 
         case msv_set_receive_entry_events:
@@ -268,6 +289,15 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    static void pad_out_data(common::chunkyseri &seri) {
+        std::uint8_t padding[3];
+        
+        // Pad out  
+        if (seri.size() % 4 != 0) {
+            seri.absorb_impl(padding, 4 - seri.size() % 4);
+        }
+    }
+
     static void pack_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
         epoc::msv::entry_data data_str;
         data_str.data_ = ent.data_;
@@ -279,22 +309,18 @@ namespace eka2l1 {
         data_str.type_uid_ = ent.type_uid_;
         
         seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&data_str), sizeof(epoc::msv::entry_data));
-        std::uint8_t padding[3];
-        
-        // Pad out
-        auto pad_out_data = [&]() {       
-            if (seri.size() % 4 != 0) {
-                seri.absorb_impl(padding, 4 - seri.size() % 4);
-            }
-        };
 
-        pad_out_data();
+        pad_out_data(seri);
         seri.absorb(ent.description_);
 
-        pad_out_data();
+        pad_out_data(seri);
         seri.absorb(ent.details_);
+        
+        pad_out_data(seri);
+    }
 
-        pad_out_data();
+    static void pack_entry_and_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+        pack_entry_to_buffer(seri, ent);
         seri.absorb(ent.service_id_);
     }
 
@@ -334,6 +360,82 @@ namespace eka2l1 {
         pack_entry_to_buffer(seri, *ent);
 
         ctx->set_arg_des_len(1, static_cast<std::uint32_t>(seri.size()));
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    struct children_details {
+        std::uint32_t parent_id_;
+        std::uint32_t child_count_total_;
+        std::uint32_t child_count_in_array_;
+        std::uint32_t last_entry_in_array_;
+    };
+
+    void msv_client_session::get_children(service::ipc_context *ctx) {
+        std::optional<children_details> details = ctx->get_arg_packed<children_details>(0);
+
+        if (!details) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
+        child_entries_ = indexer->get_entries_by_parent(details->parent_id_);
+
+        if (child_entries_.empty()) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        // TODO(pent0): Include the selection flags in slot 1
+        std::uint8_t *buffer = reinterpret_cast<std::uint8_t*>(ctx->get_arg_ptr(2));
+        std::size_t buffer_max_size = ctx->get_arg_max_size(2);
+
+        if (!buffer || !buffer_max_size) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        details->child_count_total_ = static_cast<std::uint32_t>(child_entries_.size());
+
+        std::size_t written = 0;
+        common::chunkyseri seri(buffer, buffer_max_size, common::SERI_MODE_WRITE);
+
+        bool is_overflow = false;
+
+        while ((written < buffer_max_size) && (!child_entries_.empty())) {
+            common::chunkyseri measurer(nullptr, 0x1000, common::SERI_MODE_MEASURE);
+            pack_entry_to_buffer(measurer, *child_entries_.back());
+
+            if (measurer.size() + written > buffer_max_size) {
+                is_overflow = true;
+                break;
+            }
+
+            // Start writing to this buffer
+            pack_entry_to_buffer(seri, *child_entries_.back());
+
+            details->child_count_in_array_++;
+
+            // TODO: Not sure.
+            details->last_entry_in_array_ = details->child_count_in_array_;
+
+            child_entries_.pop_back();
+
+            written = seri.size();
+        }
+
+        ctx->write_arg_pkg(0, details.value());
+        ctx->set_arg_des_len(2, static_cast<std::uint32_t>(seri.size()));
+        
+        if (is_overflow) {
+            ctx->set_request_status(epoc::error_overflow);
+        } else {
+            ctx->set_request_status(epoc::error_none);
+        }
+    }
+
+    void msv_client_session::get_notify_sequence(service::ipc_context *ctx) {
+        ctx->write_arg_pkg<std::uint32_t>(0, nof_sequence_);
         ctx->set_request_status(epoc::error_none);
     }
 
