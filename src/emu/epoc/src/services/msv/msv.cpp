@@ -510,7 +510,8 @@ namespace eka2l1 {
             seri.absorb(group->tech_type_uid_);
 
             // WARN (pent0): Currently force it to eat all stuffs as UTF8
-            epoc::absorb_des_string(common::ucs2_to_utf8(comp->name_), seri);
+            std::string name_utf8 = common::ucs2_to_utf8(comp->name_);
+            epoc::absorb_des_string(name_utf8, seri);
             seri.absorb(group->cap_send_);
             seri.absorb(group->cap_body_);
             seri.absorb(group->cap_avail_);
@@ -528,7 +529,8 @@ namespace eka2l1 {
             seri.absorb(version);
 
             if (comp->specific_uid_ == epoc::msv::MTM_DEFAULT_SPECIFIC_UID) {
-                epoc::absorb_des_string(common::ucs2_to_utf8(comp->filename_), seri);
+                std::string filename_utf8 = common::ucs2_to_utf8(comp->filename_);
+                epoc::absorb_des_string(filename_utf8, seri);
             }
         }
 
