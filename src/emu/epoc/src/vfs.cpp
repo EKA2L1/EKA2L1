@@ -462,7 +462,7 @@ namespace eka2l1 {
                 }
 
                 // If it doesn't meet the filter, continue until find one or there is no one
-                if (!std::regex_match(name, filter)) {
+                if (!std::regex_match(common::lowercase_string(name), filter)) {
                     continue;
                 }
 
