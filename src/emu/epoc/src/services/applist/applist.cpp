@@ -113,6 +113,10 @@ namespace eka2l1 {
             return true;
         }
 
+        // Absolute the localised info path
+        reg.localised_info_rsc_path = eka2l1::absolute_path(reg.localised_info_rsc_path,
+            eka2l1::root_dir(path), true);
+
         const auto localised_path = utils::get_nearest_lang_file(io, reg.localised_info_rsc_path,
             ideal_lang, land_drive);
 
@@ -224,7 +228,7 @@ namespace eka2l1 {
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
                 const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-                auto reg_dir = io->open_dir(base_dir, io_attrib::include_file);
+                auto reg_dir = io->open_dir(base_dir + u"*.rsc", io_attrib::include_file);
 
                 if (reg_dir) {
                     while (auto ent = reg_dir->get_next_entry()) {
