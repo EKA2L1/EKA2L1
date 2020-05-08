@@ -252,6 +252,11 @@ namespace eka2l1::epoc {
             source_rect = blt_cmd->source_rect;
         }
 
+        if (!source_rect.valid()) {
+            context.set_request_status(epoc::error_none);
+            return;
+        }
+
         eka2l1::rect dest_rect;
         dest_rect.top = blt_cmd->pos;
         dest_rect.size = source_rect.size;
@@ -295,6 +300,11 @@ namespace eka2l1::epoc {
         // Symbian rectangle second vector is the bottom right, not the size
         area.transform_from_symbian_rectangle();
 
+        if (!area.valid()) {
+            context.set_request_status(epoc::error_none);
+            return;
+        }
+
         if (do_command_set_color(set_color_type::pen)) {
             // We want to draw the rectangle that backup the real rectangle, to create borders.
             eka2l1::rect backup_border = area;
@@ -317,6 +327,11 @@ namespace eka2l1::epoc {
 
         // Symbian rectangle second vector is the bottom right, not the size
         area.transform_from_symbian_rectangle();
+
+        if (!area.valid()) {
+            context.set_request_status(epoc::error_none);
+            return;
+        }
 
         const auto previous_brush_type = fill_mode;
         fill_mode = brush_style::solid;
