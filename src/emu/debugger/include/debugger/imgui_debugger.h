@@ -89,6 +89,8 @@ namespace eka2l1 {
         bool should_show_screen_options[20];
         bool should_show_empty_device_warn;
 
+        std::uint32_t active_screen;
+
         struct device_wizard {
             enum device_wizard_stage {
                 WELCOME_MESSAGE = 0,

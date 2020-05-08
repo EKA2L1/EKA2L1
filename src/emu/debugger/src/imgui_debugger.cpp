@@ -111,7 +111,8 @@ namespace eka2l1 {
         , app_launch(app_launch)
         , selected_callback(nullptr)
         , selected_callback_data(nullptr)
-        , phony_icon(0) {
+        , phony_icon(0)
+        , active_screen(0) {
         std::fill(should_show_screen_options, should_show_screen_options + sizeof(should_show_screen_options) / sizeof(bool),
             false);
 
@@ -1194,6 +1195,14 @@ namespace eka2l1 {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("View")) {
+                bool fullscreen = renderer->is_fullscreen();
+                ImGui::MenuItem("Fullscreen", nullptr, &fullscreen);
+                renderer->set_fullscreen(fullscreen);
+
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginMenu("Help")) {
                 ImGui::MenuItem("About", nullptr, &should_show_about);
                 ImGui::EndMenu();
@@ -1219,6 +1228,11 @@ namespace eka2l1 {
             if (io.KeysDown[KEY_R]) {
                 should_show_app_launch = !should_show_app_launch;
                 io.KeysDown[KEY_R] = false;
+            }
+
+            if (io.KeysDown[KEY_F11]) {
+                renderer->set_fullscreen(!renderer->is_fullscreen());
+                io.KeysDown[KEY_F11] = false;
             }
 
             io.KeyCtrl = false;
@@ -1403,6 +1417,62 @@ namespace eka2l1 {
         imgui_image_rotate(id, base, origin, size, static_cast<float>(rotation));
     }
 
+    // Thanks dosbox-staging (code by Anton Shepelev)! 
+    static void get_nice_scale_by_integer(ImVec2 out_size, ImVec2 source_size, eka2l1::vec2 &scale) {
+        double aspect_ratio = source_size.x / source_size.y;
+        double aspect_ratio_norm = (aspect_ratio < 1.0) ? (1.0 / aspect_ratio) : aspect_ratio;
+
+        const bool exect_par = (aspect_ratio_norm - floor(aspect_ratio_norm)) < 0.01;
+
+        double error_min = -1.0;
+
+        const std::int32_t scale_x_max = static_cast<std::int32_t>(std::floor(out_size.x / source_size.x));
+        const std::int32_t scale_y_max = static_cast<std::int32_t>(std::floor(out_size.y / source_size.y));
+
+        std::int32_t scale_x_cur = scale_x_max;
+        std::int32_t scale_y_cur = scale_y_max;
+
+        while (true) {
+            double crr_aspect_ratio_error = static_cast<double>(scale_x_cur) / static_cast<double>(scale_y_cur) / aspect_ratio;
+            bool was_crr_aspect_ratio_error_smaller_then_zero = crr_aspect_ratio_error < 1.0;
+
+            if (crr_aspect_ratio_error < 1.0)
+                crr_aspect_ratio_error = 1.0 / crr_aspect_ratio_error;
+
+            double aspect_ratio_size = common::min<double>(static_cast<double>(scale_x_max) / static_cast<double>(scale_x_cur),
+                static_cast<double>(scale_y_max) / static_cast<double>(scale_y_cur));
+
+            if (!exect_par) {
+                crr_aspect_ratio_error *= std::pow(aspect_ratio_size, 2);
+            }
+
+            if ((crr_aspect_ratio_error < error_min) || (error_min == -1)) {
+                scale.x = scale_x_cur;
+                scale.y = scale_y_cur;
+
+                error_min = crr_aspect_ratio_error;
+            }
+
+            if (was_crr_aspect_ratio_error_smaller_then_zero) {
+                scale_y_cur--;
+            } else {
+                scale_x_cur--;
+            }
+
+            if ((scale_x_cur < 0) || (scale_y_cur < 0)) {
+                scale.x = 1;
+                scale.y = 1;
+
+                return;
+            }
+
+            if (aspect_ratio_size >= 2.0) {
+                // No, you are not supposed to be cut in half!
+                break;
+            }
+        }
+    }
+
     void imgui_debugger::show_screens() {
         // Iterate through all screen from window server
         if (!winserv) {
@@ -1410,10 +1480,16 @@ namespace eka2l1 {
         }
 
         epoc::screen *scr = winserv->get_screens();
+        const bool fullscreen_now = renderer->is_fullscreen();
+        ImGuiIO &io = ImGui::GetIO();
 
-        for (int i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
-            const std::string name = fmt::format("Screen {}", i);
-            const eka2l1::vec2 size = scr->current_mode().size;
+        for (std::uint32_t i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
+            if (fullscreen_now && scr->number != active_screen) {
+                continue;
+            }
+
+            const std::string name = fmt::format("Screen {}", scr->number);
+            eka2l1::vec2 size = scr->current_mode().size;
             
             scr->screen_mutex.lock();
             ImVec2 rotated_size(size.x + 15.0f, size.y + 35.0f);
@@ -1423,8 +1499,27 @@ namespace eka2l1 {
                 rotated_size.y = size.x + 35.0f;
             }
 
-            ImGui::SetNextWindowSize(rotated_size);
-            ImGui::Begin(name.c_str());
+            ImVec2 fullscreen_region = ImVec2(io.DisplaySize.x, io.DisplaySize.y - 60.0f);
+
+            const float fullscreen_start_x = 0.0f;
+            const float fullscreen_start_y = 30.0f;
+
+            if (fullscreen_now) {
+                ImGui::SetNextWindowSize(fullscreen_region);
+                ImGui::SetNextWindowPos(ImVec2(fullscreen_start_x, fullscreen_start_y));
+            } else {
+                ImGui::SetNextWindowSize(rotated_size);
+            }
+
+            if (fullscreen_now)
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            
+            ImGui::Begin(name.c_str(), nullptr, fullscreen_now ? (ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)
+                : 0);
+
+            if (ImGui::IsWindowFocused()) {
+                active_screen = scr->number;
+            }
 
             ImVec2 winpos = ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin();
 
@@ -1478,10 +1573,26 @@ namespace eka2l1 {
                 }
             }
 
-            const auto window_pos = ImGui::GetWindowPos();
-            const auto content_pos = ImGui::GetWindowContentRegionMin();
-            scr->absolute_pos.x = static_cast<int>(window_pos.x + content_pos.x);
-            scr->absolute_pos.y = static_cast<int>(window_pos.y + content_pos.y);
+            eka2l1::vec2 scale(0, 0);
+            get_nice_scale_by_integer(fullscreen_region, ImVec2(static_cast<float>(size.x),
+                static_cast<float>(size.y)), scale);
+
+            if (fullscreen_now) {
+                scr->scale = scale;
+            } else {
+                scr->scale = { 1, 1 };
+            }
+
+            if (fullscreen_now) {
+                size.x *= scale.x;
+                size.y *= scale.y;
+
+                winpos.x += (fullscreen_region.x - size.x) / 2;
+                winpos.y += (fullscreen_region.y - size.y) / 2;
+            }
+            
+            scr->absolute_pos.x = static_cast<int>(winpos.x);
+            scr->absolute_pos.y = static_cast<int>(winpos.y);
             
             draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos,
                 ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scr->ui_rotation);
@@ -1491,11 +1602,18 @@ namespace eka2l1 {
                 const int rotation = (scr->current_mode().rotation + scr->ui_rotation) % 360;
 
                 draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos,
-                    ImVec2(static_cast<float>(size_dsa.x), static_cast<float>(size_dsa.y)), rotation);
+                    ImVec2(static_cast<float>(size_dsa.x * scr->scale.x), static_cast<float>(size_dsa.y * scr->scale.y)),
+                    rotation);
             }
 
             scr->screen_mutex.unlock();
+
             ImGui::End();
+
+            if (fullscreen_now) {
+                ImGui::PopStyleVar();
+                break;
+            }
         }
     }
 

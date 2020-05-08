@@ -23,12 +23,20 @@ namespace eka2l1 {
         renderer::spritesheet error_sheet;
 
         std::string background_change_path_;
-        std::chrono::steady_clock::time_point prev_time;
+        bool fullscreen_;
 
     protected:
         bool change_background_internal(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder, const char *path);
 
     public:
+        void set_fullscreen(const bool fullscreen) {
+            fullscreen_ = fullscreen;
+        }
+
+        bool is_fullscreen() const {
+            return fullscreen_;
+        }
+
         void init(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
             debugger_base *debugger);
 

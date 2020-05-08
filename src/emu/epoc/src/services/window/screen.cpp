@@ -81,6 +81,7 @@ namespace eka2l1::epoc {
         , ui_rotation(0)
         , orientation_lock(true)
         , refresh_rate(60)
+        , scale(1, 1)
         , screen_texture(0)
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
@@ -292,7 +293,7 @@ namespace eka2l1::epoc {
                 if (scr_config.modes[i].rotation == rot) {
                     // Reset the UI rotation
                     ui_rotation = 0;
-                    set_screen_mode(drv, i);
+                    set_screen_mode(drv, static_cast<int>(i));
                 }
             }
         }

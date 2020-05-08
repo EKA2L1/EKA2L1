@@ -37,6 +37,7 @@ namespace eka2l1 {
     void debugger_renderer::init(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
         debugger_base *debugger) {
         debugger_ = debugger;
+        fullscreen_ = false;
         debugger_->renderer = this;
         background_change_path_.clear();
 
@@ -89,22 +90,10 @@ namespace eka2l1 {
 
         ImGui::NewFrame();
 
-        /*
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - prev_time).count();
-
-        prev_time = now;
-
-        error_sheet.play(static_cast<const float>(elapsed));
-        ImVec2 uv_min, uv_max;
-
-        error_sheet.get_current_frame_uv_coords(uv_min.x, uv_max.x, uv_min.y, uv_max.y);
-        */
-
         // Draw the imgui ui
         debugger_->show_debugger(scaled_width, scaled_height, fb_width, fb_height);
 
-        if (background_tex_) {
+        if (background_tex_ && !fullscreen_) {
             manager::config_state *sstate = debugger_->get_config();
 
             ImGui::GetBackgroundDrawList()->AddImage(
@@ -115,16 +104,6 @@ namespace eka2l1 {
                 ImVec2(1, 1),
                 IM_COL32(255, 255, 255, sstate->bkg_transparency));
         }
-
-        /*
-        ImGui::GetBackgroundDrawList()->AddImage(
-            reinterpret_cast<ImTextureID>(error_sheet.sheet_),
-            ImVec2(120.0f, 120.0f),
-            ImVec2(120.0f + error_sheet.metas_[error_sheet.current_].size_.x, 120.0f + error_sheet.metas_[error_sheet.current_].size_.y),
-            uv_min,
-            uv_max
-        );
-        */
 
         ImGui::EndFrame();
         ImGui::Render();

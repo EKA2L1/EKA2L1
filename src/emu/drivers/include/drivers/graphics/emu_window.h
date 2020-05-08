@@ -60,6 +60,7 @@
 
 #define KEY_F1 290
 #define KEY_F2 291
+#define KEY_F11 300
 
 #define KEY_A 65
 #define KEY_H 73
