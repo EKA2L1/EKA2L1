@@ -234,6 +234,12 @@ namespace eka2l1::epoc {
 
             // Flush the queue one time.
             ctx->flush_queue_to_driver();
+
+            if (ctx->recording) {
+                // Still in active state?
+                ctx->cmd_builder->bind_bitmap(driver_win_id);
+            }
+
             ite = ite->next;
         } while (ite != end);
 
