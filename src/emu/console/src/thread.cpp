@@ -202,7 +202,9 @@ namespace eka2l1::desktop {
 
         switch (state.graphics_driver->get_current_api()) {
         case drivers::graphic_api::opengl: {
-            state.graphics_driver->set_display_hook([window]() {
+            state.graphics_driver->set_display_hook([window, &state]() {
+                window->set_fullscreen(state.deb_renderer->is_fullscreen());
+
                 window->swap_buffer();
                 window->poll_events();
             });
