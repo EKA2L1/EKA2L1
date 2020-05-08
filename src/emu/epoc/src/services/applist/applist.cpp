@@ -108,8 +108,6 @@ namespace eka2l1 {
 
         // Getting our localised resource info
         if (reg.localised_info_rsc_path.empty()) {
-            // We will still do registeration. We have our mandatory info read fine.
-            regs.push_back(std::move(reg));
             return true;
         }
 
@@ -121,8 +119,6 @@ namespace eka2l1 {
             ideal_lang, land_drive);
 
         if (localised_path.empty()) {
-            // We will still do registeration. We have our mandatory info read fine.
-            regs.push_back(std::move(reg));
             return true;
         }
 
@@ -228,7 +224,7 @@ namespace eka2l1 {
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
                 const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-                auto reg_dir = io->open_dir(base_dir + u"*.rsc", io_attrib::include_file);
+                auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib::include_file);
 
                 if (reg_dir) {
                     while (auto ent = reg_dir->get_next_entry()) {
