@@ -54,6 +54,7 @@ namespace eka2l1::epoc {
         bool orientation_lock;      ///< If this is true. Rotate the screen won't change the orientation.
 
         std::uint8_t refresh_rate;
+        eka2l1::vec2 scale;
 
         // The root window, used to traverse window tree
         // Draw order will be child in front of parent, newer in front of older.
