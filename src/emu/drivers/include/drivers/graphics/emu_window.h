@@ -122,6 +122,7 @@ namespace eka2l1 {
             virtual void swap_buffer() = 0;
             virtual void poll_events() = 0;
             virtual void shutdown() = 0;
+            virtual void set_fullscreen(const bool is_fullscreen) = 0;
 
             virtual bool should_quit() = 0;
 

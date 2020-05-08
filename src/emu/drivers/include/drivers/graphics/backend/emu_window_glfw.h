@@ -36,10 +36,13 @@ namespace eka2l1 {
         class emu_window_glfw3 : public emu_window {
             GLFWwindow *emu_win;
             vec2 emu_screen_size;
+            vec2 pos_with_title;
 
             void *userdata;
+            bool is_fullscreen_now;
 
         public:
+            explicit emu_window_glfw3();
             bool get_mouse_button_hold(const int mouse_btt) override;
 
             void change_title(std::string new_title) override;
@@ -51,6 +54,7 @@ namespace eka2l1 {
             void poll_events() override;
             void set_userdata(void *userdata) override;
             void *get_userdata() override;
+            void set_fullscreen(const bool is_fullscreen) override;
 
             bool should_quit() override;
 

@@ -98,6 +98,11 @@ namespace eka2l1 {
         const uint32_t default_width_potrait = 360;
         const uint32_t default_height_potrait = 640;
 
+        emu_window_glfw3::emu_window_glfw3()
+            : userdata(nullptr)
+            , is_fullscreen_now(false) {
+        }
+
         bool emu_window_glfw3::get_mouse_button_hold(const int mouse_btt) {
             return (glfwGetMouseButton(emu_win, mouse_btt) != 0) ? true : false;
         }
@@ -160,6 +165,20 @@ namespace eka2l1 {
             glfwSetCursorPosCallback(emu_win, &mouse_cursor_callback);
 
             emu_screen_size = size;
+        }
+
+        void emu_window_glfw3::set_fullscreen(const bool is_fullscreen) {
+            if (is_fullscreen_now == is_fullscreen) {
+                return;
+            }
+            
+            GLFWmonitor* primary = glfwGetPrimaryMonitor();
+            const GLFWvidmode* mode = glfwGetVideoMode(primary);
+
+            glfwSetWindowMonitor(emu_win, (is_fullscreen ? primary : NULL), 0, 30, 
+                emu_screen_size.x, emu_screen_size.y, mode->refreshRate);
+
+            is_fullscreen_now = is_fullscreen;
         }
 
         void emu_window_glfw3::change_title(std::string new_title) {
