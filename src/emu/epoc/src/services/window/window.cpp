@@ -956,8 +956,10 @@ namespace eka2l1 {
         }
 
         scr->screen_mutex.lock();
-        guest_evt_.adv_pointer_evt_.pos.x = driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x;
-        guest_evt_.adv_pointer_evt_.pos.y = driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y;
+        guest_evt_.adv_pointer_evt_.pos.x = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x)
+            / scr->scale.x);
+        guest_evt_.adv_pointer_evt_.pos.y = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y)
+            / scr->scale.y);
 
         const int orgx = guest_evt_.adv_pointer_evt_.pos.x;
         const int orgy = guest_evt_.adv_pointer_evt_.pos.y;
