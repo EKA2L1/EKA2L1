@@ -27,7 +27,7 @@
 
 namespace eka2l1::common {
     enum : uint64_t {
-        microsecs_per_sec = 100,
+        microsecs_per_sec = 1000000,
         ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec,
         ad_win32_epoch_dist_microsecs = (1601 * 365 * 24 * 60) * microsecs_per_sec
     };
