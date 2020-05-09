@@ -24,6 +24,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 namespace eka2l1::common {
     enum : uint64_t {
@@ -39,6 +40,12 @@ namespace eka2l1::common {
     std::uint64_t get_current_time_in_microseconds_since_epoch();
 
     /**
+     * @brief Get total seconds esclaped in microseconds since 1/1/1970.
+     * @returns A 64-bit number indicates the total microseconds.
+     */
+    std::uint64_t get_current_time_in_nanoseconds_since_epoch();
+
+    /**
      * @brief Get total seconds esclaped in microseconds since 1/1/1AD
      * @returns A 64-bit number indicates the total microseconds.
      */
@@ -50,4 +57,17 @@ namespace eka2l1::common {
      * @brief Get host's UTC offset.
      */
     int get_current_utc_offset();
+
+    struct teletimer {
+    public:
+        virtual ~teletimer() = 0;
+
+        virtual void start() = 0;
+        virtual void stop() = 0;
+
+        virtual std::uint64_t ticks() = 0;
+        virtual std::uint64_t nanoseconds() = 0;
+    };
+
+    std::unique_ptr<teletimer> make_teletimer(const std::uint32_t target_frequency);
 }
