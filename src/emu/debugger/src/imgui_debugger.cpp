@@ -113,9 +113,6 @@ namespace eka2l1 {
         , selected_callback_data(nullptr)
         , phony_icon(0)
         , active_screen(0) {
-        std::fill(should_show_screen_options, should_show_screen_options + sizeof(should_show_screen_options) / sizeof(bool),
-            false);
-
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
@@ -1479,54 +1476,49 @@ namespace eka2l1 {
 
             ImVec2 winpos = ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin();
 
-            if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
-                should_show_screen_options[i] = !should_show_screen_options[i];
-            }
-
-            if (should_show_screen_options[i]) {
-                if (ImGui::BeginPopupContextItem()) {
-                    bool orientation_lock = scr->orientation_lock;
-                    if (ImGui::BeginMenu("Orientation lock", false)) {
-                        orientation_lock = !orientation_lock;
-                        ImGui::EndMenu();
-                    }
-
-                    scr->set_orientation_lock(sys->get_graphics_driver(), orientation_lock);
-
-                    if (ImGui::BeginMenu("Rotation")) {
-                        bool selected[4] = { (scr->ui_rotation == 0),
-                            (scr->ui_rotation == 90),
-                            (scr->ui_rotation == 180),
-                            (scr->ui_rotation == 270) };
-
-                        ImGui::MenuItem("0", nullptr, &selected[0]);
-                        ImGui::MenuItem("90", nullptr, &selected[1]);
-                        ImGui::MenuItem("180", nullptr, &selected[2]);
-                        ImGui::MenuItem("270", nullptr, &selected[3]);
-
-                        for (std::uint32_t i = 0; i <= 3; i++) {
-                            if (selected[i] && (i != scr->ui_rotation / 90)) {
-                                scr->set_rotation(sys->get_graphics_driver(), i * 90);
-                                break;
-                            }
-                        }
-
-                        ImGui::EndMenu();
-                    }
-
-                    if (ImGui::BeginMenu("Refresh rate")) {
-                        int current_refresh_rate = scr->refresh_rate;
-                        ImGui::SliderInt("##RefreshRate", &current_refresh_rate, 0, 120);
-
-                        if (current_refresh_rate != scr->refresh_rate) {
-                            scr->refresh_rate = static_cast<std::uint8_t>(current_refresh_rate);
-                        }
-
-                        ImGui::EndMenu();
-                    }
-
-                    ImGui::EndPopup();
+            if (fullscreen_now ? ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right) :
+                ImGui::BeginPopupContextItem(nullptr, ImGuiMouseButton_Right)) {
+                bool orientation_lock = scr->orientation_lock;
+                if (ImGui::BeginMenu("Orientation lock", false)) {
+                    orientation_lock = !orientation_lock;
+                    ImGui::EndMenu();
                 }
+
+                scr->set_orientation_lock(sys->get_graphics_driver(), orientation_lock);
+
+                if (ImGui::BeginMenu("Rotation")) {
+                    bool selected[4] = { (scr->ui_rotation == 0),
+                        (scr->ui_rotation == 90),
+                        (scr->ui_rotation == 180),
+                        (scr->ui_rotation == 270) };
+
+                    ImGui::MenuItem("0", nullptr, &selected[0]);
+                    ImGui::MenuItem("90", nullptr, &selected[1]);
+                    ImGui::MenuItem("180", nullptr, &selected[2]);
+                    ImGui::MenuItem("270", nullptr, &selected[3]);
+
+                    for (std::uint32_t i = 0; i <= 3; i++) {
+                        if (selected[i] && (i != scr->ui_rotation / 90)) {
+                            scr->set_rotation(sys->get_graphics_driver(), i * 90);
+                            break;
+                        }
+                    }
+
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Refresh rate")) {
+                    int current_refresh_rate = scr->refresh_rate;
+                    ImGui::SliderInt("##RefreshRate", &current_refresh_rate, 0, 120);
+
+                    if (current_refresh_rate != scr->refresh_rate) {
+                        scr->refresh_rate = static_cast<std::uint8_t>(current_refresh_rate);
+                    }
+
+                    ImGui::EndMenu();
+                }
+
+                ImGui::EndPopup();
             }
 
             eka2l1::vec2 scale(0, 0);
@@ -1543,8 +1535,13 @@ namespace eka2l1 {
                 size.x *= scale.x;
                 size.y *= scale.y;
 
-                winpos.x += (fullscreen_region.x - size.x) / 2;
-                winpos.y += (fullscreen_region.y - size.y) / 2;
+                if (scr->ui_rotation % 180 == 0) {
+                    winpos.x += (fullscreen_region.x - size.x) / 2;
+                    winpos.y += (fullscreen_region.y - size.y) / 2;
+                } else {
+                    winpos.x += (fullscreen_region.x - size.y) / 2;
+                    winpos.y += (fullscreen_region.y - size.x) / 2;
+                }
             }
             
             scr->absolute_pos.x = static_cast<int>(winpos.x);
