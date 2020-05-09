@@ -1424,6 +1424,9 @@ namespace eka2l1 {
             scale.x++;
             scale.y++;
         }
+
+        if (scale.x > 1) scale.x--;
+        if (scale.y > 1) scale.y--;
     }
 
     void imgui_debugger::show_screens() {
