@@ -30,7 +30,7 @@
 
 namespace eka2l1 {
     class kernel_system;
-    class timing_system;
+    class ntimer;
     class manager_system;
     class memory_system;
 
@@ -57,7 +57,7 @@ namespace eka2l1 {
             std::unique_ptr<arm_dynarmic_callback> cb;
 
             disasm *asmdis;
-            timing_system *timing;
+            ntimer *timing;
             memory_system *mem;
             kernel_system *kern;
 
@@ -68,9 +68,10 @@ namespace eka2l1 {
 
             manager::config_state *conf;
             std::uint32_t ticks_executed{ 0 };
+            std::uint32_t ticks_target{ 0 };
 
         public:
-            timing_system *get_timing_sys() {
+            ntimer *get_timing_sys() {
                 return timing;
             }
 
@@ -86,13 +87,13 @@ namespace eka2l1 {
                 return lib_mngr;
             }
 
-            explicit arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+            explicit arm_dynarmic(kernel_system *kern, ntimer *sys, manager::config_state *conf,
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr,
                 gdbstub *stub);
 
             ~arm_dynarmic();
 
-            void run() override;
+            void run(const std::uint32_t instruction_count) override;
             void stop() override;
 
             void step() override;

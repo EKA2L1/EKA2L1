@@ -24,7 +24,7 @@
 
 namespace eka2l1 {
     class kernel_system;
-    class timing_system;
+    class ntimer;
     class memory_system;
     class manager_system;
 
@@ -51,7 +51,7 @@ namespace eka2l1 {
          * 
          * \returns An instance to the CPU executor.
          */
-        cpu create_cpu(kernel_system *kern, timing_system *timing, manager::config_state *conf, manager_system *mngr,
+        cpu create_cpu(kernel_system *kern, ntimer *timing, manager::config_state *conf, manager_system *mngr,
             memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub, arm_emulator_type arm_type);
     }
 }

@@ -208,7 +208,7 @@ namespace eka2l1 {
             return thumb_mode(engine);
         }
 
-        arm_unicorn::arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+        arm_unicorn::arm_unicorn(kernel_system *kern, ntimer *sys, manager::config_state *conf,
             manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
             : timing(sys)
             , mem(mem)
@@ -298,10 +298,6 @@ namespace eka2l1 {
 
                 assert(err == UC_ERR_OK);
 
-                if (timing) {
-                    timing->add_ticks(num_insts_runned);
-                }
-
                 num_insts_runned = 0;
 
                 if (stub && stub->is_server_enabled()) {
@@ -355,13 +351,13 @@ namespace eka2l1 {
             return true;
         }
 
-        void arm_unicorn::run() {
+        void arm_unicorn::run(const std::uint32_t instruction_count) {
             if (!timing) {
                 execute_instructions(-1);
                 return;
             }
 
-            execute_instructions(std::max<std::uint32_t>(static_cast<std::uint32_t>(timing->downcount()), 0));
+            execute_instructions(instruction_count);
         }
 
         void arm_unicorn::stop() {

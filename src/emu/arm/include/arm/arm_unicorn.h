@@ -25,7 +25,7 @@
 #include <unicorn/unicorn.h>
 
 namespace eka2l1 {
-    class timing_system;
+    class ntimer;
     class manager_system;
     class kernel_system;
     class memory_system;
@@ -46,7 +46,7 @@ namespace eka2l1 {
             uc_engine *engine;
             address epa;
 
-            timing_system *timing;
+            ntimer *timing;
             disasm *asmdis;
             memory_system *mem;
             kernel_system *kern;
@@ -66,7 +66,7 @@ namespace eka2l1 {
 
             bool execute_instructions(uint32_t num_instructions);
 
-            timing_system *get_timing_sys() {
+            ntimer *get_timing_sys() {
                 return timing;
             }
 
@@ -111,12 +111,12 @@ namespace eka2l1 {
                 breakpoint_hit_addr = addr;
             }
 
-            explicit arm_unicorn(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+            explicit arm_unicorn(kernel_system *kern, ntimer *sys, manager::config_state *conf,
                 manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub);
 
             ~arm_unicorn();
 
-            void run() override;
+            void run(const std::uint32_t instruction_count) override;
             void stop() override;
 
             void step() override;
