@@ -1417,59 +1417,12 @@ namespace eka2l1 {
         imgui_image_rotate(id, base, origin, size, static_cast<float>(rotation));
     }
 
-    // Thanks dosbox-staging (code by Anton Shepelev)! 
     static void get_nice_scale_by_integer(ImVec2 out_size, ImVec2 source_size, eka2l1::vec2 &scale) {
-        double aspect_ratio = source_size.x / source_size.y;
-        double aspect_ratio_norm = (aspect_ratio < 1.0) ? (1.0 / aspect_ratio) : aspect_ratio;
+        scale.x = scale.y = 1;
 
-        const bool exect_par = (aspect_ratio_norm - floor(aspect_ratio_norm)) < 0.01;
-
-        double error_min = -1.0;
-
-        const std::int32_t scale_x_max = static_cast<std::int32_t>(std::floor(out_size.x / source_size.x));
-        const std::int32_t scale_y_max = static_cast<std::int32_t>(std::floor(out_size.y / source_size.y));
-
-        std::int32_t scale_x_cur = scale_x_max;
-        std::int32_t scale_y_cur = scale_y_max;
-
-        while (true) {
-            double crr_aspect_ratio_error = static_cast<double>(scale_x_cur) / static_cast<double>(scale_y_cur) / aspect_ratio;
-            bool was_crr_aspect_ratio_error_smaller_then_zero = crr_aspect_ratio_error < 1.0;
-
-            if (crr_aspect_ratio_error < 1.0)
-                crr_aspect_ratio_error = 1.0 / crr_aspect_ratio_error;
-
-            double aspect_ratio_size = common::min<double>(static_cast<double>(scale_x_max) / static_cast<double>(scale_x_cur),
-                static_cast<double>(scale_y_max) / static_cast<double>(scale_y_cur));
-
-            if (!exect_par) {
-                crr_aspect_ratio_error *= std::pow(aspect_ratio_size, 2);
-            }
-
-            if ((crr_aspect_ratio_error < error_min) || (error_min == -1)) {
-                scale.x = scale_x_cur;
-                scale.y = scale_y_cur;
-
-                error_min = crr_aspect_ratio_error;
-            }
-
-            if (was_crr_aspect_ratio_error_smaller_then_zero) {
-                scale_y_cur--;
-            } else {
-                scale_x_cur--;
-            }
-
-            if ((scale_x_cur < 0) || (scale_y_cur < 0)) {
-                scale.x = 1;
-                scale.y = 1;
-
-                return;
-            }
-
-            if (aspect_ratio_size >= 2.0) {
-                // No, you are not supposed to be cut in half!
-                break;
-            }
+        while ((source_size.x * scale.x < out_size.x) && (source_size.y * scale.y < out_size.y)) {
+            scale.x++;
+            scale.y++;
         }
     }
 
