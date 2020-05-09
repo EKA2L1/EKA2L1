@@ -90,14 +90,19 @@ namespace eka2l1::common {
         void stop() {
             end_ = get_current_time_in_nanoseconds_since_epoch();
         }
+        
+        bool set_target_frequency(const std::uint32_t freq) override {
+            target_freq_ = freq;
+            return true;
+        }
 
         std::uint64_t ticks() override {
-            return nanoseconds() * (1000000000 / target_freq_);
+            return nanoseconds() * target_freq_ / 1000000000;
         }
 
         std::uint64_t nanoseconds() override {
             if (end_ == 0) {
-                return get_current_time_in_microseconds_since_epoch() - start_;
+                return get_current_time_in_nanoseconds_since_epoch() - start_;
             }
 
             return end_ - start_;

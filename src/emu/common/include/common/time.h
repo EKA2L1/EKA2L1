@@ -33,6 +33,10 @@ namespace eka2l1::common {
         ad_win32_epoch_dist_microsecs = (1601 * 365 * 24 * 60) * microsecs_per_sec
     };
 
+    inline std::uint64_t us_to_ns(const std::uint64_t us) {
+        return us * 1000;
+    }
+
     /**
      * @brief Get total seconds esclaped in microseconds since 1/1/1970.
      * @returns A 64-bit number indicates the total microseconds.
@@ -58,12 +62,18 @@ namespace eka2l1::common {
      */
     int get_current_utc_offset();
 
+    /**
+     * @brief Timer that translate host timing to a target frequency.
+     */
     struct teletimer {
     public:
-        virtual ~teletimer() = 0;
+        virtual ~teletimer() {
+        }
 
         virtual void start() = 0;
         virtual void stop() = 0;
+
+        virtual bool set_target_frequency(const std::uint32_t freq) = 0;
 
         virtual std::uint64_t ticks() = 0;
         virtual std::uint64_t nanoseconds() = 0;
