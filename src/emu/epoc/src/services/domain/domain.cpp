@@ -44,10 +44,10 @@ namespace eka2l1 {
      * NOTE: In EKA2L1, there is no budget for the deferrals. You can have as many deferrals as you want. 
      * Deferrals are not limited, unlike on Symbian hardware.
      */
-    void domain::transition_timeout(uint64_t data, const int cycles_late) {
+    void domain::transition_timeout(uint64_t data, const int ns_late) {
         if (hierarchy->deferral_statuses.size() > 0) {
             // reschedule
-            hierarchy->timing->schedule_event(trans_timeout, trans_timeout_event, data);
+            hierarchy->timing->schedule_event(common::us_to_ns(trans_timeout), trans_timeout_event, data);
 
             // complete all deferrals
             for (auto [id, sts] : hierarchy->deferral_statuses) {
@@ -139,7 +139,7 @@ namespace eka2l1 {
         hierarchy->timing->unschedule_event(trans_timeout_event, reinterpret_cast<std::uint64_t>(this));
     }
 
-    void construct_domain_from_database(timing_system *timing, kernel_system *kern, hierarchy_ptr hier, const service::database::domain &domain_db) {
+    void construct_domain_from_database(ntimer *timing, kernel_system *kern, hierarchy_ptr hier, const service::database::domain &domain_db) {
         domain_ptr dm = std::make_shared<domain>();
 
         std::copy(reinterpret_cast<const std::uint8_t *>(&domain_db), reinterpret_cast<const std::uint8_t *>(&domain_db) + sizeof(decltype(domain_db)),
@@ -171,7 +171,7 @@ namespace eka2l1 {
             std::bind(&domain::transition_timeout, &(*parent->child), std::placeholders::_1, std::placeholders::_2));
     }
 
-    hierarchy_ptr construct_hier_from_database(timing_system *timing, kernel_system *kern, const service::database::hierarchy &hier_db) {
+    hierarchy_ptr construct_hier_from_database(ntimer *timing, kernel_system *kern, const service::database::hierarchy &hier_db) {
         hierarchy_ptr hier = std::make_shared<hierarchy>(kern->get_memory_system(), timing);
 
         std::copy(reinterpret_cast<const std::uint8_t *>(&hier_db), reinterpret_cast<const std::uint8_t *>(&hier_db) + sizeof(decltype(hier_db)),
@@ -501,7 +501,7 @@ namespace eka2l1 {
         // If there is at least one client wait for transition, set the timer
         // wait for them to acknowledge the transition
         if (transition_count > 0) {
-            hierarchy->timing->schedule_event(trans_timeout_event, trans_timeout,
+            hierarchy->timing->schedule_event(common::us_to_ns(trans_timeout), trans_timeout_event,
                 reinterpret_cast<std::uint64_t>(this));
         } else {
             complete_members_transition();
@@ -828,7 +828,7 @@ namespace eka2l1 {
     domainmngr_server::domainmngr_server(eka2l1::system *sys)
         : server(sys, "!DmManagerServer", true) {
         mngr = std::make_shared<domain_manager>();
-        mngr->timing = sys->get_timing_system();
+        mngr->timing = sys->get_ntimer();
         mngr->kern = sys->get_kernel_system();
 
         property_ptr init_prop = kern->create<service::property>();

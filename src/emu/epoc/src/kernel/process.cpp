@@ -39,7 +39,7 @@ namespace eka2l1::kernel {
         primary_thread
             = kern->create<kernel::thread>(
                 mem,
-                kern->get_timing_system(),
+                kern->get_ntimer(),
                 this,
                 kernel::access_type::local_access,
                 "Main", ep_off,
@@ -49,7 +49,7 @@ namespace eka2l1::kernel {
 
         ++thread_count;
 
-        dll_lock = kern->create<kernel::mutex>(kern->get_timing_system(),
+        dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(),
             "dllLockMutexProcess" + common::to_string(puid),
             false, kernel::access_type::local_access);
     }

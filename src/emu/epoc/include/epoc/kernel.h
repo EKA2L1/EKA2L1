@@ -53,7 +53,7 @@ namespace eka2l1 {
 #define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
 
     class posix_server;
-    class timing_system;
+    class ntimer;
     class memory_system;
     class manager_system;
     class io_system;
@@ -166,7 +166,7 @@ namespace eka2l1 {
 
         std::unique_ptr<kernel::btrace> btrace_inst;
 
-        timing_system *timing;
+        ntimer *timing;
         manager_system *mngr;
         memory_system *mem;
         hle::lib_manager *libmngr;
@@ -203,7 +203,7 @@ namespace eka2l1 {
             , timing(nullptr) {
         }
 
-        timing_system *get_timing_system() {
+        ntimer *get_ntimer() {
             return timing;
         }
 
@@ -225,7 +225,7 @@ namespace eka2l1 {
 
         std::uint64_t home_time();
 
-        void init(system *esys, timing_system *sys, manager_system *mngrsys,
+        void init(system *esys, ntimer *sys, manager_system *mngrsys,
             memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys,
             manager::config_state *conf, arm::arm_interface *cpu);
 

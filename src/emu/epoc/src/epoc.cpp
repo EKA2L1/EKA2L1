@@ -89,7 +89,7 @@ namespace eka2l1 {
 
         memory_system mem;
         kernel_system kern;
-        timing_system timing;
+        std::unique_ptr<ntimer> timing;
         manager_system mngr;
 
         //! The IO system
@@ -254,8 +254,8 @@ namespace eka2l1 {
             return &io;
         }
 
-        timing_system *get_timing_system() {
-            return &timing;
+        ntimer *get_ntimer() {
+            return timing.get();
         }
 
         disasm *get_disasm() {
@@ -333,6 +333,8 @@ namespace eka2l1 {
     void system_impl::do_state(common::chunkyseri &seri) {
     }
 
+    static constexpr std::uint32_t DEFAULT_CPU_HZ = 484000000;
+
     void system_impl::init() {
         exit = false;
 
@@ -340,7 +342,8 @@ namespace eka2l1 {
         mngr.init(parent, &io, conf);
 
         // Initialize all the system that doesn't depend on others first
-        timing.init();
+        timing = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
+
         io.init();
         asmdis.init();
 
@@ -353,10 +356,10 @@ namespace eka2l1 {
 
         rom_fs_id = io.add_filesystem(rom_fs);
 
-        cpu = arm::create_cpu(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
+        cpu = arm::create_cpu(&kern, timing.get(), conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
 
         mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
-        kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
+        kern.init(parent, timing.get(), &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
 
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
@@ -365,7 +368,7 @@ namespace eka2l1 {
         set_system_language(static_cast<language>(conf->language));
 
         // Initialize HLE finally
-        dispatcher.init(&kern, &timing);
+        dispatcher.init(&kern, timing.get());
     }
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, manager::config_state *conf)
@@ -427,14 +430,13 @@ namespace eka2l1 {
         }
 
         if (kern.crr_thread() == nullptr) {
-            timing.idle();
-            timing.advance();
             prepare_reschedule();
         } else {
-            timing.advance();
+            kernel::thread *thr = kern.crr_thread();
 
             if (!should_step) {
-                cpu->run();
+                cpu->run(thr->get_remaining_screenticks());
+                thr->add_ticks(cpu->get_num_instruction_executed());
             } else {
                 cpu->step();
 
@@ -442,9 +444,9 @@ namespace eka2l1 {
                     arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
                     extended.reset_breakpoint_hit(&kern);
                 }
-            }
 
-            kern.crr_thread()->add_ticks(static_cast<int>(cpu->get_num_instruction_executed()));
+                thr->add_ticks(1);
+            }
         }
 
         if (!kern.should_terminate()) {
@@ -510,11 +512,11 @@ namespace eka2l1 {
     }
 
     void system_impl::shutdown() {
-        timing.shutdown();
         kern.shutdown();
         hlelibmngr.shutdown();
         mem.shutdown();
         asmdis.shutdown();
+        timing.reset();
 
         exit = false;
     }
@@ -651,8 +653,8 @@ namespace eka2l1 {
         return impl->get_io_system();
     }
 
-    timing_system *system::get_timing_system() {
-        return impl->get_timing_system();
+    ntimer *system::get_ntimer() {
+        return impl->get_ntimer();
     }
 
     disasm *system::get_disasm() {

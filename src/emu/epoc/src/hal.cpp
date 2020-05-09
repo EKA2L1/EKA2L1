@@ -120,7 +120,7 @@ namespace eka2l1::epoc {
             info_ptr->minor_ = rom_info.header.minor;
             info_ptr->build_ = rom_info.header.build;
 
-            info_ptr->processor_clock_in_mhz_ = sys->get_timing_system()->get_clock_frequency_mhz();
+            info_ptr->processor_clock_in_mhz_ = sys->get_ntimer()->get_clock_frequency_mhz();
             info_ptr->machine_uid_ = 0x70000001;
 
             return 0;

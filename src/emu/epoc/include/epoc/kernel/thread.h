@@ -43,7 +43,7 @@
 
 namespace eka2l1 {
     class kernel_system;
-    class timing_system;
+    class ntimer;
     class memory;
 
     namespace kernel {
@@ -153,7 +153,7 @@ namespace eka2l1 {
             ptr<void> usrdata;
 
             memory_system *mem;
-            timing_system *timing;
+            ntimer *timing;
 
             std::uint64_t lrt;
             int time;
@@ -260,16 +260,20 @@ namespace eka2l1 {
 
             void pop_call();
 
+            int get_remaining_screenticks() const {
+                return time;
+            }
+
             explicit thread();
 
-            explicit thread(kernel_system *kern, memory_system *mem, timing_system *timing)
+            explicit thread(kernel_system *kern, memory_system *mem, ntimer *timing)
                 : kernel_obj(kern)
                 , mem(mem)
                 , timing(timing) {
                 obj_type = kernel::object_type::thread;
             }
 
-            explicit thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner, kernel::access_type access,
+            explicit thread(kernel_system *kern, memory_system *mem, ntimer *timing, kernel::process *owner, kernel::access_type access,
                 const std::string &name, const address epa, const size_t stack_size,
                 const size_t min_heap_size, const size_t max_heap_size,
                 bool initial,

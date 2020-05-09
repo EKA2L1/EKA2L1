@@ -46,7 +46,7 @@ namespace eka2l1 {
     }
 
     class io_system;
-    class timing_system;
+    class ntimer;
     class disasm;
     class gdbstub;
 
@@ -123,7 +123,7 @@ namespace eka2l1 {
         kernel_system *get_kernel_system();
         hle::lib_manager *get_lib_manager();
         io_system *get_io_system();
-        timing_system *get_timing_system();
+        ntimer *get_ntimer();
         disasm *get_disasm();
         gdbstub *get_gdb_stub();
         drivers::graphics_driver *get_graphics_driver();

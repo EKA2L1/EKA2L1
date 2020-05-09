@@ -106,7 +106,7 @@ namespace eka2l1::epoc {
         if (type == window_kind::group || type == window_kind::client || new_parent != parent) {
             // TODO: Check if any childs need a redraw before hassle.
             client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
-                scr, client->get_ws().get_timing_system()->get_global_time_us());
+                scr, client->get_ws().get_ntimer()->nanoseconds());
         }
 
         remove_from_sibling_list();

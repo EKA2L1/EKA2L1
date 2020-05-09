@@ -23,12 +23,13 @@
 
 #include <epoc/kernel/thread.h>
 #include <epoc/kernel/timer.h>
+#include <epoc/kernel.h>
 
 namespace eka2l1 {
     namespace kernel {
-        void timer_callback(uint64_t user, int cycles_late);
+        void timer_callback(uint64_t user, int ns_late);
 
-        timer::timer(kernel_system *kern, timing_system *timing, std::string name,
+        timer::timer(kernel_system *kern, ntimer *timing, std::string name,
             kernel::access_type access)
             : kernel_obj(kern, name, nullptr, access)
             , timing(timing)
@@ -46,12 +47,12 @@ namespace eka2l1 {
         timer::~timer() {
         }
 
-        bool timer::after(kernel::thread *requester, epoc::request_status *request_status, uint64_t ms_signal) {
+        bool timer::after(kernel::thread *requester, epoc::request_status *request_status, std::uint64_t us_signal) {
             if (outstanding) {
                 return false;
             }
 
-            if (ms_signal == 0) {
+            if (us_signal == 0) {
                 *request_status = 0;
                 requester->signal_request();
 
@@ -64,8 +65,7 @@ namespace eka2l1 {
             info.own_thread = requester;
             info.own_timer = this;
 
-            const int64_t invoke_time = timing->us_to_cycles(ms_signal);
-            timing->schedule_event(invoke_time, callback_type, (uint64_t)(&info));
+            timing->schedule_event(common::us_to_ns(us_signal), callback_type, reinterpret_cast<std::uint64_t>(&info));
 
             return false;
         }
@@ -99,16 +99,21 @@ namespace eka2l1 {
             return request_finish();
         }
 
-        void timer_callback(uint64_t user, int cycles_late) {
+        void timer_callback(uint64_t user, int ns_late) {
             signal_info *info = reinterpret_cast<signal_info *>(user);
 
             if (!info) {
                 return;
             }
 
+            kernel_system *kern = info->own_timer->get_kernel_object_owner();
+            kern->lock();
+
             *info->request_status = 0;
             info->own_thread->signal_request();
             info->own_timer->request_finish();
+
+            kern->unlock();
         }
     }
 }

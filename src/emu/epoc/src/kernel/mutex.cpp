@@ -28,7 +28,7 @@
 
 namespace eka2l1 {
     namespace kernel {
-        mutex::mutex(kernel_system *kern, timing_system *timing, std::string name, bool init_locked,
+        mutex::mutex(kernel_system *kern, ntimer *timing, std::string name, bool init_locked,
             kernel::access_type access)
             : kernel_obj(kern, std::move(name), kern->crr_process(), access)
             , timing(timing)
@@ -143,11 +143,11 @@ namespace eka2l1 {
             thread_to_wake->resume();
         }
 
-        void mutex::wait_for(int msecs) {
+        void mutex::wait_for(int usecs) {
             wait();
 
             // Schedule event to wake up
-            timing->schedule_event(timing->ms_to_cycles(msecs), mutex_event_type,
+            timing->schedule_event(common::us_to_ns(usecs), mutex_event_type,
                 reinterpret_cast<std::uint64_t>(kern->crr_thread()));
         }
 

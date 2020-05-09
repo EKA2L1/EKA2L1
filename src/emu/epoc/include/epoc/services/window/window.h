@@ -326,7 +326,7 @@ namespace eka2l1 {
         void load_wsini();
         void parse_wsini();
 
-        void handle_inputs_from_driver(std::uint64_t userdata, int cycles_late);
+        void handle_inputs_from_driver(std::uint64_t userdata, int nn_late);
         void init_screens();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
@@ -401,7 +401,7 @@ namespace eka2l1 {
         std::uint32_t get_window_group_list_and_chain(epoc::window_group_chain_info *infos, const std::uint32_t max = 0, const int pri = -1, const int scr_num = 0);
 
         drivers::graphics_driver *get_graphics_driver();
-        timing_system *get_timing_system();
+        ntimer *get_ntimer();
         kernel_system *get_kernel_system();
 
         void queue_input_from_driver(drivers::input_event &evt);

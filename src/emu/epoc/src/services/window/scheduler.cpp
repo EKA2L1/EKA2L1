@@ -34,7 +34,7 @@ namespace eka2l1::epoc {
         callback->sched->idle_callback(callback->driver);
     }
 
-    animation_scheduler::animation_scheduler(timing_system *timing, const int total_screen)
+    animation_scheduler::animation_scheduler(ntimer *timing, const int total_screen)
         : timing_(timing)
         , callback_scheduled_(false) {
         anim_due_evt_ = timing_->register_event("anim_sched_anim_due_evt", on_anim_due);
@@ -106,7 +106,7 @@ namespace eka2l1::epoc {
         }
 
         // TODO: Clamp to not bigger than 30 mins maybe?
-        return std::max<std::int64_t>(due - timing_->get_global_time_us(), 0);
+        return std::max<std::int64_t>(due - timing_->nanoseconds(), 0);
     }
 
     void animation_scheduler::scan_for_redraw(drivers::graphics_driver *driver, const int screen_number, const bool force_redraw) {
@@ -122,7 +122,7 @@ namespace eka2l1::epoc {
                 const std::int64_t until_due = get_due_delta(force_redraw, sched->time);
                 bool should_update = true;
 
-                const std::uint64_t now = timing_->get_global_time_us();
+                const std::uint64_t now = timing_->nanoseconds();
 
                 if (scr_state.flags == screen_state::scheduled) {
                     // The screen update has been scheduled before. In that case, we need to check the time
@@ -186,14 +186,14 @@ namespace eka2l1::epoc {
     void animation_scheduler::schedule_scans(drivers::graphics_driver *driver) {
         // Schedule scan, create some screen update delay to be correspond with hardware.
         // TODO: Maybe get rid of this function?
-        static constexpr std::uint16_t scheduled_ticks = 12000;
+        static constexpr std::uint16_t scheduled_nns = 500;
 
         if (!callback_scheduled_) {
             // Schedule it
             scan_callback_data_.driver = driver;
             scan_callback_data_.sched = this;
 
-            timing_->schedule_event(scheduled_ticks, callback_evt_, reinterpret_cast<std::uint64_t>(&scan_callback_data_));
+            timing_->schedule_event(scheduled_nns, callback_evt_, reinterpret_cast<std::uint64_t>(&scan_callback_data_));
             callback_scheduled_ = true;
         }
     }

@@ -33,7 +33,7 @@ namespace eka2l1 {
     class window_server;
     class kernel_system;
     class system;
-    class timing_system;
+    class ntimer;
 }
 
 namespace eka2l1::dispatch {
@@ -64,7 +64,7 @@ namespace eka2l1::dispatch {
         audio_event *get_event(const eka2l1::ptr<epoc::request_status> req_sts);
         void delete_event(audio_event *evt);
 
-        void deliver_audio_events(kernel_system *kern, timing_system *timing);
+        void deliver_audio_events(kernel_system *kern, ntimer *timing);
     };
 
     struct dispatcher {
@@ -75,10 +75,10 @@ namespace eka2l1::dispatch {
         object_manager<dsp_epoc_stream> dsp_streams_;
 
         int audio_nof_complete_evt_;
-        timing_system *timing_;
+        ntimer *timing_;
 
         explicit dispatcher();
-        void init(kernel_system *kern, timing_system *timing);
+        void init(kernel_system *kern, ntimer *timing);
         void shutdown();
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);

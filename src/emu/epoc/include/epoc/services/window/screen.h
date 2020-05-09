@@ -36,7 +36,7 @@ namespace eka2l1 {
     }
 
     class window_server;
-    class timing_system;
+    class ntimer;
 }
 
 namespace eka2l1::drivers {
@@ -92,7 +92,7 @@ namespace eka2l1::epoc {
         void fire_focus_change_callbacks();
         void add_focus_change_callback(void *userdata, focus_change_callback_handler handler);
 
-        void vsync(timing_system *timing);
+        void vsync(ntimer *timing);
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
 

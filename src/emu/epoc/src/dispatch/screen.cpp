@@ -60,7 +60,7 @@ namespace eka2l1::dispatch {
                     drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
 
                 driver->submit_command_list(*command_list);
-                scr->vsync(sys->get_timing_system());
+                scr->vsync(sys->get_ntimer());
             }
 
             scr = scr->next;

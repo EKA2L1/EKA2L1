@@ -247,7 +247,7 @@ namespace eka2l1::epoc {
         resize(drv, mode_info(mode)->size);
     }
 
-    void screen::vsync(timing_system *timing) {
+    void screen::vsync(ntimer *timing) {
         const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
         std::uint64_t delta = tnow - last_vsync;
 
@@ -255,7 +255,6 @@ namespace eka2l1::epoc {
 
         if (delta < microsecs_a_frame) {
             std::this_thread::sleep_for(std::chrono::microseconds(microsecs_a_frame - delta));
-            timing->add_ticks(static_cast<std::uint32_t>(timing->us_to_cycles(microsecs_a_frame - delta)));
         }
 
         last_vsync = tnow;

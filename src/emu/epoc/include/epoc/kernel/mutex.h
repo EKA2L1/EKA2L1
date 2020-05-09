@@ -39,7 +39,7 @@ namespace eka2l1 {
             common::roundabout pendings;
             common::roundabout suspended;
 
-            timing_system *timing;
+            ntimer *timing;
 
             int mutex_event_type;
 
@@ -47,13 +47,13 @@ namespace eka2l1 {
             void wake_next_thread();
 
         public:
-            mutex(kernel_system *kern, timing_system *timing)
+            mutex(kernel_system *kern, ntimer *timing)
                 : kernel_obj(kern)
                 , timing(timing) {
                 obj_type = kernel::object_type::mutex;
             }
 
-            mutex(kernel_system *kern, timing_system *timing, std::string name, bool init_locked,
+            mutex(kernel_system *kern, ntimer *timing, std::string name, bool init_locked,
                 kernel::access_type access = kernel::access_type::local_access);
 
             void destroy() override;
@@ -65,7 +65,7 @@ namespace eka2l1 {
             void wait();
             void try_wait();
 
-            void wait_for(int msecs);
+            void wait_for(int usecs);
 
             kernel::thread *holder() {
                 return holding;

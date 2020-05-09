@@ -31,13 +31,13 @@ namespace eka2l1::dispatch {
         : winserv_(nullptr) {
     }
 
-    void dispatcher::init(kernel_system *kern, timing_system *timing) {
+    void dispatcher::init(kernel_system *kern, ntimer *timing) {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
         
         audio_nof_complete_evt_ = timing->register_event("DispatchAudio", [this, kern, timing](std::uint64_t userdata, std::uint64_t late) {  
             dsp_epoc_stream *stream = reinterpret_cast<dsp_epoc_stream*>(userdata);
             stream->deliver_audio_events(kern, timing);
-            timing->schedule_event(40000 - late, audio_nof_complete_evt_, userdata);
+            timing->schedule_event(500, audio_nof_complete_evt_, userdata);
         });
 
         // Set global variables
