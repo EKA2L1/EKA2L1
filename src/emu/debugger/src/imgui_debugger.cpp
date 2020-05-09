@@ -1467,8 +1467,8 @@ namespace eka2l1 {
             if (fullscreen_now)
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
             
-            ImGui::Begin(name.c_str(), nullptr, fullscreen_now ? (ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)
-                : 0);
+            ImGui::Begin(name.c_str(), nullptr, fullscreen_now ? (ImGuiWindowFlags_NoBringToFrontOnFocus |
+                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize) : 0);
 
             if (ImGui::IsWindowFocused()) {
                 active_screen = scr->number;
