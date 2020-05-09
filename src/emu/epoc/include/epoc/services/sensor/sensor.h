@@ -23,6 +23,7 @@
 #include <epoc/services/framework.h>
 #include <epoc/services/server.h>
 #include <epoc/utils/des.h>
+#include <epoc/utils/sec.h>
 
 namespace eka2l1 {
 
@@ -41,6 +42,9 @@ namespace eka2l1 {
 
     constexpr std::uint32_t LOCATION_LENGTH = 16;
     constexpr std::uint32_t VENDOR_ID_LENGTH = 16;
+    constexpr std::uint32_t PROPERTY_TEXT_BUFFER_LENGTH = 20;
+
+    constexpr std::uint32_t ACCEL_PROPERTY_COUNT = 3;
 
     struct channel_info {
         std::uint32_t channel_id;
@@ -62,12 +66,44 @@ namespace eka2l1 {
         std::uint32_t buffering_period;
     };
 
+    struct sensor_property {
+        std::uint32_t property_id;
+        std::int32_t item_index;
+        std::int16_t array_index;
+        std::uint64_t real_value;
+        epoc::buf_static<char, PROPERTY_TEXT_BUFFER_LENGTH> buf_value;
+        std::uint32_t flags;
+        std::uint64_t real_value_max;
+        std::uint64_t real_value_min;
+        std::uint32_t property_type;
+        epoc::security_info sec_info;
+        std::uint32_t reserved;
+        // TODO: This struct shouldn't contain these 24 bytes
+        std::uint64_t reserved2;
+        std::uint64_t reserved3;
+        std::uint64_t reserved4;
+    }; 
+
+    enum property_types {
+        uninitialized_property,
+        int_property,
+        real_property,
+        buffer_property
+    };
+
     enum channel_types {
         accelerometer_xyz_axis_data = 0x1020507E
     };
 
     class sensor_server : public service::typical_server {
+        bool initialized;
+
+        void init();
+
     public:
+        std::vector<channel_info> channel_infos;
+        std::vector<sensor_property> accel_properties;
+
         explicit sensor_server(eka2l1::system *sys);
 
         void connect(service::ipc_context &context) override;
