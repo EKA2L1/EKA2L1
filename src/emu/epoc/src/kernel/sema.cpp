@@ -41,15 +41,14 @@ namespace eka2l1 {
             signaling = true;
 
             for (size_t i = 0; i < signal_count; i++) {
-                if (++avail_count <= 0) {
+                if (avail_count++ < 0) {
                     if (waits.size() != 0) {
                         kernel::thread *ready_thread = std::move(waits.top());
+                        waits.pop();
+
                         assert(ready_thread->wait_obj == this);
 
                         ready_thread->get_scheduler()->resume(ready_thread);
-
-                        waits.pop();
-
                         ready_thread->wait_obj = nullptr;
                     }
                 }
@@ -60,9 +59,8 @@ namespace eka2l1 {
 
         void semaphore::wait() {
             kernel::thread *calling_thr = kern->crr_thread();
-            --avail_count;
-
-            if (avail_count < 0) {
+            
+            if (--avail_count < 0) {
                 assert(!calling_thr->wait_obj);
 
                 waits.push(calling_thr);

@@ -147,8 +147,7 @@ namespace eka2l1 {
             wait();
 
             // Schedule event to wake up
-            timing->schedule_event(common::us_to_ns(usecs), mutex_event_type,
-                reinterpret_cast<std::uint64_t>(kern->crr_thread()));
+            timing->schedule_event(usecs, mutex_event_type, reinterpret_cast<std::uint64_t>(kern->crr_thread()));
         }
 
         bool mutex::signal(kernel::thread *callee) {
@@ -167,12 +166,13 @@ namespace eka2l1 {
             auto put_top_wait_to_pending = [&]() {
                 // Take it from top of the wait queue
                 kernel::thread *top_wait = std::move(waits.top());
+                waits.pop();
+
                 pendings.push(&top_wait->pending_link);
 
                 assert(top_wait->wait_obj == this);
                 timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(top_wait));
-                
-                waits.pop();
+    
                 top_wait->state = kernel::thread_state::hold_mutex_pending;
             };
 
