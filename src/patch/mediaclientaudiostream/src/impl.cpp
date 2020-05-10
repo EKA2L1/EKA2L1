@@ -44,14 +44,13 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
     }
 
     TMMFMdaBufferNode *node = iBufferNodes.First();
-    iStatus = KRequestPending;
+    SetActive();
 
     // Register the notifcation for the buffer we are gonna sent
     iStream->RegisterNotifyBufferSent(iStatus);
     iStream->WriteL(*node->iBuffer);
 
     iCopied = node;
-    SetActive();
 }
 
 CMMFMdaOutputBufferQueue::~CMMFMdaOutputBufferQueue() {
@@ -69,6 +68,7 @@ void CMMFMdaOutputBufferQueue::RunL() {
     }
 
     if (iStatus != KErrAbort) {
+        iStatus = KRequestPending;
         WriteAndWait();
     }
 }
