@@ -78,6 +78,7 @@ namespace eka2l1::epoc {
         , irect({ 0, 0 }, { 0, 0 })
         , dmode(dmode)
         , driver_win_id(0)
+        , redraw_responded(true)
         , shadow_height(0)
         , max_pointer_buffer_(0)
         , flags(flags_visible) {
@@ -260,14 +261,7 @@ namespace eka2l1::epoc {
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         // LOG_TRACE("Begin redraw to window 0x{:X}!", id);
-
-        // Cancel pending redraw event, since by using this,
-        // we already starts one
-        //if (redraw_evt_id) {
-            //client->deque_redraw(redraw_evt_id);
-            //redraw_evt_id = 0;
-        //}
-
+        redraw_responded = true;
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -512,9 +506,11 @@ namespace eka2l1::epoc {
             irect.top = pos;
             irect.size = size;
             
-            if (is_visible()) {
+            if (redraw_responded && is_visible()) {
                 client->queue_redraw(this);
                 client->trigger_redraw();
+
+                redraw_responded = false;
             }
 
             ctx.set_request_status(epoc::error_none);
@@ -532,9 +528,11 @@ namespace eka2l1::epoc {
             irect.top = prototype_irect.in_top_left;
             irect.size = prototype_irect.in_bottom_right - prototype_irect.in_top_left;
 
-            if (is_visible()) {
+            if (redraw_responded && is_visible()) {
                 client->queue_redraw(this);
                 client->trigger_redraw();
+
+                redraw_responded = false;
             }
 
             ctx.set_request_status(epoc::error_none);

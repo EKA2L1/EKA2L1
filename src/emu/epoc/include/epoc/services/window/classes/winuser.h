@@ -63,6 +63,7 @@ namespace eka2l1::epoc {
         eka2l1::rect irect;
 
         std::uint64_t driver_win_id;
+        bool redraw_responded;
 
         dsa *direct;
 
