@@ -203,7 +203,7 @@ namespace eka2l1 {
 #endif
 
 #elif defined(__GNUC__)
-            using unsigned __int128 = gcc_uint128_t;
+            using gcc_uint128_t = unsigned __int128;
             return static_cast<std::uint64_t>((static_cast<gcc_uint128_t>(m1) * m2) / d1);
 #else
             return inaccruate_multiply_and_divide_qwords(m1, m2, d1);
