@@ -93,7 +93,9 @@ namespace eka2l1 {
             kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
             assert(thr);
 
+            lock();
             thr->signal_request();
+            unlock();
         });
     }
 
