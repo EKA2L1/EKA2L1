@@ -76,6 +76,7 @@ namespace eka2l1::common {
         virtual bool set_target_frequency(const std::uint32_t freq) = 0;
 
         virtual std::uint64_t ticks() = 0;
+        virtual std::uint64_t microseconds() = 0;
         virtual std::uint64_t nanoseconds() = 0;
     };
 

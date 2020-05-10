@@ -22,6 +22,7 @@
  */
 
 #include <chrono>
+#include <common/algorithm.h>
 #include <common/platform.h>
 #include <common/time.h>
 #include <ctime>
@@ -68,27 +69,27 @@ namespace eka2l1::common {
 #endif
     }
     
-    struct basic_teletimer: public teletimer {
+    struct basic_teletimer_micro: public teletimer {
         std::uint64_t start_;
         std::uint64_t end_;
 
         std::uint32_t target_freq_;
 
     public:
-        explicit basic_teletimer(const std::uint32_t freq)
+        explicit basic_teletimer_micro(const std::uint32_t freq)
             : target_freq_(freq) {
         }
 
-        ~basic_teletimer() override {
+        ~basic_teletimer_micro() override {
         }
 
         void start() override {
-            start_ = get_current_time_in_nanoseconds_since_epoch();
+            start_ = get_current_time_in_microseconds_since_epoch();
             end_ = 0;
         }
 
         void stop() {
-            end_ = get_current_time_in_nanoseconds_since_epoch();
+            end_ = get_current_time_in_microseconds_since_epoch();
         }
         
         bool set_target_frequency(const std::uint32_t freq) override {
@@ -97,7 +98,15 @@ namespace eka2l1::common {
         }
 
         std::uint64_t ticks() override {
-            return nanoseconds() * target_freq_ / 1000000000;
+            return multiply_and_divide_qwords(microseconds(), target_freq_, 1000000);
+        }
+
+        std::uint64_t microseconds() override {
+            if (end_ == 0) {
+                return get_current_time_in_microseconds_since_epoch() - start_;
+            }
+
+            return end_ - start_;
         }
 
         std::uint64_t nanoseconds() override {
@@ -110,6 +119,6 @@ namespace eka2l1::common {
     };
 
     std::unique_ptr<teletimer> make_teletimer(const std::uint32_t target_frequency) {
-        return std::make_unique<basic_teletimer>(target_frequency);
+        return std::make_unique<basic_teletimer_micro>(target_frequency);
     }
 }
