@@ -236,7 +236,9 @@ namespace eka2l1 {
         }
 
         void reschedule() {
+            lock();
             thr_sch->reschedule();
+            unlock();
         }
 
         void unschedule_wakeup() {
