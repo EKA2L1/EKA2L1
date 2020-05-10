@@ -22,6 +22,8 @@
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
 
+#include <epoc/kernel.h>
+
 namespace eka2l1::epoc {
     void window_pointer_focus_walker::add_new_event(const epoc::event &evt) {
         evts_.emplace_back(evt, false);
@@ -45,7 +47,12 @@ namespace eka2l1::epoc {
         }
 
         evt.handle = win->get_client_handle();
+
+        kernel_system *kern = win->client->get_ws().get_kernel_system();
+
+        kern->lock();
         win->queue_event(evt);
+        kern->unlock();
     }
 
     bool window_pointer_focus_walker::do_it(epoc::window *win) {
@@ -150,11 +157,17 @@ namespace eka2l1::epoc {
             evt.handle = focus->get_client_handle();
             extra_event.handle = focus->get_client_handle();
 
+            kernel_system *kern = focus->client->get_ws().get_kernel_system();
+
+            kern->lock();
             focus->queue_event(evt);
+            kern->unlock();
 
             if (!dont_send_extra_key_event) {
                 // Give it a single key event also
+                kern->lock();
                 focus->queue_event(extra_event);
+                kern->unlock();
             }
 
             // Iterates through key capture requests and deliver those in needs.key_capture_request_queue &rqueue = key_capture_requests[extra_key_evt.key_evt_.code];
@@ -169,12 +182,17 @@ namespace eka2l1::epoc {
                 switch (ite->type_) {
                 case epoc::event_key_capture_type::normal:
                     extra_event.handle = ite->user->get_client_handle();
+                    kern->lock();
                     ite->user->queue_event(extra_event);
+                    kern->unlock();
+
                     break;
 
                 case epoc::event_key_capture_type::up_and_downs:
                     evt.handle = ite->user->get_client_handle();
+                    kern->lock();
                     ite->user->queue_event(evt);
+                    kern->unlock();
 
                     break;
 
