@@ -202,6 +202,14 @@ namespace eka2l1::epoc {
         return scr->disp_mode;
     }
 
+    void window_user::take_action_on_change() {
+        // Want to trigger a screen redraw
+        if (is_visible()) {
+            epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
+            sched->schedule(client->get_ws().get_graphics_driver(), scr, client->get_ws().get_ntimer()->microseconds());
+        }
+    }
+    
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -237,14 +245,9 @@ namespace eka2l1::epoc {
             ite = ite->next;
         } while (ite != end);
 
+        take_action_on_change();
+
         // LOG_DEBUG("End redraw to window 0x{:X}!", id);
-
-        // Want to trigger a screen redraw
-        if (is_visible()) {
-            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
-                scr, client->get_ws().get_ntimer()->microseconds());
-        }
-
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -254,8 +257,8 @@ namespace eka2l1::epoc {
         // Cancel pending redraw event, since by using this,
         // we already starts one
         if (redraw_evt_id) {
-            client->deque_redraw(redraw_evt_id);
-            redraw_evt_id = 0;
+            //client->deque_redraw(redraw_evt_id);
+            //redraw_evt_id = 0;
         }
 
         ctx.set_request_status(epoc::error_none);

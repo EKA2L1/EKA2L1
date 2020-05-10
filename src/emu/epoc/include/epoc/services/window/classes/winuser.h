@@ -131,11 +131,16 @@ namespace eka2l1::epoc {
         }
 
         /**
-         * \brief Set window visibility.
+         * @brief Set window visibility.
          * 
          * This will trigger a screen redraw if the visibility is changed.
          */
         void set_visible(const bool vis);
+
+        /**
+         * @brief Action that this window does when its content is modified.
+         */
+        void take_action_on_change();
 
         void queue_event(const epoc::event &evt) override;
 
