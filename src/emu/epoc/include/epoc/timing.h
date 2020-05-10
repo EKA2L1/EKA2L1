@@ -120,7 +120,6 @@ namespace eka2l1 {
         }
 
         const std::uint64_t ticks();
-        const std::uint64_t nanoseconds();
         const std::uint64_t microseconds();
 
         /**
@@ -134,7 +133,7 @@ namespace eka2l1 {
         void unregister_all_events();
         void remove_event(int event_type);
 
-        void schedule_event(int64_t ns_into_future, int event_type, std::uint64_t userdata);
+        void schedule_event(int64_t us_into_future, int event_type, std::uint64_t userdata);
         bool unschedule_event(int event_type, uint64_t userdata);
         
         bool set_clock_frequency_mhz(const std::uint32_t cpu_mhz);

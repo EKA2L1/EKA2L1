@@ -51,10 +51,10 @@ namespace eka2l1 {
 
     void ntimer::loop() {
         while (!should_stop_) {
-            const std::optional<std::uint64_t> next_nanoseconds = advance();
+            const std::optional<std::uint64_t> next_microseconds = advance();
 
-            if (next_nanoseconds) {
-                std::this_thread::sleep_for(std::chrono::nanoseconds(next_nanoseconds.value()));
+            if (next_microseconds) {
+                std::this_thread::sleep_for(std::chrono::microseconds(next_microseconds.value()));
             } else {
                 std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
                 new_event_avail_var_.wait(unqlock);
@@ -66,17 +66,13 @@ namespace eka2l1 {
         return teletimer_->ticks();
     }
 
-    const std::uint64_t ntimer::nanoseconds() {
-        return teletimer_->nanoseconds();
-    }
-
     const std::uint64_t ntimer::microseconds() {
-        return teletimer_->nanoseconds() / 1000;
+        return teletimer_->microseconds();
     }
 
     std::optional<std::uint64_t> ntimer::advance() {
         std::unique_lock<std::mutex> unq(lock_);
-        std::uint64_t global_timer = teletimer_->nanoseconds();
+        std::uint64_t global_timer = teletimer_->microseconds();
 
         while (!events_.empty() && events_.back().event_time <= global_timer) {
             event evt = std::move(events_.back());
@@ -99,12 +95,12 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    void ntimer::schedule_event(int64_t ns_into_future, int event_type, std::uint64_t userdata) {
+    void ntimer::schedule_event(int64_t us_into_future, int event_type, std::uint64_t userdata) {
         const std::lock_guard<std::mutex> guard(lock_);
 
         event evt;
 
-        evt.event_time = teletimer_->nanoseconds() + ns_into_future;
+        evt.event_time = teletimer_->microseconds() + us_into_future;
         evt.event_type = event_type;
         evt.event_user_data = userdata;
 
