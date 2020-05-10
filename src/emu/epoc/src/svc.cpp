@@ -2242,13 +2242,17 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, ntick_count) {
+        const std::uint64_t DEFAULT_NTICK_PERIOD = (microsecs_per_sec / epoc::NANOKERNEL_HZ);
+
         ntimer *timing = sys->get_ntimer();
-        return static_cast<std::uint32_t>(timing->ticks() * epoc::NANOKERNEL_HZ / 1000000 / timing->get_clock_frequency_mhz());
+        return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_NTICK_PERIOD);
     }
 
     BRIDGE_FUNC(std::uint32_t, tick_count) {
+        const std::uint64_t DEFAULT_TICK_PERIOD = (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
+
         ntimer *timing = sys->get_ntimer();
-        return static_cast<std::uint32_t>(timing->ticks());
+        return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_TICK_PERIOD);
     }
 
     /**********************/
