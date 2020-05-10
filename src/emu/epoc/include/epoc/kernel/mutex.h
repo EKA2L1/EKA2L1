@@ -35,7 +35,7 @@ namespace eka2l1 {
             //! Thread holding
             kernel::thread *holding;
 
-            cp_queue<kernel::thread *> waits;
+            kernel::thread_priority_queue waits;
             common::roundabout pendings;
             common::roundabout suspended;
 

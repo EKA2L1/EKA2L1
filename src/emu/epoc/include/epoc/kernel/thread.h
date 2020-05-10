@@ -31,6 +31,7 @@
 
 #include <common/linked.h>
 #include <common/resource.h>
+#include <common/queue.h>
 
 #include <epoc/kernel/common.h>
 #include <epoc/kernel/chunk.h>
@@ -381,5 +382,13 @@ namespace eka2l1 {
         };
 
         using thread_ptr = kernel::thread *;
+
+        struct thread_priority_less_comparator {
+            const bool operator()(kernel::thread *lhs, kernel::thread *rhs) const {
+                return lhs->current_real_priority() < rhs->current_real_priority();
+            }
+        };
+
+        using thread_priority_queue = eka2l1::cp_queue<kernel::thread*, thread_priority_less_comparator>;
     }
 }

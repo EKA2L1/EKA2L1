@@ -32,7 +32,7 @@ namespace eka2l1 {
     namespace kernel {
         class semaphore : public kernel_obj {
             int32_t avail_count;
-            cp_queue<kernel::thread *> waits;
+            kernel::thread_priority_queue waits;
             common::roundabout suspended;
 
             bool signaling;
