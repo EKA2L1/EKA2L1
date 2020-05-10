@@ -64,10 +64,8 @@ namespace eka2l1::epoc {
                 // Wakeup windows, we have a region to invalidate
                 // Yes, I'm referencing a meme. Send help.
                 // The invalidate region is there. Gone with what we have first, but do redraw still
-                winuser->client->queue_redraw(winuser, winuser->irect);
+                winuser->client->queue_redraw(winuser);
                 winuser->client->trigger_redraw();
-
-                winuser->irect = eka2l1::rect({ 0, 0 }, { 0, 0 });
             }
 
             // Draw it onto current binding buffer

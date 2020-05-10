@@ -141,11 +141,15 @@ namespace eka2l1::epoc {
         }
     }
 
-    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &r) {
+    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user) {
         // Calculate the priority
-        return redraws.queue_event(epoc::redraw_event{ user->get_client_handle(), r.top,
-                                       vec2(r.top.x + r.size.x, r.top.y + r.size.y) },
+        const std::uint32_t id = redraws.queue_event(epoc::redraw_event{ user->get_client_handle(), user->irect.top,
+                                       vec2(user->irect.top.x + user->irect.size.x,
+                                            user->irect.top.y + user->irect.size.y) },
             user->redraw_priority());
+
+        user->irect = eka2l1::rect({ 0, 0 }, { 0 , 0 });
+        return id;
     }
 
     std::uint32_t window_server_client::add_object(window_client_obj_ptr &obj) {

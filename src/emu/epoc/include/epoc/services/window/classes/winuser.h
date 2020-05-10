@@ -62,7 +62,6 @@ namespace eka2l1::epoc {
         eka2l1::vec2 cursor_pos;
         eka2l1::rect irect;
 
-        std::uint32_t redraw_evt_id;
         std::uint64_t driver_win_id;
 
         dsa *direct;

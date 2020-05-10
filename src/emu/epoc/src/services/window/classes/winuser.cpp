@@ -77,7 +77,6 @@ namespace eka2l1::epoc {
         , cursor_pos(-1, -1)
         , irect({ 0, 0 }, { 0, 0 })
         , dmode(dmode)
-        , redraw_evt_id(0)
         , driver_win_id(0)
         , shadow_height(0)
         , max_pointer_buffer_(0)
@@ -125,7 +124,9 @@ namespace eka2l1::epoc {
         if (new_size != size) {
             // We do really need resize!
             resize_needed = true;
-            client->queue_redraw(this, rect({ 0, 0 }, new_size));
+
+            irect = eka2l1::rect({ 0, 0 }, new_size);
+            client->queue_redraw(this);
         }
 
         size = new_size;
@@ -262,10 +263,10 @@ namespace eka2l1::epoc {
 
         // Cancel pending redraw event, since by using this,
         // we already starts one
-        if (redraw_evt_id) {
-            client->deque_redraw(redraw_evt_id);
-            redraw_evt_id = 0;
-        }
+        //if (redraw_evt_id) {
+            //client->deque_redraw(redraw_evt_id);
+            //redraw_evt_id = 0;
+        //}
 
         ctx.set_request_status(epoc::error_none);
     }
@@ -286,7 +287,8 @@ namespace eka2l1::epoc {
 
         if (new_size != size) {
             resize_needed = true;
-            client->queue_redraw(this, rect({ 0, 0 }, new_size));
+            irect = eka2l1::rect({ 0, 0 }, new_size);
+            client->queue_redraw(this);
         }
 
         size = new_size;
@@ -509,9 +511,9 @@ namespace eka2l1::epoc {
         case EWsWinOpInvalidateFull: {
             irect.top = pos;
             irect.size = size;
-
+            
             if (is_visible()) {
-                client->queue_redraw(this, rect(pos, pos + size));
+                client->queue_redraw(this);
                 client->trigger_redraw();
             }
 
@@ -531,7 +533,7 @@ namespace eka2l1::epoc {
             irect.size = prototype_irect.in_bottom_right - prototype_irect.in_top_left;
 
             if (is_visible()) {
-                redraw_evt_id = client->queue_redraw(this, rect(irect.top, irect.size));
+                client->queue_redraw(this);
                 client->trigger_redraw();
             }
 
