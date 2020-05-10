@@ -65,7 +65,7 @@ namespace eka2l1 {
             info.own_thread = requester;
             info.own_timer = this;
 
-            timing->schedule_event(common::us_to_ns(us_signal), callback_type, reinterpret_cast<std::uint64_t>(&info));
+            timing->schedule_event(us_signal, callback_type, reinterpret_cast<std::uint64_t>(&info));
 
             return false;
         }

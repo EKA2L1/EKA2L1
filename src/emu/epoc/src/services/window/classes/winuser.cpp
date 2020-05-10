@@ -169,7 +169,7 @@ namespace eka2l1::epoc {
         if (should_trigger_redraw) {
             // Redraw the screen. NOW!
             client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
-                scr, client->get_ws().get_ntimer()->nanoseconds());
+                scr, client->get_ws().get_ntimer()->microseconds());
         }
     }
 
@@ -242,7 +242,7 @@ namespace eka2l1::epoc {
         // Want to trigger a screen redraw
         if (is_visible()) {
             client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
-                scr, client->get_ws().get_ntimer()->nanoseconds());
+                scr, client->get_ws().get_ntimer()->microseconds());
         }
 
         ctx.set_request_status(epoc::error_none);

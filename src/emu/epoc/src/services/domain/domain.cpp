@@ -47,7 +47,7 @@ namespace eka2l1 {
     void domain::transition_timeout(uint64_t data, const int ns_late) {
         if (hierarchy->deferral_statuses.size() > 0) {
             // reschedule
-            hierarchy->timing->schedule_event(common::us_to_ns(trans_timeout), trans_timeout_event, data);
+            hierarchy->timing->schedule_event(trans_timeout, trans_timeout_event, data);
 
             // complete all deferrals
             for (auto [id, sts] : hierarchy->deferral_statuses) {
@@ -501,7 +501,7 @@ namespace eka2l1 {
         // If there is at least one client wait for transition, set the timer
         // wait for them to acknowledge the transition
         if (transition_count > 0) {
-            hierarchy->timing->schedule_event(common::us_to_ns(trans_timeout), trans_timeout_event,
+            hierarchy->timing->schedule_event(trans_timeout, trans_timeout_event,
                 reinterpret_cast<std::uint64_t>(this));
         } else {
             complete_members_transition();

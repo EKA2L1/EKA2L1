@@ -37,7 +37,7 @@ namespace eka2l1::dispatch {
         audio_nof_complete_evt_ = timing->register_event("DispatchAudio", [this, kern, timing](std::uint64_t userdata, std::uint64_t late) {  
             dsp_epoc_stream *stream = reinterpret_cast<dsp_epoc_stream*>(userdata);
             stream->deliver_audio_events(kern, timing);
-            timing->schedule_event(500, audio_nof_complete_evt_, userdata);
+            timing->schedule_event(500 - late, audio_nof_complete_evt_, userdata);
         });
 
         // Set global variables

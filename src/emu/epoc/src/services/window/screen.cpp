@@ -26,6 +26,7 @@
 #include <drivers/itc.h>
 #include <common/time.h>
 
+#include <epoc/kernel.h>
 #include <epoc/timing.h>
 #include <thread>
 
@@ -58,11 +59,14 @@ namespace eka2l1::epoc {
             }
 
             if (!winuser->irect.empty()) {
+                kernel_system *kern = winuser->client->get_ws().get_kernel_system();
+
                 // Wakeup windows, we have a region to invalidate
                 // Yes, I'm referencing a meme. Send help.
                 // The invalidate region is there. Gone with what we have first, but do redraw still
                 winuser->client->queue_redraw(winuser, winuser->irect);
                 winuser->client->trigger_redraw();
+
                 winuser->irect = eka2l1::rect({ 0, 0 }, { 0, 0 });
             }
 

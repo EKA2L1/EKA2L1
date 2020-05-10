@@ -252,8 +252,7 @@ namespace eka2l1::kernel {
         }
 
         // Schedule the thread to be waken up
-        timing->schedule_event(common::us_to_ns(static_cast<std::uint64_t>(sl_time)),
-            wakeup_evt, thr->unique_id());
+        timing->schedule_event(static_cast<std::uint64_t>(sl_time), wakeup_evt, thr->unique_id());
 
         return true;
     }
