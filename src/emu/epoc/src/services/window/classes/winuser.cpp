@@ -263,8 +263,8 @@ namespace eka2l1::epoc {
         // Cancel pending redraw event, since by using this,
         // we already starts one
         if (redraw_evt_id) {
-            //client->deque_redraw(redraw_evt_id);
-            //redraw_evt_id = 0;
+            client->deque_redraw(redraw_evt_id);
+            redraw_evt_id = 0;
         }
 
         ctx.set_request_status(epoc::error_none);
