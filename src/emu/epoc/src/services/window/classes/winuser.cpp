@@ -232,6 +232,8 @@ namespace eka2l1::epoc {
         common::double_linked_queue_element *ite = attached_contexts.first();
         common::double_linked_queue_element *end = attached_contexts.end();
 
+        bool any_flush_performed = false;
+
         // Set all contexts to be in recording
         do {
             if (!ite) {
@@ -243,9 +245,13 @@ namespace eka2l1::epoc {
             // Flush the queue one time.
             ctx->flush_queue_to_driver();
             ite = ite->next;
+
+            any_flush_performed = true;
         } while (ite != end);
 
-        take_action_on_change();
+        if (any_flush_performed) {
+            take_action_on_change();
+        }
 
         // LOG_DEBUG("End redraw to window 0x{:X}!", id);
         ctx.set_request_status(epoc::error_none);
