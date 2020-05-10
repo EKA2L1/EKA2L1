@@ -138,6 +138,9 @@ namespace eka2l1 {
             const io_attrib attrib = io_attrib::none);
 
         void reset();
+        
+        bool pause();
+        bool unpause();
 
         bool install_rpkg(const std::string &devices_rom_path, const std::string &path, std::string &firmware_code);
         void load_scripts();
