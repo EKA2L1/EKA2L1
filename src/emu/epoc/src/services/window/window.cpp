@@ -1005,7 +1005,6 @@ namespace eka2l1 {
             return;
         }
 
-        const std::lock_guard<std::mutex> guard(input_queue_mut);
         epoc::event guest_event;
 
         drivers::input_event_type last_event_type = drivers::input_event_type::none;
@@ -1014,8 +1013,11 @@ namespace eka2l1 {
         epoc::window_key_shipper key_shipper(this);
 
         epoc::window *root_current = get_current_focus_screen()->root->child;
-
+        std::unique_lock<std::mutex> unq(input_queue_mut);
+    
         auto flush_events = [&]() {
+            unq.unlock();
+
             // Delivery events stored
             switch (last_event_type) {
             case drivers::input_event_type::touch:
@@ -1031,11 +1033,15 @@ namespace eka2l1 {
                 LOG_ERROR("Unknown driver event type {}", static_cast<int>(last_event_type));
                 break;
             }
+
+            unq.lock();
         };
+
+        drivers::input_event input_event;
 
         // Processing the events, translate them to cool things
         while (!input_events.empty()) {
-            drivers::input_event input_event = std::move(input_events.back());
+            input_event = std::move(input_events.back());
             input_events.pop();
 
             // Translate host event to guest event
