@@ -882,7 +882,7 @@ namespace eka2l1 {
     window_server::window_server(system *sys)
         : service::server(sys, WINDOW_SERVER_NAME, true, true)
         , bmp_cache(sys->get_kernel_system())
-        , anim_sched(sys->get_ntimer(), 1)
+        , anim_sched(sys->get_kernel_system(), sys->get_ntimer(), 1)
         , screens(nullptr)
         , focus_screen_(nullptr) {
         REGISTER_IPC(window_server, init, EWservMessInit,
@@ -917,7 +917,7 @@ namespace eka2l1 {
         return get_system()->get_kernel_system();
     }
 
-    constexpr std::int64_t input_update_nn = 1000;
+    constexpr std::int64_t input_update_us = 1000;
 
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
@@ -1001,7 +1001,7 @@ namespace eka2l1 {
 
     void window_server::handle_inputs_from_driver(std::uint64_t userdata, int nn_late) {
         if (!focus_screen_ || !focus_screen_->focus) {
-            sys->get_ntimer()->schedule_event(input_update_nn - nn_late, input_handler_evt_, userdata);
+            sys->get_ntimer()->schedule_event(input_update_us - nn_late, input_handler_evt_, userdata);
             return;
         }
 
@@ -1084,7 +1084,7 @@ namespace eka2l1 {
             flush_events();
         }
 
-        sys->get_ntimer()->schedule_event(input_update_nn - nn_late, input_handler_evt_, userdata);
+        sys->get_ntimer()->schedule_event(input_update_us - nn_late, input_handler_evt_, userdata);
     }
 
     static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
@@ -1174,7 +1174,7 @@ namespace eka2l1 {
             handle_inputs_from_driver(userdata, cycles_late);
         });
 
-        timing->schedule_event(input_update_nn, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
+        timing->schedule_event(input_update_us, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
 
         loaded = true;
     }
