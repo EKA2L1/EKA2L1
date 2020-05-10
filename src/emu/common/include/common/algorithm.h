@@ -345,5 +345,17 @@ namespace eka2l1 {
          * \brief Get the most significant set bit.
          */
         int find_most_significant_bit_one(const std::uint32_t v);
+
+        /**
+         * @brief   Multiply two qwords, and then divide the result we just got with another qword.
+         * 
+         * @param   m1        First factor.
+         * @param   m2        Second factor.
+         * @param   d1        The divider.
+         * 
+         * @returns The result of the operation.
+         */
+        std::uint64_t multiply_and_divide_qwords(std::uint64_t m1, std::uint64_t m2,
+            std::uint64_t d1);
     }
 }
