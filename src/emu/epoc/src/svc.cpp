@@ -495,7 +495,7 @@ namespace eka2l1::epoc {
         const bool accurate_timing = sys->get_config()->accurate_ipc_timing;
 
         // The time is since EPOC, we need to convert it to first of AD
-        *time = accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad();
+        *time = kern->home_time();
         *offset = common::get_current_utc_offset();
 
         return epoc::error_none;
@@ -1293,7 +1293,7 @@ namespace eka2l1::epoc {
         desc8 *desname = mutex_name_des.get(pr);
         kernel::owner_type owner_kern = (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread;
 
-        const kernel::handle mut = kern->create_and_add<kernel::mutex>(owner_kern, sys->get_timing_system(),
+        const kernel::handle mut = kern->create_and_add<kernel::mutex>(owner_kern, sys->get_ntimer(),
                                            !desname ? "" : desname->to_std_string(pr), false,
                                            !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
                                        .first;
@@ -1641,7 +1641,7 @@ namespace eka2l1::epoc {
         }
 
         const kernel::handle thr_handle = kern->create_and_add<kernel::thread>(static_cast<kernel::owner_type>(owner),
-                                                  mem, kern->get_timing_system(), kern->crr_process(),
+                                                  mem, kern->get_ntimer(), kern->crr_process(),
                                                   kernel::access_type::local_access, thr_name, info->func_ptr, info->user_stack_size,
                                                   info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal)
                                               .first;
@@ -2193,7 +2193,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, timer_create) {
         return sys->get_kernel_system()->create_and_add<kernel::timer>(
-                                           kernel::owner_type::process, sys->get_timing_system(),
+                                           kernel::owner_type::process, sys->get_ntimer(),
                                            "timer" + common::to_string(eka2l1::random()))
             .first;
     }
@@ -2242,13 +2242,17 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, ntick_count) {
-        timing_system *timing = sys->get_timing_system();
-        return static_cast<std::uint32_t>(timing->ticks() * epoc::NANOKERNEL_HZ / 1000000 / timing->get_clock_frequency_mhz());
+        const std::uint64_t DEFAULT_NTICK_PERIOD = (microsecs_per_sec / epoc::NANOKERNEL_HZ);
+
+        ntimer *timing = sys->get_ntimer();
+        return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_NTICK_PERIOD);
     }
 
     BRIDGE_FUNC(std::uint32_t, tick_count) {
-        timing_system *timing = sys->get_timing_system();
-        return static_cast<std::uint32_t>(timing->ticks());
+        const std::uint64_t DEFAULT_TICK_PERIOD = (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
+
+        ntimer *timing = sys->get_ntimer();
+        return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_TICK_PERIOD);
     }
 
     /**********************/
@@ -2687,7 +2691,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
-        BRIDGE_REGISTER(0x05, ntick_count),     // Actually tick count
+        BRIDGE_REGISTER(0x05, tick_count),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
         BRIDGE_REGISTER(0x11, mutex_wait),

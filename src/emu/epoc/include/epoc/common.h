@@ -24,4 +24,5 @@
 namespace eka2l1::epoc {
     using uid = std::uint32_t;
     static constexpr std::uint64_t NANOKERNEL_HZ = 1000;
+    static constexpr std::uint64_t TICK_TIMER_HZ = 64;
 }

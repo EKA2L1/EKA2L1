@@ -59,7 +59,7 @@
 #endif
 
 namespace eka2l1 {
-    void kernel_system::init(system *esys, timing_system *timing_sys, manager_system *mngrsys,
+    void kernel_system::init(system *esys, ntimer *timing_sys, manager_system *mngrsys,
         memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, manager::config_state *old_conf,
         arm::arm_interface *cpu) {
         timing = timing_sys;
@@ -93,7 +93,9 @@ namespace eka2l1 {
             kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
             assert(thr);
 
+            lock();
             thr->signal_request();
+            unlock();
         });
     }
 
@@ -580,6 +582,6 @@ namespace eka2l1 {
     }
 
     std::uint64_t kernel_system::home_time() {
-        return base_time + timing->get_global_time_us();
+        return base_time + timing->microseconds();
     }
 }

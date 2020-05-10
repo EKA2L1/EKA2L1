@@ -333,14 +333,13 @@ namespace eka2l1::arm {
         }
 
         void AddTicks(uint64_t ticks) override {
-            parent.get_timing_sys()->add_ticks(static_cast<std::uint32_t>(ticks - interpreted));
             parent.ticks_executed += static_cast<std::uint32_t>(ticks - interpreted);
             interpreted = 0;
         }
 
-        uint64_t GetTicksRemaining() override {
-            return eka2l1::common::max<std::uint64_t>(
-                static_cast<std::uint64_t>(parent.get_timing_sys()->downcount()), 0ULL);
+        std::uint64_t GetTicksRemaining() override {
+            return static_cast<std::uint64_t>(common::max<std::int64_t>(static_cast<std::int64_t>(parent.ticks_target)
+                - parent.ticks_executed, 0));
         }
     };
 
@@ -354,7 +353,7 @@ namespace eka2l1::arm {
         return std::make_unique<Dynarmic::A32::Jit>(config);
     }
 
-    arm_dynarmic::arm_dynarmic(kernel_system *kern, timing_system *sys, manager::config_state *conf,
+    arm_dynarmic::arm_dynarmic(kernel_system *kern, ntimer *sys, manager::config_state *conf,
         manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub)
         : arm_interface_extended(stub, mngr)
         , timing(sys)
@@ -372,8 +371,10 @@ namespace eka2l1::arm {
 
     arm_dynarmic::~arm_dynarmic() {}
 
-    void arm_dynarmic::run() {
+    void arm_dynarmic::run(const std::uint32_t instruction_count) {
         ticks_executed = 0;
+        ticks_target = instruction_count;
+
         jit->Run();
     }
 

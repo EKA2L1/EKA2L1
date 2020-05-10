@@ -77,8 +77,8 @@ namespace eka2l1::epoc {
         , cursor_pos(-1, -1)
         , irect({ 0, 0 }, { 0, 0 })
         , dmode(dmode)
-        , redraw_evt_id(0)
         , driver_win_id(0)
+        , redraw_responded(true)
         , shadow_height(0)
         , max_pointer_buffer_(0)
         , flags(flags_visible) {
@@ -125,7 +125,9 @@ namespace eka2l1::epoc {
         if (new_size != size) {
             // We do really need resize!
             resize_needed = true;
-            client->queue_redraw(this, rect({ 0, 0 }, new_size));
+
+            irect = eka2l1::rect({ 0, 0 }, new_size);
+            client->queue_redraw(this);
         }
 
         size = new_size;
@@ -169,7 +171,7 @@ namespace eka2l1::epoc {
         if (should_trigger_redraw) {
             // Redraw the screen. NOW!
             client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
-                scr, client->get_ws().get_timing_system()->get_global_time_us());
+                scr, client->get_ws().get_ntimer()->microseconds());
         }
     }
 
@@ -202,6 +204,14 @@ namespace eka2l1::epoc {
         return scr->disp_mode;
     }
 
+    void window_user::take_action_on_change() {
+        // Want to trigger a screen redraw
+        if (is_visible()) {
+            epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
+            sched->schedule(client->get_ws().get_graphics_driver(), scr, client->get_ws().get_ntimer()->microseconds());
+        }
+    }
+    
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -224,6 +234,8 @@ namespace eka2l1::epoc {
         common::double_linked_queue_element *ite = attached_contexts.first();
         common::double_linked_queue_element *end = attached_contexts.end();
 
+        bool any_flush_performed = false;
+
         // Set all contexts to be in recording
         do {
             if (!ite) {
@@ -235,29 +247,21 @@ namespace eka2l1::epoc {
             // Flush the queue one time.
             ctx->flush_queue_to_driver();
             ite = ite->next;
+
+            any_flush_performed = true;
         } while (ite != end);
 
-        // LOG_DEBUG("End redraw to window 0x{:X}!", id);
-
-        // Want to trigger a screen redraw
-        if (is_visible()) {
-            client->get_ws().get_anim_scheduler()->schedule(client->get_ws().get_graphics_driver(),
-                scr, client->get_ws().get_timing_system()->get_global_time_us());
+        if (any_flush_performed) {
+            take_action_on_change();
         }
 
+        // LOG_DEBUG("End redraw to window 0x{:X}!", id);
         ctx.set_request_status(epoc::error_none);
     }
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         // LOG_TRACE("Begin redraw to window 0x{:X}!", id);
-
-        // Cancel pending redraw event, since by using this,
-        // we already starts one
-        if (redraw_evt_id) {
-            client->deque_redraw(redraw_evt_id);
-            redraw_evt_id = 0;
-        }
-
+        redraw_responded = true;
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -277,7 +281,8 @@ namespace eka2l1::epoc {
 
         if (new_size != size) {
             resize_needed = true;
-            client->queue_redraw(this, rect({ 0, 0 }, new_size));
+            irect = eka2l1::rect({ 0, 0 }, new_size);
+            client->queue_redraw(this);
         }
 
         size = new_size;
@@ -500,10 +505,12 @@ namespace eka2l1::epoc {
         case EWsWinOpInvalidateFull: {
             irect.top = pos;
             irect.size = size;
-
-            if (is_visible()) {
-                client->queue_redraw(this, rect(pos, pos + size));
+            
+            if (redraw_responded && is_visible()) {
+                client->queue_redraw(this);
                 client->trigger_redraw();
+
+                redraw_responded = false;
             }
 
             ctx.set_request_status(epoc::error_none);
@@ -521,9 +528,11 @@ namespace eka2l1::epoc {
             irect.top = prototype_irect.in_top_left;
             irect.size = prototype_irect.in_bottom_right - prototype_irect.in_top_left;
 
-            if (is_visible()) {
-                redraw_evt_id = client->queue_redraw(this, rect(irect.top, irect.size));
+            if (redraw_responded && is_visible()) {
+                client->queue_redraw(this);
                 client->trigger_redraw();
+
+                redraw_responded = false;
             }
 
             ctx.set_request_status(epoc::error_none);

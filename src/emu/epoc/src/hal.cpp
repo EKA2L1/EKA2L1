@@ -97,7 +97,7 @@ namespace eka2l1::epoc {
 
         int tick_period(int *a1, int *a2, const std::uint16_t device_num) {
             std::uint64_t *tick_period_in_microsecs = reinterpret_cast<std::uint64_t*>(a1);
-            *tick_period_in_microsecs = 1000000 / epoc::NANOKERNEL_HZ;
+            *tick_period_in_microsecs = 1000000 / epoc::TICK_TIMER_HZ;
 
             return epoc::error_none;
         }
@@ -120,7 +120,7 @@ namespace eka2l1::epoc {
             info_ptr->minor_ = rom_info.header.minor;
             info_ptr->build_ = rom_info.header.build;
 
-            info_ptr->processor_clock_in_mhz_ = sys->get_timing_system()->get_clock_frequency_mhz();
+            info_ptr->processor_clock_in_mhz_ = sys->get_ntimer()->get_clock_frequency_mhz();
             info_ptr->machine_uid_ = 0x70000001;
 
             return 0;

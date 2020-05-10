@@ -218,7 +218,7 @@ namespace eka2l1 {
 
         // Render mutex. Use when render skins
         skin_chunk_render_mut_ = kern->create_and_add<kernel::mutex>(kernel::owner_type::kernel,
-                                         sys->get_timing_system(), "AknsSrvRenderSemaphore", false,
+                                         sys->get_ntimer(), "AknsSrvRenderSemaphore", false,
                                          kernel::access_type::global_access)
                                      .second;
 

@@ -30,93 +30,55 @@
 #include <vector>
 
 namespace eka2l1 {
-    ntimer::ntimer(timing_system *timing, const std::uint32_t core_num)
-        : timing_(timing)
-        , core_(core_num)
-        , slice_len_(INITIAL_SLICE_LENGTH)
-        , downcount_(INITIAL_SLICE_LENGTH)
-        , timer_sane_(false) {
+    ntimer::ntimer(const std::uint32_t cpu_hz) {
+        CPU_HZ_ = cpu_hz;
+        should_stop_ = false;
+        should_paused_ = false;
+        teletimer_ = common::make_teletimer(cpu_hz);
 
-    }
-
-    void ntimer::move_events() {
-        while (std::optional<event> evt = ts_events_.pop()) {
-            events_.push_back(evt.value());
-        }
-
-        // Sort the event
-        std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
-            return lhs.event_time > rhs.event_time;
+        timer_thread_ = std::make_unique<std::thread>([this]() {
+            loop();
         });
+
+        teletimer_->start();
     }
 
-    const std::uint32_t ntimer::core_number() const {
-        return core_;
+    ntimer::~ntimer() {
+        should_stop_ = true;
+        should_paused_ = true;
+        new_event_avail_var_.notify_one();
+
+        timer_thread_->join();
     }
 
-    const std::int64_t ntimer::get_slice_length() const {
-        return slice_len_;
-    }
-    
-    const std::int64_t ntimer::downcount() const {
-        return downcount_;
-    }
+    void ntimer::loop() {
+        while (!should_stop_) {
+            while (!should_paused_) {
+                const std::optional<std::uint64_t> next_microseconds = advance();
 
-    const std::uint64_t ntimer::ticks() const {
-        if (timer_sane_) {
-            return ticks_ + slice_len_ - downcount_;
-        }
-
-        return ticks_;
-    }
-
-    const std::uint64_t ntimer::idle_ticks() const {
-        return idle_ticks_;
-    }
-
-    void ntimer::idle(int max_idle) {
-        auto dc = downcount_;
-
-        if (max_idle != 0 && dc > max_idle) {
-            dc = max_idle;
-        }
-
-        if (events_.size() > 0 && dc > 0) {
-            event first_event = events_[0];
-
-            std::size_t cexecuted = slice_len_ - downcount_;
-            std::size_t cnextevt = first_event.event_time - ticks_;
-
-            if (cnextevt < cexecuted + dc) {
-                dc = static_cast<int>(cnextevt - cexecuted);
-
-                if (dc < 0) {
-                    dc = 0;
+                if (next_microseconds) {
+                    std::this_thread::sleep_for(std::chrono::microseconds(next_microseconds.value()));
+                } else {
+                    std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
+                    new_event_avail_var_.wait(unqlock);
                 }
             }
         }
-
-        idle_ticks_ += dc;
-        downcount_ -= dc;
     }
 
-    void ntimer::add_ticks(uint32_t ticks) {
-        downcount_ -= ticks;
+    const std::uint64_t ntimer::ticks() {
+        return teletimer_->ticks();
     }
 
-    void ntimer::advance() {
-        move_events();
+    const std::uint64_t ntimer::microseconds() {
+        return teletimer_->microseconds();
+    }
 
-        auto org_slice = slice_len_;
-        auto org_timer = ticks_;
+    std::optional<std::uint64_t> ntimer::advance() {
+        std::unique_lock<std::mutex> unq(lock_);
+        std::uint64_t global_timer = teletimer_->microseconds();
 
-        const std::int64_t cycles_executed = slice_len_ - downcount_;
-        ticks_ += cycles_executed;
-        slice_len_ = INITIAL_SLICE_LENGTH;
-
-        timer_sane_ = true;
-
-        while (!events_.empty() && events_.back().event_time <= ticks_) {
+        while (!events_.empty() && events_.back().event_time <= global_timer) {
             event evt = std::move(events_.back());
             events_.pop_back();
 
@@ -124,43 +86,43 @@ namespace eka2l1 {
                 return lhs.event_time > rhs.event_time;
             });
 
-            {
-                const std::lock_guard<std::mutex> lock(timing_->mut_);
-                timing_->event_types_[evt.event_type]
-                    .callback(evt.event_user_data, static_cast<int>(ticks_ - evt.event_time));
-            }
+            unq.unlock();
+            event_types_[evt.event_type]
+                .callback(evt.event_user_data, static_cast<int>(global_timer - evt.event_time));
+            unq.lock();
         }
-
-        timer_sane_ = false;
 
         if (!events_.empty()) {
-            slice_len_ = common::min<std::int64_t>(static_cast<std::int64_t>(events_.back().event_time - ticks_),
-                static_cast<std::int64_t>(MAX_SLICE_LENGTH));
+            return static_cast<std::uint64_t>(events_.back().event_time - global_timer);
         }
 
-        downcount_ = slice_len_;
+        return std::nullopt;
     }
 
-    void ntimer::schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata,
-        const bool thr_safe) {
+    void ntimer::schedule_event(int64_t us_into_future, int event_type, std::uint64_t userdata) {
+        const std::lock_guard<std::mutex> guard(lock_);
+
         event evt;
 
-        evt.event_time = ticks_ + cycles_into_future;
+        evt.event_time = teletimer_->microseconds() + us_into_future;
         evt.event_type = event_type;
         evt.event_user_data = userdata;
 
-        if (thr_safe) {
-            ts_events_.push(evt);
-        } else {
-            events_.push_back(evt);
+        bool was_empty = (events_.empty());
+        events_.push_back(evt);
 
-            std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
-                return lhs.event_time > rhs.event_time;
-            });
+        std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
+            return lhs.event_time > rhs.event_time;
+        });
+
+        if (was_empty) {
+            new_event_avail_var_.notify_one();
         }
     }
 
     bool ntimer::unschedule_event(int event_type, uint64_t userdata) {
+        const std::lock_guard<std::mutex> guard(lock_);
+
         auto res = std::find_if(events_.begin(), events_.end(),
             [&](auto evt) { return (evt.event_type == event_type) && (evt.event_user_data == userdata); });
 
@@ -172,69 +134,54 @@ namespace eka2l1 {
             });
 
             return true;
-        } else {
-            const std::lock_guard guard(ts_events_.lock);
-            
-            for (decltype(ts_events_)::iterator ite = ts_events_.begin(); ite != ts_events_.end(); ite++) {
-                if (ite->event_user_data == userdata) {
-                    ts_events_.erase(ite);
-                    return true;
-                }
-            }
         }
 
         return false;
     }
 
-    void timing_system::fire_mhz_changes() {
-        for (auto &mhz_change : internal_mhzcs_) {
-            mhz_change();
+    bool ntimer::set_clock_frequency_mhz(const std::uint32_t cpu_mhz) {
+        if (teletimer_->set_target_frequency(cpu_mhz * 10000000)) {
+            CPU_HZ_ = cpu_mhz * 10000000;
+            return true;
         }
+
+        return false;
     }
 
-    ntimer *timing_system::current_timer() {
-        return timers_[current_core_].get();
+    std::uint32_t ntimer::get_clock_frequency_mhz() {
+        return static_cast<std::uint32_t>(CPU_HZ_ / 1000000);
     }
 
-    void timing_system::set_clock_frequency_mhz(int cpu_mhz) {
-        CPU_HZ = cpu_mhz;
-        fire_mhz_changes();
-    }
+    int ntimer::register_event(const std::string &name, timed_callback callback) {
+        const std::lock_guard<std::mutex> guard(lock_);
 
-    std::uint32_t timing_system::get_clock_frequency_mhz() {
-        return static_cast<std::uint32_t>(CPU_HZ / 1000000);
-    }
-
-    const std::int64_t timing_system::downcount() {
-        return current_timer()->downcount();
-    }
-    
-    const std::uint64_t timing_system::ticks() {
-        return current_timer()->ticks();
-    }
-
-    const std::uint64_t timing_system::idle_ticks() {
-        return current_timer()->idle_ticks();
-    }
-
-    std::uint64_t timing_system::get_global_time_us() {
-        return cycles_to_us(ticks());
-    }
-
-    int timing_system::register_event(const std::string &name, timed_callback callback) {
-        const std::lock_guard<std::mutex> guard(mut_);
         event_type evtype;
 
         evtype.name = name;
         evtype.callback = callback;
 
-        event_types_.push_back(evtype);
+        for (std::size_t i = 0; i < event_types_.size(); i++) {
+            if (event_types_[i].callback == nullptr) {
+                event_types_[i] = evtype;
+                return static_cast<int>(i);
+            }
+        }
 
+        event_types_.push_back(evtype);
         return static_cast<int>(event_types_.size() - 1);
     }
+    
+    void ntimer::remove_event(int event_type) {
+        const std::lock_guard<std::mutex> guard(lock_);
+        if (event_types_.size() <= event_type) {
+            return;
+        }
 
-    int timing_system::get_register_event(const std::string &name) {
-        const std::lock_guard<std::mutex> guard(mut_);
+        event_types_[event_type].callback = nullptr;
+    }
+
+    int ntimer::get_register_event(const std::string &name) {
+        const std::lock_guard<std::mutex> guard(lock_);
 
         for (uint32_t i = 0; i < event_types_.size(); i++) {
             if (event_types_[i].name == name) {
@@ -245,58 +192,15 @@ namespace eka2l1 {
         return -1;
     }
 
-    void timing_system::init(const int total_core) {
-        // TODO(pent0): Multicore
-        timers_.resize(1);
-
-        for (int i = 0; i < total_core; i++) {
-            timers_[i] = std::make_unique<ntimer>(this, i);
-        }
-
-        current_core_ = 0;
-        CPU_HZ = 484000000;
-    }
-
-    void timing_system::shutdown() {
-
-    }
-
-    void timing_system::restore_register_event(int evt_type, const std::string &name, timed_callback callback) {
-        event_type evtype;
-
-        evtype.callback = callback;
-        evtype.name = name;
-
-        event_types_[evt_type] = evtype;
-    }
-
-    void timing_system::unregister_all_events() {
+    void ntimer::unregister_all_events() {
         event_types_.clear();
     }
 
-    void timing_system::add_ticks(uint32_t ticks) {
-        current_timer()->add_ticks(ticks);
-    }
-    
-    void timing_system::idle(int max_idle) {
-        current_timer()->idle(max_idle);
+    bool ntimer::is_paused() const {
+        return should_paused_.load();
     }
 
-    void timing_system::advance() {
-        current_timer()->advance();
-    }
-
-    void timing_system::schedule_event(int64_t cycles_into_future, int event_type, uint64_t userdata,
-        const bool thr_safe) {
-        current_timer()->schedule_event(cycles_into_future, event_type, userdata, thr_safe);
-    }
-
-    bool timing_system::unschedule_event(int event_type, uint64_t usrdata) {
-        return current_timer()->unschedule_event(event_type, usrdata);
-    }
-
-    void timing_system::register_mhz_change_callback(mhz_change_callback change_callback) {
-        std::lock_guard<std::mutex> guard(mut_);
-        internal_mhzcs_.push_back(change_callback);
+    void ntimer::set_paused(const bool should_pause) {
+        should_paused_ = should_pause;
     }
 }

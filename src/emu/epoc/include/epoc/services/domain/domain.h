@@ -74,7 +74,7 @@ namespace eka2l1 {
     struct hierarchy : public service::database::hierarchy {
         friend struct domain;
 
-        eka2l1::timing_system *timing;
+        eka2l1::ntimer *timing;
         eka2l1::memory_system *mem;
 
         domain_ptr root_domain;
@@ -117,7 +117,7 @@ namespace eka2l1 {
         void add_transition_failure(const std::uint16_t id, const int err);
 
     public:
-        hierarchy(memory_system *mem, timing_system *tsys)
+        hierarchy(memory_system *mem, ntimer *tsys)
             : timing(tsys)
             , mem(mem) {}
 
@@ -141,7 +141,7 @@ namespace eka2l1 {
 
     struct domain_manager {
         kernel_system *kern;
-        timing_system *timing;
+        ntimer *timing;
 
         std::unordered_map<uint32_t, hierarchy_ptr> hierarchies;
 

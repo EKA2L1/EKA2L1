@@ -141,11 +141,15 @@ namespace eka2l1::epoc {
         }
     }
 
-    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &r) {
+    std::uint32_t window_server_client::queue_redraw(epoc::window_user *user) {
         // Calculate the priority
-        return redraws.queue_event(epoc::redraw_event{ user->get_client_handle(), r.top,
-                                       vec2(r.top.x + r.size.x, r.top.y + r.size.y) },
+        const std::uint32_t id = redraws.queue_event(epoc::redraw_event{ user->get_client_handle(), user->irect.top,
+                                       vec2(user->irect.top.x + user->irect.size.x,
+                                            user->irect.top.y + user->irect.size.y) },
             user->redraw_priority());
+
+        user->irect = eka2l1::rect({ 0, 0 }, { 0 , 0 });
+        return id;
     }
 
     std::uint32_t window_server_client::add_object(window_client_obj_ptr &obj) {
@@ -882,7 +886,7 @@ namespace eka2l1 {
     window_server::window_server(system *sys)
         : service::server(sys, WINDOW_SERVER_NAME, true, true)
         , bmp_cache(sys->get_kernel_system())
-        , anim_sched(sys->get_timing_system(), 1)
+        , anim_sched(sys->get_kernel_system(), sys->get_ntimer(), 1)
         , screens(nullptr)
         , focus_screen_(nullptr) {
         REGISTER_IPC(window_server, init, EWservMessInit,
@@ -909,15 +913,15 @@ namespace eka2l1 {
         return get_system()->get_graphics_driver();
     }
 
-    timing_system *window_server::get_timing_system() {
-        return get_system()->get_timing_system();
+    ntimer *window_server::get_ntimer() {
+        return get_system()->get_ntimer();
     }
 
     kernel_system *window_server::get_kernel_system() {
         return get_system()->get_kernel_system();
     }
 
-    constexpr std::int64_t input_update_ticks = 10000;
+    constexpr std::int64_t input_update_us = 1000;
 
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
@@ -999,13 +1003,12 @@ namespace eka2l1 {
         input_events.push(std::move(evt));
     }
 
-    void window_server::handle_inputs_from_driver(std::uint64_t userdata, int cycles_late) {
+    void window_server::handle_inputs_from_driver(std::uint64_t userdata, int nn_late) {
         if (!focus_screen_ || !focus_screen_->focus) {
-            sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
+            sys->get_ntimer()->schedule_event(input_update_us - nn_late, input_handler_evt_, userdata);
             return;
         }
 
-        const std::lock_guard<std::mutex> guard(input_queue_mut);
         epoc::event guest_event;
 
         drivers::input_event_type last_event_type = drivers::input_event_type::none;
@@ -1014,8 +1017,11 @@ namespace eka2l1 {
         epoc::window_key_shipper key_shipper(this);
 
         epoc::window *root_current = get_current_focus_screen()->root->child;
-
+        std::unique_lock<std::mutex> unq(input_queue_mut);
+    
         auto flush_events = [&]() {
+            unq.unlock();
+
             // Delivery events stored
             switch (last_event_type) {
             case drivers::input_event_type::touch:
@@ -1031,11 +1037,15 @@ namespace eka2l1 {
                 LOG_ERROR("Unknown driver event type {}", static_cast<int>(last_event_type));
                 break;
             }
+
+            unq.lock();
         };
+
+        drivers::input_event input_event;
 
         // Processing the events, translate them to cool things
         while (!input_events.empty()) {
-            drivers::input_event input_event = std::move(input_events.back());
+            input_event = std::move(input_events.back());
             input_events.pop();
 
             // Translate host event to guest event
@@ -1078,7 +1088,7 @@ namespace eka2l1 {
             flush_events();
         }
 
-        sys->get_timing_system()->schedule_event(input_update_ticks - cycles_late, input_handler_evt_, userdata);
+        sys->get_ntimer()->schedule_event(input_update_us - nn_late, input_handler_evt_, userdata);
     }
 
     static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
@@ -1162,13 +1172,13 @@ namespace eka2l1 {
         init_screens();
 
         // Schedule an event which will frequently queries input from host
-        timing_system *timing = sys->get_timing_system();
+        ntimer *timing = sys->get_ntimer();
 
         input_handler_evt_ = timing->register_event("ws_serv_input_update_event", [this](std::uint64_t userdata, int cycles_late) {
             handle_inputs_from_driver(userdata, cycles_late);
         });
 
-        timing->schedule_event(input_update_ticks, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
+        timing->schedule_event(input_update_us, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
 
         loaded = true;
     }

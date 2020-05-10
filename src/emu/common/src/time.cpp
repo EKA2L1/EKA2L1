@@ -22,6 +22,7 @@
  */
 
 #include <chrono>
+#include <common/algorithm.h>
 #include <common/platform.h>
 #include <common/time.h>
 #include <ctime>
@@ -38,6 +39,11 @@ namespace eka2l1::common {
     std::uint64_t get_current_time_in_microseconds_since_1ad() {
         return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;
+    }
+
+    std::uint64_t get_current_time_in_nanoseconds_since_epoch() {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().
+                time_since_epoch()).count();
     }
 
     std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t micsecs) {
@@ -61,5 +67,58 @@ namespace eka2l1::common {
         struct std::tm *timeinfo = std::localtime(&current_time);
         return static_cast<int>(timeinfo->tm_gmtoff);
 #endif
+    }
+    
+    struct basic_teletimer_micro: public teletimer {
+        std::uint64_t start_;
+        std::uint64_t end_;
+
+        std::uint32_t target_freq_;
+
+    public:
+        explicit basic_teletimer_micro(const std::uint32_t freq)
+            : target_freq_(freq) {
+        }
+
+        ~basic_teletimer_micro() override {
+        }
+
+        void start() override {
+            start_ = get_current_time_in_microseconds_since_epoch();
+            end_ = 0;
+        }
+
+        void stop() {
+            end_ = get_current_time_in_microseconds_since_epoch();
+        }
+        
+        bool set_target_frequency(const std::uint32_t freq) override {
+            target_freq_ = freq;
+            return true;
+        }
+
+        std::uint64_t ticks() override {
+            return multiply_and_divide_qwords(microseconds(), target_freq_, 1000000);
+        }
+
+        std::uint64_t microseconds() override {
+            if (end_ == 0) {
+                return get_current_time_in_microseconds_since_epoch() - start_;
+            }
+
+            return end_ - start_;
+        }
+
+        std::uint64_t nanoseconds() override {
+            if (end_ == 0) {
+                return get_current_time_in_nanoseconds_since_epoch() - start_;
+            }
+
+            return end_ - start_;
+        }
+    };
+
+    std::unique_ptr<teletimer> make_teletimer(const std::uint32_t target_frequency) {
+        return std::make_unique<basic_teletimer_micro>(target_frequency);
     }
 }

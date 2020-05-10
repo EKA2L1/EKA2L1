@@ -38,7 +38,7 @@
 #endif
 
 namespace eka2l1::kernel {
-    thread_scheduler::thread_scheduler(kernel_system *kern, timing_system *timing, manager::script_manager *scripter,
+    thread_scheduler::thread_scheduler(kernel_system *kern, ntimer *timing, manager::script_manager *scripter,
         arm::arm_interface &cpu)
         : kern(kern)
         , timing(timing)
@@ -252,8 +252,7 @@ namespace eka2l1::kernel {
         }
 
         // Schedule the thread to be waken up
-        timing->schedule_event(timing->us_to_cycles(static_cast<std::uint64_t>(sl_time)),
-            wakeup_evt, thr->unique_id());
+        timing->schedule_event(static_cast<std::uint64_t>(sl_time), wakeup_evt, thr->unique_id());
 
         return true;
     }

@@ -33,7 +33,7 @@
 #include <vector>
 
 namespace eka2l1 {
-    class timing_system;
+    class ntimer;
     class kernel_system;
 
     namespace kernel {
@@ -69,7 +69,7 @@ namespace eka2l1 {
             int yield_evt;
 
             std::mutex mut;
-            timing_system *timing;
+            ntimer *timing;
             kernel_system *kern;
 
             manager::script_manager *scripter;
@@ -80,7 +80,7 @@ namespace eka2l1 {
 
         public:
             // The constructor also register all the needed event
-            explicit thread_scheduler(kernel_system *kern, timing_system *sys, manager::script_manager *scripter,
+            explicit thread_scheduler(kernel_system *kern, ntimer *sys, manager::script_manager *scripter,
                 arm::arm_interface &cpu);
 
             void queue_thread_ready(kernel::thread *thr);

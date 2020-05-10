@@ -19,11 +19,13 @@
 
 #pragma once
 
+#include <common/time.h>
 #include <common/queue.h>
 
 #include <cstdint>
 #include <functional>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 namespace eka2l1 {
@@ -50,139 +52,96 @@ namespace eka2l1 {
         class chunkyseri;
     }
 
-    class timing_system;
+    class ntimer;
 
     /**
-     * \brief Nanokernel timer, used to track timing for a core.
+     * @brief Nanokernel timer.
      */
     class ntimer {
     private:
-        std::uint32_t core_;
         std::vector<event> events_;
-        eka2l1::threadsafe_cn_queue<event> ts_events_;
+        std::mutex lock_;
+        std::mutex new_event_avail_lock_;
 
-        timing_system *timing_;
+        std::condition_variable new_event_avail_var_;
 
-        std::int64_t slice_len_;
-        std::int64_t downcount_;
+        std::unique_ptr<common::teletimer> teletimer_;
+        std::unique_ptr<std::thread> timer_thread_;          ///< Timer thread to executes callbacks
 
-        std::uint64_t ticks_;
-        std::uint64_t idle_ticks_;
-
-        bool timer_sane_;
-
-    protected:
-        void move_events();
-
-    public:
-        explicit ntimer(timing_system *timing, const std::uint32_t core_num);
-
-        const std::uint32_t core_number() const;
-        const std::int64_t get_slice_length() const;
-        const std::int64_t downcount() const;
-
-        const std::uint64_t ticks() const;
-        const std::uint64_t idle_ticks() const;
-
-        void idle(int max_idle = 0);
-        void add_ticks(uint32_t ticks);
-        void advance();
-
-        void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata,
-            const bool thr_safe = false);
-
-        bool unschedule_event(int event_type, uint64_t userdata);
-    };
-
-    class timing_system {
-        friend class ntimer;
-
-        std::int64_t CPU_HZ;
-        std::mutex mut_;
-
-        std::uint32_t current_core_;
-
-        std::vector<mhz_change_callback> internal_mhzcs_;
         std::vector<event_type> event_types_;
+        std::uint32_t CPU_HZ_;
 
-        std::vector<std::unique_ptr<ntimer>> timers_;
+        std::atomic<bool> should_stop_;
+        std::atomic<bool> should_paused_;
 
     protected:
-        void fire_mhz_changes();
+        void loop();
 
     public:
+        explicit ntimer(const std::uint32_t cpu_hz);
+        ~ntimer();
+
         inline int64_t ms_to_cycles(int ms) {
-            return CPU_HZ / 1000 * ms;
+            return CPU_HZ_ / 1000 * ms;
         }
 
         inline int64_t ms_to_cycles(uint64_t ms) {
-            return CPU_HZ / 1000 * ms;
+            return CPU_HZ_ / 1000 * ms;
         }
 
         inline int64_t ms_to_cycles(float ms) {
-            return (int64_t)(CPU_HZ * ms * (0.001f));
+            return (int64_t)(CPU_HZ_ * ms * (0.001f));
         }
 
         inline int64_t ms_to_cycles(double ms) {
-            return (int64_t)(CPU_HZ * ms * (0.001));
+            return (int64_t)(CPU_HZ_ * ms * (0.001));
         }
 
         inline int64_t us_to_cycles(float us) {
-            return (int64_t)(CPU_HZ * us * (0.000001f));
+            return (int64_t)(CPU_HZ_ * us * (0.000001f));
         }
 
         inline int64_t us_to_cycles(int us) {
-            return (CPU_HZ / 1000000 * (int64_t)us);
+            return (CPU_HZ_ / 1000000 * (int64_t)us);
         }
 
         inline int64_t us_to_cycles(int64_t us) {
-            return (CPU_HZ / 1000000 * us);
+            return (CPU_HZ_ / 1000000 * us);
         }
 
         inline int64_t us_to_cycles(uint64_t us) {
-            return (int64_t)(CPU_HZ / 1000000 * us);
+            return (int64_t)(CPU_HZ_ / 1000000 * us);
         }
 
         inline int64_t cycles_to_us(int64_t cycles) {
-            return cycles / (CPU_HZ / 1000000);
+            return cycles / (CPU_HZ_ / 1000000);
         }
 
         inline int64_t ns_to_cycles(uint64_t us) {
-            return (int64_t)(CPU_HZ / 1000000000 * us);
+            return (int64_t)(CPU_HZ_ / 1000000000 * us);
         }
 
-        ntimer *current_timer();
-
-        void init(const int total_core = 1);
-        void shutdown();
-
-        std::uint64_t get_global_time_us();
         const std::uint64_t ticks();
-        const std::uint64_t idle_ticks();
+        const std::uint64_t microseconds();
 
-        const std::int64_t downcount();
+        bool is_paused() const;
+        void set_paused(const bool should_pause);
+
+        /**
+         * @brief       Advance the timer.
+         * @returns     Nanoseconds to next timer.
+         */
+        std::optional<std::uint64_t> advance();
 
         int register_event(const std::string &name, timed_callback callback);
         int get_register_event(const std::string &name);
-
-        void restore_register_event(int event_type, const std::string &name, timed_callback callback);
         void unregister_all_events();
-
         void remove_event(int event_type);
-        void remove_all_events(int event_type);
 
-        void advance();
-        void add_ticks(uint32_t ticks);
-        void idle(int max_idle = 0);
-
-        void schedule_event(int64_t cycles_into_future, int event_type, std::uint64_t userdata = 0,
-            const bool thr_safe = false);
-
+        void schedule_event(int64_t us_into_future, int event_type, std::uint64_t userdata);
         bool unschedule_event(int event_type, uint64_t userdata);
-
-        void register_mhz_change_callback(mhz_change_callback change_callback);
-        void set_clock_frequency_mhz(int cpu_mhz);
-
-        uint32_t get_clock_frequency_mhz();
+        
+        bool set_clock_frequency_mhz(const std::uint32_t cpu_mhz);
+        std::uint32_t get_clock_frequency_mhz();
     };
 }

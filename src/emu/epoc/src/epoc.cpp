@@ -89,7 +89,7 @@ namespace eka2l1 {
 
         memory_system mem;
         kernel_system kern;
-        timing_system timing;
+        std::unique_ptr<ntimer> timing;
         manager_system mngr;
 
         //! The IO system
@@ -116,6 +116,7 @@ namespace eka2l1 {
 
         epocver ver = epocver::epoc94;
         bool exit = false;
+        bool paused = false;
 
         std::unordered_map<std::string, bool> bool_configs;
         std::unordered_map<uint32_t, hal_instance> hals;
@@ -123,9 +124,6 @@ namespace eka2l1 {
         bool startup_inited = false;
 
         std::optional<filesystem_id> rom_fs_id = std::nullopt;
-
-        bool save_snapshot_processes(const std::string &path,
-            const std::vector<uint32_t> &inclue_uids);
 
         system *parent;
 
@@ -205,34 +203,9 @@ namespace eka2l1 {
         bool load(const std::u16string &path, const std::u16string &cmd_arg);
         int loop();
         void shutdown();
-
-        /*!\brief Snapshot is a way to save the state of the system.
-         *
-         * Snapshot can be used for fast startup. Here, in EKA2L1,
-         * after the first UI process runs well, the state of all
-         * processes will be saved and load in the next running
-         * session.
-         *
-         * The snapshot will save all of the following:
-         * - The EPOC version
-         * - All kernel objects (semaphore, mutex, etc...)
-         * - Global memory data that is committed.
-         * - Local data for each process
-         * - Thread state, current running thread and process
-         *
-         * The following will not be saved:
-         * - The ROM content.
-         * - Page that is marked as free.
-         *
-         * \params name The path to save the snapshot. Note that the snapshot
-         *              can be really large.
-         *
-         * \returns     True if successfully save the snapshot
-         */
-        bool save_snapshot(const std::string &name);
-        bool save_snapshot_exclude_current_process(const std::string &name);
-
-        bool load_snapshot(const std::string &name);
+        
+        bool pause();
+        bool unpause();
 
         manager_system *get_manager_system() {
             return &mngr;
@@ -254,8 +227,8 @@ namespace eka2l1 {
             return &io;
         }
 
-        timing_system *get_timing_system() {
-            return &timing;
+        ntimer *get_ntimer() {
+            return timing.get();
         }
 
         disasm *get_disasm() {
@@ -333,6 +306,8 @@ namespace eka2l1 {
     void system_impl::do_state(common::chunkyseri &seri) {
     }
 
+    static constexpr std::uint32_t DEFAULT_CPU_HZ = 484000000;
+
     void system_impl::init() {
         exit = false;
 
@@ -340,7 +315,8 @@ namespace eka2l1 {
         mngr.init(parent, &io, conf);
 
         // Initialize all the system that doesn't depend on others first
-        timing.init();
+        timing = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
+
         io.init();
         asmdis.init();
 
@@ -353,10 +329,10 @@ namespace eka2l1 {
 
         rom_fs_id = io.add_filesystem(rom_fs);
 
-        cpu = arm::create_cpu(&kern, &timing, conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
+        cpu = arm::create_cpu(&kern, timing.get(), conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
 
         mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
-        kern.init(parent, &timing, &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
+        kern.init(parent, timing.get(), &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
 
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
@@ -365,7 +341,7 @@ namespace eka2l1 {
         set_system_language(static_cast<language>(conf->language));
 
         // Initialize HLE finally
-        dispatcher.init(&kern, &timing);
+        dispatcher.init(&kern, timing.get());
     }
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, manager::config_state *conf)
@@ -402,7 +378,25 @@ namespace eka2l1 {
         return true;
     }
 
+    bool system_impl::pause() {
+        paused = true;
+        timing->set_paused(true);
+
+        return true;
+    }
+    
+    bool system_impl::unpause() {
+        paused = false;
+        timing->set_paused(false);
+
+        return true;
+    }
+    
     int system_impl::loop() {
+        if (paused) {
+            return 1;
+        }
+
         bool should_step = false;
         bool script_hits_the_feels = false;
 
@@ -427,14 +421,13 @@ namespace eka2l1 {
         }
 
         if (kern.crr_thread() == nullptr) {
-            timing.idle();
-            timing.advance();
             prepare_reschedule();
         } else {
-            timing.advance();
+            kernel::thread *thr = kern.crr_thread();
 
             if (!should_step) {
-                cpu->run();
+                cpu->run(thr->get_remaining_screenticks());
+                thr->add_ticks(cpu->get_num_instruction_executed());
             } else {
                 cpu->step();
 
@@ -442,9 +435,9 @@ namespace eka2l1 {
                     arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
                     extended.reset_breakpoint_hit(&kern);
                 }
-            }
 
-            kern.crr_thread()->add_ticks(static_cast<int>(cpu->get_num_instruction_executed()));
+                thr->add_ticks(1);
+            }
         }
 
         if (!kern.should_terminate()) {
@@ -510,11 +503,11 @@ namespace eka2l1 {
     }
 
     void system_impl::shutdown() {
-        timing.shutdown();
         kern.shutdown();
         hlelibmngr.shutdown();
         mem.shutdown();
         asmdis.shutdown();
+        timing.reset();
 
         exit = false;
     }
@@ -553,11 +546,6 @@ namespace eka2l1 {
 
     epoc::hal *system_impl::get_hal(uint32_t cagetory) {
         return hals[cagetory].get();
-    }
-
-    bool system_impl::save_snapshot_processes(const std::string &path,
-        const std::vector<uint32_t> &include_uids) {
-        return true;
     }
 
     system::system(drivers::graphics_driver *gdriver, drivers::audio_driver *adriver, manager::config_state *conf)
@@ -628,6 +616,14 @@ namespace eka2l1 {
         return impl->loop();
     }
 
+    bool system::pause() {
+        return impl->pause();
+    }
+
+    bool system::unpause() {
+        return impl->unpause();
+    }
+
     void system::shutdown() {
         return impl->shutdown();
     }
@@ -651,8 +647,8 @@ namespace eka2l1 {
         return impl->get_io_system();
     }
 
-    timing_system *system::get_timing_system() {
-        return impl->get_timing_system();
+    ntimer *system::get_ntimer() {
+        return impl->get_ntimer();
     }
 
     disasm *system::get_disasm() {

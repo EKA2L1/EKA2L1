@@ -23,7 +23,8 @@
 #include <vector>
 
 namespace eka2l1 {
-    class timing_system;
+    class ntimer;
+    class kernel_system;
 
     namespace drivers {
         class graphics_driver;
@@ -77,7 +78,9 @@ namespace eka2l1::epoc {
         std::vector<screen_state> states_;
         std::vector<anim_due_callback_data> callback_datas_;
 
-        timing_system *timing_;
+        ntimer *timing_;
+        kernel_system *kern_;
+
         sched_scan_callback_data scan_callback_data_;
 
         int anim_due_evt_;
@@ -88,7 +91,7 @@ namespace eka2l1::epoc {
         void schedule_scans(drivers::graphics_driver *driver);
 
     public:
-        explicit animation_scheduler(timing_system *timing, const int total_screen);
+        explicit animation_scheduler(kernel_system *kern, ntimer *timing, const int total_screen);
 
         /**
          * \brief Callback for queueing screen redraw, when the scheduler is idled.

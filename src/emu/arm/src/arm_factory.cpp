@@ -24,7 +24,7 @@
 #include <epoc/timing.h>
 
 namespace eka2l1::arm {
-    cpu create_cpu(kernel_system *kern, timing_system *timing, manager::config_state *conf,
+    cpu create_cpu(kernel_system *kern, ntimer *timing, manager::config_state *conf,
         manager_system *mngr, memory_system *mem, disasm *asmdis, hle::lib_manager *lmngr, gdbstub *stub,
         arm_emulator_type arm_type) {
         switch (arm_type) {

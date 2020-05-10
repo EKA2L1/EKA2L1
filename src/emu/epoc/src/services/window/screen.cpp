@@ -26,6 +26,7 @@
 #include <drivers/itc.h>
 #include <common/time.h>
 
+#include <epoc/kernel.h>
 #include <epoc/timing.h>
 #include <thread>
 
@@ -58,12 +59,13 @@ namespace eka2l1::epoc {
             }
 
             if (!winuser->irect.empty()) {
+                kernel_system *kern = winuser->client->get_ws().get_kernel_system();
+
                 // Wakeup windows, we have a region to invalidate
                 // Yes, I'm referencing a meme. Send help.
                 // The invalidate region is there. Gone with what we have first, but do redraw still
-                winuser->client->queue_redraw(winuser, winuser->irect);
+                winuser->client->queue_redraw(winuser);
                 winuser->client->trigger_redraw();
-                winuser->irect = eka2l1::rect({ 0, 0 }, { 0, 0 });
             }
 
             // Draw it onto current binding buffer
@@ -247,7 +249,7 @@ namespace eka2l1::epoc {
         resize(drv, mode_info(mode)->size);
     }
 
-    void screen::vsync(timing_system *timing) {
+    void screen::vsync(ntimer *timing) {
         const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
         std::uint64_t delta = tnow - last_vsync;
 
@@ -255,7 +257,6 @@ namespace eka2l1::epoc {
 
         if (delta < microsecs_a_frame) {
             std::this_thread::sleep_for(std::chrono::microseconds(microsecs_a_frame - delta));
-            timing->add_ticks(static_cast<std::uint32_t>(timing->us_to_cycles(microsecs_a_frame - delta)));
         }
 
         last_vsync = tnow;

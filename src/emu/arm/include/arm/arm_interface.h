@@ -44,7 +44,7 @@ namespace eka2l1::arm {
         virtual ~arm_interface() {}
 
         /*! Run the CPU */
-        virtual void run() = 0;
+        virtual void run(const std::uint32_t instruction_count) = 0;
 
         /*! Stop the CPU */
         virtual void stop() = 0;

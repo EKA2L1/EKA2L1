@@ -77,19 +77,12 @@ namespace eka2l1::dispatch {
         }
     }
 
-    void dsp_epoc_stream::deliver_audio_events(kernel_system *kern, timing_system *timing) {
+    void dsp_epoc_stream::deliver_audio_events(kernel_system *kern, ntimer *timing) {
         const std::lock_guard<std::mutex> guard(lock_);
         audio_event *evt = evt_queue_.next_;
 
         while (evt != nullptr) {
             if (evt->flags_ & audio_event::FLAG_COMPLETED) {
-                const std::uint64_t delta = timing->ticks() - evt->start_ticks_;
-                const std::uint64_t ticks_target = timing->us_to_cycles(common::get_current_time_in_microseconds_since_epoch()
-                    - evt->start_host_);
-
-                if (delta < ticks_target)
-                    timing->add_ticks(static_cast<std::uint32_t>(ticks_target - delta));
-
                 kern->lock();
                 evt->info_.complete(epoc::error_none);
                 kern->unlock();
@@ -282,7 +275,7 @@ namespace eka2l1::dispatch {
     // DSP streams
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_dsp_out_stream_create, void*) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
-        timing_system *timing = sys->get_timing_system();
+        ntimer *timing = sys->get_ntimer();
         drivers::audio_driver *aud_driver = sys->get_audio_driver();
 
         auto ll_stream = drivers::new_dsp_out_stream(aud_driver, drivers::dsp_stream_backend_ffmpeg);
@@ -295,14 +288,14 @@ namespace eka2l1::dispatch {
         drivers::dsp_stream *ll_stream_ptr = ll_stream.get();
         auto stream_new = std::make_unique<dsp_epoc_stream>(ll_stream);
 
-        timing->schedule_event(40000, dispatcher->audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream_new.get()));
+        timing->schedule_event(500, dispatcher->audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream_new.get()));
 
         return dispatcher->dsp_streams_.add_object(stream_new);
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_destroy, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
-        timing_system *timing = sys->get_timing_system();
+        ntimer *timing = sys->get_ntimer();
         drivers::audio_driver *aud_driver = sys->get_audio_driver();
 
         dsp_epoc_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
@@ -334,7 +327,7 @@ namespace eka2l1::dispatch {
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_start, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
-        timing_system *timing = sys->get_timing_system();
+        ntimer *timing = sys->get_ntimer();
 
         dsp_epoc_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
 
@@ -397,7 +390,7 @@ namespace eka2l1::dispatch {
         }
 
         drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream->ll_stream_);
-        timing_system *timing = sys->get_timing_system();
+        ntimer *timing = sys->get_ntimer();
 
         const std::lock_guard<std::mutex> guard(stream->lock_);
             
@@ -431,7 +424,7 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        timing_system *timing = sys->get_timing_system();
+        ntimer *timing = sys->get_ntimer();
         
         {
             const std::lock_guard<std::mutex> guard(stream->lock_);

@@ -164,8 +164,10 @@ namespace eka2l1::epoc {
         context_attach_link.deque();
 
         // Might have to flush sooner, since this window can be used with another
-        // TODO pent0: This may gone insane
         flush_queue_to_driver();
+
+        // Content of the window changed, so call the handler
+        attached_window->take_action_on_change();
 
         attached_window = nullptr;
         recording = false;

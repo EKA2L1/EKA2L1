@@ -62,8 +62,8 @@ namespace eka2l1::epoc {
         eka2l1::vec2 cursor_pos;
         eka2l1::rect irect;
 
-        std::uint32_t redraw_evt_id;
         std::uint64_t driver_win_id;
+        bool redraw_responded;
 
         dsa *direct;
 
@@ -131,11 +131,16 @@ namespace eka2l1::epoc {
         }
 
         /**
-         * \brief Set window visibility.
+         * @brief Set window visibility.
          * 
          * This will trigger a screen redraw if the visibility is changed.
          */
         void set_visible(const bool vis);
+
+        /**
+         * @brief Action that this window does when its content is modified.
+         */
+        void take_action_on_change();
 
         void queue_event(const epoc::event &evt) override;
 

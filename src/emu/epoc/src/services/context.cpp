@@ -140,11 +140,11 @@ namespace eka2l1 {
                 // Avoid signal twice to cause undefined behavior
                 if (!signaled) {
                     if (accurate_timing) {
-                        timing_system *timing = sys->get_timing_system();
+                        ntimer *timing = sys->get_ntimer();
                         kernel_system *kern = sys->get_kernel_system();
 
                         // TODO(pent0): No hardcode
-                        timing->schedule_event(40000, kern->get_ipc_realtime_signal_event(), msg->own_thr->unique_id());
+                        timing->schedule_event(200, kern->get_ipc_realtime_signal_event(), msg->own_thr->unique_id());
                     } else {
                         msg->own_thr->signal_request();
                     }

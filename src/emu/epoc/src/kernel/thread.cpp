@@ -226,7 +226,7 @@ namespace eka2l1 {
             memcpy(stack_host_ptr, &info, 0x40);
         }
 
-        thread::thread(kernel_system *kern, memory_system *mem, timing_system *timing, kernel::process *owner,
+        thread::thread(kernel_system *kern, memory_system *mem, ntimer *timing, kernel::process *owner,
             kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
@@ -363,6 +363,8 @@ namespace eka2l1 {
         }
 
         void thread::notify_sleep(const int errcode) {
+            kern->lock();
+
             if (sleep_nof_sts) {
                 *(sleep_nof_sts.get(owning_process())) = errcode;
                 sleep_nof_sts = 0;
@@ -371,6 +373,7 @@ namespace eka2l1 {
             }
 
             sleep_nof_sts = 0;
+            kern->unlock();
         }
 
         bool thread::stop() {
