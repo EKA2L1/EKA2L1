@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <functional>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 namespace eka2l1 {
@@ -71,6 +72,7 @@ namespace eka2l1 {
         std::uint32_t CPU_HZ_;
 
         std::atomic<bool> should_stop_;
+        std::atomic<bool> should_paused_;
 
     protected:
         void loop();
@@ -121,6 +123,9 @@ namespace eka2l1 {
 
         const std::uint64_t ticks();
         const std::uint64_t microseconds();
+
+        bool is_paused() const;
+        void set_paused(const bool should_pause);
 
         /**
          * @brief       Advance the timer.

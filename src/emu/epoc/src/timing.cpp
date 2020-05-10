@@ -33,6 +33,7 @@ namespace eka2l1 {
     ntimer::ntimer(const std::uint32_t cpu_hz) {
         CPU_HZ_ = cpu_hz;
         should_stop_ = false;
+        should_paused_ = false;
         teletimer_ = common::make_teletimer(cpu_hz);
 
         timer_thread_ = std::make_unique<std::thread>([this]() {
@@ -44,6 +45,7 @@ namespace eka2l1 {
 
     ntimer::~ntimer() {
         should_stop_ = true;
+        should_paused_ = true;
         new_event_avail_var_.notify_one();
 
         timer_thread_->join();
@@ -51,13 +53,15 @@ namespace eka2l1 {
 
     void ntimer::loop() {
         while (!should_stop_) {
-            const std::optional<std::uint64_t> next_microseconds = advance();
+            while (!should_paused_) {
+                const std::optional<std::uint64_t> next_microseconds = advance();
 
-            if (next_microseconds) {
-                std::this_thread::sleep_for(std::chrono::microseconds(next_microseconds.value()));
-            } else {
-                std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
-                new_event_avail_var_.wait(unqlock);
+                if (next_microseconds) {
+                    std::this_thread::sleep_for(std::chrono::microseconds(next_microseconds.value()));
+                } else {
+                    std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
+                    new_event_avail_var_.wait(unqlock);
+                }
             }
         }
     }
@@ -190,5 +194,13 @@ namespace eka2l1 {
 
     void ntimer::unregister_all_events() {
         event_types_.clear();
+    }
+
+    bool ntimer::is_paused() const {
+        return should_paused_.load();
+    }
+
+    void ntimer::set_paused(const bool should_pause) {
+        should_paused_ = should_pause;
     }
 }
