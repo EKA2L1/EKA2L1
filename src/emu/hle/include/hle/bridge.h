@@ -91,7 +91,7 @@ namespace eka2l1 {
             //arm::arm_interface::thread_context test_caller_context;
             //mcpu->save_context(crr_caller_context);
 
-            mcpu->run();
+            mcpu->run(1UL << 31);
             mcpu->set_pc(crr_caller_context.pc);
 
             return read_return_value<ret>(mcpu);
@@ -115,7 +115,7 @@ namespace eka2l1 {
             arm::arm_interface::thread_context test_caller_context;
             mcpu->save_context(crr_caller_context);
 
-            mcpu->run();
+            mcpu->run(1UL << 31);
             mcpu->set_pc(crr_caller_context.pc);
         }
 
