@@ -40,9 +40,9 @@ namespace eka2l1 {
     void sensor_server::init() {
         for (size_t i = 0; i < ACCEL_PROPERTY_COUNT; i++) {
             sensor_property res_property;
-            res_property.property_id = 0x0001001;
+            res_property.property_id = property_ids::axis_active;
             res_property.property_type = property_types::int_property;
-            res_property.array_index = -1;
+            res_property.array_index = property_array_index::single_property;
             res_property.item_index = i + 1;
 
             res_property.real_value = 0;

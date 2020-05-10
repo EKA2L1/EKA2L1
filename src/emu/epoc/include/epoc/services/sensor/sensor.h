@@ -91,6 +91,16 @@ namespace eka2l1 {
         buffer_property
     };
 
+    enum property_array_index {
+        single_property = -1,
+        array_property = -2
+    };
+
+    enum property_ids {
+        data_rate = 0x2,
+        axis_active = 0x1001
+    };
+
     enum channel_types {
         accelerometer_xyz_axis_data = 0x1020507E
     };
