@@ -921,7 +921,7 @@ namespace eka2l1 {
         return get_system()->get_kernel_system();
     }
 
-    constexpr std::int64_t input_update_us = 1000;
+    constexpr std::int64_t input_update_us = 100;
 
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
