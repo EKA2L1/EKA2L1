@@ -24,7 +24,7 @@
 
 #define CALL_HLE_DISPATCH(FUNCID)      \
     asm volatile("mov r0, #" #FUNCID); \
-    asm volatile("swi #0xFE");
+    asm volatile("swi #0x800030");
 
 #define HLE_DISPATCH_FUNC(ret, name, id, ...) \
     ret name(const TUint32 func_id, __VA_ARGS__)
