@@ -28,16 +28,16 @@
 namespace eka2l1 {
 
     enum sensor_opcode {
-        sensor_req_query_channels,
-        sensor_req_open_channel,
-        sensor_req_close_channel,
-        sensor_req_start_listening,
-        sensor_req_stop_listening,
-        sensor_req_async_channel_data,
-        sensor_req_get_property,
-        sensor_req_async_property_data,
-        sensor_req_stop_property_listening,
-        sensor_req_get_all_properties
+        sensor_query_channels,
+        sensor_open_channel,
+        sensor_close_channel,
+        sensor_start_listening,
+        sensor_stop_listening,
+        sensor_async_channel_data,
+        sensor_get_property,
+        sensor_async_property_data,
+        sensor_stop_property_listening,
+        sensor_get_all_properties
     };
 
     constexpr std::uint32_t LOCATION_LENGTH = 16;
@@ -106,7 +106,7 @@ namespace eka2l1 {
     };
 
     class sensor_server : public service::typical_server {
-        bool initialized;
+        bool initialized{ false };
 
         void init();
 
@@ -123,5 +123,12 @@ namespace eka2l1 {
         explicit sensor_client_session(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
+        void query_channels(eka2l1::service::ipc_context *ctx);
+        void open_channel(eka2l1::service::ipc_context *ctx);
+        void close_channel(eka2l1::service::ipc_context *ctx);
+        void start_listening(eka2l1::service::ipc_context *ctx);
+        void stop_listening(eka2l1::service::ipc_context *ctx);
+        void get_property(eka2l1::service::ipc_context *ctx);
+        void get_all_properties(eka2l1::service::ipc_context *ctx);
     };
 }
