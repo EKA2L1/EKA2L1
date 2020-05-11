@@ -219,6 +219,10 @@ namespace eka2l1 {
             return (size.x == 0) && (size.y == 0);
         }
 
+        bool valid() const {
+            return (size.x > 0) && (size.y > 0) && (top.x >= 0) && (top.y >= 0);
+        }
+
         bool contains(const eka2l1::vec2 point) {
             if ((top.x <= point.x) && (top.y <= point.y) && (top.x + size.x >= point.x) && (top.y + size.y >= point.y))
                 return true;

@@ -2543,6 +2543,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800013, user_svr_rom_header_address),
         BRIDGE_REGISTER(0x00800014, user_svr_rom_root_dir_address),
         BRIDGE_REGISTER(0x00800015, safe_inc_32),
+        BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
         /* SLOW EXECUTIVE CALL */
@@ -2582,6 +2583,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x36, timer_after),
         BRIDGE_REGISTER(0x37, timer_at_utc),
         BRIDGE_REGISTER(0x39, change_notifier_logon),
+        BRIDGE_REGISTER(0x3A, change_notifier_logoff),
         BRIDGE_REGISTER(0x3B, request_signal),
         BRIDGE_REGISTER(0x3C, handle_name),
         BRIDGE_REGISTER(0x3D, handle_full_name),
@@ -2636,6 +2638,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA6, message_get_des_length),
         BRIDGE_REGISTER(0xA7, message_get_des_max_length),
         BRIDGE_REGISTER(0xA8, message_ipc_copy),
+        BRIDGE_REGISTER(0xA9, message_client),
         BRIDGE_REGISTER(0xAC, message_kill),
         BRIDGE_REGISTER(0xAE, process_security_info),
         BRIDGE_REGISTER(0xAF, thread_security_info),
@@ -2665,6 +2668,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDE, mutex_is_held),
         BRIDGE_REGISTER(0xDF, leave_start),
         BRIDGE_REGISTER(0xE0, leave_end),
+        BRIDGE_REGISTER(0xE8, btrace_out),
         BRIDGE_REGISTER(0xFE, hle_dispatch),
         BRIDGE_REGISTER(0xFF, virtual_reality)
     };
