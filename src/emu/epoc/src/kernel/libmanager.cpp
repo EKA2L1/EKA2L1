@@ -479,10 +479,21 @@ namespace eka2l1::hle {
 #undef EXPORT
 #undef ENLIB
 
-        if (ver == epocver::epoc94) {
+        switch (ver) {
+        case epocver::epoc94:
             epoc::register_epocv94(*this);
-        } else if (ver == epocver::epoc93) {
+            break;
+    
+        case epocver::epoc93:
             epoc::register_epocv93(*this);
+            break;
+
+        case epocver::epoc10:
+            epoc::register_epocv10(*this);
+            break;
+
+        default:
+            break;
         }
 
         load_patch_libraries(".//patch//");
