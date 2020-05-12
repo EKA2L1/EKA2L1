@@ -16,7 +16,16 @@ SYSTEMINCLUDE   \epoc32\include
 
 SOURCEPATH	  ..\src
 
-SOURCE		  scdv.cpp log.cpp drawdvcbuf.cpp drawdvcalgo.cpp drawdvc24.cpp panic.cpp instantiate.cpp drawdvc32.cpp cdsb.cpp sv.cpp
+SOURCE		  scdv.cpp
+SOURCE        log.cpp
+SOURCE        drawdvcbuf.cpp
+SOURCE        drawdvcalgo.cpp
+SOURCE        drawdvc24.cpp
+SOURCE        panic.cpp
+SOURCE        instantiate.cpp
+SOURCE        drawdvc32.cpp
+SOURCE        cdsb.cpp
+SOURCE        dispatch.s
 
 DEFFILE ..\eabi\scdv.def
 

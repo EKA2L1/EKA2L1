@@ -22,53 +22,51 @@
 
 #include <e32std.h>
 
-#define CALL_HLE_DISPATCH(FUNCID)      \
-    asm volatile("mov r0, #" #FUNCID); \
-    asm volatile("swi #0x800030");
-
 #define HLE_DISPATCH_FUNC(ret, name, ...) \
     ret name(const TUint32 func_id, __VA_ARGS__)
 
-/// AUDIO PLAYER DISPATCH API
+extern "C" {
+    /// AUDIO PLAYER DISPATCH API
 
-// Create new audio player instance
-HLE_DISPATCH_FUNC(TAny *, EAudioPlayerNewInstance, void *);
+    // Create new audio player instance
+    HLE_DISPATCH_FUNC(TAny *, EAudioPlayerNewInstance, void *);
 
-// Notify when a queued audio segment done playing.
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus);
+    // Notify when a queued audio segment done playing.
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerCancelNotifyAnyDone, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerCancelNotifyAnyDone, TAny *aInstance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyUrl, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyUrl, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
 
-HLE_DISPATCH_FUNC(TUint64, EAudioPlayerGetCurrentPlayPos, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TUint64, EAudioPlayerGetCurrentPlayPos, TAny *aInstance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetCurrentPlayPos, TAny *aInstance, TInt64 aMicroseconds);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetCurrentPlayPos, TAny *aInstance, TInt64 aMicroseconds);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetCurrentBitRate, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetCurrentBitRate, TAny *aInstance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetBalance, TAny *aInstance, TInt aBalance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetBalance, TAny *aInstance, TInt aBalance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetBalance, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetBalance, TAny *aInstance);
 
-// Supply raw audio data to media player queue.
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC &aAudioData, const TUint32 aEncoding, const TUint32 aFreq,
-    const TUint32 aChannels);
+    // Supply raw audio data to media player queue.
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC &aAudioData, const TUint32 aEncoding, const TUint32 aFreq,
+        const TUint32 aChannels);
 
-// Set volume of the play instance.
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetVolume, TAny *aInstance, const TInt aVolume);
+    // Set volume of the play instance.
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetVolume, TAny *aInstance, const TInt aVolume);
 
-// Get current volume of the play instance.
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetVolume, TAny *aInstance);
+    // Get current volume of the play instance.
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetVolume, TAny *aInstance);
 
-// Get the maximum volume this instance allowed.
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerMaxVolume, TAny *aInstance);
+    // Get the maximum volume this instance allowed.
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerMaxVolume, TAny *aInstance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerPlay, TAny *aInstance);
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerStop, TAny *aInstance);
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerPause, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerPlay, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerStop, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerPause, TAny *aInstance);
 
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetRepeats, TAny *aInstance, const TInt aTimes, TUint64 aSilenceIntervalMicros);
-HLE_DISPATCH_FUNC(TInt, EAudioPlayerDestroy, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetRepeats, TAny *aInstance, const TInt aTimes, TUint64 aSilenceIntervalMicros);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerDestroy, TAny *aInstance);
+}
 
 #endif

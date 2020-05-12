@@ -16,7 +16,10 @@ SYSTEMINCLUDE   \epoc32\include
 
 SOURCEPATH	  ..\src
 
-SOURCE		  main.cpp dispatch.cpp impl.cpp log.cpp
+SOURCE		  main.cpp
+SOURCE        dispatch.s
+SOURCE        impl.cpp
+SOURCE        log.cpp
 
 DEFFILE ..\eabi\mediaclientaudiostream.def
 
