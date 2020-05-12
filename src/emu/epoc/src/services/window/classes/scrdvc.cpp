@@ -147,6 +147,19 @@ namespace eka2l1::epoc {
         ctx.set_request_status(0);
     }
 
+    void screen_device::is_screen_mode_dynamic(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        const epoc::config::screen_mode &mode = scr->current_mode();
+
+        // The request code set is the boolean for whether screen mode is dynamic
+        if ((mode.size.x == -1) && (mode.size.y == -1)) {
+            // Dynamiccc!!!!
+            ctx.set_request_status(1);
+            return;
+        }
+
+        ctx.set_request_status(0);
+    }
+
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         //LOG_TRACE("Screen device {}", cmd.header.op);
         ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
@@ -251,6 +264,10 @@ namespace eka2l1::epoc {
             client->delete_object(cmd.obj_handle);
             break;
         }
+
+        case ws_sd_op_is_screen_mode_dynamic:
+            is_screen_mode_dynamic(ctx, cmd);
+            break;
 
         default: {
             LOG_WARN("Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
