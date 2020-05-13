@@ -2414,7 +2414,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, get_global_userdata) {
-        LOG_INFO("get_global_userdata stubbed with zero");
+        //LOG_INFO("get_global_userdata stubbed with zero");
         return 0;
     }
 
