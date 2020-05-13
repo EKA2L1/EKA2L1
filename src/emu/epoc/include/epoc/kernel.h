@@ -328,7 +328,12 @@ namespace eka2l1 {
         */
         template <typename T>
         T *get(const kernel::handle handle) {
-            return reinterpret_cast<T *>(get_kernel_obj_raw(handle));
+            T *result = reinterpret_cast<T *>(get_kernel_obj_raw(handle));
+            if (result->get_object_type() != get_object_type<T>()) {
+                return nullptr;
+            }
+
+            return result;
         }
 
         template <typename T>

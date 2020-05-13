@@ -169,7 +169,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        epoc::des8 *des = name.get(mem);
+        epoc::des8 *des = name.get(cr_process);
         const std::u16string full_path_u16 = pr_real->get_exe_path();
 
         // Why???...
@@ -216,7 +216,9 @@ namespace eka2l1::epoc {
             return;
         }
 
-        epoc::uid_type *type = uid_type.get(mem);
+        process_ptr crr_pr = kern->crr_process();
+
+        epoc::uid_type *type = uid_type.get(crr_pr);
         auto tup = pr_real->get_uid_type();
 
         type->uid1 = std::get<0>(tup);
@@ -920,11 +922,8 @@ namespace eka2l1::epoc {
         return do_create_session_from_server(sys, server, msg_slots, sec, mode);
     }
 
-    BRIDGE_FUNC(std::int32_t, session_share, eka2l1::ptr<std::int32_t> handle_ptr, std::int32_t share) {
+    BRIDGE_FUNC(std::int32_t, session_share, std::uint32_t *handle, std::int32_t share) {
         kernel_system *kern = sys->get_kernel_system();
-        memory_system *mem = sys->get_memory_system();
-
-        std::int32_t *handle = handle_ptr.get(mem);
         session_ptr ss = kern->get<service::session>(*handle);
 
         if (!ss) {
@@ -938,11 +937,11 @@ namespace eka2l1::epoc {
             ss->set_access_type(kernel::access_type::local_access);
         }
 
-        int old_handle = *handle;
+        const std::uint32_t old_handle = *handle;
 
         // Weird behavior, suddenly it wants to mirror handle then close the old one
         // Clean its identity :D
-        *handle = kern->mirror(kern->crr_thread(), *handle, kernel::owner_type::process);
+        *handle = kern->mirror(kern->crr_thread(), old_handle, kernel::owner_type::process);
         kern->close(old_handle);
 
         return epoc::error_none;
@@ -952,12 +951,12 @@ namespace eka2l1::epoc {
         eka2l1::ptr<epoc::request_status> status) {
         // LOG_TRACE("Send using handle: {}", (h & 0x8000) ? (h & ~0x8000) : (h));
 
-        memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
+        process_ptr crr_pr =  kern->crr_process();
 
         // Dispatch the header
         ipc_arg arg;
-        std::int32_t *arg_header = ipc_args.cast<std::int32_t>().get(mem);
+        std::int32_t *arg_header = ipc_args.cast<std::int32_t>().get(crr_pr);
 
         if (ipc_args) {
             for (uint8_t i = 0; i < 4; i++) {
@@ -1000,12 +999,12 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, session_send, kernel::handle h, std::int32_t ord, eka2l1::ptr<void> ipc_args,
         eka2l1::ptr<epoc::request_status> status) {
-        memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
+        process_ptr crr_pr =  kern->crr_process();
 
         // Dispatch the header
         ipc_arg arg;
-        std::int32_t *arg_header = ipc_args.cast<std::int32_t>().get(mem);
+        std::int32_t *arg_header = ipc_args.cast<std::int32_t>().get(crr_pr);
 
         if (ipc_args) {
             for (uint8_t i = 0; i < 4; i++) {
@@ -1103,8 +1102,8 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         process_ptr pr = kern->crr_process();
 
-        epoc::chunk_create create_info = *chunk_create_info_ptr.get(mem);
-        desc8 *name = name_des.get(mem);
+        epoc::chunk_create create_info = *chunk_create_info_ptr.get(pr);
+        desc8 *name = name_des.get(pr);
 
         kernel::chunk_type type = kernel::chunk_type::normal;
         kernel::chunk_access access = kernel::chunk_access::local;
@@ -1411,7 +1410,6 @@ namespace eka2l1::epoc {
         }
 
         int res = sys->get_kernel_system()->close(h);
-
         return res;
     }
 
@@ -1940,7 +1938,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, property_find_get_bin, std::int32_t cage, std::int32_t key, eka2l1::ptr<std::uint8_t> data, std::int32_t datlength) {
         kernel_system *kern = sys->get_kernel_system();
-        memory_system *mem = sys->get_memory_system();
+        process_ptr crr_pr = kern->crr_process();
 
         property_ptr prop = kern->get_prop(cage, key);
 
@@ -1949,7 +1947,7 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        std::uint8_t *data_ptr = data.get(mem);
+        std::uint8_t *data_ptr = data.get(crr_pr);
         auto data_vec = prop->get_bin();
 
         const std::size_t size_to_copy = std::min<std::size_t>(data_vec.size(), datlength);

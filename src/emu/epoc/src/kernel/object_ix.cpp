@@ -132,6 +132,10 @@ namespace eka2l1 {
             handle_inspect_info info = inspect_handle(handle);
 
             if (info.object_ix_index < objects.size()) {
+                if (objects[info.object_ix_index].free) {
+                    return nullptr;
+                }
+                
                 return objects[info.object_ix_index].object;
             }
 
