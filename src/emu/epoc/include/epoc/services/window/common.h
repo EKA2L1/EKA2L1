@@ -26,6 +26,7 @@
 
 #include <common/vecx.h>
 #include <cstdint>
+#include <string>
 #include <unordered_map>
 
 #include <common/e32inc.h>
@@ -80,6 +81,7 @@ namespace eka2l1::epoc {
     bool is_display_mode_mono(const display_mode disp_mode);
     bool is_display_mode_alpha(const display_mode disp_mode);
     int get_bpp_from_display_mode(const epoc::display_mode bpp);
+    epoc::display_mode string_to_display_mode(const std::string &disp_str);
 
     enum class pointer_cursor_mode {
         none, ///< The device don't have a pointer (touch)

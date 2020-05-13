@@ -21,7 +21,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/time.h>
+#include <common/log.h>
+
 #include <epoc/services/window/common.h>
 
 namespace eka2l1::epoc {
@@ -94,6 +97,17 @@ namespace eka2l1::epoc {
         default:
             return 0;
         }
+    }
+
+    epoc::display_mode string_to_display_mode(const std::string &disp_str) {
+        const std::string disp_str_lower = common::lowercase_string(disp_str);
+        if (disp_str_lower == "color16map") return epoc::display_mode::color16map;
+        if (disp_str_lower == "color16ma") return epoc::display_mode::color16ma;
+        if (disp_str_lower == "color16mu") return epoc::display_mode::color16mu;
+        if (disp_str_lower == "color64k") return epoc::display_mode::color64k;
+        
+        LOG_TRACE("Unhandled string to convert to display mode: {}", disp_str);
+        return epoc::display_mode::color16ma;
     }
 
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code) {
