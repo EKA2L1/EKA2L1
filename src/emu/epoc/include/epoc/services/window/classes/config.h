@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <epoc/services/window/common.h>
 #include <common/vecx.h>
 #include <string>
 #include <vector>
@@ -38,6 +39,7 @@ namespace eka2l1::epoc {
 
         struct screen {
             int screen_number;
+            epoc::display_mode disp_mode;
             std::vector<screen_mode> modes;
         };
     }

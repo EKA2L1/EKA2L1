@@ -93,6 +93,7 @@ namespace eka2l1::epoc {
         , next(nullptr)
         , focus(nullptr) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
+        disp_mode = scr_conf.disp_mode;
 
         for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
             if (scr_config.modes[i].rotation == 0) {

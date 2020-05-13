@@ -795,6 +795,20 @@ namespace eka2l1 {
     }
 
     void window_server::parse_wsini() {
+        common::ini_node_ptr window_mode_node = ws_config.find("WINDOWMODE");
+        epoc::display_mode scr_mode_global = epoc::display_mode::color16ma;
+
+        if (window_mode_node) {
+            common::ini_pair *window_mode_pair = window_mode_node->get_as<common::ini_pair>();
+
+            std::vector<std::string> modes;
+            modes.resize(1);
+
+            window_mode_pair->get(modes);
+
+            scr_mode_global = epoc::string_to_display_mode(modes[0]);
+        }
+
         common::ini_node *screen_node = nullptr;
         int total_screen = 0;
         
@@ -820,6 +834,7 @@ namespace eka2l1 {
             epoc::config::screen scr;
 
             scr.screen_number = total_screen - 1;
+            scr.disp_mode = scr_mode_global;
 
             int total_mode = 0;
 
