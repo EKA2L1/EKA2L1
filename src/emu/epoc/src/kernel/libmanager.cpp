@@ -217,7 +217,8 @@ namespace eka2l1::hle {
 
         relocate(img->code_reloc_section.entries, code_base, code_delta, data_delta);
 
-        if (img->header.bss_size) {
+        // Either .data or .bss exists, we need to relocate. Sometimes .data needs relocate too!
+        if ((img->header.bss_size) || (img->header.data_size)) {
             img->rt_data_addr = rtdata_addr;
             relocate(img->data_reloc_section.entries, data_base, code_delta, data_delta);
         }
