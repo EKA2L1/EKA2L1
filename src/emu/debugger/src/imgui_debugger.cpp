@@ -1765,6 +1765,7 @@ namespace eka2l1 {
                 ImGui::Text("Honors:");
                 ImGui::Text("- florastamine");
                 ImGui::Text("- HadesD (Ichiro)");
+                ImGui::Text("- quanshousio");
                 ImGui::EndChild();
             }
 
