@@ -46,6 +46,14 @@ namespace eka2l1 {
             get_status(ctx);
             break;
 
+        case epoc::etel_line_notify_incoming_call:
+            notify_incoming_call(ctx);
+            break;
+
+        case epoc::etel_line_cancel_notify_incoming_call:
+            cancel_notify_incoming_call(ctx);
+            break;
+
         case epoc::etel_mobile_line_notify_status_change:
             notify_status_change(ctx);
             break;
@@ -72,5 +80,14 @@ namespace eka2l1 {
     void etel_line_subsession::cancel_notify_status_change(service::ipc_context *ctx) {
         ctx->set_request_status(epoc::error_none);
         status_change_nof_.complete(epoc::error_cancel);
+    }
+    
+    void etel_line_subsession::notify_incoming_call(service::ipc_context *ctx) {
+        incoming_call_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void etel_line_subsession::cancel_notify_incoming_call(service::ipc_context *ctx) {
+        ctx->set_request_status(epoc::error_none);
+        incoming_call_nof_.complete(epoc::error_cancel);
     }
 }

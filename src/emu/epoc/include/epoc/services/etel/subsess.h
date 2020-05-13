@@ -79,16 +79,19 @@ namespace eka2l1 {
     struct etel_line_subsession: public etel_subsession {
         etel_line *line_;
         epoc::notify_info status_change_nof_;
+        epoc::notify_info incoming_call_nof_;
 
     protected:
         void get_status(service::ipc_context *ctx);
+        void notify_status_change(service::ipc_context *ctx);
+        void cancel_notify_status_change(service::ipc_context *ctx);
+        void notify_incoming_call(service::ipc_context *ctx);
+        void cancel_notify_incoming_call(service::ipc_context *ctx);
 
     public:
         explicit etel_line_subsession(etel_session *session, etel_line *line);
         
         void dispatch(service::ipc_context *ctx) override;
-        void notify_status_change(service::ipc_context *ctx);
-        void cancel_notify_status_change(service::ipc_context *ctx);
 
         etel_subsession_type type() const override {
             return etel_subsession_type_line;
