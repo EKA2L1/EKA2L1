@@ -937,13 +937,6 @@ namespace eka2l1::epoc {
             ss->set_access_type(kernel::access_type::local_access);
         }
 
-        const std::uint32_t old_handle = *handle;
-
-        // Weird behavior, suddenly it wants to mirror handle then close the old one
-        // Clean its identity :D
-        *handle = kern->mirror(kern->crr_thread(), old_handle, kernel::owner_type::process);
-        kern->close(old_handle);
-
         return epoc::error_none;
     }
 
