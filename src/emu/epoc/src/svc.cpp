@@ -1419,10 +1419,23 @@ namespace eka2l1::epoc {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
 
-        uint32_t res = kern->mirror(&(*kern->get<kernel::thread>(h)), dup_handle,
+        return kern->mirror(&(*kern->get<kernel::thread>(h)), dup_handle,
+            (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread);
+    }
+    
+    BRIDGE_FUNC(std::int32_t, handle_duplicate_v2, std::int32_t h, epoc::owner_type owner, std::uint32_t *dup_handle) {
+        memory_system *mem = sys->get_memory_system();
+        kernel_system *kern = sys->get_kernel_system();
+
+        const std::uint32_t handle_result = kern->mirror(&(*kern->get<kernel::thread>(h)), *dup_handle,
             (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread);
 
-        return res;
+        if (handle_result == INVALID_HANDLE) {
+            return epoc::error_not_found;
+        }
+
+        *dup_handle = handle_result;
+        return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, handle_open_object, std::int32_t obj_type, eka2l1::ptr<epoc::desc8> name_des, std::int32_t owner) {
@@ -2401,7 +2414,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, get_global_userdata) {
-        LOG_INFO("get_global_userdata stubbed with zero");
+        //LOG_INFO("get_global_userdata stubbed with zero");
         return 0;
     }
 
@@ -2527,6 +2540,54 @@ namespace eka2l1::epoc {
         }
     }
 
+    const eka2l1::hle::func_map svc_register_funcs_v10 = {
+        /* FAST EXECUTIVE CALL */
+        BRIDGE_REGISTER(0x00800000, wait_for_any_request),
+        BRIDGE_REGISTER(0x00800001, heap),
+        BRIDGE_REGISTER(0x00800002, heap_switch),
+        BRIDGE_REGISTER(0x00800005, active_scheduler),
+        BRIDGE_REGISTER(0x00800006, set_active_scheduler),
+        BRIDGE_REGISTER(0x00800008, trap_handler),
+        BRIDGE_REGISTER(0x00800009, set_trap_handler),
+        BRIDGE_REGISTER(0x0080000A, debug_mask),
+        BRIDGE_REGISTER(0x0080000B, debug_mask_index),
+        BRIDGE_REGISTER(0x00800015, utc_offset),
+        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+        /* SLOW EXECUTIVE CALL */
+        BRIDGE_REGISTER(0x01, chunk_base),
+        BRIDGE_REGISTER(0x02, chunk_size),
+        BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x16, process_filename),
+        BRIDGE_REGISTER(0x17, process_command_line),
+        BRIDGE_REGISTER(0x27, session_share),
+        BRIDGE_REGISTER(0x3B, handle_name),
+        BRIDGE_REGISTER(0x4D, session_send_sync),
+        BRIDGE_REGISTER(0x4F, hal_function),
+        BRIDGE_REGISTER(0x52, process_command_line_length),
+        BRIDGE_REGISTER(0x56, debug_print),
+        BRIDGE_REGISTER(0x64, process_type),
+        BRIDGE_REGISTER(0x6A, handle_close),
+        BRIDGE_REGISTER(0x6B, chunk_new),
+        BRIDGE_REGISTER(0x6C, chunk_adjust),
+        BRIDGE_REGISTER(0x6D, handle_open_object),
+        BRIDGE_REGISTER(0x6E, handle_duplicate_v2),
+        BRIDGE_REGISTER(0x6F, mutex_create),
+        BRIDGE_REGISTER(0x70, semaphore_create),
+        BRIDGE_REGISTER(0x73, thread_kill),
+        BRIDGE_REGISTER(0x78, thread_rename),
+        BRIDGE_REGISTER(0x80, session_create),
+        BRIDGE_REGISTER(0xA1, static_call_list),
+        BRIDGE_REGISTER(0xAF, process_security_info),
+        BRIDGE_REGISTER(0xBF, property_attach),
+        BRIDGE_REGISTER(0xC0, property_subscribe),
+        BRIDGE_REGISTER(0xC6, property_find_get_int),
+        BRIDGE_REGISTER(0xC7, property_find_get_bin),
+        BRIDGE_REGISTER(0xD2, process_get_data_parameter),
+        BRIDGE_REGISTER(0xD3, process_data_parameter_length),
+        BRIDGE_REGISTER(0xE0, leave_start),
+        BRIDGE_REGISTER(0xE9, btrace_out)
+    };
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),
@@ -2546,6 +2607,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
+        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, object_next),
         BRIDGE_REGISTER(0x01, chunk_base),
@@ -2668,9 +2731,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDE, mutex_is_held),
         BRIDGE_REGISTER(0xDF, leave_start),
         BRIDGE_REGISTER(0xE0, leave_end),
-        BRIDGE_REGISTER(0xE8, btrace_out),
-        BRIDGE_REGISTER(0xFE, hle_dispatch),
-        BRIDGE_REGISTER(0xFF, virtual_reality)
+        BRIDGE_REGISTER(0xE8, btrace_out)
     };
 
     const eka2l1::hle::func_map svc_register_funcs_v93 = {
@@ -2690,6 +2751,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
+        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, object_next),
         BRIDGE_REGISTER(0x01, chunk_base),
@@ -2794,7 +2857,6 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDC, thread_request_signal),
         BRIDGE_REGISTER(0xDE, leave_start),
         BRIDGE_REGISTER(0xDF, leave_end),
-        BRIDGE_REGISTER(0xE7, btrace_out),
-        BRIDGE_REGISTER(0xFE, hle_dispatch)
+        BRIDGE_REGISTER(0xE7, btrace_out)
     };
 }

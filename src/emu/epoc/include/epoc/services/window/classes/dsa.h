@@ -47,6 +47,8 @@ namespace eka2l1::epoc {
         explicit dsa(window_server_client_ptr client);
         ~dsa() override;
 
+        void do_cancel();
+
         void request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);

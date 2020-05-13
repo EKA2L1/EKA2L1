@@ -90,9 +90,12 @@ namespace eka2l1::epoc {
         raw_event_type type_;
     };
     
-    //! The SVC map for Symbian S60v3.
+    ///> @brief The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;
 
-    //! The SVC map for Symbian S60v5
+    ///> @brief The SVC map for Symbian S60v5.
     extern const eka2l1::hle::func_map svc_register_funcs_v94;
+    
+    ///> @brief The SVC map for Symbian S^3.
+    extern const eka2l1::hle::func_map svc_register_funcs_v10;
 }

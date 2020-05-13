@@ -17,16 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scdv/sv.h>
+.align 4
 
-HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles) {
-    (void)aScreenNumber;
-    (void)aNumberOfRect;
-    (void)aRectangles;
-    CALL_HLE_DISPATCH(1)
-}
-
-HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo) {
-    (void)aInfo;
-    CALL_HLE_DISPATCH(2)
-}
+.macro CallHleDispatch func_id
+    mov r0, #\func_id
+    swi 0x800030
+    bx lr
+.endm

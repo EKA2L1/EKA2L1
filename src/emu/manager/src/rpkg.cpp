@@ -128,8 +128,8 @@ namespace eka2l1::loader {
                 break;
             }
 
-            case 10: {
-                // TODO: Separation
+            case 100:
+            case 101: {
                 ver = epocver::epoc10;
                 break;
             }

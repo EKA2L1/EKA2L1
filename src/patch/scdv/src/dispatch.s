@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team.
+ * Copyright (c) 2020 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/reg.h>
-#include <epoc/svc.h>
+.include "../../common/sv.s"
 
-#include <epoc/kernel/libmanager.h>
-#include <hle/bridge.h>
+.global UpdateScreen
+.global FastBlit
 
-namespace eka2l1::epoc {
-    void register_epocv93(eka2l1::hle::lib_manager &mngr) {
-        ADD_SVC_REGISTERS(mngr, svc_register_funcs_v93);
-    }
+UpdateScreen:
+    CallHleDispatch 0x1
 
-    void register_epocv94(eka2l1::hle::lib_manager &mngr) {
-        ADD_SVC_REGISTERS(mngr, svc_register_funcs_v94);
-    }
-
-    void register_epocv10(eka2l1::hle::lib_manager &mngr) {
-        ADD_SVC_REGISTERS(mngr, svc_register_funcs_v10);
-    }
-}
+FastBlit:
+    CallHleDispatch 0x2

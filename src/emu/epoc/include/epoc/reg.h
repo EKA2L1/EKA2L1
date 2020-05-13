@@ -7,9 +7,21 @@ namespace eka2l1::hle {
 }
 
 namespace eka2l1::epoc {
-    /*! \brief Register Symbian 9.3 SVC calls. */
+    /**
+     * @brief Register Symbian 9.3 supervisor calls.
+     * @param mngr Reference to library manager.
+     **/
     void register_epocv93(hle::lib_manager &mngr);
 
-    /*! \brief Register Symbian 9.4 SVC calls. */
+    /**
+     * @brief Register Symbian 9.4 supervisor calls.
+     * @param mngr Reference to library manager.
+     **/
     void register_epocv94(hle::lib_manager &mngr);
+    
+    /**
+     * @brief Register Symbian S^3 supervisor calls.
+     * @param mngr Reference to library manager.
+     **/
+    void register_epocv10(eka2l1::hle::lib_manager &mngr);
 }

@@ -213,6 +213,11 @@ namespace eka2l1::epoc {
 
             builder->update_bitmap(driver_textures[idx], bpp, data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels);
             hashes[idx] = hash;
+
+            if (bmp->settings_.current_display_mode() == epoc::display_mode::color16mu) {
+                builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                    drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+            }
         }
 
         timestamps[idx] = crr_timestamp;

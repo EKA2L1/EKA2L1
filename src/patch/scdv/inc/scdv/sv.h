@@ -22,10 +22,6 @@
 
 #include <e32std.h>
 
-#define CALL_HLE_DISPATCH(FUNCID)      \
-    asm volatile("mov r0, #" #FUNCID); \
-    asm volatile("swi #0xFE");
-
 #define HLE_DISPATCH_FUNC(ret, name, id, ...) \
     ret name(const TUint32 func_id, __VA_ARGS__)
 
@@ -39,7 +35,9 @@ struct TFastBlitInfo {
     TRect iSrcRect;
 };
 
-HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles);
-HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo);
+extern "C" {
+    HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles);
+    HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo);
+}
 
 #endif

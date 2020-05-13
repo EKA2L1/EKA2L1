@@ -217,7 +217,8 @@ namespace eka2l1::hle {
 
         relocate(img->code_reloc_section.entries, code_base, code_delta, data_delta);
 
-        if (img->header.bss_size) {
+        // Either .data or .bss exists, we need to relocate. Sometimes .data needs relocate too!
+        if ((img->header.bss_size) || (img->header.data_size)) {
             img->rt_data_addr = rtdata_addr;
             relocate(img->data_reloc_section.entries, data_base, code_delta, data_delta);
         }
@@ -479,10 +480,21 @@ namespace eka2l1::hle {
 #undef EXPORT
 #undef ENLIB
 
-        if (ver == epocver::epoc94) {
+        switch (ver) {
+        case epocver::epoc94:
             epoc::register_epocv94(*this);
-        } else if (ver == epocver::epoc93) {
+            break;
+    
+        case epocver::epoc93:
             epoc::register_epocv93(*this);
+            break;
+
+        case epocver::epoc10:
+            epoc::register_epocv10(*this);
+            break;
+
+        default:
+            break;
         }
 
         load_patch_libraries(".//patch//");

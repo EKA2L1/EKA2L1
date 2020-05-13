@@ -11,12 +11,15 @@ TARGET		  mediaclientaudio.dll
 TARGETTYPE	  dll
 UID			 0x10003B19 0xed5d920d
 
-USERINCLUDE	 ..\inc
+USERINCLUDE	    ..\inc 
 SYSTEMINCLUDE   \epoc32\include
 
-SOURCEPATH	  ..\src
+SOURCEPATH	    ..\src
 
-SOURCE		  main.cpp dispatch.cpp impl.cpp log.cpp
+SOURCE		    main.cpp
+SOURCE          impl.cpp
+SOURCE          log.cpp
+SOURCE          dispatch.s
 
 DEFFILE ..\eabi\mediaclientaudio.def
 

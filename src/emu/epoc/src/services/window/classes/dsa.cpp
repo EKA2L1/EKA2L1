@@ -40,10 +40,7 @@ namespace eka2l1::epoc {
     };
 
     dsa::~dsa() {
-        if (husband_) {
-            husband_->set_dsa_active(false);
-            husband_->direct = nullptr;
-        }
+        do_cancel();
     }
 
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -73,6 +70,8 @@ namespace eka2l1::epoc {
         // But what is the point... To override a DSA? Should that be possible...
         // TODO: Verify...
         if (husband_->is_dsa_active()) {
+            LOG_WARN("Husband window is currently active in a DSA, silently pass");
+
             ctx.set_request_status(0);
             return;
         }
@@ -112,8 +111,18 @@ namespace eka2l1::epoc {
         ctx.set_request_status(1);
     }
 
-    void dsa::cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+    void dsa::do_cancel() {
         state_ = state_completed;
+
+        if (husband_) {
+            husband_->set_dsa_active(false);
+            husband_->direct = nullptr;
+            husband_ = nullptr;
+        }
+    }
+
+    void dsa::cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        do_cancel();
         ctx.set_request_status(epoc::error_none);
     }
 

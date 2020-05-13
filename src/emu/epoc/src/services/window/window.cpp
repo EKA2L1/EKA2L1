@@ -1124,9 +1124,13 @@ namespace eka2l1 {
         // Create other available screens. Plugged in screen later will be created explicitly
         for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
             crr->next = new epoc::screen(1, get_screen_config(1));
+
             crr = crr->next;
-            crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
-            create_screen_buffer_for_dsa(kern, crr);
+
+            if ((crr->size().x != -1) && (crr->size().y != -1)) {
+                crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
+                create_screen_buffer_for_dsa(kern, crr);
+            }
         }
 
         // Set default focus screen to be the first
@@ -1377,6 +1381,11 @@ namespace eka2l1 {
     }
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
-        return get_fbs_server()->get<fbsbitmap>(h)->bitmap_;
+        fbsbitmap *bmp = get_fbs_server()->get<fbsbitmap>(h);
+        if (bmp) {
+            return bmp->bitmap_;
+        }
+
+        return nullptr;
     }
 }

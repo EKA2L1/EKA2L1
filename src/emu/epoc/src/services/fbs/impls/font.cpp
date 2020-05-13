@@ -533,9 +533,9 @@ namespace eka2l1 {
         const eka2l1::address addr = font->guest_font_handle.ptr_address();
 
         if (codepoint & 0x80000000) {
-            LOG_DEBUG("Trying to rasterize glyph index {}", codepoint & ~0x80000000);
+            //LOG_DEBUG("Trying to rasterize glyph index {}", codepoint & ~0x80000000);
         } else {
-            LOG_DEBUG("Trying to rasterize character '{}' (code {})", static_cast<char>(codepoint), codepoint);
+            //LOG_DEBUG("Trying to rasterize character '{}' (code {})", static_cast<char>(codepoint), codepoint);
         }
 
         int rasterized_width = 0;
