@@ -43,6 +43,7 @@ namespace eka2l1 {
         msv_mtm_group_unref = 0x1D,
         msv_fill_registered_mtm_dll_array = 0x19,
         msv_get_message_directory = 0x25,
+        msv_set_as_observer_only = 0x27,
         msv_get_notify_sequence = 0x2D,
         msv_set_receive_entry_events = 0x31,
         msv_get_message_drive = 0x33
@@ -88,7 +89,8 @@ namespace eka2l1 {
         std::uint32_t nof_sequence_;
 
         enum msv_session_flag {
-            FLAG_RECEIVE_ENTRY_EVENTS = 1 << 0
+            FLAG_RECEIVE_ENTRY_EVENTS = 1 << 0,
+            FLAG_OBSERVER_ONLY = 1 << 1
         };
 
         std::uint32_t flags_;
@@ -113,6 +115,7 @@ namespace eka2l1 {
         void get_entry(service::ipc_context *ctx);
         void get_children(service::ipc_context *ctx);
         void get_notify_sequence(service::ipc_context *ctx);
+        void set_as_observer_only(service::ipc_context *ctx);
 
         void queue(msv_event_data &evt);
     };

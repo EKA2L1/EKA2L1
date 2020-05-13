@@ -217,6 +217,10 @@ namespace eka2l1 {
             get_message_directory(ctx);
             break;
 
+        case msv_set_as_observer_only:
+            set_as_observer_only(ctx);
+            break;
+
         case msv_get_notify_sequence:
             get_notify_sequence(ctx);
             break;
@@ -479,6 +483,11 @@ namespace eka2l1 {
         }
         
         group->ref_count_--;
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void msv_client_session::set_as_observer_only(service::ipc_context *ctx) {
+        flags_ |= FLAG_OBSERVER_ONLY;
         ctx->set_request_status(epoc::error_none);
     }
 
