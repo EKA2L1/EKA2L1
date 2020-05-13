@@ -57,8 +57,10 @@ namespace eka2l1::epoc {
         etel_phone_info_by_index = 59,
         etel_query_tsy_functionality = 60,
         etel_phone_init = 75,
+        etel_mobile_line_notify_status_change = 20024,
         etel_mobile_phone_get_indicator = 20046,
-        etel_mobile_phone_get_indicators_cap = 20047
+        etel_mobile_phone_get_indicators_cap = 20047,
+        etel_mobile_line_cancel_notify_status_change = 20524
     };
 
     enum etel_network_type: std::uint32_t {

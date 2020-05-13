@@ -46,6 +46,14 @@ namespace eka2l1 {
             get_status(ctx);
             break;
 
+        case epoc::etel_mobile_line_notify_status_change:
+            notify_status_change(ctx);
+            break;
+
+        case epoc::etel_mobile_line_cancel_notify_status_change:
+            cancel_notify_status_change(ctx);
+            break;
+
         default:
             LOG_ERROR("Unimplemented etel line opcode {}", ctx->msg->function);
             break;
@@ -55,5 +63,14 @@ namespace eka2l1 {
     void etel_line_subsession::get_status(service::ipc_context *ctx) {
         ctx->write_arg_pkg<epoc::etel_line_status>(0, line_->info_.sts_);
         ctx->set_request_status(epoc::error_none);
+    }
+    
+    void etel_line_subsession::notify_status_change(service::ipc_context *ctx) {
+        status_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+    
+    void etel_line_subsession::cancel_notify_status_change(service::ipc_context *ctx) {
+        ctx->set_request_status(epoc::error_none);
+        status_change_nof_.complete(epoc::error_cancel);
     }
 }
