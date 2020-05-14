@@ -394,6 +394,8 @@ namespace eka2l1::mem {
                 // Page table is not here. Skip....
                 running_offset += (page_num << mmu_->page_size_bits_);
                 continue;
+            } else {
+                pt = mmu_->get_page_table_by_id(ptid);
             }
 
             // Start offset
