@@ -191,6 +191,7 @@ namespace eka2l1::epoc {
         void get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd);
         void set_pointer_area(service::ipc_context &ctx, ws_cmd &cmd);
         void set_pointer_cursor_position(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_number_of_screen(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         void add_redraw_listener(notify_info nof) {

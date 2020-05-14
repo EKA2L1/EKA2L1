@@ -598,6 +598,24 @@ namespace eka2l1::epoc {
         ctx.set_request_status(epoc::error_none);
     }
 
+    void window_server_client::get_number_of_screen(service::ipc_context &ctx, ws_cmd &cmd) {
+        // We want to get the number of screen currently connected to the emulator
+        epoc::screen *scr = get_ws().get_screens();
+        std::uint32_t connected_count = 0;
+
+        while (scr) {
+            const eka2l1::vec2 size = scr->size();
+            if ((size.x != -1) && (size.y != -1)) {
+                // The screen is connected and has definite size.
+                connected_count++;
+            }
+
+            scr = scr->next;
+        }
+
+        ctx.set_request_status(connected_count);
+    }
+
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
@@ -737,6 +755,10 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_set_pointer_cursor_position:
             set_pointer_cursor_position(ctx, cmd);
+            break;
+
+        case ws_cl_op_get_number_screen:
+            get_number_of_screen(ctx, cmd);
             break;
 
         default:
