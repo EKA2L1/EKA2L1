@@ -214,8 +214,6 @@ namespace eka2l1 {
                 tsize += idx_tab.page_size[i];
             }
 
-            LOG_INFO("Total size: {}, needed size: {}", tsize, size);
-
             for (auto i = 0; i < idx_tab.header.number_of_pages; i++) {
                 uint32_t dcs_page = read_page(dest, i, size);
 
