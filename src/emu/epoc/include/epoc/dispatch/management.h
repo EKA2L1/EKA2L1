@@ -28,6 +28,8 @@ namespace eka2l1::dispatch {
     template <typename T>
     struct object_manager {
     protected:
+        friend struct dispatcher;
+
         std::vector<std::unique_ptr<T>> objs_;
         std::mutex lock_;
 

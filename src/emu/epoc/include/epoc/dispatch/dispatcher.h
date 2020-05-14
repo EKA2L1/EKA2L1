@@ -68,6 +68,9 @@ namespace eka2l1::dispatch {
     };
 
     struct dispatcher {
+    private:
+        void shutdown();
+
     public:
         window_server *winserv_;
 
@@ -78,8 +81,9 @@ namespace eka2l1::dispatch {
         ntimer *timing_;
 
         explicit dispatcher();
+        ~dispatcher();
+
         void init(kernel_system *kern, ntimer *timing);
-        void shutdown();
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);
         void update_all_screens(eka2l1::system *sys);

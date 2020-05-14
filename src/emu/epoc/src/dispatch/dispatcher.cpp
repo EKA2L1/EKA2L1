@@ -31,6 +31,10 @@ namespace eka2l1::dispatch {
         : winserv_(nullptr) {
     }
 
+    dispatcher::~dispatcher() {
+        shutdown();
+    }
+
     void dispatcher::init(kernel_system *kern, ntimer *timing) {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
         
@@ -56,7 +60,10 @@ namespace eka2l1::dispatch {
     }
 
     void dispatcher::shutdown() {
-        // TODO:
+        for (auto &stream: dsp_streams_.objs_) {
+            // Unschedule callback events.
+            timing_->unschedule_event(audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream.get()));
+        }
     }
 
     void dispatcher::update_all_screens(eka2l1::system *sys) {
