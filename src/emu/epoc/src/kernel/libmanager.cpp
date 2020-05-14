@@ -154,7 +154,7 @@ namespace eka2l1::hle {
 
     static bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, std::uint8_t *code_addr,
         kernel::process *pr, loader::e32img_import_block &import_block, codeseg_ptr &parent_cs) {
-        LOG_INFO("Fixup for: {}", import_block.dll_name);
+        // LOG_INFO("Fixup for: {}", import_block.dll_name);
 
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
         const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
@@ -206,8 +206,8 @@ namespace eka2l1::hle {
         uint32_t rtcode_addr = cs->get_code_run_addr(pr, &code_base);
         uint32_t rtdata_addr = cs->get_data_run_addr(pr, &data_base);
 
-        LOG_INFO("{} runtime code: 0x{:x}", cs->name(), rtcode_addr);
-        LOG_INFO("{} runtime data: 0x{:x}", cs->name(), rtdata_addr);
+        // LOG_INFO("{} runtime code: 0x{:x}", cs->name(), rtcode_addr);
+        // LOG_INFO("{} runtime data: 0x{:x}", cs->name(), rtdata_addr);
 
         img->rt_code_addr = rtcode_addr;
 
@@ -277,13 +277,17 @@ namespace eka2l1::hle {
         }
 
         codeseg_ptr cs = kern->create<kernel::codeseg>(common::ucs2_to_utf8(eka2l1::filename(path)), info);
+        if (!cs) {
+            LOG_ERROR("E32 image loading failed!");
+            return nullptr;
+        }
+        
         cs->attach(pr);
 
         mngr.patch_scripts(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
             pr, cs);
 
         relocate_e32img(img, pr, mem, mngr, cs);
-        LOG_INFO("Load e32img success");
         return cs;
     }
 
