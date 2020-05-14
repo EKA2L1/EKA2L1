@@ -116,54 +116,54 @@ namespace eka2l1 {
 
         struct e32img_header {
             e32_img_type uid1;
-            uint32_t uid2;
-            uint32_t uid3;
-            uint32_t check;
-            uint32_t sig;
+            std::uint32_t uid2;
+            std::uint32_t uid3;
+            std::uint32_t check;
+            std::uint32_t sig;
 
             //e32_cpu cpu;
 
-            uint32_t header_crc;
+            std::uint32_t header_crc;
 
-            uint16_t major;
-            uint16_t minor;
+            std::uint16_t major;
+            std::uint16_t minor;
 
-            uint32_t compression_type;
+            std::uint32_t compression_type;
 
-            uint8_t petran_major;
-            uint8_t petran_minor;
-            uint16_t petran_build;
+            std::uint8_t petran_major;
+            std::uint8_t petran_minor;
+            std::uint16_t petran_build;
 
-            uint32_t msb;
-            uint32_t lsb;
+            std::uint32_t msb;
+            std::uint32_t lsb;
 
-            e32_flags flags;
-            uint32_t code_size;
-            uint32_t data_size;
+            std::uint32_t flags;
+            std::uint32_t code_size;
+            std::uint32_t data_size;
 
-            uint32_t heap_size_min;
-            uint32_t heap_size_max;
+            std::uint32_t heap_size_min;
+            std::uint32_t heap_size_max;
 
-            uint32_t stack_size;
-            uint32_t bss_size;
-            uint32_t entry_point;
+            std::uint32_t stack_size;
+            std::uint32_t bss_size;
+            std::uint32_t entry_point;
 
-            uint32_t code_base;
-            uint32_t data_base;
-            uint32_t dll_ref_table_count;
+            std::uint32_t code_base;
+            std::uint32_t data_base;
+            std::uint32_t dll_ref_table_count;
 
-            uint32_t export_dir_offset;
-            uint32_t export_dir_count;
+            std::uint32_t export_dir_offset;
+            std::uint32_t export_dir_count;
 
-            uint32_t text_size;
-            uint32_t code_offset;
-            uint32_t data_offset;
+            std::uint32_t text_size;
+            std::uint32_t code_offset;
+            std::uint32_t data_offset;
 
-            uint32_t import_offset;
-            uint32_t code_reloc_offset;
-            uint32_t data_reloc_offset;
+            std::uint32_t import_offset;
+            std::uint32_t code_reloc_offset;
+            std::uint32_t data_reloc_offset;
 
-            uint16_t priority;
+            std::uint16_t priority;
             e32_cpu cpu;
         };
 

@@ -1,8 +1,7 @@
 ﻿/*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,12 +44,10 @@ namespace eka2l1::loader {
         deflate_c = 0x101F7AFC
     };
 
-    static void dump_flag_info(int flag) {
-        int fixed = (uint8_t)((flag >> 0x2) & 1);
-        int abi = (uint16_t)((flag >> 0x3) & 3);
-        int ept = (uint16_t)((flag >> 0x5) & 7);
-
-        LOG_INFO("Image dump info");
+    static void dump_flag_info(const std::uint32_t flag) {
+        const std::uint8_t fixed = static_cast<std::uint8_t>((flag >> 0x2) & 1);
+        const std::uint16_t abi = static_cast<std::uint16_t>((flag >> 0x3) & 3);
+        const std::uint16_t ept = static_cast<std::uint16_t>((flag >> 0x5) & 7);
 
         if (abi == 1) {
             LOG_INFO("ABI: EABI");
@@ -69,6 +66,34 @@ namespace eka2l1::loader {
         } else {
             LOG_INFO("Entry point type: EKA2");
         }
+    }
+
+    static void dump_image_info(const e32img &img) {
+        LOG_INFO("Image dump info:");
+        
+        if (img.has_extended_header) {
+            LOG_INFO("V-Format used, too tired \\_(-.-)_/");
+        }
+
+        dump_flag_info(img.header.flags);
+
+        switch (img.header.cpu) {
+        case e32_cpu::armv5:
+            LOG_INFO("Detected: ARMv5");
+            break;
+        case e32_cpu::armv6:
+            LOG_INFO("Detected: ARMv6");
+            break;
+        case e32_cpu::armv4:
+            LOG_INFO("Detected: ARMv4");
+            break;
+        default:
+            LOG_INFO("Invalid cpu specified in EKA2 Image Header. Maybe x86 or undetected");
+            break;
+        }
+
+        LOG_INFO("Total dll count: {}", img.header.dll_ref_table_count);
+        LOG_INFO("Import offsets: {}", img.header.import_offset);
     }
 
     static void read_relocations(common::ro_stream *stream, e32_reloc_section &section, uint32_t offset) {
@@ -129,8 +154,7 @@ namespace eka2l1::loader {
         }
 
         e32img img;
-
-        auto file_size = stream->size();
+        const std::size_t file_size = stream->size();
 
         stream->read(&img.header.uid1, 4);
         stream->read(&img.header.uid2, 4);
@@ -191,7 +215,7 @@ namespace eka2l1::loader {
             img.header.check = common::byte_swap(img.header.check);
             img.header.sig = common::byte_swap(img.header.sig);
             img.header.petran_build = common::byte_swap(img.header.petran_build);
-            img.header.flags = static_cast<e32_flags>(common::byte_swap(static_cast<std::uint32_t>(img.header.flags)));
+            img.header.flags = common::byte_swap(img.header.flags);
             img.header.code_size = common::byte_swap(img.header.code_size);
             img.header.data_size = common::byte_swap(img.header.data_size);
             img.header.heap_size_min = common::byte_swap(img.header.heap_size_min);
@@ -212,7 +236,6 @@ namespace eka2l1::loader {
         }
 
         compress_type ctype = static_cast<compress_type>(img.header.compression_type);
-        dump_flag_info(static_cast<int>(img.header.flags));
 
         if (img.header.compression_type > 0) {
             int header_format = (static_cast<int>(img.header.flags) >> 24) & 0xF;
@@ -220,7 +243,6 @@ namespace eka2l1::loader {
 
             if (header_format == 2) {
                 img.has_extended_header = true;
-                LOG_INFO("V-Format used, load more (too tired) \\_(-.-)_/");
 
                 stream->read(&img.header_extended.info, sizeof(e32img_vsec_info));
                 stream->read(&img.header_extended.exception_des, 4);
@@ -267,8 +289,6 @@ namespace eka2l1::loader {
                 inflate_machine.init();
                 auto readed = inflate_machine.read(reinterpret_cast<uint8_t *>(&img.data[img.header.code_offset]),
                     img.uncompressed_size);
-
-                LOG_INFO("Readed compress, size: {}", readed);
             } else if (ctype == compress_type::byte_pair_c) {
                 auto crr_pos = stream->tell();
 
@@ -290,26 +310,12 @@ namespace eka2l1::loader {
             stream->read(img.data.data(), static_cast<uint32_t>(img.data.size()));
         }
 
-        switch (img.header.cpu) {
-        case e32_cpu::armv5:
-            LOG_INFO("Detected: ARMv5");
-            break;
-        case e32_cpu::armv6:
-            LOG_INFO("Detected: ARMv6");
-            break;
-        case e32_cpu::armv4:
-            LOG_INFO("Detected: ARMv4");
-            break;
-        default:
-            LOG_INFO("Invalid cpu specified in EKA2 Image Header. Maybe x86 or undetected");
-            break;
-        }
-
-        uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
-        LOG_TRACE("Import + export size: 0x{:x}", import_export_table_size);
+        const std::uint32_t import_export_table_size = img.header.code_size - img.header.text_size;
 
         parse_export_dir(img);
         parse_iat(img);
+        
+        // dump_image_info(img);
 
         common::ro_buf_stream decompressed_stream(reinterpret_cast<std::uint8_t *>(&img.data[0]),
             img.data.size());
@@ -318,9 +324,6 @@ namespace eka2l1::loader {
         decompressed_stream.read(reinterpret_cast<void *>(&img.import_section.size), 4);
 
         img.import_section.imports.resize(img.header.dll_ref_table_count);
-
-        LOG_INFO("Total dll count: {}", img.header.dll_ref_table_count);
-        LOG_INFO("Import offsets: {}", img.header.import_offset);
 
         for (auto &import : img.import_section.imports) {
             decompressed_stream.read(reinterpret_cast<void *>(&import.dll_name_offset), 4);
@@ -344,8 +347,6 @@ namespace eka2l1::loader {
                     import.dll_name += temp;
                 }
             }
-
-            LOG_TRACE("Find dll import: {}, total import: {}.", import.dll_name.c_str(), import.number_of_imports);
 
             decompressed_stream.seek(static_cast<uint32_t>(crr_size), common::beg);
 
