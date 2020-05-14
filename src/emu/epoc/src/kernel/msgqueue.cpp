@@ -29,6 +29,7 @@ namespace eka2l1::kernel {
         , max_msg_length_(max_message_size)
         , max_length_(max_length)
         , avail_callback_(nullptr, nullptr) {
+        obj_type = kernel::object_type::msg_queue;
     }
 
     void msg_queue::set_available_callback(msg_queue_callback callback, void *userdata) {
