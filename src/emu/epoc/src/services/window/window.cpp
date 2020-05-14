@@ -1179,6 +1179,11 @@ namespace eka2l1 {
             do_base_init();
         }
 
+        if (number == -1) {
+            // Use default screen
+            return screens;
+        }
+
         epoc::screen *crr = screens;
 
         while (crr && crr->number != number) {
