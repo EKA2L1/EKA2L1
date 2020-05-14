@@ -505,9 +505,9 @@ namespace eka2l1 {
     }
 
     fbsfont *fbscli::get_font_object(service::ipc_context *ctx) {
-        if (ver_.build > 94) {
+        if ((ver_.build > 94) || (server<fbs_server>()->get_system()->get_symbian_version_use() >= epocver::epoc10)) {
             // Use object table handle
-            return server<fbs_server>()->font_obj_container.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
+            return obj_table_.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
         }
 
         const eka2l1::address addr = *ctx->get_arg<eka2l1::address>(0);
