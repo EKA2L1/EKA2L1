@@ -108,17 +108,10 @@ namespace eka2l1 {
         constexpr args_layout<args...> lay_out() {
             args_layout<args...> layout = {};
 
-            // The check was for GCC, but it crashed MSVC, so disable this for MSVC
-            // Clang works fine when there is check and when there isn't, which is best.
-
-#ifndef _MSC_VER
             if constexpr (sizeof...(args) != 0) {
-#endif
                 layout_args_state state = {};
                 add_args_to_layout<args...>(*layout.data(), state);
-#ifndef _MSC_VER
             }
-#endif
 
             return layout;
         }
