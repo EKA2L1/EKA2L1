@@ -88,6 +88,7 @@ namespace eka2l1 {
         symfile cfg_file = io->open_file(u"Z:\\private\\102744CA\\featreg.cfg", READ_MODE | BIN_MODE);
 
         if (!cfg_file) {
+            LOG_WARN("Feature registeration config file not present!");
             return false;
         }
 
