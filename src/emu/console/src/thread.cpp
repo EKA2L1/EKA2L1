@@ -433,19 +433,23 @@ namespace eka2l1::desktop {
         eka2l1::common::set_thread_name(os_thread_name);
 
         // Register SEH handler for this thread
-#if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER && defined(NDEBUG)
+#if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER && !defined(NDEBUG)
         _set_se_translator(seh_handler_translator_func);
 #endif
 
         while (!state.should_emu_quit) {
+#if !defined(NDEBUG)
             try {
+#endif
                 state.symsys->loop();
+#if !defined(NDEBUG)
             } catch (std::exception &exc) {
                 std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
                 state.debugger->queue_error(exc.what());
                 state.should_emu_quit = true;
                 break;
             }
+#endif
 
             if (state.should_emu_pause && !state.should_emu_quit) {
                 state.debugger->wait_for_debugger();
@@ -458,19 +462,18 @@ namespace eka2l1::desktop {
     int emulator_entry(emulator &state) {
         state.stage_two();
 
-        // First, initialize the graphics driver. This is needed for all graphics operations on the emulator.
-        std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
+        // Instantiate UI and High-level interface threads
         std::thread ui_thread_obj(ui_thread, std::ref(state));
         std::thread hli_thread_obj(high_level_interface_thread, std::ref(state));
+
+        // Run graphics driver on main entry.
+        graphics_driver_thread(state);
 
         // Wait for interface thread to be killed.
         hli_thread_obj.join();
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();
-
-        // Finally, kill of the graphics driver.
-        graphics_thread_obj.join();
 
         return 0;
     }
