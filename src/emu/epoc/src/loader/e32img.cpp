@@ -148,6 +148,29 @@ namespace eka2l1::loader {
         }
     }
 
+    static constexpr std::uint32_t E32IMG_SIGNATURE = 0x434F5045;
+
+    bool is_e32img(common::ro_stream *stream, std::uint32_t *uid_array) {
+        std::uint32_t temp_arr[3];
+        if (!uid_array) {
+            uid_array = temp_arr;
+        }
+
+        std::uint32_t check = 0;
+        std::uint32_t sig = 0;
+
+        stream->read(&uid_array[0], 4);
+        stream->read(&uid_array[1], 4);
+        stream->read(&uid_array[2], 4);
+        stream->read(&check, 4);
+        stream->read(&sig, 4);
+
+        const bool result = (sig == E32IMG_SIGNATURE);
+        stream->seek(0, common::seek_where::beg);
+
+        return result;
+    }
+
     std::optional<e32img> parse_e32img(common::ro_stream *stream, bool read_reloc) {
         if (!stream) {
             return std::nullopt;
@@ -162,7 +185,7 @@ namespace eka2l1::loader {
         stream->read(&img.header.check, 4);
         stream->read(&img.header.sig, 4);
 
-        if (img.header.sig != 0x434F5045) {
+        if (img.header.sig != E32IMG_SIGNATURE) {
             return std::nullopt;
         }
 

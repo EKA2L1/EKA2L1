@@ -201,13 +201,25 @@ namespace eka2l1 {
         };
 
         /**
-         * \brief Parse an E32 Image from stream.
+         * @brief Parse an E32 Image from stream.
          * 
-         * \param stream     The stream to parse from.
-         * \param read_reloc If this is true, relocation section will be read.
+         * @param stream     The stream to parse from.
+         * @param read_reloc If this is true, relocation section will be parsed.
          * 
-         * \returns An optional contains E32 Image. Nullopt if invalid.
+         * @returns An optional contains E32 Image. Nullopt if invalid.
          */
         std::optional<e32img> parse_e32img(common::ro_stream *stream, bool read_reloc = true);
+
+        /**
+         * @brief Check if the stream content is E32 Image.
+         * 
+         * @param   stream          Pointer to target read-only stream.
+         * @param   uid_array       Optional pointer to the array, which will contains the first
+         *                          three UIDs, even if the stream content is not E32IMG.
+         *                          
+         * 
+         * @returns True if the stream content is E32IMG.
+         */
+        bool is_e32img(common::ro_stream *stream, std::uint32_t *uid_array = nullptr);
     }
 }
