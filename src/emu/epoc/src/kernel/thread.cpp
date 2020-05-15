@@ -290,12 +290,12 @@ namespace eka2l1 {
             std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t *>(stack_chunk->host_base());
             std::uint8_t *stack_top_ptr = stack_beg_meta_ptr + stack_size - metadata_size;
 
-            const address stack_top = stack_chunk->base().ptr_address() + static_cast<address>(stack_size - metadata_size);
+            const address stack_top = stack_chunk->base(owner).ptr_address() + static_cast<address>(stack_size - metadata_size);
 
             // Fill the stack with garbage
             std::fill(stack_beg_meta_ptr, stack_top_ptr, 0xcc);
             create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
-                name_chunk->base().ptr_address(), epa);
+                name_chunk->base(owner).ptr_address(), epa);
 
             // Create local data chunk
             // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
@@ -315,7 +315,7 @@ namespace eka2l1 {
                 ldata->tls_heap = 0;
             }
 
-            reset_thread_ctx(epa, stack_top, local_data_chunk->base().ptr_address(), initial);
+            reset_thread_ctx(epa, stack_top, local_data_chunk->base(owner).ptr_address(), initial);
             scheduler = kern->get_thread_scheduler();
 
             // Add thread to process's thread list

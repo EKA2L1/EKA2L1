@@ -23,7 +23,7 @@
 #include <epoc/mem/process.h>
 
 #include <epoc/mem/model/multiple/chunk.h>
-#include <epoc/mem/model/multiple/section.h>
+#include <epoc/mem/model/section.h>
 
 namespace eka2l1::mem {
     struct multiple_mem_model_process : public mem_model_process {

@@ -40,7 +40,7 @@ namespace eka2l1::scripting {
     }
 
     std::uint32_t thread::get_stack_base() {
-        return thread_handle->get_stack_chunk()->base().ptr_address();
+        return thread_handle->get_stack_chunk()->base(thread_handle->owning_process()).ptr_address();
     }
 
     std::uint32_t thread::get_heap_base() {

@@ -74,6 +74,8 @@ namespace eka2l1::mem {
                 return running_offset - offset;
             }
 
+            const vm_address crr_base_addr = base(mmu_->current_addr_space());
+
             // Fill the entry
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
                 // If the entry has not yet been committed.
@@ -86,7 +88,7 @@ namespace eka2l1::mem {
                     size_just_mapped += psize;
 
                     if (off_start_just_mapped == 0) {
-                        off_start_just_mapped = (poff << mmu_->page_size_bits_) + base_ + pt_base;
+                        off_start_just_mapped = (poff << mmu_->page_size_bits_) + crr_base_addr + pt_base;
                         host_start_just_mapped = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
                     }
                 } else {
@@ -108,7 +110,7 @@ namespace eka2l1::mem {
 
             if (ptid == 0xFFFFFFFF) {
                 // Assign the new page table to the specified address
-                mmu_->assign_page_table(pt, base_ + pt_base, !is_local ? MMU_ASSIGN_LOCAL_GLOBAL_REGION : 0,
+                mmu_->assign_page_table(pt, crr_base_addr + pt_base, !is_local ? MMU_ASSIGN_LOCAL_GLOBAL_REGION : 0,
                     is_local ? &own_process_->addr_space_id_ : nullptr, is_local ? 1 : 0);
 
                 page_tabs_[running_offset >> mmu_->chunk_shift_] = pt->id();
@@ -157,6 +159,7 @@ namespace eka2l1::mem {
             vm_address off_start_just_unmapped = 0;
 
             const auto pt_base = (running_offset >> mmu_->chunk_shift_) << mmu_->chunk_shift_;
+            const vm_address crr_base_addr = base(mmu_->current_addr_space());
 
             // Fill the entry
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
@@ -169,7 +172,7 @@ namespace eka2l1::mem {
                     size_just_unmapped += psize;
 
                     if (off_start_just_unmapped == 0) {
-                        off_start_just_unmapped = (poff << mmu_->page_size_bits_) + base_ + pt_base;
+                        off_start_just_unmapped = (poff << mmu_->page_size_bits_) + crr_base_addr + pt_base;
                     }
                 } else {
                     // Map those just mapped to the CPU. It will love this
@@ -303,13 +306,18 @@ namespace eka2l1::mem {
             is_local = false;
         }
 
-        // Calculate total page table that we will use. Symbian uses a whole page table
-        // too, it's one of a way for it to be fast (not nitpicking places in the table,
-        // but actually alloc the whole table)
+        // Calculate total page table that we will use.
+        // For multiple model, Symbian uses a whole page table too, it's one of a way for it to be
+        // fast (not nitpicking places in the table, but actually alloc the whole table)
         const std::uint32_t total_pt = static_cast<std::uint32_t>(
             (create_info.size + mmu_->chunk_mask_) >> mmu_->chunk_shift_);
 
-        max_size_ = total_pt << mmu_->chunk_shift_;
+        // Calculate the aligned max size, depends on the granularity.
+        // The granularity is set in mem model process's chunk creation.
+        const std::uint32_t total_granularity_block = static_cast<std::uint32_t>(
+            (create_info.size + (1ULL << granularity_shift_) - 1) >> granularity_shift_);
+
+        max_size_ = total_granularity_block << granularity_shift_;
 
         // Allocate virtual pages
         vm_address addr = create_info.addr;
@@ -362,12 +370,14 @@ namespace eka2l1::mem {
     }
 
     void multiple_mem_model_chunk::do_selection_cpu_memory_manipulation(const bool unmap) {
+        const vm_address crr_base_addr = base(mmu_->current_addr_space());
+
         if (!page_bma_) {
             // Contiguous types. Just unmap/map directly
             if (unmap) {
-                mmu_->unmap_from_cpu(base_ + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_);
+                mmu_->unmap_from_cpu(crr_base_addr + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_);
             } else {
-                mmu_->map_to_cpu(base_ + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_,
+                mmu_->map_to_cpu(crr_base_addr + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_,
                     reinterpret_cast<std::uint8_t *>(host_base_) + (bottom_ << mmu_->page_size_bits_), permission_);
             }
 
@@ -414,7 +424,7 @@ namespace eka2l1::mem {
                     size_mani += psize;
 
                     if (off_start_mani == 0) {
-                        off_start_mani = (poff << mmu_->page_size_bits_) + base_ + pt_base;
+                        off_start_mani = (poff << mmu_->page_size_bits_) + crr_base_addr + pt_base;
                         host_start_mani = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
                     }
                 } else {

@@ -388,7 +388,7 @@ namespace eka2l1::hle {
                 }
 
                 // Relocate imports (yes we want to make codeseg object think this is a ROM image)
-                const std::uint32_t code_delta = code_chunk->base().ptr_address() - e32img->header.code_base;
+                const std::uint32_t code_delta = code_chunk->base(nullptr).ptr_address() - e32img->header.code_base;
 
                 for (auto &export_entry : e32img->ed.syms) {
                     export_entry += code_delta;
@@ -398,7 +398,7 @@ namespace eka2l1::hle {
 
                 // Relocate! Import
                 std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern, *this, nullptr, u"", code_chunk->base().ptr_address());
+                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern, *this, nullptr, u"", code_chunk->base(nullptr).ptr_address());
 
                 if (!patch_seg) {
                     continue;

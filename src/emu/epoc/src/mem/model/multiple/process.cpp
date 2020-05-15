@@ -74,6 +74,8 @@ namespace eka2l1::mem {
         }
 
         mchunk->own_process_ = this;
+        mchunk->granularity_shift_ = mmu_->chunk_shift_;
+
         chunk = reinterpret_cast<mem_model_chunk *>(mchunk);
 
         return mchunk->do_create(create_info);

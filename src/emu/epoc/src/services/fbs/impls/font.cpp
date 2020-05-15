@@ -313,10 +313,12 @@ namespace eka2l1 {
     };
 
     fbsfont *fbs_server::look_for_font_with_address(const eka2l1::address addr) {
+        const address base_shared_old_mm_model = shared_chunk->base(nullptr).ptr_address();
+
         for (auto &font_cache_obj_ptr : font_obj_container) {
             fbsfont *temp_font_ptr = reinterpret_cast<fbsfont *>(font_cache_obj_ptr.get());
 
-            if (temp_font_ptr && temp_font_ptr->guest_font_handle.ptr_address() == addr) {
+            if (temp_font_ptr && (temp_font_ptr->guest_font_offset + base_shared_old_mm_model) == addr) {
                 return temp_font_ptr;
             }
         }
@@ -432,7 +434,7 @@ namespace eka2l1 {
         font = serv->font_obj_container.make_new<fbsfont>();
 
         // S^3 warning!
-        font->guest_font_handle = serv->host_ptr_to_guest_general_data(bmpfont).cast<epoc::bitmapfont>();
+        font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
         font->of_info = *ofi_suit;
 
         // TODO: Adjust with physical size.
@@ -475,7 +477,7 @@ namespace eka2l1 {
         font_info result_info;
 
         result_info.handle = obj_table_.add(font);
-        result_info.address_offset = font->guest_font_handle.ptr_address() - serv->shared_chunk->base().ptr_address();
+        result_info.address_offset = font->guest_font_offset;
         result_info.server_handle = static_cast<std::int32_t>(font->id);
 
         ctx->write_arg_pkg(1, result_info);
@@ -495,7 +497,7 @@ namespace eka2l1 {
 
         // Add new one
         result_info.handle = obj_table_.add(font);
-        result_info.address_offset = font->guest_font_handle.ptr_address() - serv->shared_chunk->base().ptr_address();
+        result_info.address_offset = font->guest_font_offset;
         result_info.server_handle = static_cast<std::int32_t>(font->id);
 
         ctx->write_arg_pkg(1, result_info);
@@ -528,7 +530,10 @@ namespace eka2l1 {
     void fbscli::rasterize_glyph(service::ipc_context *ctx) {
         const std::uint32_t codepoint = *ctx->get_arg<std::uint32_t>(1);
         const fbsfont *font = get_font_object(ctx);
-        const eka2l1::address addr = font->guest_font_handle.ptr_address();
+
+        process_ptr own_pr = ctx->msg->own_thr->owning_process();
+        const eka2l1::address addr = font->guest_font_offset + server<fbs_server>()->shared_chunk->
+            base(own_pr).ptr_address();
 
         if (codepoint & 0x80000000) {
             //LOG_DEBUG("Trying to rasterize glyph index {}", codepoint & ~0x80000000);

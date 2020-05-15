@@ -20,7 +20,7 @@
 #pragma once
 
 #include <epoc/mem/mmu.h>
-#include <epoc/mem/model/multiple/section.h>
+#include <epoc/mem/model/section.h>
 
 #include <memory>
 

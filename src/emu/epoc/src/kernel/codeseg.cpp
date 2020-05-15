@@ -160,7 +160,7 @@ namespace eka2l1::kernel {
             *base = reinterpret_cast<std::uint8_t *>(attach_info->code_chunk->host_base());
         }
 
-        return attach_info->code_chunk->base().ptr_address();
+        return attach_info->code_chunk->base(pr).ptr_address();
     }
 
     address codeseg::get_data_run_addr(kernel::process *pr, std::uint8_t **base) {
@@ -189,7 +189,7 @@ namespace eka2l1::kernel {
             *base = reinterpret_cast<std::uint8_t *>(attach_info->data_chunk->host_base());
         }
 
-        return attach_info->data_chunk->base().ptr_address();
+        return attach_info->data_chunk->base(pr).ptr_address();
     }
 
     std::uint32_t codeseg::get_exception_descriptor(kernel::process *pr) {
@@ -202,7 +202,7 @@ namespace eka2l1::kernel {
             return 0;
         }
 
-        return attach_info->code_chunk->base().ptr_address() + exception_descriptor;
+        return attach_info->code_chunk->base(pr).ptr_address() + exception_descriptor;
     }
 
     address codeseg::get_entry_point(kernel::process *pr) {
@@ -219,7 +219,7 @@ namespace eka2l1::kernel {
             return 0;
         }
 
-        return attach_info->code_chunk->base().ptr_address() + ep;
+        return attach_info->code_chunk->base(pr).ptr_address() + ep;
     }
 
     address codeseg::lookup_no_relocate(const std::uint32_t ord) {
@@ -245,7 +245,7 @@ namespace eka2l1::kernel {
             return 0;
         }
 
-        return attach_info->code_chunk->base().ptr_address() + lookup_res - code_base;
+        return attach_info->code_chunk->base(pr).ptr_address() + lookup_res - code_base;
     }
 
     void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list) {
@@ -298,7 +298,7 @@ namespace eka2l1::kernel {
         }
 
         std::vector<std::uint32_t> new_table = export_table;
-        const std::uint32_t delta = attach_info->code_chunk->base().ptr_address() - code_base;
+        const std::uint32_t delta = attach_info->code_chunk->base(pr).ptr_address() - code_base;
 
         for (auto &entry : new_table) {
             entry += delta;

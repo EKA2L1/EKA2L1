@@ -126,7 +126,7 @@ namespace eka2l1::epoc {
         epoc::bitwise_bitmap *bmp) {
         if (!base_large_chunk) {
             chunk_ptr ch = kern->get_by_name<kernel::chunk>("FbsLargeChunk");
-            base_large_chunk = ch->base().get(kern->get_memory_system());
+            base_large_chunk = reinterpret_cast<std::uint8_t*>(ch->host_base());
         }
 
         std::int64_t idx = 0;

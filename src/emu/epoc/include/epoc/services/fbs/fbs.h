@@ -193,7 +193,7 @@ namespace eka2l1 {
     };
 
     struct fbsfont : fbsobj {
-        eka2l1::ptr<epoc::bitmapfont> guest_font_handle;
+        std::int32_t guest_font_offset;
         epoc::open_font_info of_info;
         fbs_server *serv;
 
@@ -364,7 +364,7 @@ namespace eka2l1 {
         }
 
         ptr<std::uint8_t> host_ptr_to_guest_general_data(void *ptr) {
-            return shared_chunk->base() + static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
+            return shared_chunk->base(nullptr) + static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
 
         std::int32_t host_ptr_to_guest_shared_offset(void *ptr) {

@@ -63,7 +63,7 @@ namespace eka2l1::mem {
         virtual const std::size_t committed() const = 0;
         virtual const std::size_t max() const = 0;
 
-        virtual const vm_address base() = 0;
+        virtual const vm_address base(const asid addr_space) = 0;
         virtual std::size_t commit(const vm_address offset, const std::size_t size) = 0;
         virtual void decommit(const vm_address offset, const std::size_t size) = 0;
 

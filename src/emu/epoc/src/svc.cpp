@@ -1147,12 +1147,13 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<std::uint8_t>, chunk_base, kernel::handle h) {
-        chunk_ptr chunk = sys->get_kernel_system()->get<kernel::chunk>(h);
+        kernel_system *kern = sys->get_kernel_system();
+        chunk_ptr chunk = kern->get<kernel::chunk>(h);
         if (!chunk) {
             return 0;
         }
 
-        return chunk->base();
+        return chunk->base(kern->crr_process());
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_size, kernel::handle h) {
@@ -1516,6 +1517,9 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(void, static_call_done) {
+    }
+
     BRIDGE_FUNC(std::int32_t, wait_dll_lock) {
         sys->get_kernel_system()->crr_process()->wait_dll_lock();
         return epoc::error_none;
@@ -1595,12 +1599,8 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::uint32_t, library_load_prepare) {
         return epoc::error_none;
     }
-
-    BRIDGE_FUNC(std::uint32_t, library_entry_call_start) {
-        return epoc::error_none;
-    }
-
-    BRIDGE_FUNC(std::uint32_t, library_entry_call_end) {
+    
+    BRIDGE_FUNC(std::uint32_t, library_entry_call_start, const address addr) {
         return epoc::error_none;
     }
 
@@ -2622,8 +2622,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xE0, leave_start),
         BRIDGE_REGISTER(0xE1, leave_end),
         BRIDGE_REGISTER(0xE9, btrace_out),
-        //BRIDGE_REGISTER(0x10B, library_entry_call_end),
-        //BRIDGE_REGISTER(0x10C, library_entry_call_start),
+        BRIDGE_REGISTER(0x10B, static_call_done),
+        BRIDGE_REGISTER(0x10C, library_entry_call_start),
         BRIDGE_REGISTER(0x10D, library_load_prepare)
     };
 

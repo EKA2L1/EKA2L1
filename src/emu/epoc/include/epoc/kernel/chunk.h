@@ -126,7 +126,7 @@ namespace eka2l1 {
             void open_to(process *own) override;
 
             /*! \brief Get the base of the chunk. */
-            ptr<uint8_t> base();
+            ptr<uint8_t> base(process *pr);
 
             /*! \brief Adjust the chunk size.
 			 * \param adj_size The size of the new adjusted chunk.

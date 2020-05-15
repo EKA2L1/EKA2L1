@@ -226,8 +226,8 @@ namespace eka2l1 {
     void imgui_debugger::show_threads() {
         if (ImGui::Begin("Threads", &should_show_threads)) {
             // Only the stack are created by the OS
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s    %-32s", "ID",
-                "Thread name", "State", "Stack");
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s", "ID",
+                "Thread name", "State");
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
@@ -235,8 +235,8 @@ namespace eka2l1 {
                 kernel::thread *thr = reinterpret_cast<kernel::thread *>(thr_obj.get());
                 chunk_ptr chnk = thr->get_stack_chunk();
 
-                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", thr->unique_id(),
-                    thr->name().c_str(), thread_state_to_string(thr->current_state()), chnk->base().ptr_address());
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s", thr->unique_id(),
+                    thr->name().c_str(), thread_state_to_string(thr->current_state()));
             }
         }
 
@@ -261,8 +261,8 @@ namespace eka2l1 {
 
     void imgui_debugger::show_chunks() {
         if (ImGui::Begin("Chunks", &should_show_chunks)) {
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-8s       %-8s    %-8s      %-32s", "ID",
-                "Chunk name", "Base", "Committed", "Max", "Creator process");
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-24s         %-8s        %-8s      %-32s", "ID",
+                "Chunk name", "Committed", "Max", "Creator process");
 
             const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
 
@@ -270,9 +270,8 @@ namespace eka2l1 {
                 kernel::chunk *chnk = reinterpret_cast<kernel::chunk *>(chnk_obj.get());
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
-                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08lX    0x%08lX      %-32s",
-                    chnk->unique_id(), chnk->name().c_str(), chnk->base().ptr_address(), chnk->committed(),
-                    chnk->max_size(), process_name.c_str());
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s      0x%08lX        0x%08lX      %-32s",
+                    chnk->unique_id(), chnk->name().c_str(), chnk->committed(), chnk->max_size(), process_name.c_str());
             }
         }
 

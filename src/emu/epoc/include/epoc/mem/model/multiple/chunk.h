@@ -21,7 +21,7 @@
 
 #include <common/allocator.h>
 #include <epoc/mem/chunk.h>
-#include <epoc/mem/model/multiple/section.h>
+#include <epoc/mem/model/section.h>
 
 #include <memory>
 #include <vector>
@@ -45,6 +45,8 @@ namespace eka2l1::mem {
         std::vector<std::uint32_t> page_tabs_;
         std::vector<asid> attached_asids_;
 
+        std::uint16_t granularity_shift_;
+
         std::unique_ptr<common::bitmap_allocator> page_bma_;
         linear_section *get_section(const std::uint32_t flags);
 
@@ -61,7 +63,7 @@ namespace eka2l1::mem {
         ~multiple_mem_model_chunk() override {
         }
 
-        const vm_address base() override {
+        const vm_address base(const asid addr_space) override {
             return base_;
         }
 

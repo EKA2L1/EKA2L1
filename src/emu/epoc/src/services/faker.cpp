@@ -181,7 +181,7 @@ namespace eka2l1::service {
         std::uint32_t *trampoline32 = reinterpret_cast<std::uint32_t *>(trampoline + data_offset_);
 
         // Relocate export.
-        trampoline32[0] = control_->base().ptr_address();
+        trampoline32[0] = control_->base(process_).ptr_address();
         trampoline32[1] = euser_lib->lookup(process_, SETUP_THREAD_HEAP_EXPORT_ORD);
         trampoline32[2] = euser_lib->lookup(process_, NEW_TRAP_CLEANUP_EXPORT_ORD);
 
@@ -268,7 +268,7 @@ namespace eka2l1::service {
         faker::chain *end = get_end_chain(initial_);
 
         end->free_lists_.push_back(result);
-        return offset + control_->base().ptr_address();
+        return offset + control_->base(process_).ptr_address();
     }
 
     std::uint8_t *faker::get_last_temporary_argument_impl(const int number) {

@@ -138,7 +138,7 @@ namespace eka2l1::epoc {
         void get_screen_info_from_scr_object(epoc::screen *scr, epoc::screen_info_v1 &info) {
             info.window_handle_valid_ = false;
             info.screen_address_valid_ = true;
-            info.screen_address_ = scr->screen_buffer_chunk->base().cast<void>();
+            info.screen_address_ = scr->screen_buffer_chunk->base(nullptr).cast<void>();
             info.screen_size_ = scr->current_mode().size;
         }
 
@@ -158,7 +158,7 @@ namespace eka2l1::epoc {
             info.is_palettelized_ = !info.is_mono_ && (mode < epoc::display_mode::color4k);
 
             // Intentional
-            info.video_address_ = scr->screen_buffer_chunk->base().ptr_address();
+            info.video_address_ = scr->screen_buffer_chunk->base(nullptr).ptr_address();
             info.offset_to_first_pixel_ = 0;
             info.bits_per_pixel_ = static_cast<std::int32_t>(mode);
         }
