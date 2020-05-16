@@ -27,6 +27,7 @@ namespace eka2l1::epoc::keysound {
         opcode_add_sids = 3,
         opcode_push_context = 5,
         opcode_pop_context = 6,
-        opcode_bring_to_foreground = 7
+        opcode_bring_to_foreground = 7,
+        opcode_lock_context = 9
     };
 }
