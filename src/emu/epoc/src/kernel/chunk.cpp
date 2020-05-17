@@ -116,7 +116,7 @@ namespace eka2l1 {
             mmc_impl_->adjust(bottom, top);
 
             LOG_INFO("Chunk created: {}, base (in parent): 0x{:x}, max size: 0x{:x} type: {}, access: {}{}", obj_name,
-                mmc_impl_->base(mmp ? mmp->address_space_id() : 0), max_size, (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
+                mmc_impl_->base(mmp), max_size, (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
                 (chnk_access == chunk_access::local ? "local" : (chnk_access == chunk_access::code ? "code " : "global")),
                 (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));
         }
@@ -131,7 +131,7 @@ namespace eka2l1 {
         }
 
         ptr<uint8_t> chunk::base(process *pr) {
-            return mmc_impl_->base(pr ? pr->get_mem_model()->address_space_id() : 0);
+            return mmc_impl_->base(pr ? pr->get_mem_model() : nullptr);
         }
 
         const std::size_t chunk::max_size() const {
