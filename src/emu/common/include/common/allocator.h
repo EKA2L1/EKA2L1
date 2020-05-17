@@ -95,5 +95,15 @@ namespace eka2l1::common {
         int force_fill(const std::uint32_t offset, const int size, const bool or_mode = false);
         int allocate_from(const std::uint32_t start_offset, int &size, const bool best_fit = false);
         void free(const std::uint32_t offset, const int size);
+
+        /**
+         * @brief   Get the number of allocated cells from specified region.
+         * 
+         * @param   offset          Begin offset of the region.
+         * @param   offset_end      End offset of the region.
+         * 
+         * @returns Number of cells already allocated on this region.
+         */
+        int allocated_count(const std::uint32_t offset, const std::uint32_t offset_end);
     };
 }
