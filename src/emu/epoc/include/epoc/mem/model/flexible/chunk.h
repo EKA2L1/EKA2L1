@@ -19,23 +19,54 @@
 
 #pragma once
 
-#include <epoc/mem/model/multiple/chunk.h>
-#include <vector>
+#include <epoc/mem/model/flexible/memobj.h>
+#include <epoc/mem/chunk.h>
 
-namespace eka2l1::mem {
-    struct multiple_mem_model_process;
+#include <common/algorithm.h>
+#include <common/allocator.h>
 
-    struct flexible_mem_model_chunk : public multiple_mem_model_chunk {
-        std::vector<vm_address> bases_;
+namespace eka2l1::mem::flexible {
+    struct flexible_mem_model_process;
+
+    struct flexible_mem_model_chunk: public mem_model_chunk {
+    protected:
+        friend struct flexible_mem_model_process;
+
+        std::uint32_t max_size_;
+        std::uint32_t committed_;
+        std::uint32_t flags_;
+
+        flexible_mem_model_process *owner_;
+
+        std::unique_ptr<memory_object> mem_obj_;
+        std::unique_ptr<common::bitmap_allocator> page_bma_;
+
+        bool fixed_;
 
     public:
-        explicit flexible_mem_model_chunk(mmu_base *mmu, const asid id)
-            : multiple_mem_model_chunk(mmu, id) {
+        explicit flexible_mem_model_chunk(mmu_base *mmu, const asid id);
+        ~flexible_mem_model_chunk() override;
+        
+        const vm_address base(mem_model_process *process) override;
+
+        void *host_base() override;
+
+        const std::size_t committed() const override {
+            return committed_;
         }
 
-        ~flexible_mem_model_chunk() override {
+        const std::size_t max() const override {
+            return max_size_;
         }
 
-        const vm_address base(const asid addr_space) override;
+        int do_create(const mem_model_chunk_creation_info &create_info) override;
+
+        std::size_t commit(const vm_address offset, const std::size_t size) override;
+        void decommit(const vm_address offset, const std::size_t size) override;
+
+        bool allocate(const std::size_t size) override;
+
+        void unmap_from_cpu(mem_model_process *pr) override;
+        void map_to_cpu(mem_model_process *pr) override;
     };
 }
