@@ -123,6 +123,10 @@ namespace eka2l1::mem {
         return (id == -1) ? cur_dir_->get_pointer(addr) : ((id == 0) ? global_dir_.get_pointer(addr) : dirs_[id - 1]->get_pointer(addr));
     }
 
+    page_table *mmu_multiple::get_page_table_by_addr(const vm_address addr) {
+        return cur_dir_->get_page_table(addr);
+    }
+    
     const asid mmu_multiple::current_addr_space() const {
         if (cur_dir_) {
             return cur_dir_->id();

@@ -157,7 +157,7 @@ namespace eka2l1::mem {
         return true;
     }
 
-    void multiple_mem_model_process::unmap_locals_from_cpu() {
+    void multiple_mem_model_process::unmap_from_cpu() {
         if (!mmu_->cpu_->should_clear_old_memory_map()) {
             return;
         }
@@ -165,16 +165,16 @@ namespace eka2l1::mem {
         for (auto &c : chunks_) {
             if (c && c->is_local) {
                 // Local
-                c->unmap_from_cpu();
+                c->unmap_from_cpu(this);
             }
         }
     }
 
-    void multiple_mem_model_process::remap_locals_to_cpu() {
+    void multiple_mem_model_process::remap_to_cpu() {
         for (auto &c : chunks_) {
             if (c && c->is_local) {
                 // Local
-                c->map_to_cpu();
+                c->map_to_cpu(this);
             }
         }
     }

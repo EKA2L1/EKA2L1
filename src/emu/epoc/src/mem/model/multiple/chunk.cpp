@@ -27,14 +27,6 @@
 #include <common/log.h>
 
 namespace eka2l1::mem {
-    const vm_address multiple_mem_model_chunk::bottom() const {
-        return bottom_ << mmu_->page_size_bits_;
-    }
-
-    const vm_address multiple_mem_model_chunk::top() const {
-        return top_ << mmu_->page_size_bits_;
-    }
-
     std::size_t multiple_mem_model_chunk::commit(const vm_address offset, const std::size_t size) {
         // Align the offset
         vm_address running_offset = offset;
@@ -74,7 +66,8 @@ namespace eka2l1::mem {
                 return running_offset - offset;
             }
 
-            const vm_address crr_base_addr = base(mmu_->current_addr_space());
+            const vm_address crr_base_addr = base_;
+            multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
 
             // Fill the entry
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
@@ -93,7 +86,7 @@ namespace eka2l1::mem {
                     }
                 } else {
                     // Map those just mapped to the CPU. It will love this
-                    if (size_just_mapped != 0 && (!own_process_ || own_process_->addr_space_id_ == mmu_->current_addr_space())) {
+                    if (size_just_mapped != 0 && (!own_process_ || mul_process->addr_space_id_ == mmu_->current_addr_space())) {
                         mmu_->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
                         off_start_just_mapped = 0;
                         size_just_mapped = 0;
@@ -103,7 +96,7 @@ namespace eka2l1::mem {
             }
 
             // Map the rest
-            if (size_just_mapped != 0 && (!own_process_ || own_process_->addr_space_id_ == mmu_->current_addr_space())) {
+            if (size_just_mapped != 0 && (!own_process_ || mul_process->addr_space_id_ == mmu_->current_addr_space())) {
                 //LOG_TRACE("Mapped to CPU: 0x{:X}, size 0x{:X}", off_start_just_mapped, size_just_mapped);
                 mmu_->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
             }
@@ -111,7 +104,7 @@ namespace eka2l1::mem {
             if (ptid == 0xFFFFFFFF) {
                 // Assign the new page table to the specified address
                 mmu_->assign_page_table(pt, crr_base_addr + pt_base, !is_local ? MMU_ASSIGN_LOCAL_GLOBAL_REGION : 0,
-                    is_local ? &own_process_->addr_space_id_ : nullptr, is_local ? 1 : 0);
+                    is_local ? &mul_process->addr_space_id_ : nullptr, is_local ? 1 : 0);
 
                 page_tabs_[running_offset >> mmu_->chunk_shift_] = pt->id();
             }
@@ -159,7 +152,9 @@ namespace eka2l1::mem {
             vm_address off_start_just_unmapped = 0;
 
             const auto pt_base = (running_offset >> mmu_->chunk_shift_) << mmu_->chunk_shift_;
-            const vm_address crr_base_addr = base(mmu_->current_addr_space());
+            const vm_address crr_base_addr = base_;
+
+            multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
 
             // Fill the entry
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
@@ -176,7 +171,7 @@ namespace eka2l1::mem {
                     }
                 } else {
                     // Map those just mapped to the CPU. It will love this
-                    if (size_just_unmapped != 0 && (!own_process_ || own_process_->addr_space_id_ == mmu_->current_addr_space())) {
+                    if (size_just_unmapped != 0 && (!own_process_ || mul_process->addr_space_id_ == mmu_->current_addr_space())) {
                         mmu_->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
 
                         size_just_unmapped = 0;
@@ -186,7 +181,7 @@ namespace eka2l1::mem {
             }
 
             // Unmap the rest
-            if (size_just_unmapped != 0 && (!own_process_ || own_process_->addr_space_id_ == mmu_->current_addr_space())) {
+            if (size_just_unmapped != 0 && (!own_process_ || mul_process->addr_space_id_ == mmu_->current_addr_space())) {
                 //LOG_TRACE("Unmapped from CPU: 0x{:X}, size 0x{:X}", off_start_just_unmapped, size_just_unmapped);
                 mmu_->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
             }
@@ -228,45 +223,9 @@ namespace eka2l1::mem {
         return commit(off << mmu_->page_size_bits_, size_pages);
     }
 
-    bool multiple_mem_model_chunk::adjust(const address bottom, const address top) {
-        const std::size_t top_page_off = ((top + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
-        const std::size_t bottom_page_off = (bottom >> mmu_->page_size_bits_);
-
-        // Check the top
-        // Top offset adjusted smaller than current top offset
-        if (top_page_off < top_) {
-            // Decommit
-            decommit(static_cast<vm_address>(top_page_off << mmu_->page_size_bits_),
-                (top_ - top_page_off) << mmu_->page_size_bits_);
-        } else if (top_page_off > top_) {
-            // We must commit more memory
-            commit(static_cast<vm_address>(top_ << mmu_->page_size_bits_),
-                (top_page_off - top_) << mmu_->page_size_bits_);
-        }
-
-        top_ = static_cast<vm_address>(top_page_off);
-
-        // Adjust double ended
-        if (bottom != 0xFFFFFFFF) {
-            // Check the bottom
-            if (bottom_page_off > bottom_) {
-                // Decommit
-                decommit(static_cast<vm_address>(bottom_ << mmu_->page_size_bits_),
-                    (bottom_page_off - bottom_) << mmu_->page_size_bits_);
-            } else if (bottom_page_off < bottom_) {
-                // We must commit more memory
-                commit(static_cast<vm_address>(bottom_page_off << mmu_->page_size_bits_),
-                    (bottom_ - bottom_page_off) << mmu_->page_size_bits_);
-            }
-
-            bottom_ = static_cast<vm_address>(bottom_page_off);
-        }
-
-        return true;
-    }
-
     linear_section *multiple_mem_model_chunk::get_section(const std::uint32_t flags) {
         mmu_multiple *mul_mmu = reinterpret_cast<mmu_multiple *>(mmu_);
+        multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
             return &mul_mmu->user_code_sec_;
@@ -277,7 +236,7 @@ namespace eka2l1::mem {
         }
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) {
-            return &own_process_->user_local_sec_;
+            return &mul_process->user_local_sec_;
         }
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_ROM) {
@@ -370,93 +329,14 @@ namespace eka2l1::mem {
     }
 
     void multiple_mem_model_chunk::do_selection_cpu_memory_manipulation(const bool unmap) {
-        const vm_address crr_base_addr = base(mmu_->current_addr_space());
-
-        if (!page_bma_) {
-            // Contiguous types. Just unmap/map directly
-            if (unmap) {
-                mmu_->unmap_from_cpu(crr_base_addr + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_);
-            } else {
-                mmu_->map_to_cpu(crr_base_addr + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_,
-                    reinterpret_cast<std::uint8_t *>(host_base_) + (bottom_ << mmu_->page_size_bits_), permission_);
-            }
-
-            return;
-        }
-
-        // Iterates through all pages, it's disconnected
-        vm_address running_offset = 0;
-        vm_address end_offset = static_cast<vm_address>(max_size_);
-
-        while (running_offset < end_offset) {
-            // The number of page satisfy the request
-            int page_num = (end_offset - running_offset) >> mmu_->page_size_bits_;
-
-            // The number of page to the end of page table
-            const int page_num_till_end_pt = (mmu_->chunk_size_ - (running_offset & mmu_->chunk_mask_)) >> mmu_->page_size_bits_;
-
-            page_num = common::min(page_num, page_num_till_end_pt);
-
-            std::uint32_t ptid = page_tabs_[running_offset >> mmu_->chunk_shift_];
-            page_table *pt = nullptr;
-
-            if (ptid == 0xFFFFFFFF) {
-                // Page table is not here. Skip....
-                running_offset += (page_num << mmu_->page_size_bits_);
-                continue;
-            } else {
-                pt = mmu_->get_page_table_by_id(ptid);
-            }
-
-            // Start offset
-            int ps_off = (running_offset >> mmu_->page_index_shift_) & mmu_->page_index_mask_;
-            const auto psize = mmu_->page_size();
-
-            std::size_t size_mani = 0;
-            vm_address off_start_mani = 0;
-            std::uint8_t *host_start_mani = nullptr;
-
-            const auto pt_base = (running_offset >> mmu_->chunk_shift_) << mmu_->chunk_shift_;
-
-            // Fill the entry
-            for (int poff = ps_off; poff < ps_off + page_num; poff++) {
-                if (pt->pages_[poff].host_addr != nullptr) {
-                    size_mani += psize;
-
-                    if (off_start_mani == 0) {
-                        off_start_mani = (poff << mmu_->page_size_bits_) + crr_base_addr + pt_base;
-                        host_start_mani = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << mmu_->page_size_bits_) + pt_base;
-                    }
-                } else {
-                    // Map those just mapped to the CPU. It will love this
-                    if (size_mani != 0) {
-                        if (unmap) {
-                            mmu_->unmap_from_cpu(off_start_mani, size_mani);
-                        } else {
-                            mmu_->map_to_cpu(off_start_mani, size_mani, host_start_mani, permission_);
-                        }
-                    }
-                }
-            }
-
-            // Map those just mapped to the CPU. It will love this
-            if (size_mani != 0) {
-                if (unmap) {
-                    mmu_->unmap_from_cpu(off_start_mani, size_mani);
-                } else {
-                    mmu_->map_to_cpu(off_start_mani, size_mani, host_start_mani, permission_);
-                }
-            }
-
-            running_offset += (page_num << mmu_->page_size_bits_);
-        }
+        manipulate_cpu_map(page_bma_.get(), nullptr, !unmap);
     }
 
-    void multiple_mem_model_chunk::unmap_from_cpu() {
+    void multiple_mem_model_chunk::unmap_from_cpu(mem_model_process *pr) {
         do_selection_cpu_memory_manipulation(true);
     }
 
-    void multiple_mem_model_chunk::map_to_cpu() {
+    void multiple_mem_model_chunk::map_to_cpu(mem_model_process *pr) {
         do_selection_cpu_memory_manipulation(false);
     }
 }
