@@ -654,8 +654,7 @@ namespace eka2l1 {
 
             if ((static_cast<int>(expr.op) >= static_cast<int>(ss_expr_op::EBinOpEqual)
                     && (static_cast<int>(expr.op) <= static_cast<int>(ss_expr_op::ELogOpOr)))
-                || (expr.op == ss_expr_op::EFuncAppProperties)
-                || (expr.op == ss_expr_op::EFuncDevProperties)) {
+                || (expr.op == ss_expr_op::EFuncAppProperties)) {
                 expr.left_expr = std::make_shared<sis_expression>(parse_expression());
             }
 
