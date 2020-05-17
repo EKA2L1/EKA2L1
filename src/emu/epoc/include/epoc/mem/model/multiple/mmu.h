@@ -31,6 +31,8 @@ namespace eka2l1::mem {
     class mmu_multiple : public mmu_base {
         friend struct multiple_mem_model_process;
         friend struct multiple_mem_model_chunk;
+        friend struct flexible_mem_model_process;
+        friend struct flexible_mem_model_chunk;
 
         std::vector<std::unique_ptr<page_directory>> dirs_;
         page_directory *cur_dir_;
@@ -51,6 +53,8 @@ namespace eka2l1::mem {
 
         asid rollover_fresh_addr_space() override;
         bool set_current_addr_space(const asid id) override;
+
+        page_table *get_page_table_by_addr(const vm_address addr);
 
         void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags,
             asid *id_list = nullptr, const std::uint32_t id_list_size = 0) override;

@@ -56,8 +56,8 @@ namespace eka2l1::mem {
         virtual bool attach_chunk(mem_model_chunk *chunk) = 0;
         virtual bool detach_chunk(mem_model_chunk *chunk) = 0;
 
-        virtual void unmap_locals_from_cpu() = 0;
-        virtual void remap_locals_to_cpu() = 0;
+        virtual void unmap_from_cpu() = 0;
+        virtual void remap_to_cpu() = 0;
     };
 
     using mem_model_process_impl = std::unique_ptr<mem_model_process>;

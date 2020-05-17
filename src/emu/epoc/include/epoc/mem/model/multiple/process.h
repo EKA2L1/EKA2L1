@@ -56,7 +56,7 @@ namespace eka2l1::mem {
         bool attach_chunk(mem_model_chunk *chunk) override;
         bool detach_chunk(mem_model_chunk *chunk) override;
 
-        void unmap_locals_from_cpu() override;
-        void remap_locals_to_cpu() override;
+        void unmap_from_cpu() override;
+        void remap_to_cpu() override;
     };
 };

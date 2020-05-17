@@ -27,13 +27,13 @@
 #include <vector>
 
 namespace eka2l1::mem {
-    struct multiple_mem_model_process;
+    struct mem_model_process;
 
     struct multiple_mem_model_chunk : public mem_model_chunk {
         vm_address base_;
         void *host_base_;
 
-        multiple_mem_model_process *own_process_{ nullptr };
+        mem_model_process *own_process_{ nullptr };
 
         std::size_t chunk_id_in_mmp_;
         vm_address bottom_{ 0 };
@@ -63,16 +63,13 @@ namespace eka2l1::mem {
         ~multiple_mem_model_chunk() override {
         }
 
-        const vm_address base(const asid addr_space) override {
+        const vm_address base(mem_model_process *process) override {
             return base_;
         }
 
         void *host_base() override {
             return host_base_;
         }
-
-        const vm_address bottom() const override;
-        const vm_address top() const override;
 
         const std::size_t committed() const override {
             return committed_;
@@ -88,9 +85,8 @@ namespace eka2l1::mem {
         void decommit(const vm_address offset, const std::size_t size) override;
 
         bool allocate(const std::size_t size) override;
-        bool adjust(const address bottom, const address top) override;
 
-        void unmap_from_cpu() override;
-        void map_to_cpu() override;
+        void unmap_from_cpu(mem_model_process *pr) override;
+        void map_to_cpu(mem_model_process *pr) override;
     };
 }

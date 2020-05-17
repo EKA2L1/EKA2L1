@@ -26,8 +26,13 @@
 #include <cstdint>
 #include <memory>
 
+namespace eka2l1::common {
+    struct bitmap_allocator;
+}
+
 namespace eka2l1::mem {
     class mmu_base;
+    struct mem_model_process;
 
     struct mem_model_chunk {
         prot permission_;
@@ -36,10 +41,18 @@ namespace eka2l1::mem {
         mmu_base *mmu_;
         asid addr_space_id_;
 
+        vm_address bottom_;
+        vm_address top_;
+
+        void manipulate_cpu_map(common::bitmap_allocator *allocator, mem_model_process *process,
+            const bool map);
+
     public:
         explicit mem_model_chunk(mmu_base *mmu, const asid id)
             : mmu_(mmu)
-            , addr_space_id_(id) {
+            , addr_space_id_(id)
+            , bottom_(0)
+            , top_(0) {
         }
 
         virtual ~mem_model_chunk() {
@@ -56,14 +69,14 @@ namespace eka2l1::mem {
          * \returns True on success.
          */
         virtual bool allocate(const std::size_t size) = 0;
-        virtual bool adjust(const address bottom, const address top) = 0;
+        virtual bool adjust(const address bottom, const address top);
 
-        virtual const vm_address bottom() const = 0;
-        virtual const vm_address top() const = 0;
+        virtual const vm_address bottom() const;
+        virtual const vm_address top() const;
         virtual const std::size_t committed() const = 0;
         virtual const std::size_t max() const = 0;
 
-        virtual const vm_address base(const asid addr_space) = 0;
+        virtual const vm_address base(mem_model_process *process) = 0;
         virtual std::size_t commit(const vm_address offset, const std::size_t size) = 0;
         virtual void decommit(const vm_address offset, const std::size_t size) = 0;
 
@@ -74,14 +87,14 @@ namespace eka2l1::mem {
          * 
          * This is support for some JIT's context switching.
          */
-        virtual void unmap_from_cpu() = 0;
+        virtual void unmap_from_cpu(mem_model_process *process) = 0;
 
         /**
          * \brief Map the committed region to CPU.
          * 
          * This is support for some JIT's context switching.
          */
-        virtual void map_to_cpu() = 0;
+        virtual void map_to_cpu(mem_model_process *process) = 0;
     };
 
     using mem_model_chunk_impl = std::unique_ptr<mem_model_chunk>;
