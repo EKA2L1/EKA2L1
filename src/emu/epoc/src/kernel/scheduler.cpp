@@ -83,7 +83,7 @@ namespace eka2l1::kernel {
 
             if (crr_process != newt->owning_process()) {
                 if (crr_process) {
-                    crr_process->get_mem_model()->unmap_locals_from_cpu();
+                    crr_process->get_mem_model()->unmap_from_cpu();
 
 #if ENABLE_SCRIPTING
                     if (scripter)
@@ -96,8 +96,8 @@ namespace eka2l1::kernel {
                 memory_system *mem = kern->get_memory_system();
                 mem->get_mmu()->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
 
-                crr_process->get_mem_model()->remap_locals_to_cpu();
-
+                crr_process->get_mem_model()->remap_to_cpu();
+                
 #if ENABLE_SCRIPTING
                 if (scripter)
                     scripter->write_breakpoint_blocks(crr_process);
