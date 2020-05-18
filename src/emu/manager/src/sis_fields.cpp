@@ -653,12 +653,15 @@ namespace eka2l1 {
             }
 
             if ((static_cast<int>(expr.op) >= static_cast<int>(ss_expr_op::EBinOpEqual)
-                    && (static_cast<int>(expr.op) <= static_cast<int>(ss_expr_op::ELogOpOr)))
-                || (expr.op == ss_expr_op::EFuncAppProperties)) {
+                    && (static_cast<int>(expr.op) <= static_cast<int>(ss_expr_op::EUnaryOpNot)))
+                || (expr.op == ss_expr_op::EFuncAppProperties)
+                || (expr.op == ss_expr_op::EFuncDevProperties)) {
                 expr.left_expr = std::make_shared<sis_expression>(parse_expression());
             }
 
-            if ((expr.op != ss_expr_op::EPrimTypeString) && (expr.op != ss_expr_op::EPrimTypeOption) && (expr.op != ss_expr_op::EPrimTypeVariable) && (expr.op != ss_expr_op::EPrimTypeNumber) && (expr.op != ss_expr_op::EFuncExists)) {
+            if ((static_cast<int>(expr.op) >= static_cast<int>(ss_expr_op::EBinOpEqual)
+                    && (static_cast<int>(expr.op) <= static_cast<int>(ss_expr_op::ELogOpOr)))
+                || (expr.op == ss_expr_op::EFuncAppProperties)) {
                 expr.right_expr = std::make_shared<sis_expression>(parse_expression());
             }
 
