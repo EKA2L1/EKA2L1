@@ -2871,6 +2871,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, static_call_list),
         BRIDGE_REGISTER(0xA2, last_thread_handle),
         BRIDGE_REGISTER(0xA4, process_rendezvous),
+        BRIDGE_REGISTER(0xA5, message_get_des_length),
+        BRIDGE_REGISTER(0xA6, message_get_des_max_length),
         BRIDGE_REGISTER(0xA7, message_ipc_copy),
         BRIDGE_REGISTER(0xA8, message_client),
         BRIDGE_REGISTER(0xAD, process_security_info),
