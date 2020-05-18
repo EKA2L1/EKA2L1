@@ -32,5 +32,6 @@ void ExceptionDescriptorRamCodeL() {
 }
 
 void AddCodeSegTestCasesL() {
-    ADD_TEST_CASE_L(ExceptionDescriptorForRamCode, CodeSeg, ExceptionDescriptorRamCodeL);
+	// This test is disabled
+    // ADD_TEST_CASE_L(ExceptionDescriptorForRamCode, CodeSeg, ExceptionDescriptorRamCodeL);
 }
