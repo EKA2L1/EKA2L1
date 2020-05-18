@@ -23,6 +23,10 @@ struct TTest {
 
 class CTestManager {
 public:
+    TInt GetWorkingDrive() const {
+    	return iWorkingDrive;
+    }
+
     /**
          * \brief Run all the tests
          * 
@@ -49,12 +53,14 @@ public:
 
     void ExpectInputFileEqualL(const TDesC8 &aData);
 
+
 private:
     void ConstructL(const TAbsorberMode aAbsorbMode);
 
     RArray<TTest> iTests;
     TInt iCurrentTest;
     TFileName iSessionPath;
+    TInt iWorkingDrive;
 
     CAbsorber *iAbsorber;
 };

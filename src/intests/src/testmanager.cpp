@@ -10,6 +10,7 @@
 
 #include <e32base.h>
 #include <e32debug.h>
+#include <f32file.h>
 
 CTestManager *instance;
 
@@ -118,6 +119,9 @@ void CTestManager::ConstructL(const TAbsorberMode aAbsorbMode) {
     iAbsorber = CAbsorber::NewL(aAbsorbMode);
     RFs &fs = iAbsorber->GetFsSession();
 
+    TFullName currentProcessName = RProcess().FullName();
+    fs.CharToDrive(TChar(currentProcessName[0]), iWorkingDrive);
+
 #if GEN_TESTS
     // Search for a memory card drive. Would be best to store on it
     for (TInt drv = EDriveA; drv <= EDriveZ; drv++) {
@@ -136,7 +140,7 @@ void CTestManager::ConstructL(const TAbsorberMode aAbsorbMode) {
     }
 
     if (iSessionPath.Length() == 0) {
-        iSessionPath = RProcess().FileName().Left(3);
+        iSessionPath = currentProcessName.Left(3);
     }
 #else
     fs.SessionPath(iSessionPath);
