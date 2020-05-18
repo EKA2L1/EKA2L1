@@ -26,6 +26,13 @@
 namespace eka2l1::mem::flexible {
     static constexpr vm_address INVALID_ADDR = 0xDEADBEEF;
 
+    flexible_mem_model_chunk::flexible_mem_model_chunk(mmu_base *mmu, const asid id)
+        : mem_model_chunk(mmu, id) {
+    }
+
+    flexible_mem_model_chunk::~flexible_mem_model_chunk() {
+    }
+
     int flexible_mem_model_chunk::do_create(const mem_model_chunk_creation_info &create_info) {
         fixed_ = false;
         flags_ = create_info.flags;

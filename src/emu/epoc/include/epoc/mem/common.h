@@ -29,7 +29,8 @@ namespace eka2l1::mem {
 
     enum class mem_model_type {
         moving,
-        multiple
+        multiple,
+        flexible
     };
 
     enum {

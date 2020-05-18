@@ -37,7 +37,8 @@ namespace eka2l1::mem::flexible {
         mmu_flexible *fl_mmu = reinterpret_cast<mmu_flexible*>(mmu_);
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
-            return &ram_code_sec_;
+            // Avoid separate code section now since complicated. TODO (pent0)
+            return &fl_mmu->code_sec_;
         }
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL) {

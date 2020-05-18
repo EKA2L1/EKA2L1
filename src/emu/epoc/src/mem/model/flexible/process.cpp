@@ -131,9 +131,13 @@ namespace eka2l1::mem::flexible {
         return true;
     }
 
+    static bool should_do_cpu_manipulate(const std::uint32_t flags) {
+        return (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL);
+    }
+
     void flexible_mem_model_process::unmap_from_cpu() {
         for (auto &attached: attachs_) {
-            if (!attached.chunk_->fixed_) {
+            if (should_do_cpu_manipulate(attached.chunk_->flags_)) {
                 // This chunk has it address not fixed, so unmap from the CPU
                 attached.chunk_->unmap_from_cpu(this);
             }
@@ -142,7 +146,7 @@ namespace eka2l1::mem::flexible {
 
     void flexible_mem_model_process::remap_to_cpu() {
         for (auto &attached: attachs_) {
-            if (!attached.chunk_->fixed_) {
+            if (should_do_cpu_manipulate(attached.chunk_->flags_)) {
                 // This chunk has it address not fixed, so map to the CPU
                 attached.chunk_->map_to_cpu(this);
             }

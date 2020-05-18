@@ -20,6 +20,7 @@
 #include <arm/arm_interface.h>
 #include <epoc/mem/mmu.h>
 
+#include <epoc/mem/model/flexible/mmu.h>
 #include <epoc/mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
@@ -66,6 +67,10 @@ namespace eka2l1::mem {
         switch (model) {
         case mem_model_type::multiple: {
             return std::make_unique<mmu_multiple>(alloc, cpu, psize_bits, mem_map_old);
+        }
+
+        case mem_model_type::flexible: {
+            return std::make_unique<flexible::mmu_flexible>(alloc, cpu, psize_bits, mem_map_old);
         }
 
         default:

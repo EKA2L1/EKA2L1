@@ -37,6 +37,7 @@ namespace eka2l1::mem::flexible {
         
         linear_section  rom_sec_;                       ///< ROM linear section.
         linear_section  kernel_mapping_sec_;            ///< Kernel mapping linear section.
+        linear_section  code_sec_;                      ///< Code section.
 
     public:
         explicit mmu_flexible(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10,

@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/mem/model/flexible/process.h>
 #include <epoc/mem/model/multiple/process.h>
 #include <epoc/mem/process.h>
 
@@ -26,6 +27,9 @@ namespace eka2l1::mem {
         case mem_model_type::multiple: {
             return std::make_unique<multiple_mem_model_process>(mmu);
         }
+
+        case mem_model_type::flexible:
+            return std::make_unique<flexible::flexible_mem_model_process>(mmu);
 
         default:
             break;

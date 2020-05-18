@@ -19,6 +19,7 @@
 
 #include <epoc/mem/chunk.h>
 #include <epoc/mem/mmu.h>
+#include <epoc/mem/model/flexible/chunk.h>
 #include <epoc/mem/model/multiple/chunk.h>
 
 #include <common/algorithm.h>
@@ -132,6 +133,9 @@ namespace eka2l1::mem {
         case mem_model_type::multiple: {
             return std::make_unique<multiple_mem_model_chunk>(mmu, addr_space_id);
         }
+
+        case mem_model_type::flexible:
+            return std::make_unique<flexible::flexible_mem_model_chunk>(mmu, addr_space_id);
 
         default:
             break;

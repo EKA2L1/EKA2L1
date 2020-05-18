@@ -28,6 +28,7 @@ namespace eka2l1::mem::flexible {
         : mmu_base(alloc, cpu, psize_bits, mem_map_old)
         , kernel_dir_(nullptr)
         , rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? rom_eka1_end : global_data, page_size())
+        , code_sec_(ram_code_addr, rom_bss_addr, page_size())
         , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size()) {
         // Instantiate the page directory manager
         dir_mngr_ = std::make_unique<page_directory_manager>(MAX_PAGE_DIR_ALLOW);

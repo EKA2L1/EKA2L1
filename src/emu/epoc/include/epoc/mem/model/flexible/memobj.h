@@ -22,6 +22,7 @@
 #include <common/types.h>
 #include <cstddef>
 #include <cstdint>
+#include <vector>
 
 namespace eka2l1::mem {
     class mmu_base;
