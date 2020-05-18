@@ -14,7 +14,7 @@ struct SFsSessionGuard {
 
     SFsSessionGuard() {
         iFs.Connect(-1);
-        iFs.SetSessionToPrivate(EDriveC);
+        iFs.SetSessionToPrivate(instance->GetWorkingDrive());
     }
 
     ~SFsSessionGuard() {
