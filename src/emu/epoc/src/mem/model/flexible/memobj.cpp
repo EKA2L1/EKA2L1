@@ -50,19 +50,17 @@ namespace eka2l1::mem::flexible {
     }
 
     bool memory_object::commit(const std::uint32_t page_offset, const std::size_t total_pages, const prot perm) {
-        if (external_) {
-            return true;
-        }
-
-        if (page_offset + total_pages >= page_occupied_) {
+        if (page_offset + total_pages > page_occupied_) {
             return false;
         }
 
-        const bool alloc_result = common::commit(reinterpret_cast<std::uint8_t*>(data_) + (page_offset << mmu_->page_size_bits_),
-            total_pages << mmu_->page_size_bits_, perm);
+        if (!external_) {
+            const bool alloc_result = common::commit(reinterpret_cast<std::uint8_t*>(data_) + (page_offset << mmu_->page_size_bits_),
+                total_pages << mmu_->page_size_bits_, perm);
 
-        if (!alloc_result) {
-            return false;
+            if (!alloc_result) {
+                return false;
+            }
         }
 
         // Map to all mappings
@@ -76,19 +74,17 @@ namespace eka2l1::mem::flexible {
     }
 
     bool memory_object::decommit(const std::uint32_t page_offset, const std::size_t total_pages) {
-        if (external_) {
-            return true;
-        }
-
-        if (page_offset + total_pages >= page_occupied_) {
+        if (page_offset + total_pages > page_occupied_) {
             return false;
         }
 
-        const bool deresult = common::decommit(reinterpret_cast<std::uint8_t*>(data_) + (page_offset << mmu_->page_size_bits_),
-            total_pages << mmu_->page_size_bits_);
+        if (!external_) {
+            const bool deresult = common::decommit(reinterpret_cast<std::uint8_t*>(data_) + (page_offset << mmu_->page_size_bits_),
+                total_pages << mmu_->page_size_bits_);
 
-        if (!deresult) {
-            return false;
+            if (!deresult) {
+                return false;
+            }
         }
 
         // Unmap decomitted memory from all mappings
