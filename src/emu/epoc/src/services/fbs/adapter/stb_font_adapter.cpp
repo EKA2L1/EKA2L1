@@ -125,24 +125,31 @@ namespace eka2l1::epoc::adapter {
         int ascent = 0;
         int descent = 0;
         int gaps = 0;
-
-        stbtt_GetFontVMetrics(info, &ascent, &descent, &gaps);
-
-        // TODO: Compensate for aspect ratio. We currently don't have screen ratio, sincce
-        // no physical screen size is provided
-        metrics.ascent = static_cast<std::uint16_t>(ascent);
-        metrics.descent = static_cast<std::uint16_t>(-descent);
-        metrics.max_height = metrics.ascent + metrics.descent;
         int x0, y0, x1, y1;
 
+        stbtt_GetFontVMetrics(info, &ascent, &descent, &gaps);
         stbtt_GetFontBoundingBox(info, &x0, &y0, &x1, &y1);
 
-        metrics.design_height = y1 - y0;
+        // TODO: Compensate for aspect ratio. We currently don't have screen ratio, since
+        //  no physical screen size is provided
+        metrics.ascent = ascent;
+        metrics.descent = descent;
+        metrics.max_height = ascent + descent;
+        metrics.design_height = ascent + descent;
         metrics.max_width = x1 - x0;
-        metrics.max_depth = metrics.descent;
+        metrics.max_depth = descent;
         metrics.baseline_correction = 0;
 
         return true;
+    }
+
+    bool stb_font_file_adapter::does_glyph_exist(const size_t idx, const uint32_t code) {
+        int off = 0;
+        stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
+        if (!info) {
+            return false;
+        }
+        return stbtt_FindGlyphIndex(info, code) != 0;
     }
 
     std::uint8_t *stb_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code,
@@ -168,7 +175,7 @@ namespace eka2l1::epoc::adapter {
             return nullptr;
         }
 
-        std::uint8_t *result = nullptr;
+        std::uint8_t *result;
 
         if (get_codepoint) {
             result = stbtt_GetCodepointBitmap(info, scale_x, scale_y, static_cast<int>(code), rasterized_width,
@@ -223,10 +230,10 @@ namespace eka2l1::epoc::adapter {
             stbtt_GetGlyphBox(info, static_cast<int>(code), &x0, &y0, &x1, &y1);
         }
 
-        character_metric.width = static_cast<std::int16_t>(std::round((x1 - x0) * scale_x));
-        character_metric.height = static_cast<std::int16_t>(std::round((y1 - y0) * scale_y));
-        character_metric.horizontal_advance = static_cast<std::int16_t>(std::round(adv_width * scale_x));
-        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(std::round(left_side_bearing * scale_x));
+        character_metric.width = static_cast<std::int16_t>((x1 - x0) * scale_x);
+        character_metric.height = static_cast<std::int16_t>((y1 - y0) * scale_y);
+        character_metric.horizontal_advance = static_cast<std::int16_t>(adv_width * scale_x);
+        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(left_side_bearing * scale_x);
 
         // As two! Step and go! ...
         // Let's calculate vertical advance. Every character of the font should have same vertical size.
@@ -237,8 +244,8 @@ namespace eka2l1::epoc::adapter {
 
         stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
 
-        // Calculate verical advance by ascent - descent + linegap
-        character_metric.vertical_advance = static_cast<std::int16_t>(std::round(ascent - descent + linegap) * scale_y);
+        // Calculate vertical advance by ascent - descent + linegap
+        character_metric.vertical_advance = static_cast<std::int16_t>((ascent - descent + linegap) * scale_y);
 
         // FreeType 2 rasterizer on WINS fill this as 0, so I guess this is ok?
         character_metric.vertical_bearing_y = 0;
@@ -246,7 +253,7 @@ namespace eka2l1::epoc::adapter {
 
         // I use image at here as reference
         // https://www.freetype.org/freetype2/docs/tutorial/step2.html
-        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(std::round(y1 * scale_y) - baseline_horz_off);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(y1 * scale_y - baseline_horz_off);
 
         return true;
     }
@@ -256,11 +263,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        if (!stbtt_PackBegin(&context_, atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr)) {
-            return false;
-        }
-
-        return true;
+        return stbtt_PackBegin(&context_, atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr) != 0;
     }
 
     void stb_font_file_adapter::end_get_atlas() {

@@ -380,12 +380,10 @@ namespace eka2l1 {
     }
 
     void fbscli::num_typefaces(service::ipc_context *ctx) {
-        ctx->set_request_status(static_cast<std::int32_t>(server<fbs_server>()->
-            persistent_font_store.number_of_fonts()));
+        ctx->set_request_status(static_cast<std::int32_t>(server<fbs_server>()->persistent_font_store.number_of_fonts()));
     }
 
     void fbscli::typeface_support(service::ipc_context *ctx) {
-        
     }
 
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
@@ -545,13 +543,13 @@ namespace eka2l1 {
         epoc::glyph_bitmap_type bitmap_type = epoc::glyph_bitmap_type::default_glyph_bitmap;
 
         // Get server font handle
-        // The returned bitmap is 8bpp single channel. Luckly Symbian likes this. (at least in v3 and upper).
+        // The returned bitmap is 8bpp single channel. Luckily Symbian likes this (at least in v3 and upper).
         std::uint8_t *bitmap_data = info->adapter->get_glyph_bitmap(info->idx, codepoint, info->scale_factor_x,
             info->scale_factor_y, &rasterized_width, &rasterized_height, &bitmap_type);
 
         const std::size_t bitmap_data_size = rasterized_height * rasterized_width;
 
-        if (!bitmap_data) {
+        if (!bitmap_data && !info->adapter->does_glyph_exist(info->idx, codepoint)) {
             // The glyph is not available. Let the client know. With code 0, we already use '?'
             // On S^3, it expect us to return false here.
             // On lower version, it expect us to return nullptr, so use 0 here is for the best.
@@ -611,7 +609,7 @@ namespace eka2l1 {
 
         MAKE_CACHE_ENTRY(3);
 
-        // From S^3 onwards, the 2nd argument contains some neccessary struct we need to fill in (metrics offset
+        // From S^3 onwards, the 2nd argument contains some necessary struct we need to fill in (metrics offset
         // and bitmap pointer offset) so we don't have to lookup anymore. On older version, the 2nd argument is
         // zero. We can do a check.
         struct rasterize_param {
