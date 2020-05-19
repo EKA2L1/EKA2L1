@@ -26,7 +26,6 @@ namespace eka2l1::mem::flexible {
     mmu_flexible::mmu_flexible(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits,
         const bool mem_map_old)
         : mmu_base(alloc, cpu, psize_bits, mem_map_old)
-        , kernel_dir_(nullptr)
         , rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? rom_eka1_end : global_data, page_size())
         , code_sec_(ram_code_addr, rom_bss_addr, page_size())
         , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size()) {
@@ -34,14 +33,17 @@ namespace eka2l1::mem::flexible {
         dir_mngr_ = std::make_unique<page_directory_manager>(MAX_PAGE_DIR_ALLOW);
         chunk_mngr_ = std::make_unique<chunk_manager>();
 
-        // Allocate the first page directory for kernel
-        kernel_dir_ = dir_mngr_->allocate(this);
+        // Allocate the first address space for kernel
+        kern_addr_space_ = std::make_unique<address_space>(this);
+
+        // Set kernel directory as the first one active
+        set_current_addr_space(kern_addr_space_->id());
     }
     
     void *mmu_flexible::get_host_pointer(const asid id, const vm_address addr) {
         if (id == 0) {
             // Directory của kernel
-            return kernel_dir_->get_pointer(addr);
+            return kern_addr_space_->dir_->get_pointer(addr);
         }
 
         // Tìm page directory trong quản lý - Find page directory in manager
@@ -86,6 +88,47 @@ namespace eka2l1::mem::flexible {
 
     void mmu_flexible::assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags,
         asid *id_list, const std::uint32_t id_list_size) {
-        LOG_WARN("Assign page table not supported in flexible memory model!");
+        // Extract the page directory offset
+        const std::uint32_t pde_off = linear_addr >> page_table_index_shift_;
+        const std::uint32_t last_off = tab ? tab->idx_ : 0;
+
+        if (tab) {
+            tab->idx_ = pde_off;
+        }
+
+        auto switch_page_table = [=](page_directory *target_dir) {
+            if (tab) {
+                target_dir->set_page_table(last_off, nullptr);
+            }
+
+            target_dir->set_page_table(pde_off, tab);
+        };
+
+        if (id_list != nullptr) {
+            for (std::uint32_t i = 0; i < id_list_size; i++) {
+                page_directory *dir = dir_mngr_->get(id_list[i]);
+                if (dir) {
+                    switch_page_table(dir);
+                }
+            }
+
+            return;
+        }
+
+        if (flags & MMU_ASSIGN_LOCAL_GLOBAL_REGION) {
+            // Iterates through all page directories and assign it
+            switch_page_table(kern_addr_space_->dir_);
+
+            for (auto &pde : dir_mngr_->dirs_) {
+                switch_page_table(pde.get());
+            }
+        } else {
+            if (flags & MMU_ASSIGN_GLOBAL) {
+                // Assign the table to global directory
+                switch_page_table(kern_addr_space_->dir_);
+            } else {
+                switch_page_table(cur_dir_);
+            }
+        }
     }
 }

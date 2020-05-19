@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <epoc/mem/model/flexible/addrspace.h>
 #include <epoc/mem/model/flexible/chnkmngr.h>
 #include <epoc/mem/model/flexible/dirmngr.h>
 #include <epoc/mem/model/section.h>
@@ -31,10 +32,10 @@ namespace eka2l1::mem::flexible {
 
         std::unique_ptr<page_directory_manager> dir_mngr_;
         std::unique_ptr<chunk_manager> chunk_mngr_;
+        std::unique_ptr<address_space> kern_addr_space_;
 
         page_directory *cur_dir_;
-        page_directory *kernel_dir_;                    ///< The page directory for kernel, ASID 0
-        
+
         linear_section  rom_sec_;                       ///< ROM linear section.
         linear_section  kernel_mapping_sec_;            ///< Kernel mapping linear section.
         linear_section  code_sec_;                      ///< Code section.
