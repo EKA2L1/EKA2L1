@@ -95,7 +95,7 @@ namespace eka2l1 {
 
         std::uint32_t flags_;
 
-        std::vector<epoc::msv::entry*> child_entries_;
+        std::vector<epoc::msv::entry *> child_entries_;
 
     protected:
         bool listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *sel);

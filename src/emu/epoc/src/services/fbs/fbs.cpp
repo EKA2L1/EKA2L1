@@ -61,7 +61,7 @@ namespace eka2l1 {
             server<fbs_server>()->session_cache_list->erase_cache(this);
         }
     }
-    
+
     void fbscli::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case fbs_init: {

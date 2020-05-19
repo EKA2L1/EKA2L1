@@ -31,10 +31,10 @@
 #include <epoc/dispatch/screen.h>
 
 #include <common/configure.h>
+#include <epoc/common.h>
 #include <epoc/dispatch/dispatcher.h>
 #include <epoc/hal.h>
 #include <epoc/svc.h>
-#include <epoc/common.h>
 
 #include <epoc/epoc.h>
 #include <epoc/kernel.h>
@@ -73,7 +73,7 @@
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
-    static security_policy server_exclamination_point_name_policy({ cap_prot_serv });
+    static security_policy server_exclamation_point_name_policy({ cap_prot_serv });
 
     /* TODO:                                       
      * 1. (pent0) Implement global user data. Global user data should be allocated in global memory region.
@@ -571,18 +571,18 @@ namespace eka2l1::epoc {
 
             switch (etype) {
             case kernel::entity_exit_type::panic:
-                LOG_TRACE("Thread {} paniced by message with cagetory: {} and exit code: {} {}", thread_name, exit_cage, reason,
+                LOG_TRACE("Thread {} panicked by message with category: {} and exit code: {} {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case kernel::entity_exit_type::kill:
-                LOG_TRACE("Thread {} forcefully killed by message with cagetory: {} and exit code: {}", thread_name, exit_cage, reason,
+                LOG_TRACE("Thread {} forcefully killed by message with category: {} and exit code: {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case kernel::entity_exit_type::terminate:
             case kernel::entity_exit_type::pending:
-                LOG_TRACE("Thread {} terminated peacefully by message with cagetory: {} and exit code: {}", thread_name, exit_cage, reason,
+                LOG_TRACE("Thread {} terminated peacefully by message with category: {} and exit code: {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
@@ -624,8 +624,7 @@ namespace eka2l1::epoc {
         }
 
         if ((int)msg->args.get_arg_type(param) & (int)ipc_arg_type::flag_des) {
-            epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[param]).
-                get(msg->own_thr->owning_process());
+            epoc::desc_base *base = eka2l1::ptr<epoc::desc_base>(msg->args.args[param]).get(msg->own_thr->owning_process());
 
             return base->get_length();
         }
@@ -786,7 +785,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(void, process_security_info, kernel::handle h, eka2l1::ptr<epoc::security_info> info) {
         kernel_system *kern = sys->get_kernel_system();
         epoc::security_info *sec_info = info.get(kern->crr_process());
-        
+
         process_ptr pr = kern->get<kernel::process>(h);
         query_security_info(&(*pr), sec_info);
     }
@@ -827,7 +826,7 @@ namespace eka2l1::epoc {
 
         // Exclamination point at the beginning of server name requires ProtServ
         if (!server_name.empty() && server_name[0] == '!') {
-            if (!crr_pr->satisfy(server_exclamination_point_name_policy)) {
+            if (!crr_pr->satisfy(server_exclamation_point_name_policy)) {
                 LOG_ERROR("Process {} try to create a server with exclamination point at the beginning of name ({}),"
                           " but doesn't have ProtServ",
                     crr_pr->name(), server_name);
@@ -878,7 +877,7 @@ namespace eka2l1::epoc {
     static std::int32_t do_create_session_from_server(system *sys, server_ptr server, std::int32_t msg_slot_count, eka2l1::ptr<void> sec, std::int32_t mode) {
         kernel_system *kern = sys->get_kernel_system();
         auto session_and_handle = kern->create_and_add<service::session>(
-                                              kernel::owner_type::process, server, msg_slot_count);
+            kernel::owner_type::process, server, msg_slot_count);
 
         if (session_and_handle.first == INVALID_HANDLE) {
             return epoc::error_general;
@@ -945,7 +944,7 @@ namespace eka2l1::epoc {
         // LOG_TRACE("Send using handle: {}", (h & 0x8000) ? (h & ~0x8000) : (h));
 
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr crr_pr =  kern->crr_process();
+        process_ptr crr_pr = kern->crr_process();
 
         // Dispatch the header
         ipc_arg arg;
@@ -993,7 +992,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, session_send, kernel::handle h, std::int32_t ord, eka2l1::ptr<void> ipc_args,
         eka2l1::ptr<epoc::request_status> status) {
         kernel_system *kern = sys->get_kernel_system();
-        process_ptr crr_pr =  kern->crr_process();
+        process_ptr crr_pr = kern->crr_process();
 
         // Dispatch the header
         ipc_arg arg;
@@ -1126,10 +1125,10 @@ namespace eka2l1::epoc {
         }
 
         const kernel::handle h = kern->create_and_add<kernel::chunk>(
-                                              owner == epoc::owner_process ? kernel::owner_type::process : kernel::owner_type::thread,
-                                              sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", create_info.initial_bottom,
-                                              create_info.initial_top, create_info.max_size, perm, type, access, att)
-                                          .first;
+                                         owner == epoc::owner_process ? kernel::owner_type::process : kernel::owner_type::thread,
+                                         sys->get_memory_system(), kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", create_info.initial_bottom,
+                                         create_info.initial_top, create_info.max_size, perm, type, access, att)
+                                     .first;
 
         if (h == INVALID_HANDLE) {
             return epoc::error_no_memory;
@@ -1413,7 +1412,7 @@ namespace eka2l1::epoc {
         return kern->mirror(&(*kern->get<kernel::thread>(h)), dup_handle,
             (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread);
     }
-    
+
     BRIDGE_FUNC(std::int32_t, handle_duplicate_v2, std::int32_t h, epoc::owner_type owner, std::uint32_t *dup_handle) {
         memory_system *mem = sys->get_memory_system();
         kernel_system *kern = sys->get_kernel_system();
@@ -1549,7 +1548,7 @@ namespace eka2l1::epoc {
 
         address *episode_choose_your_story = ep_list.cast<address>().get(pr);
         std::memcpy(episode_choose_your_story, entries.data(), num_to_copy * sizeof(address));
-        
+
         return epoc::error_none;
     }
 
@@ -1596,7 +1595,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::uint32_t, library_load_prepare) {
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC(std::uint32_t, library_entry_call_start) {
         return epoc::error_none;
     }
@@ -1714,18 +1713,18 @@ namespace eka2l1::epoc {
 
             switch (etype) {
             case kernel::entity_exit_type::panic:
-                LOG_TRACE("Thread {} paniced with cagetory: {} and exit code: {} {}", thread_name, exit_cage, reason,
+                LOG_TRACE("Thread {} panicked with category: {} and exit code: {} {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case kernel::entity_exit_type::kill:
-                LOG_TRACE("Thread {} forcefully killed with cagetory: {} and exit code: {} {}", thread_name, exit_cage, reason,
+                LOG_TRACE("Thread {} forcefully killed with category: {} and exit code: {} {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
             case kernel::entity_exit_type::terminate:
             case kernel::entity_exit_type::pending:
-                LOG_TRACE("Thread {} terminated peacefully with cagetory: {} and exit code: {}", thread_name, exit_cage, reason,
+                LOG_TRACE("Thread {} terminated peacefully with category: {} and exit code: {}", thread_name, exit_cage, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
                 break;
 
@@ -1747,7 +1746,7 @@ namespace eka2l1::epoc {
         kern->prepare_reschedule();
 
         thr->set_exit_type(etype);
-        
+
         return epoc::error_none;
     }
 
@@ -1932,7 +1931,7 @@ namespace eka2l1::epoc {
         property_ptr prop = kern->get_prop(cage, key);
 
         if (!prop) {
-            LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", cage, key);
+            LOG_WARN("Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
             return epoc::error_not_found;
         }
 
@@ -1949,7 +1948,7 @@ namespace eka2l1::epoc {
         property_ptr prop = kern->get_prop(cage, key);
 
         if (!prop) {
-            LOG_WARN("Property not found: cagetory = 0x{:x}, key = 0x{:x}", cage, key);
+            LOG_WARN("Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
             return epoc::error_not_found;
         }
 
@@ -1978,7 +1977,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = sys->get_kernel_system();
         property_ptr prop = kern->get_prop(cage, val);
 
-        LOG_TRACE("Attach to property with cagetory: 0x{:x}, key: 0x{:x}", cage, val);
+        LOG_TRACE("Attach to property with category: 0x{:x}, key: 0x{:x}", cage, val);
 
         if (!prop) {
             prop = kern->create<service::property>();
@@ -2026,7 +2025,7 @@ namespace eka2l1::epoc {
         }
         }
 
-        LOG_TRACE("Define to property with cagetory: 0x{:x}, key: 0x{:x}, type: {}", cage, key,
+        LOG_TRACE("Define to property with category: 0x{:x}, key: 0x{:x}, type: {}", cage, key,
             prop_type == service::property_type::int_data ? "int" : "bin");
 
         property_ptr prop = kern->get_prop(cage, key);
@@ -2243,8 +2242,7 @@ namespace eka2l1::epoc {
 
         const bool accurate_timing = sys->get_config()->accurate_ipc_timing;
 
-        timer->after(kern->crr_thread(), req_sts.get(kern->crr_process()), us_at - 
-            (accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad()));
+        timer->after(kern->crr_thread(), req_sts.get(kern->crr_process()), us_at - (accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad()));
     }
 
     BRIDGE_FUNC(void, timer_cancel, kernel::handle h) {
@@ -2355,7 +2353,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_queue_send, kernel::handle h, void *data, const std::int32_t length) {
-        kernel_system *kern = sys->get_kernel_system(); 
+        kernel_system *kern = sys->get_kernel_system();
         kernel::msg_queue *queue = kern->get<kernel::msg_queue>(h);
 
         if (!queue) {
@@ -2374,7 +2372,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_queue_receive, kernel::handle h, void *data, const std::int32_t length) {
-        kernel_system *kern = sys->get_kernel_system(); 
+        kernel_system *kern = sys->get_kernel_system();
         kernel::msg_queue *queue = kern->get<kernel::msg_queue>(h);
 
         if (!queue) {
@@ -2391,7 +2389,7 @@ namespace eka2l1::epoc {
 
         return epoc::error_none;
     }
-    
+
     /* DEBUG AND SECURITY */
 
     BRIDGE_FUNC(void, debug_print, eka2l1::ptr<desc8> aDes, std::int32_t aMode) {
@@ -2432,7 +2430,7 @@ namespace eka2l1::epoc {
         if (!thr) {
             return 0;
         }
-        
+
         return thr->get_exception_handler();
     }
 
@@ -2729,7 +2727,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7F, session_create),
         BRIDGE_REGISTER(0x80, session_create_from_handle),
         BRIDGE_REGISTER(0x84, timer_create),
-        BRIDGE_REGISTER(0x86, after),       // Actually AfterHighRes
+        BRIDGE_REGISTER(0x86, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x87, change_notifier_create),
         BRIDGE_REGISTER(0x9C, wait_dll_lock),
         BRIDGE_REGISTER(0x9D, release_dll_lock),
@@ -2865,7 +2863,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7D, server_create),
         BRIDGE_REGISTER(0x7E, session_create),
         BRIDGE_REGISTER(0x83, timer_create),
-        BRIDGE_REGISTER(0x85, after),       // Actually AfterHighRes
+        BRIDGE_REGISTER(0x85, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x86, change_notifier_create),
         BRIDGE_REGISTER(0x9B, wait_dll_lock),
         BRIDGE_REGISTER(0x9D, library_attach),

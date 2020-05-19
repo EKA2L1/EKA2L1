@@ -591,7 +591,7 @@ namespace eka2l1 {
 
         if (!use_spec_legacy) {
             std::optional<bmp_specs> specs_morden = ctx->get_arg_packed<bmp_specs>(0);
-                
+
             if (!specs_morden) {
                 ctx->set_request_status(epoc::error_argument);
                 return;
@@ -632,7 +632,7 @@ namespace eka2l1 {
             bmp_specs specs_to_write;
             specs_to_write.size = specs.size;
             specs_to_write.bpp = specs.bpp;
-            
+
             specs_to_write.handle = handle_ret;
             specs_to_write.server_handle = serv_handle;
             specs_to_write.address_offset = addr_off;

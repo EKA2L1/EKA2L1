@@ -102,7 +102,7 @@ namespace eka2l1::arm {
             return std::nullopt;
         }
     };
-    
+
     class arm_dynarmic_callback : public Dynarmic::A32::UserCallbacks {
         std::shared_ptr<arm_dynarmic_cp15> cp15;
 
@@ -122,27 +122,28 @@ namespace eka2l1::arm {
         void handle_thread_exception() {
             kernel::thread *crr_thread = parent.kern->crr_thread();
             kernel::process *pr = crr_thread->owning_process();
-            std::uint8_t *pc_data = reinterpret_cast<std::uint8_t*>(pr->
-                get_ptr_on_addr_space(parent.get_pc()));
+            std::uint8_t *pc_data = reinterpret_cast<std::uint8_t *>(pr->get_ptr_on_addr_space(parent.get_pc()));
 
             if (pc_data) {
                 const std::string disassemble_inst = parent.asmdis->disassemble(pc_data,
                     (parent.jit->Cpsr() & 0x20) ? 2 : 4, parent.get_pc(),
                     (parent.jit->Cpsr() & 0x20) ? true : false);
 
-                LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (parent.jit->Cpsr() & 0x20) ? 
-                    *reinterpret_cast<std::uint16_t*>(pc_data) : *reinterpret_cast<std::uint32_t*>(pc_data));
+                LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (parent.jit->Cpsr() & 0x20)
+                        ? *reinterpret_cast<std::uint16_t *>(pc_data)
+                        : *reinterpret_cast<std::uint32_t *>(pc_data));
             }
 
-            pc_data = reinterpret_cast<std::uint8_t*>(pr->get_ptr_on_addr_space(parent.get_lr()));
+            pc_data = reinterpret_cast<std::uint8_t *>(pr->get_ptr_on_addr_space(parent.get_lr()));
 
             if (pc_data) {
                 const std::string disassemble_inst = parent.asmdis->disassemble(pc_data,
                     parent.get_lr() % 2 != 0 ? 2 : 4, parent.get_lr() - parent.get_lr() % 2,
                     parent.get_lr() % 2 != 0 ? true : false);
 
-                LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, (parent.get_lr() % 2 != 0) ?
-                    *reinterpret_cast<std::uint16_t*>(pc_data) : *reinterpret_cast<std::uint32_t*>(pc_data));
+                LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, (parent.get_lr() % 2 != 0)
+                        ? *reinterpret_cast<std::uint16_t *>(pc_data)
+                        : *reinterpret_cast<std::uint32_t *>(pc_data));
             }
 
             parent.stop();
@@ -339,7 +340,7 @@ namespace eka2l1::arm {
 
         std::uint64_t GetTicksRemaining() override {
             return static_cast<std::uint64_t>(common::max<std::int64_t>(static_cast<std::int64_t>(parent.ticks_target)
-                - parent.ticks_executed, 0));
+                    - parent.ticks_executed, 0));
         }
     };
 

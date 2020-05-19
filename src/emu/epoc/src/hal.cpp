@@ -26,8 +26,8 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 
-#include <epoc/utils/err.h>
 #include <epoc/common.h>
+#include <epoc/utils/err.h>
 
 #include <drivers/graphics/graphics.h>
 #include <epoc/utils/des.h>
@@ -90,13 +90,13 @@ namespace eka2l1::epoc {
             // This value is appr. the same as rom.
             mem_info.internal_disk_ram_in_bytes_ = mem_info.total_rom_in_bytes_;
 
-            buf->assign(sys->get_kernel_system()->crr_process(), reinterpret_cast<std::uint8_t*>(&mem_info), sizeof(mem_info));
+            buf->assign(sys->get_kernel_system()->crr_process(), reinterpret_cast<std::uint8_t *>(&mem_info), sizeof(mem_info));
 
             return epoc::error_none;
         }
 
         int tick_period(int *a1, int *a2, const std::uint16_t device_num) {
-            std::uint64_t *tick_period_in_microsecs = reinterpret_cast<std::uint64_t*>(a1);
+            std::uint64_t *tick_period_in_microsecs = reinterpret_cast<std::uint64_t *>(a1);
             *tick_period_in_microsecs = 1000000 / epoc::TICK_TIMER_HZ;
 
             return epoc::error_none;
@@ -240,8 +240,8 @@ namespace eka2l1::epoc {
         }
     };
 
-    struct digitiser_hal: public hal  {
-        window_server *winserv_; 
+    struct digitiser_hal : public hal {
+        window_server *winserv_;
 
         int get_xy_info(int *a1, int *a2, const std::uint16_t device_num) {
             assert(winserv_);
@@ -254,10 +254,10 @@ namespace eka2l1::epoc {
 
             epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
             kernel::process *crr = sys->get_kernel_system()->crr_process();
-            
+
             if (package->get_length() == sizeof(digitiser_info_v1)) {
-                digitiser_info_v1 *info = reinterpret_cast<digitiser_info_v1*>(package->get_pointer(crr));
-                info->offset_to_first_useable_ = { 0, 0 };
+                digitiser_info_v1 *info = reinterpret_cast<digitiser_info_v1 *>(package->get_pointer(crr));
+                info->offset_to_first_usable_ = { 0, 0 };
                 info->size_usable_ = scr->size();
 
                 return epoc::error_none;
@@ -265,7 +265,7 @@ namespace eka2l1::epoc {
 
             return epoc::error_general;
         }
-        
+
         explicit digitiser_hal(system *sys)
             : hal(sys)
             , winserv_(nullptr) {

@@ -63,7 +63,7 @@ namespace eka2l1::loader {
         uint32_t priority;
         uint32_t data_bss_linear_base_address;
         uint32_t next_extension_linear_address;
-        uint32_t harware_variant; //I have no idea what this is exactly
+        uint32_t hardware_variant; //I have no idea what this is exactly
         uint32_t total_size;
         uint32_t module;
         uint32_t exception_des;

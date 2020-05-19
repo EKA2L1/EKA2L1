@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/etel/subsess.h>
-#include <epoc/services/etel/phone.h>
 #include <epoc/services/context.h>
+#include <epoc/services/etel/phone.h>
+#include <epoc/services/etel/subsess.h>
 #include <epoc/utils/err.h>
 
 #include <common/cvt.h>
@@ -34,7 +34,7 @@ namespace eka2l1 {
         ctx->write_arg_pkg<epoc::etel_phone_status>(0, phone_->status_);
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void etel_phone_subsession::init(service::ipc_context *ctx) {
         if (!phone_->init()) {
             ctx->set_request_status(epoc::error_general);
@@ -62,7 +62,7 @@ namespace eka2l1 {
             ctx->set_request_status(epoc::error_argument);
             return;
         }
-        
+
         if ((info_to_fill->index_ < 0) || (info_to_fill->index_ >= phone_->lines_.size())) {
             ctx->set_request_status(epoc::error_argument);
             return;

@@ -17,6 +17,7 @@
 
 from symemu2.common import MbmReader
 
+
 def main():
     # Load the mbm file. Pass the path to the mbm file.
     mbmf = MbmReader('smile.mbm')
@@ -26,16 +27,17 @@ def main():
 
     # Iterate through bitmaps.
     for i in range(0, mbmf.bitmapCount()):
-       (dimx, dimy) = mbmf.dimension(i)
+        (dimx, dimy) = mbmf.dimension(i)
 
         # Print bitmap information.
-       print('\nBitmap no {}, bits per pixel: {}, size: {}x{}'.format(i, mbmf.bitsPerPixel(i), dimx, dimy))
+        print('\nBitmap no {}, bits per pixel: {}, size: {}x{}'.format(i, mbmf.bitsPerPixel(i), dimx, dimy))
 
-       # Saving bitmap.
-       if mbmf.saveBitmap(i, 'smile_{}.bmp'.format(i)) != True:
-          print('\tError in saving bitmap no {}'.format(i))
-       else:
-          print('\tSuccess in saving bitmap no {}'.format(i))
+        # Saving bitmap.
+        if mbmf.saveBitmap(i, 'smile_{}.bmp'.format(i)) != True:
+            print('\tError in saving bitmap no {}'.format(i))
+        else:
+            print('\tSuccess in saving bitmap no {}'.format(i))
+
 
 if __name__ == '__main__':
     main()

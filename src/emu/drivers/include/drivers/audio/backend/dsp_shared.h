@@ -24,8 +24,8 @@
 
 #include <common/queue.h>
 
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace eka2l1::drivers {
     using dsp_buffer = std::vector<std::uint8_t>;
@@ -65,7 +65,7 @@ namespace eka2l1::drivers {
 
         void *get_userdata(dsp_stream_notification_type nof_type) override;
 
-        virtual bool start();
-        virtual bool stop();
+        virtual bool start() override;
+        virtual bool stop() override;
     };
 }

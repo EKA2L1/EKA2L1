@@ -124,7 +124,7 @@ namespace eka2l1 {
      * 
      * \returns True on success.
      */
-    bool read_localised_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
+    bool read_localised_registration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
 
     /*! \brief Applist services
      *
@@ -215,7 +215,7 @@ namespace eka2l1 {
          * \param uid The UID of the app.
          * \returns Nullptr if the registeration does not exist. Else the pointer to it.
          */
-        apa_app_registry *get_registeration(const std::uint32_t uid);
+        apa_app_registry *get_registration(const std::uint32_t uid);
 
         /**
          * \brief Get all app registerations.

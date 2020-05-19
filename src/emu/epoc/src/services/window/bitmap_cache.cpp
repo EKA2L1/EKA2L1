@@ -153,7 +153,7 @@ namespace eka2l1::epoc {
             // Else, get the index
             idx = std::distance(bitmaps.begin(), bitmap_ite);
 
-            // Check if we should upload or not, by calcuting the hash
+            // Check if we should upload or not, by calculating the hash
             hash = hash_bitwise_bitmap(bmp);
             should_upload = hash != (hashes[idx]);
         }

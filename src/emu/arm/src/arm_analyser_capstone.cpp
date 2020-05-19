@@ -124,7 +124,7 @@ namespace eka2l1::arm {
 
         if (total_pass == 0) {
             // Silent
-            // LOG_ERROR("Can't diassemble {} inst with given addr: 0x{:X}", thumb ? "thumb" : "arm", addr);
+            // LOG_ERROR("Can't disassemble {} inst with given addr: 0x{:X}", thumb ? "thumb" : "arm", addr);
             return nullptr;
         }
 

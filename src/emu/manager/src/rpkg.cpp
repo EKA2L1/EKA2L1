@@ -25,8 +25,8 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
-#include <common/fileutils.h>
 #include <common/dynamicfile.h>
+#include <common/fileutils.h>
 #include <common/ini.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -216,7 +216,7 @@ namespace eka2l1::loader {
     static bool determine_rpkg_product_info_from_various_txts(const std::string &extracted_path,
         std::string &manufacturer, std::string &firmcode, std::string &model) {
         const std::string version_folder = add_path(extracted_path, "resource\\versions\\");
-        
+
         common::dynamic_ifile sw_file(add_path(version_folder, "sw.txt"));
         std::string line_buffer;
 
@@ -225,7 +225,7 @@ namespace eka2l1::loader {
             return false;
         } else {
             sw_file.getline(line_buffer);
-            
+
             common::pystr sw_line_py(line_buffer);
             auto sw_infos = sw_line_py.split("\\n");
 
@@ -252,11 +252,11 @@ namespace eka2l1::loader {
     static bool determine_rpkg_product_info(const std::string &extracted_path,
         std::string &manufacturer, std::string &firmcode, std::string &model) {
         if (!determine_rpkg_product_info_from_platform_txt(extracted_path, manufacturer,
-            firmcode, model)) {
+                firmcode, model)) {
             LOG_WARN("First method of determining product info failed, start the second one.");
 
             if (!determine_rpkg_product_info_from_various_txts(extracted_path, manufacturer,
-                firmcode, model)) {
+                    firmcode, model)) {
                 LOG_ERROR("Second method of determining product info failed!");
                 return false;
             }

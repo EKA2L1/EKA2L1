@@ -59,7 +59,7 @@ namespace eka2l1 {
         io_system *io;
 
     protected:
-        fid get_lowest_useable_fid();
+        fid get_lowest_usable_fid();
 
     public:
         explicit posix_file_manager(io_system *io);

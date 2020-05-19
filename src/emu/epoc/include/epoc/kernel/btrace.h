@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/vfs.h>
 #include <cstdint>
+#include <epoc/vfs.h>
 
 namespace eka2l1 {
     class kernel_system;

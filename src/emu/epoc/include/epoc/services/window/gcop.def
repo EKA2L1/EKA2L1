@@ -1,10 +1,10 @@
 
 #ifndef OPCODE
-    #define OPCODE(prefix, name, version, val)
+#define OPCODE(prefix, name, version, val)
 #endif
 
 #ifndef OPCODE2
-    #define OPCODE2(prefix, name, version1, val1, version2, val2)
+#define OPCODE2(prefix, name, version1, val1, version2, val2)
 #endif
 
 OPCODE2(ws_gc, free, u171, 0, curr, 0)

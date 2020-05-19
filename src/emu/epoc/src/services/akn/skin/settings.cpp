@@ -59,7 +59,7 @@ namespace eka2l1::epoc {
             LOG_INFO("Arabic/hebrew mirroring active: {}", ah_mirroring_active ? "True" : "False");
             LOG_INFO("Highlight anim enabled: {}", highlight_anim_enabled ? "True" : "False");
         } else {
-            LOG_WARN("Central reposistory server not provided. Configuration will be tough");
+            LOG_WARN("Central repository server not provided. Configuration will be tough");
         }
     }
 
@@ -89,7 +89,7 @@ namespace eka2l1::epoc {
 
     bool akn_ss_settings::read_default_skin_id() {
         if (!skins_rep_) {
-            LOG_ERROR("Skin reposistory failed to load!");
+            LOG_ERROR("Skin repository failed to load!");
             return false;
         }
 
@@ -133,7 +133,7 @@ namespace eka2l1::epoc {
 
     bool akn_ss_settings::read_active_skin_id() {
         if (!skins_rep_) {
-            LOG_ERROR("Skin reposistory failed to load!");
+            LOG_ERROR("Skin repository failed to load!");
             return false;
         }
 

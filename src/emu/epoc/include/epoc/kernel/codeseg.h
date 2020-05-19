@@ -123,7 +123,7 @@ namespace eka2l1::kernel {
         void unmark();
 
         bool attach(kernel::process *new_foe);
-        bool detatch(kernel::process *de_foe);
+        bool detach(kernel::process *de_foe);
 
         /*! \brief Add new dependency.
         */

@@ -197,7 +197,7 @@ namespace eka2l1 {
             reserved = 0x0000,
             text = 0x1000,
             data = 0x2000,
-            inffered = 0x3000
+            inferred = 0x3000
         };
 
         /**

@@ -17,10 +17,8 @@
 
 from enum import Enum
 
-import ctypes
-import symemu
-
 from symemu2 import descriptor
+
 
 class ArgumentType(Enum):
     UNSPECIFIED = 0
@@ -30,22 +28,25 @@ class ArgumentType(Enum):
     DESC8 = 6
     DESC16 = 7
 
+
 def getArgumentTypeFromFlags(flags, idx):
     if (idx > 3) or (idx < 0):
         raise IndexError('Index {} is invalid! The index must be between 0 and 3', idx)
 
     return ArgumentType(((flags >> (idx * 3)) & 7))
 
+
 class Arguments(object):
     def __init__(self, arg0, arg1, arg2, arg3, flags):
-        self.args = [ arg0, arg1, arg2, arg3 ]
+        self.args = [arg0, arg1, arg2, arg3]
         self.flags = flags
-    
+
     def getArgumentType(self, idx):
         return getArgumentTypeFromFlags(self.flags, idx)
 
     def getArgument(self, idx):
         return self.args[idx]
+
 
 class Context(object):
     def __init__(self, arg0, arg1, arg2, arg3, flags, sender):
@@ -55,7 +56,7 @@ class Context(object):
     @classmethod
     def makeFromMessage(cls, msg):
         return Context(msg.arg(0), msg.arg(1), msg.arg(2), msg.arg(3), msg.flags(), msg.sender())
-    
+
     def getArguments(self):
         return self.args
 

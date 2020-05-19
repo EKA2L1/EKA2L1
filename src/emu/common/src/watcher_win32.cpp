@@ -83,7 +83,7 @@ namespace eka2l1::common {
                     auto &callback = callbacks_[which - WAIT_OBJECT_0 - 2];
 
                     if (!ReadDirectoryChangesW(dirs_[which - WAIT_OBJECT_0 - 2], &file_infos_[0], static_cast<DWORD>(file_infos_.size()),
-                        false, callback.filters_, &buffer_wrote_length, &pending_read_, nullptr)) {
+                            false, callback.filters_, &buffer_wrote_length, &pending_read_, nullptr)) {
                         LOG_WARN("Can't read directory changes. Report empty changes.");
                         break;
                     }
@@ -94,9 +94,9 @@ namespace eka2l1::common {
                     directory_changes changes;
 
                     while (pointee < buffer_wrote_length) {
-                        FILE_NOTIFY_INFORMATION *info = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&file_infos_[pointee]);
+                        FILE_NOTIFY_INFORMATION *info = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(&file_infos_[pointee]);
 
-                        std::u16string filename(reinterpret_cast<char16_t*>(info->FileName), info->FileNameLength / 2);
+                        std::u16string filename(reinterpret_cast<char16_t *>(info->FileName), info->FileNameLength / 2);
                         directory_change change;
                         change.change_ = 0;
                         change.filename_ = common::ucs2_to_utf8(filename);
@@ -163,8 +163,7 @@ namespace eka2l1::common {
     }
 
     bool directory_watcher_impl::unwatch(const std::int32_t watch_handle) {
-        if ((watch_handle <= 2) || (watch_handle > container_.size()) || 
-            container_[watch_handle - 1] == nullptr) {
+        if ((watch_handle <= 2) || (watch_handle > container_.size()) || container_[watch_handle - 1] == nullptr) {
             return false;
         }
 
@@ -252,7 +251,7 @@ namespace eka2l1::common {
 
         return 0;
     }
-    
+
     bool directory_watcher_impl::unwatch(HANDLE h, const bool is_in_loop) {
         const std::lock_guard<std::mutex> guard(lock_);
 
@@ -267,7 +266,7 @@ namespace eka2l1::common {
 
         HANDLE removed_nof = nullptr;
         bool result = true;
-        
+
         if (!is_in_loop) {
             removed_nof = CreateEvent(NULL, true, false, NULL);
             ResetEvent(removed_nof);
@@ -291,7 +290,7 @@ namespace eka2l1::common {
 
             if (wait_ite == waits_.end()) {
                 LOG_ERROR("This should not happens, a wait object not in wait list but in container list");
-                
+
                 result = false;
 
                 if (removed_nof)
@@ -310,7 +309,7 @@ namespace eka2l1::common {
             if (removed_nof)
                 SetEvent(removed_nof);
         };
-        
+
         if (!is_in_loop) {
             // Notify the wait thread, specifically the watch list change event
             SetEvent(waits_[1]);

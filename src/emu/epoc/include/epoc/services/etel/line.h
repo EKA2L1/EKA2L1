@@ -21,8 +21,8 @@
 
 #include <epoc/services/etel/common.h>
 
-namespace eka2l1 {    
-    struct etel_line: public etel_entity {
+namespace eka2l1 {
+    struct etel_line : public etel_entity {
     public:
         epoc::etel_line_info info_;
         std::uint32_t caps_;

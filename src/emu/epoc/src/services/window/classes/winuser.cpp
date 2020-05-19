@@ -211,7 +211,7 @@ namespace eka2l1::epoc {
             sched->schedule(client->get_ws().get_graphics_driver(), scr, client->get_ws().get_ntimer()->microseconds());
         }
     }
-    
+
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -359,10 +359,10 @@ namespace eka2l1::epoc {
     }
 
     void window_user::alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd) {
-        ws_cmd_alloc_pointer_buffer *alloc_params = reinterpret_cast<ws_cmd_alloc_pointer_buffer*>(cmd.data_ptr);
+        ws_cmd_alloc_pointer_buffer *alloc_params = reinterpret_cast<ws_cmd_alloc_pointer_buffer *>(cmd.data_ptr);
 
         if ((alloc_params->max_points >= 100) || (alloc_params->max_points == 0)) {
-            LOG_ERROR("Suspicous alloc pointer buffer max points detected ({})", alloc_params->max_points);
+            LOG_ERROR("Suspicious alloc pointer buffer max points detected ({})", alloc_params->max_points);
             context.set_request_status(epoc::error_argument);
 
             return;
@@ -511,7 +511,7 @@ namespace eka2l1::epoc {
         case EWsWinOpInvalidateFull: {
             irect.top = pos;
             irect.size = size;
-            
+
             if (redraw_responded && is_visible()) {
                 client->queue_redraw(this);
                 client->trigger_redraw();
@@ -592,7 +592,7 @@ namespace eka2l1::epoc {
             ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, absolute_position());
             ctx.set_request_status(epoc::error_none);
             break;
-            
+
         case EWsWinOpGetInvalidRegionCount:
             ctx.write_arg_pkg<std::uint32_t>(reply_slot, 0);
             ctx.set_request_status(epoc::error_none);

@@ -27,8 +27,8 @@
 #include <vector>
 
 namespace eka2l1::kernel {
-    using msg_queue_callback = std::function<void(void*)>;
-    using msg_queue_callback_entry = std::pair<msg_queue_callback, void*>;
+    using msg_queue_callback = std::function<void(void *)>;
+    using msg_queue_callback_entry = std::pair<msg_queue_callback, void *>;
 
     class thread;
 
@@ -57,7 +57,7 @@ namespace eka2l1::kernel {
         bool notify_full(epoc::notify_info &info);
 
         void cancel_data_available(kernel::thread *requester);
-        
+
         void clear_available_callback();
         void set_available_callback(msg_queue_callback callback, void *userdata);
 

@@ -16,39 +16,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import ctypes
-import symemu
-
+import struct
 from enum import Enum
 
-import struct
 
 class DescriptorType(Enum):
     BUF_CONST = 0
     PTR_CONST = 1
-    PTR =  2
+    PTR = 2
     BUF = 3
     BUF_CONST_PTR = 4
+
 
 # Provide read access to a in-memory descriptor
 class DescriptorBase(object):
     def __init__(self, address, process):
         def getPtrBufConst():
             return address + 4
-            
+
         def getPtrPtrConst():
             return self.process.readDword(address + 4)
-            
+
         def getPtrBuf():
             return address + 8
-            
+
         def getPtrPtr():
             return self.process.readDword(address + 8)
-            
+
         def getPtrBufConstPtr():
             real_buf_addr = self.process.readDword(address + 8)
             return real_buf_addr + 4
-        
+
         ptr_switcher = {
             DescriptorType.BUF_CONST: getPtrBufConst,
             DescriptorType.PTR_CONST: getPtrPtrConst,
@@ -56,13 +54,14 @@ class DescriptorBase(object):
             DescriptorType.BUF: getPtrBuf,
             DescriptorType.BUF_CONST_PTR: getPtrBufConstPtr
         }
-        
+
         self.process = process
 
         lengthAndType = self.process.readDword(address)
         self.length = lengthAndType & 0xFFFFFF
         self.type = DescriptorType(lengthAndType >> 28)
         self.ptr = ptr_switcher.get(self.type, lambda: 'Invalid descriptor type')()
+
 
 class Descriptor8(DescriptorBase):
     def __init__(self, address, process):
@@ -73,13 +72,14 @@ class Descriptor8(DescriptorBase):
 
     def __str__(self):
         retstr = ''
-    
+
         for i in range(0, self.length - 1):
             c = self.process.readByte(self.ptr + i * 1)
             retstr += struct.pack('<C', c).decode('utf-8')
 
-        return retstr                    
-        
+        return retstr
+
+
 class Descriptor16(DescriptorBase):
     def __init__(self, address, process):
         DescriptorBase.__init__(self, address, process)
@@ -89,7 +89,7 @@ class Descriptor16(DescriptorBase):
 
     def __str__(self):
         retstr = u''
-        
+
         for i in range(0, self.length - 1):
             uc = self.process.readWord(self.ptr + i * 2)
             retstr += struct.pack('<H', uc).decode('utf-16')

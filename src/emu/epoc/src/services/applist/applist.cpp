@@ -130,7 +130,7 @@ namespace eka2l1 {
 
         // Read localised info
         // Ignore result
-        read_localised_registeration_info(reinterpret_cast<common::ro_stream *>(&localised_app_info_resource_stream),
+        read_localised_registration_info(reinterpret_cast<common::ro_stream *>(&localised_app_info_resource_stream),
             reg, land_drive);
 
         LOG_INFO("Found app: {}, uid: 0x{:X}",
@@ -139,7 +139,7 @@ namespace eka2l1 {
 
         if (!eka2l1::is_absolute(reg.icon_file_path, std::u16string(u"c:\\"), true)) {
             // Try to absolute icon path
-            // Search the registeration file drive, and than the localiseable registeration file
+            // Search the registration file drive, and than the localizable registration file
             std::u16string try_1 = eka2l1::absolute_path(reg.icon_file_path,
                 std::u16string(1, drive_to_char16(land_drive)) + u":\\", true);
 
@@ -182,10 +182,10 @@ namespace eka2l1 {
     void applist_server::on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
         common::directory_changes &changes) {
         const std::lock_guard<std::mutex> guard(list_access_mut_);
-        
-        for (auto &change: changes) {
+
+        for (auto &change : changes) {
             const std::u16string rsc_path = eka2l1::add_path(base, common::utf8_to_ucs2(change.filename_));
-            
+
             switch (change.change_) {
             case common::directory_change_action_created:
             case common::directory_change_action_moved_to:
@@ -207,7 +207,7 @@ namespace eka2l1 {
                 // Delete the registry and then load it again
                 delete_registry(rsc_path);
                 load_registry(io, rsc_path, land_drive);
-                
+
                 break;
 
             default:
@@ -217,7 +217,7 @@ namespace eka2l1 {
 
         sort_registry_list();
     }
-    
+
     void applist_server::rescan_registries(eka2l1::io_system *io) {
         LOG_INFO("Loading app registries");
 
@@ -234,10 +234,11 @@ namespace eka2l1 {
                     }
                 }
 
-                const std::int64_t watch = io->watch_directory(base_dir, [this, base_dir, io, drv](void *userdata,
-                    common::directory_changes &changes) {
+                const std::int64_t watch = io->watch_directory(
+                    base_dir, [this, base_dir, io, drv](void *userdata, common::directory_changes &changes) {
                         on_register_directory_changes(io, base_dir, drv, changes);
-                    }, nullptr, common::directory_change_move | common::directory_change_last_write);
+                    },
+                    nullptr, common::directory_change_move | common::directory_change_last_write);
 
                 if (watch != -1) {
                     watchs_.push_back(watch);
@@ -265,7 +266,7 @@ namespace eka2l1 {
         return regs;
     }
 
-    apa_app_registry *applist_server::get_registeration(const std::uint32_t uid) {
+    apa_app_registry *applist_server::get_registration(const std::uint32_t uid) {
         const std::lock_guard<std::mutex> guard(list_access_mut_);
 
         if (!(flags & AL_INITED)) {
@@ -299,7 +300,7 @@ namespace eka2l1 {
 
     void applist_server::default_screen_number(service::ipc_context &ctx) {
         const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(0);
-        apa_app_registry *reg = get_registeration(app_uid);
+        apa_app_registry *reg = get_registration(app_uid);
 
         if (!reg) {
             ctx.set_request_status(epoc::error_not_found);
@@ -320,7 +321,7 @@ namespace eka2l1 {
 
     void applist_server::get_app_info(service::ipc_context &ctx) {
         const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(0);
-        apa_app_registry *reg = get_registeration(app_uid);
+        apa_app_registry *reg = get_registration(app_uid);
 
         if (!reg) {
             ctx.set_request_status(epoc::error_not_found);
@@ -333,7 +334,7 @@ namespace eka2l1 {
 
     void applist_server::get_capability(service::ipc_context &ctx) {
         const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(1);
-        apa_app_registry *reg = get_registeration(app_uid);
+        apa_app_registry *reg = get_registration(app_uid);
 
         if (!reg) {
             ctx.set_request_status(epoc::error_not_found);
@@ -346,7 +347,7 @@ namespace eka2l1 {
 
     void applist_server::get_app_icon_file_name(service::ipc_context &ctx) {
         const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(0);
-        apa_app_registry *reg = get_registeration(app_uid);
+        apa_app_registry *reg = get_registration(app_uid);
 
         // Either the registeration doesn't exist, or the icon file doesn't exist
         if (!reg || reg->icon_file_path.empty()) {

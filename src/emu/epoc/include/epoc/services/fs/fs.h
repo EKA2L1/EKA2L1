@@ -245,7 +245,6 @@ namespace eka2l1 {
         void drive(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
 
-
     public:
         explicit fs_server(system *sys);
 

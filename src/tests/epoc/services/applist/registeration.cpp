@@ -78,7 +78,7 @@ TEST_CASE("mandatory_check_localise", "applist_registeration") {
     common::ro_buf_stream app_info_resource_stream(&dat[0], dat.size());
     apa_app_registry reg;
 
-    bool result = read_localised_registeration_info(
+    bool result = read_localised_registration_info(
         reinterpret_cast<common::ro_stream *>(&app_info_resource_stream), reg, drive_c);
 
     REQUIRE(result);

@@ -97,7 +97,7 @@ namespace eka2l1::drivers {
         // Clear the callback
         buffer_copied_callback_ = nullptr;
         virtual_stop = true;
-        
+
         // Discard all buffers
         while (auto buffer = buffers_.pop()) {
         }
@@ -167,7 +167,7 @@ namespace eka2l1::drivers {
                 if (!encoded) {
                     break;
                 }
-                        
+
                 // Callback that internal buffer has been copied
                 {
                     const std::lock_guard<std::mutex> guard(callback_lock_);

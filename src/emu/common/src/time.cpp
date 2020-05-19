@@ -42,8 +42,7 @@ namespace eka2l1::common {
     }
 
     std::uint64_t get_current_time_in_nanoseconds_since_epoch() {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().
-                time_since_epoch()).count();
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
     std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t micsecs) {
@@ -68,8 +67,8 @@ namespace eka2l1::common {
         return static_cast<int>(timeinfo->tm_gmtoff);
 #endif
     }
-    
-    struct basic_teletimer_micro: public teletimer {
+
+    struct basic_teletimer_micro : public teletimer {
         std::uint64_t start_;
         std::uint64_t end_;
 
@@ -88,10 +87,10 @@ namespace eka2l1::common {
             end_ = 0;
         }
 
-        void stop() {
+        void stop() override {
             end_ = get_current_time_in_microseconds_since_epoch();
         }
-        
+
         bool set_target_frequency(const std::uint32_t freq) override {
             target_freq_ = freq;
             return true;

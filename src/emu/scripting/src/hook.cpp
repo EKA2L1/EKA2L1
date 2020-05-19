@@ -42,7 +42,7 @@ namespace eka2l1::scripting {
         get_current_instance()->get_manager_system()->get_script_manager()->register_library_hook(lib_name, ord, process_uid, func);
     }
 
-    void register_breakpoint_invokement(const std::string &image_name, const uint32_t addr, const std::uint32_t process_uid,  pybind11::function func) {
+    void register_breakpoint_invokement(const std::string &image_name, const uint32_t addr, const std::uint32_t process_uid, pybind11::function func) {
         get_current_instance()->get_manager_system()->get_script_manager()->register_breakpoint(image_name, addr, process_uid, func);
     }
 

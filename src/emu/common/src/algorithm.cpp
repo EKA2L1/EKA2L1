@@ -181,10 +181,10 @@ namespace eka2l1 {
             return 32 - count_leading_zero(v);
         }
 
-        static std::uint64_t inaccruate_multiply_and_divide_qwords(std::uint64_t m1, std::uint64_t m2, std::uint64_t d1) {
+        static std::uint64_t inaccurate_multiply_and_divide_qwords(std::uint64_t m1, std::uint64_t m2, std::uint64_t d1) {
             return static_cast<std::uint64_t>(m1 * (static_cast<double>(m2) / d1));
         }
-        
+
         std::uint64_t multiply_and_divide_qwords(std::uint64_t m1, std::uint64_t m2, std::uint64_t d1) {
 #if (EKA2L1_ARCH(X64) || (EKA2L1_ARCH(ARM64)))
 #if defined(_MSC_VER)
@@ -193,7 +193,7 @@ namespace eka2l1 {
 
             low = _umul128(m1, m2, &high);
 
-            // Older version of MSVC dont follow the underscore naming            
+            // Older version of MSVC dont follow the underscore naming
             std::uint64_t remainder = 0;
 
 #if _MSC_VER < 1923

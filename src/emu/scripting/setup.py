@@ -1,12 +1,11 @@
 import os
-import re
-import sys
 import platform
+import re
 import subprocess
-
+import sys
+from distutils.version import LooseVersion
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-from distutils.version import LooseVersion
 
 
 class CMakeExtension(Extension):
@@ -41,7 +40,7 @@ class CMakeBuild(build_ext):
 
         if platform.system() == "Windows":
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
-            if sys.maxsize > 2**32:
+            if sys.maxsize > 2 ** 32:
                 cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         else:
@@ -55,6 +54,7 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+
 
 setup(
     name='symemu',

@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <epoc/utils/des.h>
 #include <cstdint>
+#include <epoc/utils/des.h>
 
 namespace eka2l1::epoc::msv {
     enum change_notification_type {
@@ -29,16 +29,16 @@ namespace eka2l1::epoc::msv {
         change_notification_type_entries_changed = 2,
         change_notification_type_entries_deleted = 3,
         change_notification_type_entries_moved = 4,
-        
+
         change_notification_type_mtm_group_installed = 5,
-        change_notification_type_mtm_group_deinstalled = 6,
+        change_notification_type_mtm_group_uninstalled = 6,
 
         change_notification_type_store_deleted = 7,
         change_notification_type_close_session = 8,
 
         change_notification_type_index_loaded = 9,
         change_notification_type_index_load_failed = 10,
-        
+
         change_notification_type_index_media_changed = 12,
         change_notification_type_index_media_unavailable = 13,
         change_notification_type_index_media_available = 14,
@@ -73,7 +73,7 @@ namespace eka2l1::epoc::msv {
         epoc::ptr_desc16 description_;
         epoc::ptr_desc16 details_;
     };
-    
+
     static constexpr std::uint32_t MTM_DEFAULT_SPECIFIC_UID = 0x10202D51;
     static constexpr std::uint32_t MTM_SERVICE_UID_ROOT = 0x10000F67;
 }

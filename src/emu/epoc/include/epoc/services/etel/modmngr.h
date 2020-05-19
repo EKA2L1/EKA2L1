@@ -21,9 +21,9 @@
 
 #include <epoc/services/etel/common.h>
 
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
 namespace eka2l1 {
     class io_system;
@@ -39,7 +39,7 @@ namespace eka2l1::epoc::etel {
 
         bool load_tsy(io_system *io, const std::string &module_name);
         std::optional<std::uint32_t> get_entry_real_index(const std::uint32_t respective_index, const etel_entry_type type);
-        
+
         bool get_entry(const std::uint32_t real_index, etel_module_entry **entry);
         bool get_entry_by_name(const std::string &name, etel_module_entry **entry);
 

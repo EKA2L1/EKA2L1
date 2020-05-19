@@ -366,7 +366,7 @@ namespace eka2l1 {
             controller.options = parse_supported_options();
             controller.langs = parse_supported_langs();
             LOG_INFO("Prequisites read position: {}", stream->tellg());
-            controller.prequisites = parse_prerequisites();
+            controller.prerequisites = parse_prerequisites();
             controller.properties = parse_properties();
 
             int logo_avail;

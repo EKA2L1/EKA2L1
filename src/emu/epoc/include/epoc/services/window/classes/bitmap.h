@@ -26,7 +26,7 @@ namespace eka2l1 {
     class fbs_server;
 
     namespace epoc {
-        struct wsbitmap: public window_client_obj {
+        struct wsbitmap : public window_client_obj {
             fbsbitmap *bitmap_;
 
             explicit wsbitmap(window_server_client_ptr client, fbsbitmap *bmp);

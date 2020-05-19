@@ -253,7 +253,7 @@ namespace eka2l1 {
 
         virtual std::unique_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
         virtual std::unique_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) = 0;
-        
+
         virtual std::optional<entry_info> get_entry_info(const std::u16string &path) = 0;
 
         virtual abstract_file_system_err_code is_entry_in_rom(const std::u16string &path) {
@@ -407,7 +407,7 @@ namespace eka2l1 {
 
         std::int64_t watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
             void *callback_userdata, const std::uint32_t filters);
-        
+
         bool unwatch_directory(const std::int64_t handle);
     };
 
@@ -430,7 +430,7 @@ namespace eka2l1 {
         std::uint64_t read(void *buf, const std::uint64_t read_size) override;
     };
 
-    class wo_file_stream: public common::wo_stream {
+    class wo_file_stream : public common::wo_stream {
         file *f_;
 
     public:

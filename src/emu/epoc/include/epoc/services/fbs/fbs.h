@@ -318,7 +318,7 @@ namespace eka2l1 {
          * \param  size           Size of the bitmap, in pixels.
          * \param  dpm            Bit per pixels as display mode.
          * \param  alloc_data     If true, bitmap data will be allocated right away.
-         * \param  support_dirty  True if this bitmap supports clean variant. For backwards compability.
+         * \param  support_dirty  True if this bitmap supports clean variant. For backwards compatibility.
          * 
          * \returns Bitmap object. The ID of bitmap is the server handle.
          * 
@@ -385,8 +385,8 @@ namespace eka2l1 {
 
         /*! \brief Use to Allocate structure from server side.
          *
-         * Symbian usually avoids sendings struct that usually changes its structure
-         * to preserve compability. Especially, struct with vtable should be avoided.
+         * Symbian usually avoids sending struct that usually changes its structure
+         * to preserve compatibility. Especially, struct with vtable should be avoided.
          * 
          * Using a shared global chunk, this could be solved someway.
         */

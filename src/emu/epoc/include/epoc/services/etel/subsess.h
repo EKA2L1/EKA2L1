@@ -55,7 +55,7 @@ namespace eka2l1 {
         virtual etel_subsession_type type() const = 0;
     };
 
-    struct etel_phone_subsession: public etel_subsession {
+    struct etel_phone_subsession : public etel_subsession {
         etel_phone *phone_;
 
     protected:
@@ -68,7 +68,7 @@ namespace eka2l1 {
 
     public:
         explicit etel_phone_subsession(etel_session *session, etel_phone *phone);
-        
+
         void dispatch(service::ipc_context *ctx) override;
 
         etel_subsession_type type() const override {
@@ -76,7 +76,7 @@ namespace eka2l1 {
         }
     };
 
-    struct etel_line_subsession: public etel_subsession {
+    struct etel_line_subsession : public etel_subsession {
         etel_line *line_;
         epoc::notify_info status_change_nof_;
         epoc::notify_info incoming_call_nof_;
@@ -90,7 +90,7 @@ namespace eka2l1 {
 
     public:
         explicit etel_line_subsession(etel_session *session, etel_line *line);
-        
+
         void dispatch(service::ipc_context *ctx) override;
 
         etel_subsession_type type() const override {

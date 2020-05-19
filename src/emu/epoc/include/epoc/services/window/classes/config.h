@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <epoc/services/window/common.h>
 #include <common/vecx.h>
+#include <epoc/services/window/common.h>
 #include <string>
 #include <vector>
 

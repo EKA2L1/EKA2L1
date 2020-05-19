@@ -106,7 +106,7 @@ namespace eka2l1::loader {
         seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&file[0]), rsc_size);
 
         // Pad to align of 4
-        // We don't want extra ARM intructions, either do they, so it has to be aligned.
+        // We don't want extra ARM instructions, either do they, so it has to be aligned.
         std::uint8_t padding_bytes_size = 4 - ((name_len + rsc_size) % 4);
         char padding_byte = '\0';
 

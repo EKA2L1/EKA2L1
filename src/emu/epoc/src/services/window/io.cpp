@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/window/io.h>
-#include <epoc/services/window/window.h>
 #include <epoc/services/window/classes/wingroup.h>
 #include <epoc/services/window/classes/winuser.h>
+#include <epoc/services/window/io.h>
+#include <epoc/services/window/window.h>
 
 #include <epoc/kernel.h>
 
@@ -65,7 +65,7 @@ namespace eka2l1::epoc {
         }
 
         epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
-        
+
         std::optional<eka2l1::rect> contain_area;
         auto contain_rect_this_mode_ite = user->scr->pointer_areas_.find(user->scr->crr_mode);
 
@@ -73,7 +73,7 @@ namespace eka2l1::epoc {
             contain_area = contain_rect_this_mode_ite->second;
         }
 
-        for (auto &[evt, sended_to_highest_z]: evts_) {
+        for (auto &[evt, sent_to_highest_z] : evts_) {
             // Is this event really in the pointer area, if area exists. If not, pass
             if (contain_area && !contain_area->contains(evt.adv_pointer_evt_.pos)) {
                 continue;
@@ -93,12 +93,12 @@ namespace eka2l1::epoc {
             eka2l1::rect window_rect{ user->pos, user->size };
             evt.type = epoc::event_code::touch;
 
-            if (!sended_to_highest_z) {
+            if (!sent_to_highest_z) {
                 if (window_rect.contains(evt.adv_pointer_evt_.pos)) {
                     scr_coord_ = evt.adv_pointer_evt_.pos;
 
                     process_event_to_target_window(win, evt);
-                    sended_to_highest_z = true;
+                    sent_to_highest_z = true;
                 }
 
                 continue;
@@ -110,14 +110,13 @@ namespace eka2l1::epoc {
 
         return false;
     }
-    
+
     void window_pointer_focus_walker::clear() {
         evts_.clear();
     }
 
     window_key_shipper::window_key_shipper(window_server *serv)
         : serv_(serv) {
-
     }
 
     void window_key_shipper::add_new_event(const epoc::event &evt) {
@@ -132,7 +131,7 @@ namespace eka2l1::epoc {
         epoc::window_group *focus = serv_->get_focus();
         int ui_rotation = focus->scr->ui_rotation;
 
-        for (auto &evt: evts_) {
+        for (auto &evt : evts_) {
             evt.key_evt_.scancode = epoc::map_inputcode_to_scancode(evt.key_evt_.scancode,
                 ui_rotation);
 
@@ -150,7 +149,7 @@ namespace eka2l1::epoc {
             extra_event.type = epoc::event_code::key;
 
             if (!dont_send_extra_key_event) {
-                extra_event.key_evt_.code =  epoc::map_scancode_to_keycode(static_cast<TStdScanCode>(
+                extra_event.key_evt_.code = epoc::map_scancode_to_keycode(static_cast<TStdScanCode>(
                     evt.key_evt_.scancode));
             }
 

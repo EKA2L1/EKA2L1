@@ -21,8 +21,8 @@
 
 #include <functional>
 #include <memory>
-#include <tuple>
 #include <string>
+#include <tuple>
 
 namespace eka2l1::common {
     struct directory_watcher_impl;
@@ -49,8 +49,8 @@ namespace eka2l1::common {
     };
 
     using directory_changes = std::vector<directory_change>;
-    using directory_watcher_callback = std::function<void(void*, directory_changes&)>;
-    using directory_watcher_callback_pair = std::pair<directory_watcher_callback, void*>;
+    using directory_watcher_callback = std::function<void(void *, directory_changes &)>;
+    using directory_watcher_callback_pair = std::pair<directory_watcher_callback, void *>;
 
     struct directory_watcher_data {
         directory_watcher_callback_pair callback_pair_;

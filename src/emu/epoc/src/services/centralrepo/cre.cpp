@@ -26,8 +26,8 @@
 #include <common/log.h>
 
 #include <epoc/services/centralrepo/cre.h>
-#include <epoc/vfs.h>
 #include <epoc/utils/des.h>
+#include <epoc/vfs.h>
 
 #include <manager/device_manager.h>
 

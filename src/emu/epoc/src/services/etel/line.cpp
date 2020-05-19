@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/context.h>
 #include <epoc/services/etel/line.h>
 #include <epoc/services/etel/subsess.h>
-#include <epoc/services/context.h>
 #include <epoc/utils/err.h>
 
 #include <common/log.h>
@@ -32,7 +32,6 @@ namespace eka2l1 {
     }
 
     etel_line::~etel_line() {
-
     }
 
     etel_line_subsession::etel_line_subsession(etel_session *session, etel_line *line)
@@ -72,16 +71,16 @@ namespace eka2l1 {
         ctx->write_arg_pkg<epoc::etel_line_status>(0, line_->info_.sts_);
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     void etel_line_subsession::notify_status_change(service::ipc_context *ctx) {
         status_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
-    
+
     void etel_line_subsession::cancel_notify_status_change(service::ipc_context *ctx) {
         ctx->set_request_status(epoc::error_none);
         status_change_nof_.complete(epoc::error_cancel);
     }
-    
+
     void etel_line_subsession::notify_incoming_call(service::ipc_context *ctx) {
         incoming_call_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }

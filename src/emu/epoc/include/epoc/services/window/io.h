@@ -22,8 +22,8 @@
 #include <common/vecx.h>
 #include <epoc/services/window/classes/winbase.h>
 
-#include <vector>
 #include <tuple>
+#include <vector>
 
 namespace eka2l1 {
     class window_server;
@@ -49,7 +49,7 @@ namespace eka2l1::epoc {
      * \brief Deliver key events to windows that are suitable.
      */
     struct window_key_shipper {
-        eka2l1::window_server *serv_;           ///< Pointer to window server.
+        eka2l1::window_server *serv_; ///< Pointer to window server.
 
         std::vector<epoc::event> evts_;
 

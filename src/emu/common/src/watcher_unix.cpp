@@ -36,7 +36,7 @@ namespace eka2l1::common {
 
         // 512 is maximum event count
         events_.resize(EVENT_MAX_SIZE * 512);
-        
+
         wait_thread_ = std::make_unique<std::thread>([this]() {
             std::vector<directory_change> changes;
 
@@ -54,7 +54,7 @@ namespace eka2l1::common {
 
             while (!should_stop) {
                 const ssize_t length = read(instance_, &events_[0], events_.size());
-                
+
                 if (length == -1) {
                     LOG_ERROR("Error reading notify event!");
                     should_stop = true;
@@ -66,12 +66,12 @@ namespace eka2l1::common {
 
                 // Parse all event
                 while (i < length) {
-                    struct inotify_event *evt = reinterpret_cast<struct inotify_event*>(&events_[i]);
-                    
+                    struct inotify_event *evt = reinterpret_cast<struct inotify_event *>(&events_[i]);
+
                     directory_change change;
                     change.change_ = 0;
                     change.filename_.assign(evt->name, evt->name + evt->len);
-                    
+
                     // Remove null terminated characters
                     change.filename_.erase(std::find(change.filename_.begin(), change.filename_.end(), '\0'),
                         change.filename_.end());
@@ -118,7 +118,7 @@ namespace eka2l1::common {
     }
 
     directory_watcher_impl::~directory_watcher_impl() {
-        for (auto &wd: container_) {
+        for (auto &wd : container_) {
             inotify_rm_watch(instance_, wd);
         }
 
@@ -135,9 +135,9 @@ namespace eka2l1::common {
         if (ite == container_.end()) {
             return false;
         }
-    
+
         auto callback_ite = callbacks_.begin() + std::distance(container_.begin(), ite);
-        
+
         callbacks_.erase(callback_ite);
         container_.erase(ite);
 

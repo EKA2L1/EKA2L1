@@ -37,7 +37,7 @@ namespace eka2l1 {
             return true;
         }
 
-        // Align if neccessary. Required align by 2.
+        // Align if necessary. Required align by 2.
         if (stream->tell() % 2 != 0) {
             stream->seek(1, common::seek_where::cur);
         }
@@ -118,7 +118,7 @@ namespace eka2l1 {
             reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + u"\\:system\\programs\\"
                 + binary_name + u".dll";
         } else {
-            // Compability with old EKA1
+            // Compatibility with old EKA1
             reg.mandatory_info.app_path = std::u16string(1, drive_to_char16(land_drive)) + u":\\system\\programs\\"
                 + binary_name + u".exe";
         }
@@ -132,14 +132,14 @@ namespace eka2l1 {
         }
 
         if (!read_non_localisable_info(stream, reg, land_drive)) {
-            // Only mandantory is neccessary. Others are ok to missing.
+            // Only mandatory is nnecessary Others are ok to missing.
             return true;
         }
 
         return true;
     }
 
-    bool read_localised_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
+    bool read_localised_registration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
         // Skip over reserved variables
         stream->seek(8, common::seek_where::beg);
         std::u16string cap;

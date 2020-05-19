@@ -46,13 +46,13 @@ namespace eka2l1::epoc {
         error_abort = -39, ///< An operation has been aborted.
         error_too_big = -40, ///< Something is too big.
         error_divide_by_zero = -41, ///< A divide-by-zero operation has been attempted.
-        error_bad_power = -42, ///< Insufficent power to finish an operation.
+        error_bad_power = -42, ///< Insufficient power to finish an operation.
         error_dir_full = -43, ///< An operation with directory has failed.
-        error_hardware_not_avail = -44, ///< Neccessary hardware is not available for an operation.
+        error_hardware_not_avail = -44, ///< Necessary hardware is not available for an operation.
         error_session_closed = -45, ///< Shared session has been closed.
         error_permission_denied = -46, ///< Not enough permission to perform an operation.
         error_ext_not_supported = -47, ///< An extension is not supported by an operation.
-        error_comms_break = -48, ///< A break happens in a comms operation.
+        error_comms_break = -48, ///< A break happens in a communication operation.
         error_no_secure_time = -49, ///< Trusted time source could not be found.
         error_surrogate_found = -50, ///< Corrupt surrogate is found when processing a text/descriptor buffer.
     };

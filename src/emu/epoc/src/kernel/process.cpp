@@ -296,7 +296,7 @@ namespace eka2l1::kernel {
         seri.absorb(exe_path);
         seri.absorb(cmd_args);
 
-        // We don't need to do state for page table, eventaully it will be filled in by chunk
+        // We don't need to do state for page table, eventually it will be filled in by chunk
         // Do state for object table
         process_handles.do_state(seri);
     }

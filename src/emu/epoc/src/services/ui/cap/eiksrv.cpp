@@ -119,10 +119,10 @@ namespace eka2l1::epoc::cap {
         , flags_(0) {
     }
 
-    void eik_server::init(kernel_system *kern) {        
+    void eik_server::init(kernel_system *kern) {
         winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(WINDOW_SERVER_NAME));
     }
-    
+
     void eik_server::key_block_mode(const bool is_on) {
         flags_ &= ~FLAG_KEY_BLOCK_MODE;
 
@@ -132,7 +132,7 @@ namespace eka2l1::epoc::cap {
 
         winserv_->set_key_block_active(is_on);
     }
-    
+
     const bool eik_server::key_block_mode() const {
         return static_cast<bool>(flags_ & FLAG_KEY_BLOCK_MODE);
     }

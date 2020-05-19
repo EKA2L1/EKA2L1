@@ -40,7 +40,7 @@ namespace eka2l1 {
     }
 
     void akn_skin_server_session::do_set_notify_handler(service::ipc_context *ctx) {
-        // The notify handler does nothing rather than gurantee that the client already has a handle mechanic
+        // The notify handler does nothing rather than guarantee that the client already has a handle mechanic
         // to the request notification later.
         client_handler_ = *ctx->get_arg<std::uint32_t>(0);
         ctx->set_request_status(epoc::error_none);
@@ -58,7 +58,7 @@ namespace eka2l1 {
         ctx->set_request_status(server<akn_skin_server>()->is_icon_configured(id.value()));
     }
 
-    void akn_skin_server_session::store_scaleable_gfx(service::ipc_context *ctx) {
+    void akn_skin_server_session::store_scalable_gfx(service::ipc_context *ctx) {
         // Message parameters
         // 0. ItemID
         // 1. LayoutType & size
@@ -73,7 +73,7 @@ namespace eka2l1 {
             ctx->set_request_status(epoc::error_argument);
             return;
         }
-        server<akn_skin_server>()->store_scaleable_gfx(
+        server<akn_skin_server>()->store_scalable_gfx(
             *item_id,
             *layout_info,
             *bmp_handle,
@@ -138,8 +138,8 @@ namespace eka2l1 {
             break;
         }
 
-        case epoc::akn_skin_server_store_scaleable_gfx: {
-            store_scaleable_gfx(ctx);
+        case epoc::akn_skin_server_store_scalable_gfx: {
+            store_scalable_gfx(ctx);
             break;
         }
 
@@ -244,7 +244,7 @@ namespace eka2l1 {
         merge_active_skin(sys->get_io_system());
     }
 
-    void akn_skin_server::store_scaleable_gfx(
+    void akn_skin_server::store_scalable_gfx(
         const epoc::pid item_id,
         const epoc::skn_layout_info layout_info,
         const std::uint32_t bmp_handle,

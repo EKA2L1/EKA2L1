@@ -37,9 +37,9 @@ namespace eka2l1::dispatch {
 
     void dispatcher::init(kernel_system *kern, ntimer *timing) {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
-        
-        audio_nof_complete_evt_ = timing->register_event("DispatchAudio", [this, kern, timing](std::uint64_t userdata, std::uint64_t late) {  
-            dsp_epoc_stream *stream = reinterpret_cast<dsp_epoc_stream*>(userdata);
+
+        audio_nof_complete_evt_ = timing->register_event("DispatchAudio", [this, kern, timing](std::uint64_t userdata, std::uint64_t late) {
+            dsp_epoc_stream *stream = reinterpret_cast<dsp_epoc_stream *>(userdata);
             stream->deliver_audio_events(kern, timing);
             timing->schedule_event(500 - late, audio_nof_complete_evt_, userdata);
         });
@@ -60,7 +60,7 @@ namespace eka2l1::dispatch {
     }
 
     void dispatcher::shutdown() {
-        for (auto &stream: dsp_streams_.objs_) {
+        for (auto &stream : dsp_streams_.objs_) {
             // Unschedule callback events.
             timing_->unschedule_event(audio_nof_complete_evt_, reinterpret_cast<std::uint64_t>(stream.get()));
         }

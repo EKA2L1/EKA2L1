@@ -43,7 +43,7 @@ namespace eka2l1::desktop {
     /**
      * \brief Entry point to thread emulate Symbian OS.
      *
-     * This thread may spawn mutiple small threads emulating cores in the future.
+     * This thread may spawn multiple small threads emulating cores in the future.
      *
      * \param state Emulator state.
      */

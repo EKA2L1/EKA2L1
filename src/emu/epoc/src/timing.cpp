@@ -170,7 +170,7 @@ namespace eka2l1 {
         event_types_.push_back(evtype);
         return static_cast<int>(event_types_.size() - 1);
     }
-    
+
     void ntimer::remove_event(int event_type) {
         const std::lock_guard<std::mutex> guard(lock_);
         if (event_types_.size() <= event_type) {

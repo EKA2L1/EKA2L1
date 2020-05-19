@@ -59,7 +59,7 @@ namespace eka2l1 {
 
         void semaphore::wait() {
             kernel::thread *calling_thr = kern->crr_thread();
-            
+
             if (--avail_count < 0) {
                 assert(!calling_thr->wait_obj);
 

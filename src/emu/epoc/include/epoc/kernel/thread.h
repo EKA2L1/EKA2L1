@@ -30,11 +30,11 @@
 #include <arm/arm_factory.h>
 
 #include <common/linked.h>
-#include <common/resource.h>
 #include <common/queue.h>
+#include <common/resource.h>
 
-#include <epoc/kernel/common.h>
 #include <epoc/kernel/chunk.h>
+#include <epoc/kernel/common.h>
 #include <epoc/kernel/object_ix.h>
 
 #include <epoc/utils/reqsts.h>
@@ -118,7 +118,7 @@ namespace eka2l1 {
             // So this is fine for both mode.
             ptr<void> tls_heap;
 
-            // On real phone this is a RArray. 
+            // On real phone this is a RArray.
             std::array<tls_slot, 50> tls_slots;
         };
 
@@ -174,7 +174,7 @@ namespace eka2l1 {
             ipc_msg_ptr sync_msg;
 
             void reset_thread_ctx(const std::uint32_t entry_point, const std::uint32_t stack_top, const std::uint32_t thr_local_addr,
-                const bool inital);
+                const bool initial);
             void create_stack_metadata(std::uint8_t *stack_host_ptr, address stack_ptr, ptr<void> allocator_ptr,
                 std::uint32_t name_len, address name_ptr, address epa);
 
@@ -389,6 +389,6 @@ namespace eka2l1 {
             }
         };
 
-        using thread_priority_queue = eka2l1::cp_queue<kernel::thread*, thread_priority_less_comparator>;
+        using thread_priority_queue = eka2l1::cp_queue<kernel::thread *, thread_priority_less_comparator>;
     }
 }

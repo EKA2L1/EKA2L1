@@ -34,9 +34,8 @@ namespace eka2l1::arm {
     arm_interface_extended::arm_interface_extended(gdbstub *stub, manager_system *mngr)
         : stub_(stub)
         , mngr_(mngr) {
-
     }
-    
+
     void arm_interface_extended::handle_breakpoint(kernel_system *kern, manager::config_state *conf,
         const std::uint32_t addr) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -47,7 +46,7 @@ namespace eka2l1::arm {
         if (conf->enable_breakpoint_script) {
             stop();
             save_context(crr_thread->get_thread_context());
-    
+
             manager::script_manager *scripter = mngr_->get_script_manager();
 
             if (!last_breakpoint_script_hits_[crr_thread->unique_id()].hit_) {
@@ -89,7 +88,7 @@ namespace eka2l1::arm {
 
     void arm_interface_extended::reset_breakpoint_hit(kernel_system *kern) {
         breakpoint_hit_info &info = last_breakpoint_script_hits_[kern->crr_thread()->unique_id()];
- 
+
 #if ENABLE_SCRIPTING
         manager::script_manager *scripter = mngr_->get_script_manager();
         scripter->write_breakpoint_block(kern->crr_process(), info.addr_);

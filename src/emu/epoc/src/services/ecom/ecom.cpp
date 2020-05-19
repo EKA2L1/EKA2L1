@@ -264,7 +264,7 @@ namespace eka2l1 {
     ecom_session::ecom_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver) {
     }
-    
+
     void ecom_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case ecom_list_implementations:
@@ -276,7 +276,7 @@ namespace eka2l1 {
         case ecom_get_implementation_creation_method:
             get_implementation_creation_method(ctx);
             break;
-        
+
         case ecom_collect_implementations_list:
             collect_implementation_list(ctx);
             break;
@@ -452,22 +452,22 @@ namespace eka2l1 {
             seri.absorb(total_impls);
         }
 
-        // Iterate thorugh all implementations
+        // Iterate through all implementations
         for (ecom_implementation_info_ptr &implementation : interface->implementations) {
             // Check the extended interfaces first
-            bool sastify = true;
+            bool satisfy = true;
 
             for (std::uint32_t &given_extended_interface : given_extended_interfaces) {
                 if (std::lower_bound(implementation->extended_interfaces.begin(), implementation->extended_interfaces.end(),
                         given_extended_interface)
                     == implementation->extended_interfaces.end()) {
-                    sastify = false;
+                    satisfy = false;
                     break;
                 }
             }
 
-            // Not sastify ? Yeah, let's just turn back
-            if (!sastify) {
+            // Not satisfy ? Yeah, let's just turn back
+            if (!satisfy) {
                 continue;
             }
 
@@ -478,23 +478,23 @@ namespace eka2l1 {
                 continue;
             }
 
-            sastify = false;
+            satisfy = false;
 
             // We still need to see if the name is match
             // Generic match ? Wildcard check
             if (list_impl_param.match_type) {
                 if (std::regex_match(implementation->default_data, wildcard_matcher)) {
-                    sastify = true;
+                    satisfy = true;
                 }
             } else {
                 if (implementation->default_data.find(match_str) != std::string::npos) {
-                    sastify = true;
+                    satisfy = true;
                 }
             }
 
             // TODO(pent0): Capability supply
 
-            if (sastify) {
+            if (satisfy) {
                 collected_impls_.push_back(implementation);
                 implementation->do_state(seri, support_extended_interface, is_using_old_ecom_abi());
             }

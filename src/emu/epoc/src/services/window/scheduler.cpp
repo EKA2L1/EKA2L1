@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/kernel.h>
 #include <epoc/services/window/scheduler.h>
 #include <epoc/services/window/screen.h>
 #include <epoc/timing.h>
-#include <epoc/kernel.h>
 
 #include <cassert>
 

@@ -93,17 +93,17 @@ namespace eka2l1 {
                     central_repo_default_meta def_meta;
 
                     // Iterate through each elements to determine
-                    std::uint32_t potientially_meta = p->key_as<std::uint32_t>();
+                    std::uint32_t potentially_meta = p->key_as<std::uint32_t>();
                     common::ini_node *n = p->get<common::ini_node>(0);
 
                     if (n && n->get_node_type() == common::INI_NODE_KEY && strncmp(n->name(), "mask", 4) == 0) {
                         // That's a mask, we should add new
-                        def_meta.default_meta_data = potientially_meta;
+                        def_meta.default_meta_data = potentially_meta;
                         def_meta.key_mask = n->get_as<common::ini_pair>()->get<common::ini_value>(0)->get_as_native<std::uint32_t>();
                         def_meta.low_key = p->get<common::ini_value>(1)->get_as_native<std::uint32_t>();
                     } else {
                         // Nope
-                        def_meta.low_key = potientially_meta;
+                        def_meta.low_key = potentially_meta;
                         def_meta.high_key = n->get_as<common::ini_value>()->get_as_native<std::uint32_t>();
                         def_meta.default_meta_data = p->get<common::ini_value>(1)->get_as_native<std::uint32_t>();
                     }
@@ -314,8 +314,7 @@ namespace eka2l1 {
 
         const std::u16string private_dir_persists = u":\\Private\\10202be9\\";
         const std::u16string firmcode = common::utf8_to_ucs2(common::lowercase_string(mngr->get_current()->firmware_code));
-        const std::u16string private_dir_persists_separate_firm = private_dir_persists +
-            u"persists\\" + firmcode + u"\\";
+        const std::u16string private_dir_persists_separate_firm = private_dir_persists + u"persists\\" + firmcode + u"\\";
 
         // Temporary push rom drive so scan works
         avail_drives.push_back(rom_drv);
@@ -325,8 +324,7 @@ namespace eka2l1 {
             std::u16string repo_dir{ drive_to_char16(drv) };
 
             // Don't add separate firmware code on rom drive (it already did itself)
-            std::u16string repo_folder = repo_dir + ((drv == rom_drv) ? private_dir_persists :
-                private_dir_persists_separate_firm);
+            std::u16string repo_folder = repo_dir + ((drv == rom_drv) ? private_dir_persists : private_dir_persists_separate_firm);
 
             if (is_first_repo && !io->exist(repo_folder)) {
                 // Create one if it doesn't exist, for the future
@@ -357,7 +355,7 @@ namespace eka2l1 {
                     if (int err = do_state_for_cre(seri, *repo)) {
                         LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
                         avail_drives.pop_back();
-                        
+
                         return -1;
                     }
 
@@ -394,7 +392,7 @@ namespace eka2l1 {
     /* It should be like follow:
      *
      * - The ROM INI are for rollback
-     * - And repo initialsation file resides outside private/1020be9/
+     * - And repo initialisation file resides outside private/1020be9/
      * 
      * That's for rollback when calling reset. Any changes in repo will be saved in persists folder
      * of preferable drive (usually internal).
@@ -494,10 +492,11 @@ namespace eka2l1 {
         case cen_rep_get_real:
         case cen_rep_get_string:
             get_value(ctx);
+            break;
 
         case cen_rep_set_int:
         case cen_rep_set_string:
-        case cen_rep_set_real: 
+        case cen_rep_set_real:
             set_value(ctx);
             break;
 

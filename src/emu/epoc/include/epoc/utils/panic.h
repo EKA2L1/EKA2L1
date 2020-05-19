@@ -4,7 +4,7 @@
 #include <string>
 
 namespace eka2l1::epoc {
-    /*! \brief Intialize the panic descriptions. 
+    /*! \brief Initialize the panic descriptions.
      *
      * The function try to load the panic.json file at the same folder as
      * the executable, to a YAML node. From YAML node, function can get action
@@ -12,7 +12,7 @@ namespace eka2l1::epoc {
      * 
      * There are two types of action: default and script. While default will returns
      * a string description, script will returns nothing, and assumes a script already
-     * installed for handling panic (hooking using decorator @emulatorPanicHook(panicCagetory),
+     * installed for handling panic (hooking using decorator @emulatorPanicHook(panicCategory),
      * from symemu2.events).
      *
      * \returns True if the loading performs successfully
@@ -31,7 +31,7 @@ namespace eka2l1::epoc {
 
     /*! \brief Get the panic description of a panic code from a panic category. 
      *
-     * This function will immidiately returns none if the YAML node is not loaded. Otherwise, it will
+     * This function will immediately returns none if the YAML node is not loaded. Otherwise, it will
      * lurk up the YAML main node and get the panic description string, if the category handling
      * is marked as default.
      *

@@ -444,7 +444,7 @@ namespace eka2l1::drivers {
         helper.pop(g);
         helper.pop(b);
         helper.pop(a);
-        
+
         texture *target = nullptr;
 
         if (num & HANDLE_BITMAP) {
@@ -456,7 +456,7 @@ namespace eka2l1::drivers {
 
             target = bmp->tex.get();
         } else {
-            target = reinterpret_cast<drivers::texture*>(get_graphics_object(num));
+            target = reinterpret_cast<drivers::texture *>(get_graphics_object(num));
         }
 
         target->set_channel_swizzle({ r, g, b, a });

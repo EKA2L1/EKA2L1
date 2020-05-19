@@ -354,14 +354,14 @@ namespace eka2l1 {
             sis_info info;
             sis_supported_options options;
             sis_supported_langs langs;
-            sis_prerequisites prequisites;
+            sis_prerequisites prerequisites;
             sis_properties properties;
             sis_logo logo;
             sis_install_block install_block;
             std::vector<sis_sig_cert_chain> sigcert_chains;
             sis_data_index idx;
 
-            sis_lang choosen_lang = sis_lang::en;
+            sis_lang chosen_lang = sis_lang::en;
         };
 
         struct sis_expression;

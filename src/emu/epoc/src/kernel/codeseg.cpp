@@ -110,7 +110,7 @@ namespace eka2l1::kernel {
         return true;
     }
 
-    bool codeseg::detatch(kernel::process *de_foe) {
+    bool codeseg::detach(kernel::process *de_foe) {
         auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
             return info.attached_process == de_foe;
         });

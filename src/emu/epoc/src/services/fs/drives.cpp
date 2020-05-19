@@ -112,7 +112,7 @@ namespace eka2l1 {
         }
 
         if (static_cast<int>(io_drive.attribute & io_attrib::removeable)) {
-            info->drive_att |= epoc::fs::drive_att_removeable;
+            info->drive_att |= epoc::fs::drive_att_removable;
         }
 
         if (static_cast<int>(io_drive.attribute & io_attrib::write_protected)) {
@@ -233,7 +233,7 @@ namespace eka2l1 {
 
             return;
         }
-        
+
         fill_drive_info(&info->drv_info, *io_drive);
         info->uid = drv;
 

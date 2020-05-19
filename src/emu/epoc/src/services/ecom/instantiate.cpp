@@ -47,7 +47,7 @@ namespace eka2l1 {
 
             if (result == implementations.end() || (*result)->uid != implementation_uid) {
                 if (err) {
-                    *err = epoc::ecom_no_registeration_identified;
+                    *err = epoc::ecom_no_registration_identified;
                 }
 
                 return false;
@@ -70,7 +70,7 @@ namespace eka2l1 {
 
             if (result == interface->implementations.end() || (*result)->uid != implementation_uid) {
                 if (err) {
-                    *err = epoc::ecom_no_registeration_identified;
+                    *err = epoc::ecom_no_registration_identified;
                 }
 
                 return false;

@@ -27,18 +27,18 @@
 namespace eka2l1 {
     struct etel_line;
 
-    struct etel_phone: public etel_entity {
+    struct etel_phone : public etel_entity {
         epoc::etel_phone_status status_;
         epoc::etel_phone_info info_;
 
-        std::vector<etel_line*> lines_;
+        std::vector<etel_line *> lines_;
 
     public:
         explicit etel_phone(const epoc::etel_phone_info &info);
         ~etel_phone() override;
 
         bool init();
-        
+
         epoc::etel_entry_type type() const override {
             return epoc::etel_entry_phone;
         }

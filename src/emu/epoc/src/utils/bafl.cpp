@@ -28,7 +28,7 @@
 
 namespace eka2l1::utils {
     std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path,
-        const language prefered_lang, const drive_number on_drive) {
+        const language preferred_lang, const drive_number on_drive) {
         //common::benchmarker marker(__FUNCTION__);
 
         std::u16string cur_dr_dir = std::u16string(1, drive_to_char16(on_drive)) + u":";
@@ -69,7 +69,7 @@ namespace eka2l1::utils {
         };
 
         // Try to get the ideal lang first
-        if (rsc_for_lang_exist(prefered_lang)) {
+        if (rsc_for_lang_exist(preferred_lang)) {
             return new_path;
         }
 

@@ -23,8 +23,8 @@
 #include <epoc/utils/uid.h>
 
 #include <cstdint>
-#include <string>
 #include <optional>
+#include <string>
 
 namespace eka2l1 {
     class io_system;
@@ -47,7 +47,7 @@ namespace eka2l1::epoc::msv {
             STATUS_DELETED = 1 << 1,
             STATUS_CORRUPTED = 1 << 2
         };
-        
+
         std::uint32_t flags_;
     };
 
@@ -67,7 +67,7 @@ namespace eka2l1::epoc::msv {
         bool load_entries_file(drive_number crr_drive);
 
         std::optional<std::u16string> get_entry_data_file(entry &ent);
-        
+
         /**
          * \brief       Save this entry body data to correspond store.
          * \param       ent   The entry to save.
@@ -89,6 +89,6 @@ namespace eka2l1::epoc::msv {
         bool add_entry(entry &ent);
 
         entry *get_entry(const std::uint32_t id);
-        std::vector<entry*> get_entries_by_parent(const std::uint32_t parent_id);
+        std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id);
     };
 }

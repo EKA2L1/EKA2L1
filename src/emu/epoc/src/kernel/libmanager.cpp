@@ -73,7 +73,7 @@ namespace eka2l1::hle {
             write(dest_ptr, reloc_offset + data_delta);
             break;
 
-        case loader::relocation_type::inffered:
+        case loader::relocation_type::inferred:
         default:
             LOG_WARN("Relocation not properly handle: {}", (int)type);
             break;
@@ -281,7 +281,7 @@ namespace eka2l1::hle {
             LOG_ERROR("E32 image loading failed!");
             return nullptr;
         }
-        
+
         cs->attach(pr);
 
         mngr.patch_scripts(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
@@ -488,7 +488,7 @@ namespace eka2l1::hle {
         case epocver::epoc94:
             epoc::register_epocv94(*this);
             break;
-    
+
         case epocver::epoc93:
             epoc::register_epocv93(*this);
             break;
@@ -756,10 +756,10 @@ namespace eka2l1::hle {
 
     bool lib_manager::patch_scripts(const std::string &lib_name, kernel::process *pr, codeseg_ptr seg) {
 #ifndef ENABLE_SCRIPTING
-            return true;
+        return true;
 #else
         manager::script_manager *scripter = sys->get_manager_system()->get_script_manager();
-        
+
         // These are already rebased, so when we call patch unrelocated hook, give a zero adderss
         scripter->patch_library_hook(lib_name, seg->get_export_table_raw());
         scripter->patch_unrelocated_hook(pr ? (pr->get_uid()) : 0, lib_name, seg->is_rom() ? 0 : (seg->get_code_run_addr(pr) - seg->get_code_base()));
@@ -769,6 +769,5 @@ namespace eka2l1::hle {
     }
 
     lib_manager::lib_manager() {
-
     }
 }

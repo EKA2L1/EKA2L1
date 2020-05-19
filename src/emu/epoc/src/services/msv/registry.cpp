@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/loader/rsc.h>
 #include <epoc/services/msv/common.h>
 #include <epoc/services/msv/registry.h>
-#include <epoc/loader/rsc.h>
 #include <epoc/vfs.h>
 
 #include <common/chunkyseri.h>
@@ -33,7 +33,7 @@ namespace eka2l1::epoc::msv {
     static const std::u16string DEFAULT_MSG_REG_LIST_FILE = u"C:\\private\\1000484b\\Mtm Registry v2";
 
     mtm_registry::mtm_registry(io_system *io)
-        : io_(io) { 
+        : io_(io) {
         list_path_ = DEFAULT_MSG_REG_LIST_FILE;
     }
 
@@ -45,9 +45,9 @@ namespace eka2l1::epoc::msv {
         }
 
         eka2l1::ro_file_stream rsc_file_stream(rsc_file.get());
-        loader::rsc_file rsc_file_loader(reinterpret_cast<common::ro_stream*>(&rsc_file_stream));
+        loader::rsc_file rsc_file_loader(reinterpret_cast<common::ro_stream *>(&rsc_file_stream));
 
-        std::vector<std::uint8_t> info = rsc_file_loader.read(1);        // Info
+        std::vector<std::uint8_t> info = rsc_file_loader.read(1); // Info
         common::chunkyseri info_reader(info.data(), info.size(), common::SERI_MODE_READ);
 
         mtm_group new_group;
@@ -85,14 +85,14 @@ namespace eka2l1::epoc::msv {
 
             comps_[comp_uid].push_back(&comp);
         }
-        
+
         // Check out capability
         info = rsc_file_loader.read(2);
-        
+
         if (!info.empty()) {
             info_reader = common::chunkyseri(info.data(), info.size(), common::SERI_MODE_READ);
             new_group.cap_avail_ = 1;
-            
+
             info_reader.absorb(new_group.cap_send_);
             info_reader.absorb(new_group.cap_body_);
         }
@@ -103,7 +103,7 @@ namespace eka2l1::epoc::msv {
 
     bool mtm_registry::install_group(const std::u16string &path) {
         const std::u16string path_lower = common::lowercase_ucs2_string(path);
-        
+
         // Try to find if this group is already loaded
         if (std::find(mtm_files_.begin(), mtm_files_.end(), path_lower) != mtm_files_.end()) {
             return false;
@@ -112,7 +112,7 @@ namespace eka2l1::epoc::msv {
         const std::u16string ext = eka2l1::path_extension(path);
 
         if ((ext.length() >= 2) && ((ext[1] == u'r') || (ext[1] == u'R'))) {
-            if (install_group_from_rsc(path)) {        
+            if (install_group_from_rsc(path)) {
                 // Install this path
                 add_entry_to_mtm_list(path_lower);
                 return true;
@@ -126,7 +126,7 @@ namespace eka2l1::epoc::msv {
         return false;
     }
 
-    mtm_group* mtm_registry::query_mtm_group(const epoc::uid the_uid) {
+    mtm_group *mtm_registry::query_mtm_group(const epoc::uid the_uid) {
         for (std::size_t i = 0; i < groups_.size(); i++) {
             if (groups_[i].mtm_uid_ == the_uid) {
                 return &groups_[i];
@@ -136,10 +136,10 @@ namespace eka2l1::epoc::msv {
         return nullptr;
     }
 
-    std::vector<mtm_component*> &mtm_registry::get_components(const epoc::uid the_uid) {
+    std::vector<mtm_component *> &mtm_registry::get_components(const epoc::uid the_uid) {
         return comps_[the_uid];
     }
-    
+
     void mtm_registry::load_mtm_list() {
         symfile list_file = io_->open_file(list_path_, READ_MODE | BIN_MODE);
 
@@ -149,7 +149,7 @@ namespace eka2l1::epoc::msv {
         }
 
         eka2l1::ro_file_stream list_file_stream(list_file.get());
-        
+
         while (list_file_stream.valid()) {
             std::string mtm_path;
             mtm_path = list_file_stream.read_string<char>();
@@ -168,7 +168,7 @@ namespace eka2l1::epoc::msv {
 
         eka2l1::wo_file_stream list_file_stream(list_file.get());
 
-        for (auto &path: mtm_files_) {
+        for (auto &path : mtm_files_) {
             list_file_stream.write_string(common::ucs2_to_utf8(path));
         }
     }

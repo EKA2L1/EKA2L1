@@ -307,7 +307,7 @@ namespace eka2l1::epoc {
         // Add the definition as the head
         def->next_hash_ = hash[head];
 
-        // Get index of the defintion
+        // Get index of the definition
         hash[head] = index;
 
         return true;
@@ -347,7 +347,7 @@ namespace eka2l1::epoc {
 
             current_def = reinterpret_cast<akns_item_def *>(current_head);
         } else {
-            // The defintion already exists. Recopy it
+            // The definition already exists. Recopy it
             current_def = reinterpret_cast<akns_item_def *>(get_area_base(
                               epoc::akn_skin_chunk_area_base_offset::item_def_area_base))
                 + index;

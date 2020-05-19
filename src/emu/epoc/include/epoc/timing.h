@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <common/time.h>
 #include <common/queue.h>
+#include <common/time.h>
 
 #include <cstdint>
 #include <functional>
@@ -66,7 +66,7 @@ namespace eka2l1 {
         std::condition_variable new_event_avail_var_;
 
         std::unique_ptr<common::teletimer> teletimer_;
-        std::unique_ptr<std::thread> timer_thread_;          ///< Timer thread to executes callbacks
+        std::unique_ptr<std::thread> timer_thread_; ///< Timer thread to executes callbacks
 
         std::vector<event_type> event_types_;
         std::uint32_t CPU_HZ_;
@@ -140,7 +140,7 @@ namespace eka2l1 {
 
         void schedule_event(int64_t us_into_future, int event_type, std::uint64_t userdata);
         bool unschedule_event(int event_type, uint64_t userdata);
-        
+
         bool set_clock_frequency_mhz(const std::uint32_t cpu_mhz);
         std::uint32_t get_clock_frequency_mhz();
     };

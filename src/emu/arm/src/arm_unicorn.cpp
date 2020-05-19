@@ -525,7 +525,7 @@ namespace eka2l1 {
             ctx.lr = get_lr();
             ctx.pc = get_pc();
             ctx.cpsr = get_cpsr();
-            
+
             uc_reg_read(engine, UC_ARM_REG_C13_C0_2, &ctx.wrwr);
         }
 

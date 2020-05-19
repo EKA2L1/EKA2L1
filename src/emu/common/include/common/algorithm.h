@@ -232,9 +232,9 @@ namespace eka2l1 {
         }
 
         /**
-         * \brief Find the position of the Nth apperance of a string in another string
+         * \brief Find the position of the Nth appearance of a string in another string
          *
-         * \param idx The Nth apperance
+         * \param idx The Nth appearance
          * \param pos The position to start looking for
          */
         size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos = 0);
@@ -307,13 +307,13 @@ namespace eka2l1 {
         std::string trim_spaces(std::string str);
 
         /**
-         * \brief Replace all occurences of a word in a string with other word/string
+         * \brief Replace all occurrences of a word in a string with other word/string
          *
          * \param str           The string to find and replace
          * \param target        The word/string to find
          * \param replacement   The word/string to replace target
          * 
-         * \returns A new string with all ocurrences of target replaced.
+         * \returns A new string with all occurrences of target replaced.
          */
         std::string replace_all(std::string str, const std::string &target, const std::string &replacement);
 
@@ -332,7 +332,7 @@ namespace eka2l1 {
         std::u16string lowercase_ucs2_string(std::u16string str);
 
         /**
-         *  \brief Returns if the platform is case-senstive or not
+         *  \brief Returns if the platform is case-sensitive or not
          */
         bool is_platform_case_sensitive();
 

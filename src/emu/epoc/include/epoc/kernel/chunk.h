@@ -138,7 +138,7 @@ namespace eka2l1 {
             */
             bool adjust_de(size_t top, size_t bottom);
 
-            /*! \brief The definition of this is blurry and unclearn. However, 
+            /*! \brief The definition of this is blurry and uncleared. However,
              * afaik it commits to the top with size 
              */
             bool allocate(size_t size);

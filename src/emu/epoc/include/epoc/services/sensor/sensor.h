@@ -82,7 +82,7 @@ namespace eka2l1 {
         std::uint64_t reserved2;
         std::uint64_t reserved3;
         std::uint64_t reserved4;
-    }; 
+    };
 
     enum property_types {
         uninitialized_property,

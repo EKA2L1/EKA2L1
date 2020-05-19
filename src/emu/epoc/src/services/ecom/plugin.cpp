@@ -213,7 +213,7 @@ namespace eka2l1 {
 
         // Interface is a specification, what bare bones. It lists a bunch of functions that is useful
         // but we can't use it because nothing is implemented
-        // Implementation is interfaces but functional can useable
+        // Implementation is interfaces but functional can usable
 
         // ECom resource files contains a list of interfaces info, each interface will come with some
         // implementation infos.

@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/epoc.h>
 #include <epoc/services/centralrepo/centralrepo.h>
 #include <epoc/services/centralrepo/repo.h>
 #include <epoc/services/context.h>
-#include <epoc/epoc.h>
 #include <epoc/utils/err.h>
 
-#include <manager/manager.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 
 #include <algorithm>
 #include <chrono>
@@ -357,7 +357,7 @@ namespace eka2l1 {
             ctx->set_request_status(epoc::error_argument);
             return;
         }
-    
+
         central_repo_entry *entry = get_entry(the_key.value(), 0);
 
         if (!entry) {
@@ -434,7 +434,7 @@ namespace eka2l1 {
 
         // Get the filter
         std::optional<central_repo_key_filter> filter = ctx->get_arg_packed<central_repo_key_filter>(0);
-        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t*>(ctx->get_arg_ptr(2));
+        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_arg_ptr(2));
         const std::size_t found_uid_max_uids = (ctx->get_arg_max_size(2) / sizeof(std::uint32_t)) - 1;
 
         if (!filter || !found_uid_result_array) {
@@ -449,7 +449,7 @@ namespace eka2l1 {
         for (auto &entry : attach_repo->entries) {
             // Try to match the key first
             if ((entry.key & filter->id_mask) != (filter->partial_key & filter->id_mask)) {
-                // Mask doesn't match, abadon this entry
+                // Mask doesn't match, abandon this entry
                 continue;
             }
 
@@ -496,7 +496,7 @@ namespace eka2l1 {
                 break;
 
             default: {
-                LOG_ERROR("Unimplement Cenrep's find function for opcode {}", ctx->msg->function);
+                LOG_ERROR("Unimplemented Cenrep's find function for opcode {}", ctx->msg->function);
                 break;
             }
             }
@@ -517,11 +517,10 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::get_find_result(service::ipc_context *ctx) {
-        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t*>(ctx->get_arg_ptr(0));
+        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_arg_ptr(0));
         const std::size_t found_uid_max_uids = (ctx->get_arg_max_size(0) / sizeof(std::uint32_t));
 
-        ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t*>(&key_found_result[0]), static_cast<std::uint32_t>(common::min(
-            found_uid_max_uids, key_found_result.size()) * sizeof(std::uint32_t)));
+        ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t *>(&key_found_result[0]), static_cast<std::uint32_t>(common::min(found_uid_max_uids, key_found_result.size()) * sizeof(std::uint32_t)));
 
         ctx->set_request_status(epoc::error_none);
     }
@@ -573,7 +572,7 @@ namespace eka2l1 {
 
         ctx->set_request_status(epoc::error_none);
     }
-    
+
     int central_repo_client_subsession::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
         // In transacton, fail
         if (is_active()) {

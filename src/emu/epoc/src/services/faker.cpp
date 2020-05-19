@@ -185,7 +185,7 @@ namespace eka2l1::service {
         trampoline32[1] = euser_lib->lookup(process_, SETUP_THREAD_HEAP_EXPORT_ORD);
         trampoline32[2] = euser_lib->lookup(process_, NEW_TRAP_CLEANUP_EXPORT_ORD);
 
-        // Intialise the initial chain
+        // Initialise the initial chain
         initial_ = new chain(this);
 
         static constexpr std::uint32_t STACK_SIZE = 0x10000;

@@ -23,11 +23,11 @@
 #if EKA2L1_PLATFORM(WIN32)
 #include "watcher_win32.h"
 #else
-    #if EKA2L1_PLATFORM(UNIX)
-    #include "watcher_unix.h"
-    #else
-    #include "watcher_null.h"
-    #endif
+#if EKA2L1_PLATFORM(UNIX)
+#include "watcher_unix.h"
+#else
+#include "watcher_null.h"
+#endif
 #endif
 
 namespace eka2l1::common {
@@ -37,7 +37,7 @@ namespace eka2l1::common {
 
     std::int32_t directory_watcher::watch(const std::string &folder, directory_watcher_callback callback,
         void *callback_userdata, const std::uint32_t mask) {
-        return watcher_->watch(folder, callback, callback_userdata, mask);        
+        return watcher_->watch(folder, callback, callback_userdata, mask);
     }
 
     bool directory_watcher::unwatch(const std::int32_t watch_handle) {

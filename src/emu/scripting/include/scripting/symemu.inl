@@ -5,16 +5,16 @@
 #include <scripting/mem.h>
 #include <scripting/message.h>
 #include <scripting/process.h>
-#include <scripting/thread.h>
 #include <scripting/server.h>
 #include <scripting/session.h>
+#include <scripting/thread.h>
 
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <epoc/kernel/thread.h>
 #include <epoc/kernel/process.h>
+#include <epoc/kernel/thread.h>
 
 namespace py = pybind11;
 namespace scripting = eka2l1::scripting;
@@ -106,10 +106,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
                 A list of threads that this process owns.
         )pbdoc");
 
-    
     py::class_<scripting::thread>(m, "Thread")
         .def(py::init([](uint64_t thread_ptr) { return std::make_unique<scripting::thread>(thread_ptr); }))
-        .def("getName", &scripting::thread::get_name,R"pbdoc(
+        .def("getName", &scripting::thread::get_name, R"pbdoc(
             Get the name of thread.
         )pbdoc")
         .def("getRegister", &scripting::thread::get_register, R"pbdoc(
@@ -147,7 +146,7 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get the current state of the thread. States are defined in ThreadState enum.
         )pbdoc")
         .def("getPriority", &scripting::thread::get_priority,
-        R"pbdoc(
+            R"pbdoc(
             Get the own process of thread.
         )pbdoc")
         .def("getStackBase", &scripting::thread::get_stack_base, R"pbdoc(
@@ -304,7 +303,7 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
     m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement, R"pbdoc(
         Register a function to be called right before a reschedule is started
     )pbdoc");
-    
+
     m.def("registerIpcInvokement", &scripting::register_ipc_invokement, R"pbdoc(
         Register a function to be called around IPC event.
     )pbdoc");
@@ -332,7 +331,7 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
     m.def("getCurrentProcess", &scripting::get_current_process, R"pbdoc(
         Get kernel's current process.
     )pbdoc");
-        
+
     m.def("getCurrentThread", &scripting::get_current_thread, R"pbdoc(
         Get kernel's current thread.
     )pbdoc");
@@ -354,7 +353,7 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         IpcMessage
                      IPC Message Object.
     )pbdoc");
-    
+
     m.def("sessionFromHandle", &scripting::session_from_handle, R"pbdoc(
         Retrieve a Session message object from a handle.
 

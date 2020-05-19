@@ -40,7 +40,7 @@ pent0:
         - The sub scheduler maybe will take this as the current thread for the core, but first it has to check for the timeslice.
         If the timeslice (the amount ticks that the thread supposed to run), is zero, then the next thread that is ready will be the
         one in charge, and the current thread will be added to the end of the queue it resigned in.
-        - Thread that is being waited for suspened has already been removed from those queue, so don't worry.
+        - Thread that is being waited for suspended has already been removed from those queue, so don't worry.
         
     3. CPU load. (4:53 PM 3/7/2019)
         - A load represents the amount of traffic on a CPU.
@@ -62,7 +62,7 @@ pent0:
         - When a new scheduable is queued to the sub-scheduler for the first time, it's also taken into custody by
         the sub-scheduler's load balancing queue. Remember that.
         - The kernel has a timer that calls periodic rebalance every 107 nanokernel ticks (they should calculated it
-        percisely from user usage). Where the timer runs is currently not known to me, but it doesn't matter in our context.
+        precisely from user usage). Where the timer runs is currently not known to me, but it doesn't matter in our context.
         - The rebalance first queries all scheduable group from all load rebalance queue of both parent scheduler (TScheduler),
         and sub-scheduler, to a single queue. When queueing is done, the real balancing begins.
         - Iterates through each scheduable, and calculate it stats. The stats include:
@@ -74,17 +74,17 @@ pent0:
         - Next, is where it decided what to balance.
             * If the warm is under a defined number of ticks, it means that it hasn't been actived for a while.
               The load balance status for the scheduable is reset to inactive state, and it will stay on the core, since
-              the load is just incrediable small. However, if the core is shutting down, it will be moved to another core,
+              the load is just incredibly small. However, if the core is shutting down, it will be moved to another core,
               since it's not dead yet.
             * If only one core is active, no rebalance is needed. It's still being kept on the rebalance queue though,
               in case another core turn on.
             * If the scheduable mark as cycles between core (afaik only see it in driver), don't rebalance, but still kept it
               on the queue.
-            * Other than that, the scheduable is added to a sorted queue for futher look. How to queue is sorted will be describe,
+            * Other than that, the scheduable is added to a sorted queue for further look. How to queue is sorted will be describe,
               here!
                  + The queue is divied into two parts: at the beginning, is non-heavy scheduable, and at the end, is heavy
                  scheduable.
-                 + Non-heavy are sorted from largest to smallest by its average run time between 2 perodic balance, whether
+                 + Non-heavy are sorted from largest to smallest by its average run time between 2 periodic balance, whether
                  heavy are reversed, by its average run and active time.
             * Iterates through the sorted queue. Now this's where to CPU load struct comes in. If the comp is non-heavy,
             the load struct is used to pick the smallest load core, and throw the scheduable in there. If the comp is heavy,
