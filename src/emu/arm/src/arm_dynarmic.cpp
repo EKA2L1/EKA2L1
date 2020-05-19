@@ -340,8 +340,7 @@ namespace eka2l1::arm {
 
         std::uint64_t GetTicksRemaining() override {
             return static_cast<std::uint64_t>(common::max<std::int64_t>(static_cast<std::int64_t>(parent.ticks_target)
-                    - parent.ticks_executed,
-                0));
+                    - parent.ticks_executed, 0));
         }
     };
 
