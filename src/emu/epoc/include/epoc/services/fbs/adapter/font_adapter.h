@@ -58,7 +58,7 @@ namespace eka2l1::epoc::adapter {
         virtual void free_glyph_bitmap(std::uint8_t *data) = 0;
         virtual glyph_bitmap_type get_output_bitmap_type() const = 0;
 
-        virtual bool is_glyph_exist(std::size_t idx, std::uint32_t code) = 0;
+        virtual bool does_glyph_exist(std::size_t idx, std::uint32_t code) = 0;
 
         /**
          * \brief Initialize getting glyph atlas.

@@ -549,7 +549,7 @@ namespace eka2l1 {
 
         const std::size_t bitmap_data_size = rasterized_height * rasterized_width;
 
-        if (!bitmap_data && !info->adapter->is_glyph_exist(info->idx, codepoint)) {
+        if (!bitmap_data && !info->adapter->does_glyph_exist(info->idx, codepoint)) {
             // The glyph is not available. Let the client know. With code 0, we already use '?'
             // On S^3, it expect us to return false here.
             // On lower version, it expect us to return nullptr, so use 0 here is for the best.

@@ -69,7 +69,7 @@ namespace eka2l1::epoc::adapter {
             return antialised_glyph_bitmap;
         }
 
-        bool is_glyph_exist(std::size_t idx, std::uint32_t code) override;
+        bool does_glyph_exist(std::size_t idx, std::uint32_t code) override;
 
         std::size_t count() override;
     };
