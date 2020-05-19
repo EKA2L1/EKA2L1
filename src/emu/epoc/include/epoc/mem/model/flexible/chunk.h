@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <epoc/mem/model/flexible/mapping.h>
 #include <epoc/mem/model/flexible/memobj.h>
 #include <epoc/mem/chunk.h>
 
@@ -41,7 +42,8 @@ namespace eka2l1::mem::flexible {
         std::unique_ptr<memory_object> mem_obj_;
         std::unique_ptr<common::bitmap_allocator> page_bma_;
 
-        bool fixed_;
+        vm_address fixed_addr_;
+        std::unique_ptr<mapping> fixed_mapping_;
 
     public:
         explicit flexible_mem_model_chunk(mmu_base *mmu, const asid id);

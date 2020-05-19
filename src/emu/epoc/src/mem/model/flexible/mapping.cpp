@@ -20,6 +20,7 @@
 #include <epoc/mem/model/flexible/addrspace.h>
 #include <epoc/mem/model/flexible/mapping.h>
 #include <epoc/mem/model/flexible/memobj.h>
+#include <epoc/mem/model/flexible/mmu.h>
 #include <epoc/mem/mmu.h>
 
 #include <common/log.h>
@@ -64,7 +65,7 @@ namespace eka2l1::mem::flexible {
     }
 
     bool mapping::map(memory_object *obj, const std::uint32_t index, const std::size_t count, const prot permissions) {
-        if (index + count >= occupied_) {
+        if (index + count > occupied_) {
             // Too far
             return false;
         }
@@ -113,7 +114,7 @@ namespace eka2l1::mem::flexible {
     }
 
     bool mapping::unmap(const std::uint32_t index_start, const std::size_t count) {
-        if (index_start + count >= occupied_) {
+        if (index_start + count > occupied_) {
             // Too far
             return false;
         }
