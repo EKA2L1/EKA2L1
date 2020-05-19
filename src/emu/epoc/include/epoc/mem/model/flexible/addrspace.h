@@ -27,17 +27,17 @@
 #include <vector>
 
 namespace eka2l1::mem {
-    class mmu_base;
 }
 
 namespace eka2l1::mem::flexible {
     struct mapping;
+    struct mmu_flexible;
 
     struct address_space {
-        std::unique_ptr<page_directory> dir_;
+        page_directory *dir_;
         std::vector<mapping*> mappings_;
 
-        mmu_base *mmu_;
+        mmu_flexible *mmu_;
 
         linear_section local_data_sec_;
         linear_section shared_data_sec_;
@@ -45,7 +45,7 @@ namespace eka2l1::mem::flexible {
         linear_section rom_bss_sec_;
 
     public:
-        explicit address_space(mmu_base *mmu);
+        explicit address_space(mmu_flexible *mmu);
 
         /**
          * @brief   Get the ID of this address space.

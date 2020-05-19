@@ -21,12 +21,13 @@
 #include <epoc/mem/model/flexible/mmu.h>
 
 namespace eka2l1::mem::flexible {
-    address_space::address_space(mmu_base *mmu)
+    address_space::address_space(mmu_flexible *mmu)
         : mmu_(mmu)
         , local_data_sec_(local_data, shared_data, mmu->page_size())
         , shared_data_sec_(shared_data, ram_drive, mmu->page_size())
         , ram_code_sec_(ram_code_addr, rom_bss_addr, mmu->page_size())
         , rom_bss_sec_(rom_bss_addr, rom, mmu->page_size()) {
+        dir_ = mmu_->dir_mngr_->allocate(mmu);
     }
 
     const asid address_space::id() const {
