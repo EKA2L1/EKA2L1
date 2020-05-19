@@ -27,21 +27,25 @@ namespace eka2l1::mem::flexible {
     static constexpr vm_address INVALID_ADDR = 0xDEADBEEF;
 
     flexible_mem_model_chunk::flexible_mem_model_chunk(mmu_base *mmu, const asid id)
-        : mem_model_chunk(mmu, id) {
+        : mem_model_chunk(mmu, id)
+        , max_size_(0)
+        , committed_(0)
+        , flags_(0)
+        , fixed_addr_(0)
+        , owner_(nullptr) {
     }
 
     flexible_mem_model_chunk::~flexible_mem_model_chunk() {
     }
 
     int flexible_mem_model_chunk::do_create(const mem_model_chunk_creation_info &create_info) {
-        fixed_ = false;
+        fixed_addr_ = 0;
         flags_ = create_info.flags;
 
-        if ((create_info.flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) ||
-            (create_info.flags & MEM_MODEL_CHUNK_REGION_USER_ROM) ||
+        if ((create_info.flags & MEM_MODEL_CHUNK_REGION_USER_ROM) ||
             (create_info.flags & MEM_MODEL_CHUNK_REGION_ROM_BSS)) {
             // These has address after instantiate fixed, mark it as so
-            fixed_ = true;
+            fixed_addr_ = create_info.addr;
         }
 
         const std::uint32_t total_pages_occupied = static_cast<std::uint32_t>((create_info.size +
@@ -58,6 +62,16 @@ namespace eka2l1::mem::flexible {
 
         permission_ = create_info.perm;
 
+        if (!owner_) {
+            // Treats this as for kernel
+            mmu_flexible *fl_mmu = reinterpret_cast<mmu_flexible*>(mmu_);
+            fixed_mapping_ = std::make_unique<mapping>(fl_mmu->kern_addr_space_.get());
+            fixed_mapping_->instantiate(total_pages_occupied, flags_);
+
+            // Add this mapping to memobj's mapping
+            mem_obj_->attach_mapping(fixed_mapping_.get());
+        }
+
         return 0;
     }
 
@@ -71,11 +85,21 @@ namespace eka2l1::mem::flexible {
             return 0;
         }
 
-        committed_ += (total_page_to_commit - (page_bma_->allocated_count(dropping_place,
-            dropping_place + total_page_to_commit - 1))) << mmu_->page_size_bits_;
+        committed_ += (total_page_to_commit - (page_bma_ ? (page_bma_->allocated_count(dropping_place,
+            dropping_place + total_page_to_commit - 1)) : 0)) << mmu_->page_size_bits_;
 
         // Force fill as allocated
-        page_bma_->force_fill(dropping_place, total_page_to_commit);
+        if (page_bma_) {
+            page_bma_->force_fill(dropping_place, total_page_to_commit);
+        }
+
+        if (!owner_) {
+            // Since this is a kernel chunk, need to map it right away to CPU
+            const vm_address offset_dropping = dropping_place << mmu_->page_size_bits_;
+            mmu_->map_to_cpu(fixed_mapping_->base_ + offset_dropping, total_page_to_commit << mmu_->page_size_bits_,
+                reinterpret_cast<std::uint8_t*>(mem_obj_->ptr()) + offset_dropping, permission_);
+        }
+
         return total_page_to_commit;
     }
 
@@ -90,7 +114,16 @@ namespace eka2l1::mem::flexible {
         }
 
         // TODO: This does not seems safe...
-        page_bma_->free(dropping_place, static_cast<int>(total_page_to_decommit));
+        if (page_bma_) {
+            page_bma_->free(dropping_place, static_cast<int>(total_page_to_decommit));
+        }
+        
+        if (!owner_) {
+            // Since this is a kernel chunk, need to unao it right away from CPU
+            const vm_address offset_dropping = dropping_place << mmu_->page_size_bits_;
+            mmu_->unmap_from_cpu(fixed_mapping_->base_ + offset_dropping, total_page_to_decommit << mmu_->page_size_bits_);
+        }
+
         committed_ -= static_cast<std::uint32_t>(total_page_to_decommit << mmu_->page_size_bits_);
     }
 
@@ -123,6 +156,14 @@ namespace eka2l1::mem::flexible {
     }
 
     const vm_address flexible_mem_model_chunk::base(mem_model_process *process) {
+        if (!process) {
+            if (fixed_mapping_) {
+                return fixed_mapping_->base_;
+            }
+
+            return fixed_addr_;
+        }
+
         // Find our attacher
         flexible_mem_model_process *process_attacher = reinterpret_cast<flexible_mem_model_process*>(process);
 
