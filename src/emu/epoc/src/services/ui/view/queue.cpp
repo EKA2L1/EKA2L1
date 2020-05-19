@@ -30,7 +30,7 @@ namespace eka2l1::ui::view {
         info.complete(0);
 
         if (dest_buffer) {
-            // Write the buffer. A step should have been done to verify buffer is sufficent
+            // Write the buffer. A step should have been done to verify buffer is sufficient
             *reinterpret_cast<view_event *>(dest_buffer) = evt;
         }
     }

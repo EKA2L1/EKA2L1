@@ -110,7 +110,7 @@ namespace eka2l1::epoc {
 
             if (!adapter_->get_glyph_atlas(0, to_rast.data(), static_cast<char16_t>(to_rast.size()), size_,
                     cinfos.get())) {
-                // Try to redo the atlas, getting lastest use characters.
+                // Try to redo the atlas, getting latest use characters.
                 adapter_->end_get_atlas();
                 adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
 

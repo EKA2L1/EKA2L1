@@ -16,12 +16,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import symemu
-import symemu2.events
+
 
 def scriptEntry():
     # Load EUSER DLL.
-    seg = symemu.loadCodeseg('euser.dll')  
-    
+    seg = symemu.loadCodeseg('euser.dll')
+
     # Print code runtime information
     symemu.emulog('Runtime code address: 0x{:X}, size: 0x{:X}'.format(seg.codeRunAddress(), seg.codeSize()))
     symemu.emulog('Runtime data address: 0x{:X}, size: 0x{:X}'.format(seg.dataRunAddress(), seg.dataSize()))

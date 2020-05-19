@@ -132,7 +132,7 @@ namespace eka2l1::epoc {
             } else {
                 cmd_builder->set_brush_color({ color[1], color[2], color[3] });
             }
-            
+
             break;
 
         default:

@@ -21,9 +21,9 @@
 #include <common/cvt.h>
 #include <common/log.h>
 
+#include <epoc/kernel.h>
 #include <epoc/kernel/thread.h>
 #include <epoc/kernel/timer.h>
-#include <epoc/kernel.h>
 
 namespace eka2l1 {
     namespace kernel {

@@ -135,8 +135,7 @@ namespace eka2l1::epoc {
             kernel_system *kern = client->get_ws().get_kernel_system();
             std::int32_t target_handle = 0;
 
-            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? 
-                dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
 
             ctx.set_request_status(target_handle);
             break;

@@ -59,13 +59,13 @@ namespace eka2l1 {
         /**
          * \brief Cancel a pending signal request, if there is one available.
          * 
-         * It will be cancel only if 2 conditions are sastified:
+         * It will be cancel only if 2 conditions are satisfied:
          * - No pending notifications.
          * - A notify handler must be set.
          */
         void do_cancel(service::ipc_context *ctx);
 
-        void store_scaleable_gfx(service::ipc_context *ctx);
+        void store_scalable_gfx(service::ipc_context *ctx);
 
     public:
         explicit akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
@@ -98,7 +98,7 @@ namespace eka2l1 {
 
         int is_icon_configured(const epoc::uid app_uid);
 
-        void store_scaleable_gfx(
+        void store_scalable_gfx(
             const epoc::pid item_id,
             const epoc::skn_layout_info layout_info,
             const std::uint32_t bmp_handle,

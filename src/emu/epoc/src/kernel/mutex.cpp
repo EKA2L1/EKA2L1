@@ -77,7 +77,7 @@ namespace eka2l1 {
 
                 kernel::thread *calm_down = kern->crr_thread();
                 waits.push(calm_down);
-                
+
                 calm_down->get_scheduler()->wait(calm_down);
                 calm_down->state = thread_state::wait_mutex;
 
@@ -172,7 +172,7 @@ namespace eka2l1 {
 
                 assert(top_wait->wait_obj == this);
                 timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(top_wait));
-    
+
                 top_wait->state = kernel::thread_state::hold_mutex_pending;
             };
 
@@ -211,7 +211,7 @@ namespace eka2l1 {
                 ready_thread->state = thread_state::ready;
                 ready_thread->wait_obj = nullptr;
 
-                // Push the next thread in wait queue to the pending queue 
+                // Push the next thread in wait queue to the pending queue
                 holding = ready_thread;
 
                 if (!waits.empty()) {

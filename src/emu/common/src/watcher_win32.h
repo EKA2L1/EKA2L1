@@ -39,7 +39,7 @@ namespace eka2l1::common {
         std::vector<HANDLE> dirs_;
 
         OVERLAPPED pending_read_;
-        
+
         std::vector<directory_watcher_data> callbacks_;
         std::vector<std::uint8_t> file_infos_;
 
@@ -52,7 +52,7 @@ namespace eka2l1::common {
     public:
         explicit directory_watcher_impl();
         ~directory_watcher_impl();
-        
+
         std::int32_t watch(const std::string &folder, directory_watcher_callback callback,
             void *callback_userdata, const std::uint32_t masks);
 

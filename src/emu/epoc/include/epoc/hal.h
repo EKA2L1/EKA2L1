@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <epoc/ptr.h>
 #include <common/vecx.h>
+#include <epoc/ptr.h>
 
 #include <functional>
 #include <unordered_map>
@@ -52,7 +52,7 @@ namespace eka2l1::epoc {
         kernel_hal_supervisor_barrier = 17,
         kernel_hal_floating_point_system_id = 18,
         kernel_hal_lock_thread_to_cpu = 19,
-        kernel_hal_config_flags = 20,       // Superpage
+        kernel_hal_config_flags = 20, // Superpage
         kernel_hal_cpu_states = 21,
         kernel_hal_set_number_of_cpus = 22
     };
@@ -142,7 +142,7 @@ namespace eka2l1::epoc {
 
     static_assert(sizeof(memory_info_v1) == 24, "Size of memory info v1 is invalid!");
 
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct variant_info_v1 {
         std::uint8_t major_;
         std::uint8_t minor_;
@@ -152,7 +152,7 @@ namespace eka2l1::epoc {
         std::uint32_t processor_clock_in_mhz_;
         std::uint32_t speed_factor_;
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     static_assert(sizeof(variant_info_v1) == 24, "Size of variant info v1 is invalid!");
 
@@ -183,7 +183,7 @@ namespace eka2l1::epoc {
     };
 
     struct digitiser_info_v1 {
-        eka2l1::vec2 offset_to_first_useable_;
+        eka2l1::vec2 offset_to_first_usable_;
         eka2l1::vec2 size_usable_;
     };
 
@@ -211,16 +211,16 @@ namespace eka2l1::epoc {
     };
 
     /** 
-     * \brief Initalize HAL. 
+     * \brief Initialize HAL.
      *
-     * This adds all HAL cagetory to the system. 
+     * This adds all HAL category to the system.
     */
     void init_hal(eka2l1::system *sys);
 
     /**
-     * \brief Do a HAL function with the specified cagetory and key. 
+     * \brief Do a HAL function with the specified category and key.
      *
-     * \param cage The HAL cagetory.
+     * \param cage The HAL category.
      * \param func The HAL function opcode.
      *
      * \returns Operation result.

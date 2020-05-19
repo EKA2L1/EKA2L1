@@ -144,11 +144,11 @@ namespace eka2l1::epoc {
     std::uint32_t window_server_client::queue_redraw(epoc::window_user *user) {
         // Calculate the priority
         const std::uint32_t id = redraws.queue_event(epoc::redraw_event{ user->get_client_handle(), user->irect.top,
-                                       vec2(user->irect.top.x + user->irect.size.x,
-                                            user->irect.top.y + user->irect.size.y) },
+                                                         vec2(user->irect.top.x + user->irect.size.x,
+                                                             user->irect.top.y + user->irect.size.y) },
             user->redraw_priority());
 
-        user->irect = eka2l1::rect({ 0, 0 }, { 0 , 0 });
+        user->irect = eka2l1::rect({ 0, 0 }, { 0, 0 });
         return id;
     }
 
@@ -328,7 +328,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_wsbmp(service::ipc_context &ctx, ws_cmd &cmd) {
-        const std::uint32_t bmp_handle = *reinterpret_cast<const std::uint32_t*>(cmd.data_ptr);
+        const std::uint32_t bmp_handle = *reinterpret_cast<const std::uint32_t *>(cmd.data_ptr);
         fbs_server *serv = get_ws().get_fbs_server();
 
         // Try to get the fbsbitmap
@@ -576,11 +576,11 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::set_pointer_area(service::ipc_context &ctx, ws_cmd &cmd) {
-        ws_cmd_set_pointer_cursor_area *area_info = reinterpret_cast<ws_cmd_set_pointer_cursor_area*>(cmd.data_ptr);
+        ws_cmd_set_pointer_cursor_area *area_info = reinterpret_cast<ws_cmd_set_pointer_cursor_area *>(cmd.data_ptr);
         area_info->pointer_area.transform_from_symbian_rectangle();
 
         // Set for the default screen
-        epoc::screen *scr = get_ws().get_screen(0); 
+        epoc::screen *scr = get_ws().get_screen(0);
         assert(scr);
 
         scr->pointer_areas_[area_info->mode] = area_info->pointer_area;
@@ -589,9 +589,9 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::set_pointer_cursor_position(service::ipc_context &ctx, ws_cmd &cmd) {
-        eka2l1::vec2 *pos = reinterpret_cast<eka2l1::vec2*>(cmd.data_ptr);
+        eka2l1::vec2 *pos = reinterpret_cast<eka2l1::vec2 *>(cmd.data_ptr);
         // Set for the default screen
-        epoc::screen *scr = get_ws().get_screen(0); 
+        epoc::screen *scr = get_ws().get_screen(0);
         assert(scr);
 
         scr->pointer_cursor_pos_ = *pos;
@@ -833,7 +833,7 @@ namespace eka2l1 {
 
         common::ini_node *screen_node = nullptr;
         int total_screen = 0;
-        
+
         bool one_screen_only = false;
 
         do {
@@ -843,7 +843,7 @@ namespace eka2l1 {
 
             if (!screen_node_shared || !common::ini_section::is_my_type(screen_node_shared)) {
                 if (total_screen == 0) {
-                    screen_node = reinterpret_cast<common::ini_node*>(&ws_config);
+                    screen_node = reinterpret_cast<common::ini_node *>(&ws_config);
                     one_screen_only = true;
                 } else {
                     break;
@@ -861,7 +861,7 @@ namespace eka2l1 {
             int total_mode = 0;
 
             do {
-                std::string current_mode_str = std::to_string(total_mode + 1);  
+                std::string current_mode_str = std::to_string(total_mode + 1);
                 std::string screen_mode_width_key = "SCR_WIDTH";
                 screen_mode_width_key += current_mode_str;
 
@@ -872,7 +872,7 @@ namespace eka2l1 {
                 }
 
                 std::string screen_mode_height_key = "SCR_HEIGHT";
-                screen_mode_height_key +=current_mode_str;
+                screen_mode_height_key += current_mode_str;
 
                 common::ini_node_ptr mode_height = screen_node->get_as<common::ini_section>()->find(screen_mode_height_key.c_str());
 
@@ -1055,7 +1055,7 @@ namespace eka2l1 {
 
         epoc::window *root_current = get_current_focus_screen()->root->child;
         std::unique_lock<std::mutex> unq(input_queue_mut);
-    
+
         auto flush_events = [&]() {
             unq.unlock();
 
@@ -1117,7 +1117,7 @@ namespace eka2l1 {
                 break;
             }
 
-            last_event_type = input_event.type_; 
+            last_event_type = input_event.type_;
         }
 
         // Flush remaining events.
@@ -1142,7 +1142,7 @@ namespace eka2l1 {
             kernel::chunk_attrib::none);
 
         // Fill with white
-        std::uint8_t *fill_start = reinterpret_cast<std::uint8_t*>(buffer->host_base());
+        std::uint8_t *fill_start = reinterpret_cast<std::uint8_t *>(buffer->host_base());
         std::fill(fill_start, fill_start + max_chunk_size, 255);
 
         scr->screen_buffer_chunk = buffer;

@@ -314,7 +314,7 @@ namespace eka2l1 {
         fbs_server *fbss{ nullptr };
         int input_handler_evt_;
 
-        bool key_block_active{false};
+        bool key_block_active{ false };
 
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);

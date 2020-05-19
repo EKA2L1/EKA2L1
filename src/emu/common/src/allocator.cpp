@@ -42,12 +42,12 @@ namespace eka2l1::common {
 
     void *block_allocator::allocate(std::size_t bytes) {
         std::size_t rounded_size = common::next_power_of_two(bytes);
-        std::uint64_t farest_end_offset = 0;
+        std::uint64_t farthest_end_offset = 0;
 
         const std::lock_guard<std::mutex> guard(lock);
 
         for (auto &block : blocks) {
-            farest_end_offset = common::max(farest_end_offset, block.offset + block.size);
+            farthest_end_offset = common::max(farthest_end_offset, block.offset + block.size);
 
             if (!block.active && block.size >= rounded_size) {
                 // Gonna use it right away
@@ -73,7 +73,7 @@ namespace eka2l1::common {
             }
         }
 
-        if (farest_end_offset + bytes > max_size) {
+        if (farthest_end_offset + bytes > max_size) {
             // It's time to expand
             if (!expand(common::max(max_size * 2, max_size + rounded_size))) {
                 return nullptr;
@@ -86,12 +86,12 @@ namespace eka2l1::common {
         // We should alloc new block
         block_info new_block;
         new_block.active = true;
-        new_block.offset = farest_end_offset;
+        new_block.offset = farthest_end_offset;
         new_block.size = rounded_size;
 
         blocks.push_back(std::move(new_block));
 
-        return farest_end_offset + ptr;
+        return farthest_end_offset + ptr;
     }
 
     bool block_allocator::free(const void *tptr) {
@@ -181,7 +181,7 @@ namespace eka2l1::common {
     }
 
 // Release code generation is corrupted somewhere on MSVC. Force fill is good so i guess it's the other.
-// Either way, until when i can repro this in a short code, files and bug got fixed, this stays here.
+// Either way, until when i can reproduce this in a short code, files and bug got fixed, this stays here.
 #ifdef _MSC_VER
 #pragma optimize("", off)
 #endif

@@ -294,7 +294,7 @@ namespace eka2l1 {
         bool subscribe_prop(prop_ident_pair ident, int *request_sts);
         bool unsubscribe_prop(prop_ident_pair ident);
 
-        property_ptr get_prop(int cagetory, int key); // Get property by category and key
+        property_ptr get_prop(int category, int key); // Get property by category and key
 
         kernel::thread *crr_thread();
         kernel::process *crr_process();

@@ -60,7 +60,7 @@ namespace eka2l1::dispatch {
 
         explicit dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream);
         ~dsp_epoc_stream();
-        
+
         audio_event *get_event(const eka2l1::ptr<epoc::request_status> req_sts);
         void delete_event(audio_event *evt);
 

@@ -307,7 +307,7 @@ namespace eka2l1::common {
 
         return DeleteFileA(path.c_str());
 #else
-        return (remove(path.c_str()) == 0);
+        return (::remove(path.c_str()) == 0);
 #endif
     }
 

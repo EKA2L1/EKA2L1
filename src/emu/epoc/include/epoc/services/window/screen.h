@@ -50,8 +50,8 @@ namespace eka2l1::epoc {
 
     struct screen {
         int number;
-        int ui_rotation;            ///< Rotation for UI display. So nikita can skip neck day.
-        bool orientation_lock;      ///< If this is true. Rotate the screen won't change the orientation.
+        int ui_rotation; ///< Rotation for UI display. So nikita can skip neck day.
+        bool orientation_lock; ///< If this is true. Rotate the screen won't change the orientation.
 
         std::uint8_t refresh_rate;
         eka2l1::vec2 scale;

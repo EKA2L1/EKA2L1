@@ -18,9 +18,9 @@
  */
 
 #include <epoc/kernel.h>
-#include <epoc/services/hwrm/vibration/vibration_def.h>
-#include <epoc/services/hwrm/vibration/vibration_data.h>
 #include <epoc/services/hwrm/def.h>
+#include <epoc/services/hwrm/vibration/vibration_data.h>
+#include <epoc/services/hwrm/vibration/vibration_def.h>
 #include <epoc/services/property.h>
 
 #include <epoc/services/centralrepo/centralrepo.h>
@@ -58,7 +58,7 @@ namespace eka2l1::epoc::hwrm::vibration {
         status_prop_->define(service::property_type::int_data, sizeof(std::uint32_t));
         status_prop_->set_int(static_cast<int>(status_stopped));
 
-        central_repo_server *cen_rep_server = reinterpret_cast<central_repo_server*>(
+        central_repo_server *cen_rep_server = reinterpret_cast<central_repo_server *>(
             kern->get_by_name<service::server>(CENTRAL_REPO_SERVER_NAME));
 
         if (!cen_rep_server) {

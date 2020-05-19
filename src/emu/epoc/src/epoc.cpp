@@ -71,7 +71,7 @@
 
 namespace eka2l1 {
     /* A system instance, where all the magic happens.
-     * Represents the Symbian system. You can switch the system version dynamiclly.
+     * Represents the Symbian system. You can switch the system version dynamically.
     */
     class system_impl {
         //! Global lock mutex for system.
@@ -95,7 +95,7 @@ namespace eka2l1 {
         //! The IO system
         io_system io;
 
-        //! Disassmebly helper.
+        //! Disassembly helper.
         disasm asmdis;
 
         gdbstub gdb_stub;
@@ -203,7 +203,7 @@ namespace eka2l1 {
         bool load(const std::u16string &path, const std::u16string &cmd_arg);
         int loop();
         void shutdown();
-        
+
         bool pause();
         bool unpause();
 
@@ -278,8 +278,8 @@ namespace eka2l1 {
             return exit;
         }
 
-        void add_new_hal(uint32_t hal_cagetory, hal_instance &hal_com);
-        epoc::hal *get_hal(uint32_t cagetory);
+        void add_new_hal(uint32_t hal_category, hal_instance &hal_com);
+        epoc::hal *get_hal(uint32_t category);
     };
 
     void system_impl::load_scripts() {
@@ -384,14 +384,14 @@ namespace eka2l1 {
 
         return true;
     }
-    
+
     bool system_impl::unpause() {
         paused = false;
         timing->set_paused(false);
 
         return true;
     }
-    
+
     int system_impl::loop() {
         if (paused) {
             return 1;
@@ -412,7 +412,7 @@ namespace eka2l1 {
             }
         } else {
             if (cpu->is_extended()) {
-                arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
+                arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended &>(*cpu);
                 if (extended.last_script_breakpoint_hit(kern.crr_thread())) {
                     should_step = true;
                     script_hits_the_feels = true;
@@ -432,7 +432,7 @@ namespace eka2l1 {
                 cpu->step();
 
                 if (script_hits_the_feels) {
-                    arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended&>(*cpu);
+                    arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended &>(*cpu);
                     extended.reset_breakpoint_hit(&kern);
                 }
 
@@ -540,12 +540,12 @@ namespace eka2l1 {
         return true;
     }
 
-    void system_impl::add_new_hal(uint32_t hal_cagetory, hal_instance &hal_com) {
-        hals.emplace(hal_cagetory, std::move(hal_com));
+    void system_impl::add_new_hal(uint32_t hal_category, hal_instance &hal_com) {
+        hals.emplace(hal_category, std::move(hal_com));
     }
 
-    epoc::hal *system_impl::get_hal(uint32_t cagetory) {
-        return hals[cagetory].get();
+    epoc::hal *system_impl::get_hal(uint32_t category) {
+        return hals[category].get();
     }
 
     system::system(drivers::graphics_driver *gdriver, drivers::audio_driver *adriver, manager::config_state *conf)

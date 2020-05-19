@@ -33,7 +33,7 @@ namespace eka2l1::epoc {
         /**
          * No implementation found on the server.
          */
-        ecom_no_registeration_identified = -17007
+        ecom_no_registration_identified = -17007
     };
 
     enum {

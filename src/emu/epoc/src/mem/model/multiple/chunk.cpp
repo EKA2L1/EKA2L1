@@ -363,7 +363,7 @@ namespace eka2l1::mem {
 
     void multiple_mem_model_chunk::do_selection_cpu_memory_manipulation(const bool unmap) {
         if (!page_bma_) {
-            // Contigious types. Just unmap/map directly
+            // Contiguous types. Just unmap/map directly
             if (unmap) {
                 mmu_->unmap_from_cpu(base_ + (bottom_ << mmu_->page_size_bits_), (top_ - bottom_) << mmu_->page_size_bits_);
             } else {
@@ -379,7 +379,7 @@ namespace eka2l1::mem {
         vm_address end_offset = static_cast<vm_address>(max_size_);
 
         while (running_offset < end_offset) {
-            // The number of page sastify the request
+            // The number of page satisfy the request
             int page_num = (end_offset - running_offset) >> mmu_->page_size_bits_;
 
             // The number of page to the end of page table

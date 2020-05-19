@@ -83,8 +83,7 @@ namespace eka2l1::desktop {
                 return;
             }
 
-            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(
-                common::lowercase_string(dvc->firmware_code), "SYM.ROM"))));
+            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(common::lowercase_string(dvc->firmware_code), "SYM.ROM"))));
 
             if (!res) {
                 return;

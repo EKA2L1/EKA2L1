@@ -64,7 +64,7 @@ namespace eka2l1::epoc::fs {
 
     constexpr std::uint32_t drive_att_transaction = 0x80;
     constexpr std::uint32_t drive_att_pageable = 0x100;
-    constexpr std::uint32_t drive_att_logically_removeable = 0x200;
+    constexpr std::uint32_t drive_att_logically_removable = 0x200;
     constexpr std::uint32_t drive_att_hidden = 0x400;
     constexpr std::uint32_t drive_att_external = 0x800;
     constexpr std::uint32_t drive_att_all = 0x100000;
@@ -76,7 +76,7 @@ namespace eka2l1::epoc::fs {
     constexpr std::uint32_t drive_att_redirected = 0x04;
     constexpr std::uint32_t drive_att_substed = 0x08;
     constexpr std::uint32_t drive_att_internal = 0x10;
-    constexpr std::uint32_t drive_att_removeable = 0x20;
+    constexpr std::uint32_t drive_att_removable = 0x20;
 
     constexpr std::uint32_t media_att_write_protected = 0x08;
 

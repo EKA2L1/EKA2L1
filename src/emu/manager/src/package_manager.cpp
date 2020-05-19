@@ -161,14 +161,10 @@ namespace eka2l1 {
             package_info temp;
             temp.id = app_uid;
 
-            if (std::binary_search(packages.begin(), packages.end(), temp,
-                    [](const package_info &lhs, const package_info &rhs) {
-                        return lhs.id < rhs.id;
-                    })) {
-                return true;
-            }
-
-            return false;
+            return std::binary_search(packages.begin(), packages.end(), temp,
+                [](const package_info &lhs, const package_info &rhs) {
+                    return lhs.id < rhs.id;
+                });
         }
 
         bool package_manager::install_controller(loader::sis_controller *ctrl, const drive_number drive) {

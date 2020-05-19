@@ -22,9 +22,9 @@
 #include <epoc/utils/consts.h>
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace eka2l1 {
     class io_system;
@@ -61,7 +61,7 @@ namespace eka2l1::epoc::msv {
 
     class mtm_registry {
         std::vector<mtm_group> groups_;
-        std::map<std::uint32_t, std::vector<mtm_component*>> comps_;
+        std::map<std::uint32_t, std::vector<mtm_component *>> comps_;
         io_system *io_;
 
         std::u16string list_path_;
@@ -79,8 +79,8 @@ namespace eka2l1::epoc::msv {
 
         bool install_group(const std::u16string &path);
 
-        mtm_group* query_mtm_group(const epoc::uid the_uid);
-        std::vector<mtm_component*> &get_components(const epoc::uid the_uid);
+        mtm_group *query_mtm_group(const epoc::uid the_uid);
+        std::vector<mtm_component *> &get_components(const epoc::uid the_uid);
 
         mtm_group *get_group(const std::uint32_t idx) {
             if (groups_.size() <= idx) {

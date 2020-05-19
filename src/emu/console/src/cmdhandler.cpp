@@ -47,10 +47,10 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userda
 
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
 
-    // Since it's inconvinient for user to specify the drive (they are all the same on computer),
+    // Since it's inconvenient for user to specify the drive (they are all the same on computer),
     // and it's better to install in C since there is many apps required
-    // to be in it and hardcoded the drive, just hardcode drive C here.
-    bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_c);
+    // to be in it and hardcoded the drive, just hardcode drive E here.
+    bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_e);
 
     if (!result) {
         *err = "Installation of SIS failed";
@@ -74,7 +74,7 @@ bool package_remove_option_handler(eka2l1::common::arg_parser *parser, void *use
     bool result = emu->symsys->get_manager_system()->get_package_manager()->uninstall_package(vuid);
 
     if (!result) {
-        *err = "Fail to remove package.";
+        *err = "Failed to remove package.";
         return false;
     }
 
@@ -118,7 +118,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
     // It's an UID if it's starting with 0x
     if (tokstr.length() > 2 && tokstr.substr(0, 2) == "0x") {
         const std::uint32_t uid = common::pystr(tokstr).as_int<std::uint32_t>();
-        eka2l1::apa_app_registry *registry = svr->get_registeration(uid);
+        eka2l1::apa_app_registry *registry = svr->get_registration(uid);
 
         if (registry) {
             emu->symsys->load(registry->mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));

@@ -105,7 +105,7 @@ namespace eka2l1 {
         const std::size_t event_buf_size = ctx->get_arg_size(0);
 
         if (event_buf_size < sizeof(ui::view::view_event)) {
-            LOG_ERROR("Size of view event buffer is not sufficent enough!");
+            LOG_ERROR("Size of view event buffer is not sufficient enough!");
             ctx->set_request_status(epoc::error_argument);
             return;
         }

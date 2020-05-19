@@ -273,7 +273,7 @@ namespace eka2l1::dispatch {
     }
 
     // DSP streams
-    BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_dsp_out_stream_create, void*) {
+    BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_dsp_out_stream_create, void *) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         ntimer *timing = sys->get_ntimer();
         drivers::audio_driver *aud_driver = sys->get_audio_driver();
@@ -309,7 +309,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_set_properties, eka2l1::ptr<void> handle, const std::uint32_t freq, const std::uint32_t channels) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dsp_epoc_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
@@ -341,7 +341,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_stop, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dsp_epoc_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
@@ -356,7 +356,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_write, eka2l1::ptr<void> handle, const std::uint8_t *data, const std::uint32_t data_size) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dsp_epoc_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
@@ -365,20 +365,19 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream->ll_stream_);
-        
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream &>(*stream->ll_stream_);
+
         if (!out_stream.write(data, data_size)) {
             return epoc::error_not_ready;
         }
 
         return epoc::error_none;
     }
-    
+
     audio_event::audio_event()
         : start_ticks_(0)
         , next_(nullptr)
         , flags_(0) {
-
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_notify_buffer_ready, eka2l1::ptr<void> handle, eka2l1::ptr<epoc::request_status> req) {
@@ -389,30 +388,32 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream->ll_stream_);
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream &>(*stream->ll_stream_);
         ntimer *timing = sys->get_ntimer();
 
         const std::lock_guard<std::mutex> guard(stream->lock_);
-            
+
         audio_event *evt = stream->get_event(req);
         evt->info_.requester = sys->get_kernel_system()->crr_thread();
         evt->info_.sts = req;
         evt->start_ticks_ = timing->ticks();
         evt->start_host_ = common::get_current_time_in_microseconds_since_epoch();
 
-        out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, [dispatcher](void *userdata) {
-            dsp_epoc_stream *epoc_stream = reinterpret_cast<dsp_epoc_stream*>(userdata);
-            
-            const std::lock_guard<std::mutex> guard(epoc_stream->lock_);
-            audio_event *evt = epoc_stream->evt_queue_.next_;
+        out_stream.register_callback(
+            drivers::dsp_stream_notification_buffer_copied, [dispatcher](void *userdata) {
+                dsp_epoc_stream *epoc_stream = reinterpret_cast<dsp_epoc_stream *>(userdata);
 
-            while (evt && (evt->flags_ & audio_event::FLAG_COMPLETED)) {
-                evt = evt->next_;
-            }
+                const std::lock_guard<std::mutex> guard(epoc_stream->lock_);
+                audio_event *evt = epoc_stream->evt_queue_.next_;
 
-            evt->flags_ |= audio_event::FLAG_COMPLETED;
-        }, stream);
-        
+                while (evt && (evt->flags_ & audio_event::FLAG_COMPLETED)) {
+                    evt = evt->next_;
+                }
+
+                evt->flags_ |= audio_event::FLAG_COMPLETED;
+            },
+            stream);
+
         return epoc::error_none;
     }
 
@@ -425,7 +426,7 @@ namespace eka2l1::dispatch {
         }
 
         ntimer *timing = sys->get_ntimer();
-        
+
         {
             const std::lock_guard<std::mutex> guard(stream->lock_);
             audio_event *aud_evt = stream->evt_queue_.next_;
@@ -453,7 +454,7 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream->ll_stream_);
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream &>(*stream->ll_stream_);
         return static_cast<std::int32_t>(out_stream.max_volume());
     }
 
@@ -465,7 +466,7 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream->ll_stream_);
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream &>(*stream->ll_stream_);
         return static_cast<std::int32_t>(out_stream.volume());
     }
 
@@ -477,8 +478,8 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream&>(*stream->ll_stream_);
-        
+        drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream &>(*stream->ll_stream_);
+
         if (vol > out_stream.max_volume()) {
             return epoc::error_argument;
         }
@@ -486,7 +487,7 @@ namespace eka2l1::dispatch {
         out_stream.volume(vol);
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_bytes_rendered, eka2l1::ptr<void> handle, std::uint64_t *bytes) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dsp_epoc_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());

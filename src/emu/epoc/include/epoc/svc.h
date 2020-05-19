@@ -19,7 +19,7 @@
 
 // Header for resolving SVC call for function which we don't want to implement.
 // This exists because of many Symbian devs make their own allocator and switch it
-// Some functions are overriden with HLE functions instead of just implementing the svc call
+// Some functions are overridden with HLE functions instead of just implementing the svc call
 // Because of its complex structure (NMutex, NThread) change over different Symbian update
 // But, the public structure still the same for them (RThread, RFastLock), contains only
 // a handle. This give us advantage.
@@ -89,13 +89,13 @@ namespace eka2l1::epoc {
     struct raw_event {
         raw_event_type type_;
     };
-    
+
     ///> @brief The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;
 
     ///> @brief The SVC map for Symbian S60v5.
     extern const eka2l1::hle::func_map svc_register_funcs_v94;
-    
+
     ///> @brief The SVC map for Symbian S^3.
     extern const eka2l1::hle::func_map svc_register_funcs_v10;
 }

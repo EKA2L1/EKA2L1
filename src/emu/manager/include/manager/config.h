@@ -78,7 +78,7 @@ namespace eka2l1::manager {
 
         bool fbs_enable_compression_queue{ false };
         bool accurate_ipc_timing{ false };
-        bool enable_btrace { false };
+        bool enable_btrace{ false };
 
         void serialize();
         void deserialize();

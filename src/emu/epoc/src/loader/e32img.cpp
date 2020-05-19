@@ -70,7 +70,7 @@ namespace eka2l1::loader {
 
     static void dump_image_info(const e32img &img) {
         LOG_INFO("Image dump info:");
-        
+
         if (img.has_extended_header) {
             LOG_INFO("V-Format used, too tired \\_(-.-)_/");
         }
@@ -300,7 +300,7 @@ namespace eka2l1::loader {
             size_t bytes_read = stream->read(temp_buf.data(), static_cast<uint32_t>(temp_buf.size()));
 
             if (bytes_read != temp_buf.size()) {
-                LOG_ERROR("File reading unproperly");
+                LOG_ERROR("File reading improperly");
             }
 
             if (ctype == compress_type::deflate_c) {
@@ -310,7 +310,7 @@ namespace eka2l1::loader {
                 flate::inflater inflate_machine(input);
 
                 inflate_machine.init();
-                auto readed = inflate_machine.read(reinterpret_cast<uint8_t *>(&img.data[img.header.code_offset]),
+                auto read = inflate_machine.read(reinterpret_cast<uint8_t *>(&img.data[img.header.code_offset]),
                     img.uncompressed_size);
             } else if (ctype == compress_type::byte_pair_c) {
                 auto crr_pos = stream->tell();
@@ -337,7 +337,7 @@ namespace eka2l1::loader {
 
         parse_export_dir(img);
         parse_iat(img);
-        
+
         // dump_image_info(img);
 
         common::ro_buf_stream decompressed_stream(reinterpret_cast<std::uint8_t *>(&img.data[0]),

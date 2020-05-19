@@ -102,7 +102,7 @@ namespace eka2l1 {
         void set_debugger(debugger_base *new_debugger);
         void set_symbian_version_use(const epocver ever);
         void set_cpu_executor_type(const arm_emulator_type type);
-        
+
         const arm_emulator_type get_cpu_executor_type() const;
 
         loader::rom *get_rom_info();
@@ -138,7 +138,7 @@ namespace eka2l1 {
             const io_attrib attrib = io_attrib::none);
 
         void reset();
-        
+
         bool pause();
         bool unpause();
 
@@ -156,8 +156,8 @@ namespace eka2l1 {
         void request_exit();
         bool should_exit() const;
 
-        void add_new_hal(uint32_t hal_cagetory, hal_instance &hal_com);
-        epoc::hal *get_hal(uint32_t cagetory);
+        void add_new_hal(uint32_t hal_category, hal_instance &hal_com);
+        epoc::hal *get_hal(uint32_t category);
 
         const language get_system_language() const;
         void set_system_language(const language new_lang);

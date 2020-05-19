@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import symemu
-import symemu2.common
+
 
 def scriptEntry():
-	symemu.emulog('Hello EKA2L1!')
+    symemu.emulog('Hello EKA2L1!')

@@ -82,8 +82,8 @@ namespace eka2l1 {
 
         std::uint8_t *file_ptr;
 
-        rom_file(memory_system *mem, loader::rom *supereme_mother, loader::rom_entry entry)
-            : parent(supereme_mother)
+        rom_file(memory_system *mem, loader::rom *supreme_mother, loader::rom_entry entry)
+            : parent(supreme_mother)
             , file(entry)
             , mem(mem) {
             init();
@@ -574,7 +574,7 @@ namespace eka2l1 {
             if (!common::is_system_case_insensitive()) {
                 vert_path_no_root = common::lowercase_ucs2_string(vert_path_no_root);
             }
-    
+
             return eka2l1::add_path(map_path, vert_path_no_root);
         }
 
@@ -1176,7 +1176,7 @@ namespace eka2l1 {
         void *callback_userdata, const std::uint32_t filters) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
-        for (auto &[id, fs]: filesystems) {
+        for (auto &[id, fs] : filesystems) {
             const std::int64_t result = fs->watch_directory(path, callback, callback_userdata, filters);
 
             if (result != -1) {
@@ -1186,7 +1186,7 @@ namespace eka2l1 {
 
         return -1;
     }
-    
+
     bool io_system::unwatch_directory(const std::int64_t handle) {
         const std::int32_t fs_id = static_cast<std::int32_t>(handle >> 32);
         auto fs_pair = filesystems.find(fs_id);
@@ -1234,7 +1234,7 @@ namespace eka2l1 {
     void wo_file_stream::seek(const std::int64_t amount, common::seek_where wh) {
         f_->seek(amount, static_cast<file_seek_mode>(wh));
     }
-    
+
     bool wo_file_stream::valid() {
         return f_->valid();
     }

@@ -51,20 +51,20 @@
     ctx.set_request_status(epoc::error_none); \
     return
 
-#define POSIX_REQUEST_INIT(ctx)                                                                                 \
-    kernel::process *own_process = ctx.msg->own_thr->owning_process();                                          \
-    int *errnoptr = eka2l1::ptr<int>(ctx.msg->args.args[0]).get(own_process);                                   \
-    *errnoptr = 0;                                                                                              \
-    auto params = eka2l1::ptr<eka2l1::posix_params>(ctx.msg->args.args[1]).get(own_process);                    \
-    if (!params) {                                                                                              \
-        POSIX_REQUEST_FINISH_WITH_ERR(ctx, EINVAL);                                                             \
+#define POSIX_REQUEST_INIT(ctx)                                                              \
+    kernel::process *own_process = ctx.msg->own_thr->owning_process();                       \
+    int *errnoptr = eka2l1::ptr<int>(ctx.msg->args.args[0]).get(own_process);                \
+    *errnoptr = 0;                                                                           \
+    auto params = eka2l1::ptr<eka2l1::posix_params>(ctx.msg->args.args[1]).get(own_process); \
+    if (!params) {                                                                           \
+        POSIX_REQUEST_FINISH_WITH_ERR(ctx, EINVAL);                                          \
     }
 
 namespace eka2l1 {
     posix_file_manager::posix_file_manager(io_system *io)
         : io(io) {}
 
-    fid posix_file_manager::get_lowest_useable_fid() {
+    fid posix_file_manager::get_lowest_usable_fid() {
         if (files.size() == MAX_FID) {
             return 0;
         }
@@ -81,7 +81,7 @@ namespace eka2l1 {
     }
 
     fid posix_file_manager::open(const std::u16string &path, const int mode, int &terrno) {
-        const fid suit_fid = get_lowest_useable_fid();
+        const fid suit_fid = get_lowest_usable_fid();
 
         if (!suit_fid) {
             terrno = EMFILE;
@@ -124,7 +124,7 @@ namespace eka2l1 {
             return std::optional<fid>{};
         }
 
-        const fid suit = get_lowest_useable_fid();
+        const fid suit = get_lowest_usable_fid();
 
         if (!suit) {
             terrno = EMFILE;
@@ -287,7 +287,7 @@ namespace eka2l1 {
             write_flag_emu = WRITE_MODE;
         }
 
-        // Ignore the permissons right now, let's fetch the open mode
+        // Ignore the permissions right now, let's fetch the open mode
         int emu_mode = BIN_MODE;
 
         if (posix_open_mode & O_RDWR) {
@@ -339,8 +339,7 @@ namespace eka2l1 {
     void posix_server::fstat(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        struct stat *file_stat = reinterpret_cast<struct stat *>(params->ptr[0].get(ctx.msg->
-            own_thr->owning_process()));
+        struct stat *file_stat = reinterpret_cast<struct stat *>(params->ptr[0].get(ctx.msg->own_thr->owning_process()));
 
         file_manager.stat(params->fid, file_stat, *errnoptr);
         params->ret = *errnoptr ? -1 : 0;
@@ -363,9 +362,9 @@ namespace eka2l1 {
 
     void posix_server::write(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
-        
+
         char *source_ptr = params->ptr[0].get(ctx.msg->own_thr->owning_process());
-        
+
         params->ret = static_cast<std::int32_t>(
             file_manager.write(params->fid, params->len[0], source_ptr, *errnoptr));
 

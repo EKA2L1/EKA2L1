@@ -159,7 +159,7 @@ namespace eka2l1::epoc {
         bool import_color_table(const skn_color_table &table);
 
         /**
-         * \brief   Import image table to skin defintion chunk.
+         * \brief   Import image table to skin definition chunk.
          * 
          * \param   table Info of the table.
          * \returns True on success.
@@ -167,7 +167,7 @@ namespace eka2l1::epoc {
         bool import_image_table(const skn_image_table &table);
 
         /**
-         * \brief   Import effect queue into skin defintion chunk.
+         * \brief   Import effect queue into skin definition chunk.
          * 
          * \param   queue The queue.
          * \returns True on success.
@@ -258,7 +258,7 @@ namespace eka2l1::epoc {
          * 
          * \returns True if success.
          * 
-         * \see     update_defintion
+         * \see     update_definition
          */
         bool update_filename(const std::uint32_t filename_id, const std::u16string &filename, const std::u16string &filename_base);
 
@@ -277,22 +277,22 @@ namespace eka2l1::epoc {
 
         /**
          * \brief   Update the hash of a definition.
-         * \param   def The defintion.
+         * \param   def The definition.
          * 
          * \returns True on success.
          */
         bool update_definition_hash(epoc::akns_item_def *def, const std::int32_t index);
 
         /**
-         * \brief   Get item defintion index with its ID.
+         * \brief   Get item definition index with its ID.
          * 
-         * \param   id The ID of the defintion.
+         * \param   id The ID of the definition.
          * \returns The index of the item in item def chunk if available, else -1.
          */
         std::int32_t get_item_definition_index(const epoc::pid &id);
 
         /**
-         * \brief   Update defintion of an item.
+         * \brief   Update definition of an item.
          * 
          * \param   def               The definition struct.
          * \param   data              Data that comes with the definition.

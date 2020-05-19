@@ -17,19 +17,21 @@
 
 from symemu2.common import MifReader
 
+
 def main():
     # Load the MIF file. Pass the path to the MIF file.
     miff = MifReader('sample.mif')
 
     # Print total of entry in this MIF file.
     print('Total entry count: {}'.format(miff.entryCount()))
-    
+
     for i in range(0, miff.entryCount()):
-      print('Entry {} data size: {}'.format(i, miff.entryDataSize(i)))
+        print('Entry {} data size: {}'.format(i, miff.entryDataSize(i)))
 
     # Ideally, we can get the data of the entry with:
     # buf = miff.readEntry(i)
     # This will returns a string with binary data you can pack and unpack.
+
 
 if __name__ == '__main__':
     main()

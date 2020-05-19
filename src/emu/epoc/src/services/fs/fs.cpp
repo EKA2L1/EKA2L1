@@ -52,7 +52,7 @@ namespace eka2l1 {
 
     fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, service::ipc_context *ctx)
         : typical_session(srv, suid, client_version) {
-        // Please don't remove the seperator, absolute path needs this to determine root directory
+        // Please don't remove the separator, absolute path needs this to determine root directory
         ss_path = eka2l1::root_name(ctx->msg->own_thr->owning_process()->get_exe_path(), true) + u'\\';
     }
 

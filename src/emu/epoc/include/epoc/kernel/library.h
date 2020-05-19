@@ -18,7 +18,7 @@ namespace eka2l1::kernel {
             attaching,
             attached,
             detach_pending,
-            detatching
+            detaching
         } state;
 
     public:

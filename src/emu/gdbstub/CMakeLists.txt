@@ -1,14 +1,14 @@
 add_library(gdbstub
-    include/gdbstub/gdbstub.h
-    src/gdbstub.cpp)
+        include/gdbstub/gdbstub.h
+        src/gdbstub.cpp)
 
 set(LIBRARIES
-    arm
-    epockern)
+        arm
+        epockern)
 
-if(WIN32)
+if (WIN32)
     set(LIBRARIES ${LIBRARIES} wsock32)
-endif()
+endif ()
 
 target_include_directories(gdbstub PUBLIC include)
 target_link_libraries(gdbstub PRIVATE ${LIBRARIES})

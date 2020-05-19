@@ -49,7 +49,7 @@ namespace eka2l1::kernel {
         wakeup_evt = timing->get_register_event("SchedulerWakeUpThread");
 
         if (wakeup_evt == -1) {
-            wakeup_evt = timing->register_event("SchedulerWakeUpThread", [kern](std::uint64_t userdata, std::uint64_t cycles_late) {      
+            wakeup_evt = timing->register_event("SchedulerWakeUpThread", [kern](std::uint64_t userdata, std::uint64_t cycles_late) {
                 kernel::thread *thr = kern->get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
 
                 if (thr == nullptr) {
@@ -97,7 +97,7 @@ namespace eka2l1::kernel {
                 mem->get_mmu()->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
 
                 crr_process->get_mem_model()->remap_locals_to_cpu();
-                
+
 #if ENABLE_SCRIPTING
                 if (scripter)
                     scripter->write_breakpoint_blocks(crr_process);

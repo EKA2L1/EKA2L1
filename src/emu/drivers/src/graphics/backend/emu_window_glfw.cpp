@@ -86,10 +86,9 @@ void close_callback(GLFWwindow *window) {
 
 static void mouse_cursor_callback(GLFWwindow *window, double xpos, double ypos) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
-    
+
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-        CALL_IF_VALID(win->touch_move, win->get_userdata(), eka2l1::vec2(static_cast<int>(xpos),
-            static_cast<int>(ypos)));
+        CALL_IF_VALID(win->touch_move, win->get_userdata(), eka2l1::vec2(static_cast<int>(xpos), static_cast<int>(ypos)));
     }
 }
 
@@ -136,17 +135,16 @@ namespace eka2l1 {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-            
+
             GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 
             if (flags & emu_window_flag_maximum_size) {
-                const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+                const GLFWvidmode *mode = glfwGetVideoMode(monitor);
                 size.x = mode->width;
                 size.y = mode->height;
             }
 
-            emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ?
-                monitor : nullptr, nullptr);
+            emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
 
             if (!emu_win) {
                 LOG_ERROR("Can't create window!");
@@ -171,11 +169,11 @@ namespace eka2l1 {
             if (is_fullscreen_now == is_fullscreen) {
                 return;
             }
-            
-            GLFWmonitor* primary = glfwGetPrimaryMonitor();
-            const GLFWvidmode* mode = glfwGetVideoMode(primary);
 
-            glfwSetWindowMonitor(emu_win, (is_fullscreen ? primary : NULL), 0, 30, 
+            GLFWmonitor *primary = glfwGetPrimaryMonitor();
+            const GLFWvidmode *mode = glfwGetVideoMode(primary);
+
+            glfwSetWindowMonitor(emu_win, (is_fullscreen ? primary : NULL), 0, 30,
                 emu_screen_size.x, emu_screen_size.y, mode->refreshRate);
 
             is_fullscreen_now = is_fullscreen;

@@ -328,7 +328,8 @@ namespace eka2l1::drivers {
          * \param a Swizzling of fourth channel.
          */
         virtual void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
-            drivers::channel_swizzle a) = 0;
+            drivers::channel_swizzle a)
+            = 0;
     };
 
     class server_graphics_command_list_builder : public graphics_command_list_builder {
@@ -420,8 +421,8 @@ namespace eka2l1::drivers {
         void set_swapchain_size(const eka2l1::vec2 &swsize) override;
 
         void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) override;
-        
+
         void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
-                drivers::channel_swizzle a) override;    
+            drivers::channel_swizzle a) override;
     };
 }

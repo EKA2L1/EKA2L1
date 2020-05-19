@@ -1,5 +1,5 @@
 #ifndef LANG_DECL
-    #define LANG_DECL(x, y)
+#define LANG_DECL(x, y)
 #endif
 
 LANG_DECL(test, Test)
@@ -76,7 +76,7 @@ LANG_DECL(ml, Malayalam)
 LANG_DECL(mr, Marathi)
 LANG_DECL(mo, Moldavian)
 LANG_DECL(mn, Mongolian)
-LANG_DECL(nn, Norwegian-Nynorsk)
+LANG_DECL(nn, Norwegian - Nynorsk)
 LANG_DECL(bp, Brazilian Portuguese)
 LANG_DECL(pa, Punjabi)
 LANG_DECL(ro, Romanian)
@@ -98,5 +98,5 @@ LANG_DECL(ur, Urdu)
 LANG_DECL(test2, Test2)
 LANG_DECL(vi, Vietnamese)
 LANG_DECL(cy, Welsh)
-LANG_DECL(zu, ZULU)	
-LANG_DECL(any, Any)	
+LANG_DECL(zu, ZULU)
+LANG_DECL(any, Any)

@@ -135,7 +135,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        int caculate_thread_priority(kernel::process *pr, thread_priority pri) {
+        int calculate_thread_priority(kernel::process *pr, thread_priority pri) {
             const uint8_t pris[] = {
                 1, 1, 2, 3, 4, 5, 22, 0,
                 3, 5, 6, 7, 8, 9, 22, 0,
@@ -172,17 +172,17 @@ namespace eka2l1 {
         }
 
         void thread::reset_thread_ctx(const std::uint32_t entry_point, const std::uint32_t stack_top, const std::uint32_t thr_local_data_ptr,
-            const bool inital) {
+            const bool initial) {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
 
-            /* Userland process and thread are all initalized with _E32Startup, which is the first
+            /* Userland process and thread are all initialized with _E32Startup, which is the first
                entry point of an process. _E32Startup required:
                - r1: thread creation info register.
                - r4: Startup reason. Thread startup is 1, process startup is 0.
             */
 
-            ctx.pc = owner ? (inital ? entry_point : owning_process()->get_entry_point_address())
+            ctx.pc = owner ? (initial ? entry_point : owning_process()->get_entry_point_address())
                            : entry_point;
 
             ctx.sp = stack_top;
@@ -190,8 +190,8 @@ namespace eka2l1 {
 
             ctx.cpu_registers[1] = stack_top;
 
-            if (!inital) {
-                // Thread initalization, not process
+            if (!initial) {
+                // Thread initialization, not process
                 ctx.cpu_registers[4] = 1;
             }
 
@@ -230,7 +230,7 @@ namespace eka2l1 {
             kernel::access_type access,
             const std::string &name, const address epa, const size_t stack_size,
             const size_t min_heap_size, const size_t max_heap_size,
-            bool inital,
+            bool initial,
             ptr<void> usrdata,
             ptr<void> allocator,
             thread_priority pri)
@@ -246,7 +246,7 @@ namespace eka2l1 {
             , wait_obj(nullptr)
             , sleep_nof_sts(0)
             , thread_handles(kern, handle_array_owner::thread)
-            , rendezvous_reason(0) 
+            , rendezvous_reason(0)
             , exit_reason(0)
             , exit_type(entity_exit_type::pending)
             , create_time(0)
@@ -254,7 +254,7 @@ namespace eka2l1 {
             , exception_mask(0) {
             if (owner) {
                 owner->increase_thread_count();
-                real_priority = caculate_thread_priority(owning_process(), pri);
+                real_priority = calculate_thread_priority(owning_process(), pri);
                 last_priority = real_priority;
             }
 
@@ -298,16 +298,16 @@ namespace eka2l1 {
                 name_chunk->base().ptr_address(), epa);
 
             // Create local data chunk
-            // Alloc extra the size of thread local data to avoid dealing with binary compability (size changed etc...)
+            // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
             local_data_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, 0x1000, 0x1000,
                 prot::read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
             if (local_data_chunk) {
-                std::uint8_t *data = reinterpret_cast<std::uint8_t*>(local_data_chunk->host_base());
+                std::uint8_t *data = reinterpret_cast<std::uint8_t *>(local_data_chunk->host_base());
 
-                ldata = reinterpret_cast<thread_local_data*>(data);
+                ldata = reinterpret_cast<thread_local_data *>(data);
                 new (ldata) thread_local_data();
-                
+
                 ldata->heap = 0;
                 ldata->scheduler = 0;
                 ldata->trap_handler = 0;
@@ -315,7 +315,7 @@ namespace eka2l1 {
                 ldata->tls_heap = 0;
             }
 
-            reset_thread_ctx(epa, stack_top, local_data_chunk->base().ptr_address(), inital);
+            reset_thread_ctx(epa, stack_top, local_data_chunk->base().ptr_address(), initial);
             scheduler = kern->get_thread_scheduler();
 
             // Add thread to process's thread list
@@ -391,7 +391,7 @@ namespace eka2l1 {
                 should_reschedule_back = true;
             }
 
-            real_priority = caculate_thread_priority(owning_process(), priority);
+            real_priority = calculate_thread_priority(owning_process(), priority);
 
             if (should_reschedule_back) {
                 // It's in the queue!!! Move it!

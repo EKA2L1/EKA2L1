@@ -22,10 +22,10 @@
 #include <common/path.h>
 #include <common/time.h>
 
+#include <epoc/loader/rsc.h>
 #include <epoc/services/msv/common.h>
 #include <epoc/services/msv/entry.h>
 #include <epoc/vfs.h>
-#include <epoc/loader/rsc.h>
 
 #include <epoc/utils/bafl.h>
 #include <epoc/utils/err.h>
@@ -55,7 +55,7 @@ namespace eka2l1::epoc::msv {
         }
     }
 
-    static bool msv_entry_comparisor(const entry &lhs, const entry &rhs) {
+    static bool msv_entry_comparator(const entry &lhs, const entry &rhs) {
         return (lhs.id_ & 0x0FFFFFFF) < (rhs.id_ & 0x0FFFFFFF);
     }
 
@@ -68,7 +68,7 @@ namespace eka2l1::epoc::msv {
 
     bool entry_indexer::load_entries_file(drive_number crr_drive) {
         std::u16string msg_entries_file = eka2l1::add_path(msg_dir_, u"Entries.chs");
-    
+
         // Open the entry file first
         symfile entry_file = io_->open_file(msg_entries_file, READ_MODE | BIN_MODE);
 
@@ -105,7 +105,7 @@ namespace eka2l1::epoc::msv {
 
     bool entry_indexer::update_entries_file(const std::size_t entry_pos_start) {
         std::u16string msg_entries_file = eka2l1::add_path(msg_dir_, u"Entries.chs");
-    
+
         // Open the entry file first
         symfile entry_file = io_->open_file(msg_entries_file, WRITE_MODE | BIN_MODE);
 
@@ -171,25 +171,25 @@ namespace eka2l1::epoc::msv {
 
         while (back_trace->parent_id_ != epoc::error_not_found) {
             parent_dir = get_folder_name(ent.parent_id_, MSV_FOLDER_TYPE_PATH) + u"\\" + parent_dir;
-            
+
             entry my_parent;
             my_parent.id_ = back_trace->parent_id_;
 
-            auto ent_ite = std::lower_bound(entries_.begin(), entries_.end(), my_parent, msv_entry_comparisor);
-            
+            auto ent_ite = std::lower_bound(entries_.begin(), entries_.end(), my_parent, msv_entry_comparator);
+
             if ((ent_ite == entries_.end()) || (ent_ite->id_ != back_trace->parent_id_)) {
                 break;
             }
-            
+
             back_trace = &(*ent_ite);
         }
 
         file_path = eka2l1::add_path(file_path, parent_dir);
-        
+
         if (!io_->exist(file_path)) {
             io_->create_directories(file_path);
         }
-        
+
         return eka2l1::add_path(file_path, get_folder_name(ent.id_, MSV_FOLDER_TYPE_NORMAL));
     }
 
@@ -217,7 +217,7 @@ namespace eka2l1::epoc::msv {
         entry_file_stream.write(&ent.type_uid_, sizeof(epoc::uid));
         entry_file_stream.write(&ent.mtm_uid_, sizeof(epoc::uid));
         entry_file_stream.write(&ent.data_, sizeof(std::uint32_t));
-        
+
         entry_file_stream.write_string(ent.description_);
         entry_file_stream.write_string(ent.details_);
 
@@ -251,7 +251,7 @@ namespace eka2l1::epoc::msv {
         entry_file_stream.read(&ent.type_uid_, sizeof(epoc::uid));
         entry_file_stream.read(&ent.mtm_uid_, sizeof(epoc::uid));
         entry_file_stream.read(&ent.data_, sizeof(std::uint32_t));
-        
+
         ent.description_ = entry_file_stream.read_string<char16_t>();
         ent.details_ = entry_file_stream.read_string<char16_t>();
 
@@ -265,7 +265,7 @@ namespace eka2l1::epoc::msv {
         entry ent;
         ent.id_ = id;
 
-        auto ite_pos = std::lower_bound(entries_.begin(), entries_.end(), ent, msv_entry_comparisor);
+        auto ite_pos = std::lower_bound(entries_.begin(), entries_.end(), ent, msv_entry_comparator);
         if ((ite_pos == entries_.end()) || (ite_pos->id_ != id)) {
             return nullptr;
         }
@@ -273,11 +273,11 @@ namespace eka2l1::epoc::msv {
         return &(*ite_pos);
     }
 
-    std::vector<entry*> entry_indexer::get_entries_by_parent(const std::uint32_t parent_id) {
+    std::vector<entry *> entry_indexer::get_entries_by_parent(const std::uint32_t parent_id) {
         // TODO: Build a lookup map to increase speed.
-        std::vector<entry*> ents;
+        std::vector<entry *> ents;
 
-        for (auto &entry: entries_) {
+        for (auto &entry : entries_) {
             if (entry.parent_id_ == parent_id) {
                 ents.push_back(&entry);
             }
@@ -285,21 +285,21 @@ namespace eka2l1::epoc::msv {
 
         return ents;
     }
-    
+
     bool entry_indexer::add_entry(entry &ent) {
         ent.flags_ = entry::STATUS_PRESENT;
 
         // Find an entry with existing ID, if it exists then this entry will not be added.
-        if (std::binary_search(entries_.begin(), entries_.end(), ent, msv_entry_comparisor)) {
+        if (std::binary_search(entries_.begin(), entries_.end(), ent, msv_entry_comparator)) {
             return false;
         }
 
         // Add this entry. And sort by ID
         entries_.push_back(ent);
-        std::sort(entries_.begin(), entries_.end(), msv_entry_comparisor);
+        std::sort(entries_.begin(), entries_.end(), msv_entry_comparator);
 
         // Find the entry again in this sort list, and update the entries file from this position.
-        auto ite_pos = std::lower_bound(entries_.begin(), entries_.end(), ent, msv_entry_comparisor);
+        auto ite_pos = std::lower_bound(entries_.begin(), entries_.end(), ent, msv_entry_comparator);
         const std::size_t start_update_pos = std::distance(entries_.begin(), ite_pos);
 
         if (!update_entries_file((start_update_pos == 0) ? 0 : (start_update_pos - 1))) {
@@ -338,7 +338,7 @@ namespace eka2l1::epoc::msv {
         }
 
         ro_file_stream nearest_default_entries_file_stream(nearest_default_entries_file_io.get());
-        loader::rsc_file nearest_default_entries_loader(reinterpret_cast<common::ro_stream*>(&nearest_default_entries_file_stream));
+        loader::rsc_file nearest_default_entries_loader(reinterpret_cast<common::ro_stream *>(&nearest_default_entries_file_stream));
 
         auto entries_info_buf = nearest_default_entries_loader.read(1);
 
@@ -365,7 +365,7 @@ namespace eka2l1::epoc::msv {
             seri.absorb(ent.type_uid_);
             seri.absorb(ent.mtm_uid_);
             seri.absorb(ent.data_);
-            
+
             loader::absorb_resource_string(seri, ent.description_);
             loader::absorb_resource_string(seri, ent.details_);
 

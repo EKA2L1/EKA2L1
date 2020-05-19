@@ -80,8 +80,8 @@ namespace eka2l1::manager {
     class script_manager {
         std::unordered_map<std::string, pybind11::module> modules;
 
-        std::unordered_map<std::uint32_t, breakpoint_info_list_record> breakpoints;    ///< Breakpoints complete patching
-        breakpoint_info_list breakpoint_wait_patch;                                     ///< Breakpoints that still require patching
+        std::unordered_map<std::uint32_t, breakpoint_info_list_record> breakpoints; ///< Breakpoints complete patching
+        breakpoint_info_list breakpoint_wait_patch; ///< Breakpoints that still require patching
 
         std::unordered_map<std::string, std::map<std::uint64_t, func_list>> ipc_functions;
 

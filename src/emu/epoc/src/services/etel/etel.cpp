@@ -17,11 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/epoc.h>
 #include <epoc/services/etel/common.h>
 #include <epoc/services/etel/etel.h>
 #include <epoc/services/etel/phone.h>
 #include <epoc/utils/err.h>
-#include <epoc/epoc.h>
 
 #include <common/cvt.h>
 
@@ -34,7 +34,7 @@ namespace eka2l1 {
         create_session<etel_session>(&ctx);
         ctx.set_request_status(epoc::error_none);
     }
-    
+
     etel_session::etel_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(serv, client_ss_uid, client_ver) {
     }
@@ -75,7 +75,7 @@ namespace eka2l1 {
         epoc::etel_module_entry *entry = nullptr;
         mngr_.get_entry(real_index.value(), &entry);
 
-        etel_phone &phone = static_cast<etel_phone&>(*entry->entity_);
+        etel_phone &phone = static_cast<etel_phone &>(*entry->entity_);
 
         ctx->write_arg_pkg<epoc::etel_phone_info>(0, phone.info_);
         ctx->set_request_status(epoc::error_none);
@@ -100,14 +100,13 @@ namespace eka2l1 {
 
     void etel_session::add_new_subsession(service::ipc_context *ctx, etel_subsession_instance &instance) {
         auto empty_slot = std::find(subsessions_.begin(), subsessions_.end(), nullptr);
-        
+
         if (empty_slot == subsessions_.end()) {
             subsessions_.push_back(std::move(instance));
             ctx->write_arg_pkg<std::uint32_t>(3, static_cast<std::uint32_t>(subsessions_.size()));
         } else {
             *empty_slot = std::move(instance);
-            ctx->write_arg_pkg<std::uint32_t>(3, static_cast<std::uint32_t>(std::distance(subsessions_.begin(),
-                empty_slot) + 1));
+            ctx->write_arg_pkg<std::uint32_t>(3, static_cast<std::uint32_t>(std::distance(subsessions_.begin(), empty_slot) + 1));
         }
     }
 
@@ -132,8 +131,7 @@ namespace eka2l1 {
 
         switch (entry->entity_->type()) {
         case epoc::etel_entry_phone:
-            subsession = std::make_unique<etel_phone_subsession>(this, reinterpret_cast<etel_phone*>(
-                entry->entity_.get()));
+            subsession = std::make_unique<etel_phone_subsession>(this, reinterpret_cast<etel_phone *>(entry->entity_.get()));
 
             break;
 
@@ -175,8 +173,8 @@ namespace eka2l1 {
         }
 
         if (sub->type() == etel_subsession_type_phone) {
-            etel_phone *phone = reinterpret_cast<etel_phone_subsession*>(sub.get())->phone_;
-            
+            etel_phone *phone = reinterpret_cast<etel_phone_subsession *>(sub.get())->phone_;
+
             // First, try to find the line
             auto line_ite = std::find_if(phone->lines_.begin(), phone->lines_.end(), [=](const etel_line *line) {
                 return common::compare_ignore_case(common::utf8_to_ucs2(line->name_), name_of_object.value()) == 0;
@@ -263,7 +261,7 @@ namespace eka2l1 {
 
         default:
             std::optional<std::uint32_t> subsess_id = ctx->get_arg<std::uint32_t>(3);
-            
+
             if (subsess_id && (subsess_id.value() > 0)) {
                 if (subsess_id.value() <= subsessions_.size()) {
                     subsessions_[subsess_id.value() - 1]->dispatch(ctx);

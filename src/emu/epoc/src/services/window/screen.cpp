@@ -23,8 +23,8 @@
 #include <epoc/services/window/screen.h>
 #include <epoc/services/window/window.h>
 
-#include <drivers/itc.h>
 #include <common/time.h>
+#include <drivers/itc.h>
 
 #include <epoc/kernel.h>
 #include <epoc/timing.h>
@@ -284,7 +284,7 @@ namespace eka2l1::epoc {
     const int screen::total_screen_mode() const {
         return static_cast<int>(scr_config.modes.size());
     }
-    
+
     void screen::set_rotation(drivers::graphics_driver *drv, const int rot) {
         if (orientation_lock) {
             // Feel like we are at home
@@ -300,7 +300,7 @@ namespace eka2l1::epoc {
             }
         }
     }
-    
+
     void screen::set_orientation_lock(drivers::graphics_driver *drv, const bool lock) {
         if (orientation_lock == lock) {
             return;

@@ -56,7 +56,7 @@ namespace eka2l1 {
         std::int32_t cap_check;
     };
 
-    struct ecom_session: public service::typical_session {
+    struct ecom_session : public service::typical_session {
         enum {
             FLAG_ECOM_OLD_ABI = 1 << 0
         };

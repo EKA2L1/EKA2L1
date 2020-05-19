@@ -17,10 +17,10 @@
 
 # Decorator for event register
 
-from enum import IntEnum
-
 import symemu
+from enum import IntEnum
 from symemu2.ipc.context import Context
+
 
 # The function registed with this decorator will be invoked when
 # a panic happens to a thread. A panic code going to be passed
@@ -36,14 +36,15 @@ def emulatorPanicInvoke(panicName):
         return funcWrapper
 
     return invokeDecorator
-    
+
+
 # The function registed with this decorator will be invoked when
 # a system call happens. A svc number is passed to function.
 #
 # Also, an optional time argument is available.
 # - 0 means this hook will be invoked before executing this system call.
 # - 1 means this hook will be invoked after executing this system call.
-def emulatorSystemCallInvoke(svcNum, time = 0):
+def emulatorSystemCallInvoke(svcNum, time=0):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
             return funcToInvoke
@@ -53,7 +54,8 @@ def emulatorSystemCallInvoke(svcNum, time = 0):
         return funcWrapper
 
     return invokeDecorator
-    
+
+
 def emulatorEpocFunctionInvoke(libname, ord, process_uid):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
@@ -64,7 +66,8 @@ def emulatorEpocFunctionInvoke(libname, ord, process_uid):
         return funcWrapper
 
     return invokeDecorator
-    
+
+
 def emulatorBreakpointInvoke(imageName, addr, processUid):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
@@ -76,6 +79,7 @@ def emulatorBreakpointInvoke(imageName, addr, processUid):
 
     return invokeDecorator
 
+
 # The function registed with this decorator will be invoked when
 # a reschedule happens
 def emulatorRescheduleInvoke(func):
@@ -86,13 +90,15 @@ def emulatorRescheduleInvoke(func):
 
     return funcWrapper
 
+
 class IpcInvokementType(IntEnum):
     SEND = 0
     COMPLETE = 2
 
+
 # The function registered with this decorator will be invoked when a specific
 # message (with requested opcode) is sent (a)sync/complete to specified server
-def emulatorIpcInvoke(serverName, opcode, invokeType = IpcInvokementType.SEND):
+def emulatorIpcInvoke(serverName, opcode, invokeType=IpcInvokementType.SEND):
     def invokeDecorator(funcToInvoke):
         def funcWrapper(context):
             return funcToInvoke
@@ -102,7 +108,7 @@ def emulatorIpcInvoke(serverName, opcode, invokeType = IpcInvokementType.SEND):
 
         def assembleComplete(msg):
             funcToInvoke(Context.makeFromMessage(msg))
-            
+
         if invokeType == IpcInvokementType.SEND:
             wrapperToSend = assembleSend
         else:

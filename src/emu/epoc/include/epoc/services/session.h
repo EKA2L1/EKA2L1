@@ -51,7 +51,7 @@ namespace eka2l1 {
             server_ptr svr;
 
             std::vector<std::pair<bool, ipc_msg_ptr>> msgs_pool;
-            
+
             kernel::address cookie_address;
             kernel::handle associated_handle;
 

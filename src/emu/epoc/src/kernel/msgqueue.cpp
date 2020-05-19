@@ -49,7 +49,7 @@ namespace eka2l1::kernel {
         auto find_res = std::find_if(avail_notifies_.begin(), avail_notifies_.end(),
             [=](const epoc::notify_info &target_info) {
                 return target_info.requester == requester;
-        });
+            });
 
         if (find_res == avail_notifies_.end()) {
             return;

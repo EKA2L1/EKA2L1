@@ -135,7 +135,7 @@ namespace eka2l1 {
                 if (objects[info.object_ix_index].free) {
                     return nullptr;
                 }
-                
+
                 return objects[info.object_ix_index].object;
             }
 

@@ -55,7 +55,7 @@ namespace eka2l1::loader {
         bool do_state(common::chunkyseri &seri);
     };
 
-    /*! \breif An SPI object that can be seralized
+    /*! \breif An SPI object that can be serialized
      *
      * SPI are simply files container but for resource files.
      * It was mostly used to pack a big pack of resource files.

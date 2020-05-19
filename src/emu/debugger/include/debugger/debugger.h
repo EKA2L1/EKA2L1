@@ -36,6 +36,7 @@ namespace eka2l1 {
         virtual void notify_clients() = 0;
 
         virtual void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width,
-            std::uint32_t fb_height) = 0;
+            std::uint32_t fb_height)
+            = 0;
     };
 }

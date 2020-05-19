@@ -42,7 +42,7 @@ namespace eka2l1 {
         view_opcode_active_view = 6,
         view_opcode_request_custom_message = 7,
         view_opcode_start_app = 8,
-        view_opcode_deactive_active_view = 9,
+        view_opcode_deactivate_active_view = 9,
         view_opcode_notify_next_deactivation = 10,
         view_opcode_notify_next_activation = 11,
         view_opcode_create_activate_view_event = 12,

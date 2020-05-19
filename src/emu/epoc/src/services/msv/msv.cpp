@@ -19,11 +19,11 @@
  */
 
 #include <epoc/epoc.h>
-#include <epoc/vfs.h>
 #include <epoc/services/msv/msv.h>
+#include <epoc/vfs.h>
 
-#include <epoc/utils/err.h>
 #include <epoc/utils/consts.h>
+#include <epoc/utils/err.h>
 #include <epoc/vfs.h>
 
 #include <epoc/utils/bafl.h>
@@ -31,8 +31,8 @@
 #include <common/cvt.h>
 #include <common/time.h>
 
-#include <manager/manager.h>
 #include <manager/device_manager.h>
+#include <manager/manager.h>
 
 #include <common/path.h>
 
@@ -75,9 +75,9 @@ namespace eka2l1 {
     }
 
     void msv_server::init() {
-        // Instantiate the message folder        
+        // Instantiate the message folder
         manager::device_manager *mngr = sys->get_manager_system()->get_device_manager();
-        message_folder_ = eka2l1::add_path(DEFAULT_MSG_DATA_DIR, 
+        message_folder_ = eka2l1::add_path(DEFAULT_MSG_DATA_DIR,
             common::utf8_to_ucs2(mngr->get_current()->firmware_code) + u"\\");
 
         io_system *io = sys->get_io_system();
@@ -119,7 +119,7 @@ namespace eka2l1 {
     }
 
     static void pack_change_buffer(epoc::des8 *buf, kernel::process *pr, const msv_event_data &data) {
-        std::uint32_t *buffer_raw = reinterpret_cast<std::uint32_t*>(buf->get_pointer_raw(pr));
+        std::uint32_t *buffer_raw = reinterpret_cast<std::uint32_t *>(buf->get_pointer_raw(pr));
 
         if (!buffer_raw) {
             LOG_ERROR("Can't get change buffer raw pointer!");
@@ -166,7 +166,7 @@ namespace eka2l1 {
 
     void msv_client_session::queue(msv_event_data &evt) {
         nof_sequence_++;
-        evt.selection_ = std::string(reinterpret_cast<const char*>(&nof_sequence_), sizeof(std::uint32_t));
+        evt.selection_ = std::string(reinterpret_cast<const char *>(&nof_sequence_), sizeof(std::uint32_t));
 
         if (!msv_info_.empty()) {
             kernel::process *own_pr = msv_info_.requester->owning_process();
@@ -243,7 +243,7 @@ namespace eka2l1 {
     void msv_client_session::notify_session_event(service::ipc_context *ctx) {
         kernel::process *own_pr = ctx->msg->own_thr->owning_process();
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
-        
+
         // Remember
         epoc::des8 *change = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[0]).get(own_pr);
         epoc::des8 *select = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[1]).get(own_pr);
@@ -253,7 +253,7 @@ namespace eka2l1 {
             ctx->set_request_status(epoc::error_in_use);
         }
     }
- 
+
     void msv_client_session::cancel_notify_session_event(service::ipc_context *ctx) {
         if (!msv_info_.empty()) {
             msv_info_.complete(epoc::error_cancel);
@@ -287,7 +287,7 @@ namespace eka2l1 {
         flags_ &= ~FLAG_RECEIVE_ENTRY_EVENTS;
 
         if (receive.value()) {
-            flags_ |= FLAG_RECEIVE_ENTRY_EVENTS; 
+            flags_ |= FLAG_RECEIVE_ENTRY_EVENTS;
         }
 
         ctx->set_request_status(epoc::error_none);
@@ -295,8 +295,8 @@ namespace eka2l1 {
 
     static void pad_out_data(common::chunkyseri &seri) {
         std::uint8_t padding[3];
-        
-        // Pad out  
+
+        // Pad out
         if (seri.size() % 4 != 0) {
             seri.absorb_impl(padding, 4 - seri.size() % 4);
         }
@@ -311,15 +311,15 @@ namespace eka2l1 {
         data_str.service_id_ = ent.service_id_;
         data_str.mtm_uid_ = ent.mtm_uid_;
         data_str.type_uid_ = ent.type_uid_;
-        
-        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&data_str), sizeof(epoc::msv::entry_data));
+
+        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&data_str), sizeof(epoc::msv::entry_data));
 
         pad_out_data(seri);
         seri.absorb(ent.description_);
 
         pad_out_data(seri);
         seri.absorb(ent.details_);
-        
+
         pad_out_data(seri);
     }
 
@@ -344,7 +344,7 @@ namespace eka2l1 {
         }
 
         // Try to serialize this buffer
-        std::uint8_t *buffer = reinterpret_cast<std::uint8_t*>(ctx->get_arg_ptr(1));
+        std::uint8_t *buffer = reinterpret_cast<std::uint8_t *>(ctx->get_arg_ptr(1));
         std::size_t buffer_max_size = ctx->get_arg_max_size(1);
 
         if (!buffer || !buffer_max_size) {
@@ -391,7 +391,7 @@ namespace eka2l1 {
         }
 
         // TODO(pent0): Include the selection flags in slot 1
-        std::uint8_t *buffer = reinterpret_cast<std::uint8_t*>(ctx->get_arg_ptr(2));
+        std::uint8_t *buffer = reinterpret_cast<std::uint8_t *>(ctx->get_arg_ptr(2));
         std::size_t buffer_max_size = ctx->get_arg_max_size(2);
 
         if (!buffer || !buffer_max_size) {
@@ -430,7 +430,7 @@ namespace eka2l1 {
 
         ctx->write_arg_pkg(0, details.value());
         ctx->set_arg_des_len(2, static_cast<std::uint32_t>(seri.size()));
-        
+
         if (is_overflow) {
             ctx->set_request_status(epoc::error_overflow);
         } else {
@@ -481,7 +481,7 @@ namespace eka2l1 {
             ctx->set_request_status(epoc::error_underflow);
             return;
         }
-        
+
         group->ref_count_--;
         ctx->set_request_status(epoc::error_none);
     }
@@ -507,10 +507,10 @@ namespace eka2l1 {
         // Reserves 4 bytes for count
         common::chunkyseri seri(argptr + 4, argsize - 4, common::SERI_MODE_WRITE);
 
-        std::uint32_t *element_count = reinterpret_cast<std::uint32_t*>(argptr);
+        std::uint32_t *element_count = reinterpret_cast<std::uint32_t *>(argptr);
         *element_count = 0;
 
-        for (auto &comp: comps) {
+        for (auto &comp : comps) {
             // Make a way for break in future
             (*element_count)++;
             epoc::msv::mtm_group *group = server<msv_server>()->reg_.get_group(comp->group_idx_);
@@ -525,7 +525,7 @@ namespace eka2l1 {
             seri.absorb(group->cap_body_);
             seri.absorb(group->cap_avail_);
 
-            std::uint32_t dll_uid = 0x10000079;       ///< Dynamic DLL UID
+            std::uint32_t dll_uid = 0x10000079; ///< Dynamic DLL UID
             seri.absorb(dll_uid);
             seri.absorb(comp->comp_uid_);
             seri.absorb(comp->specific_uid_);

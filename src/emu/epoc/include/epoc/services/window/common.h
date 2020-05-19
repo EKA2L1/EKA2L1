@@ -30,8 +30,8 @@
 #include <unordered_map>
 
 #include <common/e32inc.h>
-#include <e32keys.h>
 #include <drivers/graphics/emu_window.h>
+#include <e32keys.h>
 
 enum {
     cmd_slot = 0,

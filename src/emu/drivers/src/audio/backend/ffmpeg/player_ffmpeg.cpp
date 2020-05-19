@@ -217,8 +217,7 @@ namespace eka2l1::drivers {
     player_ffmpeg::player_ffmpeg(audio_driver *driver)
         : player_shared(driver) {
     }
-    
+
     player_ffmpeg::~player_ffmpeg() {
-        
     }
 }

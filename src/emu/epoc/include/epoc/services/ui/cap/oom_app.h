@@ -132,12 +132,12 @@ namespace eka2l1 {
 
     static const char *OOM_APP_UI_SERVER_NAME = "101fdfae_10207218_AppServer";
 
-    /*! \brief OOM App Server Memebers can receive notification when memory ran out and can't be
-       freed. This is basiclly AknCapServer but loaded with this plugin.
+    /*! \brief OOM App Server Members can receive notification when memory ran out and can't be
+       freed. This is basically AknCapServer but loaded with this plugin.
       
       - Server type: critical.
 
-      - Launching: HLE when not doing a full startup. A full startup should launch this server automaticlly.
+      - Launching: HLE when not doing a full startup. A full startup should launch this server automatically.
     */
     class oom_ui_app_server : public service::typical_server {
         friend class oom_ui_app_session;

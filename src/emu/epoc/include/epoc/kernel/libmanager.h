@@ -96,7 +96,7 @@ namespace eka2l1 {
             bool patch_scripts(const std::string &lib_name, kernel::process *pr, codeseg_ptr seg);
 
             /**
-             * \brief Intialize the library manager. 
+             * \brief Initialize the library manager.
              * 
 			 * \param ver The EPOC version to import HLE functions.
 			*/

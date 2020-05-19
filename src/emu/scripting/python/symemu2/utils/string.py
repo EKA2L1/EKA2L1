@@ -17,17 +17,20 @@
 
 import struct
 
+
 def getStaticConstStringImpl(bytes, sizeOfComp, format):
     length = (struct.unpack('<L', bytes[:4])) & 0xFFFFFF
-    (str, ) = struct.unpack('<{}s'.format(length * sizeOfComp), bytes[4:4 + length * sizeofComp])
+    (str,) = struct.unpack('<{}s'.format(length * sizeOfComp), bytes[4:4 + length * sizeofComp])
     return str.decode(format)
+
 
 def getStaticStringImpl(bytes, sizeofComp, format):
     (length, maxLength) = struct.unpack('<LL', bytes[:8])
     length &= 0xFFFFFF
-    (str, ) = struct.unpack('<{}s'.format(length * sizeofComp), bytes[8:8 + length * sizeofComp])
+    (str,) = struct.unpack('<{}s'.format(length * sizeofComp), bytes[8:8 + length * sizeofComp])
     return (maxLength, str.decode(format))
-    
+
+
 # Get constant UTF-8 descriptor (string) from array of bytes.
 #
 # A constant UTF-8 descriptor has first 4 bytes as length, and the following
@@ -44,6 +47,7 @@ def getStaticStringImpl(bytes, sizeofComp, format):
 #   UTF-8 string on success.
 def getStaticConstUtf8String(bytes):
     return getStaticConstStringImpl(bytes, 1, 'utf-8')
+
 
 # Get constant UTF-16 descriptor (string) from array of bytes.
 #
@@ -62,6 +66,7 @@ def getStaticConstUtf8String(bytes):
 def getStaticConstUcs2String(bytes):
     return getStaticConstStringImpl(bytes, 2, 'utf-16')
 
+
 # Get modifiable UTF-8 descriptor (string) from array of bytes.
 #
 # An UTF-8 descriptor has first 4 bytes as length, next 4 bytes as
@@ -78,7 +83,8 @@ def getStaticConstUcs2String(bytes):
 #   UTF-8 string on success.    
 def getStaticUtf8String(bytes):
     return getStaticStringImpl(bytes, 1, 'utf-8')
-    
+
+
 # Get modifiable UCS2 descriptor (string) from array of bytes.
 #
 # An UCS2 descriptor has first 4 bytes as length, next 4 bytes as
@@ -95,4 +101,3 @@ def getStaticUtf8String(bytes):
 #   UCS2 string on success.    
 def getStaticUcs2String(bytes):
     return getStaticStringImpl(bytes, 2, 'utf-16')
-

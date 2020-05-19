@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/dsp.h>
 #include <drivers/audio/backend/ffmpeg/dsp_ffmpeg.h>
+#include <drivers/audio/dsp.h>
 
 namespace eka2l1::drivers {
     dsp_stream::dsp_stream()

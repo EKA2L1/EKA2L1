@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/etel/modmngr.h>
 #include <epoc/services/etel/line.h>
+#include <epoc/services/etel/modmngr.h>
 #include <epoc/services/etel/phone.h>
 
 #include <common/algorithm.h>
@@ -27,9 +27,8 @@
 
 namespace eka2l1::epoc::etel {
     module_manager::module_manager() {
-        
     }
-    
+
     bool module_manager::load_tsy(io_system *io, const std::string &module_name) {
         const std::string module_lowercased = common::lowercase_string(module_name);
 
@@ -45,7 +44,7 @@ namespace eka2l1::epoc::etel {
         // Give a line first, add it to phone later
         etel_module_entry line_entry;
         line_entry.tsy_name_ = module_name;
-        
+
         epoc::etel_line_info line_info;
         line_info.hook_sts_ = epoc::etel_line_hook_sts_off;
         line_info.sts_ = epoc::etel_line_status_idle;
@@ -65,9 +64,9 @@ namespace eka2l1::epoc::etel {
         const std::u16string phone_name_meme = common::utf8_to_ucs2(module_name) + u"::Phone";
 
         phone_info.phone_name_.assign(nullptr, phone_name_meme);
-        
+
         auto phone_obj = std::make_unique<etel_phone>(phone_info);
-        phone_obj->lines_.push_back(reinterpret_cast<etel_line*>(line_entry.entity_.get()));
+        phone_obj->lines_.push_back(reinterpret_cast<etel_line *>(line_entry.entity_.get()));
 
         phone_entry.entity_ = std::move(phone_obj);
 
@@ -104,7 +103,7 @@ namespace eka2l1::epoc::etel {
     bool module_manager::get_entry_by_name(const std::string &name, etel_module_entry **entry) {
         auto result = std::find_if(entries_.begin(), entries_.end(), [name](etel_module_entry &search_entry) {
             if (search_entry.entity_->type() == etel_entry_phone) {
-                etel_phone &phone = static_cast<etel_phone&>(*search_entry.entity_);
+                etel_phone &phone = static_cast<etel_phone &>(*search_entry.entity_);
                 return common::ucs2_to_utf8(phone.info_.phone_name_.to_std_string(nullptr)) == name;
             }
 

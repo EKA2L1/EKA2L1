@@ -157,7 +157,7 @@ namespace eka2l1 {
         };
 
         install_thread = std::make_unique<std::thread>([&]() {
-            while (true && !install_thread_should_stop) {
+            while (!install_thread_should_stop) {
                 while (auto result = install_list.pop()) {
                     if (!install_thread_should_stop) {
                         get_sys()->install_package(common::utf8_to_ucs2(result.value()), drive_e);
@@ -531,7 +531,7 @@ namespace eka2l1 {
 
             conf->serialize();
         };
-    
+
         if (ImGui::BeginCombo("##Devicescombo", preview_info.c_str())) {
             for (std::size_t i = 0; i < dvcs.size(); i++) {
                 const std::string device_info = dvcs[i].model + " (" + dvcs[i].firmware_code + ")";
@@ -998,7 +998,7 @@ namespace eka2l1 {
 
             std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
                 false);
-    
+
             return;
         }
 
@@ -1034,7 +1034,7 @@ namespace eka2l1 {
                 }
 
                 ImGui::Separator();
-                
+
                 ImGui::TextWrapped("Please specify the ROM file:");
                 ImGui::InputText("##ROMPath", device_wizard_state.current_rom_path.data(),
                     device_wizard_state.current_rom_path.size(), ImGuiInputTextFlags_ReadOnly);
@@ -1187,7 +1187,7 @@ namespace eka2l1 {
                 ImGui::Separator();
 
                 ImGui::MenuItem("Disassembler", nullptr, &should_show_disassembler);
-                
+
                 if (ImGui::BeginMenu("Objects")) {
                     ImGui::MenuItem("Threads", nullptr, &should_show_threads);
                     ImGui::MenuItem("Mutexs", nullptr, &should_show_mutexs);
@@ -1296,7 +1296,7 @@ namespace eka2l1 {
 
                 for (int i = clip_start; i < clip_end; i++) {
                     std::string name = " ";
-                    
+
                     if (registerations[i].mandatory_info.long_caption.get_length() != 0) {
                         name += common::ucs2_to_utf8(registerations[i].mandatory_info.long_caption.to_std_string(nullptr));
                     } else {
@@ -1433,8 +1433,10 @@ namespace eka2l1 {
             scale.y++;
         }
 
-        if (scale.x > 1) scale.x--;
-        if (scale.y > 1) scale.y--;
+        if (scale.x > 1)
+            scale.x--;
+        if (scale.y > 1)
+            scale.y--;
     }
 
     void imgui_debugger::show_screens() {
@@ -1454,7 +1456,7 @@ namespace eka2l1 {
 
             const std::string name = fmt::format("Screen {}", scr->number);
             eka2l1::vec2 size = scr->current_mode().size;
-            
+
             scr->screen_mutex.lock();
             ImVec2 rotated_size(size.x + 15.0f, size.y + 35.0f);
 
@@ -1477,9 +1479,8 @@ namespace eka2l1 {
 
             if (fullscreen_now)
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-            
-            ImGui::Begin(name.c_str(), nullptr, fullscreen_now ? (ImGuiWindowFlags_NoBringToFrontOnFocus |
-                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize) : 0);
+
+            ImGui::Begin(name.c_str(), nullptr, fullscreen_now ? (ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize) : 0);
 
             if (ImGui::IsWindowFocused()) {
                 active_screen = scr->number;
@@ -1487,8 +1488,7 @@ namespace eka2l1 {
 
             ImVec2 winpos = ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin();
 
-            if (fullscreen_now ? ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right) :
-                ImGui::BeginPopupContextItem(nullptr, ImGuiMouseButton_Right)) {
+            if (fullscreen_now ? ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right) : ImGui::BeginPopupContextItem(nullptr, ImGuiMouseButton_Right)) {
                 bool orientation_lock = scr->orientation_lock;
                 if (ImGui::BeginMenu("Orientation lock", false)) {
                     orientation_lock = !orientation_lock;
@@ -1533,8 +1533,7 @@ namespace eka2l1 {
             }
 
             eka2l1::vec2 scale(0, 0);
-            get_nice_scale_by_integer(fullscreen_region, ImVec2(static_cast<float>(size.x),
-                static_cast<float>(size.y)), scale);
+            get_nice_scale_by_integer(fullscreen_region, ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scale);
 
             if (fullscreen_now) {
                 scr->scale = scale;
@@ -1554,10 +1553,10 @@ namespace eka2l1 {
                     winpos.y += (fullscreen_region.y - size.x) / 2;
                 }
             }
-            
+
             scr->absolute_pos.x = static_cast<int>(winpos.x);
             scr->absolute_pos.y = static_cast<int>(winpos.y);
-            
+
             draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos,
                 ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scr->ui_rotation);
 
@@ -1795,11 +1794,11 @@ namespace eka2l1 {
             ImGui::SameLine((ImGui::GetWindowSize().x - 30.0f) / 2);
 
             ImGui::SetNextItemWidth(30.0f);
-            
+
             if (ImGui::Button("OK")) {
                 should_show_empty_device_warn = false;
             }
-            
+
             ImGui::EndPopup();
         }
     }

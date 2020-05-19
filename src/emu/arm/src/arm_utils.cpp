@@ -35,7 +35,7 @@ namespace eka2l1::arm {
             LOG_TRACE("r{}: 0x{:x}", i, uni.cpu_registers[i]);
         }
     }
-    
+
     const char *arm_emulator_type_to_string(const arm_emulator_type type) {
         switch (type) {
         case arm_emulator_type::dynarmic:

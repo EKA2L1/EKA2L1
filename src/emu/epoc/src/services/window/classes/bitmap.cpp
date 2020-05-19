@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/services/fbs/fbs.h>
 #include <epoc/services/window/classes/bitmap.h>
 #include <epoc/services/window/window.h>
-#include <epoc/services/fbs/fbs.h>
 
 #include <epoc/utils/err.h>
 

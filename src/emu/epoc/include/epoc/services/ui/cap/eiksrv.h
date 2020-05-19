@@ -21,7 +21,7 @@
 
 #include <cstdint>
 
-// Forward declration
+// Forward declaration
 namespace eka2l1 {
     class kernel_system;
     class window_server;

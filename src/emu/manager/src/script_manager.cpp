@@ -49,9 +49,8 @@ namespace fs = std::filesystem;
 namespace eka2l1::manager {
     breakpoint_info::breakpoint_info()
         : addr_(0)
-        , flags_(0) 
+        , flags_(0)
         , attached_process_(0) {
-
     }
 
     script_manager::script_manager(system *sys)
@@ -166,7 +165,7 @@ namespace eka2l1::manager {
     void script_manager::write_breakpoint_block(kernel::process *pr, const vaddress target) {
         const vaddress aligned = target & ~1;
 
-        std::uint32_t *data = reinterpret_cast<std::uint32_t*>(pr->get_ptr_on_addr_space(aligned));
+        std::uint32_t *data = reinterpret_cast<std::uint32_t *>(pr->get_ptr_on_addr_space(aligned));
         auto ite = std::find_if(breakpoints[aligned].list_.begin(), breakpoints[aligned].list_.end(),
             [=](const breakpoint_info &info) { return (info.attached_process_ == 0) || (info.attached_process_ == pr->get_uid()); });
 
@@ -175,14 +174,14 @@ namespace eka2l1::manager {
         if (ite == breakpoints[aligned].list_.end() || source_insts.find(pr->get_uid()) != source_insts.end()) {
             return;
         }
-    
+
         source_insts[pr->get_uid()] = data[0];
 
         if (target & 1) {
             // The target destination is thumb
-            *reinterpret_cast<std::uint16_t*>(data) = 0xBE00;
+            *reinterpret_cast<std::uint16_t *>(data) = 0xBE00;
         } else {
-            data[0] = 0xE1200070;       // bkpt #0
+            data[0] = 0xE1200070; // bkpt #0
         }
     }
 
@@ -194,7 +193,7 @@ namespace eka2l1::manager {
             return false;
         }
 
-        std::uint32_t *data = reinterpret_cast<std::uint32_t*>(pr->get_ptr_on_addr_space(target & ~1));
+        std::uint32_t *data = reinterpret_cast<std::uint32_t *>(pr->get_ptr_on_addr_space(target & ~1));
         data[0] = source_value->second;
 
         sources.erase(source_value);
@@ -202,7 +201,7 @@ namespace eka2l1::manager {
     }
 
     void script_manager::write_back_breakpoints(kernel::process *pr) {
-        for (const auto &[addr, info]: breakpoints) {
+        for (const auto &[addr, info] : breakpoints) {
             if (!info.list_.empty()) {
                 write_back_breakpoint(pr, info.list_[0].addr_);
             }
@@ -210,7 +209,7 @@ namespace eka2l1::manager {
     }
 
     void script_manager::write_breakpoint_blocks(kernel::process *pr) {
-        for (const auto &[addr, info]: breakpoints) {
+        for (const auto &[addr, info] : breakpoints) {
             // The address on the info contains information about Thumb/ARM mode
             if (!info.list_.empty())
                 write_breakpoint_block(pr, info.list_[0].addr_);
@@ -246,7 +245,7 @@ namespace eka2l1::manager {
     void script_manager::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
-        for (auto &breakpoint: breakpoint_wait_patch) {
+        for (auto &breakpoint : breakpoint_wait_patch) {
             if ((breakpoint.flags_ & breakpoint_info::FLAG_IS_ORDINAL) && (breakpoint.lib_name_ == lib_name_lower)) {
                 breakpoint.addr_ = exports[breakpoint.addr_ - 1];
 
@@ -256,9 +255,9 @@ namespace eka2l1::manager {
             }
         }
     }
-    
+
     void script_manager::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
-       const std::string lib_name_lower = common::lowercase_string(name);
+        const std::string lib_name_lower = common::lowercase_string(name);
 
         common::erase_elements(breakpoint_wait_patch, [&](breakpoint_info &breakpoint) {
             if (((process_uid == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
@@ -337,7 +336,7 @@ namespace eka2l1::manager {
         breakpoint_info_list &list = breakpoints[addr & ~1].list_;
 
         for (const auto &info : list) {
-            if ((info.attached_process_ !=0) && (info.attached_process_ != process_uid)) {
+            if ((info.attached_process_ != 0) && (info.attached_process_ != process_uid)) {
                 continue;
             }
 

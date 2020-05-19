@@ -256,7 +256,7 @@ namespace eka2l1 {
         const std::uint8_t hierarchy_id = static_cast<std::uint8_t>(*ctx.get_arg<int>(0));
 
         if (mngr->lookup_hierarchy(hierarchy_id)) {
-            // Return immdiately if there is already a hierarchy.
+            // Return immediately if there is already a hierarchy.
             // Symbian doesn't set the request status to KErrAlreadyExists
             ctx.set_request_status(epoc::error_none);
             return;
@@ -405,7 +405,7 @@ namespace eka2l1 {
      * 
      * If the traverse direction is default, based on the policy, if
      * the new state is bigger than the current state in the transition domain,
-     * the positive direction specified in the policy will be choosed, else
+     * the positive direction specified in the policy will be chose, else
      * if will be the negative one.
     */
     void hierarchy::set_state(const std::int32_t next_state, const TDmTraverseDirection new_traverse_dir) {

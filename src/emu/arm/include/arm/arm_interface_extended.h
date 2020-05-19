@@ -39,7 +39,7 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::arm {
-    class arm_interface_extended: public arm_interface {
+    class arm_interface_extended : public arm_interface {
     protected:
         gdbstub *stub_;
         manager_system *mngr_;

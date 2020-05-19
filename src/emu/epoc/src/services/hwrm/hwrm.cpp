@@ -20,8 +20,8 @@
 #include <epoc/epoc.h>
 #include <epoc/services/hwrm/hwrm.h>
 #include <epoc/services/hwrm/light/light.h>
-#include <epoc/services/hwrm/vibration/vibration.h>
 #include <epoc/services/hwrm/op.h>
+#include <epoc/services/hwrm/vibration/vibration.h>
 #include <epoc/utils/err.h>
 
 #include <manager/manager.h>

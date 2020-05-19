@@ -21,8 +21,8 @@
 
 #include <epoc/services/framework.h>
 #include <epoc/services/hwrm/light/light_data.h>
-#include <epoc/services/hwrm/vibration/vibration_data.h>
 #include <epoc/services/hwrm/resource.h>
+#include <epoc/services/hwrm/vibration/vibration_data.h>
 
 #include <memory>
 

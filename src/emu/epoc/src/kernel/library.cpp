@@ -52,7 +52,7 @@ namespace eka2l1 {
 
                 codeseg->attach(pr);
                 codeseg->queries_call_list(pr, call_list);
-                
+
                 codeseg->unmark();
 
                 return call_list;
@@ -62,7 +62,7 @@ namespace eka2l1 {
         }
 
         void library::detach(kernel::process *pr) {
-            codeseg->detatch(pr);
+            codeseg->detach(pr);
         }
 
         bool library::attached() {

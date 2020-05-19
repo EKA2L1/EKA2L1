@@ -33,7 +33,7 @@
 namespace eka2l1 {
     using etel_subsession_instance = std::unique_ptr<etel_subsession>;
 
-    struct etel_session: public service::typical_session {
+    struct etel_session : public service::typical_session {
         epoc::etel::module_manager mngr_;
         std::vector<etel_subsession_instance> subsessions_;
 
@@ -56,7 +56,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
     };
 
-    class etel_server: public service::typical_server {
+    class etel_server : public service::typical_server {
     public:
         explicit etel_server(eka2l1::system *sys);
         void connect(service::ipc_context &ctx) override;

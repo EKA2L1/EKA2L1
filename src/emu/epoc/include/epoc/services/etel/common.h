@@ -25,14 +25,14 @@
 #include <memory>
 
 namespace eka2l1 {
-    namespace epoc {        
+    namespace epoc {
         enum etel_entry_type {
             etel_entry_call = 0,
             etel_entry_phone = 1,
             etel_entry_line = 2
         };
     }
-    
+
     struct etel_entity {
     public:
         virtual ~etel_entity() = default;
@@ -65,7 +65,7 @@ namespace eka2l1::epoc {
         etel_mobile_line_cancel_notify_status_change = 20524
     };
 
-    enum etel_network_type: std::uint32_t {
+    enum etel_network_type : std::uint32_t {
         etel_network_type_wired_analog = 0,
         etel_network_type_wired_digital = 1,
         etel_network_type_mobile_analog = 2,
@@ -146,7 +146,7 @@ namespace eka2l1::epoc {
         std::uint32_t caps_;
         epoc::name name_;
     };
-    
+
     struct etel_module_entry {
         std::string tsy_name_;
         std::unique_ptr<etel_entity> entity_;

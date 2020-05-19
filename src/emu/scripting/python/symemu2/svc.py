@@ -18,6 +18,7 @@
 
 from enum import Enum
 
+
 class Epoc9Svc(Enum):
     WaitForAnyRequest = 0x00800000
     Heap = 0x00800001
@@ -47,7 +48,7 @@ class Epoc9Svc(Enum):
     ThreadSetFlags = 0x2F
     HandleName = 0x3C
     MessageComplete = 0x42
-    SessionSendSync = 0x4D 
+    SessionSendSync = 0x4D
     DllTls = 0x4E
     HalFunction = 0x4F
     ProcessCmdLineLength = 0x52

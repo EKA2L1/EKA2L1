@@ -26,8 +26,8 @@
 #include <arm/arm_interface.h>
 
 #include <common/buffer.h>
-#include <common/configure.h>
 #include <common/chunkyseri.h>
+#include <common/configure.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/log.h>
@@ -122,7 +122,7 @@ namespace eka2l1 {
         libraries.clear();
         codesegs.clear();
         message_queues.clear();
-        
+
         btrace_inst->close_trace_session();
     }
 
@@ -248,7 +248,7 @@ namespace eka2l1 {
             heap_min = imgs.first->header.heap_size_min;
             heap_max = imgs.first->header.heap_size_max;
 
-            pr->puid = imgs.first->header.uid3; 
+            pr->puid = imgs.first->header.uid3;
             cs = libmngr->load_as_e32img(*eimg, &(*pr), path);
         }
 
@@ -337,11 +337,11 @@ namespace eka2l1 {
         (msgs.begin() + msg->id)->reset();
     }
 
-    property_ptr kernel_system::get_prop(int cagetory, int key) {
+    property_ptr kernel_system::get_prop(int category, int key) {
         auto prop_res = std::find_if(props.begin(), props.end(),
             [=](const auto &prop_obj) {
                 property_ptr prop = reinterpret_cast<property_ptr>(prop_obj.get());
-                if (prop->first == cagetory && prop->second == key) {
+                if (prop->first == category && prop->second == key) {
                     return true;
                 }
 

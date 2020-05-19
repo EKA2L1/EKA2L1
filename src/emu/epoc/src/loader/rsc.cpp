@@ -57,16 +57,16 @@ namespace eka2l1::loader {
             - 16 Size = 1: Flags 
               + 0x80: third uid = offset
               + 0x40: RSS signature is generated for first resource.
-              + 0x20: First resource is a bit array containings information telling us if a specific resource
+              + 0x20: First resource is a bit array containing information telling us if a specific resource
                       has Unicode compressed in its data or not.
             - 17 Size = 2: size of largest resource when decompress
             - 19: 
                * Compressed: size = 2: resource data offset
-               * Potientially contains Unicode compressed: Unicode bit array
+               * Potentially contains Unicode compressed: Unicode bit array
             
             - 21:
               If the first resource not containing the bits array that indicates the appearance of Unicode compressed data in other resource,
-                the next *number_of_resource* butes will contain a bit array.
+                the next *number_of_resource* buts will contain a bit array.
               + Last two bytes of the file will tell us the total bit in resource data section (they resides in index table)
               + Use that to calculate the beginning of index section. Each entry of index section will be 2 bytes, so
                 calculate the number of resources in the file should be easy, by (subtracting EOF offset and the resource index begin offset) div 2
@@ -82,7 +82,7 @@ namespace eka2l1::loader {
 
               + After getting the byte, get the bit by creating a simple mask: shift 1 left by (resource index % 8) bits
               + 1 shl 2 = 0b00000100
-                11101010 & 00000100 = 0 => Not contaning unicode
+                11101010 & 00000100 = 0 => Not containing unicode
               + Sure these engineers who design this format are genius well ;)
 
       - Section layout: 
@@ -517,7 +517,7 @@ namespace eka2l1::loader {
         : flags(0) {
         read_header_and_resource_index(buf);
     }
-    
+
     void absorb_resource_string(common::chunkyseri &seri, std::u16string &str) {
         std::uint8_t length = static_cast<std::uint8_t>(str.length());
         seri.absorb(length);
@@ -531,6 +531,6 @@ namespace eka2l1::loader {
             str.resize(length);
         }
 
-        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&str[0]), length * sizeof(char16_t));
+        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), length * sizeof(char16_t));
     }
 }

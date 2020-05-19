@@ -94,7 +94,7 @@ namespace eka2l1 {
         }
 
         file *the_file = reinterpret_cast<file *>(node->vfs_node.get());
-        epoc::time last_modified { the_file->last_modify_since_1ad() };
+        epoc::time last_modified{ the_file->last_modify_since_1ad() };
 
         ctx->write_arg_pkg<epoc::time>(0, last_modified);
         ctx->set_request_status(epoc::error_none);
@@ -497,8 +497,7 @@ namespace eka2l1 {
 
         // Don't open file if it doesn't exist
         if (!ctx->sys->get_io_system()->exist(*name_res)) {
-            LOG_TRACE("IO component not exists: {} {}", common::ucs2_to_utf8(*name_res)
-                , ctx->msg->function);
+            LOG_TRACE("IO component not exists: {} {}", common::ucs2_to_utf8(*name_res), ctx->msg->function);
 
             ctx->set_request_status(epoc::error_not_found);
             return;
@@ -548,7 +547,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Handle opended: {}", handle);
+        LOG_TRACE("Handle opened: {}", handle);
 
         ctx->write_arg_pkg<int>(3, handle);
 
@@ -610,7 +609,7 @@ namespace eka2l1 {
 
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
         io_system *io = ctx->sys->get_io_system();
-        
+
         std::optional<entry_info> info = io->get_entry_info(f->file_name());
         assert(info);
 
@@ -711,7 +710,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Handle opended: {}", handle);
+        LOG_TRACE("Handle opened: {}", handle);
 
         ctx->write_arg_pkg<int>(3, handle);
         ctx->set_request_status(epoc::error_none);

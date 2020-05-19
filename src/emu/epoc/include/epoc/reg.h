@@ -18,7 +18,7 @@ namespace eka2l1::epoc {
      * @param mngr Reference to library manager.
      **/
     void register_epocv94(hle::lib_manager &mngr);
-    
+
     /**
      * @brief Register Symbian S^3 supervisor calls.
      * @param mngr Reference to library manager.

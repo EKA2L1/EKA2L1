@@ -125,7 +125,7 @@ namespace eka2l1 {
         std::uint64_t hash = 0;
         static constexpr std::uint8_t HASH_MULT = 131;
 
-        for (const char c: style) {
+        for (const char c : style) {
             hash *= HASH_MULT;
             hash += c;
         }

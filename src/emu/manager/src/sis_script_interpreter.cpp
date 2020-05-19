@@ -212,7 +212,7 @@ namespace eka2l1 {
                 switch (expr.int_val) {
                 // Language variable. We choosen upper
                 case 0x1000: {
-                    return static_cast<int>(current_controller->choosen_lang);
+                    return static_cast<int>(current_controller->chosen_lang);
                 }
 
                 default: {
@@ -378,9 +378,9 @@ namespace eka2l1 {
                     langs.push_back(static_cast<int>(reinterpret_cast<sis_language *>(lang_field.get())->language));
                 }
 
-                controller->choosen_lang = static_cast<sis_lang>(choose_lang(&langs[0], static_cast<int>(langs.size())));
+                controller->chosen_lang = static_cast<sis_lang>(choose_lang(&langs[0], static_cast<int>(langs.size())));
 
-                if (controller->choosen_lang == static_cast<sis_lang>(-1)) {
+                if (controller->chosen_lang == static_cast<sis_lang>(-1)) {
                     std::string error_string = fmt::format("Abort choosing language, leading to installation canceled for controller 0x{:X}!",
                         controller->info.uid.uid);
 
@@ -393,7 +393,7 @@ namespace eka2l1 {
                     return false;
                 }
             } else {
-                controller->choosen_lang = reinterpret_cast<sis_language *>(controller->langs.langs.fields[0].get())->language;
+                controller->chosen_lang = reinterpret_cast<sis_language *>(controller->langs.langs.fields[0].get())->language;
             }
 
             // TODO: Choose options
