@@ -125,8 +125,10 @@ namespace eka2l1::epoc::adapter {
         int ascent = 0;
         int descent = 0;
         int gaps = 0;
+        int x0, y0, x1, y1;
 
         stbtt_GetFontVMetrics(info, &ascent, &descent, &gaps);
+        stbtt_GetFontBoundingBox(info, &x0, &y0, &x1, &y1);
 
         // TODO: Compensate for aspect ratio. We currently don't have screen ratio, since
         //  no physical screen size is provided
@@ -134,14 +136,14 @@ namespace eka2l1::epoc::adapter {
         metrics.descent = descent;
         metrics.max_height = ascent + descent;
         metrics.design_height = ascent + descent;
-        metrics.max_width = 0;
-        metrics.max_depth = 0;
+        metrics.max_width = x1 - x0;
+        metrics.max_depth = descent;
         metrics.baseline_correction = 0;
 
         return true;
     }
 
-    bool stb_font_file_adapter::is_glyph_exist(const std::size_t idx, const std::uint32_t code) {
+    bool stb_font_file_adapter::does_glyph_exist(const size_t idx, const uint32_t code) {
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
         if (!info) {
