@@ -41,9 +41,13 @@ namespace eka2l1::mem::flexible {
     }
     
     void *mmu_flexible::get_host_pointer(const asid id, const vm_address addr) {
-        if (id == 0) {
+        if ((id == 0) || (addr >= (mem_map_old_ ? rom_eka1 : rom))) {
             // Directory của kernel
             return kern_addr_space_->dir_->get_pointer(addr);
+        }
+
+        if (id == -1) {
+            return cur_dir_->get_pointer(addr);
         }
 
         // Tìm page directory trong quản lý - Find page directory in manager
