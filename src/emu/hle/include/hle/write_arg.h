@@ -44,19 +44,19 @@ namespace eka2l1 {
         }
 
         template <typename T>
-        void write_to_stack(arm::cpu &cpu, const arg_layout &layout, memory_system *mem, const T &data) {
+        void write_to_stack(arm::cpu &cpu, const arg_layout &layout, kernel::process *pr, const T &data) {
             const address sp = cpu->get_stack_top();
             const address stack_arg_offset = sp - sizeof(T);
 
-            memcpy(ptr<void>(stack_arg_offset).get(mem), &data, sizeof(T));
+            memcpy(ptr<void>(stack_arg_offset).get(pr), &data, sizeof(T));
             cpu->set_sp(stack_arg_offset);
         }
 
         template <typename T>
-        void write(arm::cpu &cpu, const arg_layout &layout, memory_system *mem, const T &val) {
+        void write(arm::cpu &cpu, const arg_layout &layout, kernel::process *pr, const T &val) {
             switch (layout.loc) {
             case arg_where::stack:
-                write_to_stack<T>(cpu, layout, mem, val);
+                write_to_stack<T>(cpu, layout, pr, val);
                 break;
 
             case arg_where::gpr:
@@ -70,8 +70,8 @@ namespace eka2l1 {
         }
 
         template <typename arg, size_t idx, typename... args>
-        void write(arm::cpu &cpu, const args_layout<args...> &margs, memory_system *mem, arg val) {
-            write<arg>(cpu, margs[idx], mem, bridge_type<arg>::host_to_arm(val, mem));
+        void write(arm::cpu &cpu, const args_layout<args...> &margs, kernel::process *pr, arg val) {
+            write<arg>(cpu, margs[idx], pr, bridge_type<arg>::host_to_arm(val, pr));
         }
     }
 }

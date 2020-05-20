@@ -32,6 +32,7 @@
 // Normally we can just calls method blindly with forward declaring, considering how template is done
 // But it keeps warnings about what we are doing, so include this. Full definition of system.
 #include <epoc/epoc.h>
+#include <epoc/kernel.h>
 
 #include <cstdint>
 #include <functional>
@@ -44,7 +45,8 @@ namespace eka2l1 {
         /*! \brief Call a HLE function without return value. */
         template <typename ret, typename... args, size_t... indices>
         std::enable_if_t<!std::is_same_v<ret, void>, void> call(ret (*export_fn)(system *, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::cpu &cpu, system *symsys) {
-            const ret result = (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, symsys->get_memory_system())...);
+            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
+            const ret result = (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, crr_process)...);
 
             write_return_value(cpu, result);
         }
@@ -52,7 +54,8 @@ namespace eka2l1 {
         /*! \brief Call a HLE function with return value. */
         template <typename... args, size_t... indices>
         void call(void (*export_fn)(system *, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::cpu &cpu, system *symsys) {
-            (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, symsys->get_memory_system())...);
+            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
+            (*export_fn)(symsys, read<args, indices, args...>(cpu, layout, crr_process)...);
         }
 
         /*! \brief Bridge a HLE function to guest (ARM - Symbian). */
@@ -69,12 +72,13 @@ namespace eka2l1 {
         /*! \brief Write function arguments to guest. */
         template <typename... args, size_t... indices>
         void write_args(arm::cpu &cpu, const std::array<arg_layout, sizeof...(indices)> &layouts, std::index_sequence<indices...>, memory_system *mem, args... lle_args) {
-            ((void)write<args, indices, args...>(cpu, layouts, mem, std::forward<args>(lle_args)), ...);
+            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
+            ((void)write<args, indices, args...>(cpu, layouts, crr_process, std::forward<args>(lle_args)), ...);
         }
 
         /*! \brief Call a LLE function with return value. */
         template <typename ret, typename... args>
-        ret call_lle(hle::lib_manager *mngr, arm::cpu &mcpu, disasm *asmdis, memory_system *mem, const address addr, args... lle_args) {
+        ret call_lle(hle::lib_manager *mngr, arm::cpu &mcpu, disasm *asmdis, kernel::process *pr, const address addr, args... lle_args) {
             constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
 
             arm::arm_interface::thread_context crr_caller_context;
@@ -82,7 +86,7 @@ namespace eka2l1 {
 
             using indices = std::index_sequence_for<args...>;
 
-            write_args<args...>(mcpu, layouts, indices(), mem, lle_args...);
+            write_args<args...>(mcpu, layouts, indices(), pr, lle_args...);
 
             mcpu->set_lr(static_cast<std::uint32_t>(1ULL << 63));
             mcpu->set_pc(addr);
@@ -99,7 +103,7 @@ namespace eka2l1 {
 
         /*! \brief Call LLE function without return value */
         template <typename... args>
-        void call_lle_void(hle::lib_manager *mngr, arm::cpu &mcpu, disasm *asmdis, memory_system *mem, const address addr, args... lle_args) {
+        void call_lle_void(hle::lib_manager *mngr, arm::cpu &mcpu, disasm *asmdis, kernel::process *pr, const address addr, args... lle_args) {
             constexpr args_layout<args...> layouts = lay_out<typename bridge_type<args>::arm_type...>();
 
             arm::arm_interface::thread_context crr_caller_context;
@@ -107,7 +111,7 @@ namespace eka2l1 {
 
             using indices = std::index_sequence_for<args...>;
 
-            write_args<args...>(mcpu, layouts, indices(), mem, lle_args...);
+            write_args<args...>(mcpu, layouts, indices(), pr, lle_args...);
 
             mcpu->set_lr(static_cast<std::uint32_t>(1ULL << 63));
             mcpu->set_pc(addr);
@@ -121,24 +125,24 @@ namespace eka2l1 {
 
         template <typename... args>
         void call_lle_void(eka2l1::system *sys, const address addr, args... lle_args) {
+            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
             hle::lib_manager *mngr = sys->get_lib_manager();
-            memory_system *mem = sys->get_memory_system();
             disasm *asmdis = sys->get_disasm();
 
             arm::cpu &cpu = sys->get_cpu();
 
-            call_lle_void<args...>(mngr, cpu, asmdis, mem, addr, lle_args...);
+            call_lle_void<args...>(mngr, cpu, asmdis, crr_process, addr, lle_args...);
         }
 
         template <typename ret, typename... args>
         ret call_lle(eka2l1::system *sys, const address addr, args... lle_args) {
+            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
             hle::lib_manager *mngr = sys->get_lib_manager();
-            memory_system *mem = sys->get_memory_system();
             disasm *asmdis = sys->get_disasm();
 
             arm::cpu &cpu = sys->get_cpu();
 
-            return call_lle<ret, args...>(mngr, cpu, asmdis, mem, addr, lle_args...);
+            return call_lle<ret, args...>(mngr, cpu, asmdis, crr_process, addr, lle_args...);
         }
 
 #define BRIDGE_REGISTER(func_sid, func)                                               \

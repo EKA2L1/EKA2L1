@@ -27,9 +27,10 @@
 
 namespace eka2l1 {
     namespace hle {
-        /*! \brief Reading an argument from the registers. 
-		 * \param cpu The CPU.
-		 * \param arg The layout of that argument.
+        /**
+         * @brief Read an argument from the registers. 
+		 * @param cpu The CPU.
+		 * @param arg The layout of that argument.
 		*/
         template <typename T>
         std::enable_if_t<sizeof(T) <= 4, T> read_from_gpr(arm::cpu &cpu, const arg_layout &arg) {
@@ -37,9 +38,10 @@ namespace eka2l1 {
             return *reinterpret_cast<const T *>(&reg);
         }
 
-        /*! \brief Reading an argument from the registers. 
-		 * \param cpu The CPU.
-		 * \param arg The layout of that argument.
+        /** 
+         * @brief Read an argument from the registers. 
+		 * @param cpu The CPU.
+		 * @param arg The layout of that argument.
 		*/
         template <typename T>
         std::enable_if_t<sizeof(T) == 8, T> read_from_gpr(arm::cpu &cpu, const arg_layout &arg) {
@@ -51,9 +53,10 @@ namespace eka2l1 {
             return *reinterpret_cast<const T *>(&all);
         }
 
-        /*! \brief Reading an argument from the float registers. 
-		 * \param cpu The CPU.
-		 * \param arg The layout of that argument.
+        /**
+         * @brief Read an argument from the float registers. 
+		 * @param cpu The CPU.
+		 * @param arg The layout of that argument.
 		*/
         template <typename T>
         T read_from_fpr(arm::cpu &cpu, const arg_layout &arg) {
@@ -61,29 +64,32 @@ namespace eka2l1 {
             return T{};
         }
 
-        /*! \brief Reading an argument from stack. 
-		 * \param cpu The CPU.
-		 * \param arg The layout of that argument.
-		 * \param mem The memory system.
+        /**
+         * @brief Read an argument from stack. 
+		 * @param cpu The CPU.
+		 * @param arg The layout of that argument.
+		 * @param pr The process that does this call.
 		*/
         template <typename T>
-        T read_from_stack(arm::cpu &cpu, const arg_layout &layout, memory_system *mem) {
+        T read_from_stack(arm::cpu &cpu, const arg_layout &layout, kernel::process *pr) {
             const address sp = cpu->get_stack_top();
             const address stack_arg_offset = sp + static_cast<address>(layout.offset);
 
-            return *ptr<T>(stack_arg_offset).get(mem);
+            return *ptr<T>(stack_arg_offset).get(pr);
         }
 
-        /*! \brief Reading an argument. 
-		 * \param cpu The CPU.
-		 * \param arg The layout of that argument.
-		 * \param mem The memory system.
+        /**
+         * @brief Read an argument.
+         *  
+		 * @param cpu The CPU.
+		 * @param arg The layout of that argument.
+		 * @param pr The process that does this call.
 		*/
         template <typename T>
-        T read(arm::cpu &cpu, const arg_layout &layout, memory_system *mem) {
+        T read(arm::cpu &cpu, const arg_layout &layout, kernel::process *pr) {
             switch (layout.loc) {
             case arg_where::stack:
-                return read_from_stack<T>(cpu, layout, mem);
+                return read_from_stack<T>(cpu, layout, pr);
 
             case arg_where::gpr:
                 return read_from_gpr<T>(cpu, layout);
@@ -95,17 +101,18 @@ namespace eka2l1 {
             return T{};
         }
 
-        /*! \brief Reading an argument. 
-		 * \param cpu The CPU.
-		 * \param arg The layout of that argument.
-		 * \param mem The memory system.
+        /**
+         * @brief Read an argument. 
+		 * @param cpu The CPU.
+		 * @param arg The layout of that argument.
+		 * @param pr The process that does this call.
 		*/
         template <typename arg, size_t idx, typename... args>
-        arg read(arm::cpu &cpu, const args_layout<args...> &margs, memory_system *mem) {
+        arg read(arm::cpu &cpu, const args_layout<args...> &margs, kernel::process *pr) {
             using arm_type = typename bridge_type<arg>::arm_type;
 
-            const arm_type bridged = read<arm_type>(cpu, margs[idx], mem);
-            return bridge_type<arg>::arm_to_host(bridged, mem);
+            const arm_type bridged = read<arm_type>(cpu, margs[idx], pr);
+            return bridge_type<arg>::arm_to_host(bridged, pr);
         }
     }
 }

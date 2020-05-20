@@ -23,18 +23,20 @@
 #include <epoc/ptr.h>
 
 namespace eka2l1 {
-    class memory_system;
+    namespace kernel {
+        class process;
+    }
 
     namespace hle {
         template <typename host_type>
         struct bridge_type {
             typedef host_type arm_type;
 
-            static host_type arm_to_host(const arm_type &t, memory_system *mem) {
+            static host_type arm_to_host(const arm_type &t, kernel::process *pr) {
                 return t;
             }
 
-            static arm_type host_to_arm(const host_type &t, memory_system *mem) {
+            static arm_type host_to_arm(const host_type &t, kernel::process *pr) {
                 return t;
             }
         };
@@ -43,8 +45,8 @@ namespace eka2l1 {
         struct bridge_type<pointee *> {
             typedef ptr<pointee> arm_type;
 
-            static pointee *arm_to_host(const arm_type &t, memory_system *mem) {
-                return t.get(mem);
+            static pointee *arm_to_host(const arm_type &t, kernel::process *pr) {
+                return t.get(pr);
             }
         };
     }
