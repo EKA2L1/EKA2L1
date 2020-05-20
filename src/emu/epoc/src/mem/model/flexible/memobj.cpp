@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <epoc/mem/model/flexible/addrspace.h>
 #include <epoc/mem/model/flexible/memobj.h>
 #include <epoc/mem/model/flexible/mapping.h>
 #include <epoc/mem/mmu.h>
@@ -54,9 +55,12 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
+        const std::uint32_t start_offset = page_offset << mmu_->page_size_bits_;
+        const std::uint32_t size_to_commit = static_cast<std::uint32_t>(total_pages << mmu_->page_size_bits_);
+
         if (!external_) {
-            const bool alloc_result = common::commit(reinterpret_cast<std::uint8_t*>(data_) + (page_offset << mmu_->page_size_bits_),
-                total_pages << mmu_->page_size_bits_, perm);
+            const bool alloc_result = common::commit(reinterpret_cast<std::uint8_t*>(data_) + start_offset,
+                size_to_commit, perm);
 
             if (!alloc_result) {
                 return false;
@@ -68,6 +72,12 @@ namespace eka2l1::mem::flexible {
             if (!mapping->map(this, page_offset, total_pages, perm)) {
                 LOG_WARN("Unable to map committed memory to a mapping!");
             }
+
+            if (mapping->owner_->id() == mmu_->current_addr_space()) {
+                // Map it to CPU right away
+                mmu_->map_to_cpu(mapping->base_ + start_offset, size_to_commit, reinterpret_cast<std::uint8_t*>(data_) +
+                    start_offset, perm);
+            }
         }
 
         return true;
@@ -78,9 +88,12 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
+        const std::uint32_t start_offset = page_offset << mmu_->page_size_bits_;
+        const std::uint32_t size_to_decommit = static_cast<std::uint32_t>(total_pages << mmu_->page_size_bits_);
+
         if (!external_) {
-            const bool deresult = common::decommit(reinterpret_cast<std::uint8_t*>(data_) + (page_offset << mmu_->page_size_bits_),
-                total_pages << mmu_->page_size_bits_);
+            const bool deresult = common::decommit(reinterpret_cast<std::uint8_t*>(data_) + start_offset,
+                size_to_decommit);
 
             if (!deresult) {
                 return false;
@@ -91,6 +104,11 @@ namespace eka2l1::mem::flexible {
         for (auto &mapping: mappings_) {
             if (!mapping->unmap(page_offset, total_pages)) {
                 LOG_WARN("Unable to unmap decommitted memory from a mapping!");
+            }
+            
+            if (mapping->owner_->id() == mmu_->current_addr_space()) {
+                // Unmap from to CPU right away
+                mmu_->unmap_from_cpu(mapping->base_ + start_offset, size_to_decommit);
             }
         }
 

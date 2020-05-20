@@ -72,20 +72,24 @@ namespace eka2l1::mem::flexible {
         
         mmu_base *mmu = owner_->mmu_;
 
-        vm_address start_addr = base_ + (index << mmu->page_size_bits_);
+        const std::uint32_t start_offset = + (index << mmu->page_size_bits_);
+
+        vm_address start_addr = base_ + start_offset;
         const vm_address end_addr = start_addr + static_cast<vm_address>(count << mmu->page_size_bits_);
 
         const std::size_t page_size = mmu->page_size();
-        std::uint8_t *starting_point_host = reinterpret_cast<std::uint8_t*>(obj->ptr());
+        std::uint8_t *starting_point_host = reinterpret_cast<std::uint8_t*>(obj->ptr()) + start_offset;
+
+        page_table *faulty = nullptr;
 
         while (start_addr < end_addr) {
-            const std::uint32_t ptoff = start_addr >> mmu->chunk_shift_;
+            const std::uint32_t ptoff = start_addr >> mmu->page_table_index_shift_;
             
             std::uint32_t next_end_addr = ((ptoff + 1) << mmu->chunk_shift_);
             next_end_addr = std::min<std::uint32_t>(next_end_addr, end_addr);
 
-            std::uint32_t start_page_index = (start_addr >> mmu->page_index_shift_) & mmu->page_index_mask_;
-            const std::uint32_t end_page_index = (next_end_addr >> mmu->page_index_shift_) & mmu->page_index_mask_;
+            std::uint32_t start_page_index = (start_addr >> mmu->page_index_shift_);
+            const std::uint32_t end_page_index = (next_end_addr >> mmu->page_index_shift_);
 
             // Try to get the page table from daddy
             page_table *tbl = owner_->dir_->get_page_table(start_addr);
@@ -93,11 +97,12 @@ namespace eka2l1::mem::flexible {
             if (!tbl) {
                 // Ask the MMU to create a new page table and assign it
                 tbl = mmu->create_new_page_table();
+                tbl->idx_ = ptoff;
                 owner_->dir_->set_page_table(ptoff, tbl);
             }
 
             while (start_page_index < end_page_index) {
-                page_info *info = tbl->get_page_info(start_page_index);
+                page_info *info = tbl->get_page_info(start_page_index & mmu->page_index_mask_);
                 if (info) {
                     info->host_addr = starting_point_host;
                     info->perm = permissions;

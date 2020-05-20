@@ -93,13 +93,6 @@ namespace eka2l1::mem::flexible {
             page_bma_->force_fill(dropping_place, total_page_to_commit);
         }
 
-        if (!owner_) {
-            // Since this is a kernel chunk, need to map it right away to CPU
-            const vm_address offset_dropping = dropping_place << mmu_->page_size_bits_;
-            mmu_->map_to_cpu(fixed_mapping_->base_ + offset_dropping, total_page_to_commit << mmu_->page_size_bits_,
-                reinterpret_cast<std::uint8_t*>(mem_obj_->ptr()) + offset_dropping, permission_);
-        }
-
         return total_page_to_commit;
     }
 
@@ -116,12 +109,6 @@ namespace eka2l1::mem::flexible {
         // TODO: This does not seems safe...
         if (page_bma_) {
             page_bma_->free(dropping_place, static_cast<int>(total_page_to_decommit));
-        }
-        
-        if (!owner_) {
-            // Since this is a kernel chunk, need to unao it right away from CPU
-            const vm_address offset_dropping = dropping_place << mmu_->page_size_bits_;
-            mmu_->unmap_from_cpu(fixed_mapping_->base_ + offset_dropping, total_page_to_decommit << mmu_->page_size_bits_);
         }
 
         committed_ -= static_cast<std::uint32_t>(total_page_to_decommit << mmu_->page_size_bits_);
