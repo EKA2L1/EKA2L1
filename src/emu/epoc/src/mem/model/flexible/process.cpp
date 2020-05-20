@@ -29,6 +29,7 @@ namespace eka2l1::mem::flexible {
 
     flexible_mem_model_process::flexible_mem_model_process(mmu_base *mmu)
         : mem_model_process(mmu) {
+        addr_space_ = std::make_unique<address_space>(reinterpret_cast<mmu_flexible*>(mmu));
     }
 
     int flexible_mem_model_process::create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) {
@@ -62,6 +63,7 @@ namespace eka2l1::mem::flexible {
         }
 
         // Pretty much success.
+        chunk = reinterpret_cast<mem_model_chunk*>(new_chunk_flexible);
         return 0;
     }
 
@@ -103,11 +105,11 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
-        // Ok nice nice nice. Add this to list of attachment
-        attachs_.push_back(std::move(attach_info));
-
         // We also want to add this to memory object's list of mappings
         fl_chunk->mem_obj_->attach_mapping(attach_info.map_.get());
+
+        // Ok nice nice nice. Add this to list of attachment
+        attachs_.push_back(std::move(attach_info));
 
         return true;
     }
@@ -132,7 +134,8 @@ namespace eka2l1::mem::flexible {
     }
 
     static bool should_do_cpu_manipulate(const std::uint32_t flags) {
-        return (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL);
+        return (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL)
+            || (flags & MEM_MODEL_CHUNK_REGION_ROM_BSS) || (flags & MEM_MODEL_CHUNK_REGION_USER_CODE);
     }
 
     void flexible_mem_model_process::unmap_from_cpu() {
