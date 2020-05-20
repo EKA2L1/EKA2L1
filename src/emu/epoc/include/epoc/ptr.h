@@ -56,7 +56,7 @@ namespace eka2l1 {
             return mem_address;
         }
 
-        T *get(kernel::process *pr) {
+        T *get(kernel::process *pr) const {
             return reinterpret_cast<T *>(get_raw_pointer(pr, mem_address));
         }
 
