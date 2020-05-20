@@ -27,18 +27,13 @@ namespace eka2l1::mem::flexible {
 
     page_directory *page_directory_manager::allocate(mmu_base *mmu) {
         // Search for empty, or unoccupied directory (freed)
-        bool suit_found = false;
-
         for (std::size_t i = 0; i < dirs_.size(); i++) {
             if (!dirs_[i]) {
                 dirs_[i] = std::make_unique<page_directory>(mmu->page_size(), static_cast<asid>(i));
-                suit_found = true;
-            } else if (!dirs_[i]->occupied_) {
-                dirs_[i]->occupied_ = true;
-                suit_found = true;
             }
 
-            if (suit_found) {
+            if (!dirs_[i]->occupied_) {
+                dirs_[i]->occupied_ = true;
                 return dirs_[i].get();
             }
         }
