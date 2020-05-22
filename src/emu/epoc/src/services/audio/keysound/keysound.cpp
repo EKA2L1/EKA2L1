@@ -280,6 +280,14 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    void keysound_session::bring_to_foreground(eka2l1::service::ipc_context *ctx) {
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void keysound_session::lock_context(eka2l1::service::ipc_context *ctx) {
+        ctx->set_request_status(epoc::error_none);
+    }
+
     void keysound_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::keysound::opcode_init: {
@@ -304,6 +312,16 @@ namespace eka2l1 {
 
         case epoc::keysound::opcode_play_sid: {
             play_sid(ctx);
+            break;
+        }
+
+        case epoc::keysound::opcode_bring_to_foreground: {
+            bring_to_foreground(ctx);
+            break;
+        }
+
+        case epoc::keysound::opcode_lock_context: {
+            lock_context(ctx);
             break;
         }
 
