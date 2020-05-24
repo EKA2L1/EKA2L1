@@ -184,11 +184,6 @@ namespace eka2l1::drivers {
          */
         virtual void draw_rectangle(const eka2l1::rect &target_rect) = 0;
 
-        void draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const bool use_brush = false) {
-            eka2l1::rect empty;
-            draw_bitmap(h, pos, use_brush);
-        }
-
         /**
          * \brief Use a shader program.
          */
