@@ -100,7 +100,7 @@ namespace eka2l1::mem::flexible {
         attach_info.map_ = std::make_unique<mapping>(addr_space_.get());
 
         // Try to instantiate this mapping
-        if (!attach_info.map_->instantiate(chunk->max() >> mmu_->page_size_bits_, fl_chunk->flags_)) {
+        if (!attach_info.map_->instantiate(chunk->max() >> mmu_->page_size_bits_, fl_chunk->flags_, fl_chunk->fixed_addr_)) {
             LOG_ERROR("Unable to make new mapping to the address space {}", addr_space_->id());
             return false;
         }

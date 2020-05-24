@@ -39,14 +39,8 @@ namespace eka2l1::mem::flexible {
     }
 
     int flexible_mem_model_chunk::do_create(const mem_model_chunk_creation_info &create_info) {
-        fixed_addr_ = 0;
+        fixed_addr_ = create_info.addr;
         flags_ = create_info.flags;
-
-        if ((create_info.flags & MEM_MODEL_CHUNK_REGION_USER_ROM) ||
-            (create_info.flags & MEM_MODEL_CHUNK_REGION_ROM_BSS)) {
-            // These has address after instantiate fixed, mark it as so
-            fixed_addr_ = create_info.addr;
-        }
 
         const std::uint32_t total_pages_occupied = static_cast<std::uint32_t>((create_info.size +
             mmu_->page_size() - 1) >> mmu_->page_size_bits_);
@@ -66,7 +60,7 @@ namespace eka2l1::mem::flexible {
             // Treats this as for kernel
             mmu_flexible *fl_mmu = reinterpret_cast<mmu_flexible*>(mmu_);
             fixed_mapping_ = std::make_unique<mapping>(fl_mmu->kern_addr_space_.get());
-            fixed_mapping_->instantiate(total_pages_occupied, flags_);
+            fixed_mapping_->instantiate(total_pages_occupied, flags_, fixed_addr_);
 
             // Add this mapping to memobj's mapping
             mem_obj_->attach_mapping(fixed_mapping_.get());
