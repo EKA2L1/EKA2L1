@@ -77,7 +77,7 @@ namespace eka2l1::kernel {
         chunk_ptr dt_chunk = nullptr;
 
         if (code_addr == 0) {
-            code_chunk = kern->create<kernel::chunk>(mem, nullptr, "", 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
+            code_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
 
             // Copy data
@@ -87,8 +87,8 @@ namespace eka2l1::kernel {
 
         if (data_size_align != 0) {
             dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::none, false,
-                data_addr ? data_base : 0);
+                prot::read_write, kernel::chunk_type::normal, (data_addr) ? kernel::chunk_access::rom_bss : kernel::chunk_access::local,
+                kernel::chunk_attrib::anonymous, false, data_addr ? data_base : 0);
 
             if (!dt_chunk) {
                 return false;
@@ -96,12 +96,10 @@ namespace eka2l1::kernel {
 
             std::uint8_t *dt_base = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
 
-            if (data_addr == 0) {
-                // Confirmed that if data is in ROM, only BSS is reserved
-                std::copy(constant_data.get(), constant_data.get() + data_size, dt_base); // .data
-            }
+            // Confirmed that if data is in ROM, only BSS is reserved
+            std::copy(constant_data.get(), constant_data.get() + data_size, dt_base); // .data
 
-            const std::uint32_t bss_off = data_addr ? 0 : data_size;
+            const std::uint32_t bss_off = data_size;
             std::fill(dt_base + bss_off, dt_base + bss_off + bss_size, 0); // .bss
         }
 
@@ -253,6 +251,7 @@ namespace eka2l1::kernel {
         for (auto &dependency : dependencies) {
             if (!dependency->mark) {
                 dependency->mark = true;
+                dependency->attach(pr);
                 dependency->queries_call_list(pr, call_list);
             }
         }

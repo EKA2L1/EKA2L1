@@ -85,8 +85,6 @@ namespace eka2l1 {
 
             bool log_svc{ false };
 
-            kernel::chunk *bss_rom_chunk;
-
         protected:
             void load_patch_libraries(const std::string &patch_folder);
 
