@@ -30,7 +30,7 @@ namespace eka2l1::mem {
         dll_static_data = 0x38000000,
         shared_data = 0x40000000,
         ram_code_addr = 0x70000000,
-        rom_bss_addr = 0x7F000000,
+        rom_bss_addr = 0x7E000000,
         rom = 0x80000000,
         global_data = 0x90000000,
         ram_drive = 0xA0000000,
