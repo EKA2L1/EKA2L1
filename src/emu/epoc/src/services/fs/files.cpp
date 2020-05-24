@@ -116,7 +116,7 @@ namespace eka2l1 {
         }
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
-        if (ctx->sys->get_kernel_system()->get_epoc_version() >= epocver::epoc10) {
+        if (ctx->sys->get_kernel_system()->get_epoc_version() >= epocver::epoc95) {
             std::uint64_t fsize_u = reinterpret_cast<file *>(node->vfs_node.get())->size();
             ctx->write_arg_pkg<uint64_t>(0, fsize_u);
         } else {
@@ -269,7 +269,7 @@ namespace eka2l1 {
 
         // Slot order: (0) seek offset, (1) seek mode, (2) new pos
 
-        if ((int)ctx->sys->get_symbian_version_use() >= (int)epocver::epoc10) {
+        if ((int)ctx->sys->get_symbian_version_use() >= (int)epocver::epoc95) {
             ctx->write_arg_pkg(2, seek_res);
         } else {
             int seek_result_i = static_cast<std::int32_t>(seek_res);

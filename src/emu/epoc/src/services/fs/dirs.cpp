@@ -180,7 +180,7 @@ namespace eka2l1 {
         size_t entry_no_name_size = epoc::fs::entry_standard_size + 4 + 8;
 
         kernel_system *kern = ctx->sys->get_kernel_system();
-        const bool should_support_64bit_size = kern->get_epoc_version() >= epocver::epoc10;
+        const bool should_support_64bit_size = kern->get_epoc_version() >= epocver::epoc95;
 
         while (entry_buf < entry_buf_end) {
             epoc::fs::entry entry;

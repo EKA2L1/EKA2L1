@@ -53,6 +53,7 @@ enum class epocver {
     eka2, ///< Mark for EKA2
     epoc93, ///< Epoc 9.3
     epoc94, ///< Epoc 9.4
+    epoc95,
     epoc10
 };
 
