@@ -58,11 +58,15 @@ namespace eka2l1 {
         explicit memory_system() = default;
         ~memory_system() = default;
 
-        void init(arm::arm_interface *jit, const bool mem_map_old);
+        void init(arm::arm_interface *jit, const mem::mem_model_type model_type, const bool mem_map_old);
         void shutdown();
 
         mem::mmu_base *get_mmu() {
             return impl_.get();
+        }
+
+        mem::mem_model_type get_model_type() const {
+            return impl_->model_type();
         }
 
         const int get_page_size() const;

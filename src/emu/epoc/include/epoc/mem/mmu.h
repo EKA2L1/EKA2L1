@@ -61,6 +61,8 @@ namespace eka2l1::mem {
 
         virtual ~mmu_base() {}
 
+        virtual const mem_model_type model_type() const = 0;
+
         void map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm);
         void unmap_from_cpu(const vm_address addr, const std::size_t size);
 

@@ -58,5 +58,9 @@ namespace eka2l1::mem {
 
         void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags,
             asid *id_list = nullptr, const std::uint32_t id_list_size = 0) override;
+            
+        const mem_model_type model_type() const override {
+            return mem_model_type::multiple;
+        }
     };
 }
