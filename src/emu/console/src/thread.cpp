@@ -66,7 +66,7 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int 
     float mouse_pos_x = static_cast<float>(mouse_pos.x), mouse_pos_y = static_cast<float>(mouse_pos.y);
 
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
-    if (emu->symsys) {
+    if ((emu->symsys) && emu->winserv) {
         const float scale = emu->symsys->get_config()->ui_scale;
         mouse_pos_x /= scale;
         mouse_pos_y /= scale;
@@ -93,7 +93,9 @@ static void on_ui_window_touch_move(void *userdata, eka2l1::vec2 v) {
 
     // Make repeat event for button 0 (left mouse click)
     auto mouse_evt = make_mouse_event_driver(static_cast<float>(v.x), static_cast<float>(v.y), 0, 1);
-    emu->winserv->queue_input_from_driver(mouse_evt);
+
+    if (emu->winserv)
+        emu->winserv->queue_input_from_driver(mouse_evt);
 }
 
 static eka2l1::drivers::input_event make_key_event_driver(const int key, const eka2l1::drivers::key_state key_state) {
