@@ -42,7 +42,7 @@ namespace eka2l1::mem::flexible {
         explicit mapping(address_space *owner);
         ~mapping();
 
-        bool instantiate(const std::size_t page_occupied, const std::uint32_t flags);
+        bool instantiate(const std::size_t page_occupied, const std::uint32_t flags, const vm_address forced);
 
         bool map(memory_object *obj, const std::uint32_t index, const std::size_t count, const prot permissions);
         bool unmap(const std::uint32_t index_start, const std::size_t count);

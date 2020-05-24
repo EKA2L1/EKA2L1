@@ -35,7 +35,7 @@ namespace eka2l1::mem::flexible {
         unmap(0, occupied_);   
     }
 
-    bool mapping::instantiate(const std::size_t page_occupied, const std::uint32_t flags) {
+    bool mapping::instantiate(const std::size_t page_occupied, const std::uint32_t flags, const vm_address forced) {
         // Try to get linear section from our mommy first <3
         linear_section *sect = owner_->section(flags);
 
@@ -45,18 +45,24 @@ namespace eka2l1::mem::flexible {
         }
 
         int total_page = static_cast<int>(page_occupied);
-        const int offset = sect->alloc_.allocate_from(0, total_page, false);
 
-        if (offset == -1) {
-            LOG_ERROR("Unable to instantiate new mapping on ASID 0x{:X}, out of virtual memory", owner_->id());
-            return false;
+        if (!forced) {
+            const int offset = sect->alloc_.allocate_from(0, total_page, false);
+
+            if (offset == -1) {
+                LOG_ERROR("Unable to instantiate new mapping on ASID 0x{:X}, out of virtual memory", owner_->id());
+                return false;
+            }
+
+            if (total_page != static_cast<int>(page_occupied)) {
+                LOG_WARN("Unable to allocate all pages given in the mapping instantiate parameter");
+            }
+            
+            base_ = sect->beg_ + (offset << owner_->mmu_->page_size_bits_);
+        } else {
+            base_ = forced;
         }
 
-        if (total_page != static_cast<int>(page_occupied)) {
-            LOG_WARN("Unable to allocate all pages given in the mapping instantiate parameter");
-        }
-        
-        base_ = sect->beg_ + (offset << owner_->mmu_->page_size_bits_);
         occupied_ = total_page;
 
         // We are going to the prom! Yes, me, the mapping.
