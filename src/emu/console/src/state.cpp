@@ -45,9 +45,28 @@ namespace eka2l1::desktop {
         // Start to read the configs
         conf.deserialize();
 
-        // Initialize an empty root.
         symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
-        symsys->init();
+        symsys->set_device(conf.device);
+
+        manager::device_manager *dvcmngr = symsys->get_manager_system()->get_device_manager();
+        manager::device *dvc = dvcmngr->get_current();
+
+        if (dvc) {    
+            symsys->startup();
+            
+            symsys->set_debugger(debugger.get());
+            symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib::internal);
+            symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib::internal);
+            symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib::removeable);
+
+            if (conf.enable_gdbstub) {
+                symsys->get_gdb_stub()->set_server_port(conf.gdb_port);
+                symsys->get_gdb_stub()->init(symsys.get());
+                symsys->get_gdb_stub()->toggle_server(true);
+            }
+
+            winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>("!Windowserver"));
+        }
 
         first_time = true;
         launch_requests.max_pending_count_ = 100;
@@ -56,20 +75,6 @@ namespace eka2l1::desktop {
         debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger.get(), [&](const std::u16string &path) {
             launch_requests.push(path);
         });
-
-        symsys->set_debugger(debugger.get());
-        symsys->set_device(conf.device);
-        symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib::internal);
-        symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib::internal);
-        symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib::removeable);
-
-        if (conf.enable_gdbstub) {
-            symsys->get_gdb_stub()->set_server_port(conf.gdb_port);
-            symsys->get_gdb_stub()->init(symsys.get());
-            symsys->get_gdb_stub()->toggle_server(true);
-        }
-
-        winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>("!Windowserver"));
 
         stage_two_inited = false;
     }
@@ -83,7 +88,7 @@ namespace eka2l1::desktop {
                 LOG_ERROR("No current device is available. Stage two initialisation abort");
                 return;
             }
-
+            
             LOG_INFO("Device being used: {} ({})", dvc->model, dvc->firmware_code);
 
             bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(

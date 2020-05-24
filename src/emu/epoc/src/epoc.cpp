@@ -199,7 +199,7 @@ namespace eka2l1 {
             sys_lang = new_lang;
         }
 
-        void init();
+        void startup();
         bool load(const std::u16string &path, const std::u16string &cmd_arg);
         int loop();
         void shutdown();
@@ -308,11 +308,8 @@ namespace eka2l1 {
 
     static constexpr std::uint32_t DEFAULT_CPU_HZ = 484000000;
 
-    void system_impl::init() {
+    void system_impl::startup() {
         exit = false;
-
-        // Initialize manager. It doesn't depend much on other
-        mngr.init(parent, &io, conf);
 
         // Initialize all the system that doesn't depend on others first
         timing = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
@@ -331,7 +328,10 @@ namespace eka2l1 {
 
         cpu = arm::create_cpu(&kern, timing.get(), conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
 
-        mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
+        // Use flexible model on 9.5 and onwards.
+        mem.init(cpu.get(), (get_symbian_version_use() >= epocver::epoc95) ? mem::mem_model_type::flexible
+            : mem::mem_model_type::multiple, (get_symbian_version_use() <= epocver::epoc6) ? true : false);
+
         kern.init(parent, timing.get(), &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
 
         epoc::init_hal(parent);
@@ -349,8 +349,12 @@ namespace eka2l1 {
         , conf(conf)
         , debugger(nullptr)
         , gdriver(graphics_driver)
-        , adriver(audio_driver) {
+        , adriver(audio_driver)
+        , exit(false) {
         cpu_type = arm::string_to_arm_emulator_type(conf->cpu_backend);
+        
+        // Initialize manager. It doesn't depend much on other
+        mngr.init(parent, &io, conf);
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
@@ -604,8 +608,8 @@ namespace eka2l1 {
         return impl->prepare_reschedule();
     }
 
-    void system::init() {
-        return impl->init();
+    void system::startup() {
+        return impl->startup();
     }
 
     bool system::load(const std::u16string &path, const std::u16string &cmd_arg) {
