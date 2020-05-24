@@ -39,6 +39,7 @@
 
 #include <epoc/loader/e32img.h>
 #include <epoc/loader/romimage.h>
+#include <epoc/mem/page.h>
 #include <epoc/vfs.h>
 
 #include <common/configure.h>
@@ -348,9 +349,9 @@ namespace eka2l1::hle {
 
             if (source_seg->is_rom()) {
                 patch_rom_export(mem, source_seg, dest_seg, source_export, dest_export);
-            } else {
-                source_seg->set_export(source_export, dest_seg->lookup(nullptr, dest_export));
             }
+
+            source_seg->set_export(source_export, dest_seg->lookup(nullptr, dest_export));
         }
     }
 
@@ -502,6 +503,16 @@ namespace eka2l1::hle {
         }
 
         load_patch_libraries(".//patch//");
+
+        // Create ROM bss chunk
+        static constexpr std::uint32_t MAX_BSS_SIZE = mem::rom - mem::rom_bss_addr;
+
+        if (sys->get_symbian_version_use() >= epocver::epoc95) {
+            // Create ROM bss
+            bss_rom_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "",
+                0, static_cast<eka2l1::address>(MAX_BSS_SIZE), MAX_BSS_SIZE, prot::read_write,
+                kernel::chunk_type::normal, kernel::chunk_access::rom_bss, kernel::chunk_attrib::anonymous);
+        }
     }
 
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
@@ -545,6 +556,17 @@ namespace eka2l1::hle {
         info.sinfo.secure_id = romimg.header.sec_info.secure_id;
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(romimg.header.data_address));
+
+        if (info.bss_size != 0) {
+            if (!bss_rom_chunk) {
+                LOG_ERROR("BSS available for this ROM image but BSS chunk not presented");
+            } else {
+                // Commit memory for ROM bss
+                if (!bss_rom_chunk->commit(info.data_load_addr - bss_rom_chunk->base(nullptr).ptr_address(), info.bss_size)) {
+                    LOG_ERROR("Unable to commit memory for .bss ROM chunk (address 0x{:X})", info.data_load_addr);
+                }
+            }
+        }
 
         auto cs = kern->create<kernel::codeseg>("codeseg", info);
         cs->attach(pr);
