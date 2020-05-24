@@ -2581,6 +2581,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x2F, thread_set_flags),
         BRIDGE_REGISTER(0x3A, request_signal),
         BRIDGE_REGISTER(0x3B, handle_name),
+        BRIDGE_REGISTER(0x3C, handle_full_name),
         BRIDGE_REGISTER(0x41, message_complete),
         BRIDGE_REGISTER(0x4D, session_send_sync),
         BRIDGE_REGISTER(0x4F, hal_function),
