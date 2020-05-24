@@ -113,7 +113,7 @@ namespace eka2l1::kernel {
         }
 
         // Create mem model implementation
-        mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem::mem_model_type::multiple);
+        mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem->get_model_type());
     }
 
     void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {

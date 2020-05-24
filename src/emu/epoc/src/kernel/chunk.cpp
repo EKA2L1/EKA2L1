@@ -111,7 +111,7 @@ namespace eka2l1 {
                 mmp = own_process->get_mem_model();
                 mmp->create_chunk(mmc_impl_, create_info);
             } else {
-                mmc_impl_unq_ = mem::make_new_mem_model_chunk(mem->get_mmu(), 0, mem::mem_model_type::multiple);
+                mmc_impl_unq_ = mem::make_new_mem_model_chunk(mem->get_mmu(), 0, mem->get_model_type());
                 mmc_impl_unq_->do_create(create_info);
 
                 mmc_impl_ = mmc_impl_unq_.get();

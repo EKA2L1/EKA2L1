@@ -33,12 +33,10 @@
 #include <algorithm>
 
 namespace eka2l1 {
-    void memory_system::init(arm::arm_interface *jit, const bool mem_map_old) {
+    void memory_system::init(arm::arm_interface *jit, const mem::mem_model_type model_type, const bool mem_map_old) {
         alloc_ = std::make_unique<mem::basic_page_table_allocator>();
+        impl_ = mem::make_new_mmu(alloc_.get(), jit, 12, mem_map_old, model_type);
         cpu_ = jit;
-
-        // TODO: Make this modifiable
-        impl_ = mem::make_new_mmu(alloc_.get(), jit, 12, mem_map_old, mem::mem_model_type::multiple);
     }
 
     void memory_system::shutdown() {
