@@ -174,7 +174,9 @@ namespace eka2l1 {
         oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(sys->get_kernel_system()->get_by_name<service::server>("101fdfae_10207218_AppServer"));
 
         property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
-        lang_prop->add_data_change_callback(this, language_property_change_handler);
+        
+        if (lang_prop)
+            lang_prop->add_data_change_callback(this, language_property_change_handler);
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -754,6 +756,7 @@ namespace eka2l1 {
         // Get package manager
         manager::package_manager *manager = sys->get_manager_system()->get_package_manager();
         ImGui::Begin("Packages", &should_package_manager, ImGuiWindowFlags_MenuBar);
+
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("Package")) {
                 if (ImGui::MenuItem("Install")) {
@@ -1169,10 +1172,24 @@ namespace eka2l1 {
                     should_still_focus_on_keyboard = true;
                 }
 
-                if (ImGui::BeginMenu("Packages")) {
-                    ImGui::MenuItem("Install", nullptr, &should_install_package);
-                    ImGui::MenuItem("List", nullptr, &should_package_manager);
-                    ImGui::EndMenu();
+                manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+                if (!dvc_mngr->get_current()) {
+                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+
+                    ImGui::MenuItem("Packages");
+
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::PopStyleVar();
+                        ImGui::SetTooltip("Please install a device to access the package manager!");
+                    } else {
+                        ImGui::PopStyleVar();
+                    }
+                } else {    
+                    if (ImGui::BeginMenu("Packages")) {
+                        ImGui::MenuItem("Install", nullptr, &should_install_package);
+                        ImGui::MenuItem("List", nullptr, &should_package_manager);
+                        ImGui::EndMenu();
+                    }
                 }
 
                 ImGui::Separator();
@@ -1334,7 +1351,7 @@ namespace eka2l1 {
             }
             ImGui::Columns(1);
         } else {
-            ImGui::Text("App List Server is not available");
+            ImGui::Text("App List Server is not available. Install a device to enable it.");
         }
 
         ImGui::End();
