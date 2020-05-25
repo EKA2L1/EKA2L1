@@ -1601,6 +1601,7 @@ namespace eka2l1::epoc {
     }
     
     BRIDGE_FUNC(std::uint32_t, library_entry_call_start, const address addr) {
+        LOG_TRACE("Starting address 0x{:X}", addr);
         return epoc::error_none;
     }
 
@@ -2562,6 +2563,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
         BRIDGE_REGISTER(0x15, process_resume),
         BRIDGE_REGISTER(0x16, process_filename),
@@ -2600,6 +2602,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x70, semaphore_create),
         BRIDGE_REGISTER(0x73, thread_kill),
         BRIDGE_REGISTER(0x78, thread_rename),
+        BRIDGE_REGISTER(0x7B, process_logon),
+        BRIDGE_REGISTER(0x7C, process_logon_cancel),
         BRIDGE_REGISTER(0x7F, server_create),
         BRIDGE_REGISTER(0x80, session_create),
         BRIDGE_REGISTER(0x9D, wait_dll_lock),
@@ -2607,6 +2611,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9F, library_attach),
         BRIDGE_REGISTER(0xA0, library_attached),
         BRIDGE_REGISTER(0xA1, static_call_list),
+        BRIDGE_REGISTER(0xA5, thread_rendezvous),
+        BRIDGE_REGISTER(0xA6, process_rendezvous),
         BRIDGE_REGISTER(0xA9, message_ipc_copy),
         BRIDGE_REGISTER(0xAF, process_security_info),
         BRIDGE_REGISTER(0xBD, property_define),
