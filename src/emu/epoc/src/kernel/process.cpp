@@ -95,6 +95,22 @@ namespace eka2l1::kernel {
         obj_type = kernel::object_type::process;
     }
 
+    static constexpr mem::vm_address get_rom_bss_addr(const mem::mem_model_type type) {
+        switch (type) {
+        case mem::mem_model_type::moving:
+        case mem::mem_model_type::multiple:
+            return mem::dll_static_data + mem::ROM_BSS_START_OFFSET;
+
+        case mem::mem_model_type::flexible:
+            return mem::dll_static_data_flexible + mem::ROM_BSS_START_OFFSET;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
     process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
         const std::u16string &cmd_args)
         : kernel_obj(kern, process_name, nullptr, access_type::local_access)
@@ -114,6 +130,12 @@ namespace eka2l1::kernel {
 
         // Create mem model implementation
         mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem->get_model_type());
+
+        // Create a ROM BSS chunk for this process
+        rom_bss_chunk = kern->create<kernel::chunk>(mem, this, fmt::format("RomBssChunkProcess{}", uid),
+            0, mem::MAX_ROM_BSS_SECT_SIZE, mem::MAX_ROM_BSS_SECT_SIZE, prot::read_write,
+            kernel::chunk_type::normal, kernel::chunk_access::dll_static_data,
+            kernel::chunk_attrib::none, false, get_rom_bss_addr(mem->get_model_type()));
     }
 
     void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {

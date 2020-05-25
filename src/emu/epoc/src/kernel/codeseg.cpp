@@ -86,15 +86,22 @@ namespace eka2l1::kernel {
         }
 
         if (data_size_align != 0) {
-            dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                prot::read_write, kernel::chunk_type::normal, (data_addr) ? kernel::chunk_access::rom_bss : kernel::chunk_access::local,
-                kernel::chunk_attrib::anonymous, false, data_addr ? data_base : 0);
+            if (!data_addr) {
+                dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
+                    prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
+            } else {
+                dt_chunk = new_foe->get_rom_bss_chunk(); 
+            }
 
             if (!dt_chunk) {
                 return false;
             }
 
             std::uint8_t *dt_base = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
+
+            if (data_addr) {
+                dt_base += (data_base - dt_chunk->base(new_foe).ptr_address());
+            }
 
             // Confirmed that if data is in ROM, only BSS is reserved
             std::copy(constant_data.get(), constant_data.get() + data_size, dt_base); // .data
@@ -167,11 +174,12 @@ namespace eka2l1::kernel {
         }
 
         if (data_addr != 0) {
+            // Intentional, in this case it's ROM
             if (base) {
-                *base = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(data_addr));
+                *base = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(data_base));
             }
 
-            return data_addr;
+            return data_base;
         }
 
         // Find our stuffs

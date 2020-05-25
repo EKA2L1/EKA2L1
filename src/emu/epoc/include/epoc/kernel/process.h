@@ -40,6 +40,11 @@
 namespace eka2l1 {
     class kernel_system;
 
+    namespace kernel {
+        class chunk;
+    }
+
+    using chunk_ptr = kernel::chunk *;
     using mutex_ptr = kernel::mutex *;
 
     namespace common {
@@ -128,6 +133,7 @@ namespace eka2l1::kernel {
         epoc::security_info sec_info;
 
         common::roundabout thread_list;
+        chunk_ptr rom_bss_chunk;
 
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
@@ -207,6 +213,10 @@ namespace eka2l1::kernel {
 
         process_priority get_priority() const {
             return priority;
+        }
+
+        chunk_ptr get_rom_bss_chunk() const {
+            return rom_bss_chunk;
         }
 
         epoc::security_info get_sec_info();
