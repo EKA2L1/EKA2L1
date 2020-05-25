@@ -62,7 +62,7 @@ namespace eka2l1 {
             local,
             code,
             rom,
-            rom_bss,
+            dll_static_data,
             kernel_mapping
         };
 

@@ -31,7 +31,8 @@ namespace eka2l1::mem {
     multiple_mem_model_process::multiple_mem_model_process(mmu_base *mmu)
         : mem_model_process(mmu)
         , addr_space_id_(mmu->rollover_fresh_addr_space())
-        , user_local_sec_(local_data, shared_data, mmu->page_size()) {
+        , user_local_sec_(local_data, shared_data, mmu->page_size())
+        , user_dll_static_data_sec_(dll_static_data, shared_data, mmu->page_size()) {
     }
 
     static constexpr std::size_t MAX_CHUNK_ALLOW_PER_PROCESS = 512;

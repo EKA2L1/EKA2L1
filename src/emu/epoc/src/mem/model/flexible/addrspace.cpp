@@ -25,8 +25,8 @@ namespace eka2l1::mem::flexible {
         : mmu_(mmu)
         , local_data_sec_(local_data, shared_data, mmu->page_size())
         , shared_data_sec_(shared_data, ram_drive, mmu->page_size())
-        , ram_code_sec_(ram_code_addr, rom_bss_addr, mmu->page_size())
-        , rom_bss_sec_(rom_bss_addr, rom, mmu->page_size()) {
+        , ram_code_sec_(ram_code_addr, dll_static_data_flexible, mmu->page_size())
+        , dll_static_data_sec_(dll_static_data_flexible, rom, mmu->page_size()) {
         dir_ = mmu_->dir_mngr_->allocate(mmu);
     }
 
@@ -50,8 +50,8 @@ namespace eka2l1::mem::flexible {
             return &local_data_sec_;
         }
 
-        if (flags & MEM_MODEL_CHUNK_REGION_ROM_BSS) {
-            return &rom_bss_sec_;
+        if (flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA) {
+            return &dll_static_data_sec_;
         }
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_ROM) {

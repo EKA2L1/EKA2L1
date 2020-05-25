@@ -42,7 +42,7 @@ namespace eka2l1::mem::flexible {
         linear_section local_data_sec_;
         linear_section shared_data_sec_;
         linear_section ram_code_sec_;
-        linear_section rom_bss_sec_;
+        linear_section dll_static_data_sec_;
 
     public:
         explicit address_space(mmu_flexible *mmu);

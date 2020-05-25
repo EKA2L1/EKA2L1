@@ -135,7 +135,7 @@ namespace eka2l1::mem::flexible {
 
     static bool should_do_cpu_manipulate(const std::uint32_t flags) {
         return (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL)
-            || (flags & MEM_MODEL_CHUNK_REGION_ROM_BSS) || (flags & MEM_MODEL_CHUNK_REGION_USER_CODE);
+            || (flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA) || (flags & MEM_MODEL_CHUNK_REGION_USER_CODE);
     }
 
     void flexible_mem_model_process::unmap_from_cpu() {

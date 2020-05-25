@@ -77,8 +77,8 @@ namespace eka2l1 {
                 create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_KERNEL_MAPPING;
             }
 
-            if (chnk_access == chunk_access::rom_bss) {
-                create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_ROM_BSS;
+            if (chnk_access == chunk_access::dll_static_data) {
+                create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA;
             }
 
             switch (type) {

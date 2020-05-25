@@ -239,6 +239,10 @@ namespace eka2l1::mem {
             return &mul_process->user_local_sec_;
         }
 
+        if (flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA) {
+            return &mul_process->user_dll_static_data_sec_;
+        }
+
         if (flags & MEM_MODEL_CHUNK_REGION_USER_ROM) {
             return &mul_mmu->user_rom_sec_;
         }
