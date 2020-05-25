@@ -34,7 +34,8 @@
 
 namespace eka2l1::epoc {
     bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
-        return cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT;
+        const epocver current_sys_ver = cli->server<fbs_server>()->get_system()->get_symbian_version_use();
+        return (cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT) && (current_sys_ver < epocver::epoc95);
     }
 
     void open_font_glyph_offset_array::init(fbscli *cli, const std::int32_t count) {
