@@ -313,8 +313,6 @@ namespace eka2l1 {
 
         // Initialize all the system that doesn't depend on others first
         timing = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
-
-        io.init();
         asmdis.init();
 
         file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use(), "");
@@ -355,6 +353,7 @@ namespace eka2l1 {
         
         // Initialize manager. It doesn't depend much on other
         mngr.init(parent, &io, conf);
+        io.init();
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
@@ -384,14 +383,18 @@ namespace eka2l1 {
 
     bool system_impl::pause() {
         paused = true;
-        timing->set_paused(true);
+
+        if (timing)
+            timing->set_paused(true);
 
         return true;
     }
 
     bool system_impl::unpause() {
         paused = false;
-        timing->set_paused(false);
+
+        if (timing)
+            timing->set_paused(false);
 
         return true;
     }
