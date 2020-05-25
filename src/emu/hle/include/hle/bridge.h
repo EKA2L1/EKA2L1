@@ -71,9 +71,8 @@ namespace eka2l1 {
 
         /*! \brief Write function arguments to guest. */
         template <typename... args, size_t... indices>
-        void write_args(arm::cpu &cpu, const std::array<arg_layout, sizeof...(indices)> &layouts, std::index_sequence<indices...>, memory_system *mem, args... lle_args) {
-            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
-            ((void)write<args, indices, args...>(cpu, layouts, crr_process, std::forward<args>(lle_args)), ...);
+        void write_args(arm::cpu &cpu, const std::array<arg_layout, sizeof...(indices)> &layouts, std::index_sequence<indices...>, kernel::process *pr, args... lle_args) {
+            ((void)write<args, indices, args...>(cpu, layouts, pr, std::forward<args>(lle_args)), ...);
         }
 
         /*! \brief Call a LLE function with return value. */
