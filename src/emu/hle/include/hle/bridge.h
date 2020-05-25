@@ -125,7 +125,7 @@ namespace eka2l1 {
 
         template <typename... args>
         void call_lle_void(eka2l1::system *sys, const address addr, args... lle_args) {
-            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
+            kernel::process *crr_process = sys->get_kernel_system()->crr_process();
             hle::lib_manager *mngr = sys->get_lib_manager();
             disasm *asmdis = sys->get_disasm();
 
@@ -136,7 +136,7 @@ namespace eka2l1 {
 
         template <typename ret, typename... args>
         ret call_lle(eka2l1::system *sys, const address addr, args... lle_args) {
-            kernel::process *crr_process = symsys->get_kernel_system()->crr_process();
+            kernel::process *crr_process = sys->get_kernel_system()->crr_process();
             hle::lib_manager *mngr = sys->get_lib_manager();
             disasm *asmdis = sys->get_disasm();
 
