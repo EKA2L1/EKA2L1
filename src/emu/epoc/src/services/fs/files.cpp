@@ -388,7 +388,7 @@ namespace eka2l1 {
         write_pos = last_pos;
 
         // Low MaxUint64
-        if (write_pos_provided != static_cast<int>(0x80000000)) {
+        if ((write_pos_provided != static_cast<int>(0x80000000)) || (write_pos_provided == -1)) {
             write_pos = write_pos_provided;
         }
 
@@ -429,7 +429,7 @@ namespace eka2l1 {
         read_pos = last_pos;
 
         // Low MaxUint64
-        if (read_pos_provided != static_cast<int>(0x80000000)) {
+        if ((read_pos_provided != static_cast<int>(0x80000000)) || (read_pos_provided == -1)) {
             read_pos = read_pos_provided;
         }
 
