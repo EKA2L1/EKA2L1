@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace eka2l1 {
-    class io_system;
+    class system;
 
     namespace loader {
         struct sis_controller;
@@ -56,7 +56,7 @@ namespace eka2l1 {
             bool load_sdb_yaml(const std::string &path);
             bool write_sdb_yaml(const std::string &path);
 
-            io_system *io;
+            system *sys;
             config_state *conf;
 
             bool install_controller(loader::sis_controller *ctrl, drive_number drv);
@@ -67,8 +67,8 @@ namespace eka2l1 {
             loader::show_text_func show_text;
             loader::choose_lang_func choose_lang;
 
-            package_manager() = default;
-            package_manager(io_system *io, config_state *conf);
+            explicit package_manager() = default;
+            explicit package_manager(system *sys, config_state *conf);
 
             bool installed(const uid pkg_uid);
 

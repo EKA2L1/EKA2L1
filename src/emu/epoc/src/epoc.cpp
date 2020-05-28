@@ -352,7 +352,7 @@ namespace eka2l1 {
         cpu_type = arm::string_to_arm_emulator_type(conf->cpu_backend);
         
         // Initialize manager. It doesn't depend much on other
-        mngr.init(parent, &io, conf);
+        mngr.init(parent, conf);
         io.init();
     }
 

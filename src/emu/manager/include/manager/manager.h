@@ -48,13 +48,11 @@ namespace eka2l1 {
         std::unique_ptr<manager::device_manager> dvmngr;
         std::unique_ptr<manager::package_manager> pkgmngr;
 
-        io_system *io;
-
     public:
         manager_system() = default;
         ~manager_system() = default;
 
-        void init(system *sys, io_system *ios, manager::config_state *conf);
+        void init(system *sys, manager::config_state *conf);
 
         manager::package_manager *get_package_manager();
 

@@ -30,6 +30,7 @@
 #include <manager/sis_script_interpreter.h>
 #include <manager/sis_v1_installer.h>
 
+#include <epoc/epoc.h>
 #include <epoc/vfs.h>
 
 #include <fstream>
@@ -40,8 +41,8 @@ namespace eka2l1 {
         static constexpr const char *APP_REGISTRY_FILENAME = "apps_registry.yml";
         static constexpr const char *PACKAGE_FOLDER_PATH = "packages";
 
-        package_manager::package_manager(io_system *io, config_state *conf)
-            : io(io)
+        package_manager::package_manager(system *sys, config_state *conf)
+            : sys(sys)
             , conf(conf) {
             load_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
             eka2l1::create_directory(add_path(conf->storage, PACKAGE_FOLDER_PATH));
@@ -220,7 +221,7 @@ namespace eka2l1 {
 
                 // Interpret the file
                 loader::ss_interpreter interpreter(reinterpret_cast<common::ro_stream *>(&stream),
-                    io,
+                    sys,
                     this,
                     conf,
                     &res.controller,
@@ -242,7 +243,7 @@ namespace eka2l1 {
                 package_info de_info;
                 std::vector<std::u16string> files;
 
-                loader::install_sis_old(path, io, drive, de_info, files);
+                loader::install_sis_old(path, sys->get_io_system(), drive, de_info, files);
 
                 if (installed(de_info.id)) {
                     return false;
@@ -275,7 +276,7 @@ namespace eka2l1 {
                 std::string file_path = "";
 
                 while (std::getline(bucket_stream, file_path)) {
-                    io->delete_entry(common::utf8_to_ucs2(file_path));
+                    sys->get_io_system()->delete_entry(common::utf8_to_ucs2(file_path));
                 }
 
                 // Remove myself too!
