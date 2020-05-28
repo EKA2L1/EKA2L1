@@ -2836,6 +2836,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3A, change_notifier_logoff),
         BRIDGE_REGISTER(0x3B, request_signal),
         BRIDGE_REGISTER(0x3C, handle_name),
+        BRIDGE_REGISTER(0x3D, handle_full_name),
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
         BRIDGE_REGISTER(0x44, time_now),
