@@ -38,6 +38,13 @@
 #include <manager/config.h>
 
 namespace eka2l1 {
+    namespace epoc { 
+        bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
+            const epocver current_sys_ver = cli->server<fbs_server>()->get_system()->get_symbian_version_use();
+            return (cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT) && (current_sys_ver < epocver::epoc95);
+        }
+    }
+
     fbs_chunk_allocator::fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *dat_ptr)
         : block_allocator(dat_ptr, de_chunk->committed())
         , target_chunk(std::move(de_chunk)) {

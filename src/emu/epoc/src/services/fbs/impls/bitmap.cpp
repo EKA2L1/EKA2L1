@@ -372,7 +372,7 @@ namespace eka2l1 {
         const std::uint32_t server_handle = bmp->id;
         const std::uint32_t off = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
-        const bool legacy_return = (ctx->get_arg_size(1) > sizeof(bmp_handles));
+        const bool legacy_return = (ctx->get_arg_size(1) >= sizeof(bmp_specs_legacy));
 
         if (legacy_return) {
             bmp_specs_legacy specs;
@@ -587,7 +587,7 @@ namespace eka2l1 {
 
     void fbscli::create_bitmap(service::ipc_context *ctx) {
         bmp_specs_legacy specs;
-        const bool use_spec_legacy = ctx->get_arg_size(0) > sizeof(bmp_specs);
+        const bool use_spec_legacy = ctx->get_arg_size(0) >= sizeof(bmp_specs_legacy);
 
         if (!use_spec_legacy) {
             std::optional<bmp_specs> specs_morden = ctx->get_arg_packed<bmp_specs>(0);
@@ -622,6 +622,10 @@ namespace eka2l1 {
         const std::uint32_t serv_handle = bmp->id;
         const std::uint32_t addr_off = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
+        // From Anna the slot to write this moved to 1.
+        const bool use_bmp_handles_writeback = (server<fbs_server>()->get_system()->get_symbian_version_use() 
+            >= epocver::epoc10);;
+
         if (use_spec_legacy) {
             specs.handle = handle_ret;
             specs.server_handle = serv_handle;
@@ -629,15 +633,24 @@ namespace eka2l1 {
 
             ctx->write_arg_pkg(0, specs);
         } else {
-            bmp_specs specs_to_write;
-            specs_to_write.size = specs.size;
-            specs_to_write.bpp = specs.bpp;
+            if (use_bmp_handles_writeback) {
+                bmp_handles handles;
+                handles.address_offset = addr_off;
+                handles.server_handle = serv_handle;
+                handles.handle = handle_ret;
 
-            specs_to_write.handle = handle_ret;
-            specs_to_write.server_handle = serv_handle;
-            specs_to_write.address_offset = addr_off;
+                ctx->write_arg_pkg<bmp_handles>(1, handles);
+            } else {
+                bmp_specs specs_to_write;
+                specs_to_write.size = specs.size;
+                specs_to_write.bpp = specs.bpp;
 
-            ctx->write_arg_pkg(0, specs_to_write);
+                specs_to_write.handle = handle_ret;
+                specs_to_write.server_handle = serv_handle;
+                specs_to_write.address_offset = addr_off;
+
+                ctx->write_arg_pkg(0, specs_to_write);
+            }
         }
 
         ctx->set_request_status(epoc::error_none);
