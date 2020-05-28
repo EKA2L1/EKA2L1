@@ -384,14 +384,13 @@ target_link_libraries(epocservs PRIVATE
 
 # TODO: Make arm dependency private.
 target_link_libraries(epockern PUBLIC
-        arm common)
+        arm common drivers)
 
 target_link_libraries(epockern PRIVATE
         epocdispatch
         epocloader
         epocmem
         epocservs
-        drivers
         manager
         hle
         )
