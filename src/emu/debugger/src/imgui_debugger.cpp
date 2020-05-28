@@ -616,33 +616,6 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_pref_hal() {
-        ImGui::Text("Screen Size");
-        const float col2 = ImGui::GetWindowSize().x / 3;
-
-        ImGui::SameLine(col2);
-        ImGui::Text("X");
-        ImGui::SameLine(col2 + 10);
-        ImGui::PushItemWidth(col2 - 20);
-        ImGui::InputInt("##ScreenSizeXInput", &conf->display_size_x_pixs);
-        ImGui::PopItemWidth();
-
-        ImGui::SameLine(col2 * 2);
-        ImGui::Text("Y");
-        ImGui::SameLine(col2 * 2 + 10);
-        ImGui::PushItemWidth(col2 - 20);
-        ImGui::InputInt("##ScreenSizeYInput", &conf->display_size_y_pixs);
-        ImGui::PopItemWidth();
-
-        ImGui::Text("RAM size");
-        ImGui::SameLine(col2);
-
-        int mb_initial = static_cast<int>(conf->maximum_ram / common::MB(1));
-        ImGui::PushItemWidth(col2 * 2 - 30);
-        ImGui::SliderInt("MB", &mb_initial, 64, 512);
-        ImGui::PopItemWidth();
-        conf->maximum_ram = static_cast<std::uint32_t>(mb_initial * common::MB(1));
-
-        ImGui::Separator();
         const float col6 = ImGui::GetWindowSize().x / 6;
 
         static const char *BATTERY_LEVEL_STRS[] = {
