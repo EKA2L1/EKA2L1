@@ -28,7 +28,9 @@
 #include <manager/sis_fields.h>
 
 namespace eka2l1 {
+    class system;
     class io_system;
+    class window_server;
 
     namespace manager {
         class package_manager;
@@ -53,6 +55,8 @@ namespace eka2l1 {
             common::ro_stream *data_stream;
 
             io_system *io;
+            window_server *winserv;
+
             manager::package_manager *mngr;
 
             bool skip_next_file{ false };
@@ -61,10 +65,10 @@ namespace eka2l1 {
             bool package(const sis_uid uid);
 
             /**
-             * \brief Check if the given IF statement can be passed.
-             * \return True if it can be passed.
+             * \brief   Check if the given expression's condition can be passed.
+             * \return  1 if it can be passed, -1 for error, 0 if not passed.
              */
-            bool condition_passed(sis_field *wrap_if_stmt);
+            int condition_passed(sis_expression *expr);
 
             /**
              * \brief Get the true integral value from an expression.
@@ -103,7 +107,7 @@ namespace eka2l1 {
 
             explicit ss_interpreter();
             explicit ss_interpreter(common::ro_stream *stream,
-                io_system *io,
+                system *sys,
                 manager::package_manager *pkgmngr,
                 manager::config_state *conf,
                 sis_controller *main_controller,

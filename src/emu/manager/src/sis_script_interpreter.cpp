@@ -26,7 +26,12 @@
 #include <common/path.h>
 #include <common/types.h>
 
+#include <epoc/epoc.h>
+#include <epoc/kernel.h>
 #include <epoc/vfs.h>
+#include <epoc/services/window/window.h>
+#include <epoc/services/window/screen.h>
+
 #include <manager/config.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
@@ -61,7 +66,7 @@ namespace eka2l1 {
         }
 
         ss_interpreter::ss_interpreter(common::ro_stream *stream,
-            io_system *io,
+            system *sys,
             manager::package_manager *pkgmngr,
             manager::config_state *conf,
             sis_controller *main_controller,
@@ -70,10 +75,12 @@ namespace eka2l1 {
             : data_stream(stream)
             , mngr(pkgmngr)
             , conf(conf)
-            , io(io)
+            , io(sys->get_io_system())
             , main_controller(main_controller)
             , install_data(inst_data)
             , install_drive(inst_drv) {
+            winserv = reinterpret_cast<window_server*>(
+                sys->get_kernel_system()->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
         }
 
         std::vector<uint8_t> ss_interpreter::get_small_file_buf(uint32_t data_idx, uint16_t crr_blck_idx) {
@@ -215,12 +222,19 @@ namespace eka2l1 {
                     return static_cast<int>(current_controller->chosen_lang);
                 }
 
+                // HAL Display X
+                case 31:
+                    return winserv->get_screen(0)->size().x;
+
+                case 32:
+                    return winserv->get_screen(0)->size().y;
+
                 default: {
                     break;
                 }
                 }
 
-                return static_cast<int>(conf->get_hal_entry(expr.int_val));
+                return 0;
             }
 
             default:
@@ -230,134 +244,124 @@ namespace eka2l1 {
             return expr.int_val;
         }
 
-        bool ss_interpreter::condition_passed(sis_field *wrap_if_stmt) {
-            // We can also use this for else. Technically they have the same structure
-            sis_if *if_stmt = reinterpret_cast<sis_if *>(wrap_if_stmt);
-            const ss_expr_op stmt_type = if_stmt->expr.op;
+        int ss_interpreter::condition_passed(sis_expression *expr) {
+            if (!expr || expr->type != sis_field_type::SISExpression) {
+                return -1;
+            }
 
-            bool pass = false;
+            int pass = 0;
 
-            switch (stmt_type) {
-            case ss_expr_op::EBinOpEqual:
-            case ss_expr_op::EBinOpNotEqual:
-            case ss_expr_op::EBinOpGreaterThan:
-            case ss_expr_op::EBinOpLessThan:
-            case ss_expr_op::EBinOpGreaterThanOrEqual:
-            case ss_expr_op::EBinOpLessOrEqual:
-            case ss_expr_op::ELogOpAnd:
-            case ss_expr_op::ELogOpOr: {
-                const auto lhs = *if_stmt->expr.left_expr;
-                const auto rhs = *if_stmt->expr.right_expr;
-
-                if (is_expression_integral_type(lhs.op) && is_expression_integral_type(rhs.op)) {
-                    const int val1 = gasp_true_form_of_integral_expression(lhs);
-                    const int val2 = gasp_true_form_of_integral_expression(rhs);
-
-                    switch (stmt_type) {
-                    case ss_expr_op::EBinOpEqual: {
-                        pass = (val1 == val2);
-                        break;
-                    }
-
-                    case ss_expr_op::EBinOpNotEqual: {
-                        pass = (val1 != val2);
-                        break;
-                    }
-
-                    case ss_expr_op::EBinOpGreaterThan: {
-                        pass = (val1 > val2);
-                        break;
-                    }
-
-                    case ss_expr_op::EBinOpLessThan: {
-                        pass = (val1 < val2);
-                        break;
-                    }
-
-                    case ss_expr_op::EBinOpGreaterThanOrEqual: {
-                        pass = (val1 >= val2);
-                        break;
-                    }
-
-                    case ss_expr_op::EBinOpLessOrEqual: {
-                        pass = (val1 <= val2);
-                        break;
-                    }
-
-                    case ss_expr_op::ELogOpAnd: {
-                        pass = static_cast<std::uint32_t>(val1) & static_cast<std::uint32_t>(val2);
-                        break;
-                    }
-
-                    case ss_expr_op::ELogOpOr: {
-                        pass = static_cast<std::uint32_t>(val1) | static_cast<std::uint32_t>(val2);
-                        break;
-                    }
-
-                    default: {
-                        pass = false;
-                        break;
-                    }
-                    }
-                } else {
-                    if (lhs.op != ss_expr_op::EPrimTypeString || rhs.op != ss_expr_op::EPrimTypeString) {
-                        LOG_ERROR("Trying to do comparision between string and non-string type!");
-                    } else {
-                        switch (stmt_type) {
-                        case ss_expr_op::EBinOpEqual: {
-                            pass = lhs.val.unicode_string == rhs.val.unicode_string;
-                            break;
-                        }
-
-                        case ss_expr_op::EBinOpNotEqual: {
-                            pass = lhs.val.unicode_string != rhs.val.unicode_string;
-                            break;
-                        }
-
-                        case ss_expr_op::EBinOpGreaterThan: {
-                            pass = lhs.val.unicode_string > rhs.val.unicode_string;
-                            break;
-                        }
-
-                        case ss_expr_op::EBinOpLessThan: {
-                            pass = lhs.val.unicode_string < rhs.val.unicode_string;
-                            break;
-                        }
-
-                        case ss_expr_op::EBinOpGreaterThanOrEqual: {
-                            pass = lhs.val.unicode_string >= rhs.val.unicode_string;
-                            break;
-                        }
-
-                        case ss_expr_op::EBinOpLessOrEqual: {
-                            pass = lhs.val.unicode_string <= rhs.val.unicode_string;
-                            break;
-                        }
-
-                        default: {
-                            LOG_ERROR("Can't use op OR or AND (logical operation) with string!");
-                            pass = false;
-                            break;
-                        }
-                        }
-                    }
+            if ((expr->left_expr && (expr->left_expr->op == ss_expr_op::EPrimTypeString)) ||
+                (expr->right_expr && (expr->right_expr->op == ss_expr_op::EPrimTypeString))) {
+                if (expr->left_expr->op != expr->right_expr->op) {
+                    LOG_ERROR("String expression can only be compared with string expression");
+                    return -1;
                 }
 
+                switch (expr->op) {
+                case ss_expr_op::EBinOpEqual: {
+                    pass = (expr->left_expr->val.unicode_string == expr->right_expr->val.unicode_string);
+                    break;
+                }
+
+                case ss_expr_op::EBinOpNotEqual: {
+                    pass = (expr->left_expr->val.unicode_string != expr->right_expr->val.unicode_string);
+                    break;
+                }
+
+                case ss_expr_op::EBinOpGreaterThan: {
+                    pass = (expr->left_expr->val.unicode_string > expr->right_expr->val.unicode_string);
+                    break;
+                }
+
+                case ss_expr_op::EBinOpLessThan: {
+                    pass = (expr->left_expr->val.unicode_string < expr->right_expr->val.unicode_string);
+                    break;
+                }
+
+                case ss_expr_op::EBinOpGreaterThanOrEqual: {
+                    pass = (expr->left_expr->val.unicode_string >= expr->right_expr->val.unicode_string);
+                    break;
+                }
+
+                case ss_expr_op::EBinOpLessOrEqual: {
+                    pass = (expr->left_expr->val.unicode_string <= expr->right_expr->val.unicode_string);
+                    break;
+                }
+
+                default: {
+                    LOG_WARN("Unhandled string op type: {}", static_cast<int>(expr->op));
+                    pass = -1;
+                    break;
+                }
+                }
+
+                return pass;
+            }
+
+            const int lhs = condition_passed(expr->left_expr.get());
+            const int rhs = condition_passed(expr->right_expr.get());
+
+            switch (expr->op) {
+            case ss_expr_op::EBinOpEqual: {
+                pass = (lhs == rhs);
+                break;
+            }
+
+            case ss_expr_op::EBinOpNotEqual: {
+                pass = (lhs != rhs);
+                break;
+            }
+
+            case ss_expr_op::EBinOpGreaterThan: {
+                pass = (lhs > rhs);
+                break;
+            }
+
+            case ss_expr_op::EBinOpLessThan: {
+                pass = (lhs < rhs);
+                break;
+            }
+
+            case ss_expr_op::EBinOpGreaterThanOrEqual: {
+                pass = (lhs >= rhs);
+                break;
+            }
+
+            case ss_expr_op::EBinOpLessOrEqual: {
+                pass = (lhs <= rhs);
+                break;
+            }
+
+            case ss_expr_op::ELogOpAnd: {
+                pass = static_cast<std::uint32_t>(lhs) & static_cast<std::uint32_t>(rhs);
+                break;
+            }
+
+            case ss_expr_op::ELogOpOr: {
+                pass = static_cast<std::uint32_t>(lhs) | static_cast<std::uint32_t>(rhs);
+                break;
+            }
+
+            case ss_expr_op::EPrimTypeNumber:
+            case ss_expr_op::EPrimTypeVariable: {
+                pass = gasp_true_form_of_integral_expression(*expr);
                 break;
             }
 
             case ss_expr_op::EUnaryOpNot: {
-                pass = !if_stmt->expr.int_val;
+                pass = !lhs;
                 break;
             }
 
             case ss_expr_op::EFuncExists: {
-                pass = io->exist(if_stmt->expr.val.unicode_string);
+                pass = io->exist(expr->val.unicode_string);
                 break;
             }
 
             default: {
-                LOG_WARN("Unimplemented operation {} for expression", static_cast<int>(stmt_type));
+                pass = -1;
+                LOG_WARN("Unimplemented operation {} for expression", static_cast<int>(expr->op));
                 break;
             }
             }
@@ -435,12 +439,12 @@ namespace eka2l1 {
                         case 1 << 11:
                         case 1 << 12: { // Abort
                             mngr->delete_files_and_bucket(current_controller->info.uid.uid);
-                            const std::string err_string = fmt::format("Choosing No, installation abort for controller 0x{:X}", current_controller->info.uid.uid);
+                            const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controller->info.uid.uid);
 
                             LOG_ERROR("{}", err_string);
 
                             if (show_text) {
-                                show_text(err_string.c_str(), true);
+                                show_text(err_string.c_str(), false);
                             }
 
                             break;
@@ -488,14 +492,15 @@ namespace eka2l1 {
             // Parse if blocks
             for (auto &wrap_if_statement : install_block.if_blocks.fields) {
                 sis_if *if_stmt = (sis_if *)(wrap_if_statement.get());
+                auto result = condition_passed(&if_stmt->expr);
 
-                if (condition_passed(wrap_if_statement.get())) {
+                if (result) {
                     interpret(if_stmt->install_block, progress, crr_blck_idx);
                 } else {
                     for (auto &wrap_else_branch : if_stmt->else_if.fields) {
-                        sis_else_if *if_stmt = (sis_else_if *)(wrap_else_branch.get());
+                        sis_else_if *else_branch = (sis_else_if *)(wrap_else_branch.get());
 
-                        if (condition_passed(wrap_else_branch.get())) {
+                        if (condition_passed(&else_branch->expr)) {
                             interpret(if_stmt->install_block, progress, crr_blck_idx);
                         }
                     }
