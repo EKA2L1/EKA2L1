@@ -59,11 +59,6 @@ namespace eka2l1::manager {
 
         std::string storage = "data"; // Set this to dot, avoid making it absolute
 
-        int display_size_x_pixs{ 360 };
-        int display_size_y_pixs{ 640 };
-
-        std::uint32_t maximum_ram;
-
         bool enable_srv_ecom{ true };
         bool enable_srv_cenrep{ true };
         bool enable_srv_backup{ true };
@@ -82,7 +77,5 @@ namespace eka2l1::manager {
 
         void serialize();
         void deserialize();
-
-        const std::uint32_t get_hal_entry(const int key) const;
     };
 }
