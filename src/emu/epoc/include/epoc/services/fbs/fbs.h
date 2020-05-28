@@ -435,3 +435,7 @@ namespace eka2l1 {
         }
     };
 }
+
+namespace eka2l1::epoc {
+    bool does_client_use_pointer_instead_of_offset(fbscli *cli);
+}

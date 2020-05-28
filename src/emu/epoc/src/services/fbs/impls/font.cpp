@@ -33,11 +33,6 @@
 #include <epoc/utils/err.h>
 
 namespace eka2l1::epoc {
-    bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
-        const epocver current_sys_ver = cli->server<fbs_server>()->get_system()->get_symbian_version_use();
-        return (cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT) && (current_sys_ver < epocver::epoc95);
-    }
-
     void open_font_glyph_offset_array::init(fbscli *cli, const std::int32_t count) {
         offset_array_count = count;
 
@@ -417,16 +412,17 @@ namespace eka2l1 {
         }
 
         // Scale it
-        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
         epoc::bitmapfont *bmpfont = server<fbs_server>()->allocate_general_data<epoc::bitmapfont>();
+        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
 
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
             bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
         } else {
             // Better make it offset for future debugging purpose
+            // Mark bit 0 as set so that fntstore can recognised the offset model
             bmpfont->openfont = static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(
                                                               of)
-                - reinterpret_cast<std::uint8_t *>(bmpfont));
+                - reinterpret_cast<std::uint8_t *>(bmpfont)) | 0x1;
         }
 
         bmpfont->vtable = serv->bmp_font_vtab;
@@ -533,8 +529,8 @@ namespace eka2l1 {
         const fbsfont *font = get_font_object(ctx);
 
         process_ptr own_pr = ctx->msg->own_thr->owning_process();
-        const eka2l1::address addr = font->guest_font_offset + server<fbs_server>()->shared_chunk->
-            base(own_pr).ptr_address();
+        epoc::bitmapfont *bmp_font = reinterpret_cast<epoc::bitmapfont*>(font->guest_font_offset + reinterpret_cast<std::uint8_t*>(
+            server<fbs_server>()->shared_chunk->host_base()));
 
         if (codepoint & 0x80000000) {
             //LOG_DEBUG("Trying to rasterize glyph index {}", codepoint & ~0x80000000);
@@ -570,7 +566,6 @@ namespace eka2l1 {
 #define MAKE_CACHE_ENTRY(entry_ver)                                                                                         \
     epoc::open_font_session_cache_entry_v##entry_ver *cache_entry = reinterpret_cast<decltype(cache_entry)>(                \
         serv->allocate_general_data_impl(sizeof(epoc::open_font_session_cache_entry_v##entry_ver) + bitmap_data_size + 1)); \
-    epoc::bitmapfont *bmp_font = eka2l1::ptr<epoc::bitmapfont>(addr).get(pr);                                               \
     cache_entry->codepoint = codepoint;                                                                                     \
     cache_entry->glyph_index = codepoint % session_cache->offset_array.offset_array_count;                                  \
     cache_entry->offset = sizeof(epoc::open_font_session_cache_entry_v##entry_ver) + 1;                                     \
