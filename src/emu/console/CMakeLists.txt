@@ -20,6 +20,7 @@ target_link_libraries(console PRIVATE
         debugger
         drivers
         epoc
+        epockern
         epocservs
         manager
         gdbstub

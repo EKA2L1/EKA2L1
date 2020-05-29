@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <epoc/ipc.h>
+#include <kernel/ipc.h>
 #include <scripting/server.h>
 #include <scripting/session.h>
 #include <scripting/thread.h>

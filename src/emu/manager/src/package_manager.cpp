@@ -31,7 +31,7 @@
 #include <manager/sis_v1_installer.h>
 
 #include <epoc/epoc.h>
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 
 #include <fstream>
 #include <yaml-cpp/yaml.h>

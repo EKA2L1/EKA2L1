@@ -21,8 +21,8 @@
 #include <scripting/session.h>
 
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
-#include <epoc/services/session.h>
+#include <kernel/kernel.h>
+#include <kernel/session.h>
 
 namespace eka2l1::scripting {
     session_wrapper::session_wrapper(std::uint64_t handle)

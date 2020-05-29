@@ -2,7 +2,7 @@
 #include <common/algorithm.h>
 #include <common/path.h>
 #include <common/types.h>
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 
 struct io_scope_guard {
     eka2l1::io_system *io;

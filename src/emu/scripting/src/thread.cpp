@@ -25,8 +25,8 @@
 #include <scripting/thread.h>
 
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
-#include <epoc/kernel/thread.h>
+#include <kernel/kernel.h>
+#include <kernel/thread.h>
 
 namespace scripting = eka2l1::scripting;
 

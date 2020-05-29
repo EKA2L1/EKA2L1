@@ -27,10 +27,10 @@
 #include <common/types.h>
 
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
-#include <epoc/vfs.h>
-#include <epoc/services/window/window.h>
-#include <epoc/services/window/screen.h>
+#include <kernel/kernel.h>
+#include <vfs/vfs.h>
+#include <services/window/window.h>
+#include <services/window/screen.h>
 
 #include <manager/config.h>
 #include <manager/package_manager.h>

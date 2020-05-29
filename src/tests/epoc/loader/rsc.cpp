@@ -19,10 +19,10 @@
  */
 
 #include <catch2/catch.hpp>
-#include <epoc/loader/rsc.h>
+#include <loader/rsc.h>
 
 #include <common/buffer.h>
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 
 #include <fstream>
 #include <sstream>

@@ -13,7 +13,8 @@ target_link_libraries(ekatests PRIVATE
     common
     epocio
     epockern
-    epocloader)
+    epocloader
+    epocservs)
 
 add_test(
   NAME ekatests

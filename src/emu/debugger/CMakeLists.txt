@@ -22,7 +22,7 @@ target_link_libraries(debugger PRIVATE
         epoc
         epocapi
         epockern
-        epocloader
+        epocservs
         manager
         nativefilediag
         imgui

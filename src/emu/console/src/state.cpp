@@ -32,7 +32,7 @@
 #include <manager/device_manager.h>
 #include <manager/manager.h>
 
-#include <epoc/kernel.h>
+#include <kernel/kernel.h>
 
 namespace eka2l1::desktop {
     void emulator::stage_one() {

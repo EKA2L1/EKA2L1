@@ -20,9 +20,9 @@
 
 #include <arm/arm_interface.h>
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
-#include <epoc/kernel/process.h>
-#include <epoc/mem.h>
+#include <kernel/kernel.h>
+#include <kernel/process.h>
+#include <mem/mem.h>
 #include <gdbstub/gdbstub.h>
 
 namespace eka2l1 {

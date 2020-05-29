@@ -30,19 +30,19 @@
 
 #include <disasm/disasm.h>
 #include <epoc/epoc.h>
-#include <epoc/utils/locale.h>
+#include <utils/locale.h>
 
-#include <epoc/kernel.h>
-#include <epoc/kernel/libmanager.h>
-#include <epoc/kernel/thread.h>
+#include <kernel/kernel.h>
+#include <kernel/libmanager.h>
+#include <kernel/thread.h>
 
-#include <epoc/services/applist/applist.h>
-#include <epoc/services/ui/cap/eiksrv.h>
-#include <epoc/services/ui/cap/oom_app.h>
-#include <epoc/services/window/classes/winbase.h>
-#include <epoc/services/window/classes/wingroup.h>
-#include <epoc/services/window/classes/winuser.h>
-#include <epoc/services/window/window.h>
+#include <services/applist/applist.h>
+#include <services/ui/cap/eiksrv.h>
+#include <services/ui/cap/oom_app.h>
+#include <services/window/classes/winbase.h>
+#include <services/window/classes/wingroup.h>
+#include <services/window/classes/winuser.h>
+#include <services/window/window.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
 

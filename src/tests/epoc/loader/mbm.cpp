@@ -19,7 +19,7 @@
  */
 
 #include <catch2/catch.hpp>
-#include <epoc/loader/mbm.h>
+#include <loader/mbm.h>
 
 #include <common/buffer.h>
 

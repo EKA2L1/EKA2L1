@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/kernel/libmanager.h>
-#include <epoc/loader/e32img.h>
+#include <kernel/libmanager.h>
+#include <loader/e32img.h>
 
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>

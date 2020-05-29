@@ -4,6 +4,7 @@ add_library(gdbstub
 
 set(LIBRARIES
         arm
+        epoc
         epockern)
 
 if (WIN32)

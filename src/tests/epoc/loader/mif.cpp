@@ -19,10 +19,10 @@
  */
 
 #include <catch2/catch.hpp>
-#include <epoc/loader/mif.h>
+#include <loader/mif.h>
 
 #include <common/buffer.h>
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 
 using namespace eka2l1;
 

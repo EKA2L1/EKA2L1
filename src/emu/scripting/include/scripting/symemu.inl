@@ -13,8 +13,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <epoc/kernel/process.h>
-#include <epoc/kernel/thread.h>
+#include <kernel/process.h>
+#include <kernel/thread.h>
 
 namespace py = pybind11;
 namespace scripting = eka2l1::scripting;

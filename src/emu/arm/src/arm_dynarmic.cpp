@@ -25,10 +25,10 @@
 #include <arm/arm_utils.h>
 #include <disasm/disasm.h>
 
-#include <epoc/kernel.h>
-#include <epoc/kernel/libmanager.h>
-#include <epoc/mem.h>
-#include <epoc/timing.h>
+#include <kernel/kernel.h>
+#include <kernel/libmanager.h>
+#include <mem/mem.h>
+#include <kernel/timing.h>
 
 #include <gdbstub/gdbstub.h>
 

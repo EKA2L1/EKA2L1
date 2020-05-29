@@ -22,7 +22,7 @@
 #include <scripting/message.h>
 
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
+#include <kernel/kernel.h>
 
 #include <pybind11/pybind11.h>
 

@@ -37,7 +37,7 @@
 #include <drivers/input/common.h>
 
 #include <e32keys.h>
-#include <epoc/services/window/window.h>
+#include <services/window/window.h>
 
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);

@@ -32,8 +32,8 @@
 #include <pybind11/embed.h>
 #endif
 
-#include <epoc/kernel.h>
-#include <epoc/services/applist/applist.h>
+#include <kernel/kernel.h>
+#include <services/applist/applist.h>
 
 using namespace eka2l1;
 

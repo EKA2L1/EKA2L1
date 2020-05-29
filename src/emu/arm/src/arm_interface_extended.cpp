@@ -27,7 +27,7 @@
 #include <manager/script_manager.h>
 #endif
 
-#include <epoc/kernel.h>
+#include <kernel/kernel.h>
 #include <gdbstub/gdbstub.h>
 
 namespace eka2l1::arm {

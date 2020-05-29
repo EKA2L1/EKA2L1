@@ -33,7 +33,14 @@ pybind11_add_module(symemu_common
         src/common/register.cpp)
 
 target_include_directories(symemu PUBLIC include ${EPOC32_INCLUDE_DIR})
-target_link_libraries(symemu PRIVATE common epoc epockern manager)
+target_link_libraries(symemu PRIVATE common 
+        epoc
+        epockern
+        epocio
+        epocmem
+        epocutils
+        epocservs
+        manager)
 
 if (ENABLE_SCRIPTING_ABILITY)
     target_link_libraries(symemu PUBLIC pybind11)
@@ -44,7 +51,7 @@ if (UNIX OR APPLE)
 endif ()
 
 target_include_directories(symemu_common PUBLIC include)
-target_link_libraries(symemu_common PRIVATE common epocio pybind11)
+target_link_libraries(symemu_common PRIVATE common epocio epocservs pybind11)
 
 if (UNIX OR APPLE)
     target_link_libraries(symemu_common PRIVATE util)

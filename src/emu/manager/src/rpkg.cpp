@@ -21,7 +21,7 @@
 #include <manager/device_manager.h>
 #include <manager/rpkg.h>
 
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>

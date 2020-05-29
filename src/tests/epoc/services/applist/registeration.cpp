@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/loader/rsc.h>
-#include <epoc/services/applist/applist.h>
-#include <epoc/vfs.h>
+#include <loader/rsc.h>
+#include <services/applist/applist.h>
+#include <vfs/vfs.h>
 
 #include <common/algorithm.h>
 #include <common/buffer.h>

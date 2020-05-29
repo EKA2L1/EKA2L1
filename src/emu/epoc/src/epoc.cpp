@@ -20,7 +20,7 @@
 
 #include <common/configure.h>
 #include <epoc/epoc.h>
-#include <epoc/kernel/process.h>
+#include <kernel/process.h>
 
 #include <common/algorithm.h>
 #include <common/chunkyseri.h>
@@ -33,11 +33,11 @@
 
 #include <disasm/disasm.h>
 
-#include <epoc/loader/e32img.h>
+#include <loader/e32img.h>
 #include <manager/rpkg.h>
 
 #include <epoc/hal.h>
-#include <epoc/utils/panic.h>
+#include <utils/panic.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
@@ -51,15 +51,16 @@
 #include <drivers/itc.h>
 #include <gdbstub/gdbstub.h>
 
-#include <epoc/kernel.h>
-#include <epoc/mem.h>
-#include <epoc/ptr.h>
+#include <kernel/kernel.h>
+#include <mem/mem.h>
+#include <mem/ptr.h>
 
-#include <epoc/dispatch/dispatcher.h>
-#include <epoc/kernel/libmanager.h>
-#include <epoc/loader/rom.h>
-#include <epoc/timing.h>
-#include <epoc/vfs.h>
+#include <dispatch/dispatcher.h>
+#include <kernel/libmanager.h>
+#include <loader/rom.h>
+#include <kernel/timing.h>
+#include <services/init.h>
+#include <vfs/vfs.h>
 
 #include <arm/arm_factory.h>
 #include <arm/arm_interface_extended.h>
@@ -334,6 +335,8 @@ namespace eka2l1 {
 
         epoc::init_hal(parent);
         epoc::init_panic_descriptions();
+
+        service::init_services(parent);
 
         // Try to set system language
         set_system_language(static_cast<language>(conf->language));

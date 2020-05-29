@@ -20,6 +20,7 @@ target_include_directories(arm PUBLIC include)
 target_link_libraries(arm PUBLIC common)
 target_link_libraries(arm
         PRIVATE
+        epoc
         epocmem
         epockern
         debugger

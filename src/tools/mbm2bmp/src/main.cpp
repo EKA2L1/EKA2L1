@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/loader/mbm.h>
+#include <loader/mbm.h>
 
 #include <common/buffer.h>
 #include <common/cvt.h>

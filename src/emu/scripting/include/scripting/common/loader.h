@@ -21,8 +21,8 @@
 
 #include <common/buffer.h>
 
-#include <epoc/loader/mbm.h>
-#include <epoc/loader/mif.h>
+#include <loader/mbm.h>
+#include <loader/mif.h>
 
 #include <pybind11/pybind11.h>
 

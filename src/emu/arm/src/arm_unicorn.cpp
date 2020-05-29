@@ -26,16 +26,16 @@
 
 #include <common/configure.h>
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
+#include <kernel/kernel.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
 #endif
 
 #include <disasm/disasm.h>
-#include <epoc/kernel/libmanager.h>
-#include <epoc/ptr.h>
-#include <epoc/timing.h>
+#include <kernel/libmanager.h>
+#include <mem/ptr.h>
+#include <kernel/timing.h>
 #include <gdbstub/gdbstub.h>
 #include <manager/config.h>
 #include <manager/manager.h>

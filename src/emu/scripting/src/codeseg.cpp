@@ -22,9 +22,9 @@
 #include <scripting/process.h>
 
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
-#include <epoc/kernel/codeseg.h>
-#include <epoc/kernel/libmanager.h>
+#include <kernel/kernel.h>
+#include <kernel/codeseg.h>
+#include <kernel/libmanager.h>
 
 #include <common/cvt.h>
 #include <pybind11/embed.h>

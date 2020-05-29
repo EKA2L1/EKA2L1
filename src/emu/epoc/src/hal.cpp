@@ -17,20 +17,20 @@
 
 #include <epoc/epoc.h>
 #include <epoc/hal.h>
-#include <epoc/kernel.h>
-#include <epoc/services/window/window.h>
-#include <epoc/timing.h>
+#include <kernel/kernel.h>
+#include <services/window/window.h>
+#include <kernel/timing.h>
 
-#include <epoc/loader/rom.h>
+#include <loader/rom.h>
 
 #include <common/algorithm.h>
 #include <common/log.h>
 
-#include <epoc/common.h>
-#include <epoc/utils/err.h>
+#include <common/common.h>
+#include <utils/err.h>
 
 #include <drivers/graphics/graphics.h>
-#include <epoc/utils/des.h>
+#include <utils/des.h>
 
 #include <manager/config.h>
 

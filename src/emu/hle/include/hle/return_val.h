@@ -21,7 +21,7 @@
 #pragma once
 
 #include <arm/arm_factory.h>
-#include <epoc/ptr.h>
+#include <mem/ptr.h>
 
 namespace eka2l1 {
     namespace hle {

@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/services/server.h>
+#include <kernel/server.h>
 #include <scripting/server.h>
 
 namespace eka2l1::scripting {

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <epoc/ptr.h>
+#include <mem/ptr.h>
 
 namespace eka2l1 {
     namespace kernel {

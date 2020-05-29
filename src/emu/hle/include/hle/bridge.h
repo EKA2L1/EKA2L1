@@ -29,10 +29,8 @@
 #include <hle/return_val.h>
 #include <hle/write_arg.h>
 
-// Normally we can just calls method blindly with forward declaring, considering how template is done
-// But it keeps warnings about what we are doing, so include this. Full definition of system.
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
+#include <kernel/kernel.h>
 
 #include <cstdint>
 #include <functional>

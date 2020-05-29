@@ -21,7 +21,7 @@
 #include <arm/arm_factory.h>
 #include <arm/arm_unicorn.h>
 
-#include <epoc/timing.h>
+#include <kernel/timing.h>
 
 namespace eka2l1::arm {
     cpu create_cpu(kernel_system *kern, ntimer *timing, manager::config_state *conf,

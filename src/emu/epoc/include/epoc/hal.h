@@ -18,7 +18,7 @@
 #pragma once
 
 #include <common/vecx.h>
-#include <epoc/ptr.h>
+#include <mem/ptr.h>
 
 #include <functional>
 #include <unordered_map>

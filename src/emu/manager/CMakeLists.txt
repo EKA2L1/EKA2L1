@@ -36,11 +36,11 @@ target_link_libraries(manager PUBLIC common)
 
 if (ENABLE_SCRIPTING_ABILITY)
     target_link_libraries(manager PUBLIC pybind11::embed)
-    target_link_libraries(manager PRIVATE symemu epockern)
+    target_link_libraries(manager PRIVATE symemu epoc epockern)
 
     if (NOT MSVC)
         target_link_libraries(manager PRIVATE stdc++fs)
     endif ()
 endif (ENABLE_SCRIPTING_ABILITY)
 
-target_link_libraries(manager PRIVATE epocio miniz yaml-cpp)
+target_link_libraries(manager PRIVATE epoc epockern epocmem epocservs miniz yaml-cpp)
