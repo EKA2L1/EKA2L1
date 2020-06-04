@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <common/container.h>
 
 #include <kernel/common.h>
 #include <mem/ptr.h>
@@ -30,7 +31,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace YAML {
@@ -73,48 +73,44 @@ namespace eka2l1 {
         using export_table = std::vector<std::uint32_t>;
         using symbols = std::vector<std::string>;
 
-        /*! \brief Manage libraries and HLE functions.
+        using codeseg_loaded_callback = std::function<void(const std::string&, kernel::process*, codeseg_ptr)>;
+
+        /**
+         * \brief Manage libraries and HLE functions.
 		 * 
 		 * HLE functions are stored here. Libraries and images are also cached
 		 * and load when needed.
 		*/
         class lib_manager {
-            io_system *io;
-            memory_system *mem;
-            kernel_system *kern;
-            system *sys;
+        private:
+            io_system *io_;
+            memory_system *mem_;
+            kernel_system *kern_;
+            system *sys_;
 
             bool log_svc{ false };
 
-        protected:
-            void load_patch_libraries(const std::string &patch_folder);
+            common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
 
         public:
-            std::unordered_map<sid, epoc_import_func> svc_funcs;
+            std::map<sid, epoc_import_func> svc_funcs_;
 
-            explicit lib_manager();
+            explicit lib_manager(kernel_system *kern, io_system *ios, memory_system *mems);
+            ~lib_manager();
 
-            bool patch_scripts(const std::string &lib_name, kernel::process *pr, codeseg_ptr seg);
+            void run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target);
+
+            std::size_t register_codeseg_loaded_callback(codeseg_loaded_callback callback);
+            bool unregister_codeseg_loaded_callback(const std::size_t handle);
 
             /**
-             * \brief Initialize the library manager.
-             * 
-			 * \param ver The EPOC version to import HLE functions.
-			*/
-            void init(system *sys, kernel_system *kern, io_system *ios, memory_system *mems, epocver ver);
-
-            /*! \brief Shutdown the library manager. */
-            void shutdown();
-
-            /*! \brief Reset the library manager. */
-            void reset();
-
-            /*! \brief Call a HLE system call.
+             * \brief Call a HLE system call.
 			 * \param svcnum The system call ordinal.
 			*/
             bool call_svc(sid svcnum);
 
-            /*! \brief Load a codeseg/library/exe from name
+            /**
+             * \brief Load a codeseg/library/exe from name
              *
              * If the manager detects we are loading a library and a HLE module is available,
              * it will returns a HLE codeseg contains HLE export
@@ -130,9 +126,9 @@ namespace eka2l1 {
             codeseg_ptr load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path = u"");
             codeseg_ptr load_as_romimg(loader::romimg &img, kernel::process *pr, const std::u16string &path = u"");
 
-            system *get_sys() {
-                return sys;
-            }
+            void load_patch_libraries(const std::string &patch_folder);
+
+            system *get_sys();
         };
     }
 

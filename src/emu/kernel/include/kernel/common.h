@@ -25,12 +25,20 @@
 #include <string>
 
 namespace eka2l1 {
-    class system;
+    class kernel_system;
+
+    namespace kernel {
+        class process;
+    }
+
+    namespace arm {
+        class core;
+    }
 }
 
 namespace eka2l1::hle {
     struct epoc_import_func {
-        std::function<void(system *)> func;
+        std::function<void(kernel_system *, kernel::process *, arm::core *)> func;
         std::string name;
     };
 
@@ -43,5 +51,13 @@ namespace eka2l1::kernel {
         terminate = 1,
         panic = 2,
         pending = 3
+    };
+    
+    enum raw_event_type {
+        raw_event_type_redraw = 5
+    };
+
+    struct raw_event {
+        raw_event_type type_;
     };
 }

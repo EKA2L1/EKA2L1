@@ -134,7 +134,7 @@ namespace eka2l1 {
         public:
             std::uint32_t frequent_process_event;
 
-            server(system *sys, const std::string name, bool hle = false,
+            explicit server(kernel_system *kern, system *sys, const std::string name, bool hle = false,
                 bool unhandle_callback_enable = false);
             ~server() override;
 

@@ -41,7 +41,7 @@ namespace eka2l1::mem::flexible {
         linear_section  code_sec_;                      ///< Code section.
 
     public:
-        explicit mmu_flexible(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10,
+        explicit mmu_flexible(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits = 10,
             const bool mem_map_old = false);
 
         void *get_host_pointer(const asid id, const vm_address addr) override;

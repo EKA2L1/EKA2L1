@@ -25,8 +25,7 @@
 #include <kernel/server.h>
 #include <kernel/timing.h>
 
-#include <manager/config.h>
-#include <manager/manager.h>
+#include <config/config.h>
 
 namespace eka2l1 {
     namespace service {
@@ -47,12 +46,11 @@ namespace eka2l1 {
         }
 
         // Create a server with name
-        server::server(system *sys, const std::string name, bool hle, bool unhandle_callback_enable)
-            : sys(sys)
+        server::server(kernel_system *kern, system *sys, const std::string name, bool hle, bool unhandle_callback_enable)
+            : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
+            , sys(sys)
             , hle(hle)
-            , unhandle_callback_enable(unhandle_callback_enable)
-            , kernel_obj(sys->get_kernel_system(), name, nullptr, kernel::access_type::global_access) {
-            kernel_system *kern = sys->get_kernel_system();
+            , unhandle_callback_enable(unhandle_callback_enable) {
             process_msg = kern->create_msg(kernel::owner_type::process);
             process_msg->lock_free();
 
@@ -129,7 +127,7 @@ namespace eka2l1 {
         }
 
         void server::destroy() {
-            sys->get_kernel_system()->free_msg(process_msg);
+            kern->free_msg(process_msg);
         }
 
         void server::finish_request_lle(ipc_msg_ptr &msg, bool notify_owner) {
@@ -155,13 +153,13 @@ namespace eka2l1 {
 
         void server::receive_async_lle(eka2l1::ptr<epoc::request_status> msg_request_status,
             eka2l1::ptr<message2> data) {
-            ipc_msg_ptr msg = sys->get_kernel_system()->create_msg(kernel::owner_type::process);
+            ipc_msg_ptr msg = kern->create_msg(kernel::owner_type::process);
             msg->free = false;
 
             int res = receive(msg);
 
             request_status = msg_request_status;
-            request_own_thread = sys->get_kernel_system()->crr_thread();
+            request_own_thread = kern->crr_thread();
             request_data = data;
 
             if (res == -1) {

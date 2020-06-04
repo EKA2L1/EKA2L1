@@ -119,7 +119,7 @@ enum class drive_media {
     ram
 };
 
-enum arm_emulator_type {
+enum class arm_emulator_type {
     unicorn = 0,
     dynarmic = 1
 };

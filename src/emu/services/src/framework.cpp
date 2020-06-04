@@ -20,6 +20,8 @@
 #include <common/log.h>
 #include <services/framework.h>
 
+#include <epoc/epoc.h>
+
 namespace eka2l1::service {
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
         const std::lock_guard<std::mutex> guard(obj_lock);
@@ -41,7 +43,7 @@ namespace eka2l1::service {
     }
 
     typical_server::typical_server(system *sys, const std::string name)
-        : server(sys, name, true, false) {
+        : server(sys->get_kernel_system(), sys, name, true, false) {
     }
 
     typical_server::~typical_server() {

@@ -19,9 +19,10 @@
  */
 
 #include <services/install/install.h>
+#include <epoc/epoc.h>
 
 namespace eka2l1 {
     install_server::install_server(eka2l1::system *sys)
-        : service::server(sys, "!InstallServer", true) {
+        : service::server(sys->get_kernel_system(), sys, "!InstallServer", true) {
     }
 }

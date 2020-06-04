@@ -25,7 +25,7 @@
 #include <common/virtualmem.h>
 #include <mem/mmu.h>
 
-#include <arm/arm_interface.h>
+#include <cpu/arm_interface.h>
 
 namespace eka2l1::mem {
     multiple_mem_model_process::multiple_mem_model_process(mmu_base *mmu)

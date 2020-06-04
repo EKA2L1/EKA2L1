@@ -41,7 +41,7 @@
 
 namespace eka2l1 {
     applist_server::applist_server(system *sys)
-        : service::server(sys, "!AppListServer", true) {
+        : service::server(sys->get_kernel_system(), sys, "!AppListServer", true) {
         REGISTER_IPC(applist_server, default_screen_number,
             EAppListServGetDefaultScreenNumber, "GetDefaultScreenNumber");
         REGISTER_IPC(applist_server, app_language,

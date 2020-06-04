@@ -6,8 +6,10 @@ add_library(epoc
 
 target_include_directories(epoc PUBLIC include)
 target_link_libraries(epoc PRIVATE
-        arm
+        bridge
+        cpu
         common
+        config
         disasm
         drivers
         epocdispatch
@@ -15,6 +17,5 @@ target_link_libraries(epoc PRIVATE
         epocio
         epocloader
         epocservs
-        hle
         gdbstub
         manager)

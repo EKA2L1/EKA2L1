@@ -54,7 +54,7 @@
 #include <services/init.h>
 #include <utils/locale.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
 
@@ -117,7 +117,7 @@ namespace eka2l1::epoc {
         return locale;
     }
 
-    static void initialize_system_properties(eka2l1::system *sys, manager::config_state *cfg) {
+    static void initialize_system_properties(eka2l1::system *sys, eka2l1::config::state *cfg) {
         auto lang = epoc::locale_language{ epoc::lang_english, 0, 0, 0, 0, 0, 0, 0 };
         auto locale = epoc::get_locale_info();
         auto &dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
@@ -151,7 +151,7 @@ namespace eka2l1 {
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
 
-            manager::config_state *cfg = sys->get_config();
+            config::state *cfg = sys->get_config();
 
             if (cfg->enable_srv_ecom)
                 CREATE_SERVER(sys, ecom_server);

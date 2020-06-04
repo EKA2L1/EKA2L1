@@ -921,7 +921,7 @@ namespace eka2l1 {
 
     // TODO: Anim scheduler currently has no way to resize number of screens after construction.
     window_server::window_server(system *sys)
-        : service::server(sys, WINDOW_SERVER_NAME, true, true)
+        : service::server(sys->get_kernel_system(), sys, WINDOW_SERVER_NAME, true, true)
         , bmp_cache(sys->get_kernel_system())
         , anim_sched(sys->get_kernel_system(), sys->get_ntimer(), 1)
         , screens(nullptr)
@@ -958,7 +958,7 @@ namespace eka2l1 {
         return get_system()->get_kernel_system();
     }
 
-    constexpr std::int64_t input_update_us = 10;
+    constexpr std::int64_t input_update_us = 700;
 
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0

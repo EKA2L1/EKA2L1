@@ -133,7 +133,7 @@ namespace eka2l1::kernel {
 
         // Create a ROM BSS chunk for this process
         rom_bss_chunk = kern->create<kernel::chunk>(mem, this, fmt::format("RomBssChunkProcess{}", uid),
-            0, mem::MAX_ROM_BSS_SECT_SIZE, mem::MAX_ROM_BSS_SECT_SIZE, prot::read_write,
+            0, static_cast<address>(mem::MAX_ROM_BSS_SECT_SIZE), mem::MAX_ROM_BSS_SECT_SIZE, prot::read_write,
             kernel::chunk_type::normal, kernel::chunk_access::dll_static_data,
             kernel::chunk_attrib::none, false, get_rom_bss_addr(mem->get_model_type()));
     }

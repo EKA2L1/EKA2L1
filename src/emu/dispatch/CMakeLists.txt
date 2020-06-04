@@ -13,10 +13,9 @@ add_library(epocdispatch
 
 target_include_directories(epocdispatch PUBLIC include)
 
-
 target_link_libraries(epocdispatch PUBLIC
-        common
-        hle)
+        bridge
+        common)
 
 target_link_libraries(epocdispatch PRIVATE
         drivers

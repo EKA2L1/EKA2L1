@@ -1,4 +1,8 @@
 
+add_library(epoctiming   
+        include/kernel/timing.h
+        src/timing.cpp)
+
 # The kernel
 add_library(epockern
         include/kernel/smp/avail.h
@@ -26,7 +30,6 @@ add_library(epockern
         include/kernel/thread.h
         include/kernel/timer.h
         include/kernel/kernel.h
-        include/kernel/timing.h
         include/kernel/reg.h
         include/kernel/svc.h
         src/smp/avail.cpp
@@ -52,29 +55,26 @@ add_library(epockern
         src/server.cpp
         src/session.cpp
         src/svc.cpp
-        src/timing.cpp
         )
 
+target_include_directories(epoctiming PUBLIC include)
 target_include_directories(epockern PUBLIC include)
 
-# TODO: Make arm dependency private.
+target_link_libraries(epoctiming PUBLIC
+        common)
+
 target_link_libraries(epockern PUBLIC
-        arm 
+        bridge
+        cpu 
         common
+        config
+        disasm
         drivers
         epocio
         epocutils)
 
 target_link_libraries(epockern PRIVATE
-        epoc
-        epocdispatch
         epocloader
         epocmem
-        epocservs
-        manager
-        hle
+        epoctiming
         )
-
-if (ENABLE_SCRIPTING_ABILITY)
-    target_link_libraries(epockern PRIVATE manager)
-endif ()

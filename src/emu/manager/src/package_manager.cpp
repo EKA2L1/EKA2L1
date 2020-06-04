@@ -25,7 +25,7 @@
 
 #include <manager/sis.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 #include <manager/sis_v1_installer.h>
@@ -41,14 +41,14 @@ namespace eka2l1 {
         static constexpr const char *APP_REGISTRY_FILENAME = "apps_registry.yml";
         static constexpr const char *PACKAGE_FOLDER_PATH = "packages";
 
-        package_manager::package_manager(system *sys, config_state *conf)
+        package_manager::package_manager(system *sys, config::state *conf)
             : sys(sys)
             , conf(conf) {
             load_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
             eka2l1::create_directory(add_path(conf->storage, PACKAGE_FOLDER_PATH));
         }
 
-        static std::string get_bucket_stream_path(config_state *state, const uid package_uid) {
+        static std::string get_bucket_stream_path(config::state *state, const uid package_uid) {
             return add_path(state->storage, add_path(PACKAGE_FOLDER_PATH, common::to_string(package_uid, std::hex) + ".txt"));
         }
 

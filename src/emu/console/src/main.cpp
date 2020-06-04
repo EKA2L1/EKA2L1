@@ -47,7 +47,7 @@
 #include <drivers/graphics/graphics.h> // Declaration for graphics driver. Happy!
 #include <epoc/epoc.h>
 #include <loader/rom.h>
-#include <manager/config.h>
+#include <config/config.h>
 
 #include <kernel/libmanager.h>
 

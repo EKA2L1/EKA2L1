@@ -15,7 +15,7 @@ add_library(debugger
 
 target_include_directories(debugger PUBLIC include)
 target_link_libraries(debugger PRIVATE
-        arm
+        cpu
         common
         disasm
         drivers

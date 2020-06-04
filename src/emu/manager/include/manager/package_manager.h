@@ -36,10 +36,13 @@ namespace eka2l1 {
         struct sis_controller;
     }
 
+    namespace config {
+        struct state;
+    }
+
     /*! \brief Managing apps. */
     namespace manager {
         using uid = uint32_t;
-        struct config_state;
 
         struct package_info {
             std::u16string name;
@@ -57,7 +60,7 @@ namespace eka2l1 {
             bool write_sdb_yaml(const std::string &path);
 
             system *sys;
-            config_state *conf;
+            config::state *conf;
 
             bool install_controller(loader::sis_controller *ctrl, drive_number drv);
             void add_package(package_info &pkg);
@@ -68,7 +71,7 @@ namespace eka2l1 {
             loader::choose_lang_func choose_lang;
 
             explicit package_manager() = default;
-            explicit package_manager(system *sys, config_state *conf);
+            explicit package_manager(system *sys, config::state *conf);
 
             bool installed(const uid pkg_uid);
 

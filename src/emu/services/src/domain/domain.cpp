@@ -814,7 +814,7 @@ namespace eka2l1 {
     }
 
     domain_server::domain_server(eka2l1::system *sys, std::shared_ptr<domain_manager> &mngr)
-        : server(sys, "!DmDomainServer", true)
+        : server(sys->get_kernel_system(), sys, "!DmDomainServer", true)
         , mngr(mngr) {
         /* REGISTER IPC */
         REGISTER_IPC(domain_server, join_domain, EDmDomainJoin, "DmDomain::JoinDomain");
@@ -826,7 +826,7 @@ namespace eka2l1 {
     }
 
     domainmngr_server::domainmngr_server(eka2l1::system *sys)
-        : server(sys, "!DmManagerServer", true) {
+        : server(sys->get_kernel_system(), sys, "!DmManagerServer", true) {
         mngr = std::make_shared<domain_manager>();
         mngr->timing = sys->get_ntimer();
         mngr->kern = sys->get_kernel_system();

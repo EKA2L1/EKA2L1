@@ -27,7 +27,7 @@
 #include <stack>
 #include <string>
 
-#include <arm/arm_factory.h>
+#include <cpu/arm_factory.h>
 
 #include <common/linked.h>
 #include <common/queue.h>
@@ -124,7 +124,7 @@ namespace eka2l1 {
         };
 
         struct debug_function_trace {
-            arm::arm_interface::thread_context ctx;
+            arm::core::thread_context ctx;
             std::string func_name;
         };
 
@@ -142,7 +142,7 @@ namespace eka2l1 {
             std::condition_variable todo;
 
             // Thread context to save when suspend the execution
-            arm::arm_interface::thread_context ctx;
+            arm::core::thread_context ctx;
 
             thread_priority priority;
 
@@ -167,7 +167,7 @@ namespace eka2l1 {
 
             thread_local_data *ldata;
 
-            std::shared_ptr<thread_scheduler> scheduler;
+            thread_scheduler *scheduler;
             std::stack<debug_function_trace> call_stacks;
 
             sema_ptr request_sema;
@@ -258,7 +258,7 @@ namespace eka2l1 {
             }
 
             void push_call(const std::string &func_name,
-                const arm::arm_interface::thread_context &ctx);
+                const arm::core::thread_context &ctx);
 
             void pop_call();
 
@@ -327,7 +327,7 @@ namespace eka2l1 {
                 return ldata;
             }
 
-            std::shared_ptr<thread_scheduler> get_scheduler() {
+            thread_scheduler *get_scheduler() {
                 return scheduler;
             }
 
@@ -335,7 +335,7 @@ namespace eka2l1 {
                 return reinterpret_cast<kernel::process *>(owner);
             }
 
-            arm::arm_interface::thread_context &get_thread_context() {
+            arm::core::thread_context &get_thread_context() {
                 return ctx;
             }
 

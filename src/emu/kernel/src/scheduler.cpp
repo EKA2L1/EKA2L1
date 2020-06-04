@@ -33,17 +33,11 @@
 #include <kernel/timing.h>
 #include <functional>
 
-#if ENABLE_SCRIPTING
-#include <manager/script_manager.h>
-#endif
-
 namespace eka2l1::kernel {
-    thread_scheduler::thread_scheduler(kernel_system *kern, ntimer *timing, manager::script_manager *scripter,
-        arm::arm_interface &cpu)
+    thread_scheduler::thread_scheduler(kernel_system *kern, ntimer *timing, arm::core *cpu)
         : kern(kern)
         , timing(timing)
-        , jitter(&cpu)
-        , scripter(scripter)
+        , run_core(cpu)
         , crr_thread(nullptr)
         , crr_process(nullptr) {
         wakeup_evt = timing->get_register_event("SchedulerWakeUpThread");
@@ -67,7 +61,7 @@ namespace eka2l1::kernel {
     void thread_scheduler::switch_context(kernel::thread *oldt, kernel::thread *newt) {
         if (oldt) {
             oldt->lrt = timing->ticks();
-            jitter->save_context(oldt->ctx);
+            run_core->save_context(oldt->ctx);
 
             if (oldt->state == thread_state::run) {
                 oldt->state = thread_state::ready;
@@ -84,27 +78,18 @@ namespace eka2l1::kernel {
             if (crr_process != newt->owning_process()) {
                 if (crr_process) {
                     crr_process->get_mem_model()->unmap_from_cpu();
-
-#if ENABLE_SCRIPTING
-                    if (scripter)
-                        scripter->write_back_breakpoints(crr_process);
-#endif
                 }
 
+                kern->call_process_switch_callbacks(run_core, crr_process, newt->owning_process());
                 crr_process = newt->owning_process();
 
                 memory_system *mem = kern->get_memory_system();
                 mem->get_mmu()->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
 
                 crr_process->get_mem_model()->remap_to_cpu();
-                
-#if ENABLE_SCRIPTING
-                if (scripter)
-                    scripter->write_breakpoint_blocks(crr_process);
-#endif
             }
 
-            jitter->load_context(crr_thread->ctx);
+            run_core->load_context(crr_thread->ctx);
             //LOG_TRACE("Switched to {}", crr_thread->name());
         } else {
             crr_thread = nullptr;

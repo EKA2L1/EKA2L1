@@ -21,6 +21,7 @@
 #include <services/sms/sa/sa.h>
 #include <services/context.h>
 
+#include <epoc/epoc.h>
 #include <utils/err.h>
 
 namespace eka2l1 {
@@ -47,7 +48,7 @@ namespace eka2l1 {
     }
 
     sa_server::sa_server(eka2l1::system *sys)
-        : service::server(sys, "SAServer", true) {
+        : service::server(sys->get_kernel_system(), sys, "SAServer", true) {
         REGISTER_IPC(sa_server, unk_op1, 1001, "SaServer::UnkOp1");
     }
 }

@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arm/arm_interface.h>
+#include <cpu/arm_interface.h>
 #include <mem/mmu.h>
 
 #include <mem/model/flexible/mmu.h>
 #include <mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
-    mmu_base::mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old)
+    mmu_base::mmu_base(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old)
         : alloc_(alloc)
         , cpu_(cpu)
         , page_size_bits_(psize_bits)
@@ -48,6 +48,17 @@ namespace eka2l1::mem {
             chunk_size_ = CHUNK_SIZE_12B;
             page_per_tab_shift_ = PAGE_PER_TABLE_SHIFT_12B;
         }
+
+        // Set CPU read/write functions
+        cpu->read_8bit = [this](const vm_address addr, std::uint8_t* data) { return read_8bit_data(addr, data); };
+        cpu->read_16bit = [this](const vm_address addr, std::uint16_t* data) { return read_16bit_data(addr, data); };
+        cpu->read_32bit = [this](const vm_address addr, std::uint32_t* data) { return read_32bit_data(addr, data); };
+        cpu->read_64bit = [this](const vm_address addr, std::uint64_t* data) { return read_64bit_data(addr, data); };
+
+        cpu->write_8bit = [this](const vm_address addr, std::uint8_t* data) { return write_8bit_data(addr, data); };
+        cpu->write_16bit = [this](const vm_address addr, std::uint16_t* data) { return write_16bit_data(addr, data); };
+        cpu->write_32bit = [this](const vm_address addr, std::uint32_t* data) { return write_32bit_data(addr, data); };
+        cpu->write_64bit = [this](const vm_address addr, std::uint64_t* data) { return write_64bit_data(addr, data); };
     }
 
     page_table *mmu_base::create_new_page_table() {
@@ -62,7 +73,7 @@ namespace eka2l1::mem {
         cpu_->unmap_memory(addr, size);
     }
 
-    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old,
+    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model) {
         switch (model) {
         case mem_model_type::multiple: {
@@ -78,5 +89,87 @@ namespace eka2l1::mem {
         }
 
         return nullptr;
+    }
+    
+    /// ================== MISCS ====================
+
+    bool mmu_base::read_8bit_data(const vm_address addr, std::uint8_t *data) {
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *data = *ptr;
+        return true;
+    }
+
+    bool mmu_base::read_16bit_data(const vm_address addr, std::uint16_t *data) {
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *data = *ptr;
+        return true;
+    }
+
+    bool mmu_base::read_32bit_data(const vm_address addr, std::uint32_t *data) {
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *data = *ptr;
+        return true;
+    }
+
+    bool mmu_base::read_64bit_data(const vm_address addr, std::uint64_t *data) {
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *data = *ptr;
+        return true;
+    }
+
+    bool mmu_base::write_8bit_data(const vm_address addr, std::uint8_t *data) {
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *ptr = *data;
+        return true;
+    }
+
+    bool mmu_base::write_16bit_data(const vm_address addr, std::uint16_t *data) {
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *ptr = *data;
+        return true;
+    }
+
+    bool mmu_base::write_32bit_data(const vm_address addr, std::uint32_t *data) {
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *ptr = *data;
+        return true;
+    }
+
+    bool mmu_base::write_64bit_data(const vm_address addr, std::uint64_t *data) {
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(get_host_pointer(-1, addr));
+        if (!ptr) {
+            return false;
+        }
+
+        *ptr = *data;
+        return true;
     }
 }

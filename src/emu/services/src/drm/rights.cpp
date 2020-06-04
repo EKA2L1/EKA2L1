@@ -19,9 +19,10 @@
  */
 
 #include <services/drm/rights.h>
+#include <epoc/epoc.h>
 
 namespace eka2l1 {
     rights_server::rights_server(eka2l1::system *sys)
-        : service::server(sys, "!RightsServer", true) {
+        : service::server(sys->get_kernel_system(), sys, "!RightsServer", true) {
     }
 }

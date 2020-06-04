@@ -56,8 +56,8 @@ namespace eka2l1 {
     }
 
     namespace arm {
-        class arm_interface;
-        using cpu = std::unique_ptr<arm_interface>;
+        class core;
+        using core_instance = std::unique_ptr<core>;
     }
 
     class debugger_base;
@@ -67,8 +67,8 @@ namespace eka2l1 {
         struct rom;
     }
 
-    namespace manager {
-        struct config_state;
+    namespace config {
+        struct state;
     }
 
     namespace dispatch {
@@ -93,7 +93,7 @@ namespace eka2l1 {
         system &operator=(system &&) = delete;
 
         system(drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver,
-            manager::config_state *conf);
+            config::state *conf);
 
         ~system();
 
@@ -128,11 +128,11 @@ namespace eka2l1 {
         gdbstub *get_gdb_stub();
         drivers::graphics_driver *get_graphics_driver();
         drivers::audio_driver *get_audio_driver();
-        arm::cpu &get_cpu();
-        manager::config_state *get_config();
+        arm::core *get_cpu();
+        config::state *get_config();
         dispatch::dispatcher *get_dispatcher();
 
-        void set_config(manager::config_state *conf);
+        void set_config(config::state *conf);
 
         void mount(drive_number drv, const drive_media media, std::string path,
             const io_attrib attrib = io_attrib::none);

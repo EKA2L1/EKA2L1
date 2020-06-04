@@ -19,8 +19,10 @@
 
 #pragma once
 
-#include <arm/arm_factory.h>
+#include <cpu/arm_factory.h>
+
 #include <common/configure.h>
+#include <common/container.h>
 #include <common/queue.h>
 
 #include <algorithm>
@@ -41,17 +43,12 @@ namespace eka2l1 {
         class process;
     }
 
-    namespace manager {
-        class script_manager;
-    }
-
     struct thread_comparator {
         bool operator()(const kernel::thread *x, const kernel::thread *y) const;
     };
 
     namespace kernel {
         enum class thread_state;
-
         using uid = std::uint32_t;
 
         class thread_scheduler {
@@ -61,27 +58,22 @@ namespace eka2l1 {
             kernel::thread *crr_thread;
             kernel::process *crr_process;
 
-            uint32_t ticks_yield;
-
-            arm::arm_interface *jitter;
+            ntimer *timing;
+            kernel_system *kern;
+            arm::core *run_core;
 
             int wakeup_evt;
             int yield_evt;
-
-            std::mutex mut;
-            ntimer *timing;
-            kernel_system *kern;
-
-            manager::script_manager *scripter;
+            std::uint32_t ticks_yield;
 
         protected:
             kernel::thread *next_ready_thread();
             void switch_context(kernel::thread *oldt, kernel::thread *newt);
+            void call_process_switch_callbacks(kernel::process *old, kernel::process *new_one);
 
         public:
             // The constructor also register all the needed event
-            explicit thread_scheduler(kernel_system *kern, ntimer *sys, manager::script_manager *scripter,
-                arm::arm_interface &cpu);
+            explicit thread_scheduler(kernel_system *kern, ntimer *timing, arm::core *cpu);
 
             void queue_thread_ready(kernel::thread *thr);
             void dequeue_thread_from_ready(kernel::thread *thr);

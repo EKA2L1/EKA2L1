@@ -197,7 +197,7 @@ target_link_libraries(epocservs PUBLIC
         epocutils)
 
 target_link_libraries(epocservs PRIVATE
-        common
+        config
         epoc
         epockern
         drivers

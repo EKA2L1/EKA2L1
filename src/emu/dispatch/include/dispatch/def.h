@@ -20,6 +20,19 @@
 #pragma once
 
 #include <cstdint>
-#include <hle/bridge.h>
+#include <functional>
+#include <bridge/bridge.h>
 
-#define BRIDGE_FUNC_DISPATCHER(ret, name, ...) BRIDGE_FUNC(ret, name, const std::uint32_t function_number, ##__VA_ARGS__)
+namespace eka2l1 {
+    class system;
+
+    namespace dispatch {
+        using bridge_func = std::function<void(system *, kernel::process *, arm::core *)>;
+    }
+}
+
+#define BRIDGE_FUNC_DISPATCHER(ret, name, ...) ret name(system *sys, const std::uint32_t func_num, ##__VA_ARGS__)
+#define BRIDGE_REGISTER_DISPATCHER(func_sid, func)                                                  \
+    {                                                                                               \
+        func_sid, eka2l1::hle::bridge(&func)                                                        \
+    }

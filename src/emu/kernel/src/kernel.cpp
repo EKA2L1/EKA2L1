@@ -17,13 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <algorithm>
 #include <atomic>
 #include <queue>
 #include <thread>
 
-#include <arm/arm_analyser.h>
-#include <arm/arm_interface.h>
+#include <cpu/arm_analyser.h>
+#include <cpu/arm_interface.h>
+#include <cpu/arm_utils.h>
 
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
@@ -33,6 +35,8 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/virtualmem.h>
+
+#include <disasm/disasm.h>
 
 #include <epoc/epoc.h>
 #include <kernel/kernel.h>
@@ -48,44 +52,34 @@
 #include <loader/romimage.h>
 
 #include <common/time.h>
-
-#if ENABLE_SCRIPTING
-#include <manager/config.h>
-#include <manager/manager.h>
-#include <manager/script_manager.h>
-#endif
+#include <config/config.h>
 
 namespace eka2l1 {
-    void kernel_system::init(system *esys, ntimer *timing_sys, manager_system *mngrsys,
-        memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys, manager::config_state *old_conf,
-        arm::arm_interface *cpu) {
-        timing = timing_sys;
-        mngr = mngrsys;
-        mem = mem_sys;
-        libmngr = lib_sys;
-        io = io_sys;
-        sys = esys;
-        conf = old_conf;
-
-        base_time = common::get_current_time_in_microseconds_since_1ad();
-
-        thr_sch = std::make_shared<kernel::thread_scheduler>(this, timing,
-#if ENABLE_SCRIPTING
-            conf->enable_breakpoint_script ? mngrsys->get_script_manager() : nullptr,
-#else
-            nullptr,
-#endif
-            *cpu);
-
-        rom_map = nullptr;
+    kernel_system::kernel_system(system *esys, ntimer *timing,memory_system *mem_sys, io_system *io_sys,
+        config::state *old_conf, loader::rom *rom_info, arm::core *cpu, disasm *disassembler)
+        : btrace_inst_(nullptr)
+        , lib_mngr_(nullptr)
+        , thr_sch_(nullptr)
+        , timing_(timing)
+        , mem_(mem_sys)
+        , io_(io_sys)
+        , sys_(esys)
+        , conf_(old_conf)
+        , disassembler_(disassembler)
+        , cpu_(cpu)
+        , rom_info_(rom_info)
+        , kernel_handles_(this, kernel::handle_array_owner::kernel)
+        , realtime_ipc_signal_evt_(0)
+        , uid_counter_(0)
+        , rom_map_(nullptr)
+        , kern_ver_(epocver::epoc94) {
+        thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
-        btrace_inst = std::make_unique<kernel::btrace>(this, io);
-
-        kernel_handles = kernel::object_ix(this, kernel::handle_array_owner::kernel);
+        btrace_inst_ = std::make_unique<kernel::btrace>(this, io_);
 
         // Create real time IPC event
-        realtime_ipc_signal_evt = timing->register_event("RealTimeIpc", [this](std::uint64_t userdata, std::uint64_t cycles_late) {
+        realtime_ipc_signal_evt_ = timing->register_event("RealTimeIpc", [this](std::uint64_t userdata, std::uint64_t cycles_late) {
             kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
             assert(thr);
 
@@ -93,52 +87,210 @@ namespace eka2l1 {
             thr->signal_request();
             unlock();
         });
+
+        // Get base time
+        base_time_ = common::get_current_time_in_microseconds_since_1ad();
     }
 
-    void kernel_system::shutdown() {
-        if (rom_map) {
-            common::unmap_file(rom_map);
+    kernel_system::~kernel_system() {
+        if (rom_map_) {
+            common::unmap_file(rom_map_);
         }
 
-        rom_map = nullptr;
-        thr_sch.reset();
+        rom_map_ = nullptr;
 
         // Delete one by one in order. Do not change the order
-        servers.clear();
-        sessions.clear();
-        timers.clear();
-        mutexes.clear();
-        semas.clear();
-        change_notifiers.clear();
-        props.clear();
-        prop_refs.clear();
-        chunks.clear();
-        threads.clear();
-        processes.clear();
-        libraries.clear();
-        codesegs.clear();
-        message_queues.clear();
+        servers_.clear();
+        sessions_.clear();
+        timers_.clear();
+        mutexes_.clear();
+        semas_.clear();
+        change_notifiers_.clear();
+        props_.clear();
+        prop_refs_.clear();
+        chunks_.clear();
+        threads_.clear();
+        processes_.clear();
+        libraries_.clear();
+        codesegs_.clear();
+        message_queues_.clear();
 
-        btrace_inst->close_trace_session();
+        btrace_inst_->close_trace_session();
+    }
+
+    void kernel_system::cpu_exception_thread_handle(arm::core *core) {
+        std::uint8_t *pc_data = reinterpret_cast<std::uint8_t *>(crr_process()->get_ptr_on_addr_space(core->get_pc()));
+
+        if (pc_data) {
+            const std::string disassemble_inst = disassembler_->disassemble(pc_data,
+                (core->get_cpsr() & 0x20) ? 2 : 4, core->get_pc(),
+                (core->get_cpsr() & 0x20) ? true : false);
+
+            LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (core->get_cpsr() & 0x20)
+                    ? *reinterpret_cast<std::uint16_t *>(pc_data)
+                    : *reinterpret_cast<std::uint32_t *>(pc_data));
+        }
+
+        pc_data = reinterpret_cast<std::uint8_t *>(crr_process()->get_ptr_on_addr_space(core->get_lr()));
+
+        if (pc_data) {
+            const std::string disassemble_inst = disassembler_->disassemble(pc_data,
+                core->get_lr() % 2 != 0 ? 2 : 4, core->get_lr() - core->get_lr() % 2,
+                core->get_lr() % 2 != 0 ? true : false);
+
+            LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, (core->get_lr() % 2 != 0)
+                    ? *reinterpret_cast<std::uint16_t *>(pc_data)
+                    : *reinterpret_cast<std::uint32_t *>(pc_data));
+        }
+
+        kernel::thread *target_to_stop = crr_thread();
+
+        core->stop();
+
+        target_to_stop->stop();
+        core->save_context(target_to_stop->get_thread_context());
+
+        // Dump thread contexts
+        arm::dump_context(target_to_stop->get_thread_context());
+    }
+
+    void kernel_system::cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data) {
+        switch (exception_type) {
+        case arm::exception_type_access_violation_read:
+        case arm::exception_type_access_violation_write:
+            LOG_ERROR("Access violation {} address 0x{:X} in thread {}", exception_data, crr_thread()->name());
+            break;
+
+        case arm::exception_type_undefined_inst:
+            LOG_ERROR("Undefined instruction encountered in thread {}", crr_thread()->name());
+            break;
+
+        case arm::exception_type_breakpoint:
+            for (auto &breakpoint_callback_func: breakpoint_callbacks_) {
+                breakpoint_callback_func(core, crr_thread(), exception_data);
+            }
+
+            return;
+
+        default:
+            LOG_ERROR("Unknown exception encountered in thread {}", crr_thread()->name());
+            break;
+        }
+
+        cpu_exception_thread_handle(core);
+    }
+    
+    // For user-provided EPOC version
+    void kernel_system::set_epoc_version(const epocver ver) {
+        kern_ver_ = ver;
+        lib_mngr_ = std::make_unique<hle::lib_manager>(this, io_, mem_);
+
+        // Set CPU SVC handler
+        cpu_->system_call_handler = [this](const std::uint32_t ordinal) {
+            get_lib_manager()->call_svc(ordinal);
+        };
+
+        cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) {
+            cpu_exception_handler(cpu_, exception_type, data);
+        };
     }
 
     kernel::thread *kernel_system::crr_thread() {
-        return thr_sch->current_thread();
+        return thr_sch_->current_thread();
     }
 
     kernel::process *kernel_system::crr_process() {
-        return thr_sch->current_process();
+        return thr_sch_->current_process();
     }
 
+    arm::core *kernel_system::get_cpu() {
+        return cpu_;
+    }
+
+    void kernel_system::reschedule() {
+        lock();
+        thr_sch_->reschedule();
+        unlock();
+    }
+
+    void kernel_system::unschedule_wakeup() {
+        thr_sch_->unschedule_wakeup();
+    }
+    
     void kernel_system::prepare_reschedule() {
-        sys->prepare_reschedule();
+        sys_->prepare_reschedule();
+    }
+
+    void kernel_system::call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,
+        kernel::thread *callee) {
+        for (auto &ipc_send_callback_func: ipc_send_callbacks_) {
+            ipc_send_callback_func(server_name, ord, args, callee);
+        }
+    }
+
+    void kernel_system::call_ipc_complete_callbacks(ipc_msg *msg, const int complete_code) {
+        for (auto &ipc_complete_callback_func: ipc_complete_callbacks_) {
+            ipc_complete_callback_func(msg, complete_code);
+        }
+    }
+
+    void kernel_system::call_thread_kill_callbacks(kernel::thread *target, const std::string &category, const std::int32_t reason) {
+        for (auto &thread_kill_callback_func: thread_kill_callbacks_) {
+            thread_kill_callback_func(target, category, reason);
+        }
+    }
+
+    void kernel_system::call_process_switch_callbacks(arm::core *run_core, kernel::process *old, kernel::process *new_one) {
+        for (auto &process_switch_callback_func: process_switch_callback_funcs_) {
+            process_switch_callback_func(run_core, old, new_one);
+        }
+    }
+
+    std::size_t kernel_system::register_process_switch_callback(process_switch_callback callback) {
+        return process_switch_callback_funcs_.add(callback);
+    }
+
+    std::size_t kernel_system::register_ipc_send_callback(ipc_send_callback callback) {
+        return ipc_send_callbacks_.add(callback);
+    }
+    
+    std::size_t kernel_system::register_ipc_complete_callback(ipc_complete_callback callback) {
+        return ipc_complete_callbacks_.add(callback);
+    }
+
+    std::size_t kernel_system::register_thread_kill_callback(thread_kill_callback callback) {
+        return thread_kill_callbacks_.add(callback);
+    }
+
+    std::size_t kernel_system::register_breakpoint_hit_callback(breakpoint_callback callback) {
+        return breakpoint_callbacks_.add(callback);
+    }
+
+    bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
+        return ipc_send_callbacks_.remove(handle);
+    }
+
+    bool kernel_system::unregister_ipc_complete_callback(const std::size_t handle) {
+        return ipc_complete_callbacks_.remove(handle);
+    }
+
+    bool kernel_system::unregister_thread_kill_callback(const std::size_t handle) {
+        return thread_kill_callbacks_.remove(handle);
+    }
+    
+    bool kernel_system::unregister_breakpoint_hit_callback(const std::size_t handle) {
+        return breakpoint_callbacks_.remove(handle);
+    }
+    
+    bool kernel_system::unregister_process_switch_callback(const std::size_t handle) {
+        return process_switch_callback_funcs_.remove(handle);
     }
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
-        auto slot_free = std::find_if(msgs.begin(), msgs.end(),
+        auto slot_free = std::find_if(msgs_.begin(), msgs_.end(),
             [](auto slot) { return !slot || slot->free; });
 
-        if (slot_free != msgs.end()) {
+        if (slot_free != msgs_.end()) {
             if (!*slot_free) {
                 ipc_msg_ptr msg = std::make_shared<ipc_msg>(crr_thread());
                 *slot_free = std::move(msg);
@@ -146,7 +298,7 @@ namespace eka2l1 {
 
             slot_free->get()->own_thr = crr_thread();
             slot_free->get()->free = false;
-            slot_free->get()->id = static_cast<std::uint32_t>(slot_free - msgs.begin());
+            slot_free->get()->id = static_cast<std::uint32_t>(slot_free - msgs_.begin());
 
             return *slot_free;
         }
@@ -155,11 +307,11 @@ namespace eka2l1 {
     }
 
     ipc_msg_ptr kernel_system::get_msg(int handle) {
-        if (msgs.size() <= handle) {
+        if (msgs_.size() <= handle) {
             return nullptr;
         }
 
-        return msgs[handle];
+        return msgs_[handle];
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
@@ -176,20 +328,20 @@ namespace eka2l1 {
         return true;                                                                                             \
     }
 
-            OBJECT_SEARCH(mutex, mutexes)
-            OBJECT_SEARCH(sema, semas)
-            OBJECT_SEARCH(chunk, chunks)
-            OBJECT_SEARCH(thread, threads)
-            OBJECT_SEARCH(process, processes)
-            OBJECT_SEARCH(change_notifier, change_notifiers)
-            OBJECT_SEARCH(library, libraries)
-            OBJECT_SEARCH(codeseg, codesegs)
-            OBJECT_SEARCH(server, servers)
-            OBJECT_SEARCH(prop, props)
-            OBJECT_SEARCH(prop_ref, prop_refs)
-            OBJECT_SEARCH(session, sessions)
-            OBJECT_SEARCH(timer, timers)
-            OBJECT_SEARCH(msg_queue, message_queues)
+            OBJECT_SEARCH(mutex, mutexes_)
+            OBJECT_SEARCH(sema, semas_)
+            OBJECT_SEARCH(chunk, chunks_)
+            OBJECT_SEARCH(thread, threads_)
+            OBJECT_SEARCH(process, processes_)
+            OBJECT_SEARCH(change_notifier, change_notifiers_)
+            OBJECT_SEARCH(library, libraries_)
+            OBJECT_SEARCH(codeseg, codesegs_)
+            OBJECT_SEARCH(server, servers_)
+            OBJECT_SEARCH(prop, props_)
+            OBJECT_SEARCH(prop_ref, prop_refs_)
+            OBJECT_SEARCH(session, sessions_)
+            OBJECT_SEARCH(timer, timers_)
+            OBJECT_SEARCH(msg_queue, message_queues_)
 
 #undef OBJECT_SEARCH
 
@@ -203,7 +355,7 @@ namespace eka2l1 {
     // We can support also ELF!
     process_ptr kernel_system::spawn_new_process(const std::u16string &path, const std::u16string &cmd_arg, const kernel::uid promised_uid3,
         const std::uint32_t stack_size) {
-        auto imgs = libmngr->try_search_and_parse(path);
+        auto imgs = lib_mngr_->try_search_and_parse(path);
 
         if (!imgs.first && !imgs.second) {
             return nullptr;
@@ -213,7 +365,7 @@ namespace eka2l1 {
         std::string process_name = eka2l1::filename(path8);
 
         /* Create process through kernel system. */
-        process_ptr pr = create<kernel::process>(mem, process_name, path, cmd_arg);
+        process_ptr pr = create<kernel::process>(mem_, process_name, path, cmd_arg);
 
         if (!pr) {
             return nullptr;
@@ -245,7 +397,7 @@ namespace eka2l1 {
             heap_max = imgs.first->header.heap_size_max;
 
             pr->puid = imgs.first->header.uid3;
-            cs = libmngr->load_as_e32img(*eimg, &(*pr), path);
+            cs = lib_mngr_->load_as_e32img(*eimg, &(*pr), path);
         }
 
         // Rom image
@@ -265,7 +417,7 @@ namespace eka2l1 {
             heap_max = imgs.second->header.heap_maximum_size;
 
             pr->puid = imgs.second->header.uid3;
-            cs = libmngr->load_as_romimg(*imgs.second, &(*pr), path);
+            cs = lib_mngr_->load_as_romimg(*imgs.second, &(*pr), path);
         }
 
         if (!cs) {
@@ -292,7 +444,7 @@ namespace eka2l1 {
         }
 
         if (info.handle_array_kernel) {
-            return kernel_handles.close(handle);
+            return kernel_handles_.close(handle);
         }
 
         return crr_process()->process_handles.close(handle);
@@ -314,7 +466,7 @@ namespace eka2l1 {
         }
 
         if (info.handle_array_kernel) {
-            return kernel_handles.get_object(handle);
+            return kernel_handles_.get_object(handle);
         }
 
         return crr_process()->process_handles.get_object(handle);
@@ -330,11 +482,11 @@ namespace eka2l1 {
 
     /*! \brief Completely destroy a message. */
     void kernel_system::destroy_msg(ipc_msg_ptr msg) {
-        (msgs.begin() + msg->id)->reset();
+        (msgs_.begin() + msg->id)->reset();
     }
 
     property_ptr kernel_system::get_prop(int category, int key) {
-        auto prop_res = std::find_if(props.begin(), props.end(),
+        auto prop_res = std::find_if(props_.begin(), props_.end(),
             [=](const auto &prop_obj) {
                 property_ptr prop = reinterpret_cast<property_ptr>(prop_obj.get());
                 if (prop->first == category && prop->second == key) {
@@ -344,7 +496,7 @@ namespace eka2l1 {
                 return false;
             });
 
-        if (prop_res == props.end()) {
+        if (prop_res == props_.end()) {
             return property_ptr(nullptr);
         }
 
@@ -359,7 +511,7 @@ namespace eka2l1 {
 
         switch (owner) {
         case kernel::owner_type::kernel:
-            return kernel_handles.add_object(target_obj);
+            return kernel_handles_.add_object(target_obj);
 
         case kernel::owner_type::thread: {
             if (!own_thread) {
@@ -391,7 +543,7 @@ namespace eka2l1 {
 
         switch (owner) {
         case kernel::owner_type::kernel:
-            return kernel_handles.add_object(obj);
+            return kernel_handles_.add_object(obj);
 
         case kernel::owner_type::thread: {
             h = crr_thread()->thread_handles.add_object(obj);
@@ -423,7 +575,7 @@ namespace eka2l1 {
 
         switch (owner) {
         case kernel::owner_type::kernel:
-            return kernel_handles.add_object(obj);
+            return kernel_handles_.add_object(obj);
 
         case kernel::owner_type::thread: {
             h = thr->thread_handles.add_object(obj);
@@ -447,8 +599,8 @@ namespace eka2l1 {
     }
 
     uint32_t kernel_system::next_uid() const {
-        ++uid_counter;
-        return uid_counter.load();
+        ++uid_counter_;
+        return uid_counter_.load();
     }
 
     void kernel_system::setup_new_process(process_ptr pr) {
@@ -458,11 +610,11 @@ namespace eka2l1 {
     }
 
     codeseg_ptr kernel_system::pull_codeseg_by_ep(const address ep) {
-        auto res = std::find_if(codesegs.begin(), codesegs.end(), [=](const auto &cs) -> bool {
+        auto res = std::find_if(codesegs_.begin(), codesegs_.end(), [=](const auto &cs) -> bool {
             return reinterpret_cast<codeseg_ptr>(cs.get())->get_entry_point(nullptr) == ep;
         });
 
-        if (res == codesegs.end()) {
+        if (res == codesegs_.end()) {
             return nullptr;
         }
 
@@ -471,11 +623,11 @@ namespace eka2l1 {
 
     codeseg_ptr kernel_system::pull_codeseg_by_uids(const kernel::uid uid0, const kernel::uid uid1,
         const kernel::uid uid2) {
-        auto res = std::find_if(codesegs.begin(), codesegs.end(), [=](const auto &cs) -> bool {
+        auto res = std::find_if(codesegs_.begin(), codesegs_.end(), [=](const auto &cs) -> bool {
             return reinterpret_cast<codeseg_ptr>(cs.get())->get_uids() == std::make_tuple(uid0, uid1, uid2);
         });
 
-        if (res == codesegs.end()) {
+        if (res == codesegs_.end()) {
             return nullptr;
         }
 
@@ -504,20 +656,20 @@ namespace eka2l1 {
         return handle_find_info;                                                               \
     }
 
-            OBJECT_SEARCH(mutex, mutexes)
-            OBJECT_SEARCH(sema, semas)
-            OBJECT_SEARCH(chunk, chunks)
-            OBJECT_SEARCH(thread, threads)
-            OBJECT_SEARCH(process, processes)
-            OBJECT_SEARCH(change_notifier, change_notifiers)
-            OBJECT_SEARCH(library, libraries)
-            OBJECT_SEARCH(codeseg, codesegs)
-            OBJECT_SEARCH(server, servers)
-            OBJECT_SEARCH(prop, props)
-            OBJECT_SEARCH(prop_ref, prop_refs)
-            OBJECT_SEARCH(session, sessions)
-            OBJECT_SEARCH(timer, timers)
-            OBJECT_SEARCH(msg_queue, message_queues)
+            OBJECT_SEARCH(mutex, mutexes_)
+            OBJECT_SEARCH(sema, semas_)
+            OBJECT_SEARCH(chunk, chunks_)
+            OBJECT_SEARCH(thread, threads_)
+            OBJECT_SEARCH(process, processes_)
+            OBJECT_SEARCH(change_notifier, change_notifiers_)
+            OBJECT_SEARCH(library, libraries_)
+            OBJECT_SEARCH(codeseg, codesegs_)
+            OBJECT_SEARCH(server, servers_)
+            OBJECT_SEARCH(prop, props_)
+            OBJECT_SEARCH(prop_ref, prop_refs_)
+            OBJECT_SEARCH(session, sessions_)
+            OBJECT_SEARCH(timer, timers_)
+            OBJECT_SEARCH(msg_queue, message_queues_)
 
 #undef OBJECT_SEARCH
 
@@ -529,28 +681,28 @@ namespace eka2l1 {
     }
 
     bool kernel_system::should_terminate() {
-        return thr_sch->should_terminate();
+        return thr_sch_->should_terminate();
     }
 
     bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
-        rom_map = common::map_file(path, prot::read_write, 0, true);
+        rom_map_ = common::map_file(path, prot::read_write, 0, true);
         const std::size_t rom_size = common::file_size(path);
 
-        if (!rom_map) {
+        if (!rom_map_) {
             return false;
         }
 
-        LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map));
+        LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map_));
 
         // Don't care about the result as long as it's not null.
-        kernel::chunk *rom_chunk = create<kernel::chunk>(mem, nullptr, "ROM", 0, static_cast<address>(rom_size),
+        kernel::chunk *rom_chunk = create<kernel::chunk>(mem_, nullptr, "ROM", 0, static_cast<address>(rom_size),
             rom_size, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
-            kernel::chunk_attrib::none, false, addr, rom_map);
+            kernel::chunk_attrib::none, false, addr, rom_map_);
 
         if (!rom_chunk) {
             LOG_ERROR("Can't create ROM chunk!");
 
-            common::unmap_file(rom_map);
+            common::unmap_file(rom_map_);
             return false;
         }
 
@@ -578,6 +730,6 @@ namespace eka2l1 {
     }
 
     std::uint64_t kernel_system::home_time() {
-        return base_time + timing->microseconds();
+        return base_time_ + timing_->microseconds();
     }
 }

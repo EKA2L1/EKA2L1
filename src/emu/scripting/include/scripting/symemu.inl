@@ -255,10 +255,6 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         Register a function to be called when a panic happen
     )pbdoc");
 
-    m.def("registerSvcInvokement", &scripting::register_svc_invokement, R"pbdoc(
-        Register a function to be called when a specific SVC is called
-    )pbdoc");
-
     m.def("registerLibraryInvokement", &scripting::register_lib_invokement, R"pbdoc(
         Register a function to be called when a library function is called.
         

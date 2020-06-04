@@ -22,6 +22,10 @@
 #include <dispatch/def.h>
 #include <kernel/common.h>
 
+#include <map>
+
 namespace eka2l1::dispatch {
-    extern const eka2l1::hle::func_map dispatch_funcs;
+    using func_map = std::map<std::uint32_t, bridge_func>;
+
+    extern const eka2l1::dispatch::func_map dispatch_funcs;
 }

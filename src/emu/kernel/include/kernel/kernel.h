@@ -25,6 +25,7 @@
 #include <kernel/codeseg.h>
 #include <kernel/kernel_obj.h>
 #include <kernel/library.h>
+#include <kernel/libmanager.h>
 #include <kernel/msgqueue.h>
 #include <kernel/mutex.h>
 #include <kernel/object_ix.h>
@@ -37,6 +38,7 @@
 #include <kernel/server.h>
 #include <kernel/session.h>
 
+#include <common/container.h>
 #include <common/hash.h>
 
 #include <kernel/ipc.h>
@@ -44,6 +46,7 @@
 
 #include <atomic>
 #include <exception>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -58,6 +61,7 @@ namespace eka2l1 {
     class manager_system;
     class io_system;
     class system;
+    class disasm;
 
     namespace kernel {
         class thread;
@@ -65,8 +69,8 @@ namespace eka2l1 {
         using uid = std::uint32_t;
     }
 
-    namespace manager {
-        struct config_state;
+    namespace config {
+        struct state;
     }
 
     using thread_ptr = kernel::thread *;
@@ -129,135 +133,157 @@ namespace eka2l1 {
     };
 
     namespace arm {
-        class arm_interface;
+        class core;
     }
 
     namespace common {
         class chunkyseri;
     }
 
+    namespace loader {
+        struct rom;
+    }
+
+    /**
+     * @brief Callback invoked by the kernel when an IPC messages are bout to be sent.
+     * 
+     * @param server_name       Name of the server this message is sent to.
+     * @param ord               The opcode number of this message.
+     * @param args              Arguments for this message.
+     * @param callee            Thread that sent this message.
+     */
+    using ipc_send_callback = std::function<void(const std::string&, const int, const ipc_arg&, kernel::thread*)>;
+
+    /**
+     * @brief Callback invoked by the kernel when an IPC message completes.
+     * 
+     * @param msg               Pointer to the message that being completed.
+     * @param complete_code     The code that used to complete this message.
+     */
+    using ipc_complete_callback = std::function<void(ipc_msg*, const std::int32_t)>;
+
+    /**
+     * @brief Callback invoked by the kernel when a thread is killed.
+     * 
+     * @param thread            Pointer to the thread being killed.
+     * @param category          The category of the kill.
+     * @param reason            The reason for this thread being killed.
+     */
+    using thread_kill_callback = std::function<void(kernel::thread*, const std::string&, const std::int32_t)>;
+
+    /**
+     * @brief Callback invoked when a breakpoint is hit.
+     * 
+     * @param core              The CPU core which is currently executing this breakpoint.
+     * @param thread            Pointer to the thread that the breakpoint is triggered on.
+     * @param addr              Address of the breakpoint.
+     */
+    using breakpoint_callback = std::function<void(arm::core*, kernel::thread*, const std::uint32_t)>;
+
+    /**
+     * @brief Callback invoked when a process switch happens on a core scheduler.
+     * 
+     * @param core              The CPU core which process switching is currently happening,
+     * @param old               The process bout to be switched.
+     * @param new               The new process to switched to.
+     */
+    using process_switch_callback = std::function<void(arm::core*, kernel::process*, kernel::process*)>;
+
     class kernel_system {
+    private:
         friend class debugger_base;
         friend class imgui_debugger;
         friend class gdbstub;
         friend class kernel::process;
 
-        /* Kernel objects map */
-        std::array<ipc_msg_ptr, 0x1000> msgs;
+        std::array<ipc_msg_ptr, 0x1000> msgs_;
+        std::mutex kern_lock_;
 
-        /* End kernel objects map */
-        std::mutex kern_lock;
-        std::shared_ptr<kernel::thread_scheduler> thr_sch;
+        std::vector<kernel_obj_unq_ptr> threads_;
+        std::vector<kernel_obj_unq_ptr> processes_;
+        std::vector<kernel_obj_unq_ptr> servers_;
+        std::vector<kernel_obj_unq_ptr> sessions_;
+        std::vector<kernel_obj_unq_ptr> props_;
+        std::vector<kernel_obj_unq_ptr> prop_refs_;
+        std::vector<kernel_obj_unq_ptr> chunks_;
+        std::vector<kernel_obj_unq_ptr> mutexes_;
+        std::vector<kernel_obj_unq_ptr> semas_;
+        std::vector<kernel_obj_unq_ptr> change_notifiers_;
+        std::vector<kernel_obj_unq_ptr> libraries_;
+        std::vector<kernel_obj_unq_ptr> codesegs_;
+        std::vector<kernel_obj_unq_ptr> timers_;
+        std::vector<kernel_obj_unq_ptr> message_queues_;
 
-        std::vector<kernel_obj_unq_ptr> threads;
-        std::vector<kernel_obj_unq_ptr> processes;
-        std::vector<kernel_obj_unq_ptr> servers;
-        std::vector<kernel_obj_unq_ptr> sessions;
-        std::vector<kernel_obj_unq_ptr> props;
-        std::vector<kernel_obj_unq_ptr> prop_refs;
-        std::vector<kernel_obj_unq_ptr> chunks;
-        std::vector<kernel_obj_unq_ptr> mutexes;
-        std::vector<kernel_obj_unq_ptr> semas;
-        std::vector<kernel_obj_unq_ptr> change_notifiers;
-        std::vector<kernel_obj_unq_ptr> libraries;
-        std::vector<kernel_obj_unq_ptr> codesegs;
-        std::vector<kernel_obj_unq_ptr> timers;
-        std::vector<kernel_obj_unq_ptr> message_queues;
+        std::unique_ptr<kernel::btrace> btrace_inst_;
+        std::unique_ptr<hle::lib_manager> lib_mngr_;
+        std::unique_ptr<kernel::thread_scheduler> thr_sch_;
 
-        std::unique_ptr<kernel::btrace> btrace_inst;
+        ntimer *timing_;
+        memory_system *mem_;
+        io_system *io_;
+        system *sys_;
+        config::state *conf_;
+        disasm *disassembler_;
 
-        ntimer *timing;
-        manager_system *mngr;
-        memory_system *mem;
-        hle::lib_manager *libmngr;
-        io_system *io;
-        system *sys;
-
-        void *rom_map;
-
-        /* Contains the EPOC version */
-        epocver kern_ver = epocver::epoc94;
+        arm::core *cpu_;
+        loader::rom *rom_info_;
 
         //! Handles for some globally shared processes
-        kernel::object_ix kernel_handles;
+        kernel::object_ix kernel_handles_;
+        int realtime_ipc_signal_evt_;
 
-        mutable std::atomic<uint32_t> uid_counter;
+        mutable std::atomic<uint32_t> uid_counter_;
+        void *rom_map_;
+        std::uint64_t base_time_;
 
-        std::uint64_t base_time;
-        int realtime_ipc_signal_evt;
+        epocver kern_ver_;
 
-        manager::config_state *conf;
+        common::identity_container<ipc_send_callback> ipc_send_callbacks_;
+        common::identity_container<ipc_complete_callback> ipc_complete_callbacks_;
+        common::identity_container<thread_kill_callback> thread_kill_callbacks_;
+        common::identity_container<breakpoint_callback> breakpoint_callbacks_;
+        common::identity_container<process_switch_callback> process_switch_callback_funcs_;
 
+    protected:
         void setup_new_process(process_ptr pr);
+        void cpu_exception_thread_handle(arm::core *core);
 
     public:
-        uint32_t next_uid() const;
+        explicit kernel_system(system *esys, ntimer *timing, memory_system *mem_sys, io_system *io_sys,
+            config::state *conf, loader::rom *rom_info, arm::core *cpu, disasm *diassembler);
 
-        explicit kernel_system()
-            : uid_counter(0)
-            , libmngr(nullptr)
-            , io(nullptr)
-            , sys(nullptr)
-            , mem(nullptr)
-            , mngr(nullptr)
-            , timing(nullptr) {
+        ~kernel_system();
+
+        kernel::thread_scheduler *get_thread_scheduler() {
+            return thr_sch_.get();
         }
 
-        ntimer *get_ntimer() {
-            return timing;
-        }
+        void cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data);
 
-        memory_system *get_memory_system() {
-            return mem;
-        }
+        void call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,
+            kernel::thread *callee);
 
-        hle::lib_manager *get_lib_manager() {
-            return libmngr;
-        }
+        void call_ipc_complete_callbacks(ipc_msg *msg, const int complete_code);
+        void call_thread_kill_callbacks(kernel::thread *target, const std::string &category, const std::int32_t reason);
+        void call_process_switch_callbacks(arm::core *run_core, kernel::process *old, kernel::process *new_one);
 
-        system *get_system() {
-            return sys;
-        }
+        std::size_t register_ipc_send_callback(ipc_send_callback callback);
+        std::size_t register_ipc_complete_callback(ipc_complete_callback callback);
+        std::size_t register_thread_kill_callback(thread_kill_callback callback);
+        std::size_t register_breakpoint_hit_callback(breakpoint_callback callback);
+        std::size_t register_process_switch_callback(process_switch_callback callback);
 
-        kernel::btrace *get_btrace() {
-            return btrace_inst.get();
-        }
+        bool unregister_ipc_send_callback(const std::size_t handle);
+        bool unregister_ipc_complete_callback(const std::size_t handle);
+        bool unregister_thread_kill_callback(const std::size_t handle);
+        bool unregister_breakpoint_hit_callback(const std::size_t handle);
+        bool unregister_process_switch_callback(const std::size_t handle);
 
+        std::uint32_t next_uid() const;
         std::uint64_t home_time();
 
-        void init(system *esys, ntimer *sys, manager_system *mngrsys,
-            memory_system *mem_sys, io_system *io_sys, hle::lib_manager *lib_sys,
-            manager::config_state *conf, arm::arm_interface *cpu);
-
-        void shutdown();
-
-        std::shared_ptr<kernel::thread_scheduler> get_thread_scheduler() {
-            return thr_sch;
-        }
-
-        void reschedule() {
-            lock();
-            thr_sch->reschedule();
-            unlock();
-        }
-
-        void unschedule_wakeup() {
-            thr_sch->unschedule_wakeup();
-        }
-
-        epocver get_epoc_version() const {
-            return kern_ver;
-        }
-
-        // For user-provided EPOC version
-        void set_epoc_version(const epocver ver) {
-            kern_ver = ver;
-        }
-
-        int get_ipc_realtime_signal_event() const {
-            return realtime_ipc_signal_evt;
-        }
-
+        void reschedule();
+        void unschedule_wakeup();
         void prepare_reschedule();
 
         ipc_msg_ptr create_msg(kernel::owner_type owner);
@@ -282,7 +308,7 @@ namespace eka2l1 {
                 return;
             }
 
-            servers.push_back(std::move(svr));
+            servers_.push_back(std::move(svr));
         }
 
         bool destroy(kernel_obj_ptr obj);
@@ -311,17 +337,63 @@ namespace eka2l1 {
 
         codeseg_ptr pull_codeseg_by_ep(const address ep);
 
+        bool map_rom(const mem::vm_address addr, const std::string &path);
+
+        epocver get_epoc_version() const {
+            return kern_ver_;
+        }
+
+        // For user-provided EPOC version
+        void set_epoc_version(const epocver ver);
+
+        /**
+         * @brief Get the currently active CPU.
+         */
+        arm::core *get_cpu();
+
+        int get_ipc_realtime_signal_event() const {
+            return realtime_ipc_signal_evt_;
+        }
+
+        ntimer *get_ntimer() {
+            return timing_;
+        }
+
+        memory_system *get_memory_system() {
+            return mem_;
+        }
+
+        hle::lib_manager *get_lib_manager() {
+            return lib_mngr_.get();
+        }
+
+        config::state *get_config() {
+            return conf_;
+        }
+
+        system *get_system() {
+            return sys_;
+        }
+
+        kernel::btrace *get_btrace() {
+            return btrace_inst_.get();
+        }
+
+        loader::rom *get_rom_info() {
+            return rom_info_;
+        }
+
         // Expose for scripting, indeed very dirty
         std::vector<kernel_obj_unq_ptr> &get_process_list() {
-            return processes;
+            return processes_;
         }
 
         std::vector<kernel_obj_unq_ptr> &get_thread_list() {
-            return threads;
+            return threads_;
         }
 
         std::vector<kernel_obj_unq_ptr> &get_codeseg_list() {
-            return codesegs;
+            return codesegs_;
         }
 
         /*! \brief Get kernel object by handle
@@ -349,20 +421,20 @@ namespace eka2l1 {
         return reinterpret_cast<T *>(res->get());                                      \
     }
 
-                OBJECT_SEARCH(mutex, mutexes)
-                OBJECT_SEARCH(sema, semas)
-                OBJECT_SEARCH(chunk, chunks)
-                OBJECT_SEARCH(thread, threads)
-                OBJECT_SEARCH(process, processes)
-                OBJECT_SEARCH(change_notifier, change_notifiers)
-                OBJECT_SEARCH(library, libraries)
-                OBJECT_SEARCH(codeseg, codesegs)
-                OBJECT_SEARCH(server, servers)
-                OBJECT_SEARCH(prop, props)
-                OBJECT_SEARCH(prop_ref, prop_refs)
-                OBJECT_SEARCH(session, sessions)
-                OBJECT_SEARCH(timer, timers)
-                OBJECT_SEARCH(msg_queue, message_queues)
+                OBJECT_SEARCH(mutex, mutexes_)
+                OBJECT_SEARCH(sema, semas_)
+                OBJECT_SEARCH(chunk, chunks_)
+                OBJECT_SEARCH(thread, threads_)
+                OBJECT_SEARCH(process, processes_)
+                OBJECT_SEARCH(change_notifier, change_notifiers_)
+                OBJECT_SEARCH(library, libraries_)
+                OBJECT_SEARCH(codeseg, codesegs_)
+                OBJECT_SEARCH(server, servers_)
+                OBJECT_SEARCH(prop, props_)
+                OBJECT_SEARCH(prop_ref, prop_refs_)
+                OBJECT_SEARCH(session, sessions_)
+                OBJECT_SEARCH(timer, timers_)
+                OBJECT_SEARCH(msg_queue, message_queues_)
 
 #undef OBJECT_SEARCH
 
@@ -401,20 +473,20 @@ namespace eka2l1 {
         return nullptr;                                                                                              \
     }
 
-                OBJECT_SEARCH(mutex, mutexes)
-                OBJECT_SEARCH(sema, semas)
-                OBJECT_SEARCH(chunk, chunks)
-                OBJECT_SEARCH(thread, threads)
-                OBJECT_SEARCH(process, processes)
-                OBJECT_SEARCH(change_notifier, change_notifiers)
-                OBJECT_SEARCH(library, libraries)
-                OBJECT_SEARCH(codeseg, codesegs)
-                OBJECT_SEARCH(server, servers)
-                OBJECT_SEARCH(prop, props)
-                OBJECT_SEARCH(prop_ref, prop_refs)
-                OBJECT_SEARCH(session, sessions)
-                OBJECT_SEARCH(timer, timers)
-                OBJECT_SEARCH(msg_queue, message_queues)
+                OBJECT_SEARCH(mutex, mutexes_)
+                OBJECT_SEARCH(sema, semas_)
+                OBJECT_SEARCH(chunk, chunks_)
+                OBJECT_SEARCH(thread, threads_)
+                OBJECT_SEARCH(process, processes_)
+                OBJECT_SEARCH(change_notifier, change_notifiers_)
+                OBJECT_SEARCH(library, libraries_)
+                OBJECT_SEARCH(codeseg, codesegs_)
+                OBJECT_SEARCH(server, servers_)
+                OBJECT_SEARCH(prop, props_)
+                OBJECT_SEARCH(prop_ref, prop_refs_)
+                OBJECT_SEARCH(session, sessions_)
+                OBJECT_SEARCH(timer, timers_)
+                OBJECT_SEARCH(msg_queue, message_queues_)
 
 #undef OBJECT_SEARCH
 
@@ -430,13 +502,7 @@ namespace eka2l1 {
         template <typename T, typename... args>
         T *create(args... creation_arg) {
             constexpr kernel::object_type obj_type = get_object_type<T>();
-            std::unique_ptr<T> obj;
-
-            if constexpr (obj_type == kernel::object_type::server) {
-                obj = std::make_unique<T>(sys, creation_arg...);
-            } else {
-                obj = std::make_unique<T>(this, creation_arg...);
-            }
+            std::unique_ptr<T> obj = std::make_unique<T>(this, creation_arg...);
 
             const kernel::uid obj_uid = obj->unique_id();
 
@@ -447,20 +513,20 @@ namespace eka2l1 {
         return reinterpret_cast<T *>(container.back().get());
 
             switch (obj_type) {
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::thread, threads, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::process, processes, setup_new_process(reinterpret_cast<process_ptr>(obj.get())));
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::chunk, chunks, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::server, servers, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop, props, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop_ref, prop_refs, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::session, sessions, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::library, libraries, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::timer, timers, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::mutex, mutexes, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::sema, semas, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs, )
-                ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::thread, threads_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::process, processes_, setup_new_process(reinterpret_cast<process_ptr>(obj.get())));
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::chunk, chunks_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::server, servers_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop, props_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::prop_ref, prop_refs_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::session, sessions_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::library, libraries_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::timer, timers_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::mutex, mutexes_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::sema, semas_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues_, )
 
             default:
                 break;
@@ -485,14 +551,12 @@ namespace eka2l1 {
 
         // Lock the kernel
         void lock() {
-            kern_lock.lock();
+            kern_lock_.lock();
         }
 
         // Unlock the kernel
         void unlock() {
-            kern_lock.unlock();
+            kern_lock_.unlock();
         }
-
-        bool map_rom(const mem::vm_address addr, const std::string &path);
     };
 }

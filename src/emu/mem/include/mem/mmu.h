@@ -23,7 +23,7 @@
 #include <memory>
 
 namespace eka2l1::arm {
-    class arm_interface;
+    class core;
 }
 
 namespace eka2l1::mem {
@@ -42,6 +42,16 @@ namespace eka2l1::mem {
     protected:
         page_table_allocator *alloc_; ///< Page table allocator.
 
+        bool read_8bit_data(const vm_address addr, std::uint8_t *data);
+        bool read_16bit_data(const vm_address addr, std::uint16_t *data);
+        bool read_32bit_data(const vm_address addr, std::uint32_t *data);
+        bool read_64bit_data(const vm_address addr, std::uint64_t *data);
+
+        bool write_8bit_data(const vm_address addr, std::uint8_t *data);
+        bool write_16bit_data(const vm_address addr, std::uint16_t *data);
+        bool write_32bit_data(const vm_address addr, std::uint32_t *data);
+        bool write_64bit_data(const vm_address addr, std::uint64_t *data);
+
     public:
         std::size_t page_size_bits_; ///< The number of bits of page size.
         std::uint32_t offset_mask_;
@@ -54,10 +64,10 @@ namespace eka2l1::mem {
         std::uint32_t page_per_tab_shift_;
 
         bool mem_map_old_; ///< Should we use EKA1 mem map model?
-        arm::arm_interface *cpu_;
+        arm::core *cpu_;
 
     public:
-        explicit mmu_base(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
+        explicit mmu_base(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
 
         virtual ~mmu_base() {}
 
@@ -124,6 +134,6 @@ namespace eka2l1::mem {
 
     using mmu_impl = std::unique_ptr<mmu_base>;
 
-    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old,
+    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model);
 }

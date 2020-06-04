@@ -19,6 +19,7 @@
  */
 
 #include <common/log.h>
+#include <epoc/epoc.h>
 #include <services/ui/eikappui.h>
 #include <utils/err.h>
 
@@ -40,7 +41,7 @@ namespace eka2l1 {
     }
 
     eikappui_server::eikappui_server(eka2l1::system *sys)
-        : service::server(sys, "!EikAppUiServer", true) {
+        : service::server(sys->get_kernel_system(), sys, "!EikAppUiServer", true) {
         REGISTER_IPC(eikappui_server, get_debug_preferences, EEikAppUiGetDebugPreferences, "EikAppUi::GetDebugPreferences");
     }
 

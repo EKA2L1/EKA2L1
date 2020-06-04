@@ -29,13 +29,7 @@
 #include <kernel/reg.h>
 
 #include <common/configure.h>
-
-#include <manager/manager.h>
-#ifdef ENABLE_SCRIPTING
-#include <manager/script_manager.h>
-#endif
-
-#include <manager/config.h>
+#include <config/config.h>
 
 #include <loader/e32img.h>
 #include <loader/romimage.h>
@@ -43,8 +37,6 @@
 #include <vfs/vfs.h>
 #include <utils/dll.h>
 
-#include <common/configure.h>
-#include <epoc/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/codeseg.h>
 
@@ -286,8 +278,8 @@ namespace eka2l1::hle {
 
         cs->attach(pr);
 
-        mngr.patch_scripts(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
-            pr, cs);
+        mngr.run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path),
+            u"")), pr, cs);
 
         relocate_e32img(img, pr, mem, mngr, cs);
         return cs;
@@ -366,6 +358,11 @@ namespace eka2l1::hle {
                 codeseg_ptr original_sec = load(common::utf8_to_ucs2(eka2l1::filename(entry.name)),
                     nullptr);
 
+                if (!original_sec) {
+                    LOG_ERROR("Unable to find original code segment for {}", eka2l1::filename(entry.name));
+                    continue;
+                }
+
                 const std::string patch_dll_path = eka2l1::add_path(patch_folder, entry.name);
 
                 // We want to patch ROM image though. Do it.
@@ -381,7 +378,7 @@ namespace eka2l1::hle {
                 }
 
                 // Create the code chunk in ROM
-                kernel::chunk *code_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "",
+                kernel::chunk *code_chunk = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, "",
                     0, static_cast<eka2l1::address>(e32img->header.code_size), e32img->header.code_size, prot::read_write_exec,
                     kernel::chunk_type::normal, kernel::chunk_access::rom, kernel::chunk_attrib::anonymous);
 
@@ -396,11 +393,11 @@ namespace eka2l1::hle {
                     export_entry += code_delta;
                 }
 
-                memory_system *mem = kern->get_memory_system();
+                memory_system *mem = kern_->get_memory_system();
 
                 // Relocate! Import
                 std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern, *this, nullptr, u"", code_chunk->base(nullptr).ptr_address());
+                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, nullptr, u"", code_chunk->base(nullptr).ptr_address());
 
                 if (!patch_seg) {
                     continue;
@@ -423,7 +420,7 @@ namespace eka2l1::hle {
 
                 const char *alone_section_name = nullptr;
 
-                switch (sys->get_symbian_version_use()) {
+                switch (kern_->get_epoc_version()) {
                 case epocver::epoc94:
                     alone_section_name = "epoc9v4";
                     break;
@@ -450,7 +447,7 @@ namespace eka2l1::hle {
                     if (indi_section) {
                         patch_original_codeseg(*indi_section, mem, original_sec, patch_seg);
                     } else {
-                        LOG_TRACE("Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(sys->get_symbian_version_use()),
+                        LOG_TRACE("Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
                             entry.name);
                     }
                 }
@@ -458,70 +455,23 @@ namespace eka2l1::hle {
         }
     }
 
-    void lib_manager::init(system *syss, kernel_system *kerns, io_system *ios, memory_system *mems, epocver ver) {
-        sys = syss;
-        io = ios;
-        mem = mems;
-        kern = kerns;
-
-        // TODO (pent0): Implement external id loading
-
-        hle::symbols sb;
-        std::string lib_name;
-
-#define LIB(x) lib_name = #x;
-#define EXPORT(x, y) \
-    sb.push_back(x);
-#define ENDLIB()                       \
-    lib_symbols.emplace(lib_name, sb); \
-    sb.clear();
-
-        if (ver == epocver::epoc6) {
-            //  #include <hle/epoc6_n.def>
-        } else {
-            // #include <hle/epoc9_n.def>
-        }
-
-#undef LIB
-#undef EXPORT
-#undef ENLIB
-
-        switch (ver) {
-        case epocver::epoc94:
-            epoc::register_epocv94(*this);
-            break;
-
-        case epocver::epoc93:
-            epoc::register_epocv93(*this);
-            break;
-
-        case epocver::epoc10:
-            epoc::register_epocv10(*this);
-            break;
-
-        default:
-            break;
-        }
-
-        load_patch_libraries(".//patch//");
-    }
 
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
-        if (auto seg = kern->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
+        if (auto seg = kern_->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
                 img.header.uid2, img.header.uid3)) {
             if (seg->attach(pr)) {
-                relocate_e32img(&img, pr, kern->get_memory_system(), *this, seg);
-                patch_scripts(seg->name(), pr, seg);
+                relocate_e32img(&img, pr, kern_->get_memory_system(), *this, seg);
+                run_codeseg_loaded_callback(seg->name(), pr, seg);
             }
 
             return seg;
         }
 
-        return import_e32img(&img, mem, kern, *this, pr, path);
+        return import_e32img(&img, mem_, kern_, *this, pr, path);
     }
 
     codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, kernel::process *pr, const std::u16string &path) {
-        if (auto seg = kern->pull_codeseg_by_ep(romimg.header.entry_point)) {
+        if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
             seg->attach(pr);
             return seg;
         }
@@ -546,12 +496,12 @@ namespace eka2l1::hle {
         info.sinfo.vendor_id = romimg.header.sec_info.vendor_id;
         info.sinfo.secure_id = romimg.header.sec_info.secure_id;
         info.exception_descriptor = romimg.header.exception_des;
-        info.constant_data = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(romimg.header.data_address));
+        info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
-        auto cs = kern->create<kernel::codeseg>("codeseg", info);
+        auto cs = kern_->create<kernel::codeseg>("codeseg", info);
         cs->attach(pr);
 
-        patch_scripts(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
+        run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
             pr, cs);
 
         struct dll_ref_table {
@@ -564,23 +514,23 @@ namespace eka2l1::hle {
         std::function<void(loader::rom_image_header *, codeseg_ptr)> dig_dependencies;
         dig_dependencies = [&](loader::rom_image_header *header, codeseg_ptr acs) {
             if (header->dll_ref_table_address != 0) {
-                dll_ref_table *ref_table = eka2l1::ptr<dll_ref_table>(header->dll_ref_table_address).get(mem);
+                dll_ref_table *ref_table = eka2l1::ptr<dll_ref_table>(header->dll_ref_table_address).get(mem_);
 
                 for (uint16_t i = 0; i < ref_table->num_entries; i++) {
                     // Dig UID
                     loader::rom_image_header *ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
-                                                               .get(mem);
+                                                               .get(mem_);
 
-                    if (auto ref_seg = kern->pull_codeseg_by_ep(ref_header->entry_point)) {
+                    if (auto ref_seg = kern_->pull_codeseg_by_ep(ref_header->entry_point)) {
                         // Add ref
                         acs->add_dependency(ref_seg);
                     } else {
                         // TODO: Supply right size. The loader doesn't care about size right now
-                        common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem),
+                        common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem_),
                             0xFFFF);
 
                         // Load new romimage and add dependency
-                        loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem);
+                        loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
                         acs->add_dependency(load_as_romimg(rimg, pr));
                     }
                 }
@@ -600,8 +550,8 @@ namespace eka2l1::hle {
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
                 result{ std::nullopt, std::nullopt };
 
-            if (io->exist(lib_path)) {
-                symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+            if (io_->exist(lib_path)) {
+                symfile f = io_->open_file(path, READ_MODE | BIN_MODE);
                 if (!f) {
                     return result;
                 }
@@ -617,7 +567,7 @@ namespace eka2l1::hle {
                 }
 
                 image_data_stream.seek(0, common::seek_where::beg);
-                auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem);
+                auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_);
                 if (parse_result_2 != std::nullopt) {
                     f->close();
                     result.second = std::move(parse_result_2);
@@ -652,18 +602,18 @@ namespace eka2l1::hle {
 
     codeseg_ptr lib_manager::load(const std::u16string &name, kernel::process *pr) {
         auto load_depend_on_drive = [&](drive_number drv, const std::u16string &lib_path) -> codeseg_ptr {
-            auto entry = io->get_drive_entry(drv);
+            auto entry = io_->get_drive_entry(drv);
 
             if (entry) {
-                symfile f = io->open_file(lib_path, READ_MODE | BIN_MODE);
+                symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE);
                 if (!f) {
                     return nullptr;
                 }
 
                 eka2l1::ro_file_stream image_data_stream(f.get());
 
-                if (entry->media_type == drive_media::rom && io->is_entry_in_rom(lib_path)) {
-                    auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem);
+                if (entry->media_type == drive_media::rom && io_->is_entry_in_rom(lib_path)) {
+                    auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_);
                     if (!romimg) {
                         return nullptr;
                     }
@@ -693,7 +643,7 @@ namespace eka2l1::hle {
                 lib_path += u":\\Sys\\Bin\\";
                 lib_path += name;
 
-                if (io->exist(lib_path)) {
+                if (io_->exist(lib_path)) {
                     auto result = load_depend_on_drive(drv, lib_path);
                     if (result != nullptr) {
                         result->set_full_path(lib_path);
@@ -706,7 +656,7 @@ namespace eka2l1::hle {
         }
 
         drive_number drv = char16_to_drive(lib_path[0]);
-        if (!io->exist(lib_path)) {
+        if (!io_->exist(lib_path)) {
             return nullptr;
         }
 
@@ -718,59 +668,90 @@ namespace eka2l1::hle {
         return nullptr;
     }
 
-    void lib_manager::shutdown() {
-        reset();
-    }
-
-    void lib_manager::reset() {
-        svc_funcs.clear();
-    }
-
     bool lib_manager::call_svc(sid svcnum) {
         // Lock the kernel so SVC call can operate in safety
-        kern->lock();
-        auto res = svc_funcs.find(svcnum);
+        kern_->lock();
+        auto res = svc_funcs_.find(svcnum);
 
-        if (res == svc_funcs.end()) {
-            kern->unlock();
+        if (res == svc_funcs_.end()) {
+            kern_->unlock();
             return false;
         }
 
         epoc_import_func func = res->second;
 
-        if (sys->get_config()->log_svc) {
+        if (kern_->get_config()->log_svc) {
             LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
         }
 
-#ifdef ENABLE_SCRIPTING
-        sys->get_manager_system()->get_script_manager()->call_svcs(svcnum, 0);
-#endif
+        func.func(kern_, kern_->crr_process(), kern_->get_cpu());
 
-        func.func(sys);
-
-#ifdef ENABLE_SCRIPTING
-        sys->get_manager_system()->get_script_manager()->call_svcs(svcnum, 1);
-#endif
-
-        kern->unlock();
+        kern_->unlock();
         return true;
     }
 
-    bool lib_manager::patch_scripts(const std::string &lib_name, kernel::process *pr, codeseg_ptr seg) {
-#ifndef ENABLE_SCRIPTING
-        return true;
-#else
-        manager::script_manager *scripter = sys->get_manager_system()->get_script_manager();
-
-        // These are already rebased, so when we call patch unrelocated hook, give a zero adderss
-        scripter->patch_library_hook(lib_name, seg->get_export_table_raw());
-        scripter->patch_unrelocated_hook(pr ? (pr->get_uid()) : 0, lib_name, seg->is_rom() ? 0 : (seg->get_code_run_addr(pr) - seg->get_code_base()));
-
-        return true;
-#endif
+    std::size_t lib_manager::register_codeseg_loaded_callback(codeseg_loaded_callback callback) {
+        return codeseg_loaded_callback_funcs_.add(callback);
     }
 
-    lib_manager::lib_manager() {
+    bool lib_manager::unregister_codeseg_loaded_callback(const std::size_t handle) {
+        return codeseg_loaded_callback_funcs_.remove(handle);
+    }
+
+    void lib_manager::run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target) {
+        for (auto &codeseg_loaded_callback_func: codeseg_loaded_callback_funcs_) {
+            codeseg_loaded_callback_func(lib_name, attacher, target);
+        }
+    }
+
+    lib_manager::lib_manager(kernel_system *kerns, io_system *ios, memory_system *mems)
+        : kern_(kerns)
+        , io_(ios)
+        , mem_(mems) { 
+        hle::symbols sb;
+        std::string lib_name;
+
+#define LIB(x) lib_name = #x;
+#define EXPORT(x, y) \
+    sb.push_back(x);
+#define ENDLIB()                       \
+    lib_symbols.emplace(lib_name, sb); \
+    sb.clear();
+
+        if (kern_->get_epoc_version() == epocver::epoc6) {
+            //  #include <bridge/epoc6_n.def>
+        } else {
+            // #include <bridge/epoc9_n.def>
+        }
+
+#undef LIB
+#undef EXPORT
+#undef ENLIB
+
+        switch (kern_->get_epoc_version()) {
+        case epocver::epoc94:
+            epoc::register_epocv94(*this);
+            break;
+
+        case epocver::epoc93:
+            epoc::register_epocv93(*this);
+            break;
+
+        case epocver::epoc10:
+            epoc::register_epocv10(*this);
+            break;
+
+        default:
+            break;
+        }
+    }
+    
+    lib_manager::~lib_manager() {
+        svc_funcs_.clear();
+    }
+
+    system *lib_manager::get_sys() {
+        return kern_->get_system();
     }
 }
 

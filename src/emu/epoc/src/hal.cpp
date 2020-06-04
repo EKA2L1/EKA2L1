@@ -32,7 +32,7 @@
 #include <drivers/graphics/graphics.h>
 #include <utils/des.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
     funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3))

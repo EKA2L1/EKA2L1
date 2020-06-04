@@ -32,7 +32,7 @@
 #include <services/window/window.h>
 #include <services/window/screen.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 
@@ -68,7 +68,7 @@ namespace eka2l1 {
         ss_interpreter::ss_interpreter(common::ro_stream *stream,
             system *sys,
             manager::package_manager *pkgmngr,
-            manager::config_state *conf,
+            config::state *conf,
             sis_controller *main_controller,
             sis_data *inst_data,
             drive_number inst_drv)

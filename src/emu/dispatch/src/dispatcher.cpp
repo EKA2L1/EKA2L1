@@ -25,6 +25,7 @@
 #include <utils/err.h>
 
 #include <common/log.h>
+#include <epoc/epoc.h>
 
 namespace eka2l1::dispatch {
     dispatcher::dispatcher()
@@ -56,7 +57,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        dispatch_find_result->second.func(sys);
+        dispatch_find_result->second(sys, sys->get_kernel_system()->crr_process(), sys->get_cpu());
     }
 
     void dispatcher::shutdown() {
@@ -76,6 +77,27 @@ namespace eka2l1::dispatch {
 
             dispatch::update_screen(sys, 0, scr->number, 1, &up_rect);
             scr = scr->next;
+        }
+    }
+}
+
+namespace eka2l1::epoc {
+    void dispatcher_do_resolve(eka2l1::system *sys, const std::uint32_t ordinal) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatcher->resolve(sys, ordinal);
+    }
+
+    void dispatcher_do_event_add(eka2l1::system *sys, kernel::raw_event &evt) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+
+        switch (evt.type_) {
+        case kernel::raw_event_type_redraw:
+            dispatcher->update_all_screens(sys);
+            break;
+
+        default:
+            LOG_WARN("Unhandled raw event {}", static_cast<int>(evt.type_));
+            break;
         }
     }
 }

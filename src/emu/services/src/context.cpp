@@ -27,7 +27,7 @@
 #include <utils/des.h>
 #include <utils/sec.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 
 namespace eka2l1 {
     namespace service {
@@ -336,7 +336,7 @@ namespace eka2l1 {
             int func = process_msg->function;
 
             auto func_ite = ipc_funcs.find(func);
-            manager::config_state *conf = sys->get_config();
+            config::state *conf = sys->get_config();
 
             if (func_ite == ipc_funcs.end()) {
                 if (unhandle_callback_enable) {

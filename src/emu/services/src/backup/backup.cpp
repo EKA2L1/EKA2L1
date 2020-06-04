@@ -22,10 +22,11 @@
 #include <services/backup/backup.h>
 #include <services/context.h>
 #include <utils/err.h>
+#include <epoc/epoc.h>
 
 namespace eka2l1 {
     backup_server::backup_server(eka2l1::system *sys)
-        : service::server(sys, "!BackupServer", true) {
+        : service::server(sys->get_kernel_system(), sys, "!BackupServer", true) {
         REGISTER_IPC(backup_server, get_backup_operation_state, EBakOpCodeGetBackupOperationState,
             "Backup::GetOperationState");
     }

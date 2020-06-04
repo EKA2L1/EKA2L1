@@ -35,7 +35,7 @@
 #include <utils/err.h>
 #include <vfs/vfs.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 
 namespace eka2l1 {
     namespace epoc { 

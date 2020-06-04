@@ -32,9 +32,12 @@ namespace eka2l1 {
     class io_system;
     class window_server;
 
+    namespace config {
+        struct state;
+    }
+
     namespace manager {
         class package_manager;
-        struct config_state;
     }
 
     namespace common {
@@ -46,7 +49,7 @@ namespace eka2l1 {
         class ss_interpreter {
             sis_controller *main_controller;
             sis_data *install_data;
-            manager::config_state *conf;
+            config::state *conf;
 
             sis_controller *current_controller = nullptr;
 
@@ -109,7 +112,7 @@ namespace eka2l1 {
             explicit ss_interpreter(common::ro_stream *stream,
                 system *sys,
                 manager::package_manager *pkgmngr,
-                manager::config_state *conf,
+                config::state *conf,
                 sis_controller *main_controller,
                 sis_data *inst_data,
                 drive_number install_drv);

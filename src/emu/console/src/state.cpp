@@ -33,6 +33,7 @@
 #include <manager/manager.h>
 
 #include <kernel/kernel.h>
+#include <kernel/libmanager.h>
 
 namespace eka2l1::desktop {
     void emulator::stage_one() {
@@ -46,13 +47,13 @@ namespace eka2l1::desktop {
         conf.deserialize();
 
         symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
-        symsys->set_device(conf.device);
 
         manager::device_manager *dvcmngr = symsys->get_manager_system()->get_device_manager();
         manager::device *dvc = dvcmngr->get_current();
 
         if (dvc) {    
             symsys->startup();
+            symsys->set_device(conf.device);
             
             symsys->set_debugger(debugger.get());
             symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib::internal);
@@ -64,7 +65,7 @@ namespace eka2l1::desktop {
                 symsys->get_gdb_stub()->init(symsys.get());
                 symsys->get_gdb_stub()->toggle_server(true);
             }
-
+            
             winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>("!Windowserver"));
         }
 
@@ -106,6 +107,12 @@ namespace eka2l1::desktop {
             // Create audio driver
             audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb);
             symsys->set_audio_driver(audio_driver.get());
+
+            // Load patch libraries
+            kernel_system *kern = symsys->get_kernel_system();
+            hle::lib_manager *libmngr = kern->get_lib_manager();
+
+            libmngr->load_patch_libraries(".//patch//");
 
             stage_two_inited = true;
         }

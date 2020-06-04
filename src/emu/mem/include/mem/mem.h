@@ -39,7 +39,7 @@ namespace eka2l1 {
     }
 
     namespace arm {
-        class arm_interface;
+        class core;
     }
 
     class memory_system {
@@ -52,13 +52,13 @@ namespace eka2l1 {
         std::size_t rom_size_;
 
         mem::vm_address rom_addr_;
-        arm::arm_interface *cpu_;
+        arm::core *cpu_;
 
     public:
         explicit memory_system() = default;
         ~memory_system() = default;
 
-        void init(arm::arm_interface *jit, const mem::mem_model_type model_type, const bool mem_map_old);
+        void init(arm::core *jit, const mem::mem_model_type model_type, const bool mem_map_old);
         void shutdown();
 
         mem::mmu_base *get_mmu() {

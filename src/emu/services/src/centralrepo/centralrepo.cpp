@@ -206,7 +206,7 @@ namespace eka2l1 {
     }
 
     central_repo_server::central_repo_server(eka2l1::system *sys)
-        : service::server(sys, CENTRAL_REPO_SERVER_NAME, true)
+        : service::server(sys->get_kernel_system(), sys, CENTRAL_REPO_SERVER_NAME, true)
         , id_counter(0) {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_init, "CenRep::Init");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_close, "CenRep::Close");

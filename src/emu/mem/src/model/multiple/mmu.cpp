@@ -21,7 +21,7 @@
 #include <mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
-    mmu_multiple::mmu_multiple(page_table_allocator *alloc, arm::arm_interface *cpu, const std::size_t psize_bits, const bool mem_map_old)
+    mmu_multiple::mmu_multiple(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old)
         : mmu_base(alloc, cpu, psize_bits, mem_map_old)
         , cur_dir_(nullptr)
         , global_dir_(page_size_bits_, 0)

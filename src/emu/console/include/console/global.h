@@ -25,7 +25,7 @@
 #include <mutex>
 
 #include <epoc/epoc.h>
-#include <manager/config.h>
+#include <config/config.h>
 
 #include <imgui.h>
 
@@ -37,7 +37,7 @@ namespace eka2l1 {
 using namespace eka2l1;
 
 extern std::unique_ptr<eka2l1::system> symsys;
-extern manager::config_state conf;
+extern config::state conf;
 
 extern std::mutex ui_debugger_mutex;
 extern ImGuiContext *ui_debugger_context;

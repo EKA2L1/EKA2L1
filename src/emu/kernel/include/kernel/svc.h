@@ -34,7 +34,7 @@
 #include <utils/sec.h>
 #include <common/uid.h>
 
-#include <hle/bridge.h>
+#include <bridge/bridge.h>
 
 #include <epoc/hal.h>
 #include <kernel/libmanager.h>
@@ -44,6 +44,13 @@
 
 #include <cstdint>
 #include <unordered_map>
+
+#define BRIDGE_REGISTER(func_sid, func)                                               \
+    {                                                                                 \
+        func_sid, eka2l1::hle::epoc_import_func { eka2l1::hle::bridge(&func), #func } \
+    }
+
+#define BRIDGE_FUNC(ret, name, ...) ret name(kernel_system *kern, ##__VA_ARGS__)
 
 namespace eka2l1::kernel {
     struct memory_info;
@@ -79,14 +86,6 @@ namespace eka2l1::epoc {
         property_type type;
         epoc::security_policy read_policy;
         epoc::security_policy write_policy;
-    };
-
-    enum raw_event_type {
-        raw_event_type_redraw = 5
-    };
-
-    struct raw_event {
-        raw_event_type type_;
     };
 
     ///> @brief The SVC map for Symbian S60v3.

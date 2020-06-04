@@ -43,7 +43,7 @@ namespace eka2l1 {
         return dvmngr.get();
     }
 
-    void manager_system::init(system *sys, manager::config_state *conf) {
+    void manager_system::init(system *sys, config::state *conf) {
         pkgmngr = std::make_unique<manager::package_manager>(sys, conf);
 
 #ifdef ENABLE_SCRIPTING

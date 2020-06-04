@@ -12,8 +12,8 @@ namespace eka2l1 {
         bool is_hit;
     };
 
-    namespace manager {
-        struct config_state;
+    namespace config {
+        struct state;
     }
 
     class debugger_renderer;
@@ -30,7 +30,7 @@ namespace eka2l1 {
 
         std::function<void(bool)> on_pause_toogle;
 
-        virtual manager::config_state *get_config() = 0;
+        virtual config::state *get_config() = 0;
         virtual bool should_emulate_stop() = 0;
         virtual void wait_for_debugger() = 0;
         virtual void notify_clients() = 0;

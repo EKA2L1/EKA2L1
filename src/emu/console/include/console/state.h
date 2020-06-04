@@ -29,7 +29,7 @@
 #include <common/queue.h>
 #include <common/sync.h>
 #include <epoc/epoc.h>
-#include <manager/config.h>
+#include <config/config.h>
 
 #include <debugger/renderer/renderer.h>
 #include <drivers/graphics/emu_window.h>
@@ -73,7 +73,7 @@ namespace eka2l1::desktop {
 
         common::semaphore graphics_sema;
 
-        manager::config_state conf;
+        config::state conf;
         window_server *winserv;
 
         bool mouse_down[5];

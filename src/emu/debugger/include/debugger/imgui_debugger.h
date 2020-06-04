@@ -46,7 +46,7 @@ namespace eka2l1 {
 
     class imgui_debugger : public debugger_base {
         system *sys;
-        manager::config_state *conf;
+        config::state *conf;
 
         bool should_show_threads;
         bool should_show_mutexs;
@@ -206,6 +206,6 @@ namespace eka2l1 {
         void wait_for_debugger() override;
         void notify_clients() override;
 
-        manager::config_state *get_config() override;
+        config::state *get_config() override;
     };
 }

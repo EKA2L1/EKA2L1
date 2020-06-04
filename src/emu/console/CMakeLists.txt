@@ -15,8 +15,8 @@ add_executable(console
         ${CONSOLE_RESOURCE})
 
 target_link_libraries(console PRIVATE
-        arm
         common
+        cpu
         debugger
         drivers
         epoc

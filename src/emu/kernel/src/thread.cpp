@@ -165,7 +165,7 @@ namespace eka2l1 {
         }
 
         void thread::push_call(const std::string &func_name,
-            const arm::arm_interface::thread_context &ctx) {
+            const arm::core::thread_context &ctx) {
             call_stacks.push({ ctx, func_name });
         }
 

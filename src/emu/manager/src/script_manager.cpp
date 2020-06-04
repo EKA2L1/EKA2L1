@@ -38,6 +38,9 @@
 #include <scripting/symemu.inl>
 #include <scripting/thread.h>
 
+#include <epoc/epoc.h>
+#include <kernel/kernel.h>
+
 namespace py = pybind11;
 
 #ifndef _MSC_VER
@@ -55,8 +58,37 @@ namespace eka2l1::manager {
 
     script_manager::script_manager(system *sys)
         : sys(sys)
-        , interpreter() {
+        , interpreter()
+        , ipc_send_callback_handle(0)
+        , ipc_complete_callback_handle(0)
+        , thread_kill_callback_handle(0)
+        , breakpoint_hit_callback_handle(0)
+        , process_switch_callback_handle(0)
+        , codeseg_loaded_callback_handle(0) {
         scripting::set_current_instance(sys);
+    }
+
+    script_manager::~script_manager() {
+        kernel_system *kern = sys->get_kernel_system();
+
+        if (ipc_send_callback_handle)
+            kern->unregister_ipc_send_callback(ipc_send_callback_handle);
+        
+        if (ipc_complete_callback_handle)
+            kern->unregister_ipc_complete_callback(ipc_complete_callback_handle);
+        
+        if (thread_kill_callback_handle)
+            kern->unregister_thread_kill_callback(thread_kill_callback_handle);
+
+        if (breakpoint_hit_callback_handle)
+            kern->unregister_breakpoint_hit_callback(breakpoint_hit_callback_handle);
+
+        if (process_switch_callback_handle)
+            kern->unregister_process_switch_callback(process_switch_callback_handle);
+
+        if (codeseg_loaded_callback_handle) {
+            kern->get_lib_manager()->unregister_codeseg_loaded_callback(codeseg_loaded_callback_handle);
+        }
     }
 
     bool script_manager::import_module(const std::string &path) {
@@ -94,6 +126,34 @@ namespace eka2l1::manager {
     }
 
     bool script_manager::call_module_entry(const std::string &module) {
+        if (!ipc_send_callback_handle) {
+            kernel_system *kern = sys->get_kernel_system();
+            
+            ipc_send_callback_handle = kern->register_ipc_send_callback([this](const std::string& svr_name, const int ord, const ipc_arg& args, kernel::thread* callee) {
+                call_ipc_send(svr_name, ord, args.args[0], args.args[1], args.args[2], args.args[3], args.flag, callee);
+            });
+
+            ipc_complete_callback_handle = kern->register_ipc_complete_callback([this](ipc_msg *msg, const std::int32_t complete_code) {
+                call_ipc_complete(msg->msg_session->get_server()->name(), msg->function, msg);
+            });
+
+            thread_kill_callback_handle = kern->register_thread_kill_callback([this](kernel::thread* target, const std::string& cagetory, const std::int32_t reason) {
+                call_panics(cagetory, reason);
+            });
+
+            breakpoint_hit_callback_handle = kern->register_breakpoint_hit_callback([this](arm::core *core, kernel::thread *correspond, const vaddress addr) {
+                handle_breakpoint(core, correspond, addr);
+            });
+
+            process_switch_callback_handle = kern->register_process_switch_callback([this](arm::core *core, kernel::process *old_one, kernel::process *new_one) {
+                handle_process_switch(core, old_one, new_one);
+            });
+
+            codeseg_loaded_callback_handle = kern->get_lib_manager()->register_codeseg_loaded_callback([this](const std::string& name, kernel::process *attacher, codeseg_ptr target) {
+                handle_codeseg_loaded(name, attacher, target);
+            });
+        }
+
         if (modules.find(module) == modules.end()) {
             return false;
         }
@@ -127,31 +187,8 @@ namespace eka2l1::manager {
         scripting::set_current_instance(crr_instance);
     }
 
-    void script_manager::call_svcs(int svc_num, int time) {
-        std::lock_guard<std::mutex> guard(smutex);
-
-        eka2l1::system *crr_instance = scripting::get_current_instance();
-        eka2l1::scripting::set_current_instance(sys);
-
-        for (const auto &svc_function : svc_functions) {
-            if (std::get<0>(svc_function) == svc_num && std::get<1>(svc_function) == time) {
-                try {
-                    std::get<2>(svc_function)();
-                } catch (py::error_already_set &exec) {
-                    LOG_WARN("Script interpreted error: {}", exec.what());
-                }
-            }
-        }
-
-        scripting::set_current_instance(crr_instance);
-    }
-
     void script_manager::register_panic(const std::string &panic_cage, pybind11::function &func) {
         panic_functions.push_back(panic_func(panic_cage, func));
-    }
-
-    void script_manager::register_svc(int svc_num, int time, pybind11::function &func) {
-        svc_functions.push_back(svc_func(svc_num, time, func));
     }
 
     void script_manager::register_reschedule(pybind11::function &func) {
@@ -348,5 +385,53 @@ namespace eka2l1::manager {
         }
 
         return true;
+    }
+    
+    bool script_manager::last_breakpoint_hit(kernel::thread *thr) {
+        if (!thr) {
+            return false;
+        }
+
+        return last_breakpoint_script_hits[thr->unique_id()].hit_;
+    }
+
+    void script_manager::reset_breakpoint_hit(arm::core *running_core, kernel::thread *thr) {
+        breakpoint_hit_info &info = last_breakpoint_script_hits[thr->unique_id()];
+        write_breakpoint_block(thr->owning_process(), info.addr_);
+
+        running_core->imb_range((info.addr_ & ~1), (info.addr_ & 1) ? 2 : 4);
+        info.hit_ = false;
+    }
+
+    void script_manager::handle_breakpoint(arm::core *running_core, kernel::thread *correspond, const std::uint32_t addr) {
+        running_core->stop();
+        running_core->save_context(correspond->get_thread_context());
+        
+        if (!last_breakpoint_script_hits[correspond->unique_id()].hit_) {
+            const vaddress cur_addr = addr | ((running_core->get_cpsr() & 0x20) >> 5);
+    
+            if (call_breakpoints(cur_addr, correspond->owning_process()->get_uid())) {
+                breakpoint_hit_info &info = last_breakpoint_script_hits[correspond->unique_id()];
+                info.hit_ = true;
+                const std::uint32_t last_breakpoint_script_size_ = (running_core->get_cpsr() & 0x20) ? 2 : 4;
+                info.addr_ = cur_addr;
+
+                write_back_breakpoint(correspond->owning_process(), cur_addr);
+                running_core->imb_range(addr, last_breakpoint_script_size_);
+            }
+        }
+    }
+
+    void script_manager::handle_process_switch(arm::core *core_switch, kernel::process *old_friend, kernel::process *new_friend) {
+        if (old_friend) {
+            write_back_breakpoints(old_friend);
+        }
+
+        write_breakpoint_blocks(new_friend);
+    }
+
+    void script_manager::handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target) {
+        patch_library_hook(name, target->get_export_table_raw());
+        patch_unrelocated_hook(attacher ? (attacher->get_uid()) : 0, name, target->is_rom() ? 0 : (target->get_code_run_addr(attacher) - target->get_code_base()));
     }
 }

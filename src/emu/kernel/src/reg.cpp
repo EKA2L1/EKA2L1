@@ -22,7 +22,7 @@
 #include <kernel/svc.h>
 
 #include <kernel/libmanager.h>
-#include <hle/bridge.h>
+#include <bridge/bridge.h>
 
 namespace eka2l1::epoc {
     void register_epocv93(eka2l1::hle::lib_manager &mngr) {

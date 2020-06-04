@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <manager/config.h>
+#include <config/config.h>
 #include <manager/device_manager.h>
 #include <yaml-cpp/yaml.h>
 
@@ -73,7 +73,7 @@ namespace eka2l1::manager {
         return;
     }
 
-    device_manager::device_manager(config_state *conf)
+    device_manager::device_manager(config::state *conf)
         : conf(conf) {
         load_devices();
     }

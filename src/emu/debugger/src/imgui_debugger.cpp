@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arm/arm_utils.h>
+#include <cpu/arm_utils.h>
 
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
@@ -46,7 +46,7 @@
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
-#include <manager/config.h>
+#include <config/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
 #include <manager/rpkg.h>
@@ -73,7 +73,7 @@ const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255
 namespace eka2l1 {
     static void language_property_change_handler(void *userdata, service::property *prop) {
         imgui_debugger *debugger = reinterpret_cast<imgui_debugger *>(userdata);
-        manager::config_state *conf = debugger->get_config();
+        config::state *conf = debugger->get_config();
 
         conf->language = static_cast<int>(debugger->get_language_from_property(prop));
         conf->serialize();
@@ -169,14 +169,18 @@ namespace eka2l1 {
             }
         });
 
-        alserv = reinterpret_cast<eka2l1::applist_server *>(sys->get_kernel_system()->get_by_name<service::server>("!AppListServer"));
-        winserv = reinterpret_cast<eka2l1::window_server *>(sys->get_kernel_system()->get_by_name<service::server>("!Windowserver"));
-        oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(sys->get_kernel_system()->get_by_name<service::server>("101fdfae_10207218_AppServer"));
+        kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
-        
-        if (lang_prop)
-            lang_prop->add_data_change_callback(this, language_property_change_handler);
+        if (kern) {
+            alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>("!AppListServer"));
+            winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>("!Windowserver"));
+            oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(kern->get_by_name<service::server>("101fdfae_10207218_AppServer"));
+
+            property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+            
+            if (lang_prop)
+                lang_prop->add_data_change_callback(this, language_property_change_handler);
+        }
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -192,7 +196,7 @@ namespace eka2l1 {
         }
     }
 
-    manager::config_state *imgui_debugger::get_config() {
+    config::state *imgui_debugger::get_config() {
         return conf;
     }
 
@@ -231,9 +235,9 @@ namespace eka2l1 {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s", "ID",
                 "Thread name", "State");
 
-            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-            for (const auto &thr_obj : sys->get_kernel_system()->threads) {
+            for (const auto &thr_obj : sys->get_kernel_system()->threads_) {
                 kernel::thread *thr = reinterpret_cast<kernel::thread *>(thr_obj.get());
                 chunk_ptr chnk = thr->get_stack_chunk();
 
@@ -250,9 +254,9 @@ namespace eka2l1 {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s", "ID",
                 "Mutex name");
 
-            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-            for (const auto &mutex : sys->get_kernel_system()->mutexes) {
+            for (const auto &mutex : sys->get_kernel_system()->mutexes_) {
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s", mutex->unique_id(),
                     mutex->name().c_str());
             }
@@ -266,9 +270,9 @@ namespace eka2l1 {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-24s         %-8s        %-8s      %-32s", "ID",
                 "Chunk name", "Committed", "Max", "Creator process");
 
-            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-            for (const auto &chnk_obj : sys->get_kernel_system()->chunks) {
+            for (const auto &chnk_obj : sys->get_kernel_system()->chunks_) {
                 kernel::chunk *chnk = reinterpret_cast<kernel::chunk *>(chnk_obj.get());
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
@@ -289,14 +293,14 @@ namespace eka2l1 {
             kernel_system *kern = sys->get_kernel_system();
 
             if (!debug_thread_id) {
-                const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+                const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-                if (kern->threads.size() == 0) {
+                if (kern->threads_.size() == 0) {
                     ImGui::End();
                     return;
                 }
 
-                debug_thread = reinterpret_cast<kernel::thread *>(kern->threads.begin()->get());
+                debug_thread = reinterpret_cast<kernel::thread *>(kern->threads_.begin()->get());
                 debug_thread_id = debug_thread->unique_id();
             } else {
                 debug_thread = kern->get_by_id<kernel::thread>(debug_thread_id);
@@ -305,12 +309,12 @@ namespace eka2l1 {
             std::string thr_name = debug_thread->name();
 
             if (ImGui::BeginCombo("Thread", debug_thread ? thr_name.c_str() : "Thread")) {
-                for (std::size_t i = 0; i < kern->threads.size(); i++) {
-                    std::string cr_thrname = kern->threads[i]->name() + " (ID " + common::to_string(kern->threads[i]->unique_id()) + ")";
+                for (std::size_t i = 0; i < kern->threads_.size(); i++) {
+                    std::string cr_thrname = kern->threads_[i]->name() + " (ID " + common::to_string(kern->threads_[i]->unique_id()) + ")";
 
-                    if (ImGui::Selectable(cr_thrname.c_str(), kern->threads[i]->unique_id() == debug_thread_id)) {
-                        debug_thread_id = kern->threads[i]->unique_id();
-                        debug_thread = reinterpret_cast<kernel::thread *>(kern->threads[i].get());
+                    if (ImGui::Selectable(cr_thrname.c_str(), kern->threads_[i]->unique_id() == debug_thread_id)) {
+                        debug_thread_id = kern->threads_[i]->unique_id();
+                        debug_thread = reinterpret_cast<kernel::thread *>(kern->threads_[i].get());
                     }
                 }
 
@@ -320,7 +324,7 @@ namespace eka2l1 {
             ImGui::NewLine();
 
             if (debug_thread) {
-                arm::arm_interface::thread_context &ctx = debug_thread->get_thread_context();
+                arm::core::thread_context &ctx = debug_thread->get_thread_context();
 
                 for (std::uint32_t pc = ctx.pc - 12, i = 0; i < 12; i++) {
                     void *codeptr = debug_thread->owning_process()->get_ptr_on_addr_space(pc);
@@ -336,7 +340,7 @@ namespace eka2l1 {
                         ImGui::Text("0x%08x: %-10u    %s", pc, *reinterpret_cast<std::uint32_t *>(codeptr), dis.c_str());
                     } else {
                         const std::uint32_t svc_num = std::stoul(dis.substr(5), nullptr, 16);
-                        const std::string svc_call_name = sys->get_lib_manager()->svc_funcs.find(svc_num) != sys->get_lib_manager()->svc_funcs.end() ? sys->get_lib_manager()->svc_funcs[svc_num].name : "Unknown";
+                        const std::string svc_call_name = sys->get_lib_manager()->svc_funcs_.find(svc_num) != sys->get_lib_manager()->svc_funcs_.end() ? sys->get_lib_manager()->svc_funcs_[svc_num].name : "Unknown";
 
                         ImGui::Text("0x%08x: %-10u    %s            ; %s", pc, *reinterpret_cast<std::uint32_t *>(codeptr), dis.c_str(), svc_call_name.c_str());
                     }
@@ -501,12 +505,6 @@ namespace eka2l1 {
         ImGui::PushItemWidth(col2 - 10);
 
         if (ImGui::BeginCombo("##CPUCombo", arm::arm_emulator_type_to_string(sys->get_cpu_executor_type()))) {
-            if (ImGui::Selectable("Unicorn")) {
-                conf->cpu_backend = "Unicorn";
-                sys->set_cpu_executor_type(arm_emulator_type::unicorn);
-                conf->serialize();
-            }
-
             if (ImGui::Selectable("Dynarmic")) {
                 conf->cpu_backend = "Dynarmic";
                 sys->set_cpu_executor_type(arm_emulator_type::dynarmic);

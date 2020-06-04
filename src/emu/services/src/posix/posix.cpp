@@ -404,7 +404,7 @@ namespace eka2l1 {
     }
 
     posix_server::posix_server(eka2l1::system *sys, process_ptr &associated_process)
-        : service::server(sys, std::string("Posix-") + common::to_string(associated_process->unique_id()), true)
+        : service::server(sys->get_kernel_system(), sys, std::string("Posix-") + common::to_string(associated_process->unique_id()), true)
         , associated_process(associated_process)
         , file_manager(sys->get_io_system()) {
         working_dir = common::utf8_to_ucs2(eka2l1::root_name(
