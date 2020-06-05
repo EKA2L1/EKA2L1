@@ -58,8 +58,6 @@
 #include <common/path.h>
 #include <common/platform.h>
 
-#include <nfd.h>
-
 #include <mutex>
 
 #define RGBA_TO_FLOAT(r, g, b, a) ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f)
@@ -364,24 +362,6 @@ namespace eka2l1 {
         ImGui::End();
     }
 
-    template <typename F>
-    bool file_dialog(const char *filter, F callback, const bool is_picking_folder = false) {
-        nfdchar_t *out_path = nullptr;
-        nfdresult_t result = is_picking_folder ? NFD_PickFolder(nullptr, &out_path) : NFD_OpenDialog(filter, nullptr, &out_path);
-
-        if (result == NFD_OKAY) {
-            callback(out_path);
-        }
-
-        free(out_path);
-
-        if (result == NFD_OKAY) {
-            return true;
-        }
-
-        return false;
-    }
-
     void imgui_debugger::show_pref_personalisation() {
         ImGui::AlignTextToFramePadding();
 
@@ -396,12 +376,12 @@ namespace eka2l1 {
         if (ImGui::Button("Change")) {
             on_pause_toogle(true);
 
-            file_dialog("png,jpg,bmp", [&](const char *result) {
+            drivers::open_native_dialog(sys->get_graphics_driver(), "png,jpg,bmp", [&](const char *result) {
                 conf->bkg_path = result;
                 renderer->change_background(result);
 
                 conf->serialize();
-            });
+            }, false);
 
             should_pause = false;
             on_pause_toogle(false);
@@ -430,7 +410,7 @@ namespace eka2l1 {
         if (ImGui::Button("Replace")) {
             on_pause_toogle(true);
 
-            file_dialog("ttf", [&](const char *result) {
+            drivers::open_native_dialog(sys->get_graphics_driver(), "ttf", [&](const char *result) {
                 conf->font_path = result;
                 conf->serialize();
             });
@@ -597,7 +577,7 @@ namespace eka2l1 {
             if (ImGui::Button(button)) {
                 on_pause_toogle(true);
 
-                file_dialog(
+                drivers::open_native_dialog(sys->get_graphics_driver(),
                     "", [&](const char *res) {
                         dat = res;
                     },
@@ -708,11 +688,9 @@ namespace eka2l1 {
 
         on_pause_toogle(true);
 
-        file_dialog(
-            "sis,sisx", [&](const char *res) {
-                path = res;
-            },
-            false);
+        drivers::open_native_dialog(sys->get_graphics_driver(), "sis,sisx", [&](const char *res) {
+            path = res;
+        }, false);
 
         should_pause = false;
         on_pause_toogle(false);
@@ -1000,7 +978,7 @@ namespace eka2l1 {
                 if (ImGui::Button("Change##1")) {
                     on_pause_toogle(true);
 
-                    file_dialog("rpkg", [&](const char *result) {
+                    drivers::open_native_dialog(sys->get_graphics_driver(), "rpkg", [&](const char *result) {
                         device_wizard_state.current_rpkg_path = result;
                         device_wizard_state.should_continue_temps[0] = eka2l1::exists(result);
                         device_wizard_state.should_continue = (device_wizard_state.should_continue_temps[1]
@@ -1022,7 +1000,7 @@ namespace eka2l1 {
                 if (ImGui::Button("Change##2")) {
                     on_pause_toogle(true);
 
-                    file_dialog("rom", [&](const char *result) {
+                    drivers::open_native_dialog(sys->get_graphics_driver(), "rom", [&](const char *result) {
                         device_wizard_state.current_rom_path = result;
                         device_wizard_state.should_continue_temps[1] = eka2l1::exists(result);
                         device_wizard_state.should_continue = (device_wizard_state.should_continue_temps[0]

@@ -24,7 +24,6 @@ target_link_libraries(debugger PRIVATE
         epockern
         epocservs
         manager
-        nativefilediag
         imgui
         pugixml
         stb
