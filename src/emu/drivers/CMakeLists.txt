@@ -62,7 +62,7 @@ add_library(drivers
         src/graphics/backend/ogl/shader_ogl.cpp
         ${DRIVERS_VULKAN_SRC})
 
-target_link_libraries(drivers PRIVATE common cubeb imgui ffmpeg glad glm glfw)
+target_link_libraries(drivers PRIVATE common cubeb imgui ffmpeg glad glm glfw nativefilediag)
 target_include_directories(drivers PUBLIC include)
 
 if (BUILD_WITH_VULKAN)

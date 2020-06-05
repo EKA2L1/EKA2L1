@@ -126,6 +126,10 @@ namespace eka2l1::drivers {
 
         return handle_num;
     }
+    
+    bool open_native_dialog(graphics_driver *driver, const char *filter, drivers::graphics_driver_dialog_callback callback, const bool is_folder) {
+        return static_cast<bool>(send_sync_command(driver, graphics_driver_native_dialog, filter, &callback, is_folder));
+    }
 
     server_graphics_command_list_builder::server_graphics_command_list_builder(graphics_command_list *cmd_list)
         : graphics_command_list_builder(cmd_list) {

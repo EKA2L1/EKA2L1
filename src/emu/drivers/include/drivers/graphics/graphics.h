@@ -69,8 +69,11 @@ namespace eka2l1::drivers {
         graphics_driver_attach_descriptors,
         graphics_driver_display,
         graphics_driver_set_swizzle,
-        graphics_driver_backup_state, // Backup all possible state to a struct
-        graphics_driver_restore_state // Restore previously backup data
+        graphics_driver_backup_state,  // Backup all possible state to a struct
+        graphics_driver_restore_state, // Restore previously backup data
+
+        // Mode 2: Native UI
+        graphics_driver_native_dialog        // Open a dialog
     };
 
     using display_hook = std::function<void()>;
