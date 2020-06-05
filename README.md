@@ -1,5 +1,5 @@
 # EKA2L1 
-[![Build Status Windows](https://ci.appveyor.com/api/projects/status/hnm73527hkrfrffm/branch/master?svg=true)](https://ci.appveyor.com/project/bentokun/eka2l1-mjiuq) [![Build Status Linux](https://travis-ci.org/EKA2L1/EKA2L1.svg?branch=master)](https://travis-ci.org/EKA2L1/EKA2L1)
+[![Build Status Windows](https://ci.appveyor.com/api/projects/status/hnm73527hkrfrffm/branch/master?svg=true)](https://ci.appveyor.com/project/bentokun/eka2l1-mjiuq/branch/master) [![Build Status Linux](https://travis-ci.org/EKA2L1/EKA2L1.svg?branch=master)](https://travis-ci.org/EKA2L1/EKA2L1)
 
 ![Screenshot](screenshots/result_animated.gif)
 
