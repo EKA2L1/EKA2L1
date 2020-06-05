@@ -72,8 +72,8 @@ namespace eka2l1::common {
         };
 
     public:
-        explicit identity_container(data_free_check_func check_func = typename default_data_free_check_func<T>,
-            data_free_func freer = typename default_data_free_func<T>)
+        explicit identity_container(data_free_check_func check_func = default_data_free_check_func<T>,
+            data_free_func freer = default_data_free_func<T>)
             : check_(check_func)
             , freer_(freer) {
         }
