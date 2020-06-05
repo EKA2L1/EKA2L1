@@ -967,6 +967,11 @@ namespace eka2l1 {
 
         if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
             device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
+            device_wizard_state.failure = false;
+
+            device_wizard_state.current_rpkg_path.clear();
+            device_wizard_state.current_rom_path.clear();
+
             should_show_install_device_wizard = false;
 
             std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
@@ -1055,6 +1060,12 @@ namespace eka2l1 {
             case device_wizard::ENDING: {
                 ImGui::TextWrapped("Thank you for checking by. En hopes you have a good time!");
                 ImGui::TextWrapped("For any problem, please report to the developers by opening issues!");
+
+                if (device_wizard_state.install_thread) {
+                    device_wizard_state.install_thread->join();
+                    device_wizard_state.install_thread.reset();
+                }
+
                 device_wizard_state.should_continue = true;
                 break;
             }
