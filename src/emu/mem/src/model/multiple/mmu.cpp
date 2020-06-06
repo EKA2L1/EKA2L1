@@ -21,8 +21,8 @@
 #include <mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
-    mmu_multiple::mmu_multiple(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old)
-        : mmu_base(alloc, cpu, psize_bits, mem_map_old)
+    mmu_multiple::mmu_multiple(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits, const bool mem_map_old)
+        : mmu_base(alloc, cpu, conf, psize_bits, mem_map_old)
         , cur_dir_(nullptr)
         , global_dir_(page_size_bits_, 0)
         , user_global_sec_(mem_map_old ? shared_data_eka1 : shared_data, mem_map_old ? shared_data_end_eka1 : ram_drive, page_size())

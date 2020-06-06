@@ -40,4 +40,4 @@ add_library(epocmem
 target_include_directories(epocmem PUBLIC include)
 
 target_link_libraries(epocmem PUBLIC common)
-target_link_libraries(epocmem PRIVATE cpu)
+target_link_libraries(epocmem PRIVATE cpu config)

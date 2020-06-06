@@ -23,9 +23,9 @@
 namespace eka2l1::mem::flexible {
     static constexpr std::uint32_t MAX_PAGE_DIR_ALLOW = 512;
 
-    mmu_flexible::mmu_flexible(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits,
+    mmu_flexible::mmu_flexible(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits,
         const bool mem_map_old)
-        : mmu_base(alloc, cpu, psize_bits, mem_map_old)
+        : mmu_base(alloc, cpu, conf, psize_bits, mem_map_old)
         , rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? rom_eka1_end : global_data, page_size())
         , code_sec_(ram_code_addr, dll_static_data, page_size())
         , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size()) {

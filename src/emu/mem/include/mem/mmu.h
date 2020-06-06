@@ -26,6 +26,10 @@ namespace eka2l1::arm {
     class core;
 }
 
+namespace eka2l1::config {
+    struct state;
+}
+
 namespace eka2l1::mem {
     constexpr std::size_t PAGE_SIZE_BYTES_12B = 0x1000;
     constexpr std::size_t PAGE_SIZE_BYTES_20B = 0x100000;
@@ -65,9 +69,10 @@ namespace eka2l1::mem {
 
         bool mem_map_old_; ///< Should we use EKA1 mem map model?
         arm::core *cpu_;
+        config::state *conf_;
 
     public:
-        explicit mmu_base(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits = 10, const bool mem_map_old = false);
+        explicit mmu_base(page_table_allocator *alloc, arm::core *cpu, config::state *conf, std::size_t psize_bits = 10, const bool mem_map_old = false);
 
         virtual ~mmu_base() {}
 
@@ -134,6 +139,6 @@ namespace eka2l1::mem {
 
     using mmu_impl = std::unique_ptr<mmu_base>;
 
-    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old,
+    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model);
 }

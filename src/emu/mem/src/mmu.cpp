@@ -17,16 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/log.h>
 #include <cpu/arm_interface.h>
+#include <config/config.h>
 #include <mem/mmu.h>
 
 #include <mem/model/flexible/mmu.h>
 #include <mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
-    mmu_base::mmu_base(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old)
+    mmu_base::mmu_base(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits, const bool mem_map_old)
         : alloc_(alloc)
         , cpu_(cpu)
+        , conf_(conf)
         , page_size_bits_(psize_bits)
         , mem_map_old_(mem_map_old) {
         if (psize_bits == 20) {
@@ -73,15 +76,15 @@ namespace eka2l1::mem {
         cpu_->unmap_memory(addr, size);
     }
 
-    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::core *cpu, const std::size_t psize_bits, const bool mem_map_old,
+    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model) {
         switch (model) {
         case mem_model_type::multiple: {
-            return std::make_unique<mmu_multiple>(alloc, cpu, psize_bits, mem_map_old);
+            return std::make_unique<mmu_multiple>(alloc, cpu, conf, psize_bits, mem_map_old);
         }
 
         case mem_model_type::flexible: {
-            return std::make_unique<flexible::mmu_flexible>(alloc, cpu, psize_bits, mem_map_old);
+            return std::make_unique<flexible::mmu_flexible>(alloc, cpu, conf, psize_bits, mem_map_old);
         }
 
         default:
@@ -100,6 +103,11 @@ namespace eka2l1::mem {
         }
 
         *data = *ptr;
+
+        if (conf_->log_read) {
+            LOG_TRACE("Read 1 byte from address 0x{:X}", addr);
+        }
+
         return true;
     }
 
@@ -110,6 +118,11 @@ namespace eka2l1::mem {
         }
 
         *data = *ptr;
+
+        if (conf_->log_read) {
+            LOG_TRACE("Read 2 bytes from address 0x{:X}", addr);
+        }
+
         return true;
     }
 
@@ -120,6 +133,11 @@ namespace eka2l1::mem {
         }
 
         *data = *ptr;
+
+        if (conf_->log_read) {
+            LOG_TRACE("Read 4 bytes from address 0x{:X}", addr);
+        }
+
         return true;
     }
 
@@ -130,6 +148,11 @@ namespace eka2l1::mem {
         }
 
         *data = *ptr;
+
+        if (conf_->log_read) {
+            LOG_TRACE("Read 8 bytes from address 0x{:X}", addr);
+        }
+
         return true;
     }
 
@@ -140,6 +163,11 @@ namespace eka2l1::mem {
         }
 
         *ptr = *data;
+
+        if (conf_->log_write) {
+            LOG_TRACE("Write 1 byte to address 0x{:X}", addr);
+        }
+
         return true;
     }
 
@@ -150,6 +178,11 @@ namespace eka2l1::mem {
         }
 
         *ptr = *data;
+
+        if (conf_->log_write) {
+            LOG_TRACE("Write 2 bytes to address 0x{:X}", addr);
+        }
+
         return true;
     }
 
@@ -160,6 +193,11 @@ namespace eka2l1::mem {
         }
 
         *ptr = *data;
+
+        if (conf_->log_write) {
+            LOG_TRACE("Write 4 bytes to address 0x{:X}", addr);
+        }
+
         return true;
     }
 
@@ -170,6 +208,11 @@ namespace eka2l1::mem {
         }
 
         *ptr = *data;
+
+        if (conf_->log_write) {
+            LOG_TRACE("Write 8 bytes to address 0x{:X}", addr);
+        }
+
         return true;
     }
 }

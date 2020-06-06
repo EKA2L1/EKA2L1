@@ -33,13 +33,14 @@
 #include <algorithm>
 
 namespace eka2l1 {
-    void memory_system::init(arm::core *jit, const mem::mem_model_type model_type, const bool mem_map_old) {
+    memory_system::memory_system(arm::core *core, config::state *conf, const mem::mem_model_type model_type, const bool mem_map_old)
+        : cpu_(core)
+        , conf_(conf) {
         alloc_ = std::make_unique<mem::basic_page_table_allocator>();
-        impl_ = mem::make_new_mmu(alloc_.get(), jit, 12, mem_map_old, model_type);
-        cpu_ = jit;
+        impl_ = mem::make_new_mmu(alloc_.get(), cpu_, conf_, 12, mem_map_old, model_type);
     }
 
-    void memory_system::shutdown() {
+    memory_system::~memory_system() {
         if (rom_map_) {
             common::unmap_file(rom_map_);
         }

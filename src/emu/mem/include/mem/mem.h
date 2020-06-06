@@ -42,6 +42,10 @@ namespace eka2l1 {
         class core;
     }
 
+    namespace config {
+        struct state;
+    }
+
     class memory_system {
         friend class system;
 
@@ -53,13 +57,11 @@ namespace eka2l1 {
 
         mem::vm_address rom_addr_;
         arm::core *cpu_;
+        config::state *conf_;
 
     public:
-        explicit memory_system() = default;
-        ~memory_system() = default;
-
-        void init(arm::core *jit, const mem::mem_model_type model_type, const bool mem_map_old);
-        void shutdown();
+        explicit memory_system(arm::core *core, config::state *conf, const mem::mem_model_type model_type, const bool mem_map_old);
+        ~memory_system();
 
         mem::mmu_base *get_mmu() {
             return impl_.get();
