@@ -958,7 +958,7 @@ namespace eka2l1 {
         return get_system()->get_kernel_system();
     }
 
-    constexpr std::int64_t input_update_us = 700;
+    constexpr std::int64_t input_update_us = 100;
 
     static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
@@ -1036,6 +1036,8 @@ namespace eka2l1 {
             return;
         }
 
+        evt.time_ = kern->home_time();
+
         const std::lock_guard<std::mutex> guard(input_queue_mut);
         input_events.push(std::move(evt));
     }
@@ -1084,6 +1086,8 @@ namespace eka2l1 {
         while (!input_events.empty()) {
             input_event = std::move(input_events.back());
             input_events.pop();
+
+            guest_event.time = input_event.time_;
 
             // Translate host event to guest event
             switch (input_event.type_) {

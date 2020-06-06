@@ -84,9 +84,10 @@ namespace eka2l1 {
         drivers::graphics_driver *gdriver;
         drivers::audio_driver *adriver;
 
-        memory_system mem;
+        std::unique_ptr<memory_system> mem;
         std::unique_ptr<kernel_system> kern;
         std::unique_ptr<ntimer> timing;
+
         manager_system mngr;
 
         //! The IO system
@@ -138,10 +139,13 @@ namespace eka2l1 {
 
         void set_symbian_version_use(const epocver ever) {
             // Use flexible model on 9.5 and onwards.
-            mem.init(cpu.get(), (kern->get_epoc_version() >= epocver::epoc95) ? mem::mem_model_type::flexible
+            mem = std::make_unique<memory_system>(cpu.get(), conf, (kern->get_epoc_version() >= epocver::epoc95) ? mem::mem_model_type::flexible
                 : mem::mem_model_type::multiple, (kern->get_epoc_version() <= epocver::epoc6) ? true : false);
 
             io.set_epoc_ver(ever);
+
+            // Install memory to the kernel, then set epoc version
+            kern->install_memory(mem.get());
             kern->set_epoc_version(ever);
     
             epoc::init_hal(parent);
@@ -227,7 +231,7 @@ namespace eka2l1 {
         }
 
         memory_system *get_memory_system() {
-            return &mem;
+            return mem.get();
         }
 
         kernel_system *get_kernel_system() {
@@ -333,11 +337,11 @@ namespace eka2l1 {
         file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
         physical_fs_id = io.add_filesystem(physical_fs);
 
-        file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem, epocver::epoc94, "");
+        file_system_inst rom_fs = create_rom_filesystem(nullptr, mem.get(), epocver::epoc94, "");
         rom_fs_id = io.add_filesystem(rom_fs);
 
         cpu = arm::create_core(cpu_type);
-        kern = std::make_unique<kernel_system>(parent, timing.get(), &mem, &io, conf, &romf, cpu.get(),
+        kern = std::make_unique<kernel_system>(parent, timing.get(), &io, conf, &romf, cpu.get(),
             &asmdis);
 
         epoc::init_panic_descriptions();
@@ -508,7 +512,7 @@ namespace eka2l1 {
             return false;
         }
 
-        file_system_inst rom_fs = create_rom_filesystem(&romf, &mem,
+        file_system_inst rom_fs = create_rom_filesystem(&romf, mem.get(),
             get_symbian_version_use(), current_device->firmware_code);
 
         rom_fs_id = io.add_filesystem(rom_fs);
@@ -523,8 +527,7 @@ namespace eka2l1 {
 
     void system_impl::shutdown() {
         kern.reset();
-
-        mem.shutdown();
+        mem.reset();
         asmdis.shutdown();
         timing.reset();
 

@@ -22,6 +22,7 @@
 #include <common/log.h>
 #include <common/random.h>
 #include <common/thread.h>
+#include <common/time.h>
 #include <common/vecx.h>
 #include <common/version.h>
 #include <console/seh_handler.h>
@@ -53,6 +54,7 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
     evt.mouse_.pos_y_ = static_cast<int>(y);
     evt.mouse_.button_ = button == 0 ? eka2l1::drivers::mouse_button::left : (button == 1 ? eka2l1::drivers::mouse_button::right : eka2l1::drivers::mouse_button::middle);
     evt.mouse_.action_ = action == 0 ? eka2l1::drivers::mouse_action::press : (action == 1 ? eka2l1::drivers::mouse_action::repeat : eka2l1::drivers::mouse_action::release);
+    
     return evt;
 }
 

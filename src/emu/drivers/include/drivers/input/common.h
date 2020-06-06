@@ -65,6 +65,7 @@ namespace eka2l1::drivers {
 
     struct input_event {
         input_event_type type_;
+        std::uint64_t time_;
 
         union {
             key_event key_;
