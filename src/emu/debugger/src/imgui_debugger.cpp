@@ -118,7 +118,7 @@ namespace eka2l1 {
 
         // Check if no device is installed
         manager::device_manager *dvc_mngr = mngr->get_device_manager();
-        if (dvc_mngr->get_devices().empty()) {
+        if (dvc_mngr->total() == 0) {
             should_show_empty_device_warn = true;
         }
 
