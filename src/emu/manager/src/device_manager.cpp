@@ -74,7 +74,8 @@ namespace eka2l1::manager {
     }
 
     device_manager::device_manager(config::state *conf)
-        : conf(conf) {
+        : conf(conf)
+        , current(nullptr) {
         load_devices();
     }
 
