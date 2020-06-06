@@ -249,8 +249,8 @@ namespace eka2l1 {
         void cpu_exception_thread_handle(arm::core *core);
 
     public:
-        explicit kernel_system(system *esys, ntimer *timing, memory_system *mem_sys, io_system *io_sys,
-            config::state *conf, loader::rom *rom_info, arm::core *cpu, disasm *diassembler);
+        explicit kernel_system(system *esys, ntimer *timing, io_system *io_sys, config::state *conf,
+            loader::rom *rom_info, arm::core *cpu, disasm *diassembler);
 
         ~kernel_system();
 
@@ -345,6 +345,8 @@ namespace eka2l1 {
 
         // For user-provided EPOC version
         void set_epoc_version(const epocver ver);
+
+        void install_memory(memory_system *mem);
 
         /**
          * @brief Get the currently active CPU.

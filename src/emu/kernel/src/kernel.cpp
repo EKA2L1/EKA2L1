@@ -55,13 +55,12 @@
 #include <config/config.h>
 
 namespace eka2l1 {
-    kernel_system::kernel_system(system *esys, ntimer *timing,memory_system *mem_sys, io_system *io_sys,
+    kernel_system::kernel_system(system *esys, ntimer *timing, io_system *io_sys,
         config::state *old_conf, loader::rom *rom_info, arm::core *cpu, disasm *disassembler)
         : btrace_inst_(nullptr)
         , lib_mngr_(nullptr)
         , thr_sch_(nullptr)
         , timing_(timing)
-        , mem_(mem_sys)
         , io_(io_sys)
         , sys_(esys)
         , conf_(old_conf)
@@ -178,6 +177,10 @@ namespace eka2l1 {
         }
 
         cpu_exception_thread_handle(core);
+    }
+
+    void kernel_system::install_memory(memory_system *new_mem) {
+        mem_ = new_mem;
     }
     
     // For user-provided EPOC version
