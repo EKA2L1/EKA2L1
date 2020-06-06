@@ -49,11 +49,16 @@ namespace eka2l1::desktop {
         symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
 
         manager::device_manager *dvcmngr = symsys->get_manager_system()->get_device_manager();
-        manager::device *dvc = dvcmngr->get_current();
 
-        if (dvc) {    
+        if (dvcmngr->total() > 0) {
             symsys->startup();
-            symsys->set_device(conf.device);
+            if (!symsys->set_device(conf.device)) {
+                LOG_ERROR("Failed to set a device, device index is out of range (device index in config file is: {})", conf.device);
+                LOG_INFO("We are setting the default device back to the first device on the installed list for you");
+
+                conf.device = 0;
+                symsys->set_device(0);
+            }
             
             symsys->set_debugger(debugger.get());
             symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib::internal);
