@@ -455,21 +455,18 @@ namespace eka2l1 {
         ImGui::Checkbox("CPU Read", &conf->log_read);
         ImGui::SameLine(col2);
         ImGui::Checkbox("CPU write", &conf->log_write);
-
-        ImGui::Checkbox("CPU Code", &conf->log_code);
-        ImGui::SameLine(col2);
+        
         ImGui::Checkbox("IPC", &conf->log_ipc);
-
-        ImGui::Checkbox("Symbian API", &conf->log_passed);
         ImGui::SameLine(col2);
+        ImGui::Checkbox("Symbian API", &conf->log_passed);
+    
         ImGui::Checkbox("System calls", &conf->log_svc);
-
+        ImGui::SameLine(col2);
         ImGui::Checkbox("Accurate IPC timing", &conf->accurate_ipc_timing);
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("Improve the accuracy of system, but may results in slowdown.");
         }
 
-        ImGui::SameLine(col2);
         ImGui::Checkbox("Enable btrace", &conf->enable_btrace);
 
         if (ImGui::IsItemHovered()) {
