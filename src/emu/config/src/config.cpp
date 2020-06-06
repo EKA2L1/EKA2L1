@@ -64,9 +64,6 @@ namespace eka2l1::config {
         config_file_emit_single(emitter, "log-svc", log_svc);
         config_file_emit_single(emitter, "log-passed", log_passed);
         config_file_emit_single(emitter, "log-exports", log_exports);
-        config_file_emit_single(emitter, "log-code", log_code);
-        config_file_emit_single(emitter, "enable-breakpoint-script", enable_breakpoint_script);
-        config_file_emit_vector(emitter, "force-load", force_load_modules);
         config_file_emit_single(emitter, "cpu", cpu_backend);
         config_file_emit_single(emitter, "device", device);
         config_file_emit_single(emitter, "language", language);
@@ -114,8 +111,6 @@ namespace eka2l1::config {
         get_yaml_value(node, "log-svc", &log_svc, false);
         get_yaml_value(node, "log-passed", &log_passed, false);
         get_yaml_value(node, "log-exports", &log_exports, false);
-        get_yaml_value(node, "log-code", &log_code, false);
-        get_yaml_value(node, "enable-breakpoint-script", &enable_breakpoint_script, false);
         get_yaml_value(node, "cpu", &cpu_backend, 0);
         get_yaml_value(node, "device", &device, 0);
         get_yaml_value(node, "language", &language, -1);
@@ -136,14 +131,5 @@ namespace eka2l1::config {
         get_yaml_value(node, "fbs-enable-compression-queue", &fbs_enable_compression_queue, false);
         get_yaml_value(node, "accurate-ipc-timing", &accurate_ipc_timing, false);
         get_yaml_value(node, "enable-btrace", &enable_btrace, false);
-
-        try {
-            YAML::Node force_loads_node = node["force-load"];
-
-            for (auto force_load_node : force_loads_node) {
-                force_load_modules.push_back(force_load_node.as<std::string>());
-            }
-        } catch (...) {
-        }
     }
 }

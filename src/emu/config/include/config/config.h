@@ -39,11 +39,7 @@ namespace eka2l1::config {
         bool log_ipc{ false };
         bool log_passed{ false };
         bool log_exports{ false };
-        bool log_code{ false };
 
-        bool enable_breakpoint_script{ false };
-
-        std::vector<std::string> force_load_modules;
         std::string cpu_backend{ "dynarmic" };
         int device{ 0 };
         int language{ -1 };
