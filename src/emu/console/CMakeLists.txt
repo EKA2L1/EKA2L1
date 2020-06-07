@@ -38,15 +38,6 @@ set_target_properties(console PROPERTIES OUTPUT_NAME eka2l1
 
 add_dependencies(console scdv mediaclientaudio mediaclientaudiostream)
 
-if (WIN32)
-    add_custom_command(
-            TARGET console
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/unicorn.dll" "$<TARGET_FILE_DIR:console>"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libgcc_s_seh-1.dll" "$<TARGET_FILE_DIR:console>"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/src/external/unicorn/windows/libwinpthread-1.dll" "$<TARGET_FILE_DIR:console>")
-endif ()
-
 add_custom_command(
         TARGET console
         POST_BUILD
