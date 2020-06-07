@@ -1096,53 +1096,60 @@ namespace eka2l1 {
             // Align to center!
             ImGui::SameLine((ImGui::GetWindowSize().x - (BUTTON_SIZE.x * 2)) / 2);
 
-            if (ImGuiButtonToggle("Yes", BUTTON_SIZE, device_wizard_state.should_continue)) {
-                device_wizard_state.stage = static_cast<device_wizard::device_wizard_stage>(static_cast<int>(device_wizard_state.stage) + 1);
-                device_wizard_state.should_continue = false;
-
-                if (device_wizard_state.stage == device_wizard::INSTALL) {
-                    manager::device_manager *manager = sys->get_manager_system()->get_device_manager();
-
-                    device_wizard_state.install_thread = std::make_unique<std::thread>([](
-                                                                                           manager::device_manager *mngr, device_wizard *wizard, manager::config_state *conf) {
-                        std::atomic<int> progress;
-                        std::string firmware_code;
-
-                        bool result = eka2l1::loader::install_rpkg(mngr, wizard->current_rpkg_path,
-                            add_path(conf->storage, "drives/z/"), firmware_code, progress);
-
-                        if (!result) {
-                            wizard->failure = true;
-                            return;
-                        }
-
-                        mngr->save_devices();
-
-                        wizard->extract_rpkg_done = true;
-
-                        const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
-
-                        eka2l1::create_directories(rom_directory);
-                        result = common::copy_file(wizard->current_rom_path, add_path(rom_directory, "SYM.ROM"), true);
-
-                        if (!result) {
-                            LOG_ERROR("Unable to copy ROM to target ROM directory!");
-                            wizard->copy_rom_done = false;
-                            return;
-                        }
-
-                        wizard->copy_rom_done = true;
-                        wizard->should_continue = true;
-                    },
-                        manager, &device_wizard_state, conf);
+            if (device_wizard_state.stage == device_wizard::ENDING) {
+                if (ImGui::Button("OK", BUTTON_SIZE)) {
+                    should_show_install_device_wizard = false;
+                    device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
                 }
-            }
+            } else {
+                if (ImGuiButtonToggle("Yes", BUTTON_SIZE, device_wizard_state.should_continue)) {
+                    device_wizard_state.stage = static_cast<device_wizard::device_wizard_stage>(static_cast<int>(device_wizard_state.stage) + 1);
+                    device_wizard_state.should_continue = false;
 
-            ImGui::SameLine();
+                    if (device_wizard_state.stage == device_wizard::INSTALL) {
+                        manager::device_manager *manager = sys->get_manager_system()->get_device_manager();
 
-            if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button("No", BUTTON_SIZE)) {
-                should_show_install_device_wizard = false;
-                device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
+                        device_wizard_state.install_thread = std::make_unique<std::thread>([](
+                                                                                               manager::device_manager *mngr, device_wizard *wizard, manager::config_state *conf) {
+                            std::atomic<int> progress;
+                            std::string firmware_code;
+
+                            bool result = eka2l1::loader::install_rpkg(mngr, wizard->current_rpkg_path,
+                                add_path(conf->storage, "drives/z/"), firmware_code, progress);
+
+                            if (!result) {
+                                wizard->failure = true;
+                                return;
+                            }
+
+                            mngr->save_devices();
+
+                            wizard->extract_rpkg_done = true;
+
+                            const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
+
+                            eka2l1::create_directories(rom_directory);
+                            result = common::copy_file(wizard->current_rom_path, add_path(rom_directory, "SYM.ROM"), true);
+
+                            if (!result) {
+                                LOG_ERROR("Unable to copy ROM to target ROM directory!");
+                                wizard->copy_rom_done = false;
+                                return;
+                            }
+
+                            wizard->copy_rom_done = true;
+                            wizard->should_continue = true;
+                        },
+                            manager, &device_wizard_state, conf);
+                    }
+                }
+
+                ImGui::SameLine();
+
+                if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button("No", BUTTON_SIZE)) {
+                    should_show_install_device_wizard = false;
+                    device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
+                }
             }
 
             ImGui::EndPopup();
