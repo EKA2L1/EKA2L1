@@ -22,6 +22,7 @@
 #include <common/log.h>
 #include <common/random.h>
 #include <common/thread.h>
+#include <common/time.h>
 #include <common/vecx.h>
 #include <common/version.h>
 #include <console/seh_handler.h>
@@ -37,7 +38,7 @@
 #include <drivers/input/common.h>
 
 #include <e32keys.h>
-#include <epoc/services/window/window.h>
+#include <services/window/window.h>
 
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
@@ -53,6 +54,7 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
     evt.mouse_.pos_y_ = static_cast<int>(y);
     evt.mouse_.button_ = button == 0 ? eka2l1::drivers::mouse_button::left : (button == 1 ? eka2l1::drivers::mouse_button::right : eka2l1::drivers::mouse_button::middle);
     evt.mouse_.action_ = action == 0 ? eka2l1::drivers::mouse_action::press : (action == 1 ? eka2l1::drivers::mouse_action::repeat : eka2l1::drivers::mouse_action::release);
+    
     return evt;
 }
 
@@ -66,7 +68,7 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int 
     float mouse_pos_x = static_cast<float>(mouse_pos.x), mouse_pos_y = static_cast<float>(mouse_pos.y);
 
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
-    if (emu->symsys) {
+    if ((emu->symsys) && emu->winserv) {
         const float scale = emu->symsys->get_config()->ui_scale;
         mouse_pos_x /= scale;
         mouse_pos_y /= scale;
@@ -93,7 +95,9 @@ static void on_ui_window_touch_move(void *userdata, eka2l1::vec2 v) {
 
     // Make repeat event for button 0 (left mouse click)
     auto mouse_evt = make_mouse_event_driver(static_cast<float>(v.x), static_cast<float>(v.y), 0, 1);
-    emu->winserv->queue_input_from_driver(mouse_evt);
+
+    if (emu->winserv)
+        emu->winserv->queue_input_from_driver(mouse_evt);
 }
 
 static eka2l1::drivers::input_event make_key_event_driver(const int key, const eka2l1::drivers::key_state key_state) {

@@ -187,7 +187,10 @@ namespace eka2l1 {
 
         std::uint64_t multiply_and_divide_qwords(std::uint64_t m1, std::uint64_t m2, std::uint64_t d1) {
 #if (EKA2L1_ARCH(X64) || (EKA2L1_ARCH(ARM64)))
-#if defined(_MSC_VER)
+    #if defined(__GNUC__) || defined(__clang__)
+            using gcc_uint128_t = unsigned __int128;
+            return static_cast<std::uint64_t>((static_cast<gcc_uint128_t>(m1) * m2) / d1);
+    #elif defined(_MSC_VER)
             std::uint64_t low = 0;
             std::uint64_t high = 0;
 
@@ -196,19 +199,15 @@ namespace eka2l1 {
             // Older version of MSVC dont follow the underscore naming
             std::uint64_t remainder = 0;
 
-#if _MSC_VER < 1923
-            return udiv128(high, low, d1, &remainder);
-#else
-            return _udiv128(high, low, d1, &remainder);
-#endif
+        #if _MSC_VER < 1923
+                return udiv128(high, low, d1, &remainder);
+        #else
+                return _udiv128(high, low, d1, &remainder);
+        #endif
 
-#elif defined(__GNUC__)
-            using gcc_uint128_t = unsigned __int128;
-            return static_cast<std::uint64_t>((static_cast<gcc_uint128_t>(m1) * m2) / d1);
-#else
+    #else
             return inaccruate_multiply_and_divide_qwords(m1, m2, d1);
-#endif
-
+    #endif
 #else
             return inaccruate_multiply_and_divide_qwords(m1, m2, d1);
 #endif

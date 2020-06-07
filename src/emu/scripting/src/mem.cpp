@@ -22,8 +22,8 @@
 #include <scripting/mem.h>
 
 #include <epoc/epoc.h>
-#include <epoc/mem.h>
-#include <epoc/utils/des.h>
+#include <mem/mem.h>
+#include <utils/des.h>
 
 namespace eka2l1::scripting {
     uint8_t read_byte(const uint32_t addr) {

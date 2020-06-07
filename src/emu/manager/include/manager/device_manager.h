@@ -25,6 +25,10 @@
 #include <string>
 #include <vector>
 
+namespace eka2l1::config {
+    struct state;
+}
+
 namespace eka2l1::manager {
     struct device {
         epocver ver;
@@ -35,19 +39,17 @@ namespace eka2l1::manager {
         int default_language_code;
     };
 
-    struct config_state;
-
     /*! \brief A manager for all installed devices on this emulator
     */
     class device_manager {
         std::vector<device> devices;
         device *current;
-        config_state *conf;
+        config::state *conf;
 
     public:
         std::mutex lock;
 
-        explicit device_manager(config_state *conf);
+        explicit device_manager(config::state *conf);
         ~device_manager();
 
         std::vector<device> &get_devices() {

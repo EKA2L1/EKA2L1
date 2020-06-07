@@ -20,7 +20,7 @@
 
 #include <common/configure.h>
 #include <epoc/epoc.h>
-#include <epoc/kernel/process.h>
+#include <kernel/process.h>
 
 #include <common/algorithm.h>
 #include <common/chunkyseri.h>
@@ -33,11 +33,11 @@
 
 #include <disasm/disasm.h>
 
-#include <epoc/loader/e32img.h>
+#include <loader/e32img.h>
 #include <manager/rpkg.h>
 
 #include <epoc/hal.h>
-#include <epoc/utils/panic.h>
+#include <utils/panic.h>
 
 #ifdef ENABLE_SCRIPTING
 #include <manager/script_manager.h>
@@ -51,21 +51,21 @@
 #include <drivers/itc.h>
 #include <gdbstub/gdbstub.h>
 
-#include <epoc/kernel.h>
-#include <epoc/mem.h>
-#include <epoc/ptr.h>
+#include <kernel/kernel.h>
+#include <mem/mem.h>
+#include <mem/ptr.h>
 
-#include <epoc/dispatch/dispatcher.h>
-#include <epoc/kernel/libmanager.h>
-#include <epoc/loader/rom.h>
-#include <epoc/timing.h>
-#include <epoc/vfs.h>
+#include <dispatch/dispatcher.h>
+#include <kernel/libmanager.h>
+#include <loader/rom.h>
+#include <kernel/timing.h>
+#include <services/init.h>
+#include <vfs/vfs.h>
 
-#include <arm/arm_factory.h>
-#include <arm/arm_interface_extended.h>
-#include <arm/arm_utils.h>
+#include <cpu/arm_factory.h>
+#include <cpu/arm_utils.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
 
@@ -77,19 +77,17 @@ namespace eka2l1 {
         //! Global lock mutex for system.
         std::mutex mut;
 
-        //! The library manager.
-        hle::lib_manager hlelibmngr;
-
         //! The cpu
-        arm::cpu cpu;
+        arm::core_instance cpu;
         arm_emulator_type cpu_type;
 
         drivers::graphics_driver *gdriver;
         drivers::audio_driver *adriver;
 
-        memory_system mem;
-        kernel_system kern;
+        std::unique_ptr<memory_system> mem;
+        std::unique_ptr<kernel_system> kern;
         std::unique_ptr<ntimer> timing;
+
         manager_system mngr;
 
         //! The IO system
@@ -104,17 +102,12 @@ namespace eka2l1 {
 
         debugger_base *debugger;
 
-        //! The ROM
-        /*! This is the information parsed
-         * from the ROM, used as utility.
-        */
         loader::rom romf;
 
-        manager::config_state *conf;
+        config::state *conf;
 
         bool reschedule_pending;
 
-        epocver ver = epocver::epoc94;
         bool exit = false;
         bool paused = false;
 
@@ -123,15 +116,17 @@ namespace eka2l1 {
 
         bool startup_inited = false;
 
-        std::optional<filesystem_id> rom_fs_id = std::nullopt;
+        std::optional<filesystem_id> rom_fs_id;
+        std::optional<filesystem_id> physical_fs_id;
 
         system *parent;
 
         language sys_lang = language::en;
+        std::size_t gdb_stub_breakpoint_callback_handle;
 
     public:
-        system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver,
-            manager::config_state *conf);
+        explicit system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver,
+            config::state *conf);
 
         ~system_impl(){};
 
@@ -143,8 +138,32 @@ namespace eka2l1 {
         }
 
         void set_symbian_version_use(const epocver ever) {
-            kern.set_epoc_version(ever);
+            // Use flexible model on 9.5 and onwards.
+            mem = std::make_unique<memory_system>(cpu.get(), conf, (kern->get_epoc_version() >= epocver::epoc95) ? mem::mem_model_type::flexible
+                : mem::mem_model_type::multiple, (kern->get_epoc_version() <= epocver::epoc6) ? true : false);
+
             io.set_epoc_ver(ever);
+
+            // Install memory to the kernel, then set epoc version
+            kern->install_memory(mem.get());
+            kern->set_epoc_version(ever);
+    
+            epoc::init_hal(parent);
+            
+            if (gdb_stub.is_server_enabled()) {
+                gdb_stub_breakpoint_callback_handle = kern->register_breakpoint_hit_callback([this](arm::core *cpu_core, kernel::thread *target,
+                    const std::uint32_t addr) {
+                    if (gdb_stub.is_connected()) {
+                        cpu_core->stop();
+                        cpu_core->set_pc(addr);
+
+                        cpu_core->save_context(target->get_thread_context());
+
+                        gdb_stub.break_exec();
+                        gdb_stub.send_trap_gdb(target, 5);
+                    }
+                });
+            }
         }
 
         bool set_device(const std::uint8_t idx) {
@@ -170,11 +189,11 @@ namespace eka2l1 {
             return cpu_type;
         }
 
-        manager::config_state *get_config() {
+        config::state *get_config() {
             return conf;
         }
 
-        void set_config(manager::config_state *confs) {
+        void set_config(config::state *confs) {
             conf = confs;
         }
 
@@ -183,7 +202,7 @@ namespace eka2l1 {
         }
 
         epocver get_symbian_version_use() const {
-            return kern.get_epoc_version();
+            return kern->get_epoc_version();
         }
 
         void prepare_reschedule() {
@@ -199,7 +218,7 @@ namespace eka2l1 {
             sys_lang = new_lang;
         }
 
-        void init();
+        void startup();
         bool load(const std::u16string &path, const std::u16string &cmd_arg);
         int loop();
         void shutdown();
@@ -212,15 +231,15 @@ namespace eka2l1 {
         }
 
         memory_system *get_memory_system() {
-            return &mem;
+            return mem.get();
         }
 
         kernel_system *get_kernel_system() {
-            return &kern;
+            return kern.get();
         }
 
         hle::lib_manager *get_lib_manager() {
-            return &hlelibmngr;
+            return kern->get_lib_manager();
         }
 
         io_system *get_io_system() {
@@ -247,8 +266,8 @@ namespace eka2l1 {
             return adriver;
         }
 
-        arm::cpu &get_cpu() {
-            return cpu;
+        arm::core *get_cpu() {
+            return cpu.get();
         }
 
         dispatch::dispatcher *get_dispatcher() {
@@ -308,49 +327,45 @@ namespace eka2l1 {
 
     static constexpr std::uint32_t DEFAULT_CPU_HZ = 484000000;
 
-    void system_impl::init() {
+    void system_impl::startup() {
         exit = false;
-
-        // Initialize manager. It doesn't depend much on other
-        mngr.init(parent, &io, conf);
 
         // Initialize all the system that doesn't depend on others first
         timing = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
-
-        io.init();
         asmdis.init();
 
-        file_system_inst physical_fs = create_physical_filesystem(get_symbian_version_use(), "");
+        file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
+        physical_fs_id = io.add_filesystem(physical_fs);
 
-        io.add_filesystem(physical_fs);
-
-        file_system_inst rom_fs = create_rom_filesystem(nullptr, &mem,
-            get_symbian_version_use(), "");
-
+        file_system_inst rom_fs = create_rom_filesystem(nullptr, mem.get(), epocver::epoc94, "");
         rom_fs_id = io.add_filesystem(rom_fs);
 
-        cpu = arm::create_cpu(&kern, timing.get(), conf, &mngr, &mem, &asmdis, &hlelibmngr, &gdb_stub, cpu_type);
+        cpu = arm::create_core(cpu_type);
+        kern = std::make_unique<kernel_system>(parent, timing.get(), &io, conf, &romf, cpu.get(),
+            &asmdis);
 
-        mem.init(cpu.get(), get_symbian_version_use() <= epocver::epoc6 ? true : false);
-        kern.init(parent, timing.get(), &mngr, &mem, &io, &hlelibmngr, conf, cpu.get());
-
-        epoc::init_hal(parent);
         epoc::init_panic_descriptions();
+        service::init_services(parent);
 
         // Try to set system language
         set_system_language(static_cast<language>(conf->language));
 
         // Initialize HLE finally
-        dispatcher.init(&kern, timing.get());
+        dispatcher.init(kern.get(), timing.get());
     }
 
-    system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, manager::config_state *conf)
+    system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, config::state *conf)
         : parent(parent)
         , conf(conf)
         , debugger(nullptr)
         , gdriver(graphics_driver)
-        , adriver(audio_driver) {
+        , adriver(audio_driver)
+        , exit(false) {
         cpu_type = arm::string_to_arm_emulator_type(conf->cpu_backend);
+        
+        // Initialize manager. It doesn't depend much on other
+        mngr.init(parent, conf);
+        io.init();
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
@@ -366,10 +381,8 @@ namespace eka2l1 {
         load_scripts();
 #endif
 
-        hlelibmngr.reset();
-        hlelibmngr.init(parent, &kern, &io, &mem, get_symbian_version_use());
+        process_ptr pr = kern->spawn_new_process(path, cmd_arg);
 
-        process_ptr pr = kern.spawn_new_process(path, cmd_arg);
         if (!pr) {
             return false;
         }
@@ -380,14 +393,18 @@ namespace eka2l1 {
 
     bool system_impl::pause() {
         paused = true;
-        timing->set_paused(true);
+
+        if (timing)
+            timing->set_paused(true);
 
         return true;
     }
 
     bool system_impl::unpause() {
         paused = false;
-        timing->set_paused(false);
+
+        if (timing)
+            timing->set_paused(false);
 
         return true;
     }
@@ -400,6 +417,10 @@ namespace eka2l1 {
         bool should_step = false;
         bool script_hits_the_feels = false;
 
+#ifdef ENABLE_SCRIPTING
+        manager::script_manager *scripter = get_manager_system()->get_script_manager();
+#endif
+
         if (gdb_stub.is_server_enabled()) {
             gdb_stub.handle_packet();
 
@@ -411,19 +432,18 @@ namespace eka2l1 {
                 }
             }
         } else {
-            if (cpu->is_extended()) {
-                arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended &>(*cpu);
-                if (extended.last_script_breakpoint_hit(kern.crr_thread())) {
-                    should_step = true;
-                    script_hits_the_feels = true;
-                }
+#ifdef ENABLE_SCRIPTING
+            if (scripter->last_breakpoint_hit(kern->crr_thread())) {
+                should_step = true;
+                script_hits_the_feels = true;
             }
+#endif
         }
 
-        if (kern.crr_thread() == nullptr) {
+        if (kern->crr_thread() == nullptr) {
             prepare_reschedule();
         } else {
-            kernel::thread *thr = kern.crr_thread();
+            kernel::thread *thr = kern->crr_thread();
 
             if (!should_step) {
                 cpu->run(thr->get_remaining_screenticks());
@@ -431,21 +451,24 @@ namespace eka2l1 {
             } else {
                 cpu->step();
 
+#ifdef ENABLE_SCRIPTING
                 if (script_hits_the_feels) {
-                    arm::arm_interface_extended &extended = static_cast<arm::arm_interface_extended &>(*cpu);
-                    extended.reset_breakpoint_hit(&kern);
+                    should_step = true;
+                    script_hits_the_feels = true;
+                    scripter->reset_breakpoint_hit(cpu.get(), kern->crr_thread());
                 }
+#endif
 
                 thr->add_ticks(1);
             }
         }
 
-        if (!kern.should_terminate()) {
+        if (!kern->should_terminate()) {
 #ifdef ENABLE_SCRIPTING
-            mngr.get_script_manager()->call_reschedules();
+            scripter->call_reschedules();
 #endif
 
-            kern.reschedule();
+            kern->reschedule();
 
             reschedule_pending = false;
         } else {
@@ -489,11 +512,11 @@ namespace eka2l1 {
             return false;
         }
 
-        file_system_inst rom_fs = create_rom_filesystem(&romf, &mem,
+        file_system_inst rom_fs = create_rom_filesystem(&romf, mem.get(),
             get_symbian_version_use(), current_device->firmware_code);
 
         rom_fs_id = io.add_filesystem(rom_fs);
-        bool res1 = kern.map_rom(romf.header.rom_base, path);
+        bool res1 = kern->map_rom(romf.header.rom_base, path);
 
         if (!res1) {
             return false;
@@ -503,9 +526,8 @@ namespace eka2l1 {
     }
 
     void system_impl::shutdown() {
-        kern.shutdown();
-        hlelibmngr.shutdown();
-        mem.shutdown();
+        kern.reset();
+        mem.reset();
         asmdis.shutdown();
         timing.reset();
 
@@ -524,7 +546,6 @@ namespace eka2l1 {
 
     void system_impl::reset() {
         exit = false;
-        hlelibmngr.reset();
     }
 
     bool system_impl::install_rpkg(const std::string &devices_rom_path, const std::string &path, std::string &firmware_code) {
@@ -548,7 +569,7 @@ namespace eka2l1 {
         return hals[category].get();
     }
 
-    system::system(drivers::graphics_driver *gdriver, drivers::audio_driver *adriver, manager::config_state *conf)
+    system::system(drivers::graphics_driver *gdriver, drivers::audio_driver *adriver, config::state *conf)
         : impl(new system_impl(this, gdriver, adriver, conf)) {
     }
 
@@ -556,11 +577,11 @@ namespace eka2l1 {
         delete impl;
     }
 
-    manager::config_state *system::get_config() {
+    config::state *system::get_config() {
         return impl->get_config();
     }
 
-    void system::set_config(manager::config_state *conf) {
+    void system::set_config(config::state *conf) {
         impl->set_config(conf);
     }
 
@@ -604,8 +625,8 @@ namespace eka2l1 {
         return impl->prepare_reschedule();
     }
 
-    void system::init() {
-        return impl->init();
+    void system::startup() {
+        return impl->startup();
     }
 
     bool system::load(const std::u16string &path, const std::u16string &cmd_arg) {
@@ -667,7 +688,7 @@ namespace eka2l1 {
         return impl->get_audio_driver();
     }
 
-    arm::cpu &system::get_cpu() {
+    arm::core *system::get_cpu() {
         return impl->get_cpu();
     }
 

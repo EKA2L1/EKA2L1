@@ -80,3 +80,52 @@ TEST_CASE("bitmap_alloc_best_fit_multiple_fit", "bitmap_allocator") {
     // After allocate:      1000 0111 1001 0001 0101 0001 00[00 0]001
     REQUIRE(alloc.get_word(0) == 0b10000111100100010101000100000001);
 }
+
+TEST_CASE("bitmap_count_bit_aligned", "bitmap_allocator") {
+    common::bitmap_allocator alloc(32 * 3);
+    
+    // Bitmap 1: All bit on
+    alloc.set_word(0, 0xFFFFFFFF);
+
+    // Bitmap 2: 12 bits on
+    alloc.set_word(1, 0xF00F00F0);
+
+    // Bitmap 3: 8 bits on
+    alloc.set_word(2, 0x00F00F00);
+
+    // First bitmap has 52 bits on, plus with bitmap 2 and 3, we got 52
+    REQUIRE(alloc.allocated_count(0, 32 * 3 - 1) == 52);
+}
+
+TEST_CASE("bitmap_count_unaligned_start", "bitmap_allocator") {
+    common::bitmap_allocator alloc(32 * 3);
+    
+    // Bitmap 1: Valid bit count starting from bit 6
+    alloc.set_word(0, 0b110011000011);
+
+    // Bitmap 2: 12 bits on
+    alloc.set_word(1, 0xF00F00F0);
+
+    // Bitmap 3: 8 bits on
+    alloc.set_word(2, 0x00F00F00);
+
+    // First bitmap has 4 valid bits on (from offset 2), plus with bitmap 2 and 3, we got 24
+    REQUIRE(alloc.allocated_count(2, 32 * 3 - 3) == 24);
+}
+
+TEST_CASE("bitmap_count_unaligned_start_end", "bitmap_allocator") {
+    common::bitmap_allocator alloc(32 * 3);
+    
+    // Bitmap 1: Valid bit count starting from bit 6
+    alloc.set_word(0, 0b110011000011);
+
+    // Bitmap 2: 12 bits on
+    alloc.set_word(1, 0xF00F00F0);
+
+    // Bitmap 3: 4 bits valid before offset 68
+    alloc.set_word(2, 0b10101110001111);
+
+    // First bitmap has 4 valid bits on (from offset 2), plus with bitmap 2 and 3 (4 bits before offset 70),
+    // we got 4 + 12 + 4 = 20 bits 
+    REQUIRE(alloc.allocated_count(2, 70) == 20);
+}

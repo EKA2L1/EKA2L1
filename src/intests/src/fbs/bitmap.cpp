@@ -34,14 +34,18 @@ void FbsBitmapZeroSizeBitmap() {
 
 void FbsBitmapCheckSettingsL() {
     TFileName holderFilename;
+    TFullName currentProcessName = RProcess().FullName();
+
     RFs fs;
     fs.Connect(-1);
-    fs.SetSessionToPrivate(EDriveC);
+    
+    fs.SetSessionToPrivate(instance->GetWorkingDrive());
     fs.SessionPath(holderFilename);
     holderFilename.Append(_L("assets\\holder.mbm"));
 
     CFbsBitmap *test = new (ELeave) CFbsBitmap;
     CleanupStack::PushL(test);
+
     User::LeaveIfError(test->Load(holderFilename));
 
     TBuf8<250> text;
@@ -58,21 +62,9 @@ void FbsBitmapCheckSettingsL() {
     text.Format(_L8("Size x %d, size y %d"), test->SizeInPixels().iWidth, test->SizeInPixels().iHeight);
     EXPECT_INPUT_EQUAL_L(text);
 
-    TUint32 height = test->SizeInPixels().iHeight;
-
-    // Try to check data
-    test->BeginDataAccess();
-
-    RFile expectedBin;
-    User::LeaveIfError(expectedBin.Replace(fs, _L("E:\\expected\\fbsbitmap\\datainside.bin"), EFileShareAny | EFileWrite));
-
-    TPtrC8 dataPtrDes(reinterpret_cast<TUint8 *>(test->DataAddress()), test->DataStride() * height);
-    expectedBin.Write(0, dataPtrDes);
-    expectedBin.Close();
-
-    test->EndDataAccess(ETrue);
-
     // Try to get a scanline
+    RFile expectedBin;
+
     TInt scanLineStride = test->DataStride();
     TUint8 *scanLineBuf = (TUint8 *)User::Alloc(scanLineStride);
     TPtr8 scanLineBufPtr(scanLineBuf, scanLineStride);

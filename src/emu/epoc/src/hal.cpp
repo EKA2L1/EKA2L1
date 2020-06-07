@@ -17,22 +17,22 @@
 
 #include <epoc/epoc.h>
 #include <epoc/hal.h>
-#include <epoc/kernel.h>
-#include <epoc/services/window/window.h>
-#include <epoc/timing.h>
+#include <kernel/kernel.h>
+#include <services/window/window.h>
+#include <kernel/timing.h>
 
-#include <epoc/loader/rom.h>
+#include <loader/rom.h>
 
 #include <common/algorithm.h>
 #include <common/log.h>
 
-#include <epoc/common.h>
-#include <epoc/utils/err.h>
+#include <common/common.h>
+#include <utils/err.h>
 
 #include <drivers/graphics/graphics.h>
-#include <epoc/utils/des.h>
+#include <utils/des.h>
 
-#include <manager/config.h>
+#include <config/config.h>
 
 #define REGISTER_HAL_FUNC(op, hal_name, func) \
     funcs.emplace(op, std::bind(&hal_name::func, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3))
@@ -138,7 +138,7 @@ namespace eka2l1::epoc {
         void get_screen_info_from_scr_object(epoc::screen *scr, epoc::screen_info_v1 &info) {
             info.window_handle_valid_ = false;
             info.screen_address_valid_ = true;
-            info.screen_address_ = scr->screen_buffer_chunk->base().cast<void>();
+            info.screen_address_ = scr->screen_buffer_chunk->base(nullptr).cast<void>();
             info.screen_size_ = scr->current_mode().size;
         }
 
@@ -158,7 +158,7 @@ namespace eka2l1::epoc {
             info.is_palettelized_ = !info.is_mono_ && (mode < epoc::display_mode::color4k);
 
             // Intentional
-            info.video_address_ = scr->screen_buffer_chunk->base().ptr_address();
+            info.video_address_ = scr->screen_buffer_chunk->base(nullptr).ptr_address();
             info.offset_to_first_pixel_ = 0;
             info.bits_per_pixel_ = static_cast<std::int32_t>(mode);
         }

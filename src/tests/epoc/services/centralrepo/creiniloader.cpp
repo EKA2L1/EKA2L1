@@ -19,7 +19,7 @@
  */
 
 #include <catch2/catch.hpp>
-#include <epoc/services/centralrepo/centralrepo.h>
+#include <services/centralrepo/centralrepo.h>
 
 #include <iostream>
 

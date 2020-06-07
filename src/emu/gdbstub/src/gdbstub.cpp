@@ -18,11 +18,11 @@
 #include <common/log.h>
 #include <common/platform.h>
 
-#include <arm/arm_interface.h>
+#include <cpu/arm_interface.h>
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
-#include <epoc/kernel/process.h>
-#include <epoc/mem.h>
+#include <kernel/kernel.h>
+#include <kernel/process.h>
+#include <mem/mem.h>
 #include <gdbstub/gdbstub.h>
 
 namespace eka2l1 {
@@ -450,7 +450,7 @@ namespace eka2l1 {
             std::string val = "m";
             // TODO: Get list of threads
 
-            const auto &threads = sys->get_kernel_system()->threads;
+            const auto &threads = sys->get_kernel_system()->threads_;
             for (const auto &thread : threads) {
                 val += fmt::format("{:x},", thread->unique_id());
             }
@@ -464,7 +464,7 @@ namespace eka2l1 {
             buffer += "l<?xml version=\"1.0\"?>";
             buffer += "<threads>";
 
-            const auto &threads = sys->get_kernel_system()->threads;
+            const auto &threads = sys->get_kernel_system()->threads_;
             for (const auto &thread : threads) {
                 buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
                     thread->unique_id(), thread->name());

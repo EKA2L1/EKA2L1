@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arm/arm_utils.h>
+#include <cpu/arm_utils.h>
 
 #include <debugger/imgui_debugger.h>
 #include <debugger/logger.h>
@@ -30,23 +30,23 @@
 
 #include <disasm/disasm.h>
 #include <epoc/epoc.h>
-#include <epoc/utils/locale.h>
+#include <utils/locale.h>
 
-#include <epoc/kernel.h>
-#include <epoc/kernel/libmanager.h>
-#include <epoc/kernel/thread.h>
+#include <kernel/kernel.h>
+#include <kernel/libmanager.h>
+#include <kernel/thread.h>
 
-#include <epoc/services/applist/applist.h>
-#include <epoc/services/ui/cap/eiksrv.h>
-#include <epoc/services/ui/cap/oom_app.h>
-#include <epoc/services/window/classes/winbase.h>
-#include <epoc/services/window/classes/wingroup.h>
-#include <epoc/services/window/classes/winuser.h>
-#include <epoc/services/window/window.h>
+#include <services/applist/applist.h>
+#include <services/ui/cap/eiksrv.h>
+#include <services/ui/cap/oom_app.h>
+#include <services/window/classes/winbase.h>
+#include <services/window/classes/wingroup.h>
+#include <services/window/classes/winuser.h>
+#include <services/window/window.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
-#include <manager/config.h>
+#include <config/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
 #include <manager/rpkg.h>
@@ -57,8 +57,6 @@
 #include <common/language.h>
 #include <common/path.h>
 #include <common/platform.h>
-
-#include <nfd.h>
 
 #include <mutex>
 
@@ -73,7 +71,7 @@ const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255
 namespace eka2l1 {
     static void language_property_change_handler(void *userdata, service::property *prop) {
         imgui_debugger *debugger = reinterpret_cast<imgui_debugger *>(userdata);
-        manager::config_state *conf = debugger->get_config();
+        config::state *conf = debugger->get_config();
 
         conf->language = static_cast<int>(debugger->get_language_from_property(prop));
         conf->serialize();
@@ -120,7 +118,7 @@ namespace eka2l1 {
 
         // Check if no device is installed
         manager::device_manager *dvc_mngr = mngr->get_device_manager();
-        if (dvc_mngr->get_devices().empty()) {
+        if (dvc_mngr->total() == 0) {
             should_show_empty_device_warn = true;
         }
 
@@ -169,12 +167,18 @@ namespace eka2l1 {
             }
         });
 
-        alserv = reinterpret_cast<eka2l1::applist_server *>(sys->get_kernel_system()->get_by_name<service::server>("!AppListServer"));
-        winserv = reinterpret_cast<eka2l1::window_server *>(sys->get_kernel_system()->get_by_name<service::server>("!Windowserver"));
-        oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(sys->get_kernel_system()->get_by_name<service::server>("101fdfae_10207218_AppServer"));
+        kernel_system *kern = sys->get_kernel_system();
 
-        property_ptr lang_prop = sys->get_kernel_system()->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
-        lang_prop->add_data_change_callback(this, language_property_change_handler);
+        if (kern) {
+            alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>("!AppListServer"));
+            winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>("!Windowserver"));
+            oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(kern->get_by_name<service::server>("101fdfae_10207218_AppServer"));
+
+            property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+            
+            if (lang_prop)
+                lang_prop->add_data_change_callback(this, language_property_change_handler);
+        }
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -190,7 +194,7 @@ namespace eka2l1 {
         }
     }
 
-    manager::config_state *imgui_debugger::get_config() {
+    config::state *imgui_debugger::get_config() {
         return conf;
     }
 
@@ -226,17 +230,17 @@ namespace eka2l1 {
     void imgui_debugger::show_threads() {
         if (ImGui::Begin("Threads", &should_show_threads)) {
             // Only the stack are created by the OS
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s    %-32s", "ID",
-                "Thread name", "State", "Stack");
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-32s", "ID",
+                "Thread name", "State");
 
-            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-            for (const auto &thr_obj : sys->get_kernel_system()->threads) {
+            for (const auto &thr_obj : sys->get_kernel_system()->threads_) {
                 kernel::thread *thr = reinterpret_cast<kernel::thread *>(thr_obj.get());
                 chunk_ptr chnk = thr->get_stack_chunk();
 
-                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s    0x%08X", thr->unique_id(),
-                    thr->name().c_str(), thread_state_to_string(thr->current_state()), chnk->base().ptr_address());
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s    %-32s", thr->unique_id(),
+                    thr->name().c_str(), thread_state_to_string(thr->current_state()));
             }
         }
 
@@ -248,9 +252,9 @@ namespace eka2l1 {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s", "ID",
                 "Mutex name");
 
-            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-            for (const auto &mutex : sys->get_kernel_system()->mutexes) {
+            for (const auto &mutex : sys->get_kernel_system()->mutexes_) {
                 ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s", mutex->unique_id(),
                     mutex->name().c_str());
             }
@@ -261,18 +265,17 @@ namespace eka2l1 {
 
     void imgui_debugger::show_chunks() {
         if (ImGui::Begin("Chunks", &should_show_chunks)) {
-            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-32s    %-8s       %-8s    %-8s      %-32s", "ID",
-                "Chunk name", "Base", "Committed", "Max", "Creator process");
+            ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%-16s    %-24s         %-8s        %-8s      %-32s", "ID",
+                "Chunk name", "Committed", "Max", "Creator process");
 
-            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+            const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-            for (const auto &chnk_obj : sys->get_kernel_system()->chunks) {
+            for (const auto &chnk_obj : sys->get_kernel_system()->chunks_) {
                 kernel::chunk *chnk = reinterpret_cast<kernel::chunk *>(chnk_obj.get());
                 std::string process_name = chnk->get_own_process() ? chnk->get_own_process()->name() : "Unknown";
 
-                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s       0x%08X       0x%08lX    0x%08lX      %-32s",
-                    chnk->unique_id(), chnk->name().c_str(), chnk->base().ptr_address(), chnk->committed(),
-                    chnk->max_size(), process_name.c_str());
+                ImGui::TextColored(GUI_COLOR_TEXT, "0x%08X    %-32s      0x%08lX        0x%08lX      %-32s",
+                    chnk->unique_id(), chnk->name().c_str(), chnk->committed(), chnk->max_size(), process_name.c_str());
             }
         }
 
@@ -288,14 +291,14 @@ namespace eka2l1 {
             kernel_system *kern = sys->get_kernel_system();
 
             if (!debug_thread_id) {
-                const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock);
+                const std::lock_guard<std::mutex> guard(sys->get_kernel_system()->kern_lock_);
 
-                if (kern->threads.size() == 0) {
+                if (kern->threads_.size() == 0) {
                     ImGui::End();
                     return;
                 }
 
-                debug_thread = reinterpret_cast<kernel::thread *>(kern->threads.begin()->get());
+                debug_thread = reinterpret_cast<kernel::thread *>(kern->threads_.begin()->get());
                 debug_thread_id = debug_thread->unique_id();
             } else {
                 debug_thread = kern->get_by_id<kernel::thread>(debug_thread_id);
@@ -304,12 +307,12 @@ namespace eka2l1 {
             std::string thr_name = debug_thread->name();
 
             if (ImGui::BeginCombo("Thread", debug_thread ? thr_name.c_str() : "Thread")) {
-                for (std::size_t i = 0; i < kern->threads.size(); i++) {
-                    std::string cr_thrname = kern->threads[i]->name() + " (ID " + common::to_string(kern->threads[i]->unique_id()) + ")";
+                for (std::size_t i = 0; i < kern->threads_.size(); i++) {
+                    std::string cr_thrname = kern->threads_[i]->name() + " (ID " + common::to_string(kern->threads_[i]->unique_id()) + ")";
 
-                    if (ImGui::Selectable(cr_thrname.c_str(), kern->threads[i]->unique_id() == debug_thread_id)) {
-                        debug_thread_id = kern->threads[i]->unique_id();
-                        debug_thread = reinterpret_cast<kernel::thread *>(kern->threads[i].get());
+                    if (ImGui::Selectable(cr_thrname.c_str(), kern->threads_[i]->unique_id() == debug_thread_id)) {
+                        debug_thread_id = kern->threads_[i]->unique_id();
+                        debug_thread = reinterpret_cast<kernel::thread *>(kern->threads_[i].get());
                     }
                 }
 
@@ -319,7 +322,7 @@ namespace eka2l1 {
             ImGui::NewLine();
 
             if (debug_thread) {
-                arm::arm_interface::thread_context &ctx = debug_thread->get_thread_context();
+                arm::core::thread_context &ctx = debug_thread->get_thread_context();
 
                 for (std::uint32_t pc = ctx.pc - 12, i = 0; i < 12; i++) {
                     void *codeptr = debug_thread->owning_process()->get_ptr_on_addr_space(pc);
@@ -335,7 +338,7 @@ namespace eka2l1 {
                         ImGui::Text("0x%08x: %-10u    %s", pc, *reinterpret_cast<std::uint32_t *>(codeptr), dis.c_str());
                     } else {
                         const std::uint32_t svc_num = std::stoul(dis.substr(5), nullptr, 16);
-                        const std::string svc_call_name = sys->get_lib_manager()->svc_funcs.find(svc_num) != sys->get_lib_manager()->svc_funcs.end() ? sys->get_lib_manager()->svc_funcs[svc_num].name : "Unknown";
+                        const std::string svc_call_name = sys->get_lib_manager()->svc_funcs_.find(svc_num) != sys->get_lib_manager()->svc_funcs_.end() ? sys->get_lib_manager()->svc_funcs_[svc_num].name : "Unknown";
 
                         ImGui::Text("0x%08x: %-10u    %s            ; %s", pc, *reinterpret_cast<std::uint32_t *>(codeptr), dis.c_str(), svc_call_name.c_str());
                     }
@@ -359,24 +362,6 @@ namespace eka2l1 {
         ImGui::End();
     }
 
-    template <typename F>
-    bool file_dialog(const char *filter, F callback, const bool is_picking_folder = false) {
-        nfdchar_t *out_path = nullptr;
-        nfdresult_t result = is_picking_folder ? NFD_PickFolder(nullptr, &out_path) : NFD_OpenDialog(filter, nullptr, &out_path);
-
-        if (result == NFD_OKAY) {
-            callback(out_path);
-        }
-
-        free(out_path);
-
-        if (result == NFD_OKAY) {
-            return true;
-        }
-
-        return false;
-    }
-
     void imgui_debugger::show_pref_personalisation() {
         ImGui::AlignTextToFramePadding();
 
@@ -391,12 +376,12 @@ namespace eka2l1 {
         if (ImGui::Button("Change")) {
             on_pause_toogle(true);
 
-            file_dialog("png,jpg,bmp", [&](const char *result) {
+            drivers::open_native_dialog(sys->get_graphics_driver(), "png,jpg,bmp", [&](const char *result) {
                 conf->bkg_path = result;
                 renderer->change_background(result);
 
                 conf->serialize();
-            });
+            }, false);
 
             should_pause = false;
             on_pause_toogle(false);
@@ -425,7 +410,7 @@ namespace eka2l1 {
         if (ImGui::Button("Replace")) {
             on_pause_toogle(true);
 
-            file_dialog("ttf", [&](const char *result) {
+            drivers::open_native_dialog(sys->get_graphics_driver(), "ttf", [&](const char *result) {
                 conf->font_path = result;
                 conf->serialize();
             });
@@ -470,21 +455,18 @@ namespace eka2l1 {
         ImGui::Checkbox("CPU Read", &conf->log_read);
         ImGui::SameLine(col2);
         ImGui::Checkbox("CPU write", &conf->log_write);
-
-        ImGui::Checkbox("CPU Code", &conf->log_code);
-        ImGui::SameLine(col2);
+        
         ImGui::Checkbox("IPC", &conf->log_ipc);
-
-        ImGui::Checkbox("Symbian API", &conf->log_passed);
         ImGui::SameLine(col2);
+        ImGui::Checkbox("Symbian API", &conf->log_passed);
+    
         ImGui::Checkbox("System calls", &conf->log_svc);
-
+        ImGui::SameLine(col2);
         ImGui::Checkbox("Accurate IPC timing", &conf->accurate_ipc_timing);
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("Improve the accuracy of system, but may results in slowdown.");
         }
 
-        ImGui::SameLine(col2);
         ImGui::Checkbox("Enable btrace", &conf->enable_btrace);
 
         if (ImGui::IsItemHovered()) {
@@ -500,12 +482,6 @@ namespace eka2l1 {
         ImGui::PushItemWidth(col2 - 10);
 
         if (ImGui::BeginCombo("##CPUCombo", arm::arm_emulator_type_to_string(sys->get_cpu_executor_type()))) {
-            if (ImGui::Selectable("Unicorn")) {
-                conf->cpu_backend = "Unicorn";
-                sys->set_cpu_executor_type(arm_emulator_type::unicorn);
-                conf->serialize();
-            }
-
             if (ImGui::Selectable("Dynarmic")) {
                 conf->cpu_backend = "Dynarmic";
                 sys->set_cpu_executor_type(arm_emulator_type::dynarmic);
@@ -598,7 +574,7 @@ namespace eka2l1 {
             if (ImGui::Button(button)) {
                 on_pause_toogle(true);
 
-                file_dialog(
+                drivers::open_native_dialog(sys->get_graphics_driver(),
                     "", [&](const char *res) {
                         dat = res;
                     },
@@ -615,33 +591,6 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_pref_hal() {
-        ImGui::Text("Screen Size");
-        const float col2 = ImGui::GetWindowSize().x / 3;
-
-        ImGui::SameLine(col2);
-        ImGui::Text("X");
-        ImGui::SameLine(col2 + 10);
-        ImGui::PushItemWidth(col2 - 20);
-        ImGui::InputInt("##ScreenSizeXInput", &conf->display_size_x_pixs);
-        ImGui::PopItemWidth();
-
-        ImGui::SameLine(col2 * 2);
-        ImGui::Text("Y");
-        ImGui::SameLine(col2 * 2 + 10);
-        ImGui::PushItemWidth(col2 - 20);
-        ImGui::InputInt("##ScreenSizeYInput", &conf->display_size_y_pixs);
-        ImGui::PopItemWidth();
-
-        ImGui::Text("RAM size");
-        ImGui::SameLine(col2);
-
-        int mb_initial = static_cast<int>(conf->maximum_ram / common::MB(1));
-        ImGui::PushItemWidth(col2 * 2 - 30);
-        ImGui::SliderInt("MB", &mb_initial, 64, 512);
-        ImGui::PopItemWidth();
-        conf->maximum_ram = static_cast<std::uint32_t>(mb_initial * common::MB(1));
-
-        ImGui::Separator();
         const float col6 = ImGui::GetWindowSize().x / 6;
 
         static const char *BATTERY_LEVEL_STRS[] = {
@@ -736,11 +685,9 @@ namespace eka2l1 {
 
         on_pause_toogle(true);
 
-        file_dialog(
-            "sis,sisx", [&](const char *res) {
-                path = res;
-            },
-            false);
+        drivers::open_native_dialog(sys->get_graphics_driver(), "sis,sisx", [&](const char *res) {
+            path = res;
+        }, false);
 
         should_pause = false;
         on_pause_toogle(false);
@@ -755,6 +702,7 @@ namespace eka2l1 {
         // Get package manager
         manager::package_manager *manager = sys->get_manager_system()->get_package_manager();
         ImGui::Begin("Packages", &should_package_manager, ImGuiWindowFlags_MenuBar);
+
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("Package")) {
                 if (ImGui::MenuItem("Install")) {
@@ -994,6 +942,11 @@ namespace eka2l1 {
 
         if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
             device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
+            device_wizard_state.failure = false;
+
+            device_wizard_state.current_rpkg_path.clear();
+            device_wizard_state.current_rom_path.clear();
+
             should_show_install_device_wizard = false;
 
             std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
@@ -1022,7 +975,7 @@ namespace eka2l1 {
                 if (ImGui::Button("Change##1")) {
                     on_pause_toogle(true);
 
-                    file_dialog("rpkg", [&](const char *result) {
+                    drivers::open_native_dialog(sys->get_graphics_driver(), "rpkg", [&](const char *result) {
                         device_wizard_state.current_rpkg_path = result;
                         device_wizard_state.should_continue_temps[0] = eka2l1::exists(result);
                         device_wizard_state.should_continue = (device_wizard_state.should_continue_temps[1]
@@ -1044,7 +997,7 @@ namespace eka2l1 {
                 if (ImGui::Button("Change##2")) {
                     on_pause_toogle(true);
 
-                    file_dialog("rom", [&](const char *result) {
+                    drivers::open_native_dialog(sys->get_graphics_driver(), "rom", [&](const char *result) {
                         device_wizard_state.current_rom_path = result;
                         device_wizard_state.should_continue_temps[1] = eka2l1::exists(result);
                         device_wizard_state.should_continue = (device_wizard_state.should_continue_temps[0]
@@ -1082,6 +1035,12 @@ namespace eka2l1 {
             case device_wizard::ENDING: {
                 ImGui::TextWrapped("Thank you for checking by. En hopes you have a good time!");
                 ImGui::TextWrapped("For any problem, please report to the developers by opening issues!");
+
+                if (device_wizard_state.install_thread) {
+                    device_wizard_state.install_thread->join();
+                    device_wizard_state.install_thread.reset();
+                }
+
                 device_wizard_state.should_continue = true;
                 break;
             }
@@ -1170,10 +1129,24 @@ namespace eka2l1 {
                     should_still_focus_on_keyboard = true;
                 }
 
-                if (ImGui::BeginMenu("Packages")) {
-                    ImGui::MenuItem("Install", nullptr, &should_install_package);
-                    ImGui::MenuItem("List", nullptr, &should_package_manager);
-                    ImGui::EndMenu();
+                manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+                if (!dvc_mngr->get_current()) {
+                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+
+                    ImGui::MenuItem("Packages");
+
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::PopStyleVar();
+                        ImGui::SetTooltip("Please install a device to access the package manager!");
+                    } else {
+                        ImGui::PopStyleVar();
+                    }
+                } else {    
+                    if (ImGui::BeginMenu("Packages")) {
+                        ImGui::MenuItem("Install", nullptr, &should_install_package);
+                        ImGui::MenuItem("List", nullptr, &should_package_manager);
+                        ImGui::EndMenu();
+                    }
                 }
 
                 ImGui::Separator();
@@ -1335,7 +1308,7 @@ namespace eka2l1 {
             }
             ImGui::Columns(1);
         } else {
-            ImGui::Text("App List Server is not available");
+            ImGui::Text("App List Server is not available. Install a device to enable it.");
         }
 
         ImGui::End();

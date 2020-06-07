@@ -180,11 +180,6 @@ namespace eka2l1::common {
         force_fill(offset, size, true);
     }
 
-// Release code generation is corrupted somewhere on MSVC. Force fill is good so i guess it's the other.
-// Either way, until when i can reproduce this in a short code, files and bug got fixed, this stays here.
-#ifdef _MSC_VER
-#pragma optimize("", off)
-#endif
     int bitmap_allocator::allocate_from(const std::uint32_t start_offset, int &size, const bool best_fit) {
         std::uint32_t *word = &words_[0] + (start_offset << 5);
 
@@ -262,10 +257,6 @@ namespace eka2l1::common {
         return -1;
     }
 
-#ifdef _MSC_VER
-#pragma optimize("", on)
-#endif
-
     bool bitmap_allocator::set_word(const std::uint32_t off, const std::uint32_t val) {
         if (off >= words_.size()) {
             return false;
@@ -281,5 +272,40 @@ namespace eka2l1::common {
         }
 
         return words_[off];
+    }
+
+    static int number_of_set_bits(std::uint32_t i) {
+        i = i - ((i >> 1) & 0x55555555);
+        i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+        return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+    }
+
+    int bitmap_allocator::allocated_count(const std::uint32_t offset, const std::uint32_t offset_end) {
+        if (offset > offset_end) {
+            return -1;
+        }
+
+        const std::uint32_t beg_off = (offset >> 5);
+        const std::uint32_t end_off = (offset_end >> 5);
+
+        if ((beg_off >= words_.size()) || (end_off >= words_.size())) {
+            return -1;
+        }
+
+        std::uint32_t start_bit = offset;
+        const std::uint32_t end_bit = offset_end;
+
+        std::uint32_t allocated_count = 0;
+
+        while (start_bit < end_bit) {
+            const std::uint32_t next_end_bit = common::min<std::uint32_t>(((start_bit + 32) >> 5) << 5, end_bit);
+
+            std::uint32_t word_to_scan = (words_[start_bit >> 5] >> (start_bit & 31)) << (31 - (next_end_bit - 1) & 31);
+            allocated_count += number_of_set_bits(word_to_scan);
+            
+            start_bit = next_end_bit;
+        }
+
+        return allocated_count;
     }
 }

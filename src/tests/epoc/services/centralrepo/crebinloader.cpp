@@ -19,7 +19,7 @@
  */
 
 #include <catch2/catch.hpp>
-#include <epoc/services/centralrepo/cre.h>
+#include <services/centralrepo/cre.h>
 
 #include <common/chunkyseri.h>
 

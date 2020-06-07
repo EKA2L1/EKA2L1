@@ -46,10 +46,10 @@
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h> // Declaration for graphics driver. Happy!
 #include <epoc/epoc.h>
-#include <epoc/loader/rom.h>
-#include <manager/config.h>
+#include <loader/rom.h>
+#include <config/config.h>
 
-#include <epoc/kernel/libmanager.h>
+#include <kernel/libmanager.h>
 
 #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
 #include <console/seh_handler.h>

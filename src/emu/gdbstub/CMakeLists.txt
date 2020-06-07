@@ -3,7 +3,8 @@ add_library(gdbstub
         src/gdbstub.cpp)
 
 set(LIBRARIES
-        arm
+        cpu
+        epoc
         epockern)
 
 if (WIN32)

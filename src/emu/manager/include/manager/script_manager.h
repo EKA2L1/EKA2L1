@@ -36,13 +36,18 @@ namespace eka2l1 {
     namespace kernel {
         class thread;
         class process;
+        class codeseg;
+    }
+
+    using codeseg_ptr = kernel::codeseg*;
+
+    namespace arm {
+        class core;
     }
 }
 
 namespace eka2l1::manager {
     using panic_func = std::pair<std::string, pybind11::function>;
-    using svc_func = std::tuple<int, int, pybind11::function>;
-
     using func_list = std::vector<pybind11::function>;
 
     struct breakpoint_info {
@@ -85,11 +90,24 @@ namespace eka2l1::manager {
 
         std::unordered_map<std::string, std::map<std::uint64_t, func_list>> ipc_functions;
 
+        struct breakpoint_hit_info {
+            bool hit_;
+            std::uint32_t addr_;
+        };
+
+        std::map<std::uint32_t, breakpoint_hit_info> last_breakpoint_script_hits;
+
         std::vector<panic_func> panic_functions;
-        std::vector<svc_func> svc_functions;
         std::vector<pybind11::function> reschedule_functions;
 
         pybind11::scoped_interpreter interpreter;
+
+        std::size_t ipc_send_callback_handle;
+        std::size_t ipc_complete_callback_handle;
+        std::size_t thread_kill_callback_handle;
+        std::size_t breakpoint_hit_callback_handle;
+        std::size_t process_switch_callback_handle;
+        std::size_t codeseg_loaded_callback_handle;
 
         system *sys;
         std::mutex smutex;
@@ -100,11 +118,18 @@ namespace eka2l1::manager {
     public:
         explicit script_manager() {}
         explicit script_manager(system *sys);
+        ~script_manager();
 
         bool import_module(const std::string &path);
 
+        void handle_breakpoint(arm::core *running_core, kernel::thread *thr_triggered, const std::uint32_t addr);
+        bool last_breakpoint_hit(kernel::thread *thr);
+        void reset_breakpoint_hit(arm::core *running_core, kernel::thread *thr);
+
+        void handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target);
+        void handle_process_switch(arm::core *core_switch, kernel::process *old_friend, kernel::process *new_friend);
+
         void call_panics(const std::string &panic_cage, int err_code);
-        void call_svcs(int svc_num, int time);
         void call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0,
             const std::uint32_t arg1, const std::uint32_t arg2, const std::uint32_t arg3,
             const std::uint32_t flags, kernel::thread *callee);
@@ -115,7 +140,6 @@ namespace eka2l1::manager {
         void call_reschedules();
 
         void register_panic(const std::string &panic_cage, pybind11::function &func);
-        void register_svc(int svc_num, int time, pybind11::function &func);
         void register_reschedule(pybind11::function &func);
 
         /**

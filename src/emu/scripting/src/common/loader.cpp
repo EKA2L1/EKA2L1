@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 #include <scripting/common/loader.h>
 
 #include <pybind11/pybind11.h>

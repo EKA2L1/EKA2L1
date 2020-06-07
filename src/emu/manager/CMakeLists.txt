@@ -5,7 +5,6 @@ if (ENABLE_SCRIPTING_ABILITY)
 endif ()
 
 add_library(manager
-        include/manager/config.h
         include/manager/device_manager.h
         include/manager/manager.h
         include/manager/rpkg.h
@@ -16,7 +15,6 @@ add_library(manager
         include/manager/sis_script_interpreter.h
         include/manager/sis_v1_installer.h
         include/manager/sis.h
-        src/config.cpp
         src/device_manager.cpp
         src/manager.cpp
         src/package_manager.cpp
@@ -36,11 +34,11 @@ target_link_libraries(manager PUBLIC common)
 
 if (ENABLE_SCRIPTING_ABILITY)
     target_link_libraries(manager PUBLIC pybind11::embed)
-    target_link_libraries(manager PRIVATE symemu epockern)
+    target_link_libraries(manager PRIVATE symemu epoc epockern)
 
     if (NOT MSVC)
         target_link_libraries(manager PRIVATE stdc++fs)
     endif ()
 endif (ENABLE_SCRIPTING_ABILITY)
 
-target_link_libraries(manager PRIVATE epocio miniz yaml-cpp)
+target_link_libraries(manager PRIVATE config epoc epockern epocmem epocservs miniz yaml-cpp)

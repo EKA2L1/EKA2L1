@@ -32,8 +32,8 @@
 #include <pybind11/embed.h>
 #endif
 
-#include <epoc/kernel.h>
-#include <epoc/services/applist/applist.h>
+#include <kernel/kernel.h>
+#include <services/applist/applist.h>
 
 using namespace eka2l1;
 
@@ -107,8 +107,12 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
     emu->stage_two();
 
     // Get app list server
-    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server *>(emu->symsys->get_kernel_system()
-                                                                                 ->get_by_name<service::server>("!AppListServer"));
+    kernel_system *kern = emu->symsys->get_kernel_system();
+    eka2l1::applist_server *svr = nullptr;
+
+    if (kern) {
+        svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>("!AppListServer"));
+    }
 
     if (!svr) {
         *err = "Can't get app list server!\n";

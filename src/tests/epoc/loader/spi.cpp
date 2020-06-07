@@ -22,8 +22,8 @@
 
 #include <common/chunkyseri.h>
 
-#include <epoc/loader/spi.h>
-#include <epoc/vfs.h>
+#include <loader/spi.h>
+#include <vfs/vfs.h>
 
 TEST_CASE("normal_spi_file_read", "spi_file") {
     const char *spi_name = "loaderassets//ecom-1-0.spi";

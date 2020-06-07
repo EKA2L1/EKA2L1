@@ -23,6 +23,7 @@
 #include <drivers/graphics/shader.h>
 
 #include <glad/glad.h>
+#include <nfd.h>
 
 namespace eka2l1::drivers {
     static void translate_bpp_to_format(const int bpp, texture_format &internal_format, texture_format &format,
@@ -596,6 +597,27 @@ namespace eka2l1::drivers {
             0.0f, -1.0f, 1.0f);
     }
 
+    void shared_graphics_driver::native_dialog(command_helper &helper) {
+        const char *filter = nullptr;
+        graphics_driver_dialog_callback *callback = nullptr;
+        bool is_folder = false;
+
+        helper.pop(filter);
+        helper.pop(callback);
+        helper.pop(is_folder);
+
+        nfdchar_t *out_path = nullptr;
+        nfdresult_t final_result = is_folder ? NFD_PickFolder(nullptr, &out_path) : NFD_OpenDialog(filter, nullptr, &out_path);
+
+        if (final_result == NFD_OKAY) {
+            (*callback)(out_path);
+        }
+
+        free(out_path);
+
+        helper.finish(this, (final_result == NFD_OKAY) ? 1 : 0);
+    }
+
     void shared_graphics_driver::dispatch(command *cmd) {
         command_helper helper(cmd);
 
@@ -694,6 +716,10 @@ namespace eka2l1::drivers {
             set_swizzle(helper);
             break;
         }
+
+        case graphics_driver_native_dialog:
+            native_dialog(helper);
+            break;
 
         default:
             LOG_ERROR("Unimplemented opcode {} for graphics driver", cmd->opcode_);

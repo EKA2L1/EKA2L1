@@ -26,7 +26,7 @@
 #include <drivers/graphics/texture.h>
 
 #include <imgui.h>
-#include <manager/config.h>
+#include <config/config.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -94,7 +94,7 @@ namespace eka2l1 {
         debugger_->show_debugger(scaled_width, scaled_height, fb_width, fb_height);
 
         if (background_tex_ && !fullscreen_) {
-            manager::config_state *sstate = debugger_->get_config();
+            config::state *sstate = debugger_->get_config();
 
             ImGui::GetBackgroundDrawList()->AddImage(
                 reinterpret_cast<ImTextureID>(background_tex_),

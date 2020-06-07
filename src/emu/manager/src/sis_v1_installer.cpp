@@ -27,7 +27,7 @@
 #include <common/log.h>
 #include <common/path.h>
 
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 
 #include <cwctype>
 

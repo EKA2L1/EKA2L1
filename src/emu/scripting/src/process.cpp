@@ -25,8 +25,8 @@
 #include <common/cvt.h>
 
 #include <epoc/epoc.h>
-#include <epoc/kernel.h>
-#include <epoc/kernel/process.h>
+#include <kernel/kernel.h>
+#include <kernel/process.h>
 
 namespace scripting = eka2l1::scripting;
 namespace py = pybind11;

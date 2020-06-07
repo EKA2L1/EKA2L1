@@ -30,10 +30,6 @@ namespace eka2l1::scripting {
         get_current_instance()->get_manager_system()->get_script_manager()->register_panic(category, ifunc);
     }
 
-    void register_svc_invokement(int svc_num, int time, pybind11::function ifunc) {
-        get_current_instance()->get_manager_system()->get_script_manager()->register_svc(svc_num, time, ifunc);
-    }
-
     void register_reschedule_invokement(pybind11::function ifunc) {
         get_current_instance()->get_manager_system()->get_script_manager()->register_reschedule(ifunc);
     }

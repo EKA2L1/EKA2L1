@@ -30,6 +30,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -38,6 +39,8 @@
 namespace eka2l1::drivers {
     struct command_list;
     class graphics_driver;
+
+    using graphics_driver_dialog_callback = std::function<void(const char*)>;
 
     /** \brief Create a new bitmap in the server size.
       *
@@ -93,6 +96,18 @@ namespace eka2l1::drivers {
      */
     drivers::handle create_buffer(graphics_driver *driver, const std::size_t initial_size, const buffer_hint hint,
         const buffer_upload_hint upload_hint);
+
+    /**
+     * @brief   Open a native file/folder dialog.
+     * 
+     * @param   driver      The driver to request native dialog.
+     * @param   filter      Extension filter string.
+     * @param   callback    Function invoked when a folder/file is choosed.
+     * @param   is_folder   If this is true, the dialog will be for a folder.
+     * 
+     * @returns False if this dialog is canceled.
+     */
+    bool open_native_dialog(graphics_driver *driver, const char *filter, drivers::graphics_driver_dialog_callback callback, const bool is_folder = false);
 
     struct graphics_command_list {
     };
@@ -183,11 +198,6 @@ namespace eka2l1::drivers {
          * \param target_rect The destination rectangle.
          */
         virtual void draw_rectangle(const eka2l1::rect &target_rect) = 0;
-
-        void draw_bitmap(drivers::handle h, const eka2l1::vec2 &pos, const bool use_brush = false) {
-            eka2l1::rect empty;
-            draw_bitmap(h, pos, use_brush);
-        }
 
         /**
          * \brief Use a shader program.

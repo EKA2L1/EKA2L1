@@ -26,6 +26,8 @@
 #include <manager/script_manager.h>
 #endif
 
+#include <epoc/epoc.h>
+
 namespace eka2l1 {
     manager::package_manager *manager_system::get_package_manager() {
         return pkgmngr.get();
@@ -41,10 +43,8 @@ namespace eka2l1 {
         return dvmngr.get();
     }
 
-    void manager_system::init(system *sys, io_system *ios, manager::config_state *conf) {
-        io = ios;
-
-        pkgmngr = std::make_unique<manager::package_manager>(ios, conf);
+    void manager_system::init(system *sys, config::state *conf) {
+        pkgmngr = std::make_unique<manager::package_manager>(sys, conf);
 
 #ifdef ENABLE_SCRIPTING
         scrmngr = std::make_unique<manager::script_manager>(sys);

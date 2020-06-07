@@ -13,8 +13,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <epoc/kernel/process.h>
-#include <epoc/kernel/thread.h>
+#include <kernel/process.h>
+#include <kernel/thread.h>
 
 namespace py = pybind11;
 namespace scripting = eka2l1::scripting;
@@ -253,10 +253,6 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
 
     m.def("registerPanicInvokement", &scripting::register_panic_invokement, R"pbdoc(
         Register a function to be called when a panic happen
-    )pbdoc");
-
-    m.def("registerSvcInvokement", &scripting::register_svc_invokement, R"pbdoc(
-        Register a function to be called when a specific SVC is called
     )pbdoc");
 
     m.def("registerLibraryInvokement", &scripting::register_lib_invokement, R"pbdoc(

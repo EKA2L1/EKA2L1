@@ -30,11 +30,13 @@ namespace eka2l1 {
 }
 
 namespace eka2l1 {
+    namespace config {
+        struct state;
+    }
+
     namespace manager {
         class device_manager;
         class config_manager;
-
-        struct config_state;
 
 #ifdef ENABLE_SCRIPTING
         class script_manager;
@@ -48,13 +50,11 @@ namespace eka2l1 {
         std::unique_ptr<manager::device_manager> dvmngr;
         std::unique_ptr<manager::package_manager> pkgmngr;
 
-        io_system *io;
-
     public:
         manager_system() = default;
         ~manager_system() = default;
 
-        void init(system *sys, io_system *ios, manager::config_state *conf);
+        void init(system *sys, config::state *conf);
 
         manager::package_manager *get_package_manager();
 

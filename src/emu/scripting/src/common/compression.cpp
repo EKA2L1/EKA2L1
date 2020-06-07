@@ -22,7 +22,7 @@
 #include <common/bytepair.h>
 #include <scripting/common/compression.h>
 
-#include <epoc/vfs.h>
+#include <vfs/vfs.h>
 
 #include <pybind11/pybind11.h>
 
