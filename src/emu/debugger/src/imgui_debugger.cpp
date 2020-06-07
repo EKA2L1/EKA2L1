@@ -1099,7 +1099,7 @@ namespace eka2l1 {
             if (device_wizard_state.stage == device_wizard::ENDING) {
                 if (ImGui::Button("OK", BUTTON_SIZE)) {
                     should_show_install_device_wizard = false;
-                    device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
+                    device_wizard_state.stage = device_wizard::FINAL_FOR_REAL;
                 }
             } else {
                 if (ImGuiButtonToggle("Yes", BUTTON_SIZE, device_wizard_state.should_continue)) {
