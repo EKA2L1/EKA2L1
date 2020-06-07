@@ -1069,7 +1069,7 @@ namespace eka2l1 {
                         manager::device_manager *manager = sys->get_manager_system()->get_device_manager();
 
                         device_wizard_state.install_thread = std::make_unique<std::thread>([](
-                                                                                               manager::device_manager *mngr, device_wizard *wizard, manager::config_state *conf) {
+                                                                                               manager::device_manager *mngr, device_wizard *wizard, config::state *conf) {
                             std::atomic<int> progress;
                             std::string firmware_code;
 
