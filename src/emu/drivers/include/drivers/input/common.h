@@ -25,13 +25,19 @@ namespace eka2l1::drivers {
     enum class input_event_type {
         none,
         key,
-        touch
+        touch,
+        button
     };
 
-    enum key_state {
+    enum class key_state {
         pressed,
         released,
         repeat
+    };
+
+    enum class button_state {
+        pressed,
+        released
     };
 
     enum class mouse_button {
@@ -55,6 +61,15 @@ namespace eka2l1::drivers {
     };
 
     /**
+     * Event for controller button press/release.
+     */
+    struct button_event {
+        int controller_;
+        int button_;
+        button_state state_;
+    };
+
+    /**
      * Event for mouse 0/1/2 button press/move/release.
      */
     struct mouse_event {
@@ -70,6 +85,7 @@ namespace eka2l1::drivers {
         union {
             key_event key_;
             mouse_event mouse_;
+            button_event button_;
         };
     };
 }
