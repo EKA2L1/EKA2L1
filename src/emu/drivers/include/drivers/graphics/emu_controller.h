@@ -34,9 +34,13 @@ namespace eka2l1 {
             virtual void stop_polling() = 0;
 
             /**
-             * Callback on controller button event
-             * each axis is regarded as two buttons
-             * params: controller id, button id, is presse
+             * \brief Callback on controller button event.
+             * 
+             * Each controller axis is regarded as two buttons.
+             * 
+             * \params: controller id.
+             * \params: button id.
+             * \params: true if the button was pressed, false if release.
              */
             std::function<void(int, int, bool)> on_button_event;
         };
