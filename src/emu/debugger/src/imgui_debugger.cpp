@@ -42,6 +42,7 @@
 #include <services/window/classes/winbase.h>
 #include <services/window/classes/wingroup.h>
 #include <services/window/classes/winuser.h>
+#include <services/window/common.h>
 #include <services/window/window.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
@@ -58,7 +59,9 @@
 #include <common/path.h>
 #include <common/platform.h>
 
+#include <chrono>
 #include <mutex>
+#include <thread>
 
 #define RGBA_TO_FLOAT(r, g, b, a) ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f)
 
@@ -104,6 +107,8 @@ namespace eka2l1 {
         , should_show_install_device_wizard(false)
         , should_show_about(false)
         , should_show_empty_device_warn(false)
+        , request_key(false)
+        , key_set(false)
         , selected_package_index(0xFFFFFFFF)
         , debug_thread_id(0)
         , app_launch(app_launch)
@@ -175,10 +180,39 @@ namespace eka2l1 {
             oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(kern->get_by_name<service::server>("101fdfae_10207218_AppServer"));
 
             property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
-            
+
             if (lang_prop)
                 lang_prop->add_data_change_callback(this, language_property_change_handler);
         }
+
+        key_binder_state.target_key = {
+            KEY_UP,
+            KEY_DOWN,
+            KEY_LEFT,
+            KEY_RIGHT,
+            KEY_NUM5,
+            KEY_F1,
+            KEY_F2
+        };
+        key_binder_state.target_key_name = {
+            "KEY_UP",
+            "KEY_DOWN",
+            "KEY_LEFT",
+            "KEY_RIGHT",
+            "KEY_NUM5",
+            "KEY_F1",
+            "KEY_F2"
+        };
+        key_binder_state.key_bind_name = {
+            "KEY_UP",
+            "KEY_DOWN",
+            "KEY_LEFT",
+            "KEY_RIGHT",
+            "KEY_NUM5",
+            "KEY_F1",
+            "KEY_F2"
+        };
+        key_binder_state.need_key = std::vector<bool>(key_binder_state.BIND_NUM, false);
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -376,12 +410,14 @@ namespace eka2l1 {
         if (ImGui::Button("Change")) {
             on_pause_toogle(true);
 
-            drivers::open_native_dialog(sys->get_graphics_driver(), "png,jpg,bmp", [&](const char *result) {
-                conf->bkg_path = result;
-                renderer->change_background(result);
+            drivers::open_native_dialog(
+                sys->get_graphics_driver(), "png,jpg,bmp", [&](const char *result) {
+                    conf->bkg_path = result;
+                    renderer->change_background(result);
 
-                conf->serialize();
-            }, false);
+                    conf->serialize();
+                },
+                false);
 
             should_pause = false;
             on_pause_toogle(false);
@@ -455,11 +491,11 @@ namespace eka2l1 {
         ImGui::Checkbox("CPU Read", &conf->log_read);
         ImGui::SameLine(col2);
         ImGui::Checkbox("CPU write", &conf->log_write);
-        
+
         ImGui::Checkbox("IPC", &conf->log_ipc);
         ImGui::SameLine(col2);
         ImGui::Checkbox("Symbian API", &conf->log_passed);
-    
+
         ImGui::Checkbox("System calls", &conf->log_svc);
         ImGui::SameLine(col2);
         ImGui::Checkbox("Accurate IPC timing", &conf->accurate_ipc_timing);
@@ -557,7 +593,8 @@ namespace eka2l1 {
         }
     }
 
-    void imgui_debugger::show_pref_system() {
+    void
+    imgui_debugger::show_pref_system() {
         const float col2 = ImGui::GetWindowSize().x / 3;
 
         auto draw_path_change = [&](const char *title, const char *button, std::string &dat) {
@@ -574,7 +611,8 @@ namespace eka2l1 {
             if (ImGui::Button(button)) {
                 on_pause_toogle(true);
 
-                drivers::open_native_dialog(sys->get_graphics_driver(),
+                drivers::open_native_dialog(
+                    sys->get_graphics_driver(),
                     "", [&](const char *res) {
                         dat = res;
                     },
@@ -588,6 +626,59 @@ namespace eka2l1 {
         };
 
         draw_path_change("Data storage", "Change##1", conf->storage);
+
+        ImGui::Separator();
+
+        ImGui::NewLine();
+        ImGui::Text("%s", "Key binding");
+        ImGui::Separator();
+        const float btn_col2 = ImGui::GetWindowSize().x / 4;
+        const float btn_col3 = ImGui::GetWindowSize().x / 2;
+        const float btn_col4 = ImGui::GetWindowSize().x / 4 * 3;
+        for (int i = 0; i < key_binder_state.target_key.size(); i++) {
+            if (i % 2 == 1)
+                ImGui::SameLine(btn_col3);
+            ImGui::Text("%s: ", key_binder_state.target_key_name[i].c_str());
+            if (i % 2 == 1) {
+                ImGui::SameLine(btn_col4);
+            } else {
+                ImGui::SameLine(btn_col2);
+            }
+            if (key_binder_state.need_key[i]) {
+                if (!request_key) {
+                    request_key = true;
+                } else if (key_set) {
+                    // fetch key and add to map
+                    bool map_set = false;
+                    switch (key_evt.type_) {
+                    case drivers::input_event_type::key:
+                        epoc::key_input_map[key_evt.key_.code_] = key_binder_state.target_key[i];
+                        key_binder_state.key_bind_name[i] = std::to_string(key_evt.key_.code_);
+                        map_set = true;
+                        break;
+                    case drivers::input_event_type::button:
+                        epoc::button_input_map[std::make_pair(key_evt.button_.controller_, key_evt.button_.button_)] = key_binder_state.target_key[i];
+                        key_binder_state.key_bind_name[i] = std::to_string(key_evt.button_.controller_) + ":" + std::to_string(key_evt.button_.button_);
+                        map_set = true;
+                        break;
+                    default:
+                        break;
+                    }
+                    if (map_set) {
+                        key_binder_state.need_key[i] = false;
+                        request_key = false;
+                        key_set = false;
+                    }
+                }
+                ImGui::Button("waiting for key");
+            } else {
+                if (ImGui::Button(key_binder_state.key_bind_name[i].c_str())) {
+                    key_binder_state.need_key[i] = true;
+                    std::cout << "key " << key_binder_state.key_bind_name[i] << " clicked!\n";
+                    request_key = true;
+                }
+            }
+        }
     }
 
     void imgui_debugger::show_pref_hal() {
@@ -685,9 +776,11 @@ namespace eka2l1 {
 
         on_pause_toogle(true);
 
-        drivers::open_native_dialog(sys->get_graphics_driver(), "sis,sisx", [&](const char *res) {
-            path = res;
-        }, false);
+        drivers::open_native_dialog(
+            sys->get_graphics_driver(), "sis,sisx", [&](const char *res) {
+                path = res;
+            },
+            false);
 
         should_pause = false;
         on_pause_toogle(false);
@@ -1141,7 +1234,7 @@ namespace eka2l1 {
                     } else {
                         ImGui::PopStyleVar();
                     }
-                } else {    
+                } else {
                     if (ImGui::BeginMenu("Packages")) {
                         ImGui::MenuItem("Install", nullptr, &should_install_package);
                         ImGui::MenuItem("List", nullptr, &should_package_manager);
