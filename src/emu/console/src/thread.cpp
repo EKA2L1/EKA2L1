@@ -33,6 +33,7 @@
 #include <debugger/logger.h>
 #include <debugger/renderer/renderer.h>
 
+#include <drivers/graphics/emu_controller.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/common.h>
@@ -54,7 +55,7 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
     evt.mouse_.pos_y_ = static_cast<int>(y);
     evt.mouse_.button_ = button == 0 ? eka2l1::drivers::mouse_button::left : (button == 1 ? eka2l1::drivers::mouse_button::right : eka2l1::drivers::mouse_button::middle);
     evt.mouse_.action_ = action == 0 ? eka2l1::drivers::mouse_action::press : (action == 1 ? eka2l1::drivers::mouse_action::repeat : eka2l1::drivers::mouse_action::release);
-    
+
     return evt;
 }
 
@@ -83,6 +84,16 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int 
     if (action == 0) {
         set_mouse_down(userdata, button, true);
     }
+}
+
+static eka2l1::drivers::input_event on_controller_button_event(eka2l1::window_server *winserv, int jid, int button, bool is_press) {
+    eka2l1::drivers::input_event evt;
+    evt.type_ = eka2l1::drivers::input_event_type::button;
+    evt.button_.button_ = button;
+    evt.button_.controller_ = jid;
+    evt.button_.state_ = is_press ? eka2l1::drivers::button_state::pressed : eka2l1::drivers::button_state::released;
+    if (winserv) winserv->queue_input_from_driver(evt);
+    return evt;
 }
 
 static void on_ui_window_mouse_scrolling(void *userdata, eka2l1::vec2 v) {
@@ -121,11 +132,11 @@ static void on_ui_window_key_release(void *userdata, const int key) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::released);
 
-    if (emu->symsys)
+    if (emu->winserv)
         emu->winserv->queue_input_from_driver(key_evt);
 }
 
-static void on_ui_window_key_press(void *userdata, const int key) {
+static eka2l1::drivers::input_event on_ui_window_key_press(void *userdata, const int key) {
     ImGuiIO &io = ImGui::GetIO();
 
     io.KeysDown[key] = true;
@@ -138,8 +149,10 @@ static void on_ui_window_key_press(void *userdata, const int key) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::pressed);
 
-    if (emu->symsys)
+    if (emu->winserv)
         emu->winserv->queue_input_from_driver(key_evt);
+
+    return key_evt;
 }
 
 static void on_ui_window_char_type(void *userdata, std::uint32_t c) {
@@ -168,7 +181,13 @@ namespace eka2l1::desktop {
 
         state.window->raw_mouse_event = on_ui_window_mouse_evt;
         state.window->mouse_wheeling = on_ui_window_mouse_scrolling;
-        state.window->button_pressed = on_ui_window_key_press;
+        state.window->button_pressed = [&](void *userdata, const int key) {
+            auto evt = on_ui_window_key_press(userdata, key);
+            if (state.debugger->request_key && !state.debugger->key_set) {
+                state.debugger->key_evt = evt;
+                state.debugger->key_set = true;
+            }
+        };
         state.window->button_released = on_ui_window_key_release;
         state.window->char_hook = on_ui_window_char_type;
         state.window->touch_move = on_ui_window_touch_move;
@@ -225,6 +244,15 @@ namespace eka2l1::desktop {
         }
         }
 
+        state.joystick_controller = drivers::new_emu_controller(eka2l1::drivers::controller_type::glfw);
+        state.joystick_controller->on_button_event = [&](int jid, int button, bool pressed) {
+            auto evt = on_controller_button_event(state.winserv, jid, button, pressed);
+            if (state.debugger->request_key && !state.debugger->key_set) {
+                state.debugger->key_evt = evt;
+                state.debugger->key_set = true;
+            }
+        };
+
         // Signal that the initialization is done
         state.graphics_sema.notify(2);
         return 0;
@@ -233,6 +261,7 @@ namespace eka2l1::desktop {
     static int graphics_driver_thread_deinitialization(emulator &state) {
         state.graphics_sema.wait();
 
+        state.joystick_controller->stop_polling();
         state.graphics_driver.reset();
         state.window->shutdown();
 
@@ -251,6 +280,7 @@ namespace eka2l1::desktop {
             return;
         }
 
+        state.joystick_controller->start_polling();
         // Keep running. User which want to change the graphics backend will have to restart EKA2L1.
         state.graphics_driver->run();
 

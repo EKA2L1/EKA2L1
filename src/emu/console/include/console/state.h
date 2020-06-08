@@ -33,6 +33,7 @@
 
 #include <debugger/renderer/renderer.h>
 #include <drivers/graphics/emu_window.h>
+#include <drivers/graphics/emu_controller.h>
 
 #include <imgui.h>
 
@@ -61,6 +62,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<imgui_debugger> debugger;
         std::shared_ptr<imgui_logger> logger;
         drivers::emu_window_ptr window;
+        drivers::emu_controller_ptr joystick_controller;
 
         std::atomic<bool> should_emu_quit;
         std::atomic<bool> should_emu_pause;

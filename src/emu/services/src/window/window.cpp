@@ -34,6 +34,7 @@
 #include <services/window/classes/wingroup.h>
 #include <services/window/classes/winuser.h>
 #include <services/window/classes/wsobj.h>
+#include <services/window/common.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -965,7 +966,15 @@ namespace eka2l1 {
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        guest_evt_.key_evt_.scancode = static_cast<std::uint32_t>(driver_evt_.key_.code_);
+        guest_evt_.key_evt_.scancode = epoc::map_key_to_inputcode(driver_evt_.key_.code_);
+        guest_evt_.key_evt_.repeats = 0; // TODO?
+        guest_evt_.key_evt_.modifiers = 0;
+    }
+
+    static void make_button_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+        guest_evt_.key_evt_.code = 0;
+        guest_evt_.type = (driver_evt_.button_.state_ == drivers::button_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
+        guest_evt_.key_evt_.scancode = epoc::map_button_to_inputcode(driver_evt_.button_.controller_, driver_evt_.button_.button_);
         guest_evt_.key_evt_.repeats = 0; // TODO?
         guest_evt_.key_evt_.modifiers = 0;
     }
@@ -1069,6 +1078,7 @@ namespace eka2l1 {
                 break;
 
             case drivers::input_event_type::key:
+            case drivers::input_event_type::button:
                 key_shipper.start_shipping();
                 break;
 
@@ -1095,6 +1105,10 @@ namespace eka2l1 {
                 make_key_event(input_event, guest_event);
                 break;
 
+            case drivers::input_event_type::button:
+                make_button_event(input_event, guest_event);
+                break;
+
             case drivers::input_event_type::touch:
                 make_mouse_event(input_event, guest_event, get_current_focus_screen());
                 break;
@@ -1113,6 +1127,7 @@ namespace eka2l1 {
                 break;
 
             case drivers::input_event_type::key:
+            case drivers::input_event_type::button:
                 key_shipper.add_new_event(guest_event);
                 break;
 

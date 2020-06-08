@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <map>
 
 #include <common/e32inc.h>
 #include <drivers/graphics/emu_window.h>
@@ -685,4 +686,11 @@ namespace eka2l1::epoc {
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
 
     TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation);
+
+    // map from controller button / key to input key code
+    extern std::map<std::pair<int, int>, std::uint32_t> button_input_map;
+    extern std::map<std::uint32_t, std::uint32_t> key_input_map;
+
+    uint32_t map_button_to_inputcode(int controller_id, int button);
+    std::uint32_t map_key_to_inputcode(std::uint32_t keycode);
 }
