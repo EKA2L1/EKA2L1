@@ -674,7 +674,6 @@ namespace eka2l1 {
             } else {
                 if (ImGui::Button(key_binder_state.key_bind_name[i].c_str())) {
                     key_binder_state.need_key[i] = true;
-                    std::cout << "key " << key_binder_state.key_bind_name[i] << " clicked!\n";
                     request_key = true;
                 }
             }
