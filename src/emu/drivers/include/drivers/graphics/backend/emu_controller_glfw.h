@@ -23,11 +23,12 @@
 
 #include <map>
 #include <vector>
+#include <thread>
+#include <atomic>
 #include <GLFW/glfw3.h>
 
 namespace eka2l1 {
     namespace drivers {
-
         class emu_controller_glfw3 : public emu_controller {
             struct gamepad_state {
                 // true if pressed
@@ -36,7 +37,8 @@ namespace eka2l1 {
             };
 
             std::map<int, gamepad_state> gamepads;
-            bool shall_stop;
+            std::atomic<bool> shall_stop;
+            std::unique_ptr<std::thread> polling_thread;
 
             void poll();
             void run();

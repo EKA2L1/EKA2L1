@@ -19,7 +19,6 @@
 
 #include <chrono>
 #include <drivers/graphics/backend/emu_controller_glfw.h>
-#include <thread>
 
 namespace eka2l1 {
     namespace drivers {
@@ -80,12 +79,12 @@ namespace eka2l1 {
 
         void emu_controller_glfw3::start_polling() {
             shall_stop = false;
-            std::thread t(&emu_controller_glfw3::run, this);
-            t.detach();
+            polling_thread = std::make_unique<std::thread>(&emu_controller_glfw3::run, this);
         }
 
         void emu_controller_glfw3::stop_polling() {
             shall_stop = true;
+            polling_thread->join();
         }
     }
 }
