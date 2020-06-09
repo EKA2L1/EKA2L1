@@ -687,10 +687,4 @@ namespace eka2l1::epoc {
 
     TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation);
 
-    // map from controller button / key to input key code
-    extern std::map<std::pair<int, int>, std::uint32_t> button_input_map;
-    extern std::map<std::uint32_t, std::uint32_t> key_input_map;
-
-    uint32_t map_button_to_inputcode(int controller_id, int button);
-    std::uint32_t map_key_to_inputcode(std::uint32_t keycode);
 }

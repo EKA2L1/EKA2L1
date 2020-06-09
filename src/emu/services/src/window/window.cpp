@@ -785,6 +785,28 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
+    std::map<std::pair<int, int>, std::uint32_t> window_server::button_input_map = {};
+    std::map<std::uint32_t, std::uint32_t> window_server::key_input_map = {};
+
+    std::uint32_t window_server::map_button_to_inputcode(int controller_id, int button) {
+        auto key = std::make_pair(controller_id, button);
+        auto it = button_input_map.find(key);
+        if (it == button_input_map.end()) {
+            return 0;
+        } else {
+            return it->second;
+        }
+    }
+
+    std::uint32_t window_server::map_key_to_inputcode(std::uint32_t keycode) {
+        auto it = key_input_map.find(keycode);
+        if (it == key_input_map.end()) {
+            return keycode;
+        } else {
+            return it->second;
+        }
+    }
+
     void window_server::load_wsini() {
         io_system *io = sys->get_io_system();
         std::optional<eka2l1::drive> drv;
@@ -966,7 +988,7 @@ namespace eka2l1 {
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        guest_evt_.key_evt_.scancode = epoc::map_key_to_inputcode(driver_evt_.key_.code_);
+        guest_evt_.key_evt_.scancode = window_server::map_key_to_inputcode(driver_evt_.key_.code_);
         guest_evt_.key_evt_.repeats = 0; // TODO?
         guest_evt_.key_evt_.modifiers = 0;
     }
@@ -974,7 +996,7 @@ namespace eka2l1 {
     static void make_button_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.button_.state_ == drivers::button_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        guest_evt_.key_evt_.scancode = epoc::map_button_to_inputcode(driver_evt_.button_.controller_, driver_evt_.button_.button_);
+        guest_evt_.key_evt_.scancode = window_server::map_button_to_inputcode(driver_evt_.button_.controller_, driver_evt_.button_.button_);
         guest_evt_.key_evt_.repeats = 0; // TODO?
         guest_evt_.key_evt_.modifiers = 0;
     }

@@ -43,8 +43,8 @@
 #include <services/window/scheduler.h>
 #include <services/window/screen.h>
 
-#include <mem/ptr.h>
 #include <kernel/server.h>
+#include <mem/ptr.h>
 #include <utils/des.h>
 #include <utils/version.h>
 
@@ -286,6 +286,13 @@ namespace eka2l1 {
     class window_server : public service::server {
     public:
         using key_capture_request_queue = cp_queue<epoc::event_capture_key_notifier>;
+
+        // map from controller button / key to input key code
+        static std::map<std::pair<int, int>, std::uint32_t> button_input_map;
+        static std::map<std::uint32_t, std::uint32_t> key_input_map;
+
+        static std::uint32_t map_button_to_inputcode(int controller_id, int button);
+        static std::uint32_t map_key_to_inputcode(std::uint32_t keycode);
 
     private:
         friend class epoc::window_server_client;

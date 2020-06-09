@@ -652,12 +652,12 @@ namespace eka2l1 {
                     bool map_set = false;
                     switch (key_evt.type_) {
                     case drivers::input_event_type::key:
-                        epoc::key_input_map[key_evt.key_.code_] = key_binder_state.target_key[i];
+                        window_server::key_input_map[key_evt.key_.code_] = key_binder_state.target_key[i];
                         key_binder_state.key_bind_name[i] = std::to_string(key_evt.key_.code_);
                         map_set = true;
                         break;
                     case drivers::input_event_type::button:
-                        epoc::button_input_map[std::make_pair(key_evt.button_.controller_, key_evt.button_.button_)] = key_binder_state.target_key[i];
+                        window_server::button_input_map[std::make_pair(key_evt.button_.controller_, key_evt.button_.button_)] = key_binder_state.target_key[i];
                         key_binder_state.key_bind_name[i] = std::to_string(key_evt.button_.controller_) + ":" + std::to_string(key_evt.button_.button_);
                         map_set = true;
                         break;
