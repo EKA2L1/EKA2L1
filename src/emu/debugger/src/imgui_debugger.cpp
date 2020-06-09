@@ -190,27 +190,63 @@ namespace eka2l1 {
             KEY_DOWN,
             KEY_LEFT,
             KEY_RIGHT,
-            KEY_NUM5,
+            KEY_ENTER,
             KEY_F1,
-            KEY_F2
+            KEY_F2,
+            KEY_NUM0,
+            KEY_NUM1,
+            KEY_NUM2,
+            KEY_NUM3,
+            KEY_NUM4,
+            KEY_NUM5,
+            KEY_NUM6,
+            KEY_NUM7,
+            KEY_NUM8,
+            KEY_NUM9,
+            KEY_SLASH,
+            KEY_STAR
         };
         key_binder_state.target_key_name = {
             "KEY_UP",
             "KEY_DOWN",
             "KEY_LEFT",
             "KEY_RIGHT",
-            "KEY_NUM5",
+            "KEY_ENTER",
             "KEY_F1",
-            "KEY_F2"
+            "KEY_F2",
+            "KEY_NUM0",
+            "KEY_NUM1",
+            "KEY_NUM2",
+            "KEY_NUM3",
+            "KEY_NUM4",
+            "KEY_NUM5",
+            "KEY_NUM6",
+            "KEY_NUM7",
+            "KEY_NUM8",
+            "KEY_NUM9",
+            "KEY_SLASH",
+            "KEY_STAR"
         };
         key_binder_state.key_bind_name = {
             "KEY_UP",
             "KEY_DOWN",
             "KEY_LEFT",
             "KEY_RIGHT",
-            "KEY_NUM5",
+            "KEY_ENTER",
             "KEY_F1",
-            "KEY_F2"
+            "KEY_F2",
+            "KEY_NUM0",
+            "KEY_NUM1",
+            "KEY_NUM2",
+            "KEY_NUM3",
+            "KEY_NUM4",
+            "KEY_NUM5",
+            "KEY_NUM6",
+            "KEY_NUM7",
+            "KEY_NUM8",
+            "KEY_NUM9",
+            "KEY_SLASH",
+            "KEY_STAR"
         };
         key_binder_state.need_key = std::vector<bool>(key_binder_state.BIND_NUM, false);
     }
