@@ -24,6 +24,7 @@
 #include <map>
 #include <vector>
 #include <thread>
+#include <memory>
 #include <atomic>
 #include <GLFW/glfw3.h>
 
