@@ -20,6 +20,7 @@
 
 #pragma once
 #include <functional>
+#include <memory>
 
 namespace eka2l1 {
     namespace drivers {
