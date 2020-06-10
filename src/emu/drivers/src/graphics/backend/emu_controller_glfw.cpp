@@ -18,20 +18,21 @@
  */
 
 #include <chrono>
+#include <cmath>
 #include <drivers/graphics/backend/emu_controller_glfw.h>
 
 namespace eka2l1 {
     namespace drivers {
-        emu_controller_glfw3::emu_controller_glfw3() {}
+        emu_controller_glfw3::emu_controller_glfw3()
+            : ANALOG_MIN_DIFFERENCE(0.05f)
+            , ANALOG_ACKNOWLEDGE_THRESHOLD(0.5f) {}
 
         void emu_controller_glfw3::poll() {
             for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++) {
                 if (glfwJoystickPresent(jid)) {
-                    int axis_count, button_count;
-                    const unsigned char *buttons;
-                    const float *axes;
-                    axes = glfwGetJoystickAxes(jid, &axis_count);
-                    buttons = glfwGetJoystickButtons(jid, &button_count);
+                    int axis_count = 0, button_count = 0;
+                    const float *axes = glfwGetJoystickAxes(jid, &axis_count);
+                    const unsigned char *buttons = glfwGetJoystickButtons(jid, &button_count);
                     if (gamepads.count(jid) == 0) {
                         gamepads[jid] = { std::vector<bool>(button_count, false),
                             std::vector<float>(axis_count, 0.0f) };
@@ -46,19 +47,19 @@ namespace eka2l1 {
                     gamepad_state &current_pad = gamepads[jid];
                     for (int i = 0; i < button_count; i++) {
                         if (buttons[i] == GLFW_PRESS != current_pad.button[i]) {
-                            current_pad.button[i] = buttons[i] == GLFW_PRESS ? true : false;
+                            current_pad.button[i] = (buttons[i] == GLFW_PRESS) ? true : false;
                             on_button_event(jid, i, buttons[i]);
                         }
                     }
                     for (int i = 0; i < axis_count; i++) {
-                        if (abs(axes[i] - current_pad.axis[i]) > 0.05) {
-                            if (current_pad.axis[i] < 0.5 && axes[i] >= 0.5) {
+                        if (std::fabs(axes[i] - current_pad.axis[i]) > ANALOG_MIN_DIFFERENCE) {
+                            if (current_pad.axis[i] < ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD) {
                                 on_button_event(jid, button_count + i * 2, true);
-                            } else if (current_pad.axis[i] >= 0.5 && axes[i] < 0.5) {
+                            } else if (current_pad.axis[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] < ANALOG_ACKNOWLEDGE_THRESHOLD) {
                                 on_button_event(jid, button_count + i * 2, false);
-                            } else if (current_pad.axis[i] > -0.5 && axes[i] <= -0.5) {
+                            } else if (current_pad.axis[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD) {
                                 on_button_event(jid, button_count + i * 2 + 1, true);
-                            } else if (current_pad.axis[i] <= -0.5 && axes[i] > -0.5) {
+                            } else if (current_pad.axis[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD) {
                                 on_button_event(jid, button_count + i * 2 + 1, false);
                             }
                             current_pad.axis[i] = axes[i];
@@ -71,7 +72,7 @@ namespace eka2l1 {
         }
 
         void emu_controller_glfw3::run() {
-            while (true && !shall_stop) {
+            while (!shall_stop) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(15));
                 poll();
             }

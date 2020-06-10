@@ -40,6 +40,8 @@ namespace eka2l1 {
             std::map<int, gamepad_state> gamepads;
             std::atomic<bool> shall_stop;
             std::unique_ptr<std::thread> polling_thread;
+            const float ANALOG_MIN_DIFFERENCE;
+            const float ANALOG_ACKNOWLEDGE_THRESHOLD;
 
             void poll();
             void run();
