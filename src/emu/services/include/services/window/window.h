@@ -39,12 +39,13 @@
 #include <services/window/classes/config.h>
 #include <services/window/common.h>
 #include <services/window/fifo.h>
+#include <services/window/io.h>
 #include <services/window/opheader.h>
 #include <services/window/scheduler.h>
 #include <services/window/screen.h>
 
-#include <mem/ptr.h>
 #include <kernel/server.h>
+#include <mem/ptr.h>
 #include <utils/des.h>
 #include <utils/version.h>
 
@@ -287,6 +288,12 @@ namespace eka2l1 {
     public:
         using key_capture_request_queue = cp_queue<epoc::event_capture_key_notifier>;
 
+        struct {
+            // maps from controller button / key to input key code
+            epoc::button_map button_input_map;
+            epoc::key_map key_input_map;
+        } input_mapping;
+
     private:
         friend class epoc::window_server_client;
         friend struct epoc::window_key_shipper;
@@ -327,13 +334,12 @@ namespace eka2l1 {
         void load_wsini();
         void parse_wsini();
 
-        void handle_inputs_from_driver(std::uint64_t userdata, int nn_late);
+        epoc::window_pointer_focus_walker touch_shipper;
+        epoc::window_key_shipper key_shipper;
+        void handle_input_from_driver(drivers::input_event input_event);
         void init_screens();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
-
-        std::mutex input_queue_mut;
-        std::queue<drivers::input_event> input_events;
 
     public:
         explicit window_server(system *sys);

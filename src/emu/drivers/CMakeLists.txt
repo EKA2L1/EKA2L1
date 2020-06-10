@@ -20,11 +20,13 @@ add_library(drivers
         include/drivers/audio/backend/player_shared.h
         include/drivers/graphics/buffer.h
         include/drivers/graphics/emu_window.h
+        include/drivers/graphics/emu_controller.h
         include/drivers/graphics/fb.h
         include/drivers/graphics/graphics.h
         include/drivers/graphics/imgui_renderer.h
         include/drivers/graphics/shader.h
         include/drivers/graphics/texture.h
+        include/drivers/graphics/backend/emu_controller_glfw.h
         include/drivers/graphics/backend/emu_window_glfw.h
         include/drivers/graphics/backend/graphics_driver_shared.h
         include/drivers/graphics/backend/ogl/buffer_ogl.h
@@ -48,11 +50,13 @@ add_library(drivers
         src/graphics/buffer.cpp
         src/graphics/fb.cpp
         src/graphics/emu_window.cpp
+        src/graphics/emu_controller.cpp
         src/graphics/imgui_renderer.cpp
         src/graphics/graphics.cpp
         src/graphics/shader.cpp
         src/graphics/texture.cpp
         src/graphics/backend/emu_window_glfw.cpp
+        src/graphics/backend/emu_controller_glfw.cpp
         src/graphics/backend/graphics_driver_shared.cpp
         src/graphics/backend/ogl/buffer_ogl.cpp
         src/graphics/backend/ogl/common_ogl.cpp

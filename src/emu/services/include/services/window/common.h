@@ -26,6 +26,7 @@
 
 #include <common/vecx.h>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <unordered_map>
 
@@ -685,4 +686,8 @@ namespace eka2l1::epoc {
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
 
     TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation);
+    typedef std::map<std::pair<int, int>, std::uint32_t> button_map;
+    typedef std::map<std::uint32_t, std::uint32_t> key_map;
+    std::uint32_t map_button_to_inputcode(button_map &map, int controller_id, int button);
+    std::uint32_t map_key_to_inputcode(key_map &map, std::uint32_t keycode);
 }

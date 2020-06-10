@@ -17,18 +17,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include <common/queue.h>
 #include <common/types.h>
 #include <common/vecx.h>
 #include <debugger/debugger.h>
 #include <drivers/graphics/common.h>
+#include <drivers/input/common.h>
+#include <services/window/common.h>
 
 namespace eka2l1 {
     namespace service {
@@ -89,6 +93,14 @@ namespace eka2l1 {
         bool should_show_empty_device_warn;
 
         std::uint32_t active_screen;
+
+        struct key_binder {
+            std::vector<bool> need_key;
+            static constexpr int BIND_NUM = 19;
+            std::array<std::string, BIND_NUM> key_bind_name;
+            std::array<std::uint32_t, BIND_NUM> target_key;
+            std::array<std::string, BIND_NUM> target_key_name;
+        } key_binder_state;
 
         struct device_wizard {
             enum device_wizard_stage {
@@ -198,6 +210,10 @@ namespace eka2l1 {
         system *get_sys() const {
             return sys;
         }
+
+        std::atomic<bool> request_key;
+        std::atomic<bool> key_set;
+        eka2l1::drivers::input_event key_evt;
 
         void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
         void queue_error(const std::string &error);
