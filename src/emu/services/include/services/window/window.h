@@ -39,6 +39,7 @@
 #include <services/window/classes/config.h>
 #include <services/window/common.h>
 #include <services/window/fifo.h>
+#include <services/window/io.h>
 #include <services/window/opheader.h>
 #include <services/window/scheduler.h>
 #include <services/window/screen.h>
@@ -287,12 +288,11 @@ namespace eka2l1 {
     public:
         using key_capture_request_queue = cp_queue<epoc::event_capture_key_notifier>;
 
-        // map from controller button / key to input key code
-        static std::map<std::pair<int, int>, std::uint32_t> button_input_map;
-        static std::map<std::uint32_t, std::uint32_t> key_input_map;
-
-        static std::uint32_t map_button_to_inputcode(int controller_id, int button);
-        static std::uint32_t map_key_to_inputcode(std::uint32_t keycode);
+        struct {
+            // maps from controller button / key to input key code
+            std::map<std::pair<int, int>, std::uint32_t> button_input_map;
+            std::map<std::uint32_t, std::uint32_t> key_input_map;
+        } input_mapping;
 
     private:
         friend class epoc::window_server_client;
@@ -334,13 +334,12 @@ namespace eka2l1 {
         void load_wsini();
         void parse_wsini();
 
-        void handle_inputs_from_driver(std::uint64_t userdata, int nn_late);
+        epoc::window_pointer_focus_walker touch_shipper;
+        epoc::window_key_shipper key_shipper;
+        void handle_input_from_driver(drivers::input_event input_event);
         void init_screens();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
-
-        std::mutex input_queue_mut;
-        std::queue<drivers::input_event> input_events;
 
     public:
         explicit window_server(system *sys);

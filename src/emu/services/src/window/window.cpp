@@ -785,28 +785,6 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
-    std::map<std::pair<int, int>, std::uint32_t> window_server::button_input_map = {};
-    std::map<std::uint32_t, std::uint32_t> window_server::key_input_map = {};
-
-    std::uint32_t window_server::map_button_to_inputcode(int controller_id, int button) {
-        auto key = std::make_pair(controller_id, button);
-        auto it = button_input_map.find(key);
-        if (it == button_input_map.end()) {
-            return 0;
-        } else {
-            return it->second;
-        }
-    }
-
-    std::uint32_t window_server::map_key_to_inputcode(std::uint32_t keycode) {
-        auto it = key_input_map.find(keycode);
-        if (it == key_input_map.end()) {
-            return keycode;
-        } else {
-            return it->second;
-        }
-    }
-
     void window_server::load_wsini() {
         io_system *io = sys->get_io_system();
         std::optional<eka2l1::drive> drv;
@@ -948,7 +926,8 @@ namespace eka2l1 {
         , bmp_cache(sys->get_kernel_system())
         , anim_sched(sys->get_kernel_system(), sys->get_ntimer(), 1)
         , screens(nullptr)
-        , focus_screen_(nullptr) {
+        , focus_screen_(nullptr)
+        , key_shipper(this) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
@@ -983,20 +962,20 @@ namespace eka2l1 {
 
     constexpr std::int64_t input_update_us = 100;
 
-    static void make_key_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+    void make_key_event(std::map<std::uint32_t, std::uint32_t> &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        guest_evt_.key_evt_.scancode = window_server::map_key_to_inputcode(driver_evt_.key_.code_);
+        guest_evt_.key_evt_.scancode = epoc::map_key_to_inputcode(map, driver_evt_.key_.code_);
         guest_evt_.key_evt_.repeats = 0; // TODO?
         guest_evt_.key_evt_.modifiers = 0;
     }
 
-    static void make_button_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+    void make_button_event(std::map<std::pair<int, int>, std::uint32_t> &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.button_.state_ == drivers::button_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        guest_evt_.key_evt_.scancode = window_server::map_button_to_inputcode(driver_evt_.button_.controller_, driver_evt_.button_.button_);
+        guest_evt_.key_evt_.scancode = epoc::map_button_to_inputcode(map, driver_evt_.button_.controller_, driver_evt_.button_.button_);
         guest_evt_.key_evt_.repeats = 0; // TODO?
         guest_evt_.key_evt_.modifiers = 0;
     }
@@ -1059,6 +1038,8 @@ namespace eka2l1 {
             break;
         }
 
+        // use on debugging
+        // LOG_TRACE("touch position ({}, {}), type {}", guest_evt_.adv_pointer_evt_.pos.x, guest_evt_.adv_pointer_evt_.pos.y, guest_evt_.adv_pointer_evt_.evtype);
         scr->screen_mutex.unlock();
     }
 
@@ -1069,104 +1050,39 @@ namespace eka2l1 {
 
         evt.time_ = kern->home_time();
 
-        const std::lock_guard<std::mutex> guard(input_queue_mut);
-        input_events.push(std::move(evt));
+        handle_input_from_driver(evt);
     }
 
-    void window_server::handle_inputs_from_driver(std::uint64_t userdata, int nn_late) {
-        if (!focus_screen_ || !focus_screen_->focus) {
-            sys->get_ntimer()->schedule_event(input_update_us - nn_late, input_handler_evt_, userdata);
-            return;
-        }
-
+    void window_server::handle_input_from_driver(drivers::input_event input_event) {
         epoc::event guest_event;
-
-        drivers::input_event_type last_event_type = drivers::input_event_type::none;
-
-        epoc::window_pointer_focus_walker touch_shipper;
-        epoc::window_key_shipper key_shipper(this);
-
         epoc::window *root_current = get_current_focus_screen()->root->child;
-        std::unique_lock<std::mutex> unq(input_queue_mut);
+        guest_event.time = input_event.time_;
+        // Translate host event to guest event
+        switch (input_event.type_) {
+        case drivers::input_event_type::key:
+            make_key_event(input_mapping.key_input_map, input_event, guest_event);
+            key_shipper.add_new_event(guest_event);
+            key_shipper.start_shipping();
 
-        auto flush_events = [&]() {
-            unq.unlock();
+            break;
 
-            // Delivery events stored
-            switch (last_event_type) {
-            case drivers::input_event_type::touch:
-                root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
-                touch_shipper.clear();
-                break;
+        case drivers::input_event_type::button:
+            make_button_event(input_mapping.button_input_map, input_event, guest_event);
+            key_shipper.add_new_event(guest_event);
+            key_shipper.start_shipping();
 
-            case drivers::input_event_type::key:
-            case drivers::input_event_type::button:
-                key_shipper.start_shipping();
-                break;
+            break;
 
-            default:
-                LOG_ERROR("Unknown driver event type {}", static_cast<int>(last_event_type));
-                break;
-            }
+        case drivers::input_event_type::touch:
+            make_mouse_event(input_event, guest_event, get_current_focus_screen());
+            touch_shipper.add_new_event(guest_event);
+            root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+            touch_shipper.clear();
+            break;
 
-            unq.lock();
-        };
-
-        drivers::input_event input_event;
-
-        // Processing the events, translate them to cool things
-        while (!input_events.empty()) {
-            input_event = std::move(input_events.back());
-            input_events.pop();
-
-            guest_event.time = input_event.time_;
-
-            // Translate host event to guest event
-            switch (input_event.type_) {
-            case drivers::input_event_type::key:
-                make_key_event(input_event, guest_event);
-                break;
-
-            case drivers::input_event_type::button:
-                make_button_event(input_event, guest_event);
-                break;
-
-            case drivers::input_event_type::touch:
-                make_mouse_event(input_event, guest_event, get_current_focus_screen());
-                break;
-
-            default:
-                continue;
-            }
-
-            if ((last_event_type != drivers::input_event_type::none) && (last_event_type != input_event.type_)) {
-                flush_events();
-            }
-
-            switch (input_event.type_) {
-            case drivers::input_event_type::touch:
-                touch_shipper.add_new_event(guest_event);
-                break;
-
-            case drivers::input_event_type::key:
-            case drivers::input_event_type::button:
-                key_shipper.add_new_event(guest_event);
-                break;
-
-            default:
-                LOG_ERROR("Unknown driver event type {}", static_cast<int>(last_event_type));
-                break;
-            }
-
-            last_event_type = input_event.type_;
+        default:
+            LOG_ERROR("Unknown driver event type {}", static_cast<int>(input_event.type_));
         }
-
-        // Flush remaining events.
-        if (last_event_type != drivers::input_event_type::none) {
-            flush_events();
-        }
-
-        sys->get_ntimer()->schedule_event(input_update_us - nn_late, input_handler_evt_, userdata);
     }
 
     static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
@@ -1257,16 +1173,6 @@ namespace eka2l1 {
         load_wsini();
         parse_wsini();
         init_screens();
-
-        // Schedule an event which will frequently queries input from host
-        ntimer *timing = sys->get_ntimer();
-
-        input_handler_evt_ = timing->register_event("ws_serv_input_update_event", [this](std::uint64_t userdata, int cycles_late) {
-            handle_inputs_from_driver(userdata, cycles_late);
-        });
-
-        timing->schedule_event(input_update_us, input_handler_evt_, reinterpret_cast<std::uint64_t>(this));
-
         loaded = true;
     }
 

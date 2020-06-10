@@ -148,4 +148,23 @@ namespace eka2l1::epoc {
         }
         return static_cast<TStdScanCode>(it->second);
     }
+
+    std::uint32_t map_button_to_inputcode(std::map<std::pair<int, int>, std::uint32_t> &map, int controller_id, int button) {
+        auto key = std::make_pair(controller_id, button);
+        auto it = map.find(key);
+        if (it == map.end()) {
+            return 0;
+        } else {
+            return it->second;
+        }
+    }
+
+    std::uint32_t map_key_to_inputcode(std::map<std::uint32_t, std::uint32_t> &map, std::uint32_t keycode) {
+        auto it = map.find(keycode);
+        if (it == map.end()) {
+            return keycode;
+        } else {
+            return it->second;
+        }
+    }
 }
