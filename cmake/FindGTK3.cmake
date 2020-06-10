@@ -128,10 +128,11 @@ function(_GTK3_FIND_INCLUDE_DIR _var _hdr)
         gtkmm-2.4
         libglade-2.0
         libglademm-2.4
+        harfbuzz
         pango-1.0
         pangomm-1.4
         sigc++-2.2
-    gtk-unix-print-2.0
+        gtk-unix-print-2.0
     )
 
     set(_suffixes)
@@ -424,6 +425,8 @@ foreach(_GTK3_component ${GTK3_FIND_COMPONENTS})
 
         _GTK3_FIND_INCLUDE_DIR(GTK3_PANGO_INCLUDE_DIR pango/pango.h)
         _GTK3_FIND_LIBRARY    (GTK3_PANGO_LIBRARY pango false true)
+
+        _GTK3_FIND_INCLUDE_DIR(GTK3_HARFBUZZ_INCLUDE_DIR hb.h)
 
         _GTK3_FIND_INCLUDE_DIR(GTK3_ATK_INCLUDE_DIR atk/atk.h)
         _GTK3_FIND_LIBRARY    (GTK3_ATK_LIBRARY atk false true)
