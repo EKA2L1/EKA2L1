@@ -290,8 +290,8 @@ namespace eka2l1 {
 
         struct {
             // maps from controller button / key to input key code
-            std::map<std::pair<int, int>, std::uint32_t> button_input_map;
-            std::map<std::uint32_t, std::uint32_t> key_input_map;
+            epoc::button_map button_input_map;
+            epoc::key_map key_input_map;
         } input_mapping;
 
     private:

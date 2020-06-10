@@ -962,7 +962,7 @@ namespace eka2l1 {
 
     constexpr std::int64_t input_update_us = 100;
 
-    void make_key_event(std::map<std::uint32_t, std::uint32_t> &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+    void make_key_event(epoc::key_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
@@ -972,7 +972,7 @@ namespace eka2l1 {
         guest_evt_.key_evt_.modifiers = 0;
     }
 
-    void make_button_event(std::map<std::pair<int, int>, std::uint32_t> &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+    void make_button_event(epoc::button_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.button_.state_ == drivers::button_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
         guest_evt_.key_evt_.scancode = epoc::map_button_to_inputcode(map, driver_evt_.button_.controller_, driver_evt_.button_.button_);
@@ -1063,14 +1063,12 @@ namespace eka2l1 {
             make_key_event(input_mapping.key_input_map, input_event, guest_event);
             key_shipper.add_new_event(guest_event);
             key_shipper.start_shipping();
-
             break;
 
         case drivers::input_event_type::button:
             make_button_event(input_mapping.button_input_map, input_event, guest_event);
             key_shipper.add_new_event(guest_event);
             key_shipper.start_shipping();
-
             break;
 
         case drivers::input_event_type::touch:
@@ -1082,6 +1080,7 @@ namespace eka2l1 {
 
         default:
             LOG_ERROR("Unknown driver event type {}", static_cast<int>(input_event.type_));
+            break;
         }
     }
 
