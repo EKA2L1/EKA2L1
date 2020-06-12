@@ -131,8 +131,10 @@ namespace eka2l1 {
 
         // Read localised info
         // Ignore result
-        read_localised_registration_info(reinterpret_cast<common::ro_stream *>(&localised_app_info_resource_stream),
-            reg, land_drive);
+        if (localised_app_info_resource_stream.valid()) {
+            read_localised_registration_info(reinterpret_cast<common::ro_stream *>(&localised_app_info_resource_stream),
+                reg, land_drive);
+        }
 
         LOG_INFO("Found app: {}, uid: 0x{:X}",
             common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr)),
