@@ -15,21 +15,23 @@ namespace eka2l1 {
 
     namespace loader {
         struct rpkg_header {
-            uint32_t magic[4];
-            uint8_t major_rom;
-            uint8_t minor_rom;
-            uint16_t build_rom;
-            uint32_t count;
+            std::uint32_t magic[4];
+            std::uint8_t major_rom;
+            std::uint8_t minor_rom;
+            std::uint16_t build_rom;
+            std::uint32_t count;
+            std::uint32_t header_size;
+            std::uint32_t machine_uid;
         };
 
         struct rpkg_entry {
-            uint64_t attrib;
-            uint64_t time;
-            uint64_t path_len;
+            std::uint64_t attrib;
+            std::uint64_t time;
+            std::uint64_t path_len;
 
             std::u16string path;
 
-            uint64_t data_size;
+            std::uint64_t data_size;
         };
 
         bool install_rpkg(manager::device_manager *dvc, const std::string &path,

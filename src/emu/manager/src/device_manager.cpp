@@ -45,7 +45,15 @@ namespace eka2l1::manager {
             const std::string model = device_node.second["model"].as<std::string>();
             epocver ver = static_cast<epocver>(device_node.second["platver"].as<int>());
 
-            add_new_device(firmcode, model, manufacturer, ver);
+            std::uint32_t machine_uid = 0;
+            
+            try {
+                machine_uid = device_node.second["machine-uid"].as<int>();
+            } catch (YAML::Exception exception) {
+                machine_uid = 0;
+            }
+
+            add_new_device(firmcode, model, manufacturer, ver, machine_uid);
         }
     }
 
@@ -61,6 +69,7 @@ namespace eka2l1::manager {
             emitter << YAML::Key << "manufacturer" << YAML::Value << device.manufacturer;
             emitter << YAML::Key << "firmcode" << YAML::Value << device.firmware_code;
             emitter << YAML::Key << "model" << YAML::Value << device.model;
+            emitter << YAML::Key << "machine-uid" << YAML::Value << device.machine_uid;
 
             emitter << YAML::EndMap;
         }
@@ -116,7 +125,7 @@ namespace eka2l1::manager {
         return current;
     }
 
-    bool device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver) {
+    bool device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid) {
         const std::lock_guard<std::mutex> guard(lock);
 
         if (get(firmcode)) {
@@ -146,6 +155,7 @@ namespace eka2l1::manager {
         device dvc = { ver, firmcode, manufacturer, model };
         dvc.languages = languages;
         dvc.default_language_code = default_language;
+        dvc.machine_uid = machine_uid;
 
         devices.push_back(dvc);
         return true;

@@ -279,9 +279,22 @@ namespace eka2l1::loader {
             return false;
         }
 
-        if (header.magic[0] != 'R' || header.magic[1] != 'P' || header.magic[2] != 'K' || header.magic[3] != 'G') {
-            fclose(f);
-            return false;
+        std::uint8_t is_ver_one = 1;
+
+        if (header.magic[0] != 'R' || header.magic[1] != 'P' || header.magic[2] != 'K') {
+            switch (header.magic[3]) {
+            case 'G':
+                is_ver_one = 1;
+                break;
+
+            case '2':
+                is_ver_one = 0;
+                break;
+
+            default:
+                fclose(f);
+                return false;
+            }
         }
 
         std::size_t total_read_size = 0;
@@ -291,7 +304,15 @@ namespace eka2l1::loader {
         total_read_size += fread(&header.build_rom, 1, 2, f);
         total_read_size += fread(&header.count, 1, 4, f);
 
-        if (total_read_size != 8) {
+        header.machine_uid = 0;
+        header.header_size = 0;
+
+        if (!is_ver_one) {
+            total_read_size += fread(&header.header_size, 1, 4, f);
+            total_read_size += fread(&header.machine_uid, 1, 4, f);
+        }
+
+        if (total_read_size != 8 + header.header_size) {
             fclose(f);
             return false;
         }
@@ -351,7 +372,7 @@ namespace eka2l1::loader {
         // Rename temp folder to its product code
         eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode_low + "\\"));
 
-        if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver)) {
+        if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid)) {
             LOG_ERROR("This device ({}) failed to be install, revert all changes", firmcode);
             eka2l1::common::remove(add_path(devices_rom_path, firmcode_low + "\\"));
 

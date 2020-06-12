@@ -36,6 +36,7 @@ namespace eka2l1::manager {
         std::string manufacturer;
         std::string model;
         std::vector<int> languages;
+        std::uint32_t machine_uid;
         int default_language_code;
     };
 
@@ -70,7 +71,7 @@ namespace eka2l1::manager {
         bool set_current(const std::string &firmcode);
         bool set_current(const std::uint8_t idx);
 
-        bool add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver);
+        bool add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid);
 
         bool delete_device(const std::string &firmcode);
 
