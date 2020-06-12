@@ -127,7 +127,7 @@ namespace eka2l1::hle {
         codeseg_ptr cs = mngr.load(dll_name, pr);
 
         if (!cs) {
-            LOG_TRACE("Can't found {}", dll_name8);
+            LOG_TRACE("Can't find {}", dll_name8);
             return false;
         }
 
@@ -156,7 +156,7 @@ namespace eka2l1::hle {
         codeseg_ptr cs = mngr.load(dll_name, pr);
 
         if (!cs) {
-            LOG_TRACE("Can't found {}", dll_name8);
+            LOG_TRACE("Can't find {}", dll_name8);
             return false;
         }
 
