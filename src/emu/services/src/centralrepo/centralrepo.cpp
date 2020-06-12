@@ -345,6 +345,7 @@ namespace eka2l1 {
 
             // Don't add separate firmware code on rom drive (it already did itself)
             std::u16string repo_folder = repo_dir + ((drv == rom_drv) ? private_dir_persists : private_dir_persists_separate_firm);
+            std::u16string repo_folder_txt = repo_dir + private_dir_persists;
 
             if (is_first_repo && !io->exist(repo_folder)) {
                 // Create one if it doesn't exist, for the future
@@ -387,7 +388,7 @@ namespace eka2l1 {
                 }
 
                 // Try to load the INI
-                auto path = io->get_raw_path(repo_folder + repoini);
+                auto path = io->get_raw_path(repo_folder_txt + repoini);
 
                 if (!path) {
                     avail_drives.pop_back();
