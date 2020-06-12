@@ -59,15 +59,21 @@ namespace eka2l1 {
     bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
         const language ideal_lang) {
         // common::benchmarker marker(__FUNCTION__);
-        // Validate the path fits our current system
-        if (!utils::is_file_compatible_with_language(common::ucs2_to_utf8(path), ".rsc", sys->get_system_language()))
-            return false;
+        const std::u16string nearest_path = utils::get_nearest_lang_file(io, path, ideal_lang, land_drive);
+
+        auto find_result = std::find_if(regs.begin(), regs.end(), [=](const apa_app_registry &reg) {
+            return reg.rsc_path == nearest_path;
+        });
+
+        if (find_result != regs.end()) {
+            return true;
+        }
 
         apa_app_registry reg;
-        reg.rsc_path = path;
+        reg.rsc_path = nearest_path;
 
         // Load the resource
-        symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+        symfile f = io->open_file(nearest_path, READ_MODE | BIN_MODE);
 
         if (!f) {
             return false;
@@ -109,7 +115,17 @@ namespace eka2l1 {
 
         // Getting our localised resource info
         if (reg.localised_info_rsc_path.empty()) {
-            return true;
+            // Assume default path is used
+            reg.localised_info_rsc_path.append(1, drive_to_char16(land_drive));
+            reg.localised_info_rsc_path += u":\\resource\\apps\\";
+
+            std::u16string name_rsc = eka2l1::replace_extension(eka2l1::filename(reg.rsc_path), u"");
+
+            if (common::lowercase_ucs2_string(name_rsc.substr(name_rsc.length() - 4, 4)) == u"_reg") {
+                name_rsc.erase(name_rsc.length() - 4, 4);
+            }
+
+            reg.localised_info_rsc_path += name_rsc + u".rsc";
         }
 
         // Absolute the localised info path
