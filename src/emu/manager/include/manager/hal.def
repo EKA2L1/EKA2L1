@@ -21,6 +21,7 @@
 // HAL_ENTRY(generic_name, display_name, key)
 
 HAL_ENTRY(manufacturer, Manufacturer, 0)
+HAL_ENTRY(machine_uid, MachineUID, 5)
 HAL_ENTRY(cpu, CPU, 8)
 HAL_ENTRY(ram, RAMSize, 15)
 HAL_ENTRY(display_screen_x_pixels, ScreenXPixels, 31)

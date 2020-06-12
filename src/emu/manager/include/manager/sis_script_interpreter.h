@@ -23,6 +23,7 @@
 #include <atomic>
 #include <functional>
 #include <string>
+#include <stack>
 #include <vector>
 
 #include <manager/sis_fields.h>
@@ -38,6 +39,7 @@ namespace eka2l1 {
 
     namespace manager {
         class package_manager;
+        struct device;
     }
 
     namespace common {
@@ -51,7 +53,7 @@ namespace eka2l1 {
             sis_data *install_data;
             config::state *conf;
 
-            sis_controller *current_controller = nullptr;
+            std::stack<sis_controller*> current_controllers;
 
             drive_number install_drive;
 
@@ -61,6 +63,7 @@ namespace eka2l1 {
             window_server *winserv;
 
             manager::package_manager *mngr;
+            manager::device *current_dvc;
 
             bool skip_next_file{ false };
 
@@ -112,6 +115,7 @@ namespace eka2l1 {
             explicit ss_interpreter(common::ro_stream *stream,
                 system *sys,
                 manager::package_manager *pkgmngr,
+                manager::device *crr_dvc,
                 config::state *conf,
                 sis_controller *main_controller,
                 sis_data *inst_data,

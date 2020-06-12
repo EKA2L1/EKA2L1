@@ -33,6 +33,8 @@
 #include <services/window/screen.h>
 
 #include <config/config.h>
+
+#include <manager/device_manager.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 
@@ -40,6 +42,12 @@
 
 namespace eka2l1 {
     namespace loader {
+        #define HAL_ENTRY(generic_name, display_name, num) hal_entry_##generic_name = num,
+
+        enum hal_entry {
+            #include <manager/hal.def>
+        };
+
         std::string get_install_path(const std::u16string &pseudo_path, drive_number drv) {
             std::u16string raw_path = pseudo_path;
 
@@ -68,12 +76,14 @@ namespace eka2l1 {
         ss_interpreter::ss_interpreter(common::ro_stream *stream,
             system *sys,
             manager::package_manager *pkgmngr,
+            manager::device *crr_dvc,
             config::state *conf,
             sis_controller *main_controller,
             sis_data *inst_data,
             drive_number inst_drv)
             : data_stream(stream)
             , mngr(pkgmngr)
+            , current_dvc(crr_dvc)
             , conf(conf)
             , io(sys->get_io_system())
             , main_controller(main_controller)
@@ -219,15 +229,19 @@ namespace eka2l1 {
                 switch (expr.int_val) {
                 // Language variable. We choosen upper
                 case 0x1000: {
-                    return static_cast<int>(current_controller->chosen_lang);
+                    return static_cast<int>(current_controllers.top()->chosen_lang);
                 }
 
                 // HAL Display X
-                case 31:
+                case hal_entry_display_screen_x_pixels:
                     return winserv->get_screen(0)->size().x;
 
-                case 32:
+                case hal_entry_display_screen_y_pixels:
                     return winserv->get_screen(0)->size().y;
+
+                case hal_entry_machine_uid:
+                    return 0x20014DDD;
+                    //return current_dvc->machine_uid;
 
                 default: {
                     break;
@@ -371,7 +385,7 @@ namespace eka2l1 {
 
         bool ss_interpreter::interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress) {
             // Set current controller
-            current_controller = controller;
+            current_controllers.push(controller);
             mngr->delete_files_and_bucket(controller->info.uid.uid);
 
             // Ask for language. If we can't choose the first one, or none
@@ -401,7 +415,10 @@ namespace eka2l1 {
             }
 
             // TODO: Choose options
-            return interpret(controller->install_block, progress, base_data_idx + controller->idx.data_index);
+            const bool result = interpret(controller->install_block, progress, base_data_idx + controller->idx.data_index);
+            current_controllers.pop();
+            
+            return result;
         }
 
         bool ss_interpreter::interpret(sis_install_block &install_block, std::atomic<int> &progress, uint16_t crr_blck_idx) {
@@ -438,8 +455,8 @@ namespace eka2l1 {
 
                         case 1 << 11:
                         case 1 << 12: { // Abort
-                            mngr->delete_files_and_bucket(current_controller->info.uid.uid);
-                            const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controller->info.uid.uid);
+                            mngr->delete_files_and_bucket(current_controllers.top()->info.uid.uid);
+                            const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controllers.top()->info.uid.uid);
 
                             LOG_ERROR("{}", err_string);
 
@@ -473,7 +490,7 @@ namespace eka2l1 {
                             LOG_INFO("EOpInstall: {}", raw_path);
 
                             // Add to bucket
-                            mngr->add_to_file_bucket(current_controller->info.uid.uid, install_path);
+                            mngr->add_to_file_bucket(current_controllers.top()->info.uid.uid, install_path);
                         } else {
                             skip_next_file = false;
                         }

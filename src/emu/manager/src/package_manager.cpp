@@ -26,6 +26,9 @@
 #include <manager/sis.h>
 
 #include <config/config.h>
+
+#include <manager/manager.h>
+#include <manager/device_manager.h>
 #include <manager/package_manager.h>
 #include <manager/sis_script_interpreter.h>
 #include <manager/sis_v1_installer.h>
@@ -219,10 +222,13 @@ namespace eka2l1 {
                 loader::sis_contents res = loader::parse_sis(common::ucs2_to_utf8(path));
                 common::ro_std_file_stream stream(common::ucs2_to_utf8(path), true);
 
+                manager::device *current_device = sys->get_manager_system()->get_device_manager()->get_current();
+
                 // Interpret the file
                 loader::ss_interpreter interpreter(reinterpret_cast<common::ro_stream *>(&stream),
                     sys,
                     this,
+                    current_device,
                     conf,
                     &res.controller,
                     &res.data,
