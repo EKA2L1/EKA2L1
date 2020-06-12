@@ -253,7 +253,9 @@ namespace eka2l1::epoc {
         window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group, header->client_handle);
         epoc::window_group *group_casted = reinterpret_cast<epoc::window_group *>(group.get());
 
-        if (header->focus) {
+        // If no window group is being focused on the screen, we force the screen to receive this window as focus
+        // Else rely on the focus flag.
+        if (!device_ptr->scr->focus || (header->focus)) {
             group_casted->set_receive_focus(true);
             device_ptr->scr->update_focus(&get_ws(), nullptr);
         }
