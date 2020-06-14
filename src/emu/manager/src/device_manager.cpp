@@ -134,7 +134,8 @@ namespace eka2l1::manager {
 
         std::vector<int> languages;
         int default_language = -1;
-        const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + "/resource/bootdata/languages.txt");
+        const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + (ver < epocver::eka2 ?
+            "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
         common::dynamic_ifile ifile(lang_path);
         if (ifile.fail()) {
             return false;
