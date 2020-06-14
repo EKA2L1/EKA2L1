@@ -67,7 +67,6 @@ namespace eka2l1::hle {
             write(dest_ptr, reloc_offset + data_delta);
             break;
 
-        case loader::relocation_type::inferred:
         default:
             LOG_WARN("Relocation not properly handle: {}", (int)type);
             break;
@@ -78,9 +77,10 @@ namespace eka2l1::hle {
 
     // Given relocation entries, relocate the code and data
     static bool relocate(std::vector<loader::e32_reloc_entry> entries,
-        uint8_t *dest_addr,
-        uint32_t code_delta,
-        uint32_t data_delta) {
+        std::uint8_t *dest_addr,
+        std::uint32_t code_size,
+        std::uint32_t code_delta,
+        std::uint32_t data_delta) {
         for (uint32_t i = 0; i < entries.size(); i++) {
             auto entry = entries[i];
 
@@ -93,6 +93,13 @@ namespace eka2l1::hle {
 
                 // Compare with petran in case there are problems
                 // LOG_TRACE("{:x}", virtual_addr);
+
+                // This is relocation type named: Who bother to put my identity in PETRAN
+                // figure out who I am yourself
+                if (rel_type == loader::relocation_type::inferred) {
+                    rel_type = (virtual_addr < code_size) ? loader::relocation_type::text :
+                        loader::relocation_type::data;
+                }
 
                 if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
                     LOG_WARN("Relocate fail at page: {}", i);
@@ -109,10 +116,12 @@ namespace eka2l1::hle {
         if (FOUND_STR(dll_name_end_pos)) {
             dll_name = dll_name.substr(0, dll_name_end_pos);
         } else {
-            dll_name_end_pos = dll_name.find_last_of(".");
+            dll_name_end_pos = dll_name.find_last_of("[");
 
             if (FOUND_STR(dll_name_end_pos)) {
                 dll_name = dll_name.substr(0, dll_name_end_pos);
+            } else {
+                return dll_name;
             }
         }
 
@@ -139,10 +148,9 @@ namespace eka2l1::hle {
         for (uint32_t i = crr_idx, j = 0;
              i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
              i++, j++) {
-            *iat_pointer = cs->lookup(pr, import_block.ordinals[j]);
+            iat_pointer[crr_idx++] = cs->lookup(pr, import_block.ordinals[j]);
         }
 
-        crr_idx += static_cast<uint32_t>(import_block.ordinals.size());
         return true;
     }
 
@@ -209,20 +217,20 @@ namespace eka2l1::hle {
         uint32_t code_delta = rtcode_addr - img->header.code_base;
         uint32_t data_delta = rtdata_addr - img->header.data_base;
 
-        relocate(img->code_reloc_section.entries, code_base, code_delta, data_delta);
+        relocate(img->code_reloc_section.entries, code_base, img->header.code_size, code_delta, data_delta);
 
         // Either .data or .bss exists, we need to relocate. Sometimes .data needs relocate too!
         if ((img->header.bss_size) || (img->header.data_size)) {
             img->rt_data_addr = rtdata_addr;
-            relocate(img->data_reloc_section.entries, data_base, code_delta, data_delta);
+            relocate(img->data_reloc_section.entries, data_base, img->header.code_size, code_delta, data_delta);
         }
 
         if (img->epoc_ver == epocver::epoc6) {
-            uint32_t track = 0;
+            std::uint32_t track = 0;
+            std::uint32_t *iat_replace_start = reinterpret_cast<std::uint32_t *>(code_base + img->header.text_size);
 
             for (auto &ib : img->import_section.imports) {
-                pe_fix_up_iat(mem, mngr, reinterpret_cast<std::uint32_t *>(code_base + img->header.code_size),
-                    pr, ib, track, cs);
+                pe_fix_up_iat(mem, mngr, iat_replace_start, pr, ib, track, cs);
             }
         }
 
@@ -505,9 +513,9 @@ namespace eka2l1::hle {
             pr, cs);
 
         struct dll_ref_table {
-            uint16_t flags;
-            uint16_t num_entries;
-            uint32_t rom_img_headers_ref[25];
+            std::uint16_t flags;
+            std::uint16_t num_entries;
+            std::uint32_t rom_img_headers_ref[25];
         };
 
         // Find dependencies
@@ -516,22 +524,39 @@ namespace eka2l1::hle {
             if (header->dll_ref_table_address != 0) {
                 dll_ref_table *ref_table = eka2l1::ptr<dll_ref_table>(header->dll_ref_table_address).get(mem_);
 
-                for (uint16_t i = 0; i < ref_table->num_entries; i++) {
-                    // Dig UID
-                    loader::rom_image_header *ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
+                for (std::uint16_t i = 0; i < ref_table->num_entries; i++) {
+                    loader::rom_image_header *ref_header = nullptr;
+                    address entry_point = 0;
+
+                    if (kern_->is_eka1()) {
+                        // See sf.os.buildtools, release.txt of elf2e32.
+                        // A mentioned by Morgan tell an dll ref entry is made up of entry point and
+                        // another address to that entry point's DLL ref table. Each is 4 bytes
+                        entry_point = ref_table->rom_img_headers_ref[i * 2];
+                    } else {
+                        ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
                                                                .get(mem_);
 
-                    if (auto ref_seg = kern_->pull_codeseg_by_ep(ref_header->entry_point)) {
+                        entry_point = ref_header->entry_point;
+                    }
+
+                    if (auto ref_seg = kern_->pull_codeseg_by_ep(entry_point)) {
                         // Add ref
                         acs->add_dependency(ref_seg);
                     } else {
-                        // TODO: Supply right size. The loader doesn't care about size right now
-                        common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem_),
-                            0xFFFF);
+                        if (kern_->is_eka1()) {
+                            // If we gonna flip the ROM directory searching for this DLL, it would be time consuming
+                            // Force the codeseg to take this entry point for now
+                            acs->add_premade_entry_point(entry_point);
+                        } else {
+                            // TODO: Supply right size. The loader doesn't care about size right now
+                            common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem_),
+                                0xFFFF);
 
-                        // Load new romimage and add dependency
-                        loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
-                        acs->add_dependency(load_as_romimg(rimg, pr));
+                            // Load new romimage and add dependency
+                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
+                            acs->add_dependency(load_as_romimg(rimg, pr));
+                        }
                     }
                 }
             }
@@ -585,7 +610,7 @@ namespace eka2l1::hle {
             // Nope ? We need to cycle through all possibilities
             for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
                 lib_path = drive_to_char16(drv);
-                lib_path += u":\\Sys\\Bin\\";
+                lib_path += (kern_->is_eka1()) ? u":\\System\\Libs\\" : u":\\Sys\\Bin\\";
                 lib_path += path;
 
                 auto result = open_and_get(lib_path);
@@ -640,7 +665,7 @@ namespace eka2l1::hle {
             // Nope ? We need to cycle through all possibilities
             for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
                 lib_path = drive_to_char16(drv);
-                lib_path += u":\\Sys\\Bin\\";
+                lib_path += (kern_->is_eka1()) ? u":\\System\\Libs\\" : u":\\Sys\\Bin\\";
                 lib_path += name;
 
                 if (io_->exist(lib_path)) {
@@ -674,6 +699,8 @@ namespace eka2l1::hle {
         auto res = svc_funcs_.find(svcnum);
 
         if (res == svc_funcs_.end()) {
+            LOG_ERROR("Unimplement system call: 0x{:X}!", svcnum);
+
             kern_->unlock();
             return false;
         }
