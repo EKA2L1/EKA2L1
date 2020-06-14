@@ -343,6 +343,10 @@ namespace eka2l1 {
             return kern_ver_;
         }
 
+        bool is_eka1() const {
+            return kern_ver_ < epocver::eka2;
+        }
+
         // For user-provided EPOC version
         void set_epoc_version(const epocver ver);
 
