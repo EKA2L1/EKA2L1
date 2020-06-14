@@ -286,8 +286,10 @@ namespace eka2l1 {
             std::u16string name_16(name.begin(), name.end());
             memcpy(name_chunk->host_base(), name_16.data(), name.length() * 2);
 
-            // TODO: Not hardcode this
-            const size_t metadata_size = 0x40;
+            // I noticed that all EXEs I have encoutered so far on EKA1 does not have InitProcess
+            // or thread setup. Looks like the kernel already do it for us, but that's not good design.
+            // Kernel vs userspace should be tied together, but yeah they removed it in EKA2
+            const size_t metadata_size = kern->is_eka1() ? 0 : sizeof(epoc9_std_epoc_thread_create_info);
 
             std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t *>(stack_chunk->host_base());
             std::uint8_t *stack_top_ptr = stack_beg_meta_ptr + stack_size - metadata_size;
@@ -296,8 +298,11 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(stack_beg_meta_ptr, stack_top_ptr, 0xcc);
-            create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
-                name_chunk->base(owner).ptr_address(), epa);
+
+            if (!kern->is_eka1()) {
+                create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
+                    name_chunk->base(owner).ptr_address(), epa);
+            }
 
             // Create local data chunk
             // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
