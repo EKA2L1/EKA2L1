@@ -202,6 +202,11 @@ namespace eka2l1::loader {
             stream->read(&img.header.petran_major, 1);
             stream->read(&img.header.petran_minor, 1);
             stream->read(&img.header.petran_build, 2);
+
+            // NOTE (pent0): These 8 bytes are time.
+            stream->read(&temp, 4);
+            stream->read(&temp, 4);
+
             stream->read(&img.header.flags, 4);
             stream->read(&img.header.code_size, 4);
             stream->read(&img.header.data_size, 4);
@@ -223,7 +228,7 @@ namespace eka2l1::loader {
             stream->read(&img.header.data_reloc_offset, 4);
             stream->read(&img.header.priority, 2);
 
-            img.header.compression_type = 1;
+            img.header.compression_type = 0;
         } else {
             img.epoc_ver = epocver::epoc94;
 
