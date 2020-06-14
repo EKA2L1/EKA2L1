@@ -66,6 +66,10 @@ namespace eka2l1::common {
             return result;
         }
 
+        if (stream_.fail() || stream_.eof()) {
+            return false;
+        }
+
         line.clear();
 
         while (true) {
@@ -80,12 +84,9 @@ namespace eka2l1::common {
                 stream_.read(&hi, 1);
             }
 
-            if (stream_.fail() || stream_.eof()) {
-                return false;
-            }
-
-            if (static_cast<char16_t>((hi << 8) | lo) == u'\n') {
-                break;
+            if ((static_cast<char16_t>((hi << 8) | lo) == u'\n') || (stream_.fail()) ||
+                (stream_.eof())) {
+                return true;
             }
 
             line.push_back((hi << 8) | lo);
