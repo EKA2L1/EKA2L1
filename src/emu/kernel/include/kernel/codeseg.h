@@ -103,6 +103,7 @@ namespace eka2l1::kernel {
         };
 
         std::vector<attached_info> attaches;
+        std::vector<address> premade_eps;
 
     public:
         /*! \brief Create a new codeseg
@@ -121,6 +122,17 @@ namespace eka2l1::kernel {
 
         void queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list);
         void unmark();
+
+        /**
+         * @brief  Directly add an entry point to list of future entry point.
+         * 
+         * This call forces an entry point to get in query list despite not being a dependency of this
+         * codeseg. Used in EKA1 ROM Image.
+         * 
+         * @param   addr      Entry point address.
+         * @returns True on success.
+         */
+        bool add_premade_entry_point(const address addr);
 
         bool attach(kernel::process *new_foe);
         bool detach(kernel::process *de_foe);
