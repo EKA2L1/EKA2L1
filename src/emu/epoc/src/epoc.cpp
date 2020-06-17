@@ -138,11 +138,11 @@ namespace eka2l1 {
         }
 
         void set_symbian_version_use(const epocver ever) {
+            io.set_epoc_ver(ever);
+
             // Use flexible model on 9.5 and onwards.
             mem = std::make_unique<memory_system>(cpu.get(), conf, (kern->get_epoc_version() >= epocver::epoc95) ? mem::mem_model_type::flexible
-                : mem::mem_model_type::multiple, (kern->get_epoc_version() <= epocver::epoc6) ? true : false);
-
-            io.set_epoc_ver(ever);
+                : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
 
             // Install memory to the kernel, then set epoc version
             kern->install_memory(mem.get());
