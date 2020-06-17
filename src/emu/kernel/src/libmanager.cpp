@@ -18,6 +18,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/armemitter.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/ini.h>
@@ -25,6 +26,7 @@
 #include <common/path.h>
 #include <common/random.h>
 
+#include <kernel/common.h>
 #include <kernel/libmanager.h>
 #include <kernel/reg.h>
 
@@ -141,7 +143,10 @@ namespace eka2l1::hle {
         }
 
         // Add dependency for the codeseg
-        assert(parent_codeseg->add_dependency(cs));
+        if (!parent_codeseg->add_dependency(cs)) {
+            LOG_ERROR("Fail to add a codeseg as dependency!");
+            return false;
+        }
 
         uint32_t *imdir = &(import_block.ordinals[0]);
 
@@ -731,10 +736,142 @@ namespace eka2l1::hle {
         }
     }
 
+    bool lib_manager::build_eka1_thread_bootstrap_code() {    
+        static constexpr const char *BOOTSTRAP_CHUNK_NAME = "EKA1ThreadBootstrapCodeChunk";
+        bootstrap_chunk_ = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, BOOTSTRAP_CHUNK_NAME,
+            0, 0x1000, 0x1000, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            kernel::chunk_attrib::none);
+
+        if (!bootstrap_chunk_) {
+            LOG_ERROR("Failed to create bootstrap chunk for EKA1 thread!");
+            return false;
+        }
+        
+        codeseg_ptr userlib = load(u"euser.dll", nullptr);
+
+        if (!userlib) {
+            LOG_ERROR("Unable to load euser.dll to build EKA1 bootstrap code!");
+            return false;
+        }
+
+        static constexpr std::uint32_t CHUNK_HEAP_CREATE_FUNC_ORDINAL = 166;
+        static constexpr std::uint32_t THREAD_EXIT_FUNC_ORDINAL = 397;
+        static constexpr std::uint32_t HEAP_SWITCH_FUNC_ORDINAL = 1127;
+
+        const address chunk_heap_create_func_addr = userlib->lookup(nullptr, CHUNK_HEAP_CREATE_FUNC_ORDINAL);
+        const address heap_switch_func_addr = userlib->lookup(nullptr, HEAP_SWITCH_FUNC_ORDINAL);
+        const address thread_exit_func_addr = userlib->lookup(nullptr, THREAD_EXIT_FUNC_ORDINAL);
+
+        common::cpu_info info;
+        info.bARMv7 = false;
+        info.bASIMD = false;
+
+        common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(bootstrap_chunk_->host_base()), info);
+
+        // SP should points to the thread info struct
+        entry_points_call_routine_ = emitter.get_code_pointer();
+        
+        const std::uint32_t STATIC_CALL_LIST_SVC_FAKE = 0xFE;
+        const std::uint32_t TOTAL_EP_TO_ALLOC = 100;
+
+        /* CODE FOR DLL's ENTRY POINTS INVOKE */
+        emitter.PUSH(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_LR);
+
+        // Allocate entry point addresses on stack, plus also allocate the total entry point count
+        emitter.SUB(common::armgen::R_SP, common::armgen::R_SP, TOTAL_EP_TO_ALLOC * sizeof(address) + sizeof(std::uint32_t));
+        emitter.MOVI2R(common::armgen::R3, TOTAL_EP_TO_ALLOC);     // Assign allocated entry point count
+        emitter.STR(common::armgen::R3, common::armgen::R_SP);  // Store it to the count variable.
+        emitter.MOV(common::armgen::R5, common::armgen::R0);    // Store dll entry point invoke reason in R5
+
+        emitter.MOV(common::armgen::R0, common::armgen::R_SP);  // First arugment is pointer to total number of entry point
+        emitter.ADD(common::armgen::R1, common::armgen::R_SP, sizeof(std::uint32_t));       // Second argument is pointer to EP array
+
+        // The SVC call convention on EKA1 assigns PC after SVC with LR, which is horrible, we gotta follow it
+        emitter.MOV(common::armgen::R_LR, common::armgen::R_PC);  // This PC will skip forwards to the POP, no need to add or sub more thing.
+        emitter.SVC(STATIC_CALL_LIST_SVC_FAKE);                   // Call SVC StaticCallList, our own SVC :D
+        
+        emitter.MOV(common::armgen::R3, 0);                      // R3 is iterator
+        emitter.LDR(common::armgen::R4, common::armgen::R_SP);   // R4 is total of entry point to iterate.
+        emitter.SUB(common::armgen::R4, common::armgen::R4, 1);
+        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, sizeof(std::uint32_t));     // Free our count variable
+        
+        std::uint8_t *loop_continue_ptr = emitter.get_writeable_code_ptr();
+        emitter.CMP(common::armgen::R3, common::armgen::R4);
+        
+        common::armgen::fixup_branch entry_point_call_loop_done = emitter.B_CC(common::cc_flags::CC_GE);
+
+        emitter.MOV(common::armgen::R0, common::armgen::R5);        // Move in the entry point invoke reason, in case other function trashed this out.
+        emitter.LSL(common::armgen::R12, common::armgen::R3, 2);    // Calculate the offset of this entry point, 4 bytes
+        emitter.ADD(common::armgen::R12, common::armgen::R12, common::armgen::R_SP);
+        emitter.LDR(common::armgen::R12, common::armgen::R12);     // Jump
+        emitter.BL(common::armgen::R12);
+        emitter.ADD(common::armgen::R3, common::armgen::R3, 1);
+        emitter.B(loop_continue_ptr);
+        
+        emitter.set_jump_target(entry_point_call_loop_done);
+
+        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, TOTAL_EP_TO_ALLOC * sizeof(address));
+        emitter.POP(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_PC);
+
+        emitter.flush_lit_pool();
+
+        /* CODE FOR THREAD INITIALIZATION */
+        thread_entry_routine_ = emitter.get_code_pointer();
+
+        emitter.MOV(common::armgen::R0, kernel::dll_reason_thread_attach);     // Set the first argument the DLL reason
+        emitter.MOV(common::armgen::R4, common::armgen::R1);                   // Info struct in R1 to R4
+        emitter.BL(entry_points_call_routine_);
+        
+        // Check the allocator in the thread create info
+        emitter.LDR(common::armgen::R0, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, allocator));
+        emitter.CMP(common::armgen::R0, 0);
+        common::armgen::fixup_branch allocator_unavail_block = emitter.B_CC(common::CC_EQ);
+
+        // Block: allocator available, switch it
+        emitter.MOVI2R(common::armgen::R12, heap_switch_func_addr);
+        emitter.BL(common::armgen::R12);
+        common::armgen::fixup_branch allocator_setup_done = emitter.B();
+
+        emitter.set_jump_target(allocator_unavail_block);
+        emitter.MOV(common::armgen::R0, 0);
+        emitter.LDR(common::armgen::R1, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, heap_min));
+        emitter.LDR(common::armgen::R2, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, heap_max));
+        emitter.MOVI2R(common::armgen::R3, 0x1000);         // Grow by
+
+        emitter.MOVI2R(common::armgen::R12, chunk_heap_create_func_addr);
+        emitter.BL(common::armgen::R12);
+
+        // Switch the heap
+        emitter.MOVI2R(common::armgen::R12, heap_switch_func_addr);
+        emitter.BL(common::armgen::R12);
+
+        emitter.set_jump_target(allocator_setup_done);
+
+        // Jump to our friend
+        // Load userdata to first argument.
+        emitter.LDR(common::armgen::R0, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, ptr));
+        emitter.LDR(common::armgen::R12, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, func_ptr));
+        
+        // Pop our struct friend from the stack
+        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, sizeof(kernel::epoc9_std_epoc_thread_create_info));
+        emitter.BL(common::armgen::R12);
+
+        // Exit the thread, reason is already in R0 after calling our friend.
+        emitter.MOVI2R(common::armgen::R12, thread_exit_func_addr);
+        emitter.BL(common::armgen::R12);
+
+        emitter.flush_lit_pool();
+
+        return true;
+    }
+
     lib_manager::lib_manager(kernel_system *kerns, io_system *ios, memory_system *mems)
         : kern_(kerns)
         , io_(ios)
-        , mem_(mems) { 
+        , mem_(mems)
+        , bootstrap_chunk_(nullptr)
+        , entry_points_call_routine_(nullptr)
+        , thread_entry_routine_(nullptr) { 
         hle::symbols sb;
         std::string lib_name;
 
@@ -756,6 +893,10 @@ namespace eka2l1::hle {
 #undef ENLIB
 
         switch (kern_->get_epoc_version()) {
+        case epocver::epoc6:
+            epoc::register_epocv6(*this);
+            break;
+
         case epocver::epoc94:
             epoc::register_epocv94(*this);
             break;
@@ -779,6 +920,24 @@ namespace eka2l1::hle {
 
     system *lib_manager::get_sys() {
         return kern_->get_system();
+    }
+
+    address lib_manager::get_entry_point_call_routine_address() const {
+        if (!entry_points_call_routine_) {
+            return 0;
+        }
+
+        return static_cast<address>(entry_points_call_routine_ - reinterpret_cast<std::uint8_t*>(bootstrap_chunk_->host_base())) +
+            bootstrap_chunk_->base(nullptr).ptr_address();
+    }
+
+    address lib_manager::get_thread_entry_routine_address() const {
+        if (!thread_entry_routine_) {
+            return 0;
+        }
+
+        return static_cast<address>(thread_entry_routine_ - reinterpret_cast<std::uint8_t*>(bootstrap_chunk_->host_base())) +
+            bootstrap_chunk_->base(nullptr).ptr_address();
     }
 }
 
