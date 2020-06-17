@@ -60,4 +60,33 @@ namespace eka2l1::kernel {
     struct raw_event {
         raw_event_type type_;
     };
+
+    struct epoc9_thread_create_info {
+        std::int32_t handle;
+        std::int32_t type;
+        address func_ptr;
+        address ptr;
+        address supervisor_stack;
+        std::int32_t supervisor_stack_size;
+        address user_stack;
+        std::int32_t user_stack_size;
+        std::int32_t init_thread_priority;
+        std::uint32_t name_len;
+        address name_ptr;
+        std::int32_t total_size;
+    };
+
+    struct epoc9_std_epoc_thread_create_info : public epoc9_thread_create_info {
+        address allocator;
+        std::int32_t heap_min;
+        std::int32_t heap_max;
+        std::int32_t padding;
+    };
+
+    enum dll_reason {
+        dll_reason_process_attach = 0,
+        dll_reason_thread_attach = 1,
+        dll_reason_process_detach = 2,
+        dll_reason_thread_detach = 3
+    };
 }
