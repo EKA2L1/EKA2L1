@@ -192,6 +192,11 @@ namespace eka2l1 {
         // Set CPU SVC handler
         cpu_->system_call_handler = [this](const std::uint32_t ordinal) {
             get_lib_manager()->call_svc(ordinal);
+
+            // EKA1 does not use BX LR to jump back, they let kernel do it
+            if (is_eka1()) {
+                cpu_->set_pc(cpu_->get_lr());
+            }
         };
 
         cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) {
