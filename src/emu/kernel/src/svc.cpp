@@ -2687,4 +2687,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDF, leave_end),
         BRIDGE_REGISTER(0xE7, btrace_out)
     };
+    
+    const eka2l1::hle::func_map svc_register_funcs_v6 = {
+        BRIDGE_REGISTER(0xC6, heap),
+        BRIDGE_REGISTER(0xFE, static_call_list)
+    };
 }
