@@ -587,7 +587,7 @@ namespace eka2l1::common::armgen {
         void B_CC(cc_flags Cond, const void *fnptr);
         fixup_branch BL();
         fixup_branch BL_CC(cc_flags Cond);
-        void Setjump_target(fixup_branch const &branch);
+        void set_jump_target(fixup_branch const &branch);
 
         void B(const void *fnptr);
         void B(arm_reg src);
@@ -682,6 +682,7 @@ namespace eka2l1::common::armgen {
         void LDRH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
         void LDRSB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
         void LDRSH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void LDRLIT(arm_reg dest, std::uint32_t offset, bool Add = true);
         void STR(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
         void STRB(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
         void STRH(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
