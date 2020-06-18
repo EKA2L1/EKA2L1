@@ -35,28 +35,6 @@
 
 namespace eka2l1 {
     namespace kernel {
-        struct epoc9_thread_create_info {
-            int handle;
-            int type;
-            address func_ptr;
-            address ptr;
-            address supervisor_stack;
-            int supervisor_stack_size;
-            address user_stack;
-            int user_stack_size;
-            int init_thread_priority;
-            uint32_t name_len;
-            address name_ptr;
-            int total_size;
-        };
-
-        struct epoc9_std_epoc_thread_create_info : public epoc9_thread_create_info {
-            address allocator;
-            int heap_min;
-            int heap_max;
-            int padding;
-        };
-
         int map_thread_priority_to_calc(thread_priority pri) {
             switch (pri) {
             case thread_priority::priority_much_less:
@@ -183,9 +161,23 @@ namespace eka2l1 {
                - r1: thread creation info register.
                - r4: Startup reason. Thread startup is 1, process startup is 0.
             */
+            if (kern->is_eka1()) {
+                // We made _E32Startup ourself, since EKA1 does not have it
+                hle::lib_manager *mngr = kern->get_lib_manager();
+                ctx.pc = mngr->get_thread_entry_routine_address();
 
-            ctx.pc = owner ? (initial ? entry_point : owning_process()->get_entry_point_address())
-                           : entry_point;
+                if (ctx.pc == 0) {
+                    // Create the EKA1 thread bootstrap
+                    mngr->build_eka1_thread_bootstrap_code();
+                    ctx.pc = mngr->get_thread_entry_routine_address();
+                }
+            } else {
+                ctx.pc = entry_point;
+
+                if (owner && initial) {
+                    ctx.pc = owning_process()->get_entry_point_address();
+                }
+            }
 
             ctx.sp = stack_top;
             ctx.cpsr = ((ctx.pc & 1) << 5);
@@ -289,7 +281,8 @@ namespace eka2l1 {
             // I noticed that all EXEs I have encoutered so far on EKA1 does not have InitProcess
             // or thread setup. Looks like the kernel already do it for us, but that's not good design.
             // Kernel vs userspace should be tied together, but yeah they removed it in EKA2
-            const size_t metadata_size = kern->is_eka1() ? 0 : sizeof(epoc9_std_epoc_thread_create_info);
+            // A setup code is prepared for EKA1 for this situation, which uses this struct.
+            const size_t metadata_size = sizeof(epoc9_std_epoc_thread_create_info);
 
             std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t *>(stack_chunk->host_base());
             std::uint8_t *stack_top_ptr = stack_beg_meta_ptr + stack_size - metadata_size;
@@ -299,10 +292,8 @@ namespace eka2l1 {
             // Fill the stack with garbage
             std::fill(stack_beg_meta_ptr, stack_top_ptr, 0xcc);
 
-            if (!kern->is_eka1()) {
-                create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
-                    name_chunk->base(owner).ptr_address(), epa);
-            }
+            create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
+                name_chunk->base(owner).ptr_address(), epa);
 
             // Create local data chunk
             // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
