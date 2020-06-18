@@ -17,6 +17,7 @@
 
 #include <epoc/epoc.h>
 #include <epoc/hal.h>
+#include <kernel/common.h>
 #include <kernel/kernel.h>
 #include <services/window/window.h>
 #include <kernel/timing.h>
@@ -276,10 +277,10 @@ namespace eka2l1::epoc {
     };
 
     void init_hal(eka2l1::system *sys) {
-        REGISTER_HAL_D(sys, 0, kern_hal);
-        REGISTER_HAL(sys, 1, variant_hal);
-        REGISTER_HAL(sys, 4, display_hal);
-        REGISTER_HAL(sys, 5, digitiser_hal);
+        REGISTER_HAL_D(sys, hal_category_kernel, kern_hal);
+        REGISTER_HAL(sys, hal_category_variant, variant_hal);
+        REGISTER_HAL(sys, hal_category_display, display_hal);
+        REGISTER_HAL(sys, hal_category_digister, digitiser_hal);
     }
 
     int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2) {
@@ -300,5 +301,19 @@ namespace eka2l1::epoc {
         }
 
         return ret;
+    }
+    
+    int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data) {
+        switch (data_num) {
+        case kernel::hal_data_eka1_page_size:
+            *reinterpret_cast<std::uint32_t*>(data) = sys->get_memory_system()->get_page_size();
+            break;
+
+        default:
+            LOG_ERROR("Unimplemented HAL function handler for key {}", data_num);
+            return -1;
+        }
+
+        return 0;
     }
 }

@@ -187,6 +187,13 @@ namespace eka2l1::epoc {
         eka2l1::vec2 size_usable_;
     };
 
+    enum hal_category {
+        hal_category_kernel = 0,
+        hal_category_variant = 1,
+        hal_category_display = 4,
+        hal_category_digister = 5
+    };
+
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */
     using hal_func = std::function<int(int *, int *, std::uint16_t)>;
     using hal_cagetory_funcs = std::unordered_map<uint32_t, hal_func>;
@@ -226,4 +233,14 @@ namespace eka2l1::epoc {
      * \returns Operation result.
      */
     int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2);
+
+    /**
+     * @brief Do a HAL given a data key.
+     * 
+     * @param data_num      The number to identify a HAL function.
+     * @param data          Pointer to HAL data to be filled.
+     * 
+     * @returns Operation result.
+     */
+    int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data);
 }
