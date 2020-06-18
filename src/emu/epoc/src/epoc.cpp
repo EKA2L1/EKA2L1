@@ -150,6 +150,11 @@ namespace eka2l1 {
     
             epoc::init_hal(parent);
             
+            if (!gdb_stub.is_server_enabled() && conf->enable_gdbstub) {
+                gdb_stub.init(parent);
+                gdb_stub.toggle_server(true);
+            }
+            
             if (gdb_stub.is_server_enabled()) {
                 gdb_stub_breakpoint_callback_handle = kern->register_breakpoint_hit_callback([this](arm::core *cpu_core, kernel::thread *target,
                     const std::uint32_t addr) {

@@ -52,6 +52,11 @@ namespace eka2l1::desktop {
 
         if (dvcmngr->total() > 0) {
             symsys->startup();
+            
+            if (conf.enable_gdbstub) {
+                symsys->get_gdb_stub()->set_server_port(conf.gdb_port);
+            }
+
             if (!symsys->set_device(conf.device)) {
                 LOG_ERROR("Failed to set a device, device index is out of range (device index in config file is: {})", conf.device);
                 LOG_INFO("We are setting the default device back to the first device on the installed list for you");
@@ -64,12 +69,6 @@ namespace eka2l1::desktop {
             symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib::internal);
             symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib::internal);
             symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib::removeable);
-
-            if (conf.enable_gdbstub) {
-                symsys->get_gdb_stub()->set_server_port(conf.gdb_port);
-                symsys->get_gdb_stub()->init(symsys.get());
-                symsys->get_gdb_stub()->toggle_server(true);
-            }
             
             winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>("!Windowserver"));
         }
