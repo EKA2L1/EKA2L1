@@ -95,4 +95,16 @@ namespace eka2l1::kernel {
         dll_reason_process_detach = 2,
         dll_reason_thread_detach = 3
     };
+
+    // o__o
+    struct trap {
+        enum {
+            TRAP_MAX_STATE = 0x10
+        };
+
+        std::int32_t state_[TRAP_MAX_STATE];
+        address next_;                ///< Next trap address.
+        address result_;              ///< Trap result code pointer.
+        address trap_handler_;              ///< Pointer to trap handler.
+    };
 }
