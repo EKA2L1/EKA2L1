@@ -116,7 +116,7 @@ namespace eka2l1::mem {
             return nullptr;
         }
 
-        if (addr >= (mem_map_old_ ? ram_code_addr_eka1 : shared_data)) {
+        if (addr >= (mem_map_old_ ? shared_data_eka1 : shared_data)) {
             return global_dir_.get_pointer(addr);
         }
 
