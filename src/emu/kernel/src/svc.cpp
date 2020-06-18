@@ -1155,7 +1155,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        if (timeout) {
+        if (!kern->is_eka1() && timeout) {
             LOG_WARN("Semaphore timeout unimplemented");
         }
 
@@ -2286,6 +2286,20 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
+    BRIDGE_FUNC(std::int32_t, locked_dec_32, std::int32_t *val_ptr) {
+        const std::int32_t before = *val_ptr;
+        (*val_ptr)--;
+
+        return before;
+    }
+
+    BRIDGE_FUNC(std::int32_t, locked_inc_32, std::int32_t *val_ptr) {
+        const std::int32_t before = *val_ptr;
+        (*val_ptr)++;
+
+        return before;
+    }
+
     /// HLE
     BRIDGE_FUNC(void, hle_dispatch, const std::uint32_t ordinal) {
         dispatcher_do_resolve(kern->get_system(), ordinal);
@@ -2320,6 +2334,180 @@ namespace eka2l1::epoc {
         }
 
         dispatcher_do_event_add(kern->get_system(), *evt);
+    }
+
+    /* ================ EKA1 ROUTES ================== */
+    static void finish_status_request_eka1(kernel_system *kern, epoc::request_status *sts, const std::int32_t code) {
+        kernel::thread *crr_thread = kern->crr_thread();
+        *sts = code;
+
+        crr_thread->signal_request();
+    }
+
+    static kernel::owner_type get_handle_owner_from_eka1_attribute(const std::uint32_t attrib) {
+        return (attrib & epoc::eka1_object_executor::handle_owner_thread) ? kernel::owner_type::thread :
+            kernel::owner_type::process;
+    }
+
+    static std::int32_t do_handle_write(kernel_system *kern, epoc::eka1_object_executor *create_info,
+        epoc::request_status *finish_signal, const kernel::handle h) {
+        kernel::process *crr_process = kern->crr_process();
+        epoc::des8 *handle_write = create_info->handle_pkg_.get(crr_process);
+
+        if (!handle_write) {
+            // Handle package is invalid
+            finish_status_request_eka1(kern, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::uint32_t *handle_write_32 = reinterpret_cast<std::uint32_t*>(handle_write->get_pointer_raw(crr_process));
+        if (!handle_write_32) {
+            // Handle write pointer is invalid, wtf
+            finish_status_request_eka1(kern, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        *handle_write_32 = h;
+        finish_status_request_eka1(kern, finish_signal, epoc::error_none);
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, user_svr_hal_get, const std::uint32_t function, void *param) {
+        return do_hal_by_data_num(kern->get_system(), function, param);
+    }
+
+    std::int32_t chunk_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_object_executor *create_info,
+        epoc::request_status *finish_signal) {
+        kernel::chunk_access access_type = (attribute & epoc::eka1_object_executor::chunk_access_global) ? kernel::chunk_access::global :
+            kernel::chunk_access::local;
+
+        kernel::chunk_attrib chunk_attribute = (create_info->name_.ptr_address() == epoc::eka1_object_executor::NO_NAME_AVAIL_ADDR) ?
+            kernel::chunk_attrib::anonymous : kernel::chunk_attrib::none;
+
+        // EKA1 only support two types of chunk: double ended and normal
+        kernel::chunk_type type_of_chunk = ((attribute & 0xFE) == epoc::eka1_object_executor::obj_type_chunk_double_ended) ? kernel::chunk_type::double_ended :
+            kernel::chunk_type::normal;
+
+        std::string chunk_name = "";
+
+        kernel::process *crr_process = kern->crr_process();
+
+        // If there's a valid name passed
+        if (create_info->name_.ptr_address() != epoc::eka1_object_executor::NO_NAME_AVAIL_ADDR) {
+            epoc::desc16 *name_hosted = create_info->name_.get(crr_process);
+
+            if (!name_hosted) {
+                // Name is not pointed to valid memory, break
+                finish_status_request_eka1(kern, finish_signal, epoc::error_argument);
+                return epoc::error_argument;
+            }
+
+            chunk_name = common::ucs2_to_utf8(name_hosted->to_std_string(crr_process));
+        }
+
+        epoc::des8 *description_data_des = create_info->description_.get(crr_process);
+
+        if (!description_data_des) {
+            // Description data is invalid
+            finish_status_request_eka1(kern, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        address bottom = 0;
+        address top = 0;
+        std::size_t max_size = 0;
+
+        memory_system *mem = kern->get_memory_system();
+
+        if (type_of_chunk == kernel::chunk_type::normal) {
+            epoc::eka1_normal_chunk_create_description *description = 
+                reinterpret_cast<decltype(description)>(description_data_des->get_pointer_raw(crr_process));
+
+            if ((!description) || (description->init_size_ > description->max_size_)) {
+                // Description data is invalid, again
+                finish_status_request_eka1(kern, finish_signal, epoc::error_argument);
+                return epoc::error_argument;
+            }
+
+            bottom = 0;
+            top = common::align(description->init_size_, mem->get_page_size());
+            max_size = common::align(description->max_size_, mem->get_page_size());
+        } else {
+            epoc::eka1_double_ended_create_description *description = 
+                reinterpret_cast<decltype(description)>(description_data_des->get_pointer_raw(crr_process));
+
+            if ((!description) || (description->initial_bottom_ > description->initial_top_)) {
+                // Description data is invalid, again
+                finish_status_request_eka1(kern, finish_signal, epoc::error_argument);
+                return epoc::error_argument;
+            }
+
+            bottom = common::align(description->initial_bottom_, mem->get_page_size());
+            top = common::align(description->initial_top_, mem->get_page_size());
+            max_size = common::align(description->max_size_, mem->get_page_size());
+        }
+
+        kernel::handle h = kern->create_and_add<kernel::chunk>(get_handle_owner_from_eka1_attribute(attribute),
+            mem, crr_process, chunk_name, bottom, top, max_size, prot::read_write, type_of_chunk,
+            access_type, chunk_attribute).first;
+
+        if (h == INVALID_HANDLE) {
+            // Maybe out of memory, just don't throw general error since it's hard to debug
+            finish_status_request_eka1(kern, finish_signal, epoc::error_no_memory);
+            return epoc::error_no_memory;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, h);
+    }
+    
+    std::int32_t sema_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_object_executor *create_info,
+        epoc::request_status *finish_signal) {
+        kernel::access_type access_of_sema = (create_info->name_.ptr_address() == epoc::eka1_object_executor::NO_NAME_AVAIL_ADDR) ?
+            kernel::access_type::local_access : kernel::access_type::global_access;
+
+        // Weirdly enough that the name of this and the mutex is in description
+        kernel::process *crr_process = kern->crr_process();
+        epoc::desc16 *name_of_sema_des = (create_info->description_.cast<epoc::desc16>().get(crr_process));
+        std::string name_of_sema = "";
+
+        if (name_of_sema_des) {
+            name_of_sema = common::ucs2_to_utf8(name_of_sema_des->to_std_string(crr_process));
+        }
+
+        const kernel::handle h = kern->create_and_add<kernel::semaphore>(get_handle_owner_from_eka1_attribute(attribute),
+            name_of_sema, create_info->int_data_, access_of_sema).first;
+            
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(kern, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, h);
+    }
+
+    BRIDGE_FUNC(std::int32_t, object_executor_eka1, const std::uint32_t attribute, epoc::eka1_object_executor *create_info,
+        epoc::request_status *finish_signal) {
+        switch (attribute & 0xFF) {
+        case epoc::eka1_object_executor::obj_type_chunk_normal:
+        case epoc::eka1_object_executor::obj_type_chunk_double_ended:
+        case epoc::eka1_object_executor::obj_type_chunk_normal_global:
+        case epoc::eka1_object_executor::obj_type_chunk_double_ended_global:
+            return chunk_create_eka1(kern, attribute, create_info, finish_signal);
+
+        case epoc::eka1_object_executor::obj_type_sema:
+            return sema_create_eka1(kern, attribute, create_info, finish_signal);
+
+        default:
+            LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
+            break;
+        }
+
+        return epoc::error_general;
+    }
+
+    BRIDGE_FUNC(void, heap_created, std::uint32_t max_size, const std::uint32_t used_size, const std::uint32_t addr) {
+        LOG_TRACE("New heap created at address = 0x{:X}, allocated size = 0x{:X}, max size = 0x{:X}", addr, used_size, max_size);
     }
 
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
@@ -2689,7 +2877,22 @@ namespace eka2l1::epoc {
     };
     
     const eka2l1::hle::func_map svc_register_funcs_v6 = {
-        BRIDGE_REGISTER(0xC6, heap),
-        BRIDGE_REGISTER(0xFE, static_call_list)
+        BRIDGE_REGISTER(0x01, chunk_base),
+        BRIDGE_REGISTER(0x02, chunk_size),
+        BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x2A, semaphore_wait),
+        BRIDGE_REGISTER(0x4D, wait_for_any_request),
+        BRIDGE_REGISTER(0x6C, heap),
+        BRIDGE_REGISTER(0x81, trap_handler),
+        BRIDGE_REGISTER(0x82, set_trap_handler),
+        BRIDGE_REGISTER(0x8D, locked_inc_32),
+        BRIDGE_REGISTER(0x8E, locked_dec_32),
+        BRIDGE_REGISTER(0xFE, static_call_list),
+        
+        // User server calls
+        BRIDGE_REGISTER(0xC0006D, heap_switch),
+        BRIDGE_REGISTER(0xC00076, object_executor_eka1),
+        BRIDGE_REGISTER(0x8000A8, heap_created),
+        BRIDGE_REGISTER(0x800083, user_svr_hal_get)
     };
 }
