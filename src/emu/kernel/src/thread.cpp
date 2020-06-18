@@ -23,6 +23,7 @@
 #include <common/log.h>
 #include <common/random.h>
 
+#include <kernel/common.h>
 #include <kernel/kernel.h>
 #include <kernel/mutex.h>
 #include <kernel/sema.h>
@@ -245,7 +246,8 @@ namespace eka2l1 {
             , exit_type(entity_exit_type::pending)
             , create_time(0)
             , exception_handler(0)
-            , exception_mask(0) {
+            , exception_mask(0)
+            , trap_stack(0) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = calculate_thread_priority(owning_process(), pri);
@@ -574,6 +576,38 @@ namespace eka2l1 {
 
         void thread::add_ticks(const int num) {
             time = common::max(0, time - num);
+        }
+    
+        address thread::push_trap_frame(const address new_trap) {
+            kernel::process* mom = owning_process();
+            kernel::trap *the_trap = eka2l1::ptr<kernel::trap>(new_trap).get(mom);
+
+            if (!the_trap) {
+                return 0;
+            }
+
+            the_trap->next_ = trap_stack;
+            the_trap->trap_handler_ = ldata->trap_handler.ptr_address();
+
+            trap_stack = new_trap;
+
+            return ldata->trap_handler.ptr_address();
+        }
+
+        address thread::pop_trap_frame() {
+            if (trap_stack == 0) {
+                return 0;
+            }
+
+            kernel::process* mom = owning_process();
+            kernel::trap *the_trap = eka2l1::ptr<kernel::trap>(trap_stack).get(mom);
+
+            const address trap_popped = trap_stack;
+
+            the_trap->trap_handler_ = 0;
+            trap_stack = the_trap->next_;
+
+            return trap_popped;
         }
     }
 

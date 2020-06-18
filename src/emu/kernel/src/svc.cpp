@@ -2510,6 +2510,19 @@ namespace eka2l1::epoc {
         LOG_TRACE("New heap created at address = 0x{:X}, allocated size = 0x{:X}, max size = 0x{:X}", addr, used_size, max_size);
     }
 
+    BRIDGE_FUNC(address, push_trap_frame, eka2l1::ptr<kernel::trap> new_trap_frame) {
+        return kern->crr_thread()->push_trap_frame(new_trap_frame.ptr_address());
+    }
+
+    BRIDGE_FUNC(address, pop_trap_frame) {
+        const address result = kern->crr_thread()->pop_trap_frame();
+        if (result == 0) {
+            LOG_ERROR("Trap frame popped from already empty stack!");
+        }
+
+        return result;
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),
@@ -2883,6 +2896,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x2A, semaphore_wait),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
         BRIDGE_REGISTER(0x6C, heap),
+        BRIDGE_REGISTER(0x72, push_trap_frame),
+        BRIDGE_REGISTER(0x73, pop_trap_frame),
         BRIDGE_REGISTER(0x81, trap_handler),
         BRIDGE_REGISTER(0x82, set_trap_handler),
         BRIDGE_REGISTER(0x8D, locked_inc_32),
