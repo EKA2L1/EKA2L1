@@ -42,10 +42,10 @@
 
 namespace eka2l1 {
     namespace loader {
-        #define HAL_ENTRY(generic_name, display_name, num) hal_entry_##generic_name = num,
+        #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
 
         enum hal_entry {
-            #include <manager/hal.def>
+            #include <kernel/hal.def>
         };
 
         std::string get_install_path(const std::u16string &pseudo_path, drive_number drv) {
