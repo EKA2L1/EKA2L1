@@ -89,6 +89,7 @@ namespace eka2l1 {
 
         // Get base time
         base_time_ = common::get_current_time_in_microseconds_since_1ad();
+        locale_ = std::make_unique<std::locale>("");
     }
 
     kernel_system::~kernel_system() {
@@ -195,7 +196,11 @@ namespace eka2l1 {
 
             // EKA1 does not use BX LR to jump back, they let kernel do it
             if (is_eka1()) {
-                cpu_->set_pc(cpu_->get_lr());
+                const std::uint32_t jump_back = cpu_->get_lr();
+
+                // Set pc and ARM/thumb flag
+                cpu_->set_pc(jump_back & ~0b1);
+                cpu_->set_cpsr(cpu_->get_cpsr() | ((jump_back & 0b1) ? 0x20 : 0));
             }
         };
 

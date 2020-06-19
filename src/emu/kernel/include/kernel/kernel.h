@@ -47,6 +47,7 @@
 #include <atomic>
 #include <exception>
 #include <functional>
+#include <locale>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -238,6 +239,8 @@ namespace eka2l1 {
 
         epocver kern_ver_;
 
+        std::unique_ptr<std::locale> locale_;
+
         common::identity_container<ipc_send_callback> ipc_send_callbacks_;
         common::identity_container<ipc_complete_callback> ipc_complete_callbacks_;
         common::identity_container<thread_kill_callback> thread_kill_callbacks_;
@@ -387,6 +390,10 @@ namespace eka2l1 {
 
         loader::rom *get_rom_info() {
             return rom_info_;
+        }
+
+        std::locale *get_current_locale() {
+            return locale_.get();
         }
 
         // Expose for scripting, indeed very dirty
