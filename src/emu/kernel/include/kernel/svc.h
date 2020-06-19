@@ -88,27 +88,42 @@ namespace eka2l1::epoc {
         epoc::security_policy write_policy;
     };
 
-    struct eka1_object_executor {
+    struct eka1_executor {
         static constexpr std::uint32_t NO_NAME_AVAIL_ADDR = 0xFFFF0000;
 
         enum attribute {
             handle_owner_thread = 0x40000000,
             chunk_access_global = 0x1,
-            obj_type_chunk_normal = 0x00,
-            obj_type_chunk_normal_global = 0x01,
-            obj_type_server_global = 0x15,
-            obj_type_mutex = 0x17,
-            obj_type_sema = 0x19,
-            obj_type_timer = 0x1B,
-            obj_type_chunk_double_ended = 0x4C,
-            obj_type_chunk_double_ended_global = 0x4D
+            execute_create_chunk_normal = 0x00,
+            execute_create_chunk_normal_global = 0x01,
+            execute_duplicate_handle = 0x0F,
+            execute_create_server_global = 0x15,
+            execute_create_session = 0x16,
+            execute_create_mutex = 0x17,
+            execute_create_sema = 0x19,
+            execute_create_timer = 0x1B,
+            execute_create_thread = 0x27,
+            execute_logon_thread = 0x30,
+            execute_set_tls = 0x34,
+            execute_free_tls = 0x35,
+            execute_create_chunk_double_ended = 0x4C,
+            execute_create_chunk_double_ended_global = 0x4D
         };
 
-        eka2l1::ptr<epoc::des8> handle_pkg_;
-        eka2l1::ptr<epoc::desc16> name_;
-        eka2l1::ptr<epoc::des8> description_;
+        std::uint32_t arg0_;
+        std::uint32_t arg1_;
+        std::uint32_t arg2_;
+        std::uint32_t arg3_;
+    };
 
-        std::uint32_t int_data_;
+    struct eka1_thread_create_description {
+        address func_;
+        std::uint32_t stack_size_;
+        address heap_;
+        std::uint32_t min_heap_size_;
+        std::uint32_t max_heap_size_;
+        address func_data_;
+        address lib_of_func_ptr_;
     };
 
     ///> @brief The SVC map for Symbian S60v3.
