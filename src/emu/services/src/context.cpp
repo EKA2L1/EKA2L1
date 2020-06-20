@@ -97,7 +97,7 @@ namespace eka2l1 {
             const bool is_descriptor = (int)iatype & (int)ipc_arg_type::flag_des;
             const bool is_16_bit = (int)iatype & (int)ipc_arg_type::flag_16b;
 
-            if (is_descriptor && is_16_bit) {
+            if (sys->get_kernel_system()->is_eka1() || (is_descriptor && is_16_bit)) {
                 kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
 
@@ -122,7 +122,7 @@ namespace eka2l1 {
             const bool is_16_bit = (int)iatype & (int)ipc_arg_type::flag_16b;
 
             // If it has descriptor flag and it doesn't have an 16-bit flag, it should be 8-bit one.
-            if (is_descriptor && !is_16_bit) {
+            if (sys->get_kernel_system()->is_eka1() || (is_descriptor && !is_16_bit)) {
                 kernel::process *own_process = msg->own_thr->owning_process();
                 eka2l1::epoc::desc8 *des = ptr<epoc::desc8>(msg->args.args[idx]).get(own_process);
 
@@ -162,7 +162,7 @@ namespace eka2l1 {
         }
 
         bool ipc_context::write_arg(int idx, uint32_t data) {
-            if (idx >= 0 && idx < 4 && msg->args.get_arg_type(idx) == ipc_arg_type::handle) {
+            if (idx >= 0 && idx < 4 && (sys->get_kernel_system()->is_eka1() || (msg->args.get_arg_type(idx) == ipc_arg_type::handle))) {
                 msg->args.args[idx] = data;
                 return true;
             }
@@ -177,7 +177,7 @@ namespace eka2l1 {
 
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
-            if ((int)arg_type & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b)) {
+            if (sys->get_kernel_system()->is_eka1() || ((int)arg_type & ((int)ipc_arg_type::flag_des | (int)ipc_arg_type::flag_16b))) {
                 eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(msg->own_thr->owning_process());
 
                 des->assign(msg->own_thr->owning_process(), data);
@@ -194,12 +194,14 @@ namespace eka2l1 {
             }
 
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+            const bool is_eka1 = sys->get_kernel_system()->is_eka1();
 
-            if ((int)arg_type & (int)ipc_arg_type::flag_des) {
+            if (is_eka1 || ((int)arg_type & (int)ipc_arg_type::flag_des)) {
                 kernel::process *own_pr = msg->own_thr->owning_process();
 
                 // Please don't change the order
-                if ((int)arg_type & (int)ipc_arg_type::flag_16b) {
+                // On EKA1 force write argument package to be 8-bit descriptor only
+                if (!is_eka1 && ((int)arg_type & (int)ipc_arg_type::flag_16b)) {
                     eka2l1::epoc::desc16 *des = ptr<epoc::desc16>(msg->args.args[idx]).get(own_pr);
 
                     // We can't handle odd length
@@ -242,7 +244,7 @@ namespace eka2l1 {
         std::uint8_t *ipc_context::get_arg_ptr(int idx) {
             const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
-            if ((int)arg_type & (int)ipc_arg_type::flag_des) {
+            if (sys->get_kernel_system()->is_eka1() || ((int)arg_type & (int)ipc_arg_type::flag_des)) {
                 kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
@@ -258,17 +260,20 @@ namespace eka2l1 {
             }
 
             const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+            const bool is_eka1 = sys->get_kernel_system()->is_eka1();
 
-            if ((static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::unspecified))
-                || (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::handle))) {
-                return 4;
+            if (!is_eka1) {
+                if ((static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::unspecified))
+                    || (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::handle))) {
+                    return 4;
+                }
             }
 
             // Cast it to descriptor
             kernel::process *own_pr = msg->own_thr->owning_process();
             epoc::des8 *descriptor = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
-            if (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::flag_16b)) {
+            if (!is_eka1 && (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::flag_16b))) {
                 return descriptor->get_max_length(own_pr) * 2;
             }
 
@@ -281,17 +286,20 @@ namespace eka2l1 {
             }
 
             const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
+            const bool is_eka1 = sys->get_kernel_system()->is_eka1();
 
-            if ((static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::unspecified))
-                || (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::handle))) {
-                return 4;
+            if (!is_eka1) {
+                if ((static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::unspecified))
+                    || (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::handle))) {
+                    return 4;
+                }
             }
 
             // Cast it to descriptor
             kernel::process *own_pr = msg->own_thr->owning_process();
             epoc::des8 *descriptor = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
-            if (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::flag_16b)) {
+            if (!is_eka1 && (static_cast<int>(arg_type) & static_cast<int>(ipc_arg_type::flag_16b))) {
                 return descriptor->get_length() * 2;
             }
 
@@ -301,7 +309,7 @@ namespace eka2l1 {
         bool ipc_context::set_arg_des_len(const int idx, const std::uint32_t len) {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
-            if ((int)arg_type & (int)ipc_arg_type::flag_des) {
+            if (sys->get_kernel_system()->is_eka1() || ((int)arg_type & (int)ipc_arg_type::flag_des)) {
                 kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
