@@ -228,27 +228,36 @@ namespace eka2l1 {
             "KEY_STAR"
         };
         key_binder_state.key_bind_name = {
-            "KEY_UP",
-            "KEY_DOWN",
-            "KEY_LEFT",
-            "KEY_RIGHT",
-            "KEY_ENTER",
-            "KEY_F1",
-            "KEY_F2",
-            "KEY_NUM0",
-            "KEY_NUM1",
-            "KEY_NUM2",
-            "KEY_NUM3",
-            "KEY_NUM4",
-            "KEY_NUM5",
-            "KEY_NUM6",
-            "KEY_NUM7",
-            "KEY_NUM8",
-            "KEY_NUM9",
-            "KEY_SLASH",
-            "KEY_STAR"
+            { KEY_UP, "KEY_UP" },
+            { KEY_DOWN, "KEY_DOWN" },
+            { KEY_LEFT, "KEY_LEFT" },
+            { KEY_RIGHT, "KEY_RIGHT" },
+            { KEY_ENTER, "KEY_ENTER" },
+            { KEY_F1, "KEY_F1" },
+            { KEY_F2, "KEY_F2" },
+            { KEY_NUM0, "KEY_NUM0" },
+            { KEY_NUM1, "KEY_NUM1" },
+            { KEY_NUM2, "KEY_NUM2" },
+            { KEY_NUM3, "KEY_NUM3" },
+            { KEY_NUM4, "KEY_NUM4" },
+            { KEY_NUM5, "KEY_NUM5" },
+            { KEY_NUM6, "KEY_NUM6" },
+            { KEY_NUM7, "KEY_NUM7" },
+            { KEY_NUM8, "KEY_NUM8" },
+            { KEY_NUM9, "KEY_NUM9" },
+            { KEY_SLASH, "KEY_SLASH" },
+            { KEY_STAR, "KEY_STAR" }
         };
         key_binder_state.need_key = std::vector<bool>(key_binder_state.BIND_NUM, false);
+        for (auto &kb : conf->keybinds) {
+            if (kb.source.type == "key") {
+                winserv->input_mapping.key_input_map[kb.source.data.keycode] = kb.target;
+                key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.keycode);
+            } else if (kb.source.type == "controller") {
+                winserv->input_mapping.button_input_map[std::make_pair(kb.source.data.button.controller_id, kb.source.data.button.button_id)] = kb.target;
+                key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.button.controller_id) + ":" + std::to_string(kb.source.data.button.button_id);
+            }
+        }
     }
 
     imgui_debugger::~imgui_debugger() {
@@ -686,15 +695,22 @@ namespace eka2l1 {
                 } else if (key_set) {
                     // fetch key and add to map
                     bool map_set = false;
+                    config::keybind new_kb;
+                    new_kb.target = key_binder_state.target_key[i];
                     switch (key_evt.type_) {
                     case drivers::input_event_type::key:
                         winserv->input_mapping.key_input_map[key_evt.key_.code_] = key_binder_state.target_key[i];
-                        key_binder_state.key_bind_name[i] = std::to_string(key_evt.key_.code_);
+                        key_binder_state.key_bind_name[new_kb.target] = std::to_string(key_evt.key_.code_);
+                        new_kb.source.type = "key";
+                        new_kb.source.data.keycode = key_evt.key_.code_;
                         map_set = true;
                         break;
                     case drivers::input_event_type::button:
                         winserv->input_mapping.button_input_map[std::make_pair(key_evt.button_.controller_, key_evt.button_.button_)] = key_binder_state.target_key[i];
-                        key_binder_state.key_bind_name[i] = std::to_string(key_evt.button_.controller_) + ":" + std::to_string(key_evt.button_.button_);
+                        key_binder_state.key_bind_name[new_kb.target] = std::to_string(key_evt.button_.controller_) + ":" + std::to_string(key_evt.button_.button_);
+                        new_kb.source.type = "controller";
+                        new_kb.source.data.button.controller_id = key_evt.button_.controller_;
+                        new_kb.source.data.button.button_id = key_evt.button_.button_;
                         map_set = true;
                         break;
                     default:
@@ -705,10 +721,21 @@ namespace eka2l1 {
                         request_key = false;
                         key_set = false;
                     }
+                    bool exist_in_config = false;
+                    for (auto &kb : conf->keybinds) {
+                        if (kb.target == key_binder_state.target_key[i]) {
+                            kb = new_kb;
+                            exist_in_config = true;
+                            break;
+                        }
+                    }
+                    if (!exist_in_config) {
+                        conf->keybinds.emplace_back(new_kb);
+                    }
                 }
                 ImGui::Button("waiting for key");
             } else {
-                if (ImGui::Button(key_binder_state.key_bind_name[i].c_str())) {
+                if (ImGui::Button(key_binder_state.key_bind_name[key_binder_state.target_key[i]].c_str())) {
                     key_binder_state.need_key[i] = true;
                     request_key = true;
                 }
