@@ -120,8 +120,6 @@ namespace eka2l1 {
         std::optional<filesystem_id> physical_fs_id;
 
         system *parent;
-
-        language sys_lang = language::en;
         std::size_t gdb_stub_breakpoint_callback_handle;
 
     public:
@@ -224,11 +222,11 @@ namespace eka2l1 {
         }
 
         const language get_system_language() const {
-            return sys_lang;
+            return kern->get_current_language();
         }
 
         void set_system_language(const language new_lang) {
-            sys_lang = new_lang;
+            kern->set_current_language(new_lang);
         }
 
         void startup();

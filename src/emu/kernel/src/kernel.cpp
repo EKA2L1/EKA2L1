@@ -71,7 +71,8 @@ namespace eka2l1 {
         , realtime_ipc_signal_evt_(0)
         , uid_counter_(0)
         , rom_map_(nullptr)
-        , kern_ver_(epocver::epoc94) {
+        , kern_ver_(epocver::epoc94)
+        , lang_(language::en) {
         thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
@@ -721,6 +722,10 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    void kernel_system::set_current_language(const language new_lang) {
+        lang_ = new_lang;
     }
 
     struct kernel_info {

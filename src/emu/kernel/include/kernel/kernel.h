@@ -38,6 +38,7 @@
 #include <kernel/server.h>
 #include <kernel/session.h>
 
+#include <common/types.h>
 #include <common/container.h>
 #include <common/hash.h>
 
@@ -238,6 +239,7 @@ namespace eka2l1 {
         std::uint64_t base_time_;
 
         epocver kern_ver_;
+        language lang_;
 
         std::unique_ptr<std::locale> locale_;
 
@@ -395,6 +397,12 @@ namespace eka2l1 {
         std::locale *get_current_locale() {
             return locale_.get();
         }
+
+        language get_current_language() const {
+            return lang_;
+        }
+
+        void set_current_language(const language new_lang);
 
         // Expose for scripting, indeed very dirty
         std::vector<kernel_obj_unq_ptr> &get_process_list() {
