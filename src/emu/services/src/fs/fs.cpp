@@ -41,6 +41,16 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
+    namespace epoc::fs {        
+        std::string get_server_name_through_epocver(const epocver ver) {
+            if (ver < epocver::eka2) {
+                return "FileServer";
+            }
+
+            return "!FileServer";
+        }
+    }
+
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
         utf16_str copy = common::lowercase_ucs2_string(key);
         return std::hash<utf16_str>()(copy);
@@ -57,11 +67,7 @@ namespace eka2l1 {
     }
 
     fs_server::fs_server(system *sys)
-        : service::typical_server(sys, "!FileServer") {
-        if (kern->is_eka1()) {
-            obj_name = "FileServer";
-        }
-
+        : service::typical_server(sys, epoc::fs::get_server_name_through_epocver(sys->get_symbian_version_use())) {
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());
@@ -79,6 +85,14 @@ namespace eka2l1 {
             // FileWriteDirty does not exist
             if (ctx->msg->function >= epoc::fs_msg_file_write_dirty)
                 ctx->msg->function++;
+        }
+
+        if (version < epocver::eka2) {
+            // Base subclose, see RFsBase from devpedia
+            if (ctx->msg->function > epoc::fs_msg_base_close) {
+                // Skip to open. EKA2 separate RFsBase into separate categories
+                ctx->msg->function += epoc::fs_msg_raw_subclose - epoc::fs_msg_base_close;
+            }
         }
 
         switch (ctx->msg->function & 0xFF) {
@@ -134,6 +148,13 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(server<fs_server>()->private_path, epoc::fs_msg_private_path, "Fs::PrivatePath");
             HANDLE_CLIENT_IPC(server<fs_server>()->volume, epoc::fs_msg_volume, "Fs::Volume");
             HANDLE_CLIENT_IPC(server<fs_server>()->query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
+
+        case epoc::fs_msg_base_close:
+            if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
+                generic_close(ctx);
+            }
+
+            break;
 
         default: {
             LOG_ERROR("Unknown FSServer client opcode {}!", ctx->msg->function);
@@ -509,5 +530,31 @@ namespace eka2l1 {
     void fs_server_client::set_should_notify_failure(service::ipc_context *ctx) {
         should_notify_failures = static_cast<bool>(ctx->get_arg<std::int32_t>(0));
         ctx->set_request_status(epoc::error_none);
+    }
+
+    void fs_server_client::generic_close(service::ipc_context *ctx) {
+        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+
+        if (!handle_res) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        switch (node->vfs_node->type) {
+        case io_component_type::file: {
+            file_close(ctx);
+            break;
+        }
+
+        case io_component_type::dir:
+            close_dir(ctx);
+            break;
+
+        default:
+            LOG_WARN("Unhandled close type for node type {}", static_cast<int>(node->vfs_node->type));
+            break;
+        }
     }
 }

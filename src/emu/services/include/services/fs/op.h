@@ -47,6 +47,7 @@ namespace eka2l1::epoc {
         fs_msg_set_entry = 23,
         fs_msg_get_drive_name = 24,
         fs_msg_set_drive_name = 25,
+        fs_msg_base_close = 26,         // EKA1
         fs_msg_format_subclose = 26,
         fs_msg_dir_subclose = 27,
         fs_msg_file_subclose = 28,
