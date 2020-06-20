@@ -2513,7 +2513,7 @@ namespace eka2l1::epoc {
 
     std::int32_t thread_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
-        // Out = handle, arg2 = name, In2 = thread create info
+        // arg0 = handle, arg2 = name, arg3 = thread create info
         kernel::process *target_process = target_thread->owning_process();
         epoc::desc16 *name_des = eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_process);
 
@@ -2555,6 +2555,39 @@ namespace eka2l1::epoc {
             description->func_, description->stack_size_);
 
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t session_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg0 = out handle, arg1 = server name, arg2 = async message slot count
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::desc16 *name_des = eka2l1::ptr<epoc::desc16>(create_info->arg1_).get(target_process);
+
+        if (!name_des) {
+            // Server ame is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::string server_name = common::ucs2_to_utf8(name_des->to_std_string(target_process));
+        server_ptr server = kern->get_by_name<service::server>(server_name);
+
+        if (!server) {
+            LOG_TRACE("Create session to unexist server: {}", server_name);
+
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        const std::int32_t the_handle = do_create_session_from_server(kern, server, create_info->arg2_, 0, 0);
+        std::int32_t error_code = (the_handle <= 0) ? the_handle : epoc::error_none;
+        
+        if (the_handle > 0) {
+            return do_handle_write(kern, create_info, finish_signal, target_thread, the_handle);
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, error_code);
+        return error_code;
     }
 
     std::int32_t thread_logon_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
@@ -2628,6 +2661,9 @@ namespace eka2l1::epoc {
         case epoc::eka1_executor::execute_create_thread:
             return thread_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+        case epoc::eka1_executor::execute_create_session:
+            return session_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
         case epoc::eka1_executor::execute_logon_thread:
             return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
@@ -2660,6 +2696,45 @@ namespace eka2l1::epoc {
         const address result = kern->crr_thread()->pop_trap_frame();
         if (result == 0) {
             LOG_ERROR("Trap frame popped from already empty stack!");
+        }
+
+        return result;
+    }
+
+    BRIDGE_FUNC(std::int32_t, session_send_eka1, kernel::handle session_handle, const std::int32_t ord,
+        std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
+        if (!args) {
+            return epoc::error_argument;
+        }
+
+        process_ptr crr_pr = kern->crr_process();
+
+        ipc_arg the_arg;
+        the_arg.flag = 0xFFFFFFFF;          // EKA1 does not have flags for message, so mark all
+        std::memcpy(the_arg.args, args, sizeof(the_arg.args));
+
+        session_ptr ss = kern->get<service::session>(session_handle);
+
+        if (!ss) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!status) {
+            LOG_TRACE("Sending a blind sync message");
+        }
+
+        if (kern->get_config()->log_ipc) {
+            LOG_TRACE("Sending {} sync to {}", ord, ss->get_server()->name());
+        }
+
+        const std::string server_name = ss->get_server()->name();
+        kern->call_ipc_send_callbacks(server_name, ord, the_arg, kern->crr_thread());
+
+        const int result = ss->send_receive_sync(ord, the_arg, status);
+
+        if (ss->get_server()->is_hle()) {
+            // Process it right away.
+            ss->get_server()->process_accepted_msg();
         }
 
         return result;
@@ -3066,10 +3141,11 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xFE, static_call_list),
         
         // User server calls
+        BRIDGE_REGISTER(0x8000A8, heap_created),
+        BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
-        BRIDGE_REGISTER(0x8000A8, heap_created),
-        BRIDGE_REGISTER(0x800083, user_svr_hal_get)
+        BRIDGE_REGISTER(0xC000BF, session_send_eka1)
     };
 }
