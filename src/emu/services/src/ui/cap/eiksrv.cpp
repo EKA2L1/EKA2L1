@@ -120,7 +120,8 @@ namespace eka2l1::epoc::cap {
     }
 
     void eik_server::init(kernel_system *kern) {
-        winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(WINDOW_SERVER_NAME));
+        winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
+            kern->get_epoc_version())));
     }
 
     void eik_server::key_block_mode(const bool is_on) {

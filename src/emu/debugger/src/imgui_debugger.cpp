@@ -177,7 +177,8 @@ namespace eka2l1 {
 
         if (kern) {
             alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>("!AppListServer"));
-            winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>("!Windowserver"));
+            winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
+                kern->get_epoc_version())));
             oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(kern->get_by_name<service::server>("101fdfae_10207218_AppServer"));
 
             property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);

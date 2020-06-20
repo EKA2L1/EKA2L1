@@ -236,8 +236,8 @@ namespace eka2l1::epoc {
             REGISTER_HAL_FUNC(display_hal_specified_mode_info, display_hal, specified_mode_info);
             REGISTER_HAL_FUNC(display_hal_colors, display_hal, color_count);
 
-            winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()
-                                                             ->get_by_name<service::server>(WINDOW_SERVER_NAME));
+            winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
+                eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
         }
     };
 
@@ -271,8 +271,9 @@ namespace eka2l1::epoc {
             : hal(sys)
             , winserv_(nullptr) {
             REGISTER_HAL_FUNC(digitiser_hal_hal_xy_info, digitiser_hal, get_xy_info);
-            winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()
-                                                             ->get_by_name<service::server>(WINDOW_SERVER_NAME));
+
+            winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
+                eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
         }
     };
 
