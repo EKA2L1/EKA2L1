@@ -26,6 +26,20 @@
 #include <vector>
 
 namespace eka2l1::config {
+    struct keybind {
+        struct {
+            std::string type; // one of "key", "controller"
+            union {
+                std::uint32_t keycode;
+                struct {
+                    int controller_id;
+                    int button_id;
+                } button;
+            } data;
+        } source;
+        std::uint32_t target; // target keycode
+    };
+
     struct state {
         float menu_height = 0;
         int bkg_transparency{ 129 };
@@ -64,6 +78,8 @@ namespace eka2l1::config {
         bool fbs_enable_compression_queue{ false };
         bool accurate_ipc_timing{ false };
         bool enable_btrace{ false };
+
+        std::vector<keybind> keybinds;
 
         void serialize();
         void deserialize();

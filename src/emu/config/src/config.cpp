@@ -20,8 +20,8 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 
-#include <fstream>
 #include <config/config.h>
+#include <fstream>
 #include <yaml-cpp/yaml.h>
 
 namespace eka2l1::config {
@@ -48,6 +48,29 @@ namespace eka2l1::config {
         }
 
         emitter << YAML::EndSeq;
+    }
+
+    void config_file_emit_keybind(YAML::Emitter &emitter, const keybind &kb) {
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "source" << YAML::Value;
+        emitter << YAML::BeginMap;
+        emitter << YAML::Key << "type" << YAML::Value << kb.source.type;
+        emitter << YAML::Key << "data" << YAML::Value;
+        if (kb.source.type == "key") {
+            emitter << YAML::BeginMap;
+            emitter << YAML::Key << "keycode" << YAML::Value << kb.source.data.keycode;
+            emitter << YAML::EndMap;
+        } else if (kb.source.type == "controller") {
+            emitter << YAML::BeginMap;
+            emitter << YAML::Key << "controller_id" << YAML::Value << kb.source.data.button.controller_id;
+            emitter << YAML::Key << "button_id" << YAML::Value << kb.source.data.button.button_id;
+            emitter << YAML::EndMap;
+        } else {
+            emitter << "error";
+        }
+        emitter << YAML::EndMap;
+        emitter << YAML::Key << "target" << YAML::Value << kb.target;
+        emitter << YAML::EndMap;
     }
 
     void state::serialize() {
@@ -89,6 +112,18 @@ namespace eka2l1::config {
 
         std::ofstream file("config.yml");
         file << emitter.c_str();
+        file.close();
+
+        YAML::Emitter keybind_emitter;
+        keybind_emitter << YAML::BeginSeq;
+        for (const auto &kb : keybinds) {
+            config_file_emit_keybind(keybind_emitter, kb);
+        }
+        keybind_emitter << YAML::EndSeq;
+
+        std::ofstream keybind_file("keybind.yml");
+        keybind_file << keybind_emitter.c_str();
+        keybind_file.close();
     }
 
     void state::deserialize() {
@@ -131,5 +166,26 @@ namespace eka2l1::config {
         get_yaml_value(node, "fbs-enable-compression-queue", &fbs_enable_compression_queue, false);
         get_yaml_value(node, "accurate-ipc-timing", &accurate_ipc_timing, false);
         get_yaml_value(node, "enable-btrace", &enable_btrace, false);
+
+        YAML::Node keybind_node;
+        try {
+            keybind_node = YAML::LoadFile("keybind.yml");
+        } catch (...) {
+            return;
+        }
+
+        for (size_t i = 0; i < keybind_node.size(); i++) {
+            keybind kb;
+            kb.target = keybind_node[i]["target"].as<std::uint32_t>();
+            std::string source_type = keybind_node[i]["source"]["type"].as<std::string>();
+            kb.source.type = source_type;
+            if (source_type == "key") {
+                kb.source.data.keycode = keybind_node[i]["source"]["data"]["keycode"].as<std::uint32_t>();
+            } else if (source_type == "controller") {
+                kb.source.data.button.controller_id = keybind_node[i]["source"]["data"]["controller_id"].as<int>();
+                kb.source.data.button.button_id = keybind_node[i]["source"]["data"]["button_id"].as<int>();
+            }
+            keybinds.emplace_back(kb);
+        }
     }
 }
