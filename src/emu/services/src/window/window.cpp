@@ -787,6 +787,14 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
+    std::string get_winserv_name_by_epocver(const epocver ver) {
+        if (ver < epocver::eka2) {
+            return "Windowserver";
+        }
+
+        return "!Windowserver";
+    }
+
     void window_server::load_wsini() {
         io_system *io = sys->get_io_system();
         std::optional<eka2l1::drive> drv;
@@ -839,6 +847,9 @@ namespace eka2l1 {
 
         bool one_screen_only = false;
 
+        // Screen size is assumed to be 176x208 by default
+        static const eka2l1::vec2 ASSUMED_SCREEN_SIZE = { 176, 208 };
+
         do {
             std::string screen_key = "SCREEN";
             screen_key += std::to_string(total_screen);
@@ -862,6 +873,7 @@ namespace eka2l1 {
             scr.disp_mode = scr_mode_global;
 
             int total_mode = 0;
+            bool one_mode_only = false;
 
             do {
                 std::string current_mode_str = std::to_string(total_mode + 1);
@@ -869,10 +881,6 @@ namespace eka2l1 {
                 screen_mode_width_key += current_mode_str;
 
                 common::ini_node_ptr mode_width = screen_node->get_as<common::ini_section>()->find(screen_mode_width_key.c_str());
-
-                if (!mode_width) {
-                    break;
-                }
 
                 std::string screen_mode_height_key = "SCR_HEIGHT";
                 screen_mode_height_key += current_mode_str;
@@ -885,10 +893,27 @@ namespace eka2l1 {
                 scr_mode.screen_number = total_screen - 1;
                 scr_mode.mode_number = total_mode;
 
-                mode_width->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.x),
-                    1, 0);
-                mode_height->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.y),
-                    1, 0);
+                if (mode_width) {
+                    mode_width->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.x),
+                        1, 0);
+                } else {
+                    if (total_mode > 1)
+                        break;
+
+                    scr_mode.size.x = ASSUMED_SCREEN_SIZE.x;
+                    one_mode_only = true;
+                }
+
+                if (mode_height) {
+                    mode_height->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.y),
+                        1, 0);
+                } else {
+                    if (total_mode > 1)
+                        break;
+
+                    scr_mode.size.y = ASSUMED_SCREEN_SIZE.y;
+                    one_mode_only = true;
+                }
 
                 current_mode_str = std::to_string(total_mode);
 
@@ -897,8 +922,12 @@ namespace eka2l1 {
 
                 common::ini_node_ptr mode_rot = screen_node->get_as<common::ini_section>()->find(screen_mode_rot_key.c_str());
 
-                mode_rot->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.rotation),
-                    1, 0);
+                if (mode_rot) {
+                    mode_rot->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.rotation),
+                        1, 0);
+                } else {
+                    scr_mode.rotation = 0;
+                }
 
                 std::string screen_style_s60_key = "S60_SCR_STYLE_NAME";
                 screen_style_s60_key += current_mode_str;
@@ -916,15 +945,15 @@ namespace eka2l1 {
                 }
 
                 scr.modes.push_back(scr_mode);
-            } while (true);
+            } while (!one_mode_only);
 
             screen_configs.push_back(scr);
-        } while ((screen_node != nullptr) && !one_screen_only);
+        } while ((screen_node != nullptr) && (!one_screen_only));
     }
 
     // TODO: Anim scheduler currently has no way to resize number of screens after construction.
     window_server::window_server(system *sys)
-        : service::server(sys->get_kernel_system(), sys, WINDOW_SERVER_NAME, true, true)
+        : service::server(sys->get_kernel_system(), sys, get_winserv_name_by_epocver(sys->get_symbian_version_use()), true, true)
         , bmp_cache(sys->get_kernel_system())
         , anim_sched(sys->get_kernel_system(), sys->get_ntimer(), 1)
         , screens(nullptr)
@@ -1364,7 +1393,8 @@ namespace eka2l1 {
 
     fbs_server *window_server::get_fbs_server() {
         if (!fbss) {
-            fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
+            fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>(
+                epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use()))));
         }
 
         return fbss;
