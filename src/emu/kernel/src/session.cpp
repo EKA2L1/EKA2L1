@@ -93,17 +93,6 @@ namespace eka2l1 {
 
             send(msg);
 
-            if (msg->function == -1) {
-                struct version {
-                    uint8_t major;
-                    uint8_t minor;
-                    uint16_t build;
-                };
-
-                const version sreq_ver = *reinterpret_cast<const version *>(&args.args[0]);
-                LOG_TRACE("Requested server version: {}.{}.{}", sreq_ver.major, sreq_ver.minor, sreq_ver.build);
-            }
-
             return 0;
         }
 

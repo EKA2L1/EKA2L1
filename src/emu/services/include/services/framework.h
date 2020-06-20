@@ -20,6 +20,7 @@
 #pragma once
 
 #include <services/context.h>
+#include <kernel/kernel.h>
 #include <kernel/server.h>
 #include <kernel/session.h>
 #include <utils/obj.h>
@@ -90,6 +91,7 @@ namespace eka2l1::service {
 
     protected:
         normal_object_container obj_con;
+        std::optional<epoc::version> get_version(service::ipc_context *ctx);
 
     public:
         ~typical_server() override;
@@ -115,10 +117,14 @@ namespace eka2l1::service {
         template <typename T, typename... Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
             const service::uid suid = ctx->msg->msg_session->unique_id();
-            epoc::version client_version;
-            client_version.u32 = ctx->get_arg<std::uint32_t>(0).value();
+            
+            std::optional<epoc::version> client_version = get_version(ctx);
 
-            sessions.emplace(suid, std::make_unique<T>(reinterpret_cast<typical_server *>(this), suid, client_version, arguments...));
+            if (!client_version) {
+                return nullptr;
+            }
+
+            sessions.emplace(suid, std::make_unique<T>(reinterpret_cast<typical_server *>(this), suid, client_version.value(), arguments...));
 
             auto &target_session = sessions[suid];
             return reinterpret_cast<T *>(target_session.get());
