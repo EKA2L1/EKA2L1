@@ -149,6 +149,14 @@ namespace eka2l1 {
             kern->set_epoc_version(ever);
     
             epoc::init_hal(parent);
+                
+            service::init_services(parent);
+
+            // Try to set system language
+            set_system_language(static_cast<language>(conf->language));
+
+            // Initialize HLE finally
+            dispatcher.init(kern.get(), timing.get());
             
             if (!gdb_stub.is_server_enabled() && conf->enable_gdbstub) {
                 gdb_stub.init(parent);
@@ -350,13 +358,6 @@ namespace eka2l1 {
             &asmdis);
 
         epoc::init_panic_descriptions();
-        service::init_services(parent);
-
-        // Try to set system language
-        set_system_language(static_cast<language>(conf->language));
-
-        // Initialize HLE finally
-        dispatcher.init(kern.get(), timing.get());
     }
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, config::state *conf)
