@@ -58,6 +58,10 @@ namespace eka2l1 {
 
     fs_server::fs_server(system *sys)
         : service::typical_server(sys, "!FileServer") {
+        if (kern->is_eka1()) {
+            obj_name = "FileServer";
+        }
+
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());

@@ -184,6 +184,9 @@ namespace eka2l1 {
         , persistent_font_store(sys->get_io_system())
         , shared_chunk(nullptr)
         , large_chunk(nullptr) {
+        if (kern->is_eka1()) {
+            obj_name = "Fontbitmapserver";
+        }
     }
 
     static void compressor_thread_func(compress_queue *queue) {
