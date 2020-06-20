@@ -256,7 +256,7 @@ namespace eka2l1::kernel {
 
     bool process::satisfy(epoc::security_policy &policy, epoc::security_info *missing) {
         // Do not enforce security on EKA1. It's not even there
-        if (kern->get_epoc_version() >= epocver::eka2) {
+        if (kern->is_eka1()) {
             return true;
         }
 
@@ -266,7 +266,7 @@ namespace eka2l1::kernel {
 
     bool process::has(epoc::capability_set &cap_set) {
         // Do not enforce security on EKA1. It's not even there
-        if (kern->get_epoc_version() >= epocver::eka2) {
+        if (kern->is_eka1()) {
             return true;
         }
 
