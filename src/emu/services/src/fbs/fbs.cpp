@@ -25,7 +25,9 @@
 #include <kernel/kernel.h>
 #include <kernel/chunk.h>
 #include <kernel/libmanager.h>
+
 #include <services/fbs/fbs.h>
+#include <services/fs/std.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
@@ -42,6 +44,14 @@ namespace eka2l1 {
         bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
             const epocver current_sys_ver = cli->server<fbs_server>()->get_system()->get_symbian_version_use();
             return (cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT) && (current_sys_ver < epocver::epoc95);
+        }
+            
+        std::string get_fbs_server_name_by_epocver(const epocver ver) {
+            if (ver < epocver::eka2) {
+                return "Fontbitmapserver";
+            }
+
+            return "!Fontbitmapserver";
         }
     }
 
@@ -67,6 +77,13 @@ namespace eka2l1 {
         } else {
             server<fbs_server>()->session_cache_list->erase_cache(this);
         }
+    }
+
+    void fbscli::set_pixel_size_in_twips(service::ipc_context *ctx) {
+        server<fbs_server>()->set_pixel_size_in_twips({ ctx->get_arg<std::int32_t>(0).value(),
+            ctx->get_arg<std::int32_t>(1).value() });
+
+        ctx->set_request_status(epoc::error_none);
     }
 
     void fbscli::fetch(service::ipc_context *ctx) {
@@ -172,6 +189,10 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_set_pixel_size_in_twips:
+            set_pixel_size_in_twips(ctx);
+            break;
+
         default: {
             LOG_ERROR("Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;
@@ -180,7 +201,7 @@ namespace eka2l1 {
     }
 
     fbs_server::fbs_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!Fontbitmapserver")
+        : service::typical_server(sys, epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use()))
         , persistent_font_store(sys->get_io_system())
         , shared_chunk(nullptr)
         , large_chunk(nullptr) {
@@ -264,7 +285,8 @@ namespace eka2l1 {
             // Probably also indicates that font aren't loaded yet
             load_fonts(context.sys->get_io_system());
 
-            fs_server = kern->get_by_name<service::server>("!FileServer");
+            fs_server = kern->get_by_name<service::server>(epoc::fs::get_server_name_through_epocver(
+                kern->get_epoc_version()));
 
             // Create session cache list
             session_cache_list = allocate_general_data<epoc::open_font_session_cache_list>();
