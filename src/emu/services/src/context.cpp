@@ -248,6 +248,10 @@ namespace eka2l1 {
                 kernel::process *own_pr = msg->own_thr->owning_process();
                 eka2l1::epoc::des8 *des = ptr<epoc::des8>(msg->args.args[idx]).get(own_pr);
 
+                if (!des) {
+                    return nullptr;
+                }
+
                 return reinterpret_cast<std::uint8_t *>(des->get_pointer_raw(own_pr));
             }
 
