@@ -18,32 +18,35 @@
  */
 
 #include <utils/uchar.h>
+#include <cctype>
 
 namespace eka2l1::epoc {
     // TODO (bent): Probably not really accurate yet.
     std::uint32_t get_uchar_category(const uchar c, std::locale &ln) {
-        if (std::iscntrl(c, ln)) {
+        wchar_t the_wc = static_cast<wchar_t>(c);
+
+        if (std::iscntrl(the_wc, ln)) {
             return uchar_category::UCHAR_CATEGORY_OTHER_CONTROL;
         }
 
-        if (std::ispunct(c, ln)) {
+        if (std::ispunct(the_wc, ln)) {
             // TODO (bent): Expanse this into specific category
             return uchar_category::UCHAR_CATEGORY_PUNCTUATION_GROUP;
         }
 
-        if (std::isalpha(c, ln)) {
-            if (std::islower(c, ln)) {
+        if (std::isalpha(the_wc, ln)) {
+            if (std::islower(the_wc, ln)) {
                 return uchar_category::UCHAR_CATEGORY_LETTER_LOWERCASE;
             } else {
                 return uchar_category::UCHAR_CATEGORY_LETTER_UPPERCASE;
             }
         }
 
-        if (std::isspace(c, ln)) {
+        if (std::isspace(the_wc, ln)) {
             return uchar_category::UCHAR_CATEGORY_SEPARATOR_SPACE;
         }
 
-        if (std::isdigit(c, ln)) {
+        if (std::isdigit(the_wc, ln)) {
             return uchar_category::UCHAR_CATEGORY_NUMBER_DECIMAL_DIGIT;
         }
 
@@ -51,10 +54,10 @@ namespace eka2l1::epoc {
     }
 
     const uchar uppercase_uchar(const uchar c, std::locale &ln) {
-        return std::toupper(c, ln);
+        return std::toupper(static_cast<wchar_t>(c), ln);
     }
     
     const uchar lowercase_uchar(const uchar c, std::locale &ln) {
-        return std::tolower(c, ln);
+        return std::tolower(static_cast<wchar_t>(c), ln);
     }
 }
