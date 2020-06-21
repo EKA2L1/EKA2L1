@@ -33,6 +33,10 @@ namespace eka2l1 {
                     int axis_count = 0, button_count = 0;
                     const float *axes = glfwGetJoystickAxes(jid, &axis_count);
                     const unsigned char *buttons = glfwGetJoystickButtons(jid, &button_count);
+
+                    // Only allow the maximum of 4 axes
+                    axis_count = std::min<int>(axis_count, 4);
+
                     if (gamepads.count(jid) == 0) {
                         gamepads[jid] = { std::vector<bool>(button_count, false),
                             std::vector<float>(axis_count, 0.0f) };
@@ -40,13 +44,13 @@ namespace eka2l1 {
                         if (gamepads[jid].button.size() != button_count) {
                             gamepads[jid].button = std::vector<bool>(button_count, false);
                         }
-                        if (gamepads[jid].axis.size() != button_count) {
+                        if (gamepads[jid].axis.size() != axis_count) {
                             gamepads[jid].axis = std::vector<float>(axis_count, 0.0f);
                         }
                     }
                     gamepad_state &current_pad = gamepads[jid];
                     for (int i = 0; i < button_count; i++) {
-                        if (buttons[i] == GLFW_PRESS != current_pad.button[i]) {
+                        if ((buttons[i] == GLFW_PRESS) != current_pad.button[i]) {
                             current_pad.button[i] = (buttons[i] == GLFW_PRESS) ? true : false;
                             on_button_event(jid, i, buttons[i]);
                         }
