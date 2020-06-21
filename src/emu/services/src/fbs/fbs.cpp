@@ -87,6 +87,28 @@ namespace eka2l1 {
     }
 
     void fbscli::fetch(service::ipc_context *ctx) {
+        if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
+            // Move get nearest font to be after set pixel size in twips
+            switch (ctx->msg->function) {
+            case fbs_set_pixel_size_in_twips + 1:
+                ctx->msg->function = fbs_nearest_font_max_height_in_twips;
+                break;
+
+            case fbs_set_pixel_size_in_twips + 2:
+                ctx->msg->function = fbs_nearest_font_max_height_in_pixels;
+                break;
+
+            default: {
+                if ((ctx->msg->function > fbs_set_pixel_size_in_twips + 2) && 
+                    (ctx->msg->function < fbs_nearest_font_design_height_in_twips + 2)) {
+                    ctx->msg->function -= 2;
+                }
+
+                break;
+            }
+            }
+        }
+
         switch (ctx->msg->function) {
         case fbs_init: {
             connection_id_ = server<fbs_server>()->init();
@@ -107,7 +129,9 @@ namespace eka2l1 {
         }
 
         case fbs_nearest_font_design_height_in_pixels:
-        case fbs_nearest_font_design_height_in_twips: {
+        case fbs_nearest_font_design_height_in_twips:
+        case fbs_nearest_font_max_height_in_pixels:
+        case fbs_nearest_font_max_height_in_twips: {
             get_nearest_font(ctx);
             break;
         }
