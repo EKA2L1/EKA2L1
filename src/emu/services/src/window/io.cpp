@@ -50,9 +50,11 @@ namespace eka2l1::epoc {
 
         kernel_system *kern = win->client->get_ws().get_kernel_system();
 
-        kern->lock();
+        const bool try_success = kern->try_lock();
         win->queue_event(evt);
-        kern->unlock();
+        
+        if (try_success) 
+            kern->unlock();
     }
 
     bool window_pointer_focus_walker::do_it(epoc::window *win) {
@@ -129,6 +131,11 @@ namespace eka2l1::epoc {
         }
 
         epoc::window_group *focus = serv_->get_focus();
+
+        if (!focus) {
+            return;
+        }
+
         int ui_rotation = focus->scr->ui_rotation;
 
         for (auto &evt : evts_) {
@@ -158,15 +165,19 @@ namespace eka2l1::epoc {
 
             kernel_system *kern = focus->client->get_ws().get_kernel_system();
 
-            kern->lock();
+            bool try_success = kern->try_lock();
             focus->queue_event(evt);
-            kern->unlock();
+
+            if (try_success)
+                kern->unlock();
 
             if (!dont_send_extra_key_event) {
                 // Give it a single key event also
-                kern->lock();
+                try_success = kern->try_lock();
                 focus->queue_event(extra_event);
-                kern->unlock();
+                
+                if (try_success)
+                    kern->unlock();
             }
 
             // Iterates through key capture requests and deliver those in needs.key_capture_request_queue &rqueue = key_capture_requests[extra_key_evt.key_evt_.code];
@@ -181,17 +192,21 @@ namespace eka2l1::epoc {
                 switch (ite->type_) {
                 case epoc::event_key_capture_type::normal:
                     extra_event.handle = ite->user->get_client_handle();
-                    kern->lock();
+                    try_success = kern->try_lock();
                     ite->user->queue_event(extra_event);
-                    kern->unlock();
+                    
+                    if (try_success)
+                        kern->unlock();
 
                     break;
 
                 case epoc::event_key_capture_type::up_and_downs:
                     evt.handle = ite->user->get_client_handle();
-                    kern->lock();
+                    try_success = kern->try_lock();
                     ite->user->queue_event(evt);
-                    kern->unlock();
+                    
+                    if (try_success)
+                        kern->unlock();
 
                     break;
 
