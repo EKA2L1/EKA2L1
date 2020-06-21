@@ -501,6 +501,24 @@ namespace eka2l1 {
         ctx->set_request_status(epoc::error_none);
     }
 
+    static constexpr std::uint16_t FBS_TWIPS_MUL = 15;
+
+    void fbscli::get_twips_height(service::ipc_context *ctx) {
+        fbs_server *serv = server<fbs_server>();
+        fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
+
+        if (!font) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.scale_factor_y *
+            font->of_info.metrics.max_height * FBS_TWIPS_MUL);
+
+        ctx->write_arg_pkg<std::int32_t>(1, twips_height);
+        ctx->set_request_status(epoc::error_none);
+    }
+    
     fbsfont *fbscli::get_font_object(service::ipc_context *ctx) {
         if ((ver_.build > 94) || (server<fbs_server>()->get_system()->get_symbian_version_use() >= epocver::epoc95)) {
             // Use object table handle

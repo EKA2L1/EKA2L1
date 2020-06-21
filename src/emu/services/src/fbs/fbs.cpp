@@ -100,6 +100,11 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_get_twips_height: {
+            get_twips_height(ctx);
+            break;
+        }
+
         case fbs_rasterize: {
             rasterize_glyph(ctx);
             break;
