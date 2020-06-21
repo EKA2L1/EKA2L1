@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/graphics/backend/emu_controller_glfw.h>
-#include <drivers/graphics/emu_controller.h>
+#include <drivers/input/backend/emu_controller_glfw.h>
+#include <drivers/input/emu_controller.h>
 
 namespace eka2l1 {
     namespace drivers {

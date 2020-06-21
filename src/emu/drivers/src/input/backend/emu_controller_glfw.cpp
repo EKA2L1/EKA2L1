@@ -17,9 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <drivers/graphics/backend/emu_controller_glfw.h>
+
+#include <drivers/input/backend/emu_controller_glfw.h>
 
 namespace eka2l1 {
     namespace drivers {

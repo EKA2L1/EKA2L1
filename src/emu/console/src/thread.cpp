@@ -33,10 +33,10 @@
 #include <debugger/logger.h>
 #include <debugger/renderer/renderer.h>
 
-#include <drivers/graphics/emu_controller.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/common.h>
+#include <drivers/input/emu_controller.h>
 
 #include <e32keys.h>
 #include <services/window/window.h>

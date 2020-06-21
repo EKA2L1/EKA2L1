@@ -19,7 +19,7 @@
  */
 #pragma once
 
-#include <drivers/graphics/emu_controller.h>
+#include <drivers/input/emu_controller.h>
 
 #include <map>
 #include <vector>

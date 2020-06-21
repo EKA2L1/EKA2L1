@@ -33,7 +33,7 @@
 
 #include <debugger/renderer/renderer.h>
 #include <drivers/graphics/emu_window.h>
-#include <drivers/graphics/emu_controller.h>
+#include <drivers/input/emu_controller.h>
 
 #include <imgui.h>
 
