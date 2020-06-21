@@ -19,11 +19,10 @@
 
 #pragma once
 
-#include <cstdint>
 #include <locale>
 
 namespace eka2l1::epoc {
-    using uchar = std::uint32_t;            ///< Unicode character type.
+    using uchar = char32_t;            ///< Unicode character type.
 
     /**
      * @brief Unicode character category.
