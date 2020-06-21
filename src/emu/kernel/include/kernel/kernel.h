@@ -556,6 +556,10 @@ namespace eka2l1 {
             kern_lock_.lock();
         }
 
+        bool try_lock() {
+            return kern_lock_.try_lock();
+        }
+
         // Unlock the kernel
         void unlock() {
             kern_lock_.unlock();
