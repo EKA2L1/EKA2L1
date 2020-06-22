@@ -183,6 +183,7 @@ namespace eka2l1 {
         void background_compress_bitmap(service::ipc_context *ctx);
         void num_typefaces(service::ipc_context *ctx);
         void typeface_support(service::ipc_context *ctx);
+        void get_twips_height(service::ipc_context *ctx);
         void set_pixel_size_in_twips(service::ipc_context *ctx);
 
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
