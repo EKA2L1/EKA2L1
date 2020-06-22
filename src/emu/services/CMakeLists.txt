@@ -30,6 +30,7 @@ add_library(epocservs
         include/services/centralrepo/centralrepo.h
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
+        include/services/connmonitor/connmonitor.h
         include/services/domain/database.h
         include/services/domain/defs.h
         include/services/domain/domain.h
@@ -116,6 +117,7 @@ add_library(epocservs
         src/centralrepo/centralrepo.cpp
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
+        src/connmonitor/connmonitor.cpp
         src/domain/domain.cpp
         src/drm/helper.cpp
         src/drm/rights.cpp
