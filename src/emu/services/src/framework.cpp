@@ -55,6 +55,26 @@ namespace eka2l1::service {
         ctx.set_request_status(0);
     }
 
+    std::optional<epoc::version> typical_server::get_version(service::ipc_context *ctx) {
+        kernel_system *kern = ctx->sys->get_kernel_system();
+
+        epoc::version ver;
+
+        if (kern->is_eka1()) {
+            std::optional<std::uint32_t> ver_package = ctx->get_arg_packed<std::uint32_t>(1);
+            if (!ver_package) {
+                return std::nullopt;
+            }
+
+            ver.u32 = ver_package.value();
+        } else {
+            ver.u32 = ctx->get_arg<std::uint32_t>(0).value();
+        }
+
+        LOG_TRACE("Requested server version: {}.{}.{}", ver.major, ver.minor, ver.build);
+        return ver;
+    }
+
     void typical_server::process_accepted_msg() {
         int res = receive(process_msg);
 

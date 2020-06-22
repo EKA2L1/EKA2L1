@@ -160,14 +160,14 @@ namespace eka2l1::common {
         if (handle == INVALID_HANDLE_VALUE) {
             handle = nullptr;
             delete find_data;
-        }
+        } else {
+            LPWIN32_FIND_DATA fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
 
-        LPWIN32_FIND_DATA fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
-
-        while (fdata_win32 && (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0)
-            && is_valid()) {
-            cycles_to_next_entry();
-            fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
+            while (fdata_win32 && (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0)
+                && is_valid()) {
+                cycles_to_next_entry();
+                fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
+            }
         }
 #endif
     }

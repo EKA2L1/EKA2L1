@@ -95,11 +95,11 @@ namespace eka2l1::kernel {
         obj_type = kernel::object_type::process;
     }
 
-    static constexpr mem::vm_address get_rom_bss_addr(const mem::mem_model_type type) {
+    static constexpr mem::vm_address get_rom_bss_addr(const mem::mem_model_type type, const bool mem_map_old) {
         switch (type) {
         case mem::mem_model_type::moving:
         case mem::mem_model_type::multiple:
-            return mem::dll_static_data + mem::ROM_BSS_START_OFFSET;
+            return (mem_map_old ? mem::dll_static_data_eka1 : mem::dll_static_data) + mem::ROM_BSS_START_OFFSET;
 
         case mem::mem_model_type::flexible:
             return mem::dll_static_data_flexible + mem::ROM_BSS_START_OFFSET;
@@ -135,7 +135,7 @@ namespace eka2l1::kernel {
         rom_bss_chunk = kern->create<kernel::chunk>(mem, this, fmt::format("RomBssChunkProcess{}", uid),
             0, static_cast<address>(mem::MAX_ROM_BSS_SECT_SIZE), mem::MAX_ROM_BSS_SECT_SIZE, prot::read_write,
             kernel::chunk_type::normal, kernel::chunk_access::dll_static_data,
-            kernel::chunk_attrib::none, false, get_rom_bss_addr(mem->get_model_type()));
+            kernel::chunk_attrib::none, false, get_rom_bss_addr(mem->get_model_type(), kern->is_eka1()));
     }
 
     void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {
@@ -256,7 +256,7 @@ namespace eka2l1::kernel {
 
     bool process::satisfy(epoc::security_policy &policy, epoc::security_info *missing) {
         // Do not enforce security on EKA1. It's not even there
-        if (kern->get_epoc_version() >= epocver::eka2) {
+        if (kern->is_eka1()) {
             return true;
         }
 
@@ -266,7 +266,7 @@ namespace eka2l1::kernel {
 
     bool process::has(epoc::capability_set &cap_set) {
         // Do not enforce security on EKA1. It's not even there
-        if (kern->get_epoc_version() >= epocver::eka2) {
+        if (kern->is_eka1()) {
             return true;
         }
 

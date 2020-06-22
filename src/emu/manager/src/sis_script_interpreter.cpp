@@ -42,10 +42,10 @@
 
 namespace eka2l1 {
     namespace loader {
-        #define HAL_ENTRY(generic_name, display_name, num) hal_entry_##generic_name = num,
+        #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
 
         enum hal_entry {
-            #include <manager/hal.def>
+            #include <kernel/hal.def>
         };
 
         std::string get_install_path(const std::u16string &pseudo_path, drive_number drv) {
@@ -89,8 +89,8 @@ namespace eka2l1 {
             , main_controller(main_controller)
             , install_data(inst_data)
             , install_drive(inst_drv) {
-            winserv = reinterpret_cast<window_server*>(
-                sys->get_kernel_system()->get_by_name<service::server>(eka2l1::WINDOW_SERVER_NAME));
+            winserv = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
+                eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
         }
 
         std::vector<uint8_t> ss_interpreter::get_small_file_buf(uint32_t data_idx, uint16_t crr_blck_idx) {

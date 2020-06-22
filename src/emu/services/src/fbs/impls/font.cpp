@@ -388,7 +388,7 @@ namespace eka2l1 {
         epoc::font_spec spec = *ctx->get_arg_packed<epoc::font_spec>(0);
 
         // 1 x int of Max height - 2 x int of device size
-        eka2l1::vec3 size_info = *ctx->get_arg_packed<eka2l1::vec3>(2);
+        std::optional<eka2l1::vec3> size_info = ctx->get_arg_packed<eka2l1::vec3>(2);
 
         const bool is_twips = is_opcode_ruler_twips(ctx->msg->function);
 
@@ -437,9 +437,9 @@ namespace eka2l1 {
         // TODO: Adjust with physical size.
         float scale_factor = 0;
 
-        if (size_info.x != 0) {
+        if (size_info && (size_info->x != 0)) {
             // Scale for max height
-            scale_factor = static_cast<float>(size_info.x) / font->of_info.metrics.max_height;
+            scale_factor = static_cast<float>(size_info->x) / font->of_info.metrics.max_height;
         } else {
             scale_factor = static_cast<float>(spec.height) / font->of_info.metrics.design_height;
         }

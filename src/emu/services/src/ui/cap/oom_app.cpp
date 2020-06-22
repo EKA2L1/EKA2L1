@@ -135,7 +135,8 @@ namespace eka2l1 {
 
     std::string oom_ui_app_server::get_layout_buf() {
         if (!winsrv) {
-            winsrv = reinterpret_cast<window_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Windowserver")));
+            winsrv = reinterpret_cast<window_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>(
+                eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use()))));
         }
 
         epoc::config::screen *scr_config = winsrv->get_current_focus_screen_config();

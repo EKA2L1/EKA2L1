@@ -74,7 +74,7 @@ namespace eka2l1 {
         fbs_add_font_store_file,
         fbs_install_font_store_file,
         fbs_remove_font_store_file,
-        fbs_set_pixel_height,
+        fbs_set_pixel_size_in_twips,
         fbs_get_font_by_id,
         fbs_font_dup,
         fbs_bitmap_create,
@@ -184,6 +184,7 @@ namespace eka2l1 {
         void num_typefaces(service::ipc_context *ctx);
         void typeface_support(service::ipc_context *ctx);
         void get_twips_height(service::ipc_context *ctx);
+        void set_pixel_size_in_twips(service::ipc_context *ctx);
 
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
@@ -304,6 +305,8 @@ namespace eka2l1 {
         std::atomic<service::uid> connection_id_counter{ 0x1234 }; // Easier to debug
 
         service::normal_object_container font_obj_container; ///< Specifically storing fonts
+
+        eka2l1::vec2 pixel_size_in_twips;
 
     public:
         explicit fbs_server(eka2l1::system *sys);
@@ -434,9 +437,18 @@ namespace eka2l1 {
         bool free_general_data(const T *dat) {
             return free_general_data_impl(dat);
         }
+
+        eka2l1::vec2 get_pixel_size_in_twips() const {
+            return pixel_size_in_twips;
+        }
+
+        void set_pixel_size_in_twips(const eka2l1::vec2 &new_pixel_size_in_twips) {
+            pixel_size_in_twips = new_pixel_size_in_twips;
+        }
     };
 }
 
 namespace eka2l1::epoc {
     bool does_client_use_pointer_instead_of_offset(fbscli *cli);
+    std::string get_fbs_server_name_by_epocver(const epocver ver);
 }

@@ -38,6 +38,7 @@
 #include <kernel/server.h>
 #include <kernel/session.h>
 
+#include <common/types.h>
 #include <common/container.h>
 #include <common/hash.h>
 
@@ -47,6 +48,7 @@
 #include <atomic>
 #include <exception>
 #include <functional>
+#include <locale>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -237,6 +239,9 @@ namespace eka2l1 {
         std::uint64_t base_time_;
 
         epocver kern_ver_;
+        language lang_;
+
+        std::unique_ptr<std::locale> locale_;
 
         common::identity_container<ipc_send_callback> ipc_send_callbacks_;
         common::identity_container<ipc_complete_callback> ipc_complete_callbacks_;
@@ -343,6 +348,10 @@ namespace eka2l1 {
             return kern_ver_;
         }
 
+        bool is_eka1() const {
+            return kern_ver_ < epocver::eka2;
+        }
+
         // For user-provided EPOC version
         void set_epoc_version(const epocver ver);
 
@@ -384,6 +393,16 @@ namespace eka2l1 {
         loader::rom *get_rom_info() {
             return rom_info_;
         }
+
+        std::locale *get_current_locale() {
+            return locale_.get();
+        }
+
+        language get_current_language() const {
+            return lang_;
+        }
+
+        void set_current_language(const language new_lang);
 
         // Expose for scripting, indeed very dirty
         std::vector<kernel_obj_unq_ptr> &get_process_list() {

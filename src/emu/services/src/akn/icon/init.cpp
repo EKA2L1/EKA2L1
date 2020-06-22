@@ -31,7 +31,8 @@
 
 namespace eka2l1 {
     void akn_icon_server::init_server() {
-        fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>("!Fontbitmapserver")));
+        fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>(
+            epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use()))));
 
         // Get the ROM device, and read the rsc
         eka2l1::io_system *io = sys->get_io_system();

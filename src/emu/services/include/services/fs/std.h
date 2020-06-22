@@ -22,6 +22,7 @@
 
 #include <cstdint>
 
+#include <common/types.h>
 #include <utils/des.h>
 #include <utils/locale.h>
 
@@ -170,4 +171,6 @@ namespace eka2l1::epoc::fs {
         std::uint32_t size_high;
         std::uint32_t reserved;
     };
+
+    std::string get_server_name_through_epocver(const epocver ver);
 }

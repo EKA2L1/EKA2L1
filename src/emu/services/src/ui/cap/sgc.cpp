@@ -114,7 +114,8 @@ namespace eka2l1::epoc::cap {
         orientation_prop_->second = UIK_PREFERRED_ORIENTATION_KEY;
         orientation_prop_->set_int(UIK_ORIENTATION_NORMAL);
 
-        winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(WINDOW_SERVER_NAME));
+        winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(
+            eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
 
         // Add initial callback
         epoc::screen *screens = winserv_->get_screens();

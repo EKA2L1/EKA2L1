@@ -24,6 +24,7 @@
 #include <utils/handle.h>
 #include <utils/panic.h>
 #include <utils/reqsts.h>
+#include <utils/uchar.h>
 #include <common/uid.h>
 
 #include <common/configure.h>
@@ -1155,7 +1156,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        if (timeout) {
+        if (!kern->is_eka1() && timeout) {
             LOG_WARN("Semaphore timeout unimplemented");
         }
 
@@ -2286,6 +2287,20 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
+    BRIDGE_FUNC(std::int32_t, locked_dec_32, std::int32_t *val_ptr) {
+        const std::int32_t before = *val_ptr;
+        (*val_ptr)--;
+
+        return before;
+    }
+
+    BRIDGE_FUNC(std::int32_t, locked_inc_32, std::int32_t *val_ptr) {
+        const std::int32_t before = *val_ptr;
+        (*val_ptr)++;
+
+        return before;
+    }
+
     /// HLE
     BRIDGE_FUNC(void, hle_dispatch, const std::uint32_t ordinal) {
         dispatcher_do_resolve(kern->get_system(), ordinal);
@@ -2320,6 +2335,488 @@ namespace eka2l1::epoc {
         }
 
         dispatcher_do_event_add(kern->get_system(), *evt);
+    }
+
+    /* ================ EKA1 ROUTES ================== */
+    static void finish_status_request_eka1(kernel::thread *target_thread, epoc::request_status *sts, const std::int32_t code) {
+        *sts = code;
+        target_thread->signal_request();
+    }
+
+    static kernel::owner_type get_handle_owner_from_eka1_attribute(const std::uint32_t attrib) {
+        return (attrib & epoc::eka1_executor::handle_owner_thread) ? kernel::owner_type::thread :
+            kernel::owner_type::process;
+    }
+
+    static std::int32_t do_handle_write(kernel_system *kern, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread, const kernel::handle h) {
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::des8 *handle_write = eka2l1::ptr<epoc::des8>(create_info->arg0_).get(target_process);
+
+        if (!handle_write) {
+            // Handle package is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::uint32_t *handle_write_32 = reinterpret_cast<std::uint32_t*>(handle_write->get_pointer_raw(target_process));
+        if (!handle_write_32) {
+            // Handle write pointer is invalid, wtf
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        *handle_write_32 = h;
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, user_svr_hal_get, const std::uint32_t function, void *param) {
+        return do_hal_by_data_num(kern->get_system(), function, param);
+    }
+
+    std::int32_t chunk_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg0 = handle, arg1 = name, arg2 = create info
+        kernel::chunk_access access_type = (attribute & epoc::eka1_executor::chunk_access_global) ? kernel::chunk_access::global :
+            kernel::chunk_access::local;
+
+        kernel::chunk_attrib chunk_attribute = (create_info->arg1_ == epoc::eka1_executor::NO_NAME_AVAIL_ADDR) ?
+            kernel::chunk_attrib::anonymous : kernel::chunk_attrib::none;
+
+        // EKA1 only support two types of chunk: double ended and normal
+        kernel::chunk_type type_of_chunk = ((attribute & 0xFE) == epoc::eka1_executor::execute_create_chunk_double_ended) ? kernel::chunk_type::double_ended :
+            kernel::chunk_type::normal;
+
+        std::string chunk_name = "";
+        kernel::process *target_process = target_thread->owning_process();
+
+        // If there's a valid name passed
+        if (create_info->arg1_ != epoc::eka1_executor::NO_NAME_AVAIL_ADDR) {
+            epoc::desc16 *name_hosted = eka2l1::ptr<epoc::desc16>(create_info->arg1_).get(target_process);
+
+            if (!name_hosted) {
+                // Name is not pointed to valid memory, break
+                finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+                return epoc::error_argument;
+            }
+
+            chunk_name = common::ucs2_to_utf8(name_hosted->to_std_string(target_process));
+        }
+
+        epoc::des8 *description_data_des = eka2l1::ptr<epoc::des8>(create_info->arg2_).get(target_process);
+
+        if (!description_data_des) {
+            // Description data is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        address bottom = 0;
+        address top = 0;
+        std::size_t max_size = 0;
+
+        memory_system *mem = kern->get_memory_system();
+
+        if (type_of_chunk == kernel::chunk_type::normal) {
+            epoc::eka1_normal_chunk_create_description *description = 
+                reinterpret_cast<decltype(description)>(description_data_des->get_pointer_raw(target_process));
+
+            if ((!description) || (description->init_size_ > description->max_size_)) {
+                // Description data is invalid, again
+                finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+                return epoc::error_argument;
+            }
+
+            bottom = 0;
+            top = common::align(description->init_size_, mem->get_page_size());
+            max_size = common::align(description->max_size_, mem->get_page_size());
+        } else {
+            epoc::eka1_double_ended_create_description *description = 
+                reinterpret_cast<decltype(description)>(description_data_des->get_pointer_raw(target_process));
+
+            if ((!description) || (description->initial_bottom_ > description->initial_top_)) {
+                // Description data is invalid, again
+                finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+                return epoc::error_argument;
+            }
+
+            bottom = common::align(description->initial_bottom_, mem->get_page_size());
+            top = common::align(description->initial_top_, mem->get_page_size());
+            max_size = common::align(description->max_size_, mem->get_page_size());
+        }
+
+        kernel::handle h = kern->create_and_add<kernel::chunk>(get_handle_owner_from_eka1_attribute(attribute),
+            mem, target_process, chunk_name, bottom, top, max_size, prot::read_write, type_of_chunk,
+            access_type, chunk_attribute).first;
+
+        if (h == INVALID_HANDLE) {
+            // Maybe out of memory, just don't throw general error since it's hard to debug
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_no_memory);
+            return epoc::error_no_memory;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+    
+    std::int32_t mutex_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg1 = global/local, arg2 = name, arg0 = handle
+        kernel::access_type access_of_mut = (create_info->arg1_ == epoc::eka1_executor::NO_NAME_AVAIL_ADDR) ?
+            kernel::access_type::local_access : kernel::access_type::global_access;
+            
+        kernel::process *target_process = target_thread->owning_process();
+
+        epoc::desc16 *name_of_mut_des = (eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_process));
+        std::string name_of_mut = "";
+
+        if (name_of_mut_des) {
+            name_of_mut = common::ucs2_to_utf8(name_of_mut_des->to_std_string(target_process));
+        }
+        
+        const kernel::handle h = kern->create_and_add<kernel::mutex>(get_handle_owner_from_eka1_attribute(attribute),
+            kern->get_ntimer(), name_of_mut, false, access_of_mut).first;
+            
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t sema_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg1 = global/local, arg2 = name, arg3 = initial count, arg0 = handle
+        kernel::access_type access_of_sema = (create_info->arg1_ == epoc::eka1_executor::NO_NAME_AVAIL_ADDR) ?
+            kernel::access_type::local_access : kernel::access_type::global_access;
+
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::desc16 *name_of_sema_des = (eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_process));
+        std::string name_of_sema = "";
+
+        if (name_of_sema_des) {
+            name_of_sema = common::ucs2_to_utf8(name_of_sema_des->to_std_string(target_process));
+        }
+
+        const kernel::handle h = kern->create_and_add<kernel::semaphore>(get_handle_owner_from_eka1_attribute(attribute),
+            name_of_sema, create_info->arg3_, access_of_sema).first;
+            
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t thread_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg0 = handle, arg2 = name, arg3 = thread create info
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::desc16 *name_des = eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_process);
+
+        if (!name_des) {
+            // Name is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::u16string name = name_des->to_std_string(target_process);
+        epoc::des8 *description_des = eka2l1::ptr<epoc::des8>(create_info->arg3_).get(target_process);
+
+        if (!description_des) {
+            // Description descriptor pointer is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        epoc::eka1_thread_create_description *description = reinterpret_cast<epoc::eka1_thread_create_description*>(
+            description_des->get_pointer_raw(target_process));
+
+        if (!description) {
+            // Description pointer is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        const kernel::handle h = kern->create_and_add<kernel::thread>(get_handle_owner_from_eka1_attribute(attribute),
+            kern->get_memory_system(), kern->get_ntimer(), target_process, kernel::access_type::local_access,
+            common::ucs2_to_utf8(name), description->func_, description->stack_size_, description->min_heap_size_,
+            description->max_heap_size_, false, description->func_data_, description->heap_).first;
+            
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        LOG_TRACE("Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", common::ucs2_to_utf8(name),
+            description->func_, description->stack_size_);
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t session_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg0 = out handle, arg1 = server name, arg2 = async message slot count
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::desc16 *name_des = eka2l1::ptr<epoc::desc16>(create_info->arg1_).get(target_process);
+
+        if (!name_des) {
+            // Server ame is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::string server_name = common::ucs2_to_utf8(name_des->to_std_string(target_process));
+        server_ptr server = kern->get_by_name<service::server>(server_name);
+
+        if (!server) {
+            LOG_TRACE("Create session to unexist server: {}", server_name);
+
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        const std::int32_t the_handle = do_create_session_from_server(kern, server, create_info->arg2_, 0, 0);
+        std::int32_t error_code = (the_handle <= 0) ? the_handle : epoc::error_none;
+        
+        if (the_handle > 0) {
+            return do_handle_write(kern, create_info, finish_signal, target_thread, the_handle);
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, error_code);
+        return error_code;
+    }
+
+    std::int32_t thread_logon_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg0 = thread handle, arg1 = request status
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        thr->logon(create_info->arg1_, false);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t duplicate_handle_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg0 = output duplicated handle, arg1 = thread handle to duplicate on, arg2 = handle to duplicate
+        kernel::thread *target_to_duplicate_on = kern->get<kernel::thread>(create_info->arg1_);
+        if (!target_to_duplicate_on) {
+            // The target to duplicate on is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        const kernel::handle h = kern->mirror(target_to_duplicate_on, create_info->arg2_,
+            get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t dll_set_tls_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        const std::int32_t finish_code = dll_set_tls(kern, create_info->arg0_, create_info->arg0_, create_info->arg1_);
+        finish_status_request_eka1(target_thread, finish_signal, finish_code);
+        return finish_code;
+    }
+
+    std::int32_t dll_free_tls_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        dll_free_tls(kern, create_info->arg0_);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t open_object_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg0 = out handle, arg1 = server name, arg2 = async message slot count
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::desc16 *name_des = eka2l1::ptr<epoc::desc16>(create_info->arg1_).get(target_process);
+
+        if (!name_des) {
+            // Object name is invalid
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::string obj_name = common::ucs2_to_utf8(name_des->to_std_string(target_process));
+        kernel_obj_ptr obj_ptr = nullptr;
+
+        switch (attribute & 0xFF) {
+        case epoc::eka1_executor::execute_open_chunk_global:
+            obj_ptr = kern->get_by_name_and_type<kernel::chunk>(obj_name, kernel::object_type::chunk);
+            break;
+
+        case epoc::eka1_executor::execute_open_mutex_global:
+            obj_ptr = kern->get_by_name_and_type<kernel::mutex>(obj_name, kernel::object_type::mutex);
+            break;
+
+        default:
+            LOG_ERROR("Unhandled object open with name: {}", obj_name);
+            return epoc::error_none;
+        }
+
+        if (!obj_ptr) {
+            LOG_ERROR("Unable to find object with name: {}", obj_name);
+            
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        kernel::handle h = kern->mirror(obj_ptr, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t close_handle_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        const std::int32_t close_result = kern->close(create_info->arg0_) ? epoc::error_none : epoc::error_general;
+
+        finish_status_request_eka1(target_thread, finish_signal, close_result);
+        return close_result;
+    }
+
+    BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal) {
+        kernel::thread *crr_thread = kern->crr_thread();
+
+        switch (attribute & 0xFF) {
+        case epoc::eka1_executor::execute_create_chunk_normal:
+        case epoc::eka1_executor::execute_create_chunk_double_ended:
+        case epoc::eka1_executor::execute_create_chunk_normal_global:
+        case epoc::eka1_executor::execute_create_chunk_double_ended_global:
+            return chunk_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_open_chunk_global:
+        case epoc::eka1_executor::execute_open_mutex_global:
+            return open_object_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_create_mutex:
+            return mutex_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_create_sema:
+            return sema_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_create_thread:
+            return thread_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_create_session:
+            return session_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_logon_thread:
+            return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_duplicate_handle:
+            return duplicate_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_set_tls:
+            return dll_set_tls_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_free_tls:
+            return dll_free_tls_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_close_handle:
+            return close_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        default:
+            LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
+            break;
+        }
+
+        return epoc::error_general;
+    }
+
+    BRIDGE_FUNC(void, heap_created, std::uint32_t max_size, const std::uint32_t used_size, const std::uint32_t addr) {
+        LOG_TRACE("New heap created at address = 0x{:X}, allocated size = 0x{:X}, max size = 0x{:X}", addr, used_size, max_size);
+    }
+
+    BRIDGE_FUNC(address, push_trap_frame, eka2l1::ptr<kernel::trap> new_trap_frame) {
+        return kern->crr_thread()->push_trap_frame(new_trap_frame.ptr_address());
+    }
+
+    BRIDGE_FUNC(address, pop_trap_frame) {
+        const address result = kern->crr_thread()->pop_trap_frame();
+        if (result == 0) {
+            LOG_ERROR("Trap frame popped from already empty stack!");
+        }
+
+        return result;
+    }
+
+    BRIDGE_FUNC(std::int32_t, session_send_eka1, kernel::handle session_handle, const std::int32_t ord,
+        std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
+        process_ptr crr_pr = kern->crr_process();
+
+        ipc_arg the_arg;
+        the_arg.flag = 0xFFFFFFFF;          // EKA1 does not have flags for message, so mark all
+        
+        if (args) {
+            std::memcpy(the_arg.args, args, sizeof(the_arg.args));
+        } else {
+            std::fill(the_arg.args, the_arg.args + sizeof(the_arg.args) / sizeof(std::uint32_t), 0);
+        }
+
+        session_ptr ss = kern->get<service::session>(session_handle);
+
+        if (!ss) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!status) {
+            LOG_TRACE("Sending a blind sync message");
+        }
+
+        if (kern->get_config()->log_ipc) {
+            LOG_TRACE("Sending {} sync to {}", ord, ss->get_server()->name());
+        }
+
+        const std::string server_name = ss->get_server()->name();
+        kern->call_ipc_send_callbacks(server_name, ord, the_arg, kern->crr_thread());
+
+        const int result = ss->send_receive_sync(ord, the_arg, status);
+
+        if (ss->get_server()->is_hle()) {
+            // Process it right away.
+            ss->get_server()->process_accepted_msg();
+        }
+
+        return result;
+    }
+
+    /*======================= LOCALE-RELATED FUNCTION ====================*/
+    BRIDGE_FUNC(std::uint32_t, uchar_get_category, const epoc::uchar character) {
+        return epoc::get_uchar_category(character, *kern->get_current_locale());
+    }
+
+    BRIDGE_FUNC(std::uint32_t, uchar_lowercase, const epoc::uchar character) {
+        return epoc::lowercase_uchar(character, *kern->get_current_locale());
+    }
+
+    BRIDGE_FUNC(std::uint32_t, uchar_uppercase, const epoc::uchar character) {
+        return epoc::uppercase_uchar(character, *kern->get_current_locale());
+    }
+
+    BRIDGE_FUNC(std::uint32_t, user_language) {
+        return static_cast<std::uint32_t>(kern->get_current_language());
     }
 
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
@@ -2639,6 +3136,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6D, handle_duplicate),
         BRIDGE_REGISTER(0x6E, mutex_create),
         BRIDGE_REGISTER(0x6F, semaphore_create),
+        BRIDGE_REGISTER(0x70, thread_open_by_id),
         BRIDGE_REGISTER(0x72, thread_kill),
         BRIDGE_REGISTER(0x73, thread_logon),
         BRIDGE_REGISTER(0x74, thread_logon_cancel),
@@ -2686,5 +3184,36 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDE, leave_start),
         BRIDGE_REGISTER(0xDF, leave_end),
         BRIDGE_REGISTER(0xE7, btrace_out)
+    };
+    
+    const eka2l1::hle::func_map svc_register_funcs_v6 = {
+        BRIDGE_REGISTER(0x01, chunk_base),
+        BRIDGE_REGISTER(0x02, chunk_size),
+        BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x2A, semaphore_wait),
+        BRIDGE_REGISTER(0x4D, wait_for_any_request),
+        BRIDGE_REGISTER(0x51, uchar_lowercase),
+        BRIDGE_REGISTER(0x52, uchar_uppercase),
+        BRIDGE_REGISTER(0x53, uchar_get_category),
+        BRIDGE_REGISTER(0x6C, heap),
+        BRIDGE_REGISTER(0x72, push_trap_frame),
+        BRIDGE_REGISTER(0x73, pop_trap_frame),
+        BRIDGE_REGISTER(0x74, active_scheduler),
+        BRIDGE_REGISTER(0x75, set_active_scheduler),
+        BRIDGE_REGISTER(0x80, dll_tls),
+        BRIDGE_REGISTER(0x81, trap_handler),
+        BRIDGE_REGISTER(0x82, set_trap_handler),
+        BRIDGE_REGISTER(0x8D, locked_inc_32),
+        BRIDGE_REGISTER(0x8E, locked_dec_32),
+        BRIDGE_REGISTER(0xFE, static_call_list),
+        
+        // User server calls
+        BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x800083, user_svr_hal_get),
+        BRIDGE_REGISTER(0x8000A8, heap_created),
+        BRIDGE_REGISTER(0xC00034, thread_resume),
+        BRIDGE_REGISTER(0xC0006D, heap_switch),
+        BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC000BF, session_send_eka1)
     };
 }

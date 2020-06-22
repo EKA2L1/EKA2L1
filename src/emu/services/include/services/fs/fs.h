@@ -96,6 +96,8 @@ namespace eka2l1 {
         explicit fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, service::ipc_context *ctx);
         void fetch(service::ipc_context *ctx) override;
 
+        void generic_close(service::ipc_context *ctx);
+
         void file_open(service::ipc_context *ctx);
         void file_create(service::ipc_context *ctx);
         void file_replace(service::ipc_context *ctx);

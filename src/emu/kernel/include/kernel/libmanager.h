@@ -88,15 +88,25 @@ namespace eka2l1 {
             kernel_system *kern_;
             system *sys_;
 
+            kernel::chunk *bootstrap_chunk_;
             bool log_svc{ false };
 
             common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
+
+        protected:
+            const std::uint8_t *entry_points_call_routine_;
+            const std::uint8_t *thread_entry_routine_;
 
         public:
             std::map<sid, epoc_import_func> svc_funcs_;
 
             explicit lib_manager(kernel_system *kern, io_system *ios, memory_system *mems);
             ~lib_manager();
+
+            address get_entry_point_call_routine_address() const;
+            address get_thread_entry_routine_address() const;
+
+            bool build_eka1_thread_bootstrap_code();
 
             void run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target);
 

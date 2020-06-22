@@ -282,7 +282,7 @@ namespace eka2l1::epoc {
 }
 
 namespace eka2l1 {
-    static constexpr const char *WINDOW_SERVER_NAME = "!Windowserver";
+    std::string get_winserv_name_by_epocver(const epocver ver);
 
     class window_server : public service::server {
     public:

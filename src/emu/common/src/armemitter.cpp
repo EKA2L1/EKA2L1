@@ -434,13 +434,14 @@ namespace eka2l1::common::armgen {
 
             // Write the constant to Literal Pool
             if (!pool.loc) {
-                pool.loc = (intptr_t)code;
+                pool.loc = reinterpret_cast<intptr_t>(code);
                 write32(pool.val);
             }
-            std::int32_t offset = (std::int32_t)(pool.loc - (intptr_t)pool.ldr_address - 8);
+
+            std::int32_t offset = static_cast<std::uint32_t>(pool.loc - reinterpret_cast<intptr_t>(pool.ldr_address) - 8);
 
             // Backpatch the LDR
-            *(std::uint32_t *)pool.ldr_address |= (offset >= 0) << 23 | abs(offset);
+            *reinterpret_cast<std::uint32_t*>(pool.ldr_address) |= (offset >= 0) << 23 | abs(offset);
         }
 
         // TODO: Save a copy of previous pools in case they are still in range.
@@ -476,27 +477,9 @@ namespace eka2l1::common::armgen {
                 if (val & 0xFFFF0000)
                     MOVT(reg, val, true);
             } else {
-                if (!try_set_value_two_op(reg, val)) {
-                    bool first = true;
-                    for (int i = 0; i < 32; i += 2) {
-                        std::uint8_t bits = rotr(val, i) & 0xFF;
-                        if ((bits & 3) != 0) {
-                            std::uint8_t rotation = i == 0 ? 0 : 16 - i / 2;
-                            if (first) {
-                                MOV(reg, operand2(bits, rotation));
-                                first = false;
-                            } else {
-                                ORR(reg, reg, operand2(bits, rotation));
-                            }
-                            // Well, we took care of these other bits while we were at it.
-                            i += 8 - 2;
-                        }
-                    }
-                    // Use literal pool for ARMv6.
-                    // Disabled for now as it is crashfing since Vertex Decoder JIT
-                    //			AddNewLit(val);
-                    //			LDR(reg, R_PC); // To be backpatched later
-                }
+                // Use literal pool for ARMv6.
+                add_new_lit(val);
+                LDRLIT(reg, 0, 0); // To be backpatched later
             }
         }
     }
@@ -736,7 +719,7 @@ namespace eka2l1::common::armgen {
         write32(condition | 0x01A00000);
         return branch;
     }
-    void armx_emitter::Setjump_target(fixup_branch const &branch) {
+    void armx_emitter::set_jump_target(fixup_branch const &branch) {
         ptrdiff_t distance = ((intptr_t)(code)-8) - (intptr_t)branch.ptr;
         LOG_ERROR_IF((distance <= -0x2000000) || (distance >= 0x2000000), "SetJumpTarget out of range ({} calls {})", code,
             branch.ptr);
@@ -1050,6 +1033,10 @@ namespace eka2l1::common::armgen {
     }
     void armx_emitter::SVC(operand2 op) {
         write32(condition | (0x0F << 24) | op.Imm24());
+    }
+    
+    void armx_emitter::LDRLIT(arm_reg dest, std::uint32_t offset, bool Add) {
+        write32(condition | 0x05 << 24 | Add << 23 | 0x1F << 16 | dest << 12 | offset);
     }
 
     // IMM, REG, IMMSREG, RSR

@@ -18,6 +18,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/armemitter.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/ini.h>
@@ -25,6 +26,7 @@
 #include <common/path.h>
 #include <common/random.h>
 
+#include <kernel/common.h>
 #include <kernel/libmanager.h>
 #include <kernel/reg.h>
 
@@ -67,7 +69,6 @@ namespace eka2l1::hle {
             write(dest_ptr, reloc_offset + data_delta);
             break;
 
-        case loader::relocation_type::inferred:
         default:
             LOG_WARN("Relocation not properly handle: {}", (int)type);
             break;
@@ -78,9 +79,10 @@ namespace eka2l1::hle {
 
     // Given relocation entries, relocate the code and data
     static bool relocate(std::vector<loader::e32_reloc_entry> entries,
-        uint8_t *dest_addr,
-        uint32_t code_delta,
-        uint32_t data_delta) {
+        std::uint8_t *dest_addr,
+        std::uint32_t code_size,
+        std::uint32_t code_delta,
+        std::uint32_t data_delta) {
         for (uint32_t i = 0; i < entries.size(); i++) {
             auto entry = entries[i];
 
@@ -93,6 +95,13 @@ namespace eka2l1::hle {
 
                 // Compare with petran in case there are problems
                 // LOG_TRACE("{:x}", virtual_addr);
+
+                // This is relocation type named: Who bother to put my identity in PETRAN
+                // figure out who I am yourself
+                if (rel_type == loader::relocation_type::inferred) {
+                    rel_type = (virtual_addr < code_size) ? loader::relocation_type::text :
+                        loader::relocation_type::data;
+                }
 
                 if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
                     LOG_WARN("Relocate fail at page: {}", i);
@@ -109,10 +118,12 @@ namespace eka2l1::hle {
         if (FOUND_STR(dll_name_end_pos)) {
             dll_name = dll_name.substr(0, dll_name_end_pos);
         } else {
-            dll_name_end_pos = dll_name.find_last_of(".");
+            dll_name_end_pos = dll_name.find_last_of("[");
 
             if (FOUND_STR(dll_name_end_pos)) {
                 dll_name = dll_name.substr(0, dll_name_end_pos);
+            } else {
+                return dll_name;
             }
         }
 
@@ -132,17 +143,19 @@ namespace eka2l1::hle {
         }
 
         // Add dependency for the codeseg
-        assert(parent_codeseg->add_dependency(cs));
+        if (!parent_codeseg->add_dependency(cs)) {
+            LOG_ERROR("Fail to add a codeseg as dependency!");
+            return false;
+        }
 
         uint32_t *imdir = &(import_block.ordinals[0]);
 
         for (uint32_t i = crr_idx, j = 0;
              i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
              i++, j++) {
-            *iat_pointer = cs->lookup(pr, import_block.ordinals[j]);
+            iat_pointer[crr_idx++] = cs->lookup(pr, import_block.ordinals[j]);
         }
 
-        crr_idx += static_cast<uint32_t>(import_block.ordinals.size());
         return true;
     }
 
@@ -209,20 +222,20 @@ namespace eka2l1::hle {
         uint32_t code_delta = rtcode_addr - img->header.code_base;
         uint32_t data_delta = rtdata_addr - img->header.data_base;
 
-        relocate(img->code_reloc_section.entries, code_base, code_delta, data_delta);
+        relocate(img->code_reloc_section.entries, code_base, img->header.code_size, code_delta, data_delta);
 
         // Either .data or .bss exists, we need to relocate. Sometimes .data needs relocate too!
         if ((img->header.bss_size) || (img->header.data_size)) {
             img->rt_data_addr = rtdata_addr;
-            relocate(img->data_reloc_section.entries, data_base, code_delta, data_delta);
+            relocate(img->data_reloc_section.entries, data_base, img->header.code_size, code_delta, data_delta);
         }
 
         if (img->epoc_ver == epocver::epoc6) {
-            uint32_t track = 0;
+            std::uint32_t track = 0;
+            std::uint32_t *iat_replace_start = reinterpret_cast<std::uint32_t *>(code_base + img->header.text_size);
 
             for (auto &ib : img->import_section.imports) {
-                pe_fix_up_iat(mem, mngr, reinterpret_cast<std::uint32_t *>(code_base + img->header.code_size),
-                    pr, ib, track, cs);
+                pe_fix_up_iat(mem, mngr, iat_replace_start, pr, ib, track, cs);
             }
         }
 
@@ -505,9 +518,9 @@ namespace eka2l1::hle {
             pr, cs);
 
         struct dll_ref_table {
-            uint16_t flags;
-            uint16_t num_entries;
-            uint32_t rom_img_headers_ref[25];
+            std::uint16_t flags;
+            std::uint16_t num_entries;
+            std::uint32_t rom_img_headers_ref[25];
         };
 
         // Find dependencies
@@ -516,22 +529,39 @@ namespace eka2l1::hle {
             if (header->dll_ref_table_address != 0) {
                 dll_ref_table *ref_table = eka2l1::ptr<dll_ref_table>(header->dll_ref_table_address).get(mem_);
 
-                for (uint16_t i = 0; i < ref_table->num_entries; i++) {
-                    // Dig UID
-                    loader::rom_image_header *ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
+                for (std::uint16_t i = 0; i < ref_table->num_entries; i++) {
+                    loader::rom_image_header *ref_header = nullptr;
+                    address entry_point = 0;
+
+                    if (kern_->is_eka1()) {
+                        // See sf.os.buildtools, release.txt of elf2e32.
+                        // A mentioned by Morgan tell an dll ref entry is made up of entry point and
+                        // another address to that entry point's DLL ref table. Each is 4 bytes
+                        entry_point = ref_table->rom_img_headers_ref[i * 2];
+                    } else {
+                        ref_header = eka2l1::ptr<loader::rom_image_header>(ref_table->rom_img_headers_ref[i])
                                                                .get(mem_);
 
-                    if (auto ref_seg = kern_->pull_codeseg_by_ep(ref_header->entry_point)) {
+                        entry_point = ref_header->entry_point;
+                    }
+
+                    if (auto ref_seg = kern_->pull_codeseg_by_ep(entry_point)) {
                         // Add ref
                         acs->add_dependency(ref_seg);
                     } else {
-                        // TODO: Supply right size. The loader doesn't care about size right now
-                        common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem_),
-                            0xFFFF);
+                        if (kern_->is_eka1()) {
+                            // If we gonna flip the ROM directory searching for this DLL, it would be time consuming
+                            // Force the codeseg to take this entry point for now
+                            acs->add_premade_entry_point(entry_point);
+                        } else {
+                            // TODO: Supply right size. The loader doesn't care about size right now
+                            common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem_),
+                                0xFFFF);
 
-                        // Load new romimage and add dependency
-                        loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
-                        acs->add_dependency(load_as_romimg(rimg, pr));
+                            // Load new romimage and add dependency
+                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
+                            acs->add_dependency(load_as_romimg(rimg, pr));
+                        }
                     }
                 }
             }
@@ -585,7 +615,7 @@ namespace eka2l1::hle {
             // Nope ? We need to cycle through all possibilities
             for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
                 lib_path = drive_to_char16(drv);
-                lib_path += u":\\Sys\\Bin\\";
+                lib_path += (kern_->is_eka1()) ? u":\\System\\Libs\\" : u":\\Sys\\Bin\\";
                 lib_path += path;
 
                 auto result = open_and_get(lib_path);
@@ -640,7 +670,7 @@ namespace eka2l1::hle {
             // Nope ? We need to cycle through all possibilities
             for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
                 lib_path = drive_to_char16(drv);
-                lib_path += u":\\Sys\\Bin\\";
+                lib_path += (kern_->is_eka1()) ? u":\\System\\Libs\\" : u":\\Sys\\Bin\\";
                 lib_path += name;
 
                 if (io_->exist(lib_path)) {
@@ -674,6 +704,8 @@ namespace eka2l1::hle {
         auto res = svc_funcs_.find(svcnum);
 
         if (res == svc_funcs_.end()) {
+            LOG_ERROR("Unimplement system call: 0x{:X}!", svcnum);
+
             kern_->unlock();
             return false;
         }
@@ -704,10 +736,142 @@ namespace eka2l1::hle {
         }
     }
 
+    bool lib_manager::build_eka1_thread_bootstrap_code() {    
+        static constexpr const char *BOOTSTRAP_CHUNK_NAME = "EKA1ThreadBootstrapCodeChunk";
+        bootstrap_chunk_ = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, BOOTSTRAP_CHUNK_NAME,
+            0, 0x1000, 0x1000, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            kernel::chunk_attrib::none);
+
+        if (!bootstrap_chunk_) {
+            LOG_ERROR("Failed to create bootstrap chunk for EKA1 thread!");
+            return false;
+        }
+        
+        codeseg_ptr userlib = load(u"euser.dll", nullptr);
+
+        if (!userlib) {
+            LOG_ERROR("Unable to load euser.dll to build EKA1 bootstrap code!");
+            return false;
+        }
+
+        static constexpr std::uint32_t CHUNK_HEAP_CREATE_FUNC_ORDINAL = 166;
+        static constexpr std::uint32_t THREAD_EXIT_FUNC_ORDINAL = 397;
+        static constexpr std::uint32_t HEAP_SWITCH_FUNC_ORDINAL = 1127;
+
+        const address chunk_heap_create_func_addr = userlib->lookup(nullptr, CHUNK_HEAP_CREATE_FUNC_ORDINAL);
+        const address heap_switch_func_addr = userlib->lookup(nullptr, HEAP_SWITCH_FUNC_ORDINAL);
+        const address thread_exit_func_addr = userlib->lookup(nullptr, THREAD_EXIT_FUNC_ORDINAL);
+
+        common::cpu_info info;
+        info.bARMv7 = false;
+        info.bASIMD = false;
+
+        common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(bootstrap_chunk_->host_base()), info);
+
+        // SP should points to the thread info struct
+        entry_points_call_routine_ = emitter.get_code_pointer();
+        
+        const std::uint32_t STATIC_CALL_LIST_SVC_FAKE = 0xFE;
+        const std::uint32_t TOTAL_EP_TO_ALLOC = 100;
+
+        /* CODE FOR DLL's ENTRY POINTS INVOKE */
+        emitter.PUSH(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_LR);
+
+        // Allocate entry point addresses on stack, plus also allocate the total entry point count
+        emitter.SUB(common::armgen::R_SP, common::armgen::R_SP, TOTAL_EP_TO_ALLOC * sizeof(address) + sizeof(std::uint32_t));
+        emitter.MOVI2R(common::armgen::R3, TOTAL_EP_TO_ALLOC);     // Assign allocated entry point count
+        emitter.STR(common::armgen::R3, common::armgen::R_SP);  // Store it to the count variable.
+        emitter.MOV(common::armgen::R5, common::armgen::R0);    // Store dll entry point invoke reason in R5
+
+        emitter.MOV(common::armgen::R0, common::armgen::R_SP);  // First arugment is pointer to total number of entry point
+        emitter.ADD(common::armgen::R1, common::armgen::R_SP, sizeof(std::uint32_t));       // Second argument is pointer to EP array
+
+        // The SVC call convention on EKA1 assigns PC after SVC with LR, which is horrible, we gotta follow it
+        emitter.MOV(common::armgen::R_LR, common::armgen::R_PC);  // This PC will skip forwards to the POP, no need to add or sub more thing.
+        emitter.SVC(STATIC_CALL_LIST_SVC_FAKE);                   // Call SVC StaticCallList, our own SVC :D
+        
+        emitter.MOV(common::armgen::R3, 0);                      // R3 is iterator
+        emitter.LDR(common::armgen::R4, common::armgen::R_SP);   // R4 is total of entry point to iterate.
+        emitter.SUB(common::armgen::R4, common::armgen::R4, 1);
+        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, sizeof(std::uint32_t));     // Free our count variable
+        
+        std::uint8_t *loop_continue_ptr = emitter.get_writeable_code_ptr();
+        emitter.CMP(common::armgen::R3, common::armgen::R4);
+        
+        common::armgen::fixup_branch entry_point_call_loop_done = emitter.B_CC(common::cc_flags::CC_GE);
+
+        emitter.MOV(common::armgen::R0, common::armgen::R5);        // Move in the entry point invoke reason, in case other function trashed this out.
+        emitter.LSL(common::armgen::R12, common::armgen::R3, 2);    // Calculate the offset of this entry point, 4 bytes
+        emitter.ADD(common::armgen::R12, common::armgen::R12, common::armgen::R_SP);
+        emitter.LDR(common::armgen::R12, common::armgen::R12);     // Jump
+        emitter.BL(common::armgen::R12);
+        emitter.ADD(common::armgen::R3, common::armgen::R3, 1);
+        emitter.B(loop_continue_ptr);
+        
+        emitter.set_jump_target(entry_point_call_loop_done);
+
+        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, TOTAL_EP_TO_ALLOC * sizeof(address));
+        emitter.POP(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_PC);
+
+        emitter.flush_lit_pool();
+
+        /* CODE FOR THREAD INITIALIZATION */
+        thread_entry_routine_ = emitter.get_code_pointer();
+
+        emitter.MOV(common::armgen::R0, kernel::dll_reason_thread_attach);     // Set the first argument the DLL reason
+        emitter.MOV(common::armgen::R4, common::armgen::R1);                   // Info struct in R1 to R4
+        emitter.BL(entry_points_call_routine_);
+        
+        // Check the allocator in the thread create info
+        emitter.LDR(common::armgen::R0, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, allocator));
+        emitter.CMP(common::armgen::R0, 0);
+        common::armgen::fixup_branch allocator_unavail_block = emitter.B_CC(common::CC_EQ);
+
+        // Block: allocator available, switch it
+        emitter.MOVI2R(common::armgen::R12, heap_switch_func_addr);
+        emitter.BL(common::armgen::R12);
+        common::armgen::fixup_branch allocator_setup_done = emitter.B();
+
+        emitter.set_jump_target(allocator_unavail_block);
+        emitter.MOV(common::armgen::R0, 0);
+        emitter.LDR(common::armgen::R1, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, heap_min));
+        emitter.LDR(common::armgen::R2, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, heap_max));
+        emitter.MOVI2R(common::armgen::R3, 0x1000);         // Grow by
+
+        emitter.MOVI2R(common::armgen::R12, chunk_heap_create_func_addr);
+        emitter.BL(common::armgen::R12);
+
+        // Switch the heap
+        emitter.MOVI2R(common::armgen::R12, heap_switch_func_addr);
+        emitter.BL(common::armgen::R12);
+
+        emitter.set_jump_target(allocator_setup_done);
+
+        // Jump to our friend
+        // Load userdata to first argument.
+        emitter.LDR(common::armgen::R0, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, ptr));
+        emitter.LDR(common::armgen::R12, common::armgen::R4, offsetof(kernel::epoc9_std_epoc_thread_create_info, func_ptr));
+        
+        // Pop our struct friend from the stack
+        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, sizeof(kernel::epoc9_std_epoc_thread_create_info));
+        emitter.BL(common::armgen::R12);
+
+        // Exit the thread, reason is already in R0 after calling our friend.
+        emitter.MOVI2R(common::armgen::R12, thread_exit_func_addr);
+        emitter.BL(common::armgen::R12);
+
+        emitter.flush_lit_pool();
+
+        return true;
+    }
+
     lib_manager::lib_manager(kernel_system *kerns, io_system *ios, memory_system *mems)
         : kern_(kerns)
         , io_(ios)
-        , mem_(mems) { 
+        , mem_(mems)
+        , bootstrap_chunk_(nullptr)
+        , entry_points_call_routine_(nullptr)
+        , thread_entry_routine_(nullptr) { 
         hle::symbols sb;
         std::string lib_name;
 
@@ -729,6 +893,10 @@ namespace eka2l1::hle {
 #undef ENLIB
 
         switch (kern_->get_epoc_version()) {
+        case epocver::epoc6:
+            epoc::register_epocv6(*this);
+            break;
+
         case epocver::epoc94:
             epoc::register_epocv94(*this);
             break;
@@ -752,6 +920,24 @@ namespace eka2l1::hle {
 
     system *lib_manager::get_sys() {
         return kern_->get_system();
+    }
+
+    address lib_manager::get_entry_point_call_routine_address() const {
+        if (!entry_points_call_routine_) {
+            return 0;
+        }
+
+        return static_cast<address>(entry_points_call_routine_ - reinterpret_cast<std::uint8_t*>(bootstrap_chunk_->host_base())) +
+            bootstrap_chunk_->base(nullptr).ptr_address();
+    }
+
+    address lib_manager::get_thread_entry_routine_address() const {
+        if (!thread_entry_routine_) {
+            return 0;
+        }
+
+        return static_cast<address>(thread_entry_routine_ - reinterpret_cast<std::uint8_t*>(bootstrap_chunk_->host_base())) +
+            bootstrap_chunk_->base(nullptr).ptr_address();
     }
 }
 

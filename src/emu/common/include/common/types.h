@@ -57,6 +57,10 @@ enum class epocver {
     epoc10
 };
 
+inline bool is_epocver_eka1(epocver ver) {
+    return (ver <= epocver::epoc6);
+}
+
 enum drive_number {
     drive_a,
     drive_b,

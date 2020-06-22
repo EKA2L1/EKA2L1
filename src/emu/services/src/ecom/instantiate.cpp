@@ -149,7 +149,7 @@ namespace eka2l1 {
             std::int32_t error_code = 0;
 
             if (!server<ecom_server>()->get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index],
-                    lib_entry, dtor_key, &error_code, true)) {
+                    lib_entry, dtor_key, &error_code, false)) {
                 ctx->set_request_status(error_code);
                 return;
             }

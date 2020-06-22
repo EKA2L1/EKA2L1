@@ -4,17 +4,19 @@ add_library(epocutils
         include/utils/bafl.h
         include/utils/des.h
         include/utils/handle.h
+        include/utils/uchar.h
+        include/utils/obj.h
         include/utils/panic.h
         include/utils/dll.h
         include/utils/reqsts.h
         include/utils/sec.h
-        include/utils/obj.h
         src/bafl.cpp
         src/des.cpp
+        src/obj.cpp
         src/panic.cpp
         src/reqsts.cpp
         src/sec.cpp
-        src/obj.cpp)
+        src/uchar.cpp)
 
 target_include_directories(epocutils PUBLIC include)
 

@@ -202,7 +202,8 @@ namespace eka2l1 {
         icon_config_map_ = std::make_unique<epoc::akn_skin_icon_config_map>(!svr ? nullptr : reinterpret_cast<central_repo_server *>(&(*svr)), sys->get_manager_system()->get_device_manager(),
             sys->get_io_system(), sys->get_system_language());
 
-        fbss = reinterpret_cast<fbs_server *>(&(*kern->get_by_name<service::server>("!Fontbitmapserver")));
+        fbss = reinterpret_cast<fbs_server *>(&(*kern->get_by_name<service::server>(
+            epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version()))));
 
         // Create skin chunk
         skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,

@@ -59,6 +59,7 @@ namespace eka2l1::epoc {
         etel_line_notify_incoming_call = 71,
         etel_line_cancel_notify_incoming_call = 72,
         etel_phone_init = 75,
+        etel_mobile_line_get_mobile_line_status = 20023,
         etel_mobile_line_notify_status_change = 20024,
         etel_mobile_phone_get_indicator = 20046,
         etel_mobile_phone_get_indicators_cap = 20047,

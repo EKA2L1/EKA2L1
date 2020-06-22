@@ -120,8 +120,6 @@ namespace eka2l1 {
         std::optional<filesystem_id> physical_fs_id;
 
         system *parent;
-
-        language sys_lang = language::en;
         std::size_t gdb_stub_breakpoint_callback_handle;
 
     public:
@@ -138,17 +136,25 @@ namespace eka2l1 {
         }
 
         void set_symbian_version_use(const epocver ever) {
+            io.set_epoc_ver(ever);
+
             // Use flexible model on 9.5 and onwards.
             mem = std::make_unique<memory_system>(cpu.get(), conf, (kern->get_epoc_version() >= epocver::epoc95) ? mem::mem_model_type::flexible
-                : mem::mem_model_type::multiple, (kern->get_epoc_version() <= epocver::epoc6) ? true : false);
-
-            io.set_epoc_ver(ever);
+                : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
 
             // Install memory to the kernel, then set epoc version
             kern->install_memory(mem.get());
             kern->set_epoc_version(ever);
     
+            service::init_services(parent);
+
+            // Try to set system language
+            set_system_language(static_cast<language>(conf->language));
+
             epoc::init_hal(parent);
+
+            // Initialize HLE finally
+            dispatcher.init(kern.get(), timing.get());
             
             if (!gdb_stub.is_server_enabled() && conf->enable_gdbstub) {
                 gdb_stub.init(parent);
@@ -216,11 +222,11 @@ namespace eka2l1 {
         }
 
         const language get_system_language() const {
-            return sys_lang;
+            return kern->get_current_language();
         }
 
         void set_system_language(const language new_lang) {
-            sys_lang = new_lang;
+            kern->set_current_language(new_lang);
         }
 
         void startup();
@@ -350,13 +356,6 @@ namespace eka2l1 {
             &asmdis);
 
         epoc::init_panic_descriptions();
-        service::init_services(parent);
-
-        // Try to set system language
-        set_system_language(static_cast<language>(conf->language));
-
-        // Initialize HLE finally
-        dispatcher.init(kern.get(), timing.get());
     }
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, config::state *conf)

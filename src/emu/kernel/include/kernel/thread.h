@@ -206,6 +206,8 @@ namespace eka2l1 {
             address exception_handler;
             std::uint32_t exception_mask;
 
+            address trap_stack;
+
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);
             kernel_obj *wait_obj;
@@ -216,6 +218,15 @@ namespace eka2l1 {
             void rendezvous(int rendezvous_reason);
 
             void finish_logons();
+
+            /**
+             * @brief       Push a new trap frame.
+             * 
+             * @param       new_trap          Pointer of the new trap to push.
+             * @returns     Pointer to trap handler.
+             */
+            address push_trap_frame(const address new_trap);
+            address pop_trap_frame();
 
             const address get_exception_handler() const {
                 return exception_handler;

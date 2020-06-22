@@ -71,7 +71,8 @@ namespace eka2l1 {
         , realtime_ipc_signal_evt_(0)
         , uid_counter_(0)
         , rom_map_(nullptr)
-        , kern_ver_(epocver::epoc94) {
+        , kern_ver_(epocver::epoc94)
+        , lang_(language::en) {
         thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
@@ -89,6 +90,7 @@ namespace eka2l1 {
 
         // Get base time
         base_time_ = common::get_current_time_in_microseconds_since_1ad();
+        locale_ = std::make_unique<std::locale>("");
     }
 
     kernel_system::~kernel_system() {
@@ -192,6 +194,15 @@ namespace eka2l1 {
         // Set CPU SVC handler
         cpu_->system_call_handler = [this](const std::uint32_t ordinal) {
             get_lib_manager()->call_svc(ordinal);
+
+            // EKA1 does not use BX LR to jump back, they let kernel do it
+            if (is_eka1()) {
+                const std::uint32_t jump_back = cpu_->get_lr();
+
+                // Set pc and ARM/thumb flag
+                cpu_->set_pc(jump_back & ~0b1);
+                cpu_->set_cpsr(cpu_->get_cpsr() | ((jump_back & 0b1) ? 0x20 : 0));
+            }
         };
 
         cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) {
@@ -711,6 +722,10 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    void kernel_system::set_current_language(const language new_lang) {
+        lang_ = new_lang;
     }
 
     struct kernel_info {

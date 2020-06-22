@@ -23,6 +23,7 @@
 #include <common/log.h>
 #include <common/random.h>
 
+#include <kernel/common.h>
 #include <kernel/kernel.h>
 #include <kernel/mutex.h>
 #include <kernel/sema.h>
@@ -35,28 +36,6 @@
 
 namespace eka2l1 {
     namespace kernel {
-        struct epoc9_thread_create_info {
-            int handle;
-            int type;
-            address func_ptr;
-            address ptr;
-            address supervisor_stack;
-            int supervisor_stack_size;
-            address user_stack;
-            int user_stack_size;
-            int init_thread_priority;
-            uint32_t name_len;
-            address name_ptr;
-            int total_size;
-        };
-
-        struct epoc9_std_epoc_thread_create_info : public epoc9_thread_create_info {
-            address allocator;
-            int heap_min;
-            int heap_max;
-            int padding;
-        };
-
         int map_thread_priority_to_calc(thread_priority pri) {
             switch (pri) {
             case thread_priority::priority_much_less:
@@ -183,9 +162,23 @@ namespace eka2l1 {
                - r1: thread creation info register.
                - r4: Startup reason. Thread startup is 1, process startup is 0.
             */
+            if (kern->is_eka1()) {
+                // We made _E32Startup ourself, since EKA1 does not have it
+                hle::lib_manager *mngr = kern->get_lib_manager();
+                ctx.pc = mngr->get_thread_entry_routine_address();
 
-            ctx.pc = owner ? (initial ? entry_point : owning_process()->get_entry_point_address())
-                           : entry_point;
+                if (ctx.pc == 0) {
+                    // Create the EKA1 thread bootstrap
+                    mngr->build_eka1_thread_bootstrap_code();
+                    ctx.pc = mngr->get_thread_entry_routine_address();
+                }
+            } else {
+                ctx.pc = entry_point;
+
+                if (owner && !initial) {
+                    ctx.pc = owning_process()->get_entry_point_address();
+                }
+            }
 
             ctx.sp = stack_top;
             ctx.cpsr = ((ctx.pc & 1) << 5);
@@ -253,7 +246,8 @@ namespace eka2l1 {
             , exit_type(entity_exit_type::pending)
             , create_time(0)
             , exception_handler(0)
-            , exception_mask(0) {
+            , exception_mask(0)
+            , trap_stack(0) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = calculate_thread_priority(owning_process(), pri);
@@ -286,8 +280,11 @@ namespace eka2l1 {
             std::u16string name_16(name.begin(), name.end());
             memcpy(name_chunk->host_base(), name_16.data(), name.length() * 2);
 
-            // TODO: Not hardcode this
-            const size_t metadata_size = 0x40;
+            // I noticed that all EXEs I have encoutered so far on EKA1 does not have InitProcess
+            // or thread setup. Looks like the kernel already do it for us, but that's not good design.
+            // Kernel vs userspace should be tied together, but yeah they removed it in EKA2
+            // A setup code is prepared for EKA1 for this situation, which uses this struct.
+            const size_t metadata_size = sizeof(epoc9_std_epoc_thread_create_info);
 
             std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t *>(stack_chunk->host_base());
             std::uint8_t *stack_top_ptr = stack_beg_meta_ptr + stack_size - metadata_size;
@@ -296,6 +293,7 @@ namespace eka2l1 {
 
             // Fill the stack with garbage
             std::fill(stack_beg_meta_ptr, stack_top_ptr, 0xcc);
+
             create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
                 name_chunk->base(owner).ptr_address(), epa);
 
@@ -578,6 +576,38 @@ namespace eka2l1 {
 
         void thread::add_ticks(const int num) {
             time = common::max(0, time - num);
+        }
+    
+        address thread::push_trap_frame(const address new_trap) {
+            kernel::process* mom = owning_process();
+            kernel::trap *the_trap = eka2l1::ptr<kernel::trap>(new_trap).get(mom);
+
+            if (!the_trap) {
+                return 0;
+            }
+
+            the_trap->next_ = trap_stack;
+            the_trap->trap_handler_ = ldata->trap_handler.ptr_address();
+
+            trap_stack = new_trap;
+
+            return ldata->trap_handler.ptr_address();
+        }
+
+        address thread::pop_trap_frame() {
+            if (trap_stack == 0) {
+                return 0;
+            }
+
+            kernel::process* mom = owning_process();
+            kernel::trap *the_trap = eka2l1::ptr<kernel::trap>(trap_stack).get(mom);
+
+            const address trap_popped = trap_stack;
+
+            the_trap->trap_handler_ = 0;
+            trap_stack = the_trap->next_;
+
+            return trap_popped;
         }
     }
 

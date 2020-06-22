@@ -35,6 +35,8 @@
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
 
+#include <services/window/window.h>
+
 namespace eka2l1::desktop {
     void emulator::stage_one() {
         // Initialize the logger
@@ -70,7 +72,8 @@ namespace eka2l1::desktop {
             symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib::internal);
             symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib::removeable);
             
-            winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>("!Windowserver"));
+            winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>(
+                eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
         }
 
         first_time = true;
