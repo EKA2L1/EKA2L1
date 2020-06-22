@@ -146,12 +146,12 @@ namespace eka2l1 {
             kern->install_memory(mem.get());
             kern->set_epoc_version(ever);
     
-            epoc::init_hal(parent);
-                
             service::init_services(parent);
 
             // Try to set system language
             set_system_language(static_cast<language>(conf->language));
+
+            epoc::init_hal(parent);
 
             // Initialize HLE finally
             dispatcher.init(kern.get(), timing.get());

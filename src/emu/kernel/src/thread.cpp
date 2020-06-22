@@ -175,7 +175,7 @@ namespace eka2l1 {
             } else {
                 ctx.pc = entry_point;
 
-                if (owner && initial) {
+                if (owner && !initial) {
                     ctx.pc = owning_process()->get_entry_point_address();
                 }
             }
