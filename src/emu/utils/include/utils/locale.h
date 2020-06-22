@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
 #include <cstdint>
@@ -777,12 +778,4 @@ namespace eka2l1::epoc {
         eka2l1::ptr<char> am_pm_table;
         eka2l1::ptr<uint16_t> msg_table;
     };
-
-    const std::uint32_t SYS_CATEGORY = 0x101f75b6;
-
-    const std::uint32_t HAL_KEY_BASE = 0x1020e306;
-    const std::uint32_t UNK_KEY1 = 0x1020e34e;
-
-    const std::uint32_t LOCALE_DATA_KEY = 0x10208904;
-    const std::uint32_t LOCALE_LANG_KEY = 0x10208903;
 }

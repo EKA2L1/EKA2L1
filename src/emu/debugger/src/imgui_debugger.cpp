@@ -44,6 +44,7 @@
 #include <services/window/classes/winuser.h>
 #include <services/window/common.h>
 #include <services/window/window.h>
+#include <utils/system.h>
 
 #include <drivers/graphics/emu_window.h> // For scancode
 

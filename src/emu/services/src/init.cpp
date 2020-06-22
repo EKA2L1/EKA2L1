@@ -54,6 +54,7 @@
 #include <epoc/epoc.h>
 #include <services/init.h>
 #include <utils/locale.h>
+#include <utils/system.h>
 
 #include <config/config.h>
 #include <manager/device_manager.h>
@@ -136,6 +137,7 @@ namespace eka2l1::epoc {
         // Unknown key, testing show that this prop return 65535 most of times
         // The prop belongs to HAL server, but the key usuage is unknown. (TODO)
         DEFINE_INT_PROP_D(sys, epoc::SYS_CATEGORY, epoc::UNK_KEY1, 65535);
+        DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::PHONE_POWER_KEY, system_agent_state_on);
 
         // From Domain Server request
         DEFINE_INT_PROP(sys, 0x1020e406, 0x250, 0);
