@@ -448,6 +448,12 @@ namespace eka2l1 {
         do_fill_bitmap_font_spec(bmpfont->spec_in_twips, spec, font->of_info.metrics.design_height,
             font->of_info.adapter);
 
+        // Set font name and flags. Flags is stubbed
+        static constexpr std::uint16_t MAX_TF_NAME = 24;
+        bmpfont->spec_in_twips.tf.name.assign(nullptr, reinterpret_cast<std::uint8_t*>(ofi_suit->face_attrib.name.data),
+            MAX_TF_NAME * 2);
+        bmpfont->spec_in_twips.tf.flags = spec.tf.flags;
+
         font->of_info.scale_factor_x = scale_factor;
         font->of_info.scale_factor_y = scale_factor;
 
