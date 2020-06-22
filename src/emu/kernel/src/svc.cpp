@@ -1826,6 +1826,8 @@ namespace eka2l1::epoc {
         LOG_TRACE("Attach to property with category: 0x{:x}, key: 0x{:x}", cage, val);
 
         if (!prop) {
+            LOG_WARN("Property (0x{:x}, 0x{:x}) has not been defined before, undefined behavior may rise", cage, val);
+
             prop = kern->create<service::property>();
 
             if (!prop) {
