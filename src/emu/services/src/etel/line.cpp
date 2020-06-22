@@ -42,6 +42,7 @@ namespace eka2l1 {
     void etel_line_subsession::dispatch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::etel_line_get_status:
+        case epoc::etel_mobile_line_get_mobile_line_status:         // Note: Not the same, just stub
             get_status(ctx);
             break;
 
@@ -68,6 +69,10 @@ namespace eka2l1 {
     }
 
     void etel_line_subsession::get_status(service::ipc_context *ctx) {
+        if (ctx->msg->function == epoc::etel_mobile_line_get_mobile_line_status) {
+            LOG_TRACE("Mobile line get status stubbed with normal get status");
+        }
+
         ctx->write_arg_pkg<epoc::etel_line_status>(0, line_->info_.sts_);
         ctx->set_request_status(epoc::error_none);
     }
