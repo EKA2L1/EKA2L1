@@ -566,6 +566,8 @@ namespace eka2l1 {
             return;
         }
 
+        *name_res = eka2l1::absolute_path(*name_res, ss_path, true);
+
         // If the file already exist, stop
         if (ctx->sys->get_io_system()->exist(*name_res)) {
             ctx->set_request_status(epoc::error_already_exists);
