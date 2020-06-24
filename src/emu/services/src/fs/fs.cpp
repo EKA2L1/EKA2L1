@@ -51,6 +51,17 @@ namespace eka2l1 {
         }
     }
 
+    static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
+        const char16_t drive_dos_char = char16_t(0x41 + static_cast<int>(drive));
+        const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
+
+        // Try to get the app uid
+        uint32_t uid = std::get<2>(pr->get_uid_type());
+        std::string hex_id = common::to_string(uid, std::hex);
+
+        return drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+    }
+
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
         utf16_str copy = common::lowercase_ucs2_string(key);
         return std::hash<utf16_str>()(copy);
@@ -256,7 +267,11 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context &ctx) {
-        create_session<fs_server_client>(&ctx, &ctx);
+        static const drive_number default_root_drv = drive_c;
+
+        fs_server_client *cli = create_session<fs_server_client>(&ctx, &ctx);
+        cli->ss_path = get_private_path(ctx.msg->own_thr->owning_process(), default_root_drv);
+
         typical_server::connect(ctx);
     }
 
@@ -279,17 +294,6 @@ namespace eka2l1 {
 
         ss_path = std::move(new_path.value());
         ctx->set_request_status(epoc::error_none);
-    }
-
-    static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
-        const char16_t drive_dos_char = char16_t(0x41 + static_cast<int>(drive));
-        const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
-
-        // Try to get the app uid
-        uint32_t uid = std::get<2>(pr->get_uid_type());
-        std::string hex_id = common::to_string(uid, std::hex);
-
-        return drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
     }
 
     void fs_server_client::set_session_to_private(service::ipc_context *ctx) {
