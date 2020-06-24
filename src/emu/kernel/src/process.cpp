@@ -175,12 +175,14 @@ namespace eka2l1::kernel {
 
     void process::set_priority(const process_priority new_pri) {
         priority = new_pri;
+        
         common::double_linked_queue_element *elem = thread_list.first();
+        common::double_linked_queue_element *end = thread_list.last();
 
-        while (elem && !elem->alone()) {
+        do {
             E_LOFF(elem, kernel::thread, process_thread_link)->update_priority();
             elem = elem->next;
-        }
+        } while (elem != end);
     }
 
     void *process::get_ptr_on_addr_space(address addr) {
