@@ -456,9 +456,10 @@ namespace eka2l1::loader {
                     }
 
                     common::unicode_expander expander;
+                    int source_size = runlen;
 
                     // Bytes should not multiply, since read_char16 already adds number of bytes by 2
-                    written += expander.expand(&data[index], runlen, append_data, size_of_largest_resource_when_uncompressed - written);
+                    written += expander.expand(&data[index], source_size, append_data, size_of_largest_resource_when_uncompressed - written);
                     index += runlen;
                 } else {
                     std::memcpy(append_data, &data[index], runlen);

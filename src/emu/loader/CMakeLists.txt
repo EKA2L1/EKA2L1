@@ -1,6 +1,7 @@
 # Loader for EPOC image, etc...
 add_library(epocloader
         include/loader/e32img.h
+        include/loader/gdr.h
         include/loader/mbm.h
         include/loader/mif.h
         include/loader/rom.h
@@ -8,6 +9,7 @@ add_library(epocloader
         include/loader/rsc.h
         include/loader/spi.h
         src/e32img.cpp
+        src/gdr.cpp
         src/mbm.cpp
         src/mif.cpp
         src/rom.cpp
@@ -25,5 +27,6 @@ target_link_libraries(epocloader
         PRIVATE
         common
         epocmem
+        epocutils
         miniz
         )
