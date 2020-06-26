@@ -4,3 +4,4 @@ endif()
 
 add_subdirectory(mbm2bmp)
 add_subdirectory(skninfo)
+add_subdirectory(gdrdump)
