@@ -77,7 +77,6 @@ namespace eka2l1::common {
         bool handle_ubyte(const std::uint8_t ubyte);
         bool handle_sbyte(const std::uint8_t sbyte);
 
-        int expand(std::uint8_t *source, int source_size,
-            std::uint8_t *dest, int dest_size);
+        int expand(std::uint8_t *source, int &source_size, std::uint8_t *dest, int dest_size);
     };
 }

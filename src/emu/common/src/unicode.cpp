@@ -84,7 +84,10 @@ namespace eka2l1::common {
             return false;
         }
 
-        *(dest_buf + (dest_pointer++)) = b;
+        if (dest_buf) {
+            *(dest_buf + (dest_pointer++)) = b;
+        }
+
         dest_size--;
 
         return true;
@@ -171,9 +174,7 @@ namespace eka2l1::common {
         }
 
         std::uint16_t c = static_cast<std::uint16_t>((high << 8) | low);
-        write_byte(c);
-
-        return true;
+        return write_byte(c);
     }
 
     bool unicode_expander::handle_ubyte(const std::uint8_t ubyte) {
@@ -182,8 +183,7 @@ namespace eka2l1::common {
 
             if (read_byte(&low)) {
                 std::uint16_t c = static_cast<std::uint16_t>((ubyte << 8) | low);
-                write_byte(c);
-                return true;
+                return write_byte(c);
             } else {
                 return false;
             }
@@ -275,8 +275,7 @@ namespace eka2l1::common {
         return false;
     }
 
-    int unicode_expander::expand(std::uint8_t *source, int source_size,
-        std::uint8_t *dest, int dest_size) {
+    int unicode_expander::expand(std::uint8_t *source, int &source_size, std::uint8_t *dest, int dest_size) {
         source_buf = source;
         dest_buf = dest;
 
@@ -288,7 +287,7 @@ namespace eka2l1::common {
 
         unicode_mode = false;
 
-        for (; dest_size >= 0;) {
+        for (; this->dest_size > 0;) {
             std::uint8_t b;
 
             if (read_byte(&b)) {
@@ -302,6 +301,7 @@ namespace eka2l1::common {
             }
         }
 
+        source_size -= this->source_size;
         return dest_size - this->dest_size;
     }
 }
