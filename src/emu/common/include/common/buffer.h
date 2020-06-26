@@ -224,7 +224,7 @@ namespace eka2l1 {
             }
 
             std::uint64_t read(void *buf, const std::uint64_t read_size) override {
-                return fread(buf, read_size, 1, fi_);
+                return fread(buf, 1, read_size, fi_);
             }
 
             void seek(const std::int64_t amount, common::seek_where wh) override {
