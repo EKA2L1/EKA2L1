@@ -20,7 +20,9 @@
 
 #pragma once
 
+#include <common/buffer.h>
 #include <common/chunkyseri.h>
+#include <common/unicode.h>
 #include <common/log.h>
 #include <mem/ptr.h>
 
@@ -310,5 +312,74 @@ namespace eka2l1::epoc {
         if (seri.get_seri_mode() != common::SERI_MODE_READ) {
             *data = *reinterpret_cast<T *>(&dat[0]);
         }
+    }
+
+    template <typename T>
+    bool read_des_string(std::basic_string<T> &str, common::ro_stream *stream, const bool is_unicode) {
+        std::uint8_t b1 = 0;
+        std::uint32_t len = 0;
+
+        if (stream->read(&b1, 1) != 1) {
+            return false;
+        }
+
+        if ((b1 & 1) == 0) {
+            len = (b1 >> 1);
+        } else {
+            if ((b1 & 2) == 0) {
+                len = b1;
+
+                if (stream->read(&b1, 1) != 1) {
+                    return false;
+                }
+
+                len += b1 << 8;
+                len >>= 2;
+            } else if ((b1 & 4) == 0) {
+                std::uint16_t b2 = 0;
+
+                if (stream->read(&b2, 2) != 2) {
+                    return false;
+                }
+
+                len = b1 + (b2 << 8);
+                len >>= 4;
+            }
+        }
+
+        len >>= 1;
+
+        if (is_unicode) {
+            common::unicode_expander expander;
+
+            len = len * sizeof(T);
+            int source_size = (len + 5) * 2;
+
+            std::string encoded;
+            encoded.resize(source_size);
+
+            const std::uint64_t offset = stream->tell();
+
+            // TODO: Actually check
+            stream->read(&encoded[0], source_size);
+
+            const int len_written = expander.expand(reinterpret_cast<std::uint8_t*>(encoded.data()), source_size, nullptr, len);
+
+            if (len_written != len) {
+                return false;
+            }
+
+            stream->seek(offset + source_size, common::seek_where::beg);
+
+            str.resize(len / sizeof(T));
+            expander.expand(reinterpret_cast<std::uint8_t*>(encoded.data()), source_size, reinterpret_cast<std::uint8_t*>(&str[0]), len);
+        } else {
+            str.resize(len);
+            if (stream->read(&str[0], len * sizeof(T)) != len * sizeof(T)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
