@@ -19,12 +19,14 @@
 
 #pragma once
 
-#include <common/buffer.h>
-
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <map>
+
+namespace eka2l1::common {
+    class ro_stream;
+}
 
 namespace eka2l1::loader::gdr {
     struct header {
@@ -36,7 +38,7 @@ namespace eka2l1::loader::gdr {
         std::uint32_t fnt_tran_version_;
         std::uint32_t collection_uid_;
         std::uint32_t pixel_aspect_ratio_;
-        std::uint32_t components_offset_;
+        std::uint32_t id_offset_2_;
         std::vector<std::u16string> copyright_strings_;
     };
 
@@ -64,11 +66,13 @@ namespace eka2l1::loader::gdr {
     };
     #pragma pack(pop)
 
+    #pragma pack(push, 1)
     struct typeface_font_bitmap_header {
         std::uint32_t uid_;
         std::uint8_t width_factor_;
         std::uint8_t height_factor_;
     };
+    #pragma pack(pop)
 
     struct typeface_header {
         std::u16string name_;
@@ -87,13 +91,13 @@ namespace eka2l1::loader::gdr {
     using bitmap = std::vector<std::uint32_t>;
 
     struct character {
-        character_metric &metric;
+        character_metric *metric_;
         bitmap data_;
     };
 
     struct code_section {
         code_section_header header_;
-        std::map<std::uint16_t, character> chars_;
+        std::vector<character> chars_;
     };
 
     struct font_bitmap {
