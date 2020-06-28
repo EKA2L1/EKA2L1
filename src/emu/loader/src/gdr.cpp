@@ -266,7 +266,8 @@ namespace eka2l1::loader::gdr {
             c.metric_ = &metrics[metric_index];
             
             const std::uint16_t target_height = c.metric_->height_in_pixels_;
-            const std::uint16_t content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_ - c.metric_->right_adjust_in_pixels_;
+            const std::uint16_t content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_ - 
+                ((c.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : c.metric_->right_adjust_in_pixels_);
             std::uint16_t height_read = 0;
         
             c.data_.resize((target_height * content_width + 31) >> 5);
