@@ -48,6 +48,62 @@ void print_typeface_list_header_info(std::vector<eka2l1::loader::gdr::typeface> 
         LOG_INFO("- {}:", eka2l1::common::ucs2_to_utf8(typefaces[i].header_.name_));
         LOG_INFO("\t+ Flags: {}", typefaces[i].header_.flags_);
         LOG_INFO("\t+ Font bitmap header:");
+        for (std::size_t j = 0; j < typefaces[i].header_.bitmap_headers_.size(); j++) {
+            LOG_INFO("\t\t* UID: 0x{:X}", typefaces[i].header_.bitmap_headers_[j].uid_);
+            LOG_INFO("\t\t* Factor: ({}, {})", typefaces[i].header_.bitmap_headers_[j].width_factor_,
+                typefaces[i].header_.bitmap_headers_[j].height_factor_);
+            LOG_INFO("");
+        }
+    }
+}
+
+void print_bitmap_font_info(std::vector<eka2l1::loader::gdr::font_bitmap> &fonts) {
+    LOG_INFO("============ FONT BITMAP LIST =============");
+
+    for (std::size_t i = 0; i < fonts.size(); i++) {
+        LOG_INFO("- UID:                    0x{:X}", fonts[i].header_.uid_);
+        LOG_INFO("- Ascent:                 {}", fonts[i].header_.ascent_in_pixels_);
+        LOG_INFO("- Bitmap encoding:        {}", fonts[i].header_.bitmap_encoding_);
+        LOG_INFO("- Cell height:            {}", fonts[i].header_.cell_height_in_pixels_);
+        LOG_INFO("- Proportional:           {}", fonts[i].header_.is_proportional_);
+        LOG_INFO("- Max char width:         {}", fonts[i].header_.max_char_width_in_pixels_);
+        LOG_INFO("- Max normal char width:  {}", fonts[i].header_.max_normal_char_width_in_pixels_);
+        LOG_INFO("- Posture:                {}", fonts[i].header_.posture_);
+        LOG_INFO("- Stroke weight:          {}", fonts[i].header_.stroke_weight_);
+        LOG_INFO("");
+        
+        for (std::size_t j = 0; j < fonts[i].code_sections_.size(); j++) {
+            for (std::size_t k = 0; k < fonts[i].code_sections_[j].chars_.size(); k++) {
+                LOG_INFO("- Character code {} bitmap:", fonts[i].code_sections_[j].header_.start_ + k);
+
+                // Print this character
+                eka2l1::loader::gdr::character &the_char = fonts[i].code_sections_[j].chars_[k];
+
+                if (!the_char.metric_) {
+                    LOG_INFO("\tNone");
+                    continue;
+                }
+
+                const std::uint16_t target_width = the_char.metric_->move_in_pixels_ -
+                    ((the_char.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : the_char.metric_->right_adjust_in_pixels_)
+                    - the_char.metric_->left_adj_in_pixels_;
+
+                for (std::uint16_t y = 0; y < the_char.metric_->height_in_pixels_; y++) { 
+                    std::string buf;
+
+                    for (std::uint16_t x = 0; x < target_width; x++) {
+                        std::uint32_t idx = (y * target_width) + x;
+                        buf += (the_char.data_[idx >> 5] & (1 << (idx & 31))) ? '5' : '-';
+                    }
+
+                    LOG_INFO("\t{}", buf);
+                }
+
+                LOG_INFO("");
+            }    
+        }
+
+        LOG_INFO("");
     }
 }
 
@@ -73,6 +129,7 @@ int main(int argc, char **argv) {
 
     print_header_info(store.header_);
     print_typeface_list_header_info(store.typefaces_);
+    print_bitmap_font_info(store.font_bitmaps_);
 
     return 0;
 }
