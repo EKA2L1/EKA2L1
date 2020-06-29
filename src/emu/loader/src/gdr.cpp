@@ -296,6 +296,11 @@ namespace eka2l1::loader::gdr {
         read += stream->read(&metric.move_in_pixels_, sizeof(metric.move_in_pixels_));
         read += stream->read(&metric.right_adjust_in_pixels_, sizeof(metric.right_adjust_in_pixels_));
 
+        // Im scared of this being a hack.
+        if (metric.right_adjust_in_pixels_ == 0xFF) {
+            metric.right_adjust_in_pixels_ = 0;
+        }
+
         return (read == sizeof(character_metric));
     }
 
