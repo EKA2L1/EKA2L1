@@ -57,7 +57,7 @@ namespace eka2l1::epoc::adapter {
             const float scale_x = 1.0f, const float scale_y = 1.0f) override;
 
         std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const float scale_x,
-            const float scale_y, int *rasterized_width, int *rasterized_height, epoc::glyph_bitmap_type *bmp_type) override;
+            const float scale_y, int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) override;
 
         void free_glyph_bitmap(std::uint8_t *data) override;
 

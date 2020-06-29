@@ -55,7 +55,7 @@ namespace eka2l1::epoc::adapter {
             = 0;
 
         virtual std::uint8_t *get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const float scale_x,
-            const float scale_y, int *rasterized_width, int *rasterized_height, epoc::glyph_bitmap_type *bmp_type)
+            const float scale_y, int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type)
             = 0;
 
         virtual void free_glyph_bitmap(std::uint8_t *data) = 0;

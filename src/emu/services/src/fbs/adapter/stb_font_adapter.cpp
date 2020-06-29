@@ -154,7 +154,7 @@ namespace eka2l1::epoc::adapter {
 
     std::uint8_t *stb_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code,
         const float scale_x, const float scale_y, int *rasterized_width, int *rasterized_height,
-        epoc::glyph_bitmap_type *bmp_type) {
+        std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
         bool get_codepoint = true;
 
         if (code & 0x80000000) {
@@ -187,6 +187,10 @@ namespace eka2l1::epoc::adapter {
 
         if (bmp_type) {
             *bmp_type = epoc::glyph_bitmap_type::antialised_glyph_bitmap;
+        }
+
+        if (result) {
+            total_size = *rasterized_width * *rasterized_height;
         }
 
         return result;

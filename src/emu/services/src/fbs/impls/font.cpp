@@ -567,13 +567,12 @@ namespace eka2l1 {
 
         const epoc::open_font_info *info = &(font->of_info);
         epoc::glyph_bitmap_type bitmap_type = epoc::glyph_bitmap_type::default_glyph_bitmap;
+        std::uint32_t bitmap_data_size = 0;
 
         // Get server font handle
         // The returned bitmap is 8bpp single channel. Luckily Symbian likes this (at least in v3 and upper).
         std::uint8_t *bitmap_data = info->adapter->get_glyph_bitmap(info->idx, codepoint, info->scale_factor_x,
-            info->scale_factor_y, &rasterized_width, &rasterized_height, &bitmap_type);
-
-        const std::size_t bitmap_data_size = rasterized_height * rasterized_width;
+            info->scale_factor_y, &rasterized_width, &rasterized_height, bitmap_data_size, &bitmap_type);
 
         if (!bitmap_data && !info->adapter->does_glyph_exist(info->idx, codepoint)) {
             // The glyph is not available. Let the client know. With code 0, we already use '?'

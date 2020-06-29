@@ -135,7 +135,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::uint8_t *gdr_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const float scale_x,
-        const float scale_y, int *rasterized_width, int *rasterized_height, epoc::glyph_bitmap_type *bmp_type) {
+        const float scale_y, int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
         loader::gdr::character *the_char = get_character(idx, code);
 
         if (!the_char) {
@@ -233,7 +233,12 @@ namespace eka2l1::epoc::adapter {
             total_line_processed_so_far += count;
         }
 
-        *bmp_type = epoc::glyph_bitmap_type::monochrome_glyph_bitmap;
+        #undef WRITE_BIT_32
+
+        if (bmp_type)
+            *bmp_type = epoc::glyph_bitmap_type::monochrome_glyph_bitmap;
+
+        total_size = ((total_bit_write + 31) >> 5) * 4;
         
         // In case this adapter get destroyed. It will free this data.
         dynamic_alloc_list_.push_back(compressed_bitmap);
