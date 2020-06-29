@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace eka2l1::common {
     template <typename T>
     T byte_swap(T val);
@@ -36,4 +38,9 @@ namespace eka2l1::common {
     constexpr endian_type get_system_endian_type() {
         return ((0xFFFFFFFF & 0x1) == little_endian) ? little_endian : big_endian;
     }
+
+    template <typename T>
+    T extract_bits(const T num, const std::uint8_t p, const std::uint8_t n) { 
+        return (((1 << n) - 1) & (num >> (p - 1))); 
+    } 
 }
