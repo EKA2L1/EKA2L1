@@ -22,6 +22,117 @@
 #include <utils/des.h>
 
 namespace eka2l1::loader::gdr {
+    static void scan_coverage(const code_section &range, std::uint32_t &coverage_flags, std::uint32_t &coverage_flags_add) {
+        // 0000-007F
+        if (range.header_.start_ >= 0x00) {
+            coverage_flags |= font_bitmap::COVERAGE_LATIN_SET;
+        }
+
+        // 0370-03FF
+        if (range.header_.end_ >= 0x370) {
+            coverage_flags |= font_bitmap::COVERAGE_GREEK_SET;
+        }
+
+        // 0400-04FF
+        if (range.header_.end_ >= 0x400) {
+            coverage_flags |= font_bitmap::COVERAGE_CYRILLIC_SET;
+        }
+
+        // 0530-058F
+        if (range.header_.end_ >= 0x530) {
+            coverage_flags |= font_bitmap::COVERAGE_ARMENIAN_SET;
+        }
+
+        // 0590-05FF
+        if (range.header_.end_ >= 0x590) {
+            coverage_flags |= font_bitmap::COVERAGE_HEBREW_SET;
+        }
+
+        // 0600-06FF
+        if (range.header_.end_ >= 0x600) {
+            coverage_flags |= font_bitmap::COVERAGE_ARABIC_SET;
+        }
+
+        // 0900-097F
+        if (range.header_.end_ >= 0x900) {
+            coverage_flags |= font_bitmap::COVERAGE_DEVANAGARI_SET;
+        }
+
+        // 0980-09FF
+        if (range.header_.end_ >= 0x980) {
+            coverage_flags |= font_bitmap::COVERAGE_BENGALI_SET;
+        }
+
+        // 0A00-0A7F
+        if (range.header_.end_ >= 0xA00) {
+            coverage_flags |= font_bitmap::COVERAGE_GURMUKHI_SET;
+        }
+
+        // 0A80-0AFF
+        if (range.header_.end_ >= 0xA80) {
+            coverage_flags |= font_bitmap::COVERAGE_GUJURATI_SET;
+        }
+
+        // 0B00-0B7F
+        if (range.header_.end_ >= 0xB00) {
+            coverage_flags |= font_bitmap::COVERAGE_ORIYA_SET;
+        }
+
+        // 0B80-0BFF
+        if (range.header_.end_ >= 0xB80) {
+            coverage_flags |= font_bitmap::COVERAGE_TAMIL_SET;
+        }
+
+        // 0C00-0C7F
+        if (range.header_.end_ >= 0xC00) {
+            coverage_flags |= font_bitmap::COVERAGE_TELUGU_SET;
+        }
+
+        // 0C80-0CFF
+        if (range.header_.end_ >= 0xC80) {
+            coverage_flags |= font_bitmap::COVERAGE_KANNADA_SET;
+        }
+
+        // 0D00-0D7F
+        if (range.header_.end_ >= 0xD00) {
+            coverage_flags |= font_bitmap::COVERAGE_MALAYALAM_SET;
+        }
+
+        //  0E00-0E7F
+        if (range.header_.end_ >= 0xE00) {
+            coverage_flags |= font_bitmap::COVERAGE_THAI_SET;
+        }
+
+        // 0E80-0EFF
+        if (range.header_.end_ >= 0xE80) {
+            coverage_flags |= font_bitmap::COVERAGE_LAO_SET;
+        }
+
+        // 10A0-10FF
+        if (range.header_.end_ >= 0x10A0) {
+            coverage_flags |= font_bitmap::COVERAGE_GEORGIAN_SET;
+        }
+
+        // 1100-11FF
+        if (range.header_.end_ >= 0x1100) {
+            coverage_flags |= font_bitmap::COVERAGE_HANGUL_JAMO_SET;
+        }
+
+        // NOTICE: I got lazy from here.
+
+        // 30A0 - 30FF
+        if (range.header_.end_ >= 0x30A0) {
+            coverage_flags_add |= font_bitmap::COVERAGE_KANA_SETS;
+        }
+
+        // Hangul
+        // U+AC00–U+D7AF, U+1100–U+11FF, U+3130–U+318F, U+A960–U+A97F, U+D7B0–U+D7FF
+        if ((range.header_.end_ >= 0xAC00) || (range.header_.end_ >= 0x1100) || (range.header_.end_ >= 0x3130) || (range.header_.end_ >= 0xA960)
+            || (range.header_.end_ >= 0xD7B0)) {
+            coverage_flags_add |= font_bitmap::COVERAGE_HANGUL_SET;
+        }
+    }
+
     bool parse_store_header(common::ro_stream *stream, header &the_header) {
         std::size_t read = 0;
 
@@ -330,17 +441,12 @@ namespace eka2l1::loader::gdr {
             return false;
         }
 
-        // Assign typeface headers to typeface
-        store.typefaces_.resize(typeface_headers.size());
-        for (std::size_t i = 0; i < typeface_headers.size(); i++) {
-            store.typefaces_[i].header_ = std::move(typeface_headers[i]);
-        }
-
         // Assign font bitmap header to font bitmap and read its components
         store.font_bitmaps_.resize(font_bitmap_headers.size());
 
         for (std::size_t i = 0; i < font_bitmap_headers.size(); i++) {
             store.font_bitmaps_[i].header_ = font_bitmap_headers[i];
+            std::fill(store.font_bitmaps_[i].coverage_, store.font_bitmaps_[i].coverage_ + 4, 0);
 
             if (!parse_font_bitmap_character_metrics(stream, store.font_bitmaps_[i].metrics_)) {
                 return false;
@@ -353,6 +459,38 @@ namespace eka2l1::loader::gdr {
 
                 if (!parse_font_code_section_comps(stream, store.font_bitmaps_[i].metrics_, store.font_bitmaps_[i].code_sections_[j])) {
                     return false;
+                }
+
+                scan_coverage(store.font_bitmaps_[i].code_sections_[j], store.font_bitmaps_[i].coverage_[0], store.font_bitmaps_[i].coverage_[1]);
+            }
+        }
+        
+        // Sort all font bitmaps by UID
+        std::sort(store.font_bitmaps_.begin(), store.font_bitmaps_.end(), [](const loader::gdr::font_bitmap &f1, const loader::gdr::font_bitmap &f2) {
+            return f1.header_.uid_ < f2.header_.uid_;
+        });
+
+        // Assign typeface headers to typeface
+        store.typefaces_.resize(typeface_headers.size());
+        for (std::size_t i = 0; i < typeface_headers.size(); i++) {
+            store.typefaces_[i].header_ = std::move(typeface_headers[i]);
+            std::fill(store.typefaces_[i].whole_coverage_, store.typefaces_[i].whole_coverage_ + 4, 0);
+
+            // Find all font bitmaps
+            for (auto &bitmap_header: store.typefaces_[i].header_.bitmap_headers_) {
+                auto result = std::lower_bound(store.font_bitmaps_.begin(), store.font_bitmaps_.end(), bitmap_header.uid_, 
+                    [](const loader::gdr::font_bitmap &b, const std::uint32_t uid) {
+                        return b.header_.uid_ < uid;
+                    });
+
+                if ((result == store.font_bitmaps_.end()) || (result->header_.uid_ != bitmap_header.uid_)) {
+                    return false;
+                }
+
+                store.typefaces_[i].font_bitmaps_.push_back(&(*result));
+                
+                for (std::uint32_t j = 0; j < 4; j++) {
+                    store.typefaces_[i].whole_coverage_[j] |= result->coverage_[j];
                 }
             }
         }

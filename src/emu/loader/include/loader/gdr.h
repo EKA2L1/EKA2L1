@@ -104,10 +104,42 @@ namespace eka2l1::loader::gdr {
         font_bitmap_header header_;
         std::vector<character_metric> metrics_;
         std::vector<code_section> code_sections_;
+
+        // This enum value based on TrueType's
+        enum {
+            COVERAGE_LATIN_SET = 0x1,
+            COVERAGE_GREEK_SET = 0x80,
+            COVERAGE_CYRILLIC_SET = 0x200,
+            COVERAGE_ARMENIAN_SET = 0x400,
+            COVERAGE_HEBREW_SET = 0x800,
+            COVERAGE_ARABIC_SET = 0x2000,
+            COVERAGE_DEVANAGARI_SET = 0x8000,
+            COVERAGE_BENGALI_SET = 0x10000,
+            COVERAGE_GURMUKHI_SET = 0x20000,
+            COVERAGE_GUJURATI_SET = 0x40000,
+            COVERAGE_ORIYA_SET = 0x80000,
+            COVERAGE_TAMIL_SET = 0x100000,
+            COVERAGE_TELUGU_SET = 0x200000,
+            COVERAGE_KANNADA_SET = 0x400000,
+            COVERAGE_MALAYALAM_SET = 0x800000,
+            COVERAGE_THAI_SET = 0x1000000,
+            COVERAGE_LAO_SET = 0x2000000,
+            COVERAGE_GEORGIAN_SET = 0x8000000,
+            COVERAGE_HANGUL_JAMO_SET = 0x10000000,
+            COVERAGE_SYMBOL_SETS = 0xFFFE,
+            COVERAGE_KANA_SETS = 0x60000,
+            COVERAGE_HANGUL_SET = 0x100000,
+            COVERAGE_CJK_SET = 0x8000000
+        };
+
+        std::uint32_t coverage_[4];
     };
 
     struct typeface {
         typeface_header header_;
+
+        std::vector<font_bitmap*> font_bitmaps_;
+        std::uint32_t whole_coverage_[4];
     };
 
     struct file_store {
