@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team.
+ * Copyright (c) 2020 EKA2L1 Team.
  * 
  * This file is part of EKA2L1 project
  * 
@@ -19,35 +19,22 @@
 
 #pragma once
 
-#include <map>
-#include <memory>
-#include <vector>
-
 #include <services/fbs/adapter/font_adapter.h>
-#include <stb_truetype.h>
+
+#include <common/buffer.h>
+#include <loader/gdr.h>
 
 namespace eka2l1::epoc::adapter {
-    class stb_font_file_adapter : public font_file_adapter_base {
-        std::vector<std::uint8_t> data_;
-        std::map<int, stbtt_fontinfo> cache_info;
-
-        stbtt_fontinfo info_;
-        stbtt_pack_context context_;
-
-        std::size_t count_;
-
-        std::uint8_t flags_;
-
-        enum {
-            FLAGS_CONTEXT_INITED = 1 << 0
-        };
+    class gdr_font_file_adapter : public font_file_adapter_base {
+        loader::gdr::file_store store_;
+        std::unique_ptr<common::ro_stream> buf_stream_;
 
     public:
-        stbtt_fontinfo *get_or_create_info(const int idx, int *off);
+        explicit gdr_font_file_adapter(std::vector<std::uint8_t> &data_);
 
-        explicit stb_font_file_adapter(std::vector<std::uint8_t> &data_);
         bool is_valid() override {
-            return flags_ & FLAGS_CONTEXT_INITED;
+            // This is valid if the stream still exists
+            return buf_stream_.get();
         }
 
         bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) override;
@@ -69,7 +56,7 @@ namespace eka2l1::epoc::adapter {
         void end_get_atlas() override;
 
         glyph_bitmap_type get_output_bitmap_type() const override {
-            return antialised_glyph_bitmap;
+            return monochrome_glyph_bitmap;
         }
 
         bool does_glyph_exist(std::size_t idx, std::uint32_t code) override;

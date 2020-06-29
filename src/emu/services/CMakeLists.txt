@@ -46,6 +46,7 @@ add_library(epocservs
         include/services/etel/phone.h
         include/services/etel/subsess.h
         include/services/fbs/adapter/font_adapter.h
+        include/services/fbs/adapter/gdr_font_adapter.h
         include/services/fbs/adapter/stb_font_adapter.h
         include/services/fbs/bitmap.h
         include/services/fbs/compress_queue.h
@@ -131,6 +132,7 @@ add_library(epocservs
         src/etel/phone.cpp
         src/etel/subsess.cpp
         src/fbs/adapter/font_adapter.cpp
+        src/fbs/adapter/gdr_font_adapter.cpp
         src/fbs/adapter/stb_font_adapter.cpp
         src/fbs/compress_queue.cpp
         src/fbs/fbs.cpp

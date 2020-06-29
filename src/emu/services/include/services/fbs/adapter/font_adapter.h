@@ -45,6 +45,9 @@ namespace eka2l1::epoc::adapter {
     class font_file_adapter_base {
     public:
         virtual ~font_file_adapter_base() {}
+
+        virtual bool is_valid() = 0;
+
         virtual bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) = 0;
         virtual bool get_metrics(const std::size_t idx, open_font_metrics &metrics) = 0;
         virtual bool get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &metric,
