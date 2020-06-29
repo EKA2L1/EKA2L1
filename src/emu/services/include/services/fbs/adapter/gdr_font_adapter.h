@@ -29,6 +29,11 @@ namespace eka2l1::epoc::adapter {
         loader::gdr::file_store store_;
         std::unique_ptr<common::ro_stream> buf_stream_;
 
+        std::vector<std::uint32_t*> dynamic_alloc_list_;
+
+    protected:
+        loader::gdr::character *get_character(const std::size_t idx, std::uint32_t code);
+
     public:
         explicit gdr_font_file_adapter(std::vector<std::uint8_t> &data_);
 
