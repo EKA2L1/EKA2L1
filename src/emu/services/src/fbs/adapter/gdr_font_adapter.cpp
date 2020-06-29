@@ -89,7 +89,7 @@ namespace eka2l1::epoc::adapter {
 
     loader::gdr::character *gdr_font_file_adapter::get_character(const std::size_t idx, std::uint32_t code) {
         if (!is_valid() || (idx >= store_.typefaces_.size())) {
-            return false;
+            return nullptr;
         }
 
         loader::gdr::typeface &the_typeface = store_.typefaces_[idx];
