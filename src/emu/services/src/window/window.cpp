@@ -194,7 +194,7 @@ namespace eka2l1::epoc {
         ws_cmd_screen_device_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
 
         // Get screen object
-        epoc::screen *target_screen = get_ws().get_screen(header->num_screen);
+        epoc::screen *target_screen = get_ws().get_screen((cmd.header.cmd_len == 0) ? 0 : header->num_screen);
 
         if (!target_screen) {
             LOG_ERROR("Can't find screen object with number {}", header->num_screen);
@@ -1088,6 +1088,11 @@ namespace eka2l1 {
         epoc::event guest_event;
         epoc::window *root_current = get_current_focus_screen()->root->child;
         guest_event.time = input_event.time_;
+
+        if (!root_current) {
+            return;
+        }
+
         // Translate host event to guest event
         switch (input_event.type_) {
         case drivers::input_event_type::key:
