@@ -25,6 +25,7 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
 #include <common/vecx.h>
 
 #include <epoc/epoc.h>
@@ -667,32 +668,43 @@ namespace eka2l1 {
         return font_obj_container.get<fbsfont>(id);
     }
 
+    void fbs_server::load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *folder) {
+        while (auto entry = folder->get_next_entry()) {
+            symfile f = io->open_file(common::utf8_to_ucs2(entry->full_path), READ_MODE | BIN_MODE);
+            const std::uint64_t fsize = f->size();
+
+            std::vector<std::uint8_t> buf;
+
+            buf.resize(fsize);
+            f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+
+            f->close();
+
+            // Add fonts
+            const auto extension = common::lowercase_string(eka2l1::path_extension(entry->full_path));
+            epoc::adapter::font_file_adapter_kind adapter_kind = epoc::adapter::font_file_adapter_kind::none;
+
+            if (extension == ".ttf") {
+                adapter_kind = epoc::adapter::font_file_adapter_kind::stb;
+            } else if (extension == ".gdr") {
+                adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
+            }
+
+            persistent_font_store.add_fonts(buf, adapter_kind);
+        }
+    }
+    
     void fbs_server::load_fonts(eka2l1::io_system *io) {
         // Search all drives
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
-                const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + u":\\Resource\\Fonts\\*.ttf";
+                const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\");
                 auto folder = io->open_dir(fonts_folder_path, io_attrib::include_file);
 
                 if (folder) {
                     LOG_TRACE("Found font folder: {}", common::ucs2_to_utf8(fonts_folder_path));
-
-                    while (auto entry = folder->get_next_entry()) {
-                        symfile f = io->open_file(common::utf8_to_ucs2(entry->full_path), READ_MODE | BIN_MODE);
-                        const std::uint64_t fsize = f->size();
-
-                        std::vector<std::uint8_t> buf;
-
-                        buf.resize(fsize);
-                        f->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
-
-                        f->close();
-
-                        // Add fonts
-                        persistent_font_store.add_fonts(buf);
-                    }
+                    load_fonts_from_directory(io, folder.get());
                 }
-
                 // TODO: Implement FS callback
             }
         }

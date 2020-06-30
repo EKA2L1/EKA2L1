@@ -20,8 +20,12 @@
 #include <services/fbs/font_store.h>
 
 namespace eka2l1::epoc {
-    void font_store::add_fonts(std::vector<std::uint8_t> &buf) {
-        auto adapter = epoc::adapter::make_font_file_adapter(epoc::adapter::font_file_adapter_kind::stb, buf);
+    void font_store::add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind) {
+        auto adapter = epoc::adapter::make_font_file_adapter(adapter_kind, buf);
+
+        if (!adapter->is_valid()) {
+            return;
+        }
 
         for (std::size_t i = 0; i < adapter->count(); i++) {
             epoc::open_font_face_attrib attrib;

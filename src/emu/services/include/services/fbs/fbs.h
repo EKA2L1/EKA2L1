@@ -45,6 +45,8 @@
 
 namespace eka2l1 {
     struct file;
+    struct directory;
+
     using symfile = std::unique_ptr<file>;
 
     namespace drivers {
@@ -307,6 +309,9 @@ namespace eka2l1 {
         service::normal_object_container font_obj_container; ///< Specifically storing fonts
 
         eka2l1::vec2 pixel_size_in_twips;
+
+    protected:
+        void load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *dir);
 
     public:
         explicit fbs_server(eka2l1::system *sys);

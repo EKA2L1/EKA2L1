@@ -20,7 +20,11 @@
 #include <services/fbs/adapter/gdr_font_adapter.h>
 #include <common/bytes.h>
 
+#define STB_RECT_PACK_IMPLEMENTATION
+#include <stb_rect_pack.h>
+
 namespace eka2l1::epoc::adapter {
+    // Do you like fonts? I dont (pent0)
     gdr_font_file_adapter::gdr_font_file_adapter(std::vector<std::uint8_t> &data) {
         // Instantiate a read-only buffer stream
         buf_stream_ = std::make_unique<common::ro_buf_stream>(&data[0], data.size());
@@ -29,6 +33,8 @@ namespace eka2l1::epoc::adapter {
             // Do this so a sanity check can happens
             buf_stream_.release();
         }
+
+        // Note: Stream is unusable after constructor. It just there for sanity check.
     }
 
     std::size_t gdr_font_file_adapter::count() {
@@ -252,5 +258,86 @@ namespace eka2l1::epoc::adapter {
             delete data;
             dynamic_alloc_list_.erase(store_result);
         }
+    }
+
+    bool gdr_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+        if (pack_context_) {
+            // The atlas rendering is still active!
+            return false;
+        }
+
+        pack_context_ = std::make_unique<stbrp_context>();
+        pack_nodes_.resize(atlas_size.y);
+
+        stbrp_init_target(pack_context_.get(), atlas_size.x, atlas_size.y, pack_nodes_.data(), static_cast<int>(pack_nodes_.size()));
+        pack_dest_ = atlas_ptr;
+        pack_size_ = atlas_size;
+
+        return true;
+    }
+
+    bool gdr_font_file_adapter::get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code, const int font_size,
+        character_info *info) {
+        std::vector<stbrp_rect> rect_build;
+        std::vector<loader::gdr::character*> the_chars;
+        rect_build.resize(num_code);
+
+        for (char16_t i = 0; i < num_code; i++) {
+            const char16_t ucode = (unicode_point) ? static_cast<char16_t>(unicode_point[i]) : start_code + i;
+            loader::gdr::character *c = get_character(idx, ucode);
+
+            if (!c) {
+                rect_build[i].w = 0;
+                rect_build[i].h = 0;
+            } else {
+                const float scale_factor = static_cast<float>(c->metric_->height_in_pixels_) / font_size;
+
+                rect_build[i].w = static_cast<stbrp_coord>((c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_ - c->metric_->right_adjust_in_pixels_) * scale_factor);
+                rect_build[i].h = font_size;
+            }
+
+            the_chars.push_back(c);
+        }
+
+        if (stbrp_pack_rects(pack_context_.get(), rect_build.data(), num_code) != 1) {
+            return false;
+        }
+
+        for (char16_t i = 0; i < num_code; i++) {
+            // Copy those info to character infos
+            info[i].x0 = rect_build[i].x;
+            info[i].y0 = rect_build[i].y;
+            info[i].x1 = rect_build[i].x + rect_build[i].w;
+            info[i].y1 = rect_build[i].y + rect_build[i].h;
+
+            const float scale_factor = static_cast<float>(the_chars[i]->metric_->height_in_pixels_) / font_size;
+            const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
+                the_chars[i]->metric_->right_adjust_in_pixels_;
+
+            const std::int16_t target_height = the_chars[i]->metric_->height_in_pixels_;
+
+            info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
+            info[i].yoff = the_chars[i]->metric_->ascent_in_pixels_ * scale_factor;
+            info[i].xoff2 = info[i].xoff + scale_factor * target_width;
+            info[i].yoff2 =  info[i].yoff + scale_factor * target_height;
+            info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
+
+            loader::gdr::bitmap &bmp = the_chars[i]->data_;
+
+            // UWU gonna copy data to you. Simple scaling algorithm WARNING!
+            for (int y = rect_build[i].y; y < rect_build[i].y + rect_build[i].h; y++) {
+                for (int x = rect_build[i].x; x < rect_build[i].x + rect_build[i].w; x++) {
+                    const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y * scale_factor) * target_width + static_cast<std::int16_t>(x * scale_factor));
+                    pack_dest_[pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    void gdr_font_file_adapter::end_get_atlas() {
+        pack_context_.reset();
+        pack_dest_ = nullptr;
     }
 }
