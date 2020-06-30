@@ -76,6 +76,7 @@ namespace eka2l1::epoc::adapter {
         /**
          * \brief Get an atlas contains glyphs bitmap.
          * 
+         * \param idx           Index of the typeface we want to get glyph bitmaps from.
          * \param start_code    First unicode point in a range to get glyph bitmap. 0 to use unicode array.
          * \param unicode_point Pointer to an array of unicode point which we want to rasterize. NULL to ingore.
          * \param num_code      Number of unicode point to rasterize.
@@ -84,7 +85,7 @@ namespace eka2l1::epoc::adapter {
          * 
          * \returns True on success. 
          */
-        virtual bool get_glyph_atlas(const char16_t start_code, int *unicode_point,
+        virtual bool get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point,
             const char16_t num_code, const int font_size, character_info *info)
             = 0;
 
@@ -99,7 +100,9 @@ namespace eka2l1::epoc::adapter {
     };
 
     enum class font_file_adapter_kind {
-        stb
+        none,
+        stb,
+        gdr
         // Add your new adapter here
     };
 

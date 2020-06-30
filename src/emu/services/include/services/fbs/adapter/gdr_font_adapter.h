@@ -20,9 +20,12 @@
 #pragma once
 
 #include <services/fbs/adapter/font_adapter.h>
+#include <stb_rect_pack.h>
 
 #include <common/buffer.h>
 #include <loader/gdr.h>
+
+#include <vector>
 
 namespace eka2l1::epoc::adapter {
     class gdr_font_file_adapter : public font_file_adapter_base {
@@ -30,6 +33,11 @@ namespace eka2l1::epoc::adapter {
         std::unique_ptr<common::ro_stream> buf_stream_;
 
         std::vector<std::uint32_t*> dynamic_alloc_list_;
+
+        std::vector<stbrp_node> pack_nodes_;
+        std::unique_ptr<stbrp_context> pack_context_;
+        std::uint8_t *pack_dest_;
+        eka2l1::vec2 pack_size_;
 
     protected:
         loader::gdr::character *get_character(const std::size_t idx, std::uint32_t code);
@@ -55,7 +63,7 @@ namespace eka2l1::epoc::adapter {
 
         bool begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
 
-        bool get_glyph_atlas(const char16_t start_code, int *unicode_point,
+        bool get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point,
             const char16_t num_code, const int font_size, character_info *info) override;
 
         void end_get_atlas() override;

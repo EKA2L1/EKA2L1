@@ -63,8 +63,8 @@ namespace eka2l1::epoc::adapter {
 
         bool begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
 
-        bool get_glyph_atlas(const char16_t start_code, int *unicode_point,
-            const char16_t num_code, const int font_size, character_info *info) override;
+        bool get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code, const int font_size,
+            character_info *info) override;
 
         void end_get_atlas() override;
 

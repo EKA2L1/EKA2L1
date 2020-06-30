@@ -274,7 +274,7 @@ namespace eka2l1::epoc::adapter {
         stbtt_PackEnd(&context_);
     }
 
-    bool stb_font_file_adapter::get_glyph_atlas(const char16_t start_code, int *unicode_point,
+    bool stb_font_file_adapter::get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point,
         const char16_t num_code, const int font_size, character_info *info) {
         auto character_infos = std::make_unique<stbtt_packedchar[]>(num_code);
 
@@ -287,7 +287,7 @@ namespace eka2l1::epoc::adapter {
         range.num_chars = num_code;
         range.first_unicode_codepoint_in_range = start_code;
 
-        if (!stbtt_PackFontRanges(&context_, data_.data(), 0, &range, 1)) {
+        if (!stbtt_PackFontRanges(&context_, data_.data(), static_cast<int>(idx), &range, 1)) {
             return false;
         }
 
