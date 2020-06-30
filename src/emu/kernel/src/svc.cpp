@@ -2802,6 +2802,26 @@ namespace eka2l1::epoc {
         return result;
     }
 
+    BRIDGE_FUNC(void, thread_request_complete_eka1, address *sts_addr, const std::int32_t code, kernel::handle thread_handle) {
+        kernel::thread *thr = kern->get<kernel::thread>(thread_handle);
+
+        if (!thr) {
+            return;
+        }
+
+        epoc::request_status *sts = eka2l1::ptr<epoc::request_status>(*sts_addr).get(thr->owning_process());
+
+        if (!sts) {
+            LOG_ERROR("Status for request complete is null!");
+            return;
+        }
+
+        *sts = code;
+        *sts_addr = 0;          // Empty out the address as the behavior in the document.
+
+        thr->signal_request();
+    }
+
     /*======================= LOCALE-RELATED FUNCTION ====================*/
     BRIDGE_FUNC(std::uint32_t, uchar_get_category, const epoc::uchar character) {
         return epoc::get_uchar_category(character, *kern->get_current_locale());
@@ -3212,6 +3232,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0xC00034, thread_resume),
+        BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_eka1)
