@@ -26,20 +26,22 @@ namespace eka2l1::epoc {
         : atlas_handle_(0) {
     }
 
-    font_atlas::font_atlas(adapter::font_file_adapter_base *adapter, const char16_t initial_start,
+    font_atlas::font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
         const char16_t initial_char_count, int font_size)
         : atlas_handle_(0)
         , adapter_(adapter)
         , size_(font_size)
-        , initial_range_(initial_start, initial_char_count) {
+        , initial_range_(initial_start, initial_char_count)
+        , typeface_idx_(typeface_idx) {
     }
 
-    void font_atlas::init(adapter::font_file_adapter_base *adapter, const char16_t initial_start,
+    void font_atlas::init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
         const char16_t initial_char_count, int font_size) {
         adapter_ = adapter;
         atlas_handle_ = 0;
         size_ = font_size;
         initial_range_ = { initial_start, initial_char_count };
+        typeface_idx_ = typeface_idx;
     }
 
     void font_atlas::free(drivers::graphics_driver *driver) {
@@ -67,7 +69,7 @@ namespace eka2l1::epoc {
                 return false;
             }
 
-            if (!adapter_->get_glyph_atlas(initial_range_.first, nullptr, initial_range_.second,
+            if (!adapter_->get_glyph_atlas(typeface_idx_, initial_range_.first, nullptr, initial_range_.second,
                     size_, cinfos.get())) {
                 return false;
             }
@@ -108,13 +110,13 @@ namespace eka2l1::epoc {
             // Try to rasterize these
             auto cinfos = std::make_unique<adapter::character_info[]>(to_rast.size());
 
-            if (!adapter_->get_glyph_atlas(0, to_rast.data(), static_cast<char16_t>(to_rast.size()), size_,
+            if (!adapter_->get_glyph_atlas(typeface_idx_, 0, to_rast.data(), static_cast<char16_t>(to_rast.size()), size_,
                     cinfos.get())) {
                 // Try to redo the atlas, getting latest use characters.
                 adapter_->end_get_atlas();
                 adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
 
-                if (!adapter_->get_glyph_atlas(0, &last_use_[0], static_cast<char16_t>(characters_.size() - 5),
+                if (!adapter_->get_glyph_atlas(typeface_idx_, 0, &last_use_[0], static_cast<char16_t>(characters_.size() - 5),
                         size_, cinfos.get())) {
                     return false;
                 }

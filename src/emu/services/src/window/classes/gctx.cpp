@@ -378,8 +378,7 @@ namespace eka2l1::epoc {
 
         if (text_font->atlas.atlas_handle_ == 0) {
             // Initialize the atlas
-            text_font->atlas.init(font_object->of_info.adapter, 0x20, 0xFF - 0x20,
-                font_object->of_info.metrics.max_height);
+            text_font->atlas.init(font_object->of_info.adapter, text_font->of_info.idx, 0x20, 0xFF - 0x20, font_object->of_info.metrics.max_height);
         }
 
         context.set_request_status(epoc::error_none);

@@ -53,19 +53,22 @@ namespace eka2l1::epoc {
         std::pair<char16_t, char16_t> initial_range_;
         std::unique_ptr<std::uint8_t[]> atlas_data_;
 
+        std::size_t typeface_idx_;
+
     public:
         explicit font_atlas();
 
-        explicit font_atlas(adapter::font_file_adapter_base *adapter, const char16_t initial_start,
+        explicit font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
             const char16_t initial_char_count, int font_size);
 
-        void init(adapter::font_file_adapter_base *adapter, const char16_t initial_start,
+        void init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
             const char16_t initial_char_count, int font_size);
 
         void free(drivers::graphics_driver *driver);
 
         int get_atlas_width() const;
 
-        bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder);
+        bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
+            drivers::graphics_command_list_builder *builder);
     };
 }
