@@ -116,7 +116,10 @@ namespace eka2l1 {
         , selected_callback(nullptr)
         , selected_callback_data(nullptr)
         , phony_icon(0)
-        , active_screen(0) {
+        , active_screen(0)
+        , alserv(nullptr)
+        , winserv(nullptr)
+        , oom(nullptr) {
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
