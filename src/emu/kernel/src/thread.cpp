@@ -380,6 +380,24 @@ namespace eka2l1 {
             return scheduler->stop(this);
         }
 
+        bool thread::kill(const entity_exit_type the_exit_type, const std::int32_t reason) {
+            if (state == kernel::thread_state::stop) {
+                return false;
+            }
+
+            stop();
+
+            exit_reason = reason;
+            exit_type = the_exit_type;
+
+            if (owning_process()->decrease_thread_count() == 0) {
+                owning_process()->set_exit_type(exit_type);
+            }
+
+            kern->prepare_reschedule();
+            return true;
+        }
+        
         void thread::update_priority() {
             last_priority = real_priority;
 

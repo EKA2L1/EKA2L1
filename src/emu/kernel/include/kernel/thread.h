@@ -319,6 +319,7 @@ namespace eka2l1 {
             void notify_sleep(const int errcode);
 
             bool stop();
+            bool kill(const entity_exit_type exit_type, const std::int32_t reason);
 
             void add_ticks(const int num);
 
