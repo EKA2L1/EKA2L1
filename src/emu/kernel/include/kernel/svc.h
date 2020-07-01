@@ -107,6 +107,7 @@ namespace eka2l1::epoc {
             execute_create_sema = 0x19,
             execute_create_timer = 0x1B,
             execute_create_thread = 0x27,
+            execute_panic_thread = 0x2F,
             execute_logon_thread = 0x30,
             execute_set_tls = 0x34,
             execute_free_tls = 0x35,

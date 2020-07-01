@@ -2714,6 +2714,36 @@ namespace eka2l1::epoc {
         return result;
     }
 
+    std::int32_t thread_panic_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        const std::int32_t reason = static_cast<std::int32_t>(create_info->arg1_);
+        epoc::desc16 *category = eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_thread->owning_process());
+
+        if (!thr->kill(kernel::entity_exit_type::panic, reason)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        std::string exit_category_utf;
+
+        if (category) {
+            exit_category_utf = common::ucs2_to_utf8(category->to_std_string(target_thread->owning_process()));
+        }
+
+        kern->call_thread_kill_callbacks(thr, exit_category_utf, reason);
+        LOG_TRACE("Thread {} panic with category {}, reason {}", thr->name(), exit_category_utf, reason);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -2746,6 +2776,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_logon_thread:
             return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_panic_thread:
+            return thread_panic_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_duplicate_handle:
             return duplicate_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
