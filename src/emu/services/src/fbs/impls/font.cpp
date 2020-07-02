@@ -410,6 +410,7 @@ namespace eka2l1 {
 
         if (!ofi_suit) {
             ctx->set_request_status(epoc::error_not_found);
+            return;
         }
 
         // Scale it
@@ -690,7 +691,9 @@ namespace eka2l1 {
                 adapter_kind = epoc::adapter::font_file_adapter_kind::gdr;
             }
 
-            persistent_font_store.add_fonts(buf, adapter_kind);
+            if (adapter_kind != epoc::adapter::font_file_adapter_kind::none) {
+                persistent_font_store.add_fonts(buf, adapter_kind);
+            }
         }
     }
     
