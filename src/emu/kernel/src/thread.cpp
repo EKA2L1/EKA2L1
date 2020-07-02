@@ -621,8 +621,6 @@ namespace eka2l1 {
             kernel::trap *the_trap = eka2l1::ptr<kernel::trap>(trap_stack).get(mom);
 
             const address trap_popped = trap_stack;
-
-            the_trap->trap_handler_ = 0;
             trap_stack = the_trap->next_;
 
             return trap_popped;
