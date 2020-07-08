@@ -211,6 +211,8 @@ namespace eka2l1::epoc {
             return cli_version;
         }
 
+        void get_ready(service::ipc_context &ctx, ws_cmd *cmd, const bool is_redraw);
+
         void execute_command(service::ipc_context &ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);
         void parse_command_buffer(service::ipc_context &ctx);

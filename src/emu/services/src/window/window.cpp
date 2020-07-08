@@ -619,10 +619,33 @@ namespace eka2l1::epoc {
         ctx.set_request_status(connected_count);
     }
 
+    void window_server_client::get_ready(service::ipc_context &ctx, ws_cmd *cmd, const bool is_redraw) {
+        epoc::notify_info info;
+        info.requester = ctx.msg->own_thr;
+
+        bool should_finish = false;
+
+        if (cmd && cmd->header.cmd_len >= sizeof(address)) {
+            info.sts = *reinterpret_cast<address*>(cmd->data_ptr);
+            should_finish = true;
+        } else {
+            info.sts = ctx.msg->request_sts;
+        }
+
+        if (is_redraw) {
+            add_redraw_listener(info);
+        } else {
+            add_event_listener(info);
+        }
+
+        if (should_finish) {
+            ctx.set_request_status(epoc::error_none);
+        }
+    }
+    
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
-
         switch (cmd.header.op) {
         // Gets the total number of window groups with specified priority currently running
         // in the window server.
@@ -697,6 +720,11 @@ namespace eka2l1::epoc {
             break;
 
         case ws_cl_op_event_ready:
+            get_ready(ctx, &cmd, false);
+            break;
+
+        case ws_cl_op_redraw_ready:
+            get_ready(ctx, &cmd, true);
             break;
 
         case ws_cl_op_get_focus_window_group: {
@@ -1255,34 +1283,20 @@ namespace eka2l1 {
     void window_server::on_unhandled_opcode(service::ipc_context &ctx) {
         if (ctx.msg->function & EWservMessAsynchronousService) {
             switch (ctx.msg->function & ~EWservMessAsynchronousService) {
-            case ws_cl_op_redraw_ready: {
-                epoc::notify_info info;
-                info.requester = ctx.msg->own_thr;
-                info.sts = ctx.msg->request_sts;
-
-                clients[ctx.msg->msg_session->unique_id()]->add_redraw_listener(info);
-
+            case ws_cl_op_redraw_ready:
+                clients[ctx.msg->msg_session->unique_id()]->get_ready(ctx, nullptr, true);
                 break;
-            }
 
             // Notify when an event is ringing, means that whenever
             // is occured within an object that belongs to a client that
             // created by the same thread as the requester, that requester
             // will be notify
-            case ws_cl_op_event_ready: {
-                epoc::notify_info info;
-                info.requester = ctx.msg->own_thr;
-                info.sts = ctx.msg->request_sts;
-
-                clients[ctx.msg->msg_session->unique_id()]->add_event_listener(info);
-
+            case ws_cl_op_event_ready:
+                clients[ctx.msg->msg_session->unique_id()]->get_ready(ctx, nullptr, false);
                 break;
-            }
 
             default: {
-                LOG_TRACE("UNHANDLE ASYNC OPCODE: {}",
-                    ctx.msg->function & ~EWservMessAsynchronousService);
-
+                LOG_TRACE("Unhandle async code: {}", ctx.msg->function & ~EWservMessAsynchronousService);
                 break;
             }
             }
