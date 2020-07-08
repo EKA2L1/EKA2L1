@@ -286,6 +286,7 @@ namespace eka2l1 {
         std::uint8_t *base_large_chunk;
 
         eka2l1::ptr<void> bmp_font_vtab;
+        codeseg_ptr fntstr_seg;
 
         std::u16string default_system_font;
 

@@ -34,7 +34,9 @@
 #include <common/thread.h>
 #include <common/vecx.h>
 
+#include <utils/cppabi.h>
 #include <utils/err.h>
+
 #include <vfs/vfs.h>
 
 #include <config/config.h>
@@ -228,10 +230,9 @@ namespace eka2l1 {
         : service::typical_server(sys, epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use()))
         , persistent_font_store(sys->get_io_system())
         , shared_chunk(nullptr)
-        , large_chunk(nullptr) {
-        if (kern->is_eka1()) {
-            obj_name = "Fontbitmapserver";
-        }
+        , large_chunk(nullptr)
+        , fntstr_seg(nullptr)
+        , bmp_font_vtab(0) {
     }
 
     static void compressor_thread_func(compress_queue *queue) {
@@ -300,10 +301,34 @@ namespace eka2l1 {
             large_chunk_allocator = std::make_unique<fbs_chunk_allocator>(large_chunk,
                 base_large_chunk);
 
-            if (auto seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {
+            if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {
                 // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#
                 // Skip the filler (vtable start address) and the typeinfo
-                bmp_font_vtab = seg->lookup(nullptr, 97) + 2 * 4;
+                if (kern->is_eka1()) {
+                    std::uint8_t *addr = nullptr;
+                    fntstr_seg->get_code_run_addr(nullptr, &addr);
+
+                    utils::cpp_gcc98_abi_analyser analyser(addr, fntstr_seg->get_text_size());
+
+                    // We got two clues. TypeUid__C11CBitmapFont @ 52 NONAME ; Which is a virtual method (not sure why it's exported)
+                    // Also this         TextWidthInPixels__C11CBitmapFontRC7TDesC16 @ 51 NONAME    ;
+                    std::vector<address> clues;
+                    clues.push_back(fntstr_seg->lookup_no_relocate(51));
+                    clues.push_back(fntstr_seg->lookup_no_relocate(52));
+
+                    bmp_font_vtab = static_cast<std::uint32_t>(analyser.search_vtable(clues));
+                } else {
+                    bmp_font_vtab = fntstr_seg->lookup_no_relocate(97) + 2 * 4;
+                }
+
+                if (bmp_font_vtab == 0) {
+                    LOG_ERROR("Unable to find vtable address of CBitmapFont!");
+                }
+                
+                if (kern->is_eka1()) {
+                    // For relocate later
+                    bmp_font_vtab += fntstr_seg->get_code_base();
+                }
             }
 
             // Probably also indicates that font aren't loaded yet

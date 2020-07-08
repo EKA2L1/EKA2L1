@@ -427,7 +427,7 @@ namespace eka2l1 {
                 - reinterpret_cast<std::uint8_t *>(bmpfont)) | 0x1;
         }
 
-        bmpfont->vtable = serv->bmp_font_vtab;
+        bmpfont->vtable = serv->fntstr_seg->relocate(ctx->msg->own_thr->owning_process(), serv->bmp_font_vtab.ptr_address());
         calculate_algorithic_style(bmpfont->algorithic_style, spec);
 
         font = serv->font_obj_container.make_new<fbsfont>();
