@@ -61,7 +61,7 @@ namespace eka2l1::epoc {
 
         void add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind);
 
-        open_font_info *seek_the_open_font(epoc::font_spec &spec);
+        open_font_info *seek_the_open_font(epoc::font_spec_base &spec);
         open_font_info *seek_the_font_by_uid(const epoc::uid the_uid);
 
         const std::size_t number_of_fonts() const {

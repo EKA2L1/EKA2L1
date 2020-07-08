@@ -105,7 +105,7 @@ namespace eka2l1::epoc {
         std::int32_t is_scalable_;
     };
 
-    struct font_style {
+    struct font_style_base {
         enum {
             italic = 0x1,
             bold = 0x2,
@@ -115,8 +115,6 @@ namespace eka2l1::epoc {
 
         // 16 bit (high) = bitmap type, font effects = (12 bit) middule, 4 bits low for style
         std::uint32_t flags;
-        eka2l1::ptr<void> reserved1;
-        eka2l1::ptr<void> reserved2;
 
         void reset_flags() {
             flags = 0;
@@ -132,10 +130,25 @@ namespace eka2l1::epoc {
         }
     };
 
-    struct font_spec {
+    struct font_style_v1: public font_style_base {
+    };
+
+    struct font_style_v2: public font_style_base {
+        eka2l1::ptr<void> reserved1;
+        eka2l1::ptr<void> reserved2;
+    };
+
+    struct font_spec_base {
         typeface_info tf;
         std::int32_t height;
-        font_style style;
+    };
+
+    struct font_spec_v1 : public font_spec_base {
+        font_style_v1 style;
+    };
+
+    struct font_spec_v2: public font_spec_base {
+        font_style_v2 style;
     };
 
     enum {
@@ -156,10 +169,26 @@ namespace eka2l1::epoc {
         std::uint8_t height_factor;
     };
 
-    struct bitmapfont {
+    struct bitmapfont_base {
         eka2l1::ptr<void> vtable;
+    };
 
-        font_spec spec_in_twips;
+    struct bitmapfont_v1: public bitmapfont_base {
+        font_spec_v1 spec_in_twips;
+        alg_style algorithic_style;
+
+        eka2l1::ptr<void> allocator;
+        int fontbitmap_offset;
+
+        // Absolute pointer to COpenFont
+        eka2l1::ptr<void> openfont;
+
+        std::uint32_t reserved;
+        std::uint32_t font_uid;
+    };
+
+    struct bitmapfont_v2 : public bitmapfont_base {
+        font_spec_v2 spec_in_twips;
         alg_style algorithic_style;
 
         eka2l1::ptr<void> allocator;

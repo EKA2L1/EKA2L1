@@ -75,7 +75,7 @@ namespace eka2l1::epoc {
         return nullptr;
     }
     
-    open_font_info *font_store::seek_the_open_font(epoc::font_spec &spec) {
+    open_font_info *font_store::seek_the_open_font(epoc::font_spec_base &spec) {
         open_font_info *best = nullptr;
         int best_score = -99999999;
 
@@ -94,11 +94,11 @@ namespace eka2l1::epoc {
                 score += 100;
             }
 
-            if ((spec.style.flags & epoc::font_style::italic) == (info.face_attrib.style & epoc::open_font_face_attrib::italic)) {
+            if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::italic) == (info.face_attrib.style & epoc::open_font_face_attrib::italic)) {
                 score += 50;
             }
 
-            if ((spec.style.flags & epoc::font_style::bold) == (info.face_attrib.style & epoc::open_font_face_attrib::bold)) {
+            if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::bold) == (info.face_attrib.style & epoc::open_font_face_attrib::bold)) {
                 score += 50;
             }
 

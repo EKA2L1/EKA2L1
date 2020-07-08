@@ -332,14 +332,14 @@ namespace eka2l1 {
         metrics.max_width = static_cast<std::int16_t>(metrics.max_width * scale_y);
     }
 
-    static std::int32_t calculate_baseline(epoc::font_spec &spec) {
-        if (spec.style.flags & epoc::font_style::super) {
+    static std::int32_t calculate_baseline(epoc::font_spec_base &spec) {
+        if (static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::super) {
             // Superscript, see 2^5 for example, 5 is the superscript
             constexpr std::int32_t super_script_offset_percentage = -28;
             return super_script_offset_percentage * spec.height / 100;
         }
 
-        if (spec.style.flags & epoc::font_style::sub) {
+        if (static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::sub) {
             // Subscript, it's the opposite with superscript. HNO3 for example, in chemistry,
             // 3 supposed to be below HNO
             constexpr std::int32_t subscript_offset_percentage = 14;
@@ -350,7 +350,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    static void calculate_algorithic_style(epoc::alg_style &style, epoc::font_spec &spec) {
+    static void calculate_algorithic_style(epoc::alg_style &style, epoc::font_spec_base &spec) {
         style.baseline_offsets_in_pixel = calculate_baseline(spec);
 
         style.height_factor = 1;
@@ -368,14 +368,14 @@ namespace eka2l1 {
      * \param adjusted_height     The adjusted height in pixels.
      * \param adapter             The adapter for the target bitmap font that we will fill the spec.
      */
-    static void do_fill_bitmap_font_spec(epoc::font_spec &target_spec, epoc::font_spec &given_spec,
+    static void do_fill_bitmap_font_spec(epoc::font_spec_base &target_spec, epoc::font_spec_base &given_spec,
         std::int16_t adjusted_height, epoc::adapter::font_file_adapter_base *adapter) {
         // TODO: Proper conversion through physical screen size
         target_spec.height = adjusted_height * 15;
 
         // Set bitmap type that we gonna output
-        target_spec.style.reset_flags();
-        target_spec.style.set_glyph_bitmap_type(adapter->get_output_bitmap_type());
+        static_cast<epoc::font_spec_v1&>(target_spec).style.reset_flags();
+        static_cast<epoc::font_spec_v1&>(target_spec).style.set_glyph_bitmap_type(adapter->get_output_bitmap_type());
     }
 
     void fbscli::num_typefaces(service::ipc_context *ctx) {
@@ -385,22 +385,10 @@ namespace eka2l1 {
     void fbscli::typeface_support(service::ipc_context *ctx) {
     }
 
-    epoc::bitmapfont *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec &spec, kernel::process *font_user, const std::uint32_t desired_height,
-        std::optional<std::pair<float, float>> scale_vector) {
+    template <typename T>
+    void fbscli::fill_bitmap_information(T *bmpfont, epoc::open_font *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
+        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector) {
         fbs_server *serv = server<fbs_server>();
-
-        epoc::bitmapfont *bmpfont = serv->allocate_general_data<epoc::bitmapfont>();
-
-        if (!bmpfont) {
-            return nullptr;
-        }
-
-        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
-
-        if (!of) {
-            serv->free_general_data(bmpfont);
-            return nullptr;
-        }
 
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
             bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
@@ -457,9 +445,38 @@ namespace eka2l1 {
                                                                           serv->session_cache_list)
                 - reinterpret_cast<std::uint8_t *>(of));
         }
+    }
 
-        // TODO (pent0): Fill basic font info to epoc::open_font
-        return bmpfont;
+    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v1>(epoc::bitmapfont_v1 *bitmapfont, epoc::open_font *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
+        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
+
+    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v2>(epoc::bitmapfont_v2 *bitmapfont, epoc::open_font *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
+        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
+
+    epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user, const std::uint32_t desired_height,
+        std::optional<std::pair<float, float>> scale_vector) {
+        fbs_server *serv = server<fbs_server>();
+        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
+
+        if (!of) {
+            return nullptr;
+        }
+
+#define DO_BITMAP_OPEN_FONT_CREATION(ver)                                                               \
+        epoc::bitmapfont_v##ver *bmpfont = serv->allocate_general_data<epoc::bitmapfont_v##ver>();        \
+        if (!bmpfont) {                                                                                 \
+            serv->free_general_data(of);                                                                \
+            return nullptr;                                                                             \
+        }                                                                                               \
+        fill_bitmap_information<epoc::bitmapfont_v##ver>(bmpfont, of, info, spec, font_user,             \
+            desired_height, scale_vector);                                                              \
+        return bmpfont
+
+        if (serv->kern->is_eka1()) {
+            DO_BITMAP_OPEN_FONT_CREATION(1);
+        }
+
+        DO_BITMAP_OPEN_FONT_CREATION(2);
     }
 
     void fbscli::write_font_handle(service::ipc_context *ctx, fbsfont *font) {
@@ -474,7 +491,7 @@ namespace eka2l1 {
     }
     
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
-        epoc::font_spec spec = *ctx->get_arg_packed<epoc::font_spec>(0);
+        epoc::font_spec_v1 spec = *ctx->get_arg_packed<epoc::font_spec_v1>(0);
 
         // 1 x int of Max height - 2 x int of device size
         std::optional<eka2l1::vec3> size_info = ctx->get_arg_packed<eka2l1::vec3>(2);
@@ -506,7 +523,7 @@ namespace eka2l1 {
         font->of_info = *ofi_suit;
         font->serv = serv;
 
-        epoc::bitmapfont *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
+        epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
             size_info.has_value() ? size_info->x : 0);
 
         if (!bmpfont) {
@@ -536,7 +553,7 @@ namespace eka2l1 {
             return;
         }
 
-        epoc::font_spec the_spec;
+        epoc::font_spec_v1 the_spec;
         the_spec.tf.name = info->face_attrib.name.to_std_string(nullptr);
         the_spec.tf.flags = the_style->flags;
 
@@ -550,7 +567,7 @@ namespace eka2l1 {
         font->of_info = *info;
         font->serv = serv;
 
-        epoc::bitmapfont *bmpfont = create_bitmap_open_font(font->of_info, the_spec, ctx->msg->own_thr->owning_process(), 0, scale_pair);
+        epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, the_spec, ctx->msg->own_thr->owning_process(), 0, scale_pair);
 
         if (!bmpfont) {
             ctx->set_request_status(epoc::error_no_memory);
@@ -620,7 +637,7 @@ namespace eka2l1 {
         const fbsfont *font = get_font_object(ctx);
 
         process_ptr own_pr = ctx->msg->own_thr->owning_process();
-        epoc::bitmapfont *bmp_font = reinterpret_cast<epoc::bitmapfont*>(font->guest_font_offset + reinterpret_cast<std::uint8_t*>(
+        epoc::bitmapfont_base *bmp_font = reinterpret_cast<epoc::bitmapfont_base*>(font->guest_font_offset + reinterpret_cast<std::uint8_t*>(
             server<fbs_server>()->shared_chunk->host_base()));
 
         if (codepoint & 0x80000000) {
@@ -653,22 +670,22 @@ namespace eka2l1 {
         fbs_server *serv = server<fbs_server>();
         kernel::process *pr = ctx->msg->own_thr->owning_process();
 
-#define MAKE_CACHE_ENTRY(entry_ver)                                                                                         \
+#define MAKE_CACHE_ENTRY(entry_ver, type)                                                                                         \
     epoc::open_font_session_cache_entry_v##entry_ver *cache_entry = reinterpret_cast<decltype(cache_entry)>(                \
         serv->allocate_general_data_impl(sizeof(epoc::open_font_session_cache_entry_v##entry_ver) + bitmap_data_size + 1)); \
     cache_entry->codepoint = codepoint;                                                                                     \
     cache_entry->glyph_index = codepoint % session_cache->offset_array.offset_array_count;                                  \
     cache_entry->offset = sizeof(epoc::open_font_session_cache_entry_v##entry_ver) + 1;                                     \
     info->adapter->get_glyph_metric(info->idx, codepoint, cache_entry->metric,                                              \
-        bmp_font->algorithic_style.baseline_offsets_in_pixel, info->scale_factor_x, info->scale_factor_y);                  \
+        reinterpret_cast<type*>(bmp_font)->algorithic_style.baseline_offsets_in_pixel, info->scale_factor_x, info->scale_factor_y);                  \
     cache_entry->metric.width = rasterized_width;                                                                           \
     cache_entry->metric.height = rasterized_height;                                                                         \
     cache_entry->metric.bitmap_type = bitmap_type;                                                                          \
     const auto cache_entry_ptr = serv->host_ptr_to_guest_general_data(cache_entry).ptr_address();                           \
     if (epoc::does_client_use_pointer_instead_of_offset(this)) {                                                            \
-        cache_entry->font_offset = static_cast<std::int32_t>(bmp_font->openfont.ptr_address());                             \
+        cache_entry->font_offset = static_cast<std::int32_t>(reinterpret_cast<type*>(bmp_font)->openfont.ptr_address());                             \
     } else {                                                                                                                \
-        cache_entry->font_offset = static_cast<std::int32_t>(bmp_font->openfont.ptr_address() - cache_entry_ptr);           \
+        cache_entry->font_offset = static_cast<std::int32_t>(reinterpret_cast<type*>(bmp_font)->openfont.ptr_address() - cache_entry_ptr);           \
     }                                                                                                                       \
     std::memcpy(reinterpret_cast<std::uint8_t *>(cache_entry) + cache_entry->offset, bitmap_data,                           \
         bitmap_data_size);                                                                                                  \
@@ -683,22 +700,24 @@ namespace eka2l1 {
             epoc::open_font_session_cache_link *link = serv->session_cache_link->get_or_create(this);
             epoc::open_font_session_cache_v2 *session_cache = link->cache.get(pr);
 
-            MAKE_CACHE_ENTRY(2);
+#define DO_CACHE_ENTRY_FINISH_UP                                                                             \
+    cache_entry->last_use = session_cache->last_use_counter++;                                               \
+    cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();   \
+    ctx->set_request_status(cache_entry_ptr)
 
-            cache_entry->last_use = session_cache->last_use_counter++;
-
-            // What the hell?
-            cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();
-
-            // Return the pointer to glyph cache entry on lower version
-            ctx->set_request_status(cache_entry_ptr);
-            return;
+            if (serv->kern->is_eka1()) {
+                MAKE_CACHE_ENTRY(2, epoc::bitmapfont_v1);
+                DO_CACHE_ENTRY_FINISH_UP;
+            } else {
+                MAKE_CACHE_ENTRY(2, epoc::bitmapfont_v2);
+                DO_CACHE_ENTRY_FINISH_UP;
+            }
         }
 
         epoc::open_font_session_cache_v3 *session_cache = serv->session_cache_list->get(this,
             static_cast<std::int32_t>(connection_id_), true);
 
-        MAKE_CACHE_ENTRY(3);
+        MAKE_CACHE_ENTRY(3, epoc::bitmapfont_v2);
 
         // From S^3 onwards, the 2nd argument contains some necessary struct we need to fill in (metrics offset
         // and bitmap pointer offset) so we don't have to lookup anymore. On older version, the 2nd argument is
