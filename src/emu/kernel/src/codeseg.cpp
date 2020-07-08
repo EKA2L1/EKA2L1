@@ -33,6 +33,7 @@ namespace eka2l1::kernel {
         code_size = info.code_size;
         data_size = info.data_size;
         bss_size = info.bss_size;
+        text_size = info.text_size;
 
         exception_descriptor = info.exception_descriptor;
 
@@ -332,5 +333,9 @@ namespace eka2l1::kernel {
         }
 
         return false;
+    }
+
+    address codeseg::relocate(kernel::process *pr, const address addr_on_base) {
+        return addr_on_base - get_code_base() + get_code_run_addr(pr, nullptr);
     }
 }

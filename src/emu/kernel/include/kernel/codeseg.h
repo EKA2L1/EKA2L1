@@ -48,6 +48,7 @@ namespace eka2l1::kernel {
 
         std::uint32_t code_size = 0;
         std::uint32_t data_size = 0;
+        std::uint32_t text_size = 0;
         std::uint32_t bss_size = 0;
 
         // Offset to exception descriptor
@@ -76,6 +77,7 @@ namespace eka2l1::kernel {
         std::uint32_t data_base;
 
         std::uint32_t code_size;
+        std::uint32_t text_size;
         std::uint32_t data_size;
         std::uint32_t bss_size;
 
@@ -169,6 +171,10 @@ namespace eka2l1::kernel {
             return data_size;
         }
 
+        std::uint32_t get_text_size() const {
+            return text_size;
+        }
+
         address get_code_base() const {
             return code_base;
         }
@@ -203,5 +209,6 @@ namespace eka2l1::kernel {
 
         // Use for patching
         void set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address);
+        address relocate(kernel::process *pr, const address addr_on_base);
     };
 }
