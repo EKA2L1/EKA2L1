@@ -385,6 +385,76 @@ namespace eka2l1 {
     void fbscli::typeface_support(service::ipc_context *ctx) {
     }
 
+    epoc::bitmapfont *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec &spec, kernel::process *font_user, const std::uint32_t desired_height) {
+        fbs_server *serv = server<fbs_server>();
+
+        epoc::bitmapfont *bmpfont = serv->allocate_general_data<epoc::bitmapfont>();
+
+        if (!bmpfont) {
+            return nullptr;
+        }
+
+        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
+
+        if (!of) {
+            serv->free_general_data(bmpfont);
+            return nullptr;
+        }
+
+        if (epoc::does_client_use_pointer_instead_of_offset(this)) {
+            bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
+        } else {
+            // Better make it offset for future debugging purpose
+            // Mark bit 0 as set so that fntstore can recognised the offset model
+            bmpfont->openfont = static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(
+                                                              of)
+                - reinterpret_cast<std::uint8_t *>(bmpfont)) | 0x1;
+        }
+
+        bmpfont->vtable = serv->fntstr_seg->relocate(font_user, serv->bmp_font_vtab.ptr_address());
+        calculate_algorithic_style(bmpfont->algorithic_style, spec);
+
+        float scale_factor = 0;
+
+        if (desired_height != 0) {
+            // Scale for max height
+            scale_factor = static_cast<float>(desired_height) / info.metrics.max_height;
+        } else {
+            scale_factor = static_cast<float>(spec.height) / info.metrics.design_height;
+        }
+
+        do_scale_metrics(info.metrics, scale_factor);
+        do_fill_bitmap_font_spec(bmpfont->spec_in_twips, spec, info.metrics.design_height, info.adapter);
+
+        // Set font name and flags. Flags is stubbed
+        info.scale_factor_x = scale_factor;
+        info.scale_factor_y = scale_factor;
+
+        static constexpr std::uint16_t MAX_TF_NAME = 24;
+        bmpfont->spec_in_twips.tf.name.assign(nullptr, reinterpret_cast<std::uint8_t*>(info.face_attrib.name.data),
+            MAX_TF_NAME * 2);
+        bmpfont->spec_in_twips.tf.flags = spec.tf.flags;
+
+        of->metrics = info.metrics;
+        of->face_index_offset = static_cast<int>(info.idx);
+        of->vtable = epoc::DEAD_VTABLE;
+
+        // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
+        // Since I don't know the version that starts using offset yet, we just leave it be this for now
+        if (epoc::does_client_use_pointer_instead_of_offset(this)) {
+            of->session_cache_list_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_general_data(
+                                                                              serv->session_cache_link)
+                                                                          .ptr_address());
+        } else {
+            of->session_cache_list_offset = static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(
+                                                                          serv->session_cache_list)
+                - reinterpret_cast<std::uint8_t *>(of));
+        }
+
+        // TODO (pent0): Fill basic font info to epoc::open_font
+        return bmpfont;
+    }
+
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
         epoc::font_spec spec = *ctx->get_arg_packed<epoc::font_spec>(0);
 
@@ -414,70 +484,20 @@ namespace eka2l1 {
         }
 
         // Scale it
-        epoc::bitmapfont *bmpfont = server<fbs_server>()->allocate_general_data<epoc::bitmapfont>();
-        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
-
-        if (epoc::does_client_use_pointer_instead_of_offset(this)) {
-            bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
-        } else {
-            // Better make it offset for future debugging purpose
-            // Mark bit 0 as set so that fntstore can recognised the offset model
-            bmpfont->openfont = static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(
-                                                              of)
-                - reinterpret_cast<std::uint8_t *>(bmpfont)) | 0x1;
-        }
-
-        bmpfont->vtable = serv->fntstr_seg->relocate(ctx->msg->own_thr->owning_process(), serv->bmp_font_vtab.ptr_address());
-        calculate_algorithic_style(bmpfont->algorithic_style, spec);
-
         font = serv->font_obj_container.make_new<fbsfont>();
+        font->of_info = *ofi_suit;
+        font->serv = serv;
+
+        epoc::bitmapfont *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
+            size_info.has_value() ? size_info->x : 0);
+
+        if (!bmpfont) {
+            ctx->set_request_status(epoc::error_no_memory);
+            return;
+        }
 
         // S^3 warning!
         font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
-        font->of_info = *ofi_suit;
-
-        // TODO: Adjust with physical size.
-        float scale_factor = 0;
-
-        if (size_info && (size_info->x != 0)) {
-            // Scale for max height
-            scale_factor = static_cast<float>(size_info->x) / font->of_info.metrics.max_height;
-        } else {
-            scale_factor = static_cast<float>(spec.height) / font->of_info.metrics.design_height;
-        }
-
-        do_scale_metrics(font->of_info.metrics, scale_factor);
-        do_fill_bitmap_font_spec(bmpfont->spec_in_twips, spec, font->of_info.metrics.design_height,
-            font->of_info.adapter);
-
-        // Set font name and flags. Flags is stubbed
-        static constexpr std::uint16_t MAX_TF_NAME = 24;
-        bmpfont->spec_in_twips.tf.name.assign(nullptr, reinterpret_cast<std::uint8_t*>(ofi_suit->face_attrib.name.data),
-            MAX_TF_NAME * 2);
-        bmpfont->spec_in_twips.tf.flags = spec.tf.flags;
-
-        font->of_info.scale_factor_x = scale_factor;
-        font->of_info.scale_factor_y = scale_factor;
-
-        font->serv = serv;
-
-        of->metrics = font->of_info.metrics;
-        of->face_index_offset = static_cast<int>(ofi_suit->idx);
-        of->vtable = epoc::DEAD_VTABLE;
-
-        // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
-        // Since I don't know the version that starts using offset yet, we just leave it be this for now
-        if (epoc::does_client_use_pointer_instead_of_offset(this)) {
-            of->session_cache_list_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_general_data(
-                                                                              serv->session_cache_link)
-                                                                          .ptr_address());
-        } else {
-            of->session_cache_list_offset = static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(
-                                                                          serv->session_cache_list)
-                - reinterpret_cast<std::uint8_t *>(of));
-        }
-
-        // TODO (pent0): Fill basic font info to epoc::open_font
 
         font_info result_info;
 
@@ -487,6 +507,18 @@ namespace eka2l1 {
 
         ctx->write_arg_pkg(1, result_info);
         ctx->set_request_status(epoc::error_none);
+    }
+
+    void fbscli::get_font_by_uid(service::ipc_context *ctx) {
+        std::optional<epoc::uid> font_uid = ctx->get_arg<epoc::uid>(2);
+        std::optional<epoc::alg_style> the_style = ctx->get_arg_packed<epoc::alg_style>(1);
+
+        if (!the_style || !font_uid) {
+            ctx->set_request_status(epoc::error_argument);
+            return;
+        }
+
+        LOG_TRACE("{} {}", font_uid.value(), the_style->width_factor);
     }
 
     void fbscli::duplicate_font(service::ipc_context *ctx) {
@@ -664,7 +696,7 @@ namespace eka2l1 {
 
         epoc::ref_count_object::deref();
     }
-
+    
     fbsfont *fbs_server::get_font(const service::uid id) {
         return font_obj_container.get<fbsfont>(id);
     }

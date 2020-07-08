@@ -138,6 +138,10 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_get_font_by_id:
+            get_font_by_uid(ctx);
+            break;
+
         case fbs_face_attrib: {
             get_face_attrib(ctx);
             break;

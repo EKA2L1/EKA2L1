@@ -61,6 +61,10 @@ namespace eka2l1 {
         // They should probably use offset from the beginning.
         constexpr std::uint16_t RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT = 94;
 
+        struct bitmapfont;
+        struct open_font;
+        struct open_font_info;
+
         bool does_client_use_pointer_instead_of_offset(fbscli *cli);
     }
 
@@ -165,6 +169,9 @@ namespace eka2l1 {
         service::uid connection_id_{ 0 };
         epoc::notify_info dirty_nof_;
         bool support_dirty_bitmap{ true };
+        
+        // Info is adjusted after this function to fit the spec
+        epoc::bitmapfont *create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec &spec, kernel::process *font_user, const std::uint32_t desired_height);
 
         explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
 
@@ -187,6 +194,7 @@ namespace eka2l1 {
         void typeface_support(service::ipc_context *ctx);
         void get_twips_height(service::ipc_context *ctx);
         void set_pixel_size_in_twips(service::ipc_context *ctx);
+        void get_font_by_uid(service::ipc_context *ctx);
 
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
