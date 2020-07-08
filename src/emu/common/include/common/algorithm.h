@@ -306,7 +306,7 @@ namespace eka2l1 {
          */
         template <typename T>
         std::basic_string<T> trim_spaces(std::basic_string<T> str) {
-            std::basic_string<T>::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
+            typename std::basic_string<T>::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
                 return (lhs == rhs) && (static_cast<char>(lhs) == ' ');
             });
 
