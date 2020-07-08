@@ -43,11 +43,12 @@ namespace eka2l1::utils {
 
         // The addresses that we traced back for each clue must match. Virtual unimplemented method will not have the address of 0.
         offset the_off = 0;
-        const std::uint32_t *start_looking = reinterpret_cast<const std::uint32_t*>(end_ - 4);
+        const std::uint32_t *start_looking = nullptr;
 
         for (const std::uint32_t addr: addrs) {
             // Looking for this address's word first
             std::uint32_t looked = 0;
+            start_looking = reinterpret_cast<const std::uint32_t*>(end_ - 4);
 
             while ((start_looking >= reinterpret_cast<const std::uint32_t*>(start_)) && (looked <= MAXIMUM_ADDR_SEARCH_BACK)) {
                 if (*start_looking == addr) {
@@ -58,12 +59,12 @@ namespace eka2l1::utils {
                 start_looking--;
             }
 
-            looked = 0;
-
             if (((looked == MAXIMUM_ADDR_SEARCH_BACK) || (start_looking == reinterpret_cast<const std::uint32_t*>(start_))) && (*start_looking != addr)) {
                 // Abadon this clue
                 continue;
             }
+
+            looked = 0;
 
             // Begin search back to 0
             while ((start_looking >= reinterpret_cast<const std::uint32_t*>(start_)) && (looked <= MAXIMUM_VTABLE_SEARCH_BACK)) {
