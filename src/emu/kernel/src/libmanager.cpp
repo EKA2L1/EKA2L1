@@ -259,6 +259,7 @@ namespace eka2l1::hle {
         info.data_base = img->header.data_base;
         info.code_size = img->header.code_size;
         info.data_size = img->header.data_size;
+        info.text_size = img->header.text_size;
         info.bss_size = img->header.bss_size;
         info.entry_point = img->header.entry_point;
         info.export_table = img->ed.syms;
@@ -501,6 +502,7 @@ namespace eka2l1::hle {
         info.data_load_addr = romimg.header.data_address;
         info.code_size = romimg.header.code_size;
         info.data_size = romimg.header.data_size;
+        info.text_size = romimg.header.text_size;
         info.entry_point = romimg.header.entry_point;
         info.bss_size = romimg.header.bss_size;
         info.export_table = romimg.exports;
