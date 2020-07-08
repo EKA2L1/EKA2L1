@@ -2376,6 +2376,10 @@ namespace eka2l1::epoc {
         return do_hal_by_data_num(kern->get_system(), function, param);
     }
 
+    BRIDGE_FUNC(void, user_svr_screen_info, epoc::des8 *the_des) {
+        do_hal_by_data_num(kern->get_system(), kernel::hal_data_eka1_screen_info, the_des);
+    }
+
     std::int32_t chunk_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         // arg0 = handle, arg1 = name, arg2 = create info
@@ -3284,6 +3288,7 @@ namespace eka2l1::epoc {
         
         // User server calls
         BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0xC00034, thread_resume),

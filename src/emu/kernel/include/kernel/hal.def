@@ -31,6 +31,7 @@ HAL_ENTRY(ram, RAMSize, 15, 0)
 HAL_ENTRY(page_size, PageSize, 18, 8)
 HAL_ENTRY(display_screen_x_pixels, ScreenXPixels, 31, 0)
 HAL_ENTRY(display_screen_y_pixels, ScreenYPixels, 32, 0)
+HAL_ENTRY(screen_info, ScreenInfo, 0, 0xC00000)
 
 #ifdef HAL_ENTRY
 #undef HAL_ENTRY

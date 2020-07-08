@@ -136,7 +136,7 @@ namespace eka2l1::epoc {
     struct display_hal : public hal {
         window_server *winserv_;
 
-        void get_screen_info_from_scr_object(epoc::screen *scr, epoc::screen_info_v1 &info) {
+        static void get_screen_info_from_scr_object(epoc::screen *scr, epoc::screen_info_v1 &info) {
             info.window_handle_valid_ = false;
             info.screen_address_valid_ = true;
             info.screen_address_ = scr->screen_buffer_chunk->base(nullptr).cast<void>();
@@ -309,6 +309,16 @@ namespace eka2l1::epoc {
         case kernel::hal_data_eka1_page_size:
             *reinterpret_cast<std::uint32_t*>(data) = sys->get_memory_system()->get_page_size();
             break;
+
+        case kernel::hal_data_eka1_screen_info: {
+            display_hal *the_hal = reinterpret_cast<display_hal*>(sys->get_hal(hal_category_display));
+
+            if (!the_hal) {
+                return -1;
+            }
+
+            return the_hal->current_screen_info(reinterpret_cast<int*>(data), nullptr, 0);
+        }
 
         default:
             LOG_ERROR("Unimplemented HAL function handler for key {}", data_num);
