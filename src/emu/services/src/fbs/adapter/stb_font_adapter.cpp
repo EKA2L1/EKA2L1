@@ -28,6 +28,10 @@ namespace eka2l1::epoc::adapter {
         : data_(data_)
         , flags_(0) {
         count_ = stbtt_GetNumberOfFonts(&data_[0]);
+
+        if (count_ > 0) {
+            flags_ |= FLAGS_CONTEXT_INITED;
+        }
     }
 
     std::size_t stb_font_file_adapter::count() {
