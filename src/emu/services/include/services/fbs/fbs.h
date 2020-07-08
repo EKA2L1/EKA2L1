@@ -171,7 +171,10 @@ namespace eka2l1 {
         bool support_dirty_bitmap{ true };
         
         // Info is adjusted after this function to fit the spec
-        epoc::bitmapfont *create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec &spec, kernel::process *font_user, const std::uint32_t desired_height);
+        epoc::bitmapfont *create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec &spec, kernel::process *font_user, const std::uint32_t desired_height,
+            std::optional<std::pair<float, float>> scale_vector = std::nullopt);
+
+        void write_font_handle(service::ipc_context *ctx, fbsfont *font);
 
         explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
 

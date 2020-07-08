@@ -65,6 +65,16 @@ namespace eka2l1::epoc {
         font_adapters.push_back(std::move(adapter));
     }
 
+    open_font_info *font_store::seek_the_font_by_uid(const epoc::uid the_uid) {
+        for (auto &info: open_font_store) {
+            if (info.adapter->unique_id(info.idx) == the_uid) {
+                return &info;
+            }
+        }
+
+        return nullptr;
+    }
+    
     open_font_info *font_store::seek_the_open_font(epoc::font_spec &spec) {
         open_font_info *best = nullptr;
         int best_score = -99999999;

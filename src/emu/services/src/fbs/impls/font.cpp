@@ -323,13 +323,13 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    static void do_scale_metrics(epoc::open_font_metrics &metrics, const float scale) {
-        metrics.max_height = static_cast<std::int16_t>(metrics.max_height * scale);
-        metrics.ascent = static_cast<std::int16_t>(metrics.ascent * scale);
-        metrics.descent = static_cast<std::int16_t>(metrics.descent * scale);
-        metrics.design_height = static_cast<std::int16_t>(metrics.design_height * scale);
-        metrics.max_depth = static_cast<std::int16_t>(metrics.max_depth * scale);
-        metrics.max_width = static_cast<std::int16_t>(metrics.max_width * scale);
+    static void do_scale_metrics(epoc::open_font_metrics &metrics, const float scale_x, const float scale_y) {
+        metrics.max_height = static_cast<std::int16_t>(metrics.max_height * scale_y);
+        metrics.ascent = static_cast<std::int16_t>(metrics.ascent * scale_x);
+        metrics.descent = static_cast<std::int16_t>(metrics.descent * scale_x);
+        metrics.design_height = static_cast<std::int16_t>(metrics.design_height * scale_y);
+        metrics.max_depth = static_cast<std::int16_t>(metrics.max_depth * scale_y);
+        metrics.max_width = static_cast<std::int16_t>(metrics.max_width * scale_y);
     }
 
     static std::int32_t calculate_baseline(epoc::font_spec &spec) {
@@ -385,7 +385,8 @@ namespace eka2l1 {
     void fbscli::typeface_support(service::ipc_context *ctx) {
     }
 
-    epoc::bitmapfont *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec &spec, kernel::process *font_user, const std::uint32_t desired_height) {
+    epoc::bitmapfont *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec &spec, kernel::process *font_user, const std::uint32_t desired_height,
+        std::optional<std::pair<float, float>> scale_vector) {
         fbs_server *serv = server<fbs_server>();
 
         epoc::bitmapfont *bmpfont = serv->allocate_general_data<epoc::bitmapfont>();
@@ -414,21 +415,27 @@ namespace eka2l1 {
         bmpfont->vtable = serv->fntstr_seg->relocate(font_user, serv->bmp_font_vtab.ptr_address());
         calculate_algorithic_style(bmpfont->algorithic_style, spec);
 
-        float scale_factor = 0;
+        float scale_factor_x = 0;
+        float scale_factor_y = 0;
 
-        if (desired_height != 0) {
-            // Scale for max height
-            scale_factor = static_cast<float>(desired_height) / info.metrics.max_height;
+        if (!scale_vector) {
+            if (desired_height != 0) {
+                // Scale for max height
+                scale_factor_x = scale_factor_y = static_cast<float>(desired_height) / info.metrics.max_height;
+            } else {
+                scale_factor_x = scale_factor_y = static_cast<float>(spec.height) / info.metrics.design_height;
+            }
         } else {
-            scale_factor = static_cast<float>(spec.height) / info.metrics.design_height;
+            scale_factor_x = scale_vector->first;
+            scale_factor_y = scale_vector->second;
         }
 
-        do_scale_metrics(info.metrics, scale_factor);
+        do_scale_metrics(info.metrics, scale_factor_x, scale_factor_y);
         do_fill_bitmap_font_spec(bmpfont->spec_in_twips, spec, info.metrics.design_height, info.adapter);
 
         // Set font name and flags. Flags is stubbed
-        info.scale_factor_x = scale_factor;
-        info.scale_factor_y = scale_factor;
+        info.scale_factor_x = scale_factor_x;
+        info.scale_factor_y = scale_factor_y;
 
         static constexpr std::uint16_t MAX_TF_NAME = 24;
         bmpfont->spec_in_twips.tf.name.assign(nullptr, reinterpret_cast<std::uint8_t*>(info.face_attrib.name.data),
@@ -455,6 +462,17 @@ namespace eka2l1 {
         return bmpfont;
     }
 
+    void fbscli::write_font_handle(service::ipc_context *ctx, fbsfont *font) {
+        font_info result_info;
+
+        result_info.handle = obj_table_.add(font);
+        result_info.address_offset = font->guest_font_offset;
+        result_info.server_handle = static_cast<std::int32_t>(font->id);
+
+        ctx->write_arg_pkg(1, result_info);
+        ctx->set_request_status(epoc::error_none);
+    }
+    
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
         epoc::font_spec spec = *ctx->get_arg_packed<epoc::font_spec>(0);
 
@@ -498,15 +516,7 @@ namespace eka2l1 {
 
         // S^3 warning!
         font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
-
-        font_info result_info;
-
-        result_info.handle = obj_table_.add(font);
-        result_info.address_offset = font->guest_font_offset;
-        result_info.server_handle = static_cast<std::int32_t>(font->id);
-
-        ctx->write_arg_pkg(1, result_info);
-        ctx->set_request_status(epoc::error_none);
+        write_font_handle(ctx, font);
     }
 
     void fbscli::get_font_by_uid(service::ipc_context *ctx) {
@@ -518,7 +528,38 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("{} {}", font_uid.value(), the_style->width_factor);
+        fbs_server *serv = server<fbs_server>();
+        epoc::open_font_info *info = serv->persistent_font_store.seek_the_font_by_uid(font_uid.value());
+
+        if (!info) {
+            ctx->set_request_status(epoc::error_not_found);
+            return;
+        }
+
+        epoc::font_spec the_spec;
+        the_spec.tf.name = info->face_attrib.name.to_std_string(nullptr);
+        the_spec.tf.flags = the_style->flags;
+
+        the_spec.style.flags = the_style->flags;
+        the_spec.height = info->metrics.design_height * the_style->height_factor;
+        
+        std::pair<float, float> scale_pair = { static_cast<float>(the_style->width_factor), static_cast<float>(the_style->height_factor) };
+
+        fbsfont *font = nullptr;
+        font = serv->font_obj_container.make_new<fbsfont>();
+        font->of_info = *info;
+        font->serv = serv;
+
+        epoc::bitmapfont *bmpfont = create_bitmap_open_font(font->of_info, the_spec, ctx->msg->own_thr->owning_process(), 0, scale_pair);
+
+        if (!bmpfont) {
+            ctx->set_request_status(epoc::error_no_memory);
+            return;
+        }
+
+        // S^3 warning!
+        font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
+        write_font_handle(ctx, font);
     }
 
     void fbscli::duplicate_font(service::ipc_context *ctx) {
@@ -530,15 +571,7 @@ namespace eka2l1 {
             return;
         }
 
-        font_info result_info;
-
-        // Add new one
-        result_info.handle = obj_table_.add(font);
-        result_info.address_offset = font->guest_font_offset;
-        result_info.server_handle = static_cast<std::int32_t>(font->id);
-
-        ctx->write_arg_pkg(1, result_info);
-        ctx->set_request_status(epoc::error_none);
+        write_font_handle(ctx, font);
     }
 
     static constexpr std::uint16_t FBS_TWIPS_MUL = 15;
