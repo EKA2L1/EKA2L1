@@ -304,7 +304,24 @@ namespace eka2l1 {
          * 
          * \returns A new string contains all space trimmed
          */
-        std::string trim_spaces(std::string str);
+        template <typename T>
+        std::basic_string<T> trim_spaces(std::basic_string<T> str) {
+            std::basic_string<T>::iterator new_end = std::unique(str.begin(), str.end(), [](char lhs, char rhs) {
+                return (lhs == rhs) && (static_cast<char>(lhs) == ' ');
+            });
+
+            str.erase(new_end, str.end());
+
+            while ((str.length() > 0) && (static_cast<char>(str[0]) == ' ')) {
+                str.erase(str.begin());
+            }
+
+            while ((str.length() > 0) && (static_cast<char>(str.back()) == ' ')) {
+                str.erase(str.length() - 1);
+            }
+
+            return str;
+        }
 
         /**
          * \brief Replace all occurrences of a word in a string with other word/string
