@@ -39,6 +39,8 @@ namespace eka2l1::epoc::adapter {
         float yoff2;
     };
 
+    static constexpr std::uint32_t INVALID_FONT_TF_UID = 0xFFFFFFFF;
+
     /**
      * \brief Base class for adapter.
      */
@@ -97,6 +99,13 @@ namespace eka2l1::epoc::adapter {
          * \returns Number of font in this file.
          */
         virtual std::size_t count() = 0;
+
+        /**
+         * @brief       Get the unique ID of a typeface.
+         * @param       face_index        The index of the face to get the UID from.
+         * @returns     0xFFFFFFFF on failure or unavailable
+         */
+        virtual std::uint32_t unique_id(const std::size_t face_index) = 0;
     };
 
     enum class font_file_adapter_kind {

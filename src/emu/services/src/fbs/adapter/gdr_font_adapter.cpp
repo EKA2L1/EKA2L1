@@ -41,6 +41,15 @@ namespace eka2l1::epoc::adapter {
         return store_.typefaces_.size();
     }
 
+    std::uint32_t gdr_font_file_adapter::unique_id(const std::size_t face_index) {
+        if (face_index >= store_.typefaces_.size()) {
+            return INVALID_FONT_TF_UID;
+        }
+
+        // Use the first
+        return store_.typefaces_[face_index].font_bitmaps_[0]->header_.uid_;
+    }
+    
     bool gdr_font_file_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
         // Look for the index of the typeface
         if (!is_valid() || (idx >= store_.typefaces_.size())) {

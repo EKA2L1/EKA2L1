@@ -75,5 +75,6 @@ namespace eka2l1::epoc::adapter {
         bool does_glyph_exist(std::size_t idx, std::uint32_t code) override;
 
         std::size_t count() override;
+        std::uint32_t unique_id(const std::size_t face_index) override;
     };
 }
