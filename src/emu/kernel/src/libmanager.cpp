@@ -551,14 +551,48 @@ namespace eka2l1::hle {
                         // Add ref
                         acs->add_dependency(ref_seg);
                     } else {
+                        address romimg_addr = 0;
+                        address ep_org = entry_point;
+
                         if (kern_->is_eka1()) {
-                            // If we gonna flip the ROM directory searching for this DLL, it would be time consuming
-                            // Force the codeseg to take this entry point for now
-                            acs->add_premade_entry_point(entry_point);
+                            // Look for entry point word, from there trace back to the ROM image header
+                            // Align down entry point address to word size
+                            entry_point = common::align(entry_point, 4, 0);
+                            address *the_word = eka2l1::ptr<address>(entry_point).get(mem_);
+
+                            static constexpr std::uint32_t MAX_BACK_TRACE = 100;
+                            std::uint32_t traced = 0;
+
+                            while (traced < MAX_BACK_TRACE) {
+                                if (*(the_word - traced) == ep_org) {
+                                    break;
+                                }
+
+                                traced++;
+                            }
+
+                            if (*(the_word - traced) != ep_org) {
+                                LOG_ERROR("Unable to find DLL image for entry point address: 0x{:X}", ep_org);
+                            } else {
+                                entry_point -= traced * sizeof(address);
+                                the_word -= traced;
+
+                                traced = 0;
+                                
+                                // The header has two variables: entry point and code address. They may be same, so looks on the furthest
+                                while ((traced < MAX_BACK_TRACE) && (*(the_word - traced - 1) == ep_org)) {
+                                    traced++;
+                                }
+                                
+                                romimg_addr = entry_point - traced * sizeof(address) - offsetof(loader::rom_image_header, entry_point);
+                            }
                         } else {
+                            romimg_addr = ref_table->rom_img_headers_ref[i];
+                        }
+
+                        if (romimg_addr != 0) {
                             // TODO: Supply right size. The loader doesn't care about size right now
-                            common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(ref_table->rom_img_headers_ref[i]).get(mem_),
-                                0xFFFF);
+                            common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(romimg_addr).get(mem_), 0xFFFF);
 
                             // Load new romimage and add dependency
                             loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
@@ -780,7 +814,8 @@ namespace eka2l1::hle {
         emitter.PUSH(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_LR);
 
         // Allocate entry point addresses on stack, plus also allocate the total entry point count
-        emitter.SUB(common::armgen::R_SP, common::armgen::R_SP, TOTAL_EP_TO_ALLOC * sizeof(address) + sizeof(std::uint32_t));
+        emitter.MOVI2R(common::armgen::R3, TOTAL_EP_TO_ALLOC * sizeof(address) + sizeof(std::uint32_t));
+        emitter.SUB(common::armgen::R_SP, common::armgen::R_SP, common::armgen::R3);
         emitter.MOVI2R(common::armgen::R3, TOTAL_EP_TO_ALLOC);     // Assign allocated entry point count
         emitter.STR(common::armgen::R3, common::armgen::R_SP);  // Store it to the count variable.
         emitter.MOV(common::armgen::R5, common::armgen::R0);    // Store dll entry point invoke reason in R5
@@ -812,7 +847,8 @@ namespace eka2l1::hle {
         
         emitter.set_jump_target(entry_point_call_loop_done);
 
-        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, TOTAL_EP_TO_ALLOC * sizeof(address));
+        emitter.MOVI2R(common::armgen::R3, TOTAL_EP_TO_ALLOC * sizeof(address));
+        emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, common::armgen::R3);
         emitter.POP(4, common::armgen::R3, common::armgen::R4, common::armgen::R5, common::armgen::R_PC);
 
         emitter.flush_lit_pool();
