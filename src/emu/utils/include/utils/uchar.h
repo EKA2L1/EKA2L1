@@ -106,4 +106,16 @@ namespace eka2l1::epoc {
      * @see     uppercase_uchar
      */
     const uchar lowercase_uchar(const uchar c, std::locale &ln);
+
+    /**
+     * @brief   Fold an Unicode character.
+     * 
+     * An Unicode character when folded can be used in comparision that do not care about things such as case and accents.
+     * 
+     * @param   c      Character to fold.
+     * @param   ln     The locale to base this fold on.
+     * 
+     * @returns Folded character
+     */
+    const uchar fold_uchar(const uchar c, std::locale &ln);
 }

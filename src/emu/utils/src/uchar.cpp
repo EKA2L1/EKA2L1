@@ -60,4 +60,9 @@ namespace eka2l1::epoc {
     const uchar lowercase_uchar(const uchar c, std::locale &ln) {
         return std::tolower(static_cast<wchar_t>(c), ln);
     }
+    
+    const uchar fold_uchar(const uchar c, std::locale &ln) {
+        // TODO: Proper implementation. For now just uppercase so it does not yell
+        return uppercase_uchar(c, ln);
+    }
 }
