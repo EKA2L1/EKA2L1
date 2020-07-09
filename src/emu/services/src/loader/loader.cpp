@@ -94,14 +94,32 @@ namespace eka2l1 {
     }
 
     void loader_server::load_library(service::ipc_context &ctx) {
-        std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
+        std::optional<epoc::ldr_info> info = std::nullopt;
+        std::optional<epoc::ldr_info_eka1> info_eka1 = std::nullopt;
 
-        if (!info) {
-            ctx.set_request_status(epoc::error_argument);
-            return;
+        epoc::owner_type handle_owner = epoc::owner_thread;
+        std::optional<std::u16string> lib_path = std::nullopt;
+
+        if (kern->is_eka1()) {
+            info_eka1 = ctx.get_arg_packed<epoc::ldr_info_eka1>(0);
+
+            if (!info_eka1) {
+                ctx.set_request_status(epoc::error_argument);
+                return;
+            }
+
+            lib_path = info_eka1->full_path_.to_std_string(nullptr);
+        } else {
+            info = ctx.get_arg_packed<epoc::ldr_info>(0);
+
+            if (!info) {
+                ctx.set_request_status(epoc::error_argument);
+                return;
+            }
+
+            handle_owner = info->owner_type;
+            lib_path = ctx.get_arg<std::u16string>(1);
         }
-
-        std::optional<std::u16string> lib_path = ctx.get_arg<std::u16string>(1);
 
         if (!lib_path) {
             ctx.set_request_status(epoc::error_argument);
@@ -129,16 +147,21 @@ namespace eka2l1 {
 
         /* Create process through kernel system. */
         kernel::handle lib_handle = ctx.sys->get_kernel_system()->create_and_add_thread<kernel::library>(
-                                                                    static_cast<kernel::owner_type>(info->owner_type), ctx.msg->own_thr, cs)
-                                        .first;
+            static_cast<kernel::owner_type>(handle_owner), ctx.msg->own_thr, cs).first;
 
         LOG_TRACE("Loaded library: {}", lib_name);
 
-        info->handle = lib_handle;
+        if (info) {
+            kernel::process *owning_process = ctx.msg->own_thr->owning_process();
+            owning_process->signal_dll_lock(ctx.msg->own_thr);
+        
+            info->handle = lib_handle;
+            ctx.write_arg_pkg(0, *info);
+        } else {
+            info_eka1->result_handle = lib_handle;
+            ctx.write_arg_pkg(0, *info);
+        }
 
-        ctx.msg->own_thr->owning_process()->signal_dll_lock(ctx.msg->own_thr);
-
-        ctx.write_arg_pkg(0, *info);
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -187,7 +210,7 @@ namespace eka2l1 {
     }
 
     loader_server::loader_server(system *sys)
-        : service::server(sys->get_kernel_system(), sys, get_loader_server_name_through_epocver(kern->get_epoc_version()), true) {
+        : service::server(sys->get_kernel_system(), sys, get_loader_server_name_through_epocver(sys->get_symbian_version_use()), true) {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
         REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
         REGISTER_IPC(loader_server, get_info, EGetInfo, "Loader::GetInfo");
