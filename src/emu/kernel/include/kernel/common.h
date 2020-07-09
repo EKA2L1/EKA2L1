@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <mem/ptr.h>
+
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -106,5 +108,10 @@ namespace eka2l1::kernel {
         address next_;                ///< Next trap address.
         address result_;              ///< Trap result code pointer.
         address trap_handler_;              ///< Pointer to trap handler.
+    };
+
+    struct char_set {
+        address char_data_set_;
+        address collation_data_set_;
     };
 }

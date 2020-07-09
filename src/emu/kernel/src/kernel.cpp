@@ -55,6 +55,12 @@
 #include <config/config.h>
 
 namespace eka2l1 {
+    void kernel_global_data::reset() {
+        // Reset all these to 0
+        char_set_.char_data_set_ = 0;
+        char_set_.collation_data_set_ = 0;
+    }
+
     kernel_system::kernel_system(system *esys, ntimer *timing, io_system *io_sys,
         config::state *old_conf, loader::rom *rom_info, arm::core *cpu, disasm *disassembler)
         : btrace_inst_(nullptr)
@@ -210,6 +216,23 @@ namespace eka2l1 {
         };
     }
 
+    eka2l1::ptr<kernel_global_data> kernel_system::get_global_user_data_pointer() {
+        if (!global_data_chunk_) {    
+            // Make global data
+            static constexpr std::uint32_t GLOBAL_DATA_SIZE = 0x1000;
+            global_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "Kernel global data", 0, GLOBAL_DATA_SIZE,
+                GLOBAL_DATA_SIZE, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::rom,
+                kernel::chunk_attrib::none, false);
+
+            if (global_data_chunk_) {
+                kernel_global_data *data = reinterpret_cast<kernel_global_data*>(global_data_chunk_->host_base());
+                data->reset();
+            }
+        }
+
+        return global_data_chunk_->base(nullptr).cast<kernel_global_data>();
+    }
+    
     kernel::thread *kernel_system::crr_thread() {
         return thr_sch_->current_thread();
     }

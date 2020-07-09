@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <kernel/common.h>
 #include <kernel/btrace.h>
 #include <kernel/change_notifier.h>
 #include <kernel/chunk.h>
@@ -191,6 +192,12 @@ namespace eka2l1 {
      */
     using process_switch_callback = std::function<void(arm::core*, kernel::process*, kernel::process*)>;
 
+    struct kernel_global_data {
+        kernel::char_set char_set_;
+
+        void reset();
+    };
+
     class kernel_system {
     private:
         friend class debugger_base;
@@ -242,6 +249,7 @@ namespace eka2l1 {
         language lang_;
 
         std::unique_ptr<std::locale> locale_;
+        chunk_ptr global_data_chunk_;
 
         common::identity_container<ipc_send_callback> ipc_send_callbacks_;
         common::identity_container<ipc_complete_callback> ipc_complete_callbacks_;
@@ -356,6 +364,8 @@ namespace eka2l1 {
         void set_epoc_version(const epocver ver);
 
         void install_memory(memory_system *mem);
+
+        eka2l1::ptr<kernel_global_data> get_global_user_data_pointer();
 
         /**
          * @brief Get the currently active CPU.
