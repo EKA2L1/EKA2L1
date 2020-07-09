@@ -2906,6 +2906,14 @@ namespace eka2l1::epoc {
         return epoc::uppercase_uchar(character, *kern->get_current_locale());
     }
 
+    BRIDGE_FUNC(std::uint32_t, uchar_fold, const epoc::uchar character) {
+        return epoc::fold_uchar(character, *kern->get_current_locale());
+    }
+
+    BRIDGE_FUNC(address, get_locale_char_set) {
+        return kern->get_global_user_data_pointer().ptr_address() + offsetof(kernel_global_data, char_set_);
+    }
+
     BRIDGE_FUNC(std::uint32_t, user_language) {
         return static_cast<std::uint32_t>(kern->get_current_language());
     }
@@ -3283,6 +3291,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x2A, semaphore_wait),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
+        BRIDGE_REGISTER(0x4F, uchar_fold),
         BRIDGE_REGISTER(0x51, uchar_lowercase),
         BRIDGE_REGISTER(0x52, uchar_uppercase),
         BRIDGE_REGISTER(0x53, uchar_get_category),
@@ -3303,6 +3312,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
+        BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
