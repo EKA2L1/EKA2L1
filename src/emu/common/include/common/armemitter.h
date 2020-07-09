@@ -222,10 +222,10 @@ namespace eka2l1::common::armgen {
             rotation = 0;
         }
 
-        operand2(std::uint8_t imm, std::uint8_t rotation) {
+        operand2(std::uint8_t imm, std::uint8_t the_rotation) {
             type = TYPE_IMM;
             value = imm;
-            rotation = rotation;
+            rotation = the_rotation;
         }
 
         operand2(arm_reg base, shift_type stype, arm_reg shift_reg) // RSR
