@@ -69,7 +69,8 @@ namespace eka2l1::epoc {
         epoc::filename filename_;
         epoc::buf_static<char16_t, 262> arguments_;
         std::uint32_t result_handle;
+        epoc::owner_type handle_owner_;
     };
 
-    static_assert(sizeof(ldr_info_eka1) == 1656);
+    static_assert(sizeof(ldr_info_eka1) == 1660);
 }

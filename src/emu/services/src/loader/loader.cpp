@@ -51,15 +51,44 @@ namespace eka2l1 {
     }
 
     void loader_server::load_process(eka2l1::service::ipc_context &ctx) {
-        std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
+        std::optional<epoc::ldr_info> info = std::nullopt;
+        std::optional<epoc::ldr_info_eka1> info_eka1 = std::nullopt;
 
-        if (!info) {
-            ctx.set_request_status(epoc::error_argument);
-            return;
+        epoc::owner_type handle_owner = epoc::owner_thread;
+        std::optional<std::u16string> process_name16 = std::nullopt;
+        std::optional<std::u16string> process_args = std::nullopt;
+
+        std::uint32_t stack_size = 0;
+        std::uint32_t uid3 = 0;
+
+        if (kern->is_eka1()) {
+            info_eka1 = ctx.get_arg_packed<epoc::ldr_info_eka1>(0);
+
+            if (!info_eka1) {
+                ctx.set_request_status(epoc::error_argument);
+                return;
+            }
+
+            process_name16 = info_eka1->full_path_.to_std_string(nullptr);
+            process_args = info_eka1->arguments_.to_std_string(nullptr);
+
+            uid3 = info_eka1->uid3_;        
+            handle_owner = info_eka1->handle_owner_;
+            stack_size = 0;         // Eka1 does not allow custom stack size 
+        } else {
+            info = ctx.get_arg_packed<epoc::ldr_info>(0);
+            process_name16 = ctx.get_arg<std::u16string>(1);
+            process_args = ctx.get_arg<std::u16string>(2);
+
+            if (!info) {
+                ctx.set_request_status(epoc::error_argument);
+                return;
+            }
+
+            handle_owner = info->owner_type;
+            uid3 = info->uid3;
+            stack_size = info->min_stack_size;
         }
-
-        std::optional<std::u16string> process_name16 = ctx.get_arg<std::u16string>(1);
-        std::optional<std::u16string> process_args = ctx.get_arg<std::u16string>(2);
 
         if (!process_name16 || !process_args) {
             ctx.set_request_status(epoc::error_argument);
@@ -78,7 +107,7 @@ namespace eka2l1 {
         }
 
         kernel_system *kern = ctx.sys->get_kernel_system();
-        process_ptr pr = kern->spawn_new_process(*process_name16, *process_args, info->uid3, info->min_stack_size);
+        process_ptr pr = kern->spawn_new_process(*process_name16, *process_args, uid3, stack_size);
 
         if (!pr) {
             LOG_DEBUG("Try spawning process {} failed", name_process);
@@ -86,10 +115,16 @@ namespace eka2l1 {
             return;
         }
 
-        info->handle = kern->open_handle_with_thread(ctx.msg->own_thr, pr,
-            static_cast<kernel::owner_type>(info->owner_type));
+        kernel::handle pr_handle = kern->open_handle_with_thread(ctx.msg->own_thr, pr, static_cast<kernel::owner_type>(handle_owner));
 
-        ctx.write_arg_pkg(0, *info);
+        if (info) {
+            info->handle = pr_handle;
+            ctx.write_arg_pkg(0, *info);
+        } else {
+            info_eka1->result_handle = pr_handle;
+            ctx.write_arg_pkg(0, *info_eka1);
+        }
+
         ctx.set_request_status(epoc::error_none);
     }
 
