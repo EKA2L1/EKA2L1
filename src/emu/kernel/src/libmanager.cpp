@@ -469,6 +469,20 @@ namespace eka2l1::hle {
         }
     }
 
+    drive_number lib_manager::get_drive_rom() {
+        if (rom_drv_ == drive_invalid) {
+            for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+                if (auto ent = io_->get_drive_entry(drv)) {
+                    if (ent->media_type == drive_media::rom) {
+                        rom_drv_ = drv;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return rom_drv_;
+    }
 
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
         if (auto seg = kern_->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
@@ -596,7 +610,18 @@ namespace eka2l1::hle {
 
                             // Load new romimage and add dependency
                             loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
-                            acs->add_dependency(load_as_romimg(rimg, pr));
+                            std::u16string path_to_dll = (kern_->is_eka1()) ? u"?:\\System\\Libs\\" : u"?:\\Sys\\Bin\\";
+                            path_to_dll[0] = drive_to_char16(get_drive_rom());
+
+                            std::optional<std::u16string> dll_name = io_->find_entry_with_address(path_to_dll, romimg_addr);
+
+                            if (dll_name) {
+                                path_to_dll += dll_name.value();
+                            } else {
+                                path_to_dll = u"";
+                            }
+
+                            acs->add_dependency(load_as_romimg(rimg, pr, path_to_dll));
                         }
                     }
                 }
@@ -909,7 +934,8 @@ namespace eka2l1::hle {
         , mem_(mems)
         , bootstrap_chunk_(nullptr)
         , entry_points_call_routine_(nullptr)
-        , thread_entry_routine_(nullptr) { 
+        , thread_entry_routine_(nullptr)
+        , rom_drv_(drive_invalid) { 
         hle::symbols sb;
         std::string lib_name;
 

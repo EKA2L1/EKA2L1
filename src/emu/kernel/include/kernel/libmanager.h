@@ -88,6 +88,8 @@ namespace eka2l1 {
             kernel_system *kern_;
             system *sys_;
 
+            drive_number rom_drv_;
+
             kernel::chunk *bootstrap_chunk_;
             bool log_svc{ false };
 
@@ -96,6 +98,8 @@ namespace eka2l1 {
         protected:
             const std::uint8_t *entry_points_call_routine_;
             const std::uint8_t *thread_entry_routine_;
+
+            drive_number get_drive_rom();
 
         public:
             std::map<sid, epoc_import_func> svc_funcs_;
