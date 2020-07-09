@@ -20,10 +20,14 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <kernel/server.h>
 #include <utils/dll.h>
 
 namespace eka2l1 {
+    const std::string get_loader_server_name_through_epocver(const epocver ver);
+
     class loader_server : public service::server {
         /*! \brief Parse a E32 Image/ Rom Image, and use informations from parsing to spawn a new process.
          * 
@@ -54,6 +58,6 @@ namespace eka2l1 {
         void get_info(service::ipc_context &context);
 
     public:
-        loader_server(system *sys);
+        explicit loader_server(system *sys);
     };
 }

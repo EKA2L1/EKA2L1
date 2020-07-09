@@ -42,6 +42,14 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
+    const std::string get_loader_server_name_through_epocver(const epocver ver) {
+        if (ver < epocver::eka2) {
+            return "Loader";
+        }
+
+        return "!Loader";
+    }
+
     void loader_server::load_process(eka2l1::service::ipc_context &ctx) {
         std::optional<epoc::ldr_info> info = ctx.get_arg_packed<epoc::ldr_info>(0);
 
@@ -179,7 +187,7 @@ namespace eka2l1 {
     }
 
     loader_server::loader_server(system *sys)
-        : service::server(sys->get_kernel_system(), sys, "!Loader", true) {
+        : service::server(sys->get_kernel_system(), sys, get_loader_server_name_through_epocver(kern->get_epoc_version()), true) {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
         REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
         REGISTER_IPC(loader_server, get_info, EGetInfo, "Loader::GetInfo");
