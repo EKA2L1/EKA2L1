@@ -2705,7 +2705,7 @@ namespace eka2l1::epoc {
 
     std::int32_t close_handle_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
-        const std::int32_t close_result = kern->close(create_info->arg0_) ? epoc::error_none : epoc::error_general;
+        const std::int32_t close_result = kern->close(create_info->arg0_);
 
         finish_status_request_eka1(target_thread, finish_signal, close_result);
         return close_result;
