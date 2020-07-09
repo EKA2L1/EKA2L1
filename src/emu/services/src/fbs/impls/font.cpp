@@ -703,7 +703,8 @@ namespace eka2l1 {
 #define DO_CACHE_ENTRY_FINISH_UP                                                                             \
     cache_entry->last_use = session_cache->last_use_counter++;                                               \
     cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();   \
-    ctx->set_request_status(cache_entry_ptr)
+    ctx->set_request_status(cache_entry_ptr);                                                                \
+    return
 
             if (serv->kern->is_eka1()) {
                 MAKE_CACHE_ENTRY(2, epoc::bitmapfont_v1);
