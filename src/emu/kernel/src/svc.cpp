@@ -2380,6 +2380,18 @@ namespace eka2l1::epoc {
         do_hal_by_data_num(kern->get_system(), kernel::hal_data_eka1_screen_info, the_des);
     }
 
+    BRIDGE_FUNC(void, user_svr_dll_filename, std::int32_t entry_addr, epoc::des16 *full_path_ptr) {
+        std::optional<std::u16string> dll_full_path = get_dll_full_path(kern, entry_addr);
+
+        if (!dll_full_path) {
+            LOG_WARN("Unable to find DLL name for address: 0x{:x}", entry_addr);
+            return;
+        }
+
+        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<std::uint32_t>(entry_addr), common::ucs2_to_utf8(*dll_full_path));
+        full_path_ptr->assign(kern->crr_process(), dll_full_path.value());
+    }
+
     std::int32_t chunk_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         // arg0 = handle, arg1 = name, arg2 = create info
@@ -3291,7 +3303,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
-        BRIDGE_REGISTER(0x8000BB, dll_filename),
+        BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
