@@ -21,6 +21,8 @@
 #pragma once
 
 #include <common/types.h>
+
+#include <utils/des.h>
 #include <utils/handle.h>
 
 #include <cstdint>
@@ -55,4 +57,19 @@ namespace eka2l1::epoc {
         uint8_t debug_attrib;
         uint8_t spare[6];
     };
+
+    // I would not allocate 1684 bytes on stack for this struct...
+    struct ldr_info_eka1 {
+        std::uint32_t uid1_;
+        std::uint32_t uid2_;
+        std::uint32_t uid3_;
+        std::uint32_t unk0C;
+        std::uint32_t unk10[16];
+        epoc::filename full_path_;
+        epoc::filename filename_;
+        epoc::buf_static<char16_t, 262> arguments_;
+        std::uint32_t result_handle;
+    };
+
+    static_assert(sizeof(ldr_info_eka1) == 1656);
 }
