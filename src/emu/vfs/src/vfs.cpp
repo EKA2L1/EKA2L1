@@ -802,9 +802,8 @@ namespace eka2l1 {
         loader::rom *rom_cache;
         memory_system *mem;
 
-        std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path) {
+        loader::rom_dir *burn_tree_find_dir(const std::string &vir_path) {
             auto ite = path_iterator(vir_path);
-
             loader::rom_dir *last_dir_found = &(rom_cache->root.root_dirs[0].dir);
 
             // Skip through the drive
@@ -817,10 +816,10 @@ namespace eka2l1 {
             }
 
             if (components.size() == 0) {
-                return std::nullopt;
+                return nullptr;
             }
 
-            for (std::size_t i = 0; i < components.size() - 1; i++) {
+            for (std::size_t i = 0; i < components.size(); i++) {
                 loader::rom_dir temp;
                 temp.name = common::utf8_to_ucs2(components[i]);
 
@@ -830,12 +829,22 @@ namespace eka2l1 {
                 if (res1 != last_dir_found->subdirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
                     last_dir_found = &(last_dir_found->subdirs[std::distance(last_dir_found->subdirs.begin(), res1)]);
                 } else {
-                    return std::optional<loader::rom_entry>{};
+                    return nullptr;
                 }
             }
 
+            return last_dir_found;
+        }
+
+        std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path) {
+            loader::rom_dir *last_dir_found = burn_tree_find_dir(eka2l1::file_directory(vir_path, true));
+
+            if (!last_dir_found) {
+                return std::nullopt;
+            }
+
             loader::rom_entry temp_entry;
-            temp_entry.name = common::utf8_to_ucs2(components[components.size() - 1]);
+            temp_entry.name = common::utf8_to_ucs2(eka2l1::filename(vir_path, true));
 
             auto res2 = std::lower_bound(last_dir_found->entries.begin(), last_dir_found->entries.end(), temp_entry,
                 [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
@@ -943,6 +952,27 @@ namespace eka2l1 {
             info.full_path = common::ucs2_to_utf8(path);
 
             return info;
+        }
+
+        std::optional<std::u16string> find_entry_with_address(const std::u16string &clue, const address addr) override {
+            std::u16string the_base_path = clue;
+            loader::rom_dir *the_base_dir = &(rom_cache->root.root_dirs[0].dir);
+
+            if (!the_base_path.empty()) {
+                the_base_dir = burn_tree_find_dir(common::ucs2_to_utf8(clue));
+            }
+
+            if (!the_base_dir) {
+                return std::nullopt;
+            }
+
+            for (const auto &entry: the_base_dir->entries) {
+                if (entry.address_lin == addr) {
+                    return entry.name;
+                }
+            }
+
+            return std::nullopt;
         }
     };
 
@@ -1134,6 +1164,18 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
+    std::optional<std::u16string> io_system::find_entry_with_address(const std::u16string &clue, const address addr) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
+        for (auto &[id, fs] : filesystems) {
+            if (auto e = fs->find_entry_with_address(clue, addr)) {
+                return e;
+            }
+        }
+
+        return std::nullopt;
+    }
+    
     std::optional<std::u16string> io_system::get_raw_path(const std::u16string &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
