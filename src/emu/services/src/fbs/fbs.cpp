@@ -109,6 +109,11 @@ namespace eka2l1 {
                 break;
             }
             }
+
+            if (ctx->msg->function == fbs_bitmap_load) {
+                // On EKA1 load = fast
+                ctx->msg->function = fbs_bitmap_load_fast;
+            }
         }
 
         switch (ctx->msg->function) {

@@ -345,7 +345,15 @@ namespace eka2l1 {
     }
 
     void fbscli::load_bitmap_fast(service::ipc_context *ctx) {
-        std::optional<std::u16string> name = ctx->get_arg<std::u16string>(2);
+        fbs_server *serv = server<fbs_server>();
+        int name_slot = 2;
+
+        if (serv->kern->is_eka1()) {
+            name_slot = 1;
+        }
+
+        std::optional<std::u16string> name = ctx->get_arg<std::u16string>(name_slot);
+
         if (!name.has_value()) {
             ctx->set_request_status(epoc::error_not_found);
             return;
@@ -397,7 +405,17 @@ namespace eka2l1 {
     }
 
     void fbscli::load_bitmap_impl(service::ipc_context *ctx, file *source) {
-        std::optional<load_bitmap_arg> load_options = ctx->get_arg_packed<load_bitmap_arg>(1);
+        std::optional<load_bitmap_arg> load_options = std::nullopt;
+        fbs_server *serv = server<fbs_server>();
+
+        if (serv->kern->is_eka1()) {
+            load_options = std::make_optional<load_bitmap_arg>();
+            load_options->bitmap_id = ctx->get_arg<std::uint32_t>(2).value();
+            load_options->share = ctx->get_arg<std::uint32_t>(3).value();
+        } else {
+            load_options = ctx->get_arg_packed<load_bitmap_arg>(1);
+        }
+
         if (!load_options) {
             ctx->set_request_status(epoc::error_argument);
             return;
