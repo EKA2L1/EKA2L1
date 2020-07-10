@@ -2409,6 +2409,17 @@ namespace eka2l1::epoc {
         kern->get_info(the_object, *info);
     }
 
+    BRIDGE_FUNC(void, handle_name_eka1, des16 *name_des, kernel::handle h) {
+        kernel_obj_ptr obj = kern->get_kernel_obj_raw(h);
+        process_ptr crr_pr = kern->crr_process();
+
+        if (!obj) {
+            return;
+        }
+
+        name_des->assign(crr_pr, common::utf8_to_ucs2(obj->name()));
+    }
+
     BRIDGE_FUNC(std::int32_t, library_lookup_eka1, const std::uint32_t ord_index, kernel::handle h) {
         return library_lookup(kern, h, ord_index);
     }
@@ -3330,6 +3341,7 @@ namespace eka2l1::epoc {
         
         // User server calls
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
+        BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
