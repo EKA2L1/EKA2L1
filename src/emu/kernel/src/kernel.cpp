@@ -510,6 +510,42 @@ namespace eka2l1 {
         return crr_process()->process_handles.get_object(handle);
     }
 
+    bool kernel_system::get_info(kernel_obj_ptr the_object, kernel::handle_info &info) {
+        if (!the_object) {
+            return false;
+        }
+
+        kernel::thread *current_thread = crr_thread();
+        kernel::process *current_process = crr_process();
+
+        info.num_open_in_current_thread_ = current_thread->thread_handles.count(the_object);
+        info.num_open_in_current_process_ = current_process->process_handles.count(the_object);
+        info.num_threads_using_ = 0;
+        info.num_processes_using_ = 0;
+
+        for (std::size_t i = 0; i < threads_.size(); i++) {
+            kernel::thread *thr = reinterpret_cast<kernel::thread*>(threads_[i].get());
+
+            if (thr->thread_handles.has(the_object)) {
+                info.num_threads_using_++;
+            }
+
+            if (thr->owning_process() == current_process) {
+                info.num_open_in_current_process_++;
+            }
+        }
+
+        for (std::size_t i = 0; i < processes_.size(); i++) {
+            kernel::process *pr = reinterpret_cast<kernel::process*>(processes_[i].get());
+
+            if (pr->process_handles.has(the_object)) {
+                info.num_processes_using_++;
+            }
+        }
+
+        return true;
+    }
+
     void kernel_system::free_msg(ipc_msg_ptr msg) {
         if (msg->locked()) {
             return;

@@ -326,6 +326,7 @@ namespace eka2l1 {
 
         bool destroy(kernel_obj_ptr obj);
         int close(kernel::handle handle);
+        bool get_info(kernel_obj_ptr obj, kernel::handle_info &info);
 
         kernel_obj_ptr get_kernel_obj_raw(kernel::handle handle);
 

@@ -114,4 +114,11 @@ namespace eka2l1::kernel {
         address char_data_set_;
         address collation_data_set_;
     };
+
+    struct handle_info {
+        std::uint32_t num_open_in_current_thread_;
+        std::uint32_t num_open_in_current_process_;
+        std::uint32_t num_threads_using_;
+        std::uint32_t num_processes_using_;
+    };
 }
