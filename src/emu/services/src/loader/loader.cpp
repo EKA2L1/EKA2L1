@@ -181,19 +181,23 @@ namespace eka2l1 {
         }
 
         /* Create process through kernel system. */
-        kernel::handle lib_handle = ctx.sys->get_kernel_system()->create_and_add_thread<kernel::library>(
-            static_cast<kernel::owner_type>(handle_owner), ctx.msg->own_thr, cs).first;
+        auto lib_handle_and_obj = ctx.sys->get_kernel_system()->create_and_add_thread<kernel::library>(
+            static_cast<kernel::owner_type>(handle_owner), ctx.msg->own_thr, cs);
 
         LOG_TRACE("Loaded library: {}", lib_name);
 
+        kernel::process *owning_process = ctx.msg->own_thr->owning_process();
+
         if (info) {
-            kernel::process *owning_process = ctx.msg->own_thr->owning_process();
             owning_process->signal_dll_lock(ctx.msg->own_thr);
         
-            info->handle = lib_handle;
+            info->handle = lib_handle_and_obj.first;
             ctx.write_arg_pkg(0, *info);
         } else {
-            info_eka1->result_handle = lib_handle;
+            // They auto attach on eka1
+            lib_handle_and_obj.second->attach(owning_process);
+
+            info_eka1->result_handle = lib_handle_and_obj.first;
             ctx.write_arg_pkg(0, *info_eka1);
         }
 
