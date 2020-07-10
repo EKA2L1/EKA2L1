@@ -62,6 +62,6 @@ namespace eka2l1 {
         void get_debug_preferences(service::ipc_context &ctx);
 
     public:
-        eikappui_server(eka2l1::system *sys);
+        explicit eikappui_server(eka2l1::system *sys);
     };
 }

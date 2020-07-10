@@ -40,8 +40,16 @@ namespace eka2l1 {
         return buf;
     }
 
+    static const std::string get_eik_app_ui_server_name_by_epocver(const epocver the_ver) {
+        if (the_ver < epocver::eka2) {
+            return "EikAppUiServer";
+        }
+
+        return "!EikAppUiServer";
+    }
+
     eikappui_server::eikappui_server(eka2l1::system *sys)
-        : service::server(sys->get_kernel_system(), sys, "!EikAppUiServer", true) {
+        : service::server(sys->get_kernel_system(), sys, get_eik_app_ui_server_name_by_epocver(sys->get_symbian_version_use()), true) {
         REGISTER_IPC(eikappui_server, get_debug_preferences, EEikAppUiGetDebugPreferences, "EikAppUi::GetDebugPreferences");
     }
 
