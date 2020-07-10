@@ -194,7 +194,7 @@ namespace eka2l1 {
             ctx.write_arg_pkg(0, *info);
         } else {
             info_eka1->result_handle = lib_handle;
-            ctx.write_arg_pkg(0, *info);
+            ctx.write_arg_pkg(0, *info_eka1);
         }
 
         ctx.set_request_status(epoc::error_none);
