@@ -2392,6 +2392,27 @@ namespace eka2l1::epoc {
         full_path_ptr->assign(kern->crr_process(), dll_full_path.value());
     }
 
+    // NOTE(pent0): This call may be slow when the OS kernel is crowded.
+    BRIDGE_FUNC(void, handle_info_eka1, kernel::handle_info *info, const kernel::handle h) {        
+        kernel_obj_ptr the_object = kern->get_kernel_obj_raw(h);
+
+        if (!the_object) {
+            LOG_WARN("Trying to get handle info of an invalid handle: 0x{:X}, ignored", h);
+            return;
+        }
+
+        if (!info) {
+            LOG_WARN("Trying to get handle info but the information struct is null!");
+            return;
+        }
+
+        kern->get_info(the_object, *info);
+    }
+
+    BRIDGE_FUNC(std::int32_t, library_lookup_eka1, const std::uint32_t ord_index, kernel::handle h) {
+        return library_lookup(kern, h, ord_index);
+    }
+
     std::int32_t chunk_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         // arg0 = handle, arg1 = name, arg2 = create info
@@ -3308,6 +3329,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xFE, static_call_list),
         
         // User server calls
+        BRIDGE_REGISTER(0x800010, library_lookup_eka1),
+        BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
