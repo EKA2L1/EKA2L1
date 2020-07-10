@@ -93,6 +93,11 @@ namespace eka2l1 {
                 // Skip to open. EKA2 separate RFsBase into separate categories
                 ctx->msg->function += epoc::fs_msg_raw_subclose - epoc::fs_msg_base_close;
             }
+
+            if (ctx->msg->function > epoc::fs_msg_debug_function) {
+                // No debug function opcode
+                ctx->msg->function -= 1;
+            }
         }
 
         switch (ctx->msg->function & 0xFF) {
