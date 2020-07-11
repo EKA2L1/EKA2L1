@@ -111,7 +111,7 @@ namespace eka2l1::epoc::adapter {
 
         for (auto &font_bitmap: the_typeface.font_bitmaps_) {
             for (auto &code_section: font_bitmap->code_sections_) {
-                if ((code_section.header_.start_ >= code) && (code_section.header_.end_ <= code)) {
+                if ((code_section.header_.start_ <= code) && (code <= code_section.header_.end_)) {
                     // Found you!
                     return &code_section.chars_[code - code_section.header_.start_];
                 }
@@ -162,8 +162,8 @@ namespace eka2l1::epoc::adapter {
         std::uint32_t *src = the_char->data_.data();
 
         const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
-        const std::int16_t scaled_width = static_cast<std::int16_t>(target_width * scale_x);
-        const std::int16_t scaled_height = static_cast<std::int16_t>(the_char->metric_->height_in_pixels_ * scale_y);
+        const std::int16_t scaled_width = static_cast<std::int16_t>(std::roundf(target_width * scale_x));
+        const std::int16_t scaled_height = static_cast<std::int16_t>(std::roundf(the_char->metric_->height_in_pixels_ * scale_y));
         
         if ((scale_x != 1.0f) || (scale_y != 1.0f)) {
             scaled_result.resize((scaled_width * scaled_height + 31) >> 5);
@@ -182,8 +182,9 @@ namespace eka2l1::epoc::adapter {
             src = scaled_result.data();
         }
 
-        // RLE this baby! Alloc this big to gurantee compressed data will always fit
-        std::uint32_t *compressed_bitmap = new std::uint32_t[(scaled_width * scaled_height + 31) >> 5];
+        // RLE this baby! Alloc this big to gurantee compressed data will always fit. If the compression is bad
+        // we also add 5 more words. in case compression is not effective at all.
+        std::uint32_t *compressed_bitmap = new std::uint32_t[((scaled_width * scaled_height + 31) >> 5) + 5];
         std::int16_t total_line_processed_so_far = 0;
         std::uint32_t total_bit_write = 0;
         
@@ -221,7 +222,8 @@ namespace eka2l1::epoc::adapter {
             bool mode = compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + 1, scaled_width);
             std::int8_t count = 2;
 
-            while ((count < 15) && (compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + count, scaled_width) == mode)) {
+            while ((count < 15) && (total_line_processed_so_far + count < scaled_height) && 
+                (compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + count, scaled_width) == mode)) {
                 count++;
             }
 
@@ -254,7 +256,7 @@ namespace eka2l1::epoc::adapter {
             *bmp_type = epoc::glyph_bitmap_type::monochrome_glyph_bitmap;
 
         total_size = ((total_bit_write + 31) >> 5) * 4;
-        
+
         // In case this adapter get destroyed. It will free this data.
         dynamic_alloc_list_.push_back(compressed_bitmap);
         return reinterpret_cast<std::uint8_t*>(compressed_bitmap);
