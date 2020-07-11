@@ -466,8 +466,6 @@ namespace eka2l1 {
                 cache->entry_ = 0;      // Purposedly make nullptr entry so that the cache is empty
                 of->glyph_cache_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_general_data(cache)
                     .ptr_address());
-
-                LOG_TRACE("{}", of->glyph_cache_offset);
             }
         }
     }
