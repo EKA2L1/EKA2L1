@@ -170,12 +170,12 @@ namespace eka2l1::epoc::adapter {
 
             for (std::int16_t y = 0; y < scaled_height; y++) {
                 for (std::int16_t x = 0; x < scaled_width; x++) {
-                    const std::int16_t dx = static_cast<std::int16_t>(scale_x * x );
-                    const std::int16_t dy = static_cast<std::int16_t>(scale_y * y);
+                    const std::int16_t dx = static_cast<std::int16_t>(x / scale_x);
+                    const std::int16_t dy = static_cast<std::int16_t>(y / scale_y);
                     const std::int32_t src_pixel_loc = (dy * target_width + dx);
                     const std::int32_t dest_pixel_loc = (y * scaled_width + x);
 
-                    scaled_result[dest_pixel_loc >> 5] |= (the_char->data_[src_pixel_loc >> 5] >> (src_pixel_loc & 31)) << (dest_pixel_loc & 31);
+                    scaled_result[dest_pixel_loc >> 5] |= ((the_char->data_[src_pixel_loc >> 5] >> (src_pixel_loc & 31)) & 1) << (dest_pixel_loc & 31);
                 }
             }
 
@@ -196,8 +196,8 @@ namespace eka2l1::epoc::adapter {
             while (left > 0) {
                 std::uint32_t to_read = std::max<std::uint32_t>(left, 32);
 
-                std::uint32_t pos1 = (p_l1 * scaled_height + n - left);
-                std::uint32_t pos2 = (p_l2 * scaled_height + n - left);
+                std::uint32_t pos1 = (p_l1 * scaled_width + n - left);
+                std::uint32_t pos2 = (p_l2 * scaled_width + n - left);
 
                 std::uint32_t maximum_1 = 32U - (pos1 & 31);
                 std::uint32_t maximum_2 = 32U - (pos2 & 31);
@@ -223,7 +223,7 @@ namespace eka2l1::epoc::adapter {
             std::int8_t count = 2;
 
             while ((count < 15) && (total_line_processed_so_far + count < scaled_height) && 
-                (compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + count, scaled_width) == mode)) {
+                (compare_line_equal(total_line_processed_so_far + count - 1, total_line_processed_so_far + count, scaled_width) == mode)) {
                 count++;
             }
 
