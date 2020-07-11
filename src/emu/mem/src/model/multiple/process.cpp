@@ -164,7 +164,7 @@ namespace eka2l1::mem {
         }
 
         for (auto &c : chunks_) {
-            if (c && c->is_local) {
+            if (c && (c->is_local || c->is_code)) {
                 // Local
                 c->unmap_from_cpu(this);
             }
@@ -173,7 +173,7 @@ namespace eka2l1::mem {
 
     void multiple_mem_model_process::remap_to_cpu() {
         for (auto &c : chunks_) {
-            if (c && c->is_local) {
+            if (c && (c->is_local || c->is_code)) {
                 // Local
                 c->map_to_cpu(this);
             }

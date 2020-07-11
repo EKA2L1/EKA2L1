@@ -269,6 +269,12 @@ namespace eka2l1::mem {
             is_local = false;
         }
 
+        is_code = false;
+
+        if (create_info.flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
+            is_code = true;
+        }
+
         // Calculate total page table that we will use.
         // For multiple model, Symbian uses a whole page table too, it's one of a way for it to be
         // fast (not nitpicking places in the table, but actually alloc the whole table)
