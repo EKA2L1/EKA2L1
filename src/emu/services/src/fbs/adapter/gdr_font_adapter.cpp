@@ -194,7 +194,7 @@ namespace eka2l1::epoc::adapter {
             std::uint32_t left = n;
 
             while (left > 0) {
-                std::uint32_t to_read = std::max<std::uint32_t>(left, 32);
+                std::uint32_t to_read = std::min<std::uint32_t>(left, 32);
 
                 std::uint32_t pos1 = (p_l1 * scaled_width + n - left);
                 std::uint32_t pos2 = (p_l2 * scaled_width + n - left);
@@ -202,11 +202,14 @@ namespace eka2l1::epoc::adapter {
                 std::uint32_t maximum_1 = 32U - (pos1 & 31);
                 std::uint32_t maximum_2 = 32U - (pos2 & 31);
 
-                std::uint32_t l1p = common::extract_bits(src[pos1 >> 5], (pos1 & 31), std::min<std::uint32_t>(maximum_1, to_read)) |
-                    ((maximum_1 < to_read) ? common::extract_bits(src[(pos1 >> 5) + 1], 0, to_read - maximum_1) : 0);
+                std::uint32_t part1read = std::min<std::uint32_t>(maximum_1, to_read);
+                std::uint32_t part2read = std::min<std::uint32_t>(maximum_2, to_read);
 
-                std::uint32_t l2p = common::extract_bits(src[pos2 >> 5], (pos2 & 31), std::min<std::uint32_t>(maximum_2, to_read)) |
-                    ((maximum_2 < to_read) ? common::extract_bits(src[(pos2 >> 5) + 1], 0, to_read - maximum_2) : 0);
+                std::uint32_t l1p = common::extract_bits(src[pos1 >> 5], (pos1 & 31), part1read) |
+                    ((maximum_1 < to_read) ? (common::extract_bits(src[(pos1 >> 5) + 1], 0, to_read - maximum_1) << part1read) : 0);
+
+                std::uint32_t l2p = common::extract_bits(src[pos2 >> 5], (pos2 & 31), part2read) |
+                    ((maximum_2 < to_read) ? (common::extract_bits(src[(pos2 >> 5) + 1], 0, to_read - maximum_2) << part2read) : 0);
 
                 if (l1p != l2p) {
                     return false;
@@ -219,12 +222,26 @@ namespace eka2l1::epoc::adapter {
         };
 
         while (total_line_processed_so_far < scaled_height) {
-            bool mode = compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + 1, scaled_width);
+            bool mode = false;
             std::int8_t count = 2;
 
-            while ((count < 15) && (total_line_processed_so_far + count < scaled_height) && 
-                (compare_line_equal(total_line_processed_so_far + count - 1, total_line_processed_so_far + count, scaled_width) == mode)) {
-                count++;
+            if (total_line_processed_so_far == scaled_height - 1) {
+                count = 1;
+                mode = false;
+            } else {
+                mode = compare_line_equal(total_line_processed_so_far, total_line_processed_so_far + 1, scaled_width);
+
+                bool got_in = false;
+
+                while ((count < 15) && (total_line_processed_so_far + count < scaled_height) && 
+                    (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, scaled_width) == mode)) {
+                    count++;
+                    got_in = true;
+                }
+
+                if (got_in) {
+                    count--;
+                }
             }
 
             WRITE_BIT_32(mode ? 0 : 1);            // Repeat mode if line equal
