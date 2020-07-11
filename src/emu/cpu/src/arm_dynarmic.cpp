@@ -227,6 +227,8 @@ namespace eka2l1::arm {
         std::shared_ptr<dynarmic_core_cp15> cp15 = std::make_shared<dynarmic_core_cp15>();
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 
+        std::fill(page_dyn.begin(), page_dyn.end(), nullptr);
+
         jit = make_jit(cb, &page_dyn, cp15);
     }
 
