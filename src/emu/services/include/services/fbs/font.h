@@ -152,7 +152,8 @@ namespace eka2l1::epoc {
     };
 
     enum {
-        DEAD_VTABLE = 0xDEAD1AB
+        DEAD_VTABLE = 0xDEAD1AB,
+        DEAD_ALLOC = 0xDEADA11C
     };
 
     struct alg_style {
@@ -202,13 +203,24 @@ namespace eka2l1::epoc {
         std::uint32_t font_uid;
     };
 
-    struct open_font {
+    struct open_font_base {
         eka2l1::ptr<void> vtable;
         eka2l1::ptr<void> allocator;
 
         open_font_metrics metrics;
         eka2l1::ptr<void> sharper;
+    };
 
+    struct open_font_v1: public open_font_base {
+        std::int32_t file_offset;
+        std::int32_t face_index_offset;
+        std::int32_t glyph_cache_offset;
+        std::int32_t session_cache_list_offset;
+
+        eka2l1::ptr<void> reserved;
+    };
+
+    struct open_font_v2: public open_font_base {
         std::int32_t font_captial_offset;
         std::int32_t font_max_ascent;
         std::int32_t font_standard_descent;
@@ -235,7 +247,7 @@ namespace eka2l1::epoc {
         std::int16_t vertical_bearing_x;
         std::int16_t vertical_bearing_y;
         std::int16_t vertical_advance;
-        glyph_bitmap_type bitmap_type;
+        glyph_bitmap_type bitmap_type;          ///< Note, this is always 1 bit bitmap type on EKA1
         std::int16_t reserved;
     };
 
@@ -264,7 +276,31 @@ namespace eka2l1::epoc {
         void destroy(fbs_server *serv);
     };
 
+    struct open_font_glyph_v1: public open_font_glyph_v3 {
+
+    };
+
+    struct open_font_glyph_cache_entry_v1: public open_font_glyph_v1 {
+        eka2l1::ptr<open_font_glyph_cache_entry_v1> prev_;
+        eka2l1::ptr<open_font_glyph_cache_entry_v1> next_;
+    };
+
+    // Used on s60v1 (basically from EKA2 down)
+    struct open_font_glyph_cache_v1 {
+        eka2l1::ptr<open_font_glyph_cache_entry_v1> entry_;
+        std::uint32_t unk4_;
+        std::uint32_t unk8_;
+
+        explicit open_font_glyph_cache_v1();
+    };
+
     struct open_font_session_cache_entry_v2 : public open_font_glyph_v2 {
+        std::int32_t font_offset; ///< Offset of the font that contains this glyph.
+        std::int32_t last_use; /*< A number that tells last time this was reference.
+                                                 The smaller the number is, the less recent it was referenced. */
+    };
+    
+    struct open_font_session_cache_entry_v1 : public open_font_glyph_v1 {
         std::int32_t font_offset; ///< Offset of the font that contains this glyph.
         std::int32_t last_use; /*< A number that tells last time this was reference.
                                                  The smaller the number is, the less recent it was referenced. */

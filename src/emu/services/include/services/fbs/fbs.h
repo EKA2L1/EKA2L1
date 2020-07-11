@@ -174,8 +174,8 @@ namespace eka2l1 {
         epoc::bitmapfont_base *create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec,
             kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector = std::nullopt);
 
-        template <typename T>
-        void fill_bitmap_information(T *bitmapfont, epoc::open_font *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
+        template <typename T, typename Q>
+        void fill_bitmap_information(T *bitmapfont, Q *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
             kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
 
         void write_font_handle(service::ipc_context *ctx, fbsfont *font);

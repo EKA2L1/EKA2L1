@@ -296,6 +296,13 @@ namespace eka2l1::epoc {
 
         offset_array.set_glyph(cli, real_index, the_glyph);
     }
+
+    open_font_glyph_cache_v1::open_font_glyph_cache_v1()
+        : entry_(0)
+        , unk4_(0)
+        , unk8_(0) {
+
+    }
 }
 
 namespace eka2l1 {
@@ -385,8 +392,8 @@ namespace eka2l1 {
     void fbscli::typeface_support(service::ipc_context *ctx) {
     }
 
-    template <typename T>
-    void fbscli::fill_bitmap_information(T *bmpfont, epoc::open_font *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
+    template <typename T, typename Q>
+    void fbscli::fill_bitmap_information(T *bmpfont, Q *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
         kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector) {
         fbs_server *serv = server<fbs_server>();
 
@@ -433,6 +440,7 @@ namespace eka2l1 {
         of->metrics = info.metrics;
         of->face_index_offset = static_cast<int>(info.idx);
         of->vtable = epoc::DEAD_VTABLE;
+        of->allocator = epoc::DEAD_ALLOC;
 
         // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
         // Since I don't know the version that starts using offset yet, we just leave it be this for now
@@ -445,30 +453,45 @@ namespace eka2l1 {
                                                                           serv->session_cache_list)
                 - reinterpret_cast<std::uint8_t *>(of));
         }
+
+        if (serv->kern->is_eka1()) {
+            // It allocs from the client-side using server heap the glyph cache.
+            // We don't want this to happen, our heap is fake. And non existent
+            // Alloc it by ourself
+            epoc::open_font_glyph_cache_v1 *cache = serv->allocate_general_data<epoc::open_font_glyph_cache_v1>();
+
+            if (!cache) {
+                LOG_WARN("Unable to supply empty cache for EKA1's open font!");
+            } else {
+                cache->entry_ = 0;      // Purposedly make nullptr entry so that the cache is empty
+                of->glyph_cache_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_general_data(cache)
+                    .ptr_address());
+
+                LOG_TRACE("{}", of->glyph_cache_offset);
+            }
+        }
     }
 
-    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v1>(epoc::bitmapfont_v1 *bitmapfont, epoc::open_font *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
+    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v1, epoc::open_font_v1>(epoc::bitmapfont_v1 *bitmapfont, epoc::open_font_v1 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
         kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
 
-    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v2>(epoc::bitmapfont_v2 *bitmapfont, epoc::open_font *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
+    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v2, epoc::open_font_v2>(epoc::bitmapfont_v2 *bitmapfont, epoc::open_font_v2 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
         kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
 
     epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user, const std::uint32_t desired_height,
         std::optional<std::pair<float, float>> scale_vector) {
         fbs_server *serv = server<fbs_server>();
-        epoc::open_font *of = serv->allocate_general_data<epoc::open_font>();
-
-        if (!of) {
-            return nullptr;
-        }
-
 #define DO_BITMAP_OPEN_FONT_CREATION(ver)                                                               \
-        epoc::bitmapfont_v##ver *bmpfont = serv->allocate_general_data<epoc::bitmapfont_v##ver>();        \
+        epoc::open_font_v##ver *of = serv->allocate_general_data<epoc::open_font_v##ver>();             \
+        if (!of) {                                                                                      \
+            return nullptr;                                                                             \
+        }                                                                                               \
+        epoc::bitmapfont_v##ver *bmpfont = serv->allocate_general_data<epoc::bitmapfont_v##ver>();      \
         if (!bmpfont) {                                                                                 \
             serv->free_general_data(of);                                                                \
             return nullptr;                                                                             \
         }                                                                                               \
-        fill_bitmap_information<epoc::bitmapfont_v##ver>(bmpfont, of, info, spec, font_user,             \
+        fill_bitmap_information<epoc::bitmapfont_v##ver>(bmpfont, of, info, spec, font_user,            \
             desired_height, scale_vector);                                                              \
         return bmpfont
 
@@ -702,15 +725,16 @@ namespace eka2l1 {
 
 #define DO_CACHE_ENTRY_FINISH_UP                                                                             \
     cache_entry->last_use = session_cache->last_use_counter++;                                               \
-    cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();   \
     ctx->set_request_status(cache_entry_ptr);                                                                \
     return
 
             if (serv->kern->is_eka1()) {
-                MAKE_CACHE_ENTRY(2, epoc::bitmapfont_v1);
+                MAKE_CACHE_ENTRY(1, epoc::bitmapfont_v1);
                 DO_CACHE_ENTRY_FINISH_UP;
             } else {
                 MAKE_CACHE_ENTRY(2, epoc::bitmapfont_v2);
+                cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();
+
                 DO_CACHE_ENTRY_FINISH_UP;
             }
         }
