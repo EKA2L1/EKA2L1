@@ -398,7 +398,7 @@ namespace eka2l1 {
         fbs_server *serv = server<fbs_server>();
 
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
-            bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).cast<void>();
+            bmpfont->openfont = serv->host_ptr_to_guest_general_data(of).template cast<void>();
         } else {
             // Better make it offset for future debugging purpose
             // Mark bit 0 as set so that fntstore can recognised the offset model
