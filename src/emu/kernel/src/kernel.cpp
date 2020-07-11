@@ -78,7 +78,8 @@ namespace eka2l1 {
         , uid_counter_(0)
         , rom_map_(nullptr)
         , kern_ver_(epocver::epoc94)
-        , lang_(language::en) {
+        , lang_(language::en)
+        , global_data_chunk_(nullptr) {
         thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
