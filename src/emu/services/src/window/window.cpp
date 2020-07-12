@@ -647,6 +647,18 @@ namespace eka2l1::epoc {
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
+        epoc::version cli_ver = client_version();
+
+        // Patching out user opcode.
+        if (cli_ver.major == 1 && cli_ver.minor == 0) {
+            if (cli_ver.build <= 139) {
+                // Skip start and end custom text cursor, they does not exist
+                if (cmd.header.op >= ws_cl_op_start_custom_text_cursor) {
+                    cmd.header.op += 2;
+                }
+            }
+        }
+
         switch (cmd.header.op) {
         // Gets the total number of window groups with specified priority currently running
         // in the window server.

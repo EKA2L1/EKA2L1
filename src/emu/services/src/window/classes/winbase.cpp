@@ -245,6 +245,25 @@ namespace eka2l1::epoc {
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        epoc::version cli_ver = client->client_version();
+
+        // Patching out user opcode.
+        if (cli_ver.major == 1 && cli_ver.minor == 0) {
+            if (cli_ver.build <= 171) {
+                if (cmd.header.op >= EWsWinOpSendAdvancedPointerEvent) {
+                    // Send advanced pointer event opcode does not exist in the version.
+                    cmd.header.op += 1;
+                }
+            }
+
+            if (cli_ver.build <= 139) {
+                // Skip absolute position opcode
+                if (cmd.header.op >= EWsWinOpAbsPosition) {
+                    cmd.header.op += 1;
+                }
+            }
+        }
+
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
