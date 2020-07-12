@@ -4,6 +4,7 @@ add_library(epocservs
         include/services/faker.h
         include/services/framework.h
         include/services/init.h
+        include/services/utils.h
         include/services/akn/icon/icon.h
         include/services/akn/skin/chunk_maintainer.h
         include/services/akn/skin/icon_cfg.h
@@ -94,6 +95,7 @@ add_library(epocservs
         src/faker.cpp
         src/framework.cpp
         src/init.cpp
+        src/utils.cpp
         src/akn/icon/icon.cpp
         src/akn/icon/init.cpp
         src/akn/skin/chunk_maintainer.cpp
