@@ -3322,6 +3322,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x2A, semaphore_wait),
+        BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
         BRIDGE_REGISTER(0x4F, uchar_fold),
         BRIDGE_REGISTER(0x51, uchar_lowercase),
