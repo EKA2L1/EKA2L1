@@ -35,6 +35,7 @@
 #include <services/window/classes/winuser.h>
 #include <services/window/classes/wsobj.h>
 #include <services/window/common.h>
+#include <services/utils.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -1240,11 +1241,15 @@ namespace eka2l1 {
     }
 
     void window_server::connect(service::ipc_context &ctx) {
-        std::optional<std::uint32_t> version = ctx.get_arg<std::uint32_t>(0);
-        epoc::version v = *reinterpret_cast<epoc::version *>(&version.value());
+        std::optional<epoc::version> the_ver = service::get_server_version(kern, &ctx);
+
+        if (!the_ver) {
+            the_ver = std::make_optional<epoc::version>();
+            the_ver->u32 = 0;
+        }
 
         clients.emplace(ctx.msg->msg_session->unique_id(),
-            std::make_unique<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr, v));
+            std::make_unique<epoc::window_server_client>(ctx.msg->msg_session, ctx.msg->own_thr, the_ver.value()));
 
         server::connect(ctx);
     }

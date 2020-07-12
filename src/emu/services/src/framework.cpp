@@ -18,9 +18,10 @@
  */
 
 #include <common/log.h>
-#include <services/framework.h>
-
 #include <epoc/epoc.h>
+
+#include <services/framework.h>
+#include <services/utils.h>
 
 namespace eka2l1::service {
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
@@ -57,21 +58,11 @@ namespace eka2l1::service {
 
     std::optional<epoc::version> typical_server::get_version(service::ipc_context *ctx) {
         kernel_system *kern = ctx->sys->get_kernel_system();
+        std::optional<epoc::version> ver = get_server_version(kern, ctx);
+        
+        if (ver)
+            LOG_TRACE("Requested server version: {}.{}.{}", ver.value().major, ver.value().minor, ver.value().build);
 
-        epoc::version ver;
-
-        if (kern->is_eka1()) {
-            std::optional<std::uint32_t> ver_package = ctx->get_arg_packed<std::uint32_t>(1);
-            if (!ver_package) {
-                return std::nullopt;
-            }
-
-            ver.u32 = ver_package.value();
-        } else {
-            ver.u32 = ctx->get_arg<std::uint32_t>(0).value();
-        }
-
-        LOG_TRACE("Requested server version: {}.{}.{}", ver.major, ver.minor, ver.build);
         return ver;
     }
 
