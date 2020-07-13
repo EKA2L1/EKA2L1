@@ -111,7 +111,8 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
     eka2l1::applist_server *svr = nullptr;
 
     if (kern) {
-        svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>("!AppListServer"));
+        svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(
+            get_app_list_server_name_by_epocver(kern->get_epoc_version())));
     }
 
     if (!svr) {
@@ -188,10 +189,11 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userda
 
 bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    kernel_system *kern = emu->symsys->get_kernel_system();
 
     // Get app list server
-    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server *>(emu->symsys->get_kernel_system()
-                                                                                 ->get_by_name<service::server>("!AppListServer"));
+    eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(
+        get_app_list_server_name_by_epocver(kern->get_epoc_version())));
 
     if (!svr) {
         *err = "Can't get app list server!\n";

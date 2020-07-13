@@ -126,6 +126,8 @@ namespace eka2l1 {
      */
     bool read_localised_registration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
 
+    const std::string get_app_list_server_name_by_epocver(const epocver ver);
+
     /*! \brief Applist services
      *
      * Provide external information about application management,

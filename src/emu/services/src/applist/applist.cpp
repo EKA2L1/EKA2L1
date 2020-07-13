@@ -40,20 +40,22 @@
 #include <functional>
 
 namespace eka2l1 {
+    const std::string get_app_list_server_name_by_epocver(const epocver ver) {
+        if (ver < epocver::eka2) {
+            return "AppListServer";
+        }
+
+        return "!AppListServer";
+    }
+
     applist_server::applist_server(system *sys)
-        : service::server(sys->get_kernel_system(), sys, "!AppListServer", true) {
-        REGISTER_IPC(applist_server, default_screen_number,
-            EAppListServGetDefaultScreenNumber, "GetDefaultScreenNumber");
-        REGISTER_IPC(applist_server, app_language,
-            EAppListServApplicationLanguage, "ApplicationLanguageL");
-        REGISTER_IPC(applist_server, is_accepted_to_run,
-            EAppListServRuleBasedLaunching, "RuleBasedLaunching");
-        REGISTER_IPC(applist_server, get_app_info,
-            EAppListServGetAppInfo, "GetAppInfo");
-        REGISTER_IPC(applist_server, get_capability,
-            EAppListServGetAppCapability, "GetAppCapability");
-        REGISTER_IPC(applist_server, get_app_icon_file_name,
-            EAppListServAppIconFileName, "GetAppIconFilename");
+        : service::server(sys->get_kernel_system(), sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()), true) {
+        REGISTER_IPC(applist_server, default_screen_number, EAppListServGetDefaultScreenNumber, "GetDefaultScreenNumber");
+        REGISTER_IPC(applist_server, app_language, EAppListServApplicationLanguage, "ApplicationLanguageL");
+        REGISTER_IPC(applist_server, is_accepted_to_run, EAppListServRuleBasedLaunching, "RuleBasedLaunching");
+        REGISTER_IPC(applist_server, get_app_info, EAppListServGetAppInfo, "GetAppInfo");
+        REGISTER_IPC(applist_server, get_capability, EAppListServGetAppCapability, "GetAppCapability");
+        REGISTER_IPC(applist_server, get_app_icon_file_name, EAppListServAppIconFileName, "GetAppIconFilename");
     }
 
     bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
