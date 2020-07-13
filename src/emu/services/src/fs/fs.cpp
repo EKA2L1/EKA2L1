@@ -150,6 +150,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(create_private_path, epoc::fs_msg_create_private_path, "Fs::CreatePrivatePath");
             HANDLE_CLIENT_IPC(notify_change_ex, epoc::fs_msg_notify_change_ex, "Fs::NotifyChangeEx");
             HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
+            HANDLE_CLIENT_IPC(notify_change_cancel_ex, epoc::fs_msg_notify_change_cancel_ex, "Fs::NotifyChangeCancelEx");
             HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
             HANDLE_CLIENT_IPC(rmdir, epoc::fs_msg_rmdir, "Fs::RmDir");
             HANDLE_CLIENT_IPC(delete_entry, epoc::fs_msg_delete, "Fs::Delete");
@@ -361,8 +362,7 @@ namespace eka2l1 {
 
         entry.match_pattern = ".*";
         entry.type = static_cast<notify_type>(*ctx->get_arg<std::int32_t>(0));
-        entry.request_status = ctx->msg->request_sts;
-        entry.request_thread = ctx->msg->own_thr;
+        entry.info = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
 
         notify_entries.push_back(entry);
     }
@@ -378,12 +378,24 @@ namespace eka2l1 {
         notify_entry entry;
         entry.match_pattern = common::wildcard_to_regex_string(common::ucs2_to_utf8(*wildcard_match));
         entry.type = static_cast<notify_type>(*ctx->get_arg<std::int32_t>(0));
-        entry.request_status = ctx->msg->request_sts;
-        entry.request_thread = ctx->msg->own_thr;
+        entry.info = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
 
         notify_entries.push_back(entry);
 
         LOG_TRACE("Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
+    }
+
+    void fs_server_client::notify_change_cancel_ex(service::ipc_context *ctx) { 
+        address request_status_addr = ctx->get_arg<address>(0).value();
+        for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
+            notify_entry entry = *it;
+            if (entry.info.sts.ptr_address() == request_status_addr) {
+                entry.info.complete(epoc::error_cancel);
+                notify_entries.erase(it);
+                break;
+            }
+        }
+        ctx->set_request_status(epoc::error_none);
     }
 
     bool is_e32img(symfile f) {
