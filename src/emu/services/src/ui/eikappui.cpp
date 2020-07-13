@@ -20,8 +20,10 @@
 
 #include <common/log.h>
 #include <epoc/epoc.h>
-#include <services/ui/eikappui.h>
 #include <utils/err.h>
+
+#include <services/ui/eikappui.h>
+#include <services/ui/cap/oom_app.h>
 
 #include <cstring>
 
@@ -49,8 +51,22 @@ namespace eka2l1 {
     }
 
     eikappui_server::eikappui_server(eka2l1::system *sys)
-        : service::server(sys->get_kernel_system(), sys, get_eik_app_ui_server_name_by_epocver(sys->get_symbian_version_use()), true) {
-        REGISTER_IPC(eikappui_server, get_debug_preferences, EEikAppUiGetDebugPreferences, "EikAppUi::GetDebugPreferences");
+        : service::typical_server(sys, get_eik_app_ui_server_name_by_epocver(sys->get_symbian_version_use()))
+        , cap_server_(nullptr) {
+    }
+
+    void eikappui_server::connect(service::ipc_context &ctx) {
+        if (!cap_server_) {
+            cap_server_ = reinterpret_cast<oom_ui_app_server*>(kern->get_by_name<service::server>(OOM_APP_UI_SERVER_NAME));
+        }
+    
+        create_session<eikappui_session>(&ctx);
+        typical_server::connect(ctx);
+    }
+
+    void eikappui_server::disconnect(service::ipc_context &ctx) {
+        remove_session(ctx.msg->msg_session->unique_id());
+        typical_server::disconnect(ctx);
     }
 
     // TODO: Make a resource reader and read from the config resource file
@@ -70,5 +86,37 @@ namespace eka2l1 {
             static_cast<std::uint32_t>(buf.size()));
 
         ctx.set_request_status(0);
+    }
+
+    eikappui_session::eikappui_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+        : service::typical_session(svr, client_ss_uid, client_version)
+        , cap_session_(nullptr) {
+        eikappui_server *parent = reinterpret_cast<eikappui_server*>(svr);
+        cap_session_ = parent->cap_server_->create_session_impl<oom_ui_app_session>(client_ss_uid, client_version, true);
+    }
+    
+    eikappui_session::~eikappui_session() {
+        eikappui_server *serv = server<eikappui_server>();
+        serv->cap_server_->remove_session(client_ss_uid_);
+    }
+
+    void eikappui_session::fetch(service::ipc_context *ctx) {
+        if (ctx->msg->function >= eik_app_ui_range_sgc) {
+            // Redirect to cap session
+            ctx->msg->function = ctx->msg->function - eik_app_ui_range_sgc + akn_eik_app_ui_set_sgc_params;
+            cap_session_->fetch(ctx);
+
+            return;
+        }
+
+        switch (ctx->msg->function) {
+        case eik_app_ui_debug_prefs:
+            server<eikappui_server>()->get_debug_preferences(*ctx);
+            break;
+
+        default:
+            LOG_WARN("Unimplemented app ui session opcode 0x{:X}", ctx->msg->function);
+            break;
+        }
     }
 }

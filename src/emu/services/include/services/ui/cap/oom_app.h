@@ -32,15 +32,15 @@ namespace eka2l1 {
 
     namespace epoc {
         struct sgc_params {
-            int window_group_id;
+            std::int32_t window_group_id;
 
             // For more information, when you encounter TBitFlags,
             // please see file: Babitflags.h in ossrv repo
             std::uint32_t bit_flags;
 
-            int sp_layout;
-            int sp_flag;
-            int app_screen_mode;
+            std::int32_t sp_layout;
+            std::int32_t sp_flag;
+            std::int32_t app_screen_mode;
         };
     }
 
@@ -122,11 +122,12 @@ namespace eka2l1 {
 
     class oom_ui_app_session : public service::typical_session {
         std::int32_t blank_count;
+        bool old_layout;
 
         void redraw_status_pane(service::ipc_context *ctx);
 
     public:
-        explicit oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
+        explicit oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version, const bool is_old_layout = false);
         void fetch(service::ipc_context *ctx) override;
     };
 
@@ -159,21 +160,18 @@ namespace eka2l1 {
         // This but except it loads the screen0 only
         void load_screen_mode();
         std::string get_layout_buf();
-        void set_sgc_params(service::ipc_context &ctx);
+        void set_sgc_params(service::ipc_context &ctx, const bool old_layout);
         void update_key_block_mode(service::ipc_context &ctx);
         void redraw_status_pane();
 
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);
-
         void init(kernel_system *kern);
 
         epoc::cap::eik_server *get_eik_server() {
             return eik.get();
         }
 
-        epoc::cap::sgc_server *get_sgc_server() {
-            return sgc.get();
-        }
+        epoc::cap::sgc_server *get_sgc_server();
     };
 }

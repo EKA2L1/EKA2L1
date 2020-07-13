@@ -36,17 +36,21 @@ namespace eka2l1 {
 
     void oom_ui_app_server::connect(service::ipc_context &ctx) {
         create_session<oom_ui_app_session>(&ctx);
-
-        if (!sgc) {
-            init(ctx.sys->get_kernel_system());
-        }
-
         typical_server::connect(ctx);
     }
 
-    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+    epoc::cap::sgc_server *oom_ui_app_server::get_sgc_server() {
+        if (!sgc) {
+            init(sys->get_kernel_system());
+        }
+
+        return sgc.get();
+    }
+
+    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version, const bool is_old_layout)
         : service::typical_session(svr, client_ss_uid, client_version)
-        , blank_count(0) {
+        , blank_count(0)
+        , old_layout(is_old_layout) {
     }
 
     void oom_ui_app_session::redraw_status_pane(service::ipc_context *ctx) {
@@ -74,7 +78,7 @@ namespace eka2l1 {
         }
 
         case akn_eik_app_ui_set_sgc_params: {
-            server<oom_ui_app_server>()->set_sgc_params(*ctx);
+            server<oom_ui_app_server>()->set_sgc_params(*ctx, old_layout);
             break;
         }
 
@@ -194,15 +198,26 @@ namespace eka2l1 {
         ctx.set_request_status(epoc::error_none);
     }
 
-    void oom_ui_app_server::set_sgc_params(service::ipc_context &ctx) {
+    void oom_ui_app_server::set_sgc_params(service::ipc_context &ctx, const bool old_layout) {
         std::optional<epoc::sgc_params> params = ctx.get_arg_packed<epoc::sgc_params>(0);
 
         if (!params.has_value()) {
-            ctx.set_request_status(epoc::error_argument);
-            return;
+            if (old_layout) {
+                params = std::make_optional<epoc::sgc_params>();
+                params->app_screen_mode = 0;
+                params->window_group_id = ctx.get_arg<std::int32_t>(0).value();
+                params->bit_flags = ctx.get_arg<std::uint32_t>(1).value();
+                params->sp_layout = ctx.get_arg<std::uint32_t>(2).value();
+                params->sp_flag = ctx.get_arg<std::uint32_t>(3).value();
+            } else {
+                ctx.set_request_status(epoc::error_argument);
+                return;
+            }
         }
 
-        sgc->change_wg_param(params->window_group_id, *reinterpret_cast<epoc::cap::sgc_server::wg_state::wg_state_flags *>(&(params->bit_flags)), params->sp_layout, params->sp_flag, params->app_screen_mode);
+        get_sgc_server()->change_wg_param(params->window_group_id, *reinterpret_cast<epoc::cap::sgc_server::wg_state::wg_state_flags *>(&(params->bit_flags)), params->sp_layout,
+            params->sp_flag, params->app_screen_mode);
+
         ctx.set_request_status(epoc::error_none);
     }
 
@@ -224,7 +239,7 @@ namespace eka2l1 {
         sgc = std::make_unique<epoc::cap::sgc_server>();
         eik = std::make_unique<epoc::cap::eik_server>(kern);
 
-        sgc->init(kern, sys->get_graphics_driver());
+        get_sgc_server()->init(kern, sys->get_graphics_driver());
         eik->init(kern);
     }
 }
