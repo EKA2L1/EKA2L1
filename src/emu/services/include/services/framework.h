@@ -115,19 +115,34 @@ namespace eka2l1::service {
         }
 
         template <typename T, typename... Args>
+        T *create_session_impl(const service::uid suid, const epoc::version client_version, Args... arguments) {
+            sessions.emplace(suid, std::make_unique<T>(reinterpret_cast<typical_server *>(this), suid, client_version, arguments...));
+
+            auto &target_session = sessions[suid];
+            return reinterpret_cast<T *>(target_session.get());
+        }
+
+        template <typename T, typename... Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
             const service::uid suid = ctx->msg->msg_session->unique_id();
-            
             std::optional<epoc::version> client_version = get_version(ctx);
 
             if (!client_version) {
                 return nullptr;
             }
 
-            sessions.emplace(suid, std::make_unique<T>(reinterpret_cast<typical_server *>(this), suid, client_version.value(), arguments...));
+            return create_session_impl<T>(suid, client_version.value(), arguments...);
+        }
 
-            auto &target_session = sessions[suid];
-            return reinterpret_cast<T *>(target_session.get());
+        bool remove_session(const service::uid sid) {
+            const auto ite = sessions.find(sid);
+
+            if (ite == sessions.end()) {
+                return false;
+            }
+
+            sessions.erase(ite);
+            return true;
         }
 
         template <typename T, typename... Args>
