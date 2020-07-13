@@ -210,6 +210,8 @@ namespace eka2l1 {
         void notify(service::ipc_context *ctx);
         void notify_cancel(service::ipc_context *ctx);
         void get_find_result(service::ipc_context *ctx);
+        void start_transaction(service::ipc_context *ctx);
+        void cancel_transaction(service::ipc_context *ctx);
 
         /**
          * \brief Append new key to find equal list.

@@ -491,6 +491,25 @@ namespace eka2l1 {
                 break;
             }
 
+            case cen_rep_find_eq_string:
+            case cen_rep_find_neq_string: {
+                if (entry.data.etype != central_repo_entry_type::string) {
+                    // It must be string type
+                    break;
+                }
+
+                if (static_cast<std::string>(entry.data.strd) == ctx->get_arg<std::string>(1)) {
+                    if (!find_not_eq) {
+                        key_found = entry.key;
+                    }
+                } else {
+                    if (find_not_eq) {
+                        key_found = entry.key;
+                    }
+                }
+                break;
+            }
+
             case cen_rep_find:
                 key_found = entry.key;
                 break;
@@ -595,5 +614,13 @@ namespace eka2l1 {
         e->metadata_val = source_e->metadata_val;
 
         return 0;
+    }
+
+    void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
+        ctx->set_request_status(epoc::error_none);
+    }
+
+    void central_repo_client_subsession::cancel_transaction(service::ipc_context *ctx) {
+        ctx->set_request_status(epoc::error_none);
     }
 }
