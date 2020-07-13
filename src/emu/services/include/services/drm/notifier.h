@@ -25,6 +25,16 @@
 
 namespace eka2l1 {
 
+    enum drm_notifier_opcode {
+        notifier_notify_clients = 0x1,
+        notifier_receive_notification = 0x2,
+        notifier_register = 0x3,
+        notifier_unregister = 0x4,
+        notifier_register_uri = 0x5,
+        notifier_unregister_uri = 0x6,
+        notifier_cancel_notification = 0xFF
+    };
+
     class drm_notifier_server : public service::typical_server {
     public:
         explicit drm_notifier_server(eka2l1::system *sys);
