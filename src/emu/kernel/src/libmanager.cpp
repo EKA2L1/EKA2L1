@@ -610,15 +610,19 @@ namespace eka2l1::hle {
 
                             // Load new romimage and add dependency
                             loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
-                            std::u16string path_to_dll = (kern_->is_eka1()) ? u"?:\\System\\Libs\\" : u"?:\\Sys\\Bin\\";
-                            path_to_dll[0] = drive_to_char16(get_drive_rom());
+                            std::u16string path_to_dll;
 
-                            std::optional<std::u16string> dll_name = io_->find_entry_with_address(path_to_dll, romimg_addr);
+                            for (std::size_t i = 0; i < search_paths.size(); i++) {
+                                path_to_dll = drive_to_char16(get_drive_rom());
+                                path_to_dll += u':';
+                                path_to_dll += search_paths[i];
 
-                            if (dll_name) {
-                                path_to_dll += dll_name.value();
-                            } else {
-                                path_to_dll = u"";
+                                std::optional<std::u16string> dll_name = io_->find_entry_with_address(path_to_dll, romimg_addr);
+
+                                if (dll_name) {
+                                    path_to_dll += dll_name.value();
+                                    break;
+                                }
                             }
 
                             acs->add_dependency(load_as_romimg(rimg, pr, path_to_dll));
@@ -675,13 +679,18 @@ namespace eka2l1::hle {
         if (!eka2l1::has_root_dir(lib_path)) {
             // Nope ? We need to cycle through all possibilities
             for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
-                lib_path = drive_to_char16(drv);
-                lib_path += (kern_->is_eka1()) ? u":\\System\\Libs\\" : u":\\Sys\\Bin\\";
-                lib_path += path;
+                const char16_t drvc = drive_to_char16(drv);
 
-                auto result = open_and_get(lib_path);
-                if (result.first != std::nullopt || result.second != std::nullopt) {
-                    return result;
+                for (std::size_t i = 0; i < search_paths.size(); i++) {
+                    lib_path = drvc;
+                    lib_path += u':';
+                    lib_path += search_paths[i];
+                    lib_path += path;
+
+                    auto result = open_and_get(lib_path);
+                    if (result.first != std::nullopt || result.second != std::nullopt) {
+                        return result;
+                    }
                 }
             }
 
@@ -730,15 +739,20 @@ namespace eka2l1::hle {
         if (!eka2l1::has_root_dir(lib_path)) {
             // Nope ? We need to cycle through all possibilities
             for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
-                lib_path = drive_to_char16(drv);
-                lib_path += (kern_->is_eka1()) ? u":\\System\\Libs\\" : u":\\Sys\\Bin\\";
-                lib_path += name;
+                const char16_t drvc = drive_to_char16(drv);
 
-                if (io_->exist(lib_path)) {
-                    auto result = load_depend_on_drive(drv, lib_path);
-                    if (result != nullptr) {
-                        result->set_full_path(lib_path);
-                        return result;
+                for (std::size_t i = 0; i < search_paths.size(); i++) {
+                    lib_path = drvc;
+                    lib_path += u':';
+                    lib_path += search_paths[i];
+                    lib_path += name;
+
+                    if (io_->exist(lib_path)) {
+                        auto result = load_depend_on_drive(drv, lib_path);
+                        if (result != nullptr) {
+                            result->set_full_path(lib_path);
+                            return result;
+                        }
                     }
                 }
             }
@@ -975,6 +989,13 @@ namespace eka2l1::hle {
 
         default:
             break;
+        }
+
+        if (kern_->is_eka1()) {
+            search_paths.push_back(u"\\System\\Libs\\");
+            search_paths.push_back(u"\\System\\Programs\\");
+        } else {
+            search_paths.push_back(u"\\Sys\\Bin\\");
         }
     }
     
