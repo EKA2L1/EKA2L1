@@ -617,10 +617,12 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
+        LOG_TRACE("TransactionStart stubbed");
         ctx->set_request_status(epoc::error_none);
     }
 
     void central_repo_client_subsession::cancel_transaction(service::ipc_context *ctx) {
+        LOG_TRACE("TransactionCancel stubbed");
         ctx->set_request_status(epoc::error_none);
     }
 }
