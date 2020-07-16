@@ -34,14 +34,14 @@ namespace eka2l1::epoc {
         switch (op) {
         case ws_anim_dll_op_create_instance: {
             LOG_TRACE("AnimDll::CreateInstance stubbed with a anim handle (>= 0)");
-            ctx.set_request_status(user_count++);
+            ctx.complete(user_count++);
 
             break;
         }
 
         case ws_anim_dll_op_command_reply: {
             LOG_TRACE("AnimDll command reply stubbed!");
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }

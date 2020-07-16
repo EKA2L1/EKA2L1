@@ -335,6 +335,7 @@ namespace eka2l1 {
         bool unsubscribe_prop(prop_ident_pair ident);
 
         property_ptr get_prop(int category, int key); // Get property by category and key
+        property_ptr delete_prop(int category, int key);
 
         kernel::thread *crr_thread();
         kernel::process *crr_process();

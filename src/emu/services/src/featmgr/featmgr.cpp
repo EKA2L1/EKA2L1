@@ -141,7 +141,7 @@ namespace eka2l1 {
 
         // NOTE: Newer version of this server use TFeatureEntry struct. Care about this note when this server
         // mess things up.
-        const epoc::uid feature_id = *ctx.get_arg<epoc::uid>(0);
+        const epoc::uid feature_id = *ctx.get_argument_value<epoc::uid>(0);
         int result = 0;
 
         // Search for the feature, first in feature list
@@ -158,7 +158,7 @@ namespace eka2l1 {
             }
         }
 
-        ctx.write_arg_pkg(1, result);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument(1, result);
+        ctx.complete(epoc::error_none);
     }
 }

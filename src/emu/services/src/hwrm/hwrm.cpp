@@ -35,13 +35,13 @@ namespace eka2l1 {
         switch (ctx->msg->function) {
         case hwrm_fundamental_op_create_vibration_service: {
             resource_ = std::make_unique<epoc::vibration_resource>(ctx->sys->get_kernel_system());
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             break;
         }
 
         case hwrm_fundamental_op_create_light_service: {
             resource_ = std::make_unique<epoc::light_resource>(ctx->sys->get_kernel_system());
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             break;
         }
 

@@ -42,20 +42,20 @@ namespace eka2l1 {
     void akn_skin_server_session::do_set_notify_handler(service::ipc_context *ctx) {
         // The notify handler does nothing rather than guarantee that the client already has a handle mechanic
         // to the request notification later.
-        client_handler_ = *ctx->get_arg<std::uint32_t>(0);
-        ctx->set_request_status(epoc::error_none);
+        client_handler_ = *ctx->get_argument_value<std::uint32_t>(0);
+        ctx->complete(epoc::error_none);
     }
 
     void akn_skin_server_session::check_icon_config(service::ipc_context *ctx) {
-        const std::optional<epoc::uid> id = ctx->get_arg_packed<epoc::uid>(0);
+        const std::optional<epoc::uid> id = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
 
         if (!id) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         // Check if icon is configured
-        ctx->set_request_status(server<akn_skin_server>()->is_icon_configured(id.value()));
+        ctx->complete(server<akn_skin_server>()->is_icon_configured(id.value()));
     }
 
     void akn_skin_server_session::store_scalable_gfx(service::ipc_context *ctx) {
@@ -64,13 +64,13 @@ namespace eka2l1 {
         // 1. LayoutType & size
         // 2. bitmap handle
         // 3. mask handle
-        const std::optional<epoc::pid> item_id = ctx->get_arg_packed<epoc::pid>(0);
-        const std::optional<epoc::skn_layout_info> layout_info = ctx->get_arg_packed<epoc::skn_layout_info>(1);
-        const std::optional<std::int32_t> bmp_handle = ctx->get_arg<std::int32_t>(2);
-        const std::optional<std::int32_t> msk_handle = ctx->get_arg<std::int32_t>(3);
+        const std::optional<epoc::pid> item_id = ctx->get_argument_data_from_descriptor<epoc::pid>(0);
+        const std::optional<epoc::skn_layout_info> layout_info = ctx->get_argument_data_from_descriptor<epoc::skn_layout_info>(1);
+        const std::optional<std::int32_t> bmp_handle = ctx->get_argument_value<std::int32_t>(2);
+        const std::optional<std::int32_t> msk_handle = ctx->get_argument_value<std::int32_t>(3);
 
         if (!(item_id && layout_info && bmp_handle && msk_handle)) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
         server<akn_skin_server>()->store_scalable_gfx(
@@ -79,7 +79,7 @@ namespace eka2l1 {
             *bmp_handle,
             *msk_handle);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void akn_skin_server_session::do_next_event(service::ipc_context *ctx) {
@@ -90,7 +90,7 @@ namespace eka2l1 {
             }
 
             // Set the notifier and both the next one getting the event to cancel
-            ctx->set_request_status(epoc::error_cancel);
+            ctx->complete(epoc::error_cancel);
             nof_info_.complete(epoc::error_cancel);
 
             return;
@@ -103,7 +103,7 @@ namespace eka2l1 {
             const epoc::akn_skin_server_change_handler_notification nof_code = std::move(nof_list_.front());
             nof_list_.pop();
 
-            ctx->set_request_status(static_cast<int>(nof_code));
+            ctx->complete(static_cast<int>(nof_code));
         } else {
             // There is no notification pending yet.
             // We have to wait for it, so let's get this client as the one to signal.
@@ -118,7 +118,7 @@ namespace eka2l1 {
             nof_info_.complete(epoc::error_cancel);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
@@ -167,7 +167,7 @@ namespace eka2l1 {
         }
 
         create_session<akn_skin_server_session>(&ctx);
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     int akn_skin_server::is_icon_configured(const epoc::uid app_uid) {

@@ -296,18 +296,15 @@ namespace eka2l1::manager {
     void script_manager::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
-        common::erase_elements(breakpoint_wait_patch, [&](breakpoint_info &breakpoint) {
-            if (((process_uid == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
+        for (breakpoint_info &breakpoint: breakpoint_wait_patch) {
+            if (((breakpoint.attached_process_ == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
                 && (breakpoint.flags_ & breakpoint_info::FLAG_BASED_IMAGE)) {
                 breakpoint.addr_ += new_code_addr;
                 breakpoint.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
 
                 breakpoints[breakpoint.addr_ & ~1].list_.push_back(breakpoint);
-                return true;
             }
-
-            return false;
-        });
+        }
     }
 
     void script_manager::call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0, const std::uint32_t arg1,

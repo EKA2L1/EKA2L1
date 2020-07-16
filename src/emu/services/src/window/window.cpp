@@ -89,7 +89,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::parse_command_buffer(service::ipc_context &ctx) {
-        std::optional<std::string> dat = ctx.get_arg<std::string>(cmd_slot);
+        std::optional<std::string> dat = ctx.get_argument_value<std::string>(cmd_slot);
 
         if (!dat) {
             return;
@@ -199,7 +199,7 @@ namespace eka2l1::epoc {
 
         if (!target_screen) {
             LOG_ERROR("Can't find screen object with number {}", header->num_screen);
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
@@ -209,17 +209,17 @@ namespace eka2l1::epoc {
             primary_device = reinterpret_cast<epoc::screen_device *>(device.get());
         }
 
-        ctx.set_request_status(add_object(device));
+        ctx.complete(add_object(device));
     }
 
     void window_server_client::create_dsa(service::ipc_context &ctx, ws_cmd &cmd) {
         window_client_obj_ptr dsa_inst = std::make_unique<epoc::dsa>(this);
         if (!dsa_inst) {
-            ctx.set_request_status(epoc::error_general);
+            ctx.complete(epoc::error_general);
             return;
         }
 
-        ctx.set_request_status(add_object(dsa_inst));
+        ctx.complete(add_object(dsa_inst));
     }
 
     void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -266,7 +266,7 @@ namespace eka2l1::epoc {
         group_casted->name = common::utf8_to_ucs2(fmt::format("WindowGroup{:X}", header->client_handle));
 
         std::uint32_t id = add_object(group);
-        ctx.set_request_status(id);
+        ctx.complete(id);
     }
 
     void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -275,13 +275,13 @@ namespace eka2l1::epoc {
 
         if (!parent) {
             LOG_WARN("Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         if (parent->type != window_kind::group && parent->type != window_kind::client) {
             LOG_ERROR("The parent of window user must be a group or another user!");
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
@@ -290,12 +290,12 @@ namespace eka2l1::epoc {
             (parent->type == window_kind::group) ? parent->child : parent, header->win_type,
             header->dmode, header->client_handle);
 
-        ctx.set_request_status(add_object(win));
+        ctx.complete(add_object(win));
     }
 
     void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd) {
         window_client_obj_ptr gcontext = std::make_unique<epoc::graphic_context>(this);
-        ctx.set_request_status(add_object(gcontext));
+        ctx.complete(add_object(gcontext));
     }
 
     void window_server_client::create_sprite(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -304,12 +304,12 @@ namespace eka2l1::epoc {
 
         if (!win) {
             LOG_WARN("Window handle is invalid! Abort");
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         window_client_obj_ptr spr = std::make_unique<epoc::sprite>(this, win->scr, win, sprite_header->base_pos);
-        ctx.set_request_status(add_object(spr));
+        ctx.complete(add_object(spr));
     }
 
     void window_server_client::create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -321,14 +321,14 @@ namespace eka2l1::epoc {
         LOG_TRACE("Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
 
         window_client_obj_ptr animdll = std::make_unique<epoc::anim_dll>(this, nullptr);
-        ctx.set_request_status(add_object(animdll));
+        ctx.complete(add_object(animdll));
     }
 
     void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd &cmd) {
         LOG_TRACE("Create CLICKDLL (button click sound plugin), stubbed object");
 
         window_client_obj_ptr clickdll = std::make_unique<epoc::click_dll>(this, nullptr);
-        ctx.set_request_status(add_object(clickdll));
+        ctx.complete(add_object(clickdll));
     }
 
     void window_server_client::create_wsbmp(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -339,12 +339,12 @@ namespace eka2l1::epoc {
         fbsbitmap *bmp = serv->get<fbsbitmap>(bmp_handle);
 
         if (!bmp) {
-            ctx.set_request_status(epoc::error_bad_handle);
+            ctx.complete(epoc::error_bad_handle);
             return;
         }
 
         window_client_obj_ptr wsbmpobj = std::make_unique<epoc::wsbitmap>(this, bmp);
-        ctx.set_request_status(add_object(wsbmpobj));
+        ctx.complete(add_object(wsbmpobj));
     }
 
     void window_server_client::get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -366,12 +366,12 @@ namespace eka2l1::epoc {
                 list_req->count, accept_priority, screen);
         }
 
-        ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]), static_cast<std::uint32_t>(ids.size()));
-        ctx.set_request_status(static_cast<int>(total));
+        ctx.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(&ids[0]), static_cast<std::uint32_t>(ids.size()));
+        ctx.complete(static_cast<int>(total));
     }
 
     void window_server_client::get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
-        ctx.set_request_status(static_cast<int>(get_ws().get_total_window_groups(
+        ctx.complete(static_cast<int>(get_ws().get_total_window_groups(
             cmd.header.op == ws_cl_op_num_window_groups ? *static_cast<int *>(cmd.data_ptr) : -1)));
     }
 
@@ -379,7 +379,7 @@ namespace eka2l1::epoc {
         ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
         queue_event(evt->evt);
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -392,7 +392,7 @@ namespace eka2l1::epoc {
 
             if (!group) {
                 LOG_ERROR("Previous group sibling not found with id {}", find_info->previous_id);
-                ctx.set_request_status(epoc::error_not_found);
+                ctx.complete(epoc::error_not_found);
                 return;
             }
 
@@ -406,23 +406,23 @@ namespace eka2l1::epoc {
 
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
             if (common::compare_ignore_case(group->name.substr(find_info->offset), win_group_name) == 0) {
-                ctx.set_request_status(group->id);
+                ctx.complete(group->id);
                 return;
             }
         }
 
-        ctx.set_request_status(epoc::error_not_found);
+        ctx.complete(epoc::error_not_found);
     }
 
     void window_server_client::set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Check errors
         if (get_ws().get_focus() && get_ws().get_focus()->client == this) {
             get_ws().cursor_mode() = *reinterpret_cast<epoc::pointer_cursor_mode *>(cmd.data_ptr);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             return;
         }
 
-        ctx.set_request_status(epoc::error_permission_denied);
+        ctx.complete(epoc::error_permission_denied);
     }
 
     void window_server_client::get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -431,26 +431,26 @@ namespace eka2l1::epoc {
 
         if (!win || win->type != window_kind::group) {
             LOG_TRACE("Can't find group with id {}", group_id);
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         const std::uint32_t thr_id = win->client->get_client()->unique_id();
 
-        ctx.write_arg_pkg<std::uint32_t>(reply_slot, thr_id);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<std::uint32_t>(reply_slot, thr_id);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::get_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         auto evt = redraws.get_evt_opt();
 
         if (!evt) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
-        ctx.write_arg_pkg<epoc::redraw_event>(reply_slot, *evt);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<epoc::redraw_event>(reply_slot, *evt);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::get_event(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -458,14 +458,14 @@ namespace eka2l1::epoc {
 
         // Allow the context to shrink if needed, since the struct certainly got larger as Symbian
         // grows. S^3 has advance pointer struct which along takes 56 bytes buffer.
-        ctx.write_arg_pkg<epoc::event>(reply_slot, evt, nullptr, true);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<epoc::event>(reply_slot, evt, nullptr, true);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Epoc < 9
         if (cmd.header.cmd_len == 0) {
-            ctx.set_request_status(primary_device->scr->focus->id);
+            ctx.complete(primary_device->scr->focus->id);
             return;
         }
 
@@ -474,11 +474,11 @@ namespace eka2l1::epoc {
 
         if (!scr) {
             LOG_ERROR("Invalid screen number {}", screen_num);
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
-        ctx.set_request_status(scr->focus->id);
+        ctx.complete(scr->focus->id);
     }
 
     void window_server_client::get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -486,12 +486,12 @@ namespace eka2l1::epoc {
         epoc::window_group *group = get_ws().get_group_from_id(find_info->id);
 
         if (!group || group->type != window_kind::group) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         if (group->name.length() == 0) {
-            ctx.set_request_status(epoc::error_not_ready);
+            ctx.complete(epoc::error_not_ready);
             return;
         }
 
@@ -501,7 +501,7 @@ namespace eka2l1::epoc {
         const std::u16string to_write = group->name.substr(0, len_to_write);
 
         ctx.write_arg(reply_slot, to_write);
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     struct window_clear_store_walker : public epoc::window_tree_walker {
@@ -528,7 +528,7 @@ namespace eka2l1::epoc {
             scr->root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -536,12 +536,12 @@ namespace eka2l1::epoc {
         epoc::window_group *group = get_ws().get_group_from_id(set->identifier);
 
         if (!group || group->type != window_kind::group) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         group->set_position(set->ord_pos);
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     struct def_mode_max_num_colors {
@@ -563,8 +563,8 @@ namespace eka2l1::epoc {
         scr->get_max_num_colors(result.num_color, result.num_grey);
         result.disp_mode = scr->disp_mode;
 
-        ctx.write_arg_pkg<def_mode_max_num_colors>(reply_slot, result);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<def_mode_max_num_colors>(reply_slot, result);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -576,7 +576,7 @@ namespace eka2l1::epoc {
             scr = get_ws().get_current_focus_screen();
         }
 
-        ctx.set_request_status(1 << (static_cast<std::uint8_t>(scr->disp_mode) - 1));
+        ctx.complete(1 << (static_cast<std::uint8_t>(scr->disp_mode) - 1));
     }
 
     void window_server_client::set_pointer_area(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -589,7 +589,7 @@ namespace eka2l1::epoc {
 
         scr->pointer_areas_[area_info->mode] = area_info->pointer_area;
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::set_pointer_cursor_position(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -599,7 +599,7 @@ namespace eka2l1::epoc {
         assert(scr);
 
         scr->pointer_cursor_pos_ = *pos;
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void window_server_client::get_number_of_screen(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -617,7 +617,7 @@ namespace eka2l1::epoc {
             scr = scr->next;
         }
 
-        ctx.set_request_status(connected_count);
+        ctx.complete(connected_count);
     }
 
     void window_server_client::get_ready(service::ipc_context &ctx, ws_cmd *cmd, const bool is_redraw) {
@@ -640,7 +640,7 @@ namespace eka2l1::epoc {
         }
 
         if (should_finish) {
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
         }
     }
     
@@ -675,7 +675,7 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_compute_mode: {
             LOG_TRACE("Setting compute mode not supported, instead stubbed");
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -1276,7 +1276,7 @@ namespace eka2l1 {
             do_base_init();
         }
 
-        ctx.set_request_status(ctx.msg->msg_session->unique_id());
+        ctx.complete(ctx.msg->msg_session->unique_id());
     }
 
     epoc::config::screen *window_server::get_current_focus_screen_config() {

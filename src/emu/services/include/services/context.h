@@ -64,17 +64,17 @@ namespace eka2l1 {
             bool accurate_timing = false;
 
             /**
-             * \brief   Get raw IPC argument data.
+             * \brief   Get raw IPC argument value.
              * 
              * Accept template include: std::string, std::u16string, and integer types.
              * 
              * \param   idx The index of the IPC argument.
              * \returns The raw data asked, if available. Else std::nullopt.
              * 
-             * \sa      get_arg_packed
+             * \sa      get_argument_data_from_descriptor
              */
             template <typename T>
-            std::optional<T> get_arg(const int idx);
+            std::optional<T> get_argument_value(const int idx);
 
             /**
              * \brief    Convert descriptor data to a struct.
@@ -83,17 +83,17 @@ namespace eka2l1 {
              * \returns  std::nullopt if argument is not a descriptor, or index is out of range.
              *           Else, returns the target struct data.
              * 
-             * \sa       get_arg_packed
+             * \sa       get_argument_data_from_descriptor
              */
             template <typename T>
-            std::optional<T> get_arg_packed(const int idx) {
-                std::uint8_t *data = get_arg_ptr(idx);
+            std::optional<T> get_argument_data_from_descriptor(const int idx) {
+                std::uint8_t *data = get_descriptor_argument_ptr(idx);
 
                 if (!data) {
                     return std::nullopt;
                 }
 
-                const std::size_t packed_size = get_arg_size(idx);
+                const std::size_t packed_size = get_argument_data_size(idx);
 
                 if (packed_size != sizeof(T)) {
                     LOG_WARN("Getting packed struct with mismatch size ({} vs {}), size to get "
@@ -115,26 +115,26 @@ namespace eka2l1 {
              * 
              * \param res The result code.
              */
-            void set_request_status(int res);
+            void complete(int res);
 
             /**
              * \brief    Get the flag contains IPC argument information.
              * \returns  The flag value.
              * 
-             * \sa       set_request_status
+             * \sa       complete
              */
             int flag() const;
 
-            /*
+            /**
              * \brief   Get a pointer to the data of an IPC descriptor argument.
              * 
              * \param   idx The index of the argument. Should be in the range [0, 3].
              * \returns Null if the index is out of range, or the IPC argument is not a descriptor.
              *          Else, return pointer to the descriptor data.
              * 
-             * \sa      get_arg_size, set_arg_des_len
+             * \sa      get_argument_data_size, set_descriptor_argument_length
             */
-            std::uint8_t *get_arg_ptr(int idx);
+            std::uint8_t *get_descriptor_argument_ptr(int idx);
 
             /**
              * \brief   Get the size of data stored in the IPC argument.
@@ -146,9 +146,9 @@ namespace eka2l1 {
              * \returns Size of the IPC argument in the specified index.
              *          Return size_t(-1) if index is out of range.
              * 
-             * \sa      get_arg_ptr
+             * \sa      get_descriptor_argument_ptr
              */
-            std::size_t get_arg_size(int idx);
+            std::size_t get_argument_data_size(int idx);
 
             /**
              * \brief   Get the max size of data stored in the IPC argument.
@@ -160,9 +160,9 @@ namespace eka2l1 {
              * \returns Size of the IPC argument in the specified index.
              *          Return size_t(-1) if index is out of range.
              * 
-             * \sa      get_arg_ptr
+             * \sa      get_descriptor_argument_ptr
              */
-            std::size_t get_arg_max_size(int idx);
+            std::size_t get_argument_max_data_size(int idx);
 
             /**
              * \brief   Set length of a descriptor passed as IPC argument in given index.
@@ -173,9 +173,9 @@ namespace eka2l1 {
              * \returns True if success. False if failure (index out of range, length to large,
              *          or IPC argument is not a descriptor).
              * 
-             * \sa      get_arg_size, get_arg_ptr
+             * \sa      get_argument_data_size, get_argument_max_data_size
              */
-            bool set_arg_des_len(const int idx, const std::uint32_t len);
+            bool set_descriptor_argument_length(const int idx, const std::uint32_t len);
 
             /**
              * \brief    Write integer data to an IPC argument.
@@ -198,7 +198,7 @@ namespace eka2l1 {
              * \param    data The 16-bit string.
              * 
              * \returns  True on success.
-             * \sa       write_arg_pkg
+             * \sa       write_data_to_descriptor_argument
              */
             bool write_arg(int idx, const std::u16string &data);
 
@@ -222,14 +222,14 @@ namespace eka2l1 {
              * \returns  True on success.
              * \sa       write_arg
              */
-            bool write_arg_pkg(int idx, const uint8_t *data, uint32_t len, int *err_code = nullptr, const bool auto_shrink_to_fit = false);
+            bool write_data_to_descriptor_argument(int idx, const uint8_t *data, uint32_t len, int *err_code = nullptr, const bool auto_shrink_to_fit = false);
 
             /**
              * \brief    Write a struct to an IPC argument.
              * 
              * The IPC argument should have type of 8-bit descriptor.
              * 
-             * For optional error code lookup, see write_arg_pkg uint8_t* version
+             * For optional error code lookup, see write_data_to_descriptor_argument uint8_t* version
              * 
              * \param    idx                 The index of the IPC argument, in range of [0, 3].
              * \param    data                A reference to the struct we want to write.
@@ -241,8 +241,8 @@ namespace eka2l1 {
              * \sa       write_arg
              */
             template <typename T>
-            bool write_arg_pkg(int idx, const T &data, int *err_code = nullptr, const bool auto_shrink_to_fit = false) {
-                return write_arg_pkg(idx, reinterpret_cast<const uint8_t *>(&data), sizeof(T), err_code, auto_shrink_to_fit);
+            bool write_data_to_descriptor_argument(int idx, const T &data, int *err_code = nullptr, const bool auto_shrink_to_fit = false) {
+                return write_data_to_descriptor_argument(idx, reinterpret_cast<const uint8_t *>(&data), sizeof(T), err_code, auto_shrink_to_fit);
             }
 
             /**

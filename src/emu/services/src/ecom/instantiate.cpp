@@ -115,10 +115,10 @@ namespace eka2l1 {
     }
 
     void ecom_session::do_get_resolved_impl_creation_method(service::ipc_context *ctx) {
-        std::optional<epoc::uid_type> uids = ctx->get_arg_packed<epoc::uid_type>(0);
+        std::optional<epoc::uid_type> uids = ctx->get_argument_data_from_descriptor<epoc::uid_type>(0);
 
         if (!uids) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -128,15 +128,15 @@ namespace eka2l1 {
         {
             std::string arg2_data;
 
-            if (auto arg2_data_op = ctx->get_arg<std::string>(1)) {
+            if (auto arg2_data_op = ctx->get_argument_value<std::string>(1)) {
                 arg2_data = std::move(arg2_data_op.value());
             } else {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
             if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
         }
@@ -150,7 +150,7 @@ namespace eka2l1 {
 
             if (!server<ecom_server>()->get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index],
                     lib_entry, dtor_key, &error_code, false)) {
-                ctx->set_request_status(error_code);
+                ctx->complete(error_code);
                 return;
             }
 
@@ -164,11 +164,11 @@ namespace eka2l1 {
         }
 
         // Write entry and more infos
-        ctx->write_arg_pkg<epoc::fs::entry>(3, lib_entry);
+        ctx->write_data_to_descriptor_argument<epoc::fs::entry>(3, lib_entry);
 
         epoc::uid_type dtor_uids{ 0, dtor_key, 0 };
-        ctx->write_arg_pkg<epoc::uid_type>(0, dtor_uids);
+        ctx->write_data_to_descriptor_argument<epoc::uid_type>(0, dtor_uids);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 }

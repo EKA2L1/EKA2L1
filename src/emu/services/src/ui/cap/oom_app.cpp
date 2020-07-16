@@ -55,7 +55,7 @@ namespace eka2l1 {
 
     void oom_ui_app_session::redraw_status_pane(service::ipc_context *ctx) {
         server<oom_ui_app_server>()->redraw_status_pane();
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void oom_ui_app_session::fetch(service::ipc_context *ctx) {
@@ -88,12 +88,12 @@ namespace eka2l1 {
             if (blank_count == 0) {
                 // No way... This is impossible
                 LOG_ERROR("App session has blank count negative before called blank screen");
-                ctx->set_request_status(epoc::error_abort);
+                ctx->complete(epoc::error_abort);
                 break;
             }
 
             LOG_TRACE("Blanking screen in AKNCAP session stubbed");
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             break;
         }
 
@@ -101,7 +101,7 @@ namespace eka2l1 {
             blank_count--;
 
             LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             break;
         }
 
@@ -116,7 +116,7 @@ namespace eka2l1 {
 
         default: {
             LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with epoc::error_none", ctx->msg->function);
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
         }
         }
     }
@@ -185,32 +185,32 @@ namespace eka2l1 {
 
         int layout_buf_size = static_cast<int>(layout_buf.size());
 
-        ctx.write_arg_pkg<int>(0, layout_buf_size);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<int>(0, layout_buf_size);
+        ctx.complete(epoc::error_none);
     }
 
     void oom_ui_app_server::get_layout_config(service::ipc_context &ctx) {
         layout_buf = get_layout_buf();
 
-        ctx.write_arg_pkg(0, reinterpret_cast<std::uint8_t *>(&layout_buf[0]),
+        ctx.write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&layout_buf[0]),
             static_cast<std::uint32_t>(layout_buf.size()));
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void oom_ui_app_server::set_sgc_params(service::ipc_context &ctx, const bool old_layout) {
-        std::optional<epoc::sgc_params> params = ctx.get_arg_packed<epoc::sgc_params>(0);
+        std::optional<epoc::sgc_params> params = ctx.get_argument_data_from_descriptor<epoc::sgc_params>(0);
 
         if (!params.has_value()) {
             if (old_layout) {
                 params = std::make_optional<epoc::sgc_params>();
                 params->app_screen_mode = 0;
-                params->window_group_id = ctx.get_arg<std::int32_t>(0).value();
-                params->bit_flags = ctx.get_arg<std::uint32_t>(1).value();
-                params->sp_layout = ctx.get_arg<std::uint32_t>(2).value();
-                params->sp_flag = ctx.get_arg<std::uint32_t>(3).value();
+                params->window_group_id = ctx.get_argument_value<std::int32_t>(0).value();
+                params->bit_flags = ctx.get_argument_value<std::uint32_t>(1).value();
+                params->sp_layout = ctx.get_argument_value<std::uint32_t>(2).value();
+                params->sp_flag = ctx.get_argument_value<std::uint32_t>(3).value();
             } else {
-                ctx.set_request_status(epoc::error_argument);
+                ctx.complete(epoc::error_argument);
                 return;
             }
         }
@@ -218,19 +218,19 @@ namespace eka2l1 {
         get_sgc_server()->change_wg_param(params->window_group_id, *reinterpret_cast<epoc::cap::sgc_server::wg_state::wg_state_flags *>(&(params->bit_flags)), params->sp_layout,
             params->sp_flag, params->app_screen_mode);
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void oom_ui_app_server::update_key_block_mode(service::ipc_context &ctx) {
-        std::optional<std::uint32_t> disable_it = ctx.get_arg<std::uint32_t>(0);
+        std::optional<std::uint32_t> disable_it = ctx.get_argument_value<std::uint32_t>(0);
 
         if (!disable_it.has_value()) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         eik->key_block_mode(!static_cast<bool>(disable_it.value()));
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void oom_ui_app_server::init(kernel_system *kern) {

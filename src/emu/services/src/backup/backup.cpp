@@ -36,7 +36,7 @@ namespace eka2l1 {
 
         bool state = false;
 
-        ctx.write_arg_pkg<bool>(0, state);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<bool>(0, state);
+        ctx.complete(epoc::error_none);
     }
 }

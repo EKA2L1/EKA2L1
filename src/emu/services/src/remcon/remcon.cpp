@@ -30,7 +30,7 @@ namespace eka2l1 {
 
     void remcon_server::connect(service::ipc_context &ctx) {
         create_session<remcon_session>(&ctx);
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     remcon_session::remcon_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
@@ -54,14 +54,14 @@ namespace eka2l1 {
     }
 
     void remcon_session::set_player_type(service::ipc_context *ctx) {
-        std::optional<epoc::remcon::player_type_information> information = ctx->get_arg_packed<epoc::remcon::player_type_information>(1);
+        std::optional<epoc::remcon::player_type_information> information = ctx->get_argument_data_from_descriptor<epoc::remcon::player_type_information>(1);
 
-        std::optional<std::string> name = ctx->get_arg<std::string>(2);
+        std::optional<std::string> name = ctx->get_argument_value<std::string>(2);
 
         if (!information || !name) {
             // On older version of remcon (reversed, it's set client type)
             // First argument is the client type, and that's it
-            type_ = static_cast<epoc::remcon::client_type>(*ctx->get_arg<std::int32_t>(0));
+            type_ = static_cast<epoc::remcon::client_type>(*ctx->get_argument_value<std::int32_t>(0));
 
             switch (type_) {
             case epoc::remcon::client_type_controller:
@@ -91,6 +91,6 @@ namespace eka2l1 {
             epoc::remcon::player_type_to_string(information_.type_),
             epoc::remcon::player_subtype_to_string(information_.subtype_));
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 }

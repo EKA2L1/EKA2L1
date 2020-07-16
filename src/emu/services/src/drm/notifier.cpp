@@ -19,27 +19,27 @@
  */
 
 #include <epoc/epoc.h>
-#include <services/notifier/notifier.h>
+#include <services/drm/notifier.h>
 
 #include <utils/err.h>
 
 namespace eka2l1 {
-    notifier_server::notifier_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!Notifier") {
+    drm_notifier_server::drm_notifier_server(eka2l1::system *sys)
+        : service::typical_server(sys, "!DRMNotifier") {
     }
 
-    void notifier_server::connect(service::ipc_context &context) {
-        create_session<notifier_client_session>(&context);
+    void drm_notifier_server::connect(service::ipc_context &context) {
+        create_session<drm_notifier_client_session>(&context);
         context.complete(epoc::error_none);
     }
 
-    notifier_client_session::notifier_client_session(service::typical_server *serv, const std::uint32_t ss_id,
+    drm_notifier_client_session::drm_notifier_client_session(service::typical_server *serv, const std::uint32_t ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
     }
 
-    void notifier_client_session::fetch(service::ipc_context *ctx) {
-        LOG_ERROR("Unimplemented opcode for Notifier server 0x{:X}", ctx->msg->function);
+    void drm_notifier_client_session::fetch(service::ipc_context *ctx) {
+        LOG_ERROR("Unimplemented opcode for DRMNotifier server 0x{:X}", ctx->msg->function);
         ctx->complete(epoc::error_none);
     }
 }

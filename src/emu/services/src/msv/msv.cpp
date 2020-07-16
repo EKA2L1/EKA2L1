@@ -108,7 +108,7 @@ namespace eka2l1 {
         ready.nof_ = epoc::msv::change_notification_type_index_loaded;
 
         sess->queue(ready);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     msv_client_session::msv_client_session(service::typical_server *serv, const std::uint32_t ss_id,
@@ -250,7 +250,7 @@ namespace eka2l1 {
 
         if (!listen(info, change, select)) {
             LOG_ERROR("Request listen on an already-listening MSV session");
-            ctx->set_request_status(epoc::error_in_use);
+            ctx->complete(epoc::error_in_use);
         }
     }
 
@@ -259,28 +259,28 @@ namespace eka2l1 {
             msv_info_.complete(epoc::error_cancel);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::get_message_directory(service::ipc_context *ctx) {
         const std::u16string folder = server<msv_server>()->message_folder();
 
         ctx->write_arg(0, folder);
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::get_message_drive(service::ipc_context *ctx) {
         const std::u16string folder = server<msv_server>()->message_folder();
         const drive_number drv = char16_to_drive(folder[0]);
 
-        ctx->set_request_status(static_cast<int>(drv));
+        ctx->complete(static_cast<int>(drv));
     }
 
     void msv_client_session::set_receive_entry_events(service::ipc_context *ctx) {
-        std::optional<std::int32_t> receive = ctx->get_arg<std::int32_t>(0);
+        std::optional<std::int32_t> receive = ctx->get_argument_value<std::int32_t>(0);
 
         if (!receive) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -290,7 +290,7 @@ namespace eka2l1 {
             flags_ |= FLAG_RECEIVE_ENTRY_EVENTS;
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     static void pad_out_data(common::chunkyseri &seri) {
@@ -330,25 +330,25 @@ namespace eka2l1 {
 
     void msv_client_session::get_entry(service::ipc_context *ctx) {
         epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
-        std::optional<epoc::uid> id = ctx->get_arg<epoc::uid>(0);
+        std::optional<epoc::uid> id = ctx->get_argument_value<epoc::uid>(0);
 
         if (!id.has_value()) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         epoc::msv::entry *ent = indexer->get_entry(id.value());
         if (!ent) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         // Try to serialize this buffer
-        std::uint8_t *buffer = reinterpret_cast<std::uint8_t *>(ctx->get_arg_ptr(1));
-        std::size_t buffer_max_size = ctx->get_arg_max_size(1);
+        std::uint8_t *buffer = reinterpret_cast<std::uint8_t *>(ctx->get_descriptor_argument_ptr(1));
+        std::size_t buffer_max_size = ctx->get_argument_max_data_size(1);
 
         if (!buffer || !buffer_max_size) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -356,15 +356,15 @@ namespace eka2l1 {
         pack_entry_to_buffer(seri, *ent);
 
         if (seri.size() > buffer_max_size) {
-            ctx->set_request_status(epoc::error_overflow);
+            ctx->complete(epoc::error_overflow);
             return;
         }
 
         seri = common::chunkyseri(buffer, buffer_max_size, common::SERI_MODE_WRITE);
         pack_entry_to_buffer(seri, *ent);
 
-        ctx->set_arg_des_len(1, static_cast<std::uint32_t>(seri.size()));
-        ctx->set_request_status(epoc::error_none);
+        ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
+        ctx->complete(epoc::error_none);
     }
 
     struct children_details {
@@ -375,10 +375,10 @@ namespace eka2l1 {
     };
 
     void msv_client_session::get_children(service::ipc_context *ctx) {
-        std::optional<children_details> details = ctx->get_arg_packed<children_details>(0);
+        std::optional<children_details> details = ctx->get_argument_data_from_descriptor<children_details>(0);
 
         if (!details) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -386,16 +386,16 @@ namespace eka2l1 {
         child_entries_ = indexer->get_entries_by_parent(details->parent_id_);
 
         if (child_entries_.empty()) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         // TODO(pent0): Include the selection flags in slot 1
-        std::uint8_t *buffer = reinterpret_cast<std::uint8_t *>(ctx->get_arg_ptr(2));
-        std::size_t buffer_max_size = ctx->get_arg_max_size(2);
+        std::uint8_t *buffer = reinterpret_cast<std::uint8_t *>(ctx->get_descriptor_argument_ptr(2));
+        std::size_t buffer_max_size = ctx->get_argument_max_data_size(2);
 
         if (!buffer || !buffer_max_size) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -428,81 +428,81 @@ namespace eka2l1 {
             written = seri.size();
         }
 
-        ctx->write_arg_pkg(0, details.value());
-        ctx->set_arg_des_len(2, static_cast<std::uint32_t>(seri.size()));
+        ctx->write_data_to_descriptor_argument(0, details.value());
+        ctx->set_descriptor_argument_length(2, static_cast<std::uint32_t>(seri.size()));
 
         if (is_overflow) {
-            ctx->set_request_status(epoc::error_overflow);
+            ctx->complete(epoc::error_overflow);
         } else {
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
         }
     }
 
     void msv_client_session::get_notify_sequence(service::ipc_context *ctx) {
-        ctx->write_arg_pkg<std::uint32_t>(0, nof_sequence_);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, nof_sequence_);
+        ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::ref_mtm_group(service::ipc_context *ctx) {
-        std::optional<epoc::uid> uid = ctx->get_arg<epoc::uid>(0);
+        std::optional<epoc::uid> uid = ctx->get_argument_value<epoc::uid>(0);
 
         if (!uid.value()) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         epoc::msv::mtm_group *group = server<msv_server>()->reg_.query_mtm_group(uid.value());
 
         if (!group) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         group->ref_count_++;
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::unref_mtm_group(service::ipc_context *ctx) {
-        std::optional<epoc::uid> uid = ctx->get_arg<epoc::uid>(0);
+        std::optional<epoc::uid> uid = ctx->get_argument_value<epoc::uid>(0);
 
         if (!uid.value()) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         epoc::msv::mtm_group *group = server<msv_server>()->reg_.query_mtm_group(uid.value());
 
         if (!group) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         if (group->ref_count_ == 0) {
-            ctx->set_request_status(epoc::error_underflow);
+            ctx->complete(epoc::error_underflow);
             return;
         }
 
         group->ref_count_--;
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::set_as_observer_only(service::ipc_context *ctx) {
         flags_ |= FLAG_OBSERVER_ONLY;
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::fill_registered_mtm_dll_array(service::ipc_context *ctx) {
-        std::optional<std::uint32_t> mtm_uid = ctx->get_arg<std::uint32_t>(0);
+        std::optional<std::uint32_t> mtm_uid = ctx->get_argument_value<std::uint32_t>(0);
 
         if (!mtm_uid) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         auto comps = server<msv_server>()->reg_.get_components(mtm_uid.value());
 
-        std::uint8_t *argptr = ctx->get_arg_ptr(1);
-        const std::size_t argsize = ctx->get_arg_max_size(1);
+        std::uint8_t *argptr = ctx->get_descriptor_argument_ptr(1);
+        const std::size_t argsize = ctx->get_argument_max_data_size(1);
 
         // Reserves 4 bytes for count
         common::chunkyseri seri(argptr + 4, argsize - 4, common::SERI_MODE_WRITE);
@@ -543,7 +543,7 @@ namespace eka2l1 {
             }
         }
 
-        ctx->set_arg_des_len(1, static_cast<std::uint32_t>(seri.size()) + 4);
-        ctx->set_request_status(epoc::error_none);
+        ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()) + 4);
+        ctx->complete(epoc::error_none);
     }
 }

@@ -65,13 +65,13 @@ namespace eka2l1::epoc {
         LOG_TRACE("Light resource's get supported targets stubbed with -1 (all permitted)");
         std::uint32_t support_mask = static_cast<std::uint32_t>(-1);
 
-        ctx.write_arg_pkg(0, support_mask);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument(0, support_mask);
+        ctx.complete(epoc::error_none);
     }
 
     void light_resource::cleanup(service::ipc_context &ctx) {
         // Don't have anything to cleanup right now. TODO.
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void light_resource::execute_command(service::ipc_context &ctx) {

@@ -32,6 +32,7 @@
 #include <services/connmonitor/connmonitor.h>
 #include <services/domain/domain.h>
 #include <services/drm/helper.h>
+#include <services/drm/notifier.h>
 #include <services/drm/rights.h>
 #include <services/ecom/ecom.h>
 #include <services/etel/etel.h>
@@ -193,6 +194,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, msv_server);
             CREATE_SERVER(sys, sensor_server);
             CREATE_SERVER(sys, connmonitor_server);
+            CREATE_SERVER(sys, drm_notifier_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);

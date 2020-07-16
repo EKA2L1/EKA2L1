@@ -142,6 +142,7 @@ namespace eka2l1 {
 
         void notify_change_ex(service::ipc_context *ctx);
         void notify_change(service::ipc_context *ctx);
+        void notify_change_cancel_ex(service::ipc_context *ctx);
 
         void mkdir(service::ipc_context *ctx);
         void rmdir(service::ipc_context *ctx);
@@ -167,8 +168,7 @@ namespace eka2l1 {
         struct notify_entry {
             std::regex match_pattern;
             notify_type type;
-            eka2l1::ptr<epoc::request_status> request_status;
-            kernel::thread *request_thread;
+            epoc::notify_info info;
         };
 
         std::vector<notify_entry> notify_entries;

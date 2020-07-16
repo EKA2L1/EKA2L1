@@ -31,17 +31,17 @@ namespace eka2l1 {
     void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive);
 
     void fs_server_client::file_drive(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
@@ -59,10 +59,10 @@ namespace eka2l1 {
             fill_drive_info(&(info), *io_drive);
         }
 
-        ctx->write_arg_pkg<drive_number>(0, drv);
-        ctx->write_arg_pkg<epoc::fs::drive_info>(1, info);
+        ctx->write_data_to_descriptor_argument<drive_number>(0, drv);
+        ctx->write_data_to_descriptor_argument<epoc::fs::drive_info>(1, info);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive) {
@@ -122,11 +122,11 @@ namespace eka2l1 {
 
     /* Simple for now only, in the future this should be more advance. */
     void fs_server::drive(service::ipc_context *ctx) {
-        drive_number drv = static_cast<drive_number>(*ctx->get_arg<std::int32_t>(1));
-        std::optional<epoc::fs::drive_info> info = ctx->get_arg_packed<epoc::fs::drive_info>(0);
+        drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
+        std::optional<epoc::fs::drive_info> info = ctx->get_argument_data_from_descriptor<epoc::fs::drive_info>(0);
 
         if (!info) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -138,15 +138,15 @@ namespace eka2l1 {
             fill_drive_info(&(*info), *io_drive);
         }
 
-        ctx->write_arg_pkg<epoc::fs::drive_info>(0, *info);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<epoc::fs::drive_info>(0, *info);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server::drive_list(service::ipc_context *ctx) {
-        std::optional<std::int32_t> flags = ctx->get_arg<std::int32_t>(1);
+        std::optional<std::int32_t> flags = ctx->get_argument_value<std::int32_t>(1);
 
         if (!flags) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -203,33 +203,33 @@ namespace eka2l1 {
             }
         }
 
-        bool success = ctx->write_arg_pkg(0, reinterpret_cast<uint8_t *>(&dlist[0]),
+        bool success = ctx->write_data_to_descriptor_argument(0, reinterpret_cast<uint8_t *>(&dlist[0]),
             static_cast<std::uint32_t>(dlist.size()));
 
         if (!success) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server::volume(service::ipc_context *ctx) {
-        std::optional<epoc::fs::volume_info> info = ctx->get_arg_packed<epoc::fs::volume_info>(0);
+        std::optional<epoc::fs::volume_info> info = ctx->get_argument_data_from_descriptor<epoc::fs::volume_info>(0);
 
         if (!info) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
-        drive_number drv = static_cast<drive_number>(*ctx->get_arg<std::int32_t>(1));
+        drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
         if (!io_drive) {
             info->drv_info.type = epoc::fs::media_unknown;
 
-            ctx->write_arg_pkg<epoc::fs::volume_info>(0, *info);
-            ctx->set_request_status(epoc::error_not_ready);
+            ctx->write_data_to_descriptor_argument<epoc::fs::volume_info>(0, *info);
+            ctx->complete(epoc::error_not_ready);
 
             return;
         }
@@ -243,21 +243,21 @@ namespace eka2l1 {
         info->size = common::GB(1);
         info->free = common::GB(1);
 
-        ctx->write_arg_pkg<epoc::fs::volume_info>(0, *info);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<epoc::fs::volume_info>(0, *info);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server::query_drive_info_ext(service::ipc_context *ctx) {
-        drive_number drv = static_cast<drive_number>(*ctx->get_arg<std::int32_t>(0));
+        drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(0));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(drv);
 
         // If the drive hasn't been mounted yet, return epoc::error_not_found
         if (!io_drive) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
-        epoc::fs::extended_fs_query_command query_cmd = static_cast<decltype(query_cmd)>(*ctx->get_arg<std::int32_t>(1));
+        epoc::fs::extended_fs_query_command query_cmd = static_cast<decltype(query_cmd)>(*ctx->get_argument_value<std::int32_t>(1));
 
         switch (query_cmd) {
         case epoc::fs::extended_fs_query_command::file_system_sub_type: {
@@ -270,7 +270,7 @@ namespace eka2l1 {
             // Check if drive is sync. Yes in this case.
             bool result = true;
 
-            ctx->write_arg_pkg(2, result);
+            ctx->write_data_to_descriptor_argument(2, result);
             break;
         }
 
@@ -279,7 +279,7 @@ namespace eka2l1 {
 
             // Check if drive is safe to remove. Yes ?
             LOG_WARN("Checking if drive is finalised, stubbed");
-            ctx->write_arg_pkg(2, result);
+            ctx->write_data_to_descriptor_argument(2, result);
             break;
         }
 
@@ -292,7 +292,7 @@ namespace eka2l1 {
             param.rec_write_buf_size = 16384;
 
             LOG_INFO("IOParamInfo stubbed");
-            ctx->write_arg_pkg(2, param);
+            ctx->write_data_to_descriptor_argument(2, param);
 
             break;
         }
@@ -303,6 +303,6 @@ namespace eka2l1 {
         }
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 }

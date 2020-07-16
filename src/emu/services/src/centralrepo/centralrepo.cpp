@@ -222,21 +222,24 @@ namespace eka2l1 {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_req_check, "CenRep::NofReqCheck");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_eq_int, "CenRep::FindEqInt");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_neq_int, "CenRep::FindNeqInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find_eq_string, "CenRep::FindEqString");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_find, "CenRep::Find");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_get_find_res, "CenRep::GetFindResult");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel, "CenRep::NofCancel");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_notify_cancel_all, "CenRep::NofCancelAll");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_transaction_start, "CenRep::TransactionStart");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_transaction_cancel, "CenRep::TransactionCancel");
     }
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
         // The UID repo to load
-        const std::uint32_t repo_uid = *ctx->get_arg<std::uint32_t>(0);
+        const std::uint32_t repo_uid = *ctx->get_argument_value<std::uint32_t>(0);
         manager::device_manager *mngr = ctx->sys->get_manager_system()->get_device_manager();
         eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), mngr, repo_uid);
 
         if (!repo) {
             LOG_TRACE("Repository not found with UID 0x{:X}", repo_uid);
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -248,14 +251,14 @@ namespace eka2l1 {
         auto res = client_subsessions.emplace(++idcounter, std::move(clisubsession));
 
         if (!res.second) {
-            ctx->set_request_status(epoc::error_no_memory);
+            ctx->complete(epoc::error_no_memory);
             return;
         }
 
         repo->attached.push_back(&res.first->second);
 
-        bool result = ctx->write_arg_pkg<std::uint32_t>(3, idcounter);
-        ctx->set_request_status(epoc::error_none);
+        bool result = ctx->write_data_to_descriptor_argument<std::uint32_t>(3, idcounter);
+        ctx->complete(epoc::error_none);
     }
 
     void central_repo_server::rescan_drives(eka2l1::io_system *io) {
@@ -309,7 +312,7 @@ namespace eka2l1 {
 
         if (session_ite == client_sessions.end()) {
             LOG_ERROR("Session ID passed not found 0x{:X}", session_uid);
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
 
             return;
         }
@@ -471,12 +474,12 @@ namespace eka2l1 {
 
         default: {
             // We find the repo subsession and redirect message to subsession
-            const std::uint32_t subsession_uid = *ctx->get_arg<std::uint32_t>(3);
+            const std::uint32_t subsession_uid = *ctx->get_argument_value<std::uint32_t>(3);
             auto subsession_ite = client_subsessions.find(subsession_uid);
 
             if (subsession_ite == client_subsessions.end()) {
                 LOG_ERROR("Subsession ID passed not found 0x{:X}", subsession_uid);
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
 
                 return;
             }
@@ -501,7 +504,7 @@ namespace eka2l1 {
 
         case cen_rep_notify_cancel_all:
             cancel_all_notify_requests();
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             break;
 
         case cen_rep_group_nof_req:
@@ -535,6 +538,14 @@ namespace eka2l1 {
             find(ctx);
             break;
         }
+
+        case cen_rep_transaction_start:
+            start_transaction(ctx);
+            break;
+
+        case cen_rep_transaction_cancel:
+            cancel_transaction(ctx);
+            break;
 
         case cen_rep_get_find_res:
             get_find_result(ctx);
@@ -593,21 +604,21 @@ namespace eka2l1 {
 
     void central_repo_client_session::close(service::ipc_context *ctx) {
         manager::device_manager *mngr = ctx->sys->get_manager_system()->get_device_manager();
-        const int err = closerep(ctx->sys->get_io_system(), mngr, 0, *ctx->get_arg<std::uint32_t>(3));
+        const int err = closerep(ctx->sys->get_io_system(), mngr, 0, *ctx->get_argument_value<std::uint32_t>(3));
 
         switch (err) {
         case 0: {
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             break;
         }
 
         case -1: {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             break;
         }
 
         case -2: {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             break;
         }
 
@@ -640,7 +651,7 @@ namespace eka2l1 {
         }
 
         // Ignore all errors
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void central_repo_server::connect(service::ipc_context &ctx) {
@@ -652,6 +663,6 @@ namespace eka2l1 {
         // Put all process code here
         client_sessions.insert(std::make_pair(static_cast<const std::uint32_t>(id), std::move(session)));
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 }

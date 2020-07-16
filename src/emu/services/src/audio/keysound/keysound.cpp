@@ -147,26 +147,26 @@ namespace eka2l1 {
 
     void keysound_session::init(service::ipc_context *ctx) {
         const bool inited = server<keysound_server>()->initialized();
-        ctx->write_arg_pkg<std::int32_t>(0, inited);
+        ctx->write_data_to_descriptor_argument<std::int32_t>(0, inited);
 
         if (!inited) {
             server<keysound_server>()->initialized(true);
         }
 
         // Store app UID
-        app_uid_ = *ctx->get_arg<std::uint32_t>(1);
-        ctx->set_request_status(epoc::error_none);
+        app_uid_ = *ctx->get_argument_value<std::uint32_t>(1);
+        ctx->complete(epoc::error_none);
     }
 
     void keysound_session::push_context(service::ipc_context *ctx) {
-        const auto item_count = ctx->get_arg<std::uint32_t>(0);
-        const auto uid = ctx->get_arg<std::uint32_t>(2);
-        const auto rsc_id = ctx->get_arg<std::int32_t>(3);
+        const auto item_count = ctx->get_argument_value<std::uint32_t>(0);
+        const auto uid = ctx->get_argument_value<std::uint32_t>(2);
+        const auto rsc_id = ctx->get_argument_value<std::int32_t>(3);
 
-        std::uint8_t *item_def_ptr = ctx->get_arg_ptr(1);
+        std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(1);
 
         if (!item_count || !uid || !rsc_id || !item_def_ptr) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -177,26 +177,26 @@ namespace eka2l1 {
             common::SERI_MODE_READ);
 
         contexts_.emplace_back(seri, uid.value(), rsc_id.value(), item_count.value());
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void keysound_session::pop_context(service::ipc_context *ctx) {
         contexts_.pop_back();
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void keysound_session::play_sid(service::ipc_context *ctx) {
-        LOG_TRACE("Trying to play sound with ID 0x{:x}, stubbed", ctx->get_arg<std::uint32_t>(0).value());
-        epoc::keysound::sound_info *info = server<keysound_server>()->get_sound(ctx->get_arg<std::uint32_t>(0).value());
+        LOG_TRACE("Trying to play sound with ID 0x{:x}, stubbed", ctx->get_argument_value<std::uint32_t>(0).value());
+        epoc::keysound::sound_info *info = server<keysound_server>()->get_sound(ctx->get_argument_value<std::uint32_t>(0).value());
 
         if (!info) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         if (info->type_ == epoc::keysound::sound_type::sound_type_file) {
             LOG_WARN("Sound type file unsupported, skip. Please revisit");
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             return;
         }
 
@@ -207,16 +207,16 @@ namespace eka2l1 {
         state_.sound_ = *info;
         aud_out_->start();
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void keysound_session::add_sids(service::ipc_context *ctx) {
-        std::uint8_t *sound_descriptor = ctx->get_arg_ptr(2);
-        const std::optional<std::uint32_t> sound_descriptor_size = ctx->get_arg<std::uint32_t>(1);
-        const std::optional<std::uint32_t> uid = ctx->get_arg<std::uint32_t>(0);
+        std::uint8_t *sound_descriptor = ctx->get_descriptor_argument_ptr(2);
+        const std::optional<std::uint32_t> sound_descriptor_size = ctx->get_argument_value<std::uint32_t>(1);
+        const std::optional<std::uint32_t> uid = ctx->get_argument_value<std::uint32_t>(0);
 
         if (!sound_descriptor || !sound_descriptor_size || !uid) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -277,15 +277,15 @@ namespace eka2l1 {
             server<keysound_server>()->add_sound(info);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void keysound_session::bring_to_foreground(eka2l1::service::ipc_context *ctx) {
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void keysound_session::lock_context(eka2l1::service::ipc_context *ctx) {
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void keysound_session::fetch(service::ipc_context *ctx) {
@@ -340,7 +340,7 @@ namespace eka2l1 {
 
     void keysound_server::connect(service::ipc_context &context) {
         create_session<keysound_session>(&context);
-        context.set_request_status(0);
+        context.complete(0);
     }
 
     epoc::keysound::sound_info *keysound_server::get_sound(const std::uint32_t sid) {

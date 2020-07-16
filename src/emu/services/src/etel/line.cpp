@@ -73,8 +73,8 @@ namespace eka2l1 {
             LOG_TRACE("Mobile line get status stubbed with normal get status");
         }
 
-        ctx->write_arg_pkg<epoc::etel_line_status>(0, line_->info_.sts_);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<epoc::etel_line_status>(0, line_->info_.sts_);
+        ctx->complete(epoc::error_none);
     }
 
     void etel_line_subsession::notify_status_change(service::ipc_context *ctx) {
@@ -82,7 +82,7 @@ namespace eka2l1 {
     }
 
     void etel_line_subsession::cancel_notify_status_change(service::ipc_context *ctx) {
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
         status_change_nof_.complete(epoc::error_cancel);
     }
 
@@ -91,7 +91,7 @@ namespace eka2l1 {
     }
 
     void etel_line_subsession::cancel_notify_incoming_call(service::ipc_context *ctx) {
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
         incoming_call_nof_.complete(epoc::error_cancel);
     }
 }
