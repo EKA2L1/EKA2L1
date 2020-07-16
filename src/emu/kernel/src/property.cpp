@@ -35,6 +35,10 @@ namespace eka2l1 {
             obj_type = kernel::object_type::prop;
         }
 
+        bool property::is_defined() {
+            return data_type != service::property_type::unk;
+        }
+
         void property::add_data_change_callback(void *userdata, data_change_callback_handler handler) {
             data_change_callbacks.push_back({ userdata, handler });
         }

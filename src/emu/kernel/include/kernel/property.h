@@ -85,6 +85,8 @@ namespace eka2l1 {
 
             void define(service::property_type pt, uint32_t pre_allocated);
 
+            bool is_defined();
+
             /**
              * \brief Set the property value (integer).
              *
