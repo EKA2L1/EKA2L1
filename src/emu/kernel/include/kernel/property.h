@@ -56,13 +56,11 @@ namespace eka2l1 {
             typedef void (*data_change_callback_handler)(void *userdata, service::property *prop);
 
         protected:
-            union {
-                int ndata;
-                std::array<uint8_t, 512> bindata;
-            } data;
+
+            int ndata;
+            std::vector<uint8_t> bindata;
 
             uint32_t data_len;
-            uint32_t bin_data_len;
 
             service::property_type data_type;
 

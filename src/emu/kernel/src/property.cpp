@@ -29,10 +29,10 @@ namespace eka2l1 {
     namespace service {
         property::property(kernel_system *kern)
             : kernel::kernel_obj(kern, "", nullptr, kernel::access_type::global_access)
-            , bin_data_len(0)
             , data_len(0)
             , data_type(service::property_type::unk) {
             obj_type = kernel::object_type::prop;
+            bindata.reserve(512);
         }
 
         bool property::is_defined() {
@@ -63,7 +63,7 @@ namespace eka2l1 {
 
         bool property::set_int(int val) {
             if (data_type == service::property_type::int_data) {
-                data.ndata = val;
+                ndata = val;
                 notify_request(epoc::error_none);
 
                 fire_data_change_callbacks();
@@ -76,11 +76,11 @@ namespace eka2l1 {
 
         bool property::set(uint8_t *bdata, uint32_t arr_length) {
             if (arr_length > data_len) {
-                return false;
+                bindata.resize(arr_length);
             }
 
-            memcpy(data.bindata.data(), bdata, arr_length);
-            bin_data_len = arr_length;
+            memcpy(bindata.data(), bdata, arr_length);
+            data_len = arr_length;
 
             notify_request(epoc::error_none);
             fire_data_change_callbacks();
@@ -93,14 +93,14 @@ namespace eka2l1 {
                 return -1;
             }
 
-            return data.ndata;
+            return ndata;
         }
 
         std::vector<uint8_t> property::get_bin() {
             std::vector<uint8_t> local;
-            local.resize(bin_data_len);
+            local.resize(data_len);
 
-            memcpy(local.data(), data.bindata.data(), bin_data_len);
+            memcpy(local.data(), bindata.data(), data_len);
 
             return local;
         }
