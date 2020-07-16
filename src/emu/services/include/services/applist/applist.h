@@ -110,8 +110,14 @@ namespace eka2l1 {
         bool load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
             const language ideal_lang = language::en);
 
+        bool load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
+            const language ideal_lang = language::en);
+
         void on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
             common::directory_changes &changes);
+
+        void rescan_registries_oldarch(eka2l1::io_system *io);
+        void rescan_registries_newarch(eka2l1::io_system *io);
 
         void rescan_registries(eka2l1::io_system *io);
 

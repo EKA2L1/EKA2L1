@@ -93,7 +93,8 @@ enum drive_number {
 };
 
 inline drive_number operator--(drive_number &drv, int) {
-    return static_cast<drive_number>(static_cast<int>(drv) - 1);
+    drv = static_cast<drive_number>(static_cast<int>(drv) - 1);
+    return drv;
 }
 
 enum class io_attrib {

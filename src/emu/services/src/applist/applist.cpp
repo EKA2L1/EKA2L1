@@ -31,6 +31,7 @@
 
 #include <common/common.h>
 #include <epoc/epoc.h>
+#include <kernel/kernel.h>
 #include <loader/rsc.h>
 #include <utils/bafl.h>
 #include <utils/des.h>
@@ -56,6 +57,12 @@ namespace eka2l1 {
         REGISTER_IPC(applist_server, get_app_info, EAppListServGetAppInfo, "GetAppInfo");
         REGISTER_IPC(applist_server, get_capability, EAppListServGetAppCapability, "GetAppCapability");
         REGISTER_IPC(applist_server, get_app_icon_file_name, EAppListServAppIconFileName, "GetAppIconFilename");
+    }
+
+    bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
+        const language ideal_lang) {
+        LOG_TRACE("TODO");
+        return true;
     }
 
     bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
@@ -239,18 +246,19 @@ namespace eka2l1 {
         sort_registry_list();
     }
 
-    void applist_server::rescan_registries(eka2l1::io_system *io) {
-        LOG_INFO("Loading app registries");
-
-        for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+    void applist_server::rescan_registries_oldarch(eka2l1::io_system *io) {
+        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
             if (io->get_drive_entry(drv)) {
-                const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-                auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib::include_file);
+                const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
+                auto reg_dir = io->open_dir(base_dir, io_attrib::include_dir);
 
                 if (reg_dir) {
                     while (auto ent = reg_dir->get_next_entry()) {
-                        if (ent->type == io_component_type::file) {
-                            load_registry(io, common::utf8_to_ucs2(ent->full_path), drv);
+                        if (ent->type == io_component_type::dir) {
+                            const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
+                                ent->full_path, ent->name + ".aif"));
+
+                            load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language());    
                         }
                     }
                 }
@@ -265,6 +273,43 @@ namespace eka2l1 {
                     watchs_.push_back(watch);
                 }
             }
+        }
+    }
+
+    void applist_server::rescan_registries_newarch(eka2l1::io_system *io) {
+        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+            if (io->get_drive_entry(drv)) {
+                const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
+                auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib::include_file);
+
+                if (reg_dir) {
+                    while (auto ent = reg_dir->get_next_entry()) {
+                        if (ent->type == io_component_type::file) {
+                            load_registry(io, common::utf8_to_ucs2(ent->full_path), drv, kern->get_current_language());
+                        }
+                    }
+                }
+
+                const std::int64_t watch = io->watch_directory(
+                    base_dir, [this, base_dir, io, drv](void *userdata, common::directory_changes &changes) {
+                        on_register_directory_changes(io, base_dir, drv, changes);
+                    },
+                    nullptr, common::directory_change_move | common::directory_change_last_write);
+
+                if (watch != -1) {
+                    watchs_.push_back(watch);
+                }
+            }
+        }
+    }
+
+    void applist_server::rescan_registries(eka2l1::io_system *io) {        
+        LOG_INFO("Loading app registries");
+
+        if (kern->is_eka1()) {
+            rescan_registries_oldarch(io);
+        } else {
+            rescan_registries_newarch(io);
         }
 
         sort_registry_list();
