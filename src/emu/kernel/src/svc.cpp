@@ -1952,7 +1952,7 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(std::int32_t, property_set_bin, kernel::handle h, std::int32_t size, eka2l1::ptr<std::uint8_t> data_ptr) {
+    BRIDGE_FUNC(std::int32_t, property_set_bin, kernel::handle h, eka2l1::ptr<std::uint8_t> data_ptr, std::int32_t size) {
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
         if (!prop || !prop->get_property_object()->is_defined()) {
