@@ -382,22 +382,30 @@ namespace eka2l1 {
         std::int32_t write_pos_provided = *ctx->get_arg<std::int32_t>(2);
 
         std::uint64_t write_pos = 0;
-        std::uint64_t last_pos = vfs_file->tell();
-        bool should_reseek = false;
+        std::uint64_t size_of_file = vfs_file->tell();
 
-        write_pos = last_pos;
+        write_pos = size_of_file;
 
         // Low MaxUint64
         if ((write_pos_provided != static_cast<int>(0x80000000)) || (write_pos_provided == -1)) {
             write_pos = write_pos_provided;
         }
 
-        // If this write pos is beyond the current end of file, use last pos
-        vfs_file->seek(write_pos > last_pos ? last_pos : write_pos, file_seek_mode::beg);
-        size_t wrote_size = vfs_file->write_file(&(*write_data)[0], 1, write_len);
+        if (write_pos > size_of_file) {
+            // Fill the file with temporary 0
+            vfs_file->seek(0, file_seek_mode::end);
+            static char ZERO_BYTE = 0;
 
-        // LOG_TRACE("File {} wroted with size: {}",
-        //    common::ucs2_to_utf8(vfs_file->file_name()), wrote_size);
+            if (vfs_file->write_file(&ZERO_BYTE, 1, static_cast<std::uint32_t>(write_pos - size_of_file)) != write_pos - size_of_file) {
+                LOG_WARN("Unable to supply stubbed bytes for beyond file size write operation!");
+            }
+        }
+
+        // If this write pos is beyond the current end of file, use last pos
+        vfs_file->seek(write_pos, file_seek_mode::beg);
+        size_t wrote_size = vfs_file->write_file(write_data.value().data(), 1, write_len);
+
+        //LOG_TRACE("File {} wroted with size: {}, at {}", common::ucs2_to_utf8(vfs_file->file_name()), wrote_size, write_pos);
 
         ctx->set_request_status(epoc::error_none);
     }
@@ -424,7 +432,6 @@ namespace eka2l1 {
 
         std::uint64_t read_pos = 0;
         std::uint64_t last_pos = vfs_file->tell();
-        bool should_reseek = false;
 
         read_pos = last_pos;
 
