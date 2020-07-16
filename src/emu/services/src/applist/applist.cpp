@@ -308,27 +308,27 @@ namespace eka2l1 {
     }
 
     void applist_server::is_accepted_to_run(service::ipc_context &ctx) {
-        auto exe_name = ctx.get_arg<std::u16string>(0);
+        auto exe_name = ctx.get_argument_value<std::u16string>(0);
 
         if (!exe_name) {
-            ctx.set_request_status(false);
+            ctx.complete(false);
             return;
         }
 
         LOG_TRACE("Asking permission to launch: {}, accepted", common::ucs2_to_utf8(*exe_name));
-        ctx.set_request_status(true);
+        ctx.complete(true);
     }
 
     void applist_server::default_screen_number(service::ipc_context &ctx) {
-        const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(0);
+        const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(0);
         apa_app_registry *reg = get_registration(app_uid);
 
         if (!reg) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
-        ctx.set_request_status(reg->default_screen_number);
+        ctx.complete(reg->default_screen_number);
     }
 
     void applist_server::app_language(service::ipc_context &ctx) {
@@ -336,49 +336,49 @@ namespace eka2l1 {
 
         language default_lang = language::en;
 
-        ctx.write_arg_pkg<language>(1, default_lang);
-        ctx.set_request_status(0);
+        ctx.write_data_to_descriptor_argument<language>(1, default_lang);
+        ctx.complete(0);
     }
 
     void applist_server::get_app_info(service::ipc_context &ctx) {
-        const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(0);
+        const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(0);
         apa_app_registry *reg = get_registration(app_uid);
 
         if (!reg) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
-        ctx.write_arg_pkg<apa_app_info>(1, reg->mandatory_info);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<apa_app_info>(1, reg->mandatory_info);
+        ctx.complete(epoc::error_none);
     }
 
     void applist_server::get_capability(service::ipc_context &ctx) {
-        const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(1);
+        const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(1);
         apa_app_registry *reg = get_registration(app_uid);
 
         if (!reg) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
-        ctx.write_arg_pkg<apa_capability>(0, reg->caps);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<apa_capability>(0, reg->caps);
+        ctx.complete(epoc::error_none);
     }
 
     void applist_server::get_app_icon_file_name(service::ipc_context &ctx) {
-        const epoc::uid app_uid = *ctx.get_arg<epoc::uid>(0);
+        const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(0);
         apa_app_registry *reg = get_registration(app_uid);
 
         // Either the registeration doesn't exist, or the icon file doesn't exist
         if (!reg || reg->icon_file_path.empty()) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
         epoc::filename fname_des(reg->icon_file_path);
 
-        ctx.write_arg_pkg<epoc::filename>(1, fname_des);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<epoc::filename>(1, fname_des);
+        ctx.complete(epoc::error_none);
     }
 }

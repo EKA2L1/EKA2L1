@@ -27,14 +27,14 @@ namespace eka2l1::service {
         epoc::version ver;
 
         if (kern->is_eka1()) {
-            std::optional<std::uint32_t> ver_package = ctx->get_arg_packed<std::uint32_t>(1);
+            std::optional<std::uint32_t> ver_package = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
             if (!ver_package) {
                 return std::nullopt;
             }
 
             ver.u32 = ver_package.value();
         } else {
-            ver.u32 = ctx->get_arg<std::uint32_t>(0).value();
+            ver.u32 = ctx->get_argument_value<std::uint32_t>(0).value();
         }
 
         return ver;

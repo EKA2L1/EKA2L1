@@ -330,14 +330,14 @@ namespace eka2l1 {
 
     void fbscli::load_bitmap(service::ipc_context *ctx) {
         // Get the FS session
-        session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_arg<std::int32_t>(2)));
-        const std::uint32_t fs_file_handle = *(ctx->get_arg<std::uint32_t>(3));
+        session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_argument_value<std::int32_t>(2)));
+        const std::uint32_t fs_file_handle = *(ctx->get_argument_value<std::uint32_t>(3));
 
         auto fs_server = reinterpret_cast<eka2l1::fs_server *>(server<fbs_server>()->fs_server);
         file *source_file = fs_server->get_file(fs_target_session->unique_id(), fs_file_handle);
 
         if (!source_file) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -352,17 +352,17 @@ namespace eka2l1 {
             name_slot = 1;
         }
 
-        std::optional<std::u16string> name = ctx->get_arg<std::u16string>(name_slot);
+        std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(name_slot);
 
         if (!name.has_value()) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         symfile source_file = ctx->sys->get_io_system()->open_file(name.value(), READ_MODE | BIN_MODE);
 
         if (!source_file) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -370,9 +370,9 @@ namespace eka2l1 {
     }
 
     void fbscli::duplicate_bitmap(service::ipc_context *ctx) {
-        fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(*(ctx->get_arg<std::uint32_t>(0)));
+        fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(*(ctx->get_argument_value<std::uint32_t>(0)));
         if (!bmp) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
@@ -380,7 +380,7 @@ namespace eka2l1 {
         const std::uint32_t server_handle = bmp->id;
         const std::uint32_t off = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
-        const bool legacy_return = (ctx->get_arg_size(1) >= sizeof(bmp_specs_legacy));
+        const bool legacy_return = (ctx->get_argument_data_size(1) >= sizeof(bmp_specs_legacy));
 
         if (legacy_return) {
             bmp_specs_legacy specs;
@@ -389,7 +389,7 @@ namespace eka2l1 {
             specs.server_handle = server_handle;
             specs.address_offset = off;
 
-            ctx->write_arg_pkg(1, specs);
+            ctx->write_data_to_descriptor_argument(1, specs);
         } else {
             bmp_handles handle_info;
 
@@ -398,10 +398,10 @@ namespace eka2l1 {
             handle_info.server_handle = server_handle;
             handle_info.address_offset = off;
 
-            ctx->write_arg_pkg(1, handle_info);
+            ctx->write_data_to_descriptor_argument(1, handle_info);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fbscli::load_bitmap_impl(service::ipc_context *ctx, file *source) {
@@ -410,14 +410,14 @@ namespace eka2l1 {
 
         if (serv->kern->is_eka1()) {
             load_options = std::make_optional<load_bitmap_arg>();
-            load_options->bitmap_id = ctx->get_arg<std::uint32_t>(2).value();
-            load_options->share = ctx->get_arg<std::uint32_t>(3).value();
+            load_options->bitmap_id = ctx->get_argument_value<std::uint32_t>(2).value();
+            load_options->share = ctx->get_argument_value<std::uint32_t>(3).value();
         } else {
-            load_options = ctx->get_arg_packed<load_bitmap_arg>(1);
+            load_options = ctx->get_argument_data_from_descriptor<load_bitmap_arg>(1);
         }
 
         if (!load_options) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -451,14 +451,14 @@ namespace eka2l1 {
             loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream *>(&stream_));
 
             if (!mbmf_.do_read_headers()) {
-                ctx->set_request_status(epoc::error_corrupt);
+                ctx->complete(epoc::error_corrupt);
                 return;
             }
 
             // Let's do an insanity check. Is the bitmap index client given us is not valid ?
             // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 5.
             if (mbmf_.trailer.count <= load_options->bitmap_id) {
-                ctx->set_request_status(epoc::error_not_found);
+                ctx->complete(epoc::error_not_found);
                 return;
             }
 
@@ -480,21 +480,21 @@ namespace eka2l1 {
                 switch (err_code) {
                 case fbs_load_data_err_out_of_mem: {
                     LOG_ERROR("Can't allocate data for storing bitmap!");
-                    ctx->set_request_status(epoc::error_no_memory);
+                    ctx->complete(epoc::error_no_memory);
 
                     return;
                 }
 
                 case fbs_load_data_err_read_decomp_fail: {
                     LOG_ERROR("Can't read or decompress bitmap data, possibly corrupted.");
-                    ctx->set_request_status(epoc::error_corrupt);
+                    ctx->complete(epoc::error_corrupt);
 
                     return;
                 }
 
                 default: {
                     LOG_ERROR("Unknown error code from loading uncompressed bitmap!");
-                    ctx->set_request_status(epoc::error_general);
+                    ctx->complete(epoc::error_general);
 
                     return;
                 }
@@ -532,8 +532,8 @@ namespace eka2l1 {
         handle_info.server_handle = bmp->id;
         handle_info.address_offset = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
-        ctx->write_arg_pkg<bmp_handles>(0, handle_info);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<bmp_handles>(0, handle_info);
+        ctx->complete(epoc::error_none);
     }
 
     static std::size_t calculate_aligned_bitmap_bytes(const eka2l1::vec2 &size, const epoc::display_mode bpp) {
@@ -605,23 +605,23 @@ namespace eka2l1 {
 
     void fbscli::create_bitmap(service::ipc_context *ctx) {
         bmp_specs_legacy specs;
-        const bool use_spec_legacy = ctx->get_arg_size(0) >= sizeof(bmp_specs_legacy);
+        const bool use_spec_legacy = ctx->get_argument_data_size(0) >= sizeof(bmp_specs_legacy);
 
         if (!use_spec_legacy) {
-            std::optional<bmp_specs> specs_morden = ctx->get_arg_packed<bmp_specs>(0);
+            std::optional<bmp_specs> specs_morden = ctx->get_argument_data_from_descriptor<bmp_specs>(0);
 
             if (!specs_morden) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
             specs.size = specs_morden->size;
             specs.bpp = specs_morden->bpp;
         } else {
-            std::optional<bmp_specs_legacy> specs_legacy = ctx->get_arg_packed<bmp_specs_legacy>(0);
+            std::optional<bmp_specs_legacy> specs_legacy = ctx->get_argument_data_from_descriptor<bmp_specs_legacy>(0);
 
             if (!specs_legacy) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
@@ -632,7 +632,7 @@ namespace eka2l1 {
         fbsbitmap *bmp = fbss->create_bitmap(specs.size, specs.bpp);
 
         if (!bmp) {
-            ctx->set_request_status(epoc::error_no_memory);
+            ctx->complete(epoc::error_no_memory);
             return;
         }
 
@@ -649,7 +649,7 @@ namespace eka2l1 {
             specs.server_handle = serv_handle;
             specs.address_offset = addr_off;
 
-            ctx->write_arg_pkg(0, specs);
+            ctx->write_data_to_descriptor_argument(0, specs);
         } else {
             if (use_bmp_handles_writeback) {
                 bmp_handles handles;
@@ -657,7 +657,7 @@ namespace eka2l1 {
                 handles.server_handle = serv_handle;
                 handles.handle = handle_ret;
 
-                ctx->write_arg_pkg<bmp_handles>(1, handles);
+                ctx->write_data_to_descriptor_argument<bmp_handles>(1, handles);
             } else {
                 bmp_specs specs_to_write;
                 specs_to_write.size = specs.size;
@@ -667,11 +667,11 @@ namespace eka2l1 {
                 specs_to_write.server_handle = serv_handle;
                 specs_to_write.address_offset = addr_off;
 
-                ctx->write_arg_pkg(0, specs_to_write);
+                ctx->write_data_to_descriptor_argument(0, specs_to_write);
             }
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     fbsbitmap *fbscli::get_clean_bitmap(fbsbitmap *bmp) {
@@ -683,16 +683,16 @@ namespace eka2l1 {
 
     void fbscli::resize_bitmap(service::ipc_context *ctx) {
         const auto fbss = server<fbs_server>();
-        const epoc::handle handle = *(ctx->get_arg<std::uint32_t>(0));
+        const epoc::handle handle = *(ctx->get_argument_value<std::uint32_t>(0));
         fbsbitmap *bmp = fbss->get<fbsbitmap>(handle);
         if (!bmp) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         bmp = get_clean_bitmap(bmp);
 
-        const vec2 new_size = { *(ctx->get_arg<int>(1)), *(ctx->get_arg<int>(2)) };
+        const vec2 new_size = { *(ctx->get_argument_value<int>(1)), *(ctx->get_argument_value<int>(2)) };
         const bool compressed_in_ram = bmp->bitmap_->compressed_in_ram_;
 
         // not working with compressed bitmaps right now
@@ -714,8 +714,8 @@ namespace eka2l1 {
         handle_info.server_handle = new_bmp->id;
         handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
 
-        ctx->write_arg_pkg(3, handle_info);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument(3, handle_info);
+        ctx->complete(epoc::error_none);
     }
 
     void fbscli::notify_dirty_bitmap(service::ipc_context *ctx) {
@@ -734,15 +734,15 @@ namespace eka2l1 {
         else
             dirty_nof_.complete(epoc::error_cancel);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fbscli::get_clean_bitmap(service::ipc_context *ctx) {
-        const epoc::handle bmp_handle = *ctx->get_arg<epoc::handle>(0);
+        const epoc::handle bmp_handle = *ctx->get_argument_value<epoc::handle>(0);
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
 
         if (!bmp) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
@@ -759,8 +759,8 @@ namespace eka2l1 {
         // In case no clean bitmap at all!
         obj_table_.remove(bmp_handle);
 
-        ctx->write_arg_pkg(1, handle_info);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument(1, handle_info);
+        ctx->complete(epoc::error_none);
     }
 
     namespace epoc {
@@ -908,18 +908,18 @@ namespace eka2l1 {
     }
 
     void fbscli::background_compress_bitmap(service::ipc_context *ctx) {
-        const epoc::handle bmp_handle = *ctx->get_arg<epoc::handle>(0);
+        const epoc::handle bmp_handle = *ctx->get_argument_value<epoc::handle>(0);
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
 
         if (!bmp) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         compress_queue *compressor = server<fbs_server>()->compressor.get();
 
         if (!compressor) {
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             return;
         }
 

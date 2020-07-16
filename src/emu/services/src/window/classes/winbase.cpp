@@ -235,13 +235,13 @@ namespace eka2l1::epoc {
         epoc::window *win = reinterpret_cast<epoc::window *>(client->get_object(handle));
 
         if (!win) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
         eka2l1::vec2 offset_dist = get_origin() - win->get_origin();
-        ctx.write_arg_pkg(0, offset_dist);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument(0, offset_dist);
+        ctx.complete(epoc::error_none);
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -273,18 +273,18 @@ namespace eka2l1::epoc {
             nof.user = this;
 
             client->add_event_notifier<epoc::event_mod_notifier_user>(nof);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             return true;
         }
 
         case EWsWinOpOrdinalPosition: {
-            ctx.set_request_status(ordinal_position(false));
+            ctx.complete(ordinal_position(false));
             break;
         }
 
         case EWsWinOpFullOrdinalPosition: {
-            ctx.set_request_status(ordinal_position(true));
+            ctx.complete(ordinal_position(true));
             break;
         }
 
@@ -292,7 +292,7 @@ namespace eka2l1::epoc {
             const int position = *reinterpret_cast<int *>(cmd.data_ptr);
             set_position(position);
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             return true;
         }
@@ -303,13 +303,13 @@ namespace eka2l1::epoc {
             const int position = info->pri2;
 
             set_position(position);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             return true;
         }
 
         case EWsWinOpIdentifier: {
-            ctx.set_request_status(static_cast<int>(id));
+            ctx.complete(static_cast<int>(id));
             return true;
         }
 
@@ -320,7 +320,7 @@ namespace eka2l1::epoc {
             nof.user = this;
 
             client->add_event_notifier<epoc::event_error_msg_user>(nof);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             return true;
         }

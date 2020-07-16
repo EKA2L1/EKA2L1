@@ -30,7 +30,7 @@ namespace eka2l1 {
 
     void connmonitor_server::connect(service::ipc_context &context) {
         create_session<connmonitor_client_session>(&context);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     connmonitor_client_session::connmonitor_client_session(service::typical_server *serv, const std::uint32_t ss_id,
@@ -60,8 +60,8 @@ namespace eka2l1 {
     void connmonitor_client_session::get_connection_count(eka2l1::service::ipc_context *ctx) {
         std::uint8_t connection_count = 1;
 
-        ctx->write_arg_pkg(0, connection_count);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument(0, connection_count);
+        ctx->complete(epoc::error_none);
     }
 
     void connmonitor_client_session::receive_event(eka2l1::service::ipc_context *ctx) {

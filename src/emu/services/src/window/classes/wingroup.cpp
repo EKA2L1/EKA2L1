@@ -54,7 +54,7 @@ namespace eka2l1::epoc {
         }
 
         scr->update_focus(&client->get_ws(), nullptr);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
@@ -80,12 +80,12 @@ namespace eka2l1::epoc {
 
         if (!window_user_to_set || window_user_to_set->type == window_kind::client) {
             LOG_ERROR("Window not found or not client kind to set text cursor");
-            context.set_request_status(epoc::error_not_found);
+            context.complete(epoc::error_not_found);
             return;
         }
 
         window_user_to_set->cursor_pos = cmd_set->pos + window_user_to_set->pos;
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -104,7 +104,7 @@ namespace eka2l1::epoc {
             evt.user = this;
 
             client->add_event_notifier<epoc::event_screen_change_user>(evt);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -112,7 +112,7 @@ namespace eka2l1::epoc {
         case EWsWinOpCaptureKey:
         case EWsWinOpCaptureKeyUpsAndDowns: {
             if (!ctx.satisfy(key_capture_policy)) {
-                ctx.set_request_status(epoc::error_permission_denied);
+                ctx.complete(epoc::error_permission_denied);
                 break;
             }
 
@@ -127,28 +127,28 @@ namespace eka2l1::epoc {
             capture_key_notify.type_ = (op == EWsWinOpCaptureKeyUpsAndDowns) ? epoc::event_key_capture_type::up_and_downs : epoc::event_key_capture_type::normal;
             capture_key_notify.pri_ = capture_key_cmd->priority;
 
-            ctx.set_request_status(client->add_event_notifier(capture_key_notify));
+            ctx.complete(client->add_event_notifier(capture_key_notify));
 
             break;
         }
 
         case EWsWinOpSetName: {
-            auto name_re = ctx.get_arg<std::u16string>(remote_slot);
+            auto name_re = ctx.get_argument_value<std::u16string>(remote_slot);
 
             if (!name_re) {
-                ctx.set_request_status(epoc::error_argument);
+                ctx.complete(epoc::error_argument);
                 break;
             }
 
             name = std::move(*name_re);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
 
         case EWsWinOpEnableOnEvents: {
             LOG_TRACE("Currently not support lock/unlock event for window server");
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -164,12 +164,12 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpOrdinalPosition: {
-            ctx.set_request_status(ordinal_position(true));
+            ctx.complete(ordinal_position(true));
             break;
         }
 
         case EWsWinOpOrdinalPriority: {
-            ctx.set_request_status(priority);
+            ctx.complete(priority);
             break;
         }
 

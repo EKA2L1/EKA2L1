@@ -266,17 +266,17 @@ namespace eka2l1 {
         eka2l1::central_repo *init_repo = server->get_initial_repo(io, mngr, attach_repo->uid);
 
         // Reset the keys
-        const std::uint32_t key = *ctx->get_arg<std::uint32_t>(0);
+        const std::uint32_t key = *ctx->get_argument_value<std::uint32_t>(0);
         int err = reset_key(init_repo, key);
 
         // In transaction
         if (err == -1) {
-            ctx->set_request_status(epoc::error_not_supported);
+            ctx->complete(epoc::error_not_supported);
             return;
         }
 
         if (err == -2) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -284,18 +284,18 @@ namespace eka2l1 {
         write_changes(io, mngr);
         modification_success(key);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void central_repo_client_subsession::set_value(service::ipc_context *ctx) {
         // We get the entry.
         // Use mode 1 (write) to get the entry, since we are modifying data.
-        central_repo_entry *entry = get_entry(*ctx->get_arg<std::uint32_t>(0), 1);
+        central_repo_entry *entry = get_entry(*ctx->get_argument_value<std::uint32_t>(0), 1);
 
         // If it does not exist, or it is in different type, discard.
         // Depends on the invalid type, we set error code
         if (!entry) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -305,31 +305,31 @@ namespace eka2l1 {
         switch (ctx->msg->function) {
         case cen_rep_set_int: {
             if (entry->data.etype != central_repo_entry_type::integer) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 break;
             }
 
-            entry->data.intd = static_cast<std::uint64_t>(*ctx->get_arg<std::uint32_t>(1));
+            entry->data.intd = static_cast<std::uint64_t>(*ctx->get_argument_value<std::uint32_t>(1));
             break;
         }
 
         case cen_rep_set_real: {
             if (entry->data.etype != central_repo_entry_type::real) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 break;
             }
 
-            entry->data.reald = *ctx->get_arg<float>(1);
+            entry->data.reald = *ctx->get_argument_value<float>(1);
             break;
         }
 
         case cen_rep_set_string: {
             if (entry->data.etype != central_repo_entry_type::string) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 break;
             }
 
-            entry->data.strd = *ctx->get_arg<std::string>(1);
+            entry->data.strd = *ctx->get_argument_value<std::string>(1);
             break;
         }
 
@@ -342,7 +342,7 @@ namespace eka2l1 {
 
         // Success in modifying
         modification_success(entry->key);
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
 #ifdef _MSC_VER
@@ -351,52 +351,52 @@ namespace eka2l1 {
     void central_repo_client_subsession::get_value(service::ipc_context *ctx) {
         // We get the entry.
         // Use mode 0 (write) to get the entry, since we are modifying data.
-        std::optional<std::uint32_t> the_key = ctx->get_arg<std::uint32_t>(0);
+        std::optional<std::uint32_t> the_key = ctx->get_argument_value<std::uint32_t>(0);
 
         if (!the_key.has_value()) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         central_repo_entry *entry = get_entry(the_key.value(), 0);
 
         if (!entry) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         switch (ctx->msg->function) {
         case cen_rep_get_int: {
             if (entry->data.etype != central_repo_entry_type::integer) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
             const std::uint32_t result_int = static_cast<std::uint32_t>(entry->data.intd);
-            ctx->write_arg_pkg<std::uint32_t>(1, result_int);
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(1, result_int);
 
             break;
         }
 
         case cen_rep_get_real: {
             if (entry->data.etype != central_repo_entry_type::real) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
             const float result_fl = static_cast<float>(entry->data.reald);
-            ctx->write_arg_pkg<float>(1, result_fl);
+            ctx->write_data_to_descriptor_argument<float>(1, result_fl);
 
             break;
         }
 
         case cen_rep_get_string: {
             if (entry->data.etype != central_repo_entry_type::string) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
-            ctx->write_arg_pkg(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
+            ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
                 static_cast<std::uint32_t>(entry->data.strd.length()));
 
             break;
@@ -404,11 +404,11 @@ namespace eka2l1 {
 
         default:
             LOG_ERROR("Invalid cenrep entry get type!");
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 #ifdef _MSC_VER
 #pragma optimize("", on)
@@ -433,13 +433,13 @@ namespace eka2l1 {
         key_found_result.clear();
 
         // Get the filter
-        std::optional<central_repo_key_filter> filter = ctx->get_arg_packed<central_repo_key_filter>(0);
-        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_arg_ptr(2));
-        const std::size_t found_uid_max_uids = (ctx->get_arg_max_size(2) / sizeof(std::uint32_t)) - 1;
+        std::optional<central_repo_key_filter> filter = ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
+        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(2));
+        const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(2) / sizeof(std::uint32_t)) - 1;
 
         if (!filter || !found_uid_result_array) {
             LOG_ERROR("Trying to find equal value in cenrep, but arguments are invalid!");
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -478,7 +478,7 @@ namespace eka2l1 {
 
                 // Index 1 argument contains the value we should look for
                 // TODO: Signed/unsigned is dangerous
-                if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_arg<std::int32_t>(1)) {
+                if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_argument_value<std::int32_t>(1)) {
                     if (!find_not_eq) {
                         key_found = entry.key;
                     }
@@ -498,7 +498,7 @@ namespace eka2l1 {
                     break;
                 }
 
-                if (static_cast<std::string>(entry.data.strd) == ctx->get_arg<std::string>(1)) {
+                if (static_cast<std::string>(entry.data.strd) == ctx->get_argument_value<std::string>(1)) {
                     if (!find_not_eq) {
                         key_found = entry.key;
                     }
@@ -528,20 +528,20 @@ namespace eka2l1 {
 
         if (found_uid_result_array[0] == 0) {
             // NOTHING! NOTHING! omg no
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void central_repo_client_subsession::get_find_result(service::ipc_context *ctx) {
-        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_arg_ptr(0));
-        const std::size_t found_uid_max_uids = (ctx->get_arg_max_size(0) / sizeof(std::uint32_t));
+        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(0));
+        const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(0) / sizeof(std::uint32_t));
 
-        ctx->write_arg_pkg(0, reinterpret_cast<std::uint8_t *>(&key_found_result[0]), static_cast<std::uint32_t>(common::min(found_uid_max_uids, key_found_result.size()) * sizeof(std::uint32_t)));
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&key_found_result[0]), static_cast<std::uint32_t>(common::min(found_uid_max_uids, key_found_result.size()) * sizeof(std::uint32_t)));
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void central_repo_client_subsession::notify_nof_check(service::ipc_context *ctx) {
@@ -549,17 +549,17 @@ namespace eka2l1 {
         holder.sts = 0;
 
         // Pass a test notify info. Add notify request will not add this, but will check for request existence.
-        if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_arg<std::int32_t>(0)) == 0) {
-            ctx->set_request_status(epoc::error_none);
+        if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_argument_value<std::int32_t>(0)) == 0) {
+            ctx->complete(epoc::error_none);
             return;
         }
 
-        ctx->set_request_status(epoc::error_already_exists);
+        ctx->complete(epoc::error_already_exists);
     }
 
     void central_repo_client_subsession::notify(service::ipc_context *ctx) {
-        const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
-        const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
+        const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : *ctx->get_argument_value<std::uint32_t>(1);
+        const std::uint32_t partial_key = *ctx->get_argument_value<std::uint32_t>(0);
 
         epoc::notify_info info{ ctx->msg->request_sts, ctx->msg->own_thr };
         const int err = add_notify_request(info, mask, partial_key);
@@ -570,13 +570,13 @@ namespace eka2l1 {
         }
 
         case -1: {
-            ctx->set_request_status(epoc::error_already_exists);
+            ctx->complete(epoc::error_already_exists);
             break;
         }
 
         default: {
             LOG_TRACE("Unknown returns code {} from add_notify_request, set status to epoc::error_none", err);
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
 
             break;
         }
@@ -584,12 +584,12 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::notify_cancel(service::ipc_context *ctx) {
-        const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_cancel) ? 0xFFFFFFFF : *ctx->get_arg<std::uint32_t>(1);
-        const std::uint32_t partial_key = *ctx->get_arg<std::uint32_t>(0);
+        const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_cancel) ? 0xFFFFFFFF : *ctx->get_argument_value<std::uint32_t>(1);
+        const std::uint32_t partial_key = *ctx->get_argument_value<std::uint32_t>(0);
 
         cancel_notify_request(partial_key, mask);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     int central_repo_client_subsession::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
@@ -618,11 +618,11 @@ namespace eka2l1 {
 
     void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
         LOG_TRACE("TransactionStart stubbed");
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void central_repo_client_subsession::cancel_transaction(service::ipc_context *ctx) {
         LOG_TRACE("TransactionCancel stubbed");
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 }

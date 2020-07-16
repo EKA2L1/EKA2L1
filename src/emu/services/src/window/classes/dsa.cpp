@@ -47,7 +47,7 @@ namespace eka2l1::epoc {
         if (state_ != state_none) {
             if (state_ != state_completed) {
                 LOG_ERROR("Requesting access on a DSA in progress");
-                ctx.set_request_status(epoc::error_argument);
+                ctx.complete(epoc::error_argument);
                 return;
             } else {
                 state_ = state_none;
@@ -60,7 +60,7 @@ namespace eka2l1::epoc {
         // what the fuck msvc
         if ((!user) || (user->type != epoc::window_kind::client)) {
             LOG_ERROR("Invalid window handle given 0x{:X}", window_handle);
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
         if (husband_->is_dsa_active()) {
             LOG_WARN("Husband window is currently active in a DSA, silently pass");
 
-            ctx.set_request_status(0);
+            ctx.complete(0);
             return;
         }
 
@@ -88,7 +88,7 @@ namespace eka2l1::epoc {
 
         husband_->scr->dsa_rect.merge(extent);
 
-        ctx.set_request_status(1);
+        ctx.complete(1);
     }
 
     void dsa::get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -96,7 +96,7 @@ namespace eka2l1::epoc {
 
         if ((max_rects == 0) || (state_ != state_prepare)) {
             // What? Nothing?
-            ctx.set_request_status(epoc::CINT32_MAX);
+            ctx.complete(epoc::CINT32_MAX);
             return;
         }
 
@@ -107,8 +107,8 @@ namespace eka2l1::epoc {
 
         state_ = state_running;
 
-        ctx.write_arg_pkg<eka2l1::rect>(reply_slot, extent);
-        ctx.set_request_status(1);
+        ctx.write_data_to_descriptor_argument<eka2l1::rect>(reply_slot, extent);
+        ctx.complete(1);
     }
 
     void dsa::do_cancel() {
@@ -123,7 +123,7 @@ namespace eka2l1::epoc {
 
     void dsa::cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         do_cancel();
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -137,7 +137,7 @@ namespace eka2l1::epoc {
 
             target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
 
-            ctx.set_request_status(target_handle);
+            ctx.complete(target_handle);
             break;
         }
 

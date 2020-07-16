@@ -53,42 +53,42 @@ namespace eka2l1 {
         }
 
         template <>
-        std::optional<std::uint8_t> ipc_context::get_arg(const int idx) {
+        std::optional<std::uint8_t> ipc_context::get_argument_value(const int idx) {
             return get_integral_arg_from_msg<std::uint8_t>(msg, idx);
         }
 
         template <>
-        std::optional<std::uint16_t> ipc_context::get_arg(const int idx) {
+        std::optional<std::uint16_t> ipc_context::get_argument_value(const int idx) {
             return get_integral_arg_from_msg<std::uint16_t>(msg, idx);
         }
 
         template <>
-        std::optional<std::uint32_t> ipc_context::get_arg(const int idx) {
+        std::optional<std::uint32_t> ipc_context::get_argument_value(const int idx) {
             return get_integral_arg_from_msg<std::uint32_t>(msg, idx);
         }
 
         template <>
-        std::optional<std::int8_t> ipc_context::get_arg(const int idx) {
+        std::optional<std::int8_t> ipc_context::get_argument_value(const int idx) {
             return get_integral_arg_from_msg<std::int8_t>(msg, idx);
         }
 
         template <>
-        std::optional<std::int16_t> ipc_context::get_arg(const int idx) {
+        std::optional<std::int16_t> ipc_context::get_argument_value(const int idx) {
             return get_integral_arg_from_msg<std::int16_t>(msg, idx);
         }
 
         template <>
-        std::optional<std::int32_t> ipc_context::get_arg(const int idx) {
+        std::optional<std::int32_t> ipc_context::get_argument_value(const int idx) {
             return get_integral_arg_from_msg<std::int32_t>(msg, idx);
         }
 
         template <>
-        std::optional<float> ipc_context::get_arg(const int idx) {
+        std::optional<float> ipc_context::get_argument_value(const int idx) {
             return get_integral_arg_from_msg<float>(msg, idx);
         }
 
         template <>
-        std::optional<std::u16string> ipc_context::get_arg(const int idx) {
+        std::optional<std::u16string> ipc_context::get_argument_value(const int idx) {
             if (idx >= 4) {
                 return std::nullopt;
             }
@@ -112,7 +112,7 @@ namespace eka2l1 {
         }
 
         template <>
-        std::optional<std::string> ipc_context::get_arg(int idx) {
+        std::optional<std::string> ipc_context::get_argument_value(const int idx) {
             if (idx >= 4) {
                 return std::nullopt;
             }
@@ -136,7 +136,7 @@ namespace eka2l1 {
             return std::nullopt;
         }
 
-        void ipc_context::set_request_status(int res) {
+        void ipc_context::complete(int res) {
             if (msg->request_sts) {
                 *(msg->request_sts.get(msg->own_thr->owning_process())) = res;
 
@@ -188,7 +188,7 @@ namespace eka2l1 {
             return false;
         }
 
-        bool ipc_context::write_arg_pkg(int idx, const uint8_t *data, uint32_t len, int *err_code, const bool auto_shrink_to_fit) {
+        bool ipc_context::write_data_to_descriptor_argument(int idx, const uint8_t *data, uint32_t len, int *err_code, const bool auto_shrink_to_fit) {
             if (idx >= 4 || idx < 0) {
                 return false;
             }
@@ -241,7 +241,7 @@ namespace eka2l1 {
             return false;
         }
 
-        std::uint8_t *ipc_context::get_arg_ptr(int idx) {
+        std::uint8_t *ipc_context::get_descriptor_argument_ptr(int idx) {
             const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if (sys->get_kernel_system()->is_eka1() || ((int)arg_type & (int)ipc_arg_type::flag_des)) {
@@ -258,7 +258,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        std::size_t ipc_context::get_arg_max_size(int idx) {
+        std::size_t ipc_context::get_argument_max_data_size(int idx) {
             if (idx >= 4 || idx < 0) {
                 return static_cast<std::size_t>(-1);
             }
@@ -284,7 +284,7 @@ namespace eka2l1 {
             return descriptor->get_max_length(own_pr);
         }
 
-        std::size_t ipc_context::get_arg_size(int idx) {
+        std::size_t ipc_context::get_argument_data_size(int idx) {
             if (idx >= 4 || idx < 0) {
                 return static_cast<std::size_t>(-1);
             }
@@ -310,7 +310,7 @@ namespace eka2l1 {
             return descriptor->get_length();
         }
 
-        bool ipc_context::set_arg_des_len(const int idx, const std::uint32_t len) {
+        bool ipc_context::set_descriptor_argument_length(const int idx, const std::uint32_t len) {
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if (sys->get_kernel_system()->is_eka1() || ((int)arg_type & (int)ipc_arg_type::flag_des)) {
@@ -329,11 +329,11 @@ namespace eka2l1 {
         }
         
         void server::connect(service::ipc_context &ctx) {
-            ctx.set_request_status(0);
+            ctx.complete(0);
         }
 
         void server::disconnect(service::ipc_context &ctx) {
-            ctx.set_request_status(0);
+            ctx.complete(0);
         }
 
         // Processed asynchronously, use for HLE service where accepted function

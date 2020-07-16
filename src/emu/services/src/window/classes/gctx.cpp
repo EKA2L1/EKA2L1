@@ -45,7 +45,7 @@ namespace eka2l1::epoc {
 
         // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
         // this.
-        context.set_request_status(attached_window->scr->number);
+        context.complete(attached_window->scr->number);
 
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
         const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
         cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, 0);
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
@@ -97,7 +97,7 @@ namespace eka2l1::epoc {
         text_font->atlas.draw_text(text, area, align, client->get_ws().get_graphics_driver(),
             cmd_builder.get());
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     bool graphic_context::do_command_set_color(const set_color_type to_set) {
@@ -157,7 +157,7 @@ namespace eka2l1::epoc {
 
     void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
         brush_color = *reinterpret_cast<const common::rgb *>(cmd.data_ptr);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {
@@ -171,7 +171,7 @@ namespace eka2l1::epoc {
 
         attached_window = nullptr;
         recording = false;
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     drivers::handle graphic_context::handle_from_bitwise_bitmap(epoc::bitwise_bitmap *bmp) {
@@ -185,7 +185,7 @@ namespace eka2l1::epoc {
         epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
 
         if (!bw_bmp) {
-            context.set_request_status(epoc::error_argument);
+            context.complete(epoc::error_argument);
             return;
         }
 
@@ -200,7 +200,7 @@ namespace eka2l1::epoc {
         epoc::bitwise_bitmap *masked = client->get_ws().get_bitmap(blt_cmd->mask_handle);
 
         if (!bmp || !masked) {
-            context.set_request_status(epoc::error_bad_handle);
+            context.complete(epoc::error_bad_handle);
             return;
         }
 
@@ -231,7 +231,7 @@ namespace eka2l1::epoc {
             cmd_builder->set_blend_mode(false);
         }
 
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver) {
@@ -241,7 +241,7 @@ namespace eka2l1::epoc {
         epoc::bitwise_bitmap *bmp = client->get_ws().get_bitmap(blt_cmd->handle);
 
         if (!bmp) {
-            context.set_request_status(epoc::error_bad_handle);
+            context.complete(epoc::error_bad_handle);
             return;
         }
 
@@ -255,7 +255,7 @@ namespace eka2l1::epoc {
         }
 
         if (!source_rect.valid()) {
-            context.set_request_status(epoc::error_none);
+            context.complete(epoc::error_none);
             return;
         }
 
@@ -288,12 +288,12 @@ namespace eka2l1::epoc {
 
     void graphic_context::set_brush_style(service::ipc_context &context, ws_cmd &cmd) {
         fill_mode = *reinterpret_cast<brush_style *>(cmd.data_ptr);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::set_pen_style(service::ipc_context &context, ws_cmd &cmd) {
         line_mode = *reinterpret_cast<pen_style *>(cmd.data_ptr);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::draw_rect(service::ipc_context &context, ws_cmd &cmd) {
@@ -303,7 +303,7 @@ namespace eka2l1::epoc {
         area.transform_from_symbian_rectangle();
 
         if (!area.valid()) {
-            context.set_request_status(epoc::error_none);
+            context.complete(epoc::error_none);
             return;
         }
 
@@ -321,7 +321,7 @@ namespace eka2l1::epoc {
             cmd_builder->draw_rectangle(area);
         }
 
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::clear_rect(service::ipc_context &context, ws_cmd &cmd) {
@@ -331,7 +331,7 @@ namespace eka2l1::epoc {
         area.transform_from_symbian_rectangle();
 
         if (!area.valid()) {
-            context.set_request_status(epoc::error_none);
+            context.complete(epoc::error_none);
             return;
         }
 
@@ -345,7 +345,7 @@ namespace eka2l1::epoc {
         fill_mode = previous_brush_type;
 
         // Draw rectangle
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::reset_context() {
@@ -360,7 +360,7 @@ namespace eka2l1::epoc {
 
     void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
         reset_context();
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::use_font(service::ipc_context &context, ws_cmd &cmd) {
@@ -370,7 +370,7 @@ namespace eka2l1::epoc {
         fbsfont *font_object = fbs->get_font(font_handle);
 
         if (!font_object) {
-            context.set_request_status(epoc::error_argument);
+            context.complete(epoc::error_argument);
             return;
         }
 
@@ -381,7 +381,7 @@ namespace eka2l1::epoc {
             text_font->atlas.init(font_object->of_info.adapter, text_font->of_info.idx, 0x20, 0xFF - 0x20, font_object->of_info.metrics.max_height);
         }
 
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd) {
@@ -401,7 +401,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::free(service::ipc_context &context, ws_cmd &cmd) {
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);
     }
 

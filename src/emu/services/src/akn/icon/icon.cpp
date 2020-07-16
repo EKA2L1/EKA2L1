@@ -36,8 +36,8 @@ namespace eka2l1 {
         switch (ctx->msg->function) {
         case akn_icon_server_get_init_data: {
             // Write initialisation data to buffer
-            ctx->write_arg_pkg<epoc::akn_icon_init_data>(0, *server<akn_icon_server>()->get_init_data(), nullptr, true);
-            ctx->set_request_status(epoc::error_none);
+            ctx->write_data_to_descriptor_argument<epoc::akn_icon_init_data>(0, *server<akn_icon_server>()->get_init_data(), nullptr, true);
+            ctx->complete(epoc::error_none);
 
             break;
         }
@@ -69,15 +69,15 @@ namespace eka2l1 {
         }
 
         create_session<akn_icon_server_session>(&context);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void akn_icon_server::retrieve_icon(service::ipc_context *ctx) {
-        std::optional<epoc::akn_icon_params> spec = ctx->get_arg_packed<epoc::akn_icon_params>(0);
-        std::optional<epoc::akn_icon_srv_return_data> ret = ctx->get_arg_packed<epoc::akn_icon_srv_return_data>(1);
+        std::optional<epoc::akn_icon_params> spec = ctx->get_argument_data_from_descriptor<epoc::akn_icon_params>(0);
+        std::optional<epoc::akn_icon_srv_return_data> ret = ctx->get_argument_data_from_descriptor<epoc::akn_icon_srv_return_data>(1);
 
         if (!spec || !ret) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -89,7 +89,7 @@ namespace eka2l1 {
             fbsbitmap *mask = fbss->create_bitmap(size, init_data.icon_mask_mode);
 
             if (!bmp || !mask) {
-                ctx->set_request_status(epoc::error_no_memory);
+                ctx->complete(epoc::error_no_memory);
                 return;
             }
 
@@ -108,9 +108,9 @@ namespace eka2l1 {
             icons[icon_index].use_count++;
         }
 
-        ctx->write_arg_pkg(0, spec.value());
-        ctx->write_arg_pkg(1, ret.value());
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument(0, spec.value());
+        ctx->write_data_to_descriptor_argument(1, ret.value());
+        ctx->complete(epoc::error_none);
     }
 
     bool akn_icon_server::cache_or_delete_icon(const std::size_t icon_idx) {
@@ -143,12 +143,12 @@ namespace eka2l1 {
     }
 
     void akn_icon_server::free_bitmap(service::ipc_context *ctx) {
-        std::optional<epoc::akn_icon_params> params = ctx->get_arg_packed<epoc::akn_icon_params>(0);
+        std::optional<epoc::akn_icon_params> params = ctx->get_argument_data_from_descriptor<epoc::akn_icon_params>(0);
 
         std::size_t icon_index = 0;
         if (!find_existing_icon(params.value(), &icon_index)) {
             // We can't find the icon. The params is fraud!!
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -160,13 +160,13 @@ namespace eka2l1 {
         // Cache the bitmap, or delete it from the server
         if (icons[icon_index].use_count == 0) {
             if (!cache_or_delete_icon(icon_index)) {
-                ctx->set_request_status(epoc::error_general);
+                ctx->complete(epoc::error_general);
                 return;
             }
         }
 
         // Success, return error none.
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_existing_icon(epoc::akn_icon_params &spec, std::size_t *idx) {

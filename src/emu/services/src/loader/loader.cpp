@@ -62,10 +62,10 @@ namespace eka2l1 {
         std::uint32_t uid3 = 0;
 
         if (kern->is_eka1()) {
-            info_eka1 = ctx.get_arg_packed<epoc::ldr_info_eka1>(0);
+            info_eka1 = ctx.get_argument_data_from_descriptor<epoc::ldr_info_eka1>(0);
 
             if (!info_eka1) {
-                ctx.set_request_status(epoc::error_argument);
+                ctx.complete(epoc::error_argument);
                 return;
             }
 
@@ -76,12 +76,12 @@ namespace eka2l1 {
             handle_owner = info_eka1->handle_owner_;
             stack_size = 0;         // Eka1 does not allow custom stack size 
         } else {
-            info = ctx.get_arg_packed<epoc::ldr_info>(0);
-            process_name16 = ctx.get_arg<std::u16string>(1);
-            process_args = ctx.get_arg<std::u16string>(2);
+            info = ctx.get_argument_data_from_descriptor<epoc::ldr_info>(0);
+            process_name16 = ctx.get_argument_value<std::u16string>(1);
+            process_args = ctx.get_argument_value<std::u16string>(2);
 
             if (!info) {
-                ctx.set_request_status(epoc::error_argument);
+                ctx.complete(epoc::error_argument);
                 return;
             }
 
@@ -91,7 +91,7 @@ namespace eka2l1 {
         }
 
         if (!process_name16 || !process_args) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
@@ -111,7 +111,7 @@ namespace eka2l1 {
 
         if (!pr) {
             LOG_DEBUG("Try spawning process {} failed", name_process);
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
@@ -119,13 +119,13 @@ namespace eka2l1 {
 
         if (info) {
             info->handle = pr_handle;
-            ctx.write_arg_pkg(0, *info);
+            ctx.write_data_to_descriptor_argument(0, *info);
         } else {
             info_eka1->result_handle = pr_handle;
-            ctx.write_arg_pkg(0, *info_eka1);
+            ctx.write_data_to_descriptor_argument(0, *info_eka1);
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void loader_server::load_library(service::ipc_context &ctx) {
@@ -136,28 +136,28 @@ namespace eka2l1 {
         std::optional<std::u16string> lib_path = std::nullopt;
 
         if (kern->is_eka1()) {
-            info_eka1 = ctx.get_arg_packed<epoc::ldr_info_eka1>(0);
+            info_eka1 = ctx.get_argument_data_from_descriptor<epoc::ldr_info_eka1>(0);
 
             if (!info_eka1) {
-                ctx.set_request_status(epoc::error_argument);
+                ctx.complete(epoc::error_argument);
                 return;
             }
 
             lib_path = info_eka1->full_path_.to_std_string(nullptr);
         } else {
-            info = ctx.get_arg_packed<epoc::ldr_info>(0);
+            info = ctx.get_argument_data_from_descriptor<epoc::ldr_info>(0);
 
             if (!info) {
-                ctx.set_request_status(epoc::error_argument);
+                ctx.complete(epoc::error_argument);
                 return;
             }
 
             handle_owner = info->owner_type;
-            lib_path = ctx.get_arg<std::u16string>(1);
+            lib_path = ctx.get_argument_value<std::u16string>(1);
         }
 
         if (!lib_path) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
@@ -176,7 +176,7 @@ namespace eka2l1 {
 
         if (!cs) {
             LOG_DEBUG("Try loading {} to {} failed", lib_name, ctx.msg->own_thr->owning_process()->name());
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
@@ -192,30 +192,30 @@ namespace eka2l1 {
             owning_process->signal_dll_lock(ctx.msg->own_thr);
         
             info->handle = lib_handle_and_obj.first;
-            ctx.write_arg_pkg(0, *info);
+            ctx.write_data_to_descriptor_argument(0, *info);
         } else {
             // They auto attach on eka1
             lib_handle_and_obj.second->attach(owning_process);
 
             info_eka1->result_handle = lib_handle_and_obj.first;
-            ctx.write_arg_pkg(0, *info_eka1);
+            ctx.write_data_to_descriptor_argument(0, *info_eka1);
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void loader_server::get_info(service::ipc_context &ctx) {
-        std::optional<utf16_str> lib_name = ctx.get_arg<utf16_str>(1);
+        std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
         epoc::des8 *buffer = eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 
         if (!lib_name || !buffer) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         // Check the buffer size
         if (buffer->max_length < sizeof(epoc::lib_info)) {
-            ctx.set_request_status(epoc::error_no_memory);
+            ctx.complete(epoc::error_no_memory);
             return;
         }
 
@@ -223,7 +223,7 @@ namespace eka2l1 {
         epoc::lib_info linfo;
 
         if (!epoc::get_image_info(ctx.sys->get_lib_manager(), *lib_name, linfo)) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
@@ -239,13 +239,13 @@ namespace eka2l1 {
             linfo2.debug_attrib = 1;
             linfo2.hfp = 0;
 
-            ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
+            ctx.write_data_to_descriptor_argument(2, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
         } else {
-            ctx.write_arg_pkg(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info));
+            ctx.write_data_to_descriptor_argument(2, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info));
         }
 
-        ctx.write_arg_pkg<epoc::ldr_info>(0, load_info);
-        ctx.set_request_status(epoc::error_none);
+        ctx.write_data_to_descriptor_argument<epoc::ldr_info>(0, load_info);
+        ctx.complete(epoc::error_none);
     }
 
     loader_server::loader_server(system *sys)

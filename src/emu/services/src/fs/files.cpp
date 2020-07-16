@@ -79,88 +79,88 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_modified(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *the_file = reinterpret_cast<file *>(node->vfs_node.get());
         epoc::time last_modified{ the_file->last_modify_since_1ad() };
 
-        ctx->write_arg_pkg<epoc::time>(0, last_modified);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<epoc::time>(0, last_modified);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_size(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         // On Symbian^3 onwards, 64-bit file were supported, 64-bit integer for filesize used by default
         if (ctx->sys->get_kernel_system()->get_epoc_version() >= epocver::epoc95) {
             std::uint64_t fsize_u = reinterpret_cast<file *>(node->vfs_node.get())->size();
-            ctx->write_arg_pkg<uint64_t>(0, fsize_u);
+            ctx->write_data_to_descriptor_argument<uint64_t>(0, fsize_u);
         } else {
             std::uint32_t fsize_u = static_cast<std::uint32_t>(reinterpret_cast<file *>(node->vfs_node.get())->size());
-            ctx->write_arg_pkg<uint32_t>(0, fsize_u);
+            ctx->write_data_to_descriptor_argument<uint32_t>(0, fsize_u);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_set_size(service::ipc_context *ctx) {
-        std::optional<int> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<int> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         if (!(node->open_mode & WRITE_MODE) && !(node->open_mode & APPEND_MODE)) {
             // Can't set file size if the file is not open for write
-            ctx->set_request_status(epoc::error_permission_denied);
+            ctx->complete(epoc::error_permission_denied);
             return;
         }
 
-        int size = *ctx->get_arg<std::int32_t>(0);
+        int size = *ctx->get_argument_value<std::int32_t>(0);
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
         std::size_t fsize = f->size();
 
         if (size == fsize) {
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             return;
         }
 
         // This is trying to prevent from data corruption that will affect the host
         if (size >= common::GB(1)) {
             LOG_ERROR("File trying to resize to 1GB, operation not permitted");
-            ctx->set_request_status(epoc::error_too_big);
+            ctx->complete(epoc::error_too_big);
 
             return;
         }
@@ -168,7 +168,7 @@ namespace eka2l1 {
         bool res = f->resize(size);
 
         if (!res) {
-            ctx->set_request_status(epoc::error_general);
+            ctx->complete(epoc::error_general);
             return;
         }
 
@@ -177,73 +177,73 @@ namespace eka2l1 {
             f->seek(size, file_seek_mode::beg);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_name(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         ctx->write_arg(0, eka2l1::filename(f->file_name(), true));
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_full_name(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         ctx->write_arg(0, f->file_name());
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_seek(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
-        std::optional<std::int32_t> seek_mode = ctx->get_arg<std::int32_t>(1);
-        std::optional<std::int32_t> seek_off = ctx->get_arg<std::int32_t>(0);
+        std::optional<std::int32_t> seek_mode = ctx->get_argument_value<std::int32_t>(1);
+        std::optional<std::int32_t> seek_off = ctx->get_argument_value<std::int32_t>(0);
 
         if (!seek_mode || !seek_off) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -263,67 +263,67 @@ namespace eka2l1 {
         std::uint64_t seek_res = vfs_file->seek(*seek_off, vfs_seek_mode);
 
         if (seek_res == 0xFFFFFFFFFFFFFFFF) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         // Slot order: (0) seek offset, (1) seek mode, (2) new pos
 
         if ((int)ctx->sys->get_symbian_version_use() >= (int)epocver::epoc95) {
-            ctx->write_arg_pkg(2, seek_res);
+            ctx->write_data_to_descriptor_argument(2, seek_res);
         } else {
             int seek_result_i = static_cast<std::int32_t>(seek_res);
-            ctx->write_arg_pkg(2, seek_result_i);
+            ctx->write_data_to_descriptor_argument(2, seek_result_i);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_flush(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         if (!vfs_file->flush()) {
-            ctx->set_request_status(epoc::error_general);
+            ctx->complete(epoc::error_general);
             return;
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_rename(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
-        auto new_path = ctx->get_arg<std::u16string>(0);
+        auto new_path = ctx->get_argument_value<std::u16string>(0);
 
         if (!new_path) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -331,7 +331,7 @@ namespace eka2l1 {
         bool res = ctx->sys->get_io_system()->rename(vfs_file->file_name(), new_path_abs);
 
         if (!res) {
-            ctx->set_request_status(epoc::error_general);
+            ctx->complete(epoc::error_general);
             return;
         }
 
@@ -346,40 +346,40 @@ namespace eka2l1 {
 
         node->vfs_node = std::move(new_vfs_file);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_write(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
-        std::optional<std::string> write_data = ctx->get_arg<std::string>(0);
+        std::optional<std::string> write_data = ctx->get_argument_value<std::string>(0);
 
         if (!write_data) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
         if (!(node->open_mode & WRITE_MODE)) {
-            ctx->set_request_status(epoc::error_access_denied);
+            ctx->complete(epoc::error_access_denied);
             return;
         }
 
-        std::int32_t write_len = *ctx->get_arg<std::int32_t>(1);
-        std::int32_t write_pos_provided = *ctx->get_arg<std::int32_t>(2);
+        std::int32_t write_len = *ctx->get_argument_value<std::int32_t>(1);
+        std::int32_t write_pos_provided = *ctx->get_argument_value<std::int32_t>(2);
 
         std::uint64_t write_pos = 0;
         std::uint64_t size_of_file = vfs_file->tell();
@@ -407,28 +407,28 @@ namespace eka2l1 {
 
         //LOG_TRACE("File {} wroted with size: {}, at {}", common::ucs2_to_utf8(vfs_file->file_name()), wrote_size, write_pos);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_read(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
-        int read_len = *ctx->get_arg<std::int32_t>(1);
-        int read_pos_provided = *ctx->get_arg<std::int32_t>(2);
+        int read_len = *ctx->get_argument_value<std::int32_t>(1);
+        int read_pos_provided = *ctx->get_argument_value<std::int32_t>(2);
 
         std::uint64_t read_pos = 0;
         std::uint64_t last_pos = vfs_file->tell();
@@ -452,24 +452,24 @@ namespace eka2l1 {
         read_data.resize(read_len);
 
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
-        ctx->write_arg_pkg(0, reinterpret_cast<uint8_t *>(read_data.data()), static_cast<std::uint32_t>(read_finish_len));
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<uint8_t *>(read_data.data()), static_cast<std::uint32_t>(read_finish_len));
 
         // LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_close(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle_res = ctx->get_arg<std::int32_t>(3);
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         fs_node *node = get_file_node(*handle_res);
 
         if (node == nullptr || node->vfs_node->type != io_component_type::file) {
-            ctx->set_request_status(epoc::error_bad_handle);
+            ctx->complete(epoc::error_bad_handle);
             return;
         }
 
@@ -486,15 +486,15 @@ namespace eka2l1 {
         }
 
         obj_table_.remove(*handle_res);
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_open(service::ipc_context *ctx) {
-        std::optional<std::u16string> name_res = ctx->get_arg<std::u16string>(0);
-        std::optional<int> open_mode_res = ctx->get_arg<std::int32_t>(1);
+        std::optional<std::u16string> name_res = ctx->get_argument_value<std::u16string>(0);
+        std::optional<int> open_mode_res = ctx->get_argument_value<std::int32_t>(1);
 
         if (!name_res || !open_mode_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -506,7 +506,7 @@ namespace eka2l1 {
         if (!ctx->sys->get_io_system()->exist(*name_res)) {
             LOG_TRACE("IO component not exists: {} {}", common::ucs2_to_utf8(*name_res), ctx->msg->function);
 
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -518,10 +518,10 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_temp(service::ipc_context *ctx) {
-        auto dir_create = ctx->get_arg<std::u16string>(0);
+        auto dir_create = ctx->get_argument_value<std::u16string>(0);
 
         if (!dir_create) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -532,7 +532,7 @@ namespace eka2l1 {
         if (!io->exist(full_path)) {
             LOG_TRACE("Directory for temp file not exists", common::ucs2_to_utf8(full_path));
 
-            ctx->set_request_status(epoc::error_path_not_found);
+            ctx->complete(epoc::error_path_not_found);
             return;
         }
 
@@ -547,29 +547,29 @@ namespace eka2l1 {
 
         LOG_INFO("Opening temp file: {}", common::ucs2_to_utf8(full_path));
         int handle = new_node(ctx->sys->get_io_system(), ctx->msg->own_thr, full_path,
-            *ctx->get_arg<std::int32_t>(1), true, true);
+            *ctx->get_argument_value<std::int32_t>(1), true, true);
 
         if (handle <= 0) {
-            ctx->set_request_status(handle);
+            ctx->complete(handle);
             return;
         }
 
         LOG_TRACE("Handle opened: {}", handle);
 
-        ctx->write_arg_pkg<int>(3, handle);
+        ctx->write_data_to_descriptor_argument<int>(3, handle);
 
         // Arg2 take the temp path
         ctx->write_arg(2, full_path);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_create(service::ipc_context *ctx) {
-        std::optional<std::u16string> name_res = ctx->get_arg<std::u16string>(0);
-        std::optional<std::int32_t> open_mode_res = ctx->get_arg<std::int32_t>(1);
+        std::optional<std::u16string> name_res = ctx->get_argument_value<std::u16string>(0);
+        std::optional<std::int32_t> open_mode_res = ctx->get_argument_value<std::int32_t>(1);
 
         if (!name_res || !open_mode_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -577,7 +577,7 @@ namespace eka2l1 {
 
         // If the file already exist, stop
         if (ctx->sys->get_io_system()->exist(*name_res)) {
-            ctx->set_request_status(epoc::error_already_exists);
+            ctx->complete(epoc::error_already_exists);
             return;
         }
 
@@ -585,34 +585,34 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_duplicate(service::ipc_context *ctx) {
-        std::int32_t target_handle = *ctx->get_arg<std::int32_t>(0);
+        std::int32_t target_handle = *ctx->get_argument_value<std::int32_t>(0);
         fs_node *node = get_file_node(target_handle);
 
         if (!node) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         const epoc::handle dup_handle = obj_table_.add(node);
 
-        ctx->write_arg_pkg<epoc::handle>(3, dup_handle);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<epoc::handle>(3, dup_handle);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_adopt(service::ipc_context *ctx) {
         LOG_TRACE("Fs::FileAdopt stubbed");
         // TODO (pent0) : Do an adopt implementation
 
-        ctx->write_arg_pkg<std::uint32_t>(3, ctx->get_arg<std::uint32_t>(0).value());
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, ctx->get_argument_value<std::uint32_t>(0).value());
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_att(service::ipc_context *ctx) {
-        std::int32_t target_handle = *ctx->get_arg<std::int32_t>(3);
+        std::int32_t target_handle = *ctx->get_argument_value<std::int32_t>(3);
         fs_node *node = get_file_node(target_handle);
 
         if (!node) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -623,8 +623,8 @@ namespace eka2l1 {
         assert(info);
 
         const std::uint32_t attrib = build_attribute_from_entry_info(info.value());
-        ctx->write_arg_pkg(0, attrib);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument(0, attrib);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::read_file_section(service::ipc_context *ctx) {
@@ -632,43 +632,43 @@ namespace eka2l1 {
 
         if (ctx->msg->function & 0x00040000) {
             // The position is in a package
-            auto position_package = ctx->get_arg_packed<std::uint64_t>(2);
+            auto position_package = ctx->get_argument_data_from_descriptor<std::uint64_t>(2);
 
             if (!position_package) {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
             position = position_package.value();
         } else {
-            position = ctx->get_arg<std::uint32_t>(2).value();
+            position = ctx->get_argument_value<std::uint32_t>(2).value();
         }
 
-        std::optional<std::u16string> target_file_path = ctx->get_arg<std::u16string>(1);
+        std::optional<std::u16string> target_file_path = ctx->get_argument_value<std::u16string>(1);
 
         if (!target_file_path) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         target_file_path.value() = eka2l1::absolute_path(target_file_path.value(), ss_path, true);
 
         // Get the buffer length
-        const std::uint32_t buffer_length = ctx->get_arg<std::uint32_t>(3).value();
+        const std::uint32_t buffer_length = ctx->get_argument_value<std::uint32_t>(3).value();
 
         // Open the file, one time only, from VFS
         io_system *io = ctx->sys->get_io_system();
         symfile target_file = io->open_file(target_file_path.value(), READ_MODE | BIN_MODE);
 
         if (!target_file) {
-            ctx->set_request_status(epoc::error_path_not_found);
+            ctx->complete(epoc::error_path_not_found);
             return;
         }
 
-        std::uint8_t *buffer = ctx->get_arg_ptr(0);
+        std::uint8_t *buffer = ctx->get_descriptor_argument_ptr(0);
 
         if (!buffer) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             target_file->close();
             return;
         }
@@ -677,20 +677,20 @@ namespace eka2l1 {
         const std::size_t readed_size = target_file->read_file(buffer, buffer_length, 1);
         target_file->close();
 
-        if (!ctx->set_arg_des_len(0, static_cast<std::uint32_t>(readed_size))) {
-            ctx->set_request_status(epoc::error_argument);
+        if (!ctx->set_descriptor_argument_length(0, static_cast<std::uint32_t>(readed_size))) {
+            ctx->complete(epoc::error_argument);
             return;
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::new_file_subsession(service::ipc_context *ctx, bool overwrite, bool temporary) {
-        std::optional<std::u16string> name_res = ctx->get_arg<std::u16string>(0);
-        std::optional<std::int32_t> open_mode_res = ctx->get_arg<std::int32_t>(1);
+        std::optional<std::u16string> name_res = ctx->get_argument_value<std::u16string>(0);
+        std::optional<std::int32_t> open_mode_res = ctx->get_argument_value<std::int32_t>(1);
 
         if (!name_res || !open_mode_res) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -704,7 +704,7 @@ namespace eka2l1 {
             if (!ctx->sys->get_io_system()->exist(file_dir)) {
                 LOG_TRACE("Base directory of file {} not found", name_utf8);
 
-                ctx->set_request_status(epoc::error_path_not_found);
+                ctx->complete(epoc::error_path_not_found);
                 return;
             }
         }
@@ -715,14 +715,14 @@ namespace eka2l1 {
             *open_mode_res, overwrite, temporary);
 
         if (handle <= 0) {
-            ctx->set_request_status(handle);
+            ctx->complete(handle);
             return;
         }
 
         LOG_TRACE("Handle opened: {}", handle);
 
-        ctx->write_arg_pkg<int>(3, handle);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<int>(3, handle);
+        ctx->complete(epoc::error_none);
     }
 
     int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {

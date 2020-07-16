@@ -64,13 +64,13 @@ namespace eka2l1::epoc {
             if (mode.size == info->pixel_size && number_to_orientation(mode.rotation) == info->orientation) {
                 // Eureka... Bắt được mày rồi....
                 scr->set_screen_mode(client->get_ws().get_graphics_driver(), mode.mode_number);
-                ctx.set_request_status(epoc::error_none);
+                ctx.complete(epoc::error_none);
                 return;
             }
         }
 
         LOG_ERROR("Unable to set size and orientation: mode not found!");
-        ctx.set_request_status(epoc::error_not_supported);
+        ctx.complete(epoc::error_not_supported);
     }
 
     void screen_device::set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -85,10 +85,10 @@ namespace eka2l1::epoc {
             modes.push_back(scr->scr_config.modes[i].mode_number);
         }
 
-        ctx.write_arg_pkg(reply_slot, reinterpret_cast<std::uint8_t *>(&modes[0]),
+        ctx.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(&modes[0]),
             static_cast<std::uint32_t>(sizeof(int) * modes.size()));
 
-        ctx.set_request_status(scr->total_screen_mode());
+        ctx.complete(scr->total_screen_mode());
     }
 
     void screen_device::get_screen_size_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
@@ -97,7 +97,7 @@ namespace eka2l1::epoc {
         const epoc::config::screen_mode *scr_mode = scr->mode_info(mode);
 
         if (!scr_mode) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
@@ -107,16 +107,16 @@ namespace eka2l1::epoc {
             data.twips_size = scr_mode->size * twips_mul;
             data.orientation = number_to_orientation(scr_mode->rotation);
 
-            ctx.write_arg_pkg(reply_slot, data);
+            ctx.write_data_to_descriptor_argument(reply_slot, data);
         } else {
             pixel_and_rot data;
             data.pixel_size = scr_mode->size;
             data.orientation = number_to_orientation(scr_mode->rotation);
 
-            ctx.write_arg_pkg(reply_slot, data);
+            ctx.write_data_to_descriptor_argument(reply_slot, data);
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void screen_device::get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
@@ -131,20 +131,20 @@ namespace eka2l1::epoc {
             result.pixel_size = result.pixel_size * 15;
         }
 
-        ctx.write_arg_pkg<pixel_and_rot>(reply_slot, result);
-        ctx.set_request_status(0);
+        ctx.write_data_to_descriptor_argument<pixel_and_rot>(reply_slot, result);
+        ctx.complete(0);
     }
 
     void screen_device::get_default_screen_mode_origin(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         // On emulator there is no physical scale nor coordinate
-        ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, eka2l1::vec2(0, 0));
-        ctx.set_request_status(0);
+        ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, eka2l1::vec2(0, 0));
+        ctx.complete(0);
     }
 
     void screen_device::get_current_screen_mode_scale(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         // On emulator there is no physical scale nor coordinate
-        ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, eka2l1::vec2(1, 1));
-        ctx.set_request_status(0);
+        ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, eka2l1::vec2(1, 1));
+        ctx.complete(0);
     }
 
     void screen_device::is_screen_mode_dynamic(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -153,11 +153,11 @@ namespace eka2l1::epoc {
         // The request code set is the boolean for whether screen mode is dynamic
         if ((mode.size.x == -1) && (mode.size.y == -1)) {
             // Dynamiccc!!!!
-            ctx.set_request_status(1);
+            ctx.complete(1);
             return;
         }
 
-        ctx.set_request_status(0);
+        ctx.complete(0);
     }
 
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -167,8 +167,8 @@ namespace eka2l1::epoc {
         switch (op) {
         case ws_sd_op_pixel_size: {
             // This doesn't take any arguments
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, scr->current_mode().size);
-            ctx.set_request_status(0);
+            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, scr->current_mode().size);
+            ctx.complete(0);
 
             break;
         }
@@ -176,8 +176,8 @@ namespace eka2l1::epoc {
         case ws_sd_op_twips_size: {
             // This doesn't take any arguments
             eka2l1::vec2 screen_size = scr->current_mode().size * twips_mul;
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, screen_size);
-            ctx.set_request_status(0);
+            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, screen_size);
+            ctx.complete(0);
 
             break;
         }
@@ -200,18 +200,18 @@ namespace eka2l1::epoc {
             break;
 
         case ws_sd_op_get_num_screen_modes: {
-            ctx.set_request_status(scr->total_screen_mode());
+            ctx.complete(scr->total_screen_mode());
             break;
         }
 
         case ws_sd_op_get_screen_number: {
-            ctx.set_request_status(scr->number);
+            ctx.complete(scr->number);
             break;
         }
 
         case ws_sd_op_set_screen_mode: {
             set_screen_mode(ctx, cmd);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -241,8 +241,8 @@ namespace eka2l1::epoc {
         case ws_sd_op_get_screen_mode_display_mode: {
             int mode = *reinterpret_cast<int *>(cmd.data_ptr);
 
-            ctx.write_arg_pkg(reply_slot, scr->disp_mode);
-            ctx.set_request_status(epoc::error_none);
+            ctx.write_data_to_descriptor_argument(reply_slot, scr->disp_mode);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -250,17 +250,17 @@ namespace eka2l1::epoc {
         // Get the current screen mode. AknCapServer uses this, compare with the saved screen mode
         // to trigger the layout change event for registered app.
         case ws_sd_op_get_screen_mode: {
-            ctx.set_request_status(scr->crr_mode);
+            ctx.complete(scr->crr_mode);
             break;
         }
 
         case ws_sd_op_display_mode: {
-            ctx.set_request_status(static_cast<int>(scr->disp_mode));
+            ctx.complete(static_cast<int>(scr->disp_mode));
             break;
         }
 
         case ws_sd_op_free: {
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             client->delete_object(cmd.obj_handle);
             break;
         }

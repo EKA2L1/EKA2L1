@@ -262,13 +262,13 @@ namespace eka2l1::epoc {
         }
 
         // LOG_DEBUG("End redraw to window 0x{:X}!", id);
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         // LOG_TRACE("Begin redraw to window 0x{:X}!", id);
         redraw_responded = true;
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void window_user::set_non_fading(service::ipc_context &context, ws_cmd &cmd) {
@@ -292,7 +292,7 @@ namespace eka2l1::epoc {
         }
 
         size = new_size;
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     bool window_user::clear_redraw_store() {
@@ -321,12 +321,12 @@ namespace eka2l1::epoc {
             white_map = fade_param->white_map;
         }
 
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void window_user::set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd) {
         flags |= flags_enable_alpha;
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void window_user::free(service::ipc_context &context, ws_cmd &cmd) {
@@ -348,14 +348,14 @@ namespace eka2l1::epoc {
             driver_win_id = 0;
         }
 
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
 
         client->delete_object(cmd.obj_handle);
     }
 
     void window_user::store_draw_commands(service::ipc_context &ctx, ws_cmd &cmd) {
         LOG_TRACE("Store draw command stubbed");
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void window_user::alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd) {
@@ -363,14 +363,14 @@ namespace eka2l1::epoc {
 
         if ((alloc_params->max_points >= 100) || (alloc_params->max_points == 0)) {
             LOG_ERROR("Suspicious alloc pointer buffer max points detected ({})", alloc_params->max_points);
-            context.set_request_status(epoc::error_argument);
+            context.complete(epoc::error_argument);
 
             return;
         }
 
         // Resize the buffers
         max_pointer_buffer_ = alloc_params->max_points;
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -393,28 +393,28 @@ namespace eka2l1::epoc {
 
         // Fall through to get system display mode
         case EWsWinOpGetDisplayMode: {
-            ctx.set_request_status(static_cast<int>(display_mode()));
+            ctx.complete(static_cast<int>(display_mode()));
             break;
         }
 
         case EWsWinOpSetExtent: {
             ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
             set_extent(extent->pos, extent->size);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
         }
 
         case EWsWinOpSetPos: {
             eka2l1::vec2 *pos_to_set = reinterpret_cast<eka2l1::vec2 *>(cmd.data_ptr);
             pos = *pos_to_set;
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
         }
 
         // Get window size.
         case EWsWinOpSize: {
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, size);
-            ctx.set_request_status(epoc::error_none);
+            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, size);
+            ctx.complete(epoc::error_none);
             break;
         }
 
@@ -422,7 +422,7 @@ namespace eka2l1::epoc {
             const bool op = *reinterpret_cast<bool *>(cmd.data_ptr);
 
             set_visible(op);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -434,7 +434,7 @@ namespace eka2l1::epoc {
 
         case EWsWinOpSetShadowHeight: {
             shadow_height = *reinterpret_cast<int *>(cmd.data_ptr);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -446,7 +446,7 @@ namespace eka2l1::epoc {
                 flags |= flags_shadow_disable;
             }
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -454,13 +454,13 @@ namespace eka2l1::epoc {
         case EWsWinOpSetBackgroundColor: {
             if (cmd.header.cmd_len == 0) {
                 clear_color = -1;
-                ctx.set_request_status(epoc::error_none);
+                ctx.complete(epoc::error_none);
 
                 break;
             }
 
             clear_color = *reinterpret_cast<int *>(cmd.data_ptr);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
         }
 
@@ -469,7 +469,7 @@ namespace eka2l1::epoc {
             filter &= ~filter_info->mask;
             filter |= filter_info->flags;
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
         }
 
@@ -480,7 +480,7 @@ namespace eka2l1::epoc {
                 flags |= flags_allow_pointer_grab;
             }
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
         }
 
@@ -491,7 +491,7 @@ namespace eka2l1::epoc {
             // Redraw happens with all of the screen
             // NOTE: This causes error. Let's not touch them.
             //[[fallthrough]];
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
         }
 
@@ -506,7 +506,7 @@ namespace eka2l1::epoc {
                 redraw_responded = false;
             }
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -528,7 +528,7 @@ namespace eka2l1::epoc {
                 redraw_responded = false;
             }
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
 
             break;
         }
@@ -555,7 +555,7 @@ namespace eka2l1::epoc {
             break;
 
         case EWsWinOpGetIsFaded:
-            ctx.set_request_status(static_cast<bool>(flags & flags_faded));
+            ctx.complete(static_cast<bool>(flags & flags_faded));
             break;
 
         case EWsWinOpSetTransparencyAlphaChannel:
@@ -567,28 +567,28 @@ namespace eka2l1::epoc {
             break;
 
         case EWsWinOpWindowGroupId:
-            ctx.set_request_status(get_group()->id);
+            ctx.complete(get_group()->id);
             break;
 
         case EWsWinOpPosition:
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, pos);
-            ctx.set_request_status(epoc::error_none);
+            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, pos);
+            ctx.complete(epoc::error_none);
             break;
 
         case EWsWinOpAbsPosition:
-            ctx.write_arg_pkg<eka2l1::vec2>(reply_slot, absolute_position());
-            ctx.set_request_status(epoc::error_none);
+            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, absolute_position());
+            ctx.complete(epoc::error_none);
             break;
 
         case EWsWinOpGetInvalidRegionCount:
-            ctx.write_arg_pkg<std::uint32_t>(reply_slot, 0);
-            ctx.set_request_status(epoc::error_none);
+            ctx.write_data_to_descriptor_argument<std::uint32_t>(reply_slot, 0);
+            ctx.complete(epoc::error_none);
             break;
 
         case EWsWinOpSetShape:
             LOG_WARN("SetShape stubbed");
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
 
         case EWsWinOpStoreDrawCommands:

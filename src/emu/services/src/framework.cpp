@@ -53,7 +53,7 @@ namespace eka2l1::service {
 
     void typical_server::disconnect(service::ipc_context &ctx) {
         sessions.erase(ctx.msg->msg_session->unique_id());
-        ctx.set_request_status(0);
+        ctx.complete(0);
     }
 
     std::optional<epoc::version> typical_server::get_version(service::ipc_context *ctx) {

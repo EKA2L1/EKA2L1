@@ -31,23 +31,23 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_status(service::ipc_context *ctx) {
-        ctx->write_arg_pkg<epoc::etel_phone_status>(0, phone_->status_);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<epoc::etel_phone_status>(0, phone_->status_);
+        ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::init(service::ipc_context *ctx) {
         if (!phone_->init()) {
-            ctx->set_request_status(epoc::error_general);
+            ctx->complete(epoc::error_general);
             return;
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::enumerate_lines(service::ipc_context *ctx) {
         const std::uint32_t total_line = static_cast<std::uint32_t>(phone_->lines_.size());
-        ctx->write_arg_pkg<std::uint32_t>(0, total_line);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, total_line);
+        ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_line_info(service::ipc_context *ctx) {
@@ -56,15 +56,15 @@ namespace eka2l1 {
             epoc::etel_line_info_from_phone info_;
         };
 
-        std::optional<line_info_package> info_to_fill = ctx->get_arg_packed<line_info_package>(0);
+        std::optional<line_info_package> info_to_fill = ctx->get_argument_data_from_descriptor<line_info_package>(0);
 
         if (!info_to_fill) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
         if ((info_to_fill->index_ < 0) || (info_to_fill->index_ >= phone_->lines_.size())) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -74,8 +74,8 @@ namespace eka2l1 {
         info_to_fill->info_.caps_ = line->caps_;
         info_to_fill->info_.sts_ = line->info_.sts_;
 
-        ctx->write_arg_pkg<line_info_package>(0, info_to_fill.value());
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<line_info_package>(0, info_to_fill.value());
+        ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_indicator_caps(service::ipc_context *ctx) {
@@ -86,17 +86,17 @@ namespace eka2l1 {
             | epoc::etel_mobile_phone_indicator_network_avail
             | epoc::etel_mobile_phone_indicator_call_in_progress;
 
-        ctx->write_arg_pkg<std::uint32_t>(0, action_caps);
-        ctx->write_arg_pkg<std::uint32_t>(1, indicator_caps);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, action_caps);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(1, indicator_caps);
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_indicator(service::ipc_context *ctx) {
         LOG_TRACE("Get indicator hardcoded");
         const std::uint32_t indicator = epoc::etel_mobile_phone_indicator_network_avail;
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::dispatch(service::ipc_context *ctx) {

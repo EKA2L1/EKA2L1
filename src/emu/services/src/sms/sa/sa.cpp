@@ -44,7 +44,7 @@ namespace eka2l1 {
         //
         // emitter.POP() -- delete all
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     sa_server::sa_server(eka2l1::system *sys)

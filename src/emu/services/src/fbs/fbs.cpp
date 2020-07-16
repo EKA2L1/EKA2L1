@@ -82,10 +82,10 @@ namespace eka2l1 {
     }
 
     void fbscli::set_pixel_size_in_twips(service::ipc_context *ctx) {
-        server<fbs_server>()->set_pixel_size_in_twips({ ctx->get_arg<std::int32_t>(0).value(),
-            ctx->get_arg<std::int32_t>(1).value() });
+        server<fbs_server>()->set_pixel_size_in_twips({ ctx->get_argument_value<std::int32_t>(0).value(),
+            ctx->get_argument_value<std::int32_t>(1).value() });
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void fbscli::fetch(service::ipc_context *ctx) {
@@ -122,9 +122,9 @@ namespace eka2l1 {
 
             if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
                 connection_id_ = ctx->msg->msg_session->get_associated_handle();
-                ctx->set_request_status(epoc::error_none);
+                ctx->complete(epoc::error_none);
             } else {
-                ctx->set_request_status(connection_id_);
+                ctx->complete(connection_id_);
             }
 
             break;
@@ -208,18 +208,18 @@ namespace eka2l1 {
         }
 
         case fbs_close: {
-            if (!obj_table_.remove(*ctx->get_arg<std::uint32_t>(0))) {
-                ctx->set_request_status(epoc::error_bad_handle);
+            if (!obj_table_.remove(*ctx->get_argument_value<std::uint32_t>(0))) {
+                ctx->complete(epoc::error_bad_handle);
                 break;
             }
 
-            ctx->set_request_status(epoc::error_none);
+            ctx->complete(epoc::error_none);
             break;
         }
 
         case fbs_bitmap_bg_compress: {
             //LOG_WARN("BitmapBgCompress stubbed with 0");
-            //ctx->set_request_status(epoc::error_none);
+            //ctx->complete(epoc::error_none);
             background_compress_bitmap(ctx);
             break;
         }
@@ -287,7 +287,7 @@ namespace eka2l1 {
 
             if (!shared_chunk || !large_chunk) {
                 LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
-                context.set_request_status(epoc::error_no_memory);
+                context.complete(epoc::error_no_memory);
 
                 return;
             }
@@ -365,7 +365,7 @@ namespace eka2l1 {
 
         // Create new server client
         create_session<fbscli>(&context);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     service::uid fbs_server::init() {

@@ -40,7 +40,7 @@ namespace eka2l1 {
         }
 
         create_session<mmf_audio_server_session>(&context);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     void mmf_audio_server::init(kernel_system *kern) {
@@ -90,7 +90,7 @@ namespace eka2l1 {
     }
 
     void mmf_audio_server_session::set_devsound_info(service::ipc_context *ctx) {
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void mmf_audio_server_session::get_dev_session(service::ipc_context *ctx) {
@@ -100,7 +100,7 @@ namespace eka2l1 {
         const std::uint32_t session_handle = kern->open_handle_with_thread(ctx->msg->own_thr,
             dev_session_, kernel::owner_type::process);
 
-        ctx->set_request_status(static_cast<int>(session_handle));
+        ctx->complete(static_cast<int>(session_handle));
     }
 
     void mmf_audio_server_session::fetch(service::ipc_context *ctx) {

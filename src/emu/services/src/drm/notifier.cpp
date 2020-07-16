@@ -30,7 +30,7 @@ namespace eka2l1 {
 
     void drm_notifier_server::connect(service::ipc_context &context) {
         create_session<drm_notifier_client_session>(&context);
-        context.set_request_status(epoc::error_none);
+        context.complete(epoc::error_none);
     }
 
     drm_notifier_client_session::drm_notifier_client_session(service::typical_server *serv, const std::uint32_t ss_id,
@@ -40,6 +40,6 @@ namespace eka2l1 {
 
     void drm_notifier_client_session::fetch(service::ipc_context *ctx) {
         LOG_ERROR("Unimplemented opcode for DRMNotifier server 0x{:X}", ctx->msg->function);
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 }

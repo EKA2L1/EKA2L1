@@ -253,85 +253,85 @@ namespace eka2l1 {
     }
 
     void domainmngr_server::add_new_hierarchy(service::ipc_context &ctx) {
-        const std::uint8_t hierarchy_id = static_cast<std::uint8_t>(*ctx.get_arg<int>(0));
+        const std::uint8_t hierarchy_id = static_cast<std::uint8_t>(*ctx.get_argument_value<int>(0));
 
         if (mngr->lookup_hierarchy(hierarchy_id)) {
             // Return immediately if there is already a hierarchy.
             // Symbian doesn't set the request status to KErrAlreadyExists
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             return;
         }
 
         bool res = mngr->add_hierarchy_from_database(hierarchy_id);
 
         if (!res) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domainmngr_server::join_hierarchy(service::ipc_context &ctx) {
-        const std::uint8_t hierarchy_id = static_cast<std::uint8_t>(*ctx.get_arg<int>(0));
+        const std::uint8_t hierarchy_id = static_cast<std::uint8_t>(*ctx.get_argument_value<int>(0));
         hierarchy_ptr hier = mngr->lookup_hierarchy(hierarchy_id);
 
         if (!hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
         if (hier->control_session) {
-            ctx.set_request_status(epoc::error_in_use);
+            ctx.complete(epoc::error_in_use);
             return;
         }
 
         hier->control_session = ctx.msg->msg_session;
         control_hierarchies[ctx.msg->msg_session->unique_id()] = hier;
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domain_server::join_domain(service::ipc_context &ctx) {
-        const std::uint32_t hierarchy_id = *ctx.get_arg<int>(0);
-        const std::uint32_t domain_id = *ctx.get_arg<int>(1);
+        const std::uint32_t hierarchy_id = *ctx.get_argument_value<int>(0);
+        const std::uint32_t domain_id = *ctx.get_argument_value<int>(1);
 
         domain_ptr domain = mngr->lookup_domain(hierarchy_id, domain_id);
 
         if (!domain) {
-            ctx.set_request_status(dm_err_bad_domain_id);
+            ctx.complete(dm_err_bad_domain_id);
             return;
         }
 
         control_domains[ctx.msg->msg_session->unique_id()] = domain;
         domain->attach_session(ctx.msg->msg_session);
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domain_server::request_transition_nof(service::ipc_context &ctx) {
         const std::uint32_t sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = true;
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domain_server::cancel_transition_nof(service::ipc_context &ctx) {
         const std::uint32_t sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = false;
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domain_server::acknowledge_last_state(service::ipc_context &ctx) {
-        const int prop_val = *ctx.get_arg<int>(0);
-        const int err_set = *ctx.get_arg<int>(1);
+        const int prop_val = *ctx.get_argument_value<int>(0);
+        const int err_set = *ctx.get_argument_value<int>(1);
 
         const auto ssid = ctx.msg->msg_session->unique_id();
         domain_ptr dm = control_domains[ssid];
 
         if (!dm) {
-            ctx.set_request_status(dm_err_not_join);
+            ctx.complete(dm_err_not_join);
             return;
         }
 
@@ -347,11 +347,11 @@ namespace eka2l1 {
             dm->complete_acknowledge_with_err(err_set);
             dm->hierarchy->acknowledge_pending[ssid] = false;
 
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             return;
         }
 
-        ctx.set_request_status(epoc::error_not_found);
+        ctx.complete(epoc::error_not_found);
     }
 
     void domain_server::defer_acknowledge(service::ipc_context &ctx) {
@@ -359,12 +359,12 @@ namespace eka2l1 {
         domain_ptr dm = control_domains[ssid];
 
         if (!dm) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
         if (dm->hierarchy->deferral_statuses[ssid].second) {
-            ctx.set_request_status(epoc::error_in_use);
+            ctx.complete(epoc::error_in_use);
             return;
         }
 
@@ -375,7 +375,7 @@ namespace eka2l1 {
             return;
         }
 
-        ctx.set_request_status(epoc::error_not_ready);
+        ctx.complete(epoc::error_not_ready);
     }
 
     void domain_server::cancel_defer_acknowledge(service::ipc_context &ctx) {
@@ -383,7 +383,7 @@ namespace eka2l1 {
         domain_ptr dm = control_domains[ssid];
 
         if (!dm) {
-            ctx.set_request_status(epoc::error_not_found);
+            ctx.complete(epoc::error_not_found);
             return;
         }
 
@@ -395,7 +395,7 @@ namespace eka2l1 {
             dm->hierarchy->deferral_statuses[ssid].second = nullptr;
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     /*! \brief Set the state for the current transition domain
@@ -629,29 +629,29 @@ namespace eka2l1 {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
-        const std::uint16_t domain_id = static_cast<std::uint16_t>(*ctx.get_arg<int>(0));
+        const std::uint16_t domain_id = static_cast<std::uint16_t>(*ctx.get_argument_value<int>(0));
         const std::int32_t target_state = static_cast<int32_t>(1);
         const TDmTraverseDirection dir = static_cast<TDmTraverseDirection>(2);
 
         bool res = target_hier->transition(ctx.msg->request_sts, domain_id, target_state, dir);
 
         if (!res) {
-            ctx.set_request_status(dm_err_bad_domain_id);
+            ctx.complete(dm_err_bad_domain_id);
             return;
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domainmngr_server::request_system_transition(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
@@ -661,18 +661,18 @@ namespace eka2l1 {
         bool res = target_hier->transition(ctx.msg->request_sts, 0, target_state, dir);
 
         if (!res) {
-            ctx.set_request_status(dm_err_bad_domain_id);
+            ctx.complete(dm_err_bad_domain_id);
             return;
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domainmngr_server::cancel_transition(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
@@ -694,79 +694,79 @@ namespace eka2l1 {
             target_hier->trans_domain->observed = false;
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domainmngr_server::get_transition_fail_count(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
-        ctx.set_request_status(static_cast<int>(target_hier->transitions_fail.size()));
+        ctx.complete(static_cast<int>(target_hier->transitions_fail.size()));
     }
 
     void domainmngr_server::observer_join(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
         if (target_hier->observe_session) {
-            ctx.set_request_status(dm_err_bad_sequence);
+            ctx.complete(dm_err_bad_sequence);
             return;
         }
 
         target_hier->observe_session = ctx.msg->msg_session;
         target_hier->transitions.clear();
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domainmngr_server::observer_start(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
         if (target_hier->observe_session != ctx.msg->msg_session || target_hier->observer_started) {
-            ctx.set_request_status(dm_err_bad_sequence);
+            ctx.complete(dm_err_bad_sequence);
             return;
         }
 
         target_hier->observer_started = true;
-        target_hier->observe_type = *ctx.get_arg<int>(1);
-        const std::uint16_t dm_id = *ctx.get_arg<int>(0);
+        target_hier->observe_type = *ctx.get_argument_value<int>(1);
+        const std::uint16_t dm_id = *ctx.get_argument_value<int>(0);
 
         domain_ptr dm = target_hier->lookup(dm_id);
 
         if (!dm) {
-            ctx.set_request_status(dm_err_bad_domain_id);
+            ctx.complete(dm_err_bad_domain_id);
             return;
         }
 
         dm->set_observe(true);
         target_hier->observed_domain = dm;
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domainmngr_server::observer_cancel(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
         if (!target_hier->observe_session) {
-            ctx.set_request_status(dm_err_bad_sequence);
+            ctx.complete(dm_err_bad_sequence);
             return;
         }
 
@@ -777,19 +777,19 @@ namespace eka2l1 {
             target_hier->observed_domain = nullptr;
         }
 
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void domainmngr_server::observer_notify(service::ipc_context &ctx) {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
         if (target_hier->observe_session != ctx.msg->msg_session || !target_hier->observer_started) {
-            ctx.set_request_status(dm_err_bad_sequence);
+            ctx.complete(dm_err_bad_sequence);
             return;
         }
 
@@ -801,16 +801,16 @@ namespace eka2l1 {
         const hierarchy_ptr target_hier = control_hierarchies[ctx.msg->msg_session->unique_id()];
 
         if (!target_hier) {
-            ctx.set_request_status(dm_err_bad_hierachy_id);
+            ctx.complete(dm_err_bad_hierachy_id);
             return;
         }
 
         if (target_hier->observe_session != ctx.msg->msg_session || !target_hier->observer_started) {
-            ctx.set_request_status(dm_err_bad_sequence);
+            ctx.complete(dm_err_bad_sequence);
             return;
         }
 
-        ctx.set_request_status(target_hier->observed_children);
+        ctx.complete(target_hier->observed_children);
     }
 
     domain_server::domain_server(eka2l1::system *sys, std::shared_ptr<domain_manager> &mngr)

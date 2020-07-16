@@ -258,7 +258,7 @@ namespace eka2l1 {
         init = true;
 
         create_session<ecom_session>(&ctx);
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     ecom_session::ecom_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
@@ -370,10 +370,10 @@ namespace eka2l1 {
 
         // Use chunkyseri
 
-        if (auto uids_result = ctx->get_arg_packed<epoc::uid_type>(0)) {
+        if (auto uids_result = ctx->get_argument_data_from_descriptor<epoc::uid_type>(0)) {
             uids = std::move(uids_result.value());
         } else {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -386,10 +386,10 @@ namespace eka2l1 {
             // Let's do some reading
             std::string arg2_data;
 
-            if (auto arg2_data_op = ctx->get_arg<std::string>(1)) {
+            if (auto arg2_data_op = ctx->get_argument_value<std::string>(1)) {
                 arg2_data = std::move(arg2_data_op.value());
             } else {
-                ctx->set_request_status(epoc::error_argument);
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
@@ -398,7 +398,7 @@ namespace eka2l1 {
             } else {
                 if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
                     // TODO: This is some mysterious here.
-                    ctx->set_request_status(epoc::error_argument);
+                    ctx->complete(epoc::error_argument);
                     return;
                 }
             }
@@ -408,7 +408,7 @@ namespace eka2l1 {
         ecom_list_impl_param list_impl_param;
         bool list_param_available = false;
 
-        if (auto list_impl_param_op = ctx->get_arg_packed<ecom_list_impl_param>(2)) {
+        if (auto list_impl_param_op = ctx->get_argument_data_from_descriptor<ecom_list_impl_param>(2)) {
             list_impl_param = std::move(list_impl_param_op.value());
             list_param_available = true;
         } else {
@@ -438,7 +438,7 @@ namespace eka2l1 {
         ecom_interface_info *interface = server<ecom_server>()->get_interface(uids.uid1);
 
         if (!interface) {
-            ctx->set_request_status(epoc::ecom_error_code::ecom_no_interface_identified);
+            ctx->complete(epoc::ecom_error_code::ecom_no_interface_identified);
             return;
         }
 
@@ -509,8 +509,8 @@ namespace eka2l1 {
 
         if ((list_param_available) && (total_buffer_size_require > total_buffer_size_given)) {
             // Write new list impl param, which contains the required new size
-            ctx->write_arg_pkg<ecom_list_impl_param>(2, list_impl_param, nullptr, true);
-            ctx->set_request_status(epoc::error_overflow);
+            ctx->write_data_to_descriptor_argument<ecom_list_impl_param>(2, list_impl_param, nullptr, true);
+            ctx->complete(epoc::error_overflow);
 
             return;
         }
@@ -519,24 +519,24 @@ namespace eka2l1 {
         if (list_param_available) {
             // Write the buffer
             // This must not fail
-            if (!get_implementation_buffer(ctx->get_arg_ptr(3), total_buffer_size_given, support_extended_interface)) {
-                ctx->set_request_status(epoc::error_argument);
+            if (!get_implementation_buffer(ctx->get_descriptor_argument_ptr(3), total_buffer_size_given, support_extended_interface)) {
+                ctx->complete(epoc::error_argument);
                 return;
             }
 
-            ctx->write_arg_pkg<ecom_list_impl_param>(2, list_impl_param, nullptr, true);
+            ctx->write_data_to_descriptor_argument<ecom_list_impl_param>(2, list_impl_param, nullptr, true);
 
             // Set the buffer length. It's not I like it or anything, baka
-            ctx->set_arg_des_len(3, static_cast<const std::uint32_t>(total_buffer_size_require));
+            ctx->set_descriptor_argument_length(3, static_cast<const std::uint32_t>(total_buffer_size_require));
         }
 
         // Finally, returns
         if (!list_param_available) {
             const std::uint32_t size_require_casted = static_cast<std::uint32_t>(total_buffer_size_require);
-            ctx->write_arg_pkg<std::uint32_t>(3, size_require_casted);
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(3, size_require_casted);
         }
 
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     void ecom_session::get_implementation_creation_method(service::ipc_context *ctx) {
@@ -546,17 +546,17 @@ namespace eka2l1 {
     void ecom_session::collect_implementation_list(service::ipc_context *ctx) {
         const bool support_extended_interface = ctx->sys->get_symbian_version_use() > epocver::epoc94;
         const int slot_to_operate = is_using_old_ecom_abi() ? 3 : 0;
-        const std::size_t total_buffer_size_given = ctx->get_arg_max_size(slot_to_operate);
+        const std::size_t total_buffer_size_given = ctx->get_argument_max_data_size(slot_to_operate);
 
-        if (!get_implementation_buffer(ctx->get_arg_ptr(slot_to_operate), total_buffer_size_given, support_extended_interface)) {
-            ctx->set_request_status(epoc::error_overflow);
+        if (!get_implementation_buffer(ctx->get_descriptor_argument_ptr(slot_to_operate), total_buffer_size_given, support_extended_interface)) {
+            ctx->complete(epoc::error_overflow);
             return;
         }
 
-        ctx->set_arg_des_len(slot_to_operate, static_cast<std::uint32_t>(total_buffer_size_given));
+        ctx->set_descriptor_argument_length(slot_to_operate, static_cast<std::uint32_t>(total_buffer_size_given));
 
         collected_impls_.clear();
-        ctx->set_request_status(epoc::error_none);
+        ctx->complete(epoc::error_none);
     }
 
     ecom_server::ecom_server(eka2l1::system *sys)

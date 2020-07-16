@@ -29,14 +29,14 @@ namespace eka2l1::epoc {
     }
 
     void vibration_resource::vibrate_with_default_intensity(service::ipc_context &ctx) {
-        std::optional<std::uint32_t> duration_in_millis = ctx.get_arg<std::uint32_t>(0);
+        std::optional<std::uint32_t> duration_in_millis = ctx.get_argument_value<std::uint32_t>(0);
         if (!duration_in_millis.has_value()) {
-            ctx.set_request_status(epoc::error_argument);
+            ctx.complete(epoc::error_argument);
             return;
         }
 
         LOG_INFO("Vibrating the phone for {} milliseconds //-(o_o)-\\", duration_in_millis.value());
-        ctx.set_request_status(epoc::error_none);
+        ctx.complete(epoc::error_none);
     }
 
     void vibration_resource::execute_command(service::ipc_context &ctx) {
@@ -47,7 +47,7 @@ namespace eka2l1::epoc {
 
         default:
             LOG_ERROR("Unimplemented operation for vibration resource: ({})", ctx.msg->function);
-            ctx.set_request_status(epoc::error_none);
+            ctx.complete(epoc::error_none);
             break;
         }
     }

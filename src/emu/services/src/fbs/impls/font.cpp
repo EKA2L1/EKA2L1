@@ -386,7 +386,7 @@ namespace eka2l1 {
     }
 
     void fbscli::num_typefaces(service::ipc_context *ctx) {
-        ctx->set_request_status(static_cast<std::int32_t>(server<fbs_server>()->persistent_font_store.number_of_fonts()));
+        ctx->complete(static_cast<std::int32_t>(server<fbs_server>()->persistent_font_store.number_of_fonts()));
     }
 
     void fbscli::typeface_support(service::ipc_context *ctx) {
@@ -507,15 +507,15 @@ namespace eka2l1 {
         result_info.address_offset = font->guest_font_offset;
         result_info.server_handle = static_cast<std::int32_t>(font->id);
 
-        ctx->write_arg_pkg(1, result_info);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument(1, result_info);
+        ctx->complete(epoc::error_none);
     }
     
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
-        epoc::font_spec_v1 spec = *ctx->get_arg_packed<epoc::font_spec_v1>(0);
+        epoc::font_spec_v1 spec = *ctx->get_argument_data_from_descriptor<epoc::font_spec_v1>(0);
 
         // 1 x int of Max height - 2 x int of device size
-        std::optional<eka2l1::vec3> size_info = ctx->get_arg_packed<eka2l1::vec3>(2);
+        std::optional<eka2l1::vec3> size_info = ctx->get_argument_data_from_descriptor<eka2l1::vec3>(2);
 
         const bool is_twips = is_opcode_ruler_twips(ctx->msg->function);
 
@@ -535,7 +535,7 @@ namespace eka2l1 {
         epoc::open_font_info *ofi_suit = serv->persistent_font_store.seek_the_open_font(spec);
 
         if (!ofi_suit) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -548,7 +548,7 @@ namespace eka2l1 {
             size_info.has_value() ? size_info->x : 0);
 
         if (!bmpfont) {
-            ctx->set_request_status(epoc::error_no_memory);
+            ctx->complete(epoc::error_no_memory);
             return;
         }
 
@@ -558,11 +558,11 @@ namespace eka2l1 {
     }
 
     void fbscli::get_font_by_uid(service::ipc_context *ctx) {
-        std::optional<epoc::uid> font_uid = ctx->get_arg<epoc::uid>(2);
-        std::optional<epoc::alg_style> the_style = ctx->get_arg_packed<epoc::alg_style>(1);
+        std::optional<epoc::uid> font_uid = ctx->get_argument_value<epoc::uid>(2);
+        std::optional<epoc::alg_style> the_style = ctx->get_argument_data_from_descriptor<epoc::alg_style>(1);
 
         if (!the_style || !font_uid) {
-            ctx->set_request_status(epoc::error_argument);
+            ctx->complete(epoc::error_argument);
             return;
         }
 
@@ -570,7 +570,7 @@ namespace eka2l1 {
         epoc::open_font_info *info = serv->persistent_font_store.seek_the_font_by_uid(font_uid.value());
 
         if (!info) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -591,7 +591,7 @@ namespace eka2l1 {
         epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, the_spec, ctx->msg->own_thr->owning_process(), 0, scale_pair);
 
         if (!bmpfont) {
-            ctx->set_request_status(epoc::error_no_memory);
+            ctx->complete(epoc::error_no_memory);
             return;
         }
 
@@ -602,10 +602,10 @@ namespace eka2l1 {
 
     void fbscli::duplicate_font(service::ipc_context *ctx) {
         fbs_server *serv = server<fbs_server>();
-        fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
+        fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_argument_value<epoc::handle>(0));
 
         if (!font) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
@@ -616,27 +616,27 @@ namespace eka2l1 {
 
     void fbscli::get_twips_height(service::ipc_context *ctx) {
         fbs_server *serv = server<fbs_server>();
-        fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
+        fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_argument_value<epoc::handle>(0));
 
         if (!font) {
-            ctx->set_request_status(epoc::error_not_found);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 
         std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.scale_factor_y *
             font->of_info.metrics.max_height * FBS_TWIPS_MUL);
 
-        ctx->write_arg_pkg<std::int32_t>(1, twips_height);
-        ctx->set_request_status(epoc::error_none);
+        ctx->write_data_to_descriptor_argument<std::int32_t>(1, twips_height);
+        ctx->complete(epoc::error_none);
     }
     
     fbsfont *fbscli::get_font_object(service::ipc_context *ctx) {
         if ((ver_.build > 94) || (server<fbs_server>()->get_system()->get_symbian_version_use() >= epocver::epoc95)) {
             // Use object table handle
-            return obj_table_.get<fbsfont>(*ctx->get_arg<epoc::handle>(0));
+            return obj_table_.get<fbsfont>(*ctx->get_argument_value<epoc::handle>(0));
         }
 
-        const eka2l1::address addr = *ctx->get_arg<eka2l1::address>(0);
+        const eka2l1::address addr = *ctx->get_argument_value<eka2l1::address>(0);
         return server<fbs_server>()->look_for_font_with_address(addr);
     }
 
@@ -645,16 +645,16 @@ namespace eka2l1 {
         const fbsfont *font = get_font_object(ctx);
 
         if (!font) {
-            ctx->set_request_status(false);
+            ctx->complete(false);
             return;
         }
 
-        ctx->write_arg_pkg(1, font->of_info.face_attrib);
-        ctx->set_request_status(true);
+        ctx->write_data_to_descriptor_argument(1, font->of_info.face_attrib);
+        ctx->complete(true);
     }
 
     void fbscli::rasterize_glyph(service::ipc_context *ctx) {
-        const std::uint32_t codepoint = *ctx->get_arg<std::uint32_t>(1);
+        const std::uint32_t codepoint = *ctx->get_argument_value<std::uint32_t>(1);
         const fbsfont *font = get_font_object(ctx);
 
         process_ptr own_pr = ctx->msg->own_thr->owning_process();
@@ -683,7 +683,7 @@ namespace eka2l1 {
             // The glyph is not available. Let the client know. With code 0, we already use '?'
             // On S^3, it expect us to return false here.
             // On lower version, it expect us to return nullptr, so use 0 here is for the best.
-            ctx->set_request_status(0);
+            ctx->complete(0);
             return;
         }
 
@@ -723,7 +723,7 @@ namespace eka2l1 {
 
 #define DO_CACHE_ENTRY_FINISH_UP                                                                             \
     cache_entry->last_use = session_cache->last_use_counter++;                                               \
-    ctx->set_request_status(cache_entry_ptr);                                                                \
+    ctx->complete(cache_entry_ptr);                                                                \
     return
 
             if (serv->kern->is_eka1()) {
@@ -750,18 +750,18 @@ namespace eka2l1 {
             std::int32_t bitmap_offset;
         };
 
-        if (*ctx->get_arg<std::int32_t>(2) != 0) {
+        if (*ctx->get_argument_value<std::int32_t>(2) != 0) {
             // We can write rasterize param in there.
             rasterize_param param;
             param.metrics_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_shared_offset(&cache_entry->metric));
             param.bitmap_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_shared_offset(
                 reinterpret_cast<std::uint8_t *>(cache_entry) + cache_entry->offset));
 
-            ctx->write_arg_pkg<rasterize_param>(2, param);
+            ctx->write_data_to_descriptor_argument<rasterize_param>(2, param);
         }
 
         // Success, set to true on S^3
-        ctx->set_request_status(true);
+        ctx->complete(true);
     }
 
     void fbsfont::deref() {
