@@ -500,7 +500,10 @@ namespace eka2l1::hle {
 
     codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, kernel::process *pr, const std::u16string &path) {
         if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
-            seg->attach(pr);
+            if (seg->attach(pr)) {
+                run_codeseg_loaded_callback(seg->name(), pr, seg);
+            }
+
             return seg;
         }
 
@@ -527,11 +530,12 @@ namespace eka2l1::hle {
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
-        auto cs = kern_->create<kernel::codeseg>("codeseg", info);
+        const std::string seg_name = (path.empty()) ? "codeseg" : common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u""));
+
+        auto cs = kern_->create<kernel::codeseg>(seg_name, info);
         cs->attach(pr);
 
-        run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u"")),
-            pr, cs);
+        run_codeseg_loaded_callback(seg_name, pr, cs);
 
         struct dll_ref_table {
             std::uint16_t flags;
