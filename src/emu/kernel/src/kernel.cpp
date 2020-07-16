@@ -578,6 +578,27 @@ namespace eka2l1 {
         return reinterpret_cast<property_ptr>(prop_res->get());
     }
 
+    property_ptr kernel_system::delete_prop(int category, int key) {
+        auto prop_res = std::find_if(props_.begin(), props_.end(),
+            [=](const auto &prop_obj) {
+                property_ptr prop = reinterpret_cast<property_ptr>(prop_obj.get());
+                if (prop->first == category && prop->second == key) {
+                    return true;
+                }
+
+                return false;
+            });
+
+        if (prop_res == props_.end()) {
+            return property_ptr(nullptr);
+        }
+
+        property_ptr prop_ptr = reinterpret_cast<property_ptr>(prop_res->get());
+        props_.erase(prop_res);
+
+        return prop_ptr;
+    }
+
     kernel::handle kernel_system::mirror(kernel::thread *own_thread, kernel::handle handle, kernel::owner_type owner) {
         kernel_obj_ptr target_obj = get_kernel_obj_raw(handle);
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
