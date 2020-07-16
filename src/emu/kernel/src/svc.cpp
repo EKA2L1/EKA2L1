@@ -368,6 +368,16 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, process_priority, kernel::handle h) {
+        process_ptr pr = kern->get<kernel::process>(h);
+
+        if (!pr) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(pr->get_priority());
+    }
+
     BRIDGE_FUNC(std::int32_t, process_rename, kernel::handle h, eka2l1::ptr<des8> new_name) {
         process_ptr pr = kern->get<kernel::process>(h);
         process_ptr cur_pr = kern->crr_process();
@@ -1893,6 +1903,16 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, property_delete, std::int32_t cage, std::int32_t key) {
+        property_ptr prop = kern->delete_prop(cage, key);
+
+        if (!prop || !prop->is_defined()) {
+            return epoc::error_not_found; 
+        }
+
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(void, property_subscribe, kernel::handle h, eka2l1::ptr<epoc::request_status> sts) {
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
@@ -1919,8 +1939,8 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, property_set_int, kernel::handle h, std::int32_t val) {
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
-        if (!prop) {
-            return epoc::error_bad_handle;
+        if (!prop || !prop->get_property_object()->is_defined()) {
+            return epoc::error_not_found;
         }
 
         bool res = prop->get_property_object()->set_int(val);
@@ -1935,8 +1955,8 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, property_set_bin, kernel::handle h, std::int32_t size, eka2l1::ptr<std::uint8_t> data_ptr) {
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
-        if (!prop) {
-            return epoc::error_bad_handle;
+        if (!prop || !prop->get_property_object()->is_defined()) {
+            return epoc::error_not_found;
         }
 
         bool res = prop->get_property_object()->set(data_ptr.get(kern->crr_process()), size);
@@ -1952,8 +1972,8 @@ namespace eka2l1::epoc {
         process_ptr pr = kern->crr_process();
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
-        if (!prop) {
-            return epoc::error_bad_handle;
+        if (!prop || !prop->get_property_object()->is_defined()) {
+            return epoc::error_not_found;
         }
 
         *value_ptr.get(pr) = prop->get_property_object()->get_int();
@@ -1968,8 +1988,8 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, property_get_bin, kernel::handle h, eka2l1::ptr<std::uint8_t> buffer_ptr_guest, std::int32_t buffer_size) {
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
-        if (!prop) {
-            return epoc::error_bad_handle;
+        if (!prop || !prop->get_property_object()->is_defined()) {
+            return epoc::error_not_found;
         }
 
         std::vector<uint8_t> dat = prop->get_property_object()->get_bin();
@@ -1999,8 +2019,8 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, property_find_set_int, std::int32_t cage, std::int32_t key, std::int32_t value) {
         property_ptr prop = kern->get_prop(cage, key);
 
-        if (!prop) {
-            return epoc::error_bad_handle;
+        if (!prop || !prop->is_defined()) {
+            return epoc::error_not_found;
         }
 
         const bool res = prop->set(value);
@@ -2015,8 +2035,8 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, property_find_set_bin, std::int32_t cage, std::int32_t key, eka2l1::ptr<std::uint8_t> data_ptr, std::int32_t size) {
         property_ptr prop = kern->get_prop(cage, key);
 
-        if (!prop) {
-            return epoc::error_bad_handle;
+        if (!prop || !prop->is_defined()) {
+            return epoc::error_not_found;
         }
 
         const bool res = prop->set(data_ptr.get(kern->crr_process()), size);
@@ -2163,6 +2183,29 @@ namespace eka2l1::epoc {
         }
 
         queue->cancel_data_available(request_thread);
+    }
+
+    BRIDGE_FUNC(std::int32_t, message_queue_create, eka2l1::ptr<des8> name, const std::int32_t size,
+        const std::int32_t length, epoc::owner_type owner) {
+        if ((length <= 0) || (length > 256) | (size <= 0)) {
+            return epoc::error_argument;
+        }
+
+        process_ptr cur_pr = kern->crr_process();
+        std::string name_str;
+        if (name.ptr_address()) {
+            name_str = name.get(cur_pr)->to_std_string(cur_pr);
+        } else {
+            name_str = "";
+        }
+
+        auto queue_ptr = kern->create_and_add<kernel::msg_queue>
+            (static_cast<kernel::owner_type>(owner), name_str, size, length).first;
+        if (queue_ptr == INVALID_HANDLE) {
+            return epoc::error_no_memory;
+        }
+
+        return queue_ptr;
     }
 
     BRIDGE_FUNC(std::int32_t, message_queue_send, kernel::handle h, void *data, const std::int32_t length) {
@@ -3079,6 +3122,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x16, process_filename),
         BRIDGE_REGISTER(0x17, process_command_line),
         BRIDGE_REGISTER(0x18, process_exit_type),
+        BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
         BRIDGE_REGISTER(0x1E, process_set_flags),
         BRIDGE_REGISTER(0x1F, semaphore_wait),
@@ -3159,11 +3203,13 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xAE, process_security_info),
         BRIDGE_REGISTER(0xAF, thread_security_info),
         BRIDGE_REGISTER(0xB0, message_security_info),
+        BRIDGE_REGISTER(0xB4, message_queue_create),
         BRIDGE_REGISTER(0xB5, message_queue_send),
         BRIDGE_REGISTER(0xB6, message_queue_receive),
         BRIDGE_REGISTER(0xB9, message_queue_notify_data_available),
         BRIDGE_REGISTER(0xBA, message_queue_cancel_notify_available),
         BRIDGE_REGISTER(0xBC, property_define),
+        BRIDGE_REGISTER(0xBD, property_delete),
         BRIDGE_REGISTER(0xBE, property_attach),
         BRIDGE_REGISTER(0xBF, property_subscribe),
         BRIDGE_REGISTER(0xC0, property_cancel),
@@ -3222,6 +3268,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x16, process_filename),
         BRIDGE_REGISTER(0x17, process_command_line),
         BRIDGE_REGISTER(0x18, process_exit_type),
+        BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
         BRIDGE_REGISTER(0x1E, process_set_flags),
         BRIDGE_REGISTER(0x1F, semaphore_wait),
@@ -3286,6 +3333,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9E, library_attached),
         BRIDGE_REGISTER(0x9F, static_call_list),
         BRIDGE_REGISTER(0xA2, last_thread_handle),
+        BRIDGE_REGISTER(0xA3, thread_rendezvous),
         BRIDGE_REGISTER(0xA4, process_rendezvous),
         BRIDGE_REGISTER(0xA5, message_get_des_length),
         BRIDGE_REGISTER(0xA6, message_get_des_max_length),
@@ -3294,16 +3342,19 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xAD, process_security_info),
         BRIDGE_REGISTER(0xAE, thread_security_info),
         BRIDGE_REGISTER(0xAF, message_security_info),
-        BRIDGE_REGISTER(0xB8, message_queue_notify_data_available),
+        BRIDGE_REGISTER(0xB3, message_queue_create),
         BRIDGE_REGISTER(0xB4, message_queue_send),
         BRIDGE_REGISTER(0xB5, message_queue_receive),
+        BRIDGE_REGISTER(0xB8, message_queue_notify_data_available),
         BRIDGE_REGISTER(0xB9, message_queue_cancel_notify_available),
         BRIDGE_REGISTER(0xBB, property_define),
+        BRIDGE_REGISTER(0xBC, property_delete),
         BRIDGE_REGISTER(0xBD, property_attach),
         BRIDGE_REGISTER(0xBE, property_subscribe),
         BRIDGE_REGISTER(0xBF, property_cancel),
         BRIDGE_REGISTER(0xC0, property_get_int),
         BRIDGE_REGISTER(0xC1, property_get_bin),
+        BRIDGE_REGISTER(0xC3, property_set_bin),
         BRIDGE_REGISTER(0xC4, property_find_get_int),
         BRIDGE_REGISTER(0xC5, property_find_get_bin),
         BRIDGE_REGISTER(0xC6, property_find_set_int),
