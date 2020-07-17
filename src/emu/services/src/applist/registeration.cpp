@@ -22,6 +22,10 @@
 #include <common/benchmark.h>
 #include <common/buffer.h>
 #include <common/path.h>
+#include <common/uid.h>
+
+#include <utils/cardinality.h>
+#include <utils/consts.h>
 
 namespace eka2l1 {
     static bool read_str16_aligned(common::ro_stream *stream, std::u16string &dat) {
@@ -169,6 +173,83 @@ namespace eka2l1 {
         reg.icon_file_path = cap;
 
         // TODO: Read view list and localised group name
+
+        return true;
+    }
+    
+    bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
+        const language lang) {
+        // Read the first 3 UIDS
+        epoc::uid_type uids;
+        if (stream->read(&uids, sizeof(epoc::uid_type)) != sizeof(epoc::uid_type)) {
+            return false;
+        }
+
+        static constexpr std::uint32_t DIRECT_STORE_UID = 0x10000037;
+        static constexpr std::uint32_t AIF_UID_1 = 0x1000006A;
+        static constexpr std::uint32_t AIF_UID_2 = 0x10003A38;
+
+        if ((uids[0] != DIRECT_STORE_UID) || ((uids[1] != AIF_UID_1) && (uids[1] != AIF_UID_2))) {
+            return false;
+        }
+
+        // Read the checksum. TODO: crc32
+        std::uint32_t uid_checksum = 0;
+        if (stream->read(&uid_checksum, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+            return false;
+        }
+
+        reg.mandatory_info.uid = uids[2];
+
+        std::uint32_t header_pos = 0;
+        
+        if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+            return false;
+        }
+
+        stream->seek(header_pos, common::seek_where::beg);
+
+        // Read caption offset table
+        utils::cardinality count;
+        if (!count.internalize(*stream)) {
+            return false;
+        }
+
+        const std::size_t table1_pos = stream->tell();
+
+        for (std::uint16_t i = 0; i < count.length(); i++) {
+            std::uint32_t caption_string_offset = 0;
+            if (stream->read(&caption_string_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
+
+            std::uint16_t lang_code = 0;
+            if (stream->read(&lang_code, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
+                return false;
+            }
+
+            const std::size_t crr_pos = stream->tell();
+
+            if ((reg.mandatory_info.short_caption.get_length() == 0) || (static_cast<language>(lang_code) == lang)) {
+                stream->seek(caption_string_offset, common::seek_where::beg);
+                
+                std::u16string the_caption;
+                if (!epoc::read_des_string(the_caption, stream, true)) {
+                    return false;
+                }
+                
+                reg.mandatory_info.short_caption.assign(nullptr, the_caption);
+                reg.mandatory_info.long_caption.assign(nullptr, the_caption);
+
+                if (static_cast<language>(lang_code) == lang) {
+                    break;
+                }
+            }
+
+            stream->seek(crr_pos, common::seek_where::beg);
+        }
+
+        stream->seek(table1_pos + count.length() * sizeof(std::uint16_t), common::seek_where::beg);
 
         return true;
     }
