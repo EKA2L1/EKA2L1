@@ -261,8 +261,8 @@ namespace eka2l1 {
             return false;
         }
         
-        reg.mandatory_info.short_caption.assign(nullptr, cap);
-        reg.mandatory_info.long_caption.assign(nullptr, cap);
+        reg.mandatory_info.short_caption.assign(nullptr, cap.value());
+        reg.mandatory_info.long_caption.assign(nullptr, cap.value());
 
         if (!count.internalize(*stream)) {
             return false;
