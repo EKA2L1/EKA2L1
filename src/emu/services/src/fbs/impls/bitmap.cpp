@@ -296,7 +296,8 @@ namespace eka2l1 {
     };
 
     fbsbitmap::~fbsbitmap() {
-        serv_->free_bitmap(this);
+        if (serv_)
+            serv_->free_bitmap(this);
     }
 
     std::optional<std::size_t> fbs_server::load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code) {
