@@ -159,6 +159,11 @@ namespace eka2l1::service {
         void process_accepted_msg() override;
 
         void disconnect(service::ipc_context &ctx) override;
+
+        void destroy() override {
+            clear_all_sessions();
+            server::destroy();
+        }
     };
 
     class typical_session {
