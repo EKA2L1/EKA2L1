@@ -58,7 +58,6 @@ namespace eka2l1::manager {
 
     script_manager::script_manager(system *sys)
         : sys(sys)
-        , interpreter()
         , ipc_send_callback_handle(0)
         , ipc_complete_callback_handle(0)
         , thread_kill_callback_handle(0)
@@ -89,16 +88,22 @@ namespace eka2l1::manager {
         if (codeseg_loaded_callback_handle) {
             kern->get_lib_manager()->unregister_codeseg_loaded_callback(codeseg_loaded_callback_handle);
         }
+
+        modules.clear();
+        interpreter.release();
     }
 
     bool script_manager::import_module(const std::string &path) {
         const std::string name = eka2l1::filename(path);
+        if (!interpreter) {
+            interpreter = std::make_unique<pybind11::scoped_interpreter>();
+        }
 
         if (modules.find(name) == modules.end()) {
             const auto &crr_path = fs::current_path();
             const auto &pr_path = fs::absolute(fs::path(path).parent_path());
 
-            std::lock_guard<std::mutex> guard(smutex);
+            //std::lock_guard<std::mutex> guard(smutex);
 
             std::error_code sec;
             fs::current_path(pr_path, sec);

@@ -28,6 +28,7 @@
 #include <mutex>
 #include <tuple>
 #include <unordered_map>
+#include <memory>
 
 namespace eka2l1 {
     class system;
@@ -100,7 +101,7 @@ namespace eka2l1::manager {
         std::vector<panic_func> panic_functions;
         std::vector<pybind11::function> reschedule_functions;
 
-        pybind11::scoped_interpreter interpreter;
+        std::unique_ptr<pybind11::scoped_interpreter> interpreter;
 
         std::size_t ipc_send_callback_handle;
         std::size_t ipc_complete_callback_handle;
