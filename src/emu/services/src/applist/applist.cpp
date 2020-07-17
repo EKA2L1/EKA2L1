@@ -80,7 +80,17 @@ namespace eka2l1 {
             ideal_lang)) {
             return false;
         }
-        
+
+        if (reg.mandatory_info.short_caption.get_length() == 0) {
+            // Use the filename of the register file as the caption
+            const std::u16string caption_to_use = eka2l1::replace_extension(eka2l1::filename(path, true),
+                u"");
+
+            reg.mandatory_info.short_caption.assign(nullptr, caption_to_use);
+            reg.mandatory_info.long_caption.assign(nullptr, caption_to_use);
+        }
+
+        regs.push_back(std::move(reg));
         return true;
     }
 

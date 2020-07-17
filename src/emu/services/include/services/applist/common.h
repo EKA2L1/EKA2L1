@@ -19,10 +19,32 @@
 
 #pragma once
 
+#include <common/buffer.h>
 #include <utils/des.h>
 #include <cstdint>
 
 namespace eka2l1 {
+    enum data_type_priority {
+        data_type_priority_last_resort = -20000,
+        data_type_priority_low = -10000,
+        data_type_priority_normal = 0,
+        data_type_priority_high = 10000
+    };
+    
+    struct data_type {
+        std::int32_t priority_;
+        std::string type_;
+    };
+
+    struct view_data {
+        std::uint32_t uid_;
+        std::int32_t screen_mode_;
+        std::uint32_t icon_count_;
+        std::u16string caption_;
+    };
+
+    using file_ownership_list = std::vector<std::u16string>;
+
     /**
      * \brief Struct describles the high-level usage of a application for the
      *        APA framework.
@@ -68,5 +90,6 @@ namespace eka2l1 {
         int reserved;
 
         explicit apa_capability() {}
+        bool internalize(common::ro_stream &stream);
     };
 }

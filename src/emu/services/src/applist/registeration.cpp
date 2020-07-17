@@ -18,6 +18,7 @@
  */
 
 #include <services/applist/applist.h>
+#include <services/fbs/fbs.h>
 
 #include <common/benchmark.h>
 #include <common/buffer.h>
@@ -209,47 +210,168 @@ namespace eka2l1 {
 
         stream->seek(header_pos, common::seek_where::beg);
 
-        // Read caption offset table
         utils::cardinality count;
+
+        auto read_caption_list_and_find_best = [&]() -> std::u16string {
+            // Read caption offset table
+            if (!count.internalize(*stream)) {
+                return false;
+            }
+
+            const std::size_t table1_pos = stream->tell();
+            std::u16string the_caption;
+
+            for (std::uint16_t i = 0; i < count.value(); i++) {
+                std::uint32_t caption_string_offset = 0;
+                if (stream->read(&caption_string_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                    return false;
+                }
+
+                std::uint16_t lang_code = 0;
+                if (stream->read(&lang_code, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
+                    return false;
+                }
+
+                const std::size_t crr_pos = stream->tell();
+
+                if ((the_caption.empty()) || (static_cast<language>(lang_code) == lang)) {
+                    stream->seek(caption_string_offset, common::seek_where::beg);
+
+                    if (!epoc::read_des_string(the_caption, stream, true)) {
+                        return false;
+                    }
+
+                    if (static_cast<language>(lang_code) == lang) {
+                        break;
+                    }
+                }
+
+                stream->seek(crr_pos, common::seek_where::beg);
+            }
+
+            stream->seek(table1_pos + count.value() * (sizeof(std::uint32_t) + sizeof(std::uint16_t)),
+                common::seek_where::beg);
+
+            return the_caption;
+        };
+
+        const std::u16string cap = read_caption_list_and_find_best();
+        reg.mandatory_info.short_caption.assign(nullptr, cap);
+        reg.mandatory_info.long_caption.assign(nullptr, cap);
+
         if (!count.internalize(*stream)) {
             return false;
         }
 
-        const std::size_t table1_pos = stream->tell();
+        // Skip the icon section, we will visit in in separate section
+        stream->seek(count.value() * (sizeof(std::uint32_t) + sizeof(std::uint16_t)), common::seek_where::cur);
 
-        for (std::uint16_t i = 0; i < count.length(); i++) {
-            std::uint32_t caption_string_offset = 0;
-            if (stream->read(&caption_string_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+        if (!reg.caps.internalize(*stream)) {
+            return false;
+        }
+
+        std::uint32_t version = 0;
+        if (stream->read(&version, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+            // Pass this on, optional
+            return true;
+        }
+
+        if (version == 0) {
+            return true;
+        }
+
+        if (!count.internalize(*stream)) {
+            return false;
+        }
+
+        for (std::uint32_t i = 0; i < count.value(); i++) {
+            std::uint32_t data_type_string_offset = 0;
+            if (stream->read(&data_type_string_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
                 return false;
             }
 
-            std::uint16_t lang_code = 0;
-            if (stream->read(&lang_code, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
+            std::int16_t priority = 0;
+            if (stream->read(&priority, sizeof(std::int16_t)) != sizeof(std::int16_t)) {
                 return false;
             }
 
             const std::size_t crr_pos = stream->tell();
+            stream->seek(data_type_string_offset, common::seek_where::beg);
 
-            if ((reg.mandatory_info.short_caption.get_length() == 0) || (static_cast<language>(lang_code) == lang)) {
-                stream->seek(caption_string_offset, common::seek_where::beg);
-                
-                std::u16string the_caption;
-                if (!epoc::read_des_string(the_caption, stream, true)) {
-                    return false;
-                }
-                
-                reg.mandatory_info.short_caption.assign(nullptr, the_caption);
-                reg.mandatory_info.long_caption.assign(nullptr, the_caption);
+            data_type the_data_type;
+            the_data_type.priority_ = priority;
 
-                if (static_cast<language>(lang_code) == lang) {
-                    break;
-                }
+            if (!epoc::read_des_string(the_data_type.type_, stream, false)) {
+                return false;
             }
+
+            stream->seek(crr_pos, common::seek_where::beg);
+            reg.data_types.push_back(the_data_type);
+        }
+
+        if (version == 1) {
+            return true;
+        }
+
+        if (!count.internalize(*stream)) {
+            return false;
+        }
+
+        for (std::uint32_t i = 0; i < count.value(); i++) {
+            std::uint32_t view_data_offset = 0;
+
+            if (stream->read(&view_data_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
+
+            const std::size_t crr_pos = stream->tell();
+            stream->seek(view_data_offset, common::seek_where::beg);
+
+            view_data the_view_data;
+            
+            if (stream->read(&the_view_data.uid_, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
+
+            if (stream->read(&the_view_data.screen_mode_, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
+
+            if (stream->read(&the_view_data.icon_count_, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
+                return false;
+            }
+
+            the_view_data.caption_ = read_caption_list_and_find_best();
 
             stream->seek(crr_pos, common::seek_where::beg);
         }
 
-        stream->seek(table1_pos + count.length() * sizeof(std::uint16_t), common::seek_where::beg);
+        if (version == 2) {
+            return true;
+        }
+
+        if (!count.internalize(*stream)) {
+            return false;
+        }
+
+        reg.ownership_list.resize(count.value());
+
+        for (std::uint32_t i = 0; i < count.value(); i++) {
+            std::uint32_t file_ownership_string_offset = 0;
+
+            if (stream->read(&file_ownership_string_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
+            
+            const std::size_t crr_pos = stream->tell();
+            stream->seek(file_ownership_string_offset, common::seek_where::beg);
+
+            if (!epoc::read_des_string(reg.ownership_list[i], stream, true)) {
+                return false;
+            }
+
+            stream->seek(crr_pos, common::seek_where::beg);
+        }
 
         return true;
     }

@@ -31,6 +31,7 @@
 
 namespace eka2l1 {
     class io_system;
+    struct fbsbitmap;
 
     namespace common {
         class ro_stream;
@@ -45,6 +46,11 @@ namespace eka2l1 {
         explicit apa_app_info() {}
     };
 
+    struct apa_app_icon {
+        std::uint16_t number_;
+        fbsbitmap *bmp_;
+    };
+
     struct apa_app_registry {
         apa_app_info mandatory_info;
         apa_capability caps;
@@ -57,6 +63,11 @@ namespace eka2l1 {
 
         std::int16_t icon_count;
         std::u16string icon_file_path;
+
+        std::vector<apa_app_icon> app_icons;
+        std::vector<data_type> data_types;
+        std::vector<view_data> view_datas;
+        file_ownership_list ownership_list;
     };
 
     /**

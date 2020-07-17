@@ -14,7 +14,6 @@ add_library(epocservs
         include/services/akn/skin/skn.h
         include/services/akn/skin/bitmap_store.h
         include/services/akn/skin/utils.h
-        include/services/applist/aif.h
         include/services/applist/applist.h
         include/services/applist/common.h
         include/services/applist/op.h
@@ -110,6 +109,7 @@ add_library(epocservs
         src/akn/skin/bitmap_store.cpp
         src/akn/skin/utils.cpp
         src/applist/applist.cpp
+        src/applist/common.cpp
         src/applist/registeration.cpp
         src/audio/keysound/context.cpp
         src/audio/keysound/keysound.cpp
