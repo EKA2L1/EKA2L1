@@ -42,7 +42,7 @@ namespace eka2l1 {
         epoc::apa_app_caption short_caption; ///< Short version of the caption
         epoc::apa_app_caption long_caption; ///< Long caption of the app
 
-        apa_app_info() {}
+        explicit apa_app_info() {}
     };
 
     struct apa_app_registry {
@@ -72,6 +72,19 @@ namespace eka2l1 {
      * \returns True on success.
      */
     bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
+
+    /**
+     * \brief Read registeration info from AIF file.
+     * 
+     * \param stream      A read-only stream contains registeration info.
+     * \param reg         APA registry struct. This will be filled with info on success.
+     * \param land_drive  The drive contains this registeration.
+     * \param lang        The language of the system.
+     * 
+     * \returns True on success.
+     */
+    bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
+        const language lang);
 
     /**
      * \brief Read localised registeration info from a stream.

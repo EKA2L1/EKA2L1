@@ -61,7 +61,26 @@ namespace eka2l1 {
 
     bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
         const language ideal_lang) {
-        LOG_TRACE("TODO");
+        symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+
+        if (!f) {
+            return false;
+        }
+
+        eka2l1::ro_file_stream std_rsc_raw(f.get());
+        if (!std_rsc_raw.valid()) {
+            LOG_ERROR("Registry file {} is invalid!", common::ucs2_to_utf8(path));
+            return false;
+        }
+
+        apa_app_registry reg;
+        reg.rsc_path = path;
+
+        if (!read_registeration_info_aif(reinterpret_cast<common::ro_stream*>(&std_rsc_raw), reg, land_drive, 
+            ideal_lang)) {
+            return false;
+        }
+        
         return true;
     }
 
