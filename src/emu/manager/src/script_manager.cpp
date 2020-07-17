@@ -103,7 +103,7 @@ namespace eka2l1::manager {
             const auto &crr_path = fs::current_path();
             const auto &pr_path = fs::absolute(fs::path(path).parent_path());
 
-            //std::lock_guard<std::mutex> guard(smutex);
+            std::lock_guard<std::mutex> guard(smutex);
 
             std::error_code sec;
             fs::current_path(pr_path, sec);
