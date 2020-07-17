@@ -212,10 +212,10 @@ namespace eka2l1 {
 
         utils::cardinality count;
 
-        auto read_caption_list_and_find_best = [&]() -> std::u16string {
+        auto read_caption_list_and_find_best = [&]() -> std::optional<std::u16string> {
             // Read caption offset table
             if (!count.internalize(*stream)) {
-                return false;
+                return std::nullopt;
             }
 
             const std::size_t table1_pos = stream->tell();
@@ -224,12 +224,12 @@ namespace eka2l1 {
             for (std::uint16_t i = 0; i < count.value(); i++) {
                 std::uint32_t caption_string_offset = 0;
                 if (stream->read(&caption_string_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
-                    return false;
+                    return std::nullopt;
                 }
 
                 std::uint16_t lang_code = 0;
                 if (stream->read(&lang_code, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
-                    return false;
+                    return std::nullopt;
                 }
 
                 const std::size_t crr_pos = stream->tell();
@@ -238,7 +238,7 @@ namespace eka2l1 {
                     stream->seek(caption_string_offset, common::seek_where::beg);
 
                     if (!epoc::read_des_string(the_caption, stream, true)) {
-                        return false;
+                        return std::nullopt;
                     }
 
                     if (static_cast<language>(lang_code) == lang) {
@@ -255,7 +255,12 @@ namespace eka2l1 {
             return the_caption;
         };
 
-        const std::u16string cap = read_caption_list_and_find_best();
+        std::optional<std::u16string> cap = read_caption_list_and_find_best();
+        
+        if (!cap) {
+            return false;
+        }
+        
         reg.mandatory_info.short_caption.assign(nullptr, cap);
         reg.mandatory_info.long_caption.assign(nullptr, cap);
 
@@ -341,8 +346,13 @@ namespace eka2l1 {
                 return false;
             }
 
-            the_view_data.caption_ = read_caption_list_and_find_best();
-
+            std::optional<std::u16string> cap_string = read_caption_list_and_find_best();
+            if (!cap_string) {
+                return false;
+            }
+            
+            the_view_data.caption_ = std::move(cap_string.value());
+            
             stream->seek(crr_pos, common::seek_where::beg);
         }
 
