@@ -2,6 +2,7 @@
 
 add_library(epocutils
         include/utils/bafl.h
+        include/utils/cardinality.h
         include/utils/cppabi.h
         include/utils/des.h
         include/utils/handle.h
@@ -12,6 +13,7 @@ add_library(epocutils
         include/utils/reqsts.h
         include/utils/sec.h
         src/bafl.cpp
+        src/cardinality.cpp
         src/cppabi.cpp
         src/des.cpp
         src/obj.cpp
