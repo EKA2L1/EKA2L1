@@ -107,21 +107,27 @@ namespace eka2l1 {
 
         rom_map_ = nullptr;
 
+#define OBJECT_CONTAINER_CLEANUP(container)             \
+    for (auto &obj: container) {                        \
+        obj->destroy();                                 \
+    }                                                   \
+    container.clear();
+
         // Delete one by one in order. Do not change the order
-        servers_.clear();
-        sessions_.clear();
-        timers_.clear();
-        mutexes_.clear();
-        semas_.clear();
-        change_notifiers_.clear();
-        props_.clear();
-        prop_refs_.clear();
-        chunks_.clear();
-        threads_.clear();
-        processes_.clear();
-        libraries_.clear();
-        codesegs_.clear();
-        message_queues_.clear();
+        OBJECT_CONTAINER_CLEANUP(sessions_);
+        OBJECT_CONTAINER_CLEANUP(servers_);
+        OBJECT_CONTAINER_CLEANUP(timers_);
+        OBJECT_CONTAINER_CLEANUP(mutexes_);
+        OBJECT_CONTAINER_CLEANUP(semas_);
+        OBJECT_CONTAINER_CLEANUP(change_notifiers_);
+        OBJECT_CONTAINER_CLEANUP(props_);
+        OBJECT_CONTAINER_CLEANUP(prop_refs_);
+        OBJECT_CONTAINER_CLEANUP(chunks_);
+        OBJECT_CONTAINER_CLEANUP(threads_);
+        OBJECT_CONTAINER_CLEANUP(processes_);
+        OBJECT_CONTAINER_CLEANUP(libraries_);
+        OBJECT_CONTAINER_CLEANUP(codesegs_);
+        OBJECT_CONTAINER_CLEANUP(message_queues_);
 
         btrace_inst_->close_trace_session();
     }
