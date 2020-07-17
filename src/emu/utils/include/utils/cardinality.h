@@ -33,11 +33,7 @@ namespace eka2l1::utils {
             : val_(raw_val) {
         }
 
-        std::uint32_t length() const {
-            return val_ >> 1;
-        }
-
-        std::uint32_t raw_value() const {
+        std::uint32_t value() const {
             return val_;
         }
 

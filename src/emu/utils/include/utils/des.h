@@ -324,7 +324,7 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        len = car.length();
+        len = car.value() >> 1;
 
         if (is_unicode) {
             common::unicode_expander expander;
