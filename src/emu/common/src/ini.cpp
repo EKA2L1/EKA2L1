@@ -255,7 +255,7 @@ namespace eka2l1::common {
             }
 
             if (ignore_spaces) {
-                while (counter < line.length() && line[counter] == ' ') {
+                while (counter < line.length() && (line[counter] == ' ' || line[counter] == '\t')) {
                     counter++;
                 }
             }
@@ -284,7 +284,8 @@ namespace eka2l1::common {
 
             std::size_t begin = counter;
 
-            while (counter < line.length() && line[counter] != cto_stop && line[counter] != ',') {
+            while (counter < line.length() && line[counter] != cto_stop 
+                && line[counter] != ',' && line[counter] != '\t') {
                 counter++;
             }
 
