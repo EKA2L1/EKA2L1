@@ -177,9 +177,13 @@ namespace eka2l1::kernel {
         priority = new_pri;
         
         common::double_linked_queue_element *elem = thread_list.first();
-        common::double_linked_queue_element *end = thread_list.last();
+        common::double_linked_queue_element *end = thread_list.end();
 
         do {
+            if (!elem) {
+                return;
+            }
+
             E_LOFF(elem, kernel::thread, process_thread_link)->update_priority();
             elem = elem->next;
         } while (elem != end);
