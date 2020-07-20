@@ -352,6 +352,7 @@ namespace eka2l1 {
 
         case ecom_get_implementation_creation_method:
         case ecom_get_resolved_creation_method:
+        case ecom_get_custom_resolved_creation_method:
             get_implementation_creation_method(ctx);
             break;
 
