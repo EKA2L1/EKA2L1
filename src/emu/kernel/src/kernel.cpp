@@ -838,4 +838,8 @@ namespace eka2l1 {
     std::uint64_t kernel_system::home_time() {
         return base_time_ + timing_->microseconds();
     }
+
+    void kernel_system::set_base_time(std::uint64_t time) {
+        base_time_ = time;
+    }
 }

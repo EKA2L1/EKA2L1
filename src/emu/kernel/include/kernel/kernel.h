@@ -294,6 +294,7 @@ namespace eka2l1 {
 
         std::uint32_t next_uid() const;
         std::uint64_t home_time();
+        void set_base_time(std::uint64_t time);
 
         void reschedule();
         void unschedule_wakeup();

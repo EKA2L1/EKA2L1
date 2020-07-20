@@ -519,6 +519,15 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, set_utc_time_and_offset, eka2l1::ptr<std::uint64_t> time_ptr, std::int32_t utc_offset,
+        std::uint32_t mode, std::uint32_t changes) {
+        std::uint64_t *time = time_ptr.get(kern->crr_process());
+
+        kern->set_base_time(*time - kern->get_ntimer()->microseconds());
+
+        return epoc::error_none;
+    }
+
     /********************************************/
     /* IPC */
     /*******************************************/
@@ -3151,6 +3160,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
         BRIDGE_REGISTER(0x44, time_now),
+        BRIDGE_REGISTER(0x46, set_utc_time_and_offset),
         BRIDGE_REGISTER(0x4D, session_send_sync),
         BRIDGE_REGISTER(0x4E, dll_tls),
         BRIDGE_REGISTER(0x4F, hal_function),
@@ -3294,6 +3304,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
         BRIDGE_REGISTER(0x44, time_now),
+        BRIDGE_REGISTER(0x45, set_utc_time_and_offset),
 
         BRIDGE_REGISTER(0x4B, add_event),
         BRIDGE_REGISTER(0x4C, session_send_sync),
@@ -3358,6 +3369,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC4, property_find_get_int),
         BRIDGE_REGISTER(0xC5, property_find_get_bin),
         BRIDGE_REGISTER(0xC6, property_find_set_int),
+        BRIDGE_REGISTER(0xC7, property_find_set_bin),
+        BRIDGE_REGISTER(0xCE, process_set_data_parameter),
         BRIDGE_REGISTER(0xD0, process_get_data_parameter),
         BRIDGE_REGISTER(0xD1, process_data_parameter_length),
         BRIDGE_REGISTER(0xDA, plat_sec_diagnostic),
