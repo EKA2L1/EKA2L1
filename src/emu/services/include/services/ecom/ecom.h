@@ -56,6 +56,11 @@ namespace eka2l1 {
         std::int32_t cap_check;
     };
 
+    struct ecom_resolver_params {
+        std::string match_string_;
+        std::vector<epoc::uid> extended_interfaces_;
+    };
+
     struct ecom_session : public service::typical_session {
         enum {
             FLAG_ECOM_OLD_ABI = 1 << 0
@@ -66,6 +71,7 @@ namespace eka2l1 {
 
     protected:
         void do_get_resolved_impl_creation_method(service::ipc_context *ctx);
+
         bool get_implementation_buffer(std::uint8_t *buf, const std::size_t buf_size,
             const bool support_extended_interface);
 
@@ -73,6 +79,7 @@ namespace eka2l1 {
         void get_implementation_creation_method(service::ipc_context *ctx);
         void collect_implementation_list(service::ipc_context *ctx);
 
+        bool get_resolver_params(service::ipc_context *ctx, const int index, ecom_resolver_params &params);
         bool unpack_match_str_and_extended_interfaces(std::string &data, std::string &match_str,
             std::vector<std::uint32_t> &extended_interfaces);
 
@@ -104,8 +111,7 @@ namespace eka2l1 {
         bool init{ false };
 
     protected:
-        bool register_implementation(const std::uint32_t interface_uid,
-            ecom_implementation_info_ptr &impl);
+        bool register_implementation(const std::uint32_t interface_uid, ecom_implementation_info_ptr &impl);
 
         bool load_plugins(eka2l1::io_system *io);
         bool load_and_install_plugin_from_buffer(const std::u16string &name, std::uint8_t *buf, const std::size_t size,
@@ -140,8 +146,17 @@ namespace eka2l1 {
          */
         ecom_interface_info *get_interface(const epoc::uid interface_uid);
 
+        bool get_resolved_implementations(std::vector<ecom_implementation_info_ptr> &collect_vector, const epoc::uid interface_uid, const ecom_resolver_params &params,
+            const bool generic_wildcard_match);
+        
+        bool construct_impl_creation_method(kernel::thread *requester, ecom_implementation_info *info, epoc::fs::entry &dll_entry,
+            epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp = true);
+
         bool get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid,
             const epoc::uid impl_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err,
             const bool check_cap_comp = true);
+
+        bool get_resolved_impl_dll_info(kernel::thread *requester, const epoc::uid interface_uid, const ecom_resolver_params &params, const bool match_type,
+            epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp = true);
     };
 }

@@ -161,6 +161,83 @@ namespace eka2l1 {
         return &interface_ite->second;
     }
 
+    bool ecom_server::get_resolved_implementations(std::vector<ecom_implementation_info_ptr> &collect_vector, const epoc::uid interface_uid, const ecom_resolver_params &params, const bool generic_wildcard_match) {
+        if (!init) {
+            if (!load_plugins(sys->get_io_system())) {
+                LOG_ERROR("An error happens with initialization of ECom");
+            }
+
+            init = true;
+        }
+
+         // First, lookup the interface
+        auto interface_ite = interfaces.find(interface_uid);
+
+        // We can't find the interface!!
+        if (interface_ite == interfaces.end()) {
+            return false;
+        }
+
+        // An implementation is considered to be accepted through these conditions:
+        // - All extended interfaces given are available in the implementation
+        // - Match the wildcard (if wildcard not empty)
+
+        // May want to construct a regex for name comparing if we use generic match
+        std::regex wildcard_matcher;
+
+        if (generic_wildcard_match && !params.match_string_.empty()) {
+            wildcard_matcher = std::move(std::regex(common::wildcard_to_regex_string(params.match_string_)));
+        }
+
+        // Iterate through all implementations
+        for (ecom_implementation_info_ptr &implementation : interface_ite->second.implementations) {
+            // Check the extended interfaces first
+            bool satisfy = true;
+
+            for (epoc::uid given_extended_interface : params.extended_interfaces_) {
+                if (std::lower_bound(implementation->extended_interfaces.begin(), implementation->extended_interfaces.end(),
+                        given_extended_interface)
+                    == implementation->extended_interfaces.end()) {
+                    satisfy = false;
+                    break;
+                }
+            }
+
+            // Not satisfy ? Yeah, let's just turn back
+            if (!satisfy) {
+                continue;
+            }
+
+            // Match string empty, so we should add into nice stuff now
+            if (params.match_string_.empty()) {
+                collect_vector.push_back(implementation);
+                continue;
+            }
+
+            satisfy = false;
+
+            // We still need to see if the name is match
+            // Generic match ? Wildcard check
+            if (generic_wildcard_match) {
+                if (std::regex_match(implementation->default_data, wildcard_matcher)) {
+                    satisfy = true;
+                }
+            } else {
+                if (implementation->default_data.find(params.match_string_) != std::string::npos) {
+                    satisfy = true;
+                }
+            }
+
+            // TODO(pent0): Capability supply
+
+            if (satisfy) {
+                collect_vector.push_back(implementation);
+            }
+        }
+
+        return true;
+    }
+
     bool ecom_server::load_archives(eka2l1::io_system *io) {
         std::vector<std::string> archives = get_ecom_plugin_archives(io);
 
@@ -274,6 +351,7 @@ namespace eka2l1 {
             break;
 
         case ecom_get_implementation_creation_method:
+        case ecom_get_resolved_creation_method:
             get_implementation_creation_method(ctx);
             break;
 
@@ -356,6 +434,36 @@ namespace eka2l1 {
         return true;
     }
 
+    bool ecom_session::get_resolver_params(service::ipc_context *ctx, const int index, ecom_resolver_params &params) {
+        const bool support_extended_interface = ctx->sys->get_symbian_version_use() > epocver::epoc94;
+
+        // I only want to do reading in a scope since these will be useless really soon
+        {
+            // The second IPC argument contains the name match string and extend interface list
+            // Let's do some reading
+            std::string arg2_data;
+
+            if (auto arg2_data_op = ctx->get_argument_value<std::string>(1)) {
+                arg2_data = std::move(arg2_data_op.value());
+            } else {
+                ctx->complete(epoc::error_argument);
+                return false;
+            }
+
+            if (!support_extended_interface) {
+                params.match_string_ = arg2_data;
+            } else {
+                if (!unpack_match_str_and_extended_interfaces(arg2_data, params.match_string_, params.extended_interfaces_)) {
+                    // TODO: This is some mysterious here.
+                    ctx->complete(epoc::error_argument);
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+    
     void ecom_session::list_implementations(service::ipc_context *ctx) {
         // Clear last cache
         collected_impls_.clear();
@@ -369,7 +477,6 @@ namespace eka2l1 {
         epoc::uid_type uids;
 
         // Use chunkyseri
-
         if (auto uids_result = ctx->get_argument_data_from_descriptor<epoc::uid_type>(0)) {
             uids = std::move(uids_result.value());
         } else {
@@ -377,31 +484,10 @@ namespace eka2l1 {
             return;
         }
 
-        std::string match_str;
-        std::vector<std::uint32_t> given_extended_interfaces;
-
-        // I only want to do reading in a scope since these will be useless really soon
-        {
-            // The second IPC argument contains the name match string and extend interface list
-            // Let's do some reading
-            std::string arg2_data;
-
-            if (auto arg2_data_op = ctx->get_argument_value<std::string>(1)) {
-                arg2_data = std::move(arg2_data_op.value());
-            } else {
-                ctx->complete(epoc::error_argument);
-                return;
-            }
-
-            if (!support_extended_interface) {
-                match_str = arg2_data;
-            } else {
-                if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
-                    // TODO: This is some mysterious here.
-                    ctx->complete(epoc::error_argument);
-                    return;
-                }
-            }
+        ecom_resolver_params resolve_params;
+        if (!get_resolver_params(ctx, 1, resolve_params)) {
+            // The error is already set in that function
+            return;
         }
 
         // Get list implementations extra parameters
@@ -418,86 +504,25 @@ namespace eka2l1 {
 
         set_using_old_ecom_abi(!list_param_available);
 
-        // We still gonna list all of implementation into a global buffer
-        // So that when the guest buffer is not large enough, the server buffer will still store
-        // all the implementations collected, and ECollectImplementationLists will collect it later
-        // List it first, then write!
+        // Open a serializer for measure data size
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        std::uint32_t total_impls = 0;
 
-        // An implementation is considered to be accepted through these conditions:
-        // - All extended interfaces given are available in the implementation
-        // - Match the wildcard (if wildcard not empty)
+        // Absorb padding
+        seri.absorb(total_impls);
 
-        // May want to construct a regex for name comparing if we use generic match
-        std::regex wildcard_matcher;
-
-        if (list_impl_param.match_type && !match_str.empty()) {
-            wildcard_matcher = std::move(std::regex(common::wildcard_to_regex_string(match_str)));
-        }
-
-        // First, lookup the interface
-        ecom_interface_info *interface = server<ecom_server>()->get_interface(uids.uid1);
-
-        if (!interface) {
-            ctx->complete(epoc::ecom_error_code::ecom_no_interface_identified);
+        if (!server<ecom_server>()->get_resolved_implementations(collected_impls_, uids[epoc::ecom_interface_uid_index], resolve_params, list_impl_param.match_type)) {
+            ctx->complete(epoc::ecom_no_interface_identified);
             return;
         }
 
-        // Open a serializer for measure data size
-        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-
-        {
-            std::uint32_t total_impls = 0;
-
-            // Absorb padding
-            seri.absorb(total_impls);
+        if (collected_impls_.empty()) {
+            ctx->complete(epoc::ecom_no_registration_identified);
+            return;
         }
 
-        // Iterate through all implementations
-        for (ecom_implementation_info_ptr &implementation : interface->implementations) {
-            // Check the extended interfaces first
-            bool satisfy = true;
-
-            for (std::uint32_t &given_extended_interface : given_extended_interfaces) {
-                if (std::lower_bound(implementation->extended_interfaces.begin(), implementation->extended_interfaces.end(),
-                        given_extended_interface)
-                    == implementation->extended_interfaces.end()) {
-                    satisfy = false;
-                    break;
-                }
-            }
-
-            // Not satisfy ? Yeah, let's just turn back
-            if (!satisfy) {
-                continue;
-            }
-
-            // Match string empty, so we should add into nice stuff now
-            if (match_str.empty()) {
-                collected_impls_.push_back(implementation);
-                implementation->do_state(seri, support_extended_interface, is_using_old_ecom_abi());
-                continue;
-            }
-
-            satisfy = false;
-
-            // We still need to see if the name is match
-            // Generic match ? Wildcard check
-            if (list_impl_param.match_type) {
-                if (std::regex_match(implementation->default_data, wildcard_matcher)) {
-                    satisfy = true;
-                }
-            } else {
-                if (implementation->default_data.find(match_str) != std::string::npos) {
-                    satisfy = true;
-                }
-            }
-
-            // TODO(pent0): Capability supply
-
-            if (satisfy) {
-                collected_impls_.push_back(implementation);
-                implementation->do_state(seri, support_extended_interface, is_using_old_ecom_abi());
-            }
+        for (ecom_implementation_info_ptr &implementation: collected_impls_) {
+            implementation->do_state(seri, support_extended_interface, is_using_old_ecom_abi());
         }
 
         // Compare the total buffer size we are going to write with the one guest provided
