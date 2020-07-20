@@ -82,6 +82,7 @@ add_library(epocservs
         include/services/remcon/target.h
         include/services/sensor/sensor.h
         include/services/sms/sa/sa.h
+        include/services/socket/socket.h
         include/services/ui/cap/eiksrv.h
         include/services/ui/cap/oom_app.h
         include/services/ui/cap/sgc.h
@@ -169,6 +170,7 @@ add_library(epocservs
         src/remcon/target.cpp
         src/sensor/sensor.cpp
         src/sms/sa/sa.cpp
+        src/socket/socket.cpp
         src/ui/cap/eiksrv.cpp
         src/ui/cap/oom_app.cpp
         src/ui/cap/sgc.cpp

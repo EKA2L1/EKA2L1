@@ -47,6 +47,7 @@
 #include <services/remcon/remcon.h>
 #include <services/sensor/sensor.h>
 #include <services/sms/sa/sa.h>
+#include <services/socket/socket.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/ui/eikappui.h>
 #include <services/ui/view/view.h>
@@ -195,6 +196,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, sensor_server);
             CREATE_SERVER(sys, connmonitor_server);
             CREATE_SERVER(sys, drm_notifier_server);
+            CREATE_SERVER(sys, socket_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
