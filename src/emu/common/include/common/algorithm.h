@@ -299,6 +299,9 @@ namespace eka2l1 {
         int compare_ignore_case(const utf16_str &s1,
             const utf16_str &s2);
 
+        int compare_ignore_case(const char *s1,
+            const char *s2);
+
         /**
          * \brief Trim all space duplication to only one space between words
          * 

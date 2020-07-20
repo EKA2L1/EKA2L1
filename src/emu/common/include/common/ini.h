@@ -269,6 +269,7 @@ namespace eka2l1::common {
         */
         ini_node_ptr operator[](const char *name);
         ini_node_ptr find(const char *name);
+        ini_node_ptr find_ignore_case(const char *name);
 
         ini_section *create_section(const char *name);
 

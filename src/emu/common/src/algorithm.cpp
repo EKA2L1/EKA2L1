@@ -120,6 +120,60 @@ namespace eka2l1 {
 #endif
         }
 
+        int compare_ignore_case(const char *s1,
+            const char *s2) {
+#if EKA2L1_PLATFORM(WIN32)
+            // According to the MSDN documentation, the CompareStringEx function
+            // is optimized for NORM_IGNORECASE and string lengths specified as -1.
+
+            const int result = CompareStringA(
+                LOCALE_INVARIANT,
+                NORM_IGNORECASE,
+                s1,
+                -1,
+                s2,
+                -1
+            );
+
+            switch (result) {
+            case CSTR_EQUAL:
+                return 0;
+
+            case CSTR_GREATER_THAN:
+                return 1;
+
+            case CSTR_LESS_THAN:
+                return -1;
+
+            default:
+                return -2;
+            }
+#else
+            size_t s1_size = strlen(s1);
+            size_t s2_size = strlen(s2);
+
+            for (size_t i = 0; i < common::min<std::size_t>(s1_size, s2_size); i++) {
+                const char t1 = tolower(s1[i]);
+                const char t2 = tolower(s2[i]);
+
+                if (t1 > t2) {
+                    return 1;
+                } else if (t1 < t2) {
+                    return -1;
+                }
+            }
+
+            if (s1_size == s2_size)
+                return 0;
+
+            if (s1_size > s2_size) {
+                return 1;
+            }
+
+            return -1;
+#endif
+        }
+
         std::string lowercase_string(std::string str) {
             // TODO: Better try
             std::transform(str.begin(), str.end(), str.begin(),

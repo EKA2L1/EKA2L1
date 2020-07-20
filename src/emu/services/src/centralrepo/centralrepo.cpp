@@ -144,7 +144,7 @@ namespace eka2l1 {
         // Section: platsec
 
         // Main section
-        common::ini_section *main = creini.find("Main")->get_as<common::ini_section>();
+        common::ini_section *main = creini.find_ignore_case("Main")->get_as<common::ini_section>();
         // Iterate through each ini to get entry
 
         if (!main) {

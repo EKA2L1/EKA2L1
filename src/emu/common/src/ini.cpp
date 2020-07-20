@@ -42,6 +42,16 @@ namespace eka2l1::common {
         return nullptr;
     }
 
+    ini_node_ptr ini_section::find_ignore_case(const char *name) {
+        for (auto node : nodes) {
+            if (compare_ignore_case(name, node->name()) == 0) {
+                return node;
+            }
+        }
+
+        return nullptr;
+    }
+
     ini_node_ptr ini_section::operator[](const char *name) {
         return find(name);
     }
