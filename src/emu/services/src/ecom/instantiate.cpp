@@ -30,6 +30,68 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
+    bool ecom_server::construct_impl_creation_method(kernel::thread *requester, ecom_implementation_info *impl_info, epoc::fs::entry &dll_entry, epoc::uid &dtor_key,
+        std::int32_t *err, const bool check_cap_comp) {
+        dtor_key = impl_info->uid;
+
+        std::u16string name = std::u16string(1, drive_to_char16(impl_info->drv)) + u":\\sys\\bin\\" + impl_info->original_name + u".dll";
+
+        if (!(impl_info->flags & ecom_implementation_info::FLAG_IMPL_CREATE_INFO_CACHED)) {
+            if (!epoc::get_image_info(sys->get_lib_manager(), name, impl_info->plugin_dll_info)) {
+                if (err) {
+                    *err = epoc::error_not_found;
+                }
+
+                return false;
+            }
+
+            // Cache the info
+            impl_info->flags |= ecom_implementation_info::FLAG_IMPL_CREATE_INFO_CACHED;
+        }
+
+        // Must satisfy the capabilities
+        if (check_cap_comp && !requester->owning_process()->has(*reinterpret_cast<epoc::capability_set *>(impl_info->plugin_dll_info.caps))) {
+            if (err) {
+                *err = epoc::error_permission_denied;
+            }
+
+            return false;
+        }
+
+        dll_entry.uid1 = impl_info->plugin_dll_info.uid1;
+        dll_entry.uid2 = impl_info->plugin_dll_info.uid2;
+        dll_entry.uid3 = impl_info->plugin_dll_info.uid3;
+        dll_entry.name = name;
+
+        dll_entry.modified = epoc::time{ sys->get_io_system()->get_entry_info(name)->last_write };
+
+        return true;
+    }
+
+    bool ecom_server::get_resolved_impl_dll_info(kernel::thread *requester, const epoc::uid interface_uid, const ecom_resolver_params &params, const bool match_type,
+        epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp) {
+        std::vector<ecom_implementation_info_ptr> implementations;
+
+        if (!get_resolved_implementations(implementations, interface_uid, params, match_type)) {
+            if (err) {
+                LOG_TRACE("Unable to find interface UID: 0x{:X} to get resolved implementation!", interface_uid);
+
+                *err = epoc::ecom_no_interface_identified;
+                return false;
+            }
+        }
+
+        if (implementations.empty()) {
+            if (err) {
+                *err = epoc::ecom_no_registration_identified;
+                return false;
+            }
+        }
+
+        // Take the first one
+        return construct_impl_creation_method(requester, implementations[0].get(), dll_entry, dtor_key, err, check_cap_comp);
+    }
+    
     bool ecom_server::get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid,
         const epoc::uid implementation_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp) {
         if (implementation_uid == 0) {
@@ -80,38 +142,7 @@ namespace eka2l1 {
             impl_info = *result;
         }
 
-        std::u16string name = std::u16string(1, drive_to_char16(impl_info->drv)) + u":\\sys\\bin\\" + impl_info->original_name + u".dll";
-
-        if (!(impl_info->flags & ecom_implementation_info::FLAG_IMPL_CREATE_INFO_CACHED)) {
-            if (!epoc::get_image_info(sys->get_lib_manager(), name, impl_info->plugin_dll_info)) {
-                if (err) {
-                    *err = epoc::error_not_found;
-                }
-
-                return false;
-            }
-
-            // Cache the info
-            impl_info->flags |= ecom_implementation_info::FLAG_IMPL_CREATE_INFO_CACHED;
-        }
-
-        // Must satisfy the capabilities
-        if (check_cap_comp && !requester->owning_process()->has(*reinterpret_cast<epoc::capability_set *>(impl_info->plugin_dll_info.caps))) {
-            if (err) {
-                *err = epoc::error_permission_denied;
-            }
-
-            return false;
-        }
-
-        dll_entry.uid1 = impl_info->plugin_dll_info.uid1;
-        dll_entry.uid2 = impl_info->plugin_dll_info.uid2;
-        dll_entry.uid3 = impl_info->plugin_dll_info.uid3;
-        dll_entry.name = name;
-
-        dll_entry.modified = epoc::time{ sys->get_io_system()->get_entry_info(name)->last_write };
-
-        return true;
+        return construct_impl_creation_method(requester, impl_info.get(), dll_entry, dtor_key, err, check_cap_comp);
     }
 
     void ecom_session::do_get_resolved_impl_creation_method(service::ipc_context *ctx) {
@@ -122,27 +153,15 @@ namespace eka2l1 {
             return;
         }
 
-        std::string match_str;
-        std::vector<std::uint32_t> given_extended_interfaces;
-
-        {
-            std::string arg2_data;
-
-            if (auto arg2_data_op = ctx->get_argument_value<std::string>(1)) {
-                arg2_data = std::move(arg2_data_op.value());
-            } else {
-                ctx->complete(epoc::error_argument);
-                return;
-            }
-
-            if (!unpack_match_str_and_extended_interfaces(arg2_data, match_str, given_extended_interfaces)) {
-                ctx->complete(epoc::error_argument);
-                return;
-            }
+        ecom_resolver_params resolve_params;
+        if (!get_resolver_params(ctx, 1, resolve_params)) {
+            return;
         }
 
         epoc::fs::entry lib_entry{};
         epoc::uid dtor_key{ 0 };
+
+        std::optional<std::int32_t> generic_match = ctx->get_argument_value<std::int32_t>(2);
 
         switch (ctx->msg->function) {
         case ecom_get_implementation_creation_method: {
@@ -150,6 +169,28 @@ namespace eka2l1 {
 
             if (!server<ecom_server>()->get_implementation_dll_info(ctx->msg->own_thr, 0, (*uids)[epoc::ecom_impl_uid_index],
                     lib_entry, dtor_key, &error_code, false)) {
+                ctx->complete(error_code);
+                return;
+            }
+
+            break;
+        }
+
+        case ecom_get_resolved_creation_method:
+        case ecom_get_custom_resolved_creation_method: {
+            std::int32_t error_code = 0;
+            
+            if (!generic_match) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            if (ctx->msg->function == ecom_get_custom_resolved_creation_method) {
+                LOG_WARN("Get custom resolved creation method is currently stubbed to be same as non-custom variant!");
+            }
+
+            if (!server<ecom_server>()->get_resolved_impl_dll_info(ctx->msg->own_thr, (*uids)[epoc::ecom_impl_uid_index],
+                    resolve_params, static_cast<bool>(generic_match.value()), lib_entry, dtor_key, &error_code, false)) {
                 ctx->complete(error_code);
                 return;
             }
