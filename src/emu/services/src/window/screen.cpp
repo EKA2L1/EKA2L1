@@ -236,13 +236,13 @@ namespace eka2l1::epoc {
         for (auto &callback : focus_callbacks) {
             callback.second(callback.first, focus);
         }
-
-        focus_callbacks.clear();
     }
 
-    void screen::add_focus_change_callback(void *userdata, focus_change_callback_handler handler) {
+    std::size_t screen::add_focus_change_callback(void *userdata, focus_change_callback_handler handler) {
         const std::lock_guard<std::mutex> guard(screen_mutex);
         focus_callbacks.push_back({ userdata, handler });
+
+        return focus_callbacks.size();
     }
 
     void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {

@@ -84,6 +84,7 @@ namespace eka2l1::epoc::cap {
 
     private:
         std::vector<wg_state> states_;
+        std::vector<std::size_t> focus_callback_handles_;
 
         // Properties
         service::property *orientation_prop_;

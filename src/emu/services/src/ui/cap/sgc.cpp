@@ -97,7 +97,6 @@ namespace eka2l1::epoc::cap {
 
     static void update_screen_state_from_wg_callback(void *userdata, epoc::window_group *group) {
         reinterpret_cast<sgc_server *>(userdata)->update_screen_state_from_wg(group);
-        group->scr->add_focus_change_callback(userdata, update_screen_state_from_wg_callback);
     }
 
     bool sgc_server::init(kernel_system *kern, drivers::graphics_driver *driver) {
@@ -121,7 +120,7 @@ namespace eka2l1::epoc::cap {
         epoc::screen *screens = winserv_->get_screens();
 
         while (screens) {
-            screens->add_focus_change_callback(this, update_screen_state_from_wg_callback);
+            focus_callback_handles_.push_back(screens->add_focus_change_callback(this, update_screen_state_from_wg_callback));
             screens = screens->next;
         }
 

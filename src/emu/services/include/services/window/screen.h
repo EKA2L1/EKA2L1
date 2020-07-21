@@ -90,7 +90,7 @@ namespace eka2l1::epoc {
         std::vector<focus_change_callback> focus_callbacks;
 
         void fire_focus_change_callbacks();
-        void add_focus_change_callback(void *userdata, focus_change_callback_handler handler);
+        std::size_t add_focus_change_callback(void *userdata, focus_change_callback_handler handler);
 
         void vsync(ntimer *timing);
 
