@@ -61,6 +61,11 @@ namespace eka2l1::kernel {
         }
 
         codeseg = std::move(arg_codeseg);
+
+        // Attach this codeseg to our process
+        codeseg->attach(this);
+    
+        // Get security info
         sec_info = codeseg->get_sec_info();
 
         puid = std::get<2>(codeseg->get_uids());

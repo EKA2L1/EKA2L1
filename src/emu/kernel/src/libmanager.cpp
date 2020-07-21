@@ -222,11 +222,8 @@ namespace eka2l1::hle {
 
         // Build import table so that it can patch later
         buildup_import_fixup_table(img, pr, mem, mngr, cs);
-
-        cs->attach(pr, force_code_addr ? true : false);
-
-        mngr.run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path),
-            u"")), pr, cs);
+        //mngr.run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path),
+        //    u"")), pr, cs);
 
         return cs;
     }
@@ -349,6 +346,8 @@ namespace eka2l1::hle {
                     continue;
                 }
 
+                patch_seg->attach(nullptr, true);
+
                 // Look for map file. These describes the export maps.
                 // This function will replace original ROM subroutines with route to these functions.
                 const std::string map_path = eka2l1::replace_extension(patch_dll_path, ".map");
@@ -419,10 +418,6 @@ namespace eka2l1::hle {
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
         if (auto seg = kern_->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
                 img.header.uid2, img.header.uid3)) {
-            if (seg->attach(pr)) {
-                run_codeseg_loaded_callback(seg->name(), pr, seg);
-            }
-
             return seg;
         }
 
@@ -431,10 +426,6 @@ namespace eka2l1::hle {
 
     codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, kernel::process *pr, const std::u16string &path) {
         if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
-            if (seg->attach(pr)) {
-                run_codeseg_loaded_callback(seg->name(), pr, seg);
-            }
-
             return seg;
         }
 
@@ -464,9 +455,6 @@ namespace eka2l1::hle {
         const std::string seg_name = (path.empty()) ? "codeseg" : common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u""));
 
         auto cs = kern_->create<kernel::codeseg>(seg_name, info);
-        cs->attach(pr);
-
-        run_codeseg_loaded_callback(seg_name, pr, cs);
 
         struct dll_ref_table {
             std::uint16_t flags;
