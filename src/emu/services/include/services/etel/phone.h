@@ -30,6 +30,7 @@ namespace eka2l1 {
     struct etel_phone : public etel_entity {
         epoc::etel_phone_status status_;
         epoc::etel_phone_info info_;
+        epoc::etel_phone_network_info network_info_;
 
         std::vector<etel_line *> lines_;
 

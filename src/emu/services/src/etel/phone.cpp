@@ -96,6 +96,30 @@ namespace eka2l1 {
         LOG_TRACE("Get indicator hardcoded");
         const std::uint32_t indicator = epoc::etel_mobile_phone_indicator_network_avail;
 
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, indicator);
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::get_network_registration_status(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get network registration status hardcoded");
+        const std::uint32_t network_registration_status = epoc::etel_mobile_phone_registered_on_home_network;
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, network_registration_status);
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::get_current_network(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get current network hardcoded");  
+        std::optional<epoc::etel_phone_network_info> network_info = 
+            ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
+        epoc::etel_phone_location_area *phone_location_area = 
+            (epoc::etel_phone_location_area *)ctx->get_descriptor_argument_ptr(2);
+
+        network_info->mode_ = phone_->network_info_.mode_;
+        network_info->status_ = phone_->network_info_.status_;
+        network_info->band_info_ = phone_->network_info_.band_info_;
+
+        ctx->write_data_to_descriptor_argument<epoc::etel_phone_network_info>(0, network_info.value(), nullptr, true);
         ctx->complete(epoc::error_none);
     }
 
@@ -125,6 +149,14 @@ namespace eka2l1 {
             get_indicator(ctx);
             break;
 
+        case epoc::etel_mobile_phone_get_network_registration_status:
+            get_network_registration_status(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_get_current_network:
+            get_current_network(ctx);
+            break;
+
         default:
             LOG_ERROR("Unimplemented etel phone opcode {}", ctx->msg->function);
             break;
@@ -143,6 +175,10 @@ namespace eka2l1 {
 
     bool etel_phone::init() {
         status_.detect_ = epoc::etel_modem_detect_present;
+
+        network_info_.mode_ = epoc::etel_mobile_phone_network_mode_gsm;
+        network_info_.status_ = epoc::etel_mobile_phone_network_status_available;
+        network_info_.band_info_ = epoc::etel_mobile_phone_band_unknown;
         return true;
     }
 }

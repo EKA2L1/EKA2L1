@@ -65,6 +65,8 @@ namespace eka2l1 {
         void get_line_info(service::ipc_context *ctx);
         void get_indicator_caps(service::ipc_context *ctx);
         void get_indicator(service::ipc_context *ctx);
+        void get_network_registration_status(eka2l1::service::ipc_context *ctx);
+        void get_current_network(eka2l1::service::ipc_context *ctx);
 
     public:
         explicit etel_phone_subsession(etel_session *session, etel_phone *phone);

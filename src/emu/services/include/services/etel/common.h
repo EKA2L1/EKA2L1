@@ -63,7 +63,9 @@ namespace eka2l1::epoc {
         etel_mobile_line_notify_status_change = 20024,
         etel_mobile_phone_get_indicator = 20046,
         etel_mobile_phone_get_indicators_cap = 20047,
-        etel_mobile_line_cancel_notify_status_change = 20524
+        etel_mobile_phone_get_network_registration_status = 20054, 
+        etel_mobile_line_cancel_notify_status_change = 20524,
+        etel_mobile_phone_get_current_network = 26000 
     };
 
     enum etel_network_type : std::uint32_t {
@@ -123,6 +125,63 @@ namespace eka2l1::epoc {
         etel_mobile_phone_indicator_call_in_progress = 1 << 2
     };
 
+    enum etel_mobile_phone_registration_status {
+        etel_mobile_phone_not_registered_not_searching,
+        etel_mobile_phone_registered_on_home_network,
+        etel_mobile_phone_not_registered_searching,
+        etel_mobile_phone_registration_denied,
+        etel_mobile_phone_unknown,
+        etel_mobile_phone_registered_roaming,
+        etel_mobile_phone_not_registered_but_available,
+        etel_mobile_phone_not_registered_and_not_available
+    };
+
+    enum etel_mobile_phone_network_mode {
+        etel_mobile_phone_network_mode_unknown,
+        etel_mobile_phone_network_mode_unregistered,
+        etel_mobile_phone_network_mode_gsm,
+        etel_mobile_phone_network_mode_amps
+    };
+
+    enum etel_mobile_phone_network_status {
+        etel_mobile_phone_network_status_unknown,
+        etel_mobile_phone_network_status_available,
+        etel_mobile_phone_network_status_current,
+        etel_mobile_phone_network_status_forbidden
+    };
+
+    enum etel_mobile_phone_network_band_info {
+        etel_mobile_phone_band_unknown,
+        etel_mobile_phone_800_band_a,
+        etel_mobile_phone_800_band_b,
+        etel_mobile_phone_800_band_c,
+        etel_mobile_phone_1900_band_a,
+        etel_mobile_phone_1900_band_b,
+        etel_mobile_phone_1900_band_c,
+        etel_mobile_phone_1900_band_d,
+        etel_mobile_phone_1900_band_e,
+        etel_mobile_phone_1900_band_f
+    };
+
+    enum etel_phone_network_access_ {
+        etel_phone_network_access_unknown,
+        etel_phone_network_access_gsm,
+        etel_phone_network_access_gsm_compact,
+        etel_phone_network_access_utran,
+        etel_phone_network_amps_cellular,
+        etel_phone_network_cdma_cellular_std_channel,
+        etel_phone_network_cdma_cellular_custom_channel,
+        etel_phone_network_cdma_amps_cellular,
+        etel_phone_network_cdma_pcs_using_blocks,
+        etel_phone_network_cdma_pcs_using_network_access_channels,
+        etel_phone_network_jtacs_std_channels,
+        etel_phone_network_jtacs_custom_channels,
+        etel_phone_network_2ghz_band_using_channels,
+        etel_phone_network_generic_acq_record_2000_and_95,
+        etel_phone_network_generic_acq_record_856,
+        etel_phone_network_gsm_and_utran
+    };
+
     struct etel_phone_status {
         etel_phone_mode mode_;
         etel_modem_detection detect_;
@@ -140,6 +199,32 @@ namespace eka2l1::epoc {
         etel_line_status sts_;
         epoc::name last_call_added_;
         epoc::name last_call_answering_;
+    };
+
+    struct etel_multimode_type {
+        std::int32_t extension_id_;
+    };
+
+    struct etel_phone_network_info : etel_multimode_type {
+        etel_mobile_phone_network_mode mode_;
+        etel_mobile_phone_network_status status_;
+        etel_mobile_phone_network_band_info band_info_;
+        epoc::buf_static<char16_t, 4> country_code_;
+        epoc::buf_static<char16_t, 8> cdma_sid_;
+        epoc::buf_static<char16_t, 8> analog_sid_;
+        epoc::buf_static<char16_t, 8> network_id_;
+        epoc::buf_static<char16_t, 30> display_tag_;
+        epoc::buf_static<char16_t, 10> short_name_;
+        epoc::buf_static<char16_t, 20> long_name_;
+        etel_phone_network_access_ access_;
+        bool hsdpa_available_indicator;
+        bool egprs_available_indicator;
+    };
+
+    struct etel_phone_location_area : etel_multimode_type {
+        bool area_known_;
+        std::uint32_t location_area_code_;
+        std::uint32_t cell_id_;
     };
 
     struct etel_line_info_from_phone {
