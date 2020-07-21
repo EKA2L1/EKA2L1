@@ -3340,6 +3340,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x85, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x86, change_notifier_create),
         BRIDGE_REGISTER(0x9B, wait_dll_lock),
+        BRIDGE_REGISTER(0x9C, release_dll_lock),
         BRIDGE_REGISTER(0x9D, library_attach),
         BRIDGE_REGISTER(0x9E, library_attached),
         BRIDGE_REGISTER(0x9F, static_call_list),
