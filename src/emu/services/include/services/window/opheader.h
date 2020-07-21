@@ -76,6 +76,11 @@ namespace eka2l1 {
         int length;
     };
 
+    struct ws_cmd_find_window_group_identifier_thread {
+        std::uint32_t previous_id;
+        std::uint32_t thread_id;
+    };
+
     struct ws_cmd_set_extent {
         eka2l1::vec2 pos;
         eka2l1::vec2 size;

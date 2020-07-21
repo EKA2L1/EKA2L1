@@ -414,6 +414,34 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_not_found);
     }
 
+    void window_server_client::find_window_group_id_thread(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_find_window_group_identifier_thread *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
+        epoc::window_group *group = reinterpret_cast<epoc::window_group *>(primary_device->scr->root->child);
+
+        if (find_info->previous_id) {
+            group = get_ws().get_group_from_id(find_info->previous_id);
+
+            if (!group) {
+                LOG_ERROR("Previous group sibling not found with id {}", find_info->previous_id);
+                ctx.complete(epoc::error_not_found);
+                return;
+            }
+
+            group = reinterpret_cast<epoc::window_group *>(group->sibling);
+        }
+
+        const std::uint32_t thr_id = find_info->thread_id;
+
+        for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
+            if (group->client->get_client()->unique_id() == thr_id) {
+                ctx.complete(group->id);
+                return;
+            }
+        }
+
+        ctx.complete(epoc::error_not_found);
+    }
+
     void window_server_client::set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Check errors
         if (get_ws().get_focus() && get_ws().get_focus()->client == this) {
@@ -747,6 +775,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_find_window_group_identifier: {
             find_window_group_id(ctx, cmd);
+            break;
+        }                                           
+
+        case ws_cl_op_find_window_group_identifier_thread: {
+            find_window_group_id_thread(ctx, cmd);
             break;
         }
 
