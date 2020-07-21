@@ -39,6 +39,19 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::kernel {
+    struct codeseg_dependency_info {
+        codeseg_ptr dep_;
+
+        // Bits 0 - 15:   Ordinal to fixup
+        // Bits 16 - 31:  Adjustment
+        // Bit  32 - 63:  Offset to apply fixup
+        std::vector<std::uint64_t> import_info_;
+    };
+
+    inline std::uint64_t make_import_info(const std::uint32_t offset_to_apply, const std::uint16_t ord, const std::uint16_t adj = 0) {
+        return (ord) | (adj << 16) | (static_cast<std::uint64_t>(offset_to_apply) << 32);
+    }
+
     struct codeseg_create_info {
         std::u16string full_path;
 
@@ -61,10 +74,18 @@ namespace eka2l1::kernel {
         std::uint32_t entry_point = 0;
 
         std::vector<std::uint32_t> export_table;
+        std::vector<std::uint64_t> relocation_list;
+
         epoc::security_info sinfo;
 
         std::uint8_t *constant_data;
         std::uint8_t *code_data;
+    };
+
+    enum codeseg_state {
+        codeseg_state_none,
+        codeseg_state_attaching,
+        codeseg_state_attached
     };
 
     class codeseg : public kernel::kernel_obj {
@@ -88,7 +109,7 @@ namespace eka2l1::kernel {
         std::u16string full_path;
 
         std::vector<std::uint32_t> export_table;
-        std::vector<codeseg_ptr> dependencies;
+        std::vector<codeseg_dependency_info> dependencies;
 
         epoc::security_info sinfo;
 
@@ -106,6 +127,9 @@ namespace eka2l1::kernel {
 
         std::vector<attached_info> attaches;
         std::vector<address> premade_eps;
+
+        std::vector<std::uint64_t> relocation_list;
+        codeseg_state state;
 
     public:
         /*! \brief Create a new codeseg
@@ -136,12 +160,12 @@ namespace eka2l1::kernel {
          */
         bool add_premade_entry_point(const address addr);
 
-        bool attach(kernel::process *new_foe);
+        bool attach(kernel::process *new_foe, const bool forcefully = false);
         bool detach(kernel::process *de_foe);
 
         /*! \brief Add new dependency.
         */
-        bool add_dependency(codeseg_ptr codeseg);
+        bool add_dependency(const codeseg_dependency_info &codeseg);
 
         /*! \brief Lookup for export.
         */

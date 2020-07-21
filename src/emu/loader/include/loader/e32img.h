@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <loader/common.h>
 
 #include <cstdint>
 #include <memory>
@@ -191,13 +192,6 @@ namespace eka2l1 {
             bool has_extended_header = false;
 
             std::vector<std::string> dll_names;
-        };
-
-        enum class relocation_type : uint16_t {
-            reserved = 0x0000,
-            text = 0x1000,
-            data = 0x2000,
-            inferred = 0x3000
         };
 
         /**

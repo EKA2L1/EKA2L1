@@ -45,68 +45,30 @@
 #include <cctype>
 
 namespace eka2l1::hle {
-    // Write simple relocation
-    static bool write(uint32_t *data, uint32_t sym) {
-        *data = sym;
-        return true;
-    }
-
-    static bool relocate(uint32_t *dest_ptr, loader::relocation_type type, uint32_t code_delta, uint32_t data_delta) {
-        if (type == loader::relocation_type::reserved) {
-            return true;
-        }
-
-        // What is in it ?? :))
-        uint32_t reloc_offset = *dest_ptr;
-
-        switch (type) {
-        case loader::relocation_type::text:
-            write(dest_ptr, reloc_offset + code_delta);
-            break;
-
-        case loader::relocation_type::data:
-            // This is relocation for dynamic data.
-            write(dest_ptr, reloc_offset + data_delta);
-            break;
-
-        default:
-            LOG_WARN("Relocation not properly handle: {}", (int)type);
-            break;
-        }
-
-        return true;
-    }
-
     // Given relocation entries, relocate the code and data
-    static bool relocate(std::vector<loader::e32_reloc_entry> entries,
-        std::uint8_t *dest_addr,
-        std::uint32_t code_size,
-        std::uint32_t code_delta,
-        std::uint32_t data_delta) {
-        for (uint32_t i = 0; i < entries.size(); i++) {
-            auto entry = entries[i];
+    static bool build_relocation_list(const std::vector<loader::e32_reloc_entry> &entries, std::vector<std::uint64_t> &relocation_list, const loader::relocate_section sect) {
+        for (std::uint32_t i = 0; i < entries.size(); i++) {
+            const loader::e32_reloc_entry &entry = entries[i];
 
-            for (auto &rel_info : entry.rels_info) {
+            for (const auto &rel_info : entry.rels_info) {
                 // Get the lower 12 bit for virtual_address
-                uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
-                uint8_t *dest_ptr = virtual_addr + dest_addr;
+                const std::uint32_t virtual_addr = entry.base + (rel_info & 0x0FFF);
+                loader::relocation_type rel_type = static_cast<loader::relocation_type>(rel_info & 0xF000);
 
-                loader::relocation_type rel_type = (loader::relocation_type)(rel_info & 0xF000);
-
-                // Compare with petran in case there are problems
-                // LOG_TRACE("{:x}", virtual_addr);
-
-                // This is relocation type named: Who bother to put my identity in PETRAN
-                // figure out who I am yourself
-                if (rel_type == loader::relocation_type::inferred) {
-                    rel_type = (virtual_addr < code_size) ? loader::relocation_type::text :
-                        loader::relocation_type::data;
-                }
-
-                if (!relocate(reinterpret_cast<uint32_t *>(dest_ptr), rel_type, code_delta, data_delta)) {
-                    LOG_WARN("Relocate fail at page: {}", i);
-                }
+                relocation_list.push_back((virtual_addr) | (static_cast<std::uint64_t>(rel_type) << 32) | (static_cast<std::uint64_t>(sect) << 48));
             }
+        }
+
+        return true;
+    }
+
+    static bool build_relocation_list(std::vector<std::uint64_t> &relocation_list, loader::e32img *img) {
+        if (!build_relocation_list(img->code_reloc_section.entries, relocation_list, loader::relocate_section::relocate_section_text)) {
+            return false;
+        }
+
+        if ((img->header.bss_size) || (img->header.data_size)) {
+            return build_relocation_list(img->data_reloc_section.entries, relocation_list, loader::relocate_section::relocate_section_data);
         }
 
         return true;
@@ -130,7 +92,7 @@ namespace eka2l1::hle {
         return dll_name + ".dll";
     }
 
-    static bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, std::uint32_t *iat_pointer,
+    static bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, const std::uint32_t iat_offset_from_codebase,
         kernel::process *pr, loader::e32img_import_block &import_block, uint32_t &crr_idx, codeseg_ptr &parent_codeseg) {
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
         const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
@@ -142,25 +104,26 @@ namespace eka2l1::hle {
             return false;
         }
 
-        // Add dependency for the codeseg
-        if (!parent_codeseg->add_dependency(cs)) {
-            LOG_ERROR("Fail to add a codeseg as dependency!");
-            return false;
-        }
+        kernel::codeseg_dependency_info dependency_info;
+        dependency_info.dep_ = cs;
 
         uint32_t *imdir = &(import_block.ordinals[0]);
 
-        for (uint32_t i = crr_idx, j = 0;
-             i < crr_idx + import_block.ordinals.size() && j < import_block.ordinals.size();
-             i++, j++) {
-            iat_pointer[crr_idx++] = cs->lookup(pr, import_block.ordinals[j]);
+        for (std::uint32_t j = 0; j < import_block.ordinals.size(); crr_idx++, j++) {
+            dependency_info.import_info_.push_back(kernel::make_import_info(iat_offset_from_codebase + sizeof(address) * crr_idx, import_block.ordinals[j]));
+        }
+
+        // Add dependency for the codeseg
+        if (!parent_codeseg->add_dependency(dependency_info)) {
+            LOG_ERROR("Fail to add a codeseg as dependency!");
+            return false;
         }
 
         return true;
     }
 
-    static bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, std::uint8_t *code_addr,
-        kernel::process *pr, loader::e32img_import_block &import_block, codeseg_ptr &parent_cs) {
+    static bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, std::uint8_t *code_addr, kernel::process *pr, loader::e32img_import_block &import_block,
+        codeseg_ptr &parent_cs) {
         // LOG_INFO("Fixup for: {}", import_block.dll_name);
 
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
@@ -172,76 +135,40 @@ namespace eka2l1::hle {
             LOG_TRACE("Can't find {}", dll_name8);
             return false;
         }
-
-        // Add that codeseg as our dependency
-        if (parent_cs)
-            parent_cs->add_dependency(cs);
+        
+        kernel::codeseg_dependency_info dependency_info;
+        dependency_info.dep_ = cs;
 
         std::uint32_t *imdir = &(import_block.ordinals[0]);
 
         for (uint32_t i = 0; i < import_block.ordinals.size(); i++) {
-            uint32_t off = imdir[i];
-            uint32_t *code_ptr = reinterpret_cast<std::uint32_t *>(code_addr + off);
+            const std::uint32_t off = imdir[i];
+            const std::uint32_t *code_ptr = reinterpret_cast<std::uint32_t *>(code_addr + off);
 
-            uint32_t import_inf = *code_ptr;
-            uint32_t ord = import_inf & 0xffff;
-            uint32_t adj = import_inf >> 16;
+            const std::uint32_t import_inf = *code_ptr;
+            const std::uint16_t ord = import_inf & 0xFFFF;
+            const std::uint16_t adj = static_cast<std::uint16_t>(import_inf >> 16);
 
-            uint32_t export_addr;
-            uint32_t val = 0;
-
-            if (ord > 0) {
-                export_addr = cs->lookup(pr, ord);
-                assert(export_addr != 0);
-
-                // The export address provided is already added with relative code/data
-                // delta, so add this directly to the adjustment address
-                val = export_addr + adj;
-            }
-
-            // LOG_TRACE("Writing 0x{:x} to 0x{:x}", val, me.header.code_base + off);
-            write(code_ptr, val);
+            dependency_info.import_info_.push_back(kernel::make_import_info(off, ord, adj));
         }
 
+        // Add that codeseg as our dependency
+        parent_cs->add_dependency(dependency_info);
         return true;
     }
 
-    static void relocate_e32img(loader::e32img *img, kernel::process *pr, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
-        std::uint8_t *code_base = nullptr;
-        std::uint8_t *data_base = nullptr;
-
-        uint32_t rtcode_addr = cs->get_code_run_addr(pr, &code_base);
-        uint32_t rtdata_addr = cs->get_data_run_addr(pr, &data_base);
-
-        LOG_INFO("{} runtime code: 0x{:x}", cs->name(), rtcode_addr);
-        LOG_INFO("{} runtime data: 0x{:x}", cs->name(), rtdata_addr);
-
-        img->rt_code_addr = rtcode_addr;
-
-        // Ram code address is the run time address of the code
-        uint32_t code_delta = rtcode_addr - img->header.code_base;
-        uint32_t data_delta = rtdata_addr - img->header.data_base;
-
-        relocate(img->code_reloc_section.entries, code_base, img->header.code_size, code_delta, data_delta);
-
-        // Either .data or .bss exists, we need to relocate. Sometimes .data needs relocate too!
-        if ((img->header.bss_size) || (img->header.data_size)) {
-            img->rt_data_addr = rtdata_addr;
-            relocate(img->data_reloc_section.entries, data_base, img->header.code_size, code_delta, data_delta);
-        }
-
+    static void buildup_import_fixup_table(loader::e32img *img, kernel::process *pr, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
         if (img->epoc_ver == epocver::epoc6) {
             std::uint32_t track = 0;
-            std::uint32_t *iat_replace_start = reinterpret_cast<std::uint32_t *>(code_base + img->header.text_size);
 
             for (auto &ib : img->import_section.imports) {
-                pe_fix_up_iat(mem, mngr, iat_replace_start, pr, ib, track, cs);
+                pe_fix_up_iat(mem, mngr, img->header.text_size, pr, ib, track, cs);
             }
         }
 
         if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
             for (auto &ib : img->import_section.imports) {
-                elf_fix_up_import_dir(mem, mngr, code_base, pr, ib, cs);
+                elf_fix_up_import_dir(mem, mngr, reinterpret_cast<std::uint8_t*>(&img->data[img->header.code_offset]), pr, ib, cs);
             }
         }
     }
@@ -279,6 +206,9 @@ namespace eka2l1::hle {
 
         info.constant_data = reinterpret_cast<std::uint8_t *>(&img->data[img->header.data_offset]);
         info.code_data = reinterpret_cast<std::uint8_t *>(&img->data[img->header.code_offset]);
+        
+        // Add relocation info in
+        build_relocation_list(info.relocation_list, img);
 
         if (force_code_addr != 0) {
             info.code_load_addr = force_code_addr;
@@ -290,12 +220,11 @@ namespace eka2l1::hle {
             return nullptr;
         }
 
-        cs->attach(pr);
+        // Build import table so that it can patch later
+        buildup_import_fixup_table(img, pr, mem, mngr, cs);
+        //mngr.run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path),
+        //    u"")), pr, cs);
 
-        mngr.run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path),
-            u"")), pr, cs);
-
-        relocate_e32img(img, pr, mem, mngr, cs);
         return cs;
     }
 
@@ -417,6 +346,8 @@ namespace eka2l1::hle {
                     continue;
                 }
 
+                patch_seg->attach(nullptr, true);
+
                 // Look for map file. These describes the export maps.
                 // This function will replace original ROM subroutines with route to these functions.
                 const std::string map_path = eka2l1::replace_extension(patch_dll_path, ".map");
@@ -487,11 +418,6 @@ namespace eka2l1::hle {
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
         if (auto seg = kern_->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
                 img.header.uid2, img.header.uid3)) {
-            if (seg->attach(pr)) {
-                relocate_e32img(&img, pr, kern_->get_memory_system(), *this, seg);
-                run_codeseg_loaded_callback(seg->name(), pr, seg);
-            }
-
             return seg;
         }
 
@@ -500,10 +426,6 @@ namespace eka2l1::hle {
 
     codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, kernel::process *pr, const std::u16string &path) {
         if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
-            if (seg->attach(pr)) {
-                run_codeseg_loaded_callback(seg->name(), pr, seg);
-            }
-
             return seg;
         }
 
@@ -533,9 +455,6 @@ namespace eka2l1::hle {
         const std::string seg_name = (path.empty()) ? "codeseg" : common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u""));
 
         auto cs = kern_->create<kernel::codeseg>(seg_name, info);
-        cs->attach(pr);
-
-        run_codeseg_loaded_callback(seg_name, pr, cs);
 
         struct dll_ref_table {
             std::uint16_t flags;
@@ -567,7 +486,10 @@ namespace eka2l1::hle {
 
                     if (auto ref_seg = kern_->pull_codeseg_by_ep(entry_point)) {
                         // Add ref
-                        acs->add_dependency(ref_seg);
+                        kernel::codeseg_dependency_info dep_info;
+                        dep_info.dep_ = ref_seg;
+
+                        acs->add_dependency(dep_info);
                     } else {
                         address romimg_addr = 0;
                         address ep_org = entry_point;
@@ -629,7 +551,10 @@ namespace eka2l1::hle {
                                 }
                             }
 
-                            acs->add_dependency(load_as_romimg(rimg, pr, path_to_dll));
+                            kernel::codeseg_dependency_info dep_info;
+                            dep_info.dep_ = load_as_romimg(rimg, pr, path_to_dll);
+
+                            acs->add_dependency(dep_info);
                         }
                     }
                 }
@@ -799,20 +724,6 @@ namespace eka2l1::hle {
 
         kern_->unlock();
         return true;
-    }
-
-    std::size_t lib_manager::register_codeseg_loaded_callback(codeseg_loaded_callback callback) {
-        return codeseg_loaded_callback_funcs_.add(callback);
-    }
-
-    bool lib_manager::unregister_codeseg_loaded_callback(const std::size_t handle) {
-        return codeseg_loaded_callback_funcs_.remove(handle);
-    }
-
-    void lib_manager::run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target) {
-        for (auto &codeseg_loaded_callback_func: codeseg_loaded_callback_funcs_) {
-            codeseg_loaded_callback_func(lib_name, attacher, target);
-        }
     }
 
     bool lib_manager::build_eka1_thread_bootstrap_code() {    

@@ -192,6 +192,15 @@ namespace eka2l1 {
      */
     using process_switch_callback = std::function<void(arm::core*, kernel::process*, kernel::process*)>;
 
+    /**
+     * @brief Callback invoked when a codeseg is loaded.
+     * 
+     * @param name      The name of the codeseg.
+     * @param process   The owner process of the codeseg.
+     * @param csptr     Pointer to the target codeseg.
+     */
+    using codeseg_loaded_callback = std::function<void(const std::string&, kernel::process*, codeseg_ptr)>;
+
     struct kernel_global_data {
         kernel::char_set char_set_;
 
@@ -256,6 +265,7 @@ namespace eka2l1 {
         common::identity_container<thread_kill_callback> thread_kill_callbacks_;
         common::identity_container<breakpoint_callback> breakpoint_callbacks_;
         common::identity_container<process_switch_callback> process_switch_callback_funcs_;
+        common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
 
     protected:
         void setup_new_process(process_ptr pr);
@@ -279,13 +289,16 @@ namespace eka2l1 {
         void call_ipc_complete_callbacks(ipc_msg *msg, const int complete_code);
         void call_thread_kill_callbacks(kernel::thread *target, const std::string &category, const std::int32_t reason);
         void call_process_switch_callbacks(arm::core *run_core, kernel::process *old, kernel::process *new_one);
+        void run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target);
 
         std::size_t register_ipc_send_callback(ipc_send_callback callback);
         std::size_t register_ipc_complete_callback(ipc_complete_callback callback);
         std::size_t register_thread_kill_callback(thread_kill_callback callback);
         std::size_t register_breakpoint_hit_callback(breakpoint_callback callback);
         std::size_t register_process_switch_callback(process_switch_callback callback);
-
+        std::size_t register_codeseg_loaded_callback(codeseg_loaded_callback callback);
+        
+        bool unregister_codeseg_loaded_callback(const std::size_t handle);
         bool unregister_ipc_send_callback(const std::size_t handle);
         bool unregister_ipc_complete_callback(const std::size_t handle);
         bool unregister_thread_kill_callback(const std::size_t handle);

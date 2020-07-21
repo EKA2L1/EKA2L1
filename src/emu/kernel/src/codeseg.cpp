@@ -18,14 +18,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <common/algorithm.h>
+#include <common/log.h>
 #include <kernel/kernel.h>
 #include <kernel/codeseg.h>
+#include <loader/common.h>
+
+#include <algorithm>
 
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
-        : kernel_obj(kern, name, nullptr, kernel::access_type::global_access) {
+        : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
+        , state(codeseg_state_none) {
         std::copy(info.uids, info.uids + 3, uids);
         code_base = info.code_base;
         data_base = info.data_base;
@@ -56,18 +60,28 @@ namespace eka2l1::kernel {
             code_data = std::make_unique<std::uint8_t[]>(info.code_size);
             std::copy(info.code_data, info.code_data + info.code_size, code_data.get());
         }
+
+        relocation_list = info.relocation_list;
     }
 
-    bool codeseg::attach(kernel::process *new_foe) {
-        if (new_foe == nullptr) {
+    bool codeseg::attach(kernel::process *new_foe, const bool forcefully) {
+        if (!new_foe && !forcefully) {
+            return false;
+        }
+
+        if (!forcefully) {
+            if (common::find_and_ret_if(attaches, [=](const attached_info &info) {
+                    return info.attached_process == new_foe;
+                })) {
+                return false;
+            }
+        }
+
+        if (state == codeseg_state_attaching) {
             return true;
         }
 
-        if (common::find_and_ret_if(attaches, [=](const attached_info &info) {
-                return info.attached_process == new_foe;
-            })) {
-            return false;
-        }
+        state = codeseg_state_attaching;
 
         // Allocate new data chunk for this!
         memory_system *mem = kern->get_memory_system();
@@ -76,14 +90,25 @@ namespace eka2l1::kernel {
 
         chunk_ptr code_chunk = nullptr;
         chunk_ptr dt_chunk = nullptr;
+        
+        address the_addr_of_code_run = 0;
+        address the_addr_of_data_run = 0;
+
+        std::uint8_t *code_base_ptr = nullptr;
+        std::uint8_t *data_base_ptr = nullptr;
 
         if (code_addr == 0) {
             code_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
                 kernel::chunk_access::code, kernel::chunk_attrib::none, false);
 
+            the_addr_of_code_run = code_chunk->base(new_foe).ptr_address();
+
             // Copy data
-            std::uint8_t *code_base = reinterpret_cast<std::uint8_t *>(code_chunk->host_base());
-            std::copy(code_data.get(), code_data.get() + code_size, code_base); // .code
+            code_base_ptr = reinterpret_cast<std::uint8_t *>(code_chunk->host_base());
+            std::copy(code_data.get(), code_data.get() + code_size, code_base_ptr); // .code
+        } else {
+            the_addr_of_code_run = code_addr;
+            code_base_ptr = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(code_addr));
         }
 
         if (data_size_align != 0) {
@@ -98,20 +123,99 @@ namespace eka2l1::kernel {
                 return false;
             }
 
-            std::uint8_t *dt_base = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
+            data_base_ptr = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
+            the_addr_of_data_run = dt_chunk->base(new_foe).ptr_address();
 
             if (data_addr) {
-                dt_base += (data_base - dt_chunk->base(new_foe).ptr_address());
+                data_base_ptr += (data_base - the_addr_of_data_run);
             }
 
             // Confirmed that if data is in ROM, only BSS is reserved
-            std::copy(constant_data.get(), constant_data.get() + data_size, dt_base); // .data
+            std::copy(constant_data.get(), constant_data.get() + data_size, data_base_ptr); // .data
 
             const std::uint32_t bss_off = data_size;
-            std::fill(dt_base + bss_off, dt_base + bss_off + bss_size, 0); // .bss
+            std::fill(data_base_ptr + bss_off, data_base_ptr + bss_off + bss_size, 0); // .bss
+        } else {
+            the_addr_of_data_run = data_addr;
+            data_base_ptr = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(data_addr));
         }
+        
+        LOG_INFO("{} runtime code: 0x{:x}", name(), the_addr_of_code_run);
+        LOG_INFO("{} runtime data: 0x{:x}", name(), the_addr_of_data_run);
 
         attaches.push_back({ new_foe, dt_chunk, code_chunk });
+        
+        // Attach all of its dependencies
+        if ((code_addr && forcefully) || !code_addr) {
+            for (auto &dependency: dependencies) {
+                dependency.dep_->attach(new_foe);
+
+                // Patch what imports we need
+                for (const std::uint64_t import: dependency.import_info_) {
+                    const std::uint16_t ord = (import & 0xFFFF);
+                    const std::uint16_t adj = (import >> 16) & 0xFFFF;
+                    const std::uint32_t offset_to_apply = (import >> 32) & 0xFFFFFFFF;
+
+                    const address addr = dependency.dep_->lookup(new_foe, ord);
+                    *reinterpret_cast<std::uint32_t*>(&code_base_ptr[offset_to_apply]) = addr + adj;
+                }
+            }
+        }
+
+        if (!relocation_list.empty()) {
+            const std::uint32_t code_delta = the_addr_of_code_run - code_base;
+            const std::uint32_t data_delta = the_addr_of_data_run - data_base;
+
+            // Relocate the image
+            for (const std::uint64_t relocate_info: relocation_list) {
+                const loader::relocation_type rel_type = static_cast<loader::relocation_type>((relocate_info >> 32) & 0xFFFF);
+                const loader::relocate_section sect_type = static_cast<loader::relocate_section>((relocate_info >> 48) & 0xFFFF);
+                const std::uint32_t offset_to_relocate = static_cast<std::uint32_t>(relocate_info);
+                address the_delta = 0;
+
+                switch (rel_type) {
+                case loader::relocation_type::data:
+                    the_delta = data_delta;
+                    break;
+                
+                case loader::relocation_type::text:
+                    the_delta = code_delta;
+                    break;
+
+                case loader::relocation_type::inferred:
+                    the_delta = (offset_to_relocate < text_size) ? code_delta : data_delta;
+                    break;
+
+                case loader::relocation_type::reserved:
+                    continue;
+
+                default:
+                    LOG_ERROR("Unknown code relocation type {}", static_cast<std::uint32_t>(rel_type));
+                    break;
+                }
+
+                std::uint8_t *base_ptr = nullptr;
+
+                switch (sect_type) {
+                case loader::relocate_section_text:
+                    base_ptr = code_base_ptr;
+                    break;
+
+                case loader::relocate_section_data:
+                    base_ptr = data_base_ptr;
+                    break;
+
+                default:
+                    break;
+                }
+
+                std::uint32_t *to_relocate_ptr = reinterpret_cast<std::uint32_t*>(&base_ptr[offset_to_relocate]);
+                *to_relocate_ptr = *to_relocate_ptr + the_delta;
+            }
+        }
+
+        state = codeseg_state_attached;
+        kern->run_codeseg_loaded_callback(obj_name, new_foe, this);
 
         return true;
     }
@@ -261,10 +365,9 @@ namespace eka2l1::kernel {
 
         // Iterate through dependency first
         for (auto &dependency : dependencies) {
-            if (!dependency->mark) {
-                dependency->mark = true;
-                dependency->attach(pr);
-                dependency->queries_call_list(pr, call_list);
+            if (!dependency.dep_->mark) {
+                dependency.dep_->mark = true;
+                dependency.dep_->queries_call_list(pr, call_list);
             }
         }
 
@@ -274,18 +377,18 @@ namespace eka2l1::kernel {
 
     void codeseg::unmark() {
         for (auto &dependency : dependencies) {
-            if (dependency->mark) {
-                dependency->mark = false;
-                dependency->unmark();
+            if (dependency.dep_->mark) {
+                dependency.dep_->mark = false;
+                dependency.dep_->unmark();
             }
         }
     }
 
-    bool codeseg::add_dependency(codeseg_ptr codeseg) {
+    bool codeseg::add_dependency(const codeseg_dependency_info &codeseg) {
         // Check if this codeseg is unique first (no duplicate)
         // We don't check the UID though (TODO)
         auto result = std::find_if(dependencies.begin(), dependencies.end(),
-            [&](const codeseg_ptr &codeseg_ite) { return codeseg_ite->unique_id() == codeseg->unique_id(); });
+            [&](const codeseg_dependency_info &codeseg_ite) { return codeseg_ite.dep_->unique_id() == codeseg.dep_->unique_id(); });
 
         if (result == dependencies.end()) {
             dependencies.push_back(std::move(codeseg));
