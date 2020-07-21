@@ -86,7 +86,7 @@ namespace eka2l1::manager {
             kern->unregister_process_switch_callback(process_switch_callback_handle);
 
         if (codeseg_loaded_callback_handle) {
-            kern->get_lib_manager()->unregister_codeseg_loaded_callback(codeseg_loaded_callback_handle);
+            kern->unregister_codeseg_loaded_callback(codeseg_loaded_callback_handle);
         }
 
         modules.clear();
@@ -154,7 +154,7 @@ namespace eka2l1::manager {
                 handle_process_switch(core, old_one, new_one);
             });
 
-            codeseg_loaded_callback_handle = kern->get_lib_manager()->register_codeseg_loaded_callback([this](const std::string& name, kernel::process *attacher, codeseg_ptr target) {
+            codeseg_loaded_callback_handle = kern->register_codeseg_loaded_callback([this](const std::string& name, kernel::process *attacher, codeseg_ptr target) {
                 handle_codeseg_loaded(name, attacher, target);
             });
         }

@@ -291,6 +291,12 @@ namespace eka2l1 {
         }
     }
 
+    void kernel_system::run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target) {
+        for (auto &codeseg_loaded_callback_func: codeseg_loaded_callback_funcs_) {
+            codeseg_loaded_callback_func(lib_name, attacher, target);
+        }
+    }
+
     std::size_t kernel_system::register_process_switch_callback(process_switch_callback callback) {
         return process_switch_callback_funcs_.add(callback);
     }
@@ -311,6 +317,10 @@ namespace eka2l1 {
         return breakpoint_callbacks_.add(callback);
     }
 
+    std::size_t kernel_system::register_codeseg_loaded_callback(codeseg_loaded_callback callback) {
+        return codeseg_loaded_callback_funcs_.add(callback);
+    }
+
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
         return ipc_send_callbacks_.remove(handle);
     }
@@ -329,6 +339,10 @@ namespace eka2l1 {
     
     bool kernel_system::unregister_process_switch_callback(const std::size_t handle) {
         return process_switch_callback_funcs_.remove(handle);
+    }
+
+    bool kernel_system::unregister_codeseg_loaded_callback(const std::size_t handle) {
+        return codeseg_loaded_callback_funcs_.remove(handle);
     }
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {

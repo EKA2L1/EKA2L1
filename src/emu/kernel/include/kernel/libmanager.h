@@ -73,8 +73,6 @@ namespace eka2l1 {
         using export_table = std::vector<std::uint32_t>;
         using symbols = std::vector<std::string>;
 
-        using codeseg_loaded_callback = std::function<void(const std::string&, kernel::process*, codeseg_ptr)>;
-
         /**
          * \brief Manage libraries and HLE functions.
 		 * 
@@ -93,8 +91,6 @@ namespace eka2l1 {
             kernel::chunk *bootstrap_chunk_;
             bool log_svc{ false };
 
-            common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
-
         protected:
             const std::uint8_t *entry_points_call_routine_;
             const std::uint8_t *thread_entry_routine_;
@@ -112,11 +108,6 @@ namespace eka2l1 {
             address get_thread_entry_routine_address() const;
 
             bool build_eka1_thread_bootstrap_code();
-
-            void run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target);
-
-            std::size_t register_codeseg_loaded_callback(codeseg_loaded_callback callback);
-            bool unregister_codeseg_loaded_callback(const std::size_t handle);
 
             /**
              * \brief Call a HLE system call.

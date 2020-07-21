@@ -726,20 +726,6 @@ namespace eka2l1::hle {
         return true;
     }
 
-    std::size_t lib_manager::register_codeseg_loaded_callback(codeseg_loaded_callback callback) {
-        return codeseg_loaded_callback_funcs_.add(callback);
-    }
-
-    bool lib_manager::unregister_codeseg_loaded_callback(const std::size_t handle) {
-        return codeseg_loaded_callback_funcs_.remove(handle);
-    }
-
-    void lib_manager::run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target) {
-        for (auto &codeseg_loaded_callback_func: codeseg_loaded_callback_funcs_) {
-            codeseg_loaded_callback_func(lib_name, attacher, target);
-        }
-    }
-
     bool lib_manager::build_eka1_thread_bootstrap_code() {    
         static constexpr const char *BOOTSTRAP_CHUNK_NAME = "EKA1ThreadBootstrapCodeChunk";
         bootstrap_chunk_ = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, BOOTSTRAP_CHUNK_NAME,

@@ -215,6 +215,7 @@ namespace eka2l1::kernel {
         }
 
         state = codeseg_state_attached;
+        kern->run_codeseg_loaded_callback(obj_name, new_foe, this);
 
         return true;
     }
@@ -394,7 +395,6 @@ namespace eka2l1::kernel {
             return true;
         }
 
-        LOG_TRACE("Failed");
         return false;
     }
 
