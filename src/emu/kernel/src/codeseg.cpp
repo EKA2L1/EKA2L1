@@ -28,7 +28,8 @@
 
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
-        : kernel_obj(kern, name, nullptr, kernel::access_type::global_access) {
+        : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
+        , state(codeseg_state_none) {
         std::copy(info.uids, info.uids + 3, uids);
         code_base = info.code_base;
         data_base = info.data_base;
@@ -76,6 +77,12 @@ namespace eka2l1::kernel {
             }
         }
 
+        if (state == codeseg_state_attaching) {
+            return true;
+        }
+
+        state = codeseg_state_attaching;
+
         // Allocate new data chunk for this!
         memory_system *mem = kern->get_memory_system();
         const auto data_size_align = common::align(data_addr ? bss_size : data_size + bss_size, mem->get_page_size());
@@ -102,23 +109,6 @@ namespace eka2l1::kernel {
         } else {
             the_addr_of_code_run = code_addr;
             code_base_ptr = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(code_addr));
-        }
-        
-        // Attach all of its dependencies
-        if (!forcefully || (code_addr && forcefully)) {
-            for (auto &dependency: dependencies) {
-                dependency.dep_->attach(new_foe);
-
-                // Patch what imports we need
-                for (const std::uint64_t import: dependency.import_info_) {
-                    const std::uint16_t ord = (import & 0xFFFF);
-                    const std::uint16_t adj = (import >> 16) & 0xFFFF;
-                    const std::uint32_t offset_to_apply = (import >> 32) & 0xFFFFFFFF;
-
-                    const address addr = dependency.dep_->lookup(new_foe, ord);
-                    *reinterpret_cast<std::uint32_t*>(&code_base_ptr[offset_to_apply]) = addr + adj;
-                }
-            }
         }
 
         if (data_size_align != 0) {
@@ -152,6 +142,25 @@ namespace eka2l1::kernel {
         
         LOG_INFO("{} runtime code: 0x{:x}", name(), the_addr_of_code_run);
         LOG_INFO("{} runtime data: 0x{:x}", name(), the_addr_of_data_run);
+
+        attaches.push_back({ new_foe, dt_chunk, code_chunk });
+        
+        // Attach all of its dependencies
+        if ((code_addr && forcefully) || !code_addr) {
+            for (auto &dependency: dependencies) {
+                dependency.dep_->attach(new_foe);
+
+                // Patch what imports we need
+                for (const std::uint64_t import: dependency.import_info_) {
+                    const std::uint16_t ord = (import & 0xFFFF);
+                    const std::uint16_t adj = (import >> 16) & 0xFFFF;
+                    const std::uint32_t offset_to_apply = (import >> 32) & 0xFFFFFFFF;
+
+                    const address addr = dependency.dep_->lookup(new_foe, ord);
+                    *reinterpret_cast<std::uint32_t*>(&code_base_ptr[offset_to_apply]) = addr + adj;
+                }
+            }
+        }
 
         if (!relocation_list.empty()) {
             const std::uint32_t code_delta = the_addr_of_code_run - code_base;
@@ -205,7 +214,7 @@ namespace eka2l1::kernel {
             }
         }
 
-        attaches.push_back({ new_foe, dt_chunk, code_chunk });
+        state = codeseg_state_attached;
 
         return true;
     }

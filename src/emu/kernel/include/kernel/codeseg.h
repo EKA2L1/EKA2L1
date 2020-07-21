@@ -82,6 +82,12 @@ namespace eka2l1::kernel {
         std::uint8_t *code_data;
     };
 
+    enum codeseg_state {
+        codeseg_state_none,
+        codeseg_state_attaching,
+        codeseg_state_attached
+    };
+
     class codeseg : public kernel::kernel_obj {
         std::uint32_t uids[3];
 
@@ -123,6 +129,7 @@ namespace eka2l1::kernel {
         std::vector<address> premade_eps;
 
         std::vector<std::uint64_t> relocation_list;
+        codeseg_state state;
 
     public:
         /*! \brief Create a new codeseg
