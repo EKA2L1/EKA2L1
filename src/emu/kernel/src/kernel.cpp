@@ -752,6 +752,7 @@ namespace eka2l1 {
 
     std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name) {
         find_handle handle_find_info;
+        std::regex filter(common::wildcard_to_regex_string(name));
 
         switch (type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                                       \
@@ -763,7 +764,7 @@ namespace eka2l1 {
             } else {                                                                           \
                 to_compare = rhs->name();                                                      \
             }                                                                                  \
-            return name == to_compare;                                                         \
+            return std::regex_match(to_compare, filter);                                       \
         });                                                                                    \
         if (res == obj_map.end())                                                              \
             return std::nullopt;                                                               \

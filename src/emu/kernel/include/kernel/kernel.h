@@ -42,6 +42,7 @@
 #include <common/types.h>
 #include <common/container.h>
 #include <common/hash.h>
+#include <common/wildcard.h>
 
 #include <kernel/ipc.h>
 #include <mem/ptr.h>
@@ -54,6 +55,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <regex>
 
 namespace eka2l1 {
 #define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
@@ -457,11 +459,12 @@ namespace eka2l1 {
 
         template <typename T>
         T *get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
+            std::regex filter(common::wildcard_to_regex_string(name));
             switch (obj_type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                               \
     case kernel::object_type::obj_type: {                                              \
         auto res = std::find_if(obj_map.begin(), obj_map.end(), [&](const auto &rhs) { \
-            return name == rhs->name();                                                \
+            return std::regex_match(rhs->name(), filter);                              \
         });                                                                            \
         if (res == obj_map.end())                                                      \
             return nullptr;                                                            \
