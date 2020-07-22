@@ -71,7 +71,7 @@ namespace eka2l1 {
     namespace kernel {
         class thread;
 
-        using uid = std::uint32_t;
+        using uid = std::uint64_t;
     }
 
     namespace config {
@@ -134,7 +134,7 @@ namespace eka2l1 {
 
     struct find_handle {
         int index;
-        std::uint32_t object_id;
+        std::uint64_t object_id;
         kernel_obj_ptr obj;
     };
 
@@ -253,7 +253,7 @@ namespace eka2l1 {
         kernel::object_ix kernel_handles_;
         int realtime_ipc_signal_evt_;
 
-        mutable std::atomic<uint32_t> uid_counter_;
+        mutable std::atomic<kernel::uid> uid_counter_;
         void *rom_map_;
         std::uint64_t base_time_;
 
@@ -308,7 +308,7 @@ namespace eka2l1 {
         bool unregister_breakpoint_hit_callback(const std::size_t handle);
         bool unregister_process_switch_callback(const std::size_t handle);
 
-        std::uint32_t next_uid() const;
+        kernel::uid next_uid() const;
         std::uint64_t home_time();
         void set_base_time(std::uint64_t time);
 
@@ -451,6 +451,11 @@ namespace eka2l1 {
         template <typename T>
         T *get(const kernel::handle handle) {
             T *result = reinterpret_cast<T *>(get_kernel_obj_raw(handle));
+
+            if (!result) {
+                return nullptr;
+            }
+
             if (result->get_object_type() != get_object_type<T>()) {
                 return nullptr;
             }

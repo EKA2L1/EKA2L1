@@ -32,7 +32,7 @@ namespace eka2l1 {
 
     namespace kernel {
         using handle = std::uint32_t;
-        using uid = std::uint32_t;
+        using uid = std::uint64_t;
 
         class process;
 

@@ -49,7 +49,7 @@ namespace eka2l1 {
 
     namespace kernel {
         enum class thread_state;
-        using uid = std::uint32_t;
+        using uid = std::uint64_t;
 
         class thread_scheduler {
             kernel::thread *readys[64];

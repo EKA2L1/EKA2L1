@@ -714,7 +714,7 @@ namespace eka2l1 {
         return h;
     }
 
-    uint32_t kernel_system::next_uid() const {
+    kernel::uid kernel_system::next_uid() const {
         ++uid_counter_;
         return uid_counter_.load();
     }
