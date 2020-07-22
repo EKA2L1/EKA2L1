@@ -180,7 +180,7 @@ namespace eka2l1 {
         bool install_thread_should_stop = false;
 
         std::size_t cur_pref_tab{ 0 };
-        std::atomic<std::uint32_t> debug_thread_id;
+        std::atomic<std::uint64_t> debug_thread_id;
 
         imgui_logger *logger;
 
