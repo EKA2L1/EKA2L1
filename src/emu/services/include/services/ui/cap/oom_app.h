@@ -127,7 +127,7 @@ namespace eka2l1 {
         void redraw_status_pane(service::ipc_context *ctx);
 
     public:
-        explicit oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version, const bool is_old_layout = false);
+        explicit oom_ui_app_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version, const bool is_old_layout = false);
         void fetch(service::ipc_context *ctx) override;
     };
 

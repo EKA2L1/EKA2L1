@@ -84,7 +84,7 @@ namespace eka2l1 {
             std::vector<std::uint32_t> &extended_interfaces);
 
     public:
-        explicit ecom_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver);
+        explicit ecom_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
         void fetch(service::ipc_context *ctx) override;
 
         const bool is_using_old_ecom_abi() const {

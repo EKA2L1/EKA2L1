@@ -39,7 +39,7 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
-    mmf_dev_server_session::mmf_dev_server_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version)
+    mmf_dev_server_session::mmf_dev_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version)
         , volume_(0)
         , samples_played_(0)

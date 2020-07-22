@@ -52,7 +52,7 @@ namespace eka2l1 {
         } state_;
 
     public:
-        explicit keysound_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
+        explicit keysound_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version);
         ~keysound_session() override {}
 
         std::size_t play_sounds(std::int16_t *buffer, std::size_t frames);

@@ -47,7 +47,7 @@ namespace eka2l1 {
         return sgc.get();
     }
 
-    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version, const bool is_old_layout)
+    oom_ui_app_session::oom_ui_app_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version, const bool is_old_layout)
         : service::typical_session(svr, client_ss_uid, client_version)
         , blank_count(0)
         , old_layout(is_old_layout) {

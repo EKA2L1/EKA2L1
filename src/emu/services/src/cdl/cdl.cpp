@@ -26,7 +26,7 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
-    cdl_server_session::cdl_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+    cdl_server_session::cdl_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version) {
     }
 

@@ -37,7 +37,7 @@ namespace eka2l1 {
 
     class akn_icon_server_session : public service::typical_session {
     public:
-        explicit akn_icon_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version version);
+        explicit akn_icon_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version version);
         ~akn_icon_server_session() override {}
 
         void fetch(service::ipc_context *ctx) override;

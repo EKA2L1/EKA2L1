@@ -60,7 +60,7 @@ namespace eka2l1 {
         return sys->get_kernel_system();
     }
 
-    mmf_audio_server_session::mmf_audio_server_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version)
+    mmf_audio_server_session::mmf_audio_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version)
         , dev_session_(nullptr) {
         mmf_audio_server *aud_serv = server<mmf_audio_server>();

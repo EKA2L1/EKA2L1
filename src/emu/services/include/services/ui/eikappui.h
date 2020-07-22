@@ -60,7 +60,7 @@ namespace eka2l1 {
         oom_ui_app_session *cap_session_;
 
     public:
-        explicit eikappui_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
+        explicit eikappui_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version);
         ~eikappui_session() override;
 
         void fetch(service::ipc_context *ctx) override;

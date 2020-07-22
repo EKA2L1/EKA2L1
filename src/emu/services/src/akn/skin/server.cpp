@@ -35,7 +35,7 @@
 #include <manager/manager.h>
 
 namespace eka2l1 {
-    akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+    akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version) {
     }
 

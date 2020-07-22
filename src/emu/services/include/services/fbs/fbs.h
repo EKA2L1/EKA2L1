@@ -180,7 +180,7 @@ namespace eka2l1 {
 
         void write_font_handle(service::ipc_context *ctx, fbsfont *font);
 
-        explicit fbscli(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
+        explicit fbscli(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         ~fbscli();
 

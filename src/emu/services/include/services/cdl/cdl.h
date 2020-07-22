@@ -37,7 +37,7 @@ namespace eka2l1 {
         void do_get_plugin_drive(service::ipc_context *ctx);
 
     public:
-        explicit cdl_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
+        explicit cdl_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;
     };
 

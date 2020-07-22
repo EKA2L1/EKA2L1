@@ -52,7 +52,7 @@ namespace eka2l1 {
         void open_from_subsession(service::ipc_context *ctx);
         void close_sub(service::ipc_context *ctx);
 
-        explicit etel_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_ver);
+        explicit etel_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_ver);
         void fetch(service::ipc_context *ctx) override;
     };
 

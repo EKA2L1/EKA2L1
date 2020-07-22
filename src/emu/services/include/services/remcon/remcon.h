@@ -40,7 +40,7 @@ namespace eka2l1 {
         std::unique_ptr<epoc::remcon::base_detail_session> detail_;
 
     public:
-        explicit remcon_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver);
+        explicit remcon_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
 
         void fetch(service::ipc_context *ctx) override;
         void set_player_type(service::ipc_context *ctx);

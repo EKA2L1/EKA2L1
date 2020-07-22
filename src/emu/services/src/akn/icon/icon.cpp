@@ -28,7 +28,7 @@
 #include <vfs/vfs.h>
 
 namespace eka2l1 {
-    akn_icon_server_session::akn_icon_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version version)
+    akn_icon_server_session::akn_icon_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version version)
         : service::typical_session(svr, client_ss_uid, version) {
     }
 

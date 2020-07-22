@@ -33,7 +33,7 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
-    connmonitor_client_session::connmonitor_client_session(service::typical_server *serv, const std::uint32_t ss_id,
+    connmonitor_client_session::connmonitor_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
     }

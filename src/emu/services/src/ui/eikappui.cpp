@@ -88,7 +88,7 @@ namespace eka2l1 {
         ctx.complete(0);
     }
 
-    eikappui_session::eikappui_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version)
+    eikappui_session::eikappui_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version)
         , cap_session_(nullptr) {
         eikappui_server *parent = reinterpret_cast<eikappui_server*>(svr);

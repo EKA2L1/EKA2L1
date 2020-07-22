@@ -34,7 +34,7 @@
 #include <unordered_map>
 
 namespace eka2l1::kernel {
-    using uid = std::uint32_t;
+    using uid = std::uint64_t;
 }
 
 namespace eka2l1::service {

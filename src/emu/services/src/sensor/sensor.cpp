@@ -58,7 +58,7 @@ namespace eka2l1 {
         channel_infos.push_back(info);
     }
 
-    sensor_client_session::sensor_client_session(service::typical_server *serv, const std::uint32_t ss_id,
+    sensor_client_session::sensor_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
     }

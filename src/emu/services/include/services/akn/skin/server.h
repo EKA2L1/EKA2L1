@@ -68,7 +68,7 @@ namespace eka2l1 {
         void store_scalable_gfx(service::ipc_context *ctx);
 
     public:
-        explicit akn_skin_server_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_version);
+        explicit akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version);
         ~akn_skin_server_session() override {}
 
         void fetch(service::ipc_context *ctx) override;

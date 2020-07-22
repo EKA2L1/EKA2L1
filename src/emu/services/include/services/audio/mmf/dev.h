@@ -62,7 +62,7 @@ namespace eka2l1 {
         void do_get_buffer_to_be_filled();
 
     public:
-        explicit mmf_dev_server_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version);
+        explicit mmf_dev_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
 

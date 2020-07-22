@@ -111,7 +111,7 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
-    msv_client_session::msv_client_session(service::typical_server *serv, const std::uint32_t ss_id,
+    msv_client_session::msv_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version)
         , flags_(0)

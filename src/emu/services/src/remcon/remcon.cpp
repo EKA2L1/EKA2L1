@@ -33,7 +33,7 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
-    remcon_session::remcon_session(service::typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
+    remcon_session::remcon_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(svr, client_ss_uid, client_ver)
         , type_(epoc::remcon::client_type_undefined) {
     }

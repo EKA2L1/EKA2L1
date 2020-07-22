@@ -27,7 +27,7 @@
 #include <manager/manager.h>
 
 namespace eka2l1 {
-    hwrm_session::hwrm_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_version)
+    hwrm_session::hwrm_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version) {
     }
 

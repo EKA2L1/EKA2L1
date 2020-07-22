@@ -52,7 +52,7 @@ namespace eka2l1 {
     };
 
     struct connmonitor_client_session : public service::typical_session {
-        explicit connmonitor_client_session(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
+        explicit connmonitor_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
         void get_connection_count(eka2l1::service::ipc_context *ctx);

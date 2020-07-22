@@ -101,7 +101,7 @@ namespace eka2l1 {
         bool listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *sel);
 
     public:
-        explicit msv_client_session(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
+        explicit msv_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
         void notify_session_event(service::ipc_context *ctx);

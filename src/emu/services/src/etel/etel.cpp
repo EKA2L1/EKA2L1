@@ -35,7 +35,7 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
-    etel_session::etel_session(service::typical_server *serv, service::uid client_ss_uid, epoc::version client_ver)
+    etel_session::etel_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(serv, client_ss_uid, client_ver) {
     }
 

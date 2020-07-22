@@ -87,7 +87,7 @@ namespace eka2l1::service {
 
     class typical_server : public server {
         friend class typical_session;
-        std::unordered_map<service::uid, typical_session_ptr> sessions;
+        std::unordered_map<kernel::uid, typical_session_ptr> sessions;
 
     protected:
         normal_object_container obj_con;
@@ -106,7 +106,7 @@ namespace eka2l1::service {
         }
 
         template <typename T>
-        T *session(const service::uid session_uid) {
+        T *session(const kernel::uid session_uid) {
             if (sessions.find(session_uid) == sessions.end()) {
                 return nullptr;
             }
@@ -115,7 +115,7 @@ namespace eka2l1::service {
         }
 
         template <typename T, typename... Args>
-        T *create_session_impl(const service::uid suid, const epoc::version client_version, Args... arguments) {
+        T *create_session_impl(const kernel::uid suid, const epoc::version client_version, Args... arguments) {
             sessions.emplace(suid, std::make_unique<T>(reinterpret_cast<typical_server *>(this), suid, client_version, arguments...));
 
             auto &target_session = sessions[suid];
@@ -124,7 +124,7 @@ namespace eka2l1::service {
 
         template <typename T, typename... Args>
         T *create_session(service::ipc_context *ctx, Args... arguments) {
-            const service::uid suid = ctx->msg->msg_session->unique_id();
+            const kernel::uid suid = ctx->msg->msg_session->unique_id();
             std::optional<epoc::version> client_version = get_version(ctx);
 
             if (!client_version) {
@@ -134,7 +134,7 @@ namespace eka2l1::service {
             return create_session_impl<T>(suid, client_version.value(), arguments...);
         }
 
-        bool remove_session(const service::uid sid) {
+        bool remove_session(const kernel::uid sid) {
             const auto ite = sessions.find(sid);
 
             if (ite == sessions.end()) {
@@ -170,12 +170,12 @@ namespace eka2l1::service {
         typical_server *svr_;
 
     protected:
-        service::uid client_ss_uid_;
+        kernel::uid client_ss_uid_;
         epoc::object_table obj_table_;
         epoc::version ver_;
 
     public:
-        explicit typical_session(typical_server *svr, service::uid client_ss_uid, epoc::version client_ver)
+        explicit typical_session(typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
             : svr_(svr)
             , client_ss_uid_(client_ss_uid)
             , ver_(client_ver) {
