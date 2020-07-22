@@ -591,6 +591,12 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
+        case EWsWinOpSetColor:
+            LOG_WARN("SetColor stubbed");
+
+            ctx.complete(epoc::error_none);
+            break;
+
         case EWsWinOpStoreDrawCommands:
             store_draw_commands(ctx, cmd);
             break;

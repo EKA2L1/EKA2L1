@@ -144,8 +144,23 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
 
             break;
+        }                   
+
+        case EWsWinOpName: {
+            ctx.write_arg(0, name);
+            ctx.complete(epoc::error_none);
+            break;
         }
 
+        case EWsWinOpEnableGroupListChangeEvents:
+        case EWsWinOpDisableScreenChangeEvents:
+        case EWsWinOpDisableModifierChangedEvents:
+        case EWsWinOpDisableErrorMessages:
+        case EWsWinOpDisableOnEvents:
+        case EWsWinOpDisableGroupChangeEvents:
+        case EWsWinOpDisableKeyClick:
+        case EWsWinOpDisableFocusChangeEvents:
+        case EWsWinOpDisableGroupListChangeEvents:
         case EWsWinOpEnableOnEvents: {
             LOG_TRACE("Currently not support lock/unlock event for window server");
             ctx.complete(epoc::error_none);
