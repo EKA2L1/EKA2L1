@@ -62,7 +62,7 @@ namespace eka2l1::kernel {
     std::uint32_t object_ix::make_handle(size_t index) {
         std::uint32_t handle = 0;
 
-        handle |= next_instance << 16;
+        handle |= static_cast<std::uint32_t>(next_instance & 0xFFFF) << 16;
         handle |= index;
 
         if (owner == handle_array_owner::thread) {
