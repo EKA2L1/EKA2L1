@@ -228,6 +228,19 @@ namespace eka2l1::epoc {
             return 0;
         }
 
+        int mode(int *a1, int *a2, const std::uint16_t device_num) {
+            assert(winserv_);
+
+            epoc::screen *scr = winserv_->get_screen(device_num);
+
+            if (!scr) {
+                return epoc::error_not_found;
+            }
+
+            *a1 = static_cast<int>(scr->disp_mode);
+            return 0;
+        }
+
         explicit display_hal(system *sys)
             : hal(sys)
             , winserv_(nullptr) {
@@ -235,6 +248,7 @@ namespace eka2l1::epoc {
             REGISTER_HAL_FUNC(display_hal_current_mode_info, display_hal, current_mode_info);
             REGISTER_HAL_FUNC(display_hal_specified_mode_info, display_hal, specified_mode_info);
             REGISTER_HAL_FUNC(display_hal_colors, display_hal, color_count);
+            REGISTER_HAL_FUNC(display_hal_mode, display_hal, mode);
 
             winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
                 eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
