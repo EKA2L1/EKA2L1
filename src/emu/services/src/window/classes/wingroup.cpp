@@ -147,7 +147,7 @@ namespace eka2l1::epoc {
         }                   
 
         case EWsWinOpName: {
-            ctx.write_arg(0, name);
+            ctx.write_arg(reply_slot, name);
             ctx.complete(epoc::error_none);
             break;
         }
