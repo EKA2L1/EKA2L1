@@ -1312,10 +1312,8 @@ namespace eka2l1::epoc {
         }
 
         handle->handle = info->index;
-        handle->obj_id_low = static_cast<uint32_t>(info->object_id);
-
-        // We are never gonna reached the high part
-        handle->obj_id_high = 0;
+        handle->obj_id_low = static_cast<std::uint32_t>(info->object_id);
+        handle->obj_id_high = static_cast<std::uint32_t>(info->object_id >> 32);
 
         // Assign the actual name of the object
         std::string the_full_name;
