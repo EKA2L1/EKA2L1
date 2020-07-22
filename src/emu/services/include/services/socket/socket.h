@@ -38,7 +38,7 @@ namespace eka2l1 {
     };
 
     struct socket_client_session : public service::typical_session {
-        explicit socket_client_session(service::typical_server *serv, const std::uint32_t ss_id, epoc::version client_version);
+        explicit socket_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
