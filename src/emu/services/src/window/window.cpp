@@ -430,7 +430,7 @@ namespace eka2l1::epoc {
             group = reinterpret_cast<epoc::window_group *>(group->sibling);
         }
 
-        const std::uint32_t thr_id = find_info->thread_id;
+        const kernel::uid thr_id = find_info->thread_id;
 
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
             if (group->client->get_client()->unique_id() == thr_id) {
@@ -463,9 +463,9 @@ namespace eka2l1::epoc {
             return;
         }
 
-        const std::uint32_t thr_id = win->client->get_client()->unique_id();
+        const kernel::uid thr_id = win->client->get_client()->unique_id();
 
-        ctx.write_data_to_descriptor_argument<std::uint32_t>(reply_slot, thr_id);
+        ctx.write_data_to_descriptor_argument<kernel::uid>(reply_slot, thr_id);
         ctx.complete(epoc::error_none);
     }
 
@@ -1309,7 +1309,7 @@ namespace eka2l1 {
             do_base_init();
         }
 
-        ctx.complete(ctx.msg->msg_session->unique_id());
+        ctx.complete(static_cast<std::uint32_t>(ctx.msg->msg_session->unique_id()));
     }
 
     epoc::config::screen *window_server::get_current_focus_screen_config() {
