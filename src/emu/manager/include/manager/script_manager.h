@@ -96,7 +96,7 @@ namespace eka2l1::manager {
             std::uint32_t addr_;
         };
 
-        std::map<std::uint32_t, breakpoint_hit_info> last_breakpoint_script_hits;
+        std::map<std::uint64_t, breakpoint_hit_info> last_breakpoint_script_hits;
 
         std::vector<panic_func> panic_functions;
         std::vector<pybind11::function> reschedule_functions;
