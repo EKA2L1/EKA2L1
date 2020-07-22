@@ -53,7 +53,8 @@ namespace eka2l1 {
         }
 
         void kernel_obj::full_name(std::string &name_will_full) {
-            if (owner) {
+            // If there is a owner and its access type is not global
+            if (owner && (access != kernel::access_type::global_access)) {
                 // recusively calling parent's owner to get name
                 owner->full_name(name_will_full);
                 name_will_full += "::";
