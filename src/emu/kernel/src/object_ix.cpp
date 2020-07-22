@@ -240,7 +240,7 @@ namespace eka2l1::kernel {
         std::uint32_t next_slot_use = 0;
 
         for (std::uint32_t i = 0; i < slot_count; i++) {
-            std::uint32_t obj_id = 0;
+            std::uint64_t obj_id = 0;
 
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
                 next_slot_use = slot_used.top();

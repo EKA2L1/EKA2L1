@@ -316,7 +316,7 @@ namespace eka2l1::kernel {
         seri.absorb(prim_thread_id);
 
         if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            primary_thread = kern->get<kernel::thread>(prim_thread_id);
+            primary_thread = kern->get_by_id<kernel::thread>(prim_thread_id);
         }
 
         seri.absorb(thread_count);
