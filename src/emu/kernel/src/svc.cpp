@@ -1294,11 +1294,17 @@ namespace eka2l1::epoc {
         process_ptr pr = kern->crr_process();
 
         epoc::find_handle *handle = handle_finder.get(pr);
-        std::string name = name_des.get(pr)->to_std_string(pr);
+        epoc::des8 *name_des_ptr = name_des.get(pr);
+        
+        const std::string name = name_des_ptr->to_std_string(pr);
 
-        LOG_TRACE("Finding object name: {}", name);
+        //LOG_TRACE("Finding object name: {}", name);
+        if (handle->handle == 0) {
+            // We start at the next index
+            handle->handle = -1;
+        }
 
-        std::optional<eka2l1::find_handle> info = kern->find_object(name, handle->handle,
+        std::optional<eka2l1::find_handle> info = kern->find_object(name, handle->handle + 1,
             static_cast<kernel::object_type>(obj_type), true);
 
         if (!info) {
@@ -1310,6 +1316,12 @@ namespace eka2l1::epoc {
 
         // We are never gonna reached the high part
         handle->obj_id_high = 0;
+
+        // Assign the actual name of the object
+        std::string the_full_name;
+        info->obj->full_name(the_full_name);
+
+        name_des_ptr->assign(pr, the_full_name);
 
         return epoc::error_none;
     }
