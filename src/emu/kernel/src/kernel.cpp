@@ -770,6 +770,7 @@ namespace eka2l1 {
             return std::nullopt;                                                               \
         handle_find_info.index = static_cast<int>(std::distance(obj_map.begin(), res));        \
         handle_find_info.object_id = (*res)->unique_id();                                      \
+        handle_find_info.obj = reinterpret_cast<kernel_obj_ptr>(res->get());                   \
         return handle_find_info;                                                               \
     }
 

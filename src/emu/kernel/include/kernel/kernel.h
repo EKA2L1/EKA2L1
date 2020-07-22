@@ -134,7 +134,8 @@ namespace eka2l1 {
 
     struct find_handle {
         int index;
-        uint32_t object_id;
+        std::uint32_t object_id;
+        kernel_obj_ptr obj;
     };
 
     namespace arm {
@@ -459,12 +460,13 @@ namespace eka2l1 {
 
         template <typename T>
         T *get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
-            std::regex filter(common::wildcard_to_regex_string(name));
             switch (obj_type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                               \
     case kernel::object_type::obj_type: {                                              \
         auto res = std::find_if(obj_map.begin(), obj_map.end(), [&](const auto &rhs) { \
-            return std::regex_match(rhs->name(), filter);                              \
+            std::string the_full_name;                                                 \
+            rhs->full_name(the_full_name);                                             \
+            return the_full_name == name;                                              \
         });                                                                            \
         if (res == obj_map.end())                                                      \
             return nullptr;                                                            \
