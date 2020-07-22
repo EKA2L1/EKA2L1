@@ -27,6 +27,8 @@ namespace eka2l1::common {
         regexstr = replace_all(regexstr, ".", std::string("\\") + ".");
         regexstr = replace_all(regexstr, "?", ".");
         regexstr = replace_all(regexstr, "*", ".*");
+        regexstr = replace_all(regexstr, "[", "(");
+        regexstr = replace_all(regexstr, "]", ")");
 
         return regexstr;
     }
