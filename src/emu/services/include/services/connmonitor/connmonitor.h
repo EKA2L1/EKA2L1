@@ -44,6 +44,19 @@ namespace eka2l1 {
         connmonitor_cancel_receive_event = 15
     };
 
+    enum bearer_id {
+        bearer_id_all = 0,
+        bearer_id_gprs = 2000000,
+        bearer_id_wcdma = 2000001,
+        bearer_id_csd = 2000002,
+        bearer_id_gsm = 2000003,
+        bearer_id_wlan = 2000004,
+        bearer_id_lan = 2000005,
+        bearer_id_wcdmacsd = 2000006,
+        bearer_id_cdma2000 = 2000007,
+        bearer_id_virtualvpn = 2000008
+    };
+
     class connmonitor_server : public service::typical_server {
     public:
         explicit connmonitor_server(eka2l1::system *sys);
@@ -57,5 +70,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
         void get_connection_count(eka2l1::service::ipc_context *ctx);
         void receive_event(eka2l1::service::ipc_context *ctx);
+        void get_int_attribute(eka2l1::service::ipc_context *ctx);
+        void get_connection_info(eka2l1::service::ipc_context *ctx);
     };
 }
