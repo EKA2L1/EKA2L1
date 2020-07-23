@@ -99,6 +99,31 @@ namespace eka2l1::epoc {
         }
     }
 
+    epoc::display_mode get_display_mode_from_bpp(const int bpp) {
+        switch (bpp) {
+        case 1:
+            return epoc::display_mode::gray2;
+        case 2:
+            return epoc::display_mode::gray4;
+        case 4:
+            return epoc::display_mode::color16;
+        case 8:
+            return epoc::display_mode::color256;
+        case 12:
+            return epoc::display_mode::color4k;
+        case 16:
+            return epoc::display_mode::color64k;
+        case 24:
+            return epoc::display_mode::color16m;
+        case 32:
+            return epoc::display_mode::color16ma;
+        default:
+            break;
+        }
+
+        return epoc::display_mode::color16m;
+    }
+
     epoc::display_mode string_to_display_mode(const std::string &disp_str) {
         const std::string disp_str_lower = common::lowercase_string(disp_str);
         if (disp_str_lower == "color16map")

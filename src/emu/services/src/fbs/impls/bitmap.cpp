@@ -41,31 +41,6 @@
 #include <cassert>
 
 namespace eka2l1 {
-    static epoc::display_mode get_display_mode_from_bpp(const int bpp) {
-        switch (bpp) {
-        case 1:
-            return epoc::display_mode::gray2;
-        case 2:
-            return epoc::display_mode::gray4;
-        case 4:
-            return epoc::display_mode::color16;
-        case 8:
-            return epoc::display_mode::color256;
-        case 12:
-            return epoc::display_mode::color4k;
-        case 16:
-            return epoc::display_mode::color64k;
-        case 24:
-            return epoc::display_mode::color16m;
-        case 32:
-            return epoc::display_mode::color16ma;
-        default:
-            break;
-        }
-
-        return epoc::display_mode::color16m;
-    }
-
     static epoc::bitmap_color get_bitmap_color_type_from_display_mode(const epoc::display_mode bpp) {
         switch (bpp) {
         case epoc::display_mode::gray2:
@@ -520,7 +495,7 @@ namespace eka2l1 {
             bws_bmp->uid_ = epoc::bitwise_bitmap_uid;
 
             // Get display mode
-            const epoc::display_mode dpm = get_display_mode_from_bpp(bws_bmp->header_.bit_per_pixels);
+            const epoc::display_mode dpm = epoc::get_display_mode_from_bpp(bws_bmp->header_.bit_per_pixels);
             bws_bmp->settings_.initial_display_mode(dpm);
             bws_bmp->settings_.current_display_mode(dpm);
 
