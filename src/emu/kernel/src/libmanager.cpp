@@ -173,6 +173,15 @@ namespace eka2l1::hle {
         }
     }
 
+    static std::string get_e32_codeseg_name_from_path(const std::u16string &path) {
+        std::string res = common::ucs2_to_utf8(eka2l1::filename(path));
+        if (!res.empty() && res.back() == '\0') {
+            res.pop_back();
+        }
+
+        return res;
+    }
+
     static codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr, kernel::process *pr,
         const std::u16string &path = u"", const address force_code_addr = 0) {
         std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
@@ -214,7 +223,8 @@ namespace eka2l1::hle {
             info.code_load_addr = force_code_addr;
         }
 
-        codeseg_ptr cs = kern->create<kernel::codeseg>(common::ucs2_to_utf8(eka2l1::filename(path)), info);
+        codeseg_ptr cs = kern->create<kernel::codeseg>(get_e32_codeseg_name_from_path(path), info);
+        
         if (!cs) {
             LOG_ERROR("E32 image loading failed!");
             return nullptr;
@@ -414,8 +424,7 @@ namespace eka2l1::hle {
     }
 
     codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
-        if (auto seg = kern_->pull_codeseg_by_uids(static_cast<std::uint32_t>(img.header.uid1),
-                img.header.uid2, img.header.uid3)) {
+        if (auto seg = kern_->get_by_name<kernel::codeseg>(get_e32_codeseg_name_from_path(path))) {
             return seg;
         }
 
