@@ -85,6 +85,8 @@ namespace eka2l1::kernel {
             LOG_INFO("Process {} capabilities: {}", process_name, all_caps.empty() ? "None" : all_caps);
         }
 
+        exe_path = codeseg->get_full_path();
+
         create_prim_thread(
             codeseg->get_code_run_addr(this), codeseg->get_entry_point(this),
             stack_size, heap_min, heap_max,

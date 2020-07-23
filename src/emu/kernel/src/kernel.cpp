@@ -414,7 +414,8 @@ namespace eka2l1 {
     // We can support also ELF!
     process_ptr kernel_system::spawn_new_process(const std::u16string &path, const std::u16string &cmd_arg, const kernel::uid promised_uid3,
         const std::uint32_t stack_size) {
-        auto imgs = lib_mngr_->try_search_and_parse(path);
+        std::u16string full_path;
+        auto imgs = lib_mngr_->try_search_and_parse(path, &full_path);
 
         if (!imgs.first && !imgs.second) {
             return nullptr;
@@ -456,7 +457,7 @@ namespace eka2l1 {
             heap_max = imgs.first->header.heap_size_max;
 
             pr->puid = imgs.first->header.uid3;
-            cs = lib_mngr_->load_as_e32img(*eimg, &(*pr), path);
+            cs = lib_mngr_->load_as_e32img(*eimg, &(*pr), full_path);
         }
 
         // Rom image
@@ -476,7 +477,7 @@ namespace eka2l1 {
             heap_max = imgs.second->header.heap_maximum_size;
 
             pr->puid = imgs.second->header.uid3;
-            cs = lib_mngr_->load_as_romimg(*imgs.second, &(*pr), path);
+            cs = lib_mngr_->load_as_romimg(*imgs.second, &(*pr), full_path);
         }
 
         if (!cs) {

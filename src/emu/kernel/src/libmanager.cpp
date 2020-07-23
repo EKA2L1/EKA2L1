@@ -222,8 +222,6 @@ namespace eka2l1::hle {
 
         // Build import table so that it can patch later
         buildup_import_fixup_table(img, pr, mem, mngr, cs);
-        //mngr.run_codeseg_loaded_callback(common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path),
-        //    u"")), pr, cs);
 
         return cs;
     }
@@ -566,7 +564,7 @@ namespace eka2l1::hle {
         return cs;
     }
 
-    std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> lib_manager::try_search_and_parse(const std::u16string &path) {
+    std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> lib_manager::try_search_and_parse(const std::u16string &path, std::u16string *full_path) {
         std::u16string lib_path = path;
 
         // Try opening e32img, if fail, try open as romimg
@@ -618,12 +616,19 @@ namespace eka2l1::hle {
 
                     auto result = open_and_get(lib_path);
                     if (result.first != std::nullopt || result.second != std::nullopt) {
+                        if (full_path)
+                            *full_path = lib_path;
+
                         return result;
                     }
                 }
             }
 
             return std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>{};
+        }
+
+        if (full_path) {
+            *full_path = lib_path;
         }
 
         return open_and_get(lib_path);

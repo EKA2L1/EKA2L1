@@ -127,7 +127,7 @@ namespace eka2l1 {
 
             // Search through all drives, which will parse all existing file
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
-            try_search_and_parse(const std::u16string &path);
+            try_search_and_parse(const std::u16string &path, std::u16string *full_path = nullptr);
 
             codeseg_ptr load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path = u"");
             codeseg_ptr load_as_romimg(loader::romimg &img, kernel::process *pr, const std::u16string &path = u"");
