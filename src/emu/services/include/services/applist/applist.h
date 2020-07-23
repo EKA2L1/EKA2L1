@@ -31,6 +31,8 @@
 
 namespace eka2l1 {
     class io_system;
+    class fbs_server;
+
     struct fbsbitmap;
 
     namespace common {
@@ -49,6 +51,7 @@ namespace eka2l1 {
     struct apa_app_icon {
         std::uint16_t number_;
         fbsbitmap *bmp_;
+        address bmp_rom_addr_;
     };
 
     struct apa_app_registry {
@@ -96,6 +99,18 @@ namespace eka2l1 {
      */
     bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
         const language lang);
+
+    /**
+     * \brief   Read icon data from AIF file.
+     * 
+     * \param   stream      A read-only stream contains registeration info.
+     * \param   serv        Pointer to font bitmap server, used to create bitmap.
+     * \param   icon_list   List of icon to be filled.
+     * \param   rom_addr    The address of the registeration file in ROM. 0 for unavailable.
+     * 
+     * \returns True on success.
+     */
+    bool read_icon_data_aif(common::ro_stream *stream, fbs_server *serv, std::vector<apa_app_icon> &icon_list, const address rom_addr = 0);
 
     /**
      * \brief Read localised registeration info from a stream.

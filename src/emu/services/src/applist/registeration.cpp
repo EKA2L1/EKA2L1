@@ -385,4 +385,92 @@ namespace eka2l1 {
 
         return true;
     }
+
+    bool read_icon_data_aif(common::ro_stream *stream, fbs_server *serv, std::vector<apa_app_icon> &icon_list, const address rom_addr) {
+        // Seek to header pos, over the UIDs
+        stream->seek(4 * sizeof(std::uint32_t), common::seek_where::beg);
+        std::uint32_t header_pos = 0;
+        
+        if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+            return false;
+        }
+
+        stream->seek(header_pos, common::seek_where::beg);
+
+        utils::cardinality count;
+
+        if (!count.internalize(*stream)) {
+            return false;
+        }
+
+        // Skip these bytes to get to icon part
+        stream->seek(count.value() * (sizeof(std::uint32_t) + sizeof(std::uint16_t)), common::seek_where::cur);
+
+        // Read the data part
+        if (!count.internalize(*stream)) {
+            return false;
+        }
+
+        icon_list.resize(count.value());
+
+        for (std::size_t i = 0; i < icon_list.size(); i++) {
+            std::uint32_t data_offset = 0;
+            if (stream->read(&data_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
+            
+            std::uint16_t num = 0;
+            if (stream->read(&num, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
+                return false;
+            }
+
+            icon_list[i].number_ = num;
+
+            const std::size_t lastpos = stream->tell();
+            stream->seek(data_offset, common::seek_where::beg);
+
+            std::uint32_t assume_uid = 0;
+            if (stream->read(&assume_uid, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
+
+            stream->seek(-sizeof(std::uint32_t), common::seek_where::cur);
+
+            static constexpr std::uint32_t ROM_BITMAP_UID = 0x10000040;
+
+            if (assume_uid == ROM_BITMAP_UID) {
+                icon_list[i].bmp_ = nullptr;
+                icon_list[i].bmp_rom_addr_ = rom_addr + data_offset;
+            } else {
+                loader::sbm_header bmp_header;
+                if (!bmp_header.internalize(*stream)) {
+                    return false;
+                }
+
+                icon_list[i].bmp_rom_addr_ = 0;
+
+                fbs_bitmap_data_info info;
+                info.size_ = bmp_header.size_pixels;
+                info.dpm_ = epoc::get_display_mode_from_bpp(bmp_header.bit_per_pixels);
+                info.comp_ = static_cast<epoc::bitmap_file_compression>(bmp_header.compression);
+
+                std::vector<std::uint8_t> data_to_read;
+                data_to_read.resize(bmp_header.bitmap_size - bmp_header.header_len);
+
+                if (stream->read(&data_to_read[0], data_to_read.size()) != data_to_read.size()) {
+                    return false;
+                }
+
+                info.data_size_ = data_to_read.size();
+                info.data_ = data_to_read.data();
+
+                // Auto support dirty. TODO not hardcode
+                icon_list[i].bmp_ = serv->create_bitmap(info, true, true);
+            }
+
+            stream->seek(lastpos, common::seek_where::beg);
+        }
+
+        return true;
+    }
 }
