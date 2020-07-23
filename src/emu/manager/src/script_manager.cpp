@@ -300,14 +300,15 @@ namespace eka2l1::manager {
 
     void script_manager::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
         const std::string lib_name_lower = common::lowercase_string(name);
-
         for (breakpoint_info &breakpoint: breakpoint_wait_patch) {
             if (((breakpoint.attached_process_ == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
                 && (breakpoint.flags_ & breakpoint_info::FLAG_BASED_IMAGE)) {
-                breakpoint.addr_ += new_code_addr;
-                breakpoint.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
+                breakpoint_info patched = breakpoint;
 
-                breakpoints[breakpoint.addr_ & ~1].list_.push_back(breakpoint);
+                patched.addr_ += new_code_addr;
+                patched.flags_ &= ~breakpoint_info::FLAG_BASED_IMAGE;
+
+                breakpoints[patched.addr_ & ~1].list_.push_back(patched);
             }
         }
     }
