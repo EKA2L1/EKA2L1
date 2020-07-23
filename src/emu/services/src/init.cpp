@@ -31,8 +31,8 @@
 #include <services/centralrepo/centralrepo.h>
 #include <services/connmonitor/connmonitor.h>
 #include <services/domain/domain.h>
+#include <services/drm/notifier/notifier.h>
 #include <services/drm/helper.h>
-#include <services/drm/notifier.h>
 #include <services/drm/rights.h>
 #include <services/ecom/ecom.h>
 #include <services/etel/etel.h>
