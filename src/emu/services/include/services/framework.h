@@ -86,11 +86,12 @@ namespace eka2l1::service {
     using typical_session_ptr = std::unique_ptr<typical_session>;
 
     class typical_server : public server {
+    protected:
         friend class typical_session;
+
+        normal_object_container obj_con;
         std::unordered_map<kernel::uid, typical_session_ptr> sessions;
 
-    protected:
-        normal_object_container obj_con;
         std::optional<epoc::version> get_version(service::ipc_context *ctx);
 
     public:
