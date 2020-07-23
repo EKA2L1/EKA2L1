@@ -206,7 +206,7 @@ namespace eka2l1 {
         using generic_string = decltype(path);
 
         bool has_drive = (path.length() >= 2) && (path[1] == ':');
-        bool has_net = is_separator(path[0]) && (path[0] == path[1]);
+        bool has_net = is_separator(path[0]) && (path[0] == path[1]) && !symbian_use;
 
         if (has_drive) {
             return path.substr(0, 2);
