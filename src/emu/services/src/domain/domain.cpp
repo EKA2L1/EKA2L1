@@ -310,14 +310,14 @@ namespace eka2l1 {
     }
 
     void domain_server::request_transition_nof(service::ipc_context &ctx) {
-        const std::uint32_t sid = ctx.msg->msg_session->unique_id();
+        const kernel::uid sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = true;
         ctx.complete(epoc::error_none);
     }
 
     void domain_server::cancel_transition_nof(service::ipc_context &ctx) {
-        const std::uint32_t sid = ctx.msg->msg_session->unique_id();
+        const kernel::uid sid = ctx.msg->msg_session->unique_id();
 
         nof_enable[sid] = false;
         ctx.complete(epoc::error_none);
@@ -355,7 +355,7 @@ namespace eka2l1 {
     }
 
     void domain_server::defer_acknowledge(service::ipc_context &ctx) {
-        const std::uint32_t ssid = ctx.msg->msg_session->unique_id();
+        const kernel::uid ssid = ctx.msg->msg_session->unique_id();
         domain_ptr dm = control_domains[ssid];
 
         if (!dm) {
@@ -379,7 +379,7 @@ namespace eka2l1 {
     }
 
     void domain_server::cancel_defer_acknowledge(service::ipc_context &ctx) {
-        const std::uint32_t ssid = ctx.msg->msg_session->unique_id();
+        const kernel::uid ssid = ctx.msg->msg_session->unique_id();
         domain_ptr dm = control_domains[ssid];
 
         if (!dm) {

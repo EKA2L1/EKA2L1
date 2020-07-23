@@ -307,7 +307,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::redirect_msg_to_session(service::ipc_context &ctx) {
-        const std::uint32_t session_uid = ctx.msg->msg_session->unique_id();
+        const kernel::uid session_uid = ctx.msg->msg_session->unique_id();
         auto session_ite = client_sessions.find(session_uid);
 
         if (session_ite == client_sessions.end()) {
@@ -633,7 +633,7 @@ namespace eka2l1 {
     // At least, if the session connected still exist
     void central_repo_server::disconnect(service::ipc_context &ctx) {
         // Close all repos that are currently being opened.
-        const std::uint32_t ss_id = ctx.msg->msg_session->unique_id();
+        const kernel::uid ss_id = ctx.msg->msg_session->unique_id();
         auto ss_ite = client_sessions.find(ss_id);
 
         io_system *io = ctx.sys->get_io_system();
@@ -658,7 +658,7 @@ namespace eka2l1 {
         central_repo_client_session session;
         session.server = this;
 
-        const std::uint32_t id = ctx.msg->msg_session->unique_id();
+        const kernel::uid id = ctx.msg->msg_session->unique_id();
 
         // Put all process code here
         client_sessions.insert(std::make_pair(static_cast<const std::uint32_t>(id), std::move(session)));

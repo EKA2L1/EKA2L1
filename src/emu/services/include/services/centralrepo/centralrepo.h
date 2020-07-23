@@ -70,7 +70,7 @@ namespace eka2l1 {
 
         // Cached repos. The key is the owner of the repo.
         std::unordered_map<std::uint32_t, central_repo> repos;
-        std::unordered_map<std::uint32_t, central_repo_client_session> client_sessions;
+        std::unordered_map<std::uint64_t, central_repo_client_session> client_sessions;
 
         central_repos_cacher backup_cacher;
         drive_number rom_drv;
