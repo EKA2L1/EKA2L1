@@ -123,6 +123,23 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_phone_subsession::get_signal_strength(eka2l1::service::ipc_context *ctx) {
+        std::int32_t *signal_strength_ptr = (std::int32_t *)ctx->get_descriptor_argument_ptr(0);
+        std::int32_t *bar_ptr = (std::int32_t *)ctx->get_descriptor_argument_ptr(2);
+
+        *signal_strength_ptr = 50;
+        *bar_ptr = 7;
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::notify_network_registration_status_change(eka2l1::service::ipc_context *ctx) {
+        network_registration_status_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void etel_phone_subsession::notify_current_network_change(eka2l1::service::ipc_context *ctx) {
+        current_network_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
     void etel_phone_subsession::dispatch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::etel_phone_init:
@@ -153,8 +170,20 @@ namespace eka2l1 {
             get_network_registration_status(ctx);
             break;
 
+        case epoc::etel_mobile_phone_get_signal_strength:
+            get_signal_strength(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_notify_network_registration_status_change:
+            notify_network_registration_status_change(ctx);
+            break;
+
         case epoc::etel_mobile_phone_get_current_network:
             get_current_network(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_notify_current_network_change:
+            notify_current_network_change(ctx);
             break;
 
         default:
