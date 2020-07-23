@@ -55,6 +55,11 @@ namespace eka2l1 {
             break;
         }
 
+        case connmonitor_get_uint_attribute: {
+            get_uint_attribute(ctx);
+            break;
+        }
+
         case connmonitor_receive_event: {
             receive_event(ctx);
             break;
@@ -93,6 +98,16 @@ namespace eka2l1 {
         std::uint32_t subconnection_id = *(ctx->get_argument_value<std::uint32_t>(1));
         std::uint32_t attribute = *(ctx->get_argument_value<std::uint32_t>(2));
         std::int32_t *value_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(3));
+
+        *value_ptr = 0;
+        ctx->complete(epoc::error_none);
+    }
+
+    void connmonitor_client_session::get_uint_attribute(eka2l1::service::ipc_context *ctx) {
+        std::uint32_t connection_id = *(ctx->get_argument_value<std::uint32_t>(0));
+        std::uint32_t subconnection_id = *(ctx->get_argument_value<std::uint32_t>(1));
+        std::uint32_t attribute = *(ctx->get_argument_value<std::uint32_t>(2));
+        std::uint32_t *value_ptr = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(3));
 
         *value_ptr = 0;
         ctx->complete(epoc::error_none);
