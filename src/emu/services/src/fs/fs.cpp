@@ -268,11 +268,7 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context &ctx) {
-        static const drive_number default_root_drv = drive_c;
-
         fs_server_client *cli = create_session<fs_server_client>(&ctx, &ctx);
-        cli->ss_path = get_private_path(ctx.msg->own_thr->owning_process(), default_root_drv);
-
         typical_server::connect(ctx);
     }
 
