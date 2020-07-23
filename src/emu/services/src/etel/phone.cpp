@@ -113,7 +113,7 @@ namespace eka2l1 {
         std::optional<epoc::etel_phone_network_info> network_info = 
             ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
         epoc::etel_phone_location_area *phone_location_area = 
-            (epoc::etel_phone_location_area *)ctx->get_descriptor_argument_ptr(2);
+            reinterpret_cast<epoc::etel_phone_location_area *>(ctx->get_descriptor_argument_ptr(2));
 
         network_info->mode_ = phone_->network_info_.mode_;
         network_info->status_ = phone_->network_info_.status_;
@@ -124,8 +124,8 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_signal_strength(eka2l1::service::ipc_context *ctx) {
-        std::int32_t *signal_strength_ptr = (std::int32_t *)ctx->get_descriptor_argument_ptr(0);
-        std::int32_t *bar_ptr = (std::int32_t *)ctx->get_descriptor_argument_ptr(2);
+        std::int32_t *signal_strength_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(0));
+        std::int32_t *bar_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(2));
 
         *signal_strength_ptr = 50;
         *bar_ptr = 7;
@@ -134,6 +134,10 @@ namespace eka2l1 {
 
     void etel_phone_subsession::notify_network_registration_status_change(eka2l1::service::ipc_context *ctx) {
         network_registration_status_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void etel_phone_subsession::notify_signal_strength_change(eka2l1::service::ipc_context *ctx) {
+        signal_strength_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void etel_phone_subsession::notify_current_network_change(eka2l1::service::ipc_context *ctx) {
@@ -176,6 +180,10 @@ namespace eka2l1 {
 
         case epoc::etel_mobile_phone_notify_network_registration_status_change:
             notify_network_registration_status_change(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_notify_signal_strength_change:
+            notify_signal_strength_change(ctx);
             break;
 
         case epoc::etel_mobile_phone_get_current_network:
