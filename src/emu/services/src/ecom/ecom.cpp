@@ -517,11 +517,6 @@ namespace eka2l1 {
             return;
         }
 
-        if (collected_impls_.empty()) {
-            ctx->complete(epoc::ecom_no_registration_identified);
-            return;
-        }
-
         for (ecom_implementation_info_ptr &implementation: collected_impls_) {
             implementation->do_state(seri, support_extended_interface, is_using_old_ecom_abi());
         }
