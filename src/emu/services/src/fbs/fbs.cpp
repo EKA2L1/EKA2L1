@@ -253,114 +253,115 @@ namespace eka2l1 {
         return large_bitmap_access_mutex->get_access_count() > 0;
     }
 
+    void fbs_server::initialize_server() {
+        // Initialize those chunks
+        shared_chunk = kern->create_and_add<kernel::chunk>(
+                                kernel::owner_type::kernel,
+                                kern->get_memory_system(),
+                                nullptr,
+                                "FbsSharedChunk",
+                                0,
+                                0x10000,
+                                0x200000,
+                                prot::read_write,
+                                kernel::chunk_type::normal,
+                                kernel::chunk_access::global,
+                                kernel::chunk_attrib::none)
+                            .second;
+
+        large_chunk = kern->create_and_add<kernel::chunk>(
+                                kernel::owner_type::kernel,
+                                kern->get_memory_system(),
+                                nullptr,
+                                "FbsLargeChunk",
+                                0,
+                                0,
+                                0x2000000,
+                                prot::read_write,
+                                kernel::chunk_type::normal,
+                                kernel::chunk_access::global,
+                                kernel::chunk_attrib::none)
+                            .second;
+
+        if (!shared_chunk || !large_chunk) {
+            LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
+            return;
+        }
+
+        large_bitmap_access_mutex = kern->create<kernel::mutex>(kern->get_ntimer(),
+            "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
+
+        if (!large_bitmap_access_mutex) {
+            LOG_WARN("Large bitmap access mutex fail to create!");
+        }
+
+        memory_system *mem = sys->get_memory_system();
+
+        base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
+        base_large_chunk = reinterpret_cast<std::uint8_t *>(large_chunk->host_base());
+
+        shared_chunk_allocator = std::make_unique<fbs_chunk_allocator>(shared_chunk,
+            base_shared_chunk);
+
+        large_chunk_allocator = std::make_unique<fbs_chunk_allocator>(large_chunk,
+            base_large_chunk);
+
+        if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {
+            // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#
+            // Skip the filler (vtable start address) and the typeinfo
+            if (kern->is_eka1()) {
+                std::uint8_t *addr = nullptr;
+                fntstr_seg->get_code_run_addr(nullptr, &addr);
+
+                utils::cpp_gcc98_abi_analyser analyser(addr, fntstr_seg->get_text_size());
+
+                // We got two clues. TypeUid__C11CBitmapFont @ 52 NONAME ; Which is a virtual method (not sure why it's exported)
+                // Also this         TextWidthInPixels__C11CBitmapFontRC7TDesC16 @ 51 NONAME    ;
+                std::vector<address> clues;
+                clues.push_back(fntstr_seg->lookup_no_relocate(51));
+                clues.push_back(fntstr_seg->lookup_no_relocate(52));
+
+                bmp_font_vtab = static_cast<std::uint32_t>(analyser.search_vtable(clues));
+            } else {
+                bmp_font_vtab = fntstr_seg->lookup_no_relocate(97) + 2 * 4;
+            }
+
+            if (bmp_font_vtab == 0) {
+                LOG_ERROR("Unable to find vtable address of CBitmapFont!");
+            }
+            
+            if (kern->is_eka1()) {
+                // For relocate later
+                bmp_font_vtab += fntstr_seg->get_code_base();
+            }
+        }
+
+        // Probably also indicates that font aren't loaded yet
+        load_fonts(sys->get_io_system());
+
+        fs_server = kern->get_by_name<service::server>(epoc::fs::get_server_name_through_epocver(
+            kern->get_epoc_version()));
+
+        // Create session cache list
+        session_cache_list = allocate_general_data<epoc::open_font_session_cache_list>();
+        session_cache_link = allocate_general_data<epoc::open_font_session_cache_link>();
+        session_cache_list->init();
+
+        // Alloc 4 bytes of padding, so the offset 0 never exist. 0 is always a check if data
+        // is available.
+        large_chunk_allocator->allocate(4);
+        shared_chunk_allocator->allocate(4);
+
+        // Create compressor thread
+        if (sys->get_config()->fbs_enable_compression_queue) {
+            compressor = std::make_unique<compress_queue>(this);
+            compressor_thread = std::make_unique<std::thread>(compressor_thread_func, compressor.get());
+        }
+    }
+
     void fbs_server::connect(service::ipc_context &context) {
         if (!shared_chunk && !large_chunk) {
-            // Initialize those chunks
-            kernel_system *kern = context.sys->get_kernel_system();
-            shared_chunk = kern->create_and_add<kernel::chunk>(
-                                   kernel::owner_type::kernel,
-                                   kern->get_memory_system(),
-                                   nullptr,
-                                   "FbsSharedChunk",
-                                   0,
-                                   0x10000,
-                                   0x200000,
-                                   prot::read_write,
-                                   kernel::chunk_type::normal,
-                                   kernel::chunk_access::global,
-                                   kernel::chunk_attrib::none)
-                               .second;
-
-            large_chunk = kern->create_and_add<kernel::chunk>(
-                                  kernel::owner_type::kernel,
-                                  kern->get_memory_system(),
-                                  nullptr,
-                                  "FbsLargeChunk",
-                                  0,
-                                  0,
-                                  0x2000000,
-                                  prot::read_write,
-                                  kernel::chunk_type::normal,
-                                  kernel::chunk_access::global,
-                                  kernel::chunk_attrib::none)
-                              .second;
-
-            if (!shared_chunk || !large_chunk) {
-                LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
-                context.complete(epoc::error_no_memory);
-
-                return;
-            }
-
-            large_bitmap_access_mutex = kern->create<kernel::mutex>(kern->get_ntimer(),
-                "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
-
-            if (!large_bitmap_access_mutex) {
-                LOG_WARN("Large bitmap access mutex fail to create!");
-            }
-
-            memory_system *mem = sys->get_memory_system();
-
-            base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
-            base_large_chunk = reinterpret_cast<std::uint8_t *>(large_chunk->host_base());
-
-            shared_chunk_allocator = std::make_unique<fbs_chunk_allocator>(shared_chunk,
-                base_shared_chunk);
-
-            large_chunk_allocator = std::make_unique<fbs_chunk_allocator>(large_chunk,
-                base_large_chunk);
-
-            if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {
-                // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#
-                // Skip the filler (vtable start address) and the typeinfo
-                if (kern->is_eka1()) {
-                    std::uint8_t *addr = nullptr;
-                    fntstr_seg->get_code_run_addr(nullptr, &addr);
-
-                    utils::cpp_gcc98_abi_analyser analyser(addr, fntstr_seg->get_text_size());
-
-                    // We got two clues. TypeUid__C11CBitmapFont @ 52 NONAME ; Which is a virtual method (not sure why it's exported)
-                    // Also this         TextWidthInPixels__C11CBitmapFontRC7TDesC16 @ 51 NONAME    ;
-                    std::vector<address> clues;
-                    clues.push_back(fntstr_seg->lookup_no_relocate(51));
-                    clues.push_back(fntstr_seg->lookup_no_relocate(52));
-
-                    bmp_font_vtab = static_cast<std::uint32_t>(analyser.search_vtable(clues));
-                } else {
-                    bmp_font_vtab = fntstr_seg->lookup_no_relocate(97) + 2 * 4;
-                }
-
-                if (bmp_font_vtab == 0) {
-                    LOG_ERROR("Unable to find vtable address of CBitmapFont!");
-                }
-                
-                if (kern->is_eka1()) {
-                    // For relocate later
-                    bmp_font_vtab += fntstr_seg->get_code_base();
-                }
-            }
-
-            // Probably also indicates that font aren't loaded yet
-            load_fonts(context.sys->get_io_system());
-
-            fs_server = kern->get_by_name<service::server>(epoc::fs::get_server_name_through_epocver(
-                kern->get_epoc_version()));
-
-            // Create session cache list
-            session_cache_list = allocate_general_data<epoc::open_font_session_cache_list>();
-            session_cache_link = allocate_general_data<epoc::open_font_session_cache_link>();
-            session_cache_list->init();
-
-            // Alloc 4 bytes of padding, so the offset 0 never exist. 0 is always a check if data
-            // is available.
-            large_chunk_allocator->allocate(4);
-            shared_chunk_allocator->allocate(4);
-
-            // Create compressor thread
-            if (sys->get_config()->fbs_enable_compression_queue) {
-                compressor = std::make_unique<compress_queue>(this);
-                compressor_thread = std::make_unique<std::thread>(compressor_thread_func, compressor.get());
-            }
+            initialize_server();
         }
 
         // Create new server client

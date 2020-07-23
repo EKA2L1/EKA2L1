@@ -338,6 +338,7 @@ namespace eka2l1 {
 
     protected:
         void load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *dir);
+        void initialize_server();
 
     public:
         explicit fbs_server(eka2l1::system *sys);

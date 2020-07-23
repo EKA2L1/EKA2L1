@@ -528,6 +528,10 @@ namespace eka2l1 {
     }
 
     fbsbitmap *fbs_server::create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data, const bool support_dirty) {
+        if (!shared_chunk || !large_chunk) {
+            initialize_server();
+        }
+
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
 
         // Calculate the size
