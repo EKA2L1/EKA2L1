@@ -39,6 +39,8 @@ namespace eka2l1::loader {
         std::uint32_t color;
         std::uint32_t palette_size;
         std::uint32_t compression;
+
+        bool internalize(common::ro_stream &stream);
     };
 
     struct mbm_trailer {

@@ -27,6 +27,22 @@
 #include <loader/mbm.h>
 
 namespace eka2l1::loader {
+    bool sbm_header::internalize(common::ro_stream &stream) {
+        std::uint64_t total_read = 0;
+        total_read += stream.read(&bitmap_size, sizeof(std::uint32_t));
+        total_read += stream.read(&header_len, sizeof(std::uint32_t));
+        total_read += stream.read(&size_pixels.x, sizeof(std::int32_t));
+        total_read += stream.read(&size_pixels.y, sizeof(std::int32_t));
+        total_read += stream.read(&size_twips.x, sizeof(std::int32_t));
+        total_read += stream.read(&size_twips.y, sizeof(std::int32_t));
+        total_read += stream.read(&bit_per_pixels, sizeof(std::uint32_t));
+        total_read += stream.read(&color, sizeof(std::uint32_t));
+        total_read += stream.read(&palette_size, sizeof(std::uint32_t));
+        total_read += stream.read(&compression, sizeof(std::uint32_t));
+
+        return (total_read == sizeof(sbm_header));
+    }
+
     bool mbm_file::valid() {
         return (header.uids.uid1 == 0x10000037) && (header.uids.uid2 == 0x10000042);
     }
@@ -59,7 +75,7 @@ namespace eka2l1::loader {
             const auto crr_offset = stream->tell();
             stream->seek(trailer.sbm_offsets[i], common::seek_where::beg);
 
-            if (stream->read(&sbm_headers[i], sizeof(sbm_header)) != sizeof(sbm_header)) {
+            if (!sbm_headers[i].internalize(*stream)) {
                 return false;
             }
 
