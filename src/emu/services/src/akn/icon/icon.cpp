@@ -85,8 +85,15 @@ namespace eka2l1 {
         std::optional<epoc::akn_icon_srv_return_data> cached = find_existing_icon(spec.value(), &icon_index);
         if (!cached) {
             eka2l1::vec2 size = spec->size;
-            fbsbitmap *bmp = fbss->create_bitmap(size, init_data.icon_mode);
-            fbsbitmap *mask = fbss->create_bitmap(size, init_data.icon_mask_mode);
+
+            fbs_bitmap_data_info info;
+            info.size_ = size;
+            info.dpm_ = init_data.icon_mode;
+
+            fbsbitmap *bmp = fbss->create_bitmap(info);
+
+            info.dpm_ = init_data.icon_mask_mode;
+            fbsbitmap *mask = fbss->create_bitmap(info);
 
             if (!bmp || !mask) {
                 ctx->complete(epoc::error_no_memory);

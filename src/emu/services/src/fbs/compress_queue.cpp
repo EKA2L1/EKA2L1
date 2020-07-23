@@ -140,8 +140,11 @@ namespace eka2l1 {
 
         if (bmp->support_dirty_bitmap) {
             // Have to create new bitmap
-            clean_bitmap = serv_->create_bitmap(bmp->bitmap_->header_.size_pixels,
-                bmp->bitmap_->settings_.current_display_mode(), false, true);
+            fbs_bitmap_data_info info;
+            info.dpm_ = bmp->bitmap_->settings_.current_display_mode();
+            info.size_ = bmp->bitmap_->header_.size_pixels;
+
+            clean_bitmap = serv_->create_bitmap(info, false, true);
         }
 
         clean_bitmap->bitmap_->header_.compression = target_compression;

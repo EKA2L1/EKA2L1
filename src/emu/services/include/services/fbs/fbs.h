@@ -286,6 +286,16 @@ namespace eka2l1 {
         virtual bool expand(std::size_t target) override;
     };
 
+    struct fbs_bitmap_data_info {
+        eka2l1::vec2 size_;
+        epoc::display_mode dpm_;
+        epoc::bitmap_file_compression comp_;
+        std::uint8_t *data_;
+        std::size_t data_size_;
+
+        explicit fbs_bitmap_data_info();
+    };
+
     class fbs_server : public service::typical_server {
         friend struct fbscli;
         friend struct fbsfont;
@@ -340,8 +350,7 @@ namespace eka2l1 {
         /**
          * \brief  Create a new empty bitmap.
          * 
-         * \param  size           Size of the bitmap, in pixels.
-         * \param  dpm            Bit per pixels as display mode.
+         * \param  info           Bitmap creation info struct.
          * \param  alloc_data     If true, bitmap data will be allocated right away.
          * \param  support_dirty  True if this bitmap supports clean variant. For backwards compatibility.
          * 
@@ -349,8 +358,7 @@ namespace eka2l1 {
          * 
          * \see    free_bitmap
          */
-        fbsbitmap *create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool alloc_data = true,
-            const bool support_dirty = true);
+        fbsbitmap *create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data = true, const bool support_dirty = true);
 
         /**
          * \brief   Free a bitmap object.

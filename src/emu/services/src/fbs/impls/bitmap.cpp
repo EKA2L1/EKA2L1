@@ -129,6 +129,13 @@ namespace eka2l1 {
         return word_width * 4;
     }
 
+    fbs_bitmap_data_info::fbs_bitmap_data_info()
+        : dpm_(epoc::display_mode::none)
+        , comp_(epoc::bitmap_file_compression::bitmap_file_no_compression)
+        , data_(nullptr)
+        , data_size_(0) {
+    }
+
     namespace epoc {
         constexpr std::uint32_t BITWISE_BITMAP_UID = 0x10000040;
         constexpr std::uint32_t MAGIC_FBS_PILE_PTR = 0xDEADFB55;
@@ -545,11 +552,11 @@ namespace eka2l1 {
         return get_byte_width(size.x, epoc::get_bpp_from_display_mode(bpp)) * size.y;
     }
 
-    fbsbitmap *fbs_server::create_bitmap(const eka2l1::vec2 &size, const epoc::display_mode dpm, const bool alloc_data, const bool support_dirty) {
+    fbsbitmap *fbs_server::create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data, const bool support_dirty) {
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
 
         // Calculate the size
-        std::size_t alloc_bytes = calculate_aligned_bitmap_bytes(size, dpm);
+        std::size_t alloc_bytes = (info.data_size_ == 0) ? calculate_aligned_bitmap_bytes(info.size_, info.dpm_) : info.data_size_;
         void *data = nullptr;
 
         if ((alloc_bytes > 0) && alloc_data) {
@@ -564,17 +571,21 @@ namespace eka2l1 {
             }
         }
 
+        if (info.data_) {
+            std::memcpy(data, info.data_, alloc_bytes);
+        }
+
         loader::sbm_header header;
-        header.compression = epoc::bitmap_file_no_compression;
+        header.compression = info.comp_;
         header.bitmap_size = static_cast<std::uint32_t>(alloc_bytes + sizeof(loader::sbm_header));
-        header.size_pixels = size;
-        header.color = get_bitmap_color_type_from_display_mode(dpm);
+        header.size_pixels = info.size_;
+        header.color = get_bitmap_color_type_from_display_mode(info.dpm_);
         header.header_len = sizeof(loader::sbm_header);
         header.palette_size = 0;
-        header.size_twips = size * twips_mul;
-        header.bit_per_pixels = epoc::get_bpp_from_display_mode(dpm);
+        header.size_twips = info.size_ * twips_mul;
+        header.bit_per_pixels = epoc::get_bpp_from_display_mode(info.dpm_);
 
-        bws_bmp->construct(header, dpm, data, base_large_chunk, true);
+        bws_bmp->construct(header, info.dpm_, data, base_large_chunk, true);
 
         if (legacy_mode()) {
             // Set large bitmap flag so that the data pointer base is in large chunk
@@ -630,7 +641,12 @@ namespace eka2l1 {
         }
 
         fbs_server *fbss = server<fbs_server>();
-        fbsbitmap *bmp = fbss->create_bitmap(specs.size, specs.bpp);
+
+        fbs_bitmap_data_info info;
+        info.size_ = specs.size;
+        info.dpm_ = specs.bpp;
+
+        fbsbitmap *bmp = fbss->create_bitmap(info);
 
         if (!bmp) {
             ctx->complete(epoc::error_no_memory);
@@ -700,7 +716,12 @@ namespace eka2l1 {
         assert(compressed_in_ram == false);
 
         const epoc::display_mode disp_mode = bmp->bitmap_->settings_.current_display_mode();
-        const auto new_bmp = fbss->create_bitmap(new_size, disp_mode);
+
+        fbs_bitmap_data_info info;
+        info.size_ = new_size;
+        info.dpm_ = disp_mode;
+
+        const auto new_bmp = fbss->create_bitmap(info);
 
         new_bmp->bitmap_->copy_data(*(bmp->bitmap_), fbss->base_large_chunk);
         bmp->clean_bitmap = new_bmp;
