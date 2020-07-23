@@ -434,7 +434,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            stream->seek(-sizeof(std::uint32_t), common::seek_where::cur);
+            stream->seek(sizeof(std::uint32_t) * -1, common::seek_where::cur);
 
             static constexpr std::uint32_t ROM_BITMAP_UID = 0x10000040;
 

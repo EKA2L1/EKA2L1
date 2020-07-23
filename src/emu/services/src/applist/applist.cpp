@@ -20,6 +20,7 @@
 
 #include <services/applist/applist.h>
 #include <services/applist/op.h>
+#include <services/fbs/fbs.h>
 #include <services/context.h>
 
 #include <common/benchmark.h>
@@ -50,7 +51,8 @@ namespace eka2l1 {
     }
 
     applist_server::applist_server(system *sys)
-        : service::server(sys->get_kernel_system(), sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()), true) {
+        : service::server(sys->get_kernel_system(), sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()), true)
+        , fbsserv(nullptr) {
         REGISTER_IPC(applist_server, default_screen_number, EAppListServGetDefaultScreenNumber, "GetDefaultScreenNumber");
         REGISTER_IPC(applist_server, app_language, EAppListServApplicationLanguage, "ApplicationLanguageL");
         REGISTER_IPC(applist_server, is_accepted_to_run, EAppListServRuleBasedLaunching, "RuleBasedLaunching");
@@ -88,6 +90,19 @@ namespace eka2l1 {
 
             reg.mandatory_info.short_caption.assign(nullptr, caption_to_use);
             reg.mandatory_info.long_caption.assign(nullptr, caption_to_use);
+        }
+
+        address romaddr = static_cast<address>(f->seek(0, file_seek_mode::address));
+
+        if (romaddr == 0xFFFFFFFF) {
+            romaddr = 0;
+        }
+
+        f->seek(0, file_seek_mode::beg);
+
+        if (!read_icon_data_aif(reinterpret_cast<common::ro_stream*>(&std_rsc_raw), fbsserv, reg.app_icons,
+            romaddr)) {
+            return false;
         }
 
         regs.push_back(std::move(reg));
@@ -349,13 +364,21 @@ namespace eka2l1 {
         server::connect(ctx);
     }
 
+    void applist_server::init() {
+        fbsserv = reinterpret_cast<fbs_server*>(kern->get_by_name<service::server>(
+            epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version())));
+
+        rescan_registries(sys->get_io_system());
+    
+        flags |= AL_INITED;
+    }
+
     std::vector<apa_app_registry> &applist_server::get_registerations() {
         const std::lock_guard<std::mutex> guard(list_access_mut_);
 
         if (!(flags & AL_INITED)) {
             // Initialize
-            rescan_registries(sys->get_io_system());
-            flags |= AL_INITED;
+            init();
         }
 
         return regs;
@@ -366,8 +389,7 @@ namespace eka2l1 {
 
         if (!(flags & AL_INITED)) {
             // Initialize
-            rescan_registries(sys->get_io_system());
-            flags |= AL_INITED;
+            init();
         }
 
         auto result = std::lower_bound(regs.begin(), regs.end(), uid, [](const apa_app_registry &lhs, const std::uint32_t rhs) {

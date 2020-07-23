@@ -137,12 +137,14 @@ namespace eka2l1 {
         std::uint32_t flags{ 0 };
 
         std::vector<std::int64_t> watchs_;
+        fbs_server *fbsserv;
 
         enum {
             AL_INITED = 0x1
         };
 
         void sort_registry_list();
+        void init();
 
         bool delete_registry(const std::u16string &rsc_path);
 
