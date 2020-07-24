@@ -531,6 +531,19 @@ namespace eka2l1::epoc {
     /********************************************/
     /* IPC */
     /*******************************************/
+    BRIDGE_FUNC(void, message_construct, std::int32_t msg_handle, service::message2 *msg_to_construct) {
+        ipc_msg_ptr msg = kern->get_msg(msg_handle);
+
+        if (!msg) {
+            return;
+        }
+
+        msg_to_construct->ipc_msg_handle = msg_handle;
+        msg_to_construct->session_ptr = msg->session_ptr_lle;
+        msg_to_construct->flags = msg->args.flag;
+        msg_to_construct->function = msg->function;
+        std::copy(msg->args.args, msg->args.args + 4, msg_to_construct->args);
+    }
 
     BRIDGE_FUNC(void, set_session_ptr, std::int32_t msg_handle, std::uint32_t session_addr) {
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
@@ -3362,6 +3375,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA6, message_get_des_max_length),
         BRIDGE_REGISTER(0xA7, message_ipc_copy),
         BRIDGE_REGISTER(0xA8, message_client),
+        BRIDGE_REGISTER(0xAA, message_construct),
         BRIDGE_REGISTER(0xAD, process_security_info),
         BRIDGE_REGISTER(0xAE, thread_security_info),
         BRIDGE_REGISTER(0xAF, message_security_info),
