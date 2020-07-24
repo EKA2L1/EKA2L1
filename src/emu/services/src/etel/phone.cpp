@@ -135,10 +135,19 @@ namespace eka2l1 {
 
     void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE("Get phone id hardcoded");
-        std::string phone_id = "000000000000000";
+        std::string phone_id = "49015420323751";
 
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&phone_id[0]),
             static_cast<std::uint32_t>(phone_id.length()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::get_subscriber_id(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get subscriber id hardcoded");
+        std::string subscriber_id = "49015420323751";
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&subscriber_id[0]),
+            static_cast<std::uint32_t>(subscriber_id.length()));
         ctx->complete(epoc::error_none);
     }
 
@@ -226,6 +235,10 @@ namespace eka2l1 {
 
         case epoc::etel_mobile_phone_get_home_network:
             get_home_network(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_get_subscriber_id:
+            get_subscriber_id(ctx);
             break;
 
         case epoc::etel_mobile_phone_get_phone_id:
