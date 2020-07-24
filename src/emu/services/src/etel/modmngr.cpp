@@ -81,7 +81,7 @@ namespace eka2l1::epoc::etel {
     bool module_manager::close_tsy(io_system *io, const std::string &module_name) {
         const std::string module_lowercased = common::lowercase_string(module_name);
 
-        auto name_res = std::find(loaded_.begin(), loaded_.end(), common::lowercase_string(module_lowercased));
+        auto name_res = std::find(loaded_.begin(), loaded_.end(), module_lowercased);
         if (name_res == loaded_.end()) {
             return false;
         }
