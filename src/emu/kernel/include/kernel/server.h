@@ -72,6 +72,14 @@ namespace eka2l1 {
             }
         };
 
+        struct message {
+            std::int32_t function;
+            std::uint32_t args[4];
+            std::uint32_t client_thread_handle;
+            std::int32_t session_ptr;
+            std::int32_t ipc_msg_handle;
+        };
+
         struct message2 {
             int ipc_msg_handle;
             int function;
