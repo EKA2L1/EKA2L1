@@ -449,7 +449,7 @@ namespace eka2l1 {
                 stream->seek(size_offset, common::seek_where::cur);
                 std::uint32_t size_of_source = 0;
 
-                if (!stream->read(&size_of_source, 4) != 4ULL) {
+                if (stream->read(&size_of_source, 4) != 4ULL) {
                     return false;
                 }
 
