@@ -38,6 +38,7 @@ namespace eka2l1::epoc::etel {
         explicit module_manager();
 
         bool load_tsy(io_system *io, const std::string &module_name);
+        bool close_tsy(io_system *io, const std::string &module_name);
         std::optional<std::uint32_t> get_entry_real_index(const std::uint32_t respective_index, const etel_entry_type type);
 
         bool get_entry(const std::uint32_t real_index, etel_module_entry **entry);

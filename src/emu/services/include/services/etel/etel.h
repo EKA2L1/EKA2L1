@@ -41,6 +41,7 @@ namespace eka2l1 {
         void add_new_subsession(service::ipc_context *ctx, etel_subsession_instance &instance);
 
     public:
+        void close_phone_module(service::ipc_context *ctx);
         void load_phone_module(service::ipc_context *ctx);
         void enumerate_phones(service::ipc_context *ctx);
         void get_phone_info_by_index(service::ipc_context *ctx);

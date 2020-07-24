@@ -39,6 +39,22 @@ namespace eka2l1 {
         : service::typical_session(serv, client_ss_uid, client_ver) {
     }
 
+    void etel_session::close_phone_module(service::ipc_context *ctx) {
+        std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(0);
+
+        if (!name) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (!mngr_.close_tsy(ctx->sys->get_io_system(), common::ucs2_to_utf8(name.value()))) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_session::load_phone_module(service::ipc_context *ctx) {
         std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(0);
 
@@ -233,6 +249,10 @@ namespace eka2l1 {
 
         case epoc::etel_close:
             close_sub(ctx);
+            break;
+
+        case epoc::etel_close_phone_module:
+            close_phone_module(ctx);
             break;
 
         case epoc::etel_enumerate_phones:

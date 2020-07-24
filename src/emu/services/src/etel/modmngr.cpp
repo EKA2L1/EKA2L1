@@ -78,6 +78,27 @@ namespace eka2l1::epoc::etel {
         return true;
     }
 
+    bool module_manager::close_tsy(io_system *io, const std::string &module_name) {
+        const std::string module_lowercased = common::lowercase_string(module_name);
+
+        auto name_res = std::find(loaded_.begin(), loaded_.end(), common::lowercase_string(module_lowercased));
+        if (name_res == loaded_.end()) {
+            return false;
+        }
+        loaded_.erase(name_res);
+        
+        auto entry_res = std::remove_if(entries_.begin(), entries_.end(),
+            [=](const auto &entry) {
+                if (common::lowercase_string(entry.tsy_name_) == module_lowercased) {
+                    return true;
+                }
+                return false;
+            });
+        entries_.erase(entry_res, entries_.end());
+
+        return true;
+    }
+
     std::optional<std::uint32_t> module_manager::get_entry_real_index(const std::uint32_t respective_index, const etel_entry_type type) {
         std::int32_t i = -1;
 

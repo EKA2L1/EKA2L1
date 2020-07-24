@@ -78,6 +78,19 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_phone_subsession::get_identity_caps(service::ipc_context *ctx) {
+        LOG_TRACE("Get identity caps hardcoded");
+
+        const std::uint32_t caps = epoc::etel_mobile_phone_identity_cap_get_manufacturer 
+            | epoc::etel_mobile_phone_identity_cap_get_model 
+            | epoc::etel_mobile_phone_identity_cap_get_revision
+            | epoc::etel_mobile_phone_identity_cap_get_serialnumber
+            | epoc::etel_mobile_phone_identity_cap_get_subscriber_id;
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, caps);
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_phone_subsession::get_indicator_caps(service::ipc_context *ctx) {
         LOG_TRACE("Get indicator caps hardcoded");
 
@@ -105,6 +118,27 @@ namespace eka2l1 {
         const std::uint32_t network_registration_status = epoc::etel_mobile_phone_registered_on_home_network;
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(0, network_registration_status);
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::get_home_network(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get home network hardcoded");
+        std::optional<epoc::etel_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
+
+        network_info->mode_ = phone_->network_info_.mode_;
+        network_info->status_ = phone_->network_info_.status_;
+        network_info->band_info_ = phone_->network_info_.band_info_;
+
+        ctx->write_data_to_descriptor_argument<epoc::etel_phone_network_info>(0, network_info.value(), nullptr, true);
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get phone id hardcoded");
+        std::string phone_id = "000000000000000";
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&phone_id[0]),
+            static_cast<std::uint32_t>(phone_id.length()));
         ctx->complete(epoc::error_none);
     }
 
@@ -162,7 +196,11 @@ namespace eka2l1 {
             get_line_info(ctx);
             break;
 
-        case epoc::etel_mobile_phone_get_indicators_cap:
+        case epoc::etel_mobile_phone_get_identity_caps:
+            get_identity_caps(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_get_indicator_caps:
             get_indicator_caps(ctx);
             break;
 
@@ -184,6 +222,14 @@ namespace eka2l1 {
 
         case epoc::etel_mobile_phone_notify_signal_strength_change:
             notify_signal_strength_change(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_get_home_network:
+            get_home_network(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_get_phone_id:
+            get_phone_id(ctx);
             break;
 
         case epoc::etel_mobile_phone_get_current_network:

@@ -52,6 +52,7 @@ namespace eka2l1::epoc {
         etel_phone_get_line_info = 49,
         etel_enumerate_phones = 54,
         etel_phone_get_status = 50,
+        etel_close_phone_module = 53,
         etel_get_tsy_name = 55,
         etel_load_phone_module = 57,
         etel_phone_info_by_index = 59,
@@ -61,13 +62,16 @@ namespace eka2l1::epoc {
         etel_phone_init = 75,
         etel_mobile_line_get_mobile_line_status = 20023,
         etel_mobile_line_notify_status_change = 20024,
+        etel_mobile_phone_get_identity_caps = 20043,
         etel_mobile_phone_get_indicator = 20046,
-        etel_mobile_phone_get_indicators_cap = 20047,
+        etel_mobile_phone_get_indicator_caps = 20047,
         etel_mobile_phone_get_network_registration_status = 20054, 
         etel_mobile_phone_get_signal_strength = 20060, 
         etel_mobile_phone_notify_network_registration_status_change = 20092,
         etel_mobile_phone_notify_signal_strength_change = 20097,
         etel_mobile_line_cancel_notify_status_change = 20524,
+        etel_mobile_phone_get_home_network = 22004,
+        etel_mobile_phone_get_phone_id = 22012,
         etel_mobile_phone_get_current_network = 26000,
         etel_mobile_phone_notify_current_network_change = 26001
     };
@@ -116,6 +120,14 @@ namespace eka2l1::epoc {
         etel_line_hook_sts_off = 0,
         etel_line_hook_sts_on = 1,
         etel_line_hook_sts_unknown = 2
+    };
+
+    enum etel_mobile_phone_identity_caps {
+        etel_mobile_phone_identity_cap_get_manufacturer = 1 << 0,
+        etel_mobile_phone_identity_cap_get_model = 1 << 1,
+        etel_mobile_phone_identity_cap_get_revision = 1 << 2,
+        etel_mobile_phone_identity_cap_get_serialnumber = 1 << 3,
+        etel_mobile_phone_identity_cap_get_subscriber_id = 1 << 4
     };
 
     enum etel_mobile_phone_indicator_caps {
