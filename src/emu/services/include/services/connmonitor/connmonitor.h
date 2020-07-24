@@ -73,5 +73,6 @@ namespace eka2l1 {
         void get_int_attribute(eka2l1::service::ipc_context *ctx);
         void get_uint_attribute(eka2l1::service::ipc_context *ctx);
         void get_connection_info(eka2l1::service::ipc_context *ctx);
+        void cancel_async_request(eka2l1::service::ipc_context *ctx);
     };
 }

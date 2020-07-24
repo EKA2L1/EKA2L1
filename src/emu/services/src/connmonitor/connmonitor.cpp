@@ -65,6 +65,11 @@ namespace eka2l1 {
             break;
         }
 
+        case connmonitor_cancel_async_request: {
+            cancel_async_request(ctx);
+            break;
+        }
+
         default: {
             LOG_ERROR("Unimplemented opcode for ConnectionMonitorServer 0x{:X}", ctx->msg->function);
             break;
@@ -111,5 +116,9 @@ namespace eka2l1 {
 
         *value_ptr = 0;
         ctx->complete(epoc::error_none);
+    }
+
+    void connmonitor_client_session::cancel_async_request(eka2l1::service::ipc_context *ctx) {
+        // Stubbed
     }
 }
