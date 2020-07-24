@@ -52,7 +52,7 @@ namespace eka2l1 {
     }
 
     static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
-        const char16_t drive_dos_char = char16_t(0x41 + static_cast<int>(drive));
+        const char16_t drive_dos_char = drive_to_char16(drive);
         const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
 
         // Try to get the app uid
@@ -60,6 +60,24 @@ namespace eka2l1 {
         std::string hex_id = common::to_string(uid, std::hex);
 
         return drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+    }
+
+    std::u16string get_full_symbian_path(const std::u16string &session_path, const std::u16string &target_path) {
+        if (target_path.empty()) {
+            return session_path;
+        }
+
+        if (is_separator(target_path[0])) {
+            // Only append the root directory to the beginning
+            return eka2l1::add_path(eka2l1::root_name(session_path, true), target_path, true); 
+        }
+
+        // Check if the path has a root directory
+        if (!eka2l1::has_root_dir(target_path)) {
+            return eka2l1::add_path(session_path, target_path, true);
+        }
+
+        return target_path;
     }
 
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
@@ -73,8 +91,15 @@ namespace eka2l1 {
 
     fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, service::ipc_context *ctx)
         : typical_session(srv, suid, client_version) {
-        // Please don't remove the separator, absolute path needs this to determine root directory
-        ss_path = eka2l1::root_name(ctx->msg->own_thr->owning_process()->get_exe_path(), true) + u'\\';
+            // Please don't remove the separator, absolute path needs this to determine root directory
+        kernel::process *pr = ctx->msg->own_thr->owning_process();
+        const std::u16string root_name = eka2l1::root_name(pr->get_exe_path());
+
+        if (server<fs_server>()->kern->is_eka1()) {
+            ss_path = eka2l1::root_dir(pr->get_exe_path());
+        } else {
+            ss_path = get_private_path(pr, (root_name.length() > 1) ? char16_to_drive(root_name[0]) : drive_c);
+        }
     }
 
     fs_server::fs_server(system *sys)
@@ -191,8 +216,8 @@ namespace eka2l1 {
             return;
         }
 
-        auto target = eka2l1::absolute_path(*given_path_target, ss_path, true);
-        auto dest = eka2l1::absolute_path(*given_path_dest, ss_path, true);
+        auto target = get_full_symbian_path(ss_path, given_path_target.value());
+        auto dest = get_full_symbian_path(ss_path, given_path_dest.value());
 
         io_system *io = ctx->sys->get_io_system();
 
@@ -221,8 +246,8 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string target = eka2l1::absolute_path(*given_path_target, ss_path, true);
-        std::u16string dest = eka2l1::absolute_path(*given_path_dest, ss_path, true);
+        std::u16string target = get_full_symbian_path(ss_path, given_path_target.value());
+        std::u16string dest = get_full_symbian_path(ss_path, given_path_dest.value());
 
         io_system *io = ctx->sys->get_io_system();
 
@@ -250,7 +275,7 @@ namespace eka2l1 {
             return;
         }
 
-        auto path = eka2l1::absolute_path(*given_path, ss_path, true);
+        auto path = get_full_symbian_path(ss_path, given_path.value());
         io_system *io = ctx->sys->get_io_system();
 
         bool success = io->delete_entry(path);
@@ -332,12 +357,7 @@ namespace eka2l1 {
             return;
         }
 
-        auto final_path = std::move(*path);
-
-        if (!eka2l1::is_absolute(final_path, ss_path, true)) {
-            final_path = eka2l1::absolute_path(final_path, ss_path, true);
-        }
-
+        auto final_path = get_full_symbian_path(ss_path, path.value());
         symfile f = ctx->sys->get_io_system()->open_file(final_path, READ_MODE);
 
         if (!f) {
@@ -480,7 +500,7 @@ namespace eka2l1 {
         }
 
         std::u16string fname = std::move(*fname_op);
-        fname = eka2l1::absolute_path(fname, ss_path, true);
+        fname = get_full_symbian_path(ss_path, fname);
 
         LOG_INFO("Get entry of: {}", common::ucs2_to_utf8(fname));
 
@@ -518,9 +538,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string fname = std::move(*fname_op);
-        fname = eka2l1::absolute_path(fname, ss_path, true);
-
+        const std::u16string fname = get_full_symbian_path(ss_path, fname_op.value());
         LOG_INFO("Set entry of: {}", common::ucs2_to_utf8(fname));
 
         io_system *io = ctx->sys->get_io_system();
