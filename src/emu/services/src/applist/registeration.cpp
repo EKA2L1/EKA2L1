@@ -411,9 +411,9 @@ namespace eka2l1 {
             return false;
         }
 
-        icon_list.resize(count.value());
+        icon_list.resize(count.value() * 2);
 
-        for (std::size_t i = 0; i < icon_list.size(); i++) {
+        for (std::size_t i = 0; i < count.value(); i++) {
             std::uint32_t data_offset = 0;
             if (stream->read(&data_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
                 return false;
@@ -424,7 +424,8 @@ namespace eka2l1 {
                 return false;
             }
 
-            icon_list[i].number_ = num;
+            icon_list[i * 2].number_ = num;
+            icon_list[i * 2 + 1].number_ = num;
 
             const std::size_t lastpos = stream->tell();
             stream->seek(data_offset, common::seek_where::beg);
@@ -439,33 +440,57 @@ namespace eka2l1 {
             static constexpr std::uint32_t ROM_BITMAP_UID = 0x10000040;
 
             if (assume_uid == ROM_BITMAP_UID) {
-                icon_list[i].bmp_ = nullptr;
-                icon_list[i].bmp_rom_addr_ = rom_addr + data_offset;
+                icon_list[i * 2].bmp_ = nullptr;
+                icon_list[i * 2].bmp_rom_addr_ = rom_addr + data_offset;
+
+                static constexpr std::size_t size_offset = offsetof(epoc::bitwise_bitmap, header_) +
+                    offsetof(loader::sbm_header, bitmap_size);
+
+                stream->seek(size_offset, common::seek_where::cur);
+                std::uint32_t size_of_source = 0;
+
+                if (!stream->read(&size_of_source, 4) != 4ULL) {
+                    return false;
+                }
+
+                icon_list[i * 2 + 1].bmp_ = nullptr;
+                icon_list[i * 2 + 1].bmp_rom_addr_ = icon_list[i * 2].bmp_rom_addr_ + size_of_source;
             } else {
-                loader::sbm_header bmp_header;
-                if (!bmp_header.internalize(*stream)) {
+                auto read_and_create_bitmap = [&](const std::size_t index) { 
+                    loader::sbm_header bmp_header;
+                    if (!bmp_header.internalize(*stream)) {
+                        return false;
+                    }
+
+                    icon_list[index].bmp_rom_addr_ = 0;
+
+                    fbs_bitmap_data_info info;
+                    info.size_ = bmp_header.size_pixels;
+                    info.dpm_ = epoc::get_display_mode_from_bpp(bmp_header.bit_per_pixels);
+                    info.comp_ = static_cast<epoc::bitmap_file_compression>(bmp_header.compression);
+
+                    std::vector<std::uint8_t> data_to_read;
+                    data_to_read.resize(bmp_header.bitmap_size - bmp_header.header_len);
+
+                    if (stream->read(&data_to_read[0], data_to_read.size()) != data_to_read.size()) {
+                        return false;
+                    }
+
+                    info.data_size_ = data_to_read.size();
+                    info.data_ = data_to_read.data();
+
+                    // Auto support dirty. TODO not hardcode
+                    icon_list[index].bmp_ = serv->create_bitmap(info, true, true);
+                    return true;
+                };
+
+                if (!read_and_create_bitmap(i * 2)) {
                     return false;
                 }
 
-                icon_list[i].bmp_rom_addr_ = 0;
-
-                fbs_bitmap_data_info info;
-                info.size_ = bmp_header.size_pixels;
-                info.dpm_ = epoc::get_display_mode_from_bpp(bmp_header.bit_per_pixels);
-                info.comp_ = static_cast<epoc::bitmap_file_compression>(bmp_header.compression);
-
-                std::vector<std::uint8_t> data_to_read;
-                data_to_read.resize(bmp_header.bitmap_size - bmp_header.header_len);
-
-                if (stream->read(&data_to_read[0], data_to_read.size()) != data_to_read.size()) {
+                if (!read_and_create_bitmap(i * 2 + 1)) {
                     return false;
                 }
-
-                info.data_size_ = data_to_read.size();
-                info.data_ = data_to_read.data();
-
-                // Auto support dirty. TODO not hardcode
-                icon_list[i].bmp_ = serv->create_bitmap(info, true, true);
             }
 
             stream->seek(lastpos, common::seek_where::beg);
