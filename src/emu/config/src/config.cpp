@@ -104,6 +104,7 @@ namespace eka2l1::config {
         config_file_emit_single(emitter, "enable-srv-akn-icon", enable_srv_akn_icon);
         config_file_emit_single(emitter, "enable-srv-akn-skin", enable_srv_akn_skin);
         config_file_emit_single(emitter, "enable-srv-cdl", enable_srv_cdl);
+        config_file_emit_single(emitter, "enable-srv-socket", enable_srv_socket);
         config_file_emit_single(emitter, "fbs-enable-compression-queue", fbs_enable_compression_queue);
         config_file_emit_single(emitter, "accurate-ipc-timing", accurate_ipc_timing);
         config_file_emit_single(emitter, "enable-btrace", enable_btrace);
@@ -163,6 +164,7 @@ namespace eka2l1::config {
         get_yaml_value(node, "enable-srv-akn-icon", &enable_srv_akn_icon, true);
         get_yaml_value(node, "enable-srv-akn-skin", &enable_srv_akn_skin, true);
         get_yaml_value(node, "enable-srv-cdl", &enable_srv_cdl, true);
+        get_yaml_value(node, "enable-srv-socket", &enable_srv_socket, false);
         get_yaml_value(node, "fbs-enable-compression-queue", &fbs_enable_compression_queue, false);
         get_yaml_value(node, "accurate-ipc-timing", &accurate_ipc_timing, false);
         get_yaml_value(node, "enable-btrace", &enable_btrace, false);

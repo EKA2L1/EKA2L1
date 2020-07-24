@@ -196,7 +196,9 @@ namespace eka2l1 {
             CREATE_SERVER(sys, sensor_server);
             CREATE_SERVER(sys, connmonitor_server);
             CREATE_SERVER(sys, drm_notifier_server);
-            CREATE_SERVER(sys, socket_server);
+
+            if (cfg->enable_srv_socket)
+                CREATE_SERVER(sys, socket_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
