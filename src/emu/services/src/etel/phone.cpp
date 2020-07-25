@@ -133,21 +133,25 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get phone id hardcoded");
-        std::string phone_id = "49015420323751";
+    static const std::u16string EXAMPLE_VALID_IMI_CODE = u"540806859904945";
 
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&phone_id[0]),
-            static_cast<std::uint32_t>(phone_id.length()));
+    void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get phone id hardcoded, random generated beforehand");
+
+        phone_id_info_v1 id_info;
+        id_info.the_id_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+
+        ctx->write_data_to_descriptor_argument<phone_id_info_v1>(0, id_info);
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_subscriber_id(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get subscriber id hardcoded");
-        std::string subscriber_id = "49015420323751";
+        LOG_TRACE("Get subscriber id hardcoded, random generated beforehand");
 
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&subscriber_id[0]),
-            static_cast<std::uint32_t>(subscriber_id.length()));
+        subscriber_id_info_v1 id_info;
+        id_info.the_id_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+
+        ctx->write_data_to_descriptor_argument<subscriber_id_info_v1>(0, id_info);
         ctx->complete(epoc::error_none);
     }
 

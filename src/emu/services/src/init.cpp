@@ -215,27 +215,6 @@ namespace eka2l1 {
             if (cfg->enable_srv_akn_skin)
                 CREATE_SERVER(sys, akn_skin_server);
 
-            // Don't change order
-            temp = std::make_unique<domainmngr_server>(sys);
-            kernel_system *kern = sys->get_kernel_system();
-
-            auto &dmmngr = reinterpret_cast<domainmngr_server *>(temp.get())->get_domain_manager();
-            dmmngr->add_hierarchy_from_database(service::database::hierarchy_power_id);
-            dmmngr->add_hierarchy_from_database(service::database::hierarchy_startup_id);
-
-            kern->add_custom_server(temp);
-
-            // Create the domain server
-            temp = std::make_unique<domain_server>(sys, dmmngr);
-            kern->add_custom_server(temp);
-
-            std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
-            std::unique_ptr<service::server> audio_serv = std::make_unique<mmf_audio_server>(sys,
-                reinterpret_cast<mmf_dev_server *>(dev_serv.get()));
-
-            kern->add_custom_server(dev_serv);
-            kern->add_custom_server(audio_serv);
-
             epoc::initialize_system_properties(sys, cfg);
         }
     }

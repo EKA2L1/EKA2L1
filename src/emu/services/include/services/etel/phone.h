@@ -27,6 +27,17 @@
 namespace eka2l1 {
     struct etel_line;
 
+    struct subscriber_id_info_v1 {
+        std::int32_t ver_;
+        epoc::buf_static<char16_t, 15> the_id_;
+
+        explicit subscriber_id_info_v1()
+            : ver_(1) {
+        }
+    };
+
+    using phone_id_info_v1 = subscriber_id_info_v1;
+
     struct etel_phone : public etel_entity {
         epoc::etel_phone_status status_;
         epoc::etel_phone_info info_;

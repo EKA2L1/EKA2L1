@@ -32,6 +32,7 @@ namespace eka2l1::epoc {
 
         /**
          * No implementation found on the server.
+         * NOTE: Never use this error! It's not used by the main source code
          */
         ecom_no_registration_identified = -17007
     };
