@@ -708,22 +708,18 @@ namespace eka2l1::epoc {
         std::int32_t size_of_work = 4;
         std::uint8_t *msg_slot_ptr = reinterpret_cast<std::uint8_t *>(callee_process->get_ptr_on_addr_space(
             msg->args.args[param]));
+
+        epoc::des8 *the_des = nullptr;
         
         if (arg_type != ipc_arg_type::handle) {
             if (!msg_slot_ptr) {
                 return epoc::error_argument;
             }
 
-            size_of_work = read ? reinterpret_cast<epoc::des8*>(msg_slot_ptr)->get_length() :
-                reinterpret_cast<epoc::des8*>(msg_slot_ptr)->get_max_length(callee_process);
+            the_des = reinterpret_cast<epoc::des8*>(msg_slot_ptr);
+            size_of_work = read ? the_des->get_length() : the_des->get_max_length(callee_process);
 
-            if (static_cast<std::uint8_t>(arg_type) & static_cast<std::uint8_t>(ipc_arg_type::flag_16b)) {
-                // Multiple by size of uint16_t
-                size_of_work *= sizeof(std::uint16_t);
-            }
-
-            msg_slot_ptr = reinterpret_cast<std::uint8_t*>(reinterpret_cast<epoc::des8*>(msg_slot_ptr)
-                ->get_pointer_raw(callee_process));
+            msg_slot_ptr = reinterpret_cast<std::uint8_t*>(the_des->get_pointer_raw(callee_process));
         } else {
             msg_slot_ptr = reinterpret_cast<std::uint8_t*>(&msg->args.args[param]);
         }
@@ -744,8 +740,19 @@ namespace eka2l1::epoc {
         }
 
         size_of_work = common::min<std::uint32_t>(size_of_work, info_host->target_length);
-        std::memcpy(read ? info_host_ptr : msg_slot_ptr, read ? msg_slot_ptr : info_host_ptr, size_of_work);
 
+        if (!read && the_des) {
+            the_des->set_length(callee_process, size_of_work);
+        }
+
+        std::size_t raw_size_of_work = size_of_work;
+
+        if (static_cast<std::uint8_t>(arg_type) & static_cast<std::uint8_t>(ipc_arg_type::flag_16b)) {
+            // Multiple by size of uint16_t
+            raw_size_of_work *= sizeof(std::uint16_t);
+        }
+
+        std::memcpy(read ? info_host_ptr : msg_slot_ptr, read ? msg_slot_ptr : info_host_ptr, raw_size_of_work);
         return static_cast<std::int32_t>(size_of_work);
     }
 
