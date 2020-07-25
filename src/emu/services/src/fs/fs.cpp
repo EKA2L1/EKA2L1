@@ -109,7 +109,7 @@ namespace eka2l1 {
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());
         system_drive_prop->define(service::property_type::int_data, 0);
-        system_drive_prop->set(drive_c);
+        system_drive_prop->set_int(drive_c);
 
         system_drive_prop->first = static_cast<int>(FS_UID);
         system_drive_prop->second = static_cast<int>(SYSTEM_DRIVE_KEY);
