@@ -187,6 +187,18 @@ namespace eka2l1 {
         current_network_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
+    void etel_phone_subsession::get_current_network_cancel(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get current network cancel stubbed");
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void etel_phone_subsession::get_network_registration_status_cancel(eka2l1::service::ipc_context *ctx) {
+        LOG_TRACE("Get network registration status cancel stubbed");
+
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_phone_subsession::dispatch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::etel_phone_init:
@@ -233,6 +245,10 @@ namespace eka2l1 {
             notify_signal_strength_change(ctx);
             break;
 
+        case epoc::etel_mobile_phone_get_network_registration_status_cancel:
+            get_network_registration_status_cancel(ctx);
+            break;
+
         case epoc::etel_mobile_phone_get_home_network:
             get_home_network(ctx);
             break;
@@ -251,6 +267,10 @@ namespace eka2l1 {
 
         case epoc::etel_mobile_phone_notify_current_network_change:
             notify_current_network_change(ctx);
+            break;
+
+        case epoc::etel_mobile_phone_get_current_network_cancel:
+            get_current_network_cancel(ctx);
             break;
 
         default:
