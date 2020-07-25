@@ -65,6 +65,8 @@ namespace eka2l1 {
     };
 
     struct connmonitor_client_session : public service::typical_session {
+        epoc::notify_info nof_info;
+
         explicit connmonitor_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
@@ -74,5 +76,6 @@ namespace eka2l1 {
         void get_uint_attribute(eka2l1::service::ipc_context *ctx);
         void get_connection_info(eka2l1::service::ipc_context *ctx);
         void cancel_async_request(eka2l1::service::ipc_context *ctx);
+        void cancel_receive_event(eka2l1::service::ipc_context *ctx);
     };
 }
