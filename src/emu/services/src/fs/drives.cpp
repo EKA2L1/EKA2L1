@@ -116,7 +116,7 @@ namespace eka2l1 {
         }
 
         if (static_cast<int>(io_drive.attribute & io_attrib::write_protected)) {
-            info->drive_att |= epoc::fs::media_att_write_protected;
+            info->media_att |= epoc::fs::media_att_write_protected;
         }
     }
 
