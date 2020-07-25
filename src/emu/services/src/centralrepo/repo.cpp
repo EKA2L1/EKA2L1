@@ -150,7 +150,7 @@ namespace eka2l1 {
 
     void central_repo_client_subsession::cancel_notify_request(const std::uint32_t match_key, const std::uint32_t mask) {
         common::erase_elements(notifies, [=](cenrep_notify_info &info) {
-            if (info.match == match_key && info.mask == mask) {
+            if ((info.match == match_key) && (info.mask == mask)) {
                 info.sts.complete(-3);
                 return true;
             }
@@ -584,18 +584,25 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::notify_cancel(service::ipc_context *ctx) {
-        std::uint32_t mask;
-        std::uint32_t partial_key;
-        if (ctx->msg->function == cen_rep_notify_req) {
+        std::uint32_t mask = 0;
+        std::uint32_t partial_key = 0;
+
+        if (ctx->msg->function == cen_rep_notify_cancel) {
             mask = 0xFFFFFFFF;
             partial_key = *ctx->get_argument_value<std::uint32_t>(0);
         } else {
             std::optional<central_repo_key_filter> filter = ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
+            
+            if (!filter.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
             mask = filter->id_mask;
             partial_key = filter->partial_key;
         }
-        cancel_notify_request(partial_key, mask);
 
+        cancel_notify_request(partial_key, mask);
         ctx->complete(epoc::error_none);
     }
 
