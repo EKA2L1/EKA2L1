@@ -85,7 +85,7 @@ namespace eka2l1::kernel {
 
         // Allocate new data chunk for this!
         memory_system *mem = kern->get_memory_system();
-        const auto data_size_align = common::align(data_addr ? bss_size : data_size + bss_size, mem->get_page_size());
+        const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
         const auto code_size_align = common::align(code_size, mem->get_page_size());
 
         chunk_ptr code_chunk = nullptr;
