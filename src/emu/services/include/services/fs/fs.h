@@ -140,6 +140,7 @@ namespace eka2l1 {
 
         void entry(service::ipc_context *ctx);
         void is_file_in_rom(service::ipc_context *ctx);
+        void is_valid_name(service::ipc_context *ctx);
 
         void notify_change_ex(service::ipc_context *ctx);
         void notify_change(service::ipc_context *ctx);

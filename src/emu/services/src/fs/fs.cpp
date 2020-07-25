@@ -27,6 +27,7 @@
 #include <clocale>
 #include <cwctype>
 #include <memory>
+#include <regex>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -165,6 +166,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(file_att, epoc::fs_msg_file_att, "Fs::FileAtt");
             HANDLE_CLIENT_IPC(file_modified, epoc::fs_msg_file_modified, "Fs::FileModified");
             HANDLE_CLIENT_IPC(is_file_in_rom, epoc::fs_msg_is_file_in_rom, "Fs::IsFileInRom");
+            HANDLE_CLIENT_IPC(is_valid_name, epoc::fs_msg_is_valid_name, "Fs::IsValidName");
             HANDLE_CLIENT_IPC(open_dir, epoc::fs_msg_dir_open, "Fs::OpenDir");
             HANDLE_CLIENT_IPC(close_dir, epoc::fs_msg_dir_subclose, "Fs::CloseDir");
             HANDLE_CLIENT_IPC(read_dir, epoc::fs_msg_dir_read_one, "Fs::ReadDir");
@@ -370,6 +372,22 @@ namespace eka2l1 {
         f->close();
 
         ctx->write_data_to_descriptor_argument<address>(1, addr);
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::is_valid_name(service::ipc_context *ctx) {
+        std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
+
+        if (!path) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::regex pattern("[<>:\"/|*?]+");
+        std::string path_utf8 = common::ucs2_to_utf8(path.value());
+        std::uint32_t valid = !(std::regex_match(path_utf8, pattern) || path->empty());
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(1, valid);
         ctx->complete(epoc::error_none);
     }
 
