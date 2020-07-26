@@ -591,6 +591,12 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
+        case EWsWinOpSetCornerType:
+            LOG_WARN("SetCornerType stubbed");
+
+            ctx.complete(epoc::error_none);
+            break;
+
         case EWsWinOpSetColor:
             LOG_WARN("SetColor stubbed");
 
