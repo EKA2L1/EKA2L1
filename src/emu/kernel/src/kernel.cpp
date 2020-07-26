@@ -511,10 +511,10 @@ namespace eka2l1 {
     }
 
     kernel_obj_ptr kernel_system::get_kernel_obj_raw(uint32_t handle) {
-        if (handle == 0xFFFF8000) {
+        if ((handle & ~0x8000) == 0xFFFF0000) {
             return reinterpret_cast<kernel::kernel_obj *>(get_by_id<kernel::process>(
                 crr_process()->unique_id()));
-        } else if (handle == 0xFFFF8001) {
+        } else if ((handle & ~0x8000) == 0xFFFF0001) {
             return reinterpret_cast<kernel::kernel_obj *>(get_by_id<kernel::thread>(
                 crr_thread()->unique_id()));
         }
