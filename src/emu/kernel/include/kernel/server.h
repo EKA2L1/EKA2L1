@@ -72,7 +72,7 @@ namespace eka2l1 {
             }
         };
 
-        struct message {
+        struct message1 {
             std::int32_t function;
             std::uint32_t args[4];
             std::uint32_t client_thread_handle;

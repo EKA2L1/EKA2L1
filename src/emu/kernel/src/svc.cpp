@@ -2874,6 +2874,74 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t thread_rename_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::des16 *name = eka2l1::ptr<epoc::des16>(create_info->arg1_).get(target_process);
+
+        if (!name) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        const std::string name_to_rename_str = common::ucs2_to_utf8(name->to_std_string(target_process));
+        thr->rename(name_to_rename_str);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t thread_open_by_id_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get_by_id<kernel::thread>(create_info->arg1_);
+
+        if (!thr) {
+            LOG_ERROR("Unable to find thread with ID: {}", create_info->arg1_);
+            
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        const kernel::handle h = kern->open_handle_with_thread(kern->crr_thread(), thr, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t server_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::des16 *name = eka2l1::ptr<epoc::des16>(create_info->arg1_).get(target_process);
+
+        if (!name) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        const std::string server_name_in_str = common::ucs2_to_utf8(name->to_std_string(target_process));
+        const kernel::handle h = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(),
+            server_name_in_str).first;
+
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        LOG_TRACE("Server {} created", server_name_in_str);
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -2904,8 +2972,17 @@ namespace eka2l1::epoc {
         case epoc::eka1_executor::execute_create_session:
             return session_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+        case epoc::eka1_executor::execute_create_server_global:
+            return server_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
         case epoc::eka1_executor::execute_logon_thread:
             return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_open_thread_by_id:
+            return thread_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_rename_thread:
+            return thread_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_panic_thread:
             return thread_panic_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -3464,8 +3541,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0xC0001D, process_resume),
+        BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
+        BRIDGE_REGISTER(0xC0004E, thread_request_signal),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_eka1)
