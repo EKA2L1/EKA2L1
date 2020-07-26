@@ -131,14 +131,26 @@ namespace eka2l1 {
         }
 
         void server::finish_request_lle(ipc_msg_ptr &msg, bool notify_owner) {
-            message2 *dat_hle = request_data.get(request_own_thread->owning_process());
+            if (kern->is_eka1()) {
+                message1 *dat_hle = request_data.cast<message1>().get(request_own_thread->owning_process());
 
-            dat_hle->ipc_msg_handle = msg->id;
-            dat_hle->flags = msg->args.flag;
-            dat_hle->function = msg->function;
-            dat_hle->session_ptr = msg->session_ptr_lle;
+                dat_hle->ipc_msg_handle = msg->id;
+                dat_hle->function = msg->function;
+                dat_hle->session_ptr = msg->session_ptr_lle;
+                dat_hle->client_thread_handle = kern->open_handle_with_thread(request_own_thread,
+                    msg->own_thr, kernel::owner_type::thread);
 
-            std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
+                std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
+            } else {
+                message2 *dat_hle = request_data.get(request_own_thread->owning_process());
+
+                dat_hle->ipc_msg_handle = msg->id;
+                dat_hle->flags = msg->args.flag;
+                dat_hle->function = msg->function;
+                dat_hle->session_ptr = msg->session_ptr_lle;
+
+                std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
+            }
 
             *(request_status.get(request_own_thread->owning_process())) = 0; // KErrNone
 
