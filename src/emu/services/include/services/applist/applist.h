@@ -21,8 +21,8 @@
 #pragma once
 
 #include <services/applist/common.h>
+#include <services/framework.h>
 
-#include <kernel/server.h>
 #include <utils/des.h>
 #include <vfs/vfs.h>
 
@@ -125,6 +125,12 @@ namespace eka2l1 {
 
     const std::string get_app_list_server_name_by_epocver(const epocver ver);
 
+    class applist_session : public service::typical_session {
+    public:
+        explicit applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
+        void fetch(service::ipc_context *ctx);
+    };
+
     /*! \brief Applist services
      *
      * Provide external information about application management,
@@ -132,7 +138,9 @@ namespace eka2l1 {
 	 *
 	 * Disable for LLE testings.
      */
-    class applist_server : public service::server {
+    class applist_server : public service::typical_server {
+        friend class applist_session;
+
         std::vector<apa_app_registry> regs;
         std::uint32_t flags{ 0 };
 
@@ -142,6 +150,8 @@ namespace eka2l1 {
         enum {
             AL_INITED = 0x1
         };
+
+        bool is_oldarch();
 
         void sort_registry_list();
         void init();
@@ -209,7 +219,12 @@ namespace eka2l1 {
          */
         void get_app_icon_file_name(service::ipc_context &ctx);
 
-        void connect(service::ipc_context &ctx);
+        /**
+         * \brief Get app icon bitmap handles.
+         */
+        void get_app_icon(service::ipc_context &ctx);
+
+        void connect(service::ipc_context &ctx) override;
 
     public:
         explicit applist_server(system *sys);

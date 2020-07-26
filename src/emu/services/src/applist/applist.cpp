@@ -51,14 +51,8 @@ namespace eka2l1 {
     }
 
     applist_server::applist_server(system *sys)
-        : service::server(sys->get_kernel_system(), sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()), true)
+        : service::typical_server(sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()))
         , fbsserv(nullptr) {
-        REGISTER_IPC(applist_server, default_screen_number, EAppListServGetDefaultScreenNumber, "GetDefaultScreenNumber");
-        REGISTER_IPC(applist_server, app_language, EAppListServApplicationLanguage, "ApplicationLanguageL");
-        REGISTER_IPC(applist_server, is_accepted_to_run, EAppListServRuleBasedLaunching, "RuleBasedLaunching");
-        REGISTER_IPC(applist_server, get_app_info, EAppListServGetAppInfo, "GetAppInfo");
-        REGISTER_IPC(applist_server, get_capability, EAppListServGetAppCapability, "GetAppCapability");
-        REGISTER_IPC(applist_server, get_app_icon_file_name, EAppListServAppIconFileName, "GetAppIconFilename");
     }
 
     bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
@@ -360,7 +354,12 @@ namespace eka2l1 {
         LOG_INFO("Done loading!");
     }
 
+    bool applist_server::is_oldarch() {
+        return kern->is_eka1();
+    }
+
     void applist_server::connect(service::ipc_context &ctx) {
+        create_session<applist_session>(&ctx);
         server::connect(ctx);
     }
 
@@ -476,5 +475,113 @@ namespace eka2l1 {
 
         ctx.write_data_to_descriptor_argument<epoc::filename>(1, fname_des);
         ctx.complete(epoc::error_none);
+    }
+
+    struct app_icon_handles {
+        std::uint32_t bmp_handle;
+        std::uint32_t mask_bmp_handle;
+    };
+
+    void applist_server::get_app_icon(service::ipc_context &ctx) {
+        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
+        std::optional<std::int32_t> icon_size_width = std::nullopt;
+        std::optional<std::int32_t> icon_size_height = std::nullopt;
+        
+        if (is_oldarch()) {
+            icon_size_width = ctx.get_argument_data_from_descriptor<std::int32_t>(2);
+            icon_size_height = ctx.get_argument_data_from_descriptor<std::int32_t>(3);
+        } else {
+            icon_size_width = ctx.get_argument_value<std::int32_t>(1);
+            icon_size_height = ctx.get_argument_value<std::int32_t>(2);
+        }
+
+        if (!app_uid || !icon_size_width || !icon_size_height) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        apa_app_registry *reg = get_registration(app_uid.value());
+
+        if (!reg) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        if (reg->app_icons.size() == 0) {
+            // Usually it must have 1
+            ctx.complete(epoc::error_not_supported);
+            return;
+        }
+
+        app_icon_handles handle_result;
+
+        for (std::size_t i = 0; i < reg->app_icons.size() / 2; i++) {
+            if (reg->app_icons[i * 2].bmp_rom_addr_) {
+                handle_result.bmp_handle = reg->app_icons[i * 2].bmp_rom_addr_;
+            } else {
+                handle_result.bmp_handle = reg->app_icons[i * 2].bmp_->id;
+            }
+
+            if (reg->app_icons[i * 2 + 1].bmp_rom_addr_) {
+                handle_result.mask_bmp_handle = reg->app_icons[i * 2 + 1].bmp_rom_addr_;
+            } else {
+                handle_result.mask_bmp_handle = reg->app_icons[i * 2 + 1].bmp_->id;
+            }
+        }
+
+        ctx.write_data_to_descriptor_argument<app_icon_handles>(is_oldarch() ? 1 : 3, handle_result);
+        ctx.complete(epoc::error_none);
+    }
+
+    applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
+        : typical_session(svr, client_ss_uid, client_ver) {
+    }
+
+    void applist_session::fetch(service::ipc_context *ctx) {
+        if (server<applist_server>()->is_oldarch()) {
+            switch (ctx->msg->function) {
+            case applist_request_oldarch_app_info:
+                server<applist_server>()->get_app_info(*ctx);
+                break;
+    
+            case applist_request_oldarch_app_icon_by_uid_and_size:
+                server<applist_server>()->get_app_icon(*ctx);
+                break;
+
+            default:
+                LOG_ERROR("Unimplemented applist opcode {}", ctx->msg->function);
+                break;
+            }
+        } else {
+            switch (ctx->msg->function) {
+            case applist_request_get_default_screen_number:
+                server<applist_server>()->default_screen_number(*ctx);
+                break;
+
+            case applist_request_app_language:
+                server<applist_server>()->app_language(*ctx);
+                break;
+
+            case applist_request_rule_based_launching:
+                server<applist_server>()->is_accepted_to_run(*ctx);
+                break;
+
+            case applist_request_app_info:
+                server<applist_server>()->get_app_info(*ctx);
+                break;
+
+            case applist_request_app_capability:
+                server<applist_server>()->get_capability(*ctx);
+                break;
+
+            case applist_request_app_icon_filename:
+                server<applist_server>()->get_app_icon_file_name(*ctx);
+                break;
+
+            default:
+                LOG_ERROR("Unimplemented applist opcode 0x{:X}", ctx->msg->function);
+                break;
+            }
+        }
     }
 }
