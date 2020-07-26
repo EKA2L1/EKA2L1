@@ -386,7 +386,6 @@ namespace eka2l1 {
         bool ss_interpreter::interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress) {
             // Set current controller
             current_controllers.push(controller);
-            mngr->delete_files_and_bucket(controller->info.uid.uid);
 
             // Ask for language. If we can't choose the first one, or none
             if (controller->langs.langs.fields.size() != 1 && choose_lang) {
