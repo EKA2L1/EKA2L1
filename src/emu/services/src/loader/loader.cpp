@@ -70,7 +70,7 @@ namespace eka2l1 {
             }
 
             process_name16 = info_eka1->full_path_.to_std_string(nullptr);
-            process_args = info_eka1->arguments_.to_std_string(nullptr);
+            process_args = ctx.get_argument_value<std::u16string>(1);
 
             uid3 = info_eka1->uid3_;        
             handle_owner = info_eka1->handle_owner_;
