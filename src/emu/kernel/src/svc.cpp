@@ -3007,6 +3007,21 @@ namespace eka2l1::epoc {
         thr->signal_request();
     }
 
+    BRIDGE_FUNC(void, process_command_line_eka1, epoc::des16 *cmd_line, kernel::handle h) {
+        process_ptr pr = kern->get<kernel::process>(h);
+
+        if (!pr) {
+            LOG_WARN("Process not found with handle: 0x{:x}", h);
+            return;
+        }
+
+        if (!cmd_line) {
+            return;
+        }
+
+        cmd_line->assign(kern->crr_process(), pr->get_cmd_args());
+    }
+
     /*======================= LOCALE-RELATED FUNCTION ====================*/
     BRIDGE_FUNC(std::uint32_t, uchar_get_category, const epoc::uchar character) {
         return epoc::get_uchar_category(character, *kern->get_current_locale());
@@ -3439,6 +3454,7 @@ namespace eka2l1::epoc {
         
         // User server calls
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
+        BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
@@ -3447,6 +3463,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
+        BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
