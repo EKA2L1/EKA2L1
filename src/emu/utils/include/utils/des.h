@@ -53,7 +53,8 @@ namespace eka2l1::epoc {
         ptr_const,
         ptr,
         buf,
-        ptr_to_buf
+        ptr_to_buf,
+        des_type_end
     };
 
     constexpr int des_err_not_large_enough_to_hold = -1;
@@ -74,6 +75,10 @@ namespace eka2l1::epoc {
 
         inline des_type get_descriptor_type() const {
             return static_cast<des_type>(info >> 28);
+        }
+        
+        inline bool is_valid_descriptor() const {
+            return get_descriptor_type() < des_type_end;
         }
 
         inline void set_descriptor_type(const des_type dtype) {
