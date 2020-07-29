@@ -55,11 +55,11 @@ namespace eka2l1 {
         while (!should_stop_) {
             while (!should_paused_) {
                 const std::optional<std::uint64_t> next_microseconds = advance();
+                std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
 
                 if (next_microseconds) {
-                    std::this_thread::sleep_for(std::chrono::microseconds(next_microseconds.value()));
+                    new_event_avail_var_.wait_for(unqlock, std::chrono::microseconds(next_microseconds.value()));
                 } else {
-                    std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
                     new_event_avail_var_.wait(unqlock);
                 }
             }
@@ -108,14 +108,14 @@ namespace eka2l1 {
         evt.event_type = event_type;
         evt.event_user_data = userdata;
 
-        bool was_empty = (events_.empty());
+        bool should_nof = (events_.empty()) ||  (events_.back().event_time > evt.event_time);
         events_.push_back(evt);
 
         std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
             return lhs.event_time > rhs.event_time;
         });
 
-        if (was_empty) {
+        if (should_nof) {
             new_event_avail_var_.notify_one();
         }
     }
