@@ -673,6 +673,64 @@ namespace eka2l1::epoc {
         return epoc::error_bad_descriptor;
     }
 
+    std::int32_t do_ipc_manipulation(kernel_system *kern, kernel::thread *client_thread, std::uint8_t *client_ptr, ipc_copy_info &copy_info,
+        std::int32_t start_offset) {
+        bool des8 = true;
+        if (copy_info.flags & CHUNK_SHIFT_BY_1) {
+            des8 = false;
+        }
+
+        bool read = true;
+        if (copy_info.flags & IPC_DIR_WRITE) {
+            read = false;
+        }
+
+        process_ptr callee_process = client_thread->owning_process();
+
+        epoc::des8 *the_des = reinterpret_cast<epoc::des8*>(client_ptr);
+
+        if (!the_des->is_valid_descriptor()) {
+            return epoc::error_bad_descriptor;
+        }
+
+        std::int32_t size_of_work =  read ? (the_des->get_length() - start_offset) : (the_des->get_max_length(callee_process) - start_offset);
+        client_ptr = reinterpret_cast<std::uint8_t*>(the_des->get_pointer_raw(callee_process));
+
+        if (read && (size_of_work > copy_info.target_length)) {
+            return epoc::error_underflow;
+        }
+
+        // In write, size of work is the size to write to
+        if (!read && (size_of_work < copy_info.target_length)) {
+            return epoc::error_overflow;
+        }
+
+        process_ptr crr_process = kern->crr_process();
+        std::uint8_t *info_host_ptr = (copy_info.flags & IPC_HLE_EKA1) ? copy_info.target_host_ptr :
+            copy_info.target_ptr.get(crr_process);
+
+        if (!info_host_ptr) {
+            return epoc::error_argument;
+        }
+
+        size_of_work = common::min<std::uint32_t>(size_of_work, copy_info.target_length);
+
+        if (!read && the_des) {
+            the_des->set_length(callee_process, size_of_work + start_offset);
+        }
+
+        std::size_t raw_size_of_work = size_of_work;
+
+        if (!des8) {
+            // Multiple by size of uint16_t
+            raw_size_of_work *= sizeof(std::uint16_t);
+            start_offset *= sizeof(std::uint16_t);
+        }
+
+        std::memcpy(read ? info_host_ptr : (client_ptr + start_offset), read ? (client_ptr + start_offset) : info_host_ptr, raw_size_of_work);
+        return static_cast<std::int32_t>(size_of_work);
+    }
+
     BRIDGE_FUNC(std::int32_t, message_ipc_copy, kernel::handle h, std::int32_t param, eka2l1::ptr<ipc_copy_info> info,
         std::int32_t start_offset) {
         if (!info || param < 0 || param > 3) {
@@ -688,72 +746,19 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        bool des8 = true;
-        if (info_host->flags & CHUNK_SHIFT_BY_1) {
-            des8 = false;
-        }
-
-        bool read = true;
-        if (info_host->flags & IPC_DIR_WRITE) {
-            read = false;
-        }
-
         ipc_arg_type arg_type = msg->args.get_arg_type(param);
-        if (arg_type == ipc_arg_type::unspecified) {
+        if (!(static_cast<std::uint32_t>(arg_type) & static_cast<std::uint32_t>(ipc_arg_type::flag_des))) {
             return epoc::error_argument;
         }
 
-        process_ptr callee_process = msg->own_thr->owning_process();
+        eka2l1::ptr<std::uint8_t> param_ptr(msg->args.args[param]);
+        std::uint8_t *param_ptr_host = param_ptr.get(msg->own_thr->owning_process());
 
-        std::int32_t size_of_work = 4;
-        std::uint8_t *msg_slot_ptr = reinterpret_cast<std::uint8_t *>(callee_process->get_ptr_on_addr_space(
-            msg->args.args[param]));
-
-        epoc::des8 *the_des = nullptr;
-        
-        if (arg_type != ipc_arg_type::handle) {
-            if (!msg_slot_ptr) {
-                return epoc::error_argument;
-            }
-
-            the_des = reinterpret_cast<epoc::des8*>(msg_slot_ptr);
-            size_of_work = read ? the_des->get_length() : the_des->get_max_length(callee_process);
-
-            msg_slot_ptr = reinterpret_cast<std::uint8_t*>(the_des->get_pointer_raw(callee_process));
-        } else {
-            msg_slot_ptr = reinterpret_cast<std::uint8_t*>(&msg->args.args[param]);
-        }
-
-        if (read && (size_of_work > info_host->target_length)) {
-            return epoc::error_underflow;
-        }
-
-        // In write, size of work is the size to write to
-        if (!read && (size_of_work < info_host->target_length)) {
-            return epoc::error_overflow;
-        }
-
-        std::uint8_t *info_host_ptr = info_host->target_ptr.get(crr_process);
-
-        if (!info_host_ptr) {
+        if (!param_ptr_host || !info_host) {
             return epoc::error_argument;
         }
 
-        size_of_work = common::min<std::uint32_t>(size_of_work, info_host->target_length);
-
-        if (!read && the_des) {
-            the_des->set_length(callee_process, size_of_work);
-        }
-
-        std::size_t raw_size_of_work = size_of_work;
-
-        if (static_cast<std::uint8_t>(arg_type) & static_cast<std::uint8_t>(ipc_arg_type::flag_16b)) {
-            // Multiple by size of uint16_t
-            raw_size_of_work *= sizeof(std::uint16_t);
-        }
-
-        std::memcpy(read ? info_host_ptr : msg_slot_ptr, read ? msg_slot_ptr : info_host_ptr, raw_size_of_work);
-        return static_cast<std::int32_t>(size_of_work);
+        return do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, *info_host, start_offset);
     }
 
     BRIDGE_FUNC(std::int32_t, message_client, kernel::handle h, kernel::owner_type owner) {
@@ -2111,6 +2116,8 @@ namespace eka2l1::epoc {
             return;
         }
 
+        LOG_TRACE("After {} us", us_after);
+
         epoc::request_status *sts = req_sts.get(kern->crr_process());
         timer->after(kern->crr_thread(), sts, us_after);
     }
@@ -3064,6 +3071,52 @@ namespace eka2l1::epoc {
         return result;
     }
 
+    std::int32_t thread_ipc_to_des_eka1(kernel_system *kern, address client_ptr_addr, epoc::des8 *des_ptr, std::int32_t offset, kernel::handle client_thread_h,
+        const std::uint32_t flags) {
+        kernel::thread *client_thread = kern->get<kernel::thread>(client_thread_h);
+
+        if (!client_thread) {
+            return epoc::error_bad_handle;
+        }
+
+        if (offset < 0) {
+            return epoc::error_argument;
+        }
+
+        kernel::process *client_process = client_thread->owning_process();
+        std::uint8_t *client_ptr = eka2l1::ptr<std::uint8_t>(client_ptr_addr).get(client_process);
+
+        if (!client_ptr) {
+            return epoc::error_argument;
+        }
+
+        kernel::process *crr_process = kern->crr_process();
+
+        ipc_copy_info info;
+        info.target_ptr = 0;
+        info.target_host_ptr = reinterpret_cast<std::uint8_t*>(des_ptr->get_pointer(crr_process));
+        info.target_length = (flags & IPC_DIR_WRITE) ? des_ptr->get_length() : des_ptr->get_max_length(crr_process);
+        info.flags = flags | IPC_HLE_EKA1;
+
+        return do_ipc_manipulation(kern, client_thread, client_ptr, info, offset);
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_read_ipc_to_des8, address source_ptr_addr, epoc::des8 *dest_des, std::int32_t offset, kernel::handle source_thread) {
+        return thread_ipc_to_des_eka1(kern, source_ptr_addr, dest_des, offset, source_thread, IPC_DIR_READ | CHUNK_SHIFT_BY_0);
+    }
+    
+    BRIDGE_FUNC(std::int32_t, thread_read_ipc_to_des16, address source_ptr_addr, epoc::des8 *dest_des, std::int32_t offset, kernel::handle source_thread) {
+        return thread_ipc_to_des_eka1(kern, source_ptr_addr, dest_des, offset, source_thread, IPC_DIR_READ | CHUNK_SHIFT_BY_1);
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_write_ipc_to_des8, address dest_ptr_addr, epoc::des8 *source_des, std::int32_t offset, kernel::handle dest_thread) {
+        return thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_0);
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_write_ipc_to_des16, address dest_ptr_addr, epoc::des8 *source_des, std::int32_t offset, kernel::handle dest_thread) {
+        return thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_1);
+    }
+
     BRIDGE_FUNC(void, thread_request_complete_eka1, address *sts_addr, const std::int32_t code, kernel::handle thread_handle) {
         kernel::thread *thr = kern->get<kernel::thread>(thread_handle);
 
@@ -3532,6 +3585,10 @@ namespace eka2l1::epoc {
         // User server calls
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
+        BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
+        BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
+        BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),
+        BRIDGE_REGISTER(0x800045, thread_write_ipc_to_des16),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
@@ -3542,9 +3599,11 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC0002E, server_receive),
+        BRIDGE_REGISTER(0xC00030, set_session_ptr),
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC0004E, thread_request_signal),
+        BRIDGE_REGISTER(0xC0006B, message_complete),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_eka1)

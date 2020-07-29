@@ -61,14 +61,16 @@ namespace eka2l1::epoc {
         eka2l1::ptr<std::uint8_t> target_ptr;
         std::int32_t target_length;
         std::int32_t flags;
+        std::uint8_t *target_host_ptr;
     };
 
-    static_assert(sizeof(ipc_copy_info) == 12, "Size of IPCCopy struct is 12");
+    // static_assert(sizeof(ipc_copy_info) == 12, "Size of IPCCopy struct is 12");
 
     static constexpr std::int32_t CHUNK_SHIFT_BY_0 = 0;
     static constexpr std::int32_t CHUNK_SHIFT_BY_1 = static_cast<std::int32_t>(0x80000000);
     static constexpr std::int32_t IPC_DIR_READ = 0;
     static constexpr std::int32_t IPC_DIR_WRITE = 0x10000000;
+    static constexpr std::int32_t IPC_HLE_EKA1 = 0x1;
 
     enum property_type {
         property_type_int,
