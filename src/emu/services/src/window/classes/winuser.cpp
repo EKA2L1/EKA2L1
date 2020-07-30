@@ -580,10 +580,19 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
-        case EWsWinOpGetInvalidRegionCount:
-            ctx.write_data_to_descriptor_argument<std::uint32_t>(reply_slot, 0);
-            ctx.complete(epoc::error_none);
+        case EWsWinOpGetInvalidRegionCount: {
+            auto count_ptr = ctx.get_argument_value<address>(reply_slot);
+            LOG_TRACE("Get invalid region count stubbed with 0");
+
+            if (!count_ptr || (count_ptr == 0)) {
+                ctx.complete(0);
+            } else {
+                ctx.write_data_to_descriptor_argument<std::uint32_t>(reply_slot, 0);
+                ctx.complete(epoc::error_none);
+            }
+
             break;
+        }
 
         case EWsWinOpSetShape:
             LOG_WARN("SetShape stubbed");
