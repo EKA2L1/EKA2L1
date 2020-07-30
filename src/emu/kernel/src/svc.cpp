@@ -2116,8 +2116,6 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE("After {} us", us_after);
-
         epoc::request_status *sts = req_sts.get(kern->crr_process());
         timer->after(kern->crr_thread(), sts, us_after);
     }
