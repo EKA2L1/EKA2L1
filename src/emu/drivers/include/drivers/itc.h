@@ -134,16 +134,16 @@ namespace eka2l1::drivers {
         }
 
         /**
-         * \brief Set scissor rectangle, allow redraw only in specified area if invalidate is enabled.
+         * \brief Set scissor rectangle, allow redraw only in specified area if clipping is enabled.
          *
          * Use in drawing window rect or invalidate a specific region of an window.
          */
-        virtual void invalidate_rect(eka2l1::rect &rect) = 0;
+        virtual void clip_rect(eka2l1::rect &rect) = 0;
 
         /**
-         * \brief Enable/disable invalidation (scissor).
+         * \brief Enable/disable clipping (scissor).
          */
-        virtual void set_invalidate(const bool enabled) = 0;
+        virtual void set_clipping(const bool enabled) = 0;
 
         /**
           * \brief Clear the binding bitmap with color.
@@ -355,16 +355,16 @@ namespace eka2l1::drivers {
         void set_brush_color_detail(const eka2l1::vecx<int, 4> &color) override;
 
         /**
-         * \brief Set scissor rectangle, allow redraw only in specified area if invalidate is enabled.
+         * \brief Set scissor rectangle, allow redraw only in specified area if clipping is enabled.
          *
          * Use in drawing window rect or invalidate a specific region of an window.
          */
-        void invalidate_rect(eka2l1::rect &rect) override;
+        void clip_rect(eka2l1::rect &rect) override;
 
         /**
-         * \brief Enable/disable invalidation (scissor).
+         * \brief Enable/disable clipping (scissor).
          */
-        void set_invalidate(const bool enabled) override;
+        void set_clipping(const bool enabled) override;
 
         /**
           * \brief Clear the binding bitmap with color.

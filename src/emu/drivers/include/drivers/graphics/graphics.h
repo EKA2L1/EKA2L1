@@ -32,8 +32,8 @@
 namespace eka2l1::drivers {
     enum graphics_driver_opcode : std::uint16_t {
         // Mode -1: Miscs
-        graphics_driver_invalidate_rect,
-        graphics_driver_set_invalidate,
+        graphics_driver_clip_rect,
+        graphics_driver_set_clipping,
         graphics_driver_set_viewport,
         graphics_driver_set_blend,
         graphics_driver_set_depth,

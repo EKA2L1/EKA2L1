@@ -135,15 +135,15 @@ namespace eka2l1::drivers {
         : graphics_command_list_builder(cmd_list) {
     }
 
-    void server_graphics_command_list_builder::invalidate_rect(eka2l1::rect &rect) {
-        command *cmd = make_command(graphics_driver_invalidate_rect, nullptr, rect.top.x, rect.top.y,
+    void server_graphics_command_list_builder::clip_rect(eka2l1::rect &rect) {
+        command *cmd = make_command(graphics_driver_clip_rect, nullptr, rect.top.x, rect.top.y,
             rect.size.x, rect.size.y);
 
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::set_invalidate(const bool enabled) {
-        command *cmd = make_command(graphics_driver_set_invalidate, nullptr, enabled);
+    void server_graphics_command_list_builder::set_clipping(const bool enabled) {
+        command *cmd = make_command(graphics_driver_set_clipping, nullptr, enabled);
         get_command_list().add(cmd);
     }
 
