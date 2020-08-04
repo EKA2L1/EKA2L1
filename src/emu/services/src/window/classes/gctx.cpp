@@ -80,7 +80,7 @@ namespace eka2l1::epoc {
         const int baseline_offset, const int margin) {
         // TODO: Pen outline >_<
         eka2l1::vecx<int, 4> color;
-        color = common::rgb_to_vec(brush_color);
+        color = common::rgb_to_vec(pen_color);
         cmd_builder->set_brush_color({ color[1], color[2], color[3] });
 
         eka2l1::rect area(top_left, bottom_right - top_left);
