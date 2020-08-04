@@ -234,23 +234,34 @@ namespace eka2l1::epoc {
         drivers::handle bmp_mask_driver_handle = handle_from_bitwise_bitmap(masked);
 
         std::uint32_t flags = 0;
-        const bool alpha_blending = (masked->settings_.current_display_mode() == epoc::display_mode::color256);
+        const bool alpha_blending = (masked->settings_.current_display_mode() == epoc::display_mode::color256)
+            || (epoc::is_display_mode_alpha(masked->settings_.current_display_mode()));
 
         if (blt_cmd->invert_mask && !alpha_blending) {
             flags |= drivers::bitmap_draw_flag_invert_mask;
         }
 
-        if (alpha_blending) {
-            cmd_builder->set_blend_mode(true);
-            cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
-                drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
-                drivers::blend_factor::one, drivers::blend_factor::zero);
+        cmd_builder->set_blend_mode(true);
+        
+        // For non alpha blending we always want to take color buffer's alpha.
+        cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+            drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
+            (alpha_blending ? drivers::blend_factor::one : drivers::blend_factor::zero),
+            (alpha_blending ? drivers::blend_factor::one_minus_frag_out_alpha : drivers::blend_factor::one));
+
+        bool swizzle_alteration = false;
+        if (!epoc::is_display_mode_alpha(masked->settings_.current_display_mode())) {
+            swizzle_alteration = true;
+            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
         }
 
         cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, blt_cmd->source_rect, flags);
+        cmd_builder->set_blend_mode(false);
 
-        if (alpha_blending) {
-            cmd_builder->set_blend_mode(false);
+        if (swizzle_alteration) {
+            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha);
         }
 
         context.complete(epoc::error_none);
