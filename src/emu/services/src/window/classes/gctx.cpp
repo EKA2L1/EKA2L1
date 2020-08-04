@@ -100,21 +100,8 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
-    bool graphic_context::do_command_set_color(const set_color_type to_set) {
-        eka2l1::vecx<int, 4> color;
-
-        switch (to_set) {
-        case set_color_type::brush:
-            color = common::rgb_to_vec(brush_color);
-            break;
-
-        case set_color_type::pen:
-            color = common::rgb_to_vec(pen_color);
-            break;
-
-        default:
-            return false;
-        }
+    bool graphic_context::do_command_set_brush_color() {
+        eka2l1::vecx<int, 4> color = common::rgb_to_vec(brush_color);
 
         // Don't bother even sending any draw command
         switch (fill_mode) {
@@ -143,6 +130,36 @@ namespace eka2l1::epoc {
         return true;
     }
 
+    bool graphic_context::do_command_set_pen_color() {
+        eka2l1::vecx<int, 4> color = common::rgb_to_vec(pen_color);
+
+        // Don't bother even sending any draw command
+        switch (line_mode) {
+        case pen_style::null:
+            return false;
+
+        case pen_style::solid:
+            if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
+                if (color[0] == 0) {
+                    // Nothing, dont draw
+                    return false;
+                }
+
+                cmd_builder->set_brush_color_detail({ color[1], color[2], color[3], color[0] });
+            } else {
+                cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+            }
+
+            break;
+
+        default:
+            LOG_WARN("Unhandled pen style {}", static_cast<std::int32_t>(fill_mode));
+            return false;
+        }
+
+        return true;
+    }
+
     void graphic_context::flush_queue_to_driver() {
         drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
 
@@ -157,6 +174,11 @@ namespace eka2l1::epoc {
 
     void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
         brush_color = *reinterpret_cast<const common::rgb *>(cmd.data_ptr);
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::set_pen_color(service::ipc_context &context, ws_cmd &cmd) {
+        pen_color = *reinterpret_cast<const common::rgb *>(cmd.data_ptr);
         context.complete(epoc::error_none);
     }
 
@@ -296,6 +318,29 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void graphic_context::set_pen_size(service::ipc_context &context, ws_cmd &cmd) {
+        pen_size = *reinterpret_cast<eka2l1::vec2 *>(cmd.data_ptr);
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::draw_line(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
+
+        // Symbian rectangle second vector is the bottom right, not the size
+        area.transform_from_symbian_rectangle();
+
+        if (do_command_set_pen_color()) {
+            // We want to draw the rectangle that backup the real rectangle, to create borders.
+            eka2l1::rect backup_border = area;
+            backup_border.top -= pen_size;
+            backup_border.size += pen_size;
+
+            cmd_builder->draw_rectangle(backup_border);
+        }
+
+        context.complete(epoc::error_none);
+    }
+
     void graphic_context::draw_rect(service::ipc_context &context, ws_cmd &cmd) {
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
@@ -307,7 +352,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        if (do_command_set_color(set_color_type::pen)) {
+        if (do_command_set_pen_color()) {
             // We want to draw the rectangle that backup the real rectangle, to create borders.
             eka2l1::rect backup_border = area;
             backup_border.top -= pen_size;
@@ -317,10 +362,31 @@ namespace eka2l1::epoc {
         }
 
         // Draw the real rectangle! Hurray!
-        if (do_command_set_color(set_color_type::brush)) {
+        if (do_command_set_brush_color()) {
             cmd_builder->draw_rectangle(area);
         }
 
+        context.complete(epoc::error_none);
+    }
+
+    void graphic_context::clear(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect area(attached_window->pos, attached_window->size);
+
+        if (!area.valid()) {
+            context.complete(epoc::error_none);
+            return;
+        }
+
+        const auto previous_brush_type = fill_mode;
+        fill_mode = brush_style::solid;
+
+        if (do_command_set_brush_color()) {
+            cmd_builder->draw_rectangle(area);
+        }
+
+        fill_mode = previous_brush_type;
+
+        // Draw rectangle
         context.complete(epoc::error_none);
     }
 
@@ -338,7 +404,7 @@ namespace eka2l1::epoc {
         const auto previous_brush_type = fill_mode;
         fill_mode = brush_style::solid;
 
-        if (do_command_set_color(set_color_type::brush)) {
+        if (do_command_set_brush_color()) {
             cmd_builder->draw_rectangle(area);
         }
 
@@ -384,6 +450,14 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void graphic_context::draw_text(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_text *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
+        std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_text)), info->length);
+
+        do_command_draw_text(context, info->pos, info->pos, text,
+            epoc::text_alignment::left, 0, 0);
+    }
+
     void graphic_context::draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_draw_box_text_optimised1 *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised1)), info->length);
@@ -420,13 +494,18 @@ namespace eka2l1::epoc {
             { ws_gc_u171_active, &graphic_context::active },
             { ws_gc_u171_set_brush_color, &graphic_context::set_brush_color },
             { ws_gc_u171_set_brush_style, &graphic_context::set_brush_style },
+            { ws_gc_u171_set_pen_color, &graphic_context::set_pen_color },
             { ws_gc_u171_set_pen_style, &graphic_context::set_pen_style },
+            { ws_gc_u171_set_pen_size, &graphic_context::set_pen_size },
             { ws_gc_u171_deactive, &graphic_context::deactive },
             { ws_gc_u171_reset, &graphic_context::reset },
             { ws_gc_u171_use_font, &graphic_context::use_font },
+            { ws_gc_u171_draw_line, &graphic_context::draw_line },
             { ws_gc_u171_draw_rect, &graphic_context::draw_rect },
+            { ws_gc_u171_clear, &graphic_context::clear },
             { ws_gc_u171_clear_rect, &graphic_context::clear_rect },
             { ws_gc_u171_draw_bitmap, &graphic_context::draw_bitmap },
+            { ws_gc_u171_draw_text, &graphic_context::draw_text },
             { ws_gc_u171_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
             { ws_gc_u171_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
             { ws_gc_u171_gdi_blt2, &graphic_context::gdi_blt2 },
@@ -439,13 +518,18 @@ namespace eka2l1::epoc {
             { ws_gc_curr_active, &graphic_context::active },
             { ws_gc_curr_set_brush_color, &graphic_context::set_brush_color },
             { ws_gc_curr_set_brush_style, &graphic_context::set_brush_style },
+            { ws_gc_curr_set_pen_color, &graphic_context::set_pen_color },
             { ws_gc_curr_set_pen_style, &graphic_context::set_pen_style },
+            { ws_gc_curr_set_pen_size, &graphic_context::set_pen_size },
             { ws_gc_curr_deactive, &graphic_context::deactive },
             { ws_gc_curr_reset, &graphic_context::reset },
             { ws_gc_curr_use_font, &graphic_context::use_font },
+            { ws_gc_curr_draw_line, &graphic_context::draw_line },
             { ws_gc_curr_draw_rect, &graphic_context::draw_rect },
+            { ws_gc_curr_clear, &graphic_context::clear },
             { ws_gc_curr_clear_rect, &graphic_context::clear_rect },
             { ws_gc_curr_draw_bitmap, &graphic_context::draw_bitmap },
+            { ws_gc_curr_draw_text, &graphic_context::draw_text },
             { ws_gc_curr_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
             { ws_gc_curr_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
             { ws_gc_curr_gdi_blt2, &graphic_context::gdi_blt2 },

@@ -93,16 +93,22 @@ namespace eka2l1::epoc {
 
         void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
             const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);
-        bool do_command_set_color(const set_color_type to_set);
+        bool do_command_set_brush_color();
+        bool do_command_set_pen_color();
 
         void active(service::ipc_context &context, ws_cmd cmd);
         void deactive(service::ipc_context &context, ws_cmd &cmd);
         void draw_bitmap(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
+        void set_pen_color(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_style(service::ipc_context &context, ws_cmd &cmd);
+        void set_pen_size(service::ipc_context &context, ws_cmd &cmd);
+        void draw_line(service::ipc_context &context, ws_cmd &cmd);
         void draw_rect(service::ipc_context &context, ws_cmd &cmd);
+        void clear(service::ipc_context &context, ws_cmd &cmd);
         void clear_rect(service::ipc_context &context, ws_cmd &cmd);
+        void draw_text(service::ipc_context &context, ws_cmd &cmd);
         void draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd);
         void draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd);
 

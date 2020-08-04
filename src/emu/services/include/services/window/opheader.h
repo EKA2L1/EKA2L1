@@ -91,6 +91,11 @@ namespace eka2l1 {
         std::uint32_t flags;
     };
 
+    struct ws_cmd_draw_text {
+        eka2l1::vec2 pos;
+        std::int32_t length;
+    };
+
     struct ws_cmd_draw_text_ptr {
         eka2l1::vec2 pos;
         eka2l1::ptr<epoc::desc16> text;
@@ -120,6 +125,11 @@ namespace eka2l1 {
         epoc::text_alignment horiz;
         std::int32_t left_mgr;
         std::int32_t length;
+    };
+
+    struct ws_cmd_draw_line {
+        vec2 left_top_pos;
+        vec2 right_bottom_pos;
     };
 
     struct ws_cmd_set_text_cursor {
