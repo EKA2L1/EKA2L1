@@ -139,6 +139,48 @@ namespace eka2l1::epoc {
         return epoc::display_mode::color16ma;
     }
 
+    std::string display_mode_to_string(const epoc::display_mode disp_mode) {
+        switch (disp_mode) {
+        case epoc::display_mode::color16map:
+            return "color16map";
+
+        case epoc::display_mode::color16ma:
+            return "color16ma";
+
+        case epoc::display_mode::color16mu:
+            return "color16mu";
+
+        case epoc::display_mode::color16m:
+            return "color16m";
+
+        case epoc::display_mode::color64k:
+            return "color64k";
+
+        case epoc::display_mode::color4k:
+            return "color4k";
+
+        case epoc::display_mode::color256:
+            return "color256";
+
+        case epoc::display_mode::gray256:
+            return "gray256";
+
+        case epoc::display_mode::gray16:
+            return "gray16";
+
+        case epoc::display_mode::gray4:
+            return "gray4";
+
+        case epoc::display_mode::gray2:
+            return "gray2";
+
+        default:
+            break;
+        }
+
+        return "unk";
+    }
+
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code) {
         if (scan_code <= EStdKeyScrollLock) {
             return keymap[scan_code];
