@@ -52,7 +52,7 @@ namespace eka2l1::epoc {
     }
 
     static char *converted_bw_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
-        const std::uint8_t *original_ptr, std::vector<char> &converted_pool) {
+        const std::uint32_t *original_ptr, std::vector<char> &converted_pool) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
 
@@ -60,7 +60,8 @@ namespace eka2l1::epoc {
 
         for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
             for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
-                const std::uint32_t color = original_ptr[(y * bw_bmp->header_.size_pixels.y + x) / 8];
+                std::uint32_t word_per_line = (bw_bmp->header_.size_pixels.x + 31) / 32;
+                std::uint32_t color = original_ptr[y * word_per_line + x / 32];
                 std::uint32_t converted_color =  0;
                 if (color & (1 << (x & 0x1F))) {
                     converted_color = 0xFFFFFF;
@@ -234,7 +235,7 @@ namespace eka2l1::epoc {
             }
 
             if (bpp == 1) {
-                data_pointer = converted_bw_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
+                data_pointer = converted_bw_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
                     converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());
