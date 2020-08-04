@@ -51,6 +51,27 @@ namespace eka2l1::epoc {
         return (dsp == epoc::display_mode::color16) || (dsp == epoc::display_mode::color256);
     }
 
+    static char *converted_bw_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
+        const std::uint8_t *original_ptr, std::vector<char> &converted_pool) {
+        std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
+        converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
+
+        char *return_ptr = &converted_pool[0];
+
+        for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
+            for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
+                const std::uint32_t color = original_ptr[(y * bw_bmp->header_.size_pixels.y + x) / 8];
+                std::uint32_t converted_color =  0;
+                if (color & (1 << (x & 0x1F))) {
+                    converted_color = 0xFFFFFF;
+                }
+
+                std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char *>(&converted_color), 3);
+            }
+        }
+        return return_ptr;
+    }
+
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
         const std::uint8_t *original_ptr, std::vector<char> &converted_pool) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
@@ -207,6 +228,13 @@ namespace eka2l1::epoc {
             // GPU don't support them. Convert them on CPU
             if (is_palette_bitmap(bmp)) {
                 data_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
+                    converted);
+                bpp = 24;
+                raw_size = static_cast<std::uint32_t>(converted.size());
+            }
+
+            if (bpp == 1) {
+                data_pointer = converted_bw_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
                     converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());
