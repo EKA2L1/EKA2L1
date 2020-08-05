@@ -77,12 +77,13 @@ namespace eka2l1::drivers {
      * \param data_type         Format of the data.
      * \param data              Pointer to the data to upload.
      * \param size              Dimension size of the texture.
+     * \param pixels_per_line   Number of pixels per row. Use 0 for default.
      *
      * \returns Handle to the texture.
      */
     drivers::handle create_texture(graphics_driver *driver, const std::uint8_t dim, const std::uint8_t mip_levels,
         drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
-        const void *data, const eka2l1::vec3 &size);
+        const void *data, const eka2l1::vec3 &size, const std::size_t pixels_per_line = 0);
 
     /**
      * \brief Create a new buffer.
@@ -168,17 +169,18 @@ namespace eka2l1::drivers {
          * The dimensions and the offset parameter must reside in bitmap boundaries create before.
          * The behavior will be undefined if these conditions are not satisfied. Though some infos will be emitted.
          *
-         * \param h       The handle to existing bitmap.
-         * \param data    Pointer to bitmap data.
-         * \param size    Size of bitmap data.
-         * \param offset  The offset of the bitmap (pixels).
-         * \param dim     The dimensions of bitmap (pixels).
-         * \param bpp     Number of bits per pixel.
+         * \param h                 The handle to existing bitmap.
+         * \param data              Pointer to bitmap data.
+         * \param size              Size of bitmap data.
+         * \param offset            The offset of the bitmap (pixels).
+         * \param dim               The dimensions of bitmap (pixels).
+         * \param bpp               Number of bits per pixel.
+         * \param pixels_per_line   Number of pixels per row. Use 0 for default.
          * 
          * \returns Handle to the texture.
          */
-        virtual void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
-            const eka2l1::vec2 &dim)
+        virtual void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size,
+            const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0)
             = 0;
 
         /**
@@ -384,7 +386,7 @@ namespace eka2l1::drivers {
         void resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size) override;
 
         void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
-            const eka2l1::vec2 &dim) override;
+            const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0) override;
 
         void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const std::uint32_t flags = 0) override;
 

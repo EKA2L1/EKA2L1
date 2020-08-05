@@ -95,26 +95,26 @@ namespace eka2l1::drivers {
 
     drivers::handle create_texture(graphics_driver *driver, const std::uint8_t dim, const std::uint8_t mip_levels,
         drivers::texture_format internal_format, drivers::texture_format data_format, drivers::texture_data_type data_type,
-        const void *data, const eka2l1::vec3 &size) {
+        const void *data, const eka2l1::vec3 &size, const std::size_t pixels_per_line) {
         drivers::handle handle_num = 0;
 
         switch (dim) {
         case 1:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, pixels_per_line, &handle_num) != 0) {
                 return 0;
             }
 
             break;
 
         case 2:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, pixels_per_line, &handle_num) != 0) {
                 return 0;
             }
 
             break;
 
         case 3:
-            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, size.z, &handle_num) != 0) {
+            if (send_sync_command(driver, graphics_driver_create_texture, dim, mip_levels, internal_format, data_format, data_type, data, size.x, size.y, size.z, pixels_per_line, &handle_num) != 0) {
                 return 0;
             }
 
@@ -160,9 +160,9 @@ namespace eka2l1::drivers {
     }
 
     void server_graphics_command_list_builder::update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size,
-        const eka2l1::vec2 &offset, const eka2l1::vec2 &dim) {
+        const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line) {
         // Copy data
-        command *cmd = make_command(graphics_driver_update_bitmap, nullptr, h, make_data_copy(data, size), bpp, size, offset, dim);
+        command *cmd = make_command(graphics_driver_update_bitmap, nullptr, h, make_data_copy(data, size), bpp, size, offset, dim, pixels_per_line);
         get_command_list().add(cmd);
     }
 

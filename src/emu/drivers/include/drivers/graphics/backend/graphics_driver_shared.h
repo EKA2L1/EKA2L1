@@ -93,7 +93,7 @@ namespace eka2l1::drivers {
         ~shared_graphics_driver() override;
 
         void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset, const eka2l1::vec2 &dim,
-            const int bpp, const void *data) override;
+            const int bpp, const void *data, const std::size_t pixels_per_line = 0) override;
 
         void attach_descriptors(drivers::handle h, const int stride, const bool instance_move, const attribute_descriptor *descriptors,
             const int descriptor_count) override;
