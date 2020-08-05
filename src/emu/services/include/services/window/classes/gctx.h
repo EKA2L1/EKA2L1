@@ -25,7 +25,9 @@
 #include <services/window/classes/winuser.h>
 
 #include <common/linked.h>
+#include <common/region.h>
 #include <common/rgb.h>
+#include <common/vecx.h>
 
 #include <queue>
 #include <string>
@@ -75,6 +77,8 @@ namespace eka2l1::epoc {
         common::rgb pen_color;
 
         eka2l1::vec2 pen_size;
+        eka2l1::rect clipping_rect;
+        common::region clipping_region;
 
         void flush_queue_to_driver();
 
@@ -95,6 +99,8 @@ namespace eka2l1::epoc {
             const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);
         bool do_command_set_brush_color();
         bool do_command_set_pen_color();
+        
+        void do_submit_clipping();
 
         void active(service::ipc_context &context, ws_cmd cmd);
         void deactive(service::ipc_context &context, ws_cmd &cmd);
@@ -120,6 +126,7 @@ namespace eka2l1::epoc {
         void use_font(service::ipc_context &context, ws_cmd &cmd);
         void reset(service::ipc_context &context, ws_cmd &cmd);
         void free(service::ipc_context &context, ws_cmd &cmd);
+        void set_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
 
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
