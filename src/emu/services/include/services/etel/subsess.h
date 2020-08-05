@@ -53,6 +53,7 @@ namespace eka2l1 {
 
         virtual void dispatch(service::ipc_context *ctx) = 0;
         virtual etel_subsession_type type() const = 0;
+        virtual ~etel_subsession() = default;
     };
 
     struct etel_phone_subsession : public etel_subsession {
