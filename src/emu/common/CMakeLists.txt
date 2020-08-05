@@ -54,6 +54,7 @@ add_library(common
         include/common/time.h
         include/common/types.h
         include/common/unicode.h
+        include/common/region.h
         include/common/virtualmem.h
         include/common/watcher.h
         include/common/wildcard.h
@@ -86,6 +87,7 @@ add_library(common
         src/time.cpp
         src/types.cpp
         src/unicode.cpp
+        src/region.cpp
         src/virtualmem.cpp
         src/watcher.cpp
         src/wildcard.cpp

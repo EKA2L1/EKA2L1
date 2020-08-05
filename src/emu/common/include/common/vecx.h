@@ -210,6 +210,11 @@ namespace eka2l1 {
             , size(obj_size_) {
         }
 
+        void make_empty() {
+            top = { 0, 0 };
+            size = { 0, 0 };
+        }
+
         /**
          * \brief Check if the rectangle region is empty.
          * 
@@ -247,6 +252,24 @@ namespace eka2l1 {
             size.y = std::max<int>(top.y + size.y, other.top.y + other.size.y) - newy;
             top.x = newx;
             top.y = newy;
+        }
+
+        eka2l1::rect intersect(const eka2l1::rect &other) {
+            eka2l1::rect r { {0, 0}, {0, 0} };
+            
+            if (empty() || other.empty() || (top.x + size.x <= other.top.x) || (top.y + size.y <= other.top.y) ||
+                (top.x >= other.top.x + other.size.x) || (top.y >= other.top.y + other.size.y)) {
+                return r;
+            }
+
+            r.top.x = (top.x < other.top.x) ? other.top.x : top.x;
+            r.top.y = (top.y < other.top.y) ? other.top.y : top.y;
+            r.size.x = (top.x + size.x > other.top.x + other.size.x) ? (other.top.x + other.size.x) : (top.x + size.x);
+            r.size.y = (top.y + size.y > other.top.y + other.size.y) ? (other.top.y + other.size.y) : (top.y + size.y);
+
+            r.size -= r.top;
+
+            return r;
         }
 
         void transform_from_symbian_rectangle() {
