@@ -212,7 +212,8 @@ namespace eka2l1 {
 
         void make_empty() {
             top = { 0, 0 };
-            size = { 0, 0 };
+            size.x = 0;
+            size.y = 0;
         }
 
         /**
