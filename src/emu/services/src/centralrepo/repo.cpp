@@ -107,6 +107,11 @@ namespace eka2l1 {
         }
     }
 
+    central_repo_client_subsession::central_repo_client_subsession() 
+        : flags(0) {
+        set_transaction_mode(central_repo_transaction_mode::read_write);
+    }
+
     void central_repo_client_subsession::modification_success(const std::uint32_t key) {
         // Iters through all
         for (std::size_t i = 0; i < notifies.size(); i++) {
@@ -165,7 +170,7 @@ namespace eka2l1 {
 
         // Resolve
         // If get entry for write but the transaction mode is read only, we can't allow that
-        if (mode == 1 && get_transaction_mode() == central_repo_transaction_mode::read_only) {
+        if ((mode == 1) && (get_transaction_mode() == central_repo_transaction_mode::read_only)) {
             return nullptr;
         }
 
