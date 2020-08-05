@@ -296,14 +296,14 @@ namespace eka2l1::epoc {
         dest_rect.top = blt_cmd->pos;
         dest_rect.size = source_rect.size;
 
-        if ((ver > 2) && (blt_cmd->source_rect.top.y + blt_cmd->source_rect.size.y > bmp->header_.size_pixels.y)) {
+        if ((ver > 2) && (blt_cmd->source_rect.size.y > bmp->header_.size_pixels.y)) {
             // The source rect given by the command is too large.
             // By default, the extra space should be filled with white. We will do that by drawing
             // a white rectangle
             cmd_builder->set_brush_color({ 255, 255, 255 });
             cmd_builder->draw_rectangle(dest_rect);
 
-            source_rect.size.y = bmp->header_.size_pixels.y - blt_cmd->source_rect.top.y;
+            source_rect.size.y = bmp->header_.size_pixels.y;
             dest_rect.size.y = source_rect.size.y;
         }
 
