@@ -66,7 +66,9 @@ namespace eka2l1::epoc {
         }
 
         recording = true;
+
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
+        do_submit_clipping();
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
@@ -160,6 +162,32 @@ namespace eka2l1::epoc {
         return true;
     }
 
+    void graphic_context::do_submit_clipping() {
+        if (clipping_rect.empty() && clipping_region.empty()) {
+            cmd_builder->set_clipping(false);
+            return;
+        }
+
+        cmd_builder->set_clipping(true);
+
+        eka2l1::rect the_clip;
+
+        if (!clipping_rect.empty() && !clipping_region.empty()) {
+            the_clip = clipping_rect.intersect(clipping_region.bounding_rect());
+        } else {
+            if (!clipping_rect.empty()) {
+                the_clip = clipping_rect;
+                return;
+            } else {
+                the_clip = clipping_region.bounding_rect();
+            }
+        }
+
+        // The top should be bottom left
+        the_clip.top.y = (attached_window->size.y) - (the_clip.top.y + the_clip.size.y);
+        cmd_builder->clip_rect(the_clip);
+    }
+
     void graphic_context::flush_queue_to_driver() {
         drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
 
@@ -183,16 +211,22 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {
-        context_attach_link.deque();
+        if (attached_window) {
+            context_attach_link.deque();
 
-        // Might have to flush sooner, since this window can be used with another
-        flush_queue_to_driver();
+            // Disable clipping for other context
+            cmd_builder->set_clipping(false);
 
-        // Content of the window changed, so call the handler
-        attached_window->take_action_on_change();
+            // Might have to flush sooner, since this window can be used with another
+            flush_queue_to_driver();
+
+            // Content of the window changed, so call the handler
+            attached_window->take_action_on_change();
+        }
 
         attached_window = nullptr;
         recording = false;
+
         context.complete(epoc::error_none);
     }
 
@@ -226,8 +260,11 @@ namespace eka2l1::epoc {
             return;
         }
 
+        eka2l1::rect source_rect = blt_cmd->source_rect;
+        source_rect.transform_from_symbian_rectangle();
+
         eka2l1::rect dest_rect;
-        dest_rect.size = blt_cmd->source_rect.size;
+        dest_rect.size = source_rect.size;
         dest_rect.top = blt_cmd->pos;
 
         drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bmp);
@@ -256,7 +293,7 @@ namespace eka2l1::epoc {
                 drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
         }
 
-        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, blt_cmd->source_rect, flags);
+        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, flags);
         cmd_builder->set_blend_mode(false);
 
         if (swizzle_alteration) {
@@ -285,6 +322,7 @@ namespace eka2l1::epoc {
             source_rect.size = bmp->header_.size_pixels;
         } else {
             source_rect = blt_cmd->source_rect;
+            source_rect.transform_from_symbian_rectangle();
         }
 
         if (!source_rect.valid()) {
@@ -296,7 +334,7 @@ namespace eka2l1::epoc {
         dest_rect.top = blt_cmd->pos;
         dest_rect.size = source_rect.size;
 
-        if ((ver > 2) && (blt_cmd->source_rect.size.y > bmp->header_.size_pixels.y)) {
+        if ((ver > 2) && (source_rect.size.y > bmp->header_.size_pixels.y)) {
             // The source rect given by the command is too large.
             // By default, the extra space should be filled with white. We will do that by drawing
             // a white rectangle
@@ -433,6 +471,11 @@ namespace eka2l1::epoc {
 
         pen_size = { 1, 1 };
         brush_color = 0;
+
+        clipping_rect.make_empty();
+        clipping_region.make_empty();
+
+        do_submit_clipping();
     }
 
     void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
@@ -484,6 +527,16 @@ namespace eka2l1::epoc {
         do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
             info->horiz, info->baseline_offset, info->left_mgr);
     }
+    
+    void graphic_context::set_clipping_rect(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect the_clip = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+        the_clip.transform_from_symbian_rectangle();
+
+        clipping_rect = the_clip;
+        do_submit_clipping();
+
+        context.complete(epoc::error_none);
+    }
 
     void graphic_context::free(service::ipc_context &context, ws_cmd &cmd) {
         context.complete(epoc::error_none);
@@ -503,6 +556,7 @@ namespace eka2l1::epoc {
 
         static const ws_graphics_context_table_op v171u_opcode_handlers = {
             { ws_gc_u171_active, &graphic_context::active },
+            { ws_gc_u171_set_clipping_rect, &graphic_context::set_clipping_rect },
             { ws_gc_u171_set_brush_color, &graphic_context::set_brush_color },
             { ws_gc_u171_set_brush_style, &graphic_context::set_brush_style },
             { ws_gc_u171_set_pen_color, &graphic_context::set_pen_color },
@@ -527,6 +581,7 @@ namespace eka2l1::epoc {
 
         static const ws_graphics_context_table_op curr_opcode_handlers = {
             { ws_gc_curr_active, &graphic_context::active },
+            { ws_gc_curr_set_clipping_rect, &graphic_context::set_clipping_rect },
             { ws_gc_curr_set_brush_color, &graphic_context::set_brush_color },
             { ws_gc_curr_set_brush_style, &graphic_context::set_brush_style },
             { ws_gc_curr_set_pen_color, &graphic_context::set_pen_color },
