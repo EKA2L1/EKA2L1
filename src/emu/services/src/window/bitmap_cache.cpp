@@ -225,6 +225,11 @@ namespace eka2l1::epoc {
 
             std::vector<char> converted;
             std::uint32_t bpp = bmp->header_.bit_per_pixels;
+            std::size_t pixels_per_line = 0;
+
+            if ((bmp->header_.bit_per_pixels % 8) == 0) {
+                pixels_per_line = bmp->byte_width_ / (bmp->header_.bit_per_pixels >> 3);
+            }
 
             // GPU don't support them. Convert them on CPU
             if (is_palette_bitmap(bmp)) {
@@ -232,6 +237,9 @@ namespace eka2l1::epoc {
                     converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());
+
+                // Use default
+                pixels_per_line = 0;
             }
 
             if (bpp == 1) {
@@ -239,9 +247,12 @@ namespace eka2l1::epoc {
                     converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());
+
+                // Use default
+                pixels_per_line = 0;
             }
 
-            builder->update_bitmap(driver_textures[idx], bpp, data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels);
+            builder->update_bitmap(driver_textures[idx], bpp, data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
             hashes[idx] = hash;
 
             if (bmp->settings_.current_display_mode() == epoc::display_mode::color16mu) {
