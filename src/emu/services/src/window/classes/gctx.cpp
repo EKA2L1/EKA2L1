@@ -234,7 +234,7 @@ namespace eka2l1::epoc {
         drivers::handle bmp_mask_driver_handle = handle_from_bitwise_bitmap(masked);
 
         std::uint32_t flags = 0;
-        const bool alpha_blending = (masked->settings_.current_display_mode() == epoc::display_mode::color256)
+        const bool alpha_blending = (masked->settings_.current_display_mode() == epoc::display_mode::gray256)
             || (epoc::is_display_mode_alpha(masked->settings_.current_display_mode()));
 
         if (blt_cmd->invert_mask && !alpha_blending) {
@@ -250,7 +250,7 @@ namespace eka2l1::epoc {
             (alpha_blending ? drivers::blend_factor::one_minus_frag_out_alpha : drivers::blend_factor::one));
 
         bool swizzle_alteration = false;
-        if (!epoc::is_display_mode_alpha(masked->settings_.current_display_mode())) {
+        if (!alpha_blending && !epoc::is_display_mode_alpha(masked->settings_.current_display_mode())) {
             swizzle_alteration = true;
             cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                 drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
