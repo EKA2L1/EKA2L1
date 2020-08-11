@@ -56,6 +56,7 @@ namespace eka2l1 {
         bool should_show_mutexs;
         bool should_show_chunks;
         bool should_show_window_tree;
+        bool should_show_rendered_bitmap;
 
         bool should_pause;
         bool should_stop;
@@ -168,6 +169,7 @@ namespace eka2l1 {
 
         // Server debugging
         void show_windows_tree();
+        void show_rendered_bitmaps();
         void show_about();
 
         void set_language_to_property(const ::language new_one);

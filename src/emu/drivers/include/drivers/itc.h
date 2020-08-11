@@ -138,6 +138,8 @@ namespace eka2l1::drivers {
          * \brief Set scissor rectangle, allow redraw only in specified area if clipping is enabled.
          *
          * Use in drawing window rect or invalidate a specific region of an window.
+         * 
+         * If the height is negative, the clip will use left-hand coordinates.
          */
         virtual void clip_rect(eka2l1::rect &rect) = 0;
 

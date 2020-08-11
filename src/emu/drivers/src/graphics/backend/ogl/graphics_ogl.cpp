@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/log.h>
 #include <fstream>
 #include <sstream>
@@ -334,8 +335,8 @@ namespace eka2l1::drivers {
         eka2l1::rect clip_rect;
         helper.pop(clip_rect);
 
-        glScissor(clip_rect.top.x, current_fb_height - (clip_rect.top.y + clip_rect.size.y),
-            clip_rect.size.x, clip_rect.size.y);
+        glScissor(clip_rect.top.x, (clip_rect.size.y < 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y))
+            : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {

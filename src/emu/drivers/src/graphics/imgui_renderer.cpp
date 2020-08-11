@@ -194,9 +194,10 @@ namespace eka2l1::drivers {
                 } else {
                     cmd_builder->bind_texture(reinterpret_cast<drivers::handle>(pcmd->TextureId), 0);
 
+                    // Make this scissor follow Y axis down by negative the Y size
                     eka2l1::rect clip_rect(
                         eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.y) },
-                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
+                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), -static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
 
                     cmd_builder->clip_rect(clip_rect);
 
