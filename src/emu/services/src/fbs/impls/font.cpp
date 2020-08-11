@@ -529,6 +529,12 @@ namespace eka2l1 {
             spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / 15);
         }
 
+        // Observing font plugin on real phone, it seems to clamp the height between 2 to 256.
+        static constexpr std::int32_t MAX_FONT_HEIGHT = 256;
+        static constexpr std::int32_t MIN_FONT_HEIGHT = 2;
+
+        spec.height = common::clamp<std::int32_t>(MIN_FONT_HEIGHT, MAX_FONT_HEIGHT, spec.height);
+
         if (spec.tf.name.get_length() == 0) {
             spec.tf.name = serv->default_system_font;
         }
