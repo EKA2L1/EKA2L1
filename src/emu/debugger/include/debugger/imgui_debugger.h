@@ -169,7 +169,6 @@ namespace eka2l1 {
 
         // Server debugging
         void show_windows_tree();
-        void show_rendered_bitmaps();
         void show_about();
 
         void set_language_to_property(const ::language new_one);
