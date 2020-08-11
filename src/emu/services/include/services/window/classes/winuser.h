@@ -24,6 +24,7 @@
 #include <services/window/common.h>
 
 #include <common/linked.h>
+#include <common/region.h>
 
 namespace eka2l1::epoc {
     struct graphic_context;
@@ -60,10 +61,11 @@ namespace eka2l1::epoc {
         std::uint32_t filter;
 
         eka2l1::vec2 cursor_pos;
-        eka2l1::rect irect;
 
         std::uint64_t driver_win_id;
-        bool redraw_responded;
+
+        common::region redraw_region;
+        eka2l1::rect redraw_rect_curr;
 
         dsa *direct;
 
@@ -83,13 +85,16 @@ namespace eka2l1::epoc {
             flags_faded_default_param = 1 << 7,
             flags_faded_also_children = 1 << 8,
             flags_dsa = 1 << 9,
-            flags_enable_pbe = 1 << 10
+            flags_enable_pbe = 1 << 10,
+            flags_in_redraw = 1 << 11
         };
 
         std::uint32_t flags;
 
         std::uint8_t black_map = 128;
         std::uint8_t white_map = 255;
+
+        void invalidate(const eka2l1::rect &irect);
 
         explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::window_type type_of_window, const epoc::display_mode dmode,
@@ -102,6 +107,8 @@ namespace eka2l1::epoc {
         eka2l1::vec2 get_origin() override;
 
         std::uint32_t redraw_priority(int *shift = nullptr) override;
+
+        eka2l1::rect bounding_rect() const;
 
         /**
          * \brief Set window extent in screen space.
@@ -156,6 +163,8 @@ namespace eka2l1::epoc {
         void store_draw_commands(service::ipc_context &context, ws_cmd &cmd);
         void alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd);
         void free(service::ipc_context &context, ws_cmd &cmd);
+        void invalidate(service::ipc_context &context, ws_cmd &cmd);
+        void activate(service::ipc_context &context, ws_cmd &cmd);
 
         epoc::window_group *get_group() {
             return reinterpret_cast<epoc::window_group *>(parent);

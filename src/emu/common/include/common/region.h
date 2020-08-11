@@ -39,7 +39,7 @@ namespace eka2l1::common {
          * @brief       Add a rectangle to this region.
          * @returns     True if new rectangle create modification to the region.
          */
-        bool add_rect(eka2l1::rect &rect);
+        bool add_rect(const eka2l1::rect &rect);
 
         /**
          * @brief       Get the rectangle that bound the whole region.
@@ -53,6 +53,6 @@ namespace eka2l1::common {
          * @param   target    The rectangle to check intersection with.
          * @returns True if intersects.
          */
-        bool intersects(const eka2l1::rect &target);
+        bool intersects(const eka2l1::rect &target) const;
     };
 }

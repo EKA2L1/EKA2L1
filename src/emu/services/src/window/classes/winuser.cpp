@@ -75,10 +75,8 @@ namespace eka2l1::epoc {
         , clear_color(0xFFFFFFFF)
         , filter(pointer_filter_type::pointer_enter | pointer_filter_type::pointer_drag | pointer_filter_type::pointer_move)
         , cursor_pos(-1, -1)
-        , irect({ 0, 0 }, { 0, 0 })
         , dmode(dmode)
         , driver_win_id(0)
-        , redraw_responded(true)
         , shadow_height(0)
         , max_pointer_buffer_(0)
         , flags(flags_visible) {
@@ -86,10 +84,8 @@ namespace eka2l1::epoc {
             LOG_ERROR("Parent is not a window client type!");
         } else {
             if (parent->type == epoc::window_kind::client) {
-                epoc::window_user *user = reinterpret_cast<epoc::window_user *>(parent);
-
                 // Inherits parent's size
-                pos = user->pos;
+                epoc::window_user *user = reinterpret_cast<epoc::window_user *>(parent);
                 size = user->size;
             } else {
                 // Going fullscreen
@@ -102,6 +98,14 @@ namespace eka2l1::epoc {
 
     eka2l1::vec2 window_user::get_origin() {
         return pos;
+    }
+
+    eka2l1::rect window_user::bounding_rect() const {
+        eka2l1::rect bound;
+        bound.top = { 0, 0 };
+        bound.size = size;
+
+        return bound;
     }
 
     void window_user::queue_event(const epoc::event &evt) {
@@ -117,17 +121,9 @@ namespace eka2l1::epoc {
     void window_user::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {
         pos = top;
 
-        // TODO (pent0): Currently our implementation differs from Symbian, that we invalidates the whole
-        // window. The reason is because, when we are resizing the texture in OpenGL/Vulkan, there is
-        // no easy way to keep buffer around without overheads. So Im just gonna make it redraw all.
-        //
-        // Where on Symbian, it only invalidates the reason which is empty when size is bigger.
-        if (new_size != size) {
-            // We do really need resize!
-            resize_needed = true;
-
-            irect = eka2l1::rect({ 0, 0 }, new_size);
-            client->queue_redraw(this);
+        if (size != new_size) {
+            // We need to invalidate the whole new window
+            invalidate(bounding_rect());
         }
 
         size = new_size;
@@ -212,6 +208,30 @@ namespace eka2l1::epoc {
         }
     }
 
+    void window_user::invalidate(const eka2l1::rect &irect) {
+        if (irect.empty()) {
+            return;
+        }
+
+        if (win_type != window_type::redraw) {
+            return;
+        }
+
+        eka2l1::rect to_queue = irect;
+
+        if (flags & flags_in_redraw) {
+            to_queue = redraw_rect_curr;            
+        }
+
+        // Queue invalidate even if there's no change to the invalidated region.
+        redraw_region.add_rect(to_queue);
+
+        if (is_visible()) {
+            client->queue_redraw(this, to_queue);
+            client->trigger_redraw();
+        }
+    }
+
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -261,13 +281,23 @@ namespace eka2l1::epoc {
             take_action_on_change();
         }
 
+        flags &= ~flags_in_redraw;
+
         // LOG_DEBUG("End redraw to window 0x{:X}!", id);
         ctx.complete(epoc::error_none);
     }
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         // LOG_TRACE("Begin redraw to window 0x{:X}!", id);
-        redraw_responded = true;
+        if (flags & flags_in_redraw) {
+            ctx.complete(epoc::error_in_use);
+            return;
+        }
+
+        redraw_rect_curr = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+        redraw_rect_curr.transform_from_symbian_rectangle();
+
+        flags |= flags_in_redraw;
         ctx.complete(epoc::error_none);
     }
 
@@ -284,14 +314,7 @@ namespace eka2l1::epoc {
     void window_user::set_size(service::ipc_context &context, ws_cmd &cmd) {
         // refer to window_user::set_extent()
         const object_size new_size = *reinterpret_cast<object_size *>(cmd.data_ptr);
-
-        if (new_size != size) {
-            resize_needed = true;
-            irect = eka2l1::rect({ 0, 0 }, new_size);
-            client->queue_redraw(this);
-        }
-
-        size = new_size;
+        set_extent(pos, new_size);
         context.complete(epoc::error_none);
     }
 
@@ -373,6 +396,32 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void window_user::invalidate(service::ipc_context &context, ws_cmd &cmd) {
+        eka2l1::rect prototype_irect;
+        eka2l1::rect whole_win = bounding_rect();
+
+        if (cmd.header.op == EWsWinOpInvalidate) {
+            prototype_irect = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
+            prototype_irect.transform_from_symbian_rectangle();
+        } else {
+            // The whole window
+            prototype_irect = whole_win;
+        }
+
+        if (!prototype_irect.empty() && whole_win.contains(prototype_irect)) {
+            invalidate(prototype_irect);
+        }
+        
+        context.complete(epoc::error_none);
+    }
+
+    void window_user::activate(service::ipc_context &context, ws_cmd &cmd) {
+        flags |= flags_active;
+
+        invalidate(bounding_rect());
+        context.complete(epoc::error_none);
+    }
+    
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         //LOG_TRACE("Window user op: {}", (int)cmd.header.op);
         bool result = execute_command_for_general_node(ctx, cmd);
@@ -484,54 +533,13 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpActivate: {
-            flags |= flags_active;
-
-            // When a window actives, a redraw is needed
-            // Redraw happens with all of the screen
-            // NOTE: This causes error. Let's not touch them.
-            //[[fallthrough]];
-            ctx.complete(epoc::error_none);
+        case EWsWinOpActivate:
+            activate(ctx, cmd);
             break;
-        }
 
-        case EWsWinOpInvalidateFull: {
-            irect.top = pos;
-            irect.size = size;
-
-            if (redraw_responded && is_visible()) {
-                client->queue_redraw(this);
-                client->trigger_redraw();
-
-                redraw_responded = false;
-            }
-
-            ctx.complete(epoc::error_none);
-
-            break;
-        }
-
-        case EWsWinOpInvalidate: {
-            struct invalidate_rect {
-                eka2l1::vec2 in_top_left;
-                eka2l1::vec2 in_bottom_right;
-            };
-
-            const invalidate_rect prototype_irect = *reinterpret_cast<invalidate_rect *>(cmd.data_ptr);
-            irect.top = prototype_irect.in_top_left;
-            irect.size = prototype_irect.in_bottom_right - prototype_irect.in_top_left;
-
-            if (redraw_responded && is_visible()) {
-                client->queue_redraw(this);
-                client->trigger_redraw();
-
-                redraw_responded = false;
-            }
-
-            ctx.complete(epoc::error_none);
-
-            break;
-        }
+        case EWsWinOpInvalidateFull:
+        case EWsWinOpInvalidate:
+            invalidate(ctx, cmd);
 
         case EWsWinOpBeginRedraw:
         case EWsWinOpBeginRedrawFull: {

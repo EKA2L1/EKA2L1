@@ -236,9 +236,9 @@ namespace eka2l1 {
             return false;
         }
 
-        bool contains(const eka2l1::rect rect) {
-            return (size.x >= rect.size.x) && (size.y >= rect.size.y)
-                && (top.y >= rect.top.x) && (top.y >= rect.top.y);
+        bool contains(const eka2l1::rect rect) const {
+            return (top.x + size.x >= rect.top.x + rect.size.x) && (top.y + size.y >= rect.top.y + rect.size.y)
+                && (top.x <= rect.top.x) && (top.y <= rect.top.y);
         }
 
         void merge(eka2l1::rect other) {
@@ -255,7 +255,7 @@ namespace eka2l1 {
             top.y = newy;
         }
 
-        eka2l1::rect intersect(const eka2l1::rect &other) {
+        eka2l1::rect intersect(const eka2l1::rect &other) const {
             eka2l1::rect r { {0, 0}, {0, 0} };
             
             if (empty() || other.empty() || (top.x + size.x <= other.top.x) || (top.y + size.y <= other.top.y) ||

@@ -67,7 +67,13 @@ namespace eka2l1::epoc {
 
         recording = true;
 
+        eka2l1::rect viewport;
+        viewport.top = { 0, 0 };
+        viewport.size = attached_window->size;
+
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
+        cmd_builder->set_viewport(viewport);
+
         do_submit_clipping();
     }
 
@@ -163,28 +169,27 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_submit_clipping() {
-        if (clipping_rect.empty() && clipping_region.empty()) {
-            cmd_builder->set_clipping(false);
-            return;
-        }
-
         cmd_builder->set_clipping(true);
 
         eka2l1::rect the_clip;
 
-        if (!clipping_rect.empty() && !clipping_region.empty()) {
-            the_clip = clipping_rect.intersect(clipping_region.bounding_rect());
+        // TODO: Handle clipping to non-invalid when not doing redraw
+        if (clipping_rect.empty() && clipping_region.empty()) {
+            the_clip = attached_window->redraw_rect_curr;
         } else {
-            if (!clipping_rect.empty()) {
-                the_clip = clipping_rect;
-                return;
+            if (!clipping_rect.empty() && !clipping_region.empty()) {
+                the_clip = clipping_rect.intersect(clipping_region.bounding_rect());
             } else {
-                the_clip = clipping_region.bounding_rect();
+                if (!clipping_rect.empty()) {
+                    the_clip = clipping_rect;
+                } else {
+                    the_clip = clipping_region.bounding_rect();
+                }
             }
+
+            the_clip = the_clip.intersect(attached_window->redraw_rect_curr);
         }
 
-        // The top should be bottom left
-        the_clip.top.y = (attached_window->size.y) - (the_clip.top.y + the_clip.size.y);
         cmd_builder->clip_rect(the_clip);
     }
 
@@ -193,6 +198,8 @@ namespace eka2l1::epoc {
 
         // Unbind current bitmap
         cmd_builder->bind_bitmap(0);
+        cmd_builder->set_clipping(false);
+
         driver->submit_command_list(*cmd_list);
 
         // Renew this so that the graphic context can continue
@@ -213,9 +220,6 @@ namespace eka2l1::epoc {
     void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {
         if (attached_window) {
             context_attach_link.deque();
-
-            // Disable clipping for other context
-            cmd_builder->set_clipping(false);
 
             // Might have to flush sooner, since this window can be used with another
             flush_queue_to_driver();

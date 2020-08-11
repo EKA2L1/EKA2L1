@@ -37,7 +37,7 @@ namespace eka2l1::common {
         return eka2l1::rect { tl, br - tl };
     }
 
-    bool region::add_rect(eka2l1::rect &rect) {
+    bool region::add_rect(const eka2l1::rect &rect) {
         if (rect.empty()) {
             return true;
         }
@@ -91,7 +91,7 @@ namespace eka2l1::common {
         return true;
     }
 
-    bool region::intersects(const eka2l1::rect &target) {
+    bool region::intersects(const eka2l1::rect &target) const {
         for (std::size_t i = 0; i < rects_.size(); i++) {
             if (!rects_[i].intersect(target).empty()) {
                 return true;
