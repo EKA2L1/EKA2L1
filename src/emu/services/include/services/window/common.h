@@ -83,6 +83,7 @@ namespace eka2l1::epoc {
     bool is_display_mode_alpha(const display_mode disp_mode);
     int get_bpp_from_display_mode(const epoc::display_mode bpp);
     epoc::display_mode string_to_display_mode(const std::string &disp_str);
+    std::string display_mode_to_string(const epoc::display_mode disp_mode);
     epoc::display_mode get_display_mode_from_bpp(const int bpp);
 
     enum class pointer_cursor_mode {

@@ -210,6 +210,12 @@ namespace eka2l1 {
             , size(obj_size_) {
         }
 
+        void make_empty() {
+            top = { 0, 0 };
+            size.x = 0;
+            size.y = 0;
+        }
+
         /**
          * \brief Check if the rectangle region is empty.
          * 
@@ -230,9 +236,9 @@ namespace eka2l1 {
             return false;
         }
 
-        bool contains(const eka2l1::rect rect) {
-            return (size.x >= rect.size.x) && (size.y >= rect.size.y)
-                && (top.y >= rect.top.x) && (top.y >= rect.top.y);
+        bool contains(const eka2l1::rect rect) const {
+            return (top.x + size.x >= rect.top.x + rect.size.x) && (top.y + size.y >= rect.top.y + rect.size.y)
+                && (top.x <= rect.top.x) && (top.y <= rect.top.y);
         }
 
         void merge(eka2l1::rect other) {
@@ -247,6 +253,24 @@ namespace eka2l1 {
             size.y = std::max<int>(top.y + size.y, other.top.y + other.size.y) - newy;
             top.x = newx;
             top.y = newy;
+        }
+
+        eka2l1::rect intersect(const eka2l1::rect &other) const {
+            eka2l1::rect r { {0, 0}, {0, 0} };
+            
+            if (empty() || other.empty() || (top.x + size.x <= other.top.x) || (top.y + size.y <= other.top.y) ||
+                (top.x >= other.top.x + other.size.x) || (top.y >= other.top.y + other.size.y)) {
+                return r;
+            }
+
+            r.top.x = (top.x < other.top.x) ? other.top.x : top.x;
+            r.top.y = (top.y < other.top.y) ? other.top.y : top.y;
+            r.size.x = (top.x + size.x > other.top.x + other.size.x) ? (other.top.x + other.size.x) : (top.x + size.x);
+            r.size.y = (top.y + size.y > other.top.y + other.size.y) ? (other.top.y + other.size.y) : (top.y + size.y);
+
+            r.size -= r.top;
+
+            return r;
         }
 
         void transform_from_symbian_rectangle() {

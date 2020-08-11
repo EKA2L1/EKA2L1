@@ -132,7 +132,7 @@ namespace eka2l1::drivers {
 
         cmd_builder->set_cull_mode(false);
         cmd_builder->set_depth(false);
-        cmd_builder->set_invalidate(true);
+        cmd_builder->set_clipping(true);
 
         // Setup viewport, orthographic projection matrix
         cmd_builder->set_viewport(eka2l1::rect{ eka2l1::vec2{ 0, 0 }, eka2l1::vec2{ fb_width, fb_height } });
@@ -194,11 +194,12 @@ namespace eka2l1::drivers {
                 } else {
                     cmd_builder->bind_texture(reinterpret_cast<drivers::handle>(pcmd->TextureId), 0);
 
-                    eka2l1::rect inv_rect(
+                    // Make this scissor follow Y axis down by negative the Y size
+                    eka2l1::rect clip_rect(
                         eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.y) },
-                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
+                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), -static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
 
-                    cmd_builder->invalidate_rect(inv_rect);
+                    cmd_builder->clip_rect(clip_rect);
 
                     cmd_builder->draw_indexed(drivers::graphics_primitive_mode::triangles, pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? drivers::data_format::word : drivers::data_format::uint,
                         elem_offset + pcmd->IdxOffset * sizeof(ImDrawIdx), vert_offset + pcmd->VtxOffset);

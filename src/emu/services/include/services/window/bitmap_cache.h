@@ -62,6 +62,14 @@ namespace eka2l1::epoc {
     public:
         explicit bitmap_cache(kernel_system *kern_);
 
+        const driver_texture_handle_array &texture_array() {
+            return driver_textures;
+        }
+
+        const bitmap_array &bitwise_bitmap_array() {
+            return bitmaps;
+        }
+
         std::int64_t get_suitable_bitmap_index();
 
         /**

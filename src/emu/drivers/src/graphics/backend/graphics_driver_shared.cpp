@@ -130,7 +130,7 @@ namespace eka2l1::drivers {
     }
 
     void shared_graphics_driver::update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
-        const eka2l1::vec2 &dim, int bpp, const void *data) {
+        const eka2l1::vec2 &dim, int bpp, const void *data, const std::size_t pixels_per_line) {
         // Get our bitmap
         bitmap *bmp = get_bitmap(h);
 
@@ -144,8 +144,8 @@ namespace eka2l1::drivers {
 
         translate_bpp_to_format(bpp, internal_format, data_format, data_type);
 
-        bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), data_format,
-            data_type, data);
+        bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
+            data_format, data_type, data);
 
         switch (data_format) {
         case texture_format::r:
@@ -170,6 +170,7 @@ namespace eka2l1::drivers {
         std::size_t size = 0;
         eka2l1::vec2 offset;
         eka2l1::vec2 dim;
+        std::size_t pixels_per_line = 0;
 
         helper.pop(handle);
         helper.pop(data);
@@ -177,8 +178,9 @@ namespace eka2l1::drivers {
         helper.pop(size);
         helper.pop(offset);
         helper.pop(dim);
+        helper.pop(pixels_per_line);
 
-        update_bitmap(handle, size, offset, dim, bpp, data);
+        update_bitmap(handle, size, offset, dim, bpp, data, pixels_per_line);
 
         delete data;
     }
@@ -360,9 +362,12 @@ namespace eka2l1::drivers {
             }
         }
 
+        std::size_t pixels_per_line = 0;
+        helper.pop(pixels_per_line);
+
         auto obj = make_texture(this);
         obj->create(this, static_cast<int>(dim), static_cast<int>(mip_level), eka2l1::vec3(width, height, depth),
-            internal_format, data_format, data_type, data);
+            internal_format, data_format, data_type, data, pixels_per_line);
 
         std::unique_ptr<graphics_object> obj_casted = std::move(obj);
         drivers::handle res = append_graphics_object(obj_casted);

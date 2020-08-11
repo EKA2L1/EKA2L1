@@ -14,6 +14,7 @@ namespace eka2l1::drivers {
         texture_data_type tex_data_type;
         void *tex_data;
         int mip_level;
+        std::size_t pixels_per_line;
 
         std::uint32_t texture;
         int last_tex{ 0 };
@@ -26,7 +27,7 @@ namespace eka2l1::drivers {
         bool tex(graphics_driver *driver, const bool is_first = false) override;
 
         bool create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-            const texture_format format, const texture_data_type data_type, void *data) override;
+            const texture_format format, const texture_data_type data_type, void *data, const std::size_t pixels_per_line = 0) override;
 
         void change_size(const vec3 &new_size) override;
         void change_data(const texture_data_type data_type, void *data) override;
@@ -38,8 +39,8 @@ namespace eka2l1::drivers {
         void bind(graphics_driver *driver, const int binding) override;
         void unbind(graphics_driver *driver) override;
 
-        void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
-            const texture_data_type data_type, const void *data) override;
+        void update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t byte_width,
+            const texture_format data_format, const texture_data_type data_type, const void *data) override;
 
         vec2 get_size() const override {
             return tex_size;

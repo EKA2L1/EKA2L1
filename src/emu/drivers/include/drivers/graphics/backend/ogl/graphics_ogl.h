@@ -86,8 +86,8 @@ namespace eka2l1::drivers {
         void clear(command_helper &helper);
         void draw_bitmap(command_helper &helper);
         void draw_rectangle(command_helper &helper);
-        void set_invalidate(command_helper &helper);
-        void invalidate_rect(command_helper &helper);
+        void set_clipping(command_helper &helper);
+        void clip_rect(command_helper &helper);
         void draw_indexed(command_helper &helper);
         void set_viewport(command_helper &helper);
         void set_depth(command_helper &helper);

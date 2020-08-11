@@ -32,8 +32,8 @@
 namespace eka2l1::drivers {
     enum graphics_driver_opcode : std::uint16_t {
         // Mode -1: Miscs
-        graphics_driver_invalidate_rect,
-        graphics_driver_set_invalidate,
+        graphics_driver_clip_rect,
+        graphics_driver_set_clipping,
         graphics_driver_set_viewport,
         graphics_driver_set_blend,
         graphics_driver_set_depth,
@@ -110,7 +110,7 @@ namespace eka2l1::drivers {
         }
 
         virtual void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
-            const eka2l1::vec2 &dim, const int bpp, const void *data)
+            const eka2l1::vec2 &dim, const int bpp, const void *data, const std::size_t pixels_per_line = 0)
             = 0;
 
         virtual void attach_descriptors(drivers::handle h, const int stride, const bool instance_move, const attribute_descriptor *descriptors,

@@ -58,16 +58,6 @@ namespace eka2l1::epoc {
                 return false;
             }
 
-            if (!winuser->irect.empty()) {
-                kernel_system *kern = winuser->client->get_ws().get_kernel_system();
-
-                // Wakeup windows, we have a region to invalidate
-                // Yes, I'm referencing a meme. Send help.
-                // The invalidate region is there. Gone with what we have first, but do redraw still
-                winuser->client->queue_redraw(winuser);
-                winuser->client->trigger_redraw();
-            }
-
             // Draw it onto current binding buffer
             builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(winuser->pos, { 0, 0 }),
                 eka2l1::rect({ 0, 0 }, winuser->size), 0);

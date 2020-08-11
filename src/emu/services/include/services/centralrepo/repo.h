@@ -199,6 +199,8 @@ namespace eka2l1 {
 
         std::vector<std::uint32_t> key_found_result;
 
+        explicit central_repo_client_subsession();
+
         int reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key);
         void write_changes(eka2l1::io_system *io, manager::device_manager *mngr);
 

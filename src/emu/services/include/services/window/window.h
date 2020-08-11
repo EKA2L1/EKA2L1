@@ -234,7 +234,7 @@ namespace eka2l1::epoc {
             return client_thread;
         }
 
-        std::uint32_t queue_redraw(epoc::window_user *user);
+        std::uint32_t queue_redraw(epoc::window_user *user, const eka2l1::rect &redraw_rect);
 
         std::uint32_t queue_event(const event &evt) {
             return events.queue_event(evt);

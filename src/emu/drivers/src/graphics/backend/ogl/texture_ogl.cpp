@@ -97,6 +97,8 @@ namespace eka2l1::drivers {
     }
 
     bool ogl_texture::tex(graphics_driver *driver, const bool is_first) {
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(pixels_per_line));
+
         switch (dimensions) {
         case 1:
             glTexImage1D(GL_TEXTURE_1D, mip_level, to_gl_format(internal_format), tex_size.x, 0, to_gl_format(format),
@@ -117,6 +119,8 @@ namespace eka2l1::drivers {
             break;
 
         default: {
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
             unbind(driver);
             glDeleteTextures(1, &texture);
 
@@ -124,11 +128,12 @@ namespace eka2l1::drivers {
         }
         }
 
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         return true;
     }
 
     bool ogl_texture::create(graphics_driver *driver, const int dim, const int miplvl, const vec3 &size, const texture_format internal_format,
-        const texture_format format, const texture_data_type data_type, void *data) {
+        const texture_format format, const texture_data_type data_type, void *data, const std::size_t ppl) {
         glGenTextures(1, &texture);
 
         dimensions = dim;
@@ -136,6 +141,7 @@ namespace eka2l1::drivers {
         tex_data_type = data_type;
         tex_data = data;
         mip_level = miplvl;
+        pixels_per_line = ppl;
 
         bind(driver, 0);
 
@@ -264,9 +270,10 @@ namespace eka2l1::drivers {
         last_tex = 0;
     }
 
-    void ogl_texture::update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const texture_format data_format,
-        const texture_data_type data_type, const void *data) {
+    void ogl_texture::update_data(graphics_driver *driver, const int mip_lvl, const vec3 &offset, const vec3 &size, const std::size_t pixels_per_line,
+        const texture_format data_format, const texture_data_type data_type, const void *data) {
         bind(driver, 0);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, static_cast<GLint>(pixels_per_line));
 
         switch (dimensions) {
         case 1:
@@ -288,6 +295,7 @@ namespace eka2l1::drivers {
             break;
         }
 
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         unbind(driver);
     }
 }

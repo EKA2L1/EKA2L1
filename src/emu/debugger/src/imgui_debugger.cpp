@@ -119,7 +119,8 @@ namespace eka2l1 {
         , active_screen(0)
         , alserv(nullptr)
         , winserv(nullptr)
-        , oom(nullptr) {
+        , oom(nullptr)
+        , should_show_rendered_bitmap(true) {
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
@@ -1891,6 +1892,33 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::show_rendered_bitmaps() {
+        if (!winserv) {
+            return;
+        }
+
+        if (ImGui::Begin("Rendered bitmaps")) {
+            epoc::bitmap_cache *cache = winserv->get_bitmap_cache();
+    
+            const auto arr = cache->texture_array();
+            const auto arr2 = cache->bitwise_bitmap_array();
+
+            for (int i = 0; i < 256; i++) {
+                if (arr[i] != 0) {
+                    ImGui::Image((ImTextureID)arr[i], ImVec2(arr2[i]->header_.size_pixels.x,
+                        arr2[i]->header_.size_pixels.y));
+                    auto str = fmt::format("{}x{} {} {} {}", arr2[i]->header_.size_pixels.x,
+                        arr2[i]->header_.size_pixels.y,
+                        epoc::display_mode_to_string(arr2[i]->settings_.current_display_mode())
+                        , arr2[i]->header_.compression, arr2[i]->byte_width_);
+                    ImGui::Text(str.c_str());
+                }
+            }
+
+            ImGui::End();
+        }
+    }
+
     void imgui_debugger::show_about() {
         if (!phony_icon) {
             static constexpr const char *PHONY_PATH = "resources\\phony.png";
@@ -1973,6 +2001,10 @@ namespace eka2l1 {
 
         if (should_show_window_tree) {
             show_windows_tree();
+        }
+
+        if (should_show_rendered_bitmap) {
+            show_rendered_bitmaps();
         }
 
         if (should_show_disassembler) {

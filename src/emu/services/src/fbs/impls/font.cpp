@@ -517,14 +517,23 @@ namespace eka2l1 {
         // 1 x int of Max height - 2 x int of device size
         std::optional<eka2l1::vec3> size_info = ctx->get_argument_data_from_descriptor<eka2l1::vec3>(2);
 
+        fbs_server *serv = server<fbs_server>();
+
         const bool is_twips = is_opcode_ruler_twips(ctx->msg->function);
+        const bool is_design_height = (serv->kern->is_eka1() || (!size_info.has_value()) || 
+            (ctx->msg->function == fbs_nearest_font_design_height_in_twips) ||
+            (ctx->msg->function == fbs_nearest_font_design_height_in_pixels));
 
         if (is_twips) {
             // TODO: More proper things
             spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / 15);
         }
 
-        fbs_server *serv = server<fbs_server>();
+        // Observing font plugin on real phone, it seems to clamp the height between 2 to 256.
+        static constexpr std::int32_t MAX_FONT_HEIGHT = 256;
+        static constexpr std::int32_t MIN_FONT_HEIGHT = 2;
+
+        spec.height = common::clamp<std::int32_t>(MIN_FONT_HEIGHT, MAX_FONT_HEIGHT, spec.height);
 
         if (spec.tf.name.get_length() == 0) {
             spec.tf.name = serv->default_system_font;
@@ -545,7 +554,7 @@ namespace eka2l1 {
         font->serv = serv;
 
         epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
-            size_info.has_value() ? size_info->x : 0);
+            is_design_height ? 0 : size_info->x);
 
         if (!bmpfont) {
             ctx->complete(epoc::error_no_memory);

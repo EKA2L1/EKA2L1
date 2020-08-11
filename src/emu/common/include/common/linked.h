@@ -60,8 +60,11 @@ namespace eka2l1::common {
         }
 
         double_linked_queue_element *deque() {
-            next->previous = previous;
-            previous->next = next;
+            if (next)
+                next->previous = previous;
+            
+            if (previous)
+                previous->next = next;
 
             next = nullptr;
             previous = nullptr;

@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/log.h>
 #include <fstream>
 #include <sstream>
@@ -319,7 +320,7 @@ namespace eka2l1::drivers {
         glBindVertexArray(0);
     }
 
-    void ogl_graphics_driver::set_invalidate(command_helper &helper) {
+    void ogl_graphics_driver::set_clipping(command_helper &helper) {
         bool enable = false;
         helper.pop(enable);
 
@@ -330,12 +331,12 @@ namespace eka2l1::drivers {
         }
     }
 
-    void ogl_graphics_driver::invalidate_rect(command_helper &helper) {
-        eka2l1::rect inv_rect;
-        helper.pop(inv_rect);
+    void ogl_graphics_driver::clip_rect(command_helper &helper) {
+        eka2l1::rect clip_rect;
+        helper.pop(clip_rect);
 
-        glScissor(inv_rect.top.x, current_fb_height - (inv_rect.top.y + inv_rect.size.y),
-            inv_rect.size.x, inv_rect.size.y);
+        glScissor(clip_rect.top.x, (clip_rect.size.y < 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y))
+            : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {
@@ -590,13 +591,13 @@ namespace eka2l1::drivers {
             break;
         }
 
-        case graphics_driver_set_invalidate: {
-            set_invalidate(helper);
+        case graphics_driver_set_clipping: {
+            set_clipping(helper);
             break;
         }
 
-        case graphics_driver_invalidate_rect: {
-            invalidate_rect(helper);
+        case graphics_driver_clip_rect: {
+            clip_rect(helper);
             break;
         }
 
