@@ -173,9 +173,13 @@ namespace eka2l1::epoc {
 
         eka2l1::rect the_clip;
 
-        // TODO: Handle clipping to non-invalid when not doing redraw
         if (clipping_rect.empty() && clipping_region.empty()) {
-            the_clip = attached_window->redraw_rect_curr;
+            if (attached_window->flags & epoc::window_user::flags_in_redraw) {
+                the_clip = attached_window->redraw_rect_curr;
+            } else {
+                // TODO: Properly handle clipping to non-invalid when not doing redraw
+                the_clip = attached_window->bounding_rect();
+            }
         } else {
             if (!clipping_rect.empty() && !clipping_region.empty()) {
                 the_clip = clipping_rect.intersect(clipping_region.bounding_rect());
@@ -187,7 +191,8 @@ namespace eka2l1::epoc {
                 }
             }
 
-            the_clip = the_clip.intersect(attached_window->redraw_rect_curr);
+            the_clip = the_clip.intersect((attached_window->flags & epoc::window_user::flags_in_redraw) ?
+                attached_window->redraw_rect_curr : attached_window->bounding_rect());
         }
 
         cmd_builder->clip_rect(the_clip);

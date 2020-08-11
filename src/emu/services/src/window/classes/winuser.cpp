@@ -219,10 +219,6 @@ namespace eka2l1::epoc {
 
         eka2l1::rect to_queue = irect;
 
-        if (flags & flags_in_redraw) {
-            to_queue = redraw_rect_curr;            
-        }
-
         // Queue invalidate even if there's no change to the invalidated region.
         redraw_region.add_rect(to_queue);
 
@@ -234,6 +230,9 @@ namespace eka2l1::epoc {
 
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+        redraw_rect_curr.make_empty();
+
+        // TODO: remove current redraw rect from invalid region.
 
         if (resize_needed) {
             // Queue a resize command
