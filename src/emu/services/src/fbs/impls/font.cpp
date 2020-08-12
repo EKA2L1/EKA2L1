@@ -528,10 +528,6 @@ namespace eka2l1 {
         static constexpr std::int32_t MAX_FONT_HEIGHT = 256;
         static constexpr std::int32_t MIN_FONT_HEIGHT = 2;
 
-        if ((spec.height < MIN_FONT_HEIGHT) || (spec.height > MAX_FONT_HEIGHT)) {
-            LOG_TRACE("One weird font allocated");
-        }
-
         spec.height = common::clamp<std::int32_t>(MIN_FONT_HEIGHT, MAX_FONT_HEIGHT, spec.height);
 
         if (spec.tf.name.get_length() == 0) {
@@ -547,21 +543,36 @@ namespace eka2l1 {
             return;
         }
 
-        // Scale it
-        font = serv->font_obj_container.make_new<fbsfont>();
-        font->of_info = *ofi_suit;
-        font->serv = serv;
+        static constexpr int max_acceptable_delta = 1;
 
-        epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
-            is_design_height ? 0 : size_info->x);
+        for (auto &font_obj: server<fbs_server>()->font_obj_container) {
+            fbsfont *the_font = reinterpret_cast<fbsfont*>(font_obj.get());
 
-        if (!bmpfont) {
-            ctx->complete(epoc::error_no_memory);
-            return;
+            if (common::abs(is_design_height ? (spec.height - the_font->of_info.metrics.design_height) :
+                (size_info->x - the_font->of_info.metrics.max_height)) <= max_acceptable_delta) {
+                font = the_font;
+                break;
+            }
         }
 
-        // S^3 warning!
-        font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
+        if (!font) {
+            // Scale it
+            font = serv->font_obj_container.make_new<fbsfont>();
+            font->of_info = *ofi_suit;
+            font->serv = serv;
+
+            epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
+                is_design_height ? 0 : size_info->x);
+
+            if (!bmpfont) {
+                ctx->complete(epoc::error_no_memory);
+                return;
+            }
+
+            // S^3 warning!
+            font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
+        }
+
         write_font_handle(ctx, font);
     }
 
