@@ -66,11 +66,11 @@ namespace eka2l1::mem::flexible {
             if (!alloc_result) {
                 return false;
             }
-        }
 
-        // Clear the comitted memory
-        std::fill(reinterpret_cast<std::uint8_t*>(data_) + start_offset, reinterpret_cast<std::uint8_t*>(data_) + start_offset + size_to_commit,
-            clear_byte_);
+            // Clear the comitted memory
+            std::fill(reinterpret_cast<std::uint8_t*>(data_) + start_offset, reinterpret_cast<std::uint8_t*>(data_) + start_offset + size_to_commit,
+                clear_byte_);
+        }
 
         // Map to all mappings
         for (auto &mapping: mappings_) {

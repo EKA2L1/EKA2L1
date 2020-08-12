@@ -265,10 +265,10 @@ namespace eka2l1 {
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
             stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
+                chunk_type::normal, chunk_access::local, chunk_attrib::none, 0x00);
 
             name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
-                chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
+                chunk_type::normal, chunk_access::local, chunk_attrib::none);
 
             request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
 

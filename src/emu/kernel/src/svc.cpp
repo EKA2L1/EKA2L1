@@ -1089,7 +1089,7 @@ namespace eka2l1::epoc {
         const kernel::handle h = kern->create_and_add<kernel::chunk>(
                                          owner == epoc::owner_process ? kernel::owner_type::process : kernel::owner_type::thread,
                                          mem, kern->crr_process(), name ? name->to_std_string(kern->crr_process()) : "", create_info.initial_bottom,
-                                         create_info.initial_top, create_info.max_size, perm, type, access, att)
+                                         create_info.initial_top, create_info.max_size, perm, type, access, att, create_info.clear_bytes)
                                      .first;
 
         if (h == INVALID_HANDLE) {

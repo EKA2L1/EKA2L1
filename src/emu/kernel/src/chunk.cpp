@@ -35,7 +35,8 @@ namespace eka2l1 {
     namespace kernel {
         chunk::chunk(kernel_system *kern, memory_system *mem, kernel::process *own_process, std::string name,
             address bottom, const address top, const size_t max_size, prot protection, chunk_type type, chunk_access chnk_access,
-            chunk_attrib attrib, const bool is_heap, const address force_addr, void *force_host_map)
+            chunk_attrib attrib, const std::uint8_t clear_byte, const bool is_heap, const address force_addr,
+            void *force_host_map)
             : kernel_obj(kern, name, own_process, access_type::local_access)
             , mem(mem)
             , is_heap(is_heap)
@@ -45,6 +46,7 @@ namespace eka2l1 {
 
             create_info.perm = protection;
             create_info.size = max_size;
+            create_info.clear_byte = clear_byte;
 
             if (chnk_access == chunk_access::global) {
                 access = access_type::global_access;

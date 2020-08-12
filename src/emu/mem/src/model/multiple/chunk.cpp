@@ -68,6 +68,11 @@ namespace eka2l1::mem {
                 return running_offset - offset;
             }
 
+            if (!is_external_host) {    
+                // Clear the committed memory
+                std::fill(host_commit_ptr, host_commit_ptr + host_commit_size, clear_byte_);
+            }
+
             const vm_address crr_base_addr = base_;
             multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
 
@@ -102,9 +107,6 @@ namespace eka2l1::mem {
                 //LOG_TRACE("Mapped to CPU: 0x{:X}, size 0x{:X}", off_start_just_mapped, size_just_mapped);
                 mmu_->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
             }
-
-            // Clear the committed memory
-            std::fill(host_commit_ptr, host_commit_ptr + host_commit_size, clear_byte_);
 
             if (ptid == 0xFFFFFFFF) {
                 // Assign the new page table to the specified address

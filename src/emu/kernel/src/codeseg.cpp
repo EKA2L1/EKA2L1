@@ -99,7 +99,7 @@ namespace eka2l1::kernel {
 
         if (code_addr == 0) {
             code_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
-                kernel::chunk_access::code, kernel::chunk_attrib::none, false);
+                kernel::chunk_access::code, kernel::chunk_attrib::none);
 
             the_addr_of_code_run = code_chunk->base(new_foe).ptr_address();
 
@@ -124,7 +124,7 @@ namespace eka2l1::kernel {
                 if (data_base < dt_chunk->base(new_foe).ptr_address()) {
                     dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
                         prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous,
-                        false, data_base, nullptr);
+                        0x00, false, data_base, nullptr);
                 } else {
                     is_in_bss_rom_region = true;
                 }

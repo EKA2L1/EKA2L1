@@ -543,6 +543,7 @@ namespace eka2l1 {
             return;
         }
 
+        /*
         static constexpr int max_acceptable_delta = 1;
 
         for (auto &font_obj: server<fbs_server>()->font_obj_container) {
@@ -553,7 +554,7 @@ namespace eka2l1 {
                 font = the_font;
                 break;
             }
-        }
+        }*/
 
         if (!font) {
             // Scale it
