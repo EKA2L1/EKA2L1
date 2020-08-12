@@ -473,7 +473,10 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::reset_context() {
-        text_font = nullptr;
+        if (text_font) {
+            text_font->deref();
+            text_font = nullptr;
+        }
 
         fill_mode = brush_style::null;
         line_mode = pen_style::null;
@@ -504,6 +507,7 @@ namespace eka2l1::epoc {
         }
 
         text_font = font_object;
+        text_font->ref();
 
         if (text_font->atlas.atlas_handle_ == 0) {
             // Initialize the atlas
@@ -511,6 +515,13 @@ namespace eka2l1::epoc {
         }
 
         context.complete(epoc::error_none);
+    }
+
+    void graphic_context::discard_font(service::ipc_context &context, ws_cmd &cmd) {
+        if (text_font) {
+            text_font->deref();
+            text_font = nullptr;
+        }
     }
 
     void graphic_context::draw_text(service::ipc_context &context, ws_cmd &cmd) {
@@ -574,6 +585,7 @@ namespace eka2l1::epoc {
             { ws_gc_u171_deactive, &graphic_context::deactive },
             { ws_gc_u171_reset, &graphic_context::reset },
             { ws_gc_u171_use_font, &graphic_context::use_font },
+            { ws_gc_u171_discard_font, &graphic_context::discard_font },
             { ws_gc_u171_draw_line, &graphic_context::draw_line },
             { ws_gc_u171_draw_rect, &graphic_context::draw_rect },
             { ws_gc_u171_clear, &graphic_context::clear },
@@ -599,6 +611,7 @@ namespace eka2l1::epoc {
             { ws_gc_curr_deactive, &graphic_context::deactive },
             { ws_gc_curr_reset, &graphic_context::reset },
             { ws_gc_curr_use_font, &graphic_context::use_font },
+            { ws_gc_curr_discard_font, &graphic_context::discard_font },
             { ws_gc_curr_draw_line, &graphic_context::draw_line },
             { ws_gc_curr_draw_rect, &graphic_context::draw_rect },
             { ws_gc_curr_clear, &graphic_context::clear },

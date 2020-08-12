@@ -124,6 +124,7 @@ namespace eka2l1::epoc {
         void gdi_blt3(service::ipc_context &context, ws_cmd &cmd);
 
         void use_font(service::ipc_context &context, ws_cmd &cmd);
+        void discard_font(service::ipc_context &context, ws_cmd &cmd);
         void reset(service::ipc_context &context, ws_cmd &cmd);
         void free(service::ipc_context &context, ws_cmd &cmd);
         void set_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
