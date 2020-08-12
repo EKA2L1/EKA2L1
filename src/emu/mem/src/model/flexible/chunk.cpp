@@ -41,6 +41,7 @@ namespace eka2l1::mem::flexible {
     int flexible_mem_model_chunk::do_create(const mem_model_chunk_creation_info &create_info) {
         fixed_addr_ = create_info.addr;
         flags_ = create_info.flags;
+        clear_byte_ = create_info.clear_byte;
 
         const std::uint32_t total_pages_occupied = static_cast<std::uint32_t>((create_info.size +
             mmu_->page_size() - 1) >> mmu_->page_size_bits_);
@@ -49,7 +50,7 @@ namespace eka2l1::mem::flexible {
         top_ = 0;
 
         // Create the mem object and page allocator
-        mem_obj_ = std::make_unique<memory_object>(mmu_, total_pages_occupied, create_info.host_map);
+        mem_obj_ = std::make_unique<memory_object>(mmu_, total_pages_occupied, create_info.host_map, clear_byte_);
         
         if (!(create_info.flags & MEM_MODEL_CHUNK_TYPE_NORMAL))
             page_bma_ = std::make_unique<common::bitmap_allocator>(total_pages_occupied);

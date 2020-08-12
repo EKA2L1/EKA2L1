@@ -60,9 +60,11 @@ namespace eka2l1::mem {
             std::uint8_t *host_start_just_mapped = nullptr;
 
             const auto pt_base = (running_offset >> mmu_->chunk_shift_) << mmu_->chunk_shift_;
+            std::uint8_t *host_commit_ptr = reinterpret_cast<std::uint8_t *>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base;
+            const std::size_t host_commit_size = page_num << mmu_->page_size_bits_;
 
             // Commit the memory to the host
-            if (!is_external_host && !common::commit(reinterpret_cast<std::uint8_t *>(host_base_) + (ps_off << mmu_->page_size_bits_) + pt_base, page_num << mmu_->page_size_bits_, permission_)) {
+            if (!is_external_host && !common::commit(host_commit_ptr, host_commit_size, permission_)) {
                 return running_offset - offset;
             }
 
@@ -100,6 +102,9 @@ namespace eka2l1::mem {
                 //LOG_TRACE("Mapped to CPU: 0x{:X}, size 0x{:X}", off_start_just_mapped, size_just_mapped);
                 mmu_->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
             }
+
+            // Clear the committed memory
+            std::fill(host_commit_ptr, host_commit_ptr + host_commit_size, clear_byte_);
 
             if (ptid == 0xFFFFFFFF) {
                 // Assign the new page table to the specified address
@@ -311,6 +316,7 @@ namespace eka2l1::mem {
 
         base_ = addr;
         committed_ = 0;
+        clear_byte_ = create_info.clear_byte;
 
         // Map host base memory
         if (create_info.host_map) {

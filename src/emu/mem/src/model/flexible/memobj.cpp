@@ -27,11 +27,12 @@
 #include <common/virtualmem.h>
 
 namespace eka2l1::mem::flexible {
-    memory_object::memory_object(mmu_base *mmu, const std::size_t page_count, void *external_host)
+    memory_object::memory_object(mmu_base *mmu, const std::size_t page_count, void *external_host, const std::uint8_t clear_byte)
         : data_(external_host)
         , page_occupied_(page_count)
         , mmu_(mmu)
-        , external_(false) {
+        , external_(false)
+        , clear_byte_(clear_byte) {
         if (data_) {
             external_ = true;
         } else {
@@ -66,6 +67,10 @@ namespace eka2l1::mem::flexible {
                 return false;
             }
         }
+
+        // Clear the comitted memory
+        std::fill(reinterpret_cast<std::uint8_t*>(data_) + start_offset, reinterpret_cast<std::uint8_t*>(data_) + start_offset + size_to_commit,
+            clear_byte_);
 
         // Map to all mappings
         for (auto &mapping: mappings_) {

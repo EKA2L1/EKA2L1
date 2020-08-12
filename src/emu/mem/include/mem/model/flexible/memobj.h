@@ -38,6 +38,7 @@ namespace eka2l1::mem::flexible {
     protected:
         void *data_;                    ///< Pointer to the virtual memory allocated from host.
         std::size_t page_occupied_;     ///< Number of pages this memory object occupied.
+        std::uint8_t clear_byte_;       ///< The byte to clear when memory is committed.
 
         mmu_base *mmu_;
         bool external_;
@@ -45,7 +46,9 @@ namespace eka2l1::mem::flexible {
         std::vector<mapping*> mappings_;
 
     public:
-        explicit memory_object(mmu_base *mmu, const std::size_t page_count, void *external_host);
+        explicit memory_object(mmu_base *mmu, const std::size_t page_count, void *external_host,
+            const std::uint8_t clear_byte = 0x00);
+
         ~memory_object();
 
         void *ptr() {
