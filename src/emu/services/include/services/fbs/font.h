@@ -259,7 +259,7 @@ namespace eka2l1::epoc {
         open_font_character_metric metric;
         std::int32_t offset; ///< Offset from *this* pointer to the bitmap data.
 
-        void destroy(fbs_server *serv);
+        void destroy(fbscli *cli);
     };
 
     struct open_font_session_cache_entry_v3 : public open_font_glyph_v3 {
@@ -273,11 +273,10 @@ namespace eka2l1::epoc {
         std::int32_t offset; ///< Offset from *this* pointer to the bitmap data.
         std::uint32_t metric_offset; ///< Pointer to metric. This is what the hell moment.
 
-        void destroy(fbs_server *serv);
+        void destroy(fbscli *cli);
     };
 
     struct open_font_glyph_v1: public open_font_glyph_v3 {
-
     };
 
     struct open_font_glyph_cache_entry_v1: public open_font_glyph_v1 {

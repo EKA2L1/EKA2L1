@@ -232,22 +232,36 @@ namespace eka2l1::epoc {
         return false;
     }
 
-    void open_font_glyph_v2::destroy(fbs_server *serv) {
-        // Nothing.... May add something here later
+    void open_font_glyph_v2::destroy(fbscli *cli) {
+        auto serv = cli->server<fbs_server>();
+
+        if (epoc::does_client_use_pointer_instead_of_offset(cli)) {
+            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(serv->guest_general_data_to_host_ptr(offset)));
+        } else {
+            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(this + offset));
+        }
     }
 
-    void open_font_glyph_v3::destroy(fbs_server *serv) {
-        // Nothing.... May add something here later
+    void open_font_glyph_v3::destroy(fbscli *cli) {
+        auto serv = cli->server<fbs_server>();
+
+        if (epoc::does_client_use_pointer_instead_of_offset(cli)) {
+            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(serv->guest_general_data_to_host_ptr(offset)));
+        } else {
+            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(this + offset));
+        }
     }
 
-#define OPEN_FONT_SESSION_CACHE_DESTROY_IMPL(version)                        \
-    void open_font_session_cache_v##version::destroy(fbscli *cli) {          \
-        for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) { \
-            if (!offset_array.is_entry_empty(cli, i)) {                      \
-                auto glyph_cache = offset_array.get_glyph(cli, i);           \
-                cli->server<fbs_server>()->free_general_data(glyph_cache);   \
-            }                                                                \
-        }                                                                    \
+#define OPEN_FONT_SESSION_CACHE_DESTROY_IMPL(version)                                                         \
+    void open_font_session_cache_v##version::destroy(fbscli *cli) {                                           \
+        for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {                                  \
+            if (!offset_array.is_entry_empty(cli, i)) {                                                       \
+                auto glyph_cache = offset_array.get_glyph(cli, i);                                            \
+                auto serv = cli->server<fbs_server>();                                                        \
+                reinterpret_cast<open_font_session_cache_entry_v##version*>(glyph_cache)->destroy(cli);       \
+                serv->free_general_data(glyph_cache);                                                         \
+            }                                                                                                 \
+        }                                                                                                     \
     }
 
     OPEN_FONT_SESSION_CACHE_DESTROY_IMPL(2)
@@ -258,6 +272,7 @@ namespace eka2l1::epoc {
 
         if (!offset_array.is_entry_empty(cli, real_index)) {
             auto glyph_cache = offset_array.get_glyph(cli, real_index);
+            reinterpret_cast<open_font_session_cache_entry_v3*>(glyph_cache)->destroy(cli);
             cli->server<fbs_server>()->free_general_data(glyph_cache);
         }
 
@@ -268,29 +283,9 @@ namespace eka2l1::epoc {
         std::uint32_t real_index = (code & 0x7fffffff) % offset_array.offset_array_count;
 
         if (!offset_array.is_entry_empty(cli, real_index)) {
-            // Search for the least last used
-            auto ptr = offset_array.pointer(cli);
-            fbs_server *serv = cli->server<fbs_server>();
-            memory_system *mem = serv->get_system()->get_memory_system();
-
-            std::int32_t least_use = 99999999;
-
-            for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {
-                if (!ptr[i]) {
-                    real_index = i;
-                    break;
-                }
-
-                auto entry = eka2l1::ptr<open_font_session_cache_entry_v2>(ptr[i]).get(mem);
-
-                if (entry->last_use < least_use) {
-                    least_use = entry->last_use;
-                    real_index = i;
-                }
-            }
-
             // Free at given address.
             auto glyph_cache = offset_array.get_glyph(cli, real_index);
+            reinterpret_cast<open_font_session_cache_entry_v2*>(glyph_cache)->destroy(cli);
             cli->server<fbs_server>()->free_general_data(glyph_cache);
         }
 
@@ -532,6 +527,10 @@ namespace eka2l1 {
         // Observing font plugin on real phone, it seems to clamp the height between 2 to 256.
         static constexpr std::int32_t MAX_FONT_HEIGHT = 256;
         static constexpr std::int32_t MIN_FONT_HEIGHT = 2;
+
+        if ((spec.height < MIN_FONT_HEIGHT) || (spec.height > MAX_FONT_HEIGHT)) {
+            LOG_TRACE("One weird font allocated");
+        }
 
         spec.height = common::clamp<std::int32_t>(MIN_FONT_HEIGHT, MAX_FONT_HEIGHT, spec.height);
 

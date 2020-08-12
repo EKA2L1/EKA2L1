@@ -401,6 +401,10 @@ namespace eka2l1 {
             return shared_chunk->base(nullptr) + static_cast<std::uint32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
 
+        void *guest_general_data_to_host_ptr(ptr<std::uint8_t> addr) {
+            return base_shared_chunk + (addr.ptr_address() - shared_chunk->base(nullptr).ptr_address());
+        }
+
         std::int32_t host_ptr_to_guest_shared_offset(void *ptr) {
             return static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
@@ -450,9 +454,12 @@ namespace eka2l1 {
          * 
          * Using a shared global chunk, this could be solved someway.
         */
-        template <typename T>
-        T *allocate_general_data() {
-            return reinterpret_cast<T *>(allocate_general_data_impl(sizeof(T)));
+        template <typename T, typename ...Args>
+        T *allocate_general_data(Args... construct_args) {
+            T *obj = reinterpret_cast<T *>(allocate_general_data_impl(sizeof(T)));
+            new (obj) T(construct_args...);
+
+            return obj;
         }
 
         /**
