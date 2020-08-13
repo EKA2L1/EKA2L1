@@ -637,15 +637,21 @@ namespace eka2l1 {
 
     void fbscli::get_twips_height(service::ipc_context *ctx) {
         fbs_server *serv = server<fbs_server>();
-        fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_argument_value<epoc::handle>(0));
+        std::optional<epoc::handle> font_local_handle = ctx->get_argument_value<epoc::handle>(0);
+    
+        if (!font_local_handle) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        fbsfont *font = obj_table_.get<fbsfont>(font_local_handle.value());
 
         if (!font) {
             ctx->complete(epoc::error_not_found);
             return;
         }
 
-        std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.scale_factor_y *
-            font->of_info.metrics.max_height * FBS_TWIPS_MUL);
+        const std::int32_t twips_height = static_cast<std::int32_t>(font->of_info.metrics.max_height * FBS_TWIPS_MUL);
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(1, twips_height);
         ctx->complete(epoc::error_none);
