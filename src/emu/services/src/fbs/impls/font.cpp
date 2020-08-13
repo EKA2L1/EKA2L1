@@ -543,18 +543,19 @@ namespace eka2l1 {
             return;
         }
 
-        /*
         static constexpr int max_acceptable_delta = 1;
 
         for (auto &font_obj: server<fbs_server>()->font_obj_container) {
             fbsfont *the_font = reinterpret_cast<fbsfont*>(font_obj.get());
+            const std::int32_t delta = common::abs(is_design_height ? (spec.height - the_font->of_info.metrics.design_height) :
+                (size_info->x - the_font->of_info.metrics.max_height));
 
-            if (common::abs(is_design_height ? (spec.height - the_font->of_info.metrics.design_height) :
-                (size_info->x - the_font->of_info.metrics.max_height)) <= max_acceptable_delta) {
+            // Same adapter and font size is not to much of a difference
+            if ((the_font->of_info.adapter == ofi_suit->adapter) && (delta <= max_acceptable_delta)) {
                 font = the_font;
                 break;
             }
-        }*/
+        }
 
         if (!font) {
             // Scale it
