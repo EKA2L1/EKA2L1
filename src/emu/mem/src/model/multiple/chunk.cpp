@@ -68,11 +68,6 @@ namespace eka2l1::mem {
                 return running_offset - offset;
             }
 
-            if (!is_external_host) {    
-                // Clear the committed memory
-                std::fill(host_commit_ptr, host_commit_ptr + host_commit_size, clear_byte_);
-            }
-
             const vm_address crr_base_addr = base_;
             multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
 
@@ -95,6 +90,12 @@ namespace eka2l1::mem {
                     // Map those just mapped to the CPU. It will love this
                     if (size_just_mapped != 0 && (!own_process_ || mul_process->addr_space_id_ == mmu_->current_addr_space())) {
                         mmu_->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
+                        
+                        if (!is_external_host) {    
+                            // Clear the committed memory
+                            std::fill(host_start_just_mapped, host_start_just_mapped + size_just_mapped, clear_byte_);
+                        }
+                        
                         off_start_just_mapped = 0;
                         size_just_mapped = 0;
                         host_start_just_mapped = nullptr;
@@ -106,6 +107,11 @@ namespace eka2l1::mem {
             if (size_just_mapped != 0 && (!own_process_ || mul_process->addr_space_id_ == mmu_->current_addr_space())) {
                 //LOG_TRACE("Mapped to CPU: 0x{:X}, size 0x{:X}", off_start_just_mapped, size_just_mapped);
                 mmu_->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
+
+                if (!is_external_host) {    
+                    // Clear the committed memory
+                    std::fill(host_start_just_mapped, host_start_just_mapped + size_just_mapped, clear_byte_);
+                }
             }
 
             if (ptid == 0xFFFFFFFF) {
