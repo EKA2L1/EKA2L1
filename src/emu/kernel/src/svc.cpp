@@ -555,12 +555,8 @@ namespace eka2l1::epoc {
         msg->msg_session->set_cookie_address(session_addr);
     }
 
-    BRIDGE_FUNC(std::int32_t, message_complete, std::int32_t msg_handle, std::int32_t val) {
+    BRIDGE_FUNC(void, message_complete, std::int32_t msg_handle, std::int32_t val) {
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
-
-        if (!msg) {
-            return epoc::error_bad_handle;
-        }
 
         if (msg->request_sts) {
             *(msg->request_sts.get(msg->own_thr->owning_process())) = val;
@@ -573,21 +569,33 @@ namespace eka2l1::epoc {
 
         // Free the message
         msg->free = true;
-
-        return epoc::error_none;
     }
 
-    BRIDGE_FUNC(std::int32_t, message_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> cage) {
+     BRIDGE_FUNC(void, message_complete_handle, std::int32_t msg_handle, std::int32_t handle) {
+        std::int32_t dup_handle = kern->mirror(&(*kern->get<kernel::thread>(handle)), handle, kernel::owner_type::thread);
+
+        ipc_msg_ptr msg = kern->get_msg(msg_handle);
+
+        if (msg->request_sts) {
+            *(msg->request_sts.get(msg->own_thr->owning_process())) = dup_handle;
+            msg->own_thr->signal_request();
+        }
+
+        LOG_TRACE("Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
+
+        kern->call_ipc_complete_callbacks(msg.get(), dup_handle);
+
+        // Free the message
+        msg->free = true;
+    }
+
+    BRIDGE_FUNC(void, message_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> cage) {
         process_ptr crr = kern->crr_process();
 
         std::string exit_cage = cage.get(crr)->to_std_string(kern->crr_process());
         std::optional<std::string> exit_description;
 
         ipc_msg_ptr msg = kern->get_msg(h);
-
-        if (!msg || !msg->own_thr) {
-            return epoc::error_bad_handle;
-        }
 
         std::string exit_category = "None";
         kernel::process *pr = kern->crr_process();
@@ -597,7 +605,6 @@ namespace eka2l1::epoc {
         }
 
         msg->own_thr->kill(etype, common::utf8_to_ucs2(exit_category), reason);
-        return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, message_get_des_length, kernel::handle h, std::int32_t param) {
@@ -3254,6 +3261,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3F, handle_count),
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
+        BRIDGE_REGISTER(0x43, message_complete_handle),
         BRIDGE_REGISTER(0x44, time_now),
         BRIDGE_REGISTER(0x46, set_utc_time_and_offset),
         BRIDGE_REGISTER(0x4D, session_send_sync),
@@ -3398,6 +3406,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x3D, handle_full_name),
         BRIDGE_REGISTER(0x40, after),
         BRIDGE_REGISTER(0x42, message_complete),
+        BRIDGE_REGISTER(0x43, message_complete_handle),
         BRIDGE_REGISTER(0x44, time_now),
         BRIDGE_REGISTER(0x45, set_utc_time_and_offset),
 
