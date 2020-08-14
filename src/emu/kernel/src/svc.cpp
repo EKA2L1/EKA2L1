@@ -728,7 +728,7 @@ namespace eka2l1::epoc {
         }
 
         std::memcpy(read ? info_host_ptr : (client_ptr + start_offset), read ? (client_ptr + start_offset) : info_host_ptr, raw_size_of_work);
-        return static_cast<std::int32_t>(size_of_work);
+        return (read ? static_cast<std::int32_t>(size_of_work) : epoc::error_none);
     }
 
     BRIDGE_FUNC(std::int32_t, message_ipc_copy, kernel::handle h, std::int32_t param, eka2l1::ptr<ipc_copy_info> info,
