@@ -589,46 +589,14 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        std::string thread_name = msg->own_thr->name();
+        std::string exit_category = "None";
+        kernel::process *pr = kern->crr_process();
 
-        if (is_panic_category_action_default(exit_cage)) {
-            exit_description = get_panic_description(exit_cage, reason);
-
-            switch (etype) {
-            case kernel::entity_exit_type::panic:
-                LOG_TRACE("Thread {} panicked by message with category: {} and exit code: {} {}", thread_name, exit_cage, reason,
-                    exit_description ? (std::string("(") + *exit_description + ")") : "");
-                break;
-
-            case kernel::entity_exit_type::kill:
-                LOG_TRACE("Thread {} forcefully killed by message with category: {} and exit code: {}", thread_name, exit_cage, reason,
-                    exit_description ? (std::string("(") + *exit_description + ")") : "");
-                break;
-
-            case kernel::entity_exit_type::terminate:
-            case kernel::entity_exit_type::pending:
-                LOG_TRACE("Thread {} terminated peacefully by message with category: {} and exit code: {}", thread_name, exit_cage, reason,
-                    exit_description ? (std::string("(") + *exit_description + ")") : "");
-                break;
-
-            default:
-                return epoc::error_argument;
-            }
+        if (cage) {
+            exit_category = cage.get(pr)->to_std_string(pr);
         }
 
-        kern->call_thread_kill_callbacks(kern->crr_thread(), exit_cage, reason);
-
-        process_ptr own_pr = msg->own_thr->owning_process();
-
-        if (own_pr->decrease_thread_count() == 0) {
-            own_pr->set_exit_type(etype);
-        }
-
-        kern->get_thread_scheduler()->stop(msg->own_thr);
-        kern->prepare_reschedule();
-
-        msg->own_thr->set_exit_type(etype);
-
+        msg->own_thr->kill(etype, common::utf8_to_ucs2(exit_category), reason);
         return epoc::error_none;
     }
 
@@ -1620,53 +1588,14 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        std::string exit_cage = "None";
-        std::string thread_name = thr->name();
-
+        std::string exit_category = "None";
         kernel::process *pr = kern->crr_process();
 
         if (reason_des) {
-            exit_cage = reason_des.get(pr)->to_std_string(pr);
+            exit_category = reason_des.get(pr)->to_std_string(pr);
         }
 
-        std::optional<std::string> exit_description;
-
-        if (is_panic_category_action_default(exit_cage)) {
-            exit_description = get_panic_description(exit_cage, reason);
-
-            switch (etype) {
-            case kernel::entity_exit_type::panic:
-                LOG_TRACE("Thread {} panicked with category: {} and exit code: {} {}", thread_name, exit_cage, reason,
-                    exit_description ? (std::string("(") + *exit_description + ")") : "");
-                break;
-
-            case kernel::entity_exit_type::kill:
-                LOG_TRACE("Thread {} forcefully killed with category: {} and exit code: {} {}", thread_name, exit_cage, reason,
-                    exit_description ? (std::string("(") + *exit_description + ")") : "");
-                break;
-
-            case kernel::entity_exit_type::terminate:
-            case kernel::entity_exit_type::pending:
-                LOG_TRACE("Thread {} terminated peacefully with category: {} and exit code: {}", thread_name, exit_cage, reason,
-                    exit_description ? (std::string("(") + *exit_description + ")") : "");
-                break;
-
-            default:
-                return epoc::error_argument;
-            }
-        }
-
-        if (thr->owning_process()->decrease_thread_count() == 0) {
-            thr->owning_process()->set_exit_type(etype);
-        }
-
-        kern->call_thread_kill_callbacks(kern->crr_thread(), exit_cage, reason);
-
-        kern->get_thread_scheduler()->stop(&(*thr));
-        kern->prepare_reschedule();
-
-        thr->set_exit_type(etype);
-
+        thr->kill(etype, common::utf8_to_ucs2(exit_category), reason);
         return epoc::error_none;
     }
 
@@ -2861,19 +2790,12 @@ namespace eka2l1::epoc {
         const std::int32_t reason = static_cast<std::int32_t>(create_info->arg1_);
         epoc::desc16 *category = eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_thread->owning_process());
 
-        if (!thr->kill(kernel::entity_exit_type::panic, reason)) {
+        const std::u16string exit_category_u16 = category->to_std_string(target_thread->owning_process());
+
+        if (!thr->kill(kernel::entity_exit_type::panic, exit_category_u16, reason)) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }
-
-        std::string exit_category_utf;
-
-        if (category) {
-            exit_category_utf = common::ucs2_to_utf8(category->to_std_string(target_thread->owning_process()));
-        }
-
-        kern->call_thread_kill_callbacks(thr, exit_category_utf, reason);
-        LOG_TRACE("Thread {} panic with category {}, reason {}", thr->name(), exit_category_utf, reason);
 
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;

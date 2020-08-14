@@ -189,6 +189,7 @@ namespace eka2l1 {
             int exit_reason;
 
             entity_exit_type exit_type;
+            std::u16string exit_category;
 
             std::vector<epoc::notify_info> logon_requests;
             std::vector<epoc::notify_info> rendezvous_requests;
@@ -319,7 +320,8 @@ namespace eka2l1 {
             void notify_sleep(const int errcode);
 
             bool stop();
-            bool kill(const entity_exit_type exit_type, const std::int32_t reason);
+            bool kill(const entity_exit_type exit_type, const std::u16string &category,
+                const std::int32_t reason);
 
             void add_ticks(const int num);
 

@@ -31,6 +31,7 @@
 #include <mem/mem.h>
 #include <mem/ptr.h>
 #include <utils/err.h>
+#include <utils/panic.h>
 #include <utils/reqsts.h>
 #include <kernel/ipc.h>
 
@@ -380,7 +381,8 @@ namespace eka2l1 {
             return scheduler->stop(this);
         }
 
-        bool thread::kill(const entity_exit_type the_exit_type, const std::int32_t reason) {
+        bool thread::kill(const entity_exit_type the_exit_type,  const std::u16string &category, 
+            const std::int32_t reason) {
             if (state == kernel::thread_state::stop) {
                 return false;
             }
@@ -389,12 +391,43 @@ namespace eka2l1 {
 
             exit_reason = reason;
             exit_type = the_exit_type;
+            exit_category = category;
 
             if (owning_process()->decrease_thread_count() == 0) {
                 owning_process()->set_exit_type(exit_type);
             }
 
+            std::optional<std::string> exit_description;
+            const std::string exit_category_u8 = common::ucs2_to_utf8(exit_category);
+
+            if (epoc::is_panic_category_action_default(exit_category_u8)) {
+                exit_description = epoc::get_panic_description(exit_category_u8, reason);
+
+                switch (exit_type) {
+                case kernel::entity_exit_type::panic:
+                    LOG_TRACE("Thread {} panicked with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
+                        exit_description ? (std::string("(") + *exit_description + ")") : "");
+                    break;
+
+                case kernel::entity_exit_type::kill:
+                    LOG_TRACE("Thread {} forcefully killed with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
+                        exit_description ? (std::string("(") + *exit_description + ")") : "");
+                    break;
+
+                case kernel::entity_exit_type::terminate:
+                case kernel::entity_exit_type::pending:
+                    LOG_TRACE("Thread {} terminated peacefully with category: {} and exit code: {}", obj_name, exit_category_u8,
+                        reason, exit_description ? (std::string("(") + *exit_description + ")") : "");
+                    break;
+
+                default:
+                    return false;
+                }
+            }
+
+            kern->call_thread_kill_callbacks(this, exit_category_u8, reason);
             kern->prepare_reschedule();
+
             return true;
         }
         
