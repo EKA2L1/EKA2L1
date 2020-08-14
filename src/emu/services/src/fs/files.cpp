@@ -387,7 +387,7 @@ namespace eka2l1 {
         write_pos = size_of_file;
 
         // Low MaxUint64
-        if ((write_pos_provided != static_cast<int>(0x80000000)) || (write_pos_provided == -1)) {
+        if ((write_pos_provided != static_cast<int>(0x80000000)) && (write_pos_provided != -1)) {
             write_pos = write_pos_provided;
         }
 
@@ -436,7 +436,7 @@ namespace eka2l1 {
         read_pos = last_pos;
 
         // Low MaxUint64
-        if ((read_pos_provided != static_cast<int>(0x80000000)) || (read_pos_provided == -1)) {
+        if ((read_pos_provided != static_cast<int>(0x80000000)) && (read_pos_provided != -1)) {
             read_pos = read_pos_provided;
         }
 
@@ -454,7 +454,7 @@ namespace eka2l1 {
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<uint8_t *>(read_data.data()), static_cast<std::uint32_t>(read_finish_len));
 
-        // LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
+        //LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
         ctx->complete(epoc::error_none);
     }
 
