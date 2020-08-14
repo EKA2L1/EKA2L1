@@ -59,6 +59,8 @@ namespace eka2l1 {
 
         void delete_loader(service::ipc_context &context);
 
+        void check_library_hash(service::ipc_context &context);
+
     public:
         explicit loader_server(system *sys);
     };

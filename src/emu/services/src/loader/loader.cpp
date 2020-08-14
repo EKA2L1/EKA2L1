@@ -266,11 +266,23 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void loader_server::check_library_hash(service::ipc_context &ctx) {
+        std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
+
+        if (!lib_name) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        ctx.complete(epoc::error_none);
+    }
+
     loader_server::loader_server(system *sys)
         : service::server(sys->get_kernel_system(), sys, get_loader_server_name_through_epocver(sys->get_symbian_version_use()), true) {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
         REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
         REGISTER_IPC(loader_server, get_info, EGetInfo, "Loader::GetInfo");
         REGISTER_IPC(loader_server, delete_loader, ELdrDelete, "Loader::Delete");
+        REGISTER_IPC(loader_server, check_library_hash, ECheckLibraryHash, "Loader::CheckLibraryHash");
     }
 }
