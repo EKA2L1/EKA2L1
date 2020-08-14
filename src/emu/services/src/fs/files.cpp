@@ -778,7 +778,7 @@ namespace eka2l1 {
 
         if (real_mode & epoc::fs::file_write) {
             if (!overwrite) {
-                access_mode |= APPEND_MODE;
+                access_mode |= (READ_MODE | WRITE_MODE);
             } else {
                 access_mode |= WRITE_MODE;
             }
