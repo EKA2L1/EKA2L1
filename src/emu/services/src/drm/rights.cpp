@@ -20,9 +20,25 @@
 
 #include <services/drm/rights.h>
 #include <epoc/epoc.h>
+#include <utils/err.h>
 
 namespace eka2l1 {
     rights_server::rights_server(eka2l1::system *sys)
-        : service::server(sys->get_kernel_system(), sys, "!RightsServer", true) {
+        : service::typical_server(sys, "!RightsServer") {
+    }
+
+    void rights_server::connect(service::ipc_context &context) {
+        create_session<rights_client_session>(&context);
+        context.complete(epoc::error_none);
+    }
+
+    rights_client_session::rights_client_session(service::typical_server *serv, const kernel::uid ss_id,
+        epoc::version client_version)
+        : service::typical_session(serv, ss_id, client_version) {
+    }
+
+    void rights_client_session::fetch(service::ipc_context *ctx) {
+        LOG_ERROR("Unimplemented opcode for RightsServer 0x{:X}", ctx->msg->function);
+        ctx->complete(epoc::error_none);
     }
 }

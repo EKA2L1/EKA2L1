@@ -20,11 +20,20 @@
 
 #pragma once
 
+#include <services/framework.h>
 #include <kernel/server.h>
 
 namespace eka2l1 {
-    class rights_server : public service::server {
+    class rights_server : public service::typical_server {
     public:
         explicit rights_server(eka2l1::system *sys);
+
+        void connect(service::ipc_context &context) override;
+    };
+
+    struct rights_client_session : public service::typical_session {
+        explicit rights_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
+
+        void fetch(service::ipc_context *ctx) override;
     };
 }
