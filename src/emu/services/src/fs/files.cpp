@@ -382,7 +382,7 @@ namespace eka2l1 {
         std::int32_t write_pos_provided = *ctx->get_argument_value<std::int32_t>(2);
 
         std::uint64_t write_pos = 0;
-        std::uint64_t size_of_file = vfs_file->tell();
+        std::uint64_t size_of_file = vfs_file->size();
 
         write_pos = size_of_file;
 
