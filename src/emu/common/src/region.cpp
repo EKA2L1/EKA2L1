@@ -111,13 +111,14 @@ namespace eka2l1::common {
             const eka2l1::rect intersection_reg = rect.intersect(rects_[i]);
 
             if (!intersection_reg.empty()) {
+                const eka2l1::rect original_iterate = rects_[i];
                 rects_.erase(rects_.begin() + i);
 
                 const eka2l1::vec2 intersect_reg_br = intersection_reg.bottom_right();
-                const eka2l1::vec2 iterate_br = rects_[i].bottom_right();
+                const eka2l1::vec2 iterate_br = original_iterate.bottom_right();
 
                 if (iterate_br.y != intersect_reg_br.y) {
-                    rects_.push_back(eka2l1::rect({ rects_[i].top.x, intersect_reg_br.y }, { iterate_br.x, iterate_br.y }));
+                    rects_.push_back(eka2l1::rect({ original_iterate.top.x, intersect_reg_br.y }, { iterate_br.x, iterate_br.y }));
                     rects_.back().transform_from_symbian_rectangle();
                 }
 
@@ -126,13 +127,13 @@ namespace eka2l1::common {
                     rects_.back().transform_from_symbian_rectangle();
                 }
 
-                if (intersection_reg.top.x != rects_[i].top.x) {
-                    rects_.push_back(eka2l1::rect({ rects_[i].top.x, intersection_reg.top.y }, { intersection_reg.top.x, intersect_reg_br.y }));
+                if (intersection_reg.top.x != original_iterate.top.x) {
+                    rects_.push_back(eka2l1::rect({ original_iterate.top.x, intersection_reg.top.y }, { intersection_reg.top.x, intersect_reg_br.y }));
                     rects_.back().transform_from_symbian_rectangle();
                 }
 
-                if (intersection_reg.top.y != rects_[i].top.y) {
-                    rects_.push_back(eka2l1::rect(rects_[i].top, { iterate_br.x, intersection_reg.top.y }));
+                if (intersection_reg.top.y != original_iterate.top.y) {
+                    rects_.push_back(eka2l1::rect(original_iterate.top, { iterate_br.x, intersection_reg.top.y }));
                     rects_.back().transform_from_symbian_rectangle();
                 }
 
