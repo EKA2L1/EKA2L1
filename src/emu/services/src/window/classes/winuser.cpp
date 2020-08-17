@@ -233,9 +233,9 @@ namespace eka2l1::epoc {
 
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-        redraw_rect_curr.make_empty();
 
-        // TODO: remove current redraw rect from invalid region.
+        redraw_region.eliminate(redraw_rect_curr);
+        redraw_rect_curr.make_empty();
 
         if (resize_needed) {
             // Queue a resize command
@@ -285,6 +285,13 @@ namespace eka2l1::epoc {
         }
 
         flags &= ~flags_in_redraw;
+
+        // Some rectangles are still not validated. Notify client about them!
+        for (std::size_t i = 0; i < redraw_region.rects_.size(); i++) {
+            client->queue_redraw(this, redraw_region.rects_[i]);
+        }
+
+        client->trigger_redraw();
 
         // LOG_DEBUG("End redraw to window 0x{:X}!", id);
         ctx.complete(epoc::error_none);
