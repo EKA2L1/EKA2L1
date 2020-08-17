@@ -34,18 +34,25 @@ namespace eka2l1::drivers {
         std::uint32_t fbo;
 
         int last_fb{ 0 };
+        int max_color_attachment { 0 };
 
     public:
         std::uint32_t get_fbo() const {
             return fbo;
         }
 
-        explicit ogl_framebuffer(texture *color_buffer, texture *depth_buffer);
+        explicit ogl_framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_buffer);
         ~ogl_framebuffer() override;
 
         void bind(graphics_driver *driver) override;
         void unbind(graphics_driver *driver) override;
+        
+        std::int32_t set_color_buffer(texture *tex, const std::int32_t position = -1) override;
+        bool set_draw_buffer(const std::int32_t attachment_id) override;
+        bool set_read_buffer(const std::int32_t attachment_id) override;
 
-        std::uint64_t texture_handle() override;
+        bool remove_color_buffer(const std::int32_t position) override;
+        bool blit(const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect, const std::uint32_t flags,
+            const filter_option copy_filter) override;
     };
 }

@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace eka2l1::drivers {
@@ -73,8 +74,48 @@ namespace eka2l1::drivers {
         clear_bit_depth_buffer = 1 << 1
     };
 
+    enum framebuffer_blit_bits {
+        framebuffer_blit_color_buffer = 0,
+        framebuffer_blit_depth_buffer = 1,
+        framebuffer_blit_stencil_buffer = 2
+    };
+
     enum bitmap_draw_flags {
         bitmap_draw_flag_use_brush = 1 << 0,
         bitmap_draw_flag_invert_mask = 1 << 1,
     };
+    
+    enum class texture_format : std::uint16_t {
+        none,
+        r,
+        rg,
+        rgb,
+        bgr,
+        bgra,
+        rgba,
+        depth_stencil,
+        depth24_stencil8
+    };
+
+    enum class texture_data_type : std::uint16_t {
+        ubyte,
+        ushort,
+        ushort_5_6_5,
+        uint_24_8
+    };
+
+    enum class filter_option {
+        linear
+    };
+
+    enum class channel_swizzle : std::uint32_t {
+        red,
+        green,
+        blue,
+        alpha,
+        zero,
+        one
+    };
+
+    using channel_swizzles = std::array<channel_swizzle, 4>;
 }

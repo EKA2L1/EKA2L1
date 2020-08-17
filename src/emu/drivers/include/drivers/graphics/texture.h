@@ -30,40 +30,6 @@
 namespace eka2l1::drivers {
     class graphics_driver;
 
-    enum class texture_format : std::uint16_t {
-        none,
-        r,
-        rg,
-        rgb,
-        bgr,
-        bgra,
-        rgba,
-        depth_stencil,
-        depth24_stencil8
-    };
-
-    enum class texture_data_type : std::uint16_t {
-        ubyte,
-        ushort,
-        ushort_5_6_5,
-        uint_24_8
-    };
-
-    enum class filter_option {
-        linear
-    };
-
-    enum class channel_swizzle : std::uint32_t {
-        red,
-        green,
-        blue,
-        alpha,
-        zero,
-        one
-    };
-
-    using channel_swizzles = std::array<channel_swizzle, 4>;
-
     /*! \brief Base class for backend texture.
     */
     class texture : public graphics_object {

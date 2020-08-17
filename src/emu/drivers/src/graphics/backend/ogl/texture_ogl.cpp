@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <drivers/graphics/backend/ogl/common_ogl.h>
 #include <drivers/graphics/backend/ogl/texture_ogl.h>
 #include <glad/glad.h>
 
@@ -175,18 +176,6 @@ namespace eka2l1::drivers {
 
     void ogl_texture::change_texture_format(const texture_format format) {
         this->format = format;
-    }
-
-    static GLint to_filter_option(const filter_option op) {
-        switch (op) {
-        case filter_option::linear:
-            return GL_LINEAR;
-
-        default:
-            break;
-        }
-
-        return 0;
     }
 
     void ogl_texture::set_filter_minmag(const bool min, const filter_option op) {

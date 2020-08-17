@@ -35,6 +35,7 @@ namespace eka2l1::drivers {
      * \brief Bitmap is basically a texture. It can be drawn into and can be taken to draw.
      */
     struct bitmap {
+    public:
         std::uint32_t id;
         framebuffer_ptr fb;
         texture_ptr tex;
@@ -42,6 +43,8 @@ namespace eka2l1::drivers {
 
         explicit bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp);
         virtual ~bitmap();
+
+        void resize(graphics_driver *driver, const eka2l1::vec2 &new_size);
     };
 
     using bitmap_ptr = std::unique_ptr<bitmap>;

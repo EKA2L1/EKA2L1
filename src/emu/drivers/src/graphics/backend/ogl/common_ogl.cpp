@@ -37,4 +37,16 @@ namespace eka2l1::drivers {
 
         return GL_INVALID_ENUM;
     }
+    
+    GLint to_filter_option(const filter_option op) {
+        switch (op) {
+        case filter_option::linear:
+            return GL_LINEAR;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
 }

@@ -34,12 +34,25 @@ namespace eka2l1::drivers {
 
     class framebuffer : public graphics_object {
     protected:
-        texture *color_buffer;
+        std::vector<texture*> color_buffers;
         texture *depth_buffer;
 
+    protected:
+        bool is_attachment_id_valid(const std::int32_t attachment_id) const;
+
     public:
-        explicit framebuffer(texture *color_buffer, texture *depth_buffer)
-            : color_buffer(color_buffer)
+        /**
+         * @brief Initialize a framebuffer.
+         * 
+         * Attachment ID of each color buffer is the index of the color buffer in the initializer list.
+         * 
+         * There may only exists one depth buffer or stencil buffer.
+         * 
+         * @param color_buffer_list     List of color buffer to attach to this framebuffer.
+         * @param depth_buffer          Depth buffer to attach to this framebuffer.
+         */
+        explicit framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_buffer)
+            : color_buffers(color_buffer_list)
             , depth_buffer(depth_buffer) {
         }
 
@@ -49,10 +62,38 @@ namespace eka2l1::drivers {
         virtual void bind(graphics_driver *driver) = 0;
         virtual void unbind(graphics_driver *driver) = 0;
 
-        virtual std::uint64_t texture_handle() = 0;
+        virtual bool set_draw_buffer(const std::int32_t attachment_id) = 0;
+        virtual bool set_read_buffer(const std::int32_t attachment_id) = 0;
+
+        /**
+         * @brief   Set color buffer to an attachment ID.
+         * 
+         * @param   tex           The color buffer texture to attach to this framebuffer.
+         * @param   position      The ID to set attachment to. -1 for API to choose.
+         * @returns Attachment ID of the color buffer. -1 on failure.
+         */
+        virtual std::int32_t set_color_buffer(texture *tex, const std::int32_t position = -1) = 0;
+
+        /**
+         * @brief       Copy content of some buffer to draw buffer.
+         * 
+         * @param       source_rect           The source rectangle to copy data from.
+         * @param       dest_rect             The destination rectangle to put data to draw buffer.
+         * @param       flags                 Contains OR of framebuffer_blit_flags, specifying which buffers to copy from.
+         * @param       copy_filter           The filter to apply to texture data copied.
+         * 
+         * @returns     True on success.
+         */
+        virtual bool blit(const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect, const std::uint32_t flags,
+            const filter_option copy_filter) = 0;
+
+        virtual bool remove_color_buffer(const std::int32_t position) = 0;
+
+        virtual std::uint64_t color_attachment_handle(const std::int32_t attachment_id);
     };
 
     using framebuffer_ptr = std::unique_ptr<framebuffer>;
 
-    framebuffer_ptr make_framebuffer(graphics_driver *driver, texture *color_buffer, texture *depth_buffer);
+    framebuffer_ptr make_framebuffer(graphics_driver *driver, std::initializer_list<texture*> color_buffer_list,
+        texture *depth_buffer);
 }

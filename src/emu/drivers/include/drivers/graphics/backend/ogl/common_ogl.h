@@ -5,4 +5,5 @@
 
 namespace eka2l1::drivers {
     GLenum data_format_to_gl_enum(const data_format format);
+    GLint to_filter_option(const filter_option op);
 }

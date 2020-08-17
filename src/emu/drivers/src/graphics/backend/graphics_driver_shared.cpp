@@ -17,7 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/log.h>
+
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <drivers/graphics/buffer.h>
 #include <drivers/graphics/shader.h>
@@ -55,10 +57,8 @@ namespace eka2l1::drivers {
         }
     }
 
-    bitmap::bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp)
-        : bpp(initial_bpp) {
-        // Make color buffer for our bitmap!
-        tex = make_texture(driver);
+    static texture_ptr instantiate_suit_color_bitmap_texture(graphics_driver *driver, const eka2l1::vec2 &size, const int bpp) {
+        auto texture = make_texture(driver);
 
         texture_format internal_format = texture_format::none;
         texture_format data_format = texture_format::none;
@@ -66,14 +66,46 @@ namespace eka2l1::drivers {
 
         translate_bpp_to_format(bpp, internal_format, data_format, data_type);
 
-        tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, data_type, nullptr);
-        tex->set_filter_minmag(false, drivers::filter_option::linear);
-        tex->set_filter_minmag(true, drivers::filter_option::linear);
+        texture->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, data_type, nullptr);
+        texture->set_filter_minmag(false, drivers::filter_option::linear);
+        texture->set_filter_minmag(true, drivers::filter_option::linear);
+
+        return texture;
+    }
+
+    bitmap::bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp)
+        : bpp(initial_bpp) {
+        // Make color buffer for our bitmap!
+        tex = std::move(instantiate_suit_color_bitmap_texture(driver, size, bpp));
     }
 
     bitmap::~bitmap() {
         tex.reset();
         fb.reset();
+    }
+    
+    void bitmap::resize(graphics_driver *driver, const eka2l1::vec2 &new_size) {
+        auto tex_to_replace = std::move(instantiate_suit_color_bitmap_texture(driver, new_size, bpp));
+        
+        if (fb) {
+            fb->set_color_buffer(tex_to_replace.get(), 1);
+
+            // Setting up read/draw target
+            fb->set_draw_buffer(1);
+            fb->set_read_buffer(0);
+
+            eka2l1::rect copy_region;
+            copy_region.top = { 0, 0 };
+            copy_region.size = { common::min<int>(tex->get_size().x, new_size.x), common::min<int>(
+                tex->get_size().y, new_size.y) };
+
+            fb->blit(copy_region, copy_region, framebuffer_blit_color_buffer, filter_option::linear);
+
+            fb->set_color_buffer(tex_to_replace.get(), 0);
+            fb->set_draw_buffer(0);
+        }
+
+        tex = std::move(tex_to_replace);
     }
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
@@ -232,7 +264,7 @@ namespace eka2l1::drivers {
 
         if (!bmp->fb) {
             // Make new one
-            bmp->fb = make_framebuffer(this, bmp->tex.get(), nullptr);
+            bmp->fb = make_framebuffer(this, { bmp->tex.get() }, nullptr);
         }
 
         // Bind the framebuffer
@@ -275,11 +307,7 @@ namespace eka2l1::drivers {
         helper.pop(new_size);
 
         // Change texture size
-        bmp->tex->change_size({ new_size.x, new_size.y, 0 });
-
-        bmp->tex->bind(this, 0);
-        bmp->tex->tex(this, false);
-        bmp->tex->unbind(this);
+        bmp->resize(this, new_size);
     }
 
     void shared_graphics_driver::set_brush_color(command_helper &helper) {
