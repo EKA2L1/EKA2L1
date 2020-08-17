@@ -54,5 +54,12 @@ namespace eka2l1::common {
          * @returns True if intersects.
          */
         bool intersects(const eka2l1::rect &target) const;
+
+        /**
+         * @brief Remove a rectangle from this region.
+         * 
+         * @param rect  The rectangle to remove from this region.
+         */
+        void eliminate(const eka2l1::rect &rect);
     };
 }

@@ -241,6 +241,10 @@ namespace eka2l1 {
                 && (top.x <= rect.top.x) && (top.y <= rect.top.y);
         }
 
+        eka2l1::vec2 bottom_right() const {
+            return top + size;
+        }
+
         void merge(eka2l1::rect other) {
             if (contains(other)) {
                 return;
@@ -273,6 +277,13 @@ namespace eka2l1 {
             return r;
         }
 
+        /**
+         * @brief Transform raw rectangle from Symbian's guest.
+         * 
+         * This function turns the size variable, which offset corresponds to iBr in Symbian, to size of the rectangle.
+         * 
+         * You can use this utility outside of Symbian.
+         */
         void transform_from_symbian_rectangle() {
             // Symbian TRect has the second vector as the bottom right
             size = size - top;

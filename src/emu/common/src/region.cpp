@@ -23,6 +23,10 @@
 #include <climits>
 
 namespace eka2l1::common {
+    /**
+     * NOTE: CODE REVIEWED FROM SYMBIAN OPEN SOURCE.
+     */
+
     eka2l1::rect region::bounding_rect() const {
         eka2l1::vec2 tl { INT_MAX, INT_MAX };
         eka2l1::vec2 br { INT_MIN, INT_MIN };
@@ -89,6 +93,52 @@ namespace eka2l1::common {
 
         rects_.push_back(rect);
         return true;
+    }
+
+    void region::eliminate(const eka2l1::rect &rect) {
+        if (rect.empty()) {
+            return;
+        }
+
+        std::size_t limit = rects_.size();
+
+        for (std::size_t i = 0; i < limit; i++) {
+            if ((rect.top == rects_[i].top) && (rect.size == rects_[i].size)) {
+                rects_.erase(rects_.begin() + i);
+                return;
+            }
+            
+            const eka2l1::rect intersection_reg = rect.intersect(rects_[i]);
+
+            if (!intersection_reg.empty()) {
+                rects_.erase(rects_.begin() + i);
+
+                const eka2l1::vec2 intersect_reg_br = intersection_reg.bottom_right();
+                const eka2l1::vec2 iterate_br = rects_[i].bottom_right();
+
+                if (iterate_br.y != intersect_reg_br.y) {
+                    rects_.push_back(eka2l1::rect({ rects_[i].top.x, intersect_reg_br.y }, { iterate_br.x, iterate_br.y }));
+                    rects_.back().transform_from_symbian_rectangle();
+                }
+
+                if (iterate_br.x != intersect_reg_br.x) {
+                    rects_.push_back(eka2l1::rect({ intersect_reg_br.x, intersection_reg.top.y }, { iterate_br.x, intersect_reg_br.y }));
+                    rects_.back().transform_from_symbian_rectangle();
+                }
+
+                if (intersection_reg.top.x != rects_[i].top.x) {
+                    rects_.push_back(eka2l1::rect({ rects_[i].top.x, intersection_reg.top.y }, { intersection_reg.top.x, intersect_reg_br.y }));
+                    rects_.back().transform_from_symbian_rectangle();
+                }
+
+                if (intersection_reg.top.y != rects_[i].top.y) {
+                    rects_.push_back(eka2l1::rect(rects_[i].top, { iterate_br.x, intersection_reg.top.y }));
+                    rects_.back().transform_from_symbian_rectangle();
+                }
+
+                limit--;
+            }
+        }
     }
 
     bool region::intersects(const eka2l1::rect &target) const {
