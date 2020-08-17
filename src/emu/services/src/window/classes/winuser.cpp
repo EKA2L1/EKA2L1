@@ -297,8 +297,12 @@ namespace eka2l1::epoc {
             return;
         }
 
-        redraw_rect_curr = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
-        redraw_rect_curr.transform_from_symbian_rectangle();
+        if (cmd.header.cmd_len == 0) {
+            redraw_rect_curr = bounding_rect();
+        } else {
+            redraw_rect_curr = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+            redraw_rect_curr.transform_from_symbian_rectangle();
+        }
 
         flags |= flags_in_redraw;
         ctx.complete(epoc::error_none);
