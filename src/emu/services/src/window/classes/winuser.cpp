@@ -122,11 +122,14 @@ namespace eka2l1::epoc {
         pos = top;
 
         if (size != new_size) {
+            size = new_size;
+            redraw_region.make_empty();
+
+            resize_needed = true;
+
             // We need to invalidate the whole new window
             invalidate(bounding_rect());
         }
-
-        size = new_size;
     }
 
     static bool should_purge_window_user(void *win, epoc::event &evt) {
@@ -242,6 +245,7 @@ namespace eka2l1::epoc {
             if (driver_win_id == 0) {
                 driver_win_id = drivers::create_bitmap(drv, size);
             } else {
+                cmd_builder->bind_bitmap(driver_win_id);
                 cmd_builder->resize_bitmap(driver_win_id, size);
             }
 
