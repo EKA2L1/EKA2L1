@@ -148,7 +148,7 @@ namespace eka2l1::epoc {
         void resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size);
 
         void deinit(drivers::graphics_driver *driver);
-        void redraw(drivers::graphics_command_list_builder *builder);
+        void redraw(drivers::graphics_command_list_builder *builder, const bool need_bind);
 
         /**
          * \brief Redraw the screen.

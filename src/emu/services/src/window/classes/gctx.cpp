@@ -59,10 +59,6 @@ namespace eka2l1::epoc {
         if (attached_window->driver_win_id == 0) {
             attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size);
             attached_window->resize_needed = false;
-        } else if (attached_window->resize_needed) {
-            // Try to resize our bitmap. My NVIDIA did forgive me if texture has same spec
-            // as before, but not Intel...
-            cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size);
         }
 
         recording = true;
@@ -72,6 +68,13 @@ namespace eka2l1::epoc {
         viewport.size = attached_window->size;
 
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
+
+        if (attached_window->resize_needed) {
+            // Try to resize our bitmap. My NVIDIA did forgive me if texture has same spec
+            // as before, but not Intel...
+            cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size);
+        }
+
         cmd_builder->set_viewport(viewport);
 
         do_submit_clipping();

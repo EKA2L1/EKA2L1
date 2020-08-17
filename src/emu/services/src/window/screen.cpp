@@ -92,8 +92,10 @@ namespace eka2l1::epoc {
         }
     }
 
-    void screen::redraw(drivers::graphics_command_list_builder *cmd_builder) {
-        cmd_builder->bind_bitmap(screen_texture);
+    void screen::redraw(drivers::graphics_command_list_builder *cmd_builder, const bool need_bind) {
+        if (need_bind) {
+            cmd_builder->bind_bitmap(screen_texture);
+        }
 
         // Walk through the window tree in recursive order, and do draw
         // We dont care about visible regions. Nowadays, detect visible region to reduce pixel plotting is
@@ -113,7 +115,7 @@ namespace eka2l1::epoc {
         // Make command list first, and bind our screen bitmap
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
-        redraw(cmd_builder.get());
+        redraw(cmd_builder.get(), true);
         driver->submit_command_list(*cmd_list);
     }
 
@@ -143,14 +145,19 @@ namespace eka2l1::epoc {
         auto cmd_list = driver->new_command_list();
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
 
+        bool need_bind = true;
+
         if (!screen_texture) {
             // Create new one!
             screen_texture = drivers::create_bitmap(driver, new_size);
         } else {
+            cmd_builder->bind_bitmap(screen_texture);
             cmd_builder->resize_bitmap(screen_texture, new_size);
+
+            need_bind = false;
         }
 
-        redraw(cmd_builder.get());
+        redraw(cmd_builder.get(), need_bind);
         driver->submit_command_list(*cmd_list);
     }
 
