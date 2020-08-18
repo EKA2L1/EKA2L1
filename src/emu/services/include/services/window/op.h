@@ -240,6 +240,11 @@ namespace eka2l1 {
     OPCODE(aprefix, aname, version1, val1)                      \
     OPCODE(aprefix, aname, version2, val2)
 
+#define OPCODE3(aprefix, aname, version1, val1, version2, val2, version3, val3) \
+    OPCODE(aprefix, aname, version1, val1)                                      \
+    OPCODE(aprefix, aname, version2, val2)                                      \
+    OPCODE(aprefix, aname, version3, val3)
+
     enum ws_graphics_context_opcode {
 #include <services/window/gcop.def>
     };
@@ -247,6 +252,7 @@ namespace eka2l1 {
 #undef OPCODE_NAME
 #undef OPCODE
 #undef OPCODE2
+#undef OPCODE3
 
     enum ws_anim_dll_opcode {
         ws_anim_dll_op_create_instance = 0,

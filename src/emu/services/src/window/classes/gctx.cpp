@@ -643,6 +643,32 @@ namespace eka2l1::epoc {
 
         using ws_graphics_context_table_op = std::map<ws_graphics_context_opcode, ws_graphics_context_op_handler>;
 
+        static const ws_graphics_context_table_op v139u_opcode_handlers = {
+            { ws_gc_u139_active, &graphic_context::active },
+            { ws_gc_u139_set_clipping_rect, &graphic_context::set_clipping_rect },
+            { ws_gc_u139_set_brush_color, &graphic_context::set_brush_color },
+            { ws_gc_u139_set_brush_style, &graphic_context::set_brush_style },
+            { ws_gc_u139_set_pen_color, &graphic_context::set_pen_color },
+            { ws_gc_u139_set_pen_style, &graphic_context::set_pen_style },
+            { ws_gc_u139_set_pen_size, &graphic_context::set_pen_size },
+            { ws_gc_u139_deactive, &graphic_context::deactive },
+            { ws_gc_u139_reset, &graphic_context::reset },
+            { ws_gc_u139_use_font, &graphic_context::use_font },
+            { ws_gc_u139_discard_font, &graphic_context::discard_font },
+            { ws_gc_u139_draw_line, &graphic_context::draw_line },
+            { ws_gc_u139_draw_rect, &graphic_context::draw_rect },
+            { ws_gc_u139_clear, &graphic_context::clear },
+            { ws_gc_u139_clear_rect, &graphic_context::clear_rect },
+            { ws_gc_u139_draw_bitmap, &graphic_context::draw_bitmap },
+            { ws_gc_u139_draw_text, &graphic_context::draw_text },
+            { ws_gc_u139_draw_box_text_optimised1, &graphic_context::draw_box_text_optimised1 },
+            { ws_gc_u139_draw_box_text_optimised2, &graphic_context::draw_box_text_optimised2 },
+            { ws_gc_u139_gdi_blt2, &graphic_context::gdi_blt2 },
+            { ws_gc_u139_gdi_blt3, &graphic_context::gdi_blt3 },
+            { ws_gc_u139_gdi_blt_masked, &graphic_context::gdi_blt_masked },
+            { ws_gc_u139_free, &graphic_context::free }
+        };
+
         static const ws_graphics_context_table_op v171u_opcode_handlers = {
             { ws_gc_u171_active, &graphic_context::active },
             { ws_gc_u171_set_clipping_rect, &graphic_context::set_clipping_rect },
@@ -707,7 +733,9 @@ namespace eka2l1::epoc {
     handler = result->second;
 
         if (cli_ver.major == 1 && cli_ver.minor == 0) {
-            if (cli_ver.build <= 171) {
+            if (cli_ver.build <= 139) {
+                FIND_OPCODE(op, v139u_opcode_handlers)
+            } else if (cli_ver.build <= 171) {
                 // Execute table 1
                 FIND_OPCODE(op, v171u_opcode_handlers)
             } else {
