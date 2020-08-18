@@ -76,6 +76,7 @@ namespace eka2l1::epoc {
         }
 
         cmd_builder->set_viewport(viewport);
+        cmd_builder->clear({ 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);
 
         do_submit_clipping();
     }
@@ -172,33 +173,90 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_submit_clipping() {
-        cmd_builder->set_clipping(true);
-
         eka2l1::rect the_clip;
+        common::region *the_region = nullptr;
+
+        std::unique_ptr<common::region> clip_region_temp = std::make_unique<common::region>();
+
+        bool use_clipping = false;
+        bool stencil_one_for_valid = true;
 
         if (clipping_rect.empty() && clipping_region.empty()) {
             if (attached_window->flags & epoc::window_user::flags_in_redraw) {
                 the_clip = attached_window->redraw_rect_curr;
+                use_clipping = true;
             } else {
-                // TODO: Properly handle clipping to non-invalid when not doing redraw
-                the_clip = attached_window->bounding_rect();
+                if (attached_window->redraw_region.empty()) {
+                    cmd_builder->set_clipping(false);
+                    cmd_builder->set_stencil(false);
+                    
+                    return;
+                }
+
+                use_clipping = false;
+                stencil_one_for_valid = false;
+
+                the_region = &attached_window->redraw_region;
             }
         } else {
-            if (!clipping_rect.empty() && !clipping_region.empty()) {
-                the_clip = clipping_rect.intersect(clipping_region.bounding_rect());
+            if (attached_window->flags & epoc::window_user::flags_in_redraw) {
+                clip_region_temp->add_rect(attached_window->redraw_rect_curr);
             } else {
-                if (!clipping_rect.empty()) {
-                    the_clip = clipping_rect;
-                } else {
-                    the_clip = clipping_region.bounding_rect();
-                }
+                clip_region_temp->add_rect(attached_window->bounding_rect());
+                clip_region_temp->eliminate(attached_window->redraw_region);
             }
 
-            the_clip = the_clip.intersect((attached_window->flags & epoc::window_user::flags_in_redraw) ?
-                attached_window->redraw_rect_curr : attached_window->bounding_rect());
+            common::region personal_clipping;
+            
+            if (!clipping_rect.empty()) {
+                personal_clipping.add_rect(clipping_rect);
+            }
+
+            if (!clipping_region.empty()) {
+                personal_clipping = (personal_clipping.empty()) ? clipping_region :
+                    personal_clipping.intersect(clipping_region);
+            }
+
+            *clip_region_temp = clip_region_temp->intersect(personal_clipping);
+
+            if (clip_region_temp->rects_.size() <= 1) {
+                // We can use clipping directly
+                use_clipping = true;
+                the_clip = clip_region_temp->empty() ? eka2l1::rect({ 0, 0 }, { 0, 0 }) :
+                    clip_region_temp->rects_[0];
+            } else {
+                use_clipping = false;
+                stencil_one_for_valid = true;
+
+                the_region = clip_region_temp.get();
+            }
         }
 
-        cmd_builder->clip_rect(the_clip);
+        if (use_clipping) {
+            cmd_builder->set_clipping(true);
+            cmd_builder->clip_rect(the_clip);
+        } else {
+            cmd_builder->set_stencil(true);
+
+            // Try to fill region rects with 1 in stencil buffer.
+            // Intentionally let stencil test fail so nothing gets draw. Just need to fill it after all.
+            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, drivers::condition_func::never,
+                1, 0xFF);
+            cmd_builder->set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::replace,
+                drivers::stencil_action::keep, drivers::stencil_action::keep);
+            cmd_builder->set_stencil_mask(drivers::stencil_face::back_and_front, 0xFF);
+
+            for (std::size_t i = 0; i < the_region->rects_.size(); i++) {
+                cmd_builder->draw_rectangle(the_region->rects_[i]);
+            }
+
+            // Now set stencil buffer to only pass if value of pixel correspond in stencil buffer is not equal to 1
+            // Also disable writing to stencil buffer
+            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, stencil_one_for_valid ?
+                drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
+            cmd_builder->set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::keep,
+                drivers::stencil_action::keep, drivers::stencil_action::keep);
+        }
     }
 
     void graphic_context::flush_queue_to_driver() {
@@ -206,7 +264,9 @@ namespace eka2l1::epoc {
 
         // Unbind current bitmap
         cmd_builder->bind_bitmap(0);
+
         cmd_builder->set_clipping(false);
+        cmd_builder->set_stencil(false);
 
         driver->submit_command_list(*cmd_list);
 
