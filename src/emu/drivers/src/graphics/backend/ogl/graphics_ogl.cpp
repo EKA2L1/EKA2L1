@@ -387,6 +387,10 @@ namespace eka2l1::drivers {
         set_one(helper, GL_DEPTH_TEST);
     }
 
+    void ogl_graphics_driver::set_stencil(command_helper &helper) {
+        set_one(helper, GL_STENCIL_TEST);
+    }
+
     void ogl_graphics_driver::set_blend(command_helper &helper) {
         set_one(helper, GL_BLEND);
     }
@@ -467,34 +471,160 @@ namespace eka2l1::drivers {
             blend_factor_to_gl_enum(a_frag_out_factor), blend_factor_to_gl_enum(a_current_factor));
     }
 
-    void ogl_graphics_driver::clear(command_helper &helper) {
-        std::uint32_t color_to_clear;
-        std::uint8_t clear_bits = false;
+    static const GLint stencil_face_to_gl_enum(const stencil_face face) {
+        switch (face) {
+        case stencil_face::back:
+            return GL_BACK;
 
-        helper.pop(color_to_clear);
-        helper.pop(clear_bits);
+        case stencil_face::front:
+            return GL_FRONT;
 
-        glClearColor(((color_to_clear & 0xFF000000) >> 24) / 255.0f,
-            ((color_to_clear & 0x00FF0000) >> 16) / 255.0f,
-            ((color_to_clear & 0x0000FF00) >> 8) / 255.0f,
-            (color_to_clear & 0x000000FF) / 255.0f);
-
-        switch (clear_bits) {
-        case 3:
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            break;
-
-        case 2:
-            glClear(GL_DEPTH_BUFFER_BIT);
-            break;
-
-        case 1:
-            glClear(GL_COLOR_BUFFER_BIT);
-            break;
+        case stencil_face::back_and_front:
+            return GL_FRONT_AND_BACK;
 
         default:
             break;
         }
+
+        return GL_FRONT_AND_BACK;
+    }
+
+    static const GLint stencil_action_to_gl_enum(const stencil_action action) {
+        switch (action) {
+        case stencil_action::keep:
+            return GL_KEEP;
+
+        case stencil_action::replace:
+            return GL_REPLACE;
+
+        case stencil_action::set_to_zero:
+            return GL_ZERO;
+
+        case stencil_action::invert:
+            return GL_INVERT;
+
+        case stencil_action::decrement:
+            return GL_DECR;
+
+        case stencil_action::decrement_wrap:
+            return GL_DECR_WRAP;
+
+        case stencil_action::increment:
+            return GL_INCR;
+
+        case stencil_action::increment_wrap:
+            return GL_INCR_WRAP;
+
+        default:
+            break;
+        }
+
+        return GL_KEEP;
+    }
+
+    void ogl_graphics_driver::set_stencil_action(command_helper &helper) {
+        stencil_face face_to_operate = stencil_face::back_and_front;
+        stencil_action on_stencil_fail = stencil_action::keep;
+        stencil_action on_stencil_pass_depth_fail = stencil_action::keep;
+        stencil_action on_stencil_depth_pass = stencil_action::replace;
+
+        helper.pop(face_to_operate);
+        helper.pop(on_stencil_fail);
+        helper.pop(on_stencil_pass_depth_fail);
+        helper.pop(on_stencil_depth_pass);
+
+        glStencilOpSeparate(stencil_face_to_gl_enum(face_to_operate), stencil_action_to_gl_enum(on_stencil_fail),
+            stencil_action_to_gl_enum(on_stencil_pass_depth_fail), stencil_action_to_gl_enum(on_stencil_depth_pass));
+    }
+
+    static const GLint condition_func_to_gl_enum(const condition_func func) {
+        switch (func) {
+        case condition_func::never:
+            return GL_NEVER;
+
+        case condition_func::always:
+            return GL_ALWAYS;
+
+        case condition_func::equal:
+            return GL_EQUAL;
+
+        case condition_func::not_equal:
+            return GL_NOTEQUAL;
+
+        case condition_func::less:
+            return GL_LESS;
+
+        case condition_func::less_or_equal:
+            return GL_LEQUAL;
+
+        case condition_func::greater:
+            return GL_GREATER;
+
+        case condition_func::greater_or_equal:
+            return GL_GEQUAL;
+
+        default:
+            break;
+        }
+
+        return GL_NEVER;
+    }
+
+    void ogl_graphics_driver::set_stencil_pass_condition(command_helper &helper) {
+        condition_func pass_func = condition_func::always;
+        stencil_face face_to_operate = stencil_face::back_and_front;
+        std::int32_t ref_value = 0;
+        std::uint32_t mask = 0xFF;
+
+        helper.pop(face_to_operate);
+        helper.pop(pass_func);
+        helper.pop(ref_value);
+        helper.pop(mask);
+
+        glStencilFuncSeparate(stencil_face_to_gl_enum(face_to_operate), condition_func_to_gl_enum(pass_func),
+            ref_value, mask);
+    }
+
+    void ogl_graphics_driver::set_stencil_mask(command_helper &helper) {
+        stencil_face face_to_operate = stencil_face::back_and_front;
+        std::uint32_t mask = 0xFF;
+
+        helper.pop(face_to_operate);
+        helper.pop(mask);
+
+        glStencilMaskSeparate(stencil_face_to_gl_enum(face_to_operate), mask);
+    }
+
+    void ogl_graphics_driver::clear(command_helper &helper) {
+        std::uint32_t color_to_clear;
+        std::uint8_t clear_bits = 0;
+
+        helper.pop(color_to_clear);
+        helper.pop(clear_bits);
+
+        eka2l1::vecx<float, 4> color_converted({ ((color_to_clear & 0xFF000000) >> 24) / 255.0f,
+            ((color_to_clear & 0x00FF0000) >> 16) / 255.0f,
+            ((color_to_clear & 0x0000FF00) >> 8) / 255.0f,
+            (color_to_clear & 0x000000FF) / 255.0f });
+
+        std::uint32_t gl_flags = 0;
+
+        if (clear_bits & draw_buffer_bit_color_buffer) {
+            glClearColor(color_converted[0], color_converted[1], color_converted[2], color_converted[3]);
+            gl_flags |= GL_COLOR_BUFFER_BIT;
+        }
+
+        if (clear_bits & draw_buffer_bit_depth_buffer) {
+            glClearDepth(color_converted[0]);
+            gl_flags |= GL_DEPTH_BUFFER_BIT;
+        }
+
+        if (clear_bits & draw_buffer_bit_stencil_buffer) {
+            glClearStencil((color_to_clear & 0xFF000000) >> 24);
+            gl_flags |= GL_STENCIL_BUFFER_BIT;
+        }
+
+        glClear(gl_flags);
     }
 
     void ogl_graphics_driver::save_gl_state() {
@@ -625,6 +755,22 @@ namespace eka2l1::drivers {
             set_depth(helper);
             break;
         }
+
+        case graphics_driver_set_stencil:
+            set_stencil(helper);
+            break;
+
+        case graphics_driver_stencil_set_action:
+            set_stencil_action(helper);
+            break;
+
+        case graphics_driver_stencil_pass_condition:
+            set_stencil_pass_condition(helper);
+            break;
+
+        case graphics_driver_stencil_set_mask:
+            set_stencil_mask(helper);
+            break;
 
         case graphics_driver_set_blend: {
             set_blend(helper);

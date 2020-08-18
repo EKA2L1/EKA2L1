@@ -123,7 +123,7 @@ namespace eka2l1::drivers {
 
         // Backup GL state
         cmd_builder->backup_state();
-        cmd_builder->clear({ 0, 0, 0, 0 }, clear_bit_color_buffer);
+        cmd_builder->clear({ 0, 0, 0, 0 }, draw_buffer_bit_color_buffer);
 
         cmd_builder->set_blend_mode(true);
 

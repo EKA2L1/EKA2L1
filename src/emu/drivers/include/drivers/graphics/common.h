@@ -69,15 +69,10 @@ namespace eka2l1::drivers {
         one_minus_current_alpha = 5
     };
 
-    enum clear_bits : std::uint8_t {
-        clear_bit_color_buffer = 1 << 0,
-        clear_bit_depth_buffer = 1 << 1
-    };
-
-    enum framebuffer_blit_bits {
-        framebuffer_blit_color_buffer = 0,
-        framebuffer_blit_depth_buffer = 1,
-        framebuffer_blit_stencil_buffer = 2
+    enum draw_buffer_bits {
+        draw_buffer_bit_color_buffer = 1 << 0,
+        draw_buffer_bit_depth_buffer = 1 << 1,
+        draw_buffer_bit_stencil_buffer = 1 << 2
     };
 
     enum bitmap_draw_flags {
@@ -115,6 +110,34 @@ namespace eka2l1::drivers {
         alpha,
         zero,
         one
+    };
+
+    enum class stencil_action {
+        keep,
+        replace,
+        invert,
+        increment,
+        increment_wrap,
+        decrement,
+        decrement_wrap,
+        set_to_zero,
+    };
+
+    enum class stencil_face {
+        back,
+        front,
+        back_and_front
+    };
+
+    enum class condition_func {
+        never,
+        less,
+        less_or_equal,
+        greater,
+        greater_or_equal,
+        equal,
+        not_equal,
+        always
     };
 
     using channel_swizzles = std::array<channel_swizzle, 4>;

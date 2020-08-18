@@ -249,6 +249,10 @@ namespace eka2l1::drivers {
         create_single_set_command(graphics_driver_set_depth, enable);
     }
 
+    void server_graphics_command_list_builder::set_stencil(const bool enable) {
+        create_single_set_command(graphics_driver_set_stencil, enable);
+    }
+
     void server_graphics_command_list_builder::set_cull_mode(const bool enable) {
         create_single_set_command(graphics_driver_set_cull, enable);
     }
@@ -262,6 +266,25 @@ namespace eka2l1::drivers {
         const blend_factor a_frag_output_factor, const blend_factor a_current_factor) {
         command *cmd = make_command(graphics_driver_blend_formula, nullptr, rgb_equation, a_equation, rgb_frag_output_factor,
             rgb_current_factor, a_frag_output_factor, a_current_factor);
+        get_command_list().add(cmd);
+    }
+    
+    void server_graphics_command_list_builder::set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
+        const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) {
+        command *cmd = make_command(graphics_driver_stencil_set_action, nullptr, face_operate_on, on_stencil_fail,
+            on_stencil_pass_depth_fail, on_both_stencil_depth_pass);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
+        const int cond_func_ref_value, const std::uint32_t mask) {
+        command *cmd = make_command(graphics_driver_stencil_pass_condition, nullptr, face_operate_on, cond_func,
+            cond_func_ref_value, mask);
+        get_command_list().add(cmd);
+    }
+
+    void server_graphics_command_list_builder::set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) {
+        command *cmd = make_command(graphics_driver_stencil_set_mask, nullptr, face_operate_on, mask);
         get_command_list().add(cmd);
     }
 

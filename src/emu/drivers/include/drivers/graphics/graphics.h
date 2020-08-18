@@ -37,8 +37,12 @@ namespace eka2l1::drivers {
         graphics_driver_set_viewport,
         graphics_driver_set_blend,
         graphics_driver_set_depth,
+        graphics_driver_set_stencil,
         graphics_driver_set_cull,
         graphics_driver_blend_formula,
+        graphics_driver_stencil_pass_condition,
+        graphics_driver_stencil_set_action,
+        graphics_driver_stencil_set_mask,
         graphics_driver_set_back_face_rule,
         graphics_driver_set_swapchain_size,
 

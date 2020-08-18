@@ -25,8 +25,8 @@
 #include <common/log.h>
 
 namespace eka2l1::drivers {
-    ogl_framebuffer::ogl_framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_buffere)
-        : framebuffer(color_buffer_list, depth_buffere) {
+    ogl_framebuffer::ogl_framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_and_stencil_buffer)
+        : framebuffer(color_buffer_list, depth_and_stencil_buffer) {
         glGenFramebuffers(1, &fbo);
         bind(nullptr);
 
@@ -39,10 +39,10 @@ namespace eka2l1::drivers {
                 color_buffers[i]->get_mip_level());
         }
 
-        if (depth_buffer) {
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                static_cast<GLuint>(depth_buffer->texture_handle()),
-                depth_buffer->get_mip_level());
+        if (depth_and_stencil_buffer) {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                static_cast<GLuint>(depth_and_stencil_buffer->texture_handle()),
+                depth_and_stencil_buffer->get_mip_level());
         }
 
         const GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -52,7 +52,9 @@ namespace eka2l1::drivers {
         }
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearStencil(0);
+        glClearDepth(0);
+        glClear(GL_COLOR_BUFFER_BIT | ((depth_and_stencil_buffer) ? (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT) : 0));
 
         unbind(nullptr);
     }
@@ -107,6 +109,18 @@ namespace eka2l1::drivers {
         return attachment_id;
     }
 
+    bool ogl_framebuffer::set_depth_stencil_buffer(texture *tex) {
+        depth_and_stencil_buffer = tex;
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+            static_cast<GLuint>(tex->texture_handle()), tex->get_mip_level());
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            return false;
+        }
+
+        return true;
+    }
+
     bool ogl_framebuffer::remove_color_buffer(const std::int32_t position) {
         if (!is_attachment_id_valid(position)) {
             return false;
@@ -138,15 +152,15 @@ namespace eka2l1::drivers {
         const filter_option copy_filter) {
         std::uint32_t blit_mask_ogl = 0;
 
-        if (flags & framebuffer_blit_color_buffer) {
+        if (flags & draw_buffer_bit_color_buffer) {
             blit_mask_ogl |= GL_COLOR_BUFFER_BIT;
         }
 
-        if (flags & framebuffer_blit_depth_buffer) {
+        if (flags & draw_buffer_bit_depth_buffer) {
             blit_mask_ogl |= GL_DEPTH_BUFFER_BIT;
         }
 
-        if (flags & framebuffer_blit_stencil_buffer) {
+        if (flags & draw_buffer_bit_stencil_buffer) {
             blit_mask_ogl |= GL_STENCIL_BUFFER_BIT;
         }
 

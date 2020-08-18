@@ -34,10 +34,11 @@ namespace eka2l1::drivers {
         return !((color_buffers.size() <= attachment_id) || (color_buffers[attachment_id] == nullptr));
     }
 
-    framebuffer_ptr make_framebuffer(graphics_driver *driver, std::initializer_list<texture*> color_buffer_list, texture *depth_buffer) {
+    framebuffer_ptr make_framebuffer(graphics_driver *driver, std::initializer_list<texture*> color_buffer_list,
+        texture *depth_and_stencil_buffer) {
         switch (driver->get_current_api()) {
         case graphic_api::opengl: {
-            return std::make_unique<ogl_framebuffer>(color_buffer_list, depth_buffer);
+            return std::make_unique<ogl_framebuffer>(color_buffer_list, depth_and_stencil_buffer);
             break;
         }
 

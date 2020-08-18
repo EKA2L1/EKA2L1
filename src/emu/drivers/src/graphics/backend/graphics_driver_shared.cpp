@@ -73,6 +73,15 @@ namespace eka2l1::drivers {
         return texture;
     }
 
+    static texture_ptr instantiate_bitmap_depth_stencil_texture(graphics_driver *driver, const eka2l1::vec2 &size) {
+        auto ds_tex = make_texture(driver);
+        ds_tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0),
+            texture_format::depth24_stencil8, texture_format::depth_stencil, texture_data_type::uint_24_8,
+            nullptr, 0);
+
+        return ds_tex;
+    }
+
     bitmap::bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp)
         : bpp(initial_bpp) {
         // Make color buffer for our bitmap!
@@ -86,6 +95,7 @@ namespace eka2l1::drivers {
     
     void bitmap::resize(graphics_driver *driver, const eka2l1::vec2 &new_size) {
         auto tex_to_replace = std::move(instantiate_suit_color_bitmap_texture(driver, new_size, bpp));
+        auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
         
         if (fb) {
             fb->set_color_buffer(tex_to_replace.get(), 1);
@@ -99,15 +109,23 @@ namespace eka2l1::drivers {
             copy_region.size = { common::min<int>(tex->get_size().x, new_size.x), common::min<int>(
                 tex->get_size().y, new_size.y) };
 
-            fb->blit(copy_region, copy_region, framebuffer_blit_color_buffer, filter_option::linear);
+            fb->blit(copy_region, copy_region, draw_buffer_bit_color_buffer, filter_option::linear);
 
             fb->set_color_buffer(tex_to_replace.get(), 0);
+            fb->set_depth_stencil_buffer(ds_tex_to_replace.get());      // Depth and stencil content will be new
+
             fb->set_draw_buffer(0);
         }
 
         tex = std::move(tex_to_replace);
+        ds_tex = std::move(ds_tex_to_replace);
     }
 
+    void bitmap::init_fb(graphics_driver *driver) {
+        ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size()));
+        fb = make_framebuffer(driver, { tex.get() }, ds_tex.get());
+    }
+    
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
         : graphics_driver(gr_api)
         , binding(nullptr)
@@ -264,7 +282,7 @@ namespace eka2l1::drivers {
 
         if (!bmp->fb) {
             // Make new one
-            bmp->fb = make_framebuffer(this, { bmp->tex.get() }, nullptr);
+            bmp->init_fb(this);
         }
 
         // Bind the framebuffer

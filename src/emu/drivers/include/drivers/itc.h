@@ -265,6 +265,8 @@ namespace eka2l1::drivers {
          */
         virtual void set_depth(const bool enable) = 0;
 
+        virtual void set_stencil(const bool enable) = 0;
+
         virtual void set_cull_mode(const bool enable) = 0;
 
         virtual void set_blend_mode(const bool enable) = 0;
@@ -287,6 +289,36 @@ namespace eka2l1::drivers {
             const blend_factor rgb_frag_output_factor, const blend_factor rgb_current_factor,
             const blend_factor a_frag_output_factor, const blend_factor a_current_factor)
             = 0;
+
+        /**
+         * @brief Set action to the write for a pixel to stencil buffer on circumstances.
+         * 
+         * @param face_operate_on                   The face to base the actions on.
+         * @param on_stencil_fail                   Action to take on stencil test fails.
+         * @param on_stencil_pass_depth_fail        Action to take on stencil test passes but depth test fails.
+         * @param on_both_stencil_depth_pass        Action to take when both stencil and depth test pass.
+         */
+        virtual void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
+            const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) = 0;
+
+        /**
+         * @brief Set stencil pass condition.
+         * 
+         * @param face_operate_on           The face to set the pass condition on.
+         * @param cond_func                 The function used to determine the pass.
+         * @param cond_func_ref_value       The value argument to be used in the function.
+         * @param mask                      The mask that is AND to both value in stencil buffer with the ref value.
+         */
+        virtual void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
+            const int cond_func_ref_value, const std::uint32_t mask) = 0;
+
+        /**
+         * @brief Set the value to AND with each value be written to stencil buffer.
+         * 
+         * @param face_operate_on       The face to set this mask to
+         * @param mask                  The mask to set.
+         */
+        virtual void set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) = 0;
 
         /**
          * \brief Save state to temporary storage.
@@ -410,6 +442,8 @@ namespace eka2l1::drivers {
         void set_viewport(const eka2l1::rect &viewport_rect) override;
 
         void set_depth(const bool enable) override;
+        
+        void set_stencil(const bool enable) override;
 
         void set_cull_mode(const bool enable) override;
 
@@ -418,6 +452,14 @@ namespace eka2l1::drivers {
         void blend_formula(const blend_equation rgb_equation, const blend_equation a_equation,
             const blend_factor rgb_frag_output_factor, const blend_factor rgb_current_factor,
             const blend_factor a_frag_output_factor, const blend_factor a_current_factor) override;
+
+        void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
+            const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) override;
+        
+        void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
+            const int cond_func_ref_value, const std::uint32_t mask) override;
+
+        void set_stencil_mask(const stencil_face face_operate_on, const std::uint32_t mask) override;
 
         void attach_descriptors(drivers::handle h, const int stride, const bool instance_move,
             const attribute_descriptor *descriptors, const int descriptor_count) override;

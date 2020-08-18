@@ -91,9 +91,13 @@ namespace eka2l1::drivers {
         void draw_indexed(command_helper &helper);
         void set_viewport(command_helper &helper);
         void set_depth(command_helper &helper);
+        void set_stencil(command_helper &helper);
         void set_blend(command_helper &helper);
         void set_cull(command_helper &helper);
         void blend_formula(command_helper &helper);
+        void set_stencil_action(command_helper &helper);
+        void set_stencil_pass_condition(command_helper &helper);
+        void set_stencil_mask(command_helper &helper);
         void display(command_helper &helper);
 
         void save_gl_state();

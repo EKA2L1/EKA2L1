@@ -39,12 +39,14 @@ namespace eka2l1::drivers {
         std::uint32_t id;
         framebuffer_ptr fb;
         texture_ptr tex;
+        texture_ptr ds_tex;
         int bpp;
 
         explicit bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp);
         virtual ~bitmap();
 
         void resize(graphics_driver *driver, const eka2l1::vec2 &new_size);
+        void init_fb(graphics_driver *driver);
     };
 
     using bitmap_ptr = std::unique_ptr<bitmap>;

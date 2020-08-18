@@ -35,7 +35,7 @@ namespace eka2l1::drivers {
     class framebuffer : public graphics_object {
     protected:
         std::vector<texture*> color_buffers;
-        texture *depth_buffer;
+        texture *depth_and_stencil_buffer;
 
     protected:
         bool is_attachment_id_valid(const std::int32_t attachment_id) const;
@@ -48,12 +48,12 @@ namespace eka2l1::drivers {
          * 
          * There may only exists one depth buffer or stencil buffer.
          * 
-         * @param color_buffer_list     List of color buffer to attach to this framebuffer.
-         * @param depth_buffer          Depth buffer to attach to this framebuffer.
+         * @param color_buffer_list                 List of color buffer to attach to this framebuffer.
+         * @param depth_and_stencil_buffer          Depth and stencil buffer to attach to this framebuffer.
          */
-        explicit framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_buffer)
+        explicit framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_and_stencil_buffer)
             : color_buffers(color_buffer_list)
-            , depth_buffer(depth_buffer) {
+            , depth_and_stencil_buffer(depth_and_stencil_buffer) {
         }
 
         framebuffer() = default;
@@ -64,6 +64,16 @@ namespace eka2l1::drivers {
 
         virtual bool set_draw_buffer(const std::int32_t attachment_id) = 0;
         virtual bool set_read_buffer(const std::int32_t attachment_id) = 0;
+
+        /**
+         * @brief       Set the depth stencil buffer texture of the framebuffer.
+         * 
+         * If a depth stencil buffer already been set to this framebuffer, it will be overriden.
+         * 
+         * @param       tex       The texture to set as this framebuffer's depth stencil buffer.
+         * @returns     True on success.
+         */
+        virtual bool set_depth_stencil_buffer(texture *tex) = 0;
 
         /**
          * @brief   Set color buffer to an attachment ID.
@@ -79,7 +89,7 @@ namespace eka2l1::drivers {
          * 
          * @param       source_rect           The source rectangle to copy data from.
          * @param       dest_rect             The destination rectangle to put data to draw buffer.
-         * @param       flags                 Contains OR of framebuffer_blit_flags, specifying which buffers to copy from.
+         * @param       flags                 Contains OR of draw_buffer_bit_flags, specifying which buffers to copy from.
          * @param       copy_filter           The filter to apply to texture data copied.
          * 
          * @returns     True on success.
@@ -95,5 +105,5 @@ namespace eka2l1::drivers {
     using framebuffer_ptr = std::unique_ptr<framebuffer>;
 
     framebuffer_ptr make_framebuffer(graphics_driver *driver, std::initializer_list<texture*> color_buffer_list,
-        texture *depth_buffer);
+        texture *depth_and_stencil_buffer);
 }
