@@ -48,12 +48,12 @@ namespace eka2l1::common {
         eka2l1::rect bounding_rect() const;
 
         /**
-         * @brief   Check intersection rectangle between a rectangle and this region.
+         * @brief   Get intersection between two regions.
          * 
-         * @param   target    The rectangle to check intersection with.
-         * @returns True if intersects.
+         * @param   target    The region to get intersection with.
+         * @returns The region that intersects.
          */
-        bool intersects(const eka2l1::rect &target) const;
+        region intersect(const region &target) const;
 
         /**
          * @brief Remove a rectangle from this region.
@@ -61,5 +61,12 @@ namespace eka2l1::common {
          * @param rect  The rectangle to remove from this region.
          */
         void eliminate(const eka2l1::rect &rect);
+
+        /**
+         * @brief Remove another region that intersects or inside this region from this region.
+         * 
+         * @param reg   The region to remove from.
+         */
+        void eliminate(const region &reg);
     };
 }

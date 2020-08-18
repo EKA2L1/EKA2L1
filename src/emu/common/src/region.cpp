@@ -142,13 +142,25 @@ namespace eka2l1::common {
         }
     }
 
-    bool region::intersects(const eka2l1::rect &target) const {
+    void region::eliminate(const region &reg) {
+        for (std::size_t i = 0; i < reg.rects_.size(); i++) {
+            eliminate(reg.rects_[i]);
+        }
+    }
+
+    region region::intersect(const region &target) const {
+        region intersection;
+
         for (std::size_t i = 0; i < rects_.size(); i++) {
-            if (!rects_[i].intersect(target).empty()) {
-                return true;
+            for (std::size_t j = 0; j < target.rects_.size(); j++) {
+                eka2l1::rect the_intersect = target.rects_[j].intersect(rects_[i]);
+
+                if (!the_intersect.empty()) {
+                    intersection.rects_.push_back(the_intersect);
+                }
             }
         }
 
-        return false;
+        return intersection;
     }
 }
