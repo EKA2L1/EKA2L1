@@ -436,6 +436,25 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
     
+    void window_user::get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd) {
+        context.complete(static_cast<std::int32_t>(redraw_region.rects_.size()));
+    }
+
+    void window_user::get_invalid_region(service::ipc_context &context, ws_cmd &cmd) {
+        std::int32_t to_get_count = *reinterpret_cast<std::int32_t*>(cmd.data_ptr);
+
+        if (to_get_count < 0) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        to_get_count = common::min<std::int32_t>(to_get_count, static_cast<std::int32_t>(redraw_region.rects_.size()));
+
+        context.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t*>(redraw_region.rects_.data()),
+            to_get_count * sizeof(eka2l1::rect));
+        context.complete(epoc::error_none);
+    }
+    
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         //LOG_TRACE("Window user op: {}", (int)cmd.header.op);
         bool result = execute_command_for_general_node(ctx, cmd);
@@ -602,19 +621,13 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
-        case EWsWinOpGetInvalidRegionCount: {
-            auto count_ptr = ctx.get_argument_value<address>(reply_slot);
-            LOG_TRACE("Get invalid region count stubbed with 0");
-
-            if (!count_ptr || (count_ptr == 0)) {
-                ctx.complete(0);
-            } else {
-                ctx.write_data_to_descriptor_argument<std::uint32_t>(reply_slot, 0);
-                ctx.complete(epoc::error_none);
-            }
-
+        case EWsWinOpGetInvalidRegionCount:
+            get_invalid_region_count(ctx, cmd);
             break;
-        }
+
+        case EWsWinOpGetInvalidRegion:
+            get_invalid_region(ctx, cmd);
+            break;
 
         case EWsWinOpSetShape:
             LOG_WARN("SetShape stubbed");
