@@ -123,8 +123,24 @@ namespace eka2l1::epoc {
 
     std::uint32_t redraw_fifo::queue_event(const redraw_event &evt, const std::uint16_t pri) {
         const std::lock_guard<std::mutex> guard(lock_);
-        std::uint32_t id = queue_event_dont_care(evt);
+        eka2l1::rect target_queue_rect(evt.top_left, evt.bottom_right);
+        target_queue_rect.transform_from_symbian_rectangle();
 
+        std::size_t limit = q_.size();
+
+        for (std::size_t i = 0; i < limit; i++) {
+            eka2l1::rect queued_rect(q_[i].evt.top_left, q_[i].evt.bottom_right);
+            queued_rect.transform_from_symbian_rectangle();
+
+            if ((q_[i].evt.handle == evt.handle) && target_queue_rect.contains(queued_rect)) {
+                // The new redraw rect contains the old queued redraw rect. Remove it to avoid
+                // unneccessary redraws.
+                q_.erase(q_.begin() + i);
+                limit--;
+            }
+        }
+        
+        std::uint32_t id = queue_event_dont_care(evt);
         q_.back().pri = pri;
 
         std::stable_sort(q_.begin(), q_.end(),
