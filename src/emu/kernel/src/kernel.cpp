@@ -449,7 +449,7 @@ namespace eka2l1 {
             if (stack_size == 0) {
                 new_stack_size = imgs.first->header.stack_size;
             } else {
-                new_stack_size = std::min<std::uint32_t>(imgs.first->header.stack_size, stack_size);
+                new_stack_size = std::max<std::uint32_t>(imgs.first->header.stack_size, stack_size);
             }
 
             pri = static_cast<kernel::process_priority>(imgs.first->header.priority);
