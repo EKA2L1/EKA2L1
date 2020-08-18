@@ -234,7 +234,10 @@ namespace eka2l1::epoc {
 
         if (use_clipping) {
             cmd_builder->set_clipping(true);
-            cmd_builder->clip_rect(the_clip);
+
+            if (the_clip.valid()) {
+                cmd_builder->clip_rect(the_clip);
+            }
         } else {
             cmd_builder->set_stencil(true);
 
@@ -247,10 +250,13 @@ namespace eka2l1::epoc {
             cmd_builder->set_stencil_mask(drivers::stencil_face::back_and_front, 0xFF);
 
             for (std::size_t i = 0; i < the_region->rects_.size(); i++) {
-                cmd_builder->draw_rectangle(the_region->rects_[i]);
+                if (the_region->rects_[i].valid()) {
+                    cmd_builder->draw_rectangle(the_region->rects_[i]);
+                }
             }
 
-            // Now set stencil buffer to only pass if value of pixel correspond in stencil buffer is not equal to 1
+            // Now set stencil buffer to only pass if value of pixel correspond in stencil buffer is not equal to 1 (invalid region),
+            // or equal to 1 (if valid region)
             // Also disable writing to stencil buffer
             cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, stencil_one_for_valid ?
                 drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
