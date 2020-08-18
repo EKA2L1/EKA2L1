@@ -51,7 +51,7 @@ namespace eka2l1::epoc {
         return (dsp == epoc::display_mode::color16) || (dsp == epoc::display_mode::color256);
     }
 
-    static char *converted_bw_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
+    static char *converted_one_bpp_to_twenty_four_bpp_bitmap(epoc::bitwise_bitmap *bw_bmp,
         const std::uint32_t *original_ptr, std::vector<char> &converted_pool) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
@@ -70,6 +70,29 @@ namespace eka2l1::epoc {
                 std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char *>(&converted_color), 3);
             }
         }
+        return return_ptr;
+    }
+
+    static char *convert_twelve_bpp_to_twenty_four_bpp_bitmap(epoc::bitwise_bitmap *bw_bmp,
+        const std::uint32_t *original_ptr, std::vector<char> &converted_pool) {
+        std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
+        converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
+
+        char *return_ptr = &converted_pool[0];
+        const std::uint16_t *source = reinterpret_cast<const std::uint16_t*>(original_ptr);
+
+        for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
+            for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
+                const std::size_t location = y * byte_width_converted + x * 3;
+                std::uint16_t value = source[y * bw_bmp->byte_width_ / 2 + x];
+
+                // Kind of black magic, get bits from byte
+                return_ptr[location] = (value & 0xF) * 17;
+                return_ptr[location + 1] = ((value >> 4) & 0xF) * 17;
+                return_ptr[location + 2] = ((value >> 8) & 0xF) * 17;
+            }
+        }
+
         return return_ptr;
     }
 
@@ -205,6 +228,10 @@ namespace eka2l1::epoc {
                     eka2l1::decompress_rle<8>(&source_stream, &dest_stream);
                     break;
 
+                case bitmap_file_twelve_bit_rle_compression:
+                    eka2l1::decompress_rle<12>(&source_stream, &dest_stream);
+                    break;
+
                 case bitmap_file_sixteen_bit_rle_compression:
                     eka2l1::decompress_rle<16>(&source_stream, &dest_stream);
                     break;
@@ -242,14 +269,27 @@ namespace eka2l1::epoc {
                 pixels_per_line = 0;
             }
 
-            if (bpp == 1) {
-                data_pointer = converted_bw_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
+            switch (bpp) {
+            case 1:
+                data_pointer = converted_one_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
                     converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());
-
-                // Use default
                 pixels_per_line = 0;
+
+                break;
+
+            case 12:
+                data_pointer = convert_twelve_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
+                    converted);
+                bpp = 24;
+                raw_size = static_cast<std::uint32_t>(converted.size());
+                pixels_per_line = 0;
+
+                break;
+
+            default:
+                break;
             }
 
             builder->update_bitmap(driver_textures[idx], bpp, data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
