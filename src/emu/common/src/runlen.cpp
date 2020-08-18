@@ -19,110 +19,174 @@
  */
 
 #include <common/algorithm.h>
+#include <common/buffer.h>
 #include <common/log.h>
 #include <common/runlen.h>
 
 namespace eka2l1 {
-    void decompress_rle_24bit(const std::uint8_t *src, std::size_t &src_size,
-        std::uint8_t *dest, std::size_t &dest_size) {
-        const std::uint8_t *src_org = src;
-        const std::uint8_t *dest_org = dest;
+    template <size_t BIT>
+    bool compress_rle(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size) {
+        static_assert(BIT % 8 == 0, "This RLE compress function don't support unaligned bit decompress!");
+        dest_size = 0;
 
-        const std::uint8_t *src_end = src + src_size;
-        const std::uint8_t *dest_end = dest + dest_size;
+        while (source->valid() && (!dest || dest->valid())) {
+            // Read 3 bytes
+            static constexpr std::int32_t BYTE_COUNT = BIT / 8;
 
-        while (src < src_end && (dest_org ? dest < dest_end : true)) {
-            std::int32_t count = static_cast<std::int8_t>(*src++);
+            std::uint8_t bytes[BYTE_COUNT];
+            std::uint64_t last_position = source->tell();
 
-            if (count >= 0) {
-                if (dest_org) {
-                    count = common::min(count, static_cast<std::int32_t>((dest_end - dest) / 3));
+            if (source->read(bytes, BYTE_COUNT) != BYTE_COUNT) {
+                return false;
+            }
+
+            std::uint8_t temp_bytes[BYTE_COUNT];
+
+            if ((source->read(temp_bytes, BYTE_COUNT) == BYTE_COUNT) && std::equal(bytes, bytes + BYTE_COUNT, temp_bytes)) {
+                // Seek back BYTE_COUNT in prepare of the do while loop
+                source->seek(-BYTE_COUNT, common::seek_where::cur);
+
+                do {
+                    source->read(temp_bytes, static_cast<std::uint64_t>(BYTE_COUNT));
+                } while (source->valid() && std::equal(bytes, bytes + BYTE_COUNT, temp_bytes));
+
+                // Seek back again, to evade the unequal sequence
+                if (source->valid()) {
+                    source->seek(-BYTE_COUNT, common::seek_where::cur);
                 }
 
-                const std::uint8_t comp1 = *src++;
-                const std::uint8_t comp2 = *src++;
-                const std::uint8_t comp3 = *src++;
+                const std::uint64_t total_bytes_repeated = source->tell() - last_position;
+                assert(total_bytes_repeated % BYTE_COUNT == 0);
 
-                if (dest_org) {
-                    while (count >= 0) {
-                        *dest++ = comp1;
-                        *dest++ = comp2;
-                        *dest++ = comp3;
+                std::int64_t total_pair = static_cast<std::int64_t>(total_bytes_repeated / BYTE_COUNT);
 
-                        count--;
+                while (total_pair > 0) {
+                    std::uint8_t total_this_session = (total_pair > 128) ? 127 : static_cast<std::uint8_t>(total_pair - 1);
+
+                    if (dest) {
+                        dest->write(&total_this_session, 1);
+                        dest->write(bytes, BYTE_COUNT);
                     }
-                } else {
-                    dest += (count + 1) * 3;
+
+                    dest_size += BYTE_COUNT + 1;
+                    total_pair -= (total_this_session + 1);
                 }
             } else {
-                std::uint32_t num_bytes_to_copy = count * -3;
+                // Seek back BYTE_COUNT in prepare of the do while loop
+                source->seek(-BYTE_COUNT, common::seek_where::cur);
 
-                if (dest_org) {
-                    num_bytes_to_copy = common::min(num_bytes_to_copy, static_cast<const std::uint32_t>(dest_end - dest));
-                    std::copy(src, src + num_bytes_to_copy, dest);
+                bool should_copy = false;
+
+                do {
+                    if (should_copy)
+                        std::copy(temp_bytes, temp_bytes + BYTE_COUNT, bytes);
+
+                    source->read(temp_bytes, static_cast<std::uint64_t>(BYTE_COUNT));
+                    should_copy = true;
+                } while (source->valid() && !std::equal(bytes, bytes + BYTE_COUNT, temp_bytes));
+
+                if (source->valid()) {
+                    source->seek(-BYTE_COUNT, common::seek_where::cur);
                 }
 
-                src += num_bytes_to_copy;
-                dest += num_bytes_to_copy;
+                const std::uint64_t total_bytes_repeated = source->tell() - last_position;
+                std::int64_t total_pair = static_cast<std::int64_t>(total_bytes_repeated / BYTE_COUNT);
+
+                if (dest) {
+                    source->seek(last_position, common::seek_where::beg);
+                }
+
+                std::vector<std::uint8_t> temp_data;
+
+                while (total_pair > 0) {
+                    std::int8_t total_this_session = (total_pair > 128) ? -128 : static_cast<std::int8_t>(-total_pair);
+
+                    if (dest) {
+                        dest->write(&total_this_session, 1);
+
+                        // Read the source
+                        temp_data.resize(total_this_session * -BYTE_COUNT);
+                        source->read(&temp_data[0], temp_data.size());
+                        dest->write(&temp_data[0], static_cast<std::uint32_t>(temp_data.size()));
+                    }
+
+                    dest_size += 1 + static_cast<std::size_t>(total_this_session * -BYTE_COUNT);
+
+                    // Negative already!
+                    total_pair += total_this_session;
+                }
             }
         }
 
-        dest_size = dest - dest_org;
-        src_size = src - src_org;
+        return true;
     }
 
-    void decompress_rle_24bit_stream(common::ro_stream *stream, std::size_t &src_size, std::uint8_t *dest, std::size_t &dest_size) {
-        const std::uint8_t *dest_org = dest;
-        const std::uint8_t *dest_end = dest + dest_size;
+    template <size_t BIT>
+    void decompress_rle(common::ro_stream *source, common::wo_stream *dest) {
+        static_assert(BIT % 8 == 0, "This RLE decompress function don't support unaligned bit decompress!");
 
-        const std::size_t src_org = src_size;
-        const std::size_t crr_pos = stream->tell();
-
-        while (stream->valid() && (dest_org ? dest < dest_end : true)) {
+        while (source->valid() && dest->valid()) {
             std::int8_t count8 = 0;
-            stream->read(&count8, 1);
+            source->read(&count8, 1);
 
             std::int32_t count = count8;
 
+            constexpr int BYTE_COUNT = static_cast<int>(BIT) / 8;
+
             if (count >= 0) {
-                if (dest_org) {
-                    count = common::min(count, static_cast<std::int32_t>((dest_end - dest) / 3));
+                count = common::min(count, static_cast<const std::int32_t>(dest->left() / BYTE_COUNT));
+                std::uint8_t comp[BYTE_COUNT];
+
+                for (std::size_t i = 0; i < BYTE_COUNT; i++) {
+                    source->read(&comp[i], 1);
                 }
 
-                std::uint8_t comp1 = 0;
-                std::uint8_t comp2 = 0;
-                std::uint8_t comp3 = 0;
-
-                stream->read(&comp1, 1);
-                stream->read(&comp2, 1);
-                stream->read(&comp3, 1);
-
-                if (dest_org) {
-                    while (count >= 0) {
-                        *dest++ = comp1;
-                        *dest++ = comp2;
-                        *dest++ = comp3;
-
-                        count--;
+                while (count >= 0) {
+                    for (std::size_t i = 0; i < BYTE_COUNT; i++) {
+                        dest->write(&comp[i], 1);
                     }
-                } else {
-                    dest += (count + 1) * 3;
+
+                    count--;
                 }
             } else {
-                std::uint32_t num_bytes_to_copy = count * -3;
+                std::uint32_t num_bytes_to_copy = static_cast<std::uint32_t>(count * -BYTE_COUNT);
+                num_bytes_to_copy = common::min(num_bytes_to_copy, static_cast<const std::uint32_t>(dest->left()));
 
-                if (dest_org) {
-                    num_bytes_to_copy = common::min(num_bytes_to_copy, static_cast<const std::uint32_t>(dest_end - dest));
-                    stream->read(dest, num_bytes_to_copy);
-                } else {
-                    stream->seek(num_bytes_to_copy, common::seek_where::cur);
-                }
+                std::vector<std::uint8_t> temp_buf_holder;
+                temp_buf_holder.resize(num_bytes_to_copy);
 
-                dest += num_bytes_to_copy;
+                source->read(&temp_buf_holder[0], num_bytes_to_copy);
+                dest->write(temp_buf_holder.data(), num_bytes_to_copy);
             }
         }
-
-        dest_size = dest - dest_org;
-        src_size = stream->tell() - crr_pos;
     }
+
+    template <>
+    void decompress_rle<12>(common::ro_stream *source, common::wo_stream *dest) {
+        while (source->valid() && dest->valid()) {
+            std::uint16_t val = 0;
+            if (source->read(&val, 2) != 2) {
+                return;
+            }
+
+            std::uint32_t repeat_count = common::min<std::uint32_t>(static_cast<std::uint32_t>((val >> 12) & 0xF),
+                static_cast<const std::uint32_t>(dest->left() / 2));
+
+            val &= 0x0FFF;
+
+            for (std::uint32_t i = 0; i <= repeat_count; i++) {
+                dest->write(&val, 2);
+            }
+        }
+    }
+
+    template bool compress_rle<8>(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size);
+    template bool compress_rle<16>(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size);
+    template bool compress_rle<24>(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size);
+    template bool compress_rle<32>(common::ro_stream *source, common::wo_stream *dest, std::size_t &dest_size);
+
+    template void decompress_rle<8>(common::ro_stream *source, common::wo_stream *dest);
+    template void decompress_rle<16>(common::ro_stream *source, common::wo_stream *dest);
+    template void decompress_rle<24>(common::ro_stream *source, common::wo_stream *dest);
+    template void decompress_rle<32>(common::ro_stream *source, common::wo_stream *dest);
 }
