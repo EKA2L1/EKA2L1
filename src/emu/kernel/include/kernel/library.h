@@ -29,8 +29,11 @@ namespace eka2l1::kernel {
         std::vector<uint32_t> attach(kernel::process *pr);
 
         void detach(kernel::process *pr);
-
         bool attached();
+
+        codeseg_ptr get_codeseg() {
+            return codeseg;
+        }
 
         void do_state(common::chunkyseri &seri) override;
     };
