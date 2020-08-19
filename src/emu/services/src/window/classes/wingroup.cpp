@@ -78,7 +78,7 @@ namespace eka2l1::epoc {
         ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
         auto window_user_to_set = reinterpret_cast<window_user *>(client->get_object(cmd_set->win));
 
-        if (!window_user_to_set || window_user_to_set->type == window_kind::client) {
+        if (!window_user_to_set || (window_user_to_set->type != window_kind::client)) {
             LOG_ERROR("Window not found or not client kind to set text cursor");
             context.complete(epoc::error_not_found);
             return;
