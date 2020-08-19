@@ -42,6 +42,7 @@
 #include <common/ini.h>
 #include <common/log.h>
 #include <common/rgb.h>
+#include <common/time.h>
 
 #include <utils/err.h>
 
@@ -376,6 +377,22 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void window_server_client::send_message_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_send_message_to_window_group *msg = reinterpret_cast<decltype(msg)>(cmd.data_ptr);
+        epoc::window_group *group = get_ws().get_group_from_id(msg->id_or_priority);
+
+        if (!group) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        epoc::event evt(group->get_client_handle(), epoc::event_code::event_messages_ready);
+        evt.time = common::get_current_time_in_microseconds_since_1ad();
+        queue_event(evt);
+
+        ctx.complete(epoc::error_none);
+    }
+
     void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_find_window_group_identifier *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
         epoc::window_group *group = reinterpret_cast<epoc::window_group *>(primary_device->scr->root->child);
@@ -692,6 +709,11 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_send_event_to_window_group: {
             send_event_to_window_group(ctx, cmd);
+            break;
+        }   
+
+        case ws_cl_op_send_message_to_window_group: {
+            send_message_to_window_group(ctx, cmd);
             break;
         }
 

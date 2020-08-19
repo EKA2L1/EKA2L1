@@ -179,6 +179,7 @@ namespace eka2l1::epoc {
         void get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd);
         void restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd);
         void send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd);
+        void send_message_to_window_group(service::ipc_context &ctx, ws_cmd &cmd);
         void find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd);
         void find_window_group_id_thread(service::ipc_context &ctx, ws_cmd &cmd);
         void set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd);

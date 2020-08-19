@@ -33,6 +33,7 @@
 #include <common/e32inc.h>
 #include <drivers/graphics/emu_window.h>
 #include <e32keys.h>
+#include <utils/des.h>
 
 enum {
     cmd_slot = 0,
@@ -424,6 +425,7 @@ namespace eka2l1::epoc {
         event_code type;
         std::uint32_t handle;
         std::uint64_t time;
+        epoc::buf_static<char, 32> data;
 
         // TODO: Should be only pointer event with epoc < 9.
         // For epoc9 there shouldnt be a pointer number, since there is no multi touch
@@ -443,8 +445,6 @@ namespace eka2l1::epoc {
             adv_pointer_evt_ = rhs.adv_pointer_evt_;
         }
     };
-
-    static_assert(sizeof(event) == 16 + sizeof(adv_pointer_event), "Size of event is wrong!");
 
     struct redraw_event {
         std::uint32_t handle;
