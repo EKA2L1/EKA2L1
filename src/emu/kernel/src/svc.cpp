@@ -3127,6 +3127,27 @@ namespace eka2l1::epoc {
         return kern->get_global_user_data_pointer().ptr_address() + offsetof(kernel_global_data, char_set_);
     }
 
+    BRIDGE_FUNC(std::int32_t, des_locate_fold, epoc::desc16 *des, const epoc::uchar character) {
+        if (des->get_length() == 0) {
+            return epoc::error_not_found;
+        }
+
+        const char16_t *str_data = des->get_pointer(kern->crr_process());
+        std::locale &current_locale = *kern->get_current_locale();
+
+        if (!str_data) {
+            return epoc::error_bad_descriptor;
+        }
+
+        for (std::uint32_t i = 0; i < des->get_length(); i++) {
+            if (fold_uchar(str_data[i], current_locale) == fold_uchar(character, current_locale)) {
+                return static_cast<std::int32_t>(i);
+            }
+        }
+
+        return epoc::error_not_found;
+    }
+
     BRIDGE_FUNC(std::uint32_t, user_language) {
         return static_cast<std::uint32_t>(kern->get_current_language());
     }
@@ -3547,6 +3568,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
         BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),
         BRIDGE_REGISTER(0x800045, thread_write_ipc_to_des16),
+        BRIDGE_REGISTER(0x800059, des_locate_fold),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
