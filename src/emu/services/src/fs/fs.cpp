@@ -42,7 +42,7 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
-    namespace epoc::fs {        
+    namespace epoc::fs {
         std::string get_server_name_through_epocver(const epocver ver) {
             if (ver < epocver::eka2) {
                 return "FileServer";
