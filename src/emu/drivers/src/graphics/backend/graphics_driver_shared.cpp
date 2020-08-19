@@ -106,8 +106,8 @@ namespace eka2l1::drivers {
 
             eka2l1::rect copy_region;
             copy_region.top = { 0, 0 };
-            copy_region.size = { common::min<int>(tex->get_size().x, new_size.x), common::min<int>(
-                tex->get_size().y, new_size.y) };
+            copy_region.size = eka2l1::object_size(common::min<int>(tex->get_size().x, new_size.x), common::min<int>(
+                tex->get_size().y, new_size.y));
 
             fb->blit(copy_region, copy_region, draw_buffer_bit_color_buffer, filter_option::linear);
 
