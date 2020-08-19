@@ -46,6 +46,7 @@
 #include <services/notifier/notifier.h>
 #include <services/remcon/remcon.h>
 #include <services/sensor/sensor.h>
+#include <services/shutdown/shutdown.h>
 #include <services/sms/sa/sa.h>
 #include <services/socket/socket.h>
 #include <services/ui/cap/oom_app.h>
@@ -155,6 +156,7 @@ namespace eka2l1 {
         void init_services(system *sys) {
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
+            CREATE_SERVER(sys, shutdown_server);
 
             config::state *cfg = sys->get_config();
 
