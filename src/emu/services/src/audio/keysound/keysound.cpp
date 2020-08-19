@@ -185,6 +185,11 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void keysound_session::play_key(service::ipc_context *ctx) {
+        LOG_TRACE("Trying to play key with scancode 0x{:x}, stubbed", ctx->get_argument_value<std::uint32_t>(0).value());
+        ctx->complete(epoc::error_none);
+    }
+
     void keysound_session::play_sid(service::ipc_context *ctx) {
         LOG_TRACE("Trying to play sound with ID 0x{:x}, stubbed", ctx->get_argument_value<std::uint32_t>(0).value());
         epoc::keysound::sound_info *info = server<keysound_server>()->get_sound(ctx->get_argument_value<std::uint32_t>(0).value());
@@ -307,6 +312,11 @@ namespace eka2l1 {
 
         case epoc::keysound::opcode_add_sids: {
             add_sids(ctx);
+            break;
+        }
+
+        case epoc::keysound::opcode_play_key: {
+            play_key(ctx);
             break;
         }
 

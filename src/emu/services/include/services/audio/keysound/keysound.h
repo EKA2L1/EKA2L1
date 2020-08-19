@@ -62,6 +62,7 @@ namespace eka2l1 {
         void init(service::ipc_context *ctx);
         void push_context(service::ipc_context *ctx);
         void pop_context(service::ipc_context *ctx);
+        void play_key(service::ipc_context *ctx);
         void play_sid(service::ipc_context *ctx);
         void add_sids(service::ipc_context *ctx);
         void bring_to_foreground(service::ipc_context *ctx);
