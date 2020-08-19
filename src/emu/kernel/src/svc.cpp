@@ -889,21 +889,26 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC(std::int32_t, session_send_sync, kernel::handle h, std::int32_t ord, eka2l1::ptr<void> ipc_args,
-        eka2l1::ptr<epoc::request_status> status) {
+    static std::int32_t session_send_general(kernel_system *kern, kernel::handle h, std::int32_t ord, const std::uint32_t *ipc_args,
+        eka2l1::ptr<epoc::request_status> status, const bool no_header_flag, const bool sync) {
         // LOG_TRACE("Send using handle: {}", (h & 0x8000) ? (h & ~0x8000) : (h));
         process_ptr crr_pr = kern->crr_process();
 
         // Dispatch the header
         ipc_arg arg;
-        std::int32_t *arg_header = ipc_args.cast<std::int32_t>().get(crr_pr);
-
         if (ipc_args) {
-            for (uint8_t i = 0; i < 4; i++) {
-                arg.args[i] = *arg_header++;
-            }
+            if (no_header_flag) {
+                arg.flag = 0xFFFFFFFF;
+                std::memcpy(arg.args, ipc_args, sizeof(arg.args));
+            } else {
+                for (uint8_t i = 0; i < 4; i++) {
+                    arg.args[i] = *ipc_args++;
+                }
 
-            arg.flag = *arg_header & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
+                arg.flag = *ipc_args & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
+            }
+        } else {
+            std::fill(arg.args, arg.args + sizeof(arg.args) / sizeof(std::uint32_t), 0);
         }
 
         session_ptr ss = kern->get<service::session>(h);
@@ -923,7 +928,7 @@ namespace eka2l1::epoc {
         const std::string server_name = ss->get_server()->name();
         kern->call_ipc_send_callbacks(server_name, ord, arg, kern->crr_thread());
 
-        const int result = ss->send_receive_sync(ord, arg, status);
+        const int result = sync ? ss->send_receive_sync(ord, arg, status) : ss->send_receive(ord, arg, status);
 
         if (ss->get_server()->is_hle()) {
             // Process it right away.
@@ -933,47 +938,14 @@ namespace eka2l1::epoc {
         return result;
     }
 
-    BRIDGE_FUNC(std::int32_t, session_send, kernel::handle h, std::int32_t ord, eka2l1::ptr<void> ipc_args,
+    BRIDGE_FUNC(std::int32_t, session_send_sync, kernel::handle h, std::int32_t ord, const std::uint32_t *ipc_args,
         eka2l1::ptr<epoc::request_status> status) {
-        process_ptr crr_pr = kern->crr_process();
+        return session_send_general(kern, h, ord, ipc_args, status, false, true);
+    }
 
-        // Dispatch the header
-        ipc_arg arg;
-        std::int32_t *arg_header = ipc_args.cast<std::int32_t>().get(crr_pr);
-
-        if (ipc_args) {
-            for (uint8_t i = 0; i < 4; i++) {
-                arg.args[i] = *arg_header++;
-            }
-
-            arg.flag = *arg_header & (((1 << 12) - 1) | (int)ipc_arg_pin::pin_mask);
-        }
-
-        session_ptr ss = kern->get<service::session>(h);
-
-        if (!ss) {
-            return epoc::error_bad_handle;
-        }
-
-        if (!status) {
-            LOG_TRACE("Sending a blind async message");
-        }
-
-        if (kern->get_config()->log_ipc) {
-            LOG_TRACE("Sending {} to {}", ord, ss->get_server()->name());
-        }
-
-        const std::string server_name = ss->get_server()->name();
-        kern->call_ipc_send_callbacks(server_name, ord, arg, kern->crr_thread());
-
-        const int result = ss->send_receive(ord, arg, status);
-
-        if (ss->get_server()->is_hle()) {
-            // Process it right away.
-            ss->get_server()->process_accepted_msg();
-        }
-
-        return result;
+    BRIDGE_FUNC(std::int32_t, session_send, kernel::handle h, std::int32_t ord, const std::uint32_t *ipc_args,
+        eka2l1::ptr<epoc::request_status> status) {
+        return session_send_general(kern, h, ord, ipc_args, status, false, false);
     }
 
     /**********************************/
@@ -1506,6 +1478,31 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::uint32_t, library_entry_call_start, const address addr) {
         LOG_TRACE("Starting address 0x{:X}", addr);
         return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(void, library_filename_eka1, epoc::des16 *path_to_fill, kernel::handle h) {
+        kernel::library *lib = kern->get<kernel::library>(h);
+
+        if (!lib) {
+            return;
+        }
+
+        const std::u16string lib_filename = eka2l1::filename(lib->get_codeseg()->get_full_path(), true);
+        path_to_fill->assign(kern->crr_process(), lib_filename);
+    }
+
+    BRIDGE_FUNC(void, library_type_eka1, epoc::uid_type *type, kernel::handle h) {
+        kernel::library *lib = kern->get<kernel::library>(h);
+
+        if (!lib) {
+            return;
+        }
+
+        const auto types_of_codeseg = lib->get_codeseg()->get_uids();
+
+        type->uid1 = std::get<0>(types_of_codeseg);
+        type->uid2 = std::get<1>(types_of_codeseg);
+        type->uid3 = std::get<2>(types_of_codeseg);
     }
 
     /************************/
@@ -2832,6 +2829,30 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t process_rename_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *pr = kern->get<kernel::process>(create_info->arg0_);
+
+        if (!pr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::des16 *name = eka2l1::ptr<epoc::des16>(create_info->arg1_).get(target_process);
+
+        if (!name) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        const std::string name_to_rename_str = common::ucs2_to_utf8(name->to_std_string(target_process));
+        pr->rename(name_to_rename_str);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     std::int32_t thread_open_by_id_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::thread *thr = kern->get_by_id<kernel::thread>(create_info->arg1_);
@@ -2876,6 +2897,20 @@ namespace eka2l1::epoc {
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
     }
 
+    std::int32_t timer_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *target_process = target_thread->owning_process();
+        const kernel::handle h = kern->create_and_add<kernel::timer>(kernel::owner_type::process, kern->get_ntimer(),
+            "timer" + common::to_string(eka2l1::random())).first;
+
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -2909,6 +2944,9 @@ namespace eka2l1::epoc {
         case epoc::eka1_executor::execute_create_server_global:
             return server_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+        case epoc::eka1_executor::execute_create_timer:
+            return timer_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
         case epoc::eka1_executor::execute_logon_thread:
             return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
@@ -2917,6 +2955,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_rename_thread:
             return thread_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_rename_process:
+            return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_panic_thread:
             return thread_panic_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -2958,44 +2999,14 @@ namespace eka2l1::epoc {
         return result;
     }
 
+    BRIDGE_FUNC(std::int32_t, session_send_sync_eka1, kernel::handle session_handle, const std::int32_t ord,
+        std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
+        return session_send_general(kern, session_handle, ord, args, status, true, true);
+    }
+
     BRIDGE_FUNC(std::int32_t, session_send_eka1, kernel::handle session_handle, const std::int32_t ord,
         std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
-        process_ptr crr_pr = kern->crr_process();
-
-        ipc_arg the_arg;
-        the_arg.flag = 0xFFFFFFFF;          // EKA1 does not have flags for message, so mark all
-        
-        if (args) {
-            std::memcpy(the_arg.args, args, sizeof(the_arg.args));
-        } else {
-            std::fill(the_arg.args, the_arg.args + sizeof(the_arg.args) / sizeof(std::uint32_t), 0);
-        }
-
-        session_ptr ss = kern->get<service::session>(session_handle);
-
-        if (!ss) {
-            return epoc::error_bad_handle;
-        }
-
-        if (!status) {
-            LOG_TRACE("Sending a blind sync message");
-        }
-
-        if (kern->get_config()->log_ipc) {
-            LOG_TRACE("Sending {} sync to {}", ord, ss->get_server()->name());
-        }
-
-        const std::string server_name = ss->get_server()->name();
-        kern->call_ipc_send_callbacks(server_name, ord, the_arg, kern->crr_thread());
-
-        const int result = ss->send_receive_sync(ord, the_arg, status);
-
-        if (ss->get_server()->is_hle()) {
-            // Process it right away.
-            ss->get_server()->process_accepted_msg();
-        }
-
-        return result;
+        return session_send_general(kern, session_handle, ord, args, status, true, false);
     }
 
     std::int32_t thread_ipc_to_des_eka1(kernel_system *kern, address client_ptr_addr, epoc::des8 *des_ptr, std::int32_t offset, kernel::handle client_thread_h,
@@ -3083,6 +3094,16 @@ namespace eka2l1::epoc {
         // Todo: Exact error code?
         message_complete(kern, h, code);
         return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(void, thread_set_priority_eka1, std::int32_t thread_pri, kernel::handle thr_handle) {
+        thread_ptr thr = kern->get<kernel::thread>(thr_handle);
+
+        if (!thr) {
+            return;
+        }
+
+        thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(thread_pri));
     }
 
     /*======================= LOCALE-RELATED FUNCTION ====================*/
@@ -3520,6 +3541,7 @@ namespace eka2l1::epoc {
         
         // User server calls
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
+        BRIDGE_REGISTER(0x800016, library_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
         BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
@@ -3531,17 +3553,20 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
+        BRIDGE_REGISTER(0x8000A9, library_type_eka1),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC00030, set_session_ptr),
+        BRIDGE_REGISTER(0xC00031, session_send_eka1),
         BRIDGE_REGISTER(0xC00034, thread_resume),
+        BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
-        BRIDGE_REGISTER(0xC0004E, thread_request_signal),
+        BRIDGE_REGISTER(0xC0004E, request_signal),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
-        BRIDGE_REGISTER(0xC000BF, session_send_eka1)
+        BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1)
     };
 }

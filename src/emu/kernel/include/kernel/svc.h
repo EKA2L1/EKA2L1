@@ -108,6 +108,7 @@ namespace eka2l1::epoc {
             execute_open_mutex_global = 0x18,
             execute_create_sema = 0x19,
             execute_create_timer = 0x1B,
+            execute_rename_process = 0x20,
             execute_create_thread = 0x27,
             execute_open_thread_by_id = 0x2A,
             execute_rename_thread = 0x2C,
@@ -116,7 +117,8 @@ namespace eka2l1::epoc {
             execute_set_tls = 0x34,
             execute_free_tls = 0x35,
             execute_create_chunk_double_ended = 0x4C,
-            execute_create_chunk_double_ended_global = 0x4D
+            execute_create_chunk_double_ended_global = 0x4D,
+            execute_free_up_system = 0x52           ///< Free system memory (Unconfirmed).
         };
 
         std::uint32_t arg0_;
