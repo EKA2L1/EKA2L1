@@ -276,7 +276,7 @@ namespace eka2l1::epoc {
         void destroy(fbscli *cli);
     };
 
-    struct open_font_glyph_v1: public open_font_glyph_v3 {
+    struct open_font_glyph_v1: public open_font_glyph_v2 {
     };
 
     struct open_font_glyph_cache_entry_v1: public open_font_glyph_v1 {
