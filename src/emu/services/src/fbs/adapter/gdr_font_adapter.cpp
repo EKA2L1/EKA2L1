@@ -274,6 +274,14 @@ namespace eka2l1::epoc::adapter {
 
         total_size = ((total_bit_write + 31) >> 5) * 4;
 
+        if (rasterized_width) {
+            *rasterized_width = scaled_width;
+        }
+
+        if (rasterized_height) {
+            *rasterized_height = scaled_height;
+        }
+
         // In case this adapter get destroyed. It will free this data.
         dynamic_alloc_list_.push_back(compressed_bitmap);
         return reinterpret_cast<std::uint8_t*>(compressed_bitmap);

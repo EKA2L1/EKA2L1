@@ -283,12 +283,36 @@ namespace eka2l1::epoc {
         std::uint32_t real_index = (code & 0x7fffffff) % offset_array.offset_array_count;
 
         if (!offset_array.is_entry_empty(cli, real_index)) {
-            // Free at given address.
+            // Free at given address.// Search for the least last used	
+            auto ptr = offset_array.pointer(cli);	
+            fbs_server *serv = cli->server<fbs_server>();	
+            memory_system *mem = serv->get_system()->get_memory_system();	
+
+            std::int32_t least_use = 99999999;
+
+            for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {	
+                if (!ptr[i]) {	
+                    real_index = i;	
+                    break;	
+                }	
+
+                auto entry = eka2l1::ptr<open_font_session_cache_entry_v2>(ptr[i]).get(mem);	
+
+                if (entry->last_use < least_use) {	
+                    least_use = entry->last_use;	
+                    real_index = i;
+                }	
+            }
+        }
+
+        if (!offset_array.is_entry_empty(cli, real_index)) {
             auto glyph_cache = offset_array.get_glyph(cli, real_index);
             reinterpret_cast<open_font_session_cache_entry_v2*>(glyph_cache)->destroy(cli);
+
             cli->server<fbs_server>()->free_general_data(glyph_cache);
         }
 
+        reinterpret_cast<open_font_session_cache_entry_v2*>(the_glyph)->glyph_index = real_index;
         offset_array.set_glyph(cli, real_index, the_glyph);
     }
 
@@ -714,6 +738,10 @@ namespace eka2l1 {
             return;
         }
 
+        epoc::open_font_character_metric calculated_metric;
+        font->of_info.adapter->get_glyph_metric(font->of_info.idx, codepoint, calculated_metric, 0, font->of_info.scale_factor_x,
+            font->of_info.scale_factor_y);
+
         // Add it to session cache
         fbs_server *serv = server<fbs_server>();
         kernel::process *pr = ctx->msg->own_thr->owning_process();
@@ -726,9 +754,10 @@ namespace eka2l1 {
     cache_entry->offset = sizeof(epoc::open_font_session_cache_entry_v##entry_ver) + 1;                                     \
     info->adapter->get_glyph_metric(info->idx, codepoint, cache_entry->metric,                                              \
         reinterpret_cast<type*>(bmp_font)->algorithic_style.baseline_offsets_in_pixel, info->scale_factor_x, info->scale_factor_y);                  \
+    cache_entry->metric = calculated_metric;                                                                                 \
     cache_entry->metric.width = rasterized_width;                                                                           \
     cache_entry->metric.height = rasterized_height;                                                                         \
-    cache_entry->metric.bitmap_type = bitmap_type;                                                                          \
+    cache_entry->metric.bitmap_type = bitmap_type;                                                               \
     const auto cache_entry_ptr = serv->host_ptr_to_guest_general_data(cache_entry).ptr_address();                           \
     if (epoc::does_client_use_pointer_instead_of_offset(this)) {                                                            \
         cache_entry->font_offset = static_cast<std::int32_t>(reinterpret_cast<type*>(bmp_font)->openfont.ptr_address());                             \
@@ -750,7 +779,8 @@ namespace eka2l1 {
 
 #define DO_CACHE_ENTRY_FINISH_UP                                                                             \
     cache_entry->last_use = session_cache->last_use_counter++;                                               \
-    ctx->complete(cache_entry_ptr);                                                                \
+    cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();   \
+    ctx->complete(cache_entry_ptr);                                                                          \
     return
 
             if (serv->kern->is_eka1()) {
@@ -758,8 +788,6 @@ namespace eka2l1 {
                 DO_CACHE_ENTRY_FINISH_UP;
             } else {
                 MAKE_CACHE_ENTRY(2, epoc::bitmapfont_v2);
-                cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();
-
                 DO_CACHE_ENTRY_FINISH_UP;
             }
         }
