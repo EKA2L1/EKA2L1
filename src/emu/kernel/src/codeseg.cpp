@@ -157,11 +157,11 @@ namespace eka2l1::kernel {
         attaches.push_back({ new_foe, dt_chunk, code_chunk });
         
         // Attach all of its dependencies
-        if ((code_addr && forcefully) || !code_addr) {
-            for (auto &dependency: dependencies) {
-                dependency.dep_->attach(new_foe);
+        for (auto &dependency: dependencies) {
+            dependency.dep_->attach(new_foe);
 
-                // Patch what imports we need
+            // Patch what imports we need
+            if ((code_addr && forcefully) || !code_addr) {
                 for (const std::uint64_t import: dependency.import_info_) {
                     const std::uint16_t ord = (import & 0xFFFF);
                     const std::uint16_t adj = (import >> 16) & 0xFFFF;
