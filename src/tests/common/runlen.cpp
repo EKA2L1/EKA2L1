@@ -18,6 +18,7 @@
  */
 
 #include <catch2/catch.hpp>
+#include <common/buffer.h>
 #include <common/runlen.h>
 
 #include <array>
