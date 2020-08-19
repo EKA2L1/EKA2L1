@@ -923,6 +923,7 @@ namespace eka2l1::hle {
         if (kern_->is_eka1()) {
             search_paths.push_back(u"\\System\\Libs\\");
             search_paths.push_back(u"\\System\\Programs\\");
+            search_paths.push_back(u"\\System\\Fep\\");
         } else {
             search_paths.push_back(u"\\Sys\\Bin\\");
         }
