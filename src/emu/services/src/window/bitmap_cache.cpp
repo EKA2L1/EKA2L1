@@ -109,8 +109,11 @@ namespace eka2l1::epoc {
                 case epoc::display_mode::color256: {
                     const std::uint8_t palette_index = original_ptr[y * bw_bmp->byte_width_ + x];
                     const std::uint32_t palette_color = epoc::color_256_palette[palette_index];
+                    const std::size_t location = byte_width_converted * y + x * 3;
 
-                    std::memcpy(return_ptr + byte_width_converted * y + x * 3, reinterpret_cast<const char *>(&palette_color), 3);
+                    return_ptr[location] = palette_color & 0xFF;
+                    return_ptr[location + 1] = (palette_color >> 8) & 0xFF;
+                    return_ptr[location + 2] = (palette_color >> 16) & 0xFF;
 
                     break;
                 }
