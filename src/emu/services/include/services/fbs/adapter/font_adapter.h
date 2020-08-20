@@ -66,18 +66,21 @@ namespace eka2l1::epoc::adapter {
         virtual bool does_glyph_exist(std::size_t idx, std::uint32_t code) = 0;
 
         /**
-         * \brief Initialize getting glyph atlas.
+         * @brief   Initialize getting glyph atlas.
          * 
          * Each pixel is 8 bits.
          * 
-         * \param atlas_ptr Pointer to destination data which glyph bitmap will be written to.
-         * \param atlas_size Size of the atlas.
+         * @param   atlas_ptr Pointer to destination data which glyph bitmap will be written to.
+         * @param   atlas_size Size of the atlas.
+         * 
+         * @returns Handle to the atlas get context. -1 on failure.
          */
-        virtual bool begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) = 0;
+        virtual std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) = 0;
 
         /**
          * \brief Get an atlas contains glyphs bitmap.
          * 
+         * \param handle        Handle to the atlas get context returned in begin_get_atlas.
          * \param idx           Index of the typeface we want to get glyph bitmaps from.
          * \param start_code    First unicode point in a range to get glyph bitmap. 0 to use unicode array.
          * \param unicode_point Pointer to an array of unicode point which we want to rasterize. NULL to ingore.
@@ -87,12 +90,12 @@ namespace eka2l1::epoc::adapter {
          * 
          * \returns True on success. 
          */
-        virtual bool get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point,
+        virtual bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
             const char16_t num_code, const int font_size, character_info *info)
             = 0;
 
         // End getting atlas.
-        virtual void end_get_atlas() = 0;
+        virtual void end_get_atlas(const std::int32_t handle) = 0;
 
         /**
          * \brief Get total number of font this file consists of.

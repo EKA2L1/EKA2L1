@@ -54,6 +54,7 @@ namespace eka2l1::epoc {
         std::unique_ptr<std::uint8_t[]> atlas_data_;
 
         std::size_t typeface_idx_;
+        std::int32_t pack_handle_;
 
     public:
         explicit font_atlas();

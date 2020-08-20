@@ -23,7 +23,9 @@
 
 namespace eka2l1::epoc {
     font_atlas::font_atlas()
-        : atlas_handle_(0) {
+        : atlas_handle_(0)
+        , atlas_data_(nullptr)
+        , pack_handle_(0) {
     }
 
     font_atlas::font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
@@ -32,7 +34,9 @@ namespace eka2l1::epoc {
         , adapter_(adapter)
         , size_(font_size)
         , initial_range_(initial_start, initial_char_count)
-        , typeface_idx_(typeface_idx) {
+        , typeface_idx_(typeface_idx)
+        , atlas_data_(nullptr)
+        , pack_handle_(0) {
     }
 
     void font_atlas::init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
@@ -42,6 +46,9 @@ namespace eka2l1::epoc {
         size_ = font_size;
         initial_range_ = { initial_start, initial_char_count };
         typeface_idx_ = typeface_idx;
+        pack_handle_ = 0;
+
+        atlas_data_.reset();
     }
 
     void font_atlas::free(drivers::graphics_driver *driver) {
@@ -51,6 +58,13 @@ namespace eka2l1::epoc {
 
             cmd_builder->destroy_bitmap(atlas_handle_);
             driver->submit_command_list(*cmd_list);
+
+            atlas_handle_ = 0;
+            atlas_data_.reset();
+        }
+
+        if (pack_handle_) {
+            adapter_->end_get_atlas(pack_handle_);
         }
     }
 
@@ -65,11 +79,13 @@ namespace eka2l1::epoc {
             atlas_data_ = std::make_unique<std::uint8_t[]>(width * width);
             auto cinfos = std::make_unique<adapter::character_info[]>(initial_range_.second);
 
-            if (!adapter_->begin_get_atlas(atlas_data_.get(), { width, width })) {
+            pack_handle_ = adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
+            
+            if (pack_handle_ == -1) {
                 return false;
             }
 
-            if (!adapter_->get_glyph_atlas(typeface_idx_, initial_range_.first, nullptr, initial_range_.second,
+            if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, initial_range_.first, nullptr, initial_range_.second,
                     size_, cinfos.get())) {
                 return false;
             }
@@ -110,13 +126,17 @@ namespace eka2l1::epoc {
             // Try to rasterize these
             auto cinfos = std::make_unique<adapter::character_info[]>(to_rast.size());
 
-            if (!adapter_->get_glyph_atlas(typeface_idx_, 0, to_rast.data(), static_cast<char16_t>(to_rast.size()), size_,
+            if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, 0, to_rast.data(), static_cast<char16_t>(to_rast.size()), size_,
                     cinfos.get())) {
                 // Try to redo the atlas, getting latest use characters.
-                adapter_->end_get_atlas();
-                adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
+                adapter_->end_get_atlas(pack_handle_);
+                pack_handle_ = adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
 
-                if (!adapter_->get_glyph_atlas(typeface_idx_, 0, &last_use_[0], static_cast<char16_t>(characters_.size() - 5),
+                if (pack_handle_ == -1) {
+                    return false;
+                }
+
+                if (!adapter_->get_glyph_atlas(pack_handle_, typeface_idx_, 0, &last_use_[0], static_cast<char16_t>(characters_.size() - 5),
                         size_, cinfos.get())) {
                     return false;
                 }

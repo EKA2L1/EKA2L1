@@ -23,6 +23,8 @@
 #include <memory>
 #include <vector>
 
+#include <common/container.h>
+
 #include <services/fbs/adapter/font_adapter.h>
 #include <stb_truetype.h>
 
@@ -32,7 +34,7 @@ namespace eka2l1::epoc::adapter {
         std::map<int, stbtt_fontinfo> cache_info;
 
         stbtt_fontinfo info_;
-        stbtt_pack_context context_;
+        common::identity_container<std::unique_ptr<stbtt_pack_context>> contexts_;
 
         std::size_t count_;
 
@@ -61,12 +63,12 @@ namespace eka2l1::epoc::adapter {
 
         void free_glyph_bitmap(std::uint8_t *data) override;
 
-        bool begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
+        std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
 
-        bool get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code, const int font_size,
-            character_info *info) override;
+        bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code,
+            const int font_size, character_info *info) override;
 
-        void end_get_atlas() override;
+        void end_get_atlas(const std::int32_t handle) override;
 
         glyph_bitmap_type get_output_bitmap_type() const override {
             return antialised_glyph_bitmap;

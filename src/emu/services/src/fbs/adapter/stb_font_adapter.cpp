@@ -24,9 +24,19 @@
 #include <stb_truetype.h>
 
 namespace eka2l1::epoc::adapter {
+    static void free_stb_pack_context(std::unique_ptr<stbtt_pack_context> &ctx) {
+        stbtt_PackEnd(ctx.get());
+        ctx.reset();
+    }
+
+    static bool is_stb_pack_context_free(std::unique_ptr<stbtt_pack_context> &ctx) {
+        return (ctx == nullptr);
+    }
+
     stb_font_file_adapter::stb_font_file_adapter(std::vector<std::uint8_t> &data_)
         : data_(data_)
-        , flags_(0) {
+        , flags_(0)
+        , contexts_(is_stb_pack_context_free, free_stb_pack_context) {
         count_ = stbtt_GetNumberOfFonts(&data_[0]);
 
         if (count_ > 0) {
@@ -270,19 +280,30 @@ namespace eka2l1::epoc::adapter {
         stbtt_FreeBitmap(data, nullptr);
     }
 
-    bool stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        return stbtt_PackBegin(&context_, atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr) != 0;
+    std::int32_t stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+        std::unique_ptr<stbtt_pack_context> context = std::make_unique<stbtt_pack_context>();
+        if (stbtt_PackBegin(context.get(), atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr) == 0) {
+            return -1;
+        }
+
+        return static_cast<std::int32_t>(contexts_.add(context));
     }
 
-    void stb_font_file_adapter::end_get_atlas() {
-        stbtt_PackEnd(&context_);
+    void stb_font_file_adapter::end_get_atlas(const std::int32_t handle) {
+        contexts_.remove(static_cast<std::size_t>(handle));
     }
 
-    bool stb_font_file_adapter::get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point,
+    bool stb_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
         const char16_t num_code, const int font_size, character_info *info) {
         auto character_infos = std::make_unique<stbtt_packedchar[]>(num_code);
+        std::unique_ptr<stbtt_pack_context> *context_ptr = contexts_.get(handle);
 
-        stbtt_PackSetOversampling(&context_, 2, 2);
+        if (!context_ptr) {
+            return false;
+        }
+
+        stbtt_pack_context *context = context_ptr->get();
+        stbtt_PackSetOversampling(context, 2, 2);
 
         stbtt_pack_range range;
         range.array_of_unicode_codepoints = unicode_point;
@@ -291,7 +312,7 @@ namespace eka2l1::epoc::adapter {
         range.num_chars = num_code;
         range.first_unicode_codepoint_in_range = start_code;
 
-        if (!stbtt_PackFontRanges(&context_, data_.data(), static_cast<int>(idx), &range, 1)) {
+        if (!stbtt_PackFontRanges(context, data_.data(), static_cast<int>(idx), &range, 1)) {
             return false;
         }
 

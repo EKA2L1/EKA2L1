@@ -24,8 +24,19 @@
 #include <stb_rect_pack.h>
 
 namespace eka2l1::epoc::adapter {
+    static bool is_gdr_pack_context_free(gdr_font_atlas_pack_context &ctx) {
+        return (ctx.pack_dest_ == nullptr);
+    }
+
+    static void free_gdr_pack_context(gdr_font_atlas_pack_context &ctx) {
+        ctx.pack_nodes_.clear();
+        ctx.pack_context_.reset();
+        ctx.pack_dest_ = nullptr;
+    }
+
     // Do you like fonts? I dont (pent0)
-    gdr_font_file_adapter::gdr_font_file_adapter(std::vector<std::uint8_t> &data) {
+    gdr_font_file_adapter::gdr_font_file_adapter(std::vector<std::uint8_t> &data)
+        : pack_contexts_(is_gdr_pack_context_free, free_gdr_pack_context) {
         // Instantiate a read-only buffer stream
         buf_stream_ = std::make_unique<common::ro_buf_stream>(&data[0], data.size());
         
@@ -86,6 +97,11 @@ namespace eka2l1::epoc::adapter {
         }
 
         loader::gdr::typeface &the_typeface = store_.typefaces_[idx];
+
+        metrics.max_height = 0;
+        metrics.max_width = 0;
+        metrics.max_depth = 0;
+        metrics.ascent = 0;
 
         for (std::size_t i = 0; i < the_typeface.font_bitmaps_.size(); i++) {
             metrics.max_width = std::max<std::int16_t>(static_cast<std::int16_t>(the_typeface.font_bitmaps_[i]->header_.max_char_width_in_pixels_), metrics.max_width);
@@ -296,24 +312,26 @@ namespace eka2l1::epoc::adapter {
         }
     }
 
-    bool gdr_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
-        if (pack_context_) {
-            // The atlas rendering is still active!
+    std::int32_t gdr_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+        gdr_font_atlas_pack_context context;
+        context.pack_context_ = std::make_unique<stbrp_context>();
+        context.pack_nodes_.resize(atlas_size.y);
+
+        stbrp_init_target(context.pack_context_.get(), atlas_size.x, atlas_size.y, context.pack_nodes_.data(), static_cast<int>(context.pack_nodes_.size()));
+        context.pack_dest_ = atlas_ptr;
+        context.pack_size_ = atlas_size;
+
+        return static_cast<std::int32_t>(pack_contexts_.add(context));
+    }
+
+    bool gdr_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code,
+        const int font_size, character_info *info) {
+        gdr_font_atlas_pack_context *context = pack_contexts_.get(handle);
+
+        if (!context) {
             return false;
         }
 
-        pack_context_ = std::make_unique<stbrp_context>();
-        pack_nodes_.resize(atlas_size.y);
-
-        stbrp_init_target(pack_context_.get(), atlas_size.x, atlas_size.y, pack_nodes_.data(), static_cast<int>(pack_nodes_.size()));
-        pack_dest_ = atlas_ptr;
-        pack_size_ = atlas_size;
-
-        return true;
-    }
-
-    bool gdr_font_file_adapter::get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code, const int font_size,
-        character_info *info) {
         std::vector<stbrp_rect> rect_build;
         std::vector<loader::gdr::character*> the_chars;
         rect_build.resize(num_code);
@@ -338,7 +356,7 @@ namespace eka2l1::epoc::adapter {
             the_chars.push_back(c);
         }
 
-        if (stbrp_pack_rects(pack_context_.get(), rect_build.data(), num_code) == 0) {
+        if (stbrp_pack_rects(context->pack_context_.get(), rect_build.data(), num_code) == 0) {
             return false;
         }
 
@@ -371,7 +389,7 @@ namespace eka2l1::epoc::adapter {
                         const float x_in_rect = static_cast<float>(x - rect_build[i].x);
 
                         const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y_in_rect / scale_factor) * target_width + static_cast<std::int16_t>(x_in_rect / scale_factor));
-                        pack_dest_[pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
+                        context->pack_dest_[context->pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
                     }
                 }
             }
@@ -380,8 +398,7 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
-    void gdr_font_file_adapter::end_get_atlas() {
-        pack_context_.reset();
-        pack_dest_ = nullptr;
+    void gdr_font_file_adapter::end_get_atlas(const std::int32_t handle) {
+        pack_contexts_.remove(handle);
     }
 }

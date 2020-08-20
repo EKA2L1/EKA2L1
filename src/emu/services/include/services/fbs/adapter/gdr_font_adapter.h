@@ -23,21 +23,25 @@
 #include <stb_rect_pack.h>
 
 #include <common/buffer.h>
+#include <common/container.h>
 #include <loader/gdr.h>
 
 #include <vector>
 
 namespace eka2l1::epoc::adapter {
+    struct gdr_font_atlas_pack_context {
+        std::vector<stbrp_node> pack_nodes_;
+        std::unique_ptr<stbrp_context> pack_context_;
+        std::uint8_t *pack_dest_;
+        eka2l1::vec2 pack_size_;
+    };
+
     class gdr_font_file_adapter : public font_file_adapter_base {
         loader::gdr::file_store store_;
         std::unique_ptr<common::ro_stream> buf_stream_;
 
         std::vector<std::uint32_t*> dynamic_alloc_list_;
-
-        std::vector<stbrp_node> pack_nodes_;
-        std::unique_ptr<stbrp_context> pack_context_;
-        std::uint8_t *pack_dest_;
-        eka2l1::vec2 pack_size_;
+        common::identity_container<gdr_font_atlas_pack_context> pack_contexts_;
 
     protected:
         loader::gdr::character *get_character(const std::size_t idx, std::uint32_t code);
@@ -61,12 +65,12 @@ namespace eka2l1::epoc::adapter {
 
         void free_glyph_bitmap(std::uint8_t *data) override;
 
-        bool begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
+        std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) override;
 
-        bool get_glyph_atlas(const std::size_t idx, const char16_t start_code, int *unicode_point,
+        bool get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
             const char16_t num_code, const int font_size, character_info *info) override;
 
-        void end_get_atlas() override;
+        void end_get_atlas(const std::int32_t handle) override;
 
         glyph_bitmap_type get_output_bitmap_type() const override {
             return monochrome_glyph_bitmap;
