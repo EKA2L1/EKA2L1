@@ -79,9 +79,6 @@ namespace eka2l1::epoc {
             fifo_element element(static_cast<std::uint32_t>(q_.size()) + 1, evt);
             q_.push_back(std::move(element));
 
-            // An event is pushed, we should finish notification
-            nof.complete(0);
-
             return static_cast<std::uint32_t>(q_.size());
         }
 
