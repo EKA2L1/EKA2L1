@@ -322,11 +322,14 @@ namespace eka2l1::epoc::adapter {
             const char16_t ucode = (unicode_point) ? static_cast<char16_t>(unicode_point[i]) : start_code + i;
             loader::gdr::character *c = get_character(idx, ucode);
 
+            rect_build[i].x = 0;
+            rect_build[i].y = 0;
+
             if (!c) {
                 rect_build[i].w = 0;
                 rect_build[i].h = 0;
             } else {
-                const float scale_factor = static_cast<float>(c->metric_->height_in_pixels_) / font_size;
+                const float scale_factor = font_size / static_cast<float>(c->metric_->height_in_pixels_);
 
                 rect_build[i].w = static_cast<stbrp_coord>((c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_ - c->metric_->right_adjust_in_pixels_) * scale_factor);
                 rect_build[i].h = font_size;
@@ -335,7 +338,7 @@ namespace eka2l1::epoc::adapter {
             the_chars.push_back(c);
         }
 
-        if (stbrp_pack_rects(pack_context_.get(), rect_build.data(), num_code) != 1) {
+        if (stbrp_pack_rects(pack_context_.get(), rect_build.data(), num_code) == 0) {
             return false;
         }
 
@@ -346,7 +349,7 @@ namespace eka2l1::epoc::adapter {
             info[i].x1 = rect_build[i].x + rect_build[i].w;
             info[i].y1 = rect_build[i].y + rect_build[i].h;
 
-            const float scale_factor = static_cast<float>(the_chars[i]->metric_->height_in_pixels_) / font_size;
+            const float scale_factor = font_size / static_cast<float>(the_chars[i]->metric_->height_in_pixels_);
             const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
                 the_chars[i]->metric_->right_adjust_in_pixels_;
 
