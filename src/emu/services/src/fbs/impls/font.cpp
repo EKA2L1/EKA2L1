@@ -538,13 +538,16 @@ namespace eka2l1 {
 
         fbs_server *serv = server<fbs_server>();
 
+        // NOTE: There's no consideration right now taken on nearest font in pixels vs in twips.
         const bool is_twips = is_opcode_ruler_twips(ctx->msg->function);
         const bool is_design_height = (serv->kern->is_eka1() || (!size_info.has_value()) || 
             (ctx->msg->function == fbs_nearest_font_design_height_in_twips) ||
             (ctx->msg->function == fbs_nearest_font_design_height_in_pixels));
 
-        if (is_twips) {
-            // TODO: More proper things
+        // For eka1, it's always in twips for spec height.
+        // I don't know why when I tested with eka2, this height starts to be in pixels for pixel opcode.
+        // TODO: Find out if spec height is always in twips for eka2.
+        if (serv->kern->is_eka1() || is_twips) {
             spec.height = static_cast<std::int32_t>(static_cast<float>(spec.height) / 15);
         }
 

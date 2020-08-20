@@ -93,11 +93,11 @@ namespace eka2l1 {
             // Move get nearest font to be after set pixel size in twips
             switch (ctx->msg->function) {
             case fbs_set_pixel_size_in_twips + 1:
-                ctx->msg->function = fbs_nearest_font_max_height_in_twips;
+                ctx->msg->function = fbs_nearest_font_design_height_in_twips;
                 break;
 
             case fbs_set_pixel_size_in_twips + 2:
-                ctx->msg->function = fbs_nearest_font_max_height_in_pixels;
+                ctx->msg->function = fbs_nearest_font_design_height_in_pixels;
                 break;
 
             default: {
