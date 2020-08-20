@@ -343,31 +343,36 @@ namespace eka2l1::epoc::adapter {
         }
 
         for (char16_t i = 0; i < num_code; i++) {
-            // Copy those info to character infos
-            info[i].x0 = rect_build[i].x;
-            info[i].y0 = rect_build[i].y;
-            info[i].x1 = rect_build[i].x + rect_build[i].w;
-            info[i].y1 = rect_build[i].y + rect_build[i].h;
+            if (the_chars[i]) {
+                // Copy those info to character infos
+                info[i].x0 = rect_build[i].x;
+                info[i].y0 = rect_build[i].y;
+                info[i].x1 = rect_build[i].x + rect_build[i].w;
+                info[i].y1 = rect_build[i].y + rect_build[i].h;
 
-            const float scale_factor = font_size / static_cast<float>(the_chars[i]->metric_->height_in_pixels_);
-            const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
-                the_chars[i]->metric_->right_adjust_in_pixels_;
+                const float scale_factor = font_size / static_cast<float>(the_chars[i]->metric_->height_in_pixels_);
+                const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
+                    the_chars[i]->metric_->right_adjust_in_pixels_;
 
-            const std::int16_t target_height = the_chars[i]->metric_->height_in_pixels_;
+                const std::int16_t target_height = the_chars[i]->metric_->height_in_pixels_;
 
-            info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
-            info[i].yoff = the_chars[i]->metric_->ascent_in_pixels_ * scale_factor;
-            info[i].xoff2 = info[i].xoff + scale_factor * target_width;
-            info[i].yoff2 =  info[i].yoff + scale_factor * target_height;
-            info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
+                info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
+                info[i].yoff = the_chars[i]->metric_->ascent_in_pixels_ * scale_factor;
+                info[i].xoff2 = info[i].xoff + scale_factor * target_width;
+                info[i].yoff2 =  info[i].yoff + scale_factor * target_height;
+                info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
 
-            loader::gdr::bitmap &bmp = the_chars[i]->data_;
+                loader::gdr::bitmap &bmp = the_chars[i]->data_;
 
-            // UWU gonna copy data to you. Simple scaling algorithm WARNING!
-            for (int y = rect_build[i].y; y < rect_build[i].y + rect_build[i].h; y++) {
-                for (int x = rect_build[i].x; x < rect_build[i].x + rect_build[i].w; x++) {
-                    const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y * scale_factor) * target_width + static_cast<std::int16_t>(x * scale_factor));
-                    pack_dest_[pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
+                // UWU gonna copy data to you. Simple scaling algorithm WARNING!
+                for (int y = rect_build[i].y; y < rect_build[i].y + rect_build[i].h; y++) {
+                    for (int x = rect_build[i].x; x < rect_build[i].x + rect_build[i].w; x++) {
+                        const float y_in_rect = static_cast<float>(y - rect_build[i].y);
+                        const float x_in_rect = static_cast<float>(x - rect_build[i].x);
+
+                        const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y_in_rect / scale_factor) * target_width + static_cast<std::int16_t>(x_in_rect / scale_factor));
+                        pack_dest_[pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
+                    }
                 }
             }
         }
