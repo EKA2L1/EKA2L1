@@ -324,6 +324,10 @@ namespace eka2l1::epoc::adapter {
         return static_cast<std::int32_t>(pack_contexts_.add(context));
     }
 
+    static float calculate_scale_factor_of_font(const int target_size, const int font_general_height, const int char_height) {
+        return static_cast<float>(target_size) / ((char_height == 0) ? static_cast<float>(font_general_height) : static_cast<float>(char_height));
+    }
+
     bool gdr_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code,
         const int font_size, character_info *info) {
         gdr_font_atlas_pack_context *context = pack_contexts_.get(handle);
@@ -335,6 +339,9 @@ namespace eka2l1::epoc::adapter {
         std::vector<stbrp_rect> rect_build;
         std::vector<loader::gdr::character*> the_chars;
         rect_build.resize(num_code);
+        
+        epoc::open_font_metrics metrics;
+        get_metrics(idx, metrics);
 
         for (char16_t i = 0; i < num_code; i++) {
             const char16_t ucode = (unicode_point) ? static_cast<char16_t>(unicode_point[i]) : start_code + i;
@@ -347,7 +354,7 @@ namespace eka2l1::epoc::adapter {
                 rect_build[i].w = 0;
                 rect_build[i].h = 0;
             } else {
-                const float scale_factor = font_size / static_cast<float>(c->metric_->height_in_pixels_);
+                const float scale_factor = calculate_scale_factor_of_font(font_size, metrics.design_height, c->metric_->height_in_pixels_);
 
                 rect_build[i].w = static_cast<stbrp_coord>((c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_ - c->metric_->right_adjust_in_pixels_) * scale_factor);
                 rect_build[i].h = font_size;
@@ -368,7 +375,7 @@ namespace eka2l1::epoc::adapter {
                 info[i].x1 = rect_build[i].x + rect_build[i].w;
                 info[i].y1 = rect_build[i].y + rect_build[i].h;
 
-                const float scale_factor = font_size / static_cast<float>(the_chars[i]->metric_->height_in_pixels_);
+                const float scale_factor = calculate_scale_factor_of_font(font_size, metrics.design_height, the_chars[i]->metric_->height_in_pixels_);
                 const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
                     the_chars[i]->metric_->right_adjust_in_pixels_;
 
@@ -392,6 +399,16 @@ namespace eka2l1::epoc::adapter {
                         context->pack_dest_[context->pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
                     }
                 }
+            } else {
+                info[i].xoff = 0;
+                info[i].xoff2 = 0;
+                info[i].yoff = 0;
+                info[i].yoff2 = 0;
+                info[i].xadv = 0;
+                info[i].x0 = 0;
+                info[i].y0 = 0;
+                info[i].x1 = 0;
+                info[i].y1 = 0;
             }
         }
 
