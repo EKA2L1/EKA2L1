@@ -450,7 +450,15 @@ namespace eka2l1::epoc {
 
         to_get_count = common::min<std::int32_t>(to_get_count, static_cast<std::int32_t>(redraw_region.rects_.size()));
 
-        context.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t*>(redraw_region.rects_.data()),
+        std::vector<eka2l1::rect> transformed;
+        transformed.resize(to_get_count);
+
+        for (std::size_t i = 0; i < to_get_count; i++) {
+            transformed[i] = redraw_region.rects_[i];
+            transformed[i].transform_to_symbian_rectangle();
+        }
+
+        context.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t*>(transformed.data()),
             to_get_count * sizeof(eka2l1::rect));
         context.complete(epoc::error_none);
     }
