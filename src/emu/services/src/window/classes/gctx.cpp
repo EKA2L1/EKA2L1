@@ -186,24 +186,22 @@ namespace eka2l1::epoc {
                 the_clip = attached_window->redraw_rect_curr;
                 use_clipping = true;
             } else {
-                if (attached_window->redraw_region.empty()) {
-                    cmd_builder->set_clipping(false);
-                    cmd_builder->set_stencil(false);
-                    
-                    return;
-                }
+                // Developement document says that when not being redrawn, drawing is clipped to non-invalid part.
+                // But so far, I have not been able to see any open source code points to that being true. Even simple test can prove that's false.
+                // So for now, we let drawing happens on the window with no restrictions. Invalid region will still be invalidated.
+                cmd_builder->set_clipping(false);
+                cmd_builder->set_stencil(false);
 
-                use_clipping = false;
-                stencil_one_for_valid = false;
-
-                the_region = &attached_window->redraw_region;
+                return;
             }
         } else {
             if (attached_window->flags & epoc::window_user::flags_in_redraw) {
                 clip_region_temp->add_rect(attached_window->redraw_rect_curr);
             } else {
                 clip_region_temp->add_rect(attached_window->bounding_rect());
-                clip_region_temp->eliminate(attached_window->redraw_region);
+
+                // Following the upper comment, assume there's no invalid region.
+                // clip_region_temp->eliminate(attached_window->redraw_region);
             }
 
             common::region personal_clipping;
