@@ -43,10 +43,10 @@ namespace eka2l1::epoc {
     }
 
     void window_group::receive_focus(service::ipc_context &context, ws_cmd &cmd) {
-        flags &= ~focus_receiveable;
+        flags &= ~flag_focus_receiveable;
 
         if (*reinterpret_cast<bool *>(cmd.data_ptr)) {
-            flags |= focus_receiveable;
+            flags |= flag_focus_receiveable;
 
             LOG_TRACE("Request group {} to enable keyboard focus", common::ucs2_to_utf8(name));
         } else {
@@ -58,8 +58,7 @@ namespace eka2l1::epoc {
     }
 
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
-        : window(client, scr, parent, window_kind::group)
-        , flags(0) {
+        : window(client, scr, parent, window_kind::group) {
         // Create window group as child
         top = std::make_unique<window_top_user>(client, scr, this);
         child = top.get();
@@ -71,6 +70,27 @@ namespace eka2l1::epoc {
         return { 0, 0 };
     }
 
+    void window_group::queue_message_data(const std::uint8_t *data, const std::size_t data_size) {
+        message_data data_vec;
+        data_vec.resize(data_size);
+
+        std::copy(data, data + data_size, data_vec.begin());
+        msg_datas.push(std::move(data_vec));
+    }
+
+    void window_group::get_message_data(std::uint8_t *data, std::size_t &dest_size) {
+        if (msg_datas.empty()) {
+            dest_size = 0;
+            return;
+        }
+
+        message_data data_vec = std::move(msg_datas.front());
+        msg_datas.pop();
+
+        dest_size = common::min<std::size_t>(data_vec.size(), dest_size);
+        std::copy(data_vec.begin(), data_vec.begin() + dest_size, data);
+    }
+    
     void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
         // Warn myself in the future!
         LOG_WARN("Set cursor text is mostly a stubbed now");

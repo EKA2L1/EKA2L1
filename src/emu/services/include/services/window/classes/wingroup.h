@@ -23,28 +23,26 @@
 #include <drivers/graphics/graphics.h>
 #include <services/window/classes/winbase.h>
 
+#include <vector>
+
 namespace eka2l1::epoc {
     struct window_top_user;
+    using message_data = std::vector<std::uint8_t>;
 
     struct window_group : public epoc::window {
         std::u16string name;
         std::unique_ptr<window_top_user> top;
-
-        enum {
-            focus_receiveable = 0x1000
-        };
-
-        std::uint32_t flags;
+        std::queue<message_data> msg_datas;
 
         bool can_receive_focus() {
-            return flags & focus_receiveable;
+            return flags & flag_focus_receiveable;
         }
 
         void set_receive_focus(const bool val) {
-            flags &= ~focus_receiveable;
+            flags &= ~flag_focus_receiveable;
 
             if (val)
-                flags |= focus_receiveable;
+                flags |= flag_focus_receiveable;
         }
 
         explicit window_group(window_server_client_ptr client, screen *scr, epoc::window *parent,
@@ -59,5 +57,8 @@ namespace eka2l1::epoc {
 
         void lost_focus();
         void gain_focus();
+
+        void queue_message_data(const std::uint8_t *data, const std::size_t data_size);
+        void get_message_data(std::uint8_t *data, std::size_t &dest_size);
     };
 }

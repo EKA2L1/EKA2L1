@@ -244,6 +244,31 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void window::set_fade(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        ws_cmd_set_fade *fade_param = reinterpret_cast<ws_cmd_set_fade *>(cmd.data_ptr);
+
+        flags &= ~flags_faded;
+        flags &= ~flags_faded_also_children;
+        flags &= ~flags_faded_default_param;
+
+        if (fade_param->flags & 1) {
+            flags |= flags_faded;
+        }
+
+        if (fade_param->flags & 2) {
+            flags |= flags_faded_also_children;
+        }
+
+        if (fade_param->flags & 4) {
+            flags |= flags_faded_default_param;
+
+            black_map = fade_param->black_map;
+            white_map = fade_param->white_map;
+        }
+
+        ctx.complete(epoc::error_none);
+    }
+
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
 
@@ -327,6 +352,11 @@ namespace eka2l1::epoc {
 
         case EWsWinOpInquireOffset: {
             inquire_offset(ctx, cmd);
+            return true;
+        }
+
+        case EWsWinOpSetFade: {
+            set_fade(ctx, cmd);
             return true;
         }
 

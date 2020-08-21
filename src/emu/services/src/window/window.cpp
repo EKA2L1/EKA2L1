@@ -371,9 +371,17 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
-        ws_cmd_send_event_to_window_group *evt = reinterpret_cast<decltype(evt)>(cmd.data_ptr);
-        queue_event(evt->evt);
+        ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group*>(cmd.data_ptr);
+        epoc::window_group *group = get_ws().get_group_from_id(evt.id);
 
+        if (!group) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        evt.evt.handle = group->client_handle;
+
+        queue_event(evt.evt);
         ctx.complete(epoc::error_none);
     }
 
@@ -386,10 +394,49 @@ namespace eka2l1::epoc {
             return;
         }
 
-        epoc::event evt(group->get_client_handle(), epoc::event_code::event_messages_ready);
-        evt.time = common::get_current_time_in_microseconds_since_1ad();
-        queue_event(evt);
+        kernel::process *caller_pr = ctx.msg->own_thr->owning_process();
 
+        epoc::desc8 *msg_data_des = msg->data.get(caller_pr);
+        std::uint8_t *msg_data = reinterpret_cast<std::uint8_t*>(msg_data_des->get_pointer(caller_pr));
+
+        if (!msg_data) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        group->queue_message_data(msg_data, msg->data_length);
+
+        epoc::event evt(group->get_client_handle(), epoc::event_code::event_messages_ready);
+
+        evt.time = common::get_current_time_in_microseconds_since_1ad();
+        evt.msg_ready_evt_.window_group_id = group->id;
+        evt.msg_ready_evt_.message_uid = msg->uid;
+        evt.msg_ready_evt_.message_parameters_size = msg->data_length;
+
+        queue_event(evt);
+        ctx.complete(epoc::error_none);
+    }
+
+    void window_server_client::fetch_message(service::ipc_context &ctx, ws_cmd &cmd) {
+        const std::uint32_t group_id = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        epoc::window_group *group = get_ws().get_group_from_id(group_id);
+
+        if (!group) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        std::size_t dest_size = ctx.get_argument_max_data_size(reply_slot);
+        std::uint8_t *dest_ptr = ctx.get_descriptor_argument_ptr(reply_slot);
+
+        if (!dest_ptr) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        group->get_message_data(dest_ptr, dest_size);
+
+        ctx.set_descriptor_argument_length(reply_slot, static_cast<std::uint32_t>(dest_size));
         ctx.complete(epoc::error_none);
     }
 
@@ -716,6 +763,10 @@ namespace eka2l1::epoc {
             send_message_to_window_group(ctx, cmd);
             break;
         }
+
+        case ws_cl_op_fetch_message:
+            fetch_message(ctx, cmd);
+            break;
 
         case ws_cl_op_compute_mode: {
             LOG_TRACE("Setting compute mode not supported, instead stubbed");

@@ -74,26 +74,6 @@ namespace eka2l1::epoc {
         std::uint32_t max_pointer_buffer_;
         std::vector<epoc::event> pointer_buffer_;
 
-        enum {
-            flags_shadow_disable = 1 << 0,
-            flags_active = 1 << 1,
-            flags_visible = 1 << 2,
-            flags_allow_pointer_grab = 1 << 3,
-            flags_non_fading = 1 << 4,
-            flags_enable_alpha = 1 << 5,
-            flags_faded = 1 << 6,
-            flags_faded_default_param = 1 << 7,
-            flags_faded_also_children = 1 << 8,
-            flags_dsa = 1 << 9,
-            flags_enable_pbe = 1 << 10,
-            flags_in_redraw = 1 << 11
-        };
-
-        std::uint32_t flags;
-
-        std::uint8_t black_map = 128;
-        std::uint8_t white_map = 255;
-
         void invalidate(const eka2l1::rect &irect);
 
         explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
@@ -157,7 +137,6 @@ namespace eka2l1::epoc {
         void set_non_fading(service::ipc_context &context, ws_cmd &cmd);
         void set_size(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
-        void set_fade(service::ipc_context &context, ws_cmd &cmd);
         void set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd);
         bool clear_redraw_store();
         void store_draw_commands(service::ipc_context &context, ws_cmd &cmd);

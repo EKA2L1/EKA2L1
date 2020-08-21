@@ -149,7 +149,7 @@ namespace eka2l1 {
         std::int32_t id_or_priority;
         epoc::uid uid;
         std::int32_t data_length;
-        eka2l1::ptr<epoc::desc8> text;
+        eka2l1::ptr<epoc::desc8> data;
     };
 
     struct ws_cmd_draw_text_vertical_v94 {
@@ -219,11 +219,5 @@ namespace eka2l1 {
     struct ws_cmd_alloc_pointer_buffer {
         std::uint32_t max_points;
         std::uint32_t flags;
-    };
-
-    struct s_event_message_ready {
-        std::int32_t window_group_id;
-        epoc::uid message_uid;
-        std::int32_t message_parameters_size;
     };
 }

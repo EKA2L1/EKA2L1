@@ -68,6 +68,27 @@ namespace eka2l1::epoc {
 
         window_kind type;
 
+        enum {
+            flags_shadow_disable = 1 << 0,
+            flags_active = 1 << 1,
+            flags_visible = 1 << 2,
+            flags_allow_pointer_grab = 1 << 3,
+            flags_non_fading = 1 << 4,
+            flags_enable_alpha = 1 << 5,
+            flags_faded = 1 << 6,
+            flags_faded_default_param = 1 << 7,
+            flags_faded_also_children = 1 << 8,
+            flags_dsa = 1 << 9,
+            flags_enable_pbe = 1 << 10,
+            flags_in_redraw = 1 << 11,
+            flag_focus_receiveable = 1 << 12,
+        };
+    
+        std::uint32_t flags;
+
+        std::uint8_t black_map = 128;
+        std::uint8_t white_map = 255;
+
         std::uint32_t get_client_handle() const {
             return client_handle;
         }
@@ -97,6 +118,7 @@ namespace eka2l1::epoc {
          */
         void inquire_offset(service::ipc_context &ctx, ws_cmd &cmd);
 
+        void set_fade(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         /*! \brief Generic event queueing
@@ -161,7 +183,8 @@ namespace eka2l1::epoc {
             , type(window_kind::normal)
             , parent(nullptr)
             , sibling(nullptr)
-            , child(nullptr) {
+            , child(nullptr)
+            , flags(flags_visible) {
             set_parent(parent);
         }
 
@@ -170,7 +193,8 @@ namespace eka2l1::epoc {
             , type(type)
             , parent(nullptr)
             , sibling(nullptr)
-            , child(nullptr) {
+            , child(nullptr)
+            , flags(flags_visible) {
             set_parent(parent);
         }
 

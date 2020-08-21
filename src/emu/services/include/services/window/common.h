@@ -33,6 +33,8 @@
 #include <common/e32inc.h>
 #include <drivers/graphics/emu_window.h>
 #include <e32keys.h>
+
+#include <utils/consts.h>
 #include <utils/des.h>
 
 enum {
@@ -393,6 +395,12 @@ namespace eka2l1::epoc {
         eka2l1::vec2 parent_pos;
     };
 
+    struct message_ready_event {
+        std::int32_t window_group_id;
+        epoc::uid message_uid;
+        std::int32_t message_parameters_size;
+    };
+
     struct adv_pointer_event : public pointer_event {
         int spare1;
         int spare2;
@@ -425,13 +433,13 @@ namespace eka2l1::epoc {
         event_code type;
         std::uint32_t handle;
         std::uint64_t time;
-        epoc::buf_static<char, 32> data;
 
         // TODO: Should be only pointer event with epoc < 9.
         // For epoc9 there shouldnt be a pointer number, since there is no multi touch
         union {
             adv_pointer_event adv_pointer_evt_;
             key_event key_evt_;
+            message_ready_event msg_ready_evt_;
         };
 
         event() {}
