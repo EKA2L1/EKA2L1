@@ -100,7 +100,6 @@ namespace eka2l1::epoc::adapter {
 
         metrics.max_height = 0;
         metrics.max_width = 0;
-        metrics.max_depth = 0;
         metrics.ascent = 0;
 
         for (std::size_t i = 0; i < the_typeface.font_bitmaps_.size(); i++) {
@@ -111,7 +110,7 @@ namespace eka2l1::epoc::adapter {
 
         // No baseline correction
         metrics.baseline_correction = 0;                            // For the whole font
-        metrics.descent = metrics.max_height - metrics.ascent;      // Correct?
+        metrics.descent = -(metrics.max_height - metrics.ascent);      // Correct?
         metrics.design_height = metrics.max_height;                 // Dunno, maybe wrong ;(
         metrics.max_depth = 0;                                      // Help I dunno what this is
 
@@ -343,6 +342,8 @@ namespace eka2l1::epoc::adapter {
         epoc::open_font_metrics metrics;
         get_metrics(idx, metrics);
 
+        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(metrics.design_height);
+
         for (char16_t i = 0; i < num_code; i++) {
             const char16_t ucode = (unicode_point) ? static_cast<char16_t>(unicode_point[i]) : start_code + i;
             loader::gdr::character *c = get_character(idx, ucode);
@@ -354,8 +355,6 @@ namespace eka2l1::epoc::adapter {
                 rect_build[i].w = 0;
                 rect_build[i].h = 0;
             } else {
-                const float scale_factor = calculate_scale_factor_of_font(font_size, metrics.design_height, c->metric_->height_in_pixels_);
-
                 rect_build[i].w = static_cast<stbrp_coord>((c->metric_->move_in_pixels_ - c->metric_->left_adj_in_pixels_ - c->metric_->right_adjust_in_pixels_) * scale_factor);
                 rect_build[i].h = font_size;
             }
@@ -375,16 +374,13 @@ namespace eka2l1::epoc::adapter {
                 info[i].x1 = rect_build[i].x + rect_build[i].w;
                 info[i].y1 = rect_build[i].y + rect_build[i].h;
 
-                const float scale_factor = calculate_scale_factor_of_font(font_size, metrics.design_height, the_chars[i]->metric_->height_in_pixels_);
                 const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
                     the_chars[i]->metric_->right_adjust_in_pixels_;
 
-                const std::int16_t target_height = the_chars[i]->metric_->height_in_pixels_;
-
                 info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
-                info[i].yoff = the_chars[i]->metric_->ascent_in_pixels_ * scale_factor;
+                info[i].yoff = font_size - the_chars[i]->metric_->ascent_in_pixels_ * scale_factor;
                 info[i].xoff2 = info[i].xoff + scale_factor * target_width;
-                info[i].yoff2 =  info[i].yoff + scale_factor * target_height;
+                info[i].yoff2 =  info[i].yoff + font_size;
                 info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
 
                 loader::gdr::bitmap &bmp = the_chars[i]->data_;
@@ -396,7 +392,12 @@ namespace eka2l1::epoc::adapter {
                         const float x_in_rect = static_cast<float>(x - rect_build[i].x);
 
                         const std::uint32_t src_scale_loc = (static_cast<std::int16_t>(y_in_rect / scale_factor) * target_width + static_cast<std::int16_t>(x_in_rect / scale_factor));
-                        context->pack_dest_[context->pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
+                        if (src_scale_loc >= static_cast<std::uint32_t>(target_width * the_chars[i]->metric_->height_in_pixels_)) {
+                            // Nothing, just black
+                            context->pack_dest_[context->pack_size_.x * y + x] = 0;
+                        } else {
+                            context->pack_dest_[context->pack_size_.x * y + x] = ((bmp[src_scale_loc >> 5] >> (src_scale_loc & 31)) & 1) * 0xFF;
+                        }
                     }
                 }
             } else {
