@@ -288,5 +288,10 @@ namespace eka2l1 {
             // Symbian TRect has the second vector as the bottom right
             size = size - top;
         }
+
+        void transform_to_symbian_rectangle() {
+            // Symbian TRect has the second vector as the bottom right
+            size = size + top;
+        }
     };
 }
