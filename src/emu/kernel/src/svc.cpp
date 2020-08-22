@@ -3578,6 +3578,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000A9, library_type_eka1),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
+        BRIDGE_REGISTER(0x8000C0, process_command_line_length),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC00030, set_session_ptr),
