@@ -181,8 +181,8 @@ namespace eka2l1 {
 
     struct file_attrib {
         std::uint32_t flags{ 0 };
-        kernel::uid exclusive{ 0 };
-        std::uint32_t exclusive_count{ 0 };
+        kernel::uid owner{ 0 };
+        std::uint32_t use_count{ 0 };
 
         bool is_exlusive() const {
             return flags & static_cast<std::uint32_t>(fs_file_attrib_flag::exclusive);
@@ -213,23 +213,33 @@ namespace eka2l1 {
          * 
          * If the file attrib is not currently being claimed, the given process will claim it. If the file
          * is claimed by other process, this failed. Else, if the given process already claimed the file,
-         * the exclusive count will be increment by 1.
+         * nothing happens. You can only unclaimed when use of this file for the process claimed it reached 0.
          * 
          * \returns  False, if a process already claimed this file.
          */
         bool claim_exclusive(const kernel::uid pr_uid);
 
         /**
-         * \brief    Decrement exclusive count of the given process.
+         * \brief Increment usage of the attrib.
          * 
-         * If the given process UID currently exclusively claimed this attrib, the exclusive count will
-         * be decrement, and when it reachs zero, the claim will be freed.
+         * This only work with process UID that has already claimed this file attribute, or if this file attribute
+         * has not been claimed.
+         * 
+         * \param pr_uid        UID of the process to increment use. 
+         */
+        void increment_use(const kernel::uid pr_uid);
+
+        /**
+         * \brief    Decrement use count of the given process.
+         * 
+         * If the given process UID currently exclusively decrement use of this attrib, when it reachs zero,
+         * the claim will be freed. Any flags will also be cleared along.
          * 
          * This is used for situation where multiple file handles in a process all claimed for exclusive.
          * 
          * \param pr_uid The UID of target process.
          */
-        void decrement_exclusive(const kernel::uid pr_uid);
+        void decrement_use(const kernel::uid pr_uid);
     };
 
     class fs_server : public service::typical_server {

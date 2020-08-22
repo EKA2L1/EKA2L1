@@ -34,37 +34,39 @@
 
 namespace eka2l1 {
     bool file_attrib::claim_exclusive(const kernel::uid pr_uid) {
-        if (exclusive == 0) {
-            exclusive = pr_uid;
-            exclusive_count++;
-
+        if (owner == pr_uid) {
             flags |= static_cast<std::uint32_t>(fs_file_attrib_flag::exclusive);
-
             return true;
         }
 
-        if (pr_uid != exclusive) {
-            return false;
-        }
-
-        // Claimed again
-        exclusive_count++;
-        return true;
+        return false;
     }
 
-    void file_attrib::decrement_exclusive(const kernel::uid pr_uid) {
-        if (exclusive_count == 0) {
+    void file_attrib::increment_use(const kernel::uid pr_uid) {
+        if (use_count == 0) {
+            owner = pr_uid;
+        }
+
+        if (owner == pr_uid) {
+            use_count++;
+        }
+    }
+
+    void file_attrib::decrement_use(const kernel::uid pr_uid) {
+        if (use_count == 0) {
             return;
         }
 
-        if (pr_uid == exclusive) {
-            exclusive_count--;
+        if (pr_uid == owner) {
+            use_count--;
+        }
 
-            if (exclusive_count == 0) {
-                // Null out
-                exclusive = 0;
-                flags &= ~static_cast<std::uint32_t>(fs_file_attrib_flag::exclusive);
-            }
+        if (use_count == 0) {
+            // Clear all flags
+            flags = 0;
+            owner = 0;
+
+            return;
         }
     }
 
@@ -475,15 +477,19 @@ namespace eka2l1 {
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
-        // TODO: Let RAII do the work
-        // Vtable so buggy
-        vfs_file->close();
-
         // Delete temporary file
         if (node->temporary) {
             std::u16string path = vfs_file->file_name();
             ctx->sys->get_io_system()->delete_entry(path);
         }
+
+        auto &node_attrib = server<fs_server>()->attribs[vfs_file->file_name()];
+        if (node_attrib.is_exlusive()) {
+            node_attrib.decrement_use(ctx->msg->own_thr->owning_process()->unique_id());
+        }
+
+        // Finally, close the file
+        vfs_file->close();
 
         obj_table_.remove(*handle_res);
         ctx->complete(epoc::error_none);
@@ -724,6 +730,8 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+#pragma optimize("", off)
+
     int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {
         int real_mode = org_mode & ~(epoc::fs::file_stream_text | epoc::fs::file_read_async_all | epoc::fs::file_big_size);
         epoc::fs::file_mode share_mode = static_cast<epoc::fs::file_mode>(real_mode & 0b11);
@@ -745,11 +753,13 @@ namespace eka2l1 {
 
         if (node_attrib.is_exlusive()) {
             // Check if we can open it
-            if (node_attrib.exclusive != own_pr_uid) {
+            if (node_attrib.owner != own_pr_uid) {
                 // Access denied
                 return epoc::error_access_denied;
             }
         }
+
+        node_attrib.increment_use(own_pr_uid);
 
         if (share_mode == epoc::fs::file_share_exclusive) {
             // Try to claim and return denied if we can't

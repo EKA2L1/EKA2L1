@@ -338,8 +338,10 @@ namespace eka2l1 {
 
         eka2l1::io_system *io = ctx->sys->get_io_system();
 
+        // What you want more? The doc does not say anything, and app wants this
+        // Example: n-gage 2.0
         if (io->exist(private_path)) {
-            ctx->complete(epoc::error_already_exists);
+            ctx->complete(epoc::error_none);
             return;
         }
 
