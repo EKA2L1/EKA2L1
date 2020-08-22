@@ -1759,6 +1759,23 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(thr->get_exit_type());
     }
 
+    BRIDGE_FUNC(std::int32_t, process_open_by_id, std::uint32_t id, const epoc::owner_type owner) {
+        auto pr = kern->get_by_id<kernel::process>(id);
+
+        if (!pr) {
+            LOG_ERROR("Unable to find process with ID: {}", id);
+            return epoc::error_not_found;
+        }
+
+        const kernel::handle h = kern->open_handle(pr, static_cast<kernel::owner_type>(owner));
+
+        if (h == INVALID_HANDLE) {
+            return epoc::error_general;
+        }
+
+        return static_cast<std::int32_t>(h);
+    }
+
     /*****************************/
     /* PROPERTY */
     /****************************/
@@ -3332,6 +3349,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x6F, mutex_create),
         BRIDGE_REGISTER(0x70, semaphore_create),
         BRIDGE_REGISTER(0x71, thread_open_by_id),
+        BRIDGE_REGISTER(0x72, process_open_by_id),
         BRIDGE_REGISTER(0x73, thread_kill),
         BRIDGE_REGISTER(0x74, thread_logon),
         BRIDGE_REGISTER(0x75, thread_logon_cancel),
