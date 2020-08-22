@@ -251,7 +251,7 @@ namespace eka2l1::common {
         explicit ini_linestream(const std::string &l)
             : line(l)
             , counter(0) {
-            if (line.back() == '\r') {
+            if ((line.length() > 0) && (line.back() == '\r')) {
                 line.erase(line.length() - 1, 1);
             }
         }
