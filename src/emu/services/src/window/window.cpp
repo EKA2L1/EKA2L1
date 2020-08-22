@@ -442,7 +442,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_find_window_group_identifier *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
-        epoc::window_group *group = reinterpret_cast<epoc::window_group *>(primary_device->scr->root->child);
+        epoc::window_group *group = nullptr;
 
         if (find_info->previous_id) {
             // Find our lost sibling!!!!! Bring him to me....
@@ -457,6 +457,8 @@ namespace eka2l1::epoc {
             // She's sweet but sibling...
             // A little sibling
             group = reinterpret_cast<epoc::window_group *>(group->sibling);
+        } else {
+            group = get_ws().get_group_from_id(epoc::ws::ANY_UID);
         }
 
         const char16_t *win_group_name_ptr = reinterpret_cast<char16_t *>(find_info + 1);
@@ -474,7 +476,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::find_window_group_id_thread(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_find_window_group_identifier_thread *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
-        epoc::window_group *group = reinterpret_cast<epoc::window_group *>(primary_device->scr->root->child);
+        epoc::window_group *group = nullptr;
 
         if (find_info->previous_id) {
             group = get_ws().get_group_from_id(find_info->previous_id);
@@ -486,6 +488,8 @@ namespace eka2l1::epoc {
             }
 
             group = reinterpret_cast<epoc::window_group *>(group->sibling);
+        } else {
+            group = get_ws().get_group_from_id(epoc::ws::ANY_UID);
         }
 
         const kernel::uid thr_id = find_info->thread_id;
@@ -1331,7 +1335,7 @@ namespace eka2l1 {
 
         while (current) {
             epoc::window_group *group = reinterpret_cast<epoc::window_group *>(current->root->child);
-            while (group && group->id != id) {
+            while (group && ((id == epoc::ws::ANY_UID) || (group->id != id))) {
                 group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 

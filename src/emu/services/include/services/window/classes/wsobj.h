@@ -29,6 +29,8 @@ namespace eka2l1::epoc {
     namespace ws {
         using uid = std::uint32_t;
         using handle = std::uint32_t;
+
+        static constexpr uid ANY_UID = 0xFFFFFFFF;
     };
 
     class window_server_client;
