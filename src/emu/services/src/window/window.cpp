@@ -381,7 +381,7 @@ namespace eka2l1::epoc {
 
         evt.evt.handle = group->client_handle;
 
-        queue_event(evt.evt);
+        group->client->queue_event(evt.evt);
         ctx.complete(epoc::error_none);
     }
 
@@ -413,7 +413,7 @@ namespace eka2l1::epoc {
         evt.msg_ready_evt_.message_uid = msg->uid;
         evt.msg_ready_evt_.message_parameters_size = msg->data_length;
 
-        queue_event(evt);
+        group->client->queue_event(evt);
         ctx.complete(epoc::error_none);
     }
 
