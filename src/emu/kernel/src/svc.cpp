@@ -1504,16 +1504,25 @@ namespace eka2l1::epoc {
         type->uid3 = std::get<2>(types_of_codeseg);
     }
 
-    BRIDGE_FUNC(void, library_entry_point_queries, kernel::handle h, std::int32_t *total, std::uint32_t *list_ptr) {
+    BRIDGE_FUNC(std::int32_t, library_entry_point_queries, kernel::handle h, std::int32_t *total, eka2l1::ptr<address> *list_ptr_guest) {
         kernel::library *lib = kern->get<kernel::library>(h);
 
         if (!lib) {
-            return;
+            return epoc::error_bad_handle;
         }
 
-        if (get_call_list_from_codeseg(lib->get_codeseg(), kern->crr_process(), total, list_ptr) != epoc::error_none) {
-            // Do nothing. Just reserved for future.
+        kernel::process *crr_process = kern->crr_process();
+
+        if (!list_ptr_guest) {
+            return epoc::error_argument;
         }
+
+        address *ep_list = list_ptr_guest->get(crr_process);
+        if (!ep_list) {
+            return epoc::error_argument;
+        }
+
+        return get_call_list_from_codeseg(lib->get_codeseg(), kern->crr_process(), total, ep_list);
     }
 
     /************************/
