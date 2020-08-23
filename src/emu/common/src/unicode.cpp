@@ -596,7 +596,7 @@ namespace eka2l1::common {
                 break;
             }
 
-            actions_.emplace_back(static_cast<unicode_comp_state>(*this), uc);
+            actions_.emplace_back(static_cast<unicode_comp_state&>(*this), uc);
             if (actions_.size() == ACTION_FLUSH_SIZE) {
                 write_run();
             }
