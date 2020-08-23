@@ -258,10 +258,15 @@ namespace eka2l1::epoc {
 
     // TODO, IMPORTANT (pent0): UCS2 string absorb needs Unicode compressor.
     template <typename T>
-    void absorb_des_string(std::basic_string<T> &str, common::chunkyseri &seri) {
+    void absorb_des_string(std::basic_string<T> &str, common::chunkyseri &seri, const bool unicode) {
         std::uint32_t len = static_cast<std::uint32_t>(str.length());
 
         if (seri.get_seri_mode() != common::SERI_MODE_READ) {
+            std::string raw;
+            
+            raw.resize(str.length() * sizeof(T));
+            std::memcpy(raw.data(), str.data(), raw.length());
+
             len = len * 2 + (sizeof(T) % 2);
 
             if (len <= (0xFF >> 1)) {
@@ -277,7 +282,19 @@ namespace eka2l1::epoc {
                 }
             }
 
-            len = static_cast<std::uint32_t>(str.length());
+            if (unicode) {
+                int source_size = static_cast<int>(str.length() * sizeof(T));
+                int dest_size = source_size;
+
+                // Compress the data
+                common::unicode_compressor compressor;
+                len = compressor.compress(reinterpret_cast<std::uint8_t*>(str.data()), source_size, reinterpret_cast<std::uint8_t*>(raw.data()),
+                    dest_size);
+            } else {
+                len = static_cast<std::uint32_t>(raw.length());
+            }
+
+            seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&raw[0]), len);
         } else {
             std::uint8_t b1 = 0;
             seri.absorb(b1);
@@ -300,9 +317,24 @@ namespace eka2l1::epoc {
 
             len >>= 1;
             str.resize(len);
-        }
+            
+            if (unicode) {
+                std::string raw_temp;
+                raw_temp.resize((len + 5) * sizeof(T));
+                str.resize(len);
 
-        seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len * sizeof(T));
+                seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&raw_temp[0]), raw_temp.length());
+
+                int source_size = static_cast<int>(raw_temp.length());
+                int dest_size = static_cast<int>(str.length() * sizeof(T));
+
+                common::unicode_expander expander;
+                expander.expand(reinterpret_cast<std::uint8_t*>(raw_temp.data()), source_size, reinterpret_cast<std::uint8_t*>(str.data()),
+                    dest_size);
+            } else {        
+                seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len * sizeof(T));
+            }
+        }
     }
 
     template <typename T>
@@ -314,7 +346,7 @@ namespace eka2l1::epoc {
             dat.copy(reinterpret_cast<char *>(data), sizeof(T));
         }
 
-        absorb_des_string(dat, seri);
+        absorb_des_string(dat, seri, false);
 
         if (seri.get_seri_mode() != common::SERI_MODE_READ) {
             *data = *reinterpret_cast<T *>(&dat[0]);
