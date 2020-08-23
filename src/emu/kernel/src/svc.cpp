@@ -1385,21 +1385,20 @@ namespace eka2l1::epoc {
     /******************************/
     /* CODE SEGMENT */
     /*****************************/
-
-    BRIDGE_FUNC(std::int32_t, static_call_list, eka2l1::ptr<std::int32_t> total_ptr, eka2l1::ptr<std::uint32_t> list_ptr_guest) {
-        kernel::process *pr = kern->crr_process();
-
-        std::uint32_t *list_ptr = list_ptr_guest.get(pr);
-        std::int32_t *total = total_ptr.get(pr);
-
+    std::int32_t get_call_list_from_codeseg(codeseg_ptr cs, process_ptr caller, std::int32_t *count, address *list_ep) {
         std::vector<uint32_t> list;
-        pr->get_codeseg()->queries_call_list(pr, list);
-        pr->get_codeseg()->unmark();
+        cs->queries_call_list(caller, list);
+        cs->unmark();
 
-        *total = static_cast<std::int32_t>(list.size());
-        memcpy(list_ptr, list.data(), sizeof(std::uint32_t) * *total);
+        *count = common::min<std::int32_t>(static_cast<std::int32_t>(list.size()), *count);
+        memcpy(list_ep, list.data(), sizeof(std::uint32_t) * *count);
 
         return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, static_call_list, std::int32_t *total, std::uint32_t *list_ptr) {
+        kernel::process *pr = kern->crr_process();
+        return get_call_list_from_codeseg(pr->get_codeseg(), pr, total, list_ptr);
     }
 
     BRIDGE_FUNC(void, static_call_done) {
@@ -1503,6 +1502,18 @@ namespace eka2l1::epoc {
         type->uid1 = std::get<0>(types_of_codeseg);
         type->uid2 = std::get<1>(types_of_codeseg);
         type->uid3 = std::get<2>(types_of_codeseg);
+    }
+
+    BRIDGE_FUNC(void, library_entry_point_queries, kernel::handle h, std::int32_t *total, std::uint32_t *list_ptr) {
+        kernel::library *lib = kern->get<kernel::library>(h);
+
+        if (!lib) {
+            return;
+        }
+
+        if (get_call_list_from_codeseg(lib->get_codeseg(), kern->crr_process(), total, list_ptr) != epoc::error_none) {
+            // Do nothing. Just reserved for future.
+        }
     }
 
     /************************/
@@ -3562,6 +3573,7 @@ namespace eka2l1::epoc {
         
         // User server calls
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
+        BRIDGE_REGISTER(0x800015, library_entry_point_queries),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
