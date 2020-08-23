@@ -7,6 +7,8 @@
  * Initial contributor: pent0
  * Contributors:
  * 
+ * Work based of Symbian Open Source.
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -24,6 +26,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 namespace eka2l1::common {
     struct unicode_comp_state {
@@ -40,12 +43,22 @@ namespace eka2l1::common {
         std::uint32_t dynamic_windows[dynamic_windows_size];
         std::uint16_t special_bases[special_base_size];
 
+        explicit unicode_comp_state() {
+            reset();
+        }
+
         void reset();
+        
+        inline bool encode_as_is(const std::uint16_t code) {
+            return (code == 0x0000) || (code == 0x0009) || (code == 0x000A) || (code == 0x00D) || ((code >= 0x0020) && (code <= 0x007F));
+        }
 
         std::uint32_t dynamic_window_base(int offset_index);
+        std::int32_t dynamic_window_offset_index(std::uint16_t code);
+        std::int32_t static_window_index(std::uint16_t code);
     };
 
-    struct unicode_expander : public unicode_comp_state {
+    struct unicode_stream: public unicode_comp_state {
         int source_pointer;
         std::uint8_t *source_buf;
 
@@ -55,20 +68,23 @@ namespace eka2l1::common {
         std::uint8_t *dest_buf;
 
         int dest_size;
-
-        unicode_expander()
+        
+        explicit unicode_stream()
             : source_pointer(0)
             , source_size(0)
             , dest_pointer(0)
             , dest_size(0) {
-            reset();
         }
 
         bool read_byte(std::uint8_t *dat);
+        bool read_byte16(std::uint16_t *dat);
         bool write_byte8(std::uint8_t b);
         bool write_byte(std::uint16_t b);
+        bool write_byte_be(std::uint16_t b);
         bool write_byte32(std::uint32_t b);
+    };
 
+    struct unicode_expander : public unicode_stream {
         bool define_window(const int index);
         bool define_expansion_window();
 
@@ -78,5 +94,39 @@ namespace eka2l1::common {
         bool handle_sbyte(const std::uint8_t sbyte);
 
         int expand(std::uint8_t *source, int &source_size, std::uint8_t *dest, int dest_size);
+    };
+
+    enum unicode_char_treatment {
+        unicode_char_treatment_plain_ascii = -2,
+        unicode_char_treatment_plain_unicode = -1,
+        unicode_char_treatment_first_dynamic = 0,
+        unicode_char_treatment_last_dynamic = 255,
+        unicode_char_treatment_first_static = 256,
+        unicode_char_treatment_last_static = 263
+    };
+
+    struct unicode_compressor: public unicode_stream {
+        struct action {
+            std::uint16_t code_;
+            std::int32_t treatment_;
+
+            explicit action(unicode_comp_state &state, const std::uint16_t code_);
+        };
+
+        std::int32_t dynamic_window_index_;
+
+        explicit unicode_compressor()
+            : dynamic_window_index_(0) {
+        }
+
+        std::vector<action> actions_;
+
+        bool write_treatment_selection(const std::int32_t treatment);
+        bool write_char(const action &c);
+        bool write_uchar(std::uint16_t c);
+        bool write_schar(const action &c);
+
+        void write_run();
+        int compress(std::uint8_t *source, int &source_size, std::uint8_t *dest, int dest_size);
     };
 }
