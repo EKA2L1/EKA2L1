@@ -214,7 +214,7 @@ namespace eka2l1 {
             }
 
             case central_repo_entry_type::string: {
-                epoc::absorb_des_string(entry.data.strd, seri);
+                epoc::absorb_des_string(entry.data.strd, seri, false);
                 break;
             }
 
