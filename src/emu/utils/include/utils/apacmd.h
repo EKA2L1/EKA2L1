@@ -53,6 +53,7 @@ namespace eka2l1::epoc::apa {
         
         explicit command_line();
 
-        void do_it(common::chunkyseri &seri);
-    }
+        void do_it_newarch(common::chunkyseri &seri);
+        std::u16string to_string(const bool oldarch);
+    };
 }
