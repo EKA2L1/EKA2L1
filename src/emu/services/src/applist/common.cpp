@@ -22,6 +22,8 @@
 
 namespace eka2l1 {
     bool apa_capability::internalize(common::ro_stream &stream) {
+        flags |= apa_capability::built_as_dll;
+
         std::uint32_t ver = 0;
         if (stream.read(&ver, 4) != 4) {
             return false;
@@ -72,6 +74,8 @@ namespace eka2l1 {
         if (ver == 3) {
             return true;
         }
+
+        flags = 0;
 
         if (stream.read(&flags, 4) != 4) {
             return false;

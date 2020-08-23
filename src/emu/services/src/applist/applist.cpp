@@ -34,6 +34,7 @@
 #include <epoc/epoc.h>
 #include <kernel/kernel.h>
 #include <loader/rsc.h>
+#include <utils/apacmd.h>
 #include <utils/bafl.h>
 #include <utils/des.h>
 #include <vfs/vfs.h>
@@ -71,6 +72,7 @@ namespace eka2l1 {
 
         apa_app_registry reg;
         reg.rsc_path = path;
+        reg.mandatory_info.app_path = eka2l1::replace_extension(path, u".app");     // It seems so.
 
         if (!read_registeration_info_aif(reinterpret_cast<common::ro_stream*>(&std_rsc_raw), reg, land_drive, 
             ideal_lang)) {
@@ -583,5 +585,19 @@ namespace eka2l1 {
                 break;
             }
         }
+    }
+
+    void apa_app_registry::get_launch_parameter(std::u16string &native_executable_path, epoc::apa::command_line &args) {
+        const std::u16string app_path = mandatory_info.app_path.to_std_string(nullptr);
+
+        if (caps.flags & apa_capability::built_as_dll) {
+            native_executable_path = u"apprun.exe";
+        } else {
+            native_executable_path = mandatory_info.app_path.to_std_string(nullptr);
+        }
+
+        args.document_name_ = eka2l1::replace_extension(eka2l1::filename(app_path), u"");
+        args.executable_path_ = app_path;
+        args.default_screen_number_ = default_screen_number;
     }
 }

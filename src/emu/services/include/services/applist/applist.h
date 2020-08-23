@@ -39,6 +39,10 @@ namespace eka2l1 {
         class ro_stream;
     }
 
+    namespace epoc::apa {
+        struct command_line;
+    }
+
     struct apa_app_info {
         std::uint32_t uid; ///< The UID of the application.
         epoc::filename app_path; ///< The path to the application DLL (EKA1) / EXE (EKA2)
@@ -71,6 +75,15 @@ namespace eka2l1 {
         std::vector<data_type> data_types;
         std::vector<view_data> view_datas;
         file_ownership_list ownership_list;
+
+        /**
+         * @brief Get parameters to launch this app registry.
+         * 
+         * @param native_executable_path        Path to the host executable that runs this app.
+         * @param args                          Command line arguments. You can prefill variables that you want,
+         *                                      this function will fill parameters that you don't yet know.
+         */
+        void get_launch_parameter(std::u16string &native_executable_path, epoc::apa::command_line &args);
     };
 
     /**
@@ -151,8 +164,6 @@ namespace eka2l1 {
             AL_INITED = 0x1
         };
 
-        bool is_oldarch();
-
         void sort_registry_list();
         void init();
 
@@ -228,6 +239,12 @@ namespace eka2l1 {
 
     public:
         explicit applist_server(system *sys);
+
+        /**
+         * @brief       Check if applist server instantiated needs to be worked on old architecture.
+         * @returns     True if old architecture mode is active.
+         */
+        bool is_oldarch();
 
         std::mutex list_access_mut_;
 
