@@ -45,7 +45,7 @@ namespace eka2l1 {
     class window_server;
     class oom_ui_app_server;
 
-    using app_launch_function = std::function<void(const std::u16string &path)>;
+    using app_launch_function = std::function<void(const std::u16string &path, const std::u16string &cmd_args)>;
     using selected_window_callback_function = std::function<void(void *)>;
 
     class imgui_debugger : public debugger_base {

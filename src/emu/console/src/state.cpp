@@ -80,8 +80,9 @@ namespace eka2l1::desktop {
         launch_requests.max_pending_count_ = 100;
 
         // Make debugger. Go watch Case Closed.
-        debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger.get(), [&](const std::u16string &path) {
-            launch_requests.push(path);
+        debugger = std::make_unique<eka2l1::imgui_debugger>(symsys.get(), logger.get(), [&](const std::u16string &path, const std::u16string &args) {
+            launch_request req { path, args };
+            launch_requests.push(req);
         });
 
         stage_two_inited = false;

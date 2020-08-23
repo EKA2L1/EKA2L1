@@ -30,6 +30,8 @@
 
 #include <disasm/disasm.h>
 #include <epoc/epoc.h>
+
+#include <utils/apacmd.h>
 #include <utils/locale.h>
 
 #include <kernel/kernel.h>
@@ -1457,7 +1459,14 @@ namespace eka2l1 {
                             // Launch app!
                             should_show_app_launch = false;
                             should_still_focus_on_keyboard = true;
-                            app_launch(registerations[i].mandatory_info.app_path.to_std_string(nullptr));
+
+                            epoc::apa::command_line cmdline;
+                            cmdline.launch_cmd_ = epoc::apa::command_create;
+
+                            std::u16string run_path;
+                            registerations[i].get_launch_parameter(run_path, cmdline);
+
+                            app_launch(run_path, cmdline.to_string(alserv->is_oldarch()));
                         }
                     }
                 }

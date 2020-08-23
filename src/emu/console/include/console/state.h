@@ -50,6 +50,11 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::desktop {
+    struct launch_request {
+        std::u16string path_;
+        std::u16string cmd_arg_;
+    };
+
     /**
      * \brief State of the emulator on desktop.
      */
@@ -69,7 +74,7 @@ namespace eka2l1::desktop {
         std::atomic<bool> should_ui_quit;
         std::atomic<bool> stage_two_inited;
 
-        eka2l1::request_queue<std::u16string> launch_requests;
+        eka2l1::request_queue<launch_request> launch_requests;
 
         bool first_time;
 

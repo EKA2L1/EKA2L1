@@ -443,7 +443,7 @@ namespace eka2l1::desktop {
                 break;
             }
 
-            state.symsys->load(launch.value(), u"");
+            state.symsys->load(launch->path_, launch->cmd_arg_);
 
             if (state.first_time) {
                 state.first_time = false;

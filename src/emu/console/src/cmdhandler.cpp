@@ -35,6 +35,8 @@
 #include <kernel/kernel.h>
 #include <services/applist/applist.h>
 
+#include <utils/apacmd.h>
+
 using namespace eka2l1;
 
 bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
@@ -136,7 +138,9 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         *err += " doesn't exist";
     } else {
         if (eka2l1::has_root_dir(tokstr)) {
-            emu->launch_requests.push(common::utf8_to_ucs2(tokstr));
+            desktop::launch_request lrequest { common::utf8_to_ucs2(tokstr), u"" };
+            emu->launch_requests.push(lrequest);
+
             return true;
         }
 
@@ -147,7 +151,14 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             if (common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr))
                 == tokstr) {
                 // Load the app
-                emu->launch_requests.push(reg.mandatory_info.app_path.to_std_string(nullptr));
+                epoc::apa::command_line cmdline;
+                cmdline.launch_cmd_ = epoc::apa::command_create;
+
+                desktop::launch_request req;
+                reg.get_launch_parameter(req.path_, cmdline);
+                req.cmd_arg_ = cmdline.to_string(svr->is_oldarch());
+
+                emu->launch_requests.push(req);
                 return true;
             }
         }
