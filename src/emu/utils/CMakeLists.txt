@@ -1,6 +1,7 @@
 
 
 add_library(epocutils
+        include/utils/apacmd.h
         include/utils/bafl.h
         include/utils/cardinality.h
         include/utils/cppabi.h
@@ -12,6 +13,7 @@ add_library(epocutils
         include/utils/dll.h
         include/utils/reqsts.h
         include/utils/sec.h
+        src/apacmd.cpp
         src/bafl.cpp
         src/cardinality.cpp
         src/cppabi.cpp
