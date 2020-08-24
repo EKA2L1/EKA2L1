@@ -543,7 +543,21 @@ namespace eka2l1 {
         entry.name = fname;
         entry.modified = epoc::time{ entry_hle->last_write };
 
-        ctx->write_data_to_descriptor_argument<epoc::fs::entry>(1, entry);
+        // Stub some dead value for debugging
+        entry.uid1 = entry.uid2 = entry.uid3 = 0xDEADBEEF;
+        
+        if (entry_hle->type == io_component_type::file) {
+            // Temporarily open it to read UIDs
+            symfile f = io->open_file(fname, READ_MODE | BIN_MODE);
+
+            if (f) {
+                f->read_file(&entry.uid1, sizeof(entry.uid1), 1);
+                f->read_file(&entry.uid2, sizeof(entry.uid2), 1);
+                f->read_file(&entry.uid3, sizeof(entry.uid3), 1);
+            }
+        }
+
+        ctx->write_data_to_descriptor_argument<epoc::fs::entry>(1, entry, nullptr, true);
         ctx->complete(epoc::error_none);
     }
 
