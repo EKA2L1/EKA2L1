@@ -1280,6 +1280,7 @@ namespace eka2l1::epoc {
             static_cast<kernel::object_type>(obj_type), true);
 
         if (!info) {
+            name_des_ptr->set_length(pr, 0);
             return epoc::error_not_found;
         }
 
@@ -1293,6 +1294,40 @@ namespace eka2l1::epoc {
 
         name_des_ptr->assign(pr, the_full_name);
 
+        return epoc::error_none;
+    }
+
+    std::int32_t object_next_eka1(kernel_system *kern, epoc::des16 *found_result, std::int32_t *start_container_handle, epoc::desc16 *match,
+        const kernel::object_type obj_type) {
+        process_ptr pr = kern->crr_process();
+
+        if (!match || !start_container_handle || !found_result) {
+            return epoc::error_argument;
+        }
+
+        const std::string match_str = common::ucs2_to_utf8(match->to_std_string(pr));
+        std::int32_t handle_start_searching = *start_container_handle;
+
+        //LOG_TRACE("Finding object name: {}", name);
+        if (handle_start_searching > 0) {
+            // We start at the next index
+            handle_start_searching += 1;
+        }
+
+        std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching,
+            static_cast<kernel::object_type>(obj_type), true);
+
+        if (!info) {
+            found_result->set_length(pr, 0);
+            return epoc::error_not_found;
+        }
+
+        *start_container_handle = info->index;
+
+        std::string the_full_name;
+        info->obj->full_name(the_full_name);
+
+        found_result->assign(pr, common::utf8_to_ucs2(the_full_name));
         return epoc::error_none;
     }
 
@@ -1486,7 +1521,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        const std::u16string lib_filename = eka2l1::filename(lib->get_codeseg()->get_full_path(), true);
+        const std::u16string lib_filename = lib->get_codeseg()->get_full_path();
         path_to_fill->assign(kern->crr_process(), lib_filename);
     }
 
@@ -3185,6 +3220,26 @@ namespace eka2l1::epoc {
         return epoc::error_not_found;
     }
 
+    BRIDGE_FUNC(std::int32_t, des_match, epoc::desc16 *str_des, epoc::desc16 *seq_des, const std::int32_t is_fold) {
+        kernel::process *crr_process = kern->crr_process();
+
+        std::u16string source = str_des->to_std_string(crr_process);
+        std::u16string sequence_search = seq_des->to_std_string(crr_process);
+
+        const std::size_t pos = common::match_wildcard_in_string(common::ucs2_to_wstr(source), common::ucs2_to_wstr(sequence_search),
+            is_fold);
+
+        if (pos == std::wstring::npos) {
+            return epoc::error_not_found;
+        }
+
+        return static_cast<std::int32_t>(pos);
+    }
+
+    BRIDGE_FUNC(std::int32_t, server_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
+        return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::server);
+    }
+
     BRIDGE_FUNC(std::uint32_t, user_language) {
         return static_cast<std::uint32_t>(kern->get_current_language());
     }
@@ -3603,10 +3658,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800015, library_entry_point_queries),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
+        BRIDGE_REGISTER(0x80002D, server_find_next),
         BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
         BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
         BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),
         BRIDGE_REGISTER(0x800045, thread_write_ipc_to_des16),
+        BRIDGE_REGISTER(0x800055, des_match),
         BRIDGE_REGISTER(0x800059, des_locate_fold),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
