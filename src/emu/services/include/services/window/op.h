@@ -232,6 +232,11 @@ namespace eka2l1 {
         ws_dsa_get_rec_queue = 6
     };
 
+    enum ws_dsa_op_old {
+        ws_dsa_old_free = 0,
+        ws_dsa_old_get_sync_thread = 1
+    };
+
 #define OPCODE_NAME(aaaprefix, aname, aversion) aaaprefix##_##aversion##_##aname
 #define OPCODE(aprefix, aname, aversion, val) \
     OPCODE_NAME(aprefix, aname, aversion) = val,

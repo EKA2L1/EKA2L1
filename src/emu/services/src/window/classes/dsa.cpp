@@ -31,7 +31,9 @@ namespace eka2l1::epoc {
     dsa::dsa(window_server_client_ptr client)
         : window_client_obj(client, nullptr)
         , husband_(nullptr)
-        , state_(state_none) {
+        , state_(state_none)
+        , sync_thread_(nullptr)
+        , sync_status_(0) {
         kernel_system *kern = client->get_ws().get_kernel_system();
 
         // Each message is an integer. Allow maximum of 10 messages

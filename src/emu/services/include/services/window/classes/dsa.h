@@ -20,12 +20,14 @@
 #pragma once
 
 #include <services/window/classes/wsobj.h>
+#include <utils/reqsts.h>
 
 #include <queue>
 #include <string>
 
 namespace eka2l1::kernel {
     class msg_queue;
+    class thread;
 }
 
 namespace eka2l1::epoc {
@@ -36,6 +38,9 @@ namespace eka2l1::epoc {
         window_user *husband_; ///< Mmmhhh
         kernel::msg_queue *dsa_must_abort_queue_; ///< Queue to notify clients that DSA operation must be stopped.
         kernel::msg_queue *dsa_complete_queue_; ///< Queue for client to report completion of a DSA operation.
+
+        kernel::thread *sync_thread_;           ///< Thread used for syncing with window operations.
+        eka2l1::ptr<epoc::request_status> sync_status_;
 
         enum state {
             state_none,
