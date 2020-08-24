@@ -57,15 +57,6 @@ namespace eka2l1 {
         }
     }
 
-    fbs_chunk_allocator::fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *dat_ptr)
-        : block_allocator(dat_ptr, de_chunk->committed())
-        , target_chunk(std::move(de_chunk)) {
-    }
-
-    bool fbs_chunk_allocator::expand(std::size_t target) {
-        return target_chunk->adjust(target);
-    }
-
     fbscli::~fbscli() {
         // Remove notification if there is
         if (server<fbs_server>()->compressor && !dirty_nof_.empty()) {
@@ -300,10 +291,10 @@ namespace eka2l1 {
         base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
         base_large_chunk = reinterpret_cast<std::uint8_t *>(large_chunk->host_base());
 
-        shared_chunk_allocator = std::make_unique<fbs_chunk_allocator>(shared_chunk,
+        shared_chunk_allocator = std::make_unique<epoc::chunk_allocator>(shared_chunk,
             base_shared_chunk);
 
-        large_chunk_allocator = std::make_unique<fbs_chunk_allocator>(large_chunk,
+        large_chunk_allocator = std::make_unique<epoc::chunk_allocator>(large_chunk,
             base_large_chunk);
 
         if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {

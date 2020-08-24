@@ -1,5 +1,6 @@
 
 add_library(epocservs
+        include/services/allocator.h
         include/services/context.h
         include/services/faker.h
         include/services/framework.h
@@ -96,6 +97,7 @@ add_library(epocservs
         include/services/window/scheduler.h
         include/services/window/screen.h
         include/services/window/window.h
+        src/allocator.cpp
         src/context.cpp
         src/faker.cpp
         src/framework.cpp

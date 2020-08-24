@@ -31,6 +31,7 @@
 #include <services/fbs/font_store.h>
 #include <services/framework.h>
 #include <services/window/common.h>
+#include <services/allocator.h>
 
 #include <common/allocator.h>
 #include <common/hash.h>
@@ -278,14 +279,6 @@ namespace eka2l1 {
         fbs_load_data_err_read_decomp_fail
     };
 
-    class fbs_chunk_allocator : public common::block_allocator {
-        chunk_ptr target_chunk;
-
-    public:
-        explicit fbs_chunk_allocator(chunk_ptr de_chunk, std::uint8_t *ptr);
-        virtual bool expand(std::size_t target) override;
-    };
-
     struct fbs_bitmap_data_info {
         eka2l1::vec2 size_;
         epoc::display_mode dpm_;
@@ -317,8 +310,8 @@ namespace eka2l1 {
 
         std::unordered_map<fbsbitmap_cache_info, fbsbitmap *> shared_bitmaps;
 
-        std::unique_ptr<fbs_chunk_allocator> shared_chunk_allocator;
-        std::unique_ptr<fbs_chunk_allocator> large_chunk_allocator;
+        std::unique_ptr<epoc::chunk_allocator> shared_chunk_allocator;
+        std::unique_ptr<epoc::chunk_allocator> large_chunk_allocator;
 
         std::unique_ptr<compress_queue> compressor;
         std::unique_ptr<std::thread> compressor_thread;
