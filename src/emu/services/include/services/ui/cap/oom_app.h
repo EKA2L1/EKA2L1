@@ -124,10 +124,12 @@ namespace eka2l1 {
         std::int32_t blank_count;
         bool old_layout;
 
-        void redraw_status_pane(service::ipc_context *ctx);
-
     public:
         explicit oom_ui_app_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version, const bool is_old_layout = false);
+        
+        void blank_screen(service::ipc_context *ctx);
+        void unblank_screen(service::ipc_context *ctx);
+        void redraw_status_pane(service::ipc_context *ctx);
         void fetch(service::ipc_context *ctx) override;
     };
 

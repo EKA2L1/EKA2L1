@@ -58,6 +58,28 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void oom_ui_app_session::blank_screen(service::ipc_context *ctx) {
+        blank_count++;
+
+        if (blank_count == 0) {
+            // No way... This is impossible
+            LOG_ERROR("App session has blank count negative before called blank screen");
+            ctx->complete(epoc::error_abort);
+
+            return;
+        }
+
+        LOG_TRACE("Blanking screen in AKNCAP session stubbed");
+        ctx->complete(epoc::error_none);
+    }
+
+    void oom_ui_app_session::unblank_screen(service::ipc_context *ctx) {
+        blank_count--;
+
+        LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
+        ctx->complete(epoc::error_none);
+    }
+
     void oom_ui_app_session::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() <= epocver::epoc93) {
             // Move app in z order does not exist. Forward to other message
@@ -83,25 +105,12 @@ namespace eka2l1 {
         }
 
         case akns_blank_screen: {
-            blank_count++;
-
-            if (blank_count == 0) {
-                // No way... This is impossible
-                LOG_ERROR("App session has blank count negative before called blank screen");
-                ctx->complete(epoc::error_abort);
-                break;
-            }
-
-            LOG_TRACE("Blanking screen in AKNCAP session stubbed");
-            ctx->complete(epoc::error_none);
+            blank_screen(ctx);
             break;
         }
 
         case akns_unblank_screen: {
-            blank_count--;
-
-            LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
-            ctx->complete(epoc::error_none);
+            unblank_screen(ctx);
             break;
         }
 

@@ -107,11 +107,25 @@ namespace eka2l1 {
             cap_session_->fetch(ctx);
 
             return;
+        } else {
+            if (ctx->sys->get_symbian_version_use() <= epocver::eka2) {
+                if (ctx->msg->function >= 9) {
+                    ctx->msg->function -= (9 - eik_app_ui_blank_screen);
+                }
+            }
         }
 
         switch (ctx->msg->function) {
         case eik_app_ui_debug_prefs:
             server<eikappui_server>()->get_debug_preferences(*ctx);
+            break;
+
+        case eik_app_ui_blank_screen:
+            cap_session_->blank_screen(ctx);
+            break;
+
+        case eik_app_ui_unblank_screen:
+            cap_session_->unblank_screen(ctx);
             break;
 
         default:
