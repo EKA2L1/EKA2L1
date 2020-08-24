@@ -1349,10 +1349,30 @@ namespace eka2l1 {
         return nullptr;
     }
 
+    void window_server::init_data_for_dsa_sync_thread() {
+        ws_global_mem_chunk = kern->create_and_add<kernel::chunk>(
+                                kernel::owner_type::kernel,
+                                kern->get_memory_system(),
+                                nullptr,
+                                "WsGlobalMemChunk",
+                                0,
+                                0,
+                                0x2000,
+                                prot::read_write,
+                                kernel::chunk_type::normal,
+                                kernel::chunk_access::global,
+                                kernel::chunk_attrib::none)
+                            .second;
+
+        ws_global_mem_allocator = std::make_unique<epoc::chunk_allocator>(ws_global_mem_chunk);
+    }
+
     void window_server::do_base_init() {
         load_wsini();
         parse_wsini();
         init_screens();
+        init_data_for_dsa_sync_thread();
+
         loaded = true;
     }
 

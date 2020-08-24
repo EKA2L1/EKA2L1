@@ -449,10 +449,7 @@ namespace eka2l1 {
         */
         template <typename T, typename ...Args>
         T *allocate_general_data(Args... construct_args) {
-            T *obj = reinterpret_cast<T *>(allocate_general_data_impl(sizeof(T)));
-            new (obj) T(construct_args...);
-
-            return obj;
+            return shared_chunk_allocator->allocate_struct<T>(construct_args...);
         }
 
         /**

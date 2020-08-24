@@ -43,6 +43,7 @@
 #include <services/window/opheader.h>
 #include <services/window/scheduler.h>
 #include <services/window/screen.h>
+#include <services/allocator.h>
 
 #include <kernel/server.h>
 #include <mem/ptr.h>
@@ -328,6 +329,9 @@ namespace eka2l1 {
 
         bool key_block_active{ false };
 
+        chunk_ptr ws_global_mem_chunk;
+        std::unique_ptr<epoc::chunk_allocator> ws_global_mem_allocator;
+
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);
 
@@ -341,8 +345,10 @@ namespace eka2l1 {
 
         epoc::window_pointer_focus_walker touch_shipper;
         epoc::window_key_shipper key_shipper;
+
         void handle_input_from_driver(drivers::input_event input_event);
         void init_screens();
+        void init_data_for_dsa_sync_thread();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
 

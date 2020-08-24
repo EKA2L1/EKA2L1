@@ -34,7 +34,15 @@ namespace eka2l1::epoc {
         chunk_ptr target_chunk;
 
     public:
-        explicit chunk_allocator(chunk_ptr de_chunk, std::uint8_t *ptr);
+        explicit chunk_allocator(chunk_ptr de_chunk);
         virtual bool expand(std::size_t target) override;
+        
+        template <typename T, typename ...Args>
+        T *allocate_struct(Args... construct_args) {
+            T *obj = reinterpret_cast<T *>(allocate(sizeof(T)));
+            new (obj) T(construct_args...);
+
+            return obj;
+        }
     };
 }

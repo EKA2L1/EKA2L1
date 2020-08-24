@@ -291,11 +291,8 @@ namespace eka2l1 {
         base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
         base_large_chunk = reinterpret_cast<std::uint8_t *>(large_chunk->host_base());
 
-        shared_chunk_allocator = std::make_unique<epoc::chunk_allocator>(shared_chunk,
-            base_shared_chunk);
-
-        large_chunk_allocator = std::make_unique<epoc::chunk_allocator>(large_chunk,
-            base_large_chunk);
+        shared_chunk_allocator = std::make_unique<epoc::chunk_allocator>(shared_chunk);
+        large_chunk_allocator = std::make_unique<epoc::chunk_allocator>(large_chunk);
 
         if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {
             // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#

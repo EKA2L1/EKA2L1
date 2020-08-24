@@ -21,8 +21,8 @@
 #include <kernel/chunk.h>
 
 namespace eka2l1::epoc {
-    chunk_allocator::chunk_allocator(chunk_ptr de_chunk, std::uint8_t *dat_ptr)
-        : block_allocator(dat_ptr, de_chunk->committed())
+    chunk_allocator::chunk_allocator(chunk_ptr de_chunk)
+        : block_allocator(reinterpret_cast<std::uint8_t*>(de_chunk->host_base()), de_chunk->committed())
         , target_chunk(std::move(de_chunk)) {
     }
 
