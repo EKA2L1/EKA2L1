@@ -158,7 +158,7 @@ namespace eka2l1::hle {
     }
 
     static void buildup_import_fixup_table(loader::e32img *img, kernel::process *pr, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
-        if (img->epoc_ver == epocver::epoc6) {
+        if (img->epoc_ver <= epocver::eka2) {
             std::uint32_t track = 0;
 
             for (auto &ib : img->import_section.imports) {
@@ -199,6 +199,14 @@ namespace eka2l1::hle {
         info.bss_size = img->header.bss_size;
         info.entry_point = img->header.entry_point;
         info.export_table = img->ed.syms;
+
+        if (img->epoc_ver <= epocver::eka2) {
+            // The offset of exports have base code at address 0. Add in the code base
+            // to each export. EKA2L1's emulated kernel works with export which has an actual base.
+            for (auto &exp: info.export_table) {
+                exp += info.code_base;
+            }
+        }
 
         if (img->has_extended_header) {
             info.sinfo.caps_u[0] = img->header_extended.info.cap1;
@@ -546,8 +554,11 @@ namespace eka2l1::hle {
                             std::u16string path_to_dll;
 
                             for (std::size_t i = 0; i < search_paths.size(); i++) {
-                                path_to_dll = drive_to_char16(get_drive_rom());
-                                path_to_dll += u':';
+                                if (!eka2l1::has_root_name(search_paths[i])) {
+                                    path_to_dll = drive_to_char16(get_drive_rom());
+                                    path_to_dll += u':';
+                                }
+
                                 path_to_dll += search_paths[i];
 
                                 std::optional<std::u16string> dll_name = io_->find_entry_with_address(path_to_dll, romimg_addr);
@@ -614,12 +625,17 @@ namespace eka2l1::hle {
 
         if (!eka2l1::has_root_dir(lib_path)) {
             // Nope ? We need to cycle through all possibilities
-            for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
-                const char16_t drvc = drive_to_char16(drv);
+            for (std::size_t i = 0; i < search_paths.size(); i++) {
+                bool only_once = eka2l1::has_root_name(search_paths[i], true);
 
-                for (std::size_t i = 0; i < search_paths.size(); i++) {
-                    lib_path = drvc;
-                    lib_path += u':';
+                for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+                    const char16_t drvc = drive_to_char16(drv);
+
+                    if (!only_once) {
+                        lib_path = drvc;
+                        lib_path += u':';
+                    }
+
                     lib_path += search_paths[i];
                     lib_path += path;
 
@@ -629,6 +645,10 @@ namespace eka2l1::hle {
                             *full_path = lib_path;
 
                         return result;
+                    }
+
+                    if (only_once) {
+                        break;
                     }
                 }
             }
@@ -681,12 +701,18 @@ namespace eka2l1::hle {
         // Absolute yet ?
         if (!eka2l1::has_root_dir(lib_path)) {
             // Nope ? We need to cycle through all possibilities
-            for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
-                const char16_t drvc = drive_to_char16(drv);
+            for (std::size_t i = 0; i < search_paths.size(); i++) {
+                lib_path.clear();
+                bool only_once = eka2l1::has_root_name(search_paths[i]);
+               
+                for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+                    const char16_t drvc = drive_to_char16(drv);
 
-                for (std::size_t i = 0; i < search_paths.size(); i++) {
-                    lib_path = drvc;
-                    lib_path += u':';
+                    if (!only_once) {
+                        lib_path = drvc;
+                        lib_path += u':';
+                    }
+
                     lib_path += search_paths[i];
                     lib_path += name;
 
@@ -697,6 +723,9 @@ namespace eka2l1::hle {
                             return result;
                         }
                     }
+
+                    if (only_once)
+                        break;
                 }
             }
 
@@ -708,11 +737,16 @@ namespace eka2l1::hle {
             return nullptr;
         }
 
+        // Add the codeseg that trying to be loaded path to search path, for dependencies search.
+        search_paths.push_back(eka2l1::file_directory(lib_path, true));
+
         if (auto cs = load_depend_on_drive(drv, lib_path)) {
             cs->set_full_path(lib_path);
+            search_paths.pop_back();
             return cs;
         }
 
+        search_paths.pop_back();
         return nullptr;
     }
 
