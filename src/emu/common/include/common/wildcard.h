@@ -21,10 +21,16 @@
 #pragma once
 
 #include <common/algorithm.h>
+#include <regex>
 
 namespace eka2l1::common {
     /**
      * \brief Convert a wildcard string to regex 
      */
-    std::string wildcard_to_regex_string(std::string regexstr);
+    template <typename T>
+    std::basic_string<T> wildcard_to_regex_string(std::basic_string<T> regexstr);
+
+    template <typename T>
+    std::size_t match_wildcard_in_string(const std::basic_string<T> &reference, const std::basic_string<T> &match_pattern,
+        const bool is_fold);
 }

@@ -296,11 +296,8 @@ namespace eka2l1 {
          *           0 if s1 == s2
          *           1 if s1 > s2
          */
-        int compare_ignore_case(const utf16_str &s1,
-            const utf16_str &s2);
-
-        int compare_ignore_case(const char *s1,
-            const char *s2);
+        int compare_ignore_case(const utf16_str &s1, const utf16_str &s2);
+        int compare_ignore_case(const char *s1, const char *s2);
 
         /**
          * \brief Trim all space duplication to only one space between words
@@ -335,7 +332,16 @@ namespace eka2l1 {
          * 
          * \returns A new string with all occurrences of target replaced.
          */
-        std::string replace_all(std::string str, const std::string &target, const std::string &replacement);
+        template <typename T>
+        std::basic_string<T> replace_all(std::basic_string<T> str, const std::basic_string<T> &from,
+            const std::basic_string<T> &to) {
+            size_t start_pos = 0;
+            while ((start_pos = str.find(from, start_pos)) != std::basic_string<T>::npos) {
+                str.replace(start_pos, from.length(), to);
+                start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+            }
+            return str;
+        }
 
         /**
          * \brief Lowercase the string.

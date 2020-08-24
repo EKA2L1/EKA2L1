@@ -22,14 +22,46 @@
 #include <common/wildcard.h>
 
 namespace eka2l1::common {
-    std::string wildcard_to_regex_string(std::string regexstr) {
-        regexstr = replace_all(regexstr, "\\", "\\\\");
-        regexstr = replace_all(regexstr, ".", std::string("\\") + ".");
-        regexstr = replace_all(regexstr, "?", ".");
-        regexstr = replace_all(regexstr, "*", ".*");
-        regexstr = replace_all(regexstr, "[", "(");
-        regexstr = replace_all(regexstr, "]", ")");
+    template <>
+    std::basic_string<char> wildcard_to_regex_string(std::basic_string<char> regexstr) {
+        regexstr = replace_all<char>(regexstr, "\\", "\\\\");
+        regexstr = replace_all<char>(regexstr, ".", std::string("\\") + ".");
+        regexstr = replace_all<char>(regexstr, "?", ".");
+        regexstr = replace_all<char>(regexstr, "*", ".*");
+        regexstr = replace_all<char>(regexstr, "[", "(");
+        regexstr = replace_all<char>(regexstr, "]", ")");
 
         return regexstr;
     }
+
+    template <>
+    std::basic_string<wchar_t> wildcard_to_regex_string(std::basic_string<wchar_t> regexstr) {
+        regexstr = replace_all<wchar_t>(regexstr, L"\\", L"\\\\");
+        regexstr = replace_all<wchar_t>(regexstr, L".", std::wstring(L"\\") + L".");
+        regexstr = replace_all<wchar_t>(regexstr, L"?", L".");
+        regexstr = replace_all<wchar_t>(regexstr, L"*", L".*");
+        regexstr = replace_all<wchar_t>(regexstr, L"[", L"(");
+        regexstr = replace_all<wchar_t>(regexstr, L"]", L")");
+
+        return regexstr;
+    }
+
+    template <typename T>
+    std::size_t match_wildcard_in_string(const std::basic_string<T> &reference, const std::basic_string<T> &match_pattern,
+        const bool is_fold) {  
+        std::basic_regex<T> reg(wildcard_to_regex_string(match_pattern), (is_fold ? std::regex_constants::icase :
+            std::regex_constants::basic));
+
+        std::match_results<std::basic_string<T>::const_iterator> match_result;
+        if (std::regex_search(reference, match_result, reg)) {
+            return static_cast<std::size_t>(match_result.position());
+        }
+
+        return std::basic_string<T>::npos;
+    }
+    
+    template std::size_t match_wildcard_in_string<char>(const std::string &reference, const std::string &match_pattern,
+        const bool is_fold);
+    template std::size_t match_wildcard_in_string<wchar_t>(const std::wstring &reference, const std::wstring &match_pattern,
+        const bool is_fold);
 }
