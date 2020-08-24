@@ -38,6 +38,8 @@ namespace eka2l1 {
         notifier_update_and_get_response,
     };
 
+    std::string get_notifier_server_name_by_epocver(const epocver ver);
+
     class notifier_server : public service::typical_server {
     public:
         explicit notifier_server(eka2l1::system *sys);

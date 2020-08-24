@@ -24,8 +24,16 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
+    std::string get_notifier_server_name_by_epocver(const epocver ver) {
+        if (ver <= epocver::eka2) {
+            return "Notifier";
+        }
+
+        return "!Notifier";
+    }
+
     notifier_server::notifier_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!Notifier") {
+        : service::typical_server(sys, get_notifier_server_name_by_epocver(sys->get_symbian_version_use())) {
     }
 
     void notifier_server::connect(service::ipc_context &context) {
