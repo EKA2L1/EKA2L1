@@ -20,9 +20,25 @@
 
 #include <services/install/install.h>
 #include <epoc/epoc.h>
+#include <utils/err.h>
 
 namespace eka2l1 {
     install_server::install_server(eka2l1::system *sys)
-        : service::server(sys->get_kernel_system(), sys, "!InstallServer", true) {
+        : service::typical_server(sys, "!InstallServer") {
+    }
+
+    void install_server::connect(service::ipc_context &context) {
+        create_session<install_client_session>(&context);
+        context.complete(epoc::error_none);
+    }
+
+    install_client_session::install_client_session(service::typical_server *serv, const kernel::uid ss_id,
+        epoc::version client_version)
+        : service::typical_session(serv, ss_id, client_version) {
+    }
+
+    void install_client_session::fetch(service::ipc_context *ctx) {
+        LOG_ERROR("Unimplemented opcode for InstallServer 0x{:X}", ctx->msg->function);
+        ctx->complete(epoc::error_none);
     }
 }

@@ -20,11 +20,20 @@
 
 #pragma once
 
+#include <services/framework.h>
 #include <kernel/server.h>
 
 namespace eka2l1 {
-    class install_server : public service::server {
+    class install_server : public service::typical_server {
     public:
         explicit install_server(eka2l1::system *sys);
+
+        void connect(service::ipc_context &context) override;
+    };
+
+    struct install_client_session : public service::typical_session {
+        explicit install_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
+
+        void fetch(service::ipc_context *ctx) override;
     };
 }
