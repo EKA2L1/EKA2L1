@@ -169,7 +169,9 @@ namespace eka2l1 {
     struct fbscli : public service::typical_session {
         service::uid connection_id_{ 0 };
         epoc::notify_info dirty_nof_;
+
         bool support_dirty_bitmap{ true };
+        bool support_current_display_mode{ true };
         
         // Info is adjusted after this function to fit the spec
         epoc::bitmapfont_base *create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec,
@@ -352,7 +354,8 @@ namespace eka2l1 {
          * 
          * \see    free_bitmap
          */
-        fbsbitmap *create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data = true, const bool support_dirty = true);
+        fbsbitmap *create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data = true, const bool support_current_display_mod_flag = true,
+            const bool support_dirty = true);
 
         /**
          * \brief   Free a bitmap object.
@@ -370,9 +373,16 @@ namespace eka2l1 {
         bool free_bitmap(fbsbitmap *bmp);
 
         /**
-         * \brief Check if we are working on legacy FBS.
+         * @brief   Get the legacy level of FBS we are working on.
+         * 
+         * - Level 0: Morden FBS.
+         * - Level 1: Large bitmap flag is available.
+         * - Level 2: Bitwise bitmap flag is replaced with the display mode of the bitmap (persistent across use).
+         *            Dirty bitmap is non-existent concept.
+         * 
+         * @returns Legacy level of FBS.
          */
-        bool legacy_mode() const;
+        int legacy_level() const;
 
         drivers::graphics_driver *get_graphics_driver();
 
@@ -411,8 +421,7 @@ namespace eka2l1 {
          * 
          * \return Starting offset from the large chunk.
          */
-        std::optional<std::size_t> load_data_to_rom(loader::mbm_file &mbmf_,
-            const std::size_t idx_, int *err_code);
+        std::optional<std::size_t> load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code);
 
         /*! \brief Use to Allocate structure from server side.
          *

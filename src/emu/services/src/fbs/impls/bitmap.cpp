@@ -174,7 +174,7 @@ namespace eka2l1 {
             std::fill(dest, dest + size, 0xFF);
         }
 
-        void bitwise_bitmap::construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool white_fill) {
+        void bitwise_bitmap::construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool support_current_display_mode_flag, const bool white_fill) {
             uid_ = epoc::BITWISE_BITMAP_UID;
             allocator_ = MAGIC_FBS_HEAP_PTR;
             pile_ = MAGIC_FBS_PILE_PTR;
@@ -194,8 +194,10 @@ namespace eka2l1 {
                 data_offset_ = 0;
             }
 
-            settings_.current_display_mode(disp_mode);
             settings_.initial_display_mode(disp_mode);
+
+            if (support_current_display_mode_flag)
+                settings_.current_display_mode(disp_mode);
 
             byte_width_ = get_byte_width(info.size_pixels.width(), static_cast<std::uint8_t>(info.bit_per_pixels));
 
@@ -450,7 +452,7 @@ namespace eka2l1 {
             epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
             bws_bmp->header_ = mbmf_.sbm_headers[load_options->bitmap_id];
 
-            if (fbss->legacy_mode()) {
+            if (fbss->legacy_level() == 1) {
                 // Set large bitmap flag so that the data pointer base is in large chunk
                 bws_bmp->settings_.set_large(true);
             }
@@ -527,7 +529,7 @@ namespace eka2l1 {
         return get_byte_width(size.x, epoc::get_bpp_from_display_mode(bpp)) * size.y;
     }
 
-    fbsbitmap *fbs_server::create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data, const bool support_dirty) {
+    fbsbitmap *fbs_server::create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data, const bool support_current_display_mode_flag, const bool support_dirty) {
         if (!shared_chunk || !large_chunk) {
             initialize_server();
         }
@@ -564,9 +566,9 @@ namespace eka2l1 {
         header.size_twips = info.size_ * twips_mul;
         header.bit_per_pixels = epoc::get_bpp_from_display_mode(info.dpm_);
 
-        bws_bmp->construct(header, info.dpm_, data, base_large_chunk, true);
+        bws_bmp->construct(header, info.dpm_, data, base_large_chunk, support_current_display_mode_flag, true);
 
-        if (legacy_mode()) {
+        if (legacy_level() == 1) {
             // Set large bitmap flag so that the data pointer base is in large chunk
             bws_bmp->settings_.set_large(true);
         }
@@ -625,7 +627,7 @@ namespace eka2l1 {
         info.size_ = specs.size;
         info.dpm_ = specs.bpp;
 
-        fbsbitmap *bmp = fbss->create_bitmap(info);
+        fbsbitmap *bmp = fbss->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
 
         if (!bmp) {
             ctx->complete(epoc::error_no_memory);
@@ -700,7 +702,7 @@ namespace eka2l1 {
         info.size_ = new_size;
         info.dpm_ = disp_mode;
 
-        const auto new_bmp = fbss->create_bitmap(info);
+        const auto new_bmp = fbss->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
 
         new_bmp->bitmap_->copy_data(*(bmp->bitmap_), fbss->base_large_chunk);
         bmp->clean_bitmap = new_bmp;

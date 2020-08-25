@@ -240,8 +240,16 @@ namespace eka2l1 {
         queue->run();
     }
 
-    bool fbs_server::legacy_mode() const {
-        return large_bitmap_access_mutex->get_access_count() > 0;
+    int fbs_server::legacy_level() const {
+        if (kern->is_eka1()) {
+            return 2;
+        }
+
+        if (large_bitmap_access_mutex->get_access_count() > 0) {
+            return 1;
+        }
+
+        return 0;
     }
 
     void fbs_server::initialize_server() {
@@ -419,5 +427,9 @@ namespace eka2l1 {
 
     fbscli::fbscli(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+        if (reinterpret_cast<fbs_server*>(serv)->legacy_level() == 2) {
+            support_current_display_mode = false;
+            support_dirty_bitmap = false;
+        }
     }
 }

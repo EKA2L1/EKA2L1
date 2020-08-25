@@ -480,7 +480,7 @@ namespace eka2l1 {
                     info.data_ = data_to_read.data();
 
                     // Auto support dirty. TODO not hardcode
-                    icon_list[index].bmp_ = serv->create_bitmap(info, true, true);
+                    icon_list[index].bmp_ = serv->create_bitmap(info, true, false, false);
                     return true;
                 };
 
