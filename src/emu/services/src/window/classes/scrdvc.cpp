@@ -160,8 +160,22 @@ namespace eka2l1::epoc {
         ctx.complete(0);
     }
 
+    void screen_device::get_rotation_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        // Each bit corresponds to its ordinal in graphics_orientation enum
+        std::int32_t mode_list = 0;
+
+        for (int i = 0; i < scr->total_screen_mode(); i++) {
+            const epoc::config::screen_mode *mode = scr->mode_info(i + 1);
+
+            if (mode) {
+                mode_list |= (1 << static_cast<std::int32_t>(get_orientation_from_rotation(mode->rotation)));
+            }
+        }
+
+        ctx.complete(mode_list);
+    }
+
     void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        //LOG_TRACE("Screen device {}", cmd.header.op);
         ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
@@ -267,6 +281,10 @@ namespace eka2l1::epoc {
 
         case ws_sd_op_is_screen_mode_dynamic:
             is_screen_mode_dynamic(ctx, cmd);
+            break;
+
+        case ws_sd_op_get_rotation_list:
+            get_rotation_list(ctx, cmd);
             break;
 
         default: {
