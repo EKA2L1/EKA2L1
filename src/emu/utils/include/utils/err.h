@@ -3,6 +3,8 @@
 #include <cstdint>
 
 namespace eka2l1::epoc {
+    static constexpr std::int32_t status_pending = static_cast<std::int32_t>(0x80000001);
+
     enum error : std::int32_t {
         error_none = 0, ///< No error.
         error_not_found = -1, ///< Item not found.
