@@ -42,6 +42,8 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc {
     enum etel_old {
+        etel_old_open_from_session = 0,
+        etel_old_open_from_subsession = 1,
         etel_old_load_phone_module = 7,
         etel_old_unload_phone_module = 8,
         etel_old_enumerate_phones = 9,

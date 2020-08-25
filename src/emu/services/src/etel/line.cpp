@@ -34,37 +34,46 @@ namespace eka2l1 {
     etel_line::~etel_line() {
     }
 
-    etel_line_subsession::etel_line_subsession(etel_session *session, etel_line *line)
+    etel_line_subsession::etel_line_subsession(etel_session *session, etel_line *line, bool oldarch)
         : etel_subsession(session)
-        , line_(line) {
+        , line_(line)
+        , oldarch_(oldarch) {
     }
 
     void etel_line_subsession::dispatch(service::ipc_context *ctx) {
-        switch (ctx->msg->function) {
-        case epoc::etel_line_get_status:
-        case epoc::etel_mobile_line_get_mobile_line_status:         // Note: Not the same, just stub
-            get_status(ctx);
-            break;
+        if (oldarch_) {
+            switch (ctx->msg->function) {
+            default:
+                LOG_ERROR("Unimplemented etel line opcode {}", ctx->msg->function);
+                break;
+            }
+        } else {
+            switch (ctx->msg->function) {
+            case epoc::etel_line_get_status:
+            case epoc::etel_mobile_line_get_mobile_line_status: // Note: Not the same, just stub
+                get_status(ctx);
+                break;
 
-        case epoc::etel_line_notify_incoming_call:
-            notify_incoming_call(ctx);
-            break;
+            case epoc::etel_line_notify_incoming_call:
+                notify_incoming_call(ctx);
+                break;
 
-        case epoc::etel_line_cancel_notify_incoming_call:
-            cancel_notify_incoming_call(ctx);
-            break;
+            case epoc::etel_line_cancel_notify_incoming_call:
+                cancel_notify_incoming_call(ctx);
+                break;
 
-        case epoc::etel_mobile_line_notify_status_change:
-            notify_status_change(ctx);
-            break;
+            case epoc::etel_mobile_line_notify_status_change:
+                notify_status_change(ctx);
+                break;
 
-        case epoc::etel_mobile_line_cancel_notify_status_change:
-            cancel_notify_status_change(ctx);
-            break;
+            case epoc::etel_mobile_line_cancel_notify_status_change:
+                cancel_notify_status_change(ctx);
+                break;
 
-        default:
-            LOG_ERROR("Unimplemented etel line opcode {}", ctx->msg->function);
-            break;
+            default:
+                LOG_ERROR("Unimplemented etel line opcode {}", ctx->msg->function);
+                break;
+            }
         }
     }
 

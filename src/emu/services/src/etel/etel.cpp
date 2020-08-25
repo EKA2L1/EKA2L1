@@ -159,7 +159,8 @@ namespace eka2l1 {
 
         switch (entry->entity_->type()) {
         case epoc::etel_entry_phone:
-            subsession = std::make_unique<etel_phone_subsession>(this, reinterpret_cast<etel_phone *>(entry->entity_.get()));
+            subsession = std::make_unique<etel_phone_subsession>(this, reinterpret_cast<etel_phone *>(entry->entity_.get()),
+                server<etel_server>()->is_oldarch());
 
             break;
 
@@ -210,7 +211,7 @@ namespace eka2l1 {
 
             if (line_ite != phone->lines_.end()) {
                 // Create the subsession
-                new_sub = std::make_unique<etel_line_subsession>(this, *line_ite);
+                new_sub = std::make_unique<etel_line_subsession>(this, *line_ite, server<etel_server>()->is_oldarch());
             } else {
                 LOG_ERROR("Unable to open subsession with object name {}", common::ucs2_to_utf8(name_of_object.value()));
             }
@@ -252,12 +253,37 @@ namespace eka2l1 {
     void etel_session::fetch(service::ipc_context *ctx) {
         if (server<etel_server>()->is_oldarch()) {
             switch (ctx->msg->function) {
+            case epoc::etel_old_open_from_session:
+                open_from_session(ctx);
+                break;
+
+            case epoc::etel_old_open_from_subsession:
+                open_from_subsession(ctx);
+                break;
+
             case epoc::etel_old_load_phone_module:
                 load_phone_module(ctx);
                 break;
 
+            case epoc::etel_old_enumerate_phones:
+                enumerate_phones(ctx);
+                break;
+
+            case epoc::etel_old_get_phone_info:
+                get_phone_info_by_index(ctx);
+                break;
+
             default:
-                LOG_TRACE("Unimplement etel server opcode {}", ctx->msg->function);
+                std::optional<std::uint32_t> subsess_id = ctx->get_argument_value<std::uint32_t>(3);
+
+                if (subsess_id && (subsess_id.value() > 0)) {
+                    if (subsess_id.value() <= subsessions_.size()) {
+                        subsessions_[subsess_id.value() - 1]->dispatch(ctx);
+                        return;
+                    }
+                }
+
+                LOG_ERROR("Unimplemented ETel server opcode {}", ctx->msg->function);
                 break;
             }
         } else {
