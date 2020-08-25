@@ -234,7 +234,11 @@ namespace eka2l1 {
 
     enum ws_dsa_op_old {
         ws_dsa_old_free = 0,
-        ws_dsa_old_get_sync_thread = 1
+        ws_dsa_old_get_sync_thread = 1,
+        ws_dsa_old_request = 2,
+        ws_dsa_old_init_failed = 3,
+        ws_dsa_old_get_region = 4,
+        ws_dsa_old_cancel = 5
     };
 
 #define OPCODE_NAME(aaaprefix, aname, aversion) aaaprefix##_##aversion##_##aname

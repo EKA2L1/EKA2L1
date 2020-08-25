@@ -173,6 +173,18 @@ namespace eka2l1::epoc {
                 get_sync_info(ctx, cmd);
                 break;
 
+            case ws_dsa_old_request:
+                request_access(ctx, cmd);
+                break;
+
+            case ws_dsa_old_get_region:
+                get_region(ctx, cmd);
+                break;
+
+            case ws_dsa_old_cancel:
+                cancel(ctx, cmd);
+                break;
+
             default:
                 LOG_ERROR("Unimplemented DSA opcode {}", cmd.header.op);
                 break;
