@@ -43,6 +43,10 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    bool etel_server::is_oldarch() {
+        return kern->is_eka1();    
+    }
+
     etel_session::etel_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(serv, client_ss_uid, client_ver) {
     }
@@ -246,59 +250,71 @@ namespace eka2l1 {
     }
 
     void etel_session::fetch(service::ipc_context *ctx) {
-        switch (ctx->msg->function) {
-        case epoc::etel_open_from_session:
-            open_from_session(ctx);
-            break;
+        if (server<etel_server>()->is_oldarch()) {
+            switch (ctx->msg->function) {
+            case epoc::etel_old_load_phone_module:
+                load_phone_module(ctx);
+                break;
 
-        case epoc::etel_open_from_subsession:
-            open_from_subsession(ctx);
-            break;
-
-        case epoc::etel_close:
-            close_sub(ctx);
-            break;
-
-        case epoc::etel_close_phone_module:
-            close_phone_module(ctx);
-            break;
-
-        case epoc::etel_enumerate_phones:
-            enumerate_phones(ctx);
-            break;
-
-        case epoc::etel_get_tsy_name:
-            get_tsy_name(ctx);
-            break;
-
-        case epoc::etel_phone_info_by_index:
-            get_phone_info_by_index(ctx);
-            break;
-
-        case epoc::etel_load_phone_module:
-            load_phone_module(ctx);
-            break;
-
-        case epoc::etel_query_tsy_functionality:
-            query_tsy_functionality(ctx);
-            break;
-
-        case epoc::etel_line_enumerate_call:
-            line_enumerate_call(ctx);
-            break;
-
-        default:
-            std::optional<std::uint32_t> subsess_id = ctx->get_argument_value<std::uint32_t>(3);
-
-            if (subsess_id && (subsess_id.value() > 0)) {
-                if (subsess_id.value() <= subsessions_.size()) {
-                    subsessions_[subsess_id.value() - 1]->dispatch(ctx);
-                    return;
-                }
+            default:
+                LOG_TRACE("Unimplement etel server opcode {}", ctx->msg->function);
+                break;
             }
+        } else {
+            switch (ctx->msg->function) {
+            case epoc::etel_open_from_session:
+                open_from_session(ctx);
+                break;
 
-            LOG_ERROR("Unimplemented ETel server opcode {}", ctx->msg->function);
-            break;
+            case epoc::etel_open_from_subsession:
+                open_from_subsession(ctx);
+                break;
+
+            case epoc::etel_close:
+                close_sub(ctx);
+                break;
+
+            case epoc::etel_close_phone_module:
+                close_phone_module(ctx);
+                break;
+
+            case epoc::etel_enumerate_phones:
+                enumerate_phones(ctx);
+                break;
+
+            case epoc::etel_get_tsy_name:
+                get_tsy_name(ctx);
+                break;
+
+            case epoc::etel_phone_info_by_index:
+                get_phone_info_by_index(ctx);
+                break;
+
+            case epoc::etel_load_phone_module:
+                load_phone_module(ctx);
+                break;
+
+            case epoc::etel_query_tsy_functionality:
+                query_tsy_functionality(ctx);
+                break;
+
+            case epoc::etel_line_enumerate_call:
+                line_enumerate_call(ctx);
+                break;
+
+            default:
+                std::optional<std::uint32_t> subsess_id = ctx->get_argument_value<std::uint32_t>(3);
+
+                if (subsess_id && (subsess_id.value() > 0)) {
+                    if (subsess_id.value() <= subsessions_.size()) {
+                        subsessions_[subsess_id.value() - 1]->dispatch(ctx);
+                        return;
+                    }
+                }
+
+                LOG_ERROR("Unimplemented ETel server opcode {}", ctx->msg->function);
+                break;
+            }
         }
     }
 }

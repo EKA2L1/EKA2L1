@@ -41,22 +41,41 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc {
-    enum etel_opcode_old {
-        etel_opcode_old_load_phone_module = 7,
-        etel_opcode_old_unload_phone_module = 8,
-        etel_opcode_old_enumerate_phones = 9,
-        etel_opcode_old_get_phone_info = 10,
-        etel_opcode_old_set_priority_client = 11,
-        etel_opcode_old_is_supported_by_module = 12,
-        etel_opcode_old_get_tsy_name = 13,
-        etel_opcode_old_set_extend_error_granularity = 14,
-        etel_opcode_old_phone_get_caps = 22,
-        etel_opcode_old_phone_get_status = 23,
-        etel_opcode_old_phone_enumerate_lines = 24,
-        etel_opcode_old_phone_get_line_info = 25,
-        etel_opcode_old_answer_incoming_call = 50,
-        etel_opcode_old_hang_up = 51,
-        etel_opcode_old_get_tsy_version_number = 77
+    enum etel_old {
+        etel_old_load_phone_module = 7,
+        etel_old_unload_phone_module = 8,
+        etel_old_enumerate_phones = 9,
+        etel_old_get_phone_info = 10,
+        etel_old_set_priority_client = 11,
+        etel_old_is_supported_by_module = 12,
+        etel_old_get_tsy_name = 13,
+        etel_old_phone_get_info = 19,
+        etel_old_set_extend_error_granularity = 14,
+        etel_old_phone_get_caps = 22,
+        etel_old_phone_get_status = 23,
+        etel_old_phone_enumerate_lines = 24,
+        etel_old_phone_get_line_info = 25,
+        etel_old_line_get_info = 26,
+        etel_old_line_notify_incoming_call = 27,
+        etel_old_line_notify_incoming_call_cancel = 28,
+        etel_old_line_notify_hook_change = 29,
+        etel_old_line_notify_hook_change_cancel = 30,
+        etel_old_line_notify_status_change = 31,
+        etel_old_line_notify_status_change_cancel = 32,
+        etel_old_line_notify_call_added = 33,
+        etel_old_line_notify_call_added_cancel = 34,
+        etel_old_line_notify_cap_changes = 35,
+        etel_old_line_notify_cap_changes_cancel = 36,
+        etel_old_line_get_caps = 37,
+        etel_old_line_get_status = 38,
+        etel_old_line_get_hook_status = 39,
+        etel_old_line_enumerate_call = 40,
+        etel_old_line_get_call_info = 41,
+        etel_old_call_connect = 49,
+        etel_old_call_answer_incoming_call = 50,
+        etel_old_call_hang_up = 51,
+        etel_old_call_set_fax_setting = 72,
+        etel_old_get_tsy_version_number = 77
     };
 
     enum etel_opcode {

@@ -63,5 +63,7 @@ namespace eka2l1 {
     public:
         explicit etel_server(eka2l1::system *sys);
         void connect(service::ipc_context &ctx) override;
+
+        bool is_oldarch();
     };
 }
