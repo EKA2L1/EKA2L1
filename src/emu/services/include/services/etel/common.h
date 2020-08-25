@@ -41,6 +41,24 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc {
+    enum etel_opcode_old {
+        etel_opcode_old_load_phone_module = 7,
+        etel_opcode_old_unload_phone_module = 8,
+        etel_opcode_old_enumerate_phones = 9,
+        etel_opcode_old_get_phone_info = 10,
+        etel_opcode_old_set_priority_client = 11,
+        etel_opcode_old_is_supported_by_module = 12,
+        etel_opcode_old_get_tsy_name = 13,
+        etel_opcode_old_set_extend_error_granularity = 14,
+        etel_opcode_old_phone_get_caps = 22,
+        etel_opcode_old_phone_get_status = 23,
+        etel_opcode_old_phone_enumerate_lines = 24,
+        etel_opcode_old_phone_get_line_info = 25,
+        etel_opcode_old_answer_incoming_call = 50,
+        etel_opcode_old_hang_up = 51,
+        etel_opcode_old_get_tsy_version_number = 77
+    };
+
     enum etel_opcode {
         etel_open_from_session = 0,
         etel_open_from_subsession = 1,

@@ -32,6 +32,8 @@
 
 namespace eka2l1 {
     using etel_subsession_instance = std::unique_ptr<etel_subsession>;
+    
+    std::string get_etel_server_name_by_epocver(const epocver ver);
 
     struct etel_session : public service::typical_session {
         epoc::etel::module_manager mngr_;

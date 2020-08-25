@@ -26,8 +26,16 @@
 #include <common/cvt.h>
 
 namespace eka2l1 {
+    std::string get_etel_server_name_by_epocver(const epocver ver) {
+        if (ver <= epocver::eka2) {
+            return "EtelServer";
+        }
+
+        return "!EtelServer";
+    }
+
     etel_server::etel_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!EtelServer") {
+        : service::typical_server(sys, get_etel_server_name_by_epocver(sys->get_symbian_version_use())) {
     }
 
     void etel_server::connect(service::ipc_context &ctx) {
