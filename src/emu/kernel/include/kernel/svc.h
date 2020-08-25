@@ -107,6 +107,7 @@ namespace eka2l1::epoc {
             execute_create_mutex = 0x17,
             execute_open_mutex_global = 0x18,
             execute_create_sema = 0x19,
+            execute_open_sema_global = 0x1A,
             execute_create_timer = 0x1B,
             execute_rename_process = 0x20,
             execute_create_thread = 0x27,

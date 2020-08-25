@@ -2649,6 +2649,33 @@ namespace eka2l1::epoc {
         }
 
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }    
+
+    std::int32_t sema_open_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::desc16 *name_of_sema_des = (eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_process));
+        std::string name_of_sema = "";
+
+        if (name_of_sema_des) {
+            name_of_sema = common::ucs2_to_utf8(name_of_sema_des->to_std_string(target_process));
+        }
+
+        kernel_obj_ptr obj_ptr = kern->get_by_name_and_type<kernel::semaphore>(name_of_sema, kernel::object_type::sema);
+
+        if (!obj_ptr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        kernel::handle h = kern->open_handle(obj_ptr, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
     }
 
     std::int32_t thread_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
@@ -3005,7 +3032,10 @@ namespace eka2l1::epoc {
             return mutex_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_create_sema:
-            return sema_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+            return sema_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);   
+
+        case epoc::eka1_executor::execute_open_sema_global:
+            return sema_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_create_thread:
             return thread_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
