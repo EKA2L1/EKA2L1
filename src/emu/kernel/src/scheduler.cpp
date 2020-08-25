@@ -291,7 +291,8 @@ namespace eka2l1::kernel {
     }
 
     bool thread_scheduler::stop(kernel::thread *thr) {
-        timing->unschedule_event(wakeup_evt, thr->unique_id());
+        if (wakeup_evt)
+            timing->unschedule_event(wakeup_evt, thr->unique_id());
 
         if (thr->state == thread_state::ready) {
             unschedule(thr);
