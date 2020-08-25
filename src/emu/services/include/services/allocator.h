@@ -23,9 +23,11 @@
 
 namespace eka2l1::kernel {
     class chunk;
+    class process;
 }
 
 namespace eka2l1 {
+    using address = std::uint32_t;
     using chunk_ptr = kernel::chunk*;
 }
 
@@ -36,6 +38,9 @@ namespace eka2l1::epoc {
     public:
         explicit chunk_allocator(chunk_ptr de_chunk);
         virtual bool expand(std::size_t target) override;
+
+        address to_address(const void *addr, kernel::process *pr);
+        void *to_pointer(const address addr, kernel::process *pr);
         
         template <typename T, typename ...Args>
         T *allocate_struct(Args... construct_args) {

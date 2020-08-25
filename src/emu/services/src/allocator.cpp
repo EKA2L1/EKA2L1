@@ -29,4 +29,13 @@ namespace eka2l1::epoc {
     bool chunk_allocator::expand(std::size_t target) {
         return target_chunk->adjust(target);
     }
+
+    address chunk_allocator::to_address(const void *addr, kernel::process *pr) {
+        return static_cast<address>(reinterpret_cast<const std::uint8_t*>(addr) - reinterpret_cast<const std::uint8_t*>(
+            target_chunk->host_base())) + target_chunk->base(pr).ptr_address();
+    }
+
+    void *chunk_allocator::to_pointer(const address addr, kernel::process *pr) {
+        return reinterpret_cast<std::uint8_t*>(target_chunk->host_base()) + (addr -target_chunk->base(pr).ptr_address());
+    }
 }
