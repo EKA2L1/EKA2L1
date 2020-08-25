@@ -52,7 +52,7 @@ namespace eka2l1::common {
         std::basic_regex<T> reg(wildcard_to_regex_string(match_pattern), (is_fold ? std::regex_constants::icase :
             std::regex_constants::basic));
 
-        std::match_results<std::basic_string<T>::const_iterator> match_result;
+        std::match_results<typename std::basic_string<T>::const_iterator> match_result;
         if (std::regex_search(reference, match_result, reg)) {
             return static_cast<std::size_t>(match_result.position());
         }
