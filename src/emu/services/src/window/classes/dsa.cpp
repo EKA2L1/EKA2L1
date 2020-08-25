@@ -39,6 +39,20 @@ namespace eka2l1::epoc {
         // Each message is an integer. Allow maximum of 10 messages
         dsa_must_abort_queue_ = kern->create<kernel::msg_queue>("DsaAbortQueue", 4, 10);
         dsa_complete_queue_ = kern->create<kernel::msg_queue>("DsaCompleteQueue", 4, 10);
+
+        if (client->client_version().build <= WS_V6_BUILD_VER) {
+            epoc::chunk_allocator *allocator = client->get_ws().allocator();
+
+            sync_status_ = allocator->to_address(allocator->allocate_struct<epoc::request_status>(
+                epoc::status_pending), nullptr);
+
+            // Leech on the owner
+            sync_thread_ = kern->create<kernel::thread>(kern->get_memory_system(), kern->get_ntimer(),
+                client->get_client()->owning_process(), kernel::access_type::local_access, fmt::format("DSA sync thread {}", id),
+                client->get_ws().sync_thread_code_address(), 0x1000, 0, 0x1000, false, sync_status_.ptr_address());
+
+            sync_thread_->resume();
+        }
     };
 
     dsa::~dsa() {
@@ -121,6 +135,28 @@ namespace eka2l1::epoc {
             husband_->direct = nullptr;
             husband_ = nullptr;
         }
+
+        if (sync_thread_) {
+            sync_thread_->stop();
+
+            epoc::chunk_allocator *allocator = client->get_ws().allocator();
+            allocator->free(allocator->to_pointer(sync_status_.ptr_address(), nullptr));
+
+            sync_thread_ = nullptr;
+        }
+    }
+
+    void dsa::get_sync_info(service::ipc_context &ctx, ws_cmd &cmd) {
+        struct sync_info {
+            std::uint32_t sync_thread_handle_;
+            eka2l1::ptr<epoc::request_status> sync_status_;
+        } info;
+
+        info.sync_thread_handle_ = static_cast<std::uint32_t>(sync_thread_->unique_id());
+        info.sync_status_ = sync_status_;
+
+        ctx.write_data_to_descriptor_argument<sync_info>(reply_slot, info);
+        ctx.complete(epoc::error_none);
     }
 
     void dsa::cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -131,34 +167,47 @@ namespace eka2l1::epoc {
     void dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
 
-        switch (op) {
-        case ws_dsa_get_send_queue:
-        case ws_dsa_get_rec_queue: {
-            kernel_system *kern = client->get_ws().get_kernel_system();
-            std::int32_t target_handle = 0;
+        if (client->client_version().build <= WS_V6_BUILD_VER) {
+            switch (op) {
+            case ws_dsa_old_get_sync_thread:
+                get_sync_info(ctx, cmd);
+                break;
 
-            target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+            default:
+                LOG_ERROR("Unimplemented DSA opcode {}", cmd.header.op);
+                break;
+            }
+        } else {
+            switch (op) {
+            case ws_dsa_get_send_queue:
+            case ws_dsa_get_rec_queue: {
+                kernel_system *kern = client->get_ws().get_kernel_system();
+                std::int32_t target_handle = 0;
 
-            ctx.complete(target_handle);
-            break;
+                target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+
+                ctx.complete(target_handle);
+                break;
+            }
+
+            case ws_dsa_request:
+                request_access(ctx, cmd);
+                break;
+
+            case ws_dsa_get_region:
+                get_region(ctx, cmd);
+                break;
+
+            case ws_dsa_cancel:
+                cancel(ctx, cmd);
+                break;
+
+            default: {
+                LOG_ERROR("Unimplemented DSA opcode {}", cmd.header.op);
+                break;
+            }
+            }
         }
 
-        case ws_dsa_request:
-            request_access(ctx, cmd);
-            break;
-
-        case ws_dsa_get_region:
-            get_region(ctx, cmd);
-            break;
-
-        case ws_dsa_cancel:
-            cancel(ctx, cmd);
-            break;
-
-        default: {
-            LOG_ERROR("Unimplemented DSA opcode {}", cmd.header.op);
-            break;
-        }
-        }
     }
 }

@@ -38,6 +38,7 @@
 #include <services/utils.h>
 
 #include <common/algorithm.h>
+#include <common/armemitter.h>
 #include <common/cvt.h>
 #include <common/ini.h>
 #include <common/log.h>
@@ -741,7 +742,7 @@ namespace eka2l1::epoc {
 
         // Patching out user opcode.
         if (cli_ver.major == 1 && cli_ver.minor == 0) {
-            if (cli_ver.build <= 139) {
+            if (cli_ver.build <= WS_V6_BUILD_VER) {
                 // Skip start and end custom text cursor, they does not exist
                 if (cmd.header.op >= ws_cl_op_start_custom_text_cursor) {
                     cmd.header.op += 2;
@@ -1103,7 +1104,11 @@ namespace eka2l1 {
         , anim_sched(sys->get_kernel_system(), sys->get_ntimer(), 1)
         , screens(nullptr)
         , focus_screen_(nullptr)
-        , key_shipper(this) {
+        , key_shipper(this)
+        , ws_global_mem_chunk(nullptr)
+        , ws_code_chunk(nullptr)
+        , ws_global_mem_allocator(nullptr)
+        , sync_thread_code_offset(0) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
@@ -1349,29 +1354,80 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    void window_server::init_data_for_dsa_sync_thread() {
-        ws_global_mem_chunk = kern->create_and_add<kernel::chunk>(
-                                kernel::owner_type::kernel,
-                                kern->get_memory_system(),
-                                nullptr,
-                                "WsGlobalMemChunk",
-                                0,
-                                0,
-                                0x2000,
-                                prot::read_write,
-                                kernel::chunk_type::normal,
-                                kernel::chunk_access::global,
-                                kernel::chunk_attrib::none)
-                            .second;
+    void window_server::emit_ws_thread_code() {
+        // Emit stub code
+        common::cpu_info info;
+        info.bARMv7 = false;
+        info.bASIMD = false;
 
-        ws_global_mem_allocator = std::make_unique<epoc::chunk_allocator>(ws_global_mem_chunk);
+        common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(ws_code_chunk->host_base()), info);
+        sync_thread_code_offset = 0;
+
+        // =========== DSA synchronization code ===============
+        // TODO: Make a proper code handling DSA synchronization. For now infinite loop busy waiting.
+        common::armgen::fixup_branch sync_loop_begin;
+
+        emitter.PUSH(2, common::armgen::R4, common::armgen::R_LR);
+        emitter.MOV(common::armgen::R4, common::armgen::R0);
+
+        std::uint8_t *loop_begin = emitter.get_writeable_code_ptr();
+
+        // Load euser to get WaitForRequest
+        codeseg_ptr seg = kern->get_lib_manager()->load(u"EUSER", nullptr);
+        if (seg) {
+            address wait_for_request_addr = seg->lookup(nullptr, kern->is_eka1() ? 1210 : 604);
+
+            emitter.MOV(common::armgen::R0, common::armgen::R4);
+            emitter.MOVI2R(common::armgen::R12, wait_for_request_addr);
+            emitter.BL(common::armgen::R12);
+        }
+
+        sync_loop_begin = emitter.B();
+
+        emitter.set_code_pointer(loop_begin);
+        emitter.set_jump_target(sync_loop_begin);
+    }
+
+    void window_server::init_ws_mem() {
+        if (!ws_global_mem_chunk) {
+            ws_global_mem_chunk = kern->create_and_add<kernel::chunk>(
+                                    kernel::owner_type::kernel,
+                                    kern->get_memory_system(),
+                                    nullptr,
+                                    "WsGlobalMemChunk",
+                                    0,
+                                    0x2000,
+                                    0x2000,
+                                    prot::read_write,
+                                    kernel::chunk_type::normal,
+                                    kernel::chunk_access::global,
+                                    kernel::chunk_attrib::none)
+                                .second;
+
+            ws_code_chunk = kern->create_and_add<kernel::chunk>(
+                                    kernel::owner_type::kernel,
+                                    kern->get_memory_system(),
+                                    nullptr,
+                                    "WsCodeChunk",
+                                    0,
+                                    0x2000,
+                                    0x2000,
+                                    prot::read_write_exec,
+                                    kernel::chunk_type::normal,
+                                    kernel::chunk_access::global,
+                                    kernel::chunk_attrib::none)
+                                .second;
+
+            ws_global_mem_allocator = std::make_unique<epoc::chunk_allocator>(ws_global_mem_chunk);
+            emit_ws_thread_code();
+        }
     }
 
     void window_server::do_base_init() {
         load_wsini();
         parse_wsini();
         init_screens();
-        init_data_for_dsa_sync_thread();
+        init_ws_mem();
 
         loaded = true;
     }
@@ -1558,6 +1614,22 @@ namespace eka2l1 {
         }
 
         return fbss;
+    }
+
+    epoc::chunk_allocator *window_server::allocator() {
+        if (!ws_global_mem_allocator) {
+            init_ws_mem();
+        }
+
+        return ws_global_mem_allocator.get();
+    }
+
+    address window_server::sync_thread_code_address() {
+        if (!ws_global_mem_allocator) {
+            init_ws_mem();
+        }
+
+        return ws_code_chunk->base(nullptr).ptr_address() + sync_thread_code_offset;
     }
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {

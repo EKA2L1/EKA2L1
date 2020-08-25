@@ -330,7 +330,10 @@ namespace eka2l1 {
         bool key_block_active{ false };
 
         chunk_ptr ws_global_mem_chunk;
+        chunk_ptr ws_code_chunk;
         std::unique_ptr<epoc::chunk_allocator> ws_global_mem_allocator;
+
+        address sync_thread_code_offset;
 
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);
@@ -348,7 +351,8 @@ namespace eka2l1 {
 
         void handle_input_from_driver(drivers::input_event input_event);
         void init_screens();
-        void init_data_for_dsa_sync_thread();
+        void init_ws_mem();
+        void emit_ws_thread_code();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
 
@@ -421,6 +425,8 @@ namespace eka2l1 {
         drivers::graphics_driver *get_graphics_driver();
         ntimer *get_ntimer();
         kernel_system *get_kernel_system();
+        epoc::chunk_allocator *allocator();
+        address sync_thread_code_address();
 
         void queue_input_from_driver(drivers::input_event &evt);
         void do_base_init();

@@ -54,6 +54,7 @@ namespace eka2l1::epoc {
 
         void do_cancel();
 
+        void get_sync_info(service::ipc_context &ctx, ws_cmd &cmd);
         void request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);

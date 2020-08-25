@@ -273,15 +273,15 @@ namespace eka2l1::epoc {
         epoc::version cli_ver = client->client_version();
 
         // Patching out user opcode.
-        if (cli_ver.major == 1 && cli_ver.minor == 0) {
-            if (cli_ver.build <= 171) {
+        if ((cli_ver.major == WS_MAJOR_VER) && (cli_ver.minor == WS_MINOR_VER)) {
+            if (cli_ver.build <= WS_V93_BUILD_VER) {
                 if (cmd.header.op >= EWsWinOpSendAdvancedPointerEvent) {
                     // Send advanced pointer event opcode does not exist in the version.
                     cmd.header.op += 1;
                 }
             }
 
-            if (cli_ver.build <= 139) {
+            if (cli_ver.build <= WS_V6_BUILD_VER) {
                 // Skip absolute position opcode
                 if (cmd.header.op >= EWsWinOpAbsPosition) {
                     cmd.header.op += 1;

@@ -693,6 +693,11 @@ namespace eka2l1::epoc {
         { KEY_UP, EStdKeyRightArrow }
     };
 
+    static constexpr std::uint8_t WS_MAJOR_VER = 1;
+    static constexpr std::uint8_t WS_MINOR_VER = 0;
+    static constexpr std::uint16_t WS_V6_BUILD_VER = 139;
+    static constexpr std::uint16_t WS_V93_BUILD_VER = 171;
+
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
 
     TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation);
