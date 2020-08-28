@@ -325,31 +325,4 @@ TInt CFbsThirtyTwoBitsDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterf
     return KErrNotSupported;
 }
 
-///////////////////////////////////////////////
-//
-//	RGBA screen draw device
-//
-//////////////////////////////////////////////
-
-#define SCRDVC_IMPL(name, base)                                                     \
-    void name::Update(const TRegion &aRegion) {                                     \
-        UpdateScreen(1, iScreenNumber, aRegion.Count(), aRegion.RectangleList());   \
-    }                                                                               \
-    void name::UpdateRegion(const TRect &aRect) {                                   \
-        UpdateScreen(1, iScreenNumber, 1, &aRect);                                  \
-    }                                                                               \
-    TInt name::Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride) {    \
-        iScreenNumber = aScreenNumber;                                              \
-        return base::Construct(aSize, aDataStride);                                 \
-    }                                                                               \
-    void name::Update() {                                                           \
-        TRect updateRect;                                                           \
-        updateRect.iTl = TPoint(0, 0);                                              \
-        updateRect.iBr = updateRect.iTl + iSize;                                    \
-        UpdateScreen(1, iScreenNumber, 1, &updateRect);                             \
-    }
-
-SCRDVC_IMPL(CFbsTwentyfourBitAlphaScreenDrawDevice, CFbsTwentyfourBitAlphaDrawDevice)
-SCRDVC_IMPL(CFbsTwentyfourBitUnsignedByteScreenDrawDevice, CFbsTwentyfourBitUnsignedByteDrawDevice)
-
 #endif

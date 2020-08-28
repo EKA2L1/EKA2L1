@@ -369,3 +369,42 @@ TInt CFbsDrawDeviceAlgorithm::GetInterface(TInt aInterfaceId, TAny *&aInterface)
 void CFbsDrawDeviceAlgorithm::SwapWidthAndHeight() {
     Scdv::Log("Swap width and height not supported! TODO!");
 }
+
+TRgb CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(TRgb aBufferColor, TRgb aWriteColor, const CGraphicsContext::TDrawMode aDrawMode) {
+    TRgb currentColor;
+    
+    switch (aDrawMode) {
+    case CGraphicsContext::EDrawModePEN:
+#ifdef EKA2
+    case CGraphicsContext::EDrawModeWriteAlpha:
+#endif
+        currentColor = aWriteColor;
+        break;
+
+    case CGraphicsContext::EDrawModeAND:
+        currentColor = TRgb::TRgb(aBufferColor.Red() & aWriteColor.Red(), aBufferColor.Green() & aWriteColor.Green(), aBufferColor.Blue() & aWriteColor.Blue());
+        break;
+
+    case CGraphicsContext::EDrawModeOR:
+        currentColor = TRgb::TRgb(aBufferColor.Red() | aWriteColor.Red(), aBufferColor.Green() | aWriteColor.Green(), aBufferColor.Blue() | aWriteColor.Blue());
+        break;
+
+    case CGraphicsContext::EDrawModeXOR:
+        currentColor = TRgb::TRgb(aBufferColor.Red() ^ aWriteColor.Red(), aBufferColor.Green() ^ aWriteColor.Green(), aBufferColor.Blue() ^ aWriteColor.Blue());
+        break;
+
+    case CGraphicsContext::EDrawModeNOTSCREEN:
+        currentColor = TRgb::TRgb(~aBufferColor.Red(), ~aBufferColor.Green(), ~aBufferColor.Blue());
+        break;
+
+    case CGraphicsContext::EDrawModeANDNOT:
+        currentColor = TRgb::TRgb((~aBufferColor.Red()) & aWriteColor.Red(), (~aBufferColor.Green()) & aWriteColor.Green(), (~aBufferColor.Blue()) & aWriteColor.Blue());
+        break;
+
+    default:
+        Scdv::Log("ERR: Unsupported graphics context draw mode %d", aDrawMode);
+        break;
+    }
+
+    return currentColor;
+}

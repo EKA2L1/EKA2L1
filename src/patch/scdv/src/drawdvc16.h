@@ -17,14 +17,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-.align 4
+#ifndef SCDV_DVC_SIXTEEN_BITS_H_
+#define SCDV_DVC_SIXTEEN_BITS_H_
 
-.macro CallHleDispatch func_id
-    mov r0, #\func_id
-.ifdef EKA2
-    swi 0x800030
-    bx lr
-.else
-    swi 0xC10000
-.endif
-.endm
+#include "drawdvcb.h"
+
+class CFbsSixteenBitDrawDevice : public CFbsDrawDeviceByteBuffer {
+public:
+    TInt Construct(TSize aSize, TInt aDataStride);
+    void SetSize(TSize aSize);
+
+    virtual void WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
+    virtual void WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, CGraphicsContext::TDrawMode aDrawMode);
+
+    virtual TRgb ReadPixel(TInt aX, TInt aY) const;
+};
+
+#endif

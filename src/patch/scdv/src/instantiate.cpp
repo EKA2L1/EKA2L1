@@ -17,8 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "drawdvc16.h"
 #include "drawdvc24.h"
 #include "drawdvc32.h"
+#include "drawdvcscr.h"
+
 #include "scdv/draw.h"
 #include "scdv/panic.h"
 
@@ -36,6 +39,15 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
         Scdv::Log("INFO:: A new 24 bit bitmap device has been instantiated!");
+
+        break;
+
+    case EColor64K:
+        newDevice = new (ELeave) CFbsSixteenBitDrawDevice;
+        CleanupStack::PushL(newDevice);
+        User::LeaveIfError(reinterpret_cast<CFbsSixteenBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
+
+        Scdv::Log("INFO:: A new 16 bit bitmap device has been instantiated!");
 
         break;
 
@@ -76,6 +88,15 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
     CFbsDrawDevice *device = NULL;
 
     switch (aMode) {
+    case EColor64K:
+        device = new (ELeave) CFbsSixteenBitScreenDrawDevice;
+        CleanupStack::PushL(device);
+        User::LeaveIfError(reinterpret_cast<CFbsSixteenBitScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
+
+        Scdv::Log("INFO:: A new 16 bit screen device has been instantiated!");
+
+        break;
+
 #ifdef EKA2
     case EColor16MU:
         device = new (ELeave) CFbsTwentyfourBitUnsignedByteScreenDrawDevice;

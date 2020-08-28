@@ -20,9 +20,12 @@ SOURCEPATH	  ..\..\src
 SOURCE        panic.cpp
 SOURCE        log.cpp
 SOURCE        scdv.cpp
+SOURCE        drawdvcb.cpp
 SOURCE        drawdvcbuf.cpp
 SOURCE        drawdvcalgo.cpp
+SOURCE        drawdvc16.cpp
 SOURCE        drawdvc24.cpp
+SOURCE        drawdvcscr.cpp
 SOURCE        instantiate.cpp
 SOURCE        cdsb.cpp
 SOURCE        dispatch.s

@@ -36,6 +36,8 @@ protected:
 public:
     explicit CFbsDrawDeviceAlgorithm();
 
+    static TRgb ExecuteColorDrawMode(TRgb aBufferColor, TRgb aWriteColor, const CGraphicsContext::TDrawMode aDrawMode);
+
     virtual TInt LongWidth() const;
     virtual TInt ScanLineBytes() const;
     virtual TInt HorzTwipsPerThousandPixels() const;

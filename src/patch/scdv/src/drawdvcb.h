@@ -17,47 +17,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCDVC_DRAW_DVC_32_H_
-#define SCDVC_DRAW_DVC_32_H_
+#ifndef SCDV_DVC_TWELVE_BITS_H_
+#define SCDV_DVC_TWELVE_BITS_H_
 
 #include "drawdvcbuf.h"
-#include "scdv/blit.h"
-#include "scdv/scale.h"
 
-class CFbsThirtyTwoBitsDrawDevice : public CFbsDrawDeviceBuffer, public Scdv::MScalingSettings {
+class CFbsDrawDeviceByteBuffer : public CFbsDrawDeviceBuffer {
+protected:
+    TInt iByteCount;
+
 public:
-    TInt ConstructInner(TSize aSize, TInt aDataStride);
-    void SetSize(TSize aSize);
-
     virtual TUint8 *GetPixelStartAddress(TInt aX, TInt aY) const;
     virtual void ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const;
     virtual void WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
     virtual void WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode);
-    virtual void WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer);
 
-    typedef void (*PWriteRgbToAddressFunc)(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha);
+    virtual void WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) = 0;
+    virtual void WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, CGraphicsContext::TDrawMode aDrawMode) = 0;
 
-    PWriteRgbToAddressFunc GetRgbWriteFunc(CGraphicsContext::TDrawMode aDrawMode);
-
-    virtual TRgb ReadPixel(TInt aX, TInt aY) const;
     virtual void WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
     virtual void WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
-    
-    virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY);
-    virtual void Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY);
-    virtual TBool IsScalingOff();
-    
-    virtual TInt GetInterface(TInt aInterfaceId, TAny *&aInterface);
-};
-
-class CFbsTwentyfourBitAlphaDrawDevice : public CFbsThirtyTwoBitsDrawDevice {
-public:
-    TInt Construct(TSize aSize, TInt aDataStride);
-};
-
-class CFbsTwentyfourBitUnsignedByteDrawDevice : public CFbsThirtyTwoBitsDrawDevice {
-public:
-    TInt Construct(TSize aSize, TInt aDataStride);
+    virtual void WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer);
 };
 
 #endif
