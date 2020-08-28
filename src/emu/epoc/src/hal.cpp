@@ -320,6 +320,10 @@ namespace eka2l1::epoc {
     
     int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data) {
         switch (data_num) {
+        case kernel::hal_data_eka1_manufacturer_hardware_rev:
+            *reinterpret_cast<std::uint32_t*>(data) = 1;
+            break;
+
         case kernel::hal_data_eka1_page_size:
             *reinterpret_cast<std::uint32_t*>(data) = sys->get_memory_system()->get_page_size();
             break;

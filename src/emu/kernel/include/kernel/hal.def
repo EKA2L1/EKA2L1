@@ -25,6 +25,7 @@
 #endif
 
 HAL_ENTRY(manufacturer, Manufacturer, 0, 0)
+HAL_ENTRY(manufacturer_hardware_rev, ManufacturerHardwareRev, 0, 1)
 HAL_ENTRY(machine_uid, MachineUID, 5, 0)
 HAL_ENTRY(cpu, CPU, 8, 0)
 HAL_ENTRY(ram, RAMSize, 15, 0)
