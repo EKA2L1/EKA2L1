@@ -2125,6 +2125,17 @@ namespace eka2l1::epoc {
         timer->after(kern->crr_thread(), sts, us_after);
     }
 
+    BRIDGE_FUNC(void, timer_after_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t us_after, kernel::handle h) {
+        timer_ptr timer = kern->get<kernel::timer>(h);
+
+        if (!timer) {
+            return;
+        }
+
+        epoc::request_status *sts = req_sts.get(kern->crr_process());
+        timer->after(kern->crr_thread(), sts, us_after);
+    }
+
     BRIDGE_FUNC(void, timer_at_utc, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint64_t us_at) {
         timer_ptr timer = kern->get<kernel::timer>(h);
 
@@ -3674,6 +3685,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x52, uchar_uppercase),
         BRIDGE_REGISTER(0x53, uchar_get_category),
         BRIDGE_REGISTER(0x6C, heap),
+        BRIDGE_REGISTER(0x70, tick_count),
         BRIDGE_REGISTER(0x72, push_trap_frame),
         BRIDGE_REGISTER(0x73, pop_trap_frame),
         BRIDGE_REGISTER(0x74, active_scheduler),
@@ -3715,7 +3727,10 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
+        BRIDGE_REGISTER(0xC00047, timer_cancel),
+        BRIDGE_REGISTER(0xC00048, timer_after_eka1),
         BRIDGE_REGISTER(0xC0004E, request_signal),
+        BRIDGE_REGISTER(0xC0005E, after),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
