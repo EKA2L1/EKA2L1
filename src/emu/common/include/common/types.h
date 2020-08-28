@@ -50,16 +50,26 @@ enum class epocver {
     eka1, ///< Mark for EKA1
     epocu6,
     epoc6, ///< Epoc 6.0
+    epoc80,
     eka2, ///< Mark for EKA2
     epoc93, ///< Epoc 9.3
     epoc94, ///< Epoc 9.4
     epoc95,
-    epoc10
+    epoc10,
+    epocverend
 };
+
+inline epocver operator++(epocver &ver, int) {
+    ver = static_cast<epocver>(static_cast<int>(ver) + 1);
+    return ver;
+}
 
 inline bool is_epocver_eka1(epocver ver) {
     return (ver <= epocver::epoc6);
 }
+
+const char *epocver_to_string(const epocver ver);
+const epocver string_to_epocver(const char *str);
 
 enum drive_number {
     drive_a,

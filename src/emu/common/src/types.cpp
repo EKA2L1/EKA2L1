@@ -104,3 +104,67 @@ const char *num_to_lang(const int num) {
 
     return nullptr;
 }
+
+const char *epocver_to_string(const epocver ver) {
+    switch (ver) {
+    case epocver::epocu6:
+        return "epocu6";
+
+    case epocver::epoc6:
+        return "epoc6";
+
+    case epocver::epoc80:
+        return "epoc80";
+
+    case epocver::epoc93:
+        return "epoc93";
+
+    case epocver::epoc94:
+        return "epoc94";
+
+    case epocver::epoc95:
+        return "epoc95";
+
+    case epocver::epoc10:
+        return "epoc100";
+
+    default:
+        break;
+    }
+
+    return nullptr;
+}
+
+const epocver string_to_epocver(const char *str) {
+    std::string str_std(str);
+
+    if (str_std == "epocu6") {
+        return epocver::epocu6;
+    }
+
+    if (str_std == "epoc6") {
+        return epocver::epoc6;
+    }
+
+    if (str_std == "epoc80") {
+        return epocver::epoc80;
+    }
+
+    if (str_std == "epoc93") {
+        return epocver::epoc93;
+    }
+    
+    if (str_std == "epoc94") {
+        return epocver::epoc94;
+    }
+    
+    if (str_std == "epoc95") {
+        return epocver::epoc95;
+    }
+    
+    if (str_std == "epoc10") {
+        return epocver::epoc10;
+    }
+
+    return epocver::epoc94;
+}
