@@ -199,7 +199,10 @@ namespace eka2l1::epoc::adapter {
 
         // RLE this baby! Alloc this big to gurantee compressed data will always fit. If the compression is bad
         // we also add 5 more words. in case compression is not effective at all.
-        std::uint32_t *compressed_bitmap = new std::uint32_t[((scaled_width * scaled_height + 31) >> 5) + 5];
+        const std::size_t total_compressed_word = ((scaled_width * scaled_height + 31) >> 5) + 5;
+        std::uint32_t *compressed_bitmap = new std::uint32_t[total_compressed_word];
+        std::fill(compressed_bitmap, compressed_bitmap + total_compressed_word, 0);
+
         std::int16_t total_line_processed_so_far = 0;
         std::uint32_t total_bit_write = 0;
         
@@ -240,7 +243,7 @@ namespace eka2l1::epoc::adapter {
             bool mode = false;
             std::int8_t count = 2;
 
-            if (total_line_processed_so_far == scaled_height - 1) {
+            if (total_line_processed_so_far == (scaled_height - 1)) {
                 count = 1;
                 mode = false;
             } else {
