@@ -43,7 +43,9 @@ namespace eka2l1::manager {
             const std::string firmcode = device_node.first.as<std::string>();
             const std::string manufacturer = device_node.second["manufacturer"].as<std::string>();
             const std::string model = device_node.second["model"].as<std::string>();
-            epocver ver = static_cast<epocver>(device_node.second["platver"].as<int>());
+
+            const std::string plat_ver = device_node.second["platver"].as<std::string>();
+            epocver ver = string_to_epocver(plat_ver.c_str());
 
             std::uint32_t machine_uid = 0;
             
@@ -65,7 +67,7 @@ namespace eka2l1::manager {
             emitter << YAML::Key << device.firmware_code;
             emitter << YAML::Value << YAML::BeginMap;
 
-            emitter << YAML::Key << "platver" << YAML::Value << static_cast<const int>(device.ver);
+            emitter << YAML::Key << "platver" << YAML::Value << epocver_to_string(device.ver);
             emitter << YAML::Key << "manufacturer" << YAML::Value << device.manufacturer;
             emitter << YAML::Key << "firmcode" << YAML::Value << device.firmware_code;
             emitter << YAML::Key << "model" << YAML::Value << device.model;
