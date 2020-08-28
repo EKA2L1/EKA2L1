@@ -19,6 +19,7 @@
 
 #include <common/vecx.h>
 #include <mem/ptr.h>
+#include <utils/version.h>
 
 #include <functional>
 #include <unordered_map>
@@ -185,6 +186,31 @@ namespace eka2l1::epoc {
     struct digitiser_info_v1 {
         eka2l1::vec2 offset_to_first_usable_;
         eka2l1::vec2 size_usable_;
+    };
+
+    enum xy_input_type: std::uint32_t {
+        xy_input_type_none,
+        xy_input_type_pointer,
+        xy_input_type_mouse,
+        xy_input_type_delta_mouse
+    };
+
+    struct machine_info_v1 {
+        epoc::version rom_ver_;
+        xy_input_type input_type_;
+        std::int32_t keyboard_present_;
+        std::int32_t backlight_present_;
+        eka2l1::object_size display_size_pixels_;
+        eka2l1::object_size xy_input_size_pixels_;
+        eka2l1::object_size physical_screen_size_;
+        eka2l1::point offset_to_display_in_pixels_;
+        std::int32_t keyboard_id_;
+        std::int32_t display_id_;
+        std::int64_t machine_unique_id_;
+        std::uint32_t led_caps_;
+        std::int32_t clock_speed_mhz_;
+        std::int32_t speed_factor_;
+        std::int32_t maximum_display_color_;
     };
 
     enum hal_category {

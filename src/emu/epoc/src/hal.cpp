@@ -318,8 +318,60 @@ namespace eka2l1::epoc {
         return ret;
     }
     
+    static void fill_machine_info(eka2l1::system *sys, machine_info_v1 &info) {
+        window_server *winserv = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
+            eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
+
+        epoc::screen *crr_screen = winserv->get_current_focus_screen();
+
+        info.backlight_present_ = 1;
+        info.clock_speed_mhz_ = 0;
+        info.display_id_ = 0;
+        info.xy_input_size_pixels_ = crr_screen->size();
+        info.display_size_pixels_ = crr_screen->size();
+        info.physical_screen_size_ = info.display_size_pixels_ * 15;    // In twips
+        info.input_type_ = xy_input_type_pointer;
+        info.keyboard_id_ = 0;
+        info.keyboard_present_ = 1;
+        info.machine_unique_id_ = 0;        // TODO: Machine Unique ID here
+        info.maximum_display_color_ = get_num_colors_from_display_mode(crr_screen->disp_mode);
+        info.offset_to_display_in_pixels_ = eka2l1::point(0, 0);
+        info.speed_factor_ = 1;
+
+        info.rom_ver_.major = 1;
+        info.rom_ver_.minor = 0;
+        info.rom_ver_.build = 0;
+    }
+
+    static int do_hal_machine_info(eka2l1::system *sys, void *data) {
+        epoc::des8 *buf = reinterpret_cast<epoc::des8*>(data);
+        kernel::process *pr = sys->get_kernel_system()->crr_process();
+        machine_info_v1 *info = reinterpret_cast<machine_info_v1*>(buf->get_pointer_raw(pr));
+
+        if (!info) {
+            LOG_ERROR("Trying to get machine info but buffer is null!");
+            return -1;
+        }
+
+        fill_machine_info(sys, *info);
+        return 0;
+    }
+
     int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data) {
         switch (data_num) {
+        case kernel::hal_data_eka1_machine_info:
+            return do_hal_machine_info(sys, data);
+
+        case kernel::hal_data_eka1_memory_info: {
+            kern_hal *the_hal = reinterpret_cast<kern_hal*>(sys->get_hal(hal_category_kernel));
+
+            if (!the_hal) {
+                return -1;
+            }
+
+            return the_hal->memory_info(reinterpret_cast<int*>(data), nullptr, 0);
+        }
+
         case kernel::hal_data_eka1_manufacturer_hardware_rev:
             *reinterpret_cast<std::uint32_t*>(data) = 1;
             break;
