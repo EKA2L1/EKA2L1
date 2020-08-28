@@ -165,7 +165,10 @@ def parse_system_arguments(common_path, argvs):
                         break
 
                 if not found:
-                    raise Exception('No device found with name: {}'.format(argvs[argpointer]))
+                    print('No device found with name: {}'.format(argvs[argpointer]))
+                    should_continue = False
+
+                    return [None, None, None, None, None, False]
         elif command == '--config':
             argpointer += 1
             configuration = argvs[argpointer]
