@@ -1,0 +1,9 @@
+EXPORTS
+    E32Dll__F10TDllReason @1 NONAME
+	DisplayMode16M__14CFbsDrawDevice @ 2 NONAME
+	NewBitmapDeviceL__14CFbsDrawDeviceG11TScreenInfo12TDisplayModei @ 3 NONAME
+	NewScreenDeviceL__14CFbsDrawDeviceG11TScreenInfo12TDisplayMode @ 4 NONAME
+	NewBitmapDeviceL__14CFbsDrawDeviceRC5TSize12TDisplayModei @ 5 NONAME
+	NewScreenDeviceL__14CFbsDrawDevicei12TDisplayMode @ 6 NONAME
+	NewL__19CDirectScreenBitmap @ 7 NONAME
+

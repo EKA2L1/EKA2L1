@@ -1,0 +1,3 @@
+- scdv: Done logging + transferring exports
+- mediaclientaudio: Done logging + froze + transferring export.
+- mediaclientaudiostream: Done logging + froze + transferring export

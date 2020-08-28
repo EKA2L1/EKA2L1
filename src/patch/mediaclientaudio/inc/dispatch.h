@@ -22,8 +22,12 @@
 
 #include <e32std.h>
 
-#define HLE_DISPATCH_FUNC(ret, name, ...) \
-    ret name(const TUint32 func_id, __VA_ARGS__)
+#define HLE_DISPATCH_FUNC(ret, name, ARGS...) \
+    ret name(const TUint32 func_id, ##ARGS)
+
+#ifndef EKA2
+typedef unsigned long long TUint64;
+#endif
 
 extern "C" {
     /// AUDIO PLAYER DISPATCH API

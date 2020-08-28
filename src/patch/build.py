@@ -83,13 +83,22 @@ def parse_devices(common_path):
     for device in device_list:
         root = device.getElementsByTagName('epocroot')[0]
         dvc_id = device.getAttribute('id')
+        name = device.getAttribute('name')
         is_default_text = device.getAttribute('default')
         is_default = (is_default_text.lower() == 'yes')
 
-        devices.append((dvc_id, root.firstChild.data, is_default))
+        devices.append(((dvc_id + ':' + name), root.firstChild.data, is_default))
 
     return devices
 
+def set_default_device(common_path, target_device, old_device):
+    (target_id, target_epocroot, tdc) = target_device
+    (old_id, old_epocroot, odc) = old_device
+
+    if target_id == old_id:
+        return
+
+    subprocess.call('devices -setdefault @' + target_id, stdout=subprocess.PIPE)
 
 def get_default_device(devices):
     if len(devices) == 0:
@@ -102,47 +111,64 @@ def get_default_device(devices):
     return devices[0]
 
 
-def parse_system_arguments(common_path):
-    if len(sys.argv) <= 1:
+def parse_system_arguments(common_path, argvs):
+    if len(argvs) <= 1:
         return [None, None, None, None, False]
 
     argpointer = 1
-    group_path = sys.argv[len(sys.argv) - 1]
+    group_path = argvs[len(argvs) - 1]
     configuration = 'urel'
 
     try:
         devices = parse_devices(common_path)
     except Exception as e:
         print(e)
-        return [None, None, None, None, False]
+        return [None, None, None, None, None, False]
 
     device = get_default_device(devices)
+    olddevice = device
 
     if not device:
         print('No device presented. Build aborted')
-        return [None, None, None, None, False]
+        return [None, None, None, None, None, False]
 
     build_result_folder = None
 
-    while argpointer <= len(sys.argv) - 1:
-        command = sys.argv[argpointer].lower()
+    while argpointer <= len(argvs) - 1:
+        command = argvs[argpointer].lower()
 
         if command == '--list':
             for device in devices:
                 print(device)
 
-            return [None, group_path, None, False]
+            return [None, None, group_path, None, None, False]
         elif command == '--device':
             argpointer += 1
 
-            device_number = int(sys.argv[argpointer])
+            try:
+                device_number = int(argvs[argpointer])
 
-            if device_number >= 0:
-                # Other smaller than 0, we will assume they want to use default device.
-                device = devices[device_number]
+                if device_number >= 0:
+                    # Other smaller than 0, we will assume they want to use default device.
+                    set_default_device(common_path, devices[device_number], device)
+                    device = devices[device_number]
+            except:
+                found = False
+
+                for small_device in devices:
+                    (small_dvc_name, small_dvc_ep, small_dvc_d) = small_device
+                    if small_dvc_name == argvs[argpointer]:
+                        set_default_device(common_path, small_device, device)
+                        device = small_device
+                        found = True
+
+                        break
+
+                if not found:
+                    raise Exception('No device found with name: {}'.format(argvs[argpointer]))
         elif command == '--config':
             argpointer += 1
-            configuration = sys.argv[argpointer]
+            configuration = argvs[argpointer]
 
             # Is it valid...
             if not is_valid_build_config(configuration):
@@ -150,7 +176,7 @@ def parse_system_arguments(common_path):
                                 format(configuration))
         elif command == '--result':
             argpointer += 1
-            build_result_folder = sys.argv[argpointer]
+            build_result_folder = argvs[argpointer]
         elif command == '--help':
             print('\t--help:    Display this command.')
             print('\t--result:  Specify the folder storing build result')
@@ -158,17 +184,20 @@ def parse_system_arguments(common_path):
             print('\t--device:  Select the device ID to build the project.')
             print('\t--list:    List all available devices installed on this computer.')
 
-            return [None, None, None, False]
+            return [None, None, None, None, None, False]
 
         argpointer += 1
 
-    return [device, group_path, configuration, build_result_folder, True]
+    return [device, olddevice, group_path, configuration, build_result_folder, True]
 
 
 # Get the variant.cfg absolute path
 # This config file is used to generate ABLD makefile for basic EPOC SDK path supplies.
 def get_variant_config_file():
     return os.path.join(os.environ['EPOCROOT'], 'epoc32\\tools\\variant\\variant.cfg')
+
+def get_sdk_is_eka1():
+    return not os.path.exists(os.path.join(os.environ['EPOCROOT'], 'epoc32\\tools\\elf2e32.exe'))
 
 
 # Get the folder that store a MMP's ABLD makefile and build results
@@ -183,6 +212,9 @@ def get_mmp_build_folder(mmp_full_path):
 
 # Check if this mmp should has its ABLD makefile generated
 def should_generate_abld_makefile(mmp_full_path, plat):
+    if get_sdk_is_eka1():
+        return True
+
     mmp_build_folder = get_mmp_build_folder(mmp_full_path)
     (folder, mmp_filename) = os.path.split(mmp_full_path)
     (mmp_name, ext) = os.path.splitext(mmp_filename)
@@ -248,7 +280,10 @@ def parse_bld_file(group_path):
 
     if not build_platform or build_platform.upper() == 'DEFAULT':
         # Use our default platform
-        build_platform = 'GCCE'
+        if get_sdk_is_eka1():
+            build_platform = 'armi'
+        else:
+            build_platform = 'GCCE'
 
     return [build_platform, mmp_files]
 
@@ -313,7 +348,7 @@ def copy_build_result(group_folder, configuration, folder):
         inside_folder_name = '{}\\{}\\'.format(build_platform.upper(), configuration)
 
         original_build_folder = os.path.join(binary_folder, inside_folder_name)
-        target_build_folder = os.path.join(folder, "{}\\{}".format(mmp_name, inside_folder_name))
+        target_build_folder = folder
 
         # Make new directories!!!
         try:
@@ -328,9 +363,11 @@ def copy_build_result(group_folder, configuration, folder):
         copyfile(source_mmp_name, target_mmp_name)
 
 
-def main():
+def build_entry(argvs):
     common_path = find_symbian_common_path()
-    (device, group_folder, configuration, result_folder, should_continue) = parse_system_arguments(common_path)
+    current_path = os.getcwd()
+
+    (device, olddevice, group_folder, configuration, result_folder, should_continue) = parse_system_arguments(common_path, argvs)
 
     if not should_continue:
         return
@@ -342,40 +379,46 @@ def main():
     print('Using the following device to build the project:')
     print(device)
 
-    group_folder = os.path.abspath(group_folder)
+    try:
+        group_folder = os.path.abspath(group_folder)
 
-    # Remove device letters because all the tools dont like it
-    (drive, abs_path) = os.path.splitdrive(device[1])
-    (group_drive, abs_path_drive) = os.path.splitdrive(group_folder)
-    
-    if drive.lower() != group_drive.lower():
-        print('Drive of the SDK versus drive of the project to build are not the same')
-        return 0
+        # Remove device letters because all the tools dont like it
+        (drive, abs_path) = os.path.splitdrive(device[1])
+        (group_drive, abs_path_drive) = os.path.splitdrive(group_folder)
+        
+        if drive.lower() != group_drive.lower():
+            print('Drive of the SDK versus drive of the project to build are not the same')
+            return 0
 
-    # Yes it also want separator at the end
-    if not (abs_path.endswith('\\') or abs_path.endswith('/')):
-        abs_path += '\\'
+        # Yes it also want separator at the end
+        if not (abs_path.endswith('\\') or abs_path.endswith('/')):
+            abs_path += '\\'
 
-    # Set the EPOCROOT environment variable
-    os.environ['EPOCROOT'] = abs_path
+        # Set the EPOCROOT environment variable
+        os.environ['EPOCROOT'] = abs_path
 
-    # Change current directory to group folder
-    os.chdir(group_folder)
+        # Change current directory to group folder
+        os.chdir(group_folder)
 
-    # Ready to build!
-    time_start_build = timeit.default_timer()
-    build(group_folder, configuration)
+        # Ready to build!
+        time_start_build = timeit.default_timer()
+        build(group_folder, configuration)
 
-    print('Build finished in {} seconds'.format(timeit.default_timer() - time_start_build))
+        print('Build finished in {} seconds'.format(timeit.default_timer() - time_start_build))
 
-    if result_folder:
-        print('Copy build results to {}'.format(os.path.abspath(result_folder)))
-        copy_build_result(group_folder, configuration, result_folder)
+        if result_folder:
+            print('Copy build results to {}'.format(os.path.abspath(result_folder)))
+            copy_build_result(group_folder, configuration, result_folder)
+    except Exception as e:
+        print(e)
+
+    os.chdir(current_path)
+    set_default_device(common_path, olddevice, device)
 
     return 0
 
 
 # Main body
 if __name__ == '__main__':
-    main()
+    build_entry(sys.argv)
     sys.exit(0)

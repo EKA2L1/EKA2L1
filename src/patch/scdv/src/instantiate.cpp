@@ -19,10 +19,12 @@
 
 #include "drawdvc24.h"
 #include "drawdvc32.h"
-#include <scdv/draw.h>
-#include <scdv/panic.h>
+#include "scdv/draw.h"
+#include "scdv/panic.h"
 
+#ifdef EKA2
 #include <hal.h>
+#endif
 
 CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMode aDispMode, TInt aDataStride) {
     CFbsDrawDevice *newDevice = NULL;
@@ -37,6 +39,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
 
         break;
 
+#ifdef EKA2
     case EColor16MA:
         newDevice = new (ELeave) CFbsTwentyfourBitAlphaDrawDevice;
         CleanupStack::PushL(newDevice);
@@ -54,6 +57,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         Scdv::Log("INFO:: A new 32 bit bitmap device has been instantiated!");
 
         break;
+#endif
 
     default:
         Scdv::Log("ERR:: Unsupported or unimplemented format for bitmap device %d", aDispMode);
@@ -72,6 +76,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
     CFbsDrawDevice *device = NULL;
 
     switch (aMode) {
+#ifdef EKA2
     case EColor16MU:
         device = new (ELeave) CFbsTwentyfourBitUnsignedByteScreenDrawDevice;
         CleanupStack::PushL(device);
@@ -89,6 +94,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
         Scdv::Log("INFO:: A new 24 bit alpha screen device has been instantiated!");
 
         break;
+#endif
 
     default:
         Scdv::Log("ERROR:: Unsupported display mode for screen device %d", (TInt)aMode);
@@ -113,11 +119,25 @@ CFbsDrawDevice *CFbsDrawDevice::NewScreenDeviceL(TScreenInfo aInfo, TDisplayMode
 
 CFbsDrawDevice *CFbsDrawDevice::NewScreenDeviceL(TInt aScreenNo, TDisplayMode aDispMode) {
     TUint32 *videoAddress = NULL;
+
+#ifdef EKA2
     HAL::Get(aScreenNo, HAL::EDisplayMemoryAddress, (TInt &)(videoAddress));
+#else
+    TPckgBuf<TScreenInfoV01> info;
+    UserSvr::ScreenInfo(info);
+    
+    videoAddress = reinterpret_cast<TUint32*>(info().iScreenAddress);
+#endif
 
     TInt width, height = 0;
+    
+#ifdef EKA2
     HAL::Get(aScreenNo, HAL::EDisplayXPixels, width);
     HAL::Get(aScreenNo, HAL::EDisplayYPixels, height);
+#else
+    width = info().iScreenSize.iWidth;
+    height = info().iScreenSize.iHeight;
+#endif
 
     return InstantiateNewScreenDevice(aScreenNo, videoAddress, TSize(width, height), aDispMode);
 }

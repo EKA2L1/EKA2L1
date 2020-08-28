@@ -29,7 +29,14 @@
 #include <mmf/common/mmfaudio.h>
 #include <mmf/common/mmfbase.h>
 #include <mmf/common/mmfstandardcustomcommands.h>
+
+#if !defined(__SERIES80__) && !defined(__SERIES60_1X__)
+#define MMF_BASE_CLIENT_UTILITY
+#endif
+
+#ifdef MMF_BASE_CLIENT_UTILITY
 #include <mmfclntutility.h>
+#endif
 
 class MMdaAudioOutputStreamCallback {
 public:
@@ -40,7 +47,11 @@ public:
 
 class CMMFMdaAudioOutputStream;
 
-class CMdaAudioOutputStream : public CBase, public MMMFClientUtility {
+class CMdaAudioOutputStream : public CBase
+#ifdef MMF_BASE_CLIENT_UTILITY
+                            , public MMMFClientUtility
+#endif
+{
 public:
     EXPORT_C static CMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallBack,
         CMdaServer *aServer = NULL);
@@ -70,8 +81,12 @@ public:
     EXPORT_C TInt GetBytes();
     EXPORT_C void SetDataTypeL(TFourCC aAudioType);
     EXPORT_C TFourCC DataType() const;
+    
+#ifdef MMF_BASE_CLIENT_UTILITY
     EXPORT_C TInt RegisterAudioResourceNotification(MMMFAudioResourceNotificationCallback &aCallback, TUid aNotificationEventUid, const TDesC8 &aNotificationRegistrationData = KNullDesC8);
     EXPORT_C TInt CancelRegisterAudioResourceNotification(TUid aNotificationEventId);
+#endif
+
     EXPORT_C TInt WillResumePlay();
 
     EXPORT_C TAny *CustomInterface(TUid aInterfaceId);

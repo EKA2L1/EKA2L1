@@ -16,10 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+#ifdef EKA2
 
-#include <scdv/log.h>
-#include <scdv/panic.h>
-#include <scdv/sv.h>
+#include "scdv/log.h"
+#include "scdv/panic.h"
+#include "scdv/sv.h"
 
 #include "drawdvc32.h"
 
@@ -349,3 +351,5 @@ TInt CFbsThirtyTwoBitsDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterf
 
 SCRDVC_IMPL(CFbsTwentyfourBitAlphaScreenDrawDevice, CFbsTwentyfourBitAlphaDrawDevice)
 SCRDVC_IMPL(CFbsTwentyfourBitUnsignedByteScreenDrawDevice, CFbsTwentyfourBitUnsignedByteDrawDevice)
+
+#endif

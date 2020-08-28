@@ -20,7 +20,7 @@
 #ifndef MEDIA_CLIENT_AUDIO_STREAM_IMPL_H_
 #define MEDIA_CLIENT_AUDIO_STREAM_IMPL_H_
 
-#include <main.h>
+#include "main.h"
 
 #include <e32base.h>
 #include <e32std.h>

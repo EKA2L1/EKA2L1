@@ -17,14 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define IMPORT_C __declspec(dllexport)
-
 #include <cdsb.h>
-#include <scdv/log.h>
-#include <scdv/panic.h>
-#include <scdv/sv.h>
 
+#include "scdv/log.h"
+#include "scdv/panic.h"
+#include "scdv/sv.h"
+
+#ifdef EKA2
 #include <hal.h>
+#endif
 
 struct CDirectScreenBitmapImpl: public CDirectScreenBitmap {
     TUint32 *iData;
@@ -50,19 +51,36 @@ CDirectScreenBitmapImpl::CDirectScreenBitmapImpl()
 }
 
 TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aSettingsFlags) {
+#ifdef EKA2
     const TInt screenNum = (aSettingsFlags >> 28) & 7;
     HAL::Get(screenNum, HAL::EDisplayMemoryAddress, (TInt &)(iData));
+#else
+    const TInt screenNum = 0;
+#endif
 
     if (iData == NULL) {
         return KErrArgument;
     }
 
+#ifdef EKA2
     // Try to get the width and the height of the screen
     HAL::Get(screenNum, HAL::EDisplayXPixels, iSize.iWidth);
     HAL::Get(screenNum, HAL::EDisplayYPixels, iSize.iHeight);
+#else
+    TPckgBuf<TScreenInfoV01> info;
+    UserSvr::ScreenInfo(info);
+    
+    iSize.iWidth = info().iScreenSize.iWidth;
+    iSize.iHeight = info().iScreenSize.iHeight;
+#endif
 
     // Getting the real flags, ignoring the screen number
+#ifdef EKA2
     iFlags = (aSettingsFlags & ~(7 << 28));
+#else
+    iFlags = aSettingsFlags;
+#endif
+
     iScreenNum = screenNum;
 
     Scdv::Log("New direct screen bitmap created for screen %d, double buffer: %d", screenNum, iFlags & CDirectScreenBitmap::EDoubleBuffer);
@@ -71,7 +89,11 @@ TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aS
 }
 
 TInt CDirectScreenBitmapImpl::BeginUpdate(TAcceleratedBitmapInfo& aBitmapInfo) {
+#ifdef EKA2
     aBitmapInfo.iDisplayMode = EColor16MA;
+#else
+    aBitmapInfo.iDisplayMode = EColor64K;     // TODO
+#endif
     aBitmapInfo.iAddress = reinterpret_cast<TUint8*>(iData);
     aBitmapInfo.iSize = iSize;
     aBitmapInfo.iLinePitch = iSize.iWidth * 4;
@@ -98,10 +120,16 @@ void CDirectScreenBitmapImpl::EndUpdate(const TRect& aScreenRect, TRequestStatus
 void CDirectScreenBitmapImpl::Close() {
 }
 
-CDirectScreenBitmap *CDirectScreenBitmap::NewL() {
+#ifdef EKA2
+EXPORT_C CDirectScreenBitmap *CDirectScreenBitmap::NewL() {
     return CDirectScreenBitmap::NewL(0);
 }
 
-CDirectScreenBitmap *CDirectScreenBitmap::NewL(const TInt aScreenNum) {
+EXPORT_C CDirectScreenBitmap *CDirectScreenBitmap::NewL(const TInt aScreenNum) {
     return new (ELeave) CDirectScreenBitmapImpl();
 }
+#else
+EXPORT_C CDirectScreenBitmap *CDirectScreenBitmap::NewL() {
+    return new (ELeave) CDirectScreenBitmapImpl();
+}
+#endif

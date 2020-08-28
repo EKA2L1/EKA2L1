@@ -17,8 +17,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scdv/draw.h>
+#include "scdv/draw.h"
 
+#if defined(EKA2) || defined(__SERIES80__)
 TDisplayMode CFbsDrawDevice::DisplayMode16M() {
+#ifdef EKA2
     return EColor16MA;
+#else
+    return EColor16M;
+#endif
 }
+#endif
+
+#ifndef EKA2
+EXPORT_C TInt E32Dll(TDllReason reason) {
+    return KErrNone;
+}
+#endif

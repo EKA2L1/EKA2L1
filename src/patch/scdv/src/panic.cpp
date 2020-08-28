@@ -18,7 +18,7 @@
  */
 
 #include <e32std.h>
-#include <scdv/panic.h>
+#include "scdv/panic.h"
 
 namespace Scdv {
     void Panic(TPanicReason reason) {

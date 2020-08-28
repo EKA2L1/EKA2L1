@@ -21,8 +21,8 @@
 #define SCDVC_DRAW_DVC_32_H_
 
 #include "drawdvcbuf.h"
-#include <scdv/blit.h>
-#include <scdv/scale.h>
+#include "scdv/blit.h"
+#include "scdv/scale.h"
 
 class CFbsThirtyTwoBitsDrawDevice : public CFbsDrawDeviceBuffer, public Scdv::MScalingSettings {
 public:

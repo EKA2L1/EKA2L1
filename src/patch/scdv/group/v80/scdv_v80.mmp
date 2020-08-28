@@ -1,0 +1,39 @@
+/*
+============================================================================
+ Name		: scdv.mmp
+ Author	  : 
+ Copyright   : 
+ Description : This is the project specification file for scdv.
+============================================================================
+*/
+
+TARGET        scdv_v80.dll
+
+TARGETTYPE	  dll
+UID			 0x10003B19 0xed8dfe98
+
+USERINCLUDE	 ..\..\inc  ..\..\..\pcommon\inc
+SYSTEMINCLUDE   \epoc32\include
+
+SOURCEPATH	  ..\..\src
+
+SOURCE        panic.cpp
+SOURCE        log.cpp
+SOURCE        scdv.cpp
+SOURCE        drawdvcbuf.cpp
+SOURCE        drawdvcalgo.cpp
+SOURCE        drawdvc24.cpp
+SOURCE        instantiate.cpp
+SOURCE        cdsb.cpp
+SOURCE        dispatch.s
+
+DEFFILE ..\..\eabi\scdv_v80.def
+
+nostrictdef
+
+LIBRARY		  euser.lib gdi.lib hal.lib
+STATICLIBRARY pcommon.lib
+
+CAPABILITY   SwEvent
+
+MACRO        __SERIES80__

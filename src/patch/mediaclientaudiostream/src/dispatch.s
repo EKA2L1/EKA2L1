@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-.include "../../common/sv.s"
+.include "../../../pcommon/inc/sv.s"
 
 .global EAudioDspOutStreamCreate
 .global EAudioDspOutStreamWrite

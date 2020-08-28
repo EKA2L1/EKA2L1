@@ -18,8 +18,8 @@
  */
 
 #include "drawdvcalgo.h"
-#include <scdv/log.h>
-#include <scdv/panic.h>
+#include "scdv/log.h"
+#include "scdv/panic.h"
 
 /**
  * \brief Get number of bits per pixel of each display mode.
@@ -49,10 +49,12 @@ static TInt GetBppFromDisplayMode(TDisplayMode aMode) {
     case EColor16M:
         return 24;
 
+#ifdef EKA2
     case EColor16MA:
     case EColor16MAP:
     case EColor16MU:
         return 32;
+#endif
 
     default:
         break;
@@ -237,6 +239,7 @@ void CFbsDrawDeviceAlgorithm::ReadLine(TInt aX, TInt aY, TInt aLength, TAny *aBu
             colorTransformed = color.Color4K();
             break;
 
+#ifdef EKA2
         case EColor16MU:
             colorTransformed = color.Color16MU();
             break;
@@ -248,6 +251,7 @@ void CFbsDrawDeviceAlgorithm::ReadLine(TInt aX, TInt aY, TInt aLength, TAny *aBu
         case EColor16MA:
             colorTransformed = color.Color16MA();
             break;
+#endif
 
         default:
             Scdv::Log("Unsupported color format to transform %d", aDispMode);
@@ -299,11 +303,13 @@ void CFbsDrawDeviceAlgorithm::ReadLine(TInt aX, TInt aY, TInt aLength, TAny *aBu
             bufferByte[ite++] = (colorTransformed & 0xF00) >> 16;
             break;
 
+#ifdef EKA2
         case EColor16MA:
         case EColor16MAP:
         case EColor16MU:
             *bufferWord++ = colorTransformed;
             break;
+#endif
 
         case EColor4K:
             Scdv::Log("Trying to get 12bpp color line, warning unstable!");

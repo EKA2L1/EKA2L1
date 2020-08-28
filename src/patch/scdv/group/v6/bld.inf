@@ -1,0 +1,17 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : 
+ Copyright   : 
+ Description : This file provides the information required for building the
+				whole of a scdv.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_EXPORTS
+
+PRJ_MMPFILES
+scdv_v6.mmp

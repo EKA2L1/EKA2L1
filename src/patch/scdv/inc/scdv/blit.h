@@ -20,7 +20,7 @@
 #ifndef SCDV_BLIT_H_
 #define SCDV_BLIT_H_
 
-#include <scdv/draw.h>
+#include "scdv/draw.h"
 
 #include <e32def.h>
 #include <e32std.h>
