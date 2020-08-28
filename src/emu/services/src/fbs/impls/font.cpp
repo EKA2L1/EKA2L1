@@ -519,14 +519,14 @@ namespace eka2l1 {
         DO_BITMAP_OPEN_FONT_CREATION(2);
     }
 
-    void fbscli::write_font_handle(service::ipc_context *ctx, fbsfont *font) {
+    void fbscli::write_font_handle(service::ipc_context *ctx, fbsfont *font, const int index) {
         font_info result_info;
 
         result_info.handle = obj_table_.add(font);
         result_info.address_offset = font->guest_font_offset;
         result_info.server_handle = static_cast<std::int32_t>(font->id);
 
-        ctx->write_data_to_descriptor_argument(1, result_info);
+        ctx->write_data_to_descriptor_argument(index, result_info);
         ctx->complete(epoc::error_none);
     }
     
@@ -602,7 +602,7 @@ namespace eka2l1 {
             font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
         }
 
-        write_font_handle(ctx, font);
+        write_font_handle(ctx, font, 1);
     }
 
     void fbscli::get_font_by_uid(service::ipc_context *ctx) {
@@ -645,7 +645,7 @@ namespace eka2l1 {
 
         // S^3 warning!
         font->guest_font_offset = serv->host_ptr_to_guest_shared_offset(bmpfont);
-        write_font_handle(ctx, font);
+        write_font_handle(ctx, font, 0);
     }
 
     void fbscli::duplicate_font(service::ipc_context *ctx) {
@@ -657,7 +657,7 @@ namespace eka2l1 {
             return;
         }
 
-        write_font_handle(ctx, font);
+        write_font_handle(ctx, font, 1);
     }
 
     static constexpr std::uint16_t FBS_TWIPS_MUL = 15;

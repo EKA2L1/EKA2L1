@@ -181,7 +181,7 @@ namespace eka2l1 {
         void fill_bitmap_information(T *bitmapfont, Q *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
             kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
 
-        void write_font_handle(service::ipc_context *ctx, fbsfont *font);
+        void write_font_handle(service::ipc_context *ctx, fbsfont *font, const int index);
 
         explicit fbscli(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
