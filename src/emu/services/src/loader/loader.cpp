@@ -33,6 +33,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
+#include <common/pystr.h>
 
 #include <kernel/libmanager.h>
 
@@ -48,6 +49,11 @@ namespace eka2l1 {
         }
 
         return "!Loader";
+    }
+
+    static std::vector<common::pystr16> get_additional_search_paths(const std::u16string &search_list) {
+        common::pystr16 str(search_list);
+        return str.split(u';');
     }
 
     void loader_server::load_process(eka2l1::service::ipc_context &ctx) {
@@ -172,10 +178,29 @@ namespace eka2l1 {
             *lib_path += u".dll";
         }
 
-        codeseg_ptr cs = ctx.sys->get_lib_manager()->load(*lib_path, ctx.msg->own_thr->owning_process());
+        // Access to this library manager is locked by kernel lock, so we directly append additional search path
+        hle::lib_manager *mngr = ctx.sys->get_lib_manager();
+        kernel::process *own_pr = ctx.msg->own_thr->owning_process();
+
+        std::vector<common::pystr16> search_list;
+        
+        if (info_eka1) {
+            std::u16string search_list_str = info_eka1->search_path_.to_std_string(own_pr);
+            search_list = get_additional_search_paths(search_list_str);
+        }
+
+        for (auto &search_path: search_list) {
+            mngr->search_paths.push_back(search_path.std_str());
+        }
+
+        codeseg_ptr cs = mngr->load(*lib_path, own_pr);
+
+        if (!search_list.empty()) {
+            mngr->search_paths.erase(mngr->search_paths.end() - search_list.size(), mngr->search_paths.end());
+        }
 
         if (!cs) {
-            LOG_DEBUG("Try loading {} to {} failed", lib_name, ctx.msg->own_thr->owning_process()->name());
+            LOG_DEBUG("Try loading {} to {} failed", lib_name, own_pr->name());
             ctx.complete(epoc::error_not_found);
             return;
         }
@@ -186,16 +211,14 @@ namespace eka2l1 {
 
         LOG_TRACE("Loaded library: {}", lib_name);
 
-        kernel::process *owning_process = ctx.msg->own_thr->owning_process();
-
         if (info) {
-            owning_process->signal_dll_lock(ctx.msg->own_thr);
+            own_pr->signal_dll_lock(ctx.msg->own_thr);
         
             info->handle = lib_handle_and_obj.first;
             ctx.write_data_to_descriptor_argument(0, *info);
         } else {
             // They auto attach on eka1
-            lib_handle_and_obj.second->attach(owning_process);
+            lib_handle_and_obj.second->attach(own_pr);
 
             info_eka1->result_handle = lib_handle_and_obj.first;
             ctx.write_data_to_descriptor_argument(0, *info_eka1);

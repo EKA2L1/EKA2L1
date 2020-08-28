@@ -67,7 +67,8 @@ namespace eka2l1::epoc {
         std::uint32_t unk10[16];
         epoc::filename full_path_;
         epoc::filename filename_;
-        epoc::buf_static<char16_t, 262> unk_;
+        epoc::filename search_path_;
+        std::uint32_t unkXX[3];
         std::uint32_t result_handle;
         epoc::owner_type handle_owner_;
     };
