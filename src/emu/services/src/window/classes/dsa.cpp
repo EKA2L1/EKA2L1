@@ -70,7 +70,16 @@ namespace eka2l1::epoc {
             }
         }
 
-        std::uint32_t window_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+        std::uint32_t window_handle = 0;
+        
+        if (sync_thread_ && (cmd.header.cmd_len == 8)) {
+            // First integer looks like a sync status too. Probably for other side around.
+            // TODO: Use it.
+            window_handle = *(reinterpret_cast<std::uint32_t *>(cmd.data_ptr) + 1);
+        } else {
+            window_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        }
+
         epoc::window_user *user = reinterpret_cast<epoc::window_user *>(client->get_object(window_handle));
 
         // what the fuck msvc
@@ -112,7 +121,13 @@ namespace eka2l1::epoc {
 
         if ((max_rects == 0) || (state_ != state_prepare)) {
             // What? Nothing?
-            ctx.complete(epoc::CINT32_MAX);
+            if (sync_thread_) {
+                // Old DSA want 0
+                ctx.complete(0);
+            } else {
+                ctx.complete(epoc::CINT32_MAX);
+            }
+
             return;
         }
 
