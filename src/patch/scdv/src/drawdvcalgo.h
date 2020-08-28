@@ -21,8 +21,8 @@
 #define SCDV_DVC_ALGO_H_
 
 #include <e32std.h>
-#include <scdv/blit.h>
-#include <scdv/draw.h>
+#include "scdv/blit.h"
+#include "scdv/draw.h"
 
 void PanicAtTheEndOfTheWorld();
 

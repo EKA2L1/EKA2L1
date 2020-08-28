@@ -22,8 +22,8 @@
 
 #include <e32std.h>
 
-#define HLE_DISPATCH_FUNC(ret, name, id, ...) \
-    ret name(const TUint32 func_id, __VA_ARGS__)
+#define HLE_DISPATCH_FUNC(ret, name, id, ARGS...) \
+    ret name(const TUint32 func_id, ##ARGS)
 
 struct TFastBlitInfo {
     TUint8 *iDestBase;

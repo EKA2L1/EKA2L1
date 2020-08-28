@@ -18,8 +18,8 @@
  */
 
 #include "drawdvcbuf.h"
-#include <scdv/log.h>
-#include <scdv/sv.h>
+#include "scdv/log.h"
+#include "scdv/sv.h"
 
 CFbsDrawDeviceBuffer::CFbsDrawDeviceBuffer()
     : iBuffer(NULL)

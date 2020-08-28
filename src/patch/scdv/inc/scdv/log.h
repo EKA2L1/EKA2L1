@@ -20,8 +20,19 @@
 #ifndef SCDV_LOG_H_
 #define SCDV_LOG_H_
 
+#include <e32def.h>
+
+void DoScdvLog(const char *aFormat, VA_LIST list);
+
 namespace Scdv {
-    void Log(const char *aFormat, ...);
+    inline void Log(const char *aFormat, ...) {
+        VA_LIST list;
+        VA_START(list, aFormat);
+        
+        DoScdvLog(aFormat, list);
+        
+        VA_END(list);
+    }
 };
 
 #endif

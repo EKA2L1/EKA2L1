@@ -266,27 +266,27 @@ namespace eka2l1::hle {
         const address source_ptr = source_seg->lookup(nullptr, source_export);
         const address dest_ptr = dest_seg->lookup(nullptr, dest_export);
 
-        std::uint8_t *source_ptr_host = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(source_ptr & ~1));
+        std::uint8_t *dest_ptr_host = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(dest_ptr & ~1));
 
-        if (!source_ptr_host) {
+        if (!dest_ptr_host) {
             LOG_WARN("Unable to patch export {} of {} due to export not exist", source_export, source_seg->name());
             return;
         }
 
-        if (source_ptr & 1) {
-            std::memcpy(source_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
+        if (dest_ptr & 1) {
+            std::memcpy(dest_ptr_host, THUMB_TRAMPOLINE_ASM, sizeof(THUMB_TRAMPOLINE_ASM));
 
             // It's thumb
             // Hope it's big enough
-            if (((source_ptr & ~1) & 3) == 0) {
-                source_ptr_host -= 2;
+            if (((dest_ptr & ~1) & 3) == 0) {
+                dest_ptr_host -= 2;
             }
 
-            *reinterpret_cast<std::uint32_t *>(source_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = dest_ptr;
+            *reinterpret_cast<std::uint32_t *>(dest_ptr_host + sizeof(THUMB_TRAMPOLINE_ASM)) = source_ptr;
         } else {
             // ARM!!!!!!!!!
-            std::memcpy(source_ptr_host, ARM_TRAMPOLINE_ASM, sizeof(ARM_TRAMPOLINE_ASM));
-            *reinterpret_cast<std::uint32_t *>(source_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = dest_ptr;
+            std::memcpy(dest_ptr_host, ARM_TRAMPOLINE_ASM, sizeof(ARM_TRAMPOLINE_ASM));
+            *reinterpret_cast<std::uint32_t *>(dest_ptr_host + sizeof(ARM_TRAMPOLINE_ASM)) = source_ptr;
         }
     }
 
@@ -299,7 +299,7 @@ namespace eka2l1::hle {
             std::uint32_t dest_export = 0;
             pair->get(&dest_export, 1, 0);
 
-            if (source_seg->is_rom()) {
+            if (dest_seg->is_rom()) {
                 patch_rom_export(mem, source_seg, dest_seg, source_export, dest_export);
             }
 
@@ -307,25 +307,90 @@ namespace eka2l1::hle {
         }
     }
 
+    static std::string epocver_to_plat_suffix(const epocver ver) {
+        switch (ver) {
+        case epocver::epoc6:
+            return "v6";
+
+        case epocver::epoc80:
+            return "v80";
+
+        case epocver::epoc93:
+            return "v93";
+
+        case epocver::epoc94:
+            return "v94";
+
+        case epocver::epoc95:
+            return "v95";
+
+        case epocver::epoc10:
+            return "v100";
+
+        default:
+            break;
+        }
+
+        return "";
+    }
+
     void lib_manager::load_patch_libraries(const std::string &patch_folder) {
         common::dir_iterator iterator(patch_folder);
         common::dir_entry entry;
 
         while (iterator.next_entry(entry) == 0) {
-            if (common::lowercase_string(eka2l1::path_extension(entry.name)) == ".dll") {
+            if (common::lowercase_string(eka2l1::path_extension(entry.name)) == ".map") {
+                const std::string original_map_name = eka2l1::filename(entry.name);
+                const std::string dest_dll_name = eka2l1::replace_extension(original_map_name, ".dll");
+
                 // Try loading original ROM segment
-                codeseg_ptr original_sec = load(common::utf8_to_ucs2(eka2l1::filename(entry.name)),
-                    nullptr);
+                codeseg_ptr original_sec = load(common::utf8_to_ucs2(dest_dll_name), nullptr);
 
                 if (!original_sec) {
-                    LOG_ERROR("Unable to find original code segment for {}", eka2l1::filename(entry.name));
+                    LOG_ERROR("Unable to find original code segment for {}", original_map_name);
                     continue;
                 }
 
-                const std::string patch_dll_path = eka2l1::add_path(patch_folder, entry.name);
+                const std::string patch_map_path = eka2l1::add_path(patch_folder, entry.name);
+                epocver start_ver = kern_->get_epoc_version();
+
+                std::string patch_dll_map;
+
+                while (true) {
+                    if (start_ver >= epocver::epocverend) {
+                        break;
+                    }
+
+                    const std::string source_dll_name = eka2l1::replace_extension(original_map_name, "_") +
+                        epocver_to_plat_suffix(start_ver) + ".dll";
+                    patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
+
+                    if (!eka2l1::exists(patch_dll_map)) {
+                        patch_dll_map.clear();
+                        start_ver++;
+
+                        continue;
+                    }
+
+                    LOG_TRACE("Using dll {} as patch dll for map file {}", source_dll_name, original_map_name);
+                    break;
+                }
+
+                if (patch_dll_map.empty()) {
+                    const std::string source_dll_name = eka2l1::replace_extension(original_map_name, "_") +
+                        "general.dll";
+                    patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
+
+                    if (!eka2l1::exists(patch_dll_map)) {
+                        LOG_ERROR("Can't find suitable patch DLL for map {}", original_map_name);
+                        continue;
+                    }
+
+                    LOG_TRACE("Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
+                }
 
                 // We want to patch ROM image though. Do it.
-                auto e32imgfile = eka2l1::physical_file_proxy(patch_dll_path, READ_MODE | BIN_MODE);
+                auto e32imgfile = eka2l1::physical_file_proxy(patch_dll_map, READ_MODE | BIN_MODE);
                 eka2l1::ro_file_stream image_data_stream(e32imgfile.get());
 
                 // Try to load them to ROM section
@@ -356,7 +421,8 @@ namespace eka2l1::hle {
 
                 // Relocate! Import
                 std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, nullptr, u"", code_chunk->base(nullptr).ptr_address());
+                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, nullptr, common::utf8_to_ucs2(patch_dll_map),
+                    code_chunk->base(nullptr).ptr_address());
 
                 if (!patch_seg) {
                     continue;
@@ -366,47 +432,25 @@ namespace eka2l1::hle {
 
                 // Look for map file. These describes the export maps.
                 // This function will replace original ROM subroutines with route to these functions.
-                const std::string map_path = eka2l1::replace_extension(patch_dll_path, ".map");
                 common::ini_file map_file_parser;
-                map_file_parser.load(map_path.c_str());
+                map_file_parser.load(patch_map_path.c_str());
 
                 // Patch out the shared segment first
                 common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
 
                 if (shared_section) {
-                    patch_original_codeseg(*shared_section, mem, original_sec, patch_seg);
+                    patch_original_codeseg(*shared_section, mem, patch_seg, original_sec);
                 } else {
                     LOG_TRACE("Shared section not found for patch DLL {}", entry.name);
                 }
 
-                const char *alone_section_name = nullptr;
-
-                switch (kern_->get_epoc_version()) {
-                case epocver::epoc94:
-                    alone_section_name = "epoc9v4";
-                    break;
-
-                case epocver::epoc6:
-                    alone_section_name = "epoc6";
-                    break;
-
-                case epocver::epoc93:
-                    alone_section_name = "epoc9v3";
-                    break;
-
-                case epocver::epoc10:
-                    alone_section_name = "epoc10";
-                    break;
-
-                default:
-                    break;
-                }
+                const char *alone_section_name = epocver_to_string(kern_->get_epoc_version());
 
                 if (alone_section_name) {
                     common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
 
                     if (indi_section) {
-                        patch_original_codeseg(*indi_section, mem, original_sec, patch_seg);
+                        patch_original_codeseg(*indi_section, mem, patch_seg, original_sec);
                     } else {
                         LOG_TRACE("Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
                             entry.name);

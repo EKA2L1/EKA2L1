@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <scdv/log.h>
-#include <scdv/panic.h>
+#include "scdv/log.h"
+#include "scdv/panic.h"
 
 #include "drawdvc24.h"
 
@@ -60,7 +60,9 @@ void CFbsTwentyfourBitDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
 void CFbsTwentyfourBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, CGraphicsContext::TDrawMode aDrawMode) {
     switch (aDrawMode) {
     case CGraphicsContext::EDrawModePEN:
+#ifdef EKA2
     case CGraphicsContext::EDrawModeWriteAlpha:
+#endif
         aAddress[0] = aBlue;
         aAddress[1] = aGreen;
         aAddress[2] = aRed;

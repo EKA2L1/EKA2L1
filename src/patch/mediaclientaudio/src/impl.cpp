@@ -17,11 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <dispatch.h>
-#include <impl.h>
-#include <log.h>
+#include "dispatch.h"
+#include "impl.h"
+#include "log.h"
 
+#ifdef EKA2
 #include <e32cmn.h>
+#endif
+
+#include <e32def.h>
+#include <e32std.h>
 
 CMMFMdaAudioPlayerUtility::CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
     : CActive(CActive::EPriorityIdle)
@@ -134,11 +139,19 @@ TInt CMMFMdaAudioPlayerUtility::GetVolume() {
 }
 
 TTimeIntervalMicroSeconds CMMFMdaAudioPlayerUtility::CurrentPosition() {
+#ifdef EKA2
     return EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance);
+#else
+    return TTimeIntervalMicroSeconds(TInt64(static_cast<TInt>(EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance))));
+#endif
 }
 
 void CMMFMdaAudioPlayerUtility::SetCurrentPosition(const TTimeIntervalMicroSeconds &aPos) {
+#ifdef EKA2
     EAudioPlayerSetCurrentPlayPos(0, iDispatchInstance, aPos.Int64());
+#else
+    EAudioPlayerSetCurrentPlayPos(0, iDispatchInstance, aPos.Int64().GetTInt());
+#endif
 }
 
 TInt CMMFMdaAudioPlayerUtility::BitRate(TUint &aBitRate) {
@@ -161,5 +174,9 @@ TInt CMMFMdaAudioPlayerUtility::SetBalance(const TInt aBalance) {
 }
 
 void CMMFMdaAudioPlayerUtility::SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval) {
+#ifdef EKA2
     EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64());
+#else
+    EAudioPlayerSetRepeats(0, iDispatchInstance, aHowManyTimes, aSilenceInterval.Int64().GetTInt());
+#endif
 }

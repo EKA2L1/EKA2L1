@@ -1,0 +1,19 @@
+EXPORTS
+	_ZN21CMdaAudioOutputStream11RequestStopEv @ 1 NONAME
+	_ZN21CMdaAudioOutputStream11SetBalanceLEi @ 2 NONAME
+	_ZN21CMdaAudioOutputStream12SetDataTypeLE7TFourCC @ 3 NONAME
+	_ZN21CMdaAudioOutputStream13KeepOpenAtEndEv @ 4 NONAME
+	_ZN21CMdaAudioOutputStream14WillResumePlayEv @ 5 NONAME
+	_ZN21CMdaAudioOutputStream15CustomInterfaceE4TUid @ 6 NONAME
+	_ZN21CMdaAudioOutputStream33RegisterAudioResourceNotificationER37MMMFAudioResourceNotificationCallback4TUidRK6TDesC8 @ 7 NONAME
+	_ZN21CMdaAudioOutputStream39CancelRegisterAudioResourceNotificationE4TUid @ 8 NONAME
+	_ZN21CMdaAudioOutputStream4NewLER29MMdaAudioOutputStreamCallbackP10CMdaServer @ 9 NONAME
+	_ZN21CMdaAudioOutputStream4NewLER29MMdaAudioOutputStreamCallbacki22TMdaPriorityPreference @ 10 NONAME
+	_ZN21CMdaAudioOutputStream5PauseEv @ 11 NONAME
+	_ZN21CMdaAudioOutputStream6ResumeEv @ 12 NONAME
+	_ZN21CMdaAudioOutputStream8GetBytesEv @ 13 NONAME
+	_ZNK21CMdaAudioOutputStream11GetBalanceLEv @ 14 NONAME
+	_ZNK21CMdaAudioOutputStream8DataTypeEv @ 15 NONAME
+	_ZTI21CMdaAudioOutputStream @ 16 NONAME
+	_ZTV21CMdaAudioOutputStream @ 17 NONAME
+

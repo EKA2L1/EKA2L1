@@ -1,0 +1,11 @@
+TARGET		  pcommon.lib
+TARGETTYPE	  lib
+UID			 0
+
+USERINCLUDE	 ..\inc
+SYSTEMINCLUDE   \epoc32\include
+
+SOURCEPATH	  ..\src
+
+SOURCE		  debug.s
+SOURCE        log.cpp

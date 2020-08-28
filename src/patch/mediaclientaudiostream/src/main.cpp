@@ -20,10 +20,10 @@
 #include <mda/common/audio.h>
 #include <mda/common/resource.h>
 
-#include <dispatch.h>
-#include <impl.h>
-#include <log.h>
-#include <main.h>
+#include "dispatch.h"
+#include "impl.h"
+#include "log.h"
+#include "main.h"
 
 #include <e32std.h>
 
@@ -147,6 +147,7 @@ TFourCC CMdaAudioOutputStream::DataType() const {
     return format;
 }
 
+#ifdef MMF_BASE_CLIENT_UTILITY
 TInt CMdaAudioOutputStream::RegisterAudioResourceNotification(MMMFAudioResourceNotificationCallback &aCallback, TUid aNotificationEventUid, const TDesC8 &aNotificationRegistrationData) {
     LogOut(MCA_CAT, _L("WARN:: Register audio notification not supported!"));
     return KErrNotSupported;
@@ -156,6 +157,7 @@ TInt CMdaAudioOutputStream::CancelRegisterAudioResourceNotification(TUid aNotifi
     LogOut(MCA_CAT, _L("WARN:: Cancel register audio notification not supported!"));
     return KErrNotSupported;
 }
+#endif
 
 TInt CMdaAudioOutputStream::WillResumePlay() {
     LogOut(MCA_CAT, _L("WARN:: Will resume play not supported!"));
@@ -178,3 +180,9 @@ TInt CMdaAudioOutputStream::RequestStop() {
     LogOut(MCA_CAT, _L("WARN:: Request stop not supported!"));
     return KErrNotSupported;
 }
+
+#ifndef EKA2
+EXPORT_C TInt E32Dll(TDllReason reason) {
+    return 0;
+}
+#endif

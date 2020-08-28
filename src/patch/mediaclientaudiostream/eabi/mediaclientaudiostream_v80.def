@@ -1,0 +1,16 @@
+EXPORTS
+    WillResumePlay__21CMdaAudioOutputStream @ 1 NONAME R3UNUSED ; CMdaAudioOutputStream::WillResumePlay(void)
+    DataType__C21CMdaAudioOutputStream @ 2 NONAME R3UNUSED ; CMdaAudioOutputStream::DataType(void) const
+    E32Dll__F10TDllReason @ 3 NONAME R3UNUSED ; E32Dll(TDllReason)
+    GetBalanceL__C21CMdaAudioOutputStream @ 4 NONAME R3UNUSED ; CMdaAudioOutputStream::GetBalanceL(void) const
+    GetBytes__21CMdaAudioOutputStream @ 5 NONAME R3UNUSED ; CMdaAudioOutputStream::GetBytes(void)
+    KeepOpenAtEnd__21CMdaAudioOutputStream @ 6 NONAME R3UNUSED ; CMdaAudioOutputStream::KeepOpenAtEnd(void)
+    NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer @ 7 NONAME R3UNUSED ; CMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &, CMdaServer *)
+    NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbacki22TMdaPriorityPreference @ 8 NONAME R3UNUSED ; CMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &, int, TMdaPriorityPreference)
+    Pause__21CMdaAudioOutputStream @ 9 NONAME R3UNUSED ; CMdaAudioOutputStream::Pause(void)
+    RequestStop__21CMdaAudioOutputStream @ 10 NONAME R3UNUSED ; CMdaAudioOutputStream::RequestStop(void)
+    Resume__21CMdaAudioOutputStream @ 11 NONAME R3UNUSED ; CMdaAudioOutputStream::Resume(void)
+    SetBalanceL__21CMdaAudioOutputStreami @ 12 NONAME R3UNUSED ; CMdaAudioOutputStream::SetBalanceL(int)
+    SetDataTypeL__21CMdaAudioOutputStreamG7TFourCC @ 13 NONAME R3UNUSED ; CMdaAudioOutputStream::SetDataTypeL(TFourCC)
+    CustomInterface__21CMdaAudioOutputStreamG4TUid @ 14 NONAME R3UNUSED ; CMdaAudioOutputStream::CustomInterface(TUid)
+

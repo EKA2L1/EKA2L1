@@ -19,11 +19,14 @@
 
 #include <mda/common/audio.h>
 
-#include <dispatch.h>
-#include <impl.h>
-#include <log.h>
+#include "dispatch.h"
+#include "impl.h"
+#include "log.h"
 
+#ifdef EKA2
 #include <e32cmn.h>
+#endif
+
 #include <e32std.h>
 
 // This sits between the redraw priority (50) and ws events priority (100) of the UI framework.
@@ -120,12 +123,12 @@ void CMMFMdaOutputOpen::Open(CMMFMdaAudioOutputStream *stream) {
 
 /// AUDIO OUTPUT STREAM
 CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
-    : iCallback(aCallback)
-    , iPriority(aPriority)
+    : iPriority(aPriority)
     , iPref(aPref)
     , iState(EMdaStateReady)
     , iBufferQueue(this)
-    , iOpen() {
+    , iOpen()
+    , iCallback(aCallback) {
 }
 
 CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
@@ -324,7 +327,12 @@ const TTimeIntervalMicroSeconds &CMMFMdaAudioOutputStream::Position() {
         LogOut(MCA_CAT, _L("ERR:: Unable to get stream position!"));
     }
 
+#ifdef EKA2
     iPosition = TTimeIntervalMicroSeconds(time);
+#else
+    iPosition = TTimeIntervalMicroSeconds(static_cast<TInt>(time));
+#endif
+
     return iPosition;
 }
 

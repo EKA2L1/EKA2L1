@@ -1,0 +1,19 @@
+EXPORTS
+	_ZN14CFbsDrawDevice14DisplayMode16MEv @ 1 NONAME
+	_ZN14CFbsDrawDevice16NewBitmapDeviceLE11TScreenInfo12TDisplayModei @ 2 NONAME
+	_ZN14CFbsDrawDevice16NewScreenDeviceLE11TScreenInfo12TDisplayMode @ 3 NONAME
+	_ZN14CFbsDrawDevice16NewBitmapDeviceLERK5TSize12TDisplayModei @ 4 NONAME
+	_ZN14CFbsDrawDevice16NewScreenDeviceLEi12TDisplayMode @ 5 NONAME
+	_ZN19CDirectScreenBitmap4NewLEi @ 6 NONAME
+	_ZN19CDirectScreenBitmap4NewLEv @ 7 NONAME
+	_ZTI20CFbsDrawDeviceBuffer @ 8 NONAME
+	_ZTV20CFbsDrawDeviceBuffer @ 9 NONAME
+	_ZTI23CFbsDrawDeviceAlgorithm @ 10 NONAME
+	_ZTI27CFbsTwentyfourBitDrawDevice @ 11 NONAME
+	_ZTV23CFbsDrawDeviceAlgorithm @ 12 NONAME
+	_ZTV27CFbsTwentyfourBitDrawDevice @ 13 NONAME
+	_ZTI27CFbsThirtyTwoBitsDrawDevice @ 14 NONAME
+	_ZTI38CFbsTwentyfourBitAlphaScreenDrawDevice @ 15 NONAME
+	_ZTV27CFbsThirtyTwoBitsDrawDevice @ 16 NONAME
+	_ZTV38CFbsTwentyfourBitAlphaScreenDrawDevice @ 17 NONAME
+
