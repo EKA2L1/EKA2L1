@@ -2306,8 +2306,20 @@ namespace eka2l1::epoc {
 
     /* DEBUG AND SECURITY */
 
-    BRIDGE_FUNC(void, debug_print, eka2l1::ptr<desc8> des, std::int32_t mode) {
-        LOG_TRACE("{}", des.get(kern->crr_process())->to_std_string(kern->crr_process()));
+    BRIDGE_FUNC(void, debug_print, desc8 *tdes, std::int32_t mode) {
+        if (!tdes) {
+            return;
+        }
+
+        LOG_TRACE("{}", tdes->to_std_string(kern->crr_process()));
+    }
+
+    BRIDGE_FUNC(void, debug_print16, desc16 *tdes) {
+        if (!tdes) {
+            return;
+        }
+
+        LOG_TRACE("{}", common::ucs2_to_utf8(tdes->to_std_string(kern->crr_process())));
     }
 
     BRIDGE_FUNC(std::int32_t, btrace_out, const std::uint32_t a0, const std::uint32_t a1, const std::uint32_t a2,
@@ -3734,6 +3746,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
-        BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1)
+        BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
+        BRIDGE_REGISTER(0xC10000, hle_dispatch),
+        BRIDGE_REGISTER(0xC10001, debug_print),
+        BRIDGE_REGISTER(0xC10002, debug_print16)
     };
 }
