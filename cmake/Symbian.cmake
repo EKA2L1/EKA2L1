@@ -3,7 +3,7 @@ function(add_symbian_project FOLDER)
     add_custom_target(${FOLDER})
     add_custom_command(
         TARGET ${FOLDER}
-        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/build.py --config urel  --result ${CMAKE_CURRENT_SOURCE_DIR}/${FOLDER}/group/ ${CMAKE_CURRENT_SOURCE_DIR}/${FOLDER}/group)
+        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/patch_build.py ${CMAKE_CURRENT_SOURCE_DIR}/${FOLDER}/group)
 endfunction()
 
 function(add_symbian_patch NAME)
@@ -17,6 +17,7 @@ function(add_symbian_patch NAME)
 	    TARGET ${NAME}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin/patch/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/group/${NAME}/GCCE/urel/${NAME}.dll" "${CMAKE_BINARY_DIR}/bin/patch/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/group/${NAME}_general.dll" "${CMAKE_BINARY_DIR}/bin/patch/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/group/${NAME}_v80.dll" "${CMAKE_BINARY_DIR}/bin/patch/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}/group/${NAME}.map" "${CMAKE_BINARY_DIR}/bin/patch/")
 endfunction()
