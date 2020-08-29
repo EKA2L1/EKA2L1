@@ -99,6 +99,10 @@ namespace eka2l1 {
             io->create_directories(message_folder_);
         }
 
+        if (kern->is_eka1()) {
+            reg_.set_list_path(u"C:\\System\\mtm\\Mtm Registry v2");
+        }
+
         reg_.load_mtm_list();
         install_rom_mtm_modules();
 

@@ -89,5 +89,9 @@ namespace eka2l1::epoc::msv {
 
             return &groups_[idx];
         }
+
+        void set_list_path(const std::u16string &list) {
+            list_path_ = list;
+        }
     };
 }
