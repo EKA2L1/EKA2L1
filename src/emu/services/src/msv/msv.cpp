@@ -39,15 +39,28 @@
 namespace eka2l1 {
     static const std::u16string DEFAULT_MSG_DATA_DIR = u"C:\\private\\1000484b\\Mail2\\";
 
+    std::string get_msv_server_name_by_epocver(const epocver ver) {
+        if (ver <= epocver::eka2) {
+            return "MsvServer";
+        }
+
+        return "!MsvServer";
+    }
+
     msv_server::msv_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!MsvServer")
+        : service::typical_server(sys, get_msv_server_name_by_epocver((sys->get_symbian_version_use())))
         , reg_(sys->get_io_system())
         , inited_(false) {
     }
 
     void msv_server::install_rom_mtm_modules() {
         io_system *io = sys->get_io_system();
-        std::u16string DEFAULT_MSG_MTM_FILE_DIR = u"!:\\Resource\\Messaging\\Mtm\\*.r*";
+        std::u16string DEFAULT_MSG_MTM_FILE_DIR;
+        if (sys->get_symbian_version_use() <= epocver::eka2) {
+            DEFAULT_MSG_MTM_FILE_DIR = u"!:\\System\\mtm\\*.r*";
+        } else {
+            DEFAULT_MSG_MTM_FILE_DIR = u"!:\\Resource\\Messaging\\Mtm\\*.r*";
+        }
 
         drive_number drv_target = drive_z;
 
