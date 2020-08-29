@@ -378,6 +378,16 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(pr->get_priority());
     }
 
+    BRIDGE_FUNC(std::int32_t, process_id, kernel::handle h) {
+        process_ptr pr = kern->get<kernel::process>(h);
+
+        if (!pr) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(pr->unique_id());
+    }
+
     BRIDGE_FUNC(std::int32_t, process_rename, kernel::handle h, eka2l1::ptr<des8> new_name) {
         process_ptr pr = kern->get<kernel::process>(h);
         process_ptr cur_pr = kern->crr_process();
@@ -3689,6 +3699,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x19, mutex_wait),
         BRIDGE_REGISTER(0x1A, mutex_signal),
+        BRIDGE_REGISTER(0x1B, process_id),
         BRIDGE_REGISTER(0x2A, semaphore_wait),
         BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
