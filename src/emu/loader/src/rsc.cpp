@@ -554,7 +554,7 @@ namespace eka2l1::loader {
                 return false;
             }
 
-            lookup_table_end_ = LOOKUP_TABLE_START_OFFSET + 2 * ((1 << lookup_table_read_bit_count_) - unk[2] + 1);
+            lookup_table_end_ = LOOKUP_TABLE_START_OFFSET + 2 * ((1 << lookup_table_read_bit_count_) - unk[1] + 1);
             type_ = file_type_compressed;
         } else {
             resource_index_section_offset_ = header_id;
@@ -589,20 +589,16 @@ namespace eka2l1::loader {
         }
 
         if (type_ == file_type_compressed) {
-            res_data_.resize(res_data_offset_table_.back() - res_data_offset_table_.front());
-            if (seri->read(res_data_offset_table_.front(), res_data_.data(), res_data_.size()) != res_data_.size()) {
-                return false;
-            }
+            res_data_.resize(((res_data_offset_table_.back() - res_data_offset_table_.front()) + 7) >> 3);
+            seri->read(resource_index_section_offset_ + res_data_offset_table_.size() * 2, res_data_.data(), res_data_.size());
 
             lookup_offset_table_.resize((lookup_table_end_ - LOOKUP_TABLE_START_OFFSET) >> 1);
             if (seri->read(LOOKUP_TABLE_START_OFFSET, lookup_offset_table_.data(), lookup_offset_table_.size() * 2) != lookup_offset_table_.size() * 2) {
                 return false;
             }
 
-            lookup_data_.resize(lookup_offset_table_.back() - lookup_offset_table_.front());
-            if (seri->read(lookup_offset_table_.front(), lookup_data_.data(), lookup_data_.size()) != lookup_data_.size()) {
-                return false;
-            }
+            lookup_data_.resize(((lookup_offset_table_.back() - lookup_offset_table_.front()) + 7) >> 3);
+            seri->read(lookup_table_end_, lookup_data_.data(), lookup_data_.size());
         }
 
         return true;
@@ -619,16 +615,17 @@ namespace eka2l1::loader {
 
         while (bit_read < count) {
             const std::int8_t bit_to_read_once = 
-                static_cast<std::int8_t>(common::min<std::int16_t>(8 - current_offset & 7, count - bit_read));
+                static_cast<std::int8_t>(common::min<std::int16_t>(8 - (current_offset & 7), count - bit_read));
 
             if ((bit_to_read_once == 8) && ((current_offset & 7) == 0)) {
-                result |= lookup_mode_ ? (res_data_[current_offset >> 3] << bit_read) : (lookup_data_[current_offset >> 3] << bit_read);
+                result |= lookup_mode_ ? (lookup_data_[current_offset >> 3] << bit_read) : (res_data_[current_offset >> 3] << bit_read);
             } else {
                 result |= common::extract_bits(lookup_mode_ ? lookup_data_[current_offset >> 3] : res_data_[current_offset >> 3],
-                    current_offset & 7, bit_to_read_once) << bit_read;
+                    (current_offset & 7) + 1, bit_to_read_once) << bit_read;
             }
 
             bit_read += bit_to_read_once;
+            current_offset += bit_to_read_once;
         }
 
         return result;
@@ -658,7 +655,6 @@ namespace eka2l1::loader {
         lookup_mode_ = is_lookup;
 
         while (iterate_offset < end_offset) {
-            iterate_offset++;
             if (read_bits(iterate_offset, 1).value() == 1) {
                 iterate_offset++;
 
@@ -669,6 +665,8 @@ namespace eka2l1::loader {
                         iterate_offset++;
 
                         if (read_bits(iterate_offset, 1).value() == 1) {
+                            iterate_offset++;
+                            
                             // Repeat count with 8
                             std::uint16_t repeat_count = read_bits(iterate_offset, 8).value();
                             iterate_offset += 8;
@@ -678,6 +676,8 @@ namespace eka2l1::loader {
                                 iterate_offset += 8;
                             }
                         } else {
+                            iterate_offset++;
+
                             // Repeat count with 3-bits
                             std::uint16_t repeat_count = read_bits(iterate_offset, 3).value() + 3;
                             iterate_offset += 3;
@@ -688,6 +688,8 @@ namespace eka2l1::loader {
                             }
                         }
                     } else {
+                        iterate_offset++;
+
                         // Read 2 normal integer
                         std::uint16_t byte_data = read_bits(iterate_offset, 16).value();
                         buffer.push_back(static_cast<std::uint8_t>(byte_data));
@@ -696,6 +698,8 @@ namespace eka2l1::loader {
                         iterate_offset += 16;
                     }
                 } else {
+                    iterate_offset++;
+
                     // Read a normal byte
                     std::uint16_t byte_data = read_bits(iterate_offset, 8).value();
                     buffer.push_back(static_cast<std::uint8_t>(byte_data));
@@ -703,9 +707,15 @@ namespace eka2l1::loader {
                     iterate_offset += 8;
                 }
             } else {
+                iterate_offset++;
+
                 // Use the lookup table. Not sure if it's really lookup :D
                 std::uint16_t lookup_id = read_bits(iterate_offset, lookup_table_read_bit_count_).value();
-                read_internal(lookup_id + 1, buffer, true);
+                iterate_offset += lookup_table_read_bit_count_;
+
+                bool previous_mode = lookup_mode_;
+                read_internal(lookup_id + 1, buffer, true);        
+                lookup_mode_ = previous_mode;
             }
         }
     }
@@ -730,7 +740,7 @@ namespace eka2l1::loader {
 
         stream->seek(0, common::seek_where::beg);
 
-        if ((uid == 0x101F4A6B) || (uid == 0x101F5010) || (static_cast<std::uint16_t>(uid) == 4)) {
+        if ((uid == 0x101F4A6B) || (uid == 0x101F5010)) {
             impl_ = std::make_unique<rsc_file_morden>(stream);
             return;
         }
