@@ -100,6 +100,8 @@ namespace eka2l1::epoc {
             execute_create_chunk_normal_global = 0x01,
             execute_open_chunk_global = 0x02,
             execute_chunk_adjust = 0x03,
+            execute_compress_heap = 0x04,
+            execute_open_handle = 0x0E,
             execute_duplicate_handle = 0x0F,
             execute_close_handle = 0x10,
             execute_create_server_global = 0x15,
@@ -117,6 +119,8 @@ namespace eka2l1::epoc {
             execute_logon_thread = 0x30,
             execute_set_tls = 0x34,
             execute_free_tls = 0x35,
+            execute_open_debug = 0x3F,
+            execute_close_debug = 0x40,
             execute_create_chunk_double_ended = 0x4C,
             execute_create_chunk_double_ended_global = 0x4D,
             execute_free_up_system = 0x52           ///< Free system memory (Unconfirmed).

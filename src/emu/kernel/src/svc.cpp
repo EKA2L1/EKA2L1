@@ -244,6 +244,24 @@ namespace eka2l1::epoc {
         type->uid3 = std::get<2>(tup);
     }
 
+    BRIDGE_FUNC(void, process_type_eka1, eka2l1::ptr<epoc::uid_type> uid_type, kernel::handle h) {
+        process_ptr pr_real = kern->get<kernel::process>(h);
+
+        if (!pr_real) {
+            LOG_ERROR("Svcprocess_type: Invalid process");
+            return;
+        }
+
+        process_ptr crr_pr = kern->crr_process();
+
+        epoc::uid_type *type = uid_type.get(crr_pr);
+        auto tup = pr_real->get_uid_type();
+
+        type->uid1 = std::get<0>(tup);
+        type->uid2 = std::get<1>(tup);
+        type->uid3 = std::get<2>(tup);
+    }
+
     BRIDGE_FUNC(std::int32_t, process_data_parameter_length, std::int32_t slot) {
         kernel::process *crr_process = kern->crr_process();
 
@@ -1804,8 +1822,7 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        const kernel::handle h = kern->open_handle_with_thread(kern->crr_thread(), thr,
-            static_cast<kernel::owner_type>(owner));
+        const kernel::handle h = kern->open_handle(thr, static_cast<kernel::owner_type>(owner));
 
         if (h == INVALID_HANDLE) {
             return epoc::error_general;
@@ -2996,7 +3013,7 @@ namespace eka2l1::epoc {
             return epoc::error_not_found;
         }
 
-        const kernel::handle h = kern->open_handle_with_thread(kern->crr_thread(), thr, get_handle_owner_from_eka1_attribute(attribute));
+        const kernel::handle h = kern->open_handle(thr, get_handle_owner_from_eka1_attribute(attribute));
 
         if (h == INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
@@ -3041,6 +3058,24 @@ namespace eka2l1::epoc {
         }
 
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t debug_open_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t debug_close_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t compress_heap_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
@@ -3108,6 +3143,15 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_close_handle:
             return close_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_open_debug:
+            return debug_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_close_debug:
+            return debug_close_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_compress_heap:
+            return compress_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         default:
             LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -3241,6 +3285,14 @@ namespace eka2l1::epoc {
         thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(thread_pri));
     }
 
+    BRIDGE_FUNC(std::int32_t, server_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
+        return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::server);
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
+        return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::thread);
+    }
+
     /*======================= LOCALE-RELATED FUNCTION ====================*/
     BRIDGE_FUNC(std::uint32_t, uchar_get_category, const epoc::uchar character) {
         return epoc::get_uchar_category(character, *kern->get_current_locale());
@@ -3297,10 +3349,6 @@ namespace eka2l1::epoc {
         }
 
         return static_cast<std::int32_t>(pos);
-    }
-
-    BRIDGE_FUNC(std::int32_t, server_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
-        return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::server);
     }
 
     BRIDGE_FUNC(std::uint32_t, user_language) {
@@ -3727,6 +3775,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
+        BRIDGE_REGISTER(0x800033, thread_find_next),
         BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
         BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
         BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),
@@ -3740,6 +3789,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0x8000A9, library_type_eka1),
+        BRIDGE_REGISTER(0x8000AA, process_type_eka1),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
