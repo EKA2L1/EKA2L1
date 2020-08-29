@@ -1249,10 +1249,14 @@ namespace eka2l1 {
     }
 
     bool ro_file_stream::valid() {
-        return f_->valid();
+        return f_->tell() < f_->size();
     }
 
     std::uint64_t ro_file_stream::left() {
+        if (f_->tell() >= f_->size()) {
+            return 0;
+        }
+
         return f_->size() - f_->tell();
     }
 
