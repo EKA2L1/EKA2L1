@@ -37,7 +37,56 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::loader {
-    class rsc_file {
+    class rsc_file_impl_base {
+    public:
+        virtual std::vector<std::uint8_t> read(const int res_id) = 0;
+        virtual std::uint16_t get_total_resources() const = 0;
+
+        virtual std::uint32_t get_uid(const int idx) {
+            return 0;
+        }
+
+        virtual bool confirm_signature() {
+            return true;
+        }
+    };
+
+    class rsc_file_legacy: public rsc_file_impl_base {
+    private:
+        enum file_type {
+            file_type_non_unicode = 0,
+            file_type_unicode = 1,
+            file_type_compressed = 2
+        } type_;
+
+        std::int16_t resource_count_;
+        std::int16_t resource_index_section_offset_;
+        std::int16_t lookup_table_end_;
+        std::int16_t max_resource_size_;
+        std::int8_t  lookup_table_read_bit_count_;
+
+        std::vector<std::uint8_t> res_data_;
+        std::vector<std::int16_t> res_data_offset_table_;
+        std::vector<std::uint16_t> lookup_offset_table_;
+        std::vector<std::uint8_t> lookup_data_;
+
+        bool lookup_mode_;
+
+        bool read_header(common::ro_stream *seri);
+        std::optional<std::uint16_t> read_bits(const std::int16_t offset, const std::int16_t count);
+
+    public:
+        explicit rsc_file_legacy(common::ro_stream *seri);
+
+        void read_internal(const int res_id, std::vector<std::uint8_t> &buffer, const bool is_lookup = false);
+        std::vector<std::uint8_t> read(const int res_id) override;
+
+        std::uint16_t get_total_resources() const override {
+            return resource_count_;
+        }
+    };
+
+    class rsc_file_morden : public rsc_file_impl_base {
         struct uid_type {
             std::uint32_t uid1;
             std::uint32_t uid2;
@@ -79,22 +128,35 @@ namespace eka2l1::loader {
 
     protected:
         void read_header_and_resource_index(common::ro_stream *seri);
-
+        bool does_resource_contain_unicode(int res_id, bool first_rsc_is_gen);
         int decompress(std::uint8_t *buffer, int max, int res_index);
 
         bool own_res_id(const int res_id);
 
     public:
-        explicit rsc_file(common::ro_stream *seri);
-        bool is_resource_contains_unicode(int res_id, bool first_rsc_is_gen);
+        explicit rsc_file_morden(common::ro_stream *seri);
 
-        std::vector<std::uint8_t> read(const int res_id);
-        std::uint32_t get_uid(const int idx);
+        std::vector<std::uint8_t> read(const int res_id) override;
+        std::uint32_t get_uid(const int idx) override;
 
-        std::uint16_t get_total_resources() const {
+        std::uint16_t get_total_resources() const override {
             return num_res;
         }
 
+        bool confirm_signature() override;
+    };
+
+    class rsc_file {
+    protected:
+        std::unique_ptr<rsc_file_impl_base> impl_;
+        void instantiate_impl(common::ro_stream *stream);
+
+    public:
+        explicit rsc_file(common::ro_stream *stream);
+        
+        std::vector<std::uint8_t> read(const int res_id);
+        std::uint32_t get_uid(const int idx);
+        std::uint16_t get_total_resources() const;
         bool confirm_signature();
     };
 

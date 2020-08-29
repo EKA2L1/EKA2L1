@@ -22,6 +22,7 @@
  */
 
 #include <common/algorithm.h>
+#include <common/bytes.h>
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
 #include <common/dictcomp.h>
@@ -103,7 +104,7 @@ namespace eka2l1::loader {
             * Resource data
     */
 
-    bool rsc_file::is_resource_contains_unicode(int res_id, bool first_rsc_is_gen) {
+    bool rsc_file_morden::does_resource_contain_unicode(int res_id, bool first_rsc_is_gen) {
         if (first_rsc_is_gen) {
             // First resource is that generated bit array
             --res_id;
@@ -121,7 +122,7 @@ namespace eka2l1::loader {
         return unicode_flag_array[res_id / 8] & (1 << (res_id % 8));
     }
 
-    int rsc_file::decompress(std::uint8_t *buffer, int max, int res_index) {
+    int rsc_file_morden::decompress(std::uint8_t *buffer, int max, int res_index) {
         if (!(flags & dictionary_compressed)) {
             // We just read as normal
             int read_size_bytes = 0;
@@ -188,7 +189,7 @@ namespace eka2l1::loader {
         return total_bytes;
     }
 
-    void rsc_file::read_header_and_resource_index(common::ro_stream *buf) {
+    void rsc_file_morden::read_header_and_resource_index(common::ro_stream *buf) {
         std::uint32_t uid[3];
         buf->read(&uid, 12);
 
@@ -217,7 +218,7 @@ namespace eka2l1::loader {
         }
 
         // Check for calypso
-        std::uint16_t calypso_magic = uid[0] >> 16;
+        std::uint16_t calypso_magic = static_cast<std::uint16_t>(uid[0]);
         if (calypso_magic == 4) {
             flags |= (calypso | dictionary_compressed);
 
@@ -355,7 +356,7 @@ namespace eka2l1::loader {
         // Done with the header
     }
 
-    bool rsc_file::own_res_id(const int res_id) {
+    bool rsc_file_morden::own_res_id(const int res_id) {
         int offset = res_id & 0xFFFFF000;
 
         if (offset != 0 && offset != signature.offset) {
@@ -376,7 +377,7 @@ namespace eka2l1::loader {
         return (res_index >= 0) && (res_index < number_of_res);
     }
 
-    std::vector<std::uint8_t> rsc_file::read(const int res_id) {
+    std::vector<std::uint8_t> rsc_file_morden::read(const int res_id) {
         if (!own_res_id(res_id)) {
             LOG_ERROR("RSC file doesn't own the resource id: 0x{:X}", res_id);
             return std::vector<std::uint8_t>{};
@@ -417,7 +418,7 @@ namespace eka2l1::loader {
         // Returns value is the number of bytes readed
         data.resize(err_code);
 
-        if (!is_resource_contains_unicode(res_index, flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
+        if (!does_resource_contain_unicode(res_index, flags & first_res_generated_bit_array_of_res_contains_compressed_unicode)) {
             return data;
         }
 
@@ -477,7 +478,7 @@ namespace eka2l1::loader {
         return stage2_data;
     }
 
-    std::uint32_t rsc_file::get_uid(const int idx) {
+    std::uint32_t rsc_file_morden::get_uid(const int idx) {
         switch (idx) {
         case 1: {
             return uids.uid1;
@@ -500,7 +501,7 @@ namespace eka2l1::loader {
         return 0;
     }
 
-    bool rsc_file::confirm_signature() {
+    bool rsc_file_morden::confirm_signature() {
         auto dat = read(1);
 
         if (dat.size() > sizeof(sig_record)) {
@@ -513,9 +514,268 @@ namespace eka2l1::loader {
         return true;
     }
 
-    rsc_file::rsc_file(common::ro_stream *buf)
+    rsc_file_morden::rsc_file_morden(common::ro_stream *buf)
         : flags(0) {
         read_header_and_resource_index(buf);
+    }
+
+    enum {
+        LOOKUP_TABLE_START_OFFSET = 11
+    };
+
+    bool rsc_file_legacy::read_header(common::ro_stream *seri) {
+        std::uint16_t header_id = 0;
+        if (seri->read(&header_id, 2) != 2) {
+            return false;
+        }
+
+        if (header_id == 4) {
+            if (seri->read(&resource_count_, 2) != 2) {
+                return false;
+            }
+
+            // This is a compressed format, undocumented. Normally if follow normal documentation
+            // on uncompressed RSC, this would mean there's no data at all. So this is detectable case.
+            std::uint8_t unk[2];
+            if (seri->read(unk, 2) != 2) {
+                return false;
+            }
+
+            if (seri->read(&resource_index_section_offset_, 2) != 2) {
+                return false;
+            }
+
+            // This is for allocation for uncompressed buffer
+            if (seri->read(&max_resource_size_, 2) != 2) {
+                return false;
+            }
+            
+            if (seri->read(&lookup_table_read_bit_count_, 1) != 1) {
+                return false;
+            }
+
+            lookup_table_end_ = LOOKUP_TABLE_START_OFFSET + 2 * ((1 << lookup_table_read_bit_count_) - unk[2] + 1);
+            type_ = file_type_compressed;
+        } else {
+            resource_index_section_offset_ = header_id;
+
+            std::uint16_t resource_index_sect_size = 0;
+            if (seri->read(&resource_index_sect_size, 2) != 2) {
+                return false;
+            }
+
+            if (resource_index_sect_size & 1) {
+                type_ = file_type_unicode;
+                resource_count_ = ((resource_index_sect_size - 1) >> 1) - 1;
+            } else {
+                type_ = file_type_non_unicode;
+                resource_count_ = (resource_index_sect_size >> 1) - 1;
+            }
+
+            lookup_table_end_ = 0;
+            max_resource_size_ = 0;
+
+            res_data_.resize(resource_index_section_offset_ - 4);
+            if (seri->read(4, res_data_.data(), res_data_.size()) != res_data_.size()) {
+                return false;
+            }
+        }
+
+        // Read offset table
+        res_data_offset_table_.resize(resource_count_ + 1);
+        if (seri->read(resource_index_section_offset_, res_data_offset_table_.data(), res_data_offset_table_.size() * 2) != 
+            res_data_offset_table_.size() * 2) {
+            return false;
+        }
+
+        if (type_ == file_type_compressed) {
+            res_data_.resize(res_data_offset_table_.back() - res_data_offset_table_.front());
+            if (seri->read(res_data_offset_table_.front(), res_data_.data(), res_data_.size()) != res_data_.size()) {
+                return false;
+            }
+
+            lookup_offset_table_.resize((lookup_table_end_ - LOOKUP_TABLE_START_OFFSET) >> 1);
+            if (seri->read(LOOKUP_TABLE_START_OFFSET, lookup_offset_table_.data(), lookup_offset_table_.size() * 2) != lookup_offset_table_.size() * 2) {
+                return false;
+            }
+
+            lookup_data_.resize(lookup_offset_table_.back() - lookup_offset_table_.front());
+            if (seri->read(lookup_offset_table_.front(), lookup_data_.data(), lookup_data_.size()) != lookup_data_.size()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    std::optional<std::uint16_t> rsc_file_legacy::read_bits(const std::int16_t offset, const std::int16_t count) {
+        if (count > 16) {
+            return std::nullopt;
+        }
+
+        std::uint16_t result = 0;
+        std::int16_t bit_read = 0;
+        std::int16_t current_offset = offset;
+
+        while (bit_read < count) {
+            const std::int8_t bit_to_read_once = 
+                static_cast<std::int8_t>(common::min<std::int16_t>(8 - current_offset & 7, count - bit_read));
+
+            if ((bit_to_read_once == 8) && ((current_offset & 7) == 0)) {
+                result |= lookup_mode_ ? (res_data_[current_offset >> 3] << bit_read) : (lookup_data_[current_offset >> 3] << bit_read);
+            } else {
+                result |= common::extract_bits(lookup_mode_ ? lookup_data_[current_offset >> 3] : res_data_[current_offset >> 3],
+                    current_offset & 7, bit_to_read_once) << bit_read;
+            }
+
+            bit_read += bit_to_read_once;
+        }
+
+        return result;
+    }
+
+    void rsc_file_legacy::read_internal(const int res_id, std::vector<std::uint8_t> &buffer, const bool is_lookup) {
+        if (!is_lookup && ((res_id <= 0) || (res_id > resource_count_))) {
+            return;
+        }
+
+        if (type_ != file_type_compressed) {
+            const std::int16_t offset_in_data_section = res_data_offset_table_[res_id - 1] - res_data_offset_table_.front();
+            const std::int16_t resource_size = res_data_offset_table_[res_id] - res_data_offset_table_[res_id - 1];
+
+            buffer.resize(resource_size);
+
+            std::copy(res_data_.begin() + offset_in_data_section, res_data_.begin() + offset_in_data_section + resource_size,
+                buffer.begin());
+
+            return;
+        }
+
+        std::int16_t iterate_offset = is_lookup ? lookup_offset_table_[res_id - 1] : res_data_offset_table_[res_id - 1];
+        std::int16_t end_offset = is_lookup ? lookup_offset_table_[res_id] : res_data_offset_table_[res_id];
+        const std::int16_t compressed_resource_size_in_bits = end_offset - iterate_offset;
+
+        lookup_mode_ = is_lookup;
+
+        while (iterate_offset < end_offset) {
+            iterate_offset++;
+            if (read_bits(iterate_offset, 1).value() == 1) {
+                iterate_offset++;
+
+                if (read_bits(iterate_offset, 1).value() == 1) {
+                    iterate_offset++;
+
+                    if (read_bits(iterate_offset, 1).value() == 1) {
+                        iterate_offset++;
+
+                        if (read_bits(iterate_offset, 1).value() == 1) {
+                            // Repeat count with 8
+                            std::uint16_t repeat_count = read_bits(iterate_offset, 8).value();
+                            iterate_offset += 8;
+
+                            for (std::uint16_t i = 0; i < repeat_count; i++) {
+                                buffer.push_back(static_cast<std::uint8_t>(read_bits(iterate_offset, 8).value()));
+                                iterate_offset += 8;
+                            }
+                        } else {
+                            // Repeat count with 3-bits
+                            std::uint16_t repeat_count = read_bits(iterate_offset, 3).value() + 3;
+                            iterate_offset += 3;
+
+                            for (std::uint16_t i = 0; i < repeat_count; i++) {
+                                buffer.push_back(static_cast<std::uint8_t>(read_bits(iterate_offset, 8).value()));
+                                iterate_offset += 8;
+                            }
+                        }
+                    } else {
+                        // Read 2 normal integer
+                        std::uint16_t byte_data = read_bits(iterate_offset, 16).value();
+                        buffer.push_back(static_cast<std::uint8_t>(byte_data));
+                        buffer.push_back(static_cast<std::uint8_t>(byte_data >> 8));
+
+                        iterate_offset += 16;
+                    }
+                } else {
+                    // Read a normal byte
+                    std::uint16_t byte_data = read_bits(iterate_offset, 8).value();
+                    buffer.push_back(static_cast<std::uint8_t>(byte_data));
+
+                    iterate_offset += 8;
+                }
+            } else {
+                // Use the lookup table. Not sure if it's really lookup :D
+                std::uint16_t lookup_id = read_bits(iterate_offset, lookup_table_read_bit_count_).value();
+                read_internal(lookup_id + 1, buffer, true);
+            }
+        }
+    }
+
+    std::vector<std::uint8_t> rsc_file_legacy::read(const int res_id) {
+        std::vector<std::uint8_t> buf;
+        read_internal(res_id, buf, false);
+
+        return buf;
+    }
+
+    rsc_file_legacy::rsc_file_legacy(common::ro_stream *seri)
+        : lookup_mode_(false) {
+        read_header(seri);
+    }
+
+    void rsc_file::instantiate_impl(common::ro_stream *stream) {
+        std::uint32_t uid = 0;
+        if (stream->read(&uid, 4) != 4) {
+            return;
+        }
+
+        stream->seek(0, common::seek_where::beg);
+
+        if ((uid == 0x101F4A6B) || (uid == 0x101F5010) || (static_cast<std::uint16_t>(uid) == 4)) {
+            impl_ = std::make_unique<rsc_file_morden>(stream);
+            return;
+        }
+
+        impl_ = std::make_unique<rsc_file_legacy>(stream);
+    }
+    
+    rsc_file::rsc_file(common::ro_stream *seri) {
+        instantiate_impl(seri);
+    }
+
+    std::vector<std::uint8_t> rsc_file::read(const int res_id) {
+        if (!impl_) {
+            LOG_ERROR("RSC implementation has not been created!");
+            return std::vector<std::uint8_t>{};
+        }
+
+        return impl_->read(res_id);
+    }
+
+    std::uint32_t rsc_file::get_uid(const int idx) {
+        if (!impl_) {
+            LOG_ERROR("RSC implementation has not been created!");
+            return 0;
+        }
+
+        return impl_->get_uid(idx);
+    }
+
+    std::uint16_t rsc_file::get_total_resources() const {
+        if (!impl_) {
+            LOG_ERROR("RSC implementation has not been created!");
+            return 0;
+        }
+
+        return impl_->get_total_resources();
+    }
+
+    bool rsc_file::confirm_signature() {
+        if (!impl_) {
+            LOG_ERROR("RSC implementation has not been created!");
+            return false;
+        }
+
+        return impl_->confirm_signature();
     }
 
     void absorb_resource_string(common::chunkyseri &seri, std::u16string &str) {
