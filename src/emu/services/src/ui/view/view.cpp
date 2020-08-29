@@ -26,8 +26,16 @@
 #include <vfs/vfs.h>
 
 namespace eka2l1 {
+    std::string get_view_server_name_by_epocver(const epocver ver) {
+        if (ver <= epocver::eka2) {
+            return "ViewServer";
+        }
+
+        return "!ViewServer";
+    }
+
     view_server::view_server(system *sys)
-        : service::typical_server(sys, "!ViewServer")
+        : service::typical_server(sys, get_view_server_name_by_epocver(sys->get_symbian_version_use()))
         , flags_(0)
         , active_{ 0, 0 } {
     }

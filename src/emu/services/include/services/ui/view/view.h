@@ -59,6 +59,7 @@ namespace eka2l1 {
     };
 
     using custom_message = std::vector<std::uint8_t>;
+    std::string get_view_server_name_by_epocver(const epocver ver);
 
     class view_session : public service::typical_session {
         ipc_msg_ptr to_panic_;
