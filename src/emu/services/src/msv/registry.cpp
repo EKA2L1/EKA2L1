@@ -159,6 +159,11 @@ namespace eka2l1::epoc::msv {
     }
 
     void mtm_registry::save_mtm_list() {
+        const std::u16string list_dir = eka2l1::file_directory(list_path_);
+        if (!io_->exist(list_dir)) {
+            io_->create_directories(list_dir);
+        }
+
         symfile list_file = io_->open_file(list_path_, WRITE_MODE | BIN_MODE);
 
         if (!list_file) {
