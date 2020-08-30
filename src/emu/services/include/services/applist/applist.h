@@ -246,6 +246,8 @@ namespace eka2l1 {
          */
         bool is_oldarch();
 
+        bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter);
+
         std::mutex list_access_mut_;
 
         /**

@@ -600,4 +600,25 @@ namespace eka2l1 {
         args.executable_path_ = app_path;
         args.default_screen_number_ = default_screen_number;
     }
+
+    static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
+
+    bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter) {
+        std::u16string executable_to_run;
+        registry.get_launch_parameter(executable_to_run, parameter);
+
+        std::u16string apacmddat = parameter.to_string(is_oldarch());
+        process_ptr pr = kern->spawn_new_process(executable_to_run, is_oldarch() ? apacmddat : u"");
+
+        if (!pr) {
+            return false;
+        }
+
+        if (!is_oldarch()) {
+            pr->set_arg_slot(ENVIRONMENT_SLOT_MAIN, reinterpret_cast<std::uint8_t*>(apacmddat.data()),
+                apacmddat.size() * sizeof(char16_t));
+        }
+
+        return pr->run();
+    }
 }
