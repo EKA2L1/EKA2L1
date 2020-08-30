@@ -97,7 +97,7 @@ namespace eka2l1 {
         const std::u16string root_name = eka2l1::root_name(pr->get_exe_path());
 
         if (server<fs_server>()->kern->is_eka1()) {
-            ss_path = eka2l1::root_dir(pr->get_exe_path());
+            ss_path = server<fs_server>()->default_sys_path;
         } else {
             ss_path = get_private_path(pr, (root_name.length() > 1) ? char16_to_drive(root_name[0]) : drive_c);
         }
@@ -113,6 +113,10 @@ namespace eka2l1 {
 
         system_drive_prop->first = static_cast<int>(FS_UID);
         system_drive_prop->second = static_cast<int>(SYSTEM_DRIVE_KEY);
+    }
+
+    void fs_server::set_default_system_path(const std::u16string &to_set) {
+        default_sys_path = to_set;
     }
 
     void fs_server_client::fetch(service::ipc_context *ctx) {

@@ -44,10 +44,14 @@ namespace eka2l1 {
         }
 
         const std::int32_t attrib_raw = *ctx->get_argument_value<std::int32_t>(1);
-        io_attrib attrib = io_attrib::include_file;
+        io_attrib attrib = io_attrib::none;
 
         if (attrib_raw & epoc::fs::entry_att_dir) {
             attrib = attrib | io_attrib::include_dir;
+        }
+
+        if (attrib_raw & epoc::fs::entry_att_archive) {
+            attrib = attrib | io_attrib::include_file;
         }
 
         fs_node *node = server<fs_server>()->make_new<fs_node>();
@@ -112,6 +116,8 @@ namespace eka2l1 {
         directory *dir = reinterpret_cast<directory *>(dir_node->vfs_node.get());
 
         epoc::fs::entry entry;
+        entry.attrib = 0;
+
         std::optional<entry_info> info = dir->get_next_entry();
 
         if (!info) {
@@ -120,7 +126,7 @@ namespace eka2l1 {
         }
 
         if (info->has_raw_attribute) {
-            entry.attrib = info->raw_attribute;
+            entry.attrib |= info->raw_attribute;
         } else {
             switch (info->attribute) {
             case io_attrib::hidden: {
@@ -133,9 +139,9 @@ namespace eka2l1 {
             }
 
             if (info->type == io_component_type::dir) {
-                entry.attrib &= epoc::fs::entry_att_dir;
+                entry.attrib |= epoc::fs::entry_att_dir;
             } else {
-                entry.attrib &= epoc::fs::entry_att_archive;
+                entry.attrib |= epoc::fs::entry_att_archive;
             }
         }
 
@@ -184,6 +190,8 @@ namespace eka2l1 {
 
         while (entry_buf < entry_buf_end) {
             epoc::fs::entry entry;
+            entry.attrib = 0;
+
             std::optional<entry_info> info = dir->peek_next_entry();
 
             if (!info) {
@@ -201,7 +209,7 @@ namespace eka2l1 {
             if (info->has_raw_attribute) {
                 entry.attrib = info->raw_attribute;
             } else {
-                entry.attrib = epoc::fs::entry_att_normal;
+                entry.attrib |= epoc::fs::entry_att_normal;
 
                 switch (info->attribute) {
                 case io_attrib::hidden: {

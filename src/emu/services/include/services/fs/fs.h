@@ -42,6 +42,10 @@ namespace eka2l1::service {
 }
 
 namespace eka2l1 {
+    namespace epoc::fs {
+        std::string get_server_name_through_epocver(const epocver ver);
+    }
+
     struct entry_info;
 
     static constexpr std::uint32_t FS_UID = 0x100039E3;
@@ -247,6 +251,7 @@ namespace eka2l1 {
 
         std::unordered_map<std::u16string, file_attrib, fs_path_case_insensitive_hasher> attribs;
         service::property *system_drive_prop;
+        std::u16string default_sys_path;
 
         void connect(service::ipc_context &ctx) override;
         void disconnect(service::ipc_context &ctx) override;
@@ -262,6 +267,7 @@ namespace eka2l1 {
     public:
         explicit fs_server(system *sys);
 
+        void set_default_system_path(const std::u16string &to_set);
         file *get_file(const kernel::uid session_uid, const std::uint32_t handle);
     };
 }

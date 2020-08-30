@@ -448,12 +448,14 @@ namespace eka2l1 {
 
                 name = entry.name;
 
-                if (!static_cast<int>(attrib & io_attrib::include_dir) && entry.type == common::FILE_DIRECTORY) {
-                    continue;
-                }
+                if (attrib != io_attrib::none) {
+                    if (!static_cast<int>(attrib & io_attrib::include_dir) && entry.type == common::FILE_DIRECTORY) {
+                        continue;
+                    }
 
-                if (!static_cast<int>(attrib & io_attrib::include_file) && entry.type == common::FILE_REGULAR) {
-                    continue;
+                    if (!static_cast<int>(attrib & io_attrib::include_file) && entry.type == common::FILE_REGULAR) {
+                        continue;
+                    }
                 }
 
                 // Quick hack: Regex dumb with null-terminated string

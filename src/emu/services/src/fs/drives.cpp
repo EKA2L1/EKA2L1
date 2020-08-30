@@ -134,6 +134,10 @@ namespace eka2l1 {
 
         if (!io_drive) {
             info->type = epoc::fs::media_unknown;
+            info->drive_att = 0;
+            info->media_att = 0;
+            info->battery = epoc::fs::battery_state_not_supported;
+            info->connection_bus_type = epoc::fs::connection_bus_internal;
         } else {
             fill_drive_info(&(*info), *io_drive);
         }
