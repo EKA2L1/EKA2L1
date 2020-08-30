@@ -136,8 +136,6 @@ namespace eka2l1 {
         window_server *winserv;
         oom_ui_app_server *oom;
 
-        app_launch_function app_launch;
-
         std::mutex errors_mut;
         std::queue<std::string> error_queue;
 
@@ -199,7 +197,7 @@ namespace eka2l1 {
         void do_install_package();
 
     public:
-        explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger, app_launch_function app_launch);
+        explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger);
         ~imgui_debugger();
 
         ::language get_language_from_property(service::property *prop);

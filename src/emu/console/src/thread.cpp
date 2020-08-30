@@ -357,8 +357,6 @@ namespace eka2l1::desktop {
         // Make the graphics driver abort
         state.graphics_driver->abort();
 
-        state.launch_requests.abort();
-
         return 0;
     }
 
@@ -430,41 +428,9 @@ namespace eka2l1::desktop {
         }
     }
 
-    void high_level_interface_thread(emulator &state) {
-        // Breath of the ???
-        eka2l1::common::set_thread_name(hli_thread_name);
-
-        std::unique_ptr<std::thread> os_thread_obj;
-
-        while (true) {
-            auto launch = state.launch_requests.pop();
-
-            if (!launch) {
-                break;
-            }
-
-            state.symsys->load(launch->path_, launch->cmd_arg_);
-
-            if (state.first_time) {
-                state.first_time = false;
-
-                // Try to wait for graphics to correctly initialize
-                state.graphics_sema.wait();
-
-                // Launch the OS thread now
-                os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
-            }
-        }
-
-        if (os_thread_obj) {
-            os_thread_obj->join();
-        }
-
-        state.graphics_sema.notify(2);
-    }
-
     void os_thread(emulator &state) {
         eka2l1::common::set_thread_name(os_thread_name);
+        state.graphics_sema.wait();
 
         // Register SEH handler for this thread
 #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER && !defined(NDEBUG)
@@ -491,6 +457,7 @@ namespace eka2l1::desktop {
         }
 
         state.symsys.reset();
+        state.graphics_sema.notify();
     }
 
     int emulator_entry(emulator &state) {
@@ -498,13 +465,13 @@ namespace eka2l1::desktop {
 
         // Instantiate UI and High-level interface threads
         std::thread ui_thread_obj(ui_thread, std::ref(state));
-        std::thread hli_thread_obj(high_level_interface_thread, std::ref(state));
+        std::thread os_thread_obj(os_thread, std::ref(state));
 
         // Run graphics driver on main entry.
         graphics_driver_thread(state);
 
-        // Wait for interface thread to be killed.
-        hli_thread_obj.join();
+        // Wait for OS thread to die
+        os_thread_obj.join();
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();

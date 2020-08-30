@@ -138,8 +138,13 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         *err += " doesn't exist";
     } else {
         if (eka2l1::has_root_dir(tokstr)) {
-            desktop::launch_request lrequest { common::utf8_to_ucs2(tokstr), u"" };
-            emu->launch_requests.push(lrequest);
+            process_ptr pr = kern->spawn_new_process(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr));
+
+            if (!pr) {
+                LOG_ERROR("Unable to launch process: {}", tokstr);
+            } else {
+                pr->run();
+            }
 
             return true;
         }
@@ -154,11 +159,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                 epoc::apa::command_line cmdline;
                 cmdline.launch_cmd_ = epoc::apa::command_create;
 
-                desktop::launch_request req;
-                reg.get_launch_parameter(req.path_, cmdline);
-                req.cmd_arg_ = cmdline.to_string(svr->is_oldarch());
-
-                emu->launch_requests.push(req);
+                svr->launch_app(reg, cmdline);
                 return true;
             }
         }

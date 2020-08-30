@@ -356,6 +356,10 @@ namespace eka2l1 {
             &asmdis);
 
         epoc::init_panic_descriptions();
+        
+#if ENABLE_SCRIPTING == 1
+        load_scripts();
+#endif
     }
 
     system_impl::system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver, config::state *conf)
@@ -381,10 +385,6 @@ namespace eka2l1 {
     }
 
     bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
-#if ENABLE_SCRIPTING == 1
-        load_scripts();
-#endif
-
         process_ptr pr = kern->spawn_new_process(path, cmd_arg);
 
         if (!pr) {

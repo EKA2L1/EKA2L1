@@ -85,7 +85,7 @@ namespace eka2l1 {
         prop->add_data_change_callback(userdata, language_property_change_handler);
     }
 
-    imgui_debugger::imgui_debugger(eka2l1::system *sys, imgui_logger *logger, app_launch_function app_launch)
+    imgui_debugger::imgui_debugger(eka2l1::system *sys, imgui_logger *logger)
         : sys(sys)
         , conf(sys->get_config())
         , logger(logger)
@@ -114,7 +114,6 @@ namespace eka2l1 {
         , key_set(false)
         , selected_package_index(0xFFFFFFFF)
         , debug_thread_id(0)
-        , app_launch(app_launch)
         , selected_callback(nullptr)
         , selected_callback_data(nullptr)
         , phony_icon(0)
@@ -1466,10 +1465,11 @@ namespace eka2l1 {
                             epoc::apa::command_line cmdline;
                             cmdline.launch_cmd_ = epoc::apa::command_create;
 
-                            std::u16string run_path;
-                            registerations[i].get_launch_parameter(run_path, cmdline);
+                            kernel_system *kern = alserv->get_kernel_object_owner();
 
-                            app_launch(run_path, cmdline.to_string(alserv->is_oldarch()));
+                            kern->lock();
+                            alserv->launch_app(registerations[i], cmdline);
+                            kern->unlock();
                         }
                     }
                 }
