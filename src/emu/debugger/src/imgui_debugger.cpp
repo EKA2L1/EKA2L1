@@ -257,13 +257,16 @@ namespace eka2l1 {
             { KEY_STAR, "KEY_STAR" }
         };
         key_binder_state.need_key = std::vector<bool>(key_binder_state.BIND_NUM, false);
-        for (auto &kb : conf->keybinds) {
-            if (kb.source.type == "key") {
-                winserv->input_mapping.key_input_map[kb.source.data.keycode] = kb.target;
-                key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.keycode);
-            } else if (kb.source.type == "controller") {
-                winserv->input_mapping.button_input_map[std::make_pair(kb.source.data.button.controller_id, kb.source.data.button.button_id)] = kb.target;
-                key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.button.controller_id) + ":" + std::to_string(kb.source.data.button.button_id);
+
+        if (winserv) {
+            for (auto &kb : conf->keybinds) {
+                if (kb.source.type == "key") {
+                    winserv->input_mapping.key_input_map[kb.source.data.keycode] = kb.target;
+                    key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.keycode);
+                } else if (kb.source.type == "controller") {
+                    winserv->input_mapping.button_input_map[std::make_pair(kb.source.data.button.controller_id, kb.source.data.button.button_id)] = kb.target;
+                    key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.button.controller_id) + ":" + std::to_string(kb.source.data.button.button_id);
+                }
             }
         }
     }
@@ -1464,7 +1467,7 @@ namespace eka2l1 {
                             cmdline.launch_cmd_ = epoc::apa::command_create;
 
                             std::u16string run_path;
-                            registerations[i].get_launch_parameter(run_path, cmdline);
+                            alserv->prepare_app_launch(registerations[i], run_path, cmdline);
 
                             app_launch(run_path, cmdline.to_string(alserv->is_oldarch()));
                         }
