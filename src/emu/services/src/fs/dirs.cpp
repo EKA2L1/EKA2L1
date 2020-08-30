@@ -44,14 +44,20 @@ namespace eka2l1 {
         }
 
         const std::int32_t attrib_raw = *ctx->get_argument_value<std::int32_t>(1);
-        io_attrib attrib = io_attrib::none;
+        std::uint32_t attrib = io_attrib_none;
 
-        if (attrib_raw & epoc::fs::entry_att_dir) {
-            attrib = attrib | io_attrib::include_dir;
+        bool is_exclude = false;
+        if (attrib_raw & epoc::fs::entry_att_match_exclude) {
+            attrib = io_attrib_include_file | io_attrib_include_dir;
+            is_exclude = true;
         }
 
         if (attrib_raw & epoc::fs::entry_att_archive) {
-            attrib = attrib | io_attrib::include_file;
+            attrib = is_exclude ? (attrib & ~io_attrib_include_file) : (attrib | io_attrib_include_file);
+        }
+
+        if (attrib_raw & epoc::fs::entry_att_dir) {
+            attrib = is_exclude ? (attrib & ~io_attrib_include_dir) : (attrib | io_attrib_include_dir);
         }
 
         fs_node *node = server<fs_server>()->make_new<fs_node>();
@@ -129,7 +135,7 @@ namespace eka2l1 {
             entry.attrib |= info->raw_attribute;
         } else {
             switch (info->attribute) {
-            case io_attrib::hidden: {
+            case io_attrib_hidden: {
                 entry.attrib = epoc::fs::entry_att_hidden;
                 break;
             }
@@ -212,7 +218,7 @@ namespace eka2l1 {
                 entry.attrib |= epoc::fs::entry_att_normal;
 
                 switch (info->attribute) {
-                case io_attrib::hidden: {
+                case io_attrib_hidden: {
                     entry.attrib |= epoc::fs::entry_att_hidden;
                     break;
                 }
