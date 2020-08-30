@@ -220,4 +220,9 @@ namespace eka2l1 {
         std::uint32_t max_points;
         std::uint32_t flags;
     };
+
+    struct ws_cmd_keyboard_repeat_rate {
+        std::uint32_t initial_time;
+        std::uint32_t next_time;
+    };
 }
