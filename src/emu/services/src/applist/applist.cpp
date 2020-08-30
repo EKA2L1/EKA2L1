@@ -290,7 +290,7 @@ namespace eka2l1 {
         for (drive_number drv = drive_z; drv >= drive_a; drv--) {
             if (io->get_drive_entry(drv)) {
                 const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
-                auto reg_dir = io->open_dir(base_dir, io_attrib::include_dir);
+                auto reg_dir = io->open_dir(base_dir, io_attrib_include_dir);
 
                 if (reg_dir) {
                     while (auto ent = reg_dir->get_next_entry()) {
@@ -320,7 +320,7 @@ namespace eka2l1 {
         for (drive_number drv = drive_z; drv >= drive_a; drv--) {
             if (io->get_drive_entry(drv)) {
                 const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-                auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib::include_file);
+                auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib_include_file);
 
                 if (reg_dir) {
                     while (auto ent = reg_dir->get_next_entry()) {

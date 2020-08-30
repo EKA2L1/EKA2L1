@@ -25,9 +25,9 @@ TEST_CASE("get_physical", "vfs") {
     io_scope_guard guard(io);
 
     // Get physical
-    io.mount_physical_path(drive_number::drive_a, drive_media::physical, io_attrib::internal,
+    io.mount_physical_path(drive_number::drive_a, drive_media::physical, io_attrib_internal,
         u"drive_a");
-    io.mount_physical_path(drive_number::drive_b, drive_media::physical, io_attrib::internal,
+    io.mount_physical_path(drive_number::drive_b, drive_media::physical, io_attrib_internal,
         u"drive_b");
 
     const auto actual_path_a = io.get_raw_path(u"A:\\Despacito2Leak");

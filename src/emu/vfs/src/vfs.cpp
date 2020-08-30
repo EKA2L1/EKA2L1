@@ -42,15 +42,15 @@
 #include <string.h>
 
 namespace eka2l1 {
-    file::file(io_attrib attrib)
+    file::file(const std::uint32_t attrib)
         : io_component(io_component_type::file, attrib) {
     }
 
-    drive::drive(io_attrib attrib)
+    drive::drive(const std::uint32_t attrib)
         : io_component(io_component_type::drive, attrib) {
     }
 
-    directory::directory(io_attrib attrib)
+    directory::directory(const std::uint32_t attrib)
         : io_component(io_component_type::dir, attrib) {
     }
 
@@ -376,7 +376,7 @@ namespace eka2l1 {
         }
 
         bool resize(const std::size_t new_size) override {
-            if (fmode & READ_MODE) {
+            if (!(fmode & WRITE_MODE)) {
                 return false;
             }
 
@@ -412,13 +412,13 @@ namespace eka2l1 {
         std::optional<entry_info> peek_info;
         bool peeking;
 
-        io_attrib attrib;
+        std::uint32_t attrib;
 
         abstract_file_system *inst;
 
     public:
         physical_directory(abstract_file_system *inst, const std::string &phys_path,
-            const std::string &vir_path, const std::string &filter, const io_attrib attrib)
+            const std::string &vir_path, const std::string &filter, const std::uint32_t attrib)
             : filter(common::wildcard_to_regex_string(common::lowercase_string(filter)))
             , iterator(phys_path)
             , vir_path(vir_path)
@@ -448,12 +448,12 @@ namespace eka2l1 {
 
                 name = entry.name;
 
-                if (attrib != io_attrib::none) {
-                    if (!static_cast<int>(attrib & io_attrib::include_dir) && entry.type == common::FILE_DIRECTORY) {
+                if (attrib != io_attrib_none) {
+                    if (!(attrib & io_attrib_include_dir) && entry.type == common::FILE_DIRECTORY) {
                         continue;
                     }
 
-                    if (!static_cast<int>(attrib & io_attrib::include_file) && entry.type == common::FILE_REGULAR) {
+                    if (!(attrib & io_attrib_include_file) && entry.type == common::FILE_REGULAR) {
                         continue;
                     }
                 }
@@ -516,7 +516,7 @@ namespace eka2l1 {
             return static_cast<drive_number>(c - 0x61);
         }
 
-        bool do_mount(const drive_number drv, const drive_media media, const io_attrib attrib,
+        bool do_mount(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) {
             const std::lock_guard<std::mutex> guard(fs_mutex);
 
@@ -652,7 +652,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool mount_volume_from_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+        bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) override {
             if (media == drive_media::rom) {
                 return false;
@@ -678,7 +678,7 @@ namespace eka2l1 {
             return mappings[static_cast<int>(drv)].first;
         }
 
-        std::unique_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) override {
+        std::unique_ptr<directory> open_directory(const std::u16string &path, const std::uint32_t attrib) override {
             std::u16string vir_path = path;
 
             size_t pos_bs = vir_path.find_last_of(u"\\");
@@ -881,7 +881,7 @@ namespace eka2l1 {
             return false;
         }
 
-        bool mount_volume_from_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+        bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) override {
             if (media != drive_media::rom) {
                 return false;
@@ -987,7 +987,7 @@ namespace eka2l1 {
         return std::make_unique<rom_file_system>(rom_cache, mem, ver, product_code);
     }
 
-    io_component::io_component(io_component_type type, io_attrib attrib)
+    io_component::io_component(io_component_type type, const std::uint32_t attrib)
         : type(type)
         , attribute(attrib) {
     }
@@ -1021,7 +1021,7 @@ namespace eka2l1 {
         return true;
     }
 
-    bool io_system::mount_physical_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+    bool io_system::mount_physical_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
         const std::u16string &real_path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
@@ -1070,7 +1070,7 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    std::unique_ptr<directory> io_system::open_dir(std::u16string vir_path, const io_attrib attrib) {
+    std::unique_ptr<directory> io_system::open_dir(std::u16string vir_path, const std::uint32_t attrib) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {

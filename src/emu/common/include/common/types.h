@@ -107,23 +107,15 @@ inline drive_number operator--(drive_number &drv, int) {
     return drv;
 }
 
-enum class io_attrib {
-    none,
-    include_file = 1 << 0,
-    include_dir = 1 << 1,
-    hidden = 1 << 2,
-    write_protected = 1 << 3,
-    internal = 1 << 4,
-    removeable = 1 << 5
+enum io_attrib {
+    io_attrib_none,
+    io_attrib_include_file = 1 << 0,
+    io_attrib_include_dir = 1 << 1,
+    io_attrib_hidden = 1 << 2,
+    io_attrib_write_protected = 1 << 3,
+    io_attrib_internal = 1 << 4,
+    io_attrib_removeable = 1 << 5
 };
-
-inline io_attrib operator|(io_attrib a, io_attrib b) {
-    return static_cast<io_attrib>(static_cast<int>(a) | static_cast<int>(b));
-}
-
-inline io_attrib operator&(io_attrib a, io_attrib b) {
-    return static_cast<io_attrib>(static_cast<int>(a) & static_cast<int>(b));
-}
 
 enum class drive_media {
     none,

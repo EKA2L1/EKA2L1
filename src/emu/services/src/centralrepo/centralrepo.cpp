@@ -274,7 +274,7 @@ namespace eka2l1 {
                 rom_drv = d;
             }
 
-            if (static_cast<bool>(drv->attribute & io_attrib::internal) && !static_cast<bool>(drv->attribute & io_attrib::write_protected)) {
+            if (static_cast<bool>(drv->attribute & io_attrib_internal) && !static_cast<bool>(drv->attribute & io_attrib_write_protected)) {
                 avail_drives.push_back(d);
             }
         }
@@ -301,7 +301,7 @@ namespace eka2l1 {
                 rom_drv = drv;
             }
 
-            if (!static_cast<bool>(drvi.attribute & io_attrib::write_protected)) {
+            if (!static_cast<bool>(drvi.attribute & io_attrib_write_protected)) {
                 avail_drives.push_back(drv);
             }
         }

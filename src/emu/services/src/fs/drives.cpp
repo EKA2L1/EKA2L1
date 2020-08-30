@@ -103,19 +103,19 @@ namespace eka2l1 {
         info->connection_bus_type = epoc::fs::connection_bus_internal;
         info->battery = epoc::fs::battery_state_not_supported;
 
-        if (static_cast<int>(io_drive.attribute & io_attrib::hidden)) {
+        if (static_cast<int>(io_drive.attribute & io_attrib_hidden)) {
             info->drive_att |= epoc::fs::drive_att_hidden;
         }
 
-        if (static_cast<int>(io_drive.attribute & io_attrib::internal)) {
+        if (static_cast<int>(io_drive.attribute & io_attrib_internal)) {
             info->drive_att |= epoc::fs::drive_att_internal;
         }
 
-        if (static_cast<int>(io_drive.attribute & io_attrib::removeable)) {
+        if (static_cast<int>(io_drive.attribute & io_attrib_removeable)) {
             info->drive_att |= epoc::fs::drive_att_removable;
         }
 
-        if (static_cast<int>(io_drive.attribute & io_attrib::write_protected)) {
+        if (static_cast<int>(io_drive.attribute & io_attrib_write_protected)) {
             info->media_att |= epoc::fs::media_att_write_protected;
         }
     }
@@ -160,9 +160,9 @@ namespace eka2l1 {
         // Fetch flags
         if (*flags & epoc::fs::drive_att_hidden) {
             if (*flags & epoc::fs::drive_att_exclude) {
-                exclude_attribs.push_back(io_attrib::hidden);
+                exclude_attribs.push_back(io_attrib_hidden);
             } else {
-                include_attribs.push_back(io_attrib::hidden);
+                include_attribs.push_back(io_attrib_hidden);
             }
         }
 

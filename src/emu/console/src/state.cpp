@@ -68,9 +68,9 @@ namespace eka2l1::desktop {
             }
             
             symsys->set_debugger(debugger.get());
-            symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib::internal);
-            symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib::internal);
-            symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib::removeable);
+            symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib_internal);
+            symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib_internal);
+            symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib_removeable);
             
             winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>(
                 eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
@@ -110,7 +110,7 @@ namespace eka2l1::desktop {
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
-                eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib::internal | io_attrib::write_protected);
+                eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
 
             // Create audio driver
             audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb);

@@ -867,7 +867,7 @@ namespace eka2l1 {
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {
                 const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\");
-                auto folder = io->open_dir(fonts_folder_path, io_attrib::include_file);
+                auto folder = io->open_dir(fonts_folder_path, io_attrib_include_file);
 
                 if (folder) {
                     LOG_TRACE("Found font folder: {}", common::ucs2_to_utf8(fonts_folder_path));

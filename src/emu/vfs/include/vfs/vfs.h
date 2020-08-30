@@ -76,14 +76,14 @@ namespace eka2l1 {
     };
 
     struct io_component {
-        io_attrib attribute;
+        std::uint32_t attribute;
         io_component_type type;
 
         io_component() {}
         virtual ~io_component() {
         }
 
-        explicit io_component(io_component_type type, io_attrib attrib = io_attrib::none);
+        explicit io_component(io_component_type type, const std::uint32_t attrib = io_attrib_none);
     };
 
     /*! \brief The file abstraction for VFS class
@@ -92,7 +92,7 @@ namespace eka2l1 {
      * and actual physical file).
     */
     struct file : public io_component {
-        explicit file(io_attrib attrib = io_attrib::none);
+        explicit file(const std::uint32_t attrib = io_attrib_none);
 
         virtual ~file() override {
         }
@@ -183,7 +183,7 @@ namespace eka2l1 {
 
     /*! \brief A VFS drive. */
     struct drive : public io_component {
-        explicit drive(io_attrib attrib = io_attrib::none);
+        explicit drive(const std::uint32_t attrib = io_attrib_none);
 
         //! The name of the drive.
         /*! Lowercase of uppercase (c: or C:) doesn't matter. Like Windows,
@@ -201,7 +201,7 @@ namespace eka2l1 {
     };
 
     struct entry_info {
-        io_attrib attribute;
+        std::uint32_t attribute;
         int raw_attribute;
 
         bool has_raw_attribute = false;
@@ -215,7 +215,7 @@ namespace eka2l1 {
     };
 
     struct directory : public io_component {
-        explicit directory(io_attrib attrib = io_attrib::none);
+        explicit directory(const std::uint32_t attrib = io_attrib_none);
 
         /*! \brief Get the next iterating entry. 
         *
@@ -244,7 +244,7 @@ namespace eka2l1 {
 
         /*! \brief Mount a drive with a physical host path.
         */
-        virtual bool mount_volume_from_path(const drive_number drv, const drive_media media, const io_attrib attrib,
+        virtual bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) {
             return false;
         }
@@ -252,7 +252,7 @@ namespace eka2l1 {
         virtual bool unmount(const drive_number drv) = 0;
 
         virtual std::unique_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
-        virtual std::unique_ptr<directory> open_directory(const std::u16string &path, const io_attrib attrib) = 0;
+        virtual std::unique_ptr<directory> open_directory(const std::u16string &path, const std::uint32_t attrib) = 0;
 
         // Try to find an entry with specified address, with clue as base finding path. This is not recursive.
         virtual std::optional<std::u16string> find_entry_with_address(const std::u16string &clue, const address addr) {
@@ -354,7 +354,7 @@ namespace eka2l1 {
         * 
         * \returns True if at least one file system can mount this drive.
         */
-        bool mount_physical_path(const drive_number dvc, const drive_media media, const io_attrib attrib,
+        bool mount_physical_path(const drive_number dvc, const drive_media media, const std::uint32_t attrib,
             const std::u16string &path);
 
         /*! \brief Unount a drive.
@@ -381,7 +381,7 @@ namespace eka2l1 {
         /*! \brief Open the directory in guest.
         */
         std::unique_ptr<directory> open_dir(std::u16string vir_path,
-            const io_attrib attrib = io_attrib::none);
+            const std::uint32_t attrib = io_attrib_none);
 
         /*! \brief Get a drive info.
         */

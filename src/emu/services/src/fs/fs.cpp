@@ -499,7 +499,7 @@ namespace eka2l1 {
         } else {
             bool dir = (info.type == io_component_type::dir);
 
-            if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib::internal)) {
+            if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib_internal)) {
                 attrib |= epoc::fs::entry_att_read_only | epoc::fs::entry_att_system;
             }
 

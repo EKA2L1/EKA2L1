@@ -85,7 +85,7 @@ namespace eka2l1 {
         }
 
         pattern += u":\\Private\\10009d8f\\ecom-*-*.s*";
-        auto ecom_private_dir = io->open_dir(pattern, io_attrib::include_file);
+        auto ecom_private_dir = io->open_dir(pattern, io_attrib_include_file);
 
         if (!ecom_private_dir) {
             // Again folder not found or error from our side
@@ -296,7 +296,7 @@ namespace eka2l1 {
         plugin_dir_path += drive_to_char16(drv);
         plugin_dir_path += u":\\Resource\\Plugins\\*.r*";
 
-        auto plugin_dir = io->open_dir(plugin_dir_path, io_attrib::include_file);
+        auto plugin_dir = io->open_dir(plugin_dir_path, io_attrib_include_file);
         if (!plugin_dir) {
             LOG_TRACE("Plugins directory for drive {} not found!",
                 static_cast<char>(plugin_dir_path[0]));

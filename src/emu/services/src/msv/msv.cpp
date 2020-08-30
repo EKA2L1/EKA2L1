@@ -75,7 +75,7 @@ namespace eka2l1 {
 
         DEFAULT_MSG_MTM_FILE_DIR[0] = drive_to_char16(drv_target);
 
-        auto mtm_module_dir = io->open_dir(DEFAULT_MSG_MTM_FILE_DIR, io_attrib::include_file);
+        auto mtm_module_dir = io->open_dir(DEFAULT_MSG_MTM_FILE_DIR, io_attrib_include_file);
 
         if (mtm_module_dir) {
             while (std::optional<entry_info> info = mtm_module_dir->get_next_entry()) {

@@ -135,7 +135,7 @@ namespace eka2l1 {
         void set_config(config::state *conf);
 
         void mount(drive_number drv, const drive_media media, std::string path,
-            const io_attrib attrib = io_attrib::none);
+            const std::uint32_t attrib = io_attrib_none);
 
         void reset();
 

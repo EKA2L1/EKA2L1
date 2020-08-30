@@ -286,7 +286,7 @@ namespace eka2l1 {
         }
 
         void mount(drive_number drv, const drive_media media, std::string path,
-            const io_attrib attrib = io_attrib::none);
+            const std::uint32_t attrib = io_attrib_none);
 
         void reset();
 
@@ -539,7 +539,7 @@ namespace eka2l1 {
     }
 
     void system_impl::mount(drive_number drv, const drive_media media, std::string path,
-        const io_attrib attrib) {
+        const std::uint32_t attrib) {
         io.mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
     }
 
@@ -701,7 +701,7 @@ namespace eka2l1 {
     }
 
     void system::mount(drive_number drv, const drive_media media, std::string path,
-        const io_attrib attrib) {
+        const std::uint32_t attrib) {
         return impl->mount(drv, media, path, attrib);
     }
 

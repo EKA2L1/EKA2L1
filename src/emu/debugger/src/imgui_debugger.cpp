@@ -1467,7 +1467,7 @@ namespace eka2l1 {
                             cmdline.launch_cmd_ = epoc::apa::command_create;
 
                             std::u16string run_path;
-                            alserv->prepare_app_launch(registerations[i], run_path, cmdline);
+                            registerations[i].get_launch_parameter(run_path, cmdline);
 
                             app_launch(run_path, cmdline.to_string(alserv->is_oldarch()));
                         }
