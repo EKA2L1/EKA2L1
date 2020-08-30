@@ -45,6 +45,7 @@
 #include <common/rgb.h>
 #include <common/time.h>
 
+#include <utils/event.h>
 #include <utils/err.h>
 
 #include <epoc/epoc.h>
@@ -734,6 +735,29 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
         }
     }
+
+    void window_server_client::add_raw_event(service::ipc_context &ctx, ws_cmd &cmd) {
+        epoc::raw_event evt;
+
+        if (cmd.header.cmd_len > sizeof(epoc::raw_event_eka1)) {
+            evt = *reinterpret_cast<epoc::raw_event*>(cmd.data_ptr);
+        } else {
+            epoc::raw_event_eka1 evt_eka1;
+            evt_eka1 = *reinterpret_cast<epoc::raw_event_eka1*>(cmd.data_ptr);
+
+            evt.from_eka1_event(evt_eka1);
+        }
+
+        LOG_TRACE("Add raw event stubbed, event type {}", evt.type_);
+        ctx.complete(epoc::error_none);
+    }
+    
+    void window_server_client::set_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_keyboard_repeat_rate *repeat_rate = reinterpret_cast<ws_cmd_keyboard_repeat_rate*>(cmd.data_ptr);
+        get_ws().set_keyboard_repeat_rate(repeat_rate->initial_time, repeat_rate->next_time);
+
+        ctx.complete(epoc::error_none);
+    }
     
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
@@ -908,6 +932,14 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_get_number_screen:
             get_number_of_screen(ctx, cmd);
+            break;
+            
+        case ws_cl_op_raw_event:
+            add_raw_event(ctx, cmd);
+            break;
+
+        case ws_cl_op_set_keyboard_repeat_rate:
+            set_keyboard_repeat_rate(ctx, cmd);
             break;
 
         default:
@@ -1108,7 +1140,9 @@ namespace eka2l1 {
         , ws_global_mem_chunk(nullptr)
         , ws_code_chunk(nullptr)
         , ws_global_mem_allocator(nullptr)
-        , sync_thread_code_offset(0) {
+        , sync_thread_code_offset(0)
+        , initial_repeat_delay_(0)
+        , next_repeat_delay_(0) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
@@ -1639,5 +1673,11 @@ namespace eka2l1 {
         }
 
         return nullptr;
+    }
+
+    void window_server::set_keyboard_repeat_rate(const std::uint64_t initial_time, const std::uint64_t next_time) {
+        // TODO: Use these parameters.
+        initial_repeat_delay_ = initial_time;
+        next_repeat_delay_ = next_time;
     }
 }

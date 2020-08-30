@@ -55,18 +55,10 @@ namespace eka2l1::kernel {
         pending = 3
     };
     
-    enum raw_event_type {
-        raw_event_type_redraw = 5
-    };
-
     enum hal_data_eka1 {
         #define HAL_ENTRY(short_name, detail_name, ord, ord_old) hal_data_eka1_##short_name = ord_old,
         #include <kernel/hal.def>
         #undef HAL_ENTRY
-    };
-
-    struct raw_event {
-        raw_event_type type_;
     };
 
     struct epoc9_thread_create_info {

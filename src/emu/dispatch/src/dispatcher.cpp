@@ -22,6 +22,7 @@
 #include <dispatch/screen.h>
 #include <kernel/kernel.h>
 #include <services/window/window.h>
+#include <utils/event.h>
 #include <utils/err.h>
 
 #include <common/log.h>
@@ -88,11 +89,11 @@ namespace eka2l1::epoc {
         dispatcher->resolve(sys, ordinal);
     }
 
-    void dispatcher_do_event_add(eka2l1::system *sys, kernel::raw_event &evt) {
+    void dispatcher_do_event_add(eka2l1::system *sys, epoc::raw_event &evt) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
 
         switch (evt.type_) {
-        case kernel::raw_event_type_redraw:
+        case epoc::raw_event_type_redraw:
             dispatcher->update_all_screens(sys);
             break;
 
