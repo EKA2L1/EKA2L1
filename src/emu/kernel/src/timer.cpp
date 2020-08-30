@@ -53,7 +53,7 @@ namespace eka2l1 {
             }
 
             if (us_signal == 0) {
-                *request_status = 0;
+                request_status->set(0, kern->is_eka1());
                 requester->signal_request();
 
                 return true;
@@ -87,7 +87,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            *info.request_status = -3;
+            info.request_status->set(-3, false);
             info.own_thread->signal_request();
 
             // If the timer hasn't finished yet, please unschedule it.
@@ -109,7 +109,7 @@ namespace eka2l1 {
             kernel_system *kern = info->own_timer->get_kernel_object_owner();
             kern->lock();
 
-            *info->request_status = 0;
+            info->request_status->set(0, kern->is_eka1());
             info->own_thread->signal_request();
             info->own_timer->request_finish();
 

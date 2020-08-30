@@ -204,7 +204,7 @@ namespace eka2l1::kernel {
     // are just simple.
     void process::logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
         if (!thread_count) {
-            *(logon_request.get(kern->crr_process())) = exit_reason;
+            (logon_request.get(kern->crr_process()))->set(exit_reason, kern->is_eka1());
             return;
         }
 
@@ -219,7 +219,8 @@ namespace eka2l1::kernel {
     bool process::logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
         decltype(rendezvous_requests) *container = rendezvous ? &rendezvous_requests : &logon_requests;
 
-        const auto find_result = std::find(container->begin(), container->end(), epoc::notify_info(logon_request, kern->crr_thread()));
+        const auto find_result = std::find(container->begin(), container->end(),epoc::notify_info(logon_request,
+            kern->crr_thread()));
 
         if (find_result == container->end()) {
             return false;

@@ -152,7 +152,7 @@ namespace eka2l1 {
                 std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
             }
 
-            *(request_status.get(request_own_thread->owning_process())) = 0; // KErrNone
+            (request_status.get(request_own_thread->owning_process()))->set(0, kern->is_eka1()); // KErrNone
 
             if (notify_owner) {
                 request_own_thread->signal_request();
@@ -189,8 +189,7 @@ namespace eka2l1 {
                 return;
             }
 
-            *(request_status.get(request_own_thread->owning_process())) = -3; // KErrCancel
-
+            (request_status.get(request_own_thread->owning_process()))->set(-3, kern->is_eka1()); // KErrCancel
             request_own_thread->signal_request();
 
             request_own_thread = nullptr;

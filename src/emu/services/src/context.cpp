@@ -138,13 +138,13 @@ namespace eka2l1 {
 
         void ipc_context::complete(int res) {
             if (msg->request_sts) {
-                *(msg->request_sts.get(msg->own_thr->owning_process())) = res;
+                kernel_system *kern = sys->get_kernel_system();
+                (msg->request_sts.get(msg->own_thr->owning_process()))->set(res, kern->is_eka1());
 
                 // Avoid signal twice to cause undefined behavior
                 if (!signaled) {
                     if (accurate_timing) {
                         ntimer *timing = sys->get_ntimer();
-                        kernel_system *kern = sys->get_kernel_system();
 
                         // TODO(pent0): No hardcode
                         timing->schedule_event(200, kern->get_ipc_realtime_signal_event(), msg->own_thr->unique_id());

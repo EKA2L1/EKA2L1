@@ -25,6 +25,10 @@ namespace eka2l1::ui::view {
     struct view_id {
         epoc::uid app_uid; ///< The UID of the app owning this view.
         epoc::uid view_uid; ///< The view UID.
+
+        inline bool operator == (const view_id &rhs) {
+            return (app_uid == rhs.app_uid) && (view_uid == rhs.view_uid);
+        }
     };
 
     struct view_event {

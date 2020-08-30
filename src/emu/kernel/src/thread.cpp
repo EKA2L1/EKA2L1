@@ -367,7 +367,7 @@ namespace eka2l1 {
             kern->lock();
 
             if (sleep_nof_sts) {
-                *(sleep_nof_sts.get(owning_process())) = errcode;
+                (sleep_nof_sts.get(owning_process()))->set(errcode, kern->is_eka1());
                 sleep_nof_sts = 0;
 
                 signal_request();
@@ -560,7 +560,7 @@ namespace eka2l1 {
 
         void thread::logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
             if (state == thread_state::stop) {
-                *(logon_request.get(kern->crr_process())) = exit_reason;
+                (logon_request.get(kern->crr_process()))->set(exit_reason, kern->is_eka1());
                 return;
             }
 
@@ -666,7 +666,9 @@ namespace eka2l1 {
                 return;
             }
 
-            *sts.get(requester->owning_process()) = err_code;
+            kernel_system *kern = requester->get_kernel_object_owner();
+
+            sts.get(requester->owning_process())->set(err_code, kern->is_eka1());
             sts = 0;
 
             requester->signal_request();
@@ -674,6 +676,7 @@ namespace eka2l1 {
 
         void notify_info::do_state(common::chunkyseri &seri) {
             sts.do_state(seri);
+            seri.absorb(is_eka1);
 
             auto thread_uid = requester->unique_id();
             seri.absorb(thread_uid);

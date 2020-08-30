@@ -66,7 +66,6 @@ namespace eka2l1 {
         ui::view::event_queue queue_;
         epoc::uid app_uid_;
 
-        std::vector<ui::view::view_id> ids_;
         std::queue<custom_message> customs_;
 
     public:
@@ -75,6 +74,7 @@ namespace eka2l1 {
         void add_view(service::ipc_context *ctx);
         void request_view_event(service::ipc_context *ctx);
         void active_view(service::ipc_context *ctx, const bool /*should_complete*/);
+        void deactive_view(service::ipc_context *ctx, const bool /*should_complete*/);
 
         explicit view_session(service::typical_server *server, const kernel::uid session_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;
@@ -89,6 +89,7 @@ namespace eka2l1 {
         };
 
         ui::view::view_id active_;
+        std::vector<ui::view::view_id> ids_;
 
     public:
         explicit view_server(system *sys);
@@ -107,5 +108,8 @@ namespace eka2l1 {
         void set_active(ui::view::view_id new_id) {
             active_ = new_id;
         }
+
+        void deactivate();
+        void add_view(const ui::view::view_id &new_id);
     };
 };

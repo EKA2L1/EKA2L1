@@ -29,31 +29,28 @@ namespace eka2l1::epoc {
             pending = 2
         };
 
-        request_status(const int sts)
-            : flags(0) {
-            if (sts == 0x80000001) {
-                flags |= pending;
-            } else {
-                flags &= ~pending;
+        void set(const int sts, const bool is_eka1) {
+            if (!is_eka1) {
+                if (sts == 0x80000001) {
+                    flags |= pending;
+                } else {
+                    flags &= ~pending;
+                }
             }
 
             status = sts;
         }
 
-        void operator=(const int sts) {
-            if (sts == 0x80000001) {
-                flags |= pending;
-            } else {
-                flags &= ~pending;
-            }
-
-            status = sts;
+        request_status(const int sts, const bool is_eka1)
+            : flags(0) {
+            set(sts, is_eka1);
         }
     };
 
     struct notify_info {
         eka2l1::ptr<epoc::request_status> sts = 0;
         eka2l1::kernel::thread *requester;
+        bool is_eka1;
 
         explicit notify_info() = default;
 

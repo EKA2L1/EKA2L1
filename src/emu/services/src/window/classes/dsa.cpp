@@ -44,7 +44,7 @@ namespace eka2l1::epoc {
             epoc::chunk_allocator *allocator = client->get_ws().allocator();
 
             sync_status_ = allocator->to_address(allocator->allocate_struct<epoc::request_status>(
-                epoc::status_pending), nullptr);
+                epoc::status_pending, kern->is_eka1()), nullptr);
 
             // Leech on the owner
             sync_thread_ = kern->create<kernel::thread>(kern->get_memory_system(), kern->get_ntimer(),

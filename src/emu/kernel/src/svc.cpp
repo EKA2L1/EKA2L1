@@ -21,6 +21,7 @@
 #include <utils/chunk.h>
 #include <utils/des.h>
 #include <utils/dll.h>
+#include <utils/event.h>
 #include <utils/handle.h>
 #include <utils/panic.h>
 #include <utils/reqsts.h>
@@ -64,7 +65,7 @@
 namespace eka2l1::epoc {
     // These twos are implemented in dispatcher module. Their implementations should not be here!
     void dispatcher_do_resolve(eka2l1::system *sys, const std::uint32_t ordinal);
-    void dispatcher_do_event_add(eka2l1::system *sys, kernel::raw_event &evt);
+    void dispatcher_do_event_add(eka2l1::system *sys, epoc::raw_event &evt);
 
     static security_policy server_exclamation_point_name_policy({ cap_prot_serv });
 
@@ -587,7 +588,7 @@ namespace eka2l1::epoc {
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
 
         if (msg->request_sts) {
-            *(msg->request_sts.get(msg->own_thr->owning_process())) = val;
+            (msg->request_sts.get(msg->own_thr->owning_process()))->set(val, kern->is_eka1());
             msg->own_thr->signal_request();
         }
 
@@ -605,7 +606,7 @@ namespace eka2l1::epoc {
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
 
         if (msg->request_sts) {
-            *(msg->request_sts.get(msg->own_thr->owning_process())) = dup_handle;
+            (msg->request_sts.get(msg->own_thr->owning_process()))->set(dup_handle, kern->is_eka1());
             msg->own_thr->signal_request();
         }
 
@@ -2470,7 +2471,7 @@ namespace eka2l1::epoc {
         return eka2l1::random();
     }
 
-    BRIDGE_FUNC(void, add_event, kernel::raw_event *evt) {
+    BRIDGE_FUNC(void, add_event, epoc::raw_event *evt) {
         if (!evt) {
             LOG_ERROR("Event to add is null, ignored");
             return;
@@ -2481,7 +2482,7 @@ namespace eka2l1::epoc {
 
     /* ================ EKA1 ROUTES ================== */
     static void finish_status_request_eka1(kernel::thread *target_thread, epoc::request_status *sts, const std::int32_t code) {
-        *sts = code;
+        sts->set(code, true);
         target_thread->signal_request();
     }
 
@@ -3248,7 +3249,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        *sts = code;
+        sts->set(code, true);
         *sts_addr = 0;          // Empty out the address as the behavior in the document.
 
         thr->signal_request();
@@ -3785,6 +3786,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x80006E, time_now),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),

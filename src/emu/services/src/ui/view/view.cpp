@@ -82,6 +82,34 @@ namespace eka2l1 {
         return true;
     }
 
+    void view_server::add_view(const ui::view::view_id &new_id) {
+        ids_.push_back(new_id);
+    }
+
+    void view_server::deactivate() {
+        static constexpr std::size_t VIEW_NOT_FOUND = 0xFFFFFFFF;
+
+        // Find the next id to activate
+        std::size_t pos_of_current_view = VIEW_NOT_FOUND;
+        auto ite = std::find(ids_.begin(), ids_.end(), active_);
+
+        if (ite != ids_.end()) {
+            pos_of_current_view = std::distance(ids_.begin(), ite);
+        }
+
+        if (ids_.size() == 1) {
+            active_ = ui::view::view_id { 0, 0 };
+        } else {
+            if ((pos_of_current_view == VIEW_NOT_FOUND) || (pos_of_current_view < (ids_.size() - 1))) {
+                // Choose the lastest added one as active
+                active_ = ids_.back();
+            } else {
+                // The one being activated is already the lastest one. Choose the one before the lastest
+                active_ = ids_[ids_.size() - 2];
+            }
+        }
+    }
+
     view_session::view_session(service::typical_server *server, const kernel::uid session_uid, epoc::version client_version)
         : service::typical_session(server, session_uid, client_version)
         , to_panic_(nullptr)
@@ -105,7 +133,7 @@ namespace eka2l1 {
             }
         }
 
-        ids_.push_back(id.value());
+        server<view_server>()->add_view(id.value());
         ctx->complete(epoc::error_none);
     }
 
@@ -156,6 +184,20 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void view_session::deactive_view(service::ipc_context *ctx, const bool /*should_complete*/) {
+        view_server *svr = server<view_server>();
+
+        const ui::view::view_id view_to_deactivate = svr->active_view();
+        
+        // Deactivate view then get the one currently being activated
+        svr->deactivate();
+        const ui::view::view_id view_that_activated = svr->active_view();
+
+        queue_.queue_event({ ui::view::view_event::event_deactive_view, view_to_deactivate, view_that_activated,
+            0, 0 });
+        ctx->complete(epoc::error_none);
+    }
+
     void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
         to_panic_ = ctx->msg;
         ctx->auto_free = false;
@@ -198,6 +240,10 @@ namespace eka2l1 {
             active_view(ctx, false);
             break;
         }
+
+        case view_opcode_create_deactivate_view_event:
+            deactive_view(ctx, false);
+            break;
 
         case view_opcode_set_background_color: {
             LOG_WARN("SetBackgroundColor stubbed");
