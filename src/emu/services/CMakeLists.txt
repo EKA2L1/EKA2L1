@@ -34,9 +34,6 @@ add_library(epocservs
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
         include/services/connmonitor/connmonitor.h
-        include/services/domain/database.h
-        include/services/domain/defs.h
-        include/services/domain/domain.h
         include/services/drm/notifier/events.h
         include/services/drm/notifier/notifier.h
         include/services/drm/helper.h
@@ -129,7 +126,6 @@ add_library(epocservs
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
         src/connmonitor/connmonitor.cpp
-        src/domain/domain.cpp
         src/drm/notifier/events.cpp
         src/drm/notifier/exchange.cpp
         src/drm/notifier/notifier.cpp
