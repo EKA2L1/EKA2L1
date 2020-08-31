@@ -832,7 +832,7 @@ namespace eka2l1::epoc {
 
         auto handle = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(), server_name).first;
 
-        if (handle != INVALID_HANDLE) {
+        if (handle != kernel::INVALID_HANDLE) {
             LOG_TRACE("Server {} created", server_name);
         }
 
@@ -865,7 +865,7 @@ namespace eka2l1::epoc {
         auto session_and_handle = kern->create_and_add<service::session>(
             kernel::owner_type::process, server, msg_slot_count);
 
-        if (session_and_handle.first == INVALID_HANDLE) {
+        if (session_and_handle.first == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         }
 
@@ -1068,7 +1068,7 @@ namespace eka2l1::epoc {
                                          create_info.initial_top, create_info.max_size, perm, type, access, att, create_info.clear_bytes)
                                      .first;
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             return epoc::error_no_memory;
         }
 
@@ -1162,7 +1162,7 @@ namespace eka2l1::epoc {
                                             init_count, !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
                                         .first;
 
-        if (sema == INVALID_HANDLE) {
+        if (sema == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         }
 
@@ -1215,7 +1215,7 @@ namespace eka2l1::epoc {
                                            !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
                                        .first;
 
-        if (mut == INVALID_HANDLE) {
+        if (mut == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         }
 
@@ -1377,7 +1377,7 @@ namespace eka2l1::epoc {
         const std::uint32_t handle_result = kern->mirror(&(*kern->get<kernel::thread>(h)), *dup_handle,
             (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread);
 
-        if (handle_result == INVALID_HANDLE) {
+        if (handle_result == kernel::INVALID_HANDLE) {
             return epoc::error_not_found;
         }
 
@@ -1400,7 +1400,7 @@ namespace eka2l1::epoc {
 
         kernel::handle ret_handle = kern->mirror(obj, static_cast<eka2l1::kernel::owner_type>(owner));
 
-        if (ret_handle != INVALID_HANDLE) {
+        if (ret_handle != kernel::INVALID_HANDLE) {
             return ret_handle;
         }
 
@@ -1645,7 +1645,7 @@ namespace eka2l1::epoc {
                                                   info->heap_initial_size, info->heap_max_size, false, info->ptr, info->allocator, kernel::thread_priority::priority_normal)
                                               .first;
 
-        if (thr_handle == INVALID_HANDLE) {
+        if (thr_handle == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         } else {
             LOG_TRACE("Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", thr_name,
@@ -1825,7 +1825,7 @@ namespace eka2l1::epoc {
 
         const kernel::handle h = kern->open_handle(thr, static_cast<kernel::owner_type>(owner));
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         }
 
@@ -1852,7 +1852,7 @@ namespace eka2l1::epoc {
 
         const kernel::handle h = kern->open_handle(pr, static_cast<kernel::owner_type>(owner));
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         }
 
@@ -1929,7 +1929,7 @@ namespace eka2l1::epoc {
         auto property_ref_handle_and_obj = kern->create_and_add<service::property_reference>(
             static_cast<kernel::owner_type>(owner), prop);
 
-        if (property_ref_handle_and_obj.first == INVALID_HANDLE) {
+        if (property_ref_handle_and_obj.first == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         }
 
@@ -2289,7 +2289,7 @@ namespace eka2l1::epoc {
 
         auto queue_ptr = kern->create_and_add<kernel::msg_queue>
             (static_cast<kernel::owner_type>(owner), name_str, size, length).first;
-        if (queue_ptr == INVALID_HANDLE) {
+        if (queue_ptr == kernel::INVALID_HANDLE) {
             return epoc::error_no_memory;
         }
 
@@ -2653,7 +2653,7 @@ namespace eka2l1::epoc {
             mem, target_process, chunk_name, bottom, top, max_size, prot::read_write, type_of_chunk,
             access_type, chunk_attribute).first;
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             // Maybe out of memory, just don't throw general error since it's hard to debug
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_no_memory);
             return epoc::error_no_memory;
@@ -2680,7 +2680,7 @@ namespace eka2l1::epoc {
         const kernel::handle h = kern->create_and_add<kernel::mutex>(get_handle_owner_from_eka1_attribute(attribute),
             kern->get_ntimer(), name_of_mut, false, access_of_mut).first;
             
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }
@@ -2705,7 +2705,7 @@ namespace eka2l1::epoc {
         const kernel::handle h = kern->create_and_add<kernel::semaphore>(get_handle_owner_from_eka1_attribute(attribute),
             name_of_sema, create_info->arg3_, access_of_sema).first;
             
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }
@@ -2732,7 +2732,7 @@ namespace eka2l1::epoc {
 
         kernel::handle h = kern->open_handle(obj_ptr, get_handle_owner_from_eka1_attribute(attribute));
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
             return epoc::error_not_found;
         }
@@ -2775,7 +2775,7 @@ namespace eka2l1::epoc {
             common::ucs2_to_utf8(name), description->func_, description->stack_size_, description->min_heap_size_,
             description->max_heap_size_, false, description->func_data_, description->heap_).first;
             
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }
@@ -2847,7 +2847,7 @@ namespace eka2l1::epoc {
         const kernel::handle h = kern->mirror(target_to_duplicate_on, create_info->arg2_,
             get_handle_owner_from_eka1_attribute(attribute));
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }
@@ -2908,7 +2908,7 @@ namespace eka2l1::epoc {
 
         kernel::handle h = kern->mirror(obj_ptr, get_handle_owner_from_eka1_attribute(attribute));
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
             return epoc::error_not_found;
         }
@@ -3027,7 +3027,7 @@ namespace eka2l1::epoc {
 
         const kernel::handle h = kern->open_handle(thr, get_handle_owner_from_eka1_attribute(attribute));
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }
@@ -3049,7 +3049,7 @@ namespace eka2l1::epoc {
         const kernel::handle h = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(),
             server_name_in_str).first;
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }
@@ -3064,7 +3064,7 @@ namespace eka2l1::epoc {
         const kernel::handle h = kern->create_and_add<kernel::timer>(kernel::owner_type::process, kern->get_ntimer(),
             "timer" + common::to_string(eka2l1::random())).first;
 
-        if (h == INVALID_HANDLE) {
+        if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
         }

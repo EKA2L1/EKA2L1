@@ -624,7 +624,7 @@ namespace eka2l1 {
         kernel_obj_ptr target_obj = get_kernel_obj_raw(handle);
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
-        kernel::handle h = INVALID_HANDLE;
+        kernel::handle h = kernel::INVALID_HANDLE;
 
         switch (owner) {
         case kernel::owner_type::kernel:
@@ -632,7 +632,7 @@ namespace eka2l1 {
 
         case kernel::owner_type::thread: {
             if (!own_thread) {
-                return INVALID_HANDLE;
+                return kernel::INVALID_HANDLE;
             }
 
             h = own_thread->thread_handles.add_object(target_obj);
@@ -648,7 +648,7 @@ namespace eka2l1 {
             break;
         }
 
-        if (h != INVALID_HANDLE) {
+        if (h != kernel::INVALID_HANDLE) {
             target_obj->open_to(own_thread->owning_process());
         }
 
@@ -656,7 +656,7 @@ namespace eka2l1 {
     }
 
     uint32_t kernel_system::mirror(kernel_obj_ptr obj, kernel::owner_type owner) {
-        kernel::handle h = INVALID_HANDLE;
+        kernel::handle h = kernel::INVALID_HANDLE;
 
         switch (owner) {
         case kernel::owner_type::kernel:
@@ -673,10 +673,10 @@ namespace eka2l1 {
         }
 
         default:
-            return INVALID_HANDLE;
+            return kernel::INVALID_HANDLE;
         }
 
-        if (h != INVALID_HANDLE) {
+        if (h != kernel::INVALID_HANDLE) {
             obj->open_to(crr_process());
         }
 
@@ -688,7 +688,7 @@ namespace eka2l1 {
     }
 
     kernel::handle kernel_system::open_handle_with_thread(kernel::thread *thr, kernel_obj_ptr obj, kernel::owner_type owner) {
-        kernel::handle h = INVALID_HANDLE;
+        kernel::handle h = kernel::INVALID_HANDLE;
 
         switch (owner) {
         case kernel::owner_type::kernel:
@@ -708,7 +708,7 @@ namespace eka2l1 {
             break;
         }
 
-        if (h != INVALID_HANDLE) {
+        if (h != kernel::INVALID_HANDLE) {
             obj->open_to(thr->owning_process());
         }
 

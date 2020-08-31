@@ -113,4 +113,6 @@ namespace eka2l1::kernel {
         std::uint32_t num_threads_using_;
         std::uint32_t num_processes_using_;
     };
+
+    static constexpr std::uint32_t INVALID_HANDLE = 0xFFFFFFFF;
 }

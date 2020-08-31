@@ -78,6 +78,8 @@ namespace eka2l1 {
 
         bool exclusive{ false };
         kernel::uid process{ 0 };
+
+        void deref() override;
     };
 
     struct fs_path_case_insensitive_hasher {

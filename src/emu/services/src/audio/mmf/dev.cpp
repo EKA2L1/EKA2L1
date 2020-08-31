@@ -229,9 +229,10 @@ namespace eka2l1 {
             return;
         }
 
-        std::uint32_t buf_handle = server<mmf_dev_server>()->get_system()->get_kernel_system()->open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
+        std::uint32_t buf_handle = server<mmf_dev_server>()->get_system()->get_kernel_system()->
+            open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
 
-        if (buf_handle == INVALID_HANDLE) {
+        if (buf_handle == kernel::INVALID_HANDLE) {
             buffer_fill_info_.complete(epoc::error_general);
             return;
         }
