@@ -84,14 +84,14 @@ namespace eka2l1::desktop {
         stage_two_inited = false;
     }
 
-    void emulator::stage_two() {
+    bool emulator::stage_two() {
         if (!stage_two_inited) {
             manager::device_manager *dvcmngr = symsys->get_manager_system()->get_device_manager();
             manager::device *dvc = dvcmngr->get_current();
 
             if (!dvc) {
                 LOG_ERROR("No current device is available. Stage two initialisation abort");
-                return;
+                return false;
             }
             
             LOG_INFO("Device being used: {} ({})", dvc->model, dvc->firmware_code);
@@ -100,7 +100,7 @@ namespace eka2l1::desktop {
                 common::lowercase_string(dvc->firmware_code), "SYM.ROM"))));
 
             if (!res) {
-                return;
+                return false;
             }
 
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
@@ -120,5 +120,7 @@ namespace eka2l1::desktop {
 
             stage_two_inited = true;
         }
+
+        return true;
     }
 }

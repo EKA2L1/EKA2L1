@@ -259,7 +259,8 @@ namespace eka2l1::desktop {
     }
 
     static int graphics_driver_thread_deinitialization(emulator &state) {
-        state.graphics_sema.wait();
+        if (state.stage_two_inited)
+            state.graphics_sema.wait();
 
         state.joystick_controller->stop_polling();
         state.graphics_driver.reset();
@@ -461,17 +462,22 @@ namespace eka2l1::desktop {
     }
 
     int emulator_entry(emulator &state) {
-        state.stage_two();
+        const bool result = state.stage_two();
 
         // Instantiate UI and High-level interface threads
         std::thread ui_thread_obj(ui_thread, std::ref(state));
-        std::thread os_thread_obj(os_thread, std::ref(state));
+        std::unique_ptr<std::thread> os_thread_obj;
+        
+        if (result)
+            os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
 
         // Run graphics driver on main entry.
         graphics_driver_thread(state);
 
         // Wait for OS thread to die
-        os_thread_obj.join();
+        if (os_thread_obj) {
+            os_thread_obj->join();
+        }
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();

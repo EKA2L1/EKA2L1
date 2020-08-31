@@ -80,6 +80,6 @@ namespace eka2l1::desktop {
         std::mutex input_mutex;
 
         void stage_one();
-        void stage_two();
+        bool stage_two();
     };
 }
