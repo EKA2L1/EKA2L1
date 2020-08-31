@@ -66,8 +66,8 @@ namespace eka2l1 {
 
 #define READ_MODE 0x100
 #define WRITE_MODE 0x200
-#define APPEND_MODE 0x300
-#define BIN_MODE 0x400
+#define APPEND_MODE 0x400
+#define BIN_MODE 0x800
 
     enum class io_component_type {
         file,

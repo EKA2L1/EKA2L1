@@ -380,7 +380,17 @@ namespace eka2l1 {
                 return false;
             }
 
+            // Temporary close the file to let resize function works.
+            const std::uint64_t saved_pos = tell();
+            fclose(file);
+
             int err_code = common::resize(common::ucs2_to_utf8(physical_path), new_size);
+            const std::string path_utf8 = common::ucs2_to_utf8(physical_path);
+
+            // Reopen the file again...
+            file = fopen(path_utf8.c_str(), translate_mode(fmode));
+            fseek(file, static_cast<long>(saved_pos), SEEK_SET);
+
             return (err_code != 0) ? false : true;
         }
 
