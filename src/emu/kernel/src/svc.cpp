@@ -2567,6 +2567,17 @@ namespace eka2l1::epoc {
         return library_lookup(kern, h, ord_index);
     }
 
+    BRIDGE_FUNC(void, process_filename_eka1, epoc::des16 *path_to_fill, kernel::handle h) {
+        kernel::process *pr = kern->get<kernel::process>(h);
+
+        if (!pr) {
+            return;
+        }
+
+        const std::u16string process_filename = pr->get_codeseg()->get_full_path();
+        path_to_fill->assign(kern->crr_process(), process_filename);
+    }
+
     std::int32_t chunk_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         // arg0 = handle, arg1 = name, arg2 = create info
@@ -3774,6 +3785,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
         BRIDGE_REGISTER(0x800015, library_entry_point_queries),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
+        BRIDGE_REGISTER(0x80001E, process_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
         BRIDGE_REGISTER(0x800033, thread_find_next),
