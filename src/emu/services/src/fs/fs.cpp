@@ -20,6 +20,7 @@
 
 #include <services/fs/fs.h>
 #include <services/fs/op.h>
+#include <services/fs/parser.h>
 #include <services/fs/std.h>
 
 #include <utils/des.h>
@@ -107,16 +108,13 @@ namespace eka2l1 {
         : service::typical_server(sys, epoc::fs::get_server_name_through_epocver(sys->get_symbian_version_use())) {
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
+        default_sys_path = u"C:\\";
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());
         system_drive_prop->define(service::property_type::int_data, 0);
         system_drive_prop->set_int(drive_c);
 
         system_drive_prop->first = static_cast<int>(FS_UID);
         system_drive_prop->second = static_cast<int>(SYSTEM_DRIVE_KEY);
-    }
-
-    void fs_server::set_default_system_path(const std::u16string &to_set) {
-        default_sys_path = to_set;
     }
 
     void fs_server_client::fetch(service::ipc_context *ctx) {
@@ -184,6 +182,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(notify_change_cancel_ex, epoc::fs_msg_notify_change_cancel_ex, "Fs::NotifyChangeCancelEx");
             HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
             HANDLE_CLIENT_IPC(rmdir, epoc::fs_msg_rmdir, "Fs::RmDir");
+            HANDLE_CLIENT_IPC(parse, epoc::fs_msg_parse, "Fs::Parse");
             HANDLE_CLIENT_IPC(delete_entry, epoc::fs_msg_delete, "Fs::Delete");
             HANDLE_CLIENT_IPC(set_entry, epoc::fs_msg_set_entry, "Fs::SetEntry");
             HANDLE_CLIENT_IPC(rename, epoc::fs_msg_rename, "Fs::Rename(Move)");
@@ -196,6 +195,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(server<fs_server>()->private_path, epoc::fs_msg_private_path, "Fs::PrivatePath");
             HANDLE_CLIENT_IPC(server<fs_server>()->volume, epoc::fs_msg_volume, "Fs::Volume");
             HANDLE_CLIENT_IPC(server<fs_server>()->query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
+            HANDLE_CLIENT_IPC(server<fs_server>()->set_default_system_path, epoc::fs_msg_set_default_path, "Fs::SetDefaultPath");
 
         case epoc::fs_msg_base_close:
             if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
@@ -295,6 +295,18 @@ namespace eka2l1 {
     }
 
     void fs_server::synchronize_driver(service::ipc_context *ctx) {
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server::set_default_system_path(service::ipc_context *ctx) {
+        auto new_path = ctx->get_argument_value<std::u16string>(0);
+
+        if (!new_path) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        default_sys_path = std::move(new_path.value());
         ctx->complete(epoc::error_none);
     }
 
@@ -488,6 +500,23 @@ namespace eka2l1 {
         io_system *io = ctx->sys->get_io_system();
         io->delete_entry(dir.value());
 
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::parse(service::ipc_context *ctx) {
+        auto name = ctx->get_argument_value<std::u16string>(0);
+        auto related = ctx->get_argument_value<std::u16string>(1);
+        auto parse = ctx->get_argument_data_from_descriptor<file_parse>(2);
+
+        if (!name || !parse) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        file_parser parser(name.value(), related.value_or(u""), parse.value());
+        parser.parse(server<fs_server>()->default_sys_path);
+
+        ctx->write_data_to_descriptor_argument(2, parser.get_result());
         ctx->complete(epoc::error_none);
     }
 

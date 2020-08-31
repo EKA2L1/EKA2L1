@@ -50,6 +50,7 @@ namespace eka2l1 {
 
     static constexpr std::uint32_t FS_UID = 0x100039E3;
     static constexpr std::uint32_t SYSTEM_DRIVE_KEY = 0x10283049;
+    static constexpr std::uint32_t LEX_COMPONENTS = 0x4;
 
     class io_system;
 
@@ -78,7 +79,7 @@ namespace eka2l1 {
 
         bool exclusive{ false };
         kernel::uid process{ 0 };
-
+        
         void deref() override;
     };
 
@@ -156,6 +157,7 @@ namespace eka2l1 {
         void rmdir(service::ipc_context *ctx);
         void rename(service::ipc_context *ctx);
         void replace(service::ipc_context *ctx);
+        void parse(service::ipc_context *ctx);
 
         void delete_entry(service::ipc_context *ctx);
         void set_entry(service::ipc_context *ctx);
@@ -183,6 +185,30 @@ namespace eka2l1 {
 
         void notify(const utf16_str &entry, const notify_type type);
         bool should_notify_failures;
+    };
+
+    enum file_wild {
+        file_wild_name = 0x01,
+        file_wild_ext = 0x02,
+        file_wild_either = 0x04,
+        file_wild_is_root = 0x08,
+        file_wild_is_kmatch_one = 0x10,
+        file_wild_is_kmatch_any = 0x20
+    };
+
+    struct file_sfield {
+        std::uint8_t pos;
+        std::uint8_t len;
+        std::uint8_t present;
+        std::uint8_t filler;
+    };
+
+    struct file_parse {
+        std::int16_t mod;
+        std::int16_t wild;
+        file_sfield fields[LEX_COMPONENTS];
+        eka2l1::ptr<void> vtable;
+        epoc::filename name_buf;
     };
 
     struct file_attrib {
@@ -260,6 +286,7 @@ namespace eka2l1 {
 
         void synchronize_driver(service::ipc_context *ctx);
         void private_path(service::ipc_context *ctx);
+        void set_default_system_path(service::ipc_context *ctx);
 
         void query_drive_info_ext(service::ipc_context *ctx);
         void drive_list(service::ipc_context *ctx);
@@ -269,7 +296,6 @@ namespace eka2l1 {
     public:
         explicit fs_server(system *sys);
 
-        void set_default_system_path(const std::u16string &to_set);
         file *get_file(const kernel::uid session_uid, const std::uint32_t handle);
     };
 }
