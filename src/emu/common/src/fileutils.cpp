@@ -262,19 +262,21 @@ namespace eka2l1::common {
             nullptr);
 #endif
 
-        if (!h) {
+        if ((!h) || (h == INVALID_HANDLE_VALUE)) {
             DWORD err = GetLastError();
 
             if (err == ERROR_FILE_NOT_FOUND) {
                 return -1;
             }
+
+            return -2;
         }
 
         LONG sizeHigh = static_cast<LONG>(size >> 32);
         DWORD set_pointer_result = SetFilePointer(h, static_cast<LONG>(size), &sizeHigh,
             FILE_BEGIN);
 
-        if (set_pointer_result != static_cast<DWORD>(size) || (size >> 32) != sizeHigh) {
+        if ((set_pointer_result != static_cast<DWORD>(size)) || ((size >> 32) != sizeHigh)) {
             CloseHandle(h);
             return -2;
         }
