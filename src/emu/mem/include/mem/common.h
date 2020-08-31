@@ -55,7 +55,6 @@ namespace eka2l1::mem {
     struct mem_model_chunk_creation_info {
         std::size_t size;
         std::uint32_t flags;
-        std::uint8_t clear_byte;
         prot perm;
 
         // Use non-zero value to force the address. Use at your own risk, since this is not checked for overlapping.

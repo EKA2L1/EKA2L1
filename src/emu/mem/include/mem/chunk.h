@@ -44,8 +44,6 @@ namespace eka2l1::mem {
         vm_address bottom_;
         vm_address top_;
 
-        std::uint8_t clear_byte_;
-
         void manipulate_cpu_map(common::bitmap_allocator *allocator, mem_model_process *process,
             const bool map);
 
@@ -54,8 +52,7 @@ namespace eka2l1::mem {
             : mmu_(mmu)
             , addr_space_id_(id)
             , bottom_(0)
-            , top_(0)
-            , clear_byte_(0) {
+            , top_(0) {
         }
 
         virtual ~mem_model_chunk() {

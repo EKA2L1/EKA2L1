@@ -46,7 +46,6 @@ namespace eka2l1 {
 
             create_info.perm = protection;
             create_info.size = max_size;
-            create_info.clear_byte = clear_byte;
 
             if (chnk_access == chunk_access::global) {
                 access = access_type::global_access;
@@ -120,6 +119,14 @@ namespace eka2l1 {
             }
 
             mmc_impl_->adjust(bottom, top);
+
+            // Clear the adjusted memory with clear byte.
+            // Note that the doc does not specify if this is used in future. I don't think it will.
+            // Please look at t_chunk.cpp test in mmu category of OSS. It has only been tested on chunk creation.
+            if (!force_host_map) {
+                std::uint8_t *base_ptr = reinterpret_cast<std::uint8_t*>(mmc_impl_->host_base());
+                std::fill(base_ptr + bottom, base_ptr + top, clear_byte);
+            }
 
             LOG_INFO("Chunk created: {}, base (in parent): 0x{:x}, max size: 0x{:x} type: {}, access: {}{}", obj_name,
                 mmc_impl_->base(mmp), max_size, (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
