@@ -29,6 +29,7 @@
 #include <services/backup/backup.h>
 #include <services/cdl/cdl.h>
 #include <services/centralrepo/centralrepo.h>
+#include <services/comm/comm.h>
 #include <services/connmonitor/connmonitor.h>
 #include <services/drm/notifier/notifier.h>
 #include <services/drm/helper.h>
@@ -200,6 +201,8 @@ namespace eka2l1 {
 
             if (cfg->enable_srv_socket)
                 CREATE_SERVER(sys, socket_server);
+
+            CREATE_SERVER(sys, comm_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
