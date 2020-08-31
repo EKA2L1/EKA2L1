@@ -70,6 +70,14 @@ namespace eka2l1 {
         }
     }
 
+    void fs_node::deref() {
+        if (count == 1) {
+            vfs_node.reset();
+        }
+
+        epoc::ref_count_object::deref();
+    }
+
     file *fs_server::get_file(const kernel::uid session_uid, const std::uint32_t handle) {
         auto ss = session<fs_server_client>(session_uid);
 
@@ -167,6 +175,8 @@ namespace eka2l1 {
             return;
         }
 
+        const std::uint64_t prev_pos = f->tell();
+
         bool res = f->resize(size);
 
         if (!res) {
@@ -175,7 +185,7 @@ namespace eka2l1 {
         }
 
         // If the file is truncated, move the file pointer to the maximum new size
-        if (size < fsize) {
+        if (prev_pos > size) {
             f->seek(size, file_seek_mode::beg);
         }
 
@@ -484,12 +494,7 @@ namespace eka2l1 {
         }
 
         auto &node_attrib = server<fs_server>()->attribs[vfs_file->file_name()];
-        if (node_attrib.is_exlusive()) {
-            node_attrib.decrement_use(ctx->msg->own_thr->owning_process()->unique_id());
-        }
-
-        // Finally, close the file
-        vfs_file->close();
+        node_attrib.decrement_use(ctx->msg->own_thr->owning_process()->unique_id());
 
         obj_table_.remove(*handle_res);
         ctx->complete(epoc::error_none);
@@ -599,6 +604,11 @@ namespace eka2l1 {
         }
 
         const epoc::handle dup_handle = obj_table_.add(node);
+        
+        file *f = reinterpret_cast<file *>(node->vfs_node.get());
+
+        auto &node_attrib = server<fs_server>()->attribs[f->file_name()];
+        node_attrib.increment_use(ctx->msg->own_thr->owning_process()->unique_id());
 
         ctx->write_data_to_descriptor_argument<epoc::handle>(3, dup_handle);
         ctx->complete(epoc::error_none);
@@ -606,7 +616,6 @@ namespace eka2l1 {
 
     void fs_server_client::file_adopt(service::ipc_context *ctx) {
         LOG_TRACE("Fs::FileAdopt stubbed");
-        // TODO (pent0) : Do an adopt implementation
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, ctx->get_argument_value<std::uint32_t>(0).value());
         ctx->complete(epoc::error_none);
@@ -714,7 +723,7 @@ namespace eka2l1 {
             }
         }
 
-        LOG_INFO("Opening file: {}", name_utf8);
+        LOG_INFO("Opening file: {}, raw mode {}", name_utf8, open_mode_res.value());
 
         int handle = new_node(ctx->sys->get_io_system(), ctx->msg->own_thr, *name_res,
             *open_mode_res, overwrite, temporary);
