@@ -3297,6 +3297,10 @@ namespace eka2l1::epoc {
         thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(thread_pri));
     }
 
+    BRIDGE_FUNC(std::int32_t, process_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
+        return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::process);
+    }
+
     BRIDGE_FUNC(std::int32_t, server_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
         return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::server);
     }
@@ -3785,6 +3789,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
         BRIDGE_REGISTER(0x800015, library_entry_point_queries),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
+        BRIDGE_REGISTER(0x80001C, process_find_next),
         BRIDGE_REGISTER(0x80001E, process_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
@@ -3807,6 +3812,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
+        BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal),
         BRIDGE_REGISTER(0xC0002E, server_receive),
