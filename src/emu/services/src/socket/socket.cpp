@@ -24,8 +24,16 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
+    std::string get_socket_server_name_by_epocver(const epocver ver) {
+        if (ver <= epocver::eka2) {
+            return "SocketServer";
+        }
+
+        return "!SocketServer";
+    }
+
     socket_server::socket_server(eka2l1::system *sys)
-        : service::typical_server(sys, "!SocketServer") {
+        : service::typical_server(sys, get_socket_server_name_by_epocver((sys->get_symbian_version_use()))) {
     }
 
     void socket_server::connect(service::ipc_context &context) {
