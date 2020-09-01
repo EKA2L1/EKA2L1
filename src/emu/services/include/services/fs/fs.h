@@ -118,6 +118,7 @@ namespace eka2l1 {
         void file_name(service::ipc_context *ctx);
         void file_full_name(service::ipc_context *ctx);
         void file_att(service::ipc_context *ctx);
+        void file_set_att(service::ipc_context *ctx);
 
         void new_file_subsession(service::ipc_context *ctx, bool overwrite = false,
             bool temporary = false);
@@ -125,6 +126,7 @@ namespace eka2l1 {
         void file_size(service::ipc_context *ctx);
         void file_set_size(service::ipc_context *ctx);
         void file_modified(service::ipc_context *ctx);
+        void file_set_modified(service::ipc_context *ctx);
 
         void file_seek(service::ipc_context *ctx);
         void file_read(service::ipc_context *ctx);

@@ -166,7 +166,9 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(file_name, epoc::fs_msg_filename, "Fs::FileName");
             HANDLE_CLIENT_IPC(file_full_name, epoc::fs_msg_file_fullname, "Fs::FileFullName");
             HANDLE_CLIENT_IPC(file_att, epoc::fs_msg_file_att, "Fs::FileAtt");
+            HANDLE_CLIENT_IPC(file_set_att, epoc::fs_msg_file_set_att, "Fs::FileSetAtt");
             HANDLE_CLIENT_IPC(file_modified, epoc::fs_msg_file_modified, "Fs::FileModified");
+            HANDLE_CLIENT_IPC(file_set_modified, epoc::fs_msg_file_set_modified, "Fs::FileSetModified");
             HANDLE_CLIENT_IPC(is_file_in_rom, epoc::fs_msg_is_file_in_rom, "Fs::IsFileInRom");
             HANDLE_CLIENT_IPC(is_valid_name, epoc::fs_msg_is_valid_name, "Fs::IsValidName");
             HANDLE_CLIENT_IPC(open_dir, epoc::fs_msg_dir_open, "Fs::OpenDir");
