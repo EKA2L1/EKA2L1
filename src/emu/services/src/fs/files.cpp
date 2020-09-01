@@ -396,7 +396,7 @@ namespace eka2l1 {
         std::uint64_t write_pos = 0;
         std::uint64_t size_of_file = vfs_file->size();
 
-        write_pos = size_of_file;
+        write_pos = vfs_file->tell();
 
         // Low MaxUint64
         if ((write_pos_provided != static_cast<int>(0x80000000)) && (write_pos_provided != -1)) {
