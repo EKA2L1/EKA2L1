@@ -19,6 +19,8 @@
  */
 
 #include <epoc/epoc.h>
+#include <services/socket/connection.h>
+#include <services/socket/resolver.h>
 #include <services/socket/socket.h>
 
 #include <utils/err.h>
@@ -41,26 +43,56 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
+    epoc::socket::host &socket_server::host_by_info(const std::uint32_t family, const std::uint32_t protocol) {
+        return hosts_[static_cast<std::uint64_t>(protocol) | (static_cast<std::uint64_t>(family) << 32)];
+    }
+
     socket_client_session::socket_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
     }
 
+    bool socket_client_session::is_oldarch() {
+        return server<socket_server>()->get_kernel_object_owner()->is_eka1();
+    }
+
     void socket_client_session::fetch(service::ipc_context *ctx) {
-        switch (ctx->msg->function) {
-        case socket_sr_get_by_number:
-            sr_get_by_number(ctx);
-            break;
+        if (is_oldarch()) {
+            switch (ctx->msg->function) {
+            case socket_old_hr_open:
+                hr_create(ctx, false);
+                return;
 
-        case socket_cn_get_long_des_setting:
-            cn_get_long_des_setting(ctx);
-            break;
+            default:
+                break;
+            }
+        } else {
+            switch (ctx->msg->function) {
+            case socket_sr_get_by_number:
+                sr_get_by_number(ctx);
+                return;
 
-        default: {
-            LOG_ERROR("Unimplemented opcode for Socket server 0x{:X}", ctx->msg->function);
-            break;
+            case socket_cn_get_long_des_setting:
+                cn_get_long_des_setting(ctx);
+                return;
+
+            default:
+                break;
+            }
         }
+
+        std::optional<std::uint32_t> subsess_id = ctx->get_argument_value<std::uint32_t>(3);
+
+        if (subsess_id && (subsess_id.value() > 0)) {
+            socket_subsession_instance *inst = subsessions_.get(subsess_id.value());
+
+            if (inst) {
+                inst->get()->dispatch(ctx);
+                return;
+            }
         }
+    
+        LOG_ERROR("Unimplemented opcode for Socket server 0x{:X}", ctx->msg->function);
     }
 
     void socket_client_session::sr_get_by_number(eka2l1::service::ipc_context *ctx) {
@@ -74,6 +106,41 @@ namespace eka2l1 {
     
     void socket_client_session::cn_get_long_des_setting(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE("CnGetLongDesSetting stubbed");
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::hr_create(service::ipc_context *ctx, const bool with_conn) {
+        std::optional<std::uint32_t> addr_family = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> protocol = ctx->get_argument_value<std::uint32_t>(1);
+        std::optional<std::uint32_t> conn_subhandle = ctx->get_argument_value<std::uint32_t>(2);
+
+        if (!addr_family || !protocol || (with_conn && !conn_subhandle)) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::socket::socket_connection_proxy *conn = nullptr;
+
+        if (with_conn) {
+            socket_subsession_instance *inst = subsessions_.get(conn_subhandle.value());
+
+            if (!inst) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            conn = reinterpret_cast<epoc::socket::socket_connection_proxy*>(inst->get());
+        }
+
+        // Create new session
+        socket_subsession_instance hr_inst = std::make_unique<epoc::socket::socket_host_resolver>(
+            this, addr_family.value(), protocol.value(), conn ? conn->get_connection() : nullptr);
+
+        const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(hr_inst));
+        subsessions_.get(id)->get()->set_id(id);
+
+        // Write the subsession handle
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
     }
 }
