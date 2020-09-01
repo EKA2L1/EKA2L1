@@ -52,13 +52,6 @@ namespace eka2l1 {
                 return false;
             }
 
-            if (us_signal == 0) {
-                request_status->set(0, kern->is_eka1());
-                requester->signal_request();
-
-                return true;
-            }
-
             outstanding = true;
 
             info.request_status = request_status;
