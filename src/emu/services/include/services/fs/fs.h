@@ -295,6 +295,13 @@ namespace eka2l1 {
         void drive(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
 
+        enum {
+            FLAG_INITED = 0
+        };
+
+        std::uint32_t flags;
+        void init();
+
     public:
         explicit fs_server(system *sys);
 

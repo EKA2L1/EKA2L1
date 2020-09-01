@@ -105,7 +105,8 @@ namespace eka2l1 {
     }
 
     fs_server::fs_server(system *sys)
-        : service::typical_server(sys, epoc::fs::get_server_name_through_epocver(sys->get_symbian_version_use())) {
+        : service::typical_server(sys, epoc::fs::get_server_name_through_epocver(sys->get_symbian_version_use()))
+        , flags(0) {
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
         default_sys_path = u"C:\\";
@@ -311,8 +312,34 @@ namespace eka2l1 {
         default_sys_path = std::move(new_path.value());
         ctx->complete(epoc::error_none);
     }
+    
+    void fs_server::init() {
+        if (flags & FLAG_INITED) {
+            return;
+        }
+
+        if (kern->is_eka1()) {
+            // Create predictable directories if it does not exist
+            std::u16string system_apps_dir = u"?:\\System\\Apps\\";
+            io_system *io = sys->get_io_system();
+
+            // Ignore drive z.
+            for (drive_number drv = drive_y; drv >= drive_a; drv--) {
+                if (io->get_drive_entry(drv)) {
+                    system_apps_dir[0] = drive_to_char16(drv);
+                    io->create_directories(system_apps_dir);
+                }
+            }
+        }
+
+        flags |= FLAG_INITED;
+    }
 
     void fs_server::connect(service::ipc_context &ctx) {
+        if (!(flags & FLAG_INITED)) {
+            init();
+        }
+
         fs_server_client *cli = create_session<fs_server_client>(&ctx, &ctx);
         typical_server::connect(ctx);
     }
