@@ -24,7 +24,6 @@
 #include <algorithm>
 
 namespace eka2l1 {
-    
     file_parser::file_parser(std::u16string name, std::u16string related, file_parse parse) 
         : name_(name)
         , related_(related)
@@ -85,8 +84,10 @@ namespace eka2l1 {
         case file_parse_type::file_parse_ext:
             parse_ext(name);
             break;
-        }
 
+        default:
+            break;
+        }
     }
 
     void file_parser::parse_drive(std::u16string name) {
