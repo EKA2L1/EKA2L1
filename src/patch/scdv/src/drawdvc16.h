@@ -28,7 +28,7 @@ public:
     void SetSize(TSize aSize);
 
     virtual void WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
-    virtual void WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, CGraphicsContext::TDrawMode aDrawMode);
+    virtual void WriteRgbToAddress(TUint8 *aAddress, TUint8 *aRawColor, CGraphicsContext::TDrawMode aDrawMode);
 
     virtual TRgb ReadPixel(TInt aX, TInt aY) const;
 };

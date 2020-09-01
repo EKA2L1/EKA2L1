@@ -34,10 +34,10 @@ class TDesOverflowHandler : public TDes16Overflow {
 };
 
 void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...) {
-    HBufC *newString = HBufC::NewL(aMessage.Length() * 2);
+    HBufC *newString = HBufC::NewL(256);
     
 #ifndef EKA2
-    HBufC *newStringFinal = HBufC::NewL(aMessage.Length() * 3);
+    HBufC *newStringFinal = HBufC::NewL(256);
 #endif
 
     VA_LIST list;
