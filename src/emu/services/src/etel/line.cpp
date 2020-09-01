@@ -43,6 +43,10 @@ namespace eka2l1 {
     void etel_line_subsession::dispatch(service::ipc_context *ctx) {
         if (oldarch_) {
             switch (ctx->msg->function) {
+            case epoc::etel_old_line_get_status:
+                get_status(ctx);
+                break;
+
             default:
                 LOG_ERROR("Unimplemented etel line opcode {}", ctx->msg->function);
                 break;
