@@ -91,35 +91,35 @@ namespace eka2l1 {
     }
 
     void file_parser::parse_drive(std::u16string name) {
-        if (name.length() < 3 || name.at(2) != '\\') {
+        if (name.length() < 2 || name.at(1) != ':') {
             return;
         }
         if (!done) {
-            result += name.substr(0, 3);
+            result += name.substr(0, 2);
             done = true;
         }
     }
 
     void file_parser::parse_path(std::u16string name) {
-        if (name.find('\\') == std::string::npos) {
+        std::size_t pos_start = name.find('\\');
+        if (pos_start == std::string::npos) {
             return;
         }
-        std::size_t pos_start = 0;
-        if (name.length() >= 3 && name.at(2) == '\\') {
-            pos_start = 3;
-        }
-        std::size_t pos_end = name.find_last_of('\\');
+        std::size_t pos_end = name.find_last_of('\\') + 1;
         if (!done) {
-            result += name.substr(pos_start, pos_end);
+            result += name.substr(pos_start, pos_end - pos_start);
             done = true;
         }
     }
 
     void file_parser::parse_name(std::u16string name) {
         std::u16string fname = eka2l1::filename(name, true); 
-        std::size_t pos_end = name.find_last_of('.');
+        std::size_t pos_end = fname.find_last_of('.');
         if (pos_end != std::string::npos) {
             fname = fname.substr(0, pos_end);
+        }
+        if (fname.length() == 0) {
+            return;
         }
         if (!done) {
             result += fname;
