@@ -139,6 +139,10 @@ namespace eka2l1 {
         T &back() const {
             return queue.back();
         }
+
+        std::size_t size() const {
+            return queue.size();
+        }
     };
 
     /**
