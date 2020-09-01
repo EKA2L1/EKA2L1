@@ -2399,6 +2399,36 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, raise_exception, kernel::handle h, std::int32_t type) {
+        LOG_ERROR("Exception with type {} is thrown", type);
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            return epoc::error_bad_handle;
+        }
+
+        if (thr == kern->crr_thread()) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_not_supported;
+    }
+
+    BRIDGE_FUNC(std::int32_t, raise_exception_eka1, std::int32_t type, kernel::handle h) {
+        LOG_ERROR("Exception with type {} is thrown", type);
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            return epoc::error_bad_handle;
+        }
+
+        if (thr == kern->crr_thread()) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_not_supported;
+    }
+
     BRIDGE_FUNC(std::int32_t, is_exception_handled, kernel::handle h, std::int32_t type, bool aSwExcInProgress) {
         LOG_ERROR("Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
@@ -3828,6 +3858,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
         BRIDGE_REGISTER(0xC10000, hle_dispatch),
         BRIDGE_REGISTER(0xC10001, debug_print),
