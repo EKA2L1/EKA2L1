@@ -167,6 +167,11 @@ namespace eka2l1 {
 
         void read_file_section(service::ipc_context *ctx);
 
+        void query_drive_info_ext(service::ipc_context *ctx);
+        void drive_list(service::ipc_context *ctx);
+        void drive(service::ipc_context *ctx);
+        void volume(service::ipc_context *ctx);
+
         enum class notify_type {
             entry = 1,
             all = 2,
@@ -289,11 +294,6 @@ namespace eka2l1 {
         void synchronize_driver(service::ipc_context *ctx);
         void private_path(service::ipc_context *ctx);
         void set_default_system_path(service::ipc_context *ctx);
-
-        void query_drive_info_ext(service::ipc_context *ctx);
-        void drive_list(service::ipc_context *ctx);
-        void drive(service::ipc_context *ctx);
-        void volume(service::ipc_context *ctx);
 
         enum {
             FLAG_INITED = 0

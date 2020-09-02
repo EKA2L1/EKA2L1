@@ -192,12 +192,12 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(replace, epoc::fs_msg_replace, "Fs::Replace");
             HANDLE_CLIENT_IPC(read_file_section, epoc::fs_msg_read_file_section, "Fs::ReadFileSection");
             HANDLE_CLIENT_IPC(set_should_notify_failure, epoc::fs_msg_set_notify_user, "Fs::SetShouldNotifyFailure");
-            HANDLE_CLIENT_IPC(server<fs_server>()->drive_list, epoc::fs_msg_drive_list, "Fs::DriveList");
-            HANDLE_CLIENT_IPC(server<fs_server>()->drive, epoc::fs_msg_drive, "Fs::Drive");
+            HANDLE_CLIENT_IPC(drive_list, epoc::fs_msg_drive_list, "Fs::DriveList");
+            HANDLE_CLIENT_IPC(drive, epoc::fs_msg_drive, "Fs::Drive");
             HANDLE_CLIENT_IPC(server<fs_server>()->synchronize_driver, epoc::fs_msg_sync_drive_thread, "Fs::SyncDriveThread");
             HANDLE_CLIENT_IPC(server<fs_server>()->private_path, epoc::fs_msg_private_path, "Fs::PrivatePath");
-            HANDLE_CLIENT_IPC(server<fs_server>()->volume, epoc::fs_msg_volume, "Fs::Volume");
-            HANDLE_CLIENT_IPC(server<fs_server>()->query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
+            HANDLE_CLIENT_IPC(volume, epoc::fs_msg_volume, "Fs::Volume");
+            HANDLE_CLIENT_IPC(query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
             HANDLE_CLIENT_IPC(server<fs_server>()->set_default_system_path, epoc::fs_msg_set_default_path, "Fs::SetDefaultPath");
 
         case epoc::fs_msg_base_close:

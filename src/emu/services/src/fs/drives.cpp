@@ -28,7 +28,17 @@
 #include <cwctype>
 
 namespace eka2l1 {
-    void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive);
+    void fill_drive_info(epoc::fs::drive_info_v1 *info, eka2l1::drive *io_drive, const epoc::version fs_ver);
+
+    std::unique_ptr<epoc::fs::drive_info_v1> get_drive_info_struct(const epoc::version fs_version, std::uint32_t &struct_size) {
+        if (fs_version.major >= 2) {
+            struct_size = sizeof(epoc::fs::drive_info_v2);
+            return std::make_unique<epoc::fs::drive_info_v2>();
+        }
+
+        struct_size = sizeof(epoc::fs::drive_info_v1);
+        return std::make_unique<epoc::fs::drive_info_v1>();
+    }
 
     void fs_server_client::file_drive(service::ipc_context *ctx) {
         std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
@@ -48,33 +58,33 @@ namespace eka2l1 {
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         drive_number drv = static_cast<drive_number>(std::towlower(f->file_name()[0]) - 'a');
-        epoc::fs::drive_info info;
+
+        std::unique_ptr<epoc::fs::drive_info_v1> info;
+        std::uint32_t info_variant_size = 0;
+
+        info = std::move(get_drive_info_struct(client_version(), info_variant_size));
 
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(
             static_cast<drive_number>(drv));
 
-        if (!io_drive) {
-            info.type = epoc::fs::media_unknown;
-        } else {
-            fill_drive_info(&(info), *io_drive);
-        }
+        fill_drive_info(info.get(), io_drive.has_value() ? &io_drive.value() : nullptr, client_version());
 
         ctx->write_data_to_descriptor_argument<drive_number>(0, drv);
-        ctx->write_data_to_descriptor_argument<epoc::fs::drive_info>(1, info);
+        ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t*>(info.get()), info_variant_size, nullptr, true);
 
         ctx->complete(epoc::error_none);
     }
 
-    void fill_drive_info(epoc::fs::drive_info *info, eka2l1::drive &io_drive) {
+    void fill_drive_info(epoc::fs::drive_info_v1 *info, eka2l1::drive *io_drive, const epoc::version ver) {
         info->drive_att = 0;
         info->media_att = 0;
 
-        if (io_drive.media_type == drive_media::none) {
+        if (!io_drive || (io_drive->media_type == drive_media::none)) {
             info->type = epoc::fs::media_unknown;
             return;
         }
 
-        switch (io_drive.media_type) {
+        switch (io_drive->media_type) {
         case drive_media::physical: {
             info->type = epoc::fs::media_hard_disk;
             info->drive_att = epoc::fs::drive_att_local;
@@ -100,53 +110,50 @@ namespace eka2l1 {
             break;
         }
 
-        info->connection_bus_type = epoc::fs::connection_bus_internal;
         info->battery = epoc::fs::battery_state_not_supported;
 
-        if (static_cast<int>(io_drive.attribute & io_attrib_hidden)) {
+        if (static_cast<int>(io_drive->attribute & io_attrib_hidden)) {
             info->drive_att |= epoc::fs::drive_att_hidden;
         }
 
-        if (static_cast<int>(io_drive.attribute & io_attrib_internal)) {
+        if (static_cast<int>(io_drive->attribute & io_attrib_internal)) {
             info->drive_att |= epoc::fs::drive_att_internal;
         }
 
-        if (static_cast<int>(io_drive.attribute & io_attrib_removeable)) {
+        if (static_cast<int>(io_drive->attribute & io_attrib_removeable)) {
             info->drive_att |= epoc::fs::drive_att_removable;
         }
 
-        if (static_cast<int>(io_drive.attribute & io_attrib_write_protected)) {
+        if (static_cast<int>(io_drive->attribute & io_attrib_write_protected)) {
             info->media_att |= epoc::fs::media_att_write_protected;
+        }
+
+        if (ver.major >= 2) {    
+            reinterpret_cast<epoc::fs::drive_info_v2*>(info)->connection_bus_type =
+                epoc::fs::connection_bus_internal;
         }
     }
 
     /* Simple for now only, in the future this should be more advance. */
-    void fs_server::drive(service::ipc_context *ctx) {
+    void fs_server_client::drive(service::ipc_context *ctx) {
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
-        std::optional<epoc::fs::drive_info> info = ctx->get_argument_data_from_descriptor<epoc::fs::drive_info>(0);
 
-        if (!info) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
+        std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(
+            static_cast<drive_number>(drv));
 
-        std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
+        std::unique_ptr<epoc::fs::drive_info_v1> info;
+        std::uint32_t info_variant_size = 0;
 
-        if (!io_drive) {
-            info->type = epoc::fs::media_unknown;
-            info->drive_att = 0;
-            info->media_att = 0;
-            info->battery = epoc::fs::battery_state_not_supported;
-            info->connection_bus_type = epoc::fs::connection_bus_internal;
-        } else {
-            fill_drive_info(&(*info), *io_drive);
-        }
+        info = std::move(get_drive_info_struct(client_version(), info_variant_size));
+        fill_drive_info(info.get(), io_drive.has_value() ? &io_drive.value() : nullptr, client_version());
 
-        ctx->write_data_to_descriptor_argument<epoc::fs::drive_info>(0, *info);
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t*>(info.get()), info_variant_size,
+            nullptr, true);
+
         ctx->complete(epoc::error_none);
     }
 
-    void fs_server::drive_list(service::ipc_context *ctx) {
+    void fs_server_client::drive_list(service::ipc_context *ctx) {
         std::optional<std::int32_t> flags = ctx->get_argument_value<std::int32_t>(1);
 
         if (!flags) {
@@ -218,40 +225,35 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void fs_server::volume(service::ipc_context *ctx) {
-        std::optional<epoc::fs::volume_info> info = ctx->get_argument_data_from_descriptor<epoc::fs::volume_info>(0);
-
-        if (!info) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
-
+    void fs_server_client::volume(service::ipc_context *ctx) {
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
-        if (!io_drive) {
-            info->drv_info.type = epoc::fs::media_unknown;
+#define VOLUME_INFO_GETTERS(info_name)                                                      \
+    LOG_WARN("Volume size stubbed with 1GB");                                               \
+    fill_drive_info(reinterpret_cast<epoc::fs::drive_info_v1*>(&info_name.drv_info),        \
+        io_drive.has_value() ? &io_drive.value() : nullptr, cli_ver);                       \
+    info_name.uid = drv;                                                                    \
+    info_name.size = common::GB(1);                                                         \
+    info_name.free = common::GB(1);
 
-            ctx->write_data_to_descriptor_argument<epoc::fs::volume_info>(0, *info);
-            ctx->complete(epoc::error_not_ready);
+        const epoc::version cli_ver = client_version();
+        if (cli_ver.major >= 2) {
+            epoc::fs::volume_info_v2 info_new;
+            VOLUME_INFO_GETTERS(info_new);
 
-            return;
+            ctx->write_data_to_descriptor_argument<epoc::fs::volume_info_v2>(0, info_new, nullptr, true);
+        } else {
+            epoc::fs::volume_info_v1 info_old;
+            VOLUME_INFO_GETTERS(info_old);
+
+            ctx->write_data_to_descriptor_argument<epoc::fs::volume_info_v1>(0, info_old, nullptr, true);
         }
 
-        fill_drive_info(&info->drv_info, *io_drive);
-        info->uid = drv;
-
-        LOG_WARN("Volume size stubbed with 1GB");
-
-        // Stub this
-        info->size = common::GB(1);
-        info->free = common::GB(1);
-
-        ctx->write_data_to_descriptor_argument<epoc::fs::volume_info>(0, *info);
         ctx->complete(epoc::error_none);
     }
 
-    void fs_server::query_drive_info_ext(service::ipc_context *ctx) {
+    void fs_server_client::query_drive_info_ext(service::ipc_context *ctx) {
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(0));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(drv);
 
