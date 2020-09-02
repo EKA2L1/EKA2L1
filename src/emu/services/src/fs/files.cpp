@@ -110,6 +110,24 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void fs_server_client::file_set_modified(service::ipc_context *ctx) {
+        std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
+
+        if (!handle_res) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        fs_node *node = get_file_node(*handle_res);
+
+        if (node == nullptr || node->vfs_node->type != io_component_type::file) {
+            ctx->complete(epoc::error_bad_handle);
+            return;
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
     void fs_server_client::file_size(service::ipc_context *ctx) {
         std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
@@ -623,6 +641,12 @@ namespace eka2l1 {
 
     void fs_server_client::file_att(service::ipc_context *ctx) {
         std::int32_t target_handle = *ctx->get_argument_value<std::int32_t>(3);
+        
+        if (!target_handle) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        
         fs_node *node = get_file_node(target_handle);
 
         if (!node) {
@@ -638,6 +662,24 @@ namespace eka2l1 {
 
         const std::uint32_t attrib = build_attribute_from_entry_info(info.value());
         ctx->write_data_to_descriptor_argument(0, attrib);
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::file_set_att(service::ipc_context *ctx) {
+        std::int32_t target_handle = *ctx->get_argument_value<std::int32_t>(3);
+        
+        if (!target_handle) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        
+        fs_node *node = get_file_node(target_handle);
+
+        if (!node) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
         ctx->complete(epoc::error_none);
     }
 

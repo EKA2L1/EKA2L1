@@ -106,7 +106,7 @@ void CFbsDrawDeviceByteBuffer::WriteLine(TInt aX, TInt aY, TInt aLength, TUint32
 
     for (TInt x = aX; x < aX + aLength; x++) {
         // Try to reduce if calls pls
-        WriteRgbToAddress(pixelAddress, buffer8[0], buffer8[1], buffer8[2], aDrawMode);
+        WriteRgbToAddress(pixelAddress, buffer8, aDrawMode);
 
         pixelAddress += increment;
         buffer8 += iByteCount;

@@ -110,7 +110,7 @@ namespace eka2l1::epoc::adapter {
 
         // No baseline correction
         metrics.baseline_correction = 0;                            // For the whole font
-        metrics.descent = -(metrics.max_height - metrics.ascent);      // Correct?
+        metrics.descent = -(metrics.ascent - metrics.max_height);      // Correct?
         metrics.design_height = metrics.max_height;                 // Dunno, maybe wrong ;(
         metrics.max_depth = 0;                                      // Help I dunno what this is
 
@@ -137,24 +137,29 @@ namespace eka2l1::epoc::adapter {
     }
     
     bool gdr_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
-        const float scale_x, const float scale_y) {
+        const std::uint16_t font_size) {
         loader::gdr::character *the_char = get_character(idx, code);
 
         if (!the_char) {
             return false;
         }
 
+        epoc::open_font_metrics whole_metrics;
+        get_metrics(idx, whole_metrics);
+
         const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
+        const float the_scale = static_cast<float>(font_size) / static_cast<float>(whole_metrics.max_height);
 
-        character_metric.width = static_cast<std::int16_t>(target_width * scale_x);
-        character_metric.height = static_cast<std::int16_t>(the_char->metric_->height_in_pixels_ * scale_y);
-        character_metric.horizontal_advance = static_cast<std::int16_t>(the_char->metric_->move_in_pixels_ * scale_x);
-        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(the_char->metric_->left_adj_in_pixels_ * scale_x);
-        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(((the_char->metric_->right_adjust_in_pixels_ == 0xFF) ?
-            0 : the_char->metric_->right_adjust_in_pixels_) * scale_x);
+        character_metric.width = static_cast<std::int16_t>(target_width * the_scale);
+        character_metric.height = font_size;
+        character_metric.horizontal_advance = static_cast<std::int16_t>(the_char->metric_->move_in_pixels_ * the_scale);
+        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(the_char->metric_->left_adj_in_pixels_ * the_scale);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(the_char->metric_->ascent_in_pixels_ * the_scale);
 
+        // Todo supply vertical bearing: This is spaces when text placed vertically
         character_metric.vertical_bearing_x = 0;
         character_metric.vertical_bearing_y = 0;
+
         character_metric.bitmap_type = glyph_bitmap_type::monochrome_glyph_bitmap;
 
         return true;
@@ -164,29 +169,33 @@ namespace eka2l1::epoc::adapter {
         return get_character(idx, code);
     }
 
-    std::uint8_t *gdr_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const float scale_x,
-        const float scale_y, int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
+    std::uint8_t *gdr_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint16_t font_size,
+        int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
         loader::gdr::character *the_char = get_character(idx, code);
 
         if (!the_char) {
             return nullptr;
         }
 
+        epoc::open_font_metrics whole_metrics;
+        get_metrics(idx, whole_metrics);
+
         // Do simple scaling! :D If it is blocky, probably have to get a library involved
         std::vector<std::uint32_t> scaled_result;
         std::uint32_t *src = the_char->data_.data();
 
         const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
-        const std::int16_t scaled_width = static_cast<std::int16_t>(std::roundf(target_width * scale_x));
-        const std::int16_t scaled_height = static_cast<std::int16_t>(std::roundf(the_char->metric_->height_in_pixels_ * scale_y));
         
-        if ((scale_x != 1.0f) || (scale_y != 1.0f)) {
-            scaled_result.resize((scaled_width * scaled_height + 31) >> 5);
+        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(whole_metrics.max_height);
+        const std::int16_t scaled_width = static_cast<std::int16_t>(std::roundf(target_width * scale_factor));
+        
+        if (scale_factor != 1.0f) {
+            scaled_result.resize((static_cast<std::uint32_t>(scaled_width * font_size) + 31) >> 5);
 
-            for (std::int16_t y = 0; y < scaled_height; y++) {
+            for (std::int16_t y = 0; y < font_size; y++) {
                 for (std::int16_t x = 0; x < scaled_width; x++) {
-                    const std::int16_t dx = static_cast<std::int16_t>(x / scale_x);
-                    const std::int16_t dy = static_cast<std::int16_t>(y / scale_y);
+                    const std::int16_t dx = static_cast<std::int16_t>(x / scale_factor);
+                    const std::int16_t dy = static_cast<std::int16_t>(y / scale_factor);
                     const std::int32_t src_pixel_loc = (dy * target_width + dx);
                     const std::int32_t dest_pixel_loc = (y * scaled_width + x);
 
@@ -199,7 +208,7 @@ namespace eka2l1::epoc::adapter {
 
         // RLE this baby! Alloc this big to gurantee compressed data will always fit. If the compression is bad
         // we also add 5 more words. in case compression is not effective at all.
-        const std::size_t total_compressed_word = ((scaled_width * scaled_height + 31) >> 5) + 5;
+        const std::size_t total_compressed_word = ((static_cast<std::uint32_t>(scaled_width * font_size) + 31) >> 5) + 5;
         std::uint32_t *compressed_bitmap = new std::uint32_t[total_compressed_word];
         std::fill(compressed_bitmap, compressed_bitmap + total_compressed_word, 0);
 
@@ -239,11 +248,11 @@ namespace eka2l1::epoc::adapter {
             return true;
         };
 
-        while (total_line_processed_so_far < scaled_height) {
+        while (total_line_processed_so_far < font_size) {
             bool mode = false;
             std::int8_t count = 2;
 
-            if (total_line_processed_so_far == (scaled_height - 1)) {
+            if (total_line_processed_so_far == (font_size - 1)) {
                 count = 1;
                 mode = false;
             } else {
@@ -251,7 +260,7 @@ namespace eka2l1::epoc::adapter {
 
                 bool got_in = false;
 
-                while ((count < 15) && (total_line_processed_so_far + count < scaled_height) && 
+                while ((count < 15) && (total_line_processed_so_far + count < font_size) && 
                     (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, scaled_width) == mode)) {
                     count++;
                     got_in = true;
@@ -297,7 +306,7 @@ namespace eka2l1::epoc::adapter {
         }
 
         if (rasterized_height) {
-            *rasterized_height = scaled_height;
+            *rasterized_height = font_size;
         }
 
         // In case this adapter get destroyed. It will free this data.
@@ -345,7 +354,7 @@ namespace eka2l1::epoc::adapter {
         epoc::open_font_metrics metrics;
         get_metrics(idx, metrics);
 
-        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(metrics.design_height);
+        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(metrics.max_height);
 
         for (char16_t i = 0; i < num_code; i++) {
             const char16_t ucode = (unicode_point) ? static_cast<char16_t>(unicode_point[i]) : start_code + i;

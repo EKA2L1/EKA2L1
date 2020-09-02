@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
+ * Copyright (c) 2020 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,20 +17,29 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCDV_DVC_SIXTEEN_BITS_H_
-#define SCDV_DVC_SIXTEEN_BITS_H_
+#pragma once
 
-#include "drawdvcb.h"
+#include <cstdint>
+#include <string>
+#include <vector>
 
-class CFbsSixteenBitDrawDevice : public CFbsDrawDeviceByteBuffer {
-public:
-    TInt Construct(TSize aSize, TInt aDataStride);
-    void SetSize(TSize aSize);
+namespace eka2l1::epoc::socket {
+    struct host;
 
-    virtual void WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
-    virtual void WriteRgbToAddress(TUint8 *aAddress, TUint8 *aRawColor, CGraphicsContext::TDrawMode aDrawMode);
+    struct connection {
+        host *parent_;
+        std::u16string name_;
+    };
 
-    virtual TRgb ReadPixel(TInt aX, TInt aY) const;
-};
+    struct host {
+        std::uint32_t protocol_;
+        std::uint32_t family_;
 
-#endif
+        std::u16string name_;
+        std::vector<connection*> conns_;
+
+        std::uint64_t hash_lookup() const {
+            return static_cast<std::uint64_t>(protocol_) | (static_cast<std::uint64_t>(family_) << 32);
+        }
+    };
+}

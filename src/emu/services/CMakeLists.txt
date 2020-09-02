@@ -26,6 +26,7 @@ add_library(epocservs
         include/services/audio/mmf/audio.h
         include/services/audio/mmf/dev.h
         include/services/backup/backup.h
+        include/services/bluetooth/btman.h
         include/services/cdl/cdl.h
         include/services/cdl/common.h
         include/services/cdl/ops.h
@@ -83,6 +84,9 @@ add_library(epocservs
         include/services/sensor/sensor.h
         include/services/shutdown/shutdown.h
         include/services/sms/sa/sa.h
+        include/services/socket/common.h
+        include/services/socket/connection.h
+        include/services/socket/resolver.h
         include/services/socket/socket.h
         include/services/ui/cap/eiksrv.h
         include/services/ui/cap/oom_app.h
@@ -119,6 +123,7 @@ add_library(epocservs
         src/audio/mmf/audio.cpp
         src/audio/mmf/dev.cpp
         src/backup/backup.cpp
+        src/bluetooth/btman.cpp
         src/cdl/cdl.cpp
         src/cdl/common.cpp
         src/cdl/observer.cpp
@@ -156,6 +161,7 @@ add_library(epocservs
         src/fs/drives.cpp
         src/fs/files.cpp
         src/fs/fs.cpp
+        src/fs/parser.cpp
         src/hwrm/hwrm.cpp
         src/hwrm/light/light_data.cpp
         src/hwrm/light/light.cpp
@@ -175,6 +181,8 @@ add_library(epocservs
         src/sensor/sensor.cpp
         src/shutdown/shutdown.cpp
         src/sms/sa/sa.cpp
+        src/socket/connection.cpp
+        src/socket/resolver.cpp
         src/socket/socket.cpp
         src/ui/cap/eiksrv.cpp
         src/ui/cap/oom_app.cpp

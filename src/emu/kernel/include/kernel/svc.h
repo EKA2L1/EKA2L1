@@ -115,6 +115,7 @@ namespace eka2l1::epoc {
             execute_create_thread = 0x27,
             execute_open_thread_by_id = 0x2A,
             execute_rename_thread = 0x2C,
+            execute_kill_thread = 0x2D,
             execute_panic_thread = 0x2F,
             execute_logon_thread = 0x30,
             execute_set_tls = 0x34,

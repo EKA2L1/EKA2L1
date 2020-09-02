@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
+ * Copyright (c) 2020 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,20 +17,28 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCDV_DVC_SIXTEEN_BITS_H_
-#define SCDV_DVC_SIXTEEN_BITS_H_
+#pragma once
 
-#include "drawdvcb.h"
+#include <services/socket/common.h>
+#include <cstdint>
+#include <string>
 
-class CFbsSixteenBitDrawDevice : public CFbsDrawDeviceByteBuffer {
-public:
-    TInt Construct(TSize aSize, TInt aDataStride);
-    void SetSize(TSize aSize);
+namespace eka2l1::epoc::socket {
+    struct connection;
 
-    virtual void WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
-    virtual void WriteRgbToAddress(TUint8 *aAddress, TUint8 *aRawColor, CGraphicsContext::TDrawMode aDrawMode);
+    class socket_connection_proxy: public socket_subsession {
+        connection *conn_;
 
-    virtual TRgb ReadPixel(TInt aX, TInt aY) const;
-};
+    public:
+        explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
+        
+        connection *get_connection() const {
+            return conn_;
+        }
 
-#endif
+        void dispatch(service::ipc_context *ctx) override;
+        socket_subsession_type type() const override {
+            return socket_subsession_type_connection;
+        }
+    };
+}

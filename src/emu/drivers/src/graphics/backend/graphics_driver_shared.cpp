@@ -70,6 +70,11 @@ namespace eka2l1::drivers {
         texture->set_filter_minmag(false, drivers::filter_option::linear);
         texture->set_filter_minmag(true, drivers::filter_option::linear);
 
+        if (bpp == 16) {
+            texture->set_channel_swizzle({ drivers::channel_swizzle::blue, drivers::channel_swizzle::green,
+                drivers::channel_swizzle::red, drivers::channel_swizzle::one });
+        }
+
         return texture;
     }
 
@@ -196,6 +201,11 @@ namespace eka2l1::drivers {
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
             data_format, data_type, data);
+
+        if (bpp == 16) {
+            bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
+                channel_swizzle::red, channel_swizzle::one });
+        }
 
         switch (data_format) {
         case texture_format::r:

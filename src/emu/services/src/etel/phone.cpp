@@ -211,6 +211,10 @@ namespace eka2l1 {
                 get_status(ctx);
                 break;
 
+            case epoc::etel_old_phone_enumerate_lines:
+                enumerate_lines(ctx);
+                break;
+
             case epoc::etel_old_phone_get_line_info:
                 get_line_info(ctx);
                 break;

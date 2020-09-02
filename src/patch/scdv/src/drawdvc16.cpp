@@ -35,16 +35,16 @@ TRgb CFbsSixteenBitDrawDevice::ReadPixel(TInt aX, TInt aY) const {
     return TRgb::Color64K((TInt)(*reinterpret_cast<TUint16*>(pixelStart)));
 }
 
-void CFbsSixteenBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, CGraphicsContext::TDrawMode aDrawMode) {
+void CFbsSixteenBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 *aRawColor, CGraphicsContext::TDrawMode aDrawMode) {
+    WriteRgbToAddress(aAddress, TRgb::Color64K(*reinterpret_cast<TUint16*>(aRawColor)), aDrawMode);
+}
+
+void CFbsSixteenBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
     TUint16 *colorAddr = reinterpret_cast<TUint16*>(aAddress);
     TRgb currentColor = TRgb::Color64K((TInt)(*colorAddr));
 
     *colorAddr = static_cast<TUint16>(CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(currentColor,
-        TRgb(aRed, aGreen, aBlue), aDrawMode).Color64K());
-}
-
-void CFbsSixteenBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
-    WriteRgbToAddress(aAddress, (TUint8)aColor.Red(), (TUint8)aColor.Green(), (TUint8)aColor.Blue(), aDrawMode);
+        aColor, aDrawMode).Color64K());
 }
 
 void CFbsSixteenBitDrawDevice::SetSize(TSize aSize) {

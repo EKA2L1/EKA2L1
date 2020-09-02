@@ -2399,6 +2399,36 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, raise_exception, kernel::handle h, std::int32_t type) {
+        LOG_ERROR("Exception with type {} is thrown", type);
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            return epoc::error_bad_handle;
+        }
+
+        if (thr == kern->crr_thread()) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_not_supported;
+    }
+
+    BRIDGE_FUNC(std::int32_t, raise_exception_eka1, std::int32_t type, kernel::handle h) {
+        LOG_ERROR("Exception with type {} is thrown", type);
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            return epoc::error_bad_handle;
+        }
+
+        if (thr == kern->crr_thread()) {
+            return epoc::error_general;
+        }
+
+        return epoc::error_not_supported;
+    }
+
     BRIDGE_FUNC(std::int32_t, is_exception_handled, kernel::handle h, std::int32_t type, bool aSwExcInProgress) {
         LOG_ERROR("Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
@@ -2990,6 +3020,26 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t thread_kill_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        const std::int32_t reason = static_cast<std::int32_t>(create_info->arg1_);
+
+        if (!thr->kill(kernel::entity_exit_type::kill, common::utf8_to_ucs2("None"), reason)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     std::int32_t process_rename_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *pr = kern->get<kernel::process>(create_info->arg0_);
@@ -3137,6 +3187,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_rename_thread:
             return thread_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_kill_thread:
+            return thread_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_rename_process:
             return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -3295,6 +3348,10 @@ namespace eka2l1::epoc {
         }
 
         thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(thread_pri));
+    }
+
+    BRIDGE_FUNC(std::int32_t, process_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
+        return object_next_eka1(kern, found_result, next_con_handle, match, kernel::object_type::process);
     }
 
     BRIDGE_FUNC(std::int32_t, server_find_next, epoc::des16 *found_result, std::int32_t *next_con_handle, epoc::desc16 *match) {
@@ -3785,6 +3842,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
         BRIDGE_REGISTER(0x800015, library_entry_point_queries),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
+        BRIDGE_REGISTER(0x80001C, process_find_next),
         BRIDGE_REGISTER(0x80001E, process_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
@@ -3807,7 +3865,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
+        BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
         BRIDGE_REGISTER(0xC0001D, process_resume),
+        BRIDGE_REGISTER(0xC0002B, semaphore_signal),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC00030, set_session_ptr),
         BRIDGE_REGISTER(0xC00031, session_send_eka1),
@@ -3821,6 +3881,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
         BRIDGE_REGISTER(0xC10000, hle_dispatch),
         BRIDGE_REGISTER(0xC10001, debug_print),
