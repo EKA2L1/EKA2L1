@@ -545,6 +545,11 @@ namespace eka2l1::epoc {
         *time = kern->home_time();
         *offset = common::get_current_utc_offset();
 
+        if (kern->is_eka1()) {
+            // Let it sleeps a bit. There should be some delay...
+            kern->crr_thread()->sleep(1);
+        }
+
         return epoc::error_none;
     }
 

@@ -352,8 +352,11 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
-        bool thread::sleep(uint32_t mssecs, const bool deque) {
-            return scheduler->sleep(this, mssecs, deque);
+        bool thread::sleep(uint32_t mssecs) {
+            scheduler->sleep(this, mssecs, false);
+            wait_for_any_request();
+            
+            return true;
         }
 
         bool thread::sleep_nof(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
@@ -370,6 +373,8 @@ namespace eka2l1 {
                 (sleep_nof_sts.get(owning_process()))->set(errcode, kern->is_eka1());
                 sleep_nof_sts = 0;
 
+                signal_request();
+            } else {
                 signal_request();
             }
 
