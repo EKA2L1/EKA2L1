@@ -236,6 +236,11 @@ namespace eka2l1 {
             break;
         }
 
+        case view_opcode_deactivate_active_view: {
+            deactive_view(ctx, false);
+            break;
+        }
+
         case view_opcode_create_activate_view_event: {
             active_view(ctx, false);
             break;
