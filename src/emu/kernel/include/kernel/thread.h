@@ -188,6 +188,8 @@ namespace eka2l1 {
             int rendezvous_reason;
             int exit_reason;
 
+            int sleep_level;
+
             entity_exit_type exit_type;
             std::u16string exit_category;
 

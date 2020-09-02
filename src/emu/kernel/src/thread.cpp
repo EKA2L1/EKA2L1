@@ -353,9 +353,14 @@ namespace eka2l1 {
         }
 
         bool thread::sleep(uint32_t mssecs) {
+            sleep_level = 0;
+
+            while (state == thread_state::run) {
+                wait_for_any_request();
+                sleep_level++;
+            }
+
             scheduler->sleep(this, mssecs, false);
-            wait_for_any_request();
-            
             return true;
         }
 
@@ -375,7 +380,7 @@ namespace eka2l1 {
 
                 signal_request();
             } else {
-                signal_request();
+                signal_request(sleep_level);
             }
 
             sleep_nof_sts = 0;
