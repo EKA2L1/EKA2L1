@@ -261,6 +261,10 @@ namespace eka2l1 {
                 open_from_subsession(ctx);
                 break;
 
+            case epoc::etel_old_close:
+                close_sub(ctx);
+                break;
+
             case epoc::etel_old_load_phone_module:
                 load_phone_module(ctx);
                 break;

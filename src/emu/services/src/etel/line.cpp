@@ -47,6 +47,14 @@ namespace eka2l1 {
                 get_status(ctx);
                 break;
 
+            case epoc::etel_old_line_notify_status_change:
+                notify_status_change(ctx);
+                break;
+
+            case epoc::etel_old_line_notify_status_change_cancel:
+                cancel_notify_status_change(ctx);
+                break;
+
             default:
                 LOG_ERROR("Unimplemented etel line opcode {}", ctx->msg->function);
                 break;
