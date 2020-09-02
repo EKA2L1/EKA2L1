@@ -730,8 +730,8 @@ namespace eka2l1 {
 
         // Get server font handle
         // The returned bitmap is 8bpp single channel. Luckily Symbian likes this (at least in v3 and upper).
-        std::uint8_t *bitmap_data = info->adapter->get_glyph_bitmap(info->idx, codepoint, info->scale_factor_x,
-            info->scale_factor_y, &rasterized_width, &rasterized_height, bitmap_data_size, &bitmap_type);
+        std::uint8_t *bitmap_data = info->adapter->get_glyph_bitmap(info->idx, codepoint, font->of_info.metrics.max_height,
+            &rasterized_width, &rasterized_height, bitmap_data_size, &bitmap_type);
 
         if (!bitmap_data && !info->adapter->does_glyph_exist(info->idx, codepoint)) {
             // The glyph is not available. Let the client know. With code 0, we already use '?'
@@ -740,10 +740,6 @@ namespace eka2l1 {
             ctx->complete(0);
             return;
         }
-
-        epoc::open_font_character_metric calculated_metric;
-        font->of_info.adapter->get_glyph_metric(font->of_info.idx, codepoint, calculated_metric, 0, font->of_info.scale_factor_x,
-            font->of_info.scale_factor_y);
 
         // Add it to session cache
         fbs_server *serv = server<fbs_server>();
@@ -756,10 +752,10 @@ namespace eka2l1 {
     cache_entry->glyph_index = codepoint % session_cache->offset_array.offset_array_count;                                  \
     cache_entry->offset = sizeof(epoc::open_font_session_cache_entry_v##entry_ver) + 1;                                     \
     info->adapter->get_glyph_metric(info->idx, codepoint, cache_entry->metric,                                              \
-        reinterpret_cast<type*>(bmp_font)->algorithic_style.baseline_offsets_in_pixel, info->scale_factor_x, info->scale_factor_y);                  \
-    cache_entry->metric = calculated_metric;                                                                                 \
+        reinterpret_cast<type*>(bmp_font)->algorithic_style.baseline_offsets_in_pixel,                                      \
+        font->of_info.metrics.max_height);                                                                               \
     cache_entry->metric.width = rasterized_width;                                                                           \
-    cache_entry->metric.height = rasterized_height;                                                                         \
+    cache_entry->metric.height = font->of_info.metrics.max_height;                                                       \
     cache_entry->metric.bitmap_type = bitmap_type;                                                               \
     const auto cache_entry_ptr = serv->host_ptr_to_guest_general_data(cache_entry).ptr_address();                           \
     if (epoc::does_client_use_pointer_instead_of_offset(this)) {                                                            \

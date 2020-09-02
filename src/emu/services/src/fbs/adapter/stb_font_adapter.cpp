@@ -167,7 +167,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::uint8_t *stb_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code,
-        const float scale_x, const float scale_y, int *rasterized_width, int *rasterized_height,
+        const std::uint16_t font_size, int *rasterized_width, int *rasterized_height,
         std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type) {
         bool get_codepoint = true;
 
@@ -190,12 +190,17 @@ namespace eka2l1::epoc::adapter {
         }
 
         std::uint8_t *result;
+        int x0, x1, y0, y1 = 0;
+
+        // Let's look for a glass slipper that fit you
+        stbtt_GetFontBoundingBox(info, &x0, &y0, &x1, &y1);
+        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(y1 - y0);
 
         if (get_codepoint) {
-            result = stbtt_GetCodepointBitmap(info, scale_x, scale_y, static_cast<int>(code), rasterized_width,
+            result = stbtt_GetCodepointBitmap(info, scale_factor, scale_factor, static_cast<int>(code), rasterized_width,
                 rasterized_height, nullptr, nullptr);
         } else {
-            result = stbtt_GetGlyphBitmap(info, scale_x, scale_y, static_cast<int>(code), rasterized_width,
+            result = stbtt_GetGlyphBitmap(info, scale_factor, scale_factor, static_cast<int>(code), rasterized_width,
                 rasterized_height, nullptr, nullptr);
         }
 
@@ -212,7 +217,7 @@ namespace eka2l1::epoc::adapter {
 
     bool stb_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code,
         open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
-        const float scale_x, const float scale_y) {
+        const std::uint16_t font_size) {
         bool get_codepoint = true;
 
         if (code & 0x80000000) {
@@ -248,12 +253,17 @@ namespace eka2l1::epoc::adapter {
             stbtt_GetGlyphBox(info, static_cast<int>(code), &x0, &y0, &x1, &y1);
         }
 
-        character_metric.width = static_cast<std::int16_t>((x1 - x0) * scale_x);
-        character_metric.height = static_cast<std::int16_t>((y1 - y0) * scale_y);
-        character_metric.horizontal_advance = static_cast<std::int16_t>(adv_width * scale_x);
-        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(left_side_bearing * scale_x);
+        int wx0, wx1, wy0, wy1 = 0;
+        stbtt_GetFontBoundingBox(info, &wx0, &wy0, &wx1, &wy1);
 
-        // As two! Step and go! ...
+        const int org_height = y1 - y0;
+        const float scale_factor = static_cast<float>(font_size) / static_cast<float>(wy1 - wy0);
+
+        character_metric.width = static_cast<std::int16_t>((x1 - x0) * scale_factor);
+        character_metric.height = font_size;
+        character_metric.horizontal_advance = static_cast<std::int16_t>(adv_width * scale_factor);
+        character_metric.horizontal_bearing_x = static_cast<std::int16_t>(left_side_bearing * scale_factor);
+
         // Let's calculate vertical advance. Every character of the font should have same vertical size.
         // So use getFontVMetrics
         int ascent = 0;
@@ -263,15 +273,12 @@ namespace eka2l1::epoc::adapter {
         stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
 
         // Calculate vertical advance by ascent - descent + linegap
-        character_metric.vertical_advance = static_cast<std::int16_t>((ascent - descent + linegap) * scale_y);
+        character_metric.vertical_advance = static_cast<std::int16_t>((ascent - descent + linegap) * scale_factor);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(ascent * scale_factor);
 
-        // FreeType 2 rasterizer on WINS fill this as 0, so I guess this is ok?
+        // Not caring about vertical placement right now (text placement)
         character_metric.vertical_bearing_y = 0;
         character_metric.vertical_bearing_x = 0;
-
-        // I use image at here as reference
-        // https://www.freetype.org/freetype2/docs/tutorial/step2.html
-        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(y1 * scale_y - baseline_horz_off);
 
         return true;
     }
