@@ -26,6 +26,7 @@ add_library(epocservs
         include/services/audio/mmf/audio.h
         include/services/audio/mmf/dev.h
         include/services/backup/backup.h
+        include/services/bluetooth/btman.h
         include/services/cdl/cdl.h
         include/services/cdl/common.h
         include/services/cdl/ops.h
@@ -122,6 +123,7 @@ add_library(epocservs
         src/audio/mmf/audio.cpp
         src/audio/mmf/dev.cpp
         src/backup/backup.cpp
+        src/bluetooth/btman.cpp
         src/cdl/cdl.cpp
         src/cdl/common.cpp
         src/cdl/observer.cpp
