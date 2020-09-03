@@ -407,6 +407,9 @@ namespace eka2l1 {
                 owning_process()->set_exit_type(exit_type);
             }
 
+            sync_msg->unlock_free();
+            kern->free_msg(sync_msg);
+
             std::optional<std::string> exit_description;
             const std::string exit_category_u8 = common::ucs2_to_utf8(exit_category);
 

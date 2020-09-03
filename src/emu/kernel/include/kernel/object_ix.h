@@ -68,6 +68,11 @@ namespace eka2l1 {
             void do_state(common::chunkyseri &seri);
 
             /**
+             * @brief Reset the container state to deref all opened objects.
+             */
+            void reset();
+
+            /**
              * @brief   Add new object to the container.
              * 
              * @param   obj     Pointer to the kernel object.

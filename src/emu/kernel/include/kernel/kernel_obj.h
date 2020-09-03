@@ -108,7 +108,6 @@ namespace eka2l1 {
 
         public:
             virtual ~kernel_obj() {}
-            virtual void close() {}
             virtual void destroy() {}
 
             virtual void open_to(process *own) {}

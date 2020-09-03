@@ -156,8 +156,6 @@ namespace eka2l1::kernel {
             }
 
             obj->decrease_access_count();
-            obj->close();
-
             totals--;
 
             if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process && obj->get_object_type() != object_type::thread) {
@@ -183,6 +181,15 @@ namespace eka2l1::kernel {
         return -1;
     }
 
+    void object_ix::reset() {
+        for (auto &index: objects) {
+            if (index.free == false) {
+                index.object->decrease_access_count();
+                index.free = true;
+            }
+        }
+    }
+    
     bool object_ix::has(kernel_obj_ptr obj) {
         for (const auto &index: objects) {
             if ((index.object == obj) && (index.free == false)) {

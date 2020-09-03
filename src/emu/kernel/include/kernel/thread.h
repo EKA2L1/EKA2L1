@@ -299,6 +299,7 @@ namespace eka2l1 {
 
             ~thread() {}
 
+            void do_cleanup();
             void destroy() override;
 
             chunk_ptr get_stack_chunk();

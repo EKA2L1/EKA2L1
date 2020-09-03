@@ -41,8 +41,6 @@ namespace eka2l1 {
         }
 
         server::~server() {
-            process_msg->unlock_free();
-            kern->free_msg(process_msg);
         }
 
         // Create a server with name
@@ -127,6 +125,7 @@ namespace eka2l1 {
         }
 
         void server::destroy() {
+            process_msg->unlock_free();
             kern->free_msg(process_msg);
         }
 

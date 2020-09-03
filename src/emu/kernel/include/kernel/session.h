@@ -67,7 +67,7 @@ namespace eka2l1 {
                 return svr;
             }
 
-            void prepare_destroy();
+            void destroy() override;
 
             int send_receive_sync(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts);
             int send_receive(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts);
