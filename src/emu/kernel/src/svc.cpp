@@ -547,7 +547,7 @@ namespace eka2l1::epoc {
 
         if (kern->is_eka1()) {
             // Let it sleeps a bit. There should be some delay...
-            kern->crr_thread()->sleep(1);
+            kern->crr_thread()->sleep(100);
         }
 
         return epoc::error_none;
