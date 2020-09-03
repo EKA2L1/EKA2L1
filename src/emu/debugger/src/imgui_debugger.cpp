@@ -589,7 +589,7 @@ namespace eka2l1 {
         ImGui::PushItemWidth(col2 - 10);
 
         manager::device_manager *mngr = sys->get_manager_system()->get_device_manager();
-        const std::lock_guard<std::mutex> guard(mngr->lock);
+        mngr->lock.lock();
 
         auto &dvcs = mngr->get_devices();
         const std::string preview_info = dvcs.empty() ? "No device present" : dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
@@ -615,6 +615,10 @@ namespace eka2l1 {
 
                     conf->device = static_cast<int>(i);
                     conf->serialize();
+
+                    mngr->lock.unlock();
+                    mngr->set_current(i);
+                    mngr->lock.lock();
                 }
             }
 
@@ -670,10 +674,11 @@ namespace eka2l1 {
 
             ImGui::PushItemWidth(col2);
         }
+    
+        mngr->lock.unlock();
     }
 
-    void
-    imgui_debugger::show_pref_system() {
+    void imgui_debugger::show_pref_system() {
         const float col2 = ImGui::GetWindowSize().x / 3;
 
         auto draw_path_change = [&](const char *title, const char *button, std::string &dat) {

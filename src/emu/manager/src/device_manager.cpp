@@ -87,6 +87,7 @@ namespace eka2l1::manager {
             emitter << YAML::Key << "firmcode" << YAML::Value << device.firmware_code;
             emitter << YAML::Key << "model" << YAML::Value << device.model;
             emitter << YAML::Key << "machine-uid" << YAML::Value << device.machine_uid;
+            emitter << YAML::Key << "time-delay-us" << YAML::Value << device.time_delay_us;
 
             emitter << YAML::EndMap;
         }
