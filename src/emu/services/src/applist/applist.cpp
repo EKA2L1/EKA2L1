@@ -615,8 +615,6 @@ namespace eka2l1 {
         }
 
         if (!is_oldarch()) {
-            pr->set_arg_slot(ENVIRONMENT_SLOT_MAIN, reinterpret_cast<std::uint8_t*>(apacmddat.data()),
-                apacmddat.size() * sizeof(char16_t));
         }
 
         return pr->run();
