@@ -30,6 +30,14 @@
 #include <sstream>
 
 namespace eka2l1::manager {
+    void get_recommended_stat_for_device(const epocver ver, std::uint16_t &time_delay_us) {
+        time_delay_us = 100;
+
+        if (ver >= epocver::eka2) {
+            time_delay_us = 0;
+        }
+    }
+
     void device_manager::load_devices() {
         YAML::Node devices_node{};
 
@@ -47,6 +55,13 @@ namespace eka2l1::manager {
             const std::string plat_ver = device_node.second["platver"].as<std::string>();
             epocver ver = string_to_epocver(plat_ver.c_str());
 
+            std::uint16_t time_now_sleep_duration = 0;
+            get_recommended_stat_for_device(ver, time_now_sleep_duration);
+
+            if (YAML::Node time_to_sleep = device_node.second["time-delay-us"]) {
+                time_now_sleep_duration = time_to_sleep.as<std::uint16_t>();
+            }
+
             std::uint32_t machine_uid = 0;
             
             try {
@@ -55,7 +70,7 @@ namespace eka2l1::manager {
                 machine_uid = 0;
             }
 
-            add_new_device(firmcode, model, manufacturer, ver, machine_uid);
+            add_new_device(firmcode, model, manufacturer, ver, machine_uid, time_now_sleep_duration);
         }
     }
 
@@ -113,10 +128,15 @@ namespace eka2l1::manager {
         return &(devices[index]);
     }
 
+    void device_manager::import_device_config_to_global(device *dvc) {
+        conf->time_getter_sleep_us = dvc->time_delay_us;
+    }
+    
     bool device_manager::set_current(const std::string &firmcode) {
         const std::lock_guard<std::mutex> guard(lock);
         current = get(firmcode);
-
+        
+        import_device_config_to_global(current);
         return current;
     }
 
@@ -124,10 +144,18 @@ namespace eka2l1::manager {
         const std::lock_guard<std::mutex> guard(lock);
         current = get(idx);
 
+        import_device_config_to_global(current);
         return current;
     }
 
-    bool device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid) {
+    void device_manager::set_time_delay_in_us(const std::uint16_t delay_us) {
+        const std::lock_guard<std::mutex> guard(lock);
+        current->time_delay_us = delay_us;
+        conf->time_getter_sleep_us = delay_us;
+    }
+
+    bool device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid,
+        const std::uint16_t time_delay_us) {
         const std::lock_guard<std::mutex> guard(lock);
 
         if (get(firmcode)) {
@@ -159,6 +187,7 @@ namespace eka2l1::manager {
         dvc.languages = languages;
         dvc.default_language_code = default_language;
         dvc.machine_uid = machine_uid;
+        dvc.time_delay_us = time_delay_us;
 
         devices.push_back(dvc);
         return true;

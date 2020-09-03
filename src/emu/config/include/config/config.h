@@ -20,6 +20,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -81,6 +82,7 @@ namespace eka2l1::config {
         bool enable_btrace{ false };
 
         std::vector<keybind> keybinds;
+        std::atomic<std::uint16_t> time_getter_sleep_us { 0 };
 
         void serialize();
         void deserialize();

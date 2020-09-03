@@ -588,7 +588,10 @@ namespace eka2l1 {
         ImGui::SameLine(col2);
         ImGui::PushItemWidth(col2 - 10);
 
-        const auto &dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
+        manager::device_manager *mngr = sys->get_manager_system()->get_device_manager();
+        const std::lock_guard<std::mutex> guard(mngr->lock);
+
+        auto &dvcs = mngr->get_devices();
         const std::string preview_info = dvcs.empty() ? "No device present" : dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
 
         auto set_language_current = [&](const language lang) {
@@ -645,6 +648,27 @@ namespace eka2l1 {
             }
 
             ImGui::PopItemWidth();
+
+            static const char *TIME_DELAY_TITLE = "Time delay";
+            static const char *TIME_UNIT_NAME = "US";
+
+            ImGui::Text(TIME_DELAY_TITLE);
+            ImGui::SameLine(col2);
+            ImGui::PushItemWidth(col2 - ImGui::CalcTextSize(TIME_UNIT_NAME).x - 15);
+
+            int current_delay = conf->time_getter_sleep_us;
+            
+            static constexpr int MIN_TIME_DELAY = 0;
+            static constexpr int MAX_TIME_DELAY = 500;
+
+            if (ImGui::SliderInt(TIME_UNIT_NAME, &current_delay, MIN_TIME_DELAY, MAX_TIME_DELAY)) {
+                if (current_delay != conf->time_getter_sleep_us) {
+                    dvc.time_delay_us = static_cast<std::uint16_t>(current_delay);
+                    conf->time_getter_sleep_us = static_cast<std::uint16_t>(current_delay);
+                }
+            }
+
+            ImGui::PushItemWidth(col2);
         }
     }
 
@@ -834,7 +858,11 @@ namespace eka2l1 {
         ImGui::PushItemWidth(30);
 
         if (ImGui::Button("Save")) {
+            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+
+            // Save devices.
             conf->serialize();
+            dvc_mngr->save_devices();
         }
 
         ImGui::PopItemWidth();
