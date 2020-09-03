@@ -327,6 +327,19 @@ namespace eka2l1 {
             // Unlink from proces's thread list
             process_thread_link.deque();
             owning_process()->decrease_thread_count();
+
+            if (state != kernel::thread_state::stop) {
+                stop();
+                do_cleanup();
+            }
+        }
+    
+        void thread::do_cleanup() {
+            sync_msg->unlock_free();
+            kern->free_msg(sync_msg);
+
+            // Close all thread handles
+            thread_handles.reset();
         }
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
@@ -406,9 +419,8 @@ namespace eka2l1 {
             if (owning_process()->decrease_thread_count() == 0) {
                 owning_process()->set_exit_type(exit_type);
             }
-
-            sync_msg->unlock_free();
-            kern->free_msg(sync_msg);
+            
+            do_cleanup();
 
             std::optional<std::string> exit_description;
             const std::string exit_category_u8 = common::ucs2_to_utf8(exit_category);
