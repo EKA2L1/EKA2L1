@@ -9,4 +9,3 @@ The emulator currently *emulates* Symbian OS's EKA2 behavior (with planned EKA1 
 
 ### Artifacts:
   * Artifacts for Windows is provided through CI. Click the status badge to get to EKA2L1's Appveyor CI
-  * Linux artifacts are also available on EKA2L1 Project's [Google Drive](https://drive.google.com/open?id=1nXNL1n7hKX05JzF25u6pHAXP-VrV2EX9)
