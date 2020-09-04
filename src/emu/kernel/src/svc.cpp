@@ -2749,7 +2749,7 @@ namespace eka2l1::epoc {
     std::int32_t sema_open_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *target_process = target_thread->owning_process();
-        epoc::desc16 *name_of_sema_des = (eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_process));
+        epoc::desc16 *name_of_sema_des = (eka2l1::ptr<epoc::desc16>(create_info->arg1_).get(target_process));
         std::string name_of_sema = "";
 
         if (name_of_sema_des) {
@@ -3067,6 +3067,33 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t thread_open_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *target_process = target_thread->owning_process();
+        epoc::desc16 *name_of_thread_des = (eka2l1::ptr<epoc::desc16>(create_info->arg1_).get(target_process));
+        std::string name_of_thread = "";
+
+        if (name_of_thread_des) {
+            name_of_thread = common::ucs2_to_utf8(name_of_thread_des->to_std_string(target_process));
+        }
+
+        kernel_obj_ptr obj_ptr = kern->get_by_name_and_type<kernel::thread>(name_of_thread, kernel::object_type::thread);
+
+        if (!obj_ptr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        kernel::handle h = kern->open_handle(obj_ptr, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
     std::int32_t thread_open_by_id_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::thread *thr = kern->get_by_id<kernel::thread>(create_info->arg1_);
@@ -3184,6 +3211,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_logon_thread:
             return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_open_thread:
+            return thread_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_open_thread_by_id:
             return thread_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);

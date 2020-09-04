@@ -380,6 +380,10 @@ namespace eka2l1::epoc {
             *reinterpret_cast<std::uint32_t*>(data) = sys->get_memory_system()->get_page_size();
             break;
 
+        case kernel::hal_data_eka1_tick_period:
+            *reinterpret_cast<std::uint32_t*>(data) = 1000000 / epoc::TICK_TIMER_HZ;
+            break;
+
         case kernel::hal_data_eka1_screen_info: {
             display_hal *the_hal = reinterpret_cast<display_hal*>(sys->get_hal(hal_category_display));
 
