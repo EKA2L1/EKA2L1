@@ -92,6 +92,7 @@ namespace eka2l1 {
         bool should_show_about;
 
         bool should_show_empty_device_warn;
+        bool should_notify_reset_for_big_change;
 
         std::uint32_t active_screen;
 

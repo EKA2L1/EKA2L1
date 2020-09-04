@@ -41,6 +41,11 @@ namespace eka2l1::manager {
     void device_manager::load_devices() {
         YAML::Node devices_node{};
 
+        {    
+            const std::lock_guard<std::mutex> guard(lock);
+            devices.clear();
+        }
+
         try {
             devices_node = std::move(YAML::LoadFile(add_path(conf->storage, "devices.yml")));
         } catch (YAML::Exception exception) {

@@ -110,6 +110,7 @@ namespace eka2l1 {
         , should_show_install_device_wizard(false)
         , should_show_about(false)
         , should_show_empty_device_warn(false)
+        , should_notify_reset_for_big_change(false)
         , request_key(false)
         , key_set(false)
         , selected_package_index(0xFFFFFFFF)
@@ -592,6 +593,12 @@ namespace eka2l1 {
         mngr->lock.lock();
 
         auto &dvcs = mngr->get_devices();
+
+        if (!dvcs.empty() && (conf->device >= dvcs.size())) {
+            LOG_WARN("Device with index {} not found, resetting default device to index 0", conf->device);
+            conf->device = 0;
+        }
+
         const std::string preview_info = dvcs.empty() ? "No device present" : dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
 
         auto set_language_current = [&](const language lang) {
@@ -617,8 +624,10 @@ namespace eka2l1 {
                     conf->serialize();
 
                     mngr->lock.unlock();
-                    mngr->set_current(i);
+                    mngr->set_current(static_cast<std::uint8_t>(i));
                     mngr->lock.lock();
+
+                    should_notify_reset_for_big_change = true;
                 }
             }
 
@@ -681,7 +690,7 @@ namespace eka2l1 {
     void imgui_debugger::show_pref_system() {
         const float col2 = ImGui::GetWindowSize().x / 3;
 
-        auto draw_path_change = [&](const char *title, const char *button, std::string &dat) {
+        auto draw_path_change = [&](const char *title, const char *button, std::string &dat) -> bool {
             ImGui::Text("%s", title);
             ImGui::SameLine(col2);
 
@@ -692,6 +701,8 @@ namespace eka2l1 {
             ImGui::SameLine(col2 * 3 - 65);
             ImGui::PushItemWidth(30);
 
+            bool change = false;
+
             if (ImGui::Button(button)) {
                 on_pause_toogle(true);
 
@@ -699,6 +710,7 @@ namespace eka2l1 {
                     sys->get_graphics_driver(),
                     "", [&](const char *res) {
                         dat = res;
+                        change = true;
                     },
                     true);
 
@@ -707,9 +719,15 @@ namespace eka2l1 {
             }
 
             ImGui::PopItemWidth();
+            return change;
         };
 
-        draw_path_change("Data storage", "Change##1", conf->storage);
+        if (draw_path_change("Data storage", "Change##1", conf->storage)) {
+            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+            dvc_mngr->load_devices();
+
+            should_notify_reset_for_big_change = true;
+        }
 
         ImGui::Separator();
 
@@ -856,6 +874,13 @@ namespace eka2l1 {
         ImGui::BeginChild("##PrefTab");
         all_prefs[cur_pref_tab].second(this);
 
+        if (should_notify_reset_for_big_change) {
+            static const ImVec4 RED_COLOR = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+            ImGui::NewLine();
+            ImGui::TextColored(RED_COLOR, "Please restart the emulator for the changes made to data storage"
+                " and devices to be effective!");
+        }
+        
         ImGui::NewLine();
         ImGui::NewLine();
 
