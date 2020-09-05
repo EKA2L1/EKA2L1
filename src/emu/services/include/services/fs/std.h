@@ -61,6 +61,7 @@ namespace eka2l1::epoc::fs {
     constexpr std::uint32_t entry_att_xip = 0x0080;
     constexpr std::uint32_t entry_att_remove = 0x0100;
     constexpr std::uint32_t entry_att_mask_filesystem_specific = 0x00FF0000;
+    constexpr std::uint32_t entry_att_match_exclusive = 0x40000000;
     constexpr std::uint32_t entry_att_match_exclude = 0x8000000;
     constexpr std::uint32_t entry_att_match_mask = (entry_att_hidden | entry_att_system | entry_att_dir);
 

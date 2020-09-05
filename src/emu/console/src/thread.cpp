@@ -205,6 +205,7 @@ namespace eka2l1::desktop {
             "Causing an entire country chaos because of my imagination",
             "Thank you very much for checking out the emulator",
             "Casually the cause of case files over two decades while staying first-grade"
+            "Stop right there criminal scum!"
             // You can add more, but probably when the emulator becomes more functional
         };
 

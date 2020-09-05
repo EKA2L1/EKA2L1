@@ -44,20 +44,26 @@ namespace eka2l1 {
         }
 
         const std::int32_t attrib_raw = *ctx->get_argument_value<std::int32_t>(1);
-        std::uint32_t attrib = io_attrib_none;
+        std::uint32_t attrib = io_attrib_include_file | io_attrib_include_dir;
 
+        bool check_other_flag = false;
         bool is_exclude = false;
+
         if (attrib_raw & epoc::fs::entry_att_match_exclude) {
-            attrib = io_attrib_include_file | io_attrib_include_dir;
             is_exclude = true;
+            check_other_flag = true;
+        } else if (attrib_raw & epoc::fs::entry_att_match_exclusive) {
+            check_other_flag = true;
         }
 
-        if (attrib_raw & epoc::fs::entry_att_archive) {
-            attrib = is_exclude ? (attrib & ~io_attrib_include_file) : (attrib | io_attrib_include_file);
-        }
+        if (check_other_flag) {
+            if (attrib_raw & epoc::fs::entry_att_archive) {
+                attrib = is_exclude ? (attrib & ~io_attrib_include_file) : (attrib | io_attrib_include_file);
+            }
 
-        if (attrib_raw & epoc::fs::entry_att_dir) {
-            attrib = is_exclude ? (attrib & ~io_attrib_include_dir) : (attrib | io_attrib_include_dir);
+            if (attrib_raw & epoc::fs::entry_att_dir) {
+                attrib = is_exclude ? (attrib & ~io_attrib_include_dir) : (attrib | io_attrib_include_dir);
+            }
         }
 
         fs_node *node = server<fs_server>()->make_new<fs_node>();
