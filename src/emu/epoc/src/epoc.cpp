@@ -157,7 +157,7 @@ namespace eka2l1 {
             dispatcher.init(kern.get(), timing.get());
             
             if (!gdb_stub.is_server_enabled() && conf->enable_gdbstub) {
-                gdb_stub.init(parent);
+                gdb_stub.init(kern.get(), &io);
                 gdb_stub.toggle_server(true);
             }
             

@@ -136,6 +136,7 @@ namespace eka2l1 {
             friend class semaphore;
             friend class process;
             friend class service::faker;
+            friend class gdbstub;
 
             thread_state state;
             std::mutex mut;
