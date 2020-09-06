@@ -44,6 +44,7 @@ namespace eka2l1 {
     class kernel_system;
     class ntimer;
     class memory;
+    class gdbstub;
 
     struct ipc_msg;
     using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
@@ -130,13 +131,13 @@ namespace eka2l1 {
 
         class thread : public kernel_obj {
             friend class eka2l1::kernel_system;
+            friend class eka2l1::gdbstub;
 
             friend class thread_scheduler;
             friend class mutex;
             friend class semaphore;
             friend class process;
             friend class service::faker;
-            friend class gdbstub;
 
             thread_state state;
             std::mutex mut;
