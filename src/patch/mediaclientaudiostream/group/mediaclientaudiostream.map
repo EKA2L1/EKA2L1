@@ -60,3 +60,4 @@
 
 [epoc6]
 7 1             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer
+7 2             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer, guessing for now
