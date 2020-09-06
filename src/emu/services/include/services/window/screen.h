@@ -92,7 +92,7 @@ namespace eka2l1::epoc {
         void fire_focus_change_callbacks();
         std::size_t add_focus_change_callback(void *userdata, focus_change_callback_handler handler);
 
-        void vsync(ntimer *timing);
+        void vsync(ntimer *timing, std::uint64_t &next_vsync_us);
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
 

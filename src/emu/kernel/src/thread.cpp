@@ -365,7 +365,7 @@ namespace eka2l1 {
             slot.handle = -1;
         }
 
-        bool thread::sleep(uint32_t mssecs) {
+        bool thread::sleep(uint32_t ussecs) {
             sleep_level = 0;
 
             while (state == thread_state::run) {
@@ -373,7 +373,7 @@ namespace eka2l1 {
                 sleep_level++;
             }
 
-            scheduler->sleep(this, mssecs, false);
+            scheduler->sleep(this, ussecs, false);
             return true;
         }
 

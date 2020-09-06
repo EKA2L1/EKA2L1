@@ -172,7 +172,9 @@ namespace eka2l1::epoc {
 
             // Do redraw, now!
             sched->scr->redraw(driver);
-            sched->scr->vsync(timing_);
+
+            std::uint64_t wait_time = 0;
+            sched->scr->vsync(timing_, wait_time);
 
             kern_->unlock();
         }

@@ -247,14 +247,16 @@ namespace eka2l1::epoc {
         resize(drv, mode_info(mode)->size);
     }
 
-    void screen::vsync(ntimer *timing) {
+    void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
         const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
         std::uint64_t delta = tnow - last_vsync;
 
         const std::uint64_t microsecs_a_frame = 1000000 / refresh_rate;
 
         if (delta < microsecs_a_frame) {
-            std::this_thread::sleep_for(std::chrono::microseconds(microsecs_a_frame - delta));
+            next_vsync_us = microsecs_a_frame - delta;
+        } else {
+            next_vsync_us = 0;
         }
 
         last_vsync = tnow;

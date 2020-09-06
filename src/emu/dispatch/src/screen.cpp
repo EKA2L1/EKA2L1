@@ -35,6 +35,8 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::graphics_driver *driver = sys->get_graphics_driver();
+        kernel_system *kern = sys->get_kernel_system();
+
         epoc::screen *scr = dispatcher->winserv_->get_screens();
 
         while (scr != nullptr) {
@@ -60,7 +62,13 @@ namespace eka2l1::dispatch {
                     drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
 
                 driver->submit_command_list(*command_list);
-                scr->vsync(sys->get_ntimer());
+
+                std::uint64_t next_vsync_us = 0;
+                scr->vsync(sys->get_ntimer(), next_vsync_us);
+
+                if (next_vsync_us) {
+                    kern->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
+                }
             }
 
             scr = scr->next;
