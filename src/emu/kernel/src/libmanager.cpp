@@ -303,7 +303,7 @@ namespace eka2l1::hle {
                 patch_rom_export(mem, source_seg, dest_seg, source_export, dest_export);
             }
 
-            source_seg->set_export(source_export, dest_seg->lookup(nullptr, dest_export));
+            dest_seg->set_export(dest_export, source_seg->lookup(nullptr, source_export));
         }
     }
 
