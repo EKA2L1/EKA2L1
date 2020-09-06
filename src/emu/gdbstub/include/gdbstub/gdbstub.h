@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <common/container.h>
+#include <vfs/vfs.h>
+
 #include <array>
 #include <atomic>
 #include <cstdint>
@@ -30,11 +33,16 @@
 #include <common/types.h>
 
 namespace eka2l1 {
-    class system;
+    class kernel_system;
+    class io_system;
 
     namespace kernel {
         class thread;
+        class process;
+        class codeseg;
     }
+
+    using codeseg_ptr = kernel::codeseg*;
 
     constexpr int GDB_BUFFER_SIZE = 10000;
 
@@ -78,6 +86,7 @@ namespace eka2l1 {
 
     struct breakpoint {
         bool active;
+        bool pending;
         address addr;
         std::uint32_t len;
         std::array<std::uint8_t, 4> inst;
@@ -95,6 +104,9 @@ namespace eka2l1 {
         bool memory_break = false;
 
         kernel::thread *current_thread = nullptr;
+        std::string target_codeseg_path;
+
+        common::identity_container<symfile> file_container;
 
         // Binding to a port within the reserved ports range (0-1023) requires root permissions,
         // so default to a port outside of that range.
@@ -115,7 +127,8 @@ namespace eka2l1 {
         breakpoint_map breakpoints_read;
         breakpoint_map breakpoints_write;
 
-        system *sys;
+        kernel_system *kern;
+        io_system *io;
 
     protected:
         bool is_data_available();
@@ -142,6 +155,12 @@ namespace eka2l1 {
         void handle_query();
         void handle_set_thread();
         void handle_thread_alive();
+        void handle_get_thread_halt_reason();
+        void handle_set_argv();
+        void handle_vfile();
+        void handle_command_get_thread_infos();
+        void handle_command_read_threads();
+        void handle_vcont_query();
 
         void step();
         void continue_exec();
@@ -149,6 +168,9 @@ namespace eka2l1 {
         bool commit_breakpoint(breakpoint_type type, std::uint32_t addr, std::uint32_t len);
         void add_breakpoint();
         void remove_breakpoint();
+        void write_execute_breakpoint(breakpoint &bp);
+
+        void check_new_process_codeseg(kernel::process *loaded_pr, codeseg_ptr loaded_seg);
 
         void init(const std::uint16_t port);
 
@@ -172,7 +194,7 @@ namespace eka2l1 {
         void toggle_server(bool status);
 
         /// Start the gdbstub server.
-        void init(eka2l1::system *sys);
+        void init(kernel_system *kern, io_system *io);
 
         /// Stop gdbstub server.
         void shutdown_gdb();

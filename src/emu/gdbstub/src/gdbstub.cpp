@@ -16,12 +16,16 @@
 #include <numeric>
 
 #include <common/log.h>
+#include <common/path.h>
 #include <common/platform.h>
+#include <common/pystr.h>
+#include <common/cvt.h>
 
 #include <cpu/arm_interface.h>
 #include <epoc/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/process.h>
+#include <kernel/thread.h>
 #include <mem/mem.h>
 #include <gdbstub/gdbstub.h>
 
@@ -198,12 +202,16 @@ namespace eka2l1 {
      *
      * @param dest Pointer to buffer to store std::uint8_t bytes.
      * @param src Pointer to array of output hex string characters.
-     * @param len Length of src array.
+     * @param len Length of src array. Specify -1 for auto EOS detection.
      */
-    static void gdb_hex_to_mem(std::uint8_t *dest, const std::uint8_t *src, std::size_t len) {
-        while (len-- > 0) {
+    static void gdb_hex_to_mem(std::uint8_t *dest, const std::uint8_t *src, std::size_t len = -1) {
+        while ((len == -1) || (len-- > 0)) {
             *dest++ = (hex_char_to_value(src[0]) << 4) | hex_char_to_value(src[1]);
             src += 2;
+
+            if (src[0] == '\0') {
+                break;
+            }
         }
     }
 
@@ -319,8 +327,16 @@ namespace eka2l1 {
             bp->second.len, bp->second.addr, static_cast<int>(type));
 
         if (type == breakpoint_type::Execute) {
-            sys->get_memory_system()->write(bp->second.addr, &(bp->second.inst[0]), static_cast<std::uint32_t>(bp->second.len));
-            sys->get_cpu()->clear_instruction_cache();
+            kernel::process *target_process = current_thread->owning_process();
+
+            if (target_process) {
+                std::uint8_t *buff = reinterpret_cast<std::uint8_t*>(target_process->get_ptr_on_addr_space(bp->second.addr));
+                
+                if (buff) {
+                    std::memcpy(buff, &(bp->second.inst[0]), bp->second.len);
+                    kern->get_cpu()->clear_instruction_cache();
+                }
+            }
         }
 
         p.erase(addr);
@@ -431,10 +447,54 @@ namespace eka2l1 {
         }
     }
 
+    void gdbstub::handle_command_get_thread_infos() {
+        kernel::process *crr_process = kern->crr_process();
+
+        std::string val = "m";
+        
+        if (crr_process) {
+            common::roundabout &thread_list = crr_process->get_thread_list();
+
+            common::double_linked_queue_element *ite = thread_list.first();
+            common::double_linked_queue_element *last = thread_list.last();
+
+            do {
+                kernel::thread *target_thread = E_LOFF(ite, kernel::thread, process_thread_link);
+                val += fmt::format("{:x},", target_thread->unique_id());
+            } while (ite != last);
+        }
+
+        val.pop_back();
+        send_reply(val.c_str());
+    }
+    
+    void gdbstub::handle_command_read_threads() {
+        kernel::process *crr_process = kern->crr_process();
+
+        std::string buffer;
+        buffer += "l<?xml version=\"1.0\"?>";
+        buffer += "<threads>";
+
+        if (crr_process) {
+            common::roundabout &thread_list = crr_process->get_thread_list();
+
+            common::double_linked_queue_element *ite = thread_list.first();
+            common::double_linked_queue_element *last = thread_list.last();
+
+            do {
+                kernel::thread *target_thread = E_LOFF(ite, kernel::thread, process_thread_link);
+                buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
+                    target_thread->unique_id(), target_thread->name());
+            } while (ite != last);
+        }
+
+        buffer += "</threads>";
+        send_reply(buffer.c_str());
+    }
+
     /// Handle query command from gdb client.
     void gdbstub::handle_query() {
         LOG_DEBUG("gdb: query '{}'", command_buffer + 1);
-
         const char *query = reinterpret_cast<const char *>(command_buffer + 1);
 
         if (strcmp(query, "TStatus") == 0) {
@@ -447,31 +507,11 @@ namespace eka2l1 {
             == 0) {
             send_reply(target_xml);
         } else if (strncmp(query, "fThreadInfo", strlen("fThreadInfo")) == 0) {
-            std::string val = "m";
-            // TODO: Get list of threads
-
-            const auto &threads = sys->get_kernel_system()->threads_;
-            for (const auto &thread : threads) {
-                val += fmt::format("{:x},", thread->unique_id());
-            }
-
-            val.pop_back();
-            send_reply(val.c_str());
+            handle_command_get_thread_infos();
         } else if (strncmp(query, "sThreadInfo", strlen("sThreadInfo")) == 0) {
             send_reply("l");
         } else if (strncmp(query, "Xfer:threads:read", strlen("Xfer:threads:read")) == 0) {
-            std::string buffer;
-            buffer += "l<?xml version=\"1.0\"?>";
-            buffer += "<threads>";
-
-            const auto &threads = sys->get_kernel_system()->threads_;
-            for (const auto &thread : threads) {
-                buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
-                    thread->unique_id(), thread->name());
-            }
-
-            buffer += "</threads>";
-            send_reply(buffer.c_str());
+            handle_command_read_threads();
         } else {
             send_reply("");
         }
@@ -484,11 +524,16 @@ namespace eka2l1 {
             thread_id = static_cast<int>(hex_to_int(command_buffer + 2, command_length - 2));
         }
         if (thread_id >= 1) {
-            current_thread = find_thread_by_id(sys->get_kernel_system(), thread_id);
+            current_thread = find_thread_by_id(kern, thread_id);
         }
         if (!current_thread) {
-            thread_id = 1;
-            current_thread = find_thread_by_id(sys->get_kernel_system(), thread_id);
+            if (kern->threads_.empty()) {
+                send_reply("E01");
+                return;
+            }
+
+            current_thread = reinterpret_cast<kernel::thread*>(kern->threads_[0].get());
+            thread_id = static_cast<int>(current_thread->unique_id());
         }
         if (current_thread) {
             send_reply("OK");
@@ -503,11 +548,169 @@ namespace eka2l1 {
         if (thread_id == 0) {
             thread_id = 1;
         }
-        if (find_thread_by_id(sys->get_kernel_system(), thread_id)) {
+        if (find_thread_by_id(kern, thread_id)) {
             send_reply("OK");
             return;
         }
         send_reply("E01");
+    }
+
+    void gdbstub::handle_get_thread_halt_reason() {
+        send_signal(current_thread, current_thread ? latest_signal : current_thread->exit_reason);
+    }
+
+    void gdbstub::handle_set_argv() {
+        // Exclude the 'A' command
+        common::pystr bufferstr(std::string(command_buffer + 1, command_buffer + command_length));
+        std::vector<common::pystr> comps = bufferstr.split(',');
+
+        // Get number of bytes in hex encoded stream
+        const std::uint32_t number_of_bytes = comps[0].strip().as_int<std::uint32_t>();
+        const std::uint32_t argnum = comps[1].strip().as_int<std::uint32_t>();
+
+        for (std::uint32_t i = 0; i < common::min<std::uint32_t>(argnum + 1, static_cast<std::uint32_t>(comps.size())); i++) {
+            const std::string hex_data = comps[i + 2].strip().std_str();
+            
+            std::string target_string;
+            target_string.resize((hex_data.length() + 1) >> 1);
+
+            gdb_hex_to_mem(reinterpret_cast<std::uint8_t*>(target_string.data()),
+                reinterpret_cast<const std::uint8_t*>(hex_data.data()), hex_data.length());
+
+            LOG_INFO("Argument {} {}", i, target_string);
+
+            if (i == 0) {
+                if (!eka2l1::has_root_dir(target_string)) {
+                    LOG_ERROR("Please specify absolute path of this DLL/EXE in emulated device!");
+                }
+
+                target_codeseg_path = target_string;
+            }
+        }
+
+        // Silent the vFile! Fuck it hurts
+        send_signal(current_thread, 0);
+        send_reply("OK");
+    }
+
+    void gdbstub::handle_vfile() {
+        // Skip vFile: header text.
+        common::pystr bufferstr(std::string(command_buffer + 6, command_buffer + command_length));
+        std::vector<common::pystr> comps = bufferstr.split(':');
+        std::vector<common::pystr> arguments = comps[1].split(',');
+
+        static constexpr std::uint32_t ERRNO_NO_ENT = 2;
+        static constexpr std::uint32_t ERRNO_INVALID_ARG = 22;
+        
+        const std::string cmd = common::lowercase_string(comps[0].strip().std_str());
+        const std::string error_format = "F-1,{:X}";
+
+        if (cmd == "open") {
+            if (arguments.size() < 3) {
+                const std::string reply = fmt::format(error_format, ERRNO_INVALID_ARG);
+                send_reply(reply.c_str());
+
+                return;
+            }
+
+            // Try to open this file.
+            // Posix mode: 0 read 1 write 2 read/write
+            std::string filename;
+            filename.resize((arguments[0].length() + 1) >> 1);
+
+            const std::string filename_in_hex = arguments[0].strip().std_str();
+
+            gdb_hex_to_mem(reinterpret_cast<std::uint8_t*>(filename.data()), reinterpret_cast<const std::uint8_t*>(
+                filename_in_hex.data()), filename_in_hex.length());
+
+            if (!eka2l1::has_root_dir(filename)) {
+                filename = eka2l1::absolute_path(filename, eka2l1::file_directory(target_codeseg_path));
+            }
+
+            const std::uint32_t flags = arguments[1].as_int<std::uint32_t>(0, 16);
+            const std::uint32_t mode = arguments[2].as_int<std::uint32_t>(0, 16) & 0b11;
+
+            std::uint32_t translate_mode = BIN_MODE;
+            switch (mode) {
+            case 0:
+                translate_mode = READ_MODE;
+                break;
+
+            case 1:
+                translate_mode = WRITE_MODE;
+                break;
+
+            case 2:
+                translate_mode = READ_MODE | WRITE_MODE;
+                break;
+
+            default: {    
+                const std::string reply = fmt::format(error_format, ERRNO_INVALID_ARG);
+                send_reply(reply.c_str());
+                return;
+            }
+            }
+
+            // Check for file create
+            if (!(flags & 0x200)) {
+                if (!io->exist(common::utf8_to_ucs2(filename))) {
+                    const std::string reply = fmt::format(error_format, ERRNO_NO_ENT);
+                    send_reply(reply.c_str());
+                    return;
+                }
+            }
+
+            symfile f = io->open_file(common::utf8_to_ucs2(filename), translate_mode);
+
+            const std::string reply = fmt::format("F{}", file_container.add(f));
+            send_reply(reply.c_str());
+        } else if (cmd == "pread") {
+            // IDA just crash after find out the sane size, so this is abadoned.
+            // However, it's correct, yep!
+            if (arguments.size() < 3) {
+                const std::string reply = fmt::format(error_format, ERRNO_INVALID_ARG);
+                send_reply(reply.c_str());
+                return;
+            }
+
+            symfile *f = file_container.get(arguments[0].as_int<std::uint32_t>());
+            if (!f) {
+                const std::string reply = fmt::format(error_format, ERRNO_INVALID_ARG);
+                send_reply(reply.c_str());
+                return;
+            }
+
+            const std::uint32_t count = arguments[1].as_int<std::uint32_t>(0, 16);
+            const std::uint32_t offset = arguments[2].as_int<std::uint32_t>(0, 16);
+
+            if ((*f)->size() < offset) {
+                const std::string reply = fmt::format(error_format, ERRNO_INVALID_ARG);
+                send_reply(reply.c_str());
+                return;
+            }
+
+            std::vector<std::uint8_t> expected_data;
+            expected_data.resize(count);
+
+            (*f)->seek(offset, file_seek_mode::beg);
+            const std::size_t read = (*f)->read_file(expected_data.data(), 1, count);
+
+            std::string binary_data_response;
+            binary_data_response.resize(read * 2);
+
+            mem_to_gdb_hex(reinterpret_cast<std::uint8_t*>(binary_data_response.data()), expected_data.data(),
+                read);
+
+            std::string reply = fmt::format("F{:02x};{}", read, binary_data_response);
+            send_reply(reply.c_str());  
+        } else {
+            LOG_ERROR("Unknown vFile command {}", cmd);
+            send_reply("");
+        }
+    }
+
+    void gdbstub::handle_vcont_query() {
+        send_reply("vCont;c");
     }
 
     /**
@@ -530,8 +733,8 @@ namespace eka2l1 {
 
         if (full) {
             buffer += fmt::format("{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", PC_REGISTER,
-                htonl(sys->get_cpu()->get_pc()), SP_REGISTER, htonl(sys->get_cpu()->get_sp()),
-                LR_REGISTER, htonl(sys->get_cpu()->get_lr()));
+                htonl(kern->get_cpu()->get_pc()), SP_REGISTER, htonl(kern->get_cpu()->get_sp()),
+                LR_REGISTER, htonl(kern->get_cpu()->get_lr()));
         }
 
         if (thread) {
@@ -693,8 +896,7 @@ namespace eka2l1 {
             return send_reply("E01");
         }
 
-        sys->get_cpu()->load_context(current_thread->get_thread_context());
-
+        kern->get_cpu()->load_context(current_thread->get_thread_context());
         send_reply("OK");
     }
 
@@ -723,7 +925,7 @@ namespace eka2l1 {
             }
         }
 
-        sys->get_cpu()->load_context(current_thread->get_thread_context());
+        kern->get_cpu()->load_context(current_thread->get_thread_context());
         send_reply("OK");
     }
 
@@ -752,11 +954,13 @@ namespace eka2l1 {
         void *ptr = current_thread->owning_process()->get_ptr_on_addr_space(addr);
 
         if (!ptr) {
-            return send_reply("E00");
+            std::memset(reply, '0', len * 2);
+            reply[len * 2] = '\0';
+        } else {
+            mem_to_gdb_hex(reply, reinterpret_cast<std::uint8_t *>(ptr), len);
+            reply[len * 2] = '\0';
         }
 
-        mem_to_gdb_hex(reply, reinterpret_cast<std::uint8_t *>(ptr), len);
-        reply[len * 2] = '\0';
         send_reply(reinterpret_cast<char *>(reply));
     }
 
@@ -781,7 +985,7 @@ namespace eka2l1 {
 
         void *ptr = current_thread->owning_process()->get_ptr_on_addr_space(addr);
 
-        if (!std::memcpy(ptr, data.data(), len)) {
+        if (ptr && !std::memcpy(ptr, data.data(), len)) {
             return send_reply("E00");
         }
 
@@ -797,7 +1001,7 @@ namespace eka2l1 {
     void gdbstub::step() {
         if (command_length > 1) {
             reg_write(PC_REGISTER, gdb_hex_to_int(command_buffer + 1), current_thread);
-            sys->get_cpu()->load_context(current_thread->get_thread_context());
+            kern->get_cpu()->load_context(current_thread->get_thread_context());
         }
 
         step_loop = true;
@@ -823,6 +1027,28 @@ namespace eka2l1 {
         // TODO: Clear inst cache
     }
 
+    void gdbstub::write_execute_breakpoint(breakpoint &bp) {
+        if (current_thread) {
+            kernel::process *target_process = current_thread->owning_process();
+
+            if (target_process) {
+                std::uint8_t *buff = reinterpret_cast<std::uint8_t*>(target_process->get_ptr_on_addr_space(bp.addr));
+                
+                if (buff) {
+                    std::memcpy(&bp.inst[0], buff, bp.len);
+
+                    static std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xE1 };
+                    static std::array<std::uint8_t, 2> btrap_thumb{ 0x00, 0xBE };
+                    
+                    std::memcpy(buff, (bp.len <= 2) ? &btrap_thumb[0] : &(btrap[0]), bp.len);
+
+                    bp.pending = false;
+                    kern->get_cpu()->clear_instruction_cache();
+                }
+            }
+        }
+    }
+
     /**
      * Commit breakpoint to list of breakpoints.
      *
@@ -837,13 +1063,10 @@ namespace eka2l1 {
         br.active = true;
         br.addr = addr;
         br.len = static_cast<std::uint32_t>(len);
+        br.pending = true;
 
         if (type == breakpoint_type::Execute) {
-            sys->get_memory_system()->read(addr, &br.inst[0], len);
-            static std::array<std::uint8_t, 4> btrap{ 0x70, 0x00, 0x20, 0xE1 };
-            static std::array<std::uint8_t, 2> btrap_thumb{ 0x00, 0xBE };
-            sys->get_memory_system()->write(addr, (len <= 2) ? &btrap_thumb[0] : &(btrap[0]), len);
-            sys->get_cpu()->clear_instruction_cache();
+            write_execute_breakpoint(br);
         }
 
         p.insert({ addr, br });
@@ -964,10 +1187,10 @@ namespace eka2l1 {
             handle_set_thread();
             break;
         case '?':
-            send_signal(current_thread, latest_signal);
+            handle_get_thread_halt_reason();
             break;
         case 'k':
-            this->shutdown_gdb();
+            shutdown_gdb();
             LOG_INFO("killed by gdb");
             return;
         case 'g':
@@ -1004,6 +1227,22 @@ namespace eka2l1 {
         case 'T':
             handle_thread_alive();
             break;
+        case 'A':
+            handle_set_argv();
+            break;
+        case 'v': {
+            if (strncmp(reinterpret_cast<const char*>(command_buffer), "vFile", 5) == 0) {
+                handle_vfile();
+                break;
+            } else if (strncmp(reinterpret_cast<const char*>(command_buffer), "vCont?", 6) == 0) {
+                handle_vcont_query();
+                break;
+            }
+
+            send_reply("");
+            break;
+        }
+
         default:
             send_reply("");
             break;
@@ -1020,7 +1259,7 @@ namespace eka2l1 {
 
             // Start server
             if (!is_connected()) {
-                init(sys);
+                init(kern, io);
             }
         } else {
             // Stop server
@@ -1108,9 +1347,32 @@ namespace eka2l1 {
         }
     }
 
-    void gdbstub::init(eka2l1::system *nsys) {
-        sys = nsys;
+    void gdbstub::check_new_process_codeseg(kernel::process *loaded_pr, codeseg_ptr loaded_seg) {
+        if (!current_thread) {
+            return;
+        }
+
+        if (current_thread->owning_process() == loaded_pr) {
+            const address beg = loaded_seg->get_code_run_addr(loaded_pr);
+            const address end = beg + loaded_seg->get_code_size();
+
+            for (auto &bp: breakpoints_execute) {
+                if (bp.second.pending && (bp.first >= beg) && (bp.first <= end)) {
+                    bp.second.pending = false;
+                    write_execute_breakpoint(bp.second);
+                }
+            }
+        }
+    }
+
+    void gdbstub::init(kernel_system *new_kern, io_system *new_io) {
+        kern = new_kern;
+        io = new_io;
+
         init(gdbstub_port);
+
+        kern->register_codeseg_loaded_callback([this](const std::string&, kernel::process* pr, codeseg_ptr seg) {
+            check_new_process_codeseg(pr, seg); });
     }
 
     void gdbstub::shutdown_gdb() {
