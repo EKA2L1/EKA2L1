@@ -321,13 +321,17 @@ namespace eka2l1 {
         if (kern->is_eka1()) {
             // Create predictable directories if it does not exist
             std::u16string system_apps_dir = u"?:\\System\\Apps\\";
+            std::u16string shared_data_dir = u"?:\\System\\SharedData\\";
             io_system *io = sys->get_io_system();
 
             // Ignore drive z.
             for (drive_number drv = drive_y; drv >= drive_a; drv--) {
                 if (io->get_drive_entry(drv)) {
                     system_apps_dir[0] = drive_to_char16(drv);
+                    shared_data_dir[0] = drive_to_char16(drv);
+
                     io->create_directories(system_apps_dir);
+                    io->create_directories(shared_data_dir);
                 }
             }
         }
