@@ -36,6 +36,10 @@ namespace eka2l1::drivers {
     }
 
     bool dsp_output_stream_shared::set_properties(const std::uint32_t freq, const std::uint8_t channels) {
+        if (!stream_) {
+            return true;
+        }
+
         // Doc said: Writing to the stream must have stopped before you call this function.
         if (buffers_.size() > 0) {
             return false;
