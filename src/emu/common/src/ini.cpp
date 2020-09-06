@@ -84,10 +84,6 @@ namespace eka2l1::common {
 
     // Note that an empty key will still be saved
     ini_pair *ini_section::create_pair(const char *key) {
-        if (node_exists(key)) {
-            return nullptr;
-        }
-
         std::shared_ptr<ini_pair> pair = std::make_shared<ini_pair>();
         pair->key = key;
 
