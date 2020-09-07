@@ -132,6 +132,7 @@ target_include_directories(Vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(Vulkan INTERFACE ${Vulkan_LIBRARIES})
 
 # Cubeb
+option (BUILD_TOOLS "Build cubeb tools" OFF)
 option (BUILD_TESTS "Build cubeb tests" OFF)
 add_subdirectory(cubeb)
 
