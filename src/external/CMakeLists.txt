@@ -21,7 +21,7 @@ add_library(fmt::fmt ALIAS fmt)
 set (fmt_DIR fmt)
 
 # Pybind11
-if (ENABLE_SCRIPTING_ABILITY)
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 	option (PYBIND11_TEST "Enable pybind11 tests" OFF)
 	add_subdirectory(pybind11)
 endif()

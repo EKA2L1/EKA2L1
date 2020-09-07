@@ -1,4 +1,4 @@
-if (ENABLE_SCRIPTING_ABILITY)
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     set(SCRIPT_MANAGER_FILES
             include/manager/script_manager.h
             src/script_manager.cpp)
@@ -32,13 +32,13 @@ target_include_directories(manager PUBLIC include)
 # it will be used very common
 target_link_libraries(manager PUBLIC common)
 
-if (ENABLE_SCRIPTING_ABILITY)
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     target_link_libraries(manager PUBLIC pybind11::embed)
     target_link_libraries(manager PRIVATE symemu epoc epockern)
 
     if (NOT MSVC)
         target_link_libraries(manager PRIVATE stdc++fs)
     endif ()
-endif (ENABLE_SCRIPTING_ABILITY)
+endif (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 
 target_link_libraries(manager PRIVATE config epoc epockern epocmem epocservs miniz yaml-cpp)

@@ -35,6 +35,6 @@ add_subdirectory(services)
 add_subdirectory(utils)
 add_subdirectory(vfs)
 
-if (ENABLE_SCRIPTING_ABILITY)
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     add_subdirectory(scripting)
 endif ()

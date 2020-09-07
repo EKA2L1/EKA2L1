@@ -42,9 +42,9 @@ target_link_libraries(symemu PRIVATE common
         epocservs
         manager)
 
-if (ENABLE_SCRIPTING_ABILITY)
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     target_link_libraries(symemu PUBLIC pybind11)
-endif (ENABLE_SCRIPTING_ABILITY)
+endif (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 
 if (UNIX OR APPLE)
     target_link_libraries(symemu PRIVATE util)
