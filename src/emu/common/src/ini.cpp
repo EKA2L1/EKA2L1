@@ -420,9 +420,10 @@ namespace eka2l1::common {
                                 // We should jump right ahead and not eating any more token
                                 if (stream.eof()) {
                                     break;
-                                } else {
-                                    continue;
                                 }
+                                
+                                first_token = stream.next_string();
+                                continue;
                             } else {
                                 do {
                                     auto tok = stream.next_string();
