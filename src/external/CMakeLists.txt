@@ -22,30 +22,30 @@ set (fmt_DIR fmt)
 
 # Pybind11
 if (ENABLE_SCRIPTING_ABILITY)
-	set (PYBIND11_TEST OFF CACHE BOOL "" FORCE)
+	option (PYBIND11_TEST "Enable pybind11 tests" OFF)
 	add_subdirectory(pybind11)
 endif()
 
 # SPDLOG - Build examples off
-set (SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
-set (SPDLOG_BUILD_BENCH OFF CACHE BOOL "" FORCE)
+option (SPDLOG_BUILD_EXAMPLES "Build spdlog Examples" OFF) 
+option (SPDLOG_BUILD_BENCH "Build spdlog benchmarks" OFF)
 # set (SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(spdlog)
 
 # GLM
-set (GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
+option (GLM_TEST_ENABLE "Enable glm tests" OFF)
 add_subdirectory(glm)
 
 # Dynarmic: disable tests
-set(DYNARMIC_TESTS OFF CACHE BOOL "")
-set(DYNARMIC_NO_BUNDLED_FMT ON CACHE BOOL "")
+option(DYNARMIC_TESTS OFF "Enable dynarmic tests")
+option(DYNARMIC_NO_BUNDLED_FMT "No bundled fmt for Dynarmic" ON)
 add_subdirectory(dynarmic)
 
 # GLFW - Disable docs, tests and examples
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+option(GLFW_BUILD_DOCS "Build glfw documents" OFF)
+option(GLFW_BUILD_TESTS "Build glfw tests" OFF)
+option(GLFW_BUILD_EXAMPLES "Build glfw examples" OFF)
 
 add_subdirectory(glfw)
 
@@ -54,7 +54,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("Add debug to prevent crash for PyBind11")
 endif()
 
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "Enable testing" FORCE)
+option(YAML_CPP_BUILD_TESTS "Enable YAML cpp testing" OFF)
 add_subdirectory(yaml-cpp)
 
 add_library(imgui imgui/imgui.h imgui/imgui.cpp
@@ -75,7 +75,7 @@ if (MSVC)
 		libdemangle/include/cxxabi.h
 		libcxxabi/src/cxa_demangle.cpp)
 
-	target_include_directories(libdemangle PUBLIC libdemangle/include)
+    target_include_directories(libdemangle PUBLIC libdemangle/include)
 endif()
 
 target_include_directories(imgui PUBLIC imgui)
@@ -88,29 +88,16 @@ add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE stb)
 
 #catch2
-set (CATCH_BUILD_TESTING OFF CACHE BOOL "Turn off building testing" FORCE)
-set (CATCH_ENABLE_WERROR OFF CACHE BOOL "Disable werror" FORCE)
+option (CATCH_BUILD_TESTING "Build catch testing" OFF)
+option (CATCH_ENABLE_WERROR "Disable catch werror" OFF)
 
 add_subdirectory(Catch2)
-
-add_library(unicorn INTERFACE)
 
 # Microprofile
 add_library(microprofile STATIC microprofile/microprofile.cpp microprofile/microprofile.h)
 target_include_directories(microprofile PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/microprofile")
 set_property(TARGET microprofile PROPERTY CXX_STANDARD 11)
 target_compile_definitions(microprofile PUBLIC MICROPROFILE_ENABLED=0 MICROPROFILE_GPU_TIMERS=0)
-
-if(APPLE)
-	target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/include")
-	target_link_libraries(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/macos/lib/libunicorn.a")
-elseif(WIN32)
-	target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/windows/include")
-	target_link_libraries(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/windows/unicorn.lib")
-elseif(UNIX)
-    target_include_directories(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/unix/include")
-    target_link_libraries(unicorn INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/unicorn/unix/lib/libunicorn.a")
-endif()
 
 ## XXHash
 add_library(xxHash INTERFACE)
@@ -145,7 +132,8 @@ target_include_directories(Vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(Vulkan INTERFACE ${Vulkan_LIBRARIES})
 
 # Cubeb
-set (BUILD_TESTS OFF)
+option (BUILD_TOOLS "Build tools" OFF)
+option (BUILD_TESTS "Build cubeb tests" OFF)
 add_subdirectory(cubeb)
 
 # FFMPEG
