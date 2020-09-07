@@ -1,0 +1,107 @@
+# Vita3K emulator project
+# Copyright (C) 2018 Vita3K team
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+name: C/C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  move-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move ci tag
+        uses: s3krit/walking-tag-action@d04f7a5
+        with:
+          TAG_NAME: continous
+          TAG_MESSAGE: |
+            Last commit build by the CI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref == 'refs/heads/master'
+
+  build:
+    needs: [move-tag]
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        config: [Release]
+
+    steps:
+      - name: Set up build environment (macos-latest)
+        run: |
+          brew install ccache
+          echo "::add-path::/usr/local/opt/ccache/libexec"
+          echo "::set-env name=CCACHE_DIR::/tmp/ccache"
+        if: matrix.os == 'macos-latest'
+
+      - name: Set up build environment (ubuntu-latest)
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install ccache libgtk-3-dev
+          echo "::set-env name=CCACHE_DIR::/tmp/ccache"
+        if: matrix.os == 'ubuntu-latest'
+
+      - uses: actions/cache@v1
+        with:
+          path: /tmp/ccache
+          key: ccache-${{ matrix.os }}-${{ matrix.config }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.os }}-${{ matrix.config }}-
+        if: matrix.os != 'windows-latest'
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: CMake configure
+        run: cmake -B build -DCI=ON -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+
+      - name: CMake build
+        run: cmake --build build --config ${{ matrix.config }} --parallel 2
+
+      - name: Compute git short sha
+        id: git_short_sha
+        run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: eka2l1-${{ steps.git_short_sha.outputs.value }}-${{ matrix.os }}
+          path: build/bin
+
+      - name: Zip Artifacts
+        uses: papeloto/action-zip@5f1c4aa
+        with:
+          files: build/bin
+          dest: ${{ matrix.os }}.zip
+        if: github.ref == 'refs/heads/master'
+
+      - name: Update the CI tag
+        uses: Xotl/cool-github-releases@v1
+        with:
+          mode: update
+          isPrerelease: false
+          tag_name: continous
+          release_name: "Automatic CI builds"
+          body_mrkdwn: |
+            _Corresponding commit: ${{ github.sha }}_
+          assets: ${{ matrix.os }}.zip
+          replace_assets: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref == 'refs/heads/master'
