@@ -76,6 +76,11 @@ jobs:
       - name: CMake build
         run: cmake --build build --config ${{ matrix.config }} --parallel 2
 
+      - name: CTest
+        working-directory: build
+        run: ctest --build-config ${{ matrix.config }} --output-on-failure --parallel 2
+        if: matrix.os != 'macos-latest'             # MacOS tests have some problems.
+
       - name: Compute git short sha
         id: git_short_sha
         run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
