@@ -1,5 +1,5 @@
 # EKA2L1 
-[![Build Status Windows](https://ci.appveyor.com/api/projects/status/hnm73527hkrfrffm/branch/master?svg=true)](https://ci.appveyor.com/project/bentokun/eka2l1-mjiuq/branch/master) [![Build Status Linux](https://travis-ci.org/EKA2L1/EKA2L1.svg?branch=master)](https://travis-ci.org/EKA2L1/EKA2L1)
+[![Build Status](https://github.com/eka2l1/eka2l1/workflows/C/C++%20CI/badge.svg)](https://github.com/EKA2L1/EKA2L1/actions?query=branch%3Amaster)
 
 ![Screenshot](screenshots/result_animated.gif)
 
@@ -12,5 +12,4 @@ The emulator currently *emulates* Symbian OS's EKA2 behavior (with planned EKA1 
    
 ### Compatibility:
   * Compatibility for the games and software that can (and can't) run on the emulator can be verified [**here**](https://github.com/EKA2L1/Compatibility-List)
-
   
