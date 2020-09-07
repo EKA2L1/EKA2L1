@@ -77,7 +77,6 @@ jobs:
         run: cmake --build build --config ${{ matrix.config }} --parallel 2
 
       - name: CTest
-        working-directory: build
         run: ctest --build-config ${{ matrix.config }} --output-on-failure --parallel 2
         if: matrix.os != 'macos-latest'             # MacOS tests have some problems.
 
