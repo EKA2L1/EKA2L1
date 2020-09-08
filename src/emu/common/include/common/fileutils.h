@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <string>
 
@@ -30,6 +31,10 @@ namespace eka2l1::common {
         FILE_DEVICE,
         FILE_REGULAR,
         FILE_DIRECTORY
+    };
+
+    enum folder_copy_flags {
+        FOLDER_COPY_FLAG_LOWERCASE_NAME = 1 << 0
     };
 
     std::int64_t file_size(const std::string &path);
@@ -65,6 +70,20 @@ namespace eka2l1::common {
      * \returns True on success.
      */
     bool copy_file(const std::string &target_file, const std::string &dest, const bool overwrite_if_dest_exists);
+
+    /**
+     * @brief   Copy target folder contents to another specified folder.
+     * 
+     * You can also use this function for folder transformation, by specifying the same path for target and dest.
+     * 
+     * @param   target_folder             Folder that needs to be copied. If this folder does not exist, false is returned.
+     * @param   dest_folder_to_reside     Folder that will contain the copied folder. Automatically created if not exist.
+     * @param   flags                     Extra flag specifying extra operations when doing the copy.
+     * @param   progress                  Optional variable tracking progress of the copy.
+     * 
+     * @returns True on success.
+     */
+    bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, std::atomic<int> *progress);
 
     bool is_system_case_insensitive();
 

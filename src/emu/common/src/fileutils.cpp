@@ -18,7 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/log.h>
 #include <common/fileutils.h>
 #include <common/path.h>
 #include <common/platform.h>
@@ -41,6 +43,7 @@
 #include <common/cvt.h>
 #endif
 
+#include <stack>
 #include <string.h>
 
 namespace eka2l1::common {
@@ -376,5 +379,92 @@ namespace eka2l1::common {
 #else
         return false;
 #endif
+    }
+    
+    bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, std::atomic<int> *progress) {
+        if (!exists(target_folder)) {
+            return false;
+        }
+
+        bool no_copy = false;
+
+        if (target_folder == dest_folder_to_reside) {
+            no_copy = true;
+        }
+
+        std::uint64_t total_size = 0;
+        std::uint64_t total_copied = 0;
+
+        auto do_copy_stuffs = [&](const bool is_measuring) {
+            std::stack<std::string> folder_stacks;
+            common::dir_entry entry;
+
+            folder_stacks.push("//");
+
+            while (!folder_stacks.empty()) {
+                if (!is_measuring)
+                    eka2l1::create_directories(eka2l1::add_path(dest_folder_to_reside, folder_stacks.top()));
+
+                const std::string top_path = folder_stacks.top();
+
+                common::dir_iterator iterator(add_path(target_folder, top_path));
+                iterator.detail = true;
+
+                folder_stacks.pop();
+
+                while (iterator.next_entry(entry) == 0) {
+                    std::string name_to_use = entry.name;
+                    
+                    if (!is_measuring) {
+                        const auto lowercased = common::lowercase_string(entry.name);
+
+                        if (flags & FOLDER_COPY_FLAG_LOWERCASE_NAME) {
+                            if (no_copy) {
+                                if (entry.name != lowercased) {
+                                    if (!common::move_file(iterator.dir_name + entry.name, iterator.dir_name + lowercased)) {
+                                        return false;
+                                    }
+                                    
+                                    if (progress) {
+                                        total_copied += entry.size;
+                                        *progress = total_copied * 100 / total_size;
+                                    }
+                                }
+                            } else {
+                                name_to_use = lowercased;
+                            }
+                        }
+                    }
+
+                    if (entry.type == common::file_type::FILE_DIRECTORY) {
+                        folder_stacks.push(eka2l1::add_path(top_path, name_to_use + eka2l1::get_separator()));
+                    } else {
+                        if (is_measuring) {
+                            total_size += entry.size;
+                        } else {
+                            if (!no_copy) {
+                                if (!common::copy_file(iterator.dir_name + name_to_use, eka2l1::add_path(dest_folder_to_reside, top_path) +
+                                    eka2l1::get_separator() + name_to_use, true)) {
+                                    return false;
+                                }
+
+                                if (progress) {
+                                    total_copied += entry.size;
+                                    *progress = static_cast<int>(total_copied * 100ULL / total_size);
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+
+            return true;
+        };
+
+        if (progress) {
+            do_copy_stuffs(true);
+        }
+
+        return do_copy_stuffs(false);
     }
 }
