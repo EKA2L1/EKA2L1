@@ -663,10 +663,9 @@ namespace eka2l1 {
 
             ImGui::PopItemWidth();
 
-            static const char *TIME_DELAY_TITLE = "Time delay";
             static const char *TIME_UNIT_NAME = "US";
 
-            ImGui::Text(TIME_DELAY_TITLE);
+            ImGui::Text("Time delay");
             ImGui::SameLine(col2);
             ImGui::PushItemWidth(col2 - ImGui::CalcTextSize(TIME_UNIT_NAME).x - 15);
 
