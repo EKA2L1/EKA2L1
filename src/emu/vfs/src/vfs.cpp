@@ -811,39 +811,18 @@ namespace eka2l1 {
         }
         
         void validate_for_host() override {
-#if EKA2L1_PLATFORM(POSIX)
-            LOG_INFO("Iterating through all emulated drive to lowercase all filesystem entities!");
+           if (common::is_platform_case_sensitive()) {
+                LOG_INFO("Iterating through all emulated drive to lowercase all filesystem entities!");
 
-            for (auto &mapping: mappings) {
-                std::stack<std::string> folder_stacks;
-
-                if (!mapping.second) {
-                    continue;
-                }
-
-                common::dir_entry entry;
-
-                folder_stacks.push(mapping.first.real_path);
-
-                while (!folder_stacks.empty()) {
-                    common::dir_iterator iterator(folder_stacks.top());
-                    iterator.detail = true;
-
-                    folder_stacks.pop();
-
-                    while (iterator.next_entry(entry) == 0) {
-                        const auto lowercased = common::lowercase_string(entry.name);
-                        if (entry.name != lowercased) {
-                            common::move_file(iterator.dir_name + entry.name, iterator.dir_name + lowercased);
-                        }
-
-                        if (entry.type == common::file_type::FILE_DIRECTORY) {
-                            folder_stacks.push(iterator.dir_name + lowercased + "\\");
-                        }
+                for (auto &mapping: mappings) {
+                    if (!mapping.second) {
+                        continue;
                     }
+
+                    common::copy_folder(mapping.first.real_path, mapping.first.real_path, common::FOLDER_COPY_FLAG_LOWERCASE_NAME,
+                        nullptr);
                 }
             }
-#endif
         }
     };
 
@@ -1022,10 +1001,6 @@ namespace eka2l1 {
             }
 
             return std::nullopt;
-        }
-
-        void validate_for_host() override {
-            return;
         }
     };
 
