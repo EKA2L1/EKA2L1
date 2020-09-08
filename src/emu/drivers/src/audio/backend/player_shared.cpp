@@ -20,6 +20,7 @@
 #include <drivers/audio/audio.h>
 #include <drivers/audio/backend/player_shared.h>
 
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
 
@@ -73,7 +74,7 @@ namespace eka2l1::drivers {
                 }
 
                 // Reset the stream if we are the custom format guy!
-                if (request->type_ == player_request_format) {
+                if (request->type_ == player_request_play_format) {
                     reset_request(request);
                 }
 
@@ -154,6 +155,40 @@ namespace eka2l1::drivers {
 
         request->repeat_left_ = repeat_times;
         request->silence_micros_ = silence_intervals_micros;
+    }
+
+    void player_shared::set_position(const std::uint64_t pos_in_us) {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return;
+        }
+
+        switch (request_ref->type_) {
+        case player_request_play_format:
+        case player_request_record_raw_format:
+        case player_request_crop: {
+            set_position_for_custom_format(request_ref, pos_in_us);
+            break;
+        }
+
+        case player_request_play_raw_pcm: {
+            // Calculate the data position by using audio hz
+            // Hz / 1000000 = frames per microseconds
+            std::uint64_t total_frame_to_seek_to = common::multiply_and_divide_qwords(pos_in_us, request_ref->freq_, 1000000);
+            request_ref->data_pointer_ = total_frame_to_seek_to * sizeof(std::uint16_t) * request_ref->channels_;
+
+            if (request_ref->data_pointer_ >= request_ref->data_.size()) {
+                LOG_TRACE("Setting position for PCM overflowed! Resetting the position to 0");
+                request_ref->data_pointer_ = 0;
+            }
+
+            break;
+        }
+
+        default:
+            break;
+        }
     }
 
     player_shared::player_shared(audio_driver *driver)

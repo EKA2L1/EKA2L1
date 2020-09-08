@@ -105,6 +105,7 @@ namespace eka2l1::drivers {
         }
 
         virtual void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) = 0;
+        virtual void set_position(const std::uint64_t pos_in_us) = 0;
     };
 
     enum player_type {

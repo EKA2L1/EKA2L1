@@ -43,7 +43,7 @@ namespace eka2l1::drivers {
     }
 
     player_wmf_request::~player_wmf_request() {
-        if (type_ == player_request_format) {
+        if (type_ == player_request_play_format) {
             SafeRelease(&reader_);
         }
     }
@@ -60,7 +60,7 @@ namespace eka2l1::drivers {
         player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
         // Data drain, try to get more
-        if (request_wmf->type_ == player_request_format) {
+        if (request_wmf->type_ == player_request_play_format) {
             if (request_wmf->flags_ & 1) {
                 output_stream_->stop();
                 return;
@@ -231,7 +231,7 @@ namespace eka2l1::drivers {
         player_request_instance request = std::make_unique<player_wmf_request>();
         player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
-        request_wmf->type_ = player_request_format;
+        request_wmf->type_ = player_request_play_format;
         request_wmf->data_pointer_ = 0;
         request_wmf->url_ = url;
 
@@ -265,11 +265,11 @@ namespace eka2l1::drivers {
         player_request_instance request = std::make_unique<player_wmf_request>();
         player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
-        request_wmf->type_ = player_request_raw_pcm;
+        request_wmf->type_ = player_request_play_raw_pcm;
         request_wmf->data_pointer_ = 0;
 
         if (encoding_type == player_audio_encoding_custom) {
-            request_wmf->type_ = player_request_format;
+            request_wmf->type_ = player_request_play_format;
 
             IMFByteStream *stream = NULL;
 
@@ -314,6 +314,19 @@ namespace eka2l1::drivers {
         }
 
         return true;
+    }
+
+    void player_wmf::set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) {
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
+    
+        // Time unit in 100 nanoseconds, convert to unit by mul with 10.
+        PROPVARIANT time_to_seek = { pos_in_us * 10 };
+        time_to_seek.vt = VT_I8;
+
+        HRESULT res = request_wmf->reader_->SetCurrentPosition(GUID_NULL, time_to_seek);
+        if (res == S_OK) {
+            request->pos_in_us_ = pos_in_us;
+        }
     }
 }
 

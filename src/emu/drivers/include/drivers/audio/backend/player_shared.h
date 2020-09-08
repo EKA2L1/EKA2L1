@@ -48,6 +48,8 @@ namespace eka2l1::drivers {
         std::int32_t repeat_left_;
         std::uint64_t silence_micros_;
 
+        std::uint64_t pos_in_us_;
+
         bool use_push_new_data_;
 
         explicit player_request_base()
@@ -55,6 +57,7 @@ namespace eka2l1::drivers {
             , flags_(0)
             , repeat_left_(0)
             , silence_micros_(0)
+            , pos_in_us_(0)
             , use_push_new_data_(false) {
         }
     };
@@ -76,6 +79,7 @@ namespace eka2l1::drivers {
 
         virtual void reset_request(player_request_instance &request) = 0;
         virtual void get_more_data(player_request_instance &request) = 0;
+        virtual void set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) = 0;
         std::size_t data_supply_callback(std::int16_t *data, std::size_t size);
 
         bool play() override;
@@ -85,5 +89,6 @@ namespace eka2l1::drivers {
         void clear_notify_done() override;
 
         void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
+        void set_position(const std::uint64_t pos_in_us) override;
     };
 }

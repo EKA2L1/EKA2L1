@@ -16,21 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
-#include <string>
+#include <drivers/audio/player.h>
 
 namespace eka2l1::drivers {
-    enum player_request_type {
-        player_request_play_raw_pcm = 0,
-        player_request_play_format = 1,
-        player_request_record_raw_pcm = 2,
-        player_request_record_raw_format = 3,
-        player_request_crop = 4
-    };
-
-    struct player_metadata {
-        std::string key_;
-        std::string value_;
+    class recorder: public player {
+    public:
     };
 }

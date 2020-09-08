@@ -26,7 +26,7 @@ extern "C" {
 
 namespace eka2l1::drivers {
     void player_ffmpeg_request::deinit() {
-        if (type_ == player_request_format) {
+        if (type_ == player_request_play_format) {
             av_free_packet(&packet_);
             avformat_free_context(format_);
 
@@ -105,7 +105,7 @@ namespace eka2l1::drivers {
 
         request_ff->url_ = url;
         request_ff->format_ = avformat_alloc_context();
-        request_ff->type_ = player_request_format;
+        request_ff->type_ = player_request_play_format;
 
         if (avformat_open_input(&request_ff->format_, url.c_str(), nullptr, nullptr) < 0) {
             LOG_ERROR("Error while opening AVFormat Input!");
@@ -124,20 +124,14 @@ namespace eka2l1::drivers {
     }
 
     void player_ffmpeg::reset_request(player_request_instance &request) {
-        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
-
-        avformat_flush(request_ff->format_);
-
-        if (avformat_seek_file(request_ff->format_, -1, INT64_MIN, 0, INT64_MAX, 0) < 0) {
-            LOG_ERROR("Error seeking the stream!");
-        }
+        set_position_for_custom_format(request, 0);
     }
 
     void player_ffmpeg::get_more_data(player_request_instance &request) {
         player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
 
         // Data drain, try to get more
-        if (request_ff->type_ == player_request_format) {
+        if (request_ff->type_ == player_request_play_format) {
             if (request_ff->flags_ & 1) {
                 output_stream_->stop();
                 return;
@@ -211,7 +205,19 @@ namespace eka2l1::drivers {
     bool player_ffmpeg::queue_data(const char *raw_data, const std::size_t data_size,
         const std::uint32_t encoding_type, const std::uint32_t frequency,
         const std::uint32_t channels) {
+        LOG_INFO("Queue data unimplemented for FFMPEG, todo...");
         return true;
+    }
+
+    void player_ffmpeg::set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) {
+        player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
+
+        avformat_flush(request_ff->format_);
+
+        // The unit is microseconds
+        if (avformat_seek_file(request_ff->format_, -1, INT64_MIN, pos_in_us, INT64_MAX, 0) < 0) {
+            LOG_ERROR("Error seeking the stream!");
+        }
     }
 
     player_ffmpeg::player_ffmpeg(audio_driver *driver)

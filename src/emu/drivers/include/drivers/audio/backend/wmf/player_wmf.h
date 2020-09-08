@@ -59,6 +59,8 @@ namespace eka2l1::drivers {
         bool queue_data(const char *raw_data, const std::size_t data_size,
             const std::uint32_t encoding_type, const std::uint32_t frequency,
             const std::uint32_t channels) override;
+
+        void set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
     };
 }
 
