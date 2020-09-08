@@ -100,6 +100,10 @@ namespace eka2l1::common {
      * Born to be portable later
      */
     struct dir_iterator {
+    protected:
+        std::string match_pattern;
+
+    public:
         void *handle;
         void *find_data;
 

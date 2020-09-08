@@ -32,6 +32,7 @@
 #include <Windows.h>
 #elif EKA2L1_PLATFORM(UNIX) || EKA2L1_PLATFORM(DARWIN)
 #include <sys/stat.h>
+#include <fnmatch.h>
 #include <unistd.h>
 #endif
 
@@ -136,7 +137,16 @@ namespace eka2l1::common {
         , detail(false)
         , dir_name(name) {
 #if EKA2L1_PLATFORM(POSIX)
-        handle = reinterpret_cast<void *>(opendir(name.c_str()));
+        match_pattern = eka2l1::filename(dir_name);
+        dir_name = eka2l1::file_directory(dir_name);
+
+        if (match_pattern.empty()) {
+            match_pattern = "*";
+        }
+
+        match_pattern += '\0';
+
+        handle = reinterpret_cast<void *>(opendir(dir_name.c_str()));
 
         if (handle) {
             find_data = reinterpret_cast<void *>(readdir(reinterpret_cast<DIR *>(handle)));
@@ -144,7 +154,8 @@ namespace eka2l1::common {
 
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
-        while (d && (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0) && is_valid()) {
+        while (d && ((strncmp(d->d_name, ".", 1) == 0) || (strncmp(d->d_name, "..", 2) == 0) ||
+            (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0)) && is_valid()) {
             cycles_to_next_entry();
             d = reinterpret_cast<decltype(d)>(find_data);
         };
@@ -154,7 +165,7 @@ namespace eka2l1::common {
         std::string name_wildcard = name;
 
         if (eka2l1::filename(name).empty()) {
-            name_wildcard += "\\*.*";
+            name_wildcard += "\\*";
         }
 
         handle = reinterpret_cast<void *>(FindFirstFileA(name_wildcard.c_str(),
@@ -249,7 +260,7 @@ namespace eka2l1::common {
         do {
             cycles_to_next_entry();
             d = reinterpret_cast<struct dirent *>(find_data);
-        } while (d && (strncmp(d->d_name, ".", 1) == 0 || strncmp(d->d_name, "..", 2) == 0));
+        } while (d && ((strncmp(d->d_name, ".", 1) == 0) || (strncmp(d->d_name, "..", 2) == 0) || (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0)));
 #endif
 
         return 0;
@@ -399,7 +410,7 @@ namespace eka2l1::common {
             std::stack<std::string> folder_stacks;
             common::dir_entry entry;
 
-            folder_stacks.push("//");
+            folder_stacks.push(std::string(1, eka2l1::get_separator()));
 
             while (!folder_stacks.empty()) {
                 if (!is_measuring)
