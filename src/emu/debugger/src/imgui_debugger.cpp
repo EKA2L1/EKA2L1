@@ -2096,14 +2096,26 @@ namespace eka2l1 {
     void imgui_debugger::show_empty_device_warn() {
         ImGui::OpenPopup("##NoDevicePresent");
         if (ImGui::BeginPopupModal("##NoDevicePresent", &should_show_empty_device_warn)) {
-            ImGui::Text("You have not installed any device. Please follow the installation instructions on EKA2L1's wiki page.");
+            ImGui::Text("You have not installed any device. Please install a device or follow the installation instructions on"
+                " EKA2L1's Github Wiki page.");
+
+            static const char *CONTINUE_BUTTON_TITLE = "Continue";
+            static const char *INSTALL_DEVICE_TITLE = "Install device";
+
+            const float continue_button_title_width = ImGui::CalcTextSize(CONTINUE_BUTTON_TITLE).x;
+            const float install_device_title_width = ImGui::CalcTextSize(INSTALL_DEVICE_TITLE).x;
 
             ImGui::NewLine();
-            ImGui::SameLine((ImGui::GetWindowSize().x - 30.0f) / 2);
+            ImGui::SameLine((ImGui::GetWindowSize().x - continue_button_title_width - install_device_title_width - 10.0f) / 2);
 
-            ImGui::SetNextItemWidth(30.0f);
+            if (ImGui::Button("Continue")) {
+                should_show_empty_device_warn = false;
+            }
 
-            if (ImGui::Button("OK")) {
+            ImGui::SameLine();
+
+            if (ImGui::Button("Install device")) {
+                should_show_install_device_wizard = true;
                 should_show_empty_device_warn = false;
             }
 
