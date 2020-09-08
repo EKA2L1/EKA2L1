@@ -146,7 +146,7 @@ namespace eka2l1::loader {
             }
         }
 
-        return false;
+        return found;
     }
 
     epocver determine_rpkg_symbian_version(const std::string &extracted_path) {

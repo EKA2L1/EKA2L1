@@ -30,7 +30,7 @@ namespace eka2l1::loader {
     bool install_raw_dump(manager::device_manager *dvcmngr, const std::string &path_to_dump, const std::string &devices_z_path, std::string &firmware_code,
         std::atomic<int> &res) {
         // Rename all file to lowercase
-        common::copy_folder(path_to_dump + "\\", path_to_dump + "\\", common::FOLDER_COPY_FLAG_LOWERCASE_NAME, nullptr);
+        common::copy_folder(path_to_dump, path_to_dump, common::FOLDER_COPY_FLAG_LOWERCASE_NAME, nullptr);
 
         const epocver ver = determine_rpkg_symbian_version(path_to_dump);
         std::string platform_name, manufacturer, model;
@@ -41,7 +41,7 @@ namespace eka2l1::loader {
 
         platform_name = common::lowercase_string(platform_name);
 
-        if (!common::copy_folder(path_to_dump + "\\", add_path(devices_z_path, platform_name + "\\"), 0, &res)) {
+        if (!common::copy_folder(path_to_dump, add_path(devices_z_path, platform_name + eka2l1::get_separator()), 0, &res)) {
             return false;
         }
 

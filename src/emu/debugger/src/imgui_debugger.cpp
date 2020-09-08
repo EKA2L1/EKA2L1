@@ -718,7 +718,7 @@ namespace eka2l1 {
                     tooltip += "\nDisabled because emulated system has started. Restart the emulator to use this option.";
                 }
 
-                ImGui::SetTooltip(tooltip.c_str());
+                ImGui::SetTooltip("%s", tooltip.c_str());
             }
         }
     
@@ -1256,7 +1256,7 @@ namespace eka2l1 {
                     break;
                 }
 
-                ImGui::TextWrapped(text_to_instruct);
+                ImGui::TextWrapped("%s", text_to_instruct);
                 ImGui::InputText("##RPKGPath", device_wizard_state.current_rpkg_path.data(),
                     device_wizard_state.current_rpkg_path.size(), ImGuiInputTextFlags_ReadOnly);
 
@@ -1388,7 +1388,7 @@ namespace eka2l1 {
                                 break;
 
                             case device_wizard::INSTALLATION_TYPE_RAW_DUMP:
-                                result = eka2l1::loader::install_raw_dump(mngr, wizard->current_rpkg_path, root_z_path, firmware_code, wizard->progress_tracker);
+                                result = eka2l1::loader::install_raw_dump(mngr, wizard->current_rpkg_path + eka2l1::get_separator(), root_z_path, firmware_code, wizard->progress_tracker);
                                 break;
 
                             default:
