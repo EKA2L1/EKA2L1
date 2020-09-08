@@ -53,7 +53,8 @@
 #include <config/config.h>
 #include <manager/device_manager.h>
 #include <manager/manager.h>
-#include <manager/rpkg.h>
+#include <manager/installation/raw_dump.h>
+#include <manager/installation/rpkg.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -1226,7 +1227,36 @@ namespace eka2l1 {
                 break;
 
             case device_wizard::SPECIFY_FILES: {
-                ImGui::TextWrapped("Please specify the repackage file (RPKG):");
+                static std::map<device_wizard::installation_type, const char*> installation_type_strings = {
+                    { device_wizard::INSTALLATION_TYPE_RAW_DUMP, "Raw dump" },
+                    { device_wizard::INSTALLATION_TYPE_RPKG, "RPKG" }
+                };
+
+                if (ImGui::BeginCombo("Choose installation method", installation_type_strings[device_wizard_state.device_install_type])) {
+                    for (auto &installation: installation_type_strings) {
+                        if (ImGui::Selectable(installation.second, installation.first == device_wizard_state.device_install_type)) {
+                            device_wizard_state.device_install_type = installation.first;
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+                
+                const char *text_to_instruct = nullptr;
+                bool should_choose_folder = false;
+
+                switch (device_wizard_state.device_install_type) {
+                case device_wizard::INSTALLATION_TYPE_RPKG:
+                    text_to_instruct = "Please specify the repackage file (RPKG):";
+                    break;
+
+                case device_wizard::INSTALLATION_TYPE_RAW_DUMP:
+                    text_to_instruct = "Please specify raw Z: drive dump folder:";
+                    should_choose_folder = true;
+                    break;
+                }
+
+                ImGui::TextWrapped(text_to_instruct);
                 ImGui::InputText("##RPKGPath", device_wizard_state.current_rpkg_path.data(),
                     device_wizard_state.current_rpkg_path.size(), ImGuiInputTextFlags_ReadOnly);
 
@@ -1240,7 +1270,7 @@ namespace eka2l1 {
                         device_wizard_state.should_continue_temps[0] = eka2l1::exists(result);
                         device_wizard_state.should_continue = (device_wizard_state.should_continue_temps[1]
                             && eka2l1::exists(result));
-                    });
+                    }, should_choose_folder);
 
                     should_pause = false;
                     on_pause_toogle(false);
@@ -1268,6 +1298,7 @@ namespace eka2l1 {
                     on_pause_toogle(false);
                 }
 
+
                 break;
             }
 
@@ -1279,7 +1310,19 @@ namespace eka2l1 {
                 bool extract_rpkg_state = device_wizard_state.extract_rpkg_done.load();
                 bool copy_rom_state = device_wizard_state.copy_rom_done.load();
 
-                ImGui::Checkbox("Extract the RPKG", &extract_rpkg_state);
+                std::string method_text;
+
+                switch (device_wizard_state.device_install_type) {
+                case device_wizard::INSTALLATION_TYPE_RPKG:
+                    method_text = "Extract the RPKG";
+                    break;
+
+                case device_wizard::INSTALLATION_TYPE_RAW_DUMP:
+                    method_text = fmt::format("Copying raw dump ({}%)", device_wizard_state.progress_tracker.load());
+                    break;
+                }
+
+                ImGui::Checkbox(method_text.c_str(), &extract_rpkg_state);
                 ImGui::Checkbox("Copy the ROM", &copy_rom_state);
 
                 if (device_wizard_state.failure) {
@@ -1330,11 +1373,28 @@ namespace eka2l1 {
 
                         device_wizard_state.install_thread = std::make_unique<std::thread>([](
                                                                                                manager::device_manager *mngr, device_wizard *wizard, config::state *conf) {
-                            std::atomic<int> progress;
                             std::string firmware_code;
+                            
+                            wizard->progress_tracker = 0;
+                            wizard->extract_rpkg_done = false;
+                            wizard->copy_rom_done = false;
 
-                            bool result = eka2l1::loader::install_rpkg(mngr, wizard->current_rpkg_path,
-                                add_path(conf->storage, "drives/z/"), firmware_code, progress);
+                            bool result = false;
+                            std::string root_z_path = add_path(conf->storage, "drives/z/");
+
+                            switch (wizard->device_install_type) {
+                            case device_wizard::INSTALLATION_TYPE_RPKG:
+                                result = eka2l1::loader::install_rpkg(mngr, wizard->current_rpkg_path, root_z_path, firmware_code, wizard->progress_tracker);
+                                break;
+
+                            case device_wizard::INSTALLATION_TYPE_RAW_DUMP:
+                                result = eka2l1::loader::install_raw_dump(mngr, wizard->current_rpkg_path, root_z_path, firmware_code, wizard->progress_tracker);
+                                break;
+
+                            default:
+                                wizard->failure = true;
+                                return;
+                            }
 
                             if (!result) {
                                 wizard->failure = true;
