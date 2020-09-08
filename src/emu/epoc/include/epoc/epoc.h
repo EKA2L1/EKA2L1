@@ -161,5 +161,7 @@ namespace eka2l1 {
 
         const language get_system_language() const;
         void set_system_language(const language new_lang);
+
+        void validate_current_device();
     };
 }

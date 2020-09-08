@@ -192,6 +192,10 @@ namespace eka2l1 {
             return true;
         }
 
+        void validate_current_device() {
+            io.validate_for_host();
+        }
+
         void set_cpu_executor_type(const arm_emulator_type type) {
             cpu_type = type;
         }
@@ -752,5 +756,9 @@ namespace eka2l1 {
 
     void system::set_system_language(const language new_lang) {
         impl->set_system_language(new_lang);
+    }
+
+    void system::validate_current_device() {
+        impl->validate_current_device();
     }
 }

@@ -38,6 +38,7 @@
 #include <mutex>
 #include <regex>
 #include <thread>
+#include <stack>
 
 #include <string.h>
 
@@ -808,6 +809,42 @@ namespace eka2l1 {
 
             return watcher_->unwatch(static_cast<std::int32_t>(handle));
         }
+        
+        void validate_for_host() override {
+#if EKA2L1_PLATFORM(POSIX)
+            LOG_INFO("Iterating through all emulated drive to lowercase all filesystem entities!");
+
+            for (auto &mapping: mappings) {
+                std::stack<std::string> folder_stacks;
+
+                if (!mapping.second) {
+                    continue;
+                }
+
+                common::dir_entry entry;
+
+                folder_stacks.push(mapping.first.real_path);
+
+                while (!folder_stacks.empty()) {
+                    common::dir_iterator iterator(folder_stacks.top());
+                    iterator.detail = true;
+
+                    folder_stacks.pop();
+
+                    while (iterator.next_entry(entry) == 0) {
+                        const auto lowercased = common::lowercase_string(entry.name);
+                        if (entry.name != lowercased) {
+                            common::move_file(iterator.dir_name + entry.name, iterator.dir_name + lowercased);
+                        }
+
+                        if (entry.type == common::file_type::FILE_DIRECTORY) {
+                            folder_stacks.push(iterator.dir_name + lowercased + "\\");
+                        }
+                    }
+                }
+            }
+#endif
+        }
     };
 
     class rom_file_system : public physical_file_system {
@@ -985,6 +1022,10 @@ namespace eka2l1 {
             }
 
             return std::nullopt;
+        }
+
+        void validate_for_host() override {
+            return;
         }
     };
 
@@ -1250,6 +1291,12 @@ namespace eka2l1 {
         }
 
         return fs_pair->second->unwatch_directory(handle);
+    }
+
+    void io_system::validate_for_host() {
+        for (auto &filesystem: filesystems) {
+            filesystem.second->validate_for_host();
+        }
     }
 
     symfile physical_file_proxy(const std::string &path, int mode) {

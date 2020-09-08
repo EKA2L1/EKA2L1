@@ -290,6 +290,11 @@ namespace eka2l1 {
         virtual bool unwatch_directory(const std::int64_t handle) {
             return false;
         }
+        
+        /**
+         * @brief Validate the filesystem for host to be able to use it.
+         */
+        virtual void validate_for_host() = 0;
     };
 
     std::shared_ptr<abstract_file_system> create_physical_filesystem(const epocver ver, const std::string &product_code);
@@ -310,6 +315,8 @@ namespace eka2l1 {
 
         void set_product_code(const std::string &pc);
         void set_epoc_ver(const epocver ver);
+
+        void validate_for_host();
 
         std::optional<std::u16string> get_raw_path(const std::u16string &path);
 
