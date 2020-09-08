@@ -111,6 +111,7 @@ namespace eka2l1 {
         , should_show_about(false)
         , should_show_empty_device_warn(false)
         , should_notify_reset_for_big_change(false)
+        , should_disable_validate_drive(false)
         , request_key(false)
         , key_set(false)
         , selected_package_index(0xFFFFFFFF)
@@ -681,7 +682,44 @@ namespace eka2l1 {
                 }
             }
 
-            ImGui::PushItemWidth(col2);
+            ImGui::PopItemWidth();
+
+            kernel_system *kern = sys->get_kernel_system();
+            io_system *io = sys->get_io_system();
+
+            if (!should_disable_validate_drive) {
+                kern->lock();
+
+                if (!kern->threads_.empty()) {
+                    should_disable_validate_drive = true;
+                }
+
+                kern->unlock();
+            }
+
+            if (should_disable_validate_drive) {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            }
+
+            if (ImGui::Button("Validate device")) {
+                LOG_INFO("This might take sometimes! Please wait... The UI is frozen while this is being done.");
+                sys->validate_current_device();
+            }
+
+            if (should_disable_validate_drive) {
+                ImGui::PopItemFlag();
+                ImGui::PopStyleVar();
+            }
+
+            if (ImGui::IsItemHovered()) {
+                std::string tooltip = "Check for faults in device and fix them so that EKA2L1 can emulate the device.";
+                if (should_disable_validate_drive) {
+                    tooltip += "\nDisabled because emulated system has started. Restart the emulator to use this option.";
+                }
+
+                ImGui::SetTooltip(tooltip.c_str());
+            }
         }
     
         mngr->lock.unlock();

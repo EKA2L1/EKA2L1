@@ -94,6 +94,8 @@ namespace eka2l1 {
         bool should_show_empty_device_warn;
         bool should_notify_reset_for_big_change;
 
+        bool should_disable_validate_drive;
+
         std::uint32_t active_screen;
 
         struct key_binder {
