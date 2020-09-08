@@ -34,7 +34,7 @@
 #include <disasm/disasm.h>
 
 #include <loader/e32img.h>
-#include <manager/rpkg.h>
+#include <manager/installation/rpkg.h>
 
 #include <epoc/hal.h>
 #include <utils/panic.h>

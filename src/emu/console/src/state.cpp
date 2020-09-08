@@ -118,8 +118,6 @@ namespace eka2l1::desktop {
             io_system *io = symsys->get_io_system();
 
             libmngr->load_patch_libraries(".//patch//");
-            io->validate_for_host();
-
             stage_two_inited = true;
         }
 
