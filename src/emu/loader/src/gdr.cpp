@@ -321,7 +321,7 @@ namespace eka2l1::loader::gdr {
         return true;
     }
 
-    bool parse_font_code_section_comps(common::ro_stream *stream, std::vector<character_metric> &metrics, code_section &section) {
+    bool parse_font_code_section_comps(common::ro_stream *stream, std::vector<character_metric> &metrics, character_metric &filler_metric, code_section &section) {
         std::vector<std::uint16_t> offsets;
         std::uint32_t num_offset = 0;
 
@@ -356,77 +356,88 @@ namespace eka2l1::loader::gdr {
 
             if (offsets[i - section.header_.start_] >= 0x7FFF) {
                 // This character is filler
-                section.chars_.push_back(std::move(c));
-                continue;
-            }
-
-            std::uint8_t *byte_start = byte_list.data() + offsets[i - section.header_.start_];
-            std::uint32_t bitoffset = 0;
-            std::uint16_t metric_index = 0;
-            std::uint8_t total_bit_for_index = 0;
-
-            #define GET_BIT_8(offset) ((byte_start[offset >> 3] >> (offset & 7)) & 1)
-            if (GET_BIT_8(bitoffset) == 0) {
-                total_bit_for_index = 7;
-            } else {
-                total_bit_for_index = 15;
-            }
-
-            bitoffset++;
-
-            for (std::uint8_t idx = 0; idx < total_bit_for_index; idx++) {
-                metric_index |= GET_BIT_8(bitoffset) << idx;
-                bitoffset++;
-            }
-
-            c.metric_ = &metrics[metric_index];
-            
-            const std::uint16_t target_height = c.metric_->height_in_pixels_;
-            const std::uint16_t content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_ - 
-                ((c.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : c.metric_->right_adjust_in_pixels_);
-            std::uint16_t height_read = 0;
-        
-            c.data_.resize((target_height * content_width + 31) >> 5);
-            std::fill(c.data_.begin(), c.data_.end(), 0);
-      
-            while (height_read < target_height) {      
-                bool repeat_line = !GET_BIT_8(bitoffset);
-                bitoffset++;
+                c.metric_ = &filler_metric;
                 
-                std::uint16_t line_count = 0;
-                for (int i = 0; i < 4; i++) {
-                    line_count |= GET_BIT_8(bitoffset) << i;
+                // Give it an empty character data.
+                c.data_.resize((filler_metric.move_in_pixels_ * filler_metric.height_in_pixels_ + 31) >> 5);
+                std::fill(c.data_.begin(), c.data_.end(), 0);
+            } else {
+                std::uint8_t *byte_start = byte_list.data() + offsets[i - section.header_.start_];
+                std::uint32_t bitoffset = 0;
+                std::uint16_t metric_index = 0;
+                std::uint8_t total_bit_for_index = 0;
+
+                #define GET_BIT_8(offset) ((byte_start[offset >> 3] >> (offset & 7)) & 1)
+                if (GET_BIT_8(bitoffset) == 0) {
+                    total_bit_for_index = 7;
+                } else {
+                    total_bit_for_index = 15;
+                }
+
+                bitoffset++;
+
+                for (std::uint8_t idx = 0; idx < total_bit_for_index; idx++) {
+                    metric_index |= GET_BIT_8(bitoffset) << idx;
                     bitoffset++;
                 }
-                
-                for (std::uint16_t y = 0; y < (repeat_line ? 1 : line_count); y++) {          
-                    for (std::uint16_t x = 0; x < content_width; x++) {
-                        std::uint32_t current_pixel = ((y + height_read) * content_width + x);
-                        std::uint8_t the_bit = GET_BIT_8(bitoffset);
 
-                        if (repeat_line) {
-                            for (std::size_t k = 0; k < line_count; k++) {
-                                c.data_[current_pixel >> 5] |= the_bit << (current_pixel & 31);
-                                current_pixel += content_width;
-                            }
-                        } else {
-                            c.data_[current_pixel >> 5] |= the_bit << (current_pixel & 31);
-                        }
-                                    
+                c.metric_ = &metrics[metric_index];
+                
+                const std::uint16_t target_height = c.metric_->height_in_pixels_;
+                const std::uint16_t content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_ - 
+                    ((c.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : c.metric_->right_adjust_in_pixels_);
+                std::uint16_t height_read = 0;
+            
+                c.data_.resize((target_height * content_width + 31) >> 5);
+                std::fill(c.data_.begin(), c.data_.end(), 0);
+        
+                while (height_read < target_height) {      
+                    bool repeat_line = !GET_BIT_8(bitoffset);
+                    bitoffset++;
+                    
+                    std::uint16_t line_count = 0;
+                    for (int i = 0; i < 4; i++) {
+                        line_count |= GET_BIT_8(bitoffset) << i;
                         bitoffset++;
                     }
-                }
-                
-                // Align to next byte
-                height_read += line_count;
-            }
+                    
+                    for (std::uint16_t y = 0; y < (repeat_line ? 1 : line_count); y++) {          
+                        for (std::uint16_t x = 0; x < content_width; x++) {
+                            std::uint32_t current_pixel = ((y + height_read) * content_width + x);
+                            std::uint8_t the_bit = GET_BIT_8(bitoffset);
 
-            #undef GET_BIT_8
+                            if (repeat_line) {
+                                for (std::size_t k = 0; k < line_count; k++) {
+                                    c.data_[current_pixel >> 5] |= the_bit << (current_pixel & 31);
+                                    current_pixel += content_width;
+                                }
+                            } else {
+                                c.data_[current_pixel >> 5] |= the_bit << (current_pixel & 31);
+                            }
+                                        
+                            bitoffset++;
+                        }
+                    }
+                    
+                    // Align to next byte
+                    height_read += line_count;
+                }
+
+                #undef GET_BIT_8
+            }
 
             section.chars_.push_back(std::move(c));
         }
 
         return true;
+    }
+
+    static void get_fill_character_metric(font_bitmap_header &bitmap_header, character_metric &fill_metric) {
+        fill_metric.ascent_in_pixels_ = bitmap_header.ascent_in_pixels_;
+        fill_metric.height_in_pixels_ = bitmap_header.cell_height_in_pixels_;
+        fill_metric.left_adj_in_pixels_ = 0;
+        fill_metric.right_adjust_in_pixels_ = 0;
+        fill_metric.move_in_pixels_ = bitmap_header.max_normal_char_width_in_pixels_;
     }
 
     bool parse_store(common::ro_stream *stream, file_store &store) {
@@ -451,6 +462,8 @@ namespace eka2l1::loader::gdr {
 
         for (std::size_t i = 0; i < font_bitmap_headers.size(); i++) {
             store.font_bitmaps_[i].header_ = font_bitmap_headers[i];
+            get_fill_character_metric(store.font_bitmaps_[i].header_, store.font_bitmaps_[i].filler_metric_);
+
             std::fill(store.font_bitmaps_[i].coverage_, store.font_bitmaps_[i].coverage_ + 4, 0);
 
             if (!parse_font_bitmap_character_metrics(stream, store.font_bitmaps_[i].metrics_)) {
@@ -462,7 +475,8 @@ namespace eka2l1::loader::gdr {
             for (std::size_t j = 0; j < font_bitmap_headers[i].code_section_count_; j++) {
                 store.font_bitmaps_[i].code_sections_[j].header_ = std::move(code_section_header_list_list[i][j]);
 
-                if (!parse_font_code_section_comps(stream, store.font_bitmaps_[i].metrics_, store.font_bitmaps_[i].code_sections_[j])) {
+                if (!parse_font_code_section_comps(stream, store.font_bitmaps_[i].metrics_, store.font_bitmaps_[i].filler_metric_,
+                    store.font_bitmaps_[i].code_sections_[j])) {
                     return false;
                 }
 

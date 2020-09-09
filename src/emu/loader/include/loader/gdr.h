@@ -105,6 +105,8 @@ namespace eka2l1::loader::gdr {
         std::vector<character_metric> metrics_;
         std::vector<code_section> code_sections_;
 
+        character_metric filler_metric_;
+
         // This enum value based on TrueType's
         enum {
             COVERAGE_LATIN_SET = 0x1,
