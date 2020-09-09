@@ -441,9 +441,9 @@ namespace eka2l1::common {
                                         *progress = total_copied * 100 / total_size;
                                     }
                                 }
-                            } else {
-                                name_to_use = lowercased;
                             }
+                            
+                            name_to_use = lowercased;
                         }
                     }
 
