@@ -191,6 +191,7 @@ namespace eka2l1::epoc::adapter {
         
         if (scale_factor != 1.0f) {
             scaled_result.resize((static_cast<std::uint32_t>(scaled_width * font_size) + 31) >> 5);
+            std::fill(scaled_result.begin(), scaled_result.end(), 0);
 
             for (std::int16_t y = 0; y < font_size; y++) {
                 for (std::int16_t x = 0; x < scaled_width; x++) {

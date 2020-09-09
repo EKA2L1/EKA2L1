@@ -276,7 +276,15 @@ namespace eka2l1::epoc {
         void destroy(fbscli *cli);
     };
 
-    struct open_font_glyph_v1: public open_font_glyph_v2 {
+    struct open_font_glyph_v1: public open_font_glyph_v3 {
+    };
+
+    /**
+     * @brief This struct is returned as pointer to FBS's GetCharacterData.
+     * 
+     * It has one extra field metric_offset, like the s60v5 version!
+     */
+    struct open_font_glyph_v1_use_for_fbs: public open_font_glyph_v2 {
     };
 
     struct open_font_glyph_cache_entry_v1: public open_font_glyph_v1 {
@@ -362,7 +370,7 @@ namespace eka2l1::epoc {
     /**
      * \brief The second(?) version of the session cache. Used on build 94 and lower.
      */
-    struct open_font_session_cache_v2 : public open_font_session_cache_base {
+    struct open_font_session_cache_old : public open_font_session_cache_base {
         open_font_glyph_offset_array offset_array;
         std::uint32_t last_use_counter{ 0 };
 
@@ -376,12 +384,14 @@ namespace eka2l1::epoc {
          * \param code       The codepoint of the added glyph.
          * \param the_glyph  Pointer to the glyph.
          */
+        template <typename T>
         void add_glyph(fbscli *cli, const std::uint32_t code, void *the_glyph);
 
         /**
          * \brief Destroy the session cache, free any glyph allocated before.
          * \param cli The owner of this session cache.
          */
+        template <typename T>
         void destroy(fbscli *cli);
     };
 
@@ -419,7 +429,7 @@ namespace eka2l1::epoc {
      */
     struct open_font_session_cache_link {
         eka2l1::ptr<open_font_session_cache_link> next{ 0 };
-        eka2l1::ptr<open_font_session_cache_v2> cache{ 0 };
+        eka2l1::ptr<open_font_session_cache_old> cache{ 0 };
 
         /**
          * \brief     Try to find the link that correspond to this client, starting from the link that called

@@ -172,6 +172,9 @@ namespace eka2l1 {
 
         bool support_dirty_bitmap{ true };
         bool support_current_display_mode{ true };
+
+        epoc::open_font_glyph_v1_use_for_fbs *glyph_info_for_legacy_return_;
+        address glyph_info_for_legacy_return_addr_;
         
         // Info is adjusted after this function to fit the spec
         epoc::bitmapfont_base *create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec,

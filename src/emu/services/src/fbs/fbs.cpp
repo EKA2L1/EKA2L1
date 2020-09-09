@@ -70,6 +70,10 @@ namespace eka2l1 {
         } else {
             server<fbs_server>()->session_cache_list->erase_cache(this);
         }
+
+        if (glyph_info_for_legacy_return_) {
+            server<fbs_server>()->free_general_data(glyph_info_for_legacy_return_);
+        }
     }
 
     void fbscli::set_pixel_size_in_twips(service::ipc_context *ctx) {
@@ -426,10 +430,17 @@ namespace eka2l1 {
     }
 
     fbscli::fbscli(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version)
-        : service::typical_session(serv, ss_id, client_version) {
-        if (reinterpret_cast<fbs_server*>(serv)->legacy_level() == 2) {
+        : service::typical_session(serv, ss_id, client_version)
+        , glyph_info_for_legacy_return_(nullptr)
+        , glyph_info_for_legacy_return_addr_(0) {
+        fbs_server *fbss = reinterpret_cast<fbs_server*>(serv);
+
+        if (fbss->legacy_level() == 2) {
             support_current_display_mode = false;
             support_dirty_bitmap = false;
+
+            glyph_info_for_legacy_return_ = fbss->allocate_general_data<epoc::open_font_glyph_v1_use_for_fbs>();
+            glyph_info_for_legacy_return_addr_ = fbss->host_ptr_to_guest_general_data(glyph_info_for_legacy_return_).ptr_address();
         }
     }
 }

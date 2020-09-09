@@ -171,14 +171,14 @@ namespace eka2l1::epoc {
         auto next_link = serv->allocate_general_data<open_font_session_cache_link>();
         current->next = serv->host_ptr_to_guest_general_data(next_link).cast<epoc::open_font_session_cache_link>();
 
-        open_font_session_cache_v2 *cache = serv->allocate_general_data<open_font_session_cache_v2>();
+        open_font_session_cache_old *cache = serv->allocate_general_data<open_font_session_cache_old>();
 
         cache->session_handle = cli->connection_id_;
         cache->offset_array.init(cli, NORMAL_SESSION_CACHE_ENTRY_COUNT);
         cache->last_use_counter = 0;
 
         // Set the cache guest pointer
-        next_link->cache = serv->host_ptr_to_guest_general_data(cache).cast<epoc::open_font_session_cache_v2>();
+        next_link->cache = serv->host_ptr_to_guest_general_data(cache).cast<epoc::open_font_session_cache_old>();
 
         return next_link;
     }
@@ -203,7 +203,12 @@ namespace eka2l1::epoc {
                 previous->next = current->next;
 
                 // Free current link
-                current_cache->destroy(cli);
+                if (serv->legacy_level() == 2) {
+                    // EKA1 has a weird thing...
+                    current_cache->destroy<epoc::open_font_session_cache_entry_v1>(cli);
+                } else {
+                    current_cache->destroy<epoc::open_font_session_cache_entry_v2>(cli);
+                }
 
                 serv->free_general_data(current_cache);
                 serv->free_general_data(current);
@@ -252,20 +257,16 @@ namespace eka2l1::epoc {
         }
     }
 
-#define OPEN_FONT_SESSION_CACHE_DESTROY_IMPL(version)                                                         \
-    void open_font_session_cache_v##version::destroy(fbscli *cli) {                                           \
-        for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {                                  \
-            if (!offset_array.is_entry_empty(cli, i)) {                                                       \
-                auto glyph_cache = offset_array.get_glyph(cli, i);                                            \
-                auto serv = cli->server<fbs_server>();                                                        \
-                reinterpret_cast<open_font_session_cache_entry_v##version*>(glyph_cache)->destroy(cli);       \
-                serv->free_general_data(glyph_cache);                                                         \
-            }                                                                                                 \
-        }                                                                                                     \
+    void open_font_session_cache_v3::destroy(fbscli *cli) {
+        for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {
+            if (!offset_array.is_entry_empty(cli, i)) {
+                auto glyph_cache = offset_array.get_glyph(cli, i);
+                auto serv = cli->server<fbs_server>();
+                reinterpret_cast<open_font_session_cache_entry_v3*>(glyph_cache)->destroy(cli);
+                serv->free_general_data(glyph_cache);
+            }
+        }
     }
-
-    OPEN_FONT_SESSION_CACHE_DESTROY_IMPL(2)
-    OPEN_FONT_SESSION_CACHE_DESTROY_IMPL(3)
 
     void open_font_session_cache_v3::add_glyph(fbscli *cli, const std::uint32_t code, void *the_glyph) {
         const std::uint32_t real_index = (code & 0x7fffffff) % offset_array.offset_array_count;
@@ -279,7 +280,20 @@ namespace eka2l1::epoc {
         offset_array.set_glyph(cli, real_index, the_glyph);
     }
 
-    void open_font_session_cache_v2::add_glyph(fbscli *cli, const std::uint32_t code, void *the_glyph) {
+    template <typename T>
+    void open_font_session_cache_old::destroy(fbscli *cli) {
+        for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {
+            if (!offset_array.is_entry_empty(cli, i)) {
+                auto glyph_cache = offset_array.get_glyph(cli, i);
+                auto serv = cli->server<fbs_server>();
+                reinterpret_cast<T*>(glyph_cache)->destroy(cli);
+                serv->free_general_data(glyph_cache);
+            }
+        }
+    }
+
+    template <typename T>
+    void open_font_session_cache_old::add_glyph(fbscli *cli, const std::uint32_t code, void *the_glyph) {
         std::uint32_t real_index = (code & 0x7fffffff) % offset_array.offset_array_count;
 
         if (!offset_array.is_entry_empty(cli, real_index)) {
@@ -296,25 +310,31 @@ namespace eka2l1::epoc {
                     break;	
                 }	
 
-                auto entry = eka2l1::ptr<open_font_session_cache_entry_v2>(ptr[i]).get(mem);	
+                auto entry = eka2l1::ptr<T>(ptr[i]).get(mem);	
 
                 if (entry->last_use < least_use) {	
                     least_use = entry->last_use;	
                     real_index = i;
-                }	
+                }
             }
         }
 
         if (!offset_array.is_entry_empty(cli, real_index)) {
             auto glyph_cache = offset_array.get_glyph(cli, real_index);
-            reinterpret_cast<open_font_session_cache_entry_v2*>(glyph_cache)->destroy(cli);
+            reinterpret_cast<T*>(glyph_cache)->destroy(cli);
 
             cli->server<fbs_server>()->free_general_data(glyph_cache);
         }
 
-        reinterpret_cast<open_font_session_cache_entry_v2*>(the_glyph)->glyph_index = real_index;
+        reinterpret_cast<T*>(the_glyph)->glyph_index = real_index;
         offset_array.set_glyph(cli, real_index, the_glyph);
     }
+
+    template void open_font_session_cache_old::add_glyph<open_font_session_cache_entry_v1>(fbscli *cli, const std::uint32_t code, void *the_glyph);
+    template void open_font_session_cache_old::add_glyph<open_font_session_cache_entry_v2>(fbscli *cli, const std::uint32_t code, void *the_glyph);
+
+    template void open_font_session_cache_old::destroy<open_font_session_cache_entry_v1>(fbscli *cli);
+    template void open_font_session_cache_old::destroy<open_font_session_cache_entry_v2>(fbscli *cli);
 
     open_font_glyph_cache_v1::open_font_glyph_cache_v1()
         : entry_(0)
@@ -768,26 +788,36 @@ namespace eka2l1 {
     info->adapter->free_glyph_bitmap(bitmap_data);                                                                          \
     if (epoc::does_client_use_pointer_instead_of_offset(this)) {                                                            \
         cache_entry->offset += static_cast<std::int32_t>(cache_entry_ptr);                                                  \
-    }                                                                                                                       \
-    session_cache->add_glyph(this, codepoint, cache_entry)
+    }
 
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
             // Use linked
             epoc::open_font_session_cache_link *link = serv->session_cache_link->get_or_create(this);
-            epoc::open_font_session_cache_v2 *session_cache = link->cache.get(pr);
-
-#define DO_CACHE_ENTRY_FINISH_UP                                                                             \
-    cache_entry->last_use = session_cache->last_use_counter++;                                               \
-    cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();   \
-    ctx->complete(cache_entry_ptr);                                                                          \
-    return
+            epoc::open_font_session_cache_old *session_cache = link->cache.get(pr);
 
             if (serv->kern->is_eka1()) {
                 MAKE_CACHE_ENTRY(1, epoc::bitmapfont_v1);
-                DO_CACHE_ENTRY_FINISH_UP;
+
+                session_cache->add_glyph<epoc::open_font_session_cache_entry_v1>(this, codepoint, cache_entry);
+
+                cache_entry->last_use = session_cache->last_use_counter++;
+
+                glyph_info_for_legacy_return_->codepoint = codepoint;
+                glyph_info_for_legacy_return_->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();
+                glyph_info_for_legacy_return_->offset = cache_entry->offset;
+
+                ctx->complete(glyph_info_for_legacy_return_addr_);
+                return;
             } else {
                 MAKE_CACHE_ENTRY(2, epoc::bitmapfont_v2);
-                DO_CACHE_ENTRY_FINISH_UP;
+
+                session_cache->add_glyph<epoc::open_font_session_cache_entry_v2>(this, codepoint, cache_entry);
+
+                cache_entry->last_use = session_cache->last_use_counter++;
+                cache_entry->metric_offset = serv->host_ptr_to_guest_general_data(&cache_entry->metric).ptr_address();
+
+                ctx->complete(cache_entry_ptr);
+                return;
             }
         }
 
@@ -795,6 +825,7 @@ namespace eka2l1 {
             static_cast<std::int32_t>(connection_id_), true);
 
         MAKE_CACHE_ENTRY(3, epoc::bitmapfont_v2);
+        session_cache->add_glyph(this, codepoint, cache_entry);
 
         // From S^3 onwards, the 2nd argument contains some necessary struct we need to fill in (metrics offset
         // and bitmap pointer offset) so we don't have to lookup anymore. On older version, the 2nd argument is
