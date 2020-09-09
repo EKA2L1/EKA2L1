@@ -36,6 +36,16 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc {
+    enum font_posture {
+        font_posture_normal = 0,
+        font_posture_italic = 1
+    };
+
+    enum font_stroke_weight {
+        font_stroke_weight_normal = 0,
+        font_stroke_weight_bold = 1
+    };
+
     /**
      * Quick note: All struct in this file must be accurate with what's on real hardware, about
      * the structure member layout and order. You can add normal method in these structs, but please
