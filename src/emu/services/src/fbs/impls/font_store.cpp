@@ -91,15 +91,27 @@ namespace eka2l1::epoc {
             }
 
             if (maybe_same_family) {
-                score += 100;
+                score += 10000;
             }
 
-            if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::italic) == (info.face_attrib.style & epoc::open_font_face_attrib::italic)) {
-                score += 50;
+            // Match the flags. This is also an important factor.
+            if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::italic)) {
+                if (info.face_attrib.style & epoc::open_font_face_attrib::italic) {
+                    score += 5000;
+                }
             }
 
-            if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::bold) == (info.face_attrib.style & epoc::open_font_face_attrib::bold)) {
-                score += 50;
+            if (static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::bold) {
+                if (info.face_attrib.style & epoc::open_font_face_attrib::bold) {
+                    score += 5000;
+                }
+            }
+
+            static constexpr std::uint32_t COVERAGE_WORD_COUNT = sizeof(info.face_attrib.coverage) / sizeof(info.face_attrib.coverage[0]);
+
+            // The more coverage, the more varieties of the font.
+            for (std::size_t i = 0; i < COVERAGE_WORD_COUNT; i++) {
+                score += 100 * common::count_bit_set(info.face_attrib.coverage[i]);
             }
 
             if (score > best_score) {
