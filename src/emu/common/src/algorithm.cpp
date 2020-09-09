@@ -239,5 +239,13 @@ namespace eka2l1 {
             return inaccruate_multiply_and_divide_qwords(m1, m2, d1);
 #endif
         }
+
+        int count_bit_set(const std::uint32_t v) {
+#if defined(__GNUC__) || defined(__clang__)
+            return __builtin_popcount(v);
+#else
+            return static_cast<int>(__popcnt(v));
+#endif
+        }
     }
 }

@@ -373,6 +373,12 @@ namespace eka2l1 {
         int find_most_significant_bit_one(const std::uint32_t v);
 
         /**
+         * @brief       Count the number of bits that is set.
+         * @returns     Number of bits that is set in given 32-bit integer.
+         */
+        int count_bit_set(const std::uint32_t v);
+
+        /**
          * @brief   Multiply two qwords, and then divide the result we just got with another qword.
          * 
          * @param   m1        First factor.
