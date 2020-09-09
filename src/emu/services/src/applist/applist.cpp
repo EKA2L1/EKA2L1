@@ -296,7 +296,7 @@ namespace eka2l1 {
                     while (auto ent = reg_dir->get_next_entry()) {
                         if (ent->type == io_component_type::dir) {
                             const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
-                                ent->full_path, ent->name + ".aif"));
+                                ent->full_path, ent->name + ".aif", true));
 
                             load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language());    
                         }
