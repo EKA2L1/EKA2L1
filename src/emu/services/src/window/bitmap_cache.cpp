@@ -184,6 +184,7 @@ namespace eka2l1::epoc {
         std::uint64_t hash = 0;
 
         bool should_upload = true;
+        bool should_recreate = true;
 
         auto bitmap_ite = std::find(bitmaps.begin(), bitmaps.end(), bmp);
         if (bitmap_ite == bitmaps.end()) {
@@ -205,13 +206,17 @@ namespace eka2l1::epoc {
             // Check if we should upload or not, by calculating the hash
             hash = hash_bitwise_bitmap(bmp);
             should_upload = hash != (hashes[idx]);
+            should_recreate = bmp->header_.size_pixels != bitmap_sizes[idx];
         }
 
-        if (should_upload) {
+        if (should_recreate) {
             if (driver_textures[idx])
                 builder->destroy_bitmap(driver_textures[idx]);
 
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels);
+        }
+
+        if (should_upload) {
             char *data_pointer = reinterpret_cast<char *>(base_large_chunk + bmp->data_offset_);
 
             std::vector<std::uint8_t> decompressed;
@@ -305,6 +310,8 @@ namespace eka2l1::epoc {
         }
 
         timestamps[idx] = crr_timestamp;
+        bitmap_sizes[idx] = bmp->header_.size_pixels;
+
         return driver_textures[idx];
     }
 }
