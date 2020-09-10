@@ -46,19 +46,18 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 void mouse_callback(GLFWwindow *window, int button, int action, int mods) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
 
-    if (button != GLFW_MOUSE_BUTTON_LEFT) {
-        return;
-    }
-
     double x;
     double y;
     glfwGetCursorPos(window, &x, &y);
 
-    int but_map = (button == GLFW_MOUSE_BUTTON_LEFT) ? 0 : ((button == GLFW_MOUSE_BUTTON_RIGHT) ? 1 : 2);
-
     int but_action = (action == GLFW_PRESS) ? 0 : ((action == GLFW_REPEAT) ? 1 : 2);
 
-    CALL_IF_VALID(win->raw_mouse_event, win->get_userdata(), eka2l1::point(static_cast<int>(x), static_cast<int>(y)), but_map, but_action);
+    CALL_IF_VALID(win->raw_mouse_event, win->get_userdata(), eka2l1::point(static_cast<int>(x), static_cast<int>(y)),
+        button - GLFW_MOUSE_BUTTON_1, but_action);
+
+    if (button != GLFW_MOUSE_BUTTON_LEFT) {
+        return;
+    }
 
     if (action == GLFW_PRESS) {
         CALL_IF_VALID(win->touch_pressed, win->get_userdata(), eka2l1::point(static_cast<int>(x), static_cast<int>(y)));

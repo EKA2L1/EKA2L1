@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <drivers/input/common.h>
+
 #include <common/vecx.h>
 #include <cstdint>
 #include <functional>

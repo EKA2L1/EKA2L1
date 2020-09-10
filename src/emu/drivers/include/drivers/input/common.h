@@ -40,16 +40,26 @@ namespace eka2l1::drivers {
         released
     };
 
-    enum class mouse_button {
-        left,
-        middle,
-        right
+    enum mouse_button {
+        mouse_button_1 = 0,
+        mouse_button_2 = 1,
+        mouse_button_3 = 2,
+        mouse_button_4 = 3,
+        mouse_button_5 = 4,
+        mouse_button_6 = 5,
+        mouse_button_7 = 6,
+        mouse_button_8 = 7,
+        mouse_button_9 = 8,
+        mouse_button_10 = 9,
+        mouse_button_left = mouse_button_1,
+        mouse_button_right = mouse_button_2,
+        mouse_button_middle = mouse_button_3
     };
 
-    enum class mouse_action {
-        press,
-        repeat,
-        release
+    enum mouse_action {
+        mouse_action_press,
+        mouse_action_repeat,
+        mouse_action_release
     };
 
     /**
