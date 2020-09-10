@@ -95,6 +95,7 @@ namespace eka2l1 {
         bool should_notify_reset_for_big_change;
 
         bool should_disable_validate_drive;
+        bool should_warn_touch_disabled;
 
         std::uint32_t active_screen;
 
@@ -154,6 +155,7 @@ namespace eka2l1 {
 
         void show_app_launch();
         void show_empty_device_warn();
+        void show_touchscreen_disabled_warn();
 
         void show_threads();
         void show_mutexs();

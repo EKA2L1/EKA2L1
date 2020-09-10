@@ -53,8 +53,8 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
     evt.type_ = eka2l1::drivers::input_event_type::touch;
     evt.mouse_.pos_x_ = static_cast<int>(x);
     evt.mouse_.pos_y_ = static_cast<int>(y);
-    evt.mouse_.button_ = button == 0 ? eka2l1::drivers::mouse_button::left : (button == 1 ? eka2l1::drivers::mouse_button::right : eka2l1::drivers::mouse_button::middle);
-    evt.mouse_.action_ = action == 0 ? eka2l1::drivers::mouse_action::press : (action == 1 ? eka2l1::drivers::mouse_action::repeat : eka2l1::drivers::mouse_action::release);
+    evt.mouse_.button_ = static_cast<eka2l1::drivers::mouse_button>(button);
+    evt.mouse_.action_ = static_cast<eka2l1::drivers::mouse_action>(action);
 
     return evt;
 }
@@ -69,13 +69,19 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int 
     float mouse_pos_x = static_cast<float>(mouse_pos.x), mouse_pos_y = static_cast<float>(mouse_pos.y);
 
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+    auto mouse_evt = make_mouse_event_driver(mouse_pos_x, mouse_pos_y, button, action);
+
     if ((emu->symsys) && emu->winserv) {
         const float scale = emu->symsys->get_config()->ui_scale;
         mouse_pos_x /= scale;
         mouse_pos_y /= scale;
 
-        auto mouse_evt = make_mouse_event_driver(mouse_pos_x, mouse_pos_y, button, action);
         emu->winserv->queue_input_from_driver(mouse_evt);
+    }
+
+    if (emu->debugger->request_key && !emu->debugger->key_set) {
+        emu->debugger->key_evt = mouse_evt;
+        emu->debugger->key_set = true;
     }
 
     ImGuiIO &io = ImGui::GetIO();

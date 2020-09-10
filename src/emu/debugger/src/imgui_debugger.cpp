@@ -75,6 +75,8 @@ const ImVec4 GUI_COLOR_TEXT_TITLE = RGBA_TO_FLOAT(247.0f, 198.0f, 51.0f, 255.0f)
 const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
 const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255.0f);
 
+static const ImVec4 RED_COLOR = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+
 namespace eka2l1 {
     static void language_property_change_handler(void *userdata, service::property *prop) {
         imgui_debugger *debugger = reinterpret_cast<imgui_debugger *>(userdata);
@@ -113,6 +115,7 @@ namespace eka2l1 {
         , should_show_empty_device_warn(false)
         , should_notify_reset_for_big_change(false)
         , should_disable_validate_drive(false)
+        , should_warn_touch_disabled(false)
         , request_key(false)
         , key_set(false)
         , selected_package_index(0xFFFFFFFF)
@@ -258,14 +261,21 @@ namespace eka2l1 {
             { KEY_SLASH, "KEY_SLASH" },
             { KEY_STAR, "KEY_STAR" }
         };
+
         key_binder_state.need_key = std::vector<bool>(key_binder_state.BIND_NUM, false);
 
         if (winserv) {
             for (auto &kb : conf->keybinds) {
-                if (kb.source.type == "key") {
-                    winserv->input_mapping.key_input_map[kb.source.data.keycode] = kb.target;
-                    key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.keycode);
-                } else if (kb.source.type == "controller") {
+                bool is_mouse = (kb.source.type == config::KEYBIND_TYPE_MOUSE);
+
+                if (is_mouse) {
+                    should_warn_touch_disabled = !conf->stop_warn_touch_disabled;
+                }
+
+                if ((kb.source.type == config::KEYBIND_TYPE_KEY) || is_mouse) {
+                    winserv->input_mapping.key_input_map[kb.source.data.keycode] = (is_mouse ? 0 : epoc::KEYBIND_TYPE_MOUSE_CODE_BASE) + kb.target;
+                    key_binder_state.key_bind_name[kb.target] = (is_mouse ? "M" : "") + std::to_string(kb.source.data.keycode);
+                } else if (kb.source.type == config::KEYBIND_TYPE_CONTROLLER) {
                     winserv->input_mapping.button_input_map[std::make_pair(kb.source.data.button.controller_id, kb.source.data.button.button_id)] = kb.target;
                     key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.button.controller_id) + ":" + std::to_string(kb.source.data.button.button_id);
                 }
@@ -792,30 +802,55 @@ namespace eka2l1 {
                     bool map_set = false;
                     config::keybind new_kb;
                     new_kb.target = key_binder_state.target_key[i];
+
+                    // NOTE: key_binder_state belongs to UI. setting a key_bind_name means setting the display name of binded key
+                    // in keybind window.
                     switch (key_evt.type_) {
                     case drivers::input_event_type::key:
                         winserv->input_mapping.key_input_map[key_evt.key_.code_] = key_binder_state.target_key[i];
                         key_binder_state.key_bind_name[new_kb.target] = std::to_string(key_evt.key_.code_);
-                        new_kb.source.type = "key";
+
+                        new_kb.source.type = config::KEYBIND_TYPE_KEY;
                         new_kb.source.data.keycode = key_evt.key_.code_;
                         map_set = true;
+
                         break;
+
                     case drivers::input_event_type::button:
                         winserv->input_mapping.button_input_map[std::make_pair(key_evt.button_.controller_, key_evt.button_.button_)] = key_binder_state.target_key[i];
                         key_binder_state.key_bind_name[new_kb.target] = std::to_string(key_evt.button_.controller_) + ":" + std::to_string(key_evt.button_.button_);
-                        new_kb.source.type = "controller";
+                        
+                        new_kb.source.type = config::KEYBIND_TYPE_CONTROLLER;
                         new_kb.source.data.button.controller_id = key_evt.button_.controller_;
                         new_kb.source.data.button.button_id = key_evt.button_.button_;
                         map_set = true;
+                        
                         break;
+
+                    case drivers::input_event_type::touch: {
+                        // Use the same map for mouse
+                        const std::uint32_t MOUSE_KEYCODE = epoc::KEYBIND_TYPE_MOUSE_CODE_BASE + key_evt.mouse_.button_;
+
+                        winserv->input_mapping.key_input_map[MOUSE_KEYCODE] = key_binder_state.target_key[i];
+                        key_binder_state.key_bind_name[new_kb.target] = "M" + std::to_string(key_evt.mouse_.button_);
+
+                        new_kb.source.type = config::KEYBIND_TYPE_MOUSE;
+                        new_kb.source.data.keycode = key_evt.mouse_.button_;
+                        map_set = true;
+
+                        break;
+                    }
+
                     default:
                         break;
                     }
+
                     if (map_set) {
                         key_binder_state.need_key[i] = false;
                         request_key = false;
                         key_set = false;
                     }
+
                     bool exist_in_config = false;
                     for (auto &kb : conf->keybinds) {
                         if (kb.target == key_binder_state.target_key[i]) {
@@ -824,10 +859,12 @@ namespace eka2l1 {
                             break;
                         }
                     }
+
                     if (!exist_in_config) {
                         conf->keybinds.emplace_back(new_kb);
                     }
                 }
+
                 ImGui::Button("waiting for key");
             } else {
                 if (ImGui::Button(key_binder_state.key_bind_name[key_binder_state.target_key[i]].c_str())) {
@@ -913,7 +950,6 @@ namespace eka2l1 {
         all_prefs[cur_pref_tab].second(this);
 
         if (should_notify_reset_for_big_change) {
-            static const ImVec4 RED_COLOR = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
             ImGui::NewLine();
             ImGui::TextColored(RED_COLOR, "Please restart the emulator for the changes made to data storage"
                 " and devices to be effective!");
@@ -2123,6 +2159,32 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::show_touchscreen_disabled_warn() {
+        ImGui::OpenPopup("##TouchscreenDisabledPop");
+        if (ImGui::BeginPopupModal("##TouchscreenDisabledPop", nullptr)) {
+            ImGui::Text("Some of your current keybinds are associated with mouse buttons. Therefore"
+                " emulated touchscreen is disabled.");
+
+            ImGui::TextColored(RED_COLOR, "Note: ");
+            ImGui::SameLine();
+            ImGui::Text("Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.");
+
+            ImGui::Checkbox("Don't show this again.", &conf->stop_warn_touch_disabled);
+
+            ImGui::NewLine();
+
+            ImGui::SameLine((ImGui::GetWindowSize().x - 30.0f) / 2);
+            ImGui::SetNextItemWidth(30.0f);
+
+            if (ImGui::Button("OK")) {
+                should_warn_touch_disabled = false;
+                conf->serialize();
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
         show_menu();
         handle_shortcuts();
@@ -2131,6 +2193,11 @@ namespace eka2l1 {
 
         if (should_show_empty_device_warn) {
             show_empty_device_warn();
+            return;
+        }
+
+        if (should_warn_touch_disabled) {
+            show_touchscreen_disabled_warn();
             return;
         }
 
