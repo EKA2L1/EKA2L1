@@ -53,7 +53,17 @@ namespace eka2l1::drivers {
         virtual ~player() = default;
 
         virtual bool play() = 0;
+        virtual bool record() = 0;
         virtual bool stop() = 0;
+
+        /**
+         * @brief       Crop queued audio source.
+         * 
+         * Crop must happen before play/record.
+         * 
+         * @returns     True on success.
+         */
+        virtual bool crop() = 0;
 
         virtual bool queue_url(const std::string &url) = 0;
 

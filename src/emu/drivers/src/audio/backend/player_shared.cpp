@@ -74,7 +74,7 @@ namespace eka2l1::drivers {
                 }
 
                 // Reset the stream if we are the custom format guy!
-                if (request->type_ == player_request_play_format) {
+                if (request->type_ == player_request_format) {
                     reset_request(request);
                 }
 
@@ -165,14 +165,12 @@ namespace eka2l1::drivers {
         }
 
         switch (request_ref->type_) {
-        case player_request_play_format:
-        case player_request_record_raw_format:
-        case player_request_crop: {
+        case player_request_format: {
             set_position_for_custom_format(request_ref, pos_in_us);
             break;
         }
 
-        case player_request_play_raw_pcm: {
+        case player_request_raw_pcm: {
             // Calculate the data position by using audio hz
             // Hz / 1000000 = frames per microseconds
             std::uint64_t total_frame_to_seek_to = common::multiply_and_divide_qwords(pos_in_us, request_ref->freq_, 1000000);

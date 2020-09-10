@@ -79,7 +79,7 @@ namespace eka2l1::drivers {
 
         virtual void reset_request(player_request_instance &request) = 0;
         virtual void get_more_data(player_request_instance &request) = 0;
-        virtual void set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) = 0;
+        virtual bool set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) = 0;
         std::size_t data_supply_callback(std::int16_t *data, std::size_t size);
 
         bool play() override;

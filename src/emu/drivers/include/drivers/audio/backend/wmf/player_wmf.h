@@ -41,6 +41,7 @@ namespace eka2l1::drivers {
 
     struct player_wmf_request : public player_request_base {
         IMFSourceReader *reader_;
+        IMFSinkWriter *writer_;
 
         explicit player_wmf_request()
             : reader_(nullptr) {
@@ -60,7 +61,13 @@ namespace eka2l1::drivers {
             const std::uint32_t encoding_type, const std::uint32_t frequency,
             const std::uint32_t channels) override;
 
-        void set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
+        void read_and_transcode(player_request_instance &request, const std::uint32_t out_stream_idx, const std::uint64_t time_stamp_source, const std::uint64_t duration_source);
+        bool set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
+        
+        bool crop() override;
+        bool record() override {
+            return true;
+        }
     };
 }
 

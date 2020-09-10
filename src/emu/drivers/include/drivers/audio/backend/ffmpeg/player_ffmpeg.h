@@ -56,6 +56,9 @@ namespace eka2l1::drivers {
             const std::uint32_t encoding_type, const std::uint32_t frequency,
             const std::uint32_t channels) override;
 
-        void set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
+        bool set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
+
+        bool crop() override { return true; }
+        bool record() override { return true; }
     };
 }
