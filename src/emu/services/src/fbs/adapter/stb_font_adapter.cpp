@@ -113,8 +113,8 @@ namespace eka2l1::epoc::adapter {
         // This maybe optional, so let's check
         if (os2_off != 0) {
             // Copy unicode coverage in
-            std::copy(reinterpret_cast<std::uint32_t *>(&data_[0] + off + os2_off + 33),
-                reinterpret_cast<std::uint32_t *>(&data_[0] + off + os2_off + 33) + 4, face_attrib.coverage);
+            std::copy(reinterpret_cast<std::uint32_t *>(&data_[0] + off + os2_off + 42),
+                reinterpret_cast<std::uint32_t *>(&data_[0] + off + os2_off + 42) + 4, face_attrib.coverage);
 
             // OS/2 field which indicates lowest size of the font. Not really sure, since those fields
             // were added since 2013..
