@@ -1314,41 +1314,49 @@ namespace eka2l1 {
 
             break;
 
-        case drivers::input_event_type::touch:
-            input_event.key_.code_ = epoc::KEYBIND_TYPE_MOUSE_CODE_BASE + input_event.mouse_.button_;
-
-            switch (input_event.mouse_.action_) {
-            case drivers::mouse_action_press:
-                input_event.key_.state_ = drivers::key_state::pressed;
-                break;
-
-            case drivers::mouse_action_repeat:
-                input_event.key_.state_ = drivers::key_state::repeat;
-                break;
-
-            case drivers::mouse_action_release:
-                input_event.key_.state_ = drivers::key_state::released;
-                break;
-
-            default:
-                input_event.key_.state_ = drivers::key_state::pressed;
-                break;
-            }
+        case drivers::input_event_type::touch: {
+            epoc::screen *scr = get_current_focus_screen();
+            eka2l1::rect screen_rect(scr->absolute_pos, scr->current_mode().size * scr->scale);
 
             // For touch, try to map to keycode first...
             // If no correspond mapping is found as key, just treat it as touch
-            if (!make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
-                make_mouse_event(input_event, guest_event, get_current_focus_screen());
+            if (screen_rect.contains(eka2l1::point(input_event.mouse_.pos_x_, input_event.mouse_.pos_y_))) {
+                drivers::input_event original_input_evt = input_event;
 
-                touch_shipper.add_new_event(guest_event);
-                root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
-                touch_shipper.clear();
-            } else {
-                key_shipper.add_new_event(guest_event);
-                key_shipper.start_shipping();
+                input_event.key_.code_ = epoc::KEYBIND_TYPE_MOUSE_CODE_BASE + input_event.mouse_.button_;
+
+                switch (input_event.mouse_.action_) {
+                case drivers::mouse_action_press:
+                    input_event.key_.state_ = drivers::key_state::pressed;
+                    break;
+
+                case drivers::mouse_action_repeat:
+                    input_event.key_.state_ = drivers::key_state::repeat;
+                    break;
+
+                case drivers::mouse_action_release:
+                    input_event.key_.state_ = drivers::key_state::released;
+                    break;
+
+                default:
+                    input_event.key_.state_ = drivers::key_state::pressed;
+                    break;
+                }
+
+                if (!make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
+                    make_mouse_event(original_input_evt, guest_event, get_current_focus_screen());
+
+                    touch_shipper.add_new_event(guest_event);
+                    root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+                    touch_shipper.clear();
+                } else {
+                    key_shipper.add_new_event(guest_event);
+                    key_shipper.start_shipping();
+                }
             }
 
             break;
+        }
 
         default:
             LOG_ERROR("Unknown driver event type {}", static_cast<int>(input_event.type_));

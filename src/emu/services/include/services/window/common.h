@@ -703,7 +703,7 @@ namespace eka2l1::epoc {
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
     TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation);
 
-    static constexpr std::uint32_t KEYBIND_TYPE_MOUSE_CODE_BASE = 0x01000000;
+    static constexpr std::uint32_t KEYBIND_TYPE_MOUSE_CODE_BASE = 0x500000;
     
     typedef std::map<std::pair<int, int>, std::uint32_t> button_map;
     typedef std::map<std::uint32_t, std::uint32_t> key_map;
