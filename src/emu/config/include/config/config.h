@@ -27,6 +27,10 @@
 #include <vector>
 
 namespace eka2l1::config {
+    static constexpr const char *KEYBIND_TYPE_KEY = "key";
+    static constexpr const char *KEYBIND_TYPE_CONTROLLER = "controller";
+    static constexpr const char *KEYBIND_TYPE_MOUSE = "mouse";
+
     struct keybind {
         struct {
             std::string type; // one of "key", "controller"
@@ -80,6 +84,8 @@ namespace eka2l1::config {
         bool fbs_enable_compression_queue{ false };
         bool accurate_ipc_timing{ false };
         bool enable_btrace{ false };
+
+        bool stop_warn_touch_disabled { false };
 
         std::vector<keybind> keybinds;
         std::atomic<std::uint16_t> time_getter_sleep_us { 0 };

@@ -56,11 +56,11 @@ namespace eka2l1::config {
         emitter << YAML::BeginMap;
         emitter << YAML::Key << "type" << YAML::Value << kb.source.type;
         emitter << YAML::Key << "data" << YAML::Value;
-        if (kb.source.type == "key") {
+        if ((kb.source.type == config::KEYBIND_TYPE_KEY) || (kb.source.type == config::KEYBIND_TYPE_MOUSE)) {
             emitter << YAML::BeginMap;
             emitter << YAML::Key << "keycode" << YAML::Value << kb.source.data.keycode;
             emitter << YAML::EndMap;
-        } else if (kb.source.type == "controller") {
+        } else if (kb.source.type == config::KEYBIND_TYPE_CONTROLLER) {
             emitter << YAML::BeginMap;
             emitter << YAML::Key << "controller_id" << YAML::Value << kb.source.data.button.controller_id;
             emitter << YAML::Key << "button_id" << YAML::Value << kb.source.data.button.button_id;
@@ -108,6 +108,7 @@ namespace eka2l1::config {
         config_file_emit_single(emitter, "fbs-enable-compression-queue", fbs_enable_compression_queue);
         config_file_emit_single(emitter, "accurate-ipc-timing", accurate_ipc_timing);
         config_file_emit_single(emitter, "enable-btrace", enable_btrace);
+        config_file_emit_single(emitter, "stop-warn-touchscreen-disabled", stop_warn_touch_disabled);
 
         emitter << YAML::EndMap;
 
@@ -168,6 +169,7 @@ namespace eka2l1::config {
         get_yaml_value(node, "fbs-enable-compression-queue", &fbs_enable_compression_queue, false);
         get_yaml_value(node, "accurate-ipc-timing", &accurate_ipc_timing, false);
         get_yaml_value(node, "enable-btrace", &enable_btrace, false);
+        get_yaml_value(node, "stop-warn-touchscreen-disabled", &stop_warn_touch_disabled, false);
 
         YAML::Node keybind_node;
         try {
@@ -181,9 +183,9 @@ namespace eka2l1::config {
             kb.target = keybind_node[i]["target"].as<std::uint32_t>();
             std::string source_type = keybind_node[i]["source"]["type"].as<std::string>();
             kb.source.type = source_type;
-            if (source_type == "key") {
+            if ((source_type == config::KEYBIND_TYPE_KEY) || (source_type == config::KEYBIND_TYPE_MOUSE)) {
                 kb.source.data.keycode = keybind_node[i]["source"]["data"]["keycode"].as<std::uint32_t>();
-            } else if (source_type == "controller") {
+            } else if (source_type == config::KEYBIND_TYPE_CONTROLLER) {
                 kb.source.data.button.controller_id = keybind_node[i]["source"]["data"]["controller_id"].as<int>();
                 kb.source.data.button.button_id = keybind_node[i]["source"]["data"]["button_id"].as<int>();
             }
