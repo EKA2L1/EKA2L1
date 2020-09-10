@@ -273,7 +273,9 @@ namespace eka2l1 {
                 }
 
                 if ((kb.source.type == config::KEYBIND_TYPE_KEY) || is_mouse) {
-                    winserv->input_mapping.key_input_map[kb.source.data.keycode] = (is_mouse ? 0 : epoc::KEYBIND_TYPE_MOUSE_CODE_BASE) + kb.target;
+                    const std::uint32_t bind_keycode = (is_mouse ? epoc::KEYBIND_TYPE_MOUSE_CODE_BASE : 0) + kb.source.data.keycode;
+
+                    winserv->input_mapping.key_input_map[bind_keycode] = kb.target;
                     key_binder_state.key_bind_name[kb.target] = (is_mouse ? "M" : "") + std::to_string(kb.source.data.keycode);
                 } else if (kb.source.type == config::KEYBIND_TYPE_CONTROLLER) {
                     winserv->input_mapping.button_input_map[std::make_pair(kb.source.data.button.controller_id, kb.source.data.button.button_id)] = kb.target;
