@@ -103,6 +103,10 @@ namespace eka2l1 {
             return vec2(x - rhs.x, y - rhs.y);
         }
 
+        vec2 operator*(const vec2 &rhs) const {
+            return vec2(x * rhs.x, y * rhs.y);
+        }
+
         vec2 operator*(const int rhs) const {
             return vec2(x * rhs, y * rhs);
         }
