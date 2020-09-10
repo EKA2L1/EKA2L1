@@ -24,13 +24,15 @@
 
 #pragma once
 
-#include <common/vecx.h>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
 #include <common/e32inc.h>
+#include <common/vecx.h>
+
 #include <drivers/graphics/emu_window.h>
 #include <e32keys.h>
 
@@ -699,10 +701,13 @@ namespace eka2l1::epoc {
     static constexpr std::uint16_t WS_V93_BUILD_VER = 171;
 
     TKeyCode map_scancode_to_keycode(TStdScanCode scan_code);
-
     TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation);
+
+    static constexpr std::uint32_t KEYBIND_TYPE_MOUSE_CODE_BASE = 0x01000000;
+    
     typedef std::map<std::pair<int, int>, std::uint32_t> button_map;
     typedef std::map<std::uint32_t, std::uint32_t> key_map;
-    std::uint32_t map_button_to_inputcode(button_map &map, int controller_id, int button);
-    std::uint32_t map_key_to_inputcode(key_map &map, std::uint32_t keycode);
+    
+    std::optional<std::uint32_t> map_button_to_inputcode(button_map &map, int controller_id, int button);
+    std::optional<std::uint32_t> map_key_to_inputcode(key_map &map, std::uint32_t keycode);
 }

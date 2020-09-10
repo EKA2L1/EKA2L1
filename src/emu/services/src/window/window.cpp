@@ -1177,22 +1177,42 @@ namespace eka2l1 {
 
     constexpr std::int64_t input_update_us = 100;
 
-    void make_key_event(epoc::key_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+    bool make_key_event(epoc::key_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         // For up and down events, the keycode will always be 0
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        guest_evt_.key_evt_.scancode = epoc::map_key_to_inputcode(map, driver_evt_.key_.code_);
+        
+        std::optional<std::uint32_t> key_received = epoc::map_key_to_inputcode(map, driver_evt_.key_.code_);
+        bool found_correspond_mapping = true;
+
+        if (!key_received.has_value()) {
+            key_received = driver_evt_.key_.code_;
+            found_correspond_mapping = false;
+        }
+
+        guest_evt_.key_evt_.scancode = key_received.value();
         guest_evt_.key_evt_.repeats = 0; // TODO?
         guest_evt_.key_evt_.modifiers = 0;
+
+        return found_correspond_mapping;
     }
 
-    void make_button_event(epoc::button_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+    bool make_button_event(epoc::button_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.button_.state_ == drivers::button_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        guest_evt_.key_evt_.scancode = epoc::map_button_to_inputcode(map, driver_evt_.button_.controller_, driver_evt_.button_.button_);
+        
+        std::optional<std::uint32_t> mapped = epoc::map_button_to_inputcode(map, driver_evt_.button_.controller_, driver_evt_.button_.button_);
+        
+        if (!mapped.has_value()) {
+            return false;
+        }
+
+        guest_evt_.key_evt_.scancode = mapped.value();
         guest_evt_.key_evt_.repeats = 0; // TODO?
         guest_evt_.key_evt_.modifiers = 0;
+
+        return true;
     }
 
     /**
@@ -1202,21 +1222,21 @@ namespace eka2l1 {
         guest_evt_.type = epoc::event_code::touch;
 
         switch (driver_evt_.mouse_.button_) {
-        case drivers::mouse_button::left: {
-            if (driver_evt_.mouse_.action_ == drivers::mouse_action::repeat) {
+        case drivers::mouse_button_left: {
+            if (driver_evt_.mouse_.action_ == drivers::mouse_action_repeat) {
                 guest_evt_.adv_pointer_evt_.evtype = epoc::event_type::drag;
             } else {
-                guest_evt_.adv_pointer_evt_.evtype = (driver_evt_.mouse_.action_ == drivers::mouse_action::press) ? epoc::event_type::button1down : epoc::event_type::button1up;
+                guest_evt_.adv_pointer_evt_.evtype = (driver_evt_.mouse_.action_ == drivers::mouse_action_press) ? epoc::event_type::button1down : epoc::event_type::button1up;
             }
 
             break;
         }
-        case drivers::mouse_button::middle: {
-            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ? epoc::event_type::button2down : epoc::event_type::button2up;
+        case drivers::mouse_button_middle: {
+            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action_press ? epoc::event_type::button2down : epoc::event_type::button2up;
             break;
         }
-        case drivers::mouse_button::right: {
-            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action::press ? epoc::event_type::button3down : epoc::event_type::button3up;
+        case drivers::mouse_button_right: {
+            guest_evt_.adv_pointer_evt_.evtype = driver_evt_.mouse_.action_ == drivers::mouse_action_press ? epoc::event_type::button3down : epoc::event_type::button3up;
             break;
         }
         }
@@ -1283,19 +1303,51 @@ namespace eka2l1 {
             make_key_event(input_mapping.key_input_map, input_event, guest_event);
             key_shipper.add_new_event(guest_event);
             key_shipper.start_shipping();
+
             break;
 
         case drivers::input_event_type::button:
-            make_button_event(input_mapping.button_input_map, input_event, guest_event);
-            key_shipper.add_new_event(guest_event);
-            key_shipper.start_shipping();
+            if (make_button_event(input_mapping.button_input_map, input_event, guest_event)) {
+                key_shipper.add_new_event(guest_event);
+                key_shipper.start_shipping();
+            }
+
             break;
 
         case drivers::input_event_type::touch:
-            make_mouse_event(input_event, guest_event, get_current_focus_screen());
-            touch_shipper.add_new_event(guest_event);
-            root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
-            touch_shipper.clear();
+            input_event.key_.code_ = epoc::KEYBIND_TYPE_MOUSE_CODE_BASE + input_event.mouse_.button_;
+
+            switch (input_event.mouse_.action_) {
+            case drivers::mouse_action_press:
+                input_event.key_.state_ = drivers::key_state::pressed;
+                break;
+
+            case drivers::mouse_action_repeat:
+                input_event.key_.state_ = drivers::key_state::repeat;
+                break;
+
+            case drivers::mouse_action_release:
+                input_event.key_.state_ = drivers::key_state::released;
+                break;
+
+            default:
+                input_event.key_.state_ = drivers::key_state::pressed;
+                break;
+            }
+
+            // For touch, try to map to keycode first...
+            // If no correspond mapping is found as key, just treat it as touch
+            if (!make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
+                make_mouse_event(input_event, guest_event, get_current_focus_screen());
+
+                touch_shipper.add_new_event(guest_event);
+                root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+                touch_shipper.clear();
+            } else {
+                key_shipper.add_new_event(guest_event);
+                key_shipper.start_shipping();
+            }
+
             break;
 
         default:
