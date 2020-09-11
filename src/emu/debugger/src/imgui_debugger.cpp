@@ -126,7 +126,8 @@ namespace eka2l1 {
         , active_screen(0)
         , alserv(nullptr)
         , winserv(nullptr)
-        , oom(nullptr) {
+        , oom(nullptr)
+        , should_show_menu_fullscreen(false) {
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
@@ -1474,8 +1475,20 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_menu() {
+        int num_pops = 0;
+
+        if (renderer->is_fullscreen()) {    
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.00001f);
+            num_pops++;
+        }
+
         if (ImGui::BeginMainMenuBar()) {
             conf->menu_height = ImGui::GetWindowSize().y;
+
+            if (should_show_menu_fullscreen) {
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+                num_pops++;
+            }
 
             if (ImGui::BeginMenu("File")) {
                 ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
@@ -1554,7 +1567,18 @@ namespace eka2l1 {
                 ImGui::EndMenu();
             }
 
+            if (renderer->is_fullscreen()) {
+                should_show_menu_fullscreen = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) 
+                    || ImGui::IsWindowHovered(ImGuiHoveredFlags_RectOnly);
+            } else {
+                should_show_menu_fullscreen = false;
+            }
+
             ImGui::EndMainMenuBar();
+        }
+
+        if (num_pops) {
+            ImGui::PopStyleVar(num_pops);
         }
     }
 

@@ -205,6 +205,8 @@ namespace eka2l1 {
         drivers::handle phony_icon;
         eka2l1::vec2 phony_size;
 
+        bool should_show_menu_fullscreen;
+
     protected:
         void do_install_package();
 
