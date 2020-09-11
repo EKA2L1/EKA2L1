@@ -65,9 +65,7 @@ namespace eka2l1::drivers {
         bool set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
         
         bool crop() override;
-        bool record() override {
-            return true;
-        }
+        bool record() override;
     };
 }
 

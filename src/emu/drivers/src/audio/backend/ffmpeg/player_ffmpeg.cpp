@@ -223,6 +223,16 @@ namespace eka2l1::drivers {
         return true;
     }
 
+    bool player_ffmpeg::crop() {
+        LOG_ERROR("Crop audio operation unsupported in FFMPEG backend");
+        return false;
+    }
+
+    bool player_ffmpeg::record() {
+        LOG_ERROR("Record audio operation unsupported in FFMPEG backend");
+        return false;
+    }
+
     player_ffmpeg::player_ffmpeg(audio_driver *driver)
         : player_shared(driver) {
     }

@@ -29,6 +29,7 @@
 
 #include <drivers/audio/backend/wmf/player_wmf.h>
 
+#include <common/fileutils.h>
 #include <common/path.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -229,6 +230,26 @@ namespace eka2l1::drivers {
         return true;
     }
 
+    static bool create_source_reader_and_configure(player_wmf_request *request_wmf) {
+        const std::u16string url_16 = common::utf8_to_ucs2(request_wmf->url_);
+
+        HRESULT hr = MFCreateSourceReaderFromURL(
+            reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &request_wmf->reader_);
+
+        if (!SUCCEEDED(hr)) {
+            LOG_ERROR("Unable to queue new play URL {} (can't open source reader)", request_wmf->url_);
+            return false;
+        }
+
+        if (!configure_stream_for_pcm(*request_wmf)) {
+            LOG_ERROR("Error while configure WMF stream!");
+            SafeRelease(&request_wmf->reader_);
+            return false;
+        }
+
+        return true;
+    }
+
     bool player_wmf::queue_url(const std::string &url) {
         player_request_instance request = std::make_unique<player_wmf_request>();
         player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
@@ -237,19 +258,7 @@ namespace eka2l1::drivers {
         request_wmf->data_pointer_ = 0;
         request_wmf->url_ = url;
 
-        const std::u16string url_16 = common::utf8_to_ucs2(url);
-
-        HRESULT hr = MFCreateSourceReaderFromURL(
-            reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &request_wmf->reader_);
-
-        if (!SUCCEEDED(hr)) {
-            LOG_ERROR("Unable to queue new play URL {} (can't open source reader)", url);
-            return false;
-        }
-
-        if (!configure_stream_for_pcm(*request_wmf)) {
-            LOG_ERROR("Error while configure WMF stream!");
-            SafeRelease(&request_wmf->reader_);
+        if (!create_source_reader_and_configure(request_wmf)) {
             return false;
         }
 
@@ -493,10 +502,10 @@ namespace eka2l1::drivers {
         player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(requests_.front().get());
 
         // Construct an temporary url to write new samples to
-        const std::string url_before = eka2l1::file_directory(request_wmf->url_) + eka2l1::filename(request_wmf->url_) + "_temp" + eka2l1::path_extension(request_wmf->url_);
-        const std::u16string url_16_before = common::utf8_to_ucs2(url_before);
+        const std::string url_new = eka2l1::file_directory(request_wmf->url_) + eka2l1::filename(request_wmf->url_) + "_temp" + eka2l1::path_extension(request_wmf->url_);
+        const std::u16string url_16_new = common::utf8_to_ucs2(url_new);
 
-        HRESULT result = MFCreateSinkWriterFromURL(reinterpret_cast<LPCWSTR>(url_16_before.c_str()), nullptr, nullptr, &request_wmf->writer_);
+        HRESULT result = MFCreateSinkWriterFromURL(reinterpret_cast<LPCWSTR>(url_16_new.c_str()), nullptr, nullptr, &request_wmf->writer_);
         if (result != S_OK) {
             LOG_ERROR("Unable to create sink writer to do cropping!");
             return false;
@@ -516,7 +525,16 @@ namespace eka2l1::drivers {
         SafeRelease(&request_wmf->writer_);
 
         // Recreate reader stream. todo
-        
+        common::move_file(request_wmf->url_, url_new);
+        SafeRelease(&request_wmf->reader_);
+
+        request_wmf->data_pointer_ = 0;
+
+        return create_source_reader_and_configure(request_wmf);
+    }
+
+    bool player_wmf::record() {
+        LOG_ERROR("Record for WMF unimplemented!");
         return true;
     }
 }
