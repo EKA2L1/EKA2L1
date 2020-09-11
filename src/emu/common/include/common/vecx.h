@@ -63,6 +63,19 @@ namespace eka2l1 {
             return newv;
         }
 
+        vecx<T, SIZE> operator+(const vecx<T, SIZE> &rhs) {
+            vecx<T, SIZE> newv;
+            for (std::size_t i = 0; i < SIZE; i++) {
+                newv[i] = elements[i] + rhs.elements[i];
+            }
+
+            return newv;
+        }
+
+        void operator+=(const vecx<T, SIZE> &rhs) {
+            *this = *this + rhs;
+        }
+
         bool operator==(const eka2l1::vecx<T, SIZE> &v) {
             for (std::size_t i = 0; i < SIZE; i++) {
                 if (elements[i] != v.elements[i]) {
