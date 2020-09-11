@@ -77,6 +77,8 @@ namespace eka2l1::desktop {
         window_server *winserv;
 
         bool mouse_down[5];
+        vec2d mouse_scroll;
+
         std::mutex input_mutex;
 
         void stage_one();

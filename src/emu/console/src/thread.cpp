@@ -102,9 +102,9 @@ static eka2l1::drivers::input_event on_controller_button_event(eka2l1::window_se
     return evt;
 }
 
-static void on_ui_window_mouse_scrolling(void *userdata, eka2l1::vec2 v) {
-    ImGuiIO &io = ImGui::GetIO();
-    io.MouseWheel += static_cast<float>(v.y);
+static void on_ui_window_mouse_scrolling(void *userdata, eka2l1::vec2d v) {
+    eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+    emu->mouse_scroll = v;
 }
 
 static void on_ui_window_touch_move(void *userdata, eka2l1::vec2 v) {
@@ -409,6 +409,11 @@ namespace eka2l1::desktop {
 
             const vec2d mouse_pos = state.window->get_mouse_pos();
             io.MousePos = ImVec2(static_cast<float>(mouse_pos[0] / state.conf.ui_scale), static_cast<float>(mouse_pos[1] / state.conf.ui_scale));
+
+            io.MouseWheelH = static_cast<float>(state.mouse_scroll[0]);
+            io.MouseWheel = static_cast<float>(state.mouse_scroll[1]);
+
+            state.mouse_scroll = { 0.0, 0.0 };
 
             // Render the graphics
             state.deb_renderer->draw(state.graphics_driver.get(), cmd_builder.get(), nws.x, nws.y, nwsb.x, nwsb.y);
