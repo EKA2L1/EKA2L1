@@ -70,7 +70,7 @@ void mouse_callback(GLFWwindow *window, int button, int action, int mods) {
 
 void mouse_wheel_callback(GLFWwindow *window, double xoff, double yoff) {
     eka2l1::drivers::emu_window_glfw3 *win = reinterpret_cast<decltype(win)>(glfwGetWindowUserPointer(window));
-    CALL_IF_VALID(win->mouse_wheeling, win->get_userdata(), eka2l1::vec2(static_cast<int>(xoff), static_cast<int>(yoff)));
+    CALL_IF_VALID(win->mouse_wheeling, win->get_userdata(), { xoff, yoff });
 }
 
 void fb_resize_callback(GLFWwindow *window, int width, int height) {

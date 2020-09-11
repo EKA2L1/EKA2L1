@@ -146,7 +146,7 @@ namespace eka2l1 {
             /* Callback handler */
             std::function<void(void *, point, int, int)> raw_mouse_event;
 
-            std::function<void(void *, vec2)> mouse_wheeling;
+            std::function<void(void *, vec2d)> mouse_wheeling;
 
             /*! Call when a touch input is triggered */
             std::function<void(void *, point)> touch_pressed;
