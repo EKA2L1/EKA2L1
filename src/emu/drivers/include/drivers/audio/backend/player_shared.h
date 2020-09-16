@@ -33,7 +33,6 @@ namespace eka2l1::drivers {
     class audio_driver;
 
     struct player_request_base {
-        player_request_type type_;
         std::string url_;
 
         std::vector<std::uint8_t> data_;
@@ -41,6 +40,7 @@ namespace eka2l1::drivers {
         std::uint32_t freq_;
         std::uint32_t encoding_;
         std::uint32_t channels_;
+        std::uint32_t format_;
 
         std::size_t data_pointer_;
         std::uint32_t flags_;
@@ -65,17 +65,23 @@ namespace eka2l1::drivers {
     using player_request_instance = std::unique_ptr<player_request_base>;
 
     struct player_shared : public player {
+    private:
         audio_driver *aud_;
 
-        std::unique_ptr<audio_output_stream> output_stream_;
-        std::queue<player_request_instance> requests_;
-        std::mutex request_queue_lock_;
+    protected:
+        virtual bool is_ready_to_play(player_request_instance &request) = 0;
 
+        std::mutex request_queue_lock_;
+        std::queue<player_request_instance> requests_;
         std::vector<player_metadata> metadatas_;
+
+        std::unique_ptr<audio_output_stream> output_stream_;
 
     public:
         explicit player_shared(audio_driver *driver);
         ~player_shared() override;
+
+        virtual bool make_backend_source(player_request_instance &request) = 0;
 
         virtual void reset_request(player_request_instance &request) = 0;
         virtual void get_more_data(player_request_instance &request) = 0;
@@ -90,5 +96,16 @@ namespace eka2l1::drivers {
 
         void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) override;
         void set_position(const std::uint64_t pos_in_us) override;
+        
+        bool set_dest_freq(const std::uint32_t freq) override;
+        bool set_dest_channel_count(const std::uint32_t cn) override;
+        bool set_dest_encoding(const std::uint32_t enc) override;
+        void set_dest_container_format(const std::uint32_t confor) override;
+
+        std::uint32_t get_dest_freq() override;
+        std::uint32_t get_dest_channel_count() override;
+        std::uint32_t get_dest_encoding() override;
+
+        bool prepare_play_newest() override;
     };
 }

@@ -74,9 +74,7 @@ namespace eka2l1::drivers {
                 }
 
                 // Reset the stream if we are the custom format guy!
-                if (request->type_ == player_request_format) {
-                    reset_request(request);
-                }
+                reset_request(request);
 
                 request->data_pointer_ = 0;
                 request->flags_ = 0;
@@ -111,6 +109,10 @@ namespace eka2l1::drivers {
             player_request_instance &request = requests_.front();
 
             reset_request(request);
+
+            if (!is_ready_to_play(request)) {
+                return false;
+            }
 
             request->data_pointer_ = 0;
             request->flags_ = 0;
@@ -164,29 +166,90 @@ namespace eka2l1::drivers {
             return;
         }
 
-        switch (request_ref->type_) {
-        case player_request_format: {
-            set_position_for_custom_format(request_ref, pos_in_us);
-            break;
+        set_position_for_custom_format(request_ref, pos_in_us);
+    }
+
+    bool player_shared::set_dest_freq(const std::uint32_t freq) {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return false;
         }
 
-        case player_request_raw_pcm: {
-            // Calculate the data position by using audio hz
-            // Hz / 1000000 = frames per microseconds
-            std::uint64_t total_frame_to_seek_to = common::multiply_and_divide_qwords(pos_in_us, request_ref->freq_, 1000000);
-            request_ref->data_pointer_ = total_frame_to_seek_to * sizeof(std::uint16_t) * request_ref->channels_;
+        request_ref->freq_ = freq;
+        return true;
+    }
 
-            if (request_ref->data_pointer_ >= request_ref->data_.size()) {
-                LOG_TRACE("Setting position for PCM overflowed! Resetting the position to 0");
-                request_ref->data_pointer_ = 0;
-            }
+    bool player_shared::set_dest_channel_count(const std::uint32_t cn) {
+        player_request_instance &request_ref = requests_.back();
 
-            break;
+        if (!request_ref) {
+            return false;
         }
 
-        default:
-            break;
+        request_ref->channels_ = cn;
+        return true;
+    }
+
+    bool player_shared::set_dest_encoding(const std::uint32_t enc) {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return false;
         }
+
+        request_ref->encoding_ = enc;
+        return true;
+    }
+
+    void player_shared::set_dest_container_format(const std::uint32_t confor) {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return;
+        }
+
+        request_ref->format_ = confor;
+    }
+
+    std::uint32_t player_shared::get_dest_freq() {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return 0;
+        }
+
+        return request_ref->freq_;;
+    }
+
+    std::uint32_t player_shared::get_dest_channel_count() {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return 0;
+        }
+
+        return request_ref->channels_;
+    }
+
+    std::uint32_t player_shared::get_dest_encoding() {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return 0;
+        }
+
+        return request_ref->encoding_;
+    }
+
+    bool player_shared::prepare_play_newest() {
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return false;
+        }
+
+        return make_backend_source(request_ref);
     }
 
     player_shared::player_shared(audio_driver *driver)
