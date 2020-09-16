@@ -2402,6 +2402,10 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, set_exception_handler_eka1, address handler, std::uint32_t mask, kernel::handle h) {
+        return set_exception_handler(kern, h, handler, mask);
+    }
+
     BRIDGE_FUNC(std::int32_t, raise_exception, kernel::handle h, std::int32_t type) {
         LOG_ERROR("Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
@@ -3115,6 +3119,28 @@ namespace eka2l1::epoc {
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
     }
 
+    std::int32_t thread_get_heap_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        address *addr_ptr = eka2l1::ptr<address>(create_info->arg1_).get(target_thread->owning_process());
+
+        if (!addr_ptr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        *addr_ptr = target_thread->get_local_data()->heap.ptr_address();
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     std::int32_t server_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *target_process = target_thread->owning_process();
@@ -3250,6 +3276,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_compress_heap:
             return compress_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_get_heap_thread:
+            return thread_get_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         default:
             LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -3472,7 +3501,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800012, user_svr_rom_root_dir_address),
         BRIDGE_REGISTER(0x00800015, utc_offset),
         BRIDGE_REGISTER(0x00800016, get_global_userdata),
-        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+        BRIDGE_REGISTER(0x00C10000, hle_dispatch),
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
@@ -3567,7 +3596,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
-        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+        BRIDGE_REGISTER(0x00C10000, hle_dispatch),
 
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, object_next),
@@ -3717,7 +3746,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
-        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+        BRIDGE_REGISTER(0x00C10000, hle_dispatch),
 
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, object_next),
@@ -3914,6 +3943,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC0009F, set_exception_handler_eka1),
         BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
         BRIDGE_REGISTER(0xC10000, hle_dispatch),
