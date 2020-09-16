@@ -1331,7 +1331,7 @@ namespace eka2l1 {
         return f_->size();
     }
 
-    void wo_file_stream::write(const void *buf, const std::uint32_t write_size) {
-        f_->write_file(buf, write_size, 1);
+    std::uint64_t wo_file_stream::write(const void *buf, const std::uint64_t write_size) {
+        return f_->write_file(buf, static_cast<std::uint32_t>(write_size), 1);
     }
 }
