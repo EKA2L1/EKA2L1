@@ -21,10 +21,6 @@
 
 .macro CallHleDispatch func_id
     mov r0, #\func_id
-.ifdef EKA2
-    swi 0x800030
-    bx lr
-.else
     swi 0xC10000
-.endif
+    bx lr
 .endm

@@ -16,16 +16,20 @@ SYSTEMINCLUDE   \epoc32\include
 
 SOURCEPATH	    ..\..\src
 
-SOURCE		main.cpp
+SOURCE		    main.cpp
 SOURCE          impl.cpp
 SOURCE          dispatch.s
+SOURCE          clip.cpp
+SOURCE          recorder.cpp
+SOURCE          player.cpp
 
-DEFFILE ..\..\eabi\mediaclientaudio_general.def
 
 nostrictdef
 
 LIBRARY		euser.lib mediaclient.lib efsrv.lib
 STATICLIBRARY   pcommon.lib
+
+DEFFILE ..\..\eabi\mediaclientaudio_general.def
 
 DEBUGGABLE_UDEBONLY
 

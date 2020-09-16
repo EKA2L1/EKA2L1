@@ -17,13 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-.include "../../../pcommon/inc/sv.S"
+#ifndef MEDIA_CLIENT_AUDIO_COMMON_H_
+#define MEDIA_CLIENT_AUDIO_COMMON_H_
 
-.global UpdateScreen
-.global FastBlit
+#if defined(__SERIES60_1X_)
+#define MCA_NEW 1
+#elif defined(__SERIES80__)
+#define MCA_NEW 2
+#else
+#define MCA_NEW 3
+#endif
 
-UpdateScreen:
-    CallHleDispatch 0x1
-
-FastBlit:
-    CallHleDispatch 0x2
+#endif

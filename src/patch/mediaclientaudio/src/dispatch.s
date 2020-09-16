@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-.include "../../../pcommon/inc/sv.s"
+.include "../../../pcommon/inc/sv.S"
 
 .global EAudioPlayerNewInstance
 .global EAudioPlayerNotifyAnyDone
@@ -37,6 +37,13 @@
 .global EAudioPlayerGetBalance
 .global EAudioPlayerSetRepeats
 .global EAudioPlayerDestroy
+.global EAudioPlayerGetDestinationSampleRate
+.global EAudioPlayerSetDestinationSampleRate
+.global EAudioPlayerGetDestinationChannelCount
+.global EAudioPlayerSetDestinationChannelCount
+.global EAudioPlayerSetDestinationEncoding
+.global EAudioPlayerGetDestinationEncoding
+.global EAudioPlayerSetContainerFormat
 
 EAudioPlayerNewInstance:
     CallHleDispatch 0x20
@@ -91,3 +98,24 @@ EAudioPlayerSetRepeats:
 
 EAudioPlayerDestroy:
     CallHleDispatch 0x31
+
+EAudioPlayerGetDestinationSampleRate:
+    CallHleDispatch 0x32
+
+EAudioPlayerSetDestinationSampleRate:
+    CallHleDispatch 0x33
+
+EAudioPlayerGetDestinationChannelCount:
+    CallHleDispatch 0x34
+
+EAudioPlayerSetDestinationChannelCount:
+    CallHleDispatch 0x35
+
+EAudioPlayerSetDestinationEncoding:
+    CallHleDispatch 0x36
+
+EAudioPlayerGetDestinationEncoding:
+    CallHleDispatch 0x37
+
+EAudioPlayerSetContainerFormat:
+    CallHleDispatch 0x38

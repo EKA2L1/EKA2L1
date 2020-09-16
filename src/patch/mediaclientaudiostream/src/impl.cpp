@@ -22,6 +22,7 @@
 #include "dispatch.h"
 #include "impl.h"
 #include "log.h"
+#include "aud.h"
 
 #ifdef EKA2
 #include <e32cmn.h>
@@ -229,63 +230,6 @@ TInt CMMFMdaAudioOutputStream::GetVolume() const {
     }
 
     return result;
-}
-
-static TInt ConvertFreqEnumToNumber(const TInt caps) {
-    switch (caps) {
-    case TMdaAudioDataSettings::ESampleRate8000Hz:
-        return 8000;
-    
-    case TMdaAudioDataSettings::ESampleRate11025Hz:
-        return 11025;
-
-    case TMdaAudioDataSettings::ESampleRate12000Hz:
-        return 12000;
-
-    case TMdaAudioDataSettings::ESampleRate16000Hz:
-        return 16000;
-
-    case TMdaAudioDataSettings::ESampleRate22050Hz:
-        return 22050;
-
-    case TMdaAudioDataSettings::ESampleRate24000Hz:
-        return 24000;
-
-    case TMdaAudioDataSettings::ESampleRate32000Hz:
-        return 32000;
-
-    case TMdaAudioDataSettings::ESampleRate44100Hz:
-        return 44100;
-
-    case TMdaAudioDataSettings::ESampleRate48000Hz:
-        return 48000;
-
-    case TMdaAudioDataSettings::ESampleRate96000Hz:
-        return 96000;
-
-    case TMdaAudioDataSettings::ESampleRate64000Hz:
-        return 64000;
-
-    default:
-        break;
-    }
-
-    return -1;
-}
-
-static TInt ConvertChannelEnumToNum(const TInt caps) {
-    switch (caps) {
-    case TMdaAudioDataSettings::EChannelsMono:
-        return 1;
-
-    case TMdaAudioDataSettings::EChannelsStereo:
-        return 2;
-
-    default:
-        break;
-    }
-
-    return -1;
 }
 
 TInt CMMFMdaAudioOutputStream::SetAudioProperties(const TInt aFreq, const TInt aChannels) {

@@ -19,6 +19,9 @@ SOURCEPATH	    ..\..\src
 SOURCE          main.cpp
 SOURCE          impl.cpp
 SOURCE          dispatch.s
+SOURCE          clip.cpp
+SOURCE          recorder.cpp
+SOURCE          player.cpp
 
 nostrictdef
 
