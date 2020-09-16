@@ -4,6 +4,14 @@ function(add_symbian_project FOLDER)
     add_custom_command(
         TARGET ${FOLDER}
         COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/patch_build.py ${CMAKE_CURRENT_SOURCE_DIR}/${FOLDER}/group)
+
+    get_property(LAST_TARGET GLOBAL PROPERTY LAST_SYMBIAN_PROJECT_TARGET)
+
+    if (LAST_TARGET)
+        add_dependencies(${FOLDER} ${LAST_TARGET})
+    endif()
+
+    set_property(GLOBAL PROPERTY LAST_SYMBIAN_PROJECT_TARGET "${FOLDER}")
 endfunction()
 
 function(add_symbian_patch NAME)
