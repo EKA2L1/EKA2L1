@@ -50,6 +50,7 @@
 #include <services/shutdown/shutdown.h>
 #include <services/sms/sa/sa.h>
 #include <services/socket/socket.h>
+#include <services/sysagt/sysagt.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/ui/eikappui.h>
 #include <services/ui/view/view.h>
@@ -220,6 +221,8 @@ namespace eka2l1 {
 
             if (cfg->enable_srv_akn_skin)
                 CREATE_SERVER(sys, akn_skin_server);
+
+            CREATE_SERVER(sys, system_agent_server);
 
             epoc::initialize_system_properties(sys, cfg);
         }

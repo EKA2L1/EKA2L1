@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2020 EKA2L1 Team
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <epoc/epoc.h>
+#include <services/sysagt/sysagt.h>
+
+#include <utils/consts.h>
+#include <utils/err.h>
+
+namespace eka2l1 {
+    system_agent_server::system_agent_server(eka2l1::system *sys)
+        : service::typical_server(sys, "SystemAgent") {
+    }
+
+    void system_agent_server::connect(service::ipc_context &context) {
+        create_session<system_agent_session>(&context);
+        context.complete(epoc::error_none);
+    }
+
+
+    system_agent_session::system_agent_session(service::typical_server *serv, const kernel::uid ss_id,
+        epoc::version client_version)
+        : service::typical_session(serv, ss_id, client_version) {
+    }
+
+    void system_agent_session::get_state(service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_argument_value<epoc::uid>(0);
+
+        if (!uid) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        kernel_system *kern = ctx->sys->get_kernel_system();
+        property_ptr prop = kern->get_prop(SYSTEM_AGENT_PROPERTY_CATEGORY, uid.value());
+
+        if (!prop) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        // Not check on type on purpose. TODO: This may be harmful.
+        ctx->write_data_to_descriptor_argument<std::int32_t>(1, 0);
+        ctx->complete(epoc::error_none);
+    }
+
+    void system_agent_session::notify_event(service::ipc_context *ctx, const bool any) {
+        if (info_.state_value_) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
+        std::optional<address> uid_des_addr = ctx->get_argument_value<address>(0);
+        std::optional<address> state_des_addr = ctx->get_argument_value<address>(1);
+
+        if (!uid_des_addr || !state_des_addr) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        kernel::process *own_pr = ctx->msg->own_thr->owning_process();
+
+        epoc::des8 *uid_des = eka2l1::ptr<epoc::des8>(uid_des_addr.value()).get(own_pr);
+        epoc::des8 *state_des = eka2l1::ptr<epoc::des8>(state_des_addr.value()).get(own_pr);
+
+        if (!uid_des || !state_des) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (any) {
+            info_.uid_nof_ = 0xFFFFFFFF;
+        } else {
+            std::uint32_t *uid_to_nof_ptr = reinterpret_cast<std::uint32_t*>(uid_des->get_pointer(own_pr));
+            if (!uid_to_nof_ptr) {
+                ctx->complete(epoc::error_bad_descriptor);
+                return;
+            }
+
+            info_.uid_nof_ = *uid_to_nof_ptr;
+        }
+
+        info_.state_value_ = state_des;
+        info_.target_uid_ = uid_des;
+        info_.woke_target_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void system_agent_session::fetch(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
+        case system_agent_get_state:
+            get_state(ctx);
+            break;
+
+        case system_agent_notify_on_event:
+            notify_event(ctx, false);
+            break;
+        
+        default:
+            LOG_ERROR("Unimplemented opcode for System Agent server 0x{:X}", ctx->msg->function);
+            break;
+        }
+    }
+}
