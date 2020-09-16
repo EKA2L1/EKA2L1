@@ -106,4 +106,78 @@ namespace eka2l1::epoc {
 
         return nullptr;
     }
+
+    rw_des_stream::rw_des_stream(epoc::des8 *des, kernel::process *pr)
+        : des_(des)
+        , pr_(pr)
+        , current_pos_(0) {
+
+    }
+    
+    void rw_des_stream::seek(const std::int64_t amount, common::seek_where wh) {
+        const std::uint32_t max_len = des_->get_max_length(pr_);
+
+        switch (wh) {
+        case common::seek_where::beg: {
+            if ((amount >= max_len) || (amount < 0)) {
+                return;
+            }
+
+            current_pos_ = amount;
+            break;
+        }
+
+        case common::seek_where::cur: {
+            if ((current_pos_ + amount >= max_len) || (current_pos_ + amount < 0)) {
+                return;
+            }
+
+            current_pos_ += amount;
+            break;
+        }
+
+        case common::seek_where::end: {
+            if ((amount > 0) || (current_pos_ + amount < 0)) {
+                return;
+            }
+
+            current_pos_ = max_len + amount;
+            break;
+        }
+        }
+
+        if (current_pos_ > des_->get_length()) {
+            des_->set_length(pr_, static_cast<std::uint32_t>(current_pos_));
+        }
+    }
+
+    bool rw_des_stream::valid() {
+        return (current_pos_ < des_->get_max_length(pr_));
+    }
+
+    std::uint64_t rw_des_stream::left() {
+        return des_->get_max_length(pr_) - current_pos_;
+    }
+
+    std::uint64_t rw_des_stream::tell() const {
+        return current_pos_;
+    }
+
+    std::uint64_t rw_des_stream::size() {
+        return des_->get_max_length(pr_);
+    }
+    
+    std::uint64_t rw_des_stream::read(void *buf, const std::uint64_t read_size) {
+        const std::uint64_t to_read = common::min<std::uint64_t>(read_size, left());
+        std::memcpy(buf, des_->get_pointer(pr_) + current_pos_, to_read);
+
+        return to_read;
+    }
+
+    std::uint64_t rw_des_stream::write(const void *buf, const std::uint64_t write_size) {
+        const std::uint64_t to_write = common::min<std::uint64_t>(write_size, left());
+        std::memcpy(des_->get_pointer(pr_) + current_pos_, buf, write_size);
+
+        return write_size;
+    }
 }
