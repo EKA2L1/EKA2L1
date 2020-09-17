@@ -238,23 +238,11 @@ namespace eka2l1::epoc {
     }
 
     void open_font_glyph_v2::destroy(fbscli *cli) {
-        auto serv = cli->server<fbs_server>();
-
-        if (epoc::does_client_use_pointer_instead_of_offset(cli)) {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(serv->guest_general_data_to_host_ptr(offset)));
-        } else {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(this + offset));
-        }
+        // Bitmap data allocated together with glyph info
     }
 
     void open_font_glyph_v3::destroy(fbscli *cli) {
-        auto serv = cli->server<fbs_server>();
-
-        if (epoc::does_client_use_pointer_instead_of_offset(cli)) {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(serv->guest_general_data_to_host_ptr(offset)));
-        } else {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(this + offset));
-        }
+        // Bitmap data allocated together with glyph info
     }
 
     void open_font_session_cache_v3::destroy(fbscli *cli) {
@@ -851,7 +839,9 @@ namespace eka2l1 {
 
     void fbsfont::deref() {
         if (count == 1) {
+            // Free atlas + bitmap
             atlas.free(serv->get_graphics_driver());
+            serv->free_general_data_impl(serv->get_shared_chunk_base() + guest_font_offset);
         }
 
         epoc::ref_count_object::deref();
