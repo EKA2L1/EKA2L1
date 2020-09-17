@@ -122,6 +122,11 @@ void CMMFMdaOutputOpen::Open(CMMFMdaAudioOutputStream *stream) {
     Start(TCallBack(OpenCompleteCallback, stream));
 }
 
+void CMMFMdaOutputOpen::DoCancel() {
+    TRequestStatus *statusPointer = &iStatus;
+    User::RequestComplete(statusPointer, KErrCancel);
+}
+
 /// AUDIO OUTPUT STREAM
 CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
     : iPriority(aPriority)
@@ -170,6 +175,10 @@ void CMMFMdaAudioOutputStream::StartRaw() {
 
 void CMMFMdaAudioOutputStream::Play() {
     // Simulates that buffer has been written to server
+    if (iOpen.IsActive()) {
+        iOpen.Cancel();
+    }
+
     iOpen.Open(this);
 }
 
