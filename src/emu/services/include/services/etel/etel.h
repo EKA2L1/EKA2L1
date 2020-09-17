@@ -31,6 +31,10 @@
 #include <vector>
 
 namespace eka2l1 {
+    namespace service {
+        class property;
+    }
+
     using etel_subsession_instance = std::unique_ptr<etel_subsession>;
     
     std::string get_etel_server_name_by_epocver(const epocver ver);
@@ -60,6 +64,11 @@ namespace eka2l1 {
     };
 
     class etel_server : public service::typical_server {
+    protected:
+        service::property *call_status_prop_;
+
+        void init(kernel_system *kern);
+
     public:
         explicit etel_server(eka2l1::system *sys);
         void connect(service::ipc_context &ctx) override;
