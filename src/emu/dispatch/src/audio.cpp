@@ -631,4 +631,16 @@ namespace eka2l1::dispatch {
         *bytes = stream->ll_stream_->bytes_rendered();
         return epoc::error_none;
     }
+    
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_position, eka2l1::ptr<void> handle, std::uint64_t *the_time) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dsp_epoc_stream *stream = dispatcher->dsp_streams_.get_object(handle.ptr_address());
+
+        if (!stream) {
+            return epoc::error_bad_handle;
+        }
+
+        *the_time = stream->ll_stream_->position();
+        return epoc::error_none;
+    }
 }
