@@ -71,12 +71,6 @@ namespace eka2l1::drivers {
             return samples_played_ * channels_ * sizeof(std::uint16_t);
         }
 
-        const std::size_t position() const {
-            // Divide the played samples with frequency and we get position in seconds.
-            // Gotta multiply it with 1 000 000 us = 1s too
-            return samples_played_ * 1000000 / freq_;
-        }
-
         virtual const four_cc format() const {
             return format_;
         }
@@ -85,6 +79,8 @@ namespace eka2l1::drivers {
             format_ = fmt;
             return true;
         }
+
+        virtual std::uint64_t position() = 0;
 
         virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels) = 0;
         virtual void get_supported_formats(std::vector<four_cc> &cc_list) = 0;
