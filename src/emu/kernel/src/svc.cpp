@@ -3200,6 +3200,10 @@ namespace eka2l1::epoc {
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
 
+        if (kern->get_config()->log_svc) {
+            LOG_TRACE("Calling executor function 0x{:X}", attribute & 0xFF);
+        }
+
         switch (attribute & 0xFF) {
         case epoc::eka1_executor::execute_create_chunk_normal:
         case epoc::eka1_executor::execute_create_chunk_double_ended:
