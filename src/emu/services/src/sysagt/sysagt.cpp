@@ -51,6 +51,8 @@ namespace eka2l1 {
         property_ptr prop = kern->get_prop(SYSTEM_AGENT_PROPERTY_CATEGORY, uid.value());
 
         if (!prop) {
+            LOG_INFO("System Agent can't find state with UID 0x{:X}", uid.value());
+
             ctx->complete(epoc::error_not_found);
             return;
         }
