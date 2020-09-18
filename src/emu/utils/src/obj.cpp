@@ -36,7 +36,8 @@ namespace eka2l1::epoc {
                 objects[i] = obj;
                 obj->ref();
 
-                return make_handle(static_cast<std::uint32_t>(i + 1), next_instance++);
+                next_instance = (next_instance + 1) & 0xFFFF;
+                return make_handle(static_cast<std::uint32_t>(i + 1), next_instance);
             }
         }
 
