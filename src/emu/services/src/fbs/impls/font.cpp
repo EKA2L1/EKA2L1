@@ -503,7 +503,7 @@ namespace eka2l1 {
     void fbs_server::destroy_bitmap_font(T *bmpfont) {
         // On EKA1, free the glyph cache offset
         if (legacy_level() == 2) {
-            epoc::open_font_v1 *ofo = reinterpret_cast<epoc::open_font_v1*>(guest_general_data_to_host_ptr(bmpfont->openfont.cast<std::uint8_t>()));
+            epoc::open_font_v1 *ofo = reinterpret_cast<epoc::open_font_v1*>(guest_general_data_to_host_ptr(bmpfont->openfont.template cast<std::uint8_t>()));
 
             if (ofo->glyph_cache_offset)
                 free_general_data_impl(guest_general_data_to_host_ptr(ofo->glyph_cache_offset));
@@ -514,7 +514,7 @@ namespace eka2l1 {
             // Mark bit 0 as set so that fntstore can recognised the offset model
             free_general_data_impl(reinterpret_cast<std::uint8_t*>(bmpfont) + (bmpfont->openfont.ptr_address() & ~0x1));
         } else {
-            free_general_data_impl(guest_general_data_to_host_ptr(bmpfont->openfont.cast<std::uint8_t>()));
+            free_general_data_impl(guest_general_data_to_host_ptr(bmpfont->openfont.template cast<std::uint8_t>()));
         }
 
         free_general_data(bmpfont);
