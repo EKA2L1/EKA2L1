@@ -229,6 +229,8 @@ namespace eka2l1 {
         eka2l1::drivers::input_event key_evt;
 
         void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
+        void set_logger_visbility(const bool show);
+        
         void queue_error(const std::string &error);
         void handle_shortcuts();
 

@@ -2297,4 +2297,8 @@ namespace eka2l1 {
     void imgui_debugger::notify_clients() {
         debug_cv.notify_all();
     }
+
+    void imgui_debugger::set_logger_visbility(const bool show) {
+        should_show_logger = show;
+    }
 }
