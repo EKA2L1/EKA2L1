@@ -131,6 +131,10 @@ namespace eka2l1 {
                 kern->free_msg(msg.second);
             }
 
+            if (!kern->crr_thread()) {
+                return;
+            }
+
             // Try to send a disconnect message. Headless session and use sync message.
             headless_ = !svr->is_hle();
             eka2l1::ipc_arg arg;
