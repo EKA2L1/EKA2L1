@@ -44,6 +44,11 @@ namespace eka2l1 {
         desc16 = des16 | flag_const
     };
 
+    enum standard_ipc_message {
+        standard_ipc_message_connect = -1,
+        standard_ipc_message_disconnect = -2
+    };
+
     enum {
         bits_per_type = 3
     };

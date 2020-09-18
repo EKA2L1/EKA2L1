@@ -139,7 +139,8 @@ namespace eka2l1::manager {
             });
 
             ipc_complete_callback_handle = kern->register_ipc_complete_callback([this](ipc_msg *msg, const std::int32_t complete_code) {
-                call_ipc_complete(msg->msg_session->get_server()->name(), msg->function, msg);
+                if (msg->msg_session)
+                    call_ipc_complete(msg->msg_session->get_server()->name(), msg->function, msg);
             });
 
             thread_kill_callback_handle = kern->register_thread_kill_callback([this](kernel::thread* target, const std::string& cagetory, const std::int32_t reason) {
