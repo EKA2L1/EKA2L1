@@ -38,6 +38,20 @@
 #include <services/window/window.h>
 
 namespace eka2l1::desktop {
+    emulator::emulator()
+        : symsys(nullptr)
+        , graphics_driver_thread(nullptr)
+        , graphics_driver(nullptr)
+        , audio_driver(nullptr)
+        , deb_renderer(nullptr)
+        , debugger(nullptr)
+        , logger(nullptr)
+        , window(nullptr)
+        , joystick_controller(nullptr)
+        , init_fullscreen(false)
+        , winserv(nullptr) {
+    }
+
     void emulator::stage_one() {
         // Initialize the logger
         logger = std::make_shared<imgui_logger>();

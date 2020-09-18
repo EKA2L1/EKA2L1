@@ -70,6 +70,7 @@ namespace eka2l1::desktop {
         std::atomic<bool> stage_two_inited;
 
         bool first_time;
+        bool init_fullscreen;
 
         common::semaphore graphics_sema;
 
@@ -80,6 +81,8 @@ namespace eka2l1::desktop {
         vec2d mouse_scroll;
 
         std::mutex input_mutex;
+
+        explicit emulator();
 
         void stage_one();
         bool stage_two();

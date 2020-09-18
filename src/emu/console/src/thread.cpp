@@ -382,6 +382,9 @@ namespace eka2l1::desktop {
         std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(cmd_list.get());
 
         state.deb_renderer->init(state.graphics_driver.get(), cmd_builder.get(), state.debugger.get());
+        
+        state.deb_renderer->set_fullscreen(state.init_fullscreen);
+        state.debugger->set_logger_visbility(false);
 
         while (!state.should_ui_quit) {
             const vec2 nws = state.window->window_size();
