@@ -384,7 +384,7 @@ namespace eka2l1::desktop {
         state.deb_renderer->init(state.graphics_driver.get(), cmd_builder.get(), state.debugger.get());
         
         state.deb_renderer->set_fullscreen(state.init_fullscreen);
-        state.debugger->set_logger_visbility(false);
+        state.debugger->set_logger_visbility(!state.init_fullscreen);
 
         while (!state.should_ui_quit) {
             const vec2 nws = state.window->window_size();
