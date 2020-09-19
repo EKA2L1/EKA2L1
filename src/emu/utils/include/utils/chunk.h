@@ -7,7 +7,7 @@ namespace eka2l1::epoc {
     struct eka1_normal_chunk_create_description {
         std::uint32_t init_size_;
         std::uint32_t max_size_;
-        std::uint32_t unk8_;
+        std::uint32_t is_code_;
     };
 
     struct eka1_double_ended_create_description {
