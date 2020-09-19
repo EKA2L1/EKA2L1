@@ -75,6 +75,7 @@ namespace eka2l1::hle {
     }
 
     static std::string get_real_dll_name(std::string dll_name) {
+        const std::string ext = eka2l1::path_extension(dll_name);
         size_t dll_name_end_pos = dll_name.find_first_of("{");
 
         if (FOUND_STR(dll_name_end_pos)) {
@@ -89,7 +90,7 @@ namespace eka2l1::hle {
             }
         }
 
-        return dll_name + ".dll";
+        return dll_name + (ext.empty() ? ".dll" : ext);
     }
 
     static bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, const std::uint32_t iat_offset_from_codebase,
