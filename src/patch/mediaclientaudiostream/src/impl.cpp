@@ -45,6 +45,9 @@ CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aSt
 void CMMFMdaOutputBufferQueue::WriteAndWait() {
     if (iBufferNodes.IsEmpty()) {
         iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
+        iStream->RegisterNotifyBufferSent(iStatus);
+
+        Cancel();
         return;
     }
 
@@ -84,7 +87,8 @@ void CMMFMdaOutputBufferQueue::RunL() {
 }
 
 void CMMFMdaOutputBufferQueue::CleanQueue() {
-    iStream->iCallback.MaoscBufferCopied(KErrAbort, *iCopied->iBuffer);
+    if (iCopied)
+        iStream->iCallback.MaoscBufferCopied(KErrAbort, *iCopied->iBuffer);
 
     // Flush all stored buffers
     while (!iBufferNodes.IsEmpty()) {
@@ -102,11 +106,16 @@ void CMMFMdaOutputBufferQueue::DoCancel() {
 }
 
 void CMMFMdaOutputBufferQueue::StartTransfer() {
+    if (IsActive()) {
+        iStream->RegisterNotifyBufferSent(iStatus);
+        Cancel();
+    }
+
     WriteAndWait();
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
-    : CIdle(CActive::EPriorityIdle) {
+    : CIdle(100) {
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
