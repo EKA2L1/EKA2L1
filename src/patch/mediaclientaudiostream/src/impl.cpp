@@ -46,8 +46,10 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
     if (iBufferNodes.IsEmpty()) {
         iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
         iStream->RegisterNotifyBufferSent(iStatus);
-
+        
+        iCopied = NULL;
         Cancel();
+        
         return;
     }
 
@@ -77,8 +79,10 @@ void CMMFMdaOutputBufferQueue::RunL() {
         if (iStatus == KErrNone)
             iStream->iCallback.MaoscBufferCopied(KErrNone, *iCopied->iBuffer);
 
-        iCopied->Deque();
-        delete iCopied;
+        if (iCopied) {
+            iCopied->Deque();
+            delete iCopied;
+        }
     }
 
     if (iStatus != KErrAbort) {
