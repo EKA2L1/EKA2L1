@@ -109,6 +109,7 @@ namespace eka2l1::config {
         config_file_emit_single(emitter, "accurate-ipc-timing", accurate_ipc_timing);
         config_file_emit_single(emitter, "enable-btrace", enable_btrace);
         config_file_emit_single(emitter, "stop-warn-touchscreen-disabled", stop_warn_touch_disabled);
+        config_file_emit_single(emitter, "dump-imb-range-code", dump_imb_range_code);
 
         emitter << YAML::EndMap;
 
@@ -170,6 +171,7 @@ namespace eka2l1::config {
         get_yaml_value(node, "accurate-ipc-timing", &accurate_ipc_timing, false);
         get_yaml_value(node, "enable-btrace", &enable_btrace, false);
         get_yaml_value(node, "stop-warn-touchscreen-disabled", &stop_warn_touch_disabled, false);
+        get_yaml_value(node, "dump-imb-range-code", &dump_imb_range_code, false);
 
         YAML::Node keybind_node;
         try {
