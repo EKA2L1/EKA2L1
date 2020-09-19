@@ -297,6 +297,12 @@ namespace eka2l1 {
         }
     }
 
+    void kernel_system::run_imb_range_callback(kernel::process *caller, address range_addr, const std::size_t range_size) {
+        for (auto &imb_range_callback_func: imb_range_callback_funcs_) {
+            imb_range_callback_func(caller, range_addr, range_size);
+        }
+    }
+
     std::size_t kernel_system::register_process_switch_callback(process_switch_callback callback) {
         return process_switch_callback_funcs_.add(callback);
     }
@@ -321,6 +327,10 @@ namespace eka2l1 {
         return codeseg_loaded_callback_funcs_.add(callback);
     }
 
+    std::size_t kernel_system::register_imb_range_callback(imb_range_callback callback) {
+        return imb_range_callback_funcs_.add(callback);
+    }
+    
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
         return ipc_send_callbacks_.remove(handle);
     }
@@ -343,6 +353,10 @@ namespace eka2l1 {
 
     bool kernel_system::unregister_codeseg_loaded_callback(const std::size_t handle) {
         return codeseg_loaded_callback_funcs_.remove(handle);
+    }
+
+    bool kernel_system::unregister_imb_range_callback(const std::size_t handle) {
+        return imb_range_callback_funcs_.remove(handle);
     }
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {

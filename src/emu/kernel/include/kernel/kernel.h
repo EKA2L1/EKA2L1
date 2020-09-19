@@ -204,6 +204,15 @@ namespace eka2l1 {
      */
     using codeseg_loaded_callback = std::function<void(const std::string&, kernel::process*, codeseg_ptr)>;
 
+    /**
+     * @brief Callback invoked when Instruction Memory Barrier is called.
+     * 
+     * @param process       The process that call the flush.
+     * @param address       The address that needs to use the IMB
+     * @param size          The number of bytes to flush.
+     */
+    using imb_range_callback = std::function<void(kernel::process*, address, const std::size_t)>;
+
     struct kernel_global_data {
         kernel::char_set char_set_;
 
@@ -269,6 +278,7 @@ namespace eka2l1 {
         common::identity_container<breakpoint_callback> breakpoint_callbacks_;
         common::identity_container<process_switch_callback> process_switch_callback_funcs_;
         common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
+        common::identity_container<imb_range_callback> imb_range_callback_funcs_;
 
     protected:
         void setup_new_process(process_ptr pr);
@@ -293,6 +303,7 @@ namespace eka2l1 {
         void call_thread_kill_callbacks(kernel::thread *target, const std::string &category, const std::int32_t reason);
         void call_process_switch_callbacks(arm::core *run_core, kernel::process *old, kernel::process *new_one);
         void run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target);
+        void run_imb_range_callback(kernel::process *caller, address range_addr, const std::size_t range_size);
 
         std::size_t register_ipc_send_callback(ipc_send_callback callback);
         std::size_t register_ipc_complete_callback(ipc_complete_callback callback);
@@ -300,6 +311,7 @@ namespace eka2l1 {
         std::size_t register_breakpoint_hit_callback(breakpoint_callback callback);
         std::size_t register_process_switch_callback(process_switch_callback callback);
         std::size_t register_codeseg_loaded_callback(codeseg_loaded_callback callback);
+        std::size_t register_imb_range_callback(imb_range_callback callback);
         
         bool unregister_codeseg_loaded_callback(const std::size_t handle);
         bool unregister_ipc_send_callback(const std::size_t handle);
@@ -307,6 +319,7 @@ namespace eka2l1 {
         bool unregister_thread_kill_callback(const std::size_t handle);
         bool unregister_breakpoint_hit_callback(const std::size_t handle);
         bool unregister_process_switch_callback(const std::size_t handle);
+        bool unregister_imb_range_callback(const std::size_t handle);
 
         kernel::uid next_uid() const;
         std::uint64_t home_time();
