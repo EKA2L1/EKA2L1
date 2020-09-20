@@ -54,6 +54,10 @@ namespace eka2l1::epoc::adapter {
             return buf_stream_.get();
         }
 
+        bool vectorizable() const override {
+            return false;
+        }
+
         bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) override;
         bool get_metrics(const std::size_t idx, open_font_metrics &metrics) override;
         bool get_glyph_metric(const std::size_t idx, std::uint32_t code,
