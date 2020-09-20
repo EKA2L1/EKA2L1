@@ -612,7 +612,8 @@ namespace eka2l1 {
                 (size_info->x - the_font->of_info.metrics.max_height));
 
             // Same adapter and font size is not to much of a difference
-            if ((the_font->of_info.adapter == ofi_suit->adapter) && (delta <= max_acceptable_delta)) {
+            if ((the_font->of_info.face_attrib.name.to_std_string(nullptr) == ofi_suit->face_attrib.name.to_std_string(nullptr))
+                && (delta <= max_acceptable_delta)) {
                 font = the_font;
                 break;
             }
@@ -624,8 +625,12 @@ namespace eka2l1 {
             font->of_info = *ofi_suit;
             font->serv = serv;
 
+            // If font is not vectorizable, keep the font as it's
+            const bool vectorizable = font->of_info.adapter->vectorizable();
+            std::uint32_t desired_height = (is_design_height || !vectorizable) ? 0 : size_info->x;
+
             epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
-                is_design_height ? 0 : size_info->x);
+                desired_height, vectorizable ? std::nullopt : std::make_optional(std::make_pair(1.0f, 1.0f)));
 
             if (!bmpfont) {
                 ctx->complete(epoc::error_no_memory);

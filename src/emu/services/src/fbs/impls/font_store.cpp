@@ -94,16 +94,26 @@ namespace eka2l1::epoc {
                 score += 10000;
             }
 
+            if (!info.adapter->vectorizable()) {
+                // Font that is not vectorizable, according to test, can't resize
+                score -= common::abs(spec.height - info.metrics.max_height) * 100;
+            }
+
             // Match the flags. This is also an important factor.
-            if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::italic)) {
-                if (info.face_attrib.style & epoc::open_font_face_attrib::italic) {
+            if (info.face_attrib.style & epoc::open_font_face_attrib::italic) {
+                // Extra flags are not welcome
+                if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::italic)) {
                     score += 5000;
+                } else {
+                    score -= 3000;
                 }
             }
 
-            if (static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::bold) {
-                if (info.face_attrib.style & epoc::open_font_face_attrib::bold) {
+            if (info.face_attrib.style & epoc::open_font_face_attrib::bold) {    
+                if (static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::bold) {
                     score += 5000;
+                } else {
+                    score -= 3000;
                 }
             }
 

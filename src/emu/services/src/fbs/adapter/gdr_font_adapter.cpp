@@ -76,26 +76,16 @@ namespace eka2l1::epoc::adapter {
         face_attrib.local_full_fam_name.assign(nullptr, the_typeface.header_.name_);
         face_attrib.style = 0;
 
-        std::uint8_t find_track_flags = 0;
-
-        for (std::size_t i = 0; i < the_typeface.font_bitmaps_.size(); i++) {
-            if (the_typeface.font_bitmaps_[i]->header_.posture_ == font_posture_italic) {
-                face_attrib.style |= open_font_face_attrib::italic;
-                find_track_flags |= 1;
-            }
-                
-            if (the_typeface.font_bitmaps_[i]->header_.stroke_weight_ == font_stroke_weight_bold) {
-                face_attrib.style |= open_font_face_attrib::bold;
-                find_track_flags |= 0b10;
-            }
-
-            if (find_track_flags == 0b11) {
-                break;
-            }
-        }
-
         if (the_typeface.header_.flags_ & epoc::typeface_info::tf_serif) {
             face_attrib.style |= open_font_face_attrib::serif;
+        }
+
+        if (the_typeface.analysed_style_ & loader::gdr::typeface::FLAG_BOLD) {
+            face_attrib.style |= open_font_face_attrib::bold;
+        }
+        
+        if (the_typeface.analysed_style_ & loader::gdr::typeface::FLAG_ITALIC) {
+            face_attrib.style |= open_font_face_attrib::italic;
         }
 
         std::memcpy(face_attrib.coverage, the_typeface.whole_coverage_, sizeof(face_attrib.coverage));
