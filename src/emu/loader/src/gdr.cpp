@@ -271,7 +271,8 @@ namespace eka2l1::loader::gdr {
         return true;
     }
 
-    bool parse_typeface_list_headers(common::ro_stream *stream, std::vector<typeface_header> &headers) {
+    bool parse_typeface_list_headers(common::ro_stream *stream, std::vector<typeface_header> &headers,
+        std::u16string &original_guess_typeface_name) {
         std::uint32_t header_count = 0;
         if (stream->read(&header_count, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
             return false;
@@ -282,6 +283,32 @@ namespace eka2l1::loader::gdr {
         for (std::size_t i = 0; i < header_count; i++) {
             if (!parse_typeface_list_header(stream, headers[i])) {
                 return false;
+            }
+        }
+
+        original_guess_typeface_name.clear();
+        
+        // Try to guess original typeface name.
+        if (headers.size() > 1) {
+            std::size_t length_overlap = 1;
+
+            for (length_overlap = 1; length_overlap < headers[0].name_.size() - 1; length_overlap++) {
+                const std::u16string part = headers[0].name_.substr(0, length_overlap);
+                bool found = true;
+
+                for (std::size_t i = 1; i < headers.size(); i++) {
+                    const std::u16string another_part = headers[i].name_.substr(0, length_overlap);
+                    if (common::compare_ignore_case(part, another_part) != 0) {
+                        found = false;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    break;
+                } else {
+                    original_guess_typeface_name = part;
+                }
             }
         }
 
@@ -453,7 +480,7 @@ namespace eka2l1::loader::gdr {
             return false;
         }
 
-        if (!parse_typeface_list_headers(stream, typeface_headers)) {
+        if (!parse_typeface_list_headers(stream, typeface_headers, store.original_typeface_guess_name_)) {
             return false;
         }
 
@@ -495,6 +522,8 @@ namespace eka2l1::loader::gdr {
             store.typefaces_[i].header_ = std::move(typeface_headers[i]);
             std::fill(store.typefaces_[i].whole_coverage_, store.typefaces_[i].whole_coverage_ + 4, 0);
 
+            store.typefaces_[i].analysed_style_ = 0;
+
             // Find all font bitmaps
             for (auto &bitmap_header: store.typefaces_[i].header_.bitmap_headers_) {
                 auto result = std::lower_bound(store.font_bitmaps_.begin(), store.font_bitmaps_.end(), bitmap_header.uid_, 
@@ -506,10 +535,47 @@ namespace eka2l1::loader::gdr {
                     return false;
                 }
 
+                if (result->header_.stroke_weight_) {
+                    store.typefaces_[i].analysed_style_ |= typeface::FLAG_BOLD;
+                }
+
+                if (result->header_.posture_) {
+                    store.typefaces_[i].analysed_style_ |= typeface::FLAG_ITALIC;
+                }
+
                 store.typefaces_[i].font_bitmaps_.push_back(&(*result));
                 
                 for (std::uint32_t j = 0; j < 4; j++) {
                     store.typefaces_[i].whole_coverage_[j] |= result->coverage_[j];
+                }
+            }
+            
+            if (!store.original_typeface_guess_name_.empty()) {
+                // Extract style flags name
+                std::u16string org_name = store.typefaces_[i].header_.name_;
+                const std::size_t first_numeric = org_name.find_first_of(u"0123456789");
+
+                if (first_numeric != std::u16string::npos) {
+                    org_name = common::lowercase_ucs2_string(org_name.substr(store.original_typeface_guess_name_.length(),
+                        first_numeric - store.original_typeface_guess_name_.length()));
+
+                    static const std::map<std::u16string, std::uint32_t> FLAG_SEARCHS = {
+                        { u"bold", typeface::FLAG_BOLD },
+                        { u"pb", typeface::FLAG_BOLD },
+                        { u"b", typeface::FLAG_BOLD },
+                        { u"italic", typeface::FLAG_ITALIC },
+                        { u"pi", typeface::FLAG_ITALIC },
+                        { u"bi", typeface::FLAG_BOLD | typeface::FLAG_ITALIC },
+                        { u"plain", 0 },
+                        { u"p", 0 }
+                    };
+
+                    for (auto &flag_search: FLAG_SEARCHS) {
+                        if (org_name == flag_search.first) {
+                            store.typefaces_[i].analysed_style_ |= flag_search.second;
+                            break;
+                        }
+                    }
                 }
             }
         }

@@ -138,10 +138,16 @@ namespace eka2l1::loader::gdr {
     };
 
     struct typeface {
+        enum {
+            FLAG_ITALIC = 1 << 0,
+            FLAG_BOLD = 1 << 1
+        };
+
         typeface_header header_;
 
         std::vector<font_bitmap*> font_bitmaps_;
         std::uint32_t whole_coverage_[4];
+        std::uint32_t analysed_style_;
     };
 
     struct file_store {
@@ -149,6 +155,8 @@ namespace eka2l1::loader::gdr {
 
         std::vector<font_bitmap> font_bitmaps_;
         std::vector<typeface> typefaces_;
+
+        std::u16string original_typeface_guess_name_;
     };
 
     /**
