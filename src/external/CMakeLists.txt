@@ -3,6 +3,17 @@ target_include_directories(miniz PUBLIC miniz)
 
 # Force Boost directory for Dynarmic - we never use one
 set (BOOST_INCLUDEDIR "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/" CACHE PATH "Boost include directory")
+if (ANDROID)
+    add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY
+            -DBOOST_SYSTEM_NO_LIB
+            -DBOOST_DATE_TIME_NO_LIB
+            -DBOOST_REGEX_NO_LIB
+            -DBOOST_ALL_NO_LIB
+            )
+    set (BOOST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ext-boost/")
+    add_library(boost INTERFACE)
+    target_include_directories(boost SYSTEM INTERFACE ${BOOST_INCLUDEDIR})
+endif()
 
 # PugiXML
 add_library(pugixml
