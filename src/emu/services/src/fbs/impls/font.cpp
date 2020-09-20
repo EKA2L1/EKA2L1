@@ -794,7 +794,7 @@ namespace eka2l1 {
         reinterpret_cast<type*>(bmp_font)->algorithic_style.baseline_offsets_in_pixel,                                      \
         font->of_info.metrics.max_height);                                                                               \
     cache_entry->metric.width = rasterized_width;                                                                           \
-    cache_entry->metric.height = font->of_info.metrics.max_height;                                                       \
+    cache_entry->metric.height = rasterized_height;                                                       \
     cache_entry->metric.bitmap_type = bitmap_type;                                                               \
     const auto cache_entry_ptr = serv->host_ptr_to_guest_general_data(cache_entry).ptr_address();                           \
     if (epoc::does_client_use_pointer_instead_of_offset(this)) {                                                            \
