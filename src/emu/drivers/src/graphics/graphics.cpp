@@ -21,6 +21,7 @@
 #include <drivers/graphics/graphics.h>
 
 #include <common/log.h>
+#include <common/platform.h>
 #include <glad/glad.h>
 
 namespace eka2l1::drivers {
@@ -36,7 +37,9 @@ namespace eka2l1::drivers {
     bool init_graphics_library(graphic_api api) {
         switch (api) {
         case graphic_api::opengl: {
+#ifndef EKA2L1_PLATFORM_ANDROID
             gladLoadGL();
+#endif
             glad_set_post_callback(gl_post_callback_for_error);
 
             return true;
