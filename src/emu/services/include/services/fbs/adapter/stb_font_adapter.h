@@ -55,6 +55,8 @@ namespace eka2l1::epoc::adapter {
         bool vectorizable() const override {
             return true;
         }
+        
+        std::uint32_t line_gap(const std::size_t idx) override;
 
         bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) override;
         bool get_metrics(const std::size_t idx, open_font_metrics &metrics) override;

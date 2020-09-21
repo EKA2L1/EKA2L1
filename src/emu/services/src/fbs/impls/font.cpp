@@ -469,6 +469,17 @@ namespace eka2l1 {
         of->vtable = epoc::DEAD_VTABLE;
         of->allocator = epoc::DEAD_ALLOC;
 
+        // Fill basic extended function info
+        if constexpr(std::is_same_v<Q, epoc::open_font_v2>) {
+            of->font_max_ascent = of->metrics.ascent;
+            of->font_max_descent = of->metrics.descent;
+            of->font_standard_descent = of->metrics.descent;
+            of->font_captial_offset = 0;
+
+            // Get the line gap!! This is no stub
+            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx) * scale_factor_y);
+        }
+
         // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
         // Since I don't know the version that starts using offset yet, we just leave it be this for now
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
