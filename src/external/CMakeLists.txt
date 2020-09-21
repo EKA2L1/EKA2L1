@@ -24,7 +24,9 @@ add_library(pugixml
 target_include_directories(pugixml PUBLIC pugixml/src)
 
 # Nativefilediag
-add_subdirectory(filediag)
+if (NOT ANDROID)
+    add_subdirectory(filediag)
+endif()
 
 # fmt
 add_subdirectory(fmt)
@@ -49,7 +51,7 @@ option (GLM_TEST_ENABLE "Enable glm tests" OFF)
 add_subdirectory(glm)
 
 # Dynarmic: disable tests
-option(DYNARMIC_TESTS OFF "Enable dynarmic tests")
+option(DYNARMIC_TESTS "Enable dynarmic tests" OFF)
 option(DYNARMIC_NO_BUNDLED_FMT "No bundled fmt for Dynarmic" ON)
 add_subdirectory(dynarmic)
 
@@ -58,7 +60,9 @@ option(GLFW_BUILD_DOCS "Build glfw documents" OFF)
 option(GLFW_BUILD_TESTS "Build glfw tests" OFF)
 option(GLFW_BUILD_EXAMPLES "Build glfw examples" OFF)
 
-add_subdirectory(glfw)
+if (NOT ANDROID)
+    add_subdirectory(glfw)
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPy_DEBUG)
@@ -68,7 +72,8 @@ endif()
 option(YAML_CPP_BUILD_TESTS "Enable YAML cpp testing" OFF)
 add_subdirectory(yaml-cpp)
 
-add_library(imgui imgui/imgui.h imgui/imgui.cpp
+if (NOT ANDROID)
+    add_library(imgui imgui/imgui.h imgui/imgui.cpp
     imgui/imgui_demo.cpp
     imgui/imgui_draw.cpp
     imgui/imgui_widgets.cpp
@@ -79,7 +84,9 @@ add_library(imgui imgui/imgui.h imgui/imgui.cpp
     imgui/imstb_truetype.h
     imgui/misc/cpp/imgui_stdlib.cpp
     imgui/misc/cpp/imgui_stdlib.h
-)
+    )
+    target_include_directories(imgui PUBLIC imgui)
+endif()
 
 if (MSVC)
     add_library(libdemangle
@@ -88,8 +95,6 @@ if (MSVC)
 
     target_include_directories(libdemangle PUBLIC libdemangle/include)
 endif()
-
-target_include_directories(imgui PUBLIC imgui)
 
 add_library(glad glad/include/glad/glad.h glad/src/glad.c)
 target_include_directories(glad PUBLIC glad/include)
