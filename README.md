@@ -1,7 +1,6 @@
-# EKA2L1 
-[![Build Status](https://github.com/eka2l1/eka2l1/workflows/C/C++%20CI/badge.svg)](https://github.com/EKA2L1/EKA2L1/actions?query=branch%3Amaster)
+![Screenshot](https://femto.pw/rasu.gif)
 
-![Screenshot](screenshots/result_animated.gif)
+[![Build Status](https://github.com/eka2l1/eka2l1/workflows/C/C++%20CI/badge.svg)](https://github.com/EKA2L1/EKA2L1/actions?query=branch%3Amaster)
 
 Experimental Symbian OS emulator, written in C++ 17. 
 
