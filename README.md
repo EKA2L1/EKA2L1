@@ -12,3 +12,6 @@ The emulator currently *emulates* Symbian OS's EKA1 and EKA2 behavior, and *reim
 ### Compatibility:
   * Compatibility for the games and software that can (and can't) run on the emulator can be verified [**here**](https://github.com/EKA2L1/Compatibility-List)
   
+  -------------
+ *GIFs are provided by [**Stranno**](https://www.youtube.com/user/9esferas1)!*
+  
