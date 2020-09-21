@@ -19,13 +19,16 @@
 
 #include <common/algorithm.h>
 #include <common/log.h>
+#include <common/platform.h>
 
 #include <drivers/graphics/backend/graphics_driver_shared.h>
 #include <drivers/graphics/buffer.h>
 #include <drivers/graphics/shader.h>
 
 #include <glad/glad.h>
+#ifndef EKA2L1_PLATFORM_ANDROID
 #include <nfd.h>
+#endif
 
 namespace eka2l1::drivers {
     static void translate_bpp_to_format(const int bpp, texture_format &internal_format, texture_format &format,
@@ -659,6 +662,7 @@ namespace eka2l1::drivers {
     }
 
     void shared_graphics_driver::native_dialog(command_helper &helper) {
+#ifndef EKA2L1_PLATFORM_ANDROID
         const char *filter = nullptr;
         graphics_driver_dialog_callback *callback = nullptr;
         bool is_folder = false;
@@ -677,6 +681,7 @@ namespace eka2l1::drivers {
         free(out_path);
 
         helper.finish(this, (final_result == NFD_OKAY) ? 1 : 0);
+#endif
     }
 
     void shared_graphics_driver::dispatch(command *cmd) {
