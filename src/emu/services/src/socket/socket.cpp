@@ -73,6 +73,10 @@ namespace eka2l1 {
             }
         } else {
             switch (ctx->msg->function) {
+            case socket_pr_find:
+                pr_find(ctx);
+                return;
+
             case socket_sr_get_by_number:
                 sr_get_by_number(ctx);
                 return;
@@ -112,6 +116,11 @@ namespace eka2l1 {
     void socket_client_session::cn_get_long_des_setting(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE("CnGetLongDesSetting stubbed");
         ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::pr_find(service::ipc_context *ctx) {
+        LOG_TRACE("Protocol find stubbed with not found!");
+        ctx->complete(epoc::error_not_found);
     }
 
     void socket_client_session::hr_create(service::ipc_context *ctx, const bool with_conn) {

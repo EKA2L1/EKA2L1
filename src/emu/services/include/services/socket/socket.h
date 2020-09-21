@@ -35,6 +35,7 @@ namespace eka2l1 {
     }
 
     enum socket_opcode {
+        socket_pr_find = 0x02,
         socket_sr_get_by_number = 0x3F,
         socket_cn_get_long_des_setting = 0x51
     };
@@ -70,6 +71,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
 
         void hr_create(service::ipc_context *ctx, const bool with_conn);
+        void pr_find(service::ipc_context *ctx);
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
         void cn_get_long_des_setting(eka2l1::service::ipc_context *ctx);
     };
