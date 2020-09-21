@@ -396,4 +396,23 @@ namespace eka2l1::epoc {
 
         return true;
     }
+
+    struct rw_des_stream: public common::rw_stream {
+        epoc::des8 *des_;
+        kernel::process *pr_;
+
+        std::uint64_t current_pos_;
+
+    public:
+        explicit rw_des_stream(epoc::des8 *des, kernel::process *pr);
+    
+        void seek(const std::int64_t amount, common::seek_where wh) override;
+        bool valid() override;
+        std::uint64_t left() override;
+        std::uint64_t tell() const override;
+        std::uint64_t size() override;
+        
+        std::uint64_t read(void *buf, const std::uint64_t read_size) override;
+        std::uint64_t write(const void *buf, const std::uint64_t write_size) override;
+    };
 }

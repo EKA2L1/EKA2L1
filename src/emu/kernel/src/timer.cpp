@@ -24,6 +24,7 @@
 #include <kernel/kernel.h>
 #include <kernel/thread.h>
 #include <kernel/timer.h>
+#include <utils/err.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -74,13 +75,12 @@ namespace eka2l1 {
 
         bool timer::cancel_request() {
             if (!outstanding) {
-                // Do a signal so that the semaphore won't lock
-                // the thread up next time it waits
-                //info.own_thread->signal_request();
+                // Do a signal so that the semaphore won't lock the thread up next time it waits
+                // info.own_thread->signal_request();
                 return false;
             }
 
-            info.request_status->set(-3, false);
+            info.request_status->set(epoc::error_cancel, kern->is_eka1());
             info.own_thread->signal_request();
 
             // If the timer hasn't finished yet, please unschedule it.

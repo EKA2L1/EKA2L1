@@ -415,6 +415,9 @@ namespace eka2l1 {
             return static_cast<std::int32_t>(reinterpret_cast<std::uint8_t *>(ptr) - base_shared_chunk);
         }
 
+        template <typename T>
+        void destroy_bitmap_font(T *bitmapfont);
+        
         /**
          * \brief Load compressed image data to large chunk.
          * 

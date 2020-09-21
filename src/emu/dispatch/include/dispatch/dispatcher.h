@@ -24,9 +24,11 @@
 #include <drivers/audio/player.h>
 #include <dispatch/management.h>
 
+#include <utils/des.h>
 #include <utils/reqsts.h>
 
 #include <vector>
+#include <memory>
 
 // Foward declarations
 namespace eka2l1 {
@@ -67,6 +69,26 @@ namespace eka2l1::dispatch {
         void deliver_audio_events(kernel_system *kern, ntimer *timing);
     };
 
+    enum dsp_epoc_player_flags {
+        dsp_epoc_player_flags_prepare_play_when_queue = 1 << 0
+    };
+
+    struct dsp_epoc_player {
+    public:
+        std::unique_ptr<epoc::rw_des_stream> custom_stream_;
+        std::unique_ptr<drivers::player> impl_;
+        std::uint32_t flags_;
+
+        explicit dsp_epoc_player(std::unique_ptr<drivers::player> &impl, const std::uint32_t init_flags)
+            : impl_(std::move(impl))
+            , flags_(init_flags) {
+        }
+
+        bool should_prepare_play_when_queue() const {
+            return flags_ & dsp_epoc_player_flags_prepare_play_when_queue;
+        }
+    };
+
     struct dispatcher {
     private:
         void shutdown();
@@ -74,7 +96,7 @@ namespace eka2l1::dispatch {
     public:
         window_server *winserv_;
 
-        object_manager<drivers::player> audio_players_;
+        object_manager<dsp_epoc_player> audio_players_;
         object_manager<dsp_epoc_stream> dsp_streams_;
 
         int audio_nof_complete_evt_;

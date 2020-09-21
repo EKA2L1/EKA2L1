@@ -28,6 +28,9 @@
 #include <algorithm>
 
 namespace eka2l1::kernel {
+    static constexpr std::uint32_t HANDLE_INDEX_MASK = 0b111111111111111;
+    static constexpr std::uint32_t HANDLE_NEXT_INSTANCE_MASK = 0b1111111111111;
+
     handle_inspect_info inspect_handle(std::uint32_t handle) {
         handle_inspect_info info;
 
@@ -62,8 +65,8 @@ namespace eka2l1::kernel {
     std::uint32_t object_ix::make_handle(size_t index) {
         std::uint32_t handle = 0;
 
-        handle |= static_cast<std::uint32_t>(next_instance & 0xFFFF) << 16;
-        handle |= index;
+        handle |= static_cast<std::uint32_t>(next_instance & HANDLE_NEXT_INSTANCE_MASK) << 16;
+        handle |= (index & HANDLE_INDEX_MASK);
 
         if (owner == handle_array_owner::thread) {
             // If handle array owner is thread, the 30th bit must be 1
@@ -75,7 +78,6 @@ namespace eka2l1::kernel {
         }
 
         handles.push_back(handle);
-
         return handle;
     }
 
@@ -85,7 +87,7 @@ namespace eka2l1::kernel {
         });
 
         if (slot != objects.end()) {
-            next_instance++;
+            next_instance = (next_instance + 1) & HANDLE_NEXT_INSTANCE_MASK;
             std::uint32_t ret_handle = make_handle(slot - objects.begin());
 
             slot->associated_handle = ret_handle;
@@ -152,6 +154,7 @@ namespace eka2l1::kernel {
             kernel_obj_ptr obj = objects[info.object_ix_index].object;
 
             if (!obj) {
+                LOG_TRACE("WASDDS");
                 return -1;
             }
 
@@ -175,9 +178,16 @@ namespace eka2l1::kernel {
             objects[info.object_ix_index].free = true;
             objects[info.object_ix_index].object = nullptr;
 
+            // Find the handle in unclosed handle list
+            auto iterator = std::find(handles.begin(), handles.end(), handle);
+            if (iterator != handles.end()) {
+                handles.erase(iterator);
+            }
+
             return ret_value;
         }
 
+        LOG_TRACE("WASDDS");
         return -1;
     }
 

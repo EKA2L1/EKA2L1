@@ -25,9 +25,18 @@
 
 #include <vector>
 
+namespace eka2l1::common {
+    class rw_stream;
+}
+
 namespace eka2l1::drivers {
     class audio_driver;
     using finish_callback = std::function<void(std::uint8_t *)>;
+
+    static constexpr std::uint32_t AUDIO_MULAW_CODEC_4CC = 0x57414c75;
+    static constexpr std::uint32_t AUDIO_IMAD_CODEC_4CC = 0x44414d49;
+    static constexpr std::uint32_t AUDIO_PCM16_CODEC_4CC = 0x36315020;
+    static constexpr std::uint32_t AUDIO_PCM8_CODEC_4CC = 0x38502020;
 
     enum player_audio_encoding {
         player_audio_encoding_pcm8 = 0,
@@ -66,11 +75,7 @@ namespace eka2l1::drivers {
         virtual bool crop() = 0;
 
         virtual bool queue_url(const std::string &url) = 0;
-
-        virtual bool queue_data(const char *raw_data, const std::size_t data_size,
-            const std::uint32_t encoding_type, const std::uint32_t frequency,
-            const std::uint32_t channels)
-            = 0;
+        virtual bool queue_custom(common::rw_stream *stream) = 0;
 
         virtual std::uint32_t max_volume() const {
             return 100;
@@ -116,6 +121,17 @@ namespace eka2l1::drivers {
 
         virtual void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) = 0;
         virtual void set_position(const std::uint64_t pos_in_us) = 0;
+        
+        virtual bool set_dest_freq(const std::uint32_t freq) = 0;
+        virtual bool set_dest_channel_count(const std::uint32_t cn) = 0;
+        virtual bool set_dest_encoding(const std::uint32_t enc) = 0;
+        virtual void set_dest_container_format(const std::uint32_t confor) = 0;
+
+        virtual std::uint32_t get_dest_freq() = 0;
+        virtual std::uint32_t get_dest_channel_count() = 0;
+        virtual std::uint32_t get_dest_encoding() = 0;
+        
+        virtual bool prepare_play_newest() = 0;
     };
 
     enum player_type {

@@ -42,7 +42,7 @@
 #include <config/config.h>
 
 namespace eka2l1 {
-    namespace epoc { 
+    namespace epoc {
         bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
             const epocver current_sys_ver = cli->server<fbs_server>()->get_system()->get_symbian_version_use();
             return (cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT) && (current_sys_ver < epocver::epoc95);

@@ -477,14 +477,32 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::find_window_group_id_thread(service::ipc_context &ctx, ws_cmd &cmd) {
-        ws_cmd_find_window_group_identifier_thread *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
+        std::uint32_t prev_id = 0;
+        kernel::uid thr_id = 0;
+
+        kernel_system *kern = ctx.sys->get_kernel_system();
+
+        if (kern->is_eka1()) {
+            ws_cmd_find_window_group_identifier_thread_eka1 *find_info = reinterpret_cast<decltype(find_info)>(
+                cmd.data_ptr);
+            
+            prev_id = find_info->previous_id;
+            thr_id = find_info->thread_id;
+        } else {
+            ws_cmd_find_window_group_identifier_thread *find_info = reinterpret_cast<decltype(find_info)>(
+                cmd.data_ptr);
+            
+            prev_id = find_info->previous_id;
+            thr_id = find_info->thread_id;
+        }
+
         epoc::window_group *group = nullptr;
 
-        if (find_info->previous_id) {
-            group = get_ws().get_group_from_id(find_info->previous_id);
+        if (prev_id) {
+            group = get_ws().get_group_from_id(prev_id);
 
             if (!group) {
-                LOG_ERROR("Previous group sibling not found with id {}", find_info->previous_id);
+                LOG_ERROR("Previous group sibling not found with id {}", prev_id);
                 ctx.complete(epoc::error_not_found);
                 return;
             }
@@ -493,8 +511,6 @@ namespace eka2l1::epoc {
         } else {
             group = get_ws().get_group_from_id(epoc::ws::ANY_UID);
         }
-
-        const kernel::uid thr_id = find_info->thread_id;
 
         for (; group; group = reinterpret_cast<epoc::window_group *>(group->sibling)) {
             if (group->client->get_client()->unique_id() == thr_id) {
@@ -528,8 +544,15 @@ namespace eka2l1::epoc {
         }
 
         const kernel::uid thr_id = win->client->get_client()->unique_id();
+        kernel_system *kern = ctx.sys->get_kernel_system();
 
-        ctx.write_data_to_descriptor_argument<kernel::uid>(reply_slot, thr_id);
+        if (kern->is_eka1()) {
+            ctx.write_data_to_descriptor_argument<kernel::uid_eka1>(reply_slot, static_cast<kernel::uid_eka1>(
+                thr_id));
+        } else {
+            ctx.write_data_to_descriptor_argument<kernel::uid>(reply_slot, thr_id);
+        }
+
         ctx.complete(epoc::error_none);
     }
 
@@ -1434,11 +1457,11 @@ namespace eka2l1 {
 
         while (current) {
             epoc::window_group *group = reinterpret_cast<epoc::window_group *>(current->root->child);
-            while (group && ((id == epoc::ws::ANY_UID) || (group->id != id))) {
+            while (group && ((id != epoc::ws::ANY_UID) && (group->id != id))) {
                 group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 
-            if (group && group->id == id) {
+            if (group && ((id == epoc::ws::ANY_UID) || (group->id == id))) {
                 return group;
             }
 

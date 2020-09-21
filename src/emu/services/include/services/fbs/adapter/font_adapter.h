@@ -49,6 +49,7 @@ namespace eka2l1::epoc::adapter {
         virtual ~font_file_adapter_base() {}
 
         virtual bool is_valid() = 0;
+        virtual bool vectorizable() const = 0;
 
         virtual bool get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) = 0;
         virtual bool get_metrics(const std::size_t idx, open_font_metrics &metrics) = 0;

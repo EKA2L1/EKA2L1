@@ -531,10 +531,6 @@ namespace eka2l1 {
             const std::u16string &physical_path) {
             const std::lock_guard<std::mutex> guard(fs_mutex);
 
-            if (mappings[static_cast<int>(drv)].second) {
-                return false;
-            }
-
             drive &map_drive = mappings[static_cast<int>(drv)].first;
 
             map_drive.attribute = attrib;
@@ -542,6 +538,10 @@ namespace eka2l1 {
             map_drive.drive_name += drive_number_to_ascii(drv) + ':';
             map_drive.media_type = media;
             map_drive.real_path = common::ucs2_to_utf8(physical_path);
+
+            if (!eka2l1::is_separator(map_drive.real_path.back())) {
+                map_drive.real_path += eka2l1::get_separator(false);
+            }
 
             // Mark as mapped
             mappings[static_cast<int>(drv)].second = true;
@@ -1331,7 +1331,7 @@ namespace eka2l1 {
         return f_->size();
     }
 
-    void wo_file_stream::write(const void *buf, const std::uint32_t write_size) {
-        f_->write_file(buf, write_size, 1);
+    std::uint64_t wo_file_stream::write(const void *buf, const std::uint64_t write_size) {
+        return f_->write_file(buf, static_cast<std::uint32_t>(write_size), 1);
     }
 }

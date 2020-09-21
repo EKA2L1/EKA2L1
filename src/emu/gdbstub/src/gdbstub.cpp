@@ -1347,15 +1347,12 @@ namespace eka2l1 {
         }
     }
 
-    void gdbstub::check_new_process_codeseg(kernel::process *loaded_pr, codeseg_ptr loaded_seg) {
+    void gdbstub::check_new_process_codeseg(kernel::process *loaded_pr, const address beg, const address end) {
         if (!current_thread) {
             return;
         }
 
         if (current_thread->owning_process() == loaded_pr) {
-            const address beg = loaded_seg->get_code_run_addr(loaded_pr);
-            const address end = beg + loaded_seg->get_code_size();
-
             for (auto &bp: breakpoints_execute) {
                 if (bp.second.pending && (bp.first >= beg) && (bp.first <= end)) {
                     bp.second.pending = false;
@@ -1371,8 +1368,15 @@ namespace eka2l1 {
 
         init(gdbstub_port);
 
-        kern->register_codeseg_loaded_callback([this](const std::string&, kernel::process* pr, codeseg_ptr seg) {
-            check_new_process_codeseg(pr, seg); });
+        kern->register_codeseg_loaded_callback([this](const std::string&, kernel::process* pr, codeseg_ptr seg) {            
+            const address beg = seg->get_code_run_addr(pr);
+            const address end = beg + seg->get_code_size();
+
+            check_new_process_codeseg(pr, beg, end); });
+
+        kern->register_imb_range_callback([this](kernel::process *pr, address start, const std::size_t size) {
+            check_new_process_codeseg(pr, start, static_cast<address>(start + size));
+        });
     }
 
     void gdbstub::shutdown_gdb() {

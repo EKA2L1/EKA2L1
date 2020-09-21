@@ -86,6 +86,7 @@ namespace eka2l1::config {
         bool enable_btrace{ false };
 
         bool stop_warn_touch_disabled { false };
+        bool dump_imb_range_code { false };
 
         std::vector<keybind> keybinds;
         std::atomic<std::uint16_t> time_getter_sleep_us { 0 };

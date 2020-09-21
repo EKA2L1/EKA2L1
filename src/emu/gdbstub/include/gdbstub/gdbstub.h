@@ -170,7 +170,7 @@ namespace eka2l1 {
         void remove_breakpoint();
         void write_execute_breakpoint(breakpoint &bp);
 
-        void check_new_process_codeseg(kernel::process *loaded_pr, codeseg_ptr loaded_seg);
+        void check_new_process_codeseg(kernel::process *loaded_pr, const address beg, const address end);
 
         void init(const std::uint16_t port);
 

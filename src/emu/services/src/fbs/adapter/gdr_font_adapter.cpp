@@ -76,26 +76,16 @@ namespace eka2l1::epoc::adapter {
         face_attrib.local_full_fam_name.assign(nullptr, the_typeface.header_.name_);
         face_attrib.style = 0;
 
-        std::uint8_t find_track_flags = 0;
-
-        for (std::size_t i = 0; i < the_typeface.font_bitmaps_.size(); i++) {
-            if (the_typeface.font_bitmaps_[i]->header_.posture_ == font_posture_italic) {
-                face_attrib.style |= open_font_face_attrib::italic;
-                find_track_flags |= 1;
-            }
-                
-            if (the_typeface.font_bitmaps_[i]->header_.stroke_weight_ == font_stroke_weight_bold) {
-                face_attrib.style |= open_font_face_attrib::bold;
-                find_track_flags |= 0b10;
-            }
-
-            if (find_track_flags == 0b11) {
-                break;
-            }
-        }
-
         if (the_typeface.header_.flags_ & epoc::typeface_info::tf_serif) {
             face_attrib.style |= open_font_face_attrib::serif;
+        }
+
+        if (the_typeface.analysed_style_ & loader::gdr::typeface::FLAG_BOLD) {
+            face_attrib.style |= open_font_face_attrib::bold;
+        }
+        
+        if (the_typeface.analysed_style_ & loader::gdr::typeface::FLAG_ITALIC) {
+            face_attrib.style |= open_font_face_attrib::italic;
         }
 
         std::memcpy(face_attrib.coverage, the_typeface.whole_coverage_, sizeof(face_attrib.coverage));
@@ -199,12 +189,13 @@ namespace eka2l1::epoc::adapter {
         
         const float scale_factor = static_cast<float>(font_size) / static_cast<float>(whole_metrics.max_height);
         const std::int16_t scaled_width = static_cast<std::int16_t>(std::roundf(target_width * scale_factor));
-        
+        const std::int16_t scaled_char_height = static_cast<std::int16_t>(scale_factor * the_char->metric_->height_in_pixels_);
+
         if (scale_factor != 1.0f) {
             scaled_result.resize((static_cast<std::uint32_t>(scaled_width * font_size) + 31) >> 5);
             std::fill(scaled_result.begin(), scaled_result.end(), 0);
 
-            for (std::int16_t y = 0; y < font_size; y++) {
+            for (std::int16_t y = 0; y < scaled_char_height; y++) {
                 for (std::int16_t x = 0; x < scaled_width; x++) {
                     const std::int16_t dx = static_cast<std::int16_t>(x / scale_factor);
                     const std::int16_t dy = static_cast<std::int16_t>(y / scale_factor);
@@ -260,11 +251,11 @@ namespace eka2l1::epoc::adapter {
             return true;
         };
 
-        while (total_line_processed_so_far < font_size) {
+        while (total_line_processed_so_far < scaled_char_height) {
             bool mode = false;
             std::int8_t count = 2;
 
-            if (total_line_processed_so_far == (font_size - 1)) {
+            if (total_line_processed_so_far == (scaled_char_height - 1)) {
                 count = 1;
                 mode = false;
             } else {
@@ -272,7 +263,7 @@ namespace eka2l1::epoc::adapter {
 
                 bool got_in = false;
 
-                while ((count < 15) && (total_line_processed_so_far + count < font_size) && 
+                while ((count < 15) && (total_line_processed_so_far + count < scaled_char_height) && 
                     (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, scaled_width) == mode)) {
                     count++;
                     got_in = true;
@@ -305,7 +296,6 @@ namespace eka2l1::epoc::adapter {
 
             total_line_processed_so_far += count;
         }
-
         #undef WRITE_BIT_32
 
         if (bmp_type)
@@ -318,7 +308,7 @@ namespace eka2l1::epoc::adapter {
         }
 
         if (rasterized_height) {
-            *rasterized_height = font_size;
+            *rasterized_height = scaled_char_height;
         }
 
         // In case this adapter get destroyed. It will free this data.

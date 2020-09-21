@@ -44,7 +44,12 @@ namespace eka2l1 {
     }
 
     epoc::socket::host &socket_server::host_by_info(const std::uint32_t family, const std::uint32_t protocol) {
-        return hosts_[static_cast<std::uint64_t>(protocol) | (static_cast<std::uint64_t>(family) << 32)];
+        std::uint64_t the_id = static_cast<std::uint64_t>(protocol) | (static_cast<std::uint64_t>(family) << 32);
+        if (hosts_.find(the_id) == hosts_.end()) {
+            hosts_[the_id].name_ = u"eka2l1";
+        }
+
+        return hosts_[the_id];
     }
 
     socket_client_session::socket_client_session(service::typical_server *serv, const kernel::uid ss_id,

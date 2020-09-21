@@ -205,8 +205,17 @@ namespace eka2l1::drivers {
         }
 
         // TODO: What? Is this right
-        samples_played_ = frame_count * channels_;
+        samples_played_ += frame_count * channels_;
 
         return frame_count;
+    }
+
+    std::uint64_t dsp_output_stream_shared::position() {
+        if (format_ == PCM16_FOUR_CC_CODE) {
+            return samples_played_ * 1000000 / freq_;
+        }
+
+        // Letting the backend guess the timestamp will be better in this case.
+        return position_non_pcm16();
     }
 }

@@ -238,23 +238,11 @@ namespace eka2l1::epoc {
     }
 
     void open_font_glyph_v2::destroy(fbscli *cli) {
-        auto serv = cli->server<fbs_server>();
-
-        if (epoc::does_client_use_pointer_instead_of_offset(cli)) {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(serv->guest_general_data_to_host_ptr(offset)));
-        } else {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(this + offset));
-        }
+        // Bitmap data allocated together with glyph info
     }
 
     void open_font_glyph_v3::destroy(fbscli *cli) {
-        auto serv = cli->server<fbs_server>();
-
-        if (epoc::does_client_use_pointer_instead_of_offset(cli)) {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(serv->guest_general_data_to_host_ptr(offset)));
-        } else {
-            serv->free_general_data_impl(reinterpret_cast<std::uint8_t*>(this + offset));
-        }
+        // Bitmap data allocated together with glyph info
     }
 
     void open_font_session_cache_v3::destroy(fbscli *cli) {
@@ -506,7 +494,30 @@ namespace eka2l1 {
                 of->glyph_cache_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_general_data(cache)
                     .ptr_address());
             }
+        } else {
+            of->glyph_cache_offset = 0;
         }
+    }
+
+    template <typename T>
+    void fbs_server::destroy_bitmap_font(T *bmpfont) {
+        // On EKA1, free the glyph cache offset
+        if (legacy_level() == 2) {
+            epoc::open_font_v1 *ofo = reinterpret_cast<epoc::open_font_v1*>(guest_general_data_to_host_ptr(bmpfont->openfont.template cast<std::uint8_t>()));
+
+            if (ofo->glyph_cache_offset)
+                free_general_data_impl(guest_general_data_to_host_ptr(ofo->glyph_cache_offset));
+        }
+
+        if (bmpfont->openfont.ptr_address() & 0x1) {
+            // Better make it offset for future debugging purpose
+            // Mark bit 0 as set so that fntstore can recognised the offset model
+            free_general_data_impl(reinterpret_cast<std::uint8_t*>(bmpfont) + (bmpfont->openfont.ptr_address() & ~0x1));
+        } else {
+            free_general_data_impl(guest_general_data_to_host_ptr(bmpfont->openfont.template cast<std::uint8_t>()));
+        }
+
+        free_general_data(bmpfont);
     }
 
     template void fbscli::fill_bitmap_information<epoc::bitmapfont_v1, epoc::open_font_v1>(epoc::bitmapfont_v1 *bitmapfont, epoc::open_font_v1 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
@@ -514,6 +525,9 @@ namespace eka2l1 {
 
     template void fbscli::fill_bitmap_information<epoc::bitmapfont_v2, epoc::open_font_v2>(epoc::bitmapfont_v2 *bitmapfont, epoc::open_font_v2 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
         kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
+
+    template void fbs_server::destroy_bitmap_font<epoc::bitmapfont_v1>(epoc::bitmapfont_v1 *bmpfont);
+    template void fbs_server::destroy_bitmap_font<epoc::bitmapfont_v2>(epoc::bitmapfont_v2 *bmpfont);
 
     epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user, const std::uint32_t desired_height,
         std::optional<std::pair<float, float>> scale_vector) {
@@ -598,7 +612,8 @@ namespace eka2l1 {
                 (size_info->x - the_font->of_info.metrics.max_height));
 
             // Same adapter and font size is not to much of a difference
-            if ((the_font->of_info.adapter == ofi_suit->adapter) && (delta <= max_acceptable_delta)) {
+            if ((the_font->of_info.face_attrib.name.to_std_string(nullptr) == ofi_suit->face_attrib.name.to_std_string(nullptr))
+                && (delta <= max_acceptable_delta)) {
                 font = the_font;
                 break;
             }
@@ -610,8 +625,12 @@ namespace eka2l1 {
             font->of_info = *ofi_suit;
             font->serv = serv;
 
+            // If font is not vectorizable, keep the font as it's
+            const bool vectorizable = font->of_info.adapter->vectorizable();
+            std::uint32_t desired_height = (is_design_height || !vectorizable) ? 0 : size_info->x;
+
             epoc::bitmapfont_base *bmpfont = create_bitmap_open_font(font->of_info, spec, ctx->msg->own_thr->owning_process(),
-                is_design_height ? 0 : size_info->x);
+                desired_height, vectorizable ? std::nullopt : std::make_optional(std::make_pair(1.0f, 1.0f)));
 
             if (!bmpfont) {
                 ctx->complete(epoc::error_no_memory);
@@ -775,7 +794,7 @@ namespace eka2l1 {
         reinterpret_cast<type*>(bmp_font)->algorithic_style.baseline_offsets_in_pixel,                                      \
         font->of_info.metrics.max_height);                                                                               \
     cache_entry->metric.width = rasterized_width;                                                                           \
-    cache_entry->metric.height = font->of_info.metrics.max_height;                                                       \
+    cache_entry->metric.height = rasterized_height;                                                       \
     cache_entry->metric.bitmap_type = bitmap_type;                                                               \
     const auto cache_entry_ptr = serv->host_ptr_to_guest_general_data(cache_entry).ptr_address();                           \
     if (epoc::does_client_use_pointer_instead_of_offset(this)) {                                                            \
@@ -851,7 +870,19 @@ namespace eka2l1 {
 
     void fbsfont::deref() {
         if (count == 1) {
+            // Free atlas + bitmap
             atlas.free(serv->get_graphics_driver());
+            std::uint8_t *font_ptr = serv->get_shared_chunk_base() + guest_font_offset;
+
+            switch (serv->legacy_level()) {
+            case 2:
+                serv->destroy_bitmap_font<epoc::bitmapfont_v1>(reinterpret_cast<epoc::bitmapfont_v1*>(font_ptr));
+                break;
+
+            default:
+                serv->destroy_bitmap_font<epoc::bitmapfont_v2>(reinterpret_cast<epoc::bitmapfont_v2*>(font_ptr));
+                break;
+            }
         }
 
         epoc::ref_count_object::deref();

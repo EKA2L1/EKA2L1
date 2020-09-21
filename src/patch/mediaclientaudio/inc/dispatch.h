@@ -31,9 +31,12 @@ typedef unsigned long long TUint64;
 
 extern "C" {
     /// AUDIO PLAYER DISPATCH API
+    enum TAudioPlayerFlags {
+        EAudioPlayerFlag_StartPreparePlayWhenQueue = 1 << 0
+    };
 
     // Create new audio player instance
-    HLE_DISPATCH_FUNC(TAny *, EAudioPlayerNewInstance, void *);
+    HLE_DISPATCH_FUNC(TAny *, EAudioPlayerNewInstance, TUint32 aInitFlags);
 
     // Notify when a queued audio segment done playing.
     HLE_DISPATCH_FUNC(TInt, EAudioPlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus);
@@ -53,8 +56,7 @@ extern "C" {
     HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetBalance, TAny *aInstance);
 
     // Supply raw audio data to media player queue.
-    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, const TDesC &aAudioData, const TUint32 aEncoding, const TUint32 aFreq,
-        const TUint32 aChannels);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSupplyData, TAny *aInstance, TDesC8 &aAudioData);
 
     // Set volume of the play instance.
     HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetVolume, TAny *aInstance, const TInt aVolume);
@@ -71,6 +73,17 @@ extern "C" {
 
     HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetRepeats, TAny *aInstance, const TInt aTimes, TUint64 aSilenceIntervalMicros);
     HLE_DISPATCH_FUNC(TInt, EAudioPlayerDestroy, TAny *aInstance);
+    
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationSampleRate, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetDestinationSampleRate, TAny *aInstance, const TInt aSampleRate);
+
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationChannelCount, TAny *aInstance);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetDestinationChannelCount, TAny *aInstance, const TInt aChannelCount);
+
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetDestinationEncoding, TAny *aInstance, const TUint32 aEncoding);
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationEncoding, TAny *aInstance, TUint32 &aEncoding);
+
+    HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetContainerFormat, TAny *aInstance, const TUint32 aFourCC);
 }
 
 #endif

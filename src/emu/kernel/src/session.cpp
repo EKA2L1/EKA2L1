@@ -28,9 +28,10 @@
 namespace eka2l1 {
     namespace service {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
-            : svr(svr)
+            : kernel_obj(kern, "", kern->crr_process(), kernel::access_type::global_access) 
+            , svr(svr)
             , cookie_address(0)
-            , kernel_obj(kern, "", kern->crr_process(), kernel::access_type::global_access) {
+            , headless_(false) {
             obj_type = kernel::object_type::session;
 
             svr->attach(this);
@@ -118,15 +119,33 @@ namespace eka2l1 {
 
             smsg.real_msg = msg;
             smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = this;
+            smsg.real_msg->msg_session = (headless_) ? nullptr : this;
             smsg.real_msg->session_ptr_lle = cookie_address;
 
             return svr->deliver(smsg);
         }
 
         void session::destroy() {
+            // Free the message pool
             for (const auto &msg : msgs_pool) {
                 kern->free_msg(msg.second);
+            }
+
+            if (!kern->crr_thread()) {
+                return;
+            }
+
+            // Try to send a disconnect message. Headless session and use sync message.
+            headless_ = !svr->is_hle();
+            eka2l1::ipc_arg arg;
+
+            arg.flag = 0;
+            std::fill(arg.args, arg.args + 4, 0);
+
+            send_receive_sync(standard_ipc_message_disconnect, arg, 0);
+            
+            if (svr->is_hle()) {
+                svr->process_accepted_msg();
             }
         }
     }

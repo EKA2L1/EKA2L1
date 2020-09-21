@@ -458,6 +458,6 @@ namespace eka2l1 {
         uint64_t tell() const override;
         uint64_t size() override;
 
-        void write(const void *buf, const std::uint32_t write_size) override;
+        std::uint64_t write(const void *buf, const std::uint64_t write_size) override;
     };
 }

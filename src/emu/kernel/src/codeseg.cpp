@@ -403,10 +403,12 @@ namespace eka2l1::kernel {
 
         if (result == dependencies.end()) {
             dependencies.push_back(std::move(codeseg));
-            return true;
+        } else {
+            result->import_info_.insert(result->import_info_.end(), codeseg.import_info_.begin(),
+                codeseg.import_info_.end());
         }
 
-        return false;
+        return true;
     }
 
     std::vector<std::uint32_t> codeseg::get_export_table(kernel::process *pr) {

@@ -57,7 +57,9 @@ struct CMMFMdaOutputBufferQueue: public CActive {
 class CMMFMdaOutputOpen: public CIdle {
 public:
     explicit CMMFMdaOutputOpen();
+    
     void Open(CMMFMdaAudioOutputStream *iStream);
+    void DoCancel();
 };
 
 class CMMFMdaAudioOutputStream {

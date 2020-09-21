@@ -55,6 +55,8 @@ namespace eka2l1 {
             kernel::address cookie_address;
             kernel::handle associated_handle;
 
+            bool headless_;
+
         protected:
             int send(ipc_msg_ptr &msg);
             ipc_msg_ptr get_free_msg();

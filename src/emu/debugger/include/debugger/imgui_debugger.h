@@ -96,6 +96,7 @@ namespace eka2l1 {
 
         bool should_disable_validate_drive;
         bool should_warn_touch_disabled;
+        bool should_show_sd_card_mount;
 
         std::uint32_t active_screen;
 
@@ -180,6 +181,7 @@ namespace eka2l1 {
         // Server debugging
         void show_windows_tree();
         void show_about();
+        void show_mount_sd_card();
 
         void set_language_to_property(const ::language new_one);
 
@@ -206,6 +208,7 @@ namespace eka2l1 {
         eka2l1::vec2 phony_size;
 
         bool should_show_menu_fullscreen;
+        bool sd_card_mount_choosen;
 
     protected:
         void do_install_package();
@@ -229,6 +232,8 @@ namespace eka2l1 {
         eka2l1::drivers::input_event key_evt;
 
         void show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) override;
+        void set_logger_visbility(const bool show);
+        
         void queue_error(const std::string &error);
         void handle_shortcuts();
 

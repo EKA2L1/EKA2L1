@@ -241,6 +241,19 @@ namespace eka2l1::epoc {
         etel_phone_network_gsm_and_utran
     };
 
+    enum etel_phone_current_call_status {
+        etel_phone_current_call_none,
+        etel_phone_current_call_voice,
+        etel_phone_current_call_fax,
+        etel_phone_current_call_data,
+        etel_phone_current_call_altering,
+        etel_phone_current_call_ringing,
+        etel_phone_current_call_alternating,
+        etel_phone_current_call_dialling,
+        etel_phone_current_call_answering,
+        etel_phone_current_Call_disconnecting
+    };
+
     struct etel_phone_status {
         etel_phone_mode mode_;
         etel_modem_detection detect_;
@@ -296,4 +309,6 @@ namespace eka2l1::epoc {
         std::string tsy_name_;
         std::unique_ptr<etel_entity> entity_;
     };
+
+    static constexpr std::uint32_t ETEL_PHONE_CURRENT_CALL_UID = 0x100052CB;
 }

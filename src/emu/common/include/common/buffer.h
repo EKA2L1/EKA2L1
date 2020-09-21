@@ -54,7 +54,7 @@ namespace eka2l1 {
 
         class wo_stream : public basic_stream {
         public:
-            virtual void write(const void *buf, uint32_t size) = 0;
+            virtual std::uint64_t write(const void *buf, const std::uint64_t write_size) = 0;
 
             template <typename T>
             void write_string(const std::basic_string<T> &str) {
@@ -89,6 +89,14 @@ namespace eka2l1 {
         };
 
         class rw_stream : public ro_stream, public wo_stream {
+        public:
+            virtual void seek(const std::int64_t amount, seek_where wh) override {}
+            virtual bool valid() override { return true; };
+            virtual std::uint64_t left() override { return 0; };
+            virtual uint64_t tell() const override { return 0; };
+            virtual uint64_t size() override { return 0; };
+            virtual std::uint64_t read(void *buf, const std::uint64_t read_size) override { return 0; }
+            virtual std::uint64_t write(const void *buf, const std::uint64_t write_size) override { return 0; }
         };
 
         /*! \brief Another buffer stream, base on LLVM's Buffer 
@@ -198,16 +206,19 @@ namespace eka2l1 {
                 crr_pos = (end - beg) + amount;
             }
 
-            void write(const void *buf, uint32_t size) override {
+            std::uint64_t write(const void *buf, const std::uint64_t size) override {
+                const std::uint64_t actual_write = common::min<std::uint64_t>(size, left());
+
+                if (actual_write == 0) {
+                    return 0;
+                }
+
                 if (beg) {
-                    memcpy(beg + crr_pos, buf, size);
+                    memcpy(beg + crr_pos, buf, actual_write);
                 }
 
-                if (beg + crr_pos > end) {
-                    end = beg + crr_pos;
-                }
-
-                crr_pos += size;
+                crr_pos += actual_write;
+                return actual_write;
             }
         };
 
@@ -275,8 +286,12 @@ namespace eka2l1 {
                 : fo_(path) {
             }
 
-            void write(const void *buf, uint32_t size) override {
+            std::uint64_t write(const void *buf, const std::uint64_t size) override {
+                const std::uint64_t pos = fo_.tellp();
                 fo_.write(reinterpret_cast<const char *>(buf), size);
+                const std::uint64_t current_pos = fo_.tellp();
+
+                return current_pos - pos;
             }
 
             void seek(const std::int64_t amount, common::seek_where wh) override {

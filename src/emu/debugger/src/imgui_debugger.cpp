@@ -116,6 +116,7 @@ namespace eka2l1 {
         , should_notify_reset_for_big_change(false)
         , should_disable_validate_drive(false)
         , should_warn_touch_disabled(false)
+        , should_show_sd_card_mount(false)
         , request_key(false)
         , key_set(false)
         , selected_package_index(0xFFFFFFFF)
@@ -127,7 +128,8 @@ namespace eka2l1 {
         , alserv(nullptr)
         , winserv(nullptr)
         , oom(nullptr)
-        , should_show_menu_fullscreen(false) {
+        , should_show_menu_fullscreen(false)
+        , sd_card_mount_choosen(false) {
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
@@ -1474,6 +1476,48 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::show_mount_sd_card() {
+        if (!sd_card_mount_choosen) {
+            if (!drivers::open_native_dialog(sys->get_graphics_driver(), "", [&](const char *result) {
+                sys->mount(drive_e, drive_media::physical, result, io_attrib_removeable);
+                sd_card_mount_choosen = true;
+            }, true)) {
+                should_show_sd_card_mount = false;
+            }
+        }
+
+        if (sd_card_mount_choosen) {
+            ImGui::OpenPopup("Card mounted successfully!");
+
+            const char *SDCARD_MOUNT_SUCCESS_TEXT = "MMC/SD card mounted! All apps on MMC/SD card are reloaded.";
+            ImVec2 mount_success_window_size = ImVec2(400.0f, 100.0f);
+
+            mount_success_window_size.x = ImGui::CalcTextSize(SDCARD_MOUNT_SUCCESS_TEXT).x + 20.0f;
+
+            ImGui::SetNextWindowSize(mount_success_window_size);
+
+            if (ImGui::BeginPopupModal("Card mounted successfully!")) {
+                ImGui::Text("%s", SDCARD_MOUNT_SUCCESS_TEXT);
+
+                ImGui::NewLine();
+                ImGui::NewLine();
+
+                ImGui::SameLine((mount_success_window_size.x - 30.0f) / 2);
+
+                ImGui::PushItemWidth(30.0f);
+                
+                if (ImGui::Button("OK")) {
+                    should_show_sd_card_mount = false;
+                    sd_card_mount_choosen = false;
+                }
+
+                ImGui::PopItemWidth();
+
+                ImGui::EndPopup();
+            }
+        }
+    }
+    
     void imgui_debugger::show_menu() {
         int num_pops = 0;
 
@@ -1523,6 +1567,7 @@ namespace eka2l1 {
                 ImGui::Separator();
 
                 ImGui::MenuItem("Install device", nullptr, &should_show_install_device_wizard);
+                ImGui::MenuItem("Mount MMC/SD card", nullptr, &should_show_sd_card_mount);
 
                 ImGui::Separator();
 
@@ -2146,6 +2191,8 @@ namespace eka2l1 {
                 ImGui::Text("- florastamine");
                 ImGui::Text("- HadesD (Ichiro)");
                 ImGui::Text("- quanshousio");
+                ImGui::Text("- claimmore");
+                ImGui::Text("- stranno");
                 ImGui::EndChild();
             }
 
@@ -2276,6 +2323,10 @@ namespace eka2l1 {
             show_install_device();
         }
 
+        if (should_show_sd_card_mount) {
+            show_mount_sd_card();
+        }
+
         if (should_show_about) {
             show_about();
         }
@@ -2296,5 +2347,9 @@ namespace eka2l1 {
 
     void imgui_debugger::notify_clients() {
         debug_cv.notify_all();
+    }
+
+    void imgui_debugger::set_logger_visbility(const bool show) {
+        should_show_logger = show;
     }
 }

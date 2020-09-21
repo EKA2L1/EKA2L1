@@ -1148,6 +1148,27 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, imb_range, eka2l1::ptr<void> addr, std::uint32_t size) {
+        process_ptr crr_process = kern->crr_process();
+        void *addr_space_ptr = crr_process->get_ptr_on_addr_space(addr.ptr_address());
+
+        if (addr_space_ptr && (size <= 0x100000)) {
+            kern->run_imb_range_callback(crr_process, addr.ptr_address(), size);
+
+            if (kern->get_config()->dump_imb_range_code) {
+                auto start = std::chrono::system_clock::now();
+                std::time_t end_time = std::chrono::system_clock::to_time_t(start);
+
+                tm local_tm = *std::localtime(&end_time);
+
+                const std::string filename = fmt::format("imb_{}_0x{:X}_{}_{}_{}_{}_{}_{}.dump", crr_process->unique_id(),
+                    addr.ptr_address(), local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min,
+                    local_tm.tm_sec);
+
+                std::ofstream out(filename, std::ios_base::binary | std::ios_base::out);
+                out.write(reinterpret_cast<char*>(addr_space_ptr), size);
+            }
+        }
+
         kern->get_cpu()->imb_range(addr.ptr_address(), size);
     }
 
@@ -2402,6 +2423,10 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, set_exception_handler_eka1, address handler, std::uint32_t mask, kernel::handle h) {
+        return set_exception_handler(kern, h, handler, mask);
+    }
+
     BRIDGE_FUNC(std::int32_t, raise_exception, kernel::handle h, std::int32_t type) {
         LOG_ERROR("Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
@@ -2653,6 +2678,7 @@ namespace eka2l1::epoc {
         std::size_t max_size = 0;
 
         memory_system *mem = kern->get_memory_system();
+        prot init_prot = prot::read_write;
 
         if (type_of_chunk == kernel::chunk_type::normal) {
             epoc::eka1_normal_chunk_create_description *description = 
@@ -2667,6 +2693,10 @@ namespace eka2l1::epoc {
             bottom = 0;
             top = common::align(description->init_size_, mem->get_page_size());
             max_size = common::align(description->max_size_, mem->get_page_size());
+
+            if (description->is_code_) {
+                init_prot = prot::read_write_exec;
+            }
         } else {
             epoc::eka1_double_ended_create_description *description = 
                 reinterpret_cast<decltype(description)>(description_data_des->get_pointer_raw(target_process));
@@ -2683,7 +2713,7 @@ namespace eka2l1::epoc {
         }
 
         kernel::handle h = kern->create_and_add<kernel::chunk>(get_handle_owner_from_eka1_attribute(attribute),
-            mem, target_process, chunk_name, bottom, top, max_size, prot::read_write, type_of_chunk,
+            mem, target_process, chunk_name, bottom, top, max_size, init_prot, type_of_chunk,
             access_type, chunk_attribute).first;
 
         if (h == kernel::INVALID_HANDLE) {
@@ -3115,6 +3145,28 @@ namespace eka2l1::epoc {
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
     }
 
+    std::int32_t thread_get_heap_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        address *addr_ptr = eka2l1::ptr<address>(create_info->arg1_).get(target_thread->owning_process());
+
+        if (!addr_ptr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        *addr_ptr = target_thread->get_local_data()->heap.ptr_address();
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     std::int32_t server_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *target_process = target_thread->owning_process();
@@ -3173,6 +3225,10 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
+
+        if (kern->get_config()->log_svc) {
+            LOG_TRACE("Calling executor function 0x{:X}", attribute & 0xFF);
+        }
 
         switch (attribute & 0xFF) {
         case epoc::eka1_executor::execute_create_chunk_normal:
@@ -3251,6 +3307,9 @@ namespace eka2l1::epoc {
         case epoc::eka1_executor::execute_compress_heap:
             return compress_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+        case epoc::eka1_executor::execute_get_heap_thread:
+            return thread_get_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
         default:
             LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
             break;
@@ -3313,7 +3372,12 @@ namespace eka2l1::epoc {
         info.target_length = (flags & IPC_DIR_WRITE) ? des_ptr->get_length() : des_ptr->get_max_length(crr_process);
         info.flags = flags | IPC_HLE_EKA1;
 
-        return do_ipc_manipulation(kern, client_thread, client_ptr, info, offset);
+        const int processed = do_ipc_manipulation(kern, client_thread, client_ptr, info, offset);
+        if (!(flags & IPC_DIR_WRITE)) {
+            des_ptr->set_length(crr_process, processed);
+        }
+
+        return processed;
     }
 
     BRIDGE_FUNC(void, thread_read_ipc_to_des8, address source_ptr_addr, epoc::des8 *dest_des, std::int32_t offset, kernel::handle source_thread) {
@@ -3472,7 +3536,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800012, user_svr_rom_root_dir_address),
         BRIDGE_REGISTER(0x00800015, utc_offset),
         BRIDGE_REGISTER(0x00800016, get_global_userdata),
-        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+        BRIDGE_REGISTER(0x00C10000, hle_dispatch),
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
@@ -3567,7 +3631,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
-        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+        BRIDGE_REGISTER(0x00C10000, hle_dispatch),
 
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, object_next),
@@ -3717,7 +3781,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800016, safe_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
-        BRIDGE_REGISTER(0x00800030, hle_dispatch),
+        BRIDGE_REGISTER(0x00C10000, hle_dispatch),
 
         /* SLOW EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00, object_next),
@@ -3898,6 +3962,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
+        BRIDGE_REGISTER(0x8000CC, imb_range),
         BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal),
@@ -3914,6 +3979,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC0009F, set_exception_handler_eka1),
         BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
         BRIDGE_REGISTER(0xC10000, hle_dispatch),

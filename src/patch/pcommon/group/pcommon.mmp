@@ -9,3 +9,4 @@ SOURCEPATH	  ..\src
 
 SOURCE		  debug.s
 SOURCE        log.cpp
+SOURCE        aud.cpp

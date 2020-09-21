@@ -88,6 +88,7 @@ add_library(epocservs
         include/services/socket/connection.h
         include/services/socket/resolver.h
         include/services/socket/socket.h
+        include/services/sysagt/sysagt.h
         include/services/ui/cap/eiksrv.h
         include/services/ui/cap/oom_app.h
         include/services/ui/cap/sgc.h
@@ -184,6 +185,7 @@ add_library(epocservs
         src/socket/connection.cpp
         src/socket/resolver.cpp
         src/socket/socket.cpp
+        src/sysagt/sysagt.cpp
         src/ui/cap/eiksrv.cpp
         src/ui/cap/oom_app.cpp
         src/ui/cap/sgc.cpp

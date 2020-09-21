@@ -20,6 +20,7 @@
 #include <drivers/audio/backend/ffmpeg/dsp_ffmpeg.h>
 #include <map>
 
+#include <common/algorithm.h>
 #include <common/log.h>
 
 extern "C" {
@@ -36,7 +37,8 @@ namespace eka2l1::drivers {
 
     dsp_output_stream_ffmpeg::dsp_output_stream_ffmpeg(drivers::audio_driver *aud)
         : dsp_output_stream_shared(aud)
-        , codec_(nullptr) {
+        , codec_(nullptr)
+        , timestamp_in_base_(0) {
         format(PCM16_FOUR_CC_CODE);
     }
 
@@ -94,6 +96,7 @@ namespace eka2l1::drivers {
             }
 
             dest.resize(2 * frame->nb_samples * sizeof(std::uint16_t));
+            timestamp_in_base_ = frame->best_effort_timestamp;
 
             if ((channels_ != codec_->channels) || (frame->format != AV_SAMPLE_FMT_S16)) {
                 SwrContext *swr = swr_alloc_set_opts(nullptr,
@@ -122,5 +125,11 @@ namespace eka2l1::drivers {
                 std::memcpy(&dest[0], frame->data[0], dest.size());
             }
         }
+    }
+
+    std::uint64_t dsp_output_stream_ffmpeg::position_non_pcm16() {
+        // Time in base multiply with time spend per frame in microseconds
+        return common::multiply_and_divide_qwords(timestamp_in_base_, codec_->time_base.num * AV_TIME_BASE,
+            codec_->time_base.den);
     }
 }

@@ -17,13 +17,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-.include "../../../pcommon/inc/sv.S"
+#include <mdaaudiosampleeditor.h>
+#include <e32std.h>
 
-.global UpdateScreen
-.global FastBlit
+#include "common.h"
 
-UpdateScreen:
-    CallHleDispatch 0x1
+CMdaAudioType* CMdaAudioClipUtility::TypeL() {
+	User::Leave(KErrNotSupported);
+	return NULL;
+}
 
-FastBlit:
-    CallHleDispatch 0x2
+#if (MCA_NEW >= 2)
+void CMdaAudioClipUtility::ClipUtil_Reserved3() {
+}
+
+void CMdaAudioClipUtility::ClipUtil_Reserved4() {
+	
+}
+#endif
+
+/// == END REPROXY ==

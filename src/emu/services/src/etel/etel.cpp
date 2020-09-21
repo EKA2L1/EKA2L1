@@ -17,13 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/cvt.h>
 #include <epoc/epoc.h>
+#include <kernel/kernel.h>
+#include <kernel/property.h>
 #include <services/etel/common.h>
 #include <services/etel/etel.h>
 #include <services/etel/phone.h>
+#include <services/sysagt/sysagt.h>
 #include <utils/err.h>
-
-#include <common/cvt.h>
 
 namespace eka2l1 {
     std::string get_etel_server_name_by_epocver(const epocver ver) {
@@ -35,7 +37,23 @@ namespace eka2l1 {
     }
 
     etel_server::etel_server(eka2l1::system *sys)
-        : service::typical_server(sys, get_etel_server_name_by_epocver(sys->get_symbian_version_use())) {
+        : service::typical_server(sys, get_etel_server_name_by_epocver(sys->get_symbian_version_use()))
+        , call_status_prop_(nullptr) {
+        init(sys->get_kernel_system());
+    }
+
+    void etel_server::init(kernel_system *kern) {
+        if (call_status_prop_) {
+            return;
+        }
+
+        call_status_prop_ = kern->create<service::property>();
+        call_status_prop_->define(service::property_type::int_data, 4);
+
+        call_status_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
+        call_status_prop_->second = epoc::ETEL_PHONE_CURRENT_CALL_UID;
+
+        call_status_prop_->set_int(epoc::etel_phone_current_call_none);
     }
 
     void etel_server::connect(service::ipc_context &ctx) {
