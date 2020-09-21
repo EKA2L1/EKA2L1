@@ -359,11 +359,11 @@ namespace eka2l1 {
 
     static void do_scale_metrics(epoc::open_font_metrics &metrics, const float scale_x, const float scale_y) {
         metrics.max_height = static_cast<std::int16_t>(metrics.max_height * scale_y);
-        metrics.ascent = static_cast<std::int16_t>(metrics.ascent * scale_x);
-        metrics.descent = static_cast<std::int16_t>(metrics.descent * scale_x);
+        metrics.ascent = static_cast<std::int16_t>(metrics.ascent * scale_y);
+        metrics.descent = static_cast<std::int16_t>(metrics.descent * scale_y);
         metrics.design_height = static_cast<std::int16_t>(metrics.design_height * scale_y);
         metrics.max_depth = static_cast<std::int16_t>(metrics.max_depth * scale_y);
-        metrics.max_width = static_cast<std::int16_t>(metrics.max_width * scale_y);
+        metrics.max_width = static_cast<std::int16_t>(metrics.max_width * scale_x);
     }
 
     static std::int32_t calculate_baseline(epoc::font_spec_base &spec) {
