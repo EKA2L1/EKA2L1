@@ -79,7 +79,7 @@ namespace eka2l1::config {
         bool enable_srv_akn_icon{ false };
         bool enable_srv_akn_skin{ true };
         bool enable_srv_cdl{ true };
-        bool enable_srv_socket{ false };
+        bool enable_srv_socket{ true };
 
         bool fbs_enable_compression_queue{ false };
         bool accurate_ipc_timing{ false };
