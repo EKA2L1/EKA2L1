@@ -140,5 +140,9 @@ namespace eka2l1::drivers {
         always
     };
 
+    enum class window_api {
+        glfw
+    };
+
     using channel_swizzles = std::array<channel_swizzle, 4>;
 }

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <drivers/input/common.h>
+#include <drivers/graphics/common.h>
 
 #include <common/vecx.h>
 #include <cstdint>
@@ -100,6 +101,8 @@ namespace eka2l1 {
             emu_window_flag_maximum_size = 1 << 1
         };
 
+        class cursor;
+
         /**
          * \brief An abstract class to implement the emulator window.
          * 
@@ -141,6 +144,10 @@ namespace eka2l1 {
             virtual void set_userdata(void *userdata) = 0;
             virtual void *get_userdata() = 0;
 
+            virtual bool set_cursor(cursor *cur) = 0;
+            virtual void cursor_visiblity(const bool visi) = 0;
+            virtual bool cursor_visiblity() = 0;
+
             std::function<void(void *, vec2)> resize_hook;
 
             /* Callback handler */
@@ -172,15 +179,10 @@ namespace eka2l1 {
             std::function<void(void *, char)> char_hook;
         };
 
-        enum class window_type {
-            glfw
-        };
+        std::unique_ptr<emu_window> new_emu_window(const window_api win_type);
 
-        /** \brief Create a new window emulator. */
-        std::unique_ptr<emu_window> new_emu_window(window_type win_type);
-
-        bool init_window_library(window_type win_type);
-        bool destroy_window_library(window_type win_type);
+        bool init_window_library(const window_api win_type);
+        bool destroy_window_library(const window_api win_type);
 
         using emu_window_ptr = std::unique_ptr<emu_window>;
     }
