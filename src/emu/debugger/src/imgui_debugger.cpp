@@ -129,7 +129,10 @@ namespace eka2l1 {
         , winserv(nullptr)
         , oom(nullptr)
         , should_show_menu_fullscreen(false)
-        , sd_card_mount_choosen(false) {
+        , sd_card_mount_choosen(false) 
+        , back_from_fullscreen(false)
+        , last_scale(1.0f)
+        , last_cursor(ImGuiMouseCursor_Arrow) {
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
@@ -556,6 +559,47 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_pref_general() {
+        const float col3 = ImGui::GetWindowSize().x / 3;
+
+        auto draw_path_change = [&](const char *title, const char *button, std::string &dat) -> bool {
+            ImGui::Text("%s", title);
+            ImGui::SameLine(col3);
+
+            ImGui::PushItemWidth(col3 * 2 - 75);
+            ImGui::InputText("##Path", dat.data(), dat.size(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopItemWidth();
+
+            ImGui::SameLine(col3 * 3 - 65);
+            ImGui::PushItemWidth(30);
+
+            bool change = false;
+
+            if (ImGui::Button(button)) {
+                on_pause_toogle(true);
+
+                drivers::open_native_dialog(
+                    sys->get_graphics_driver(),
+                    "", [&](const char *res) {
+                        dat = res;
+                        change = true;
+                    },
+                    true);
+
+                should_pause = false;
+                on_pause_toogle(false);
+            }
+
+            ImGui::PopItemWidth();
+            return change;
+        };
+
+        if (draw_path_change("Data storage", "Change##1", conf->storage)) {
+            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+            dvc_mngr->load_devices();
+
+            should_notify_reset_for_big_change = true;
+        }
+
         ImGui::Text("Debugging");
         ImGui::Separator();
 
@@ -583,7 +627,21 @@ namespace eka2l1 {
         }
 
         ImGui::NewLine();
-        ImGui::Text("System");
+        ImGui::Text("Utilities");
+        ImGui::Separator();
+
+        ImGui::Checkbox("Hide mouse cursor when it is inside a screen's space", &conf->hide_mouse_in_screen_space);
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Useful when you bind a key with your mouse and game/app has built-in cursor.\n"
+                "To make the mouse cursor visible, hold ALT key.");
+        }
+    }
+
+    void imgui_debugger::show_pref_system() {
+        const float col2 = ImGui::GetWindowSize().x / 2;
+
+        ImGui::NewLine();
+        ImGui::Text("General");
         ImGui::Separator();
 
         ImGui::Text("CPU");
@@ -740,51 +798,7 @@ namespace eka2l1 {
         mngr->lock.unlock();
     }
 
-    void imgui_debugger::show_pref_system() {
-        const float col2 = ImGui::GetWindowSize().x / 3;
-
-        auto draw_path_change = [&](const char *title, const char *button, std::string &dat) -> bool {
-            ImGui::Text("%s", title);
-            ImGui::SameLine(col2);
-
-            ImGui::PushItemWidth(col2 * 2 - 75);
-            ImGui::InputText("##Path", dat.data(), dat.size(), ImGuiInputTextFlags_ReadOnly);
-            ImGui::PopItemWidth();
-
-            ImGui::SameLine(col2 * 3 - 65);
-            ImGui::PushItemWidth(30);
-
-            bool change = false;
-
-            if (ImGui::Button(button)) {
-                on_pause_toogle(true);
-
-                drivers::open_native_dialog(
-                    sys->get_graphics_driver(),
-                    "", [&](const char *res) {
-                        dat = res;
-                        change = true;
-                    },
-                    true);
-
-                should_pause = false;
-                on_pause_toogle(false);
-            }
-
-            ImGui::PopItemWidth();
-            return change;
-        };
-
-        if (draw_path_change("Data storage", "Change##1", conf->storage)) {
-            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
-            dvc_mngr->load_devices();
-
-            should_notify_reset_for_big_change = true;
-        }
-
-        ImGui::Separator();
-
-        ImGui::NewLine();
+    void imgui_debugger::show_pref_control() {
         ImGui::Text("%s", "Key binding");
         ImGui::Separator();
         const float btn_col2 = ImGui::GetWindowSize().x / 4;
@@ -879,7 +893,7 @@ namespace eka2l1 {
             }
         }
     }
-
+    
     void imgui_debugger::show_pref_hal() {
         const float col6 = ImGui::GetWindowSize().x / 6;
 
@@ -937,6 +951,7 @@ namespace eka2l1 {
         static std::vector<std::pair<std::string, show_func>> all_prefs = {
             { "General", &imgui_debugger::show_pref_general },
             { "System", &imgui_debugger::show_pref_system },
+            { "Control", &imgui_debugger::show_pref_control },
             { "Personalisation", &imgui_debugger::show_pref_personalisation },
             { "HAL", &imgui_debugger::show_pref_hal }
         };
@@ -1601,8 +1616,14 @@ namespace eka2l1 {
 
             if (ImGui::BeginMenu("View")) {
                 bool fullscreen = renderer->is_fullscreen();
+                bool last_full_status = fullscreen;
+
                 ImGui::MenuItem("Fullscreen", nullptr, &fullscreen);
                 renderer->set_fullscreen(fullscreen);
+
+                if ((fullscreen == false) && (last_full_status != fullscreen)) {
+                    back_from_fullscreen = true;
+                }
 
                 ImGui::EndMenu();
             }
@@ -1900,6 +1921,12 @@ namespace eka2l1 {
                 ImGui::SetNextWindowPos(ImVec2(fullscreen_start_x, fullscreen_start_y));
             } else {
                 ImGui::SetNextWindowSize(rotated_size, ImGuiCond_Once);
+
+                if (back_from_fullscreen) {
+                    ImGui::SetNextWindowSize(ImVec2(rotated_size.x * last_scale, rotated_size.y * last_scale));
+                    back_from_fullscreen = false;
+                }
+
                 ImGui::SetNextWindowSizeConstraints(rotated_size, fullscreen_region, imgui_screen_aspect_resize_keeper,
                     &ratioed);
             }
@@ -1913,6 +1940,10 @@ namespace eka2l1 {
 
             if (ImGui::IsWindowFocused()) {
                 active_screen = scr->number;
+            }
+
+            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RectOnly) && (conf->hide_mouse_in_screen_space && !io.KeyAlt)) {    
+                ImGui::SetMouseCursor(ImGuiMouseCursor_None);
             }
 
             ImVec2 winpos = ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin();
@@ -1970,6 +2001,8 @@ namespace eka2l1 {
             } else {
                 scr->scale_x = ImGui::GetWindowSize().x / size.x;
                 scr->scale_y = scr->scale_x;
+
+                last_scale = scr->scale_x;
             }
 
             ImVec2 scaled_no_dsa;

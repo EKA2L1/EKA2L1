@@ -154,6 +154,11 @@ namespace eka2l1 {
         selected_window_callback_function selected_callback;
         void *selected_callback_data;
 
+        bool back_from_fullscreen;
+        float last_scale;
+
+        int last_cursor;
+
         void show_app_launch();
         void show_empty_device_warn();
         void show_touchscreen_disabled_warn();
@@ -170,6 +175,7 @@ namespace eka2l1 {
 
         void show_pref_personalisation();
         void show_pref_general();
+        void show_pref_control();
         void show_pref_system();
         void show_pref_hal();
 
