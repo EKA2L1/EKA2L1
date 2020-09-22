@@ -1878,6 +1878,7 @@ namespace eka2l1 {
             eka2l1::vec2 size = scr->current_mode().size;
 
             scr->screen_mutex.lock();
+
             ImVec2 rotated_size(static_cast<float>(size.x), static_cast<float>(size.y));
 
             if (scr->ui_rotation % 180 == 90) {
@@ -1964,9 +1965,11 @@ namespace eka2l1 {
             get_nice_scale_by_integer(fullscreen_region, ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scale);
 
             if (fullscreen_now) {
-                scr->scale = scale;
+                scr->scale_x = static_cast<float>(scale.x);
+                scr->scale_y = static_cast<float>(scale.y);
             } else {
-                scr->scale = { 1, 1 };
+                scr->scale_x = ImGui::GetWindowSize().x / size.x;
+                scr->scale_y = scr->scale_x;
             }
 
             ImVec2 scaled_no_dsa;
@@ -1982,11 +1985,11 @@ namespace eka2l1 {
                 scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.y);
 
                 if (scr->ui_rotation % 180 == 0) {
-                    winpos.x += (fullscreen_region.x - size.x) / 2;
-                    winpos.y += (fullscreen_region.y - size.y) / 2;
+                    winpos.x += (fullscreen_region.x - scaled_no_dsa.x) / 2;
+                    winpos.y += (fullscreen_region.y - scaled_no_dsa.y) / 2;
                 } else {
-                    winpos.x += (fullscreen_region.x - size.y) / 2;
-                    winpos.y += (fullscreen_region.y - size.x) / 2;
+                    winpos.x += (fullscreen_region.x - scaled_no_dsa.y) / 2;
+                    winpos.y += (fullscreen_region.y - scaled_no_dsa.x) / 2;
                 }
             } else {
                 scaled_no_dsa = ImGui::GetWindowSize();
