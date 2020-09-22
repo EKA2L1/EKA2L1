@@ -133,6 +133,7 @@ namespace eka2l1 {
         , back_from_fullscreen(false)
         , last_scale(1.0f)
         , last_cursor(ImGuiMouseCursor_Arrow) {
+        localised_strings = common::get_localised_string_table("resources", "strings.xml", language::en);
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
@@ -1549,11 +1550,16 @@ namespace eka2l1 {
                 num_pops++;
             }
 
-            if (ImGui::BeginMenu("File")) {
-                ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
+            const std::string file_menu_item_name = common::get_localised_string(localised_strings, "file_menu_name");
+            const std::string logger_item_name = common::get_localised_string(localised_strings, "file_menu_logger_item_name");
+            const std::string launch_app_item_name = common::get_localised_string(localised_strings, "file_menu_launch_apps_item_name");
+            const std::string package_item_name = common::get_localised_string(localised_strings, "file_menu_packages_item_name");
+
+            if (ImGui::BeginMenu(file_menu_item_name.c_str())) {
+                ImGui::MenuItem(logger_item_name.c_str(), "CTRL+SHIFT+L", &should_show_logger);
 
                 bool last_show_launch = should_show_app_launch;
-                ImGui::MenuItem("Launch apps", "CTRL+R", &should_show_app_launch);
+                ImGui::MenuItem(launch_app_item_name.c_str(), "CTRL+R", &should_show_app_launch);
 
                 if ((last_show_launch != should_show_app_launch) && last_show_launch == false) {
                     should_still_focus_on_keyboard = true;
@@ -1563,18 +1569,26 @@ namespace eka2l1 {
                 if (!dvc_mngr->get_current()) {
                     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 
-                    ImGui::MenuItem("Packages");
+                    ImGui::MenuItem(package_item_name.c_str());
 
                     if (ImGui::IsItemHovered()) {
                         ImGui::PopStyleVar();
-                        ImGui::SetTooltip("Please install a device to access the package manager!");
+
+                        const std::string unavail_tt = common::get_localised_string(localised_strings, "file_menu_packages_item_unavail_msg");
+                        ImGui::SetTooltip(unavail_tt.c_str());
                     } else {
                         ImGui::PopStyleVar();
                     }
                 } else {
-                    if (ImGui::BeginMenu("Packages")) {
-                        ImGui::MenuItem("Install", nullptr, &should_install_package);
-                        ImGui::MenuItem("List", nullptr, &should_package_manager);
+                    if (ImGui::BeginMenu(package_item_name.c_str())) {
+                        const std::string package_install_item_name = common::get_localised_string(localised_strings,
+                            "file_menu_package_submenu_install_item_name");
+
+                        const std::string list_install_item_name = common::get_localised_string(localised_strings,
+                            "file_menu_package_submenu_list_item_name");
+
+                        ImGui::MenuItem(package_install_item_name.c_str(), nullptr, &should_install_package);
+                        ImGui::MenuItem(list_install_item_name.c_str(), nullptr, &should_package_manager);
                         ImGui::EndMenu();
                     }
                 }
@@ -1948,6 +1962,7 @@ namespace eka2l1 {
 
             ImVec2 winpos = ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin();
 
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
             if (fullscreen_now ? ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right) : ImGui::BeginPopupContextItem(nullptr, ImGuiMouseButton_Right)) {
                 bool orientation_lock = scr->orientation_lock;
                 if (ImGui::BeginMenu("Orientation lock", false)) {
@@ -1991,6 +2006,8 @@ namespace eka2l1 {
 
                 ImGui::EndPopup();
             }
+            
+            ImGui::PopStyleVar();
 
             eka2l1::vec2 scale(0, 0);
             get_nice_scale_by_integer(fullscreen_region, ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scale);
@@ -1999,7 +2016,7 @@ namespace eka2l1 {
                 scr->scale_x = static_cast<float>(scale.x);
                 scr->scale_y = static_cast<float>(scale.y);
             } else {
-                scr->scale_x = ImGui::GetWindowSize().x / size.x;
+                scr->scale_x = ImGui::GetWindowSize().x / rotated_size.x;
                 scr->scale_y = scr->scale_x;
 
                 last_scale = scr->scale_x;
@@ -2028,12 +2045,10 @@ namespace eka2l1 {
                 scaled_no_dsa = ImGui::GetWindowSize();
                 scaled_no_dsa.y -= ImGui::GetCurrentWindow()->TitleBarHeight();
 
-                if (scr->ui_rotation % 180 == 90) {
-                    scaled_dsa.x = scaled_no_dsa.y;
-                    scaled_dsa.y = scaled_no_dsa.x;
-                } else {
-                    scaled_dsa = scaled_no_dsa;
-                }
+                const eka2l1::vec2 size_dsa_org = scr->size();
+
+                scaled_dsa.x = static_cast<float>(size_dsa_org.x) * scr->scale_x;
+                scaled_dsa.y = static_cast<float>(size_dsa_org.y) * scr->scale_y;
             }
 
             scr->absolute_pos.x = static_cast<int>(winpos.x);
@@ -2042,7 +2057,6 @@ namespace eka2l1 {
             draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos, scaled_no_dsa, scr->ui_rotation);
 
             if (scr->dsa_texture) {
-                const eka2l1::vec2 size_dsa = scr->size();
                 const int rotation = (scr->current_mode().rotation + scr->ui_rotation) % 360;
 
                 draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos, scaled_dsa, rotation);

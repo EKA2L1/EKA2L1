@@ -26,6 +26,7 @@
 #include <thread>
 #include <vector>
 
+#include <common/localizer.h>
 #include <common/queue.h>
 #include <common/types.h>
 #include <common/vecx.h>
@@ -147,6 +148,8 @@ namespace eka2l1 {
         applist_server *alserv;
         window_server *winserv;
         oom_ui_app_server *oom;
+
+        common::string_table localised_strings;
 
         std::mutex errors_mut;
         std::queue<std::string> error_queue;
