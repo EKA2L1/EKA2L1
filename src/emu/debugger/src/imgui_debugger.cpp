@@ -1853,6 +1853,11 @@ namespace eka2l1 {
         if (scale.y > 1)
             scale.y--;
     }
+    
+    static void imgui_screen_aspect_resize_keeper(ImGuiSizeCallbackData* data) {
+        float ratio = *reinterpret_cast<float*>(data->UserData);
+        data->DesiredSize.y = data->DesiredSize.x / ratio + ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
+    }
 
     void imgui_debugger::show_screens() {
         // Iterate through all screen from window server
@@ -1873,11 +1878,13 @@ namespace eka2l1 {
             eka2l1::vec2 size = scr->current_mode().size;
 
             scr->screen_mutex.lock();
-            ImVec2 rotated_size(size.x + 15.0f, size.y + 35.0f);
+            ImVec2 rotated_size(static_cast<float>(size.x), static_cast<float>(size.y));
 
             if (scr->ui_rotation % 180 == 90) {
-                rotated_size.x = size.y + 15.0f;
-                rotated_size.y = size.x + 35.0f;
+                const float temp = rotated_size.x;
+
+                rotated_size.x = rotated_size.y;
+                rotated_size.y = temp;
             }
 
             ImVec2 fullscreen_region = ImVec2(io.DisplaySize.x, io.DisplaySize.y - 60.0f);
@@ -1885,12 +1892,18 @@ namespace eka2l1 {
             const float fullscreen_start_x = 0.0f;
             const float fullscreen_start_y = 30.0f;
 
+            float ratioed = rotated_size.x / rotated_size.y;
+
             if (fullscreen_now) {
                 ImGui::SetNextWindowSize(fullscreen_region);
                 ImGui::SetNextWindowPos(ImVec2(fullscreen_start_x, fullscreen_start_y));
             } else {
-                ImGui::SetNextWindowSize(rotated_size);
+                ImGui::SetNextWindowSize(rotated_size, ImGuiCond_Once);
+                ImGui::SetNextWindowSizeConstraints(rotated_size, fullscreen_region, imgui_screen_aspect_resize_keeper,
+                    &ratioed);
             }
+            
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
             if (fullscreen_now)
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -1956,9 +1969,17 @@ namespace eka2l1 {
                 scr->scale = { 1, 1 };
             }
 
+            ImVec2 scaled_no_dsa;
+            ImVec2 scaled_dsa;
+
             if (fullscreen_now) {
-                size.x *= scale.x;
-                size.y *= scale.y;
+                scaled_no_dsa.x = static_cast<float>(size.x * scale.x);
+                scaled_no_dsa.y = static_cast<float>(size.y * scale.y);
+
+                const eka2l1::vec2 org_screen_size = scr->size();
+
+                scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.x);
+                scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.y);
 
                 if (scr->ui_rotation % 180 == 0) {
                     winpos.x += (fullscreen_region.x - size.x) / 2;
@@ -1967,21 +1988,28 @@ namespace eka2l1 {
                     winpos.x += (fullscreen_region.x - size.y) / 2;
                     winpos.y += (fullscreen_region.y - size.x) / 2;
                 }
+            } else {
+                scaled_no_dsa = ImGui::GetWindowSize();
+                scaled_no_dsa.y -= ImGui::GetCurrentWindow()->TitleBarHeight();
+
+                if (scr->ui_rotation % 180 == 90) {
+                    scaled_dsa.x = scaled_no_dsa.y;
+                    scaled_dsa.y = scaled_no_dsa.x;
+                } else {
+                    scaled_dsa = scaled_no_dsa;
+                }
             }
 
             scr->absolute_pos.x = static_cast<int>(winpos.x);
             scr->absolute_pos.y = static_cast<int>(winpos.y);
 
-            draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos,
-                ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scr->ui_rotation);
+            draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos, scaled_no_dsa, scr->ui_rotation);
 
             if (scr->dsa_texture) {
                 const eka2l1::vec2 size_dsa = scr->size();
                 const int rotation = (scr->current_mode().rotation + scr->ui_rotation) % 360;
 
-                draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos,
-                    ImVec2(static_cast<float>(size_dsa.x * scr->scale.x), static_cast<float>(size_dsa.y * scr->scale.y)),
-                    rotation);
+                draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos, scaled_dsa, rotation);
             }
 
             scr->screen_mutex.unlock();
@@ -1990,6 +2018,11 @@ namespace eka2l1 {
 
             if (fullscreen_now) {
                 ImGui::PopStyleVar();
+            }
+
+            ImGui::PopStyleVar();
+
+            if (fullscreen_now) {
                 break;
             }
         }

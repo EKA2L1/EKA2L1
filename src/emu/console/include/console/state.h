@@ -32,6 +32,7 @@
 #include <config/config.h>
 
 #include <debugger/renderer/renderer.h>
+#include <drivers/graphics/cursor.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/input/emu_controller.h>
 
@@ -61,6 +62,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<debugger_renderer> deb_renderer;
         std::unique_ptr<imgui_debugger> debugger;
         std::shared_ptr<imgui_logger> logger;
+
         drivers::emu_window_ptr window;
         drivers::emu_controller_ptr joystick_controller;
 
@@ -79,6 +81,9 @@ namespace eka2l1::desktop {
 
         bool mouse_down[5];
         vec2d mouse_scroll;
+
+        std::unique_ptr<drivers::cursor_controller> mouse_cursor_controller;
+        std::array<std::unique_ptr<drivers::cursor>, 20> mouse_cursors;
 
         std::mutex input_mutex;
 

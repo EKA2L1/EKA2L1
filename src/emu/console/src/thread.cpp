@@ -179,11 +179,23 @@ namespace eka2l1::desktop {
         // Halloween decoration breath of the graphics
         eka2l1::common::set_thread_name(graphics_driver_thread_name);
 
-        if (!drivers::init_window_library(drivers::window_type::glfw)) {
+        if (!drivers::init_window_library(drivers::window_api::glfw)) {
             return -1;
         }
 
-        state.window = drivers::new_emu_window(eka2l1::drivers::window_type::glfw);
+        state.mouse_cursor_controller = drivers::make_new_cursor_controller(eka2l1::drivers::window_api::glfw);
+
+        state.mouse_cursors[ImGuiMouseCursor_Arrow] = state.mouse_cursor_controller->create(drivers::cursor_type_arrow);
+        state.mouse_cursors[ImGuiMouseCursor_TextInput] = state.mouse_cursor_controller->create(drivers::cursor_type_ibeam);
+        state.mouse_cursors[ImGuiMouseCursor_ResizeNS] = state.mouse_cursor_controller->create(drivers::cursor_type_vresize);
+        state.mouse_cursors[ImGuiMouseCursor_ResizeEW] = state.mouse_cursor_controller->create(drivers::cursor_type_hresize);
+        state.mouse_cursors[ImGuiMouseCursor_Hand] = state.mouse_cursor_controller->create(drivers::cursor_type_hand);
+        state.mouse_cursors[ImGuiMouseCursor_ResizeAll] = state.mouse_cursor_controller->create(drivers::cursor_type_allresize);
+        state.mouse_cursors[ImGuiMouseCursor_ResizeNESW] = state.mouse_cursor_controller->create(drivers::cursor_type_nesw_resize);
+        state.mouse_cursors[ImGuiMouseCursor_ResizeNWSE] = state.mouse_cursor_controller->create(drivers::cursor_type_nwse_resize);
+        state.mouse_cursors[ImGuiMouseCursor_NotAllowed] = state.mouse_cursor_controller->create(drivers::cursor_type_arrow);
+
+        state.window = drivers::new_emu_window(eka2l1::drivers::window_api::glfw);
 
         state.window->raw_mouse_event = on_ui_window_mouse_evt;
         state.window->mouse_wheeling = on_ui_window_mouse_scrolling;
@@ -211,7 +223,13 @@ namespace eka2l1::desktop {
             "Causing an entire country chaos because of my imagination",
             "Thank you very much for checking out the emulator",
             "Casually the cause of case files over two decades while staying first-grade"
-            "Stop right there criminal scum!"
+            "Stop right there criminal scum!",
+            "By Azura By Azura By Azura!",
+            "VAC is activating... It's Virtual Assistant Cellphone though, so keep using cheats!",
+            "Driftin' to save my sister in nowhere!",
+            "Will this become an Inferno Arch core soon?",
+            "Emulator from nowhere. Now on Netflix.",
+            "E3 2005 Prototype version."
             // You can add more, but probably when the emulator becomes more functional
         };
 
@@ -273,7 +291,7 @@ namespace eka2l1::desktop {
         state.graphics_driver.reset();
         state.window->shutdown();
 
-        if (!drivers::destroy_window_library(eka2l1::drivers::window_type::glfw)) {
+        if (!drivers::destroy_window_library(eka2l1::drivers::window_api::glfw)) {
             return -1;
         }
 
@@ -307,6 +325,9 @@ namespace eka2l1::desktop {
         ImGui::CreateContext();
 
         ImGuiIO &io = ImGui::GetIO();
+
+        io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+        io.BackendPlatformName = "EKA2L1";
 
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.KeyMap[ImGuiKey_A] = 'A';
@@ -418,6 +439,19 @@ namespace eka2l1::desktop {
 
             state.mouse_scroll = { 0.0, 0.0 };
 
+            if (!(io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)) {
+                ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+                if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor) {
+                    // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
+                    state.window->cursor_visiblity(false);
+                } else {
+                    state.window->set_cursor(state.mouse_cursors[imgui_cursor] ? state.mouse_cursors[imgui_cursor].get() :
+                        state.mouse_cursors[ImGuiMouseCursor_Arrow].get());
+
+                    state.window->cursor_visiblity(true);
+                }
+            }
+            
             // Render the graphics
             state.deb_renderer->draw(state.graphics_driver.get(), cmd_builder.get(), nws.x, nws.y, nwsb.x, nwsb.y);
 
