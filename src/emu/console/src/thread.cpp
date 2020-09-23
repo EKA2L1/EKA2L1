@@ -318,7 +318,7 @@ namespace eka2l1::desktop {
         }
     }
 
-    static const char *DEFAULT_FONT_PATH = "resources\\mplus-1m-bold.ttf";
+    static const char *DEFAULT_FONT_PATH = "resources//mplus-1m-bold.ttf";
     static const float DEFAULT_FONT_SIZE = 16;
 
     static int ui_thread_initialization(emulator &state) {
