@@ -74,7 +74,7 @@
     <string name="pref_general_debugging_btrace_tooltip_msg">Enable kernel tracing that is used in driver. Slowdown expected on enable.</string>
     <string name="pref_general_utilities_string">Utilities</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Hide mouse cursor when it is inside an emulated screen.</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Useful when you bind a key with your mouse and game/app has built-in cursor.\nTo make the mouse cursor visible, hold ALT key.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Useful when you bind a key with your mouse and the game/app has built-in cursor.\nTo make the mouse cursor visible, hold ALT key.</string>
 
     <string name="pref_system_title">System</string>
     <string name="pref_system_cpu_option_name">CPU</string>
@@ -110,7 +110,7 @@
     <string name="installer_language_choose_title">Choose the language for this package</string>
 
     <string name="install_device_wizard_title">Install device wizard</string>
-    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard. Me, En will guide you through this!</string>
+    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard. This wizard will guide you through device installation process!</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Choose installation method</string>
@@ -122,7 +122,7 @@
     <string name="install_device_progress_rpkg_msg">Extract the RPKG</string>
     <string name="install_device_progress_rom_msg">Copy the ROM</string>
     <string name="install_device_install_failure_msg">Something wrong happens during the install! Please check the log!</string>
-    <string name="install_device_final_msg_1">Thank you for checking by. En hopes you have a good time!</string>
+    <string name="install_device_final_msg_1">Thank you for using the wizard. We hope you have a good time using the emulator!</string>
     <string name="install_device_final_msg_2">For any problem, please report to the developers by opening issues!</string>
 
     <string name="mmc_mount_success_dialog_title">Card mounted successfully!</string>
