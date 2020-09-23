@@ -14,7 +14,6 @@
     <string name="info">Informações</string>
     <string name="warning">Aviso</string>
     <string name="cancel">Cancelar</string>
-    <string name="type">Tipo</string>
     <string name="cancel">Cancel</string>
     <string name="file_menu_name">Arquivo</string>
     <string name="debugger_menu_name">Depurador</string>
@@ -110,7 +109,7 @@
     <string name="install_device_final_msg_1">Obrigado por verificar. Por favor, espera que você se divirta!</string>
     <string name="install_device_final_msg_2">Para qualquer problema, por favor informe aos desenvolvedores abrindo issues no Github!</string>
     <string name="mmc_mount_success_dialog_title">Card montado com sucesso!</string>
-    <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card are reloaded.</string>
+    <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
     <string name="lang_name_zh">Chinese Simplified</string>
     <string name="lang_name_en">English</string>
     <string name="lang_name_fi">Finnish</string>
