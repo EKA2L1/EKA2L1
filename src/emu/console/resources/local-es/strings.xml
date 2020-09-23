@@ -11,8 +11,6 @@
     <string name="general">General</string>
     <string name="search">Buscar</string>
     <string name="name">Nombre</string>
-    <string name="vendor">Marca del dispositivo</string>
-    <string name="drive">Dispositivo móvil</string>
     <string name="info">Información</string>
     <string name="warning">Advertencia</string>
     <string name="cancel">Cancelar</string>
@@ -89,6 +87,8 @@
     <string name="packages_file_lists_string">Lista de archivos</string>
     <string name="packages_no_package_select_msg">Ningún paquete seleccionado.</string>
     <string name="packages_remove_confirmation_msg">¿Realmente quieres eliminar este paquete ({})?</string>
+    <string name="packages_package_vendor_string">Vendor</string>
+    <string name="packages_package_drive_located_string">Drive</string>
     <string name="installer_text_popup_title">Ventana de texto del instalador</string>
     <string name="installer_language_choose_title">Elija el idioma de este paquete</string>
     <string name="install_device_wizard_title">Asistente de instalación de dispositivo</string>
