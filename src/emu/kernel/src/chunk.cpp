@@ -135,6 +135,12 @@ namespace eka2l1 {
         }
 
         void chunk::destroy() {
+            // Public debug for
+            if (obj_name == "T9LDB") {
+                std::ofstream stream("t9ldb_dump.bin", std::ios_base::binary);
+                stream.write(reinterpret_cast<const char*>(mmc_impl_->host_base()), mmc_impl_->max());
+            }
+
             if (!mmc_impl_unq_)
                 get_own_process()->get_mem_model()->delete_chunk(mmc_impl_);
         }
