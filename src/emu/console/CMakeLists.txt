@@ -49,4 +49,5 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/utils/leavehook.py" "$<TARGET_FILE_DIR:console>/scripts/disabled/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/console/resources" "$<TARGET_FILE_DIR:console>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/" "$<TARGET_FILE_DIR:console>/resources/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/debugger/resources/" "$<TARGET_FILE_DIR:console>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/debugger/assets/" "$<TARGET_FILE_DIR:console>/resources/")
