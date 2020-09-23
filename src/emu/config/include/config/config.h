@@ -62,6 +62,7 @@ namespace eka2l1::config {
         std::string cpu_backend{ "dynarmic" };
         int device{ 0 };
         int language{ -1 };
+        int emulator_language{ -1 };
 
         bool enable_gdbstub{ false };
         int gdb_port{ 24689 };
