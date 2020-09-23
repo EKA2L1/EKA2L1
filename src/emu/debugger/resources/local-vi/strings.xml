@@ -14,7 +14,6 @@
     <string name="info">Thông báo</string>
     <string name="warning">Cảnh báo</string>
     <string name="cancel">Huỷ</string>
-    <string name="type">Loại</string>
     <string name="cancel">Hủy</string>
     <string name="file_menu_name">Tệp tin</string>
     <string name="debugger_menu_name">Trình gỡ lỗi</string>
@@ -110,7 +109,7 @@
     <string name="install_device_final_msg_1">Cảm ơn bạn đã ghé qua. En mong bạn tận hưởng thời gian này!</string>
     <string name="install_device_final_msg_2">Nếu bạn gặp bất kì vấn đề nào, hãy báo cáo tới nhà phát triển bằng cách mở issues!</string>
     <string name="mmc_mount_success_dialog_title">Thẻ được nạp thành công!</string>
-    <string name="mmc_mount_success_dialog_msg">Thẻ MMC/SD đã được nạp! Tất cả ứng dụng trên thẻ MMC/SD được nạp lại.</string>
+    <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
     <string name="lang_name_zh">Tiếng Trung Giản thể</string>
     <string name="lang_name_en">Tiếng Anh</string>
     <string name="lang_name_fi">Tiếng Phần Lan</string>
