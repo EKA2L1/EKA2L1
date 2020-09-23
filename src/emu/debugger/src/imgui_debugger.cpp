@@ -670,7 +670,7 @@ namespace eka2l1 {
             ImGui::SetTooltip("%s", mouse_hide_tt.c_str());
         }
 
-        static const std::map<int, std::string> AVAIL_LANG_LIST = {
+        const std::map<int, std::string> AVAIL_LANG_LIST = {
             { static_cast<int>(language::en), common::get_localised_string(localised_strings, "lang_name_en") },
             { static_cast<int>(language::de), common::get_localised_string(localised_strings, "lang_name_de") },
             { static_cast<int>(language::bp), common::get_localised_string(localised_strings, "lang_name_bp") },
@@ -1038,10 +1038,11 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_preferences() {
-        ImGui::Begin("Preferences", &should_show_preferences);
+        const std::string pref_title = common::get_localised_string(localised_strings, "file_menu_prefs_item_name");
+        ImGui::Begin(pref_title.c_str(), &should_show_preferences);
 
         using show_func = std::function<void(imgui_debugger *)>;
-        static std::vector<std::pair<std::string, show_func>> all_prefs = {
+        std::vector<std::pair<std::string, show_func>> all_prefs = {
             { common::get_localised_string(localised_strings, "pref_general_title"), &imgui_debugger::show_pref_general },
             { common::get_localised_string(localised_strings, "pref_system_title"), &imgui_debugger::show_pref_system },
             { common::get_localised_string(localised_strings, "pref_control_title"), &imgui_debugger::show_pref_control },
@@ -1416,7 +1417,7 @@ namespace eka2l1 {
             }
 
             case device_wizard::SPECIFY_FILES: {
-                static std::map<device_wizard::installation_type, std::string> installation_type_strings = {
+                std::map<device_wizard::installation_type, std::string> installation_type_strings = {
                     { device_wizard::INSTALLATION_TYPE_RAW_DUMP, common::get_localised_string(localised_strings, "install_device_wizard_raw_dump_type_name") },
                     { device_wizard::INSTALLATION_TYPE_RPKG, common::get_localised_string(localised_strings, "install_device_wizard_rpkg_type_name") }
                 };
@@ -1836,7 +1837,7 @@ namespace eka2l1 {
                 ImGui::EndMenu();
             }
 
-            const std::string help_menu_name = common::get_localised_string(localised_strings, "help_menu_about_item_name");
+            const std::string help_menu_name = common::get_localised_string(localised_strings, "help_menu_name");
 
             if (ImGui::BeginMenu(help_menu_name.c_str())) {
                 const std::string about_item_name = common::get_localised_string(localised_strings,
