@@ -44,7 +44,7 @@
     <string name="app_launcher_title">Iniciador de aplicativos</string>
     <string name="app_launcher_unavail_msg">App List Server indisponível. Instale um dispositivo para habilitá-lo.</string>
     <string name="error_dialog_title">Um erro brutal aparece</string>
-    <string name="error_dialog_message">Please attach the log and report this to a developer!</string>
+    <string name="error_dialog_message">Por favor, anexe o registro e reporte isso a um desenvolvedor!</string>
     <string name="emulated_screen_title">Tela {}</string>
     <string name="emulated_screen_orientation_lock_item_name">Orientação bloqueada</string>
     <string name="emulated_screen_rotation_item_name">Rotação</string>
