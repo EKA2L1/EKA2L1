@@ -11,8 +11,6 @@
     <string name="general">General</string>
     <string name="search">Search</string>
     <string name="name">Name</string>
-    <string name="vendor">Vendor</string>
-    <string name="drive">Drive</string>
     <string name="info">Info</string>
     <string name="warning">Warning</string>
     <string name="cancel">Cancel</string>
@@ -89,6 +87,8 @@
     <string name="packages_file_lists_string">File lists</string>
     <string name="packages_no_package_select_msg">No package selected.</string>
     <string name="packages_remove_confirmation_msg">Are you sure you want to remove the package ({})?</string>
+    <string name="packages_package_vendor_string">Vendor</string>
+    <string name="packages_package_drive_located_string">Drive</string>
     <string name="installer_text_popup_title">Installer text popup</string>
     <string name="installer_language_choose_title">Choose the language for this package</string>
     <string name="install_device_wizard_title">Install device wizard</string>
