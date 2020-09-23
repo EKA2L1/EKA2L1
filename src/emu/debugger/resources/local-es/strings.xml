@@ -65,7 +65,7 @@
     <string name="pref_general_debugging_btrace_tooltip_msg">Activar kernel tracing que sera utilizado en el dispositivo emulado. Ralentizaciones esperadas al activarse.</string>
     <string name="pref_general_utilities_string">Utilidades</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Ocultar el cursor del mouse cuando se está dentro del espacio de una pantalla</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Es útil cuando configuras una tecla a tu mause y el juego o aplicación hace uso del cursor.\nPara hacer el cursor visible, mantenga presionada la tecla ALT.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Useful when you bind a key with your mouse and the game/app has built-in cursor.\nTo make the mouse cursor visible, hold ALT key.</string>
     <string name="pref_system_title">Sistema</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Dispositivo</string>
@@ -94,7 +94,7 @@
     <string name="installer_text_popup_title">Ventana de texto del instalador</string>
     <string name="installer_language_choose_title">Elija el idioma de este paquete</string>
     <string name="install_device_wizard_title">Asistente de instalación de dispositivo</string>
-    <string name="install_device_wizard_welcome_msg">Bienvenido al asistente de instalación de dispositivos. ¡Te guiaré a través de esto!</string>
+    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard. This wizard will guide you through device installation process!</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Elija su método de instalación</string>
@@ -106,10 +106,10 @@
     <string name="install_device_progress_rpkg_msg">Extraer el RPKG</string>
     <string name="install_device_progress_rom_msg">Copiar la ROM</string>
     <string name="install_device_install_failure_msg">¡Algo fue mal durante la instalación! ¡Por favor revise el registro (log)!</string>
-    <string name="install_device_final_msg_1">Gracias por comprobarlo. ¡Espero que tengas un buen día!</string>
+    <string name="install_device_final_msg_1">Thank you for using the wizard. We hope you have a good time using the emulator!</string>
     <string name="install_device_final_msg_2">En caso de cualquier problema, por favor reporte a los desarrolladores en \'\'opening issues\'\'!</string>
     <string name="mmc_mount_success_dialog_title">Tarjeta montada de manera exitosa!</string>
-    <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
+    <string name="mmc_mount_success_dialog_msg">¡Tarjeta MMC/SD montada! Todas las apps volverán a cargarse desde la Tarjeta MMC/SD.</string>
     <string name="lang_name_zh">Chinese Simplified</string>
     <string name="lang_name_en">English</string>
     <string name="lang_name_fi">Finnish</string>
