@@ -11,8 +11,6 @@
     <string name="general">Geral</string>
     <string name="search">Pesquisar</string>
     <string name="name">Nome</string>
-    <string name="vendor">Fabricante</string>
-    <string name="drive">Unidade</string>
     <string name="info">Informações</string>
     <string name="warning">Aviso</string>
     <string name="cancel">Cancelar</string>
@@ -89,6 +87,8 @@
     <string name="packages_file_lists_string">Lista de arquivos</string>
     <string name="packages_no_package_select_msg">Nenhum pacote selecionado</string>
     <string name="packages_remove_confirmation_msg">Tem certeza de que deseja excluir o pacote ({})?</string>
+    <string name="packages_package_vendor_string">Vendor</string>
+    <string name="packages_package_drive_located_string">Drive</string>
     <string name="installer_text_popup_title">Popup de texto do instalador</string>
     <string name="installer_language_choose_title">Escolha o idioma para este pacote</string>
     <string name="install_device_wizard_title">Assistente de instalação</string>
