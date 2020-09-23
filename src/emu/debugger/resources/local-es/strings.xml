@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="path">Dirección</string>
+    <string name="path">Directorio</string>
     <string name="change">Cambiar</string>
     <string name="replace">Reemplazar</string>
     <string name="load">Cargar</string>
@@ -14,10 +14,9 @@
     <string name="info">Información</string>
     <string name="warning">Advertencia</string>
     <string name="cancel">Cancelar</string>
-    <string name="type">Tipo</string>
-    <string name="cancel">Cancel</string>
+    <string name="cancel">Cancelar</string>
     <string name="file_menu_name">Archivo</string>
-    <string name="debugger_menu_name">Debugger</string>
+    <string name="debugger_menu_name">Depurador</string>
     <string name="view_menu_name">Ver</string>
     <string name="help_menu_name">Ayuda</string>
     <string name="file_menu_logger_item_name">Ver consola de registros (logger)</string>
@@ -55,12 +54,12 @@
     <string name="pref_personalize_font_string">Fuente de letra</string>
     <string name="pref_general_title">General</string>
     <string name="pref_general_data_storage_string">Dirección de la carpeta de datos</string>
-    <string name="pref_general_debugging_string">Debugging</string>
-    <string name="pref_general_debugging_cpu_read_checkbox_title">CPU read</string>
-    <string name="pref_general_debugging_cpu_write_checkbox_title">CPU write</string>
+    <string name="pref_general_debugging_string">Depuración</string>
+    <string name="pref_general_debugging_cpu_read_checkbox_title">Lectura de CPU</string>
+    <string name="pref_general_debugging_cpu_write_checkbox_title">Escritura de CPU</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
-    <string name="pref_general_debugging_system_calls_checkbox_title">System calls</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Accurate IPC timing</string>
+    <string name="pref_general_debugging_system_calls_checkbox_title">Llamadas del sistema</string>
+    <string name="pref_general_debugging_ait_checkbox_title">Tiempo IPC preciso</string>
     <string name="pref_general_debugging_ait_tooltip_msg">Mejora la precisión del sistema, pero puede ocasionar ralentizaciones.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Habilitar B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Activar kernel tracing que sera utilizado en el dispositivo emulado. Ralentizaciones esperadas al activarse.</string>
@@ -76,13 +75,13 @@
     <string name="pref_system_validate_device_btn_title">Validar dispositivo</string>
     <string name="pref_system_validate_device_tooltip">Comprobar si hay fallos en el dispositivo y arreglarlos para que EKA2L1 pueda emular el dispositivo.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Se encuentra deshabilitado porque ya se ha iniciado la emulación del dispositivo. Reinicie el emulador para utilizar esta opción.</string>
-    <string name="pref_system_no_device_present_str">No device present</string>
+    <string name="pref_system_no_device_present_str">Ningún dispositivo detectado</string>
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Configuración de controles</string>
     <string name="pref_control_wait_for_key_string">Esperando entrada de tecla</string>
     <string name="pref_hal_battery_level_string">Nivel de batería</string>
     <string name="pref_hal_signal_level_string">Nivel de señal</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage and devices to be effective</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Por favor, reinicie el emulador para que los cambios realizados en el almacenamiento de datos y dispositivos sean efectivos</string>
     <string name="packages_title">Paquetes</string>
     <string name="packages_package_menu_name">Paquete</string>
     <string name="packages_install_string">Instalar</string>
@@ -90,8 +89,8 @@
     <string name="packages_file_lists_string">Lista de archivos</string>
     <string name="packages_no_package_select_msg">Ningún paquete seleccionado.</string>
     <string name="packages_remove_confirmation_msg">¿Realmente quieres eliminar este paquete ({})?</string>
-    <string name="packages_package_vendor_string">Vendor</string>
-    <string name="packages_package_drive_located_string">Drive</string>
+    <string name="packages_package_vendor_string">Marca del dispositivo</string>
+    <string name="packages_package_drive_located_string">Dispositivo</string>
     <string name="installer_text_popup_title">Ventana de texto del instalador</string>
     <string name="installer_language_choose_title">Elija el idioma de este paquete</string>
     <string name="install_device_wizard_title">Asistente de instalación de dispositivo</string>
@@ -110,7 +109,7 @@
     <string name="install_device_final_msg_1">Gracias por comprobarlo. ¡Espero que tengas un buen día!</string>
     <string name="install_device_final_msg_2">En caso de cualquier problema, por favor reporte a los desarrolladores en \'\'opening issues\'\'!</string>
     <string name="mmc_mount_success_dialog_title">Tarjeta montada de manera exitosa!</string>
-    <string name="mmc_mount_success_dialog_msg">¡Tarjeta MMC/SD montada! Todas las apps en MMC/SD se volverán a cargar.</string>
+    <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
     <string name="lang_name_zh">Chinese Simplified</string>
     <string name="lang_name_en">English</string>
     <string name="lang_name_fi">Finnish</string>
@@ -118,7 +117,7 @@
     <string name="lang_name_ru">Russian</string>
     <string name="lang_name_it">Italian</string>
     <string name="lang_name_de">German</string>
-    <string name="lang_name_es">Spanish</string>
+    <string name="lang_name_es">Español</string>
     <string name="lang_name_ro">Romanian</string>
     <string name="lang_name_vi">Vietnamese</string>
     <string name="lang_name_bp">Portuguese, Brazilian</string>
