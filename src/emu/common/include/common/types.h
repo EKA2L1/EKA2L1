@@ -142,6 +142,10 @@ enum class language {
 #undef LANG_DECL
 };
 
+inline bool operator < (const language lhs, const language rhs) {
+    return static_cast<int>(lhs) < static_cast<int>(rhs);
+}
+
 const char *num_to_lang(const int num);
 
 // Formatting helper, type-specific preprocessing for improving safety and functionality
