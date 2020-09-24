@@ -22,10 +22,8 @@ add_library(drivers
         include/drivers/graphics/emu_window.h
         include/drivers/graphics/fb.h
         include/drivers/graphics/graphics.h
-        include/drivers/graphics/imgui_renderer.h
         include/drivers/graphics/shader.h
         include/drivers/graphics/texture.h
-        include/drivers/graphics/backend/emu_window_glfw.h
         include/drivers/graphics/backend/graphics_driver_shared.h
         include/drivers/graphics/backend/ogl/buffer_ogl.h
         include/drivers/graphics/backend/ogl/common_ogl.h
@@ -33,7 +31,6 @@ add_library(drivers
         include/drivers/graphics/backend/ogl/graphics_ogl.h
         include/drivers/graphics/backend/ogl/shader_ogl.h
         include/drivers/graphics/backend/ogl/texture_ogl.h
-        include/drivers/input/backend/emu_controller_glfw.h
         include/drivers/input/emu_controller.h
         src/driver.cpp
         src/itc.cpp
@@ -49,12 +46,9 @@ add_library(drivers
         src/audio/backend/player_shared.cpp
         src/graphics/buffer.cpp
         src/graphics/fb.cpp
-        src/graphics/emu_window.cpp
-        src/graphics/imgui_renderer.cpp
         src/graphics/graphics.cpp
         src/graphics/shader.cpp
         src/graphics/texture.cpp
-        src/graphics/backend/emu_window_glfw.cpp
         src/graphics/backend/graphics_driver_shared.cpp
         src/graphics/backend/ogl/buffer_ogl.cpp
         src/graphics/backend/ogl/common_ogl.cpp
@@ -62,11 +56,24 @@ add_library(drivers
         src/graphics/backend/ogl/graphics_ogl.cpp
         src/graphics/backend/ogl/texture_ogl.cpp
         src/graphics/backend/ogl/shader_ogl.cpp
-        src/input/backend/emu_controller_glfw.cpp
-        src/input/emu_controller.cpp
         ${DRIVERS_VULKAN_SRC})
+if (NOT ANDROID)
+    target_sources(drivers PRIVATE
+        include/drivers/graphics/imgui_renderer.h
+        include/drivers/graphics/backend/emu_window_glfw.h
+        include/drivers/input/backend/emu_controller_glfw.h
+        src/graphics/emu_window.cpp
+        src/graphics/imgui_renderer.cpp
+        src/graphics/backend/emu_window_glfw.cpp
+        src/input/backend/emu_controller_glfw.cpp
+        src/input/emu_controller.cpp)
+endif()
 
-target_link_libraries(drivers PRIVATE common cubeb imgui ffmpeg glad glm glfw nativefilediag)
+target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm)
+if (NOT ANDROID)
+    target_link_libraries(drivers PRIVATE imgui glfw nativefilediag)
+endif()
+
 target_include_directories(drivers PUBLIC include)
 
 if (BUILD_WITH_VULKAN)
