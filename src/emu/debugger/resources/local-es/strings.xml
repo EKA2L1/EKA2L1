@@ -121,4 +121,6 @@
     <string name="lang_name_ro">Romanian</string>
     <string name="lang_name_vi">Vietnamese</string>
     <string name="lang_name_bp">Portuguese, Brazilian</string>
+    <string name="lang_name_pl">Polish</string>
+    <string name="lang_name_uk">Ukrainian</string>
 </resources>
