@@ -30,7 +30,7 @@
     <string name="file_menu_prefs_item_name">Настройки</string>
     <string name="debugger_menu_pause_item_name">Пауза</string>
     <string name="debugger_menu_stop_item_name">Стоп</string>
-    <string name="debugger_menu_disassembler_item_name">Разборщик</string>
+    <string name="debugger_menu_disassembler_item_name">Дизассемблер</string>
     <string name="debugger_menu_objects_item_name">Объекты</string>
     <string name="debugger_menu_services_item_name">Службы</string>
     <string name="debugger_menu_objects_submenu_threads_item_name">Потоки</string>
@@ -121,4 +121,6 @@
     <string name="lang_name_ro">Румынский</string>
     <string name="lang_name_vi">Вьетнамский</string>
     <string name="lang_name_bp">Португальский (Бразилия)</string>
+    <string name="lang_name_pl">Польский</string>
+    <string name="lang_name_uk">Украинский</string>
 </resources>
