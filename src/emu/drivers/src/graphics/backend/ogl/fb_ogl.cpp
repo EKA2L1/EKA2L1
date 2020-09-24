@@ -23,6 +23,7 @@
 #include <glad/glad.h>
 
 #include <common/log.h>
+#include <common/platform.h>
 
 namespace eka2l1::drivers {
     ogl_framebuffer::ogl_framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_and_stencil_buffer)
@@ -53,7 +54,11 @@ namespace eka2l1::drivers {
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClearStencil(0);
+#ifdef EKA2L1_PLATFORM_ANDROID
+        glClearDepthf(0);
+#else
         glClearDepth(0);
+#endif
         glClear(GL_COLOR_BUFFER_BIT | ((depth_and_stencil_buffer) ? (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT) : 0));
 
         unbind(nullptr);
@@ -135,7 +140,13 @@ namespace eka2l1::drivers {
             return false;
         }
 
+#ifdef EKA2L1_PLATFORM_ANDROID
+        GLenum draw_buffers[2] = { GL_NONE, GL_NONE };
+        draw_buffers[attachment_id] = GL_COLOR_ATTACHMENT0 + attachment_id;
+        glDrawBuffers(2, draw_buffers);
+#else
         glDrawBuffer(GL_COLOR_ATTACHMENT0 + attachment_id);
+#endif
         return true;
     }
 

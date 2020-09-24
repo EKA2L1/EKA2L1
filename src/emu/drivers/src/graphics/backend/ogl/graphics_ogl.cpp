@@ -19,6 +19,7 @@
 
 #include <common/algorithm.h>
 #include <common/log.h>
+#include <common/platform.h>
 #include <fstream>
 #include <sstream>
 
@@ -619,7 +620,11 @@ namespace eka2l1::drivers {
         }
 
         if (clear_bits & draw_buffer_bit_depth_buffer) {
+#ifdef EKA2L1_PLATFORM_ANDROID
+            glClearDepthf(color_converted[0]);
+#else
             glClearDepth(color_converted[0]);
+#endif
             gl_flags |= GL_DEPTH_BUFFER_BIT;
         }
 

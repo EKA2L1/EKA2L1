@@ -220,7 +220,10 @@ namespace eka2l1::drivers {
         }
 
         bind(nullptr, 0);
-        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizz_gl);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, swizz_gl[0]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, swizz_gl[1]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, swizz_gl[2]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, swizz_gl[3]);
         unbind(nullptr);
     }
 
