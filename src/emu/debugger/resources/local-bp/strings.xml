@@ -14,7 +14,7 @@
     <string name="info">Informações</string>
     <string name="warning">Aviso</string>
     <string name="cancel">Cancelar</string>
-    <string name="cancel">Cancel</string>
+    <string name="cancel">Cancelar</string>
     <string name="file_menu_name">Arquivo</string>
     <string name="debugger_menu_name">Depurador</string>
     <string name="view_menu_name">Exibir</string>
@@ -33,7 +33,7 @@
     <string name="debugger_menu_disassembler_item_name">Desmontar</string>
     <string name="debugger_menu_objects_item_name">Objetos</string>
     <string name="debugger_menu_services_item_name">Serviços</string>
-    <string name="debugger_menu_objects_submenu_threads_item_name">Threads</string>
+    <string name="debugger_menu_objects_submenu_threads_item_name">Tópicos</string>
     <string name="debugger_menu_objects_submenu_mutexes_item_name">Mutexes</string>
     <string name="debugger_menu_objects_submenu_chunks_item_name">Chunks</string>
     <string name="debugger_menu_services_submenu_window_tree_item_name">Árvore de janela</string>
@@ -52,7 +52,7 @@
     <string name="pref_personalize_transparency_string">Transparência</string>
     <string name="pref_personalize_ui_scale_string">Escala da interface</string>
     <string name="pref_personalize_font_string">Fonte</string>
-    <string name="pref_general_title">General</string>
+    <string name="pref_general_title">Definições gerais</string>
     <string name="pref_general_data_storage_string">Armazenamento de dados</string>
     <string name="pref_general_debugging_string">Depuração</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">Leitura da CPU</string>
