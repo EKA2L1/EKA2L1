@@ -28,9 +28,9 @@
     <string name="file_menu_install_device_item_name">Zainstaluj urządzenie</string>
     <string name="file_menu_mount_sd_item_name">Zamontuj kartę MMC/SD</string>
     <string name="file_menu_prefs_item_name">Ustawienia</string>
-    <string name="debugger_menu_pause_item_name">Spauzuj</string>
+    <string name="debugger_menu_pause_item_name">Pauza</string>
     <string name="debugger_menu_stop_item_name">Zatrzymaj</string>
-    <string name="debugger_menu_disassembler_item_name">Disassembler</string>
+    <string name="debugger_menu_disassembler_item_name">Dezasembler</string>
     <string name="debugger_menu_objects_item_name">Obiekty</string>
     <string name="debugger_menu_services_item_name">Usługi</string>
     <string name="debugger_menu_objects_submenu_threads_item_name">Wątki</string>
@@ -95,7 +95,7 @@
     <string name="installer_language_choose_title">Wybierz język dla tej paczki</string>
     <string name="install_device_wizard_title">Kreator instalacji urządzenia</string>
     <string name="install_device_wizard_welcome_msg">Witaj w kreatorze instalacji urządzenia. Ten kreator poprowadzi cię przez proces instalacji urządzenia!</string>
-    <string name="install_device_wizard_raw_dump_type_name">Zrzut (surowy)</string>
+    <string name="install_device_wizard_raw_dump_type_name">Surowy zrzut</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Wybierz metodę instalacji</string>
     <string name="install_device_rpkg_choose_msg">Wybierz plik przepakowania (RPKG):</string>
@@ -121,6 +121,6 @@
     <string name="lang_name_ro">Rumuński</string>
     <string name="lang_name_vi">Wietnamski</string>
     <string name="lang_name_bp">Portugalski (Brazylia)</string>
-    <string name="lang_name_pl">Polish</string>
-    <string name="lang_name_uk">Ukrainian</string>
+    <string name="lang_name_pl">Polski</string>
+    <string name="lang_name_uk">Ukraiński</string>
 </resources>
