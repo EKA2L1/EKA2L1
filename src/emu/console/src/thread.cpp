@@ -319,7 +319,7 @@ namespace eka2l1::desktop {
     }
     static const char *DEFAULT_FONT_PATH = "resources//mplus-1m-bold.ttf";
     static const char *DEFAULT_CHINESE_SIMP_FONT_PATH = "resources//NotoSansSC-Bold.otf";
-    static const float DEFAULT_FONT_SIZE = 16;
+    static const float DEFAULT_FONT_SIZE = 18;
     static const float DEFAULT_CHINESE_FONT_SIZE = 20;
 
     static int ui_thread_initialization(emulator &state) {
