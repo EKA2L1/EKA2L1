@@ -116,6 +116,7 @@ namespace eka2l1 {
         , should_notify_reset_for_big_change(false)
         , should_disable_validate_drive(false)
         , should_warn_touch_disabled(false)
+        , should_show_sd_card_mount(false)
         , request_key(false)
         , key_set(false)
         , selected_package_index(0xFFFFFFFF)
@@ -127,7 +128,16 @@ namespace eka2l1 {
         , alserv(nullptr)
         , winserv(nullptr)
         , oom(nullptr)
-        , should_show_menu_fullscreen(false) {
+        , should_show_menu_fullscreen(false)
+        , sd_card_mount_choosen(false) 
+        , back_from_fullscreen(false)
+        , last_scale(1.0f)
+        , last_cursor(ImGuiMouseCursor_Arrow) {
+        if (conf->emulator_language == -1) {
+            conf->emulator_language = static_cast<int>(language::en);
+        }
+
+        localised_strings = common::get_localised_string_table("resources", "strings.xml", static_cast<language>(conf->emulator_language));
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
@@ -470,15 +480,21 @@ namespace eka2l1 {
     void imgui_debugger::show_pref_personalisation() {
         ImGui::AlignTextToFramePadding();
 
-        ImGui::Text("Background");
+        const std::string background_str = common::get_localised_string(localised_strings, "pref_personalize_background_string");
+
+        ImGui::Text(background_str.c_str());
         ImGui::Separator();
 
-        ImGui::Text("Path         ");
+        const std::string path_str = common::get_localised_string(localised_strings, "path");
+
+        ImGui::Text("%s         ", path_str.c_str());
         ImGui::SameLine();
         ImGui::InputText("##Background", conf->bkg_path.data(), conf->bkg_path.size(), ImGuiInputTextFlags_ReadOnly);
         ImGui::SameLine();
 
-        if (ImGui::Button("Change")) {
+        const std::string change_str = common::get_localised_string(localised_strings, "change");
+
+        if (ImGui::Button(change_str.c_str())) {
             on_pause_toogle(true);
 
             drivers::open_native_dialog(
@@ -494,11 +510,15 @@ namespace eka2l1 {
             on_pause_toogle(false);
         }
 
-        ImGui::Text("Transparency ");
+        const std::string transparency_str = common::get_localised_string(localised_strings, "pref_personalize_transparency_string");
+        const std::string ui_scale_str = common::get_localised_string(localised_strings, "pref_personalize_ui_scale_string");
+        const std::string font_str = common::get_localised_string(localised_strings, "pref_personalize_font_string");
+
+        ImGui::Text("%s ", transparency_str.c_str());
         ImGui::SameLine();
         ImGui::SliderInt("##BackgroundTransparency", &conf->bkg_transparency, 0, 255);
 
-        ImGui::Text("UI Scale     ");
+        ImGui::Text("%s     ", ui_scale_str.c_str());
         ImGui::SameLine();
         const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1f);
         if (ret && conf->ui_scale <= 1e-6) {
@@ -506,15 +526,16 @@ namespace eka2l1 {
         }
 
         ImGui::NewLine();
-        ImGui::Text("Font");
+        ImGui::Text("%s", font_str.c_str());
         ImGui::Separator();
 
-        ImGui::Text("Path         ");
+        ImGui::Text("%s         ", path_str.c_str());
         ImGui::SameLine();
         ImGui::InputText("##FontPath", conf->font_path.data(), conf->font_path.size(), ImGuiInputTextFlags_ReadOnly);
         ImGui::SameLine();
 
-        if (ImGui::Button("Replace")) {
+        const std::string replace_str = common::get_localised_string(localised_strings, "replace");
+        if (ImGui::Button(replace_str.c_str())) {
             on_pause_toogle(true);
 
             drivers::open_native_dialog(sys->get_graphics_driver(), "ttf", [&](const char *result) {
@@ -554,37 +575,152 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_pref_general() {
-        ImGui::Text("Debugging");
+        const float col3 = ImGui::GetWindowSize().x / 3;
+
+        auto draw_path_change = [&](const char *title, const char *button, std::string &dat) -> bool {
+            ImGui::Text("%s", title);
+            ImGui::SameLine(col3);
+
+            ImGui::PushItemWidth(col3 * 2 - 75);
+            ImGui::InputText("##Path", dat.data(), dat.size(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopItemWidth();
+
+            ImGui::SameLine(col3 * 3 - 65);
+            ImGui::PushItemWidth(30);
+
+            bool change = false;
+
+            if (ImGui::Button(button)) {
+                on_pause_toogle(true);
+
+                drivers::open_native_dialog(
+                    sys->get_graphics_driver(),
+                    "", [&](const char *res) {
+                        dat = res;
+                        change = true;
+                    },
+                    true);
+
+                should_pause = false;
+                on_pause_toogle(false);
+            }
+
+            ImGui::PopItemWidth();
+            return change;
+        };
+
+        const std::string change_str = common::get_localised_string(localised_strings, "change");
+        const std::string change_btn_1 = change_str + "##1";
+        const std::string data_storage_str = common::get_localised_string(localised_strings, "pref_general_data_storage_string");
+
+        if (draw_path_change(data_storage_str.c_str(), change_btn_1.c_str(), conf->storage)) {
+            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+            dvc_mngr->load_devices();
+
+            should_notify_reset_for_big_change = true;
+        }
+
+        const std::string deb_title = common::get_localised_string(localised_strings, "pref_general_debugging_string");
+
+        ImGui::Text("%s", deb_title.c_str());
         ImGui::Separator();
 
         const float col2 = ImGui::GetWindowSize().x / 2;
 
-        ImGui::Checkbox("CPU Read", &conf->log_read);
+        const std::string cpu_read_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_read_checkbox_title");
+        const std::string cpu_write_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_write_checkbox_title");
+        const std::string ipc_str = common::get_localised_string(localised_strings, "pref_general_debugging_ipc_checkbox_title");
+        const std::string system_calls_str = common::get_localised_string(localised_strings, "pref_general_debugging_system_calls_checkbox_title");
+        const std::string accurate_ipc_timing_str = common::get_localised_string(localised_strings, "pref_general_debugging_ait_checkbox_title");
+        const std::string enable_btrace_str = common::get_localised_string(localised_strings, "pref_general_debugging_enable_btrace_checkbox_title");
+        
+        ImGui::Checkbox(cpu_read_str.c_str(), &conf->log_read);
         ImGui::SameLine(col2);
-        ImGui::Checkbox("CPU write", &conf->log_write);
+        ImGui::Checkbox(cpu_write_str.c_str(), &conf->log_write);
 
-        ImGui::Checkbox("IPC", &conf->log_ipc);
+        ImGui::Checkbox(ipc_str.c_str(), &conf->log_ipc);
         ImGui::SameLine(col2);
         ImGui::Checkbox("Symbian API", &conf->log_passed);
 
-        ImGui::Checkbox("System calls", &conf->log_svc);
+        ImGui::Checkbox(system_calls_str.c_str(), &conf->log_svc);
         ImGui::SameLine(col2);
-        ImGui::Checkbox("Accurate IPC timing", &conf->accurate_ipc_timing);
+        ImGui::Checkbox(accurate_ipc_timing_str.c_str(), &conf->accurate_ipc_timing);
         if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Improve the accuracy of system, but may results in slowdown.");
+            const std::string ait_tt = common::get_localised_string(localised_strings, "pref_general_debugging_ait_tooltip_msg");
+            ImGui::SetTooltip("%s", ait_tt.c_str());
         }
 
-        ImGui::Checkbox("Enable btrace", &conf->enable_btrace);
+        ImGui::Checkbox(enable_btrace_str.c_str(), &conf->enable_btrace);
 
         if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Enable kernel tracing that is used in driver. Slowdown expected on enable");
+            const std::string btrace_tt = common::get_localised_string(localised_strings, "pref_general_debugging_btrace_tooltip_msg");
+            ImGui::SetTooltip("%s", btrace_tt.c_str());
         }
 
+        const std::string utils_sect_title = common::get_localised_string(localised_strings, "pref_general_utilities_string");
+        const std::string utils_hide_mouse_str = common::get_localised_string(localised_strings, "pref_general_utilities_hide_cursor_in_screen_space_checkbox_title");
+           
         ImGui::NewLine();
-        ImGui::Text("System");
+        ImGui::Text("%s", utils_sect_title.c_str());
         ImGui::Separator();
 
-        ImGui::Text("CPU");
+        ImGui::Checkbox(utils_hide_mouse_str.c_str(), &conf->hide_mouse_in_screen_space);
+        if (ImGui::IsItemHovered()) {
+            const std::string mouse_hide_tt = common::get_localised_string(localised_strings, "pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg");
+            ImGui::SetTooltip("%s", mouse_hide_tt.c_str());
+        }
+
+        const std::map<int, std::string> AVAIL_LANG_LIST = {
+            { static_cast<int>(language::en), common::get_localised_string(localised_strings, "lang_name_en") },
+            { static_cast<int>(language::de), common::get_localised_string(localised_strings, "lang_name_de") },
+            { static_cast<int>(language::bp), common::get_localised_string(localised_strings, "lang_name_bp") },
+            { static_cast<int>(language::es), common::get_localised_string(localised_strings, "lang_name_es") },
+            { static_cast<int>(language::it), common::get_localised_string(localised_strings, "lang_name_it") },
+            { static_cast<int>(language::vi), common::get_localised_string(localised_strings, "lang_name_vi") },
+            { static_cast<int>(language::ru), common::get_localised_string(localised_strings, "lang_name_ru") },
+            { static_cast<int>(language::ro), common::get_localised_string(localised_strings, "lang_name_ro") },
+            { static_cast<int>(language::fr), common::get_localised_string(localised_strings, "lang_name_fr") },
+            { static_cast<int>(language::fi), common::get_localised_string(localised_strings, "lang_name_fi") },
+            { static_cast<int>(language::zh), common::get_localised_string(localised_strings, "lang_name_zh") },
+            { static_cast<int>(language::pl), common::get_localised_string(localised_strings, "lang_name_pl") },
+            { static_cast<int>(language::uk), common::get_localised_string(localised_strings, "lang_name_uk") },
+        };
+        
+        ImGui::NewLine();
+        const std::string lang_op = common::get_localised_string(localised_strings, "pref_system_language_option_name");
+
+        ImGui::Text("%s", lang_op.c_str());
+        ImGui::SameLine(col3);
+        ImGui::PushItemWidth(col3 * 2 - 10);
+
+        const auto default_current_lang = AVAIL_LANG_LIST.find(conf->emulator_language);
+        const std::string default_current_lang_str = (default_current_lang == AVAIL_LANG_LIST.end()) ? ""
+            : default_current_lang->second;
+
+        if (ImGui::BeginCombo("##EmuLangCombo", default_current_lang_str.c_str())) {
+            for (const auto &lang: AVAIL_LANG_LIST) {
+                if (ImGui::Selectable(lang.second.c_str())) {
+                    conf->emulator_language = lang.first;
+                    localised_strings = common::get_localised_string_table("resources", "strings.xml",
+                        static_cast<language>(conf->emulator_language));
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+    };
+
+    void imgui_debugger::show_pref_system() {
+        const float col2 = ImGui::GetWindowSize().x / 2;
+
+        ImGui::NewLine();
+
+        const std::string general_tit = common::get_localised_string(localised_strings, "pref_general_title");
+        ImGui::Text("%s", general_tit.c_str());
+        ImGui::Separator();
+
+        const std::string cpu_op = common::get_localised_string(localised_strings, "pref_system_cpu_option_name");
+        ImGui::Text("%s", cpu_op.c_str());
         ImGui::SameLine(col2);
         ImGui::PushItemWidth(col2 - 10);
 
@@ -600,7 +736,8 @@ namespace eka2l1 {
 
         ImGui::PopItemWidth();
 
-        ImGui::Text("Device");
+        const std::string device_op = common::get_localised_string(localised_strings, "pref_system_device_option_name");
+        ImGui::Text("%s", device_op.c_str());
         ImGui::SameLine(col2);
         ImGui::PushItemWidth(col2 - 10);
 
@@ -610,11 +747,14 @@ namespace eka2l1 {
         auto &dvcs = mngr->get_devices();
 
         if (!dvcs.empty() && (conf->device >= dvcs.size())) {
-            LOG_WARN("Device with index {} not found, resetting default device to index 0", conf->device);
+            const std::string device_not_found_msg_log = common::get_localised_string(localised_strings, "pref_system_device_not_found_msg");
+
+            LOG_WARN("{}", device_not_found_msg_log);
             conf->device = 0;
         }
 
-        const std::string preview_info = dvcs.empty() ? "No device present" : dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
+        const std::string preview_info = dvcs.empty() ? common::get_localised_string(localised_strings, "pref_system_no_device_present_str")
+            : dvcs[conf->device].model + " (" + dvcs[conf->device].firmware_code + ")";
 
         auto set_language_current = [&](const language lang) {
             conf->language = static_cast<int>(lang);
@@ -652,7 +792,9 @@ namespace eka2l1 {
         if (!dvcs.empty()) {
             ImGui::PopItemWidth();
 
-            ImGui::Text("Language");
+            const std::string lang_str = common::get_localised_string(localised_strings, "pref_system_language_option_name");
+
+            ImGui::Text("%s", lang_str.c_str());
             ImGui::SameLine(col2);
             ImGui::PushItemWidth(col2 - 10);
 
@@ -679,7 +821,9 @@ namespace eka2l1 {
 
             static const char *TIME_UNIT_NAME = "US";
 
-            ImGui::Text("Time delay");
+            const std::string time_delay_str = common::get_localised_string(localised_strings, "pref_system_time_delay_option_name");
+
+            ImGui::Text("%s", time_delay_str.c_str());
             ImGui::SameLine(col2);
             ImGui::PushItemWidth(col2 - ImGui::CalcTextSize(TIME_UNIT_NAME).x - 15);
 
@@ -715,7 +859,10 @@ namespace eka2l1 {
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
             }
 
-            if (ImGui::Button("Validate device")) {
+            const std::string validate_device_str = common::get_localised_string(localised_strings,
+                "pref_system_validate_device_btn_title");
+
+            if (ImGui::Button(validate_device_str.c_str())) {
                 LOG_INFO("This might take sometimes! Please wait... The UI is frozen while this is being done.");
                 sys->validate_current_device();
             }
@@ -726,64 +873,24 @@ namespace eka2l1 {
             }
 
             if (ImGui::IsItemHovered()) {
-                std::string tooltip = "Check for faults in device and fix them so that EKA2L1 can emulate the device.";
+                const std::string tooltip = common::get_localised_string(localised_strings, "pref_system_validate_device_tooltip");
+                std::string tooltip_disabled = "";
+
                 if (should_disable_validate_drive) {
-                    tooltip += "\nDisabled because emulated system has started. Restart the emulator to use this option.";
+                    tooltip_disabled = common::get_localised_string(localised_strings, "pref_system_validate_device_disabled_tooltip");
                 }
 
-                ImGui::SetTooltip("%s", tooltip.c_str());
+                ImGui::SetTooltip("%s\n%s", tooltip.c_str(), tooltip_disabled.c_str());
             }
         }
     
         mngr->lock.unlock();
     }
 
-    void imgui_debugger::show_pref_system() {
-        const float col2 = ImGui::GetWindowSize().x / 3;
+    void imgui_debugger::show_pref_control() {
+        const std::string key_bind_msg = common::get_localised_string(localised_strings, "pref_control_key_binding_sect_title");
+        ImGui::Text("%s", key_bind_msg.c_str());
 
-        auto draw_path_change = [&](const char *title, const char *button, std::string &dat) -> bool {
-            ImGui::Text("%s", title);
-            ImGui::SameLine(col2);
-
-            ImGui::PushItemWidth(col2 * 2 - 75);
-            ImGui::InputText("##Path", dat.data(), dat.size(), ImGuiInputTextFlags_ReadOnly);
-            ImGui::PopItemWidth();
-
-            ImGui::SameLine(col2 * 3 - 65);
-            ImGui::PushItemWidth(30);
-
-            bool change = false;
-
-            if (ImGui::Button(button)) {
-                on_pause_toogle(true);
-
-                drivers::open_native_dialog(
-                    sys->get_graphics_driver(),
-                    "", [&](const char *res) {
-                        dat = res;
-                        change = true;
-                    },
-                    true);
-
-                should_pause = false;
-                on_pause_toogle(false);
-            }
-
-            ImGui::PopItemWidth();
-            return change;
-        };
-
-        if (draw_path_change("Data storage", "Change##1", conf->storage)) {
-            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
-            dvc_mngr->load_devices();
-
-            should_notify_reset_for_big_change = true;
-        }
-
-        ImGui::Separator();
-
-        ImGui::NewLine();
-        ImGui::Text("%s", "Key binding");
         ImGui::Separator();
         const float btn_col2 = ImGui::GetWindowSize().x / 4;
         const float btn_col3 = ImGui::GetWindowSize().x / 2;
@@ -868,7 +975,8 @@ namespace eka2l1 {
                     }
                 }
 
-                ImGui::Button("waiting for key");
+                const std::string wait_key_msg = common::get_localised_string(localised_strings, "pref_control_wait_for_key_string");
+                ImGui::Button(wait_key_msg.c_str());
             } else {
                 if (ImGui::Button(key_binder_state.key_bind_name[key_binder_state.target_key[i]].c_str())) {
                     key_binder_state.need_key[i] = true;
@@ -877,7 +985,7 @@ namespace eka2l1 {
             }
         }
     }
-
+    
     void imgui_debugger::show_pref_hal() {
         const float col6 = ImGui::GetWindowSize().x / 6;
 
@@ -892,7 +1000,10 @@ namespace eka2l1 {
 
         epoc::cap::eik_server *eik = oom->get_eik_server();
 
-        ImGui::Text("Battery level");
+        const std::string bat_level_str = common::get_localised_string(localised_strings, "pref_hal_battery_level_string");
+        const std::string sig_level_str = common::get_localised_string(localised_strings, "pref_hal_signal_level_string");
+
+        ImGui::Text("%s", bat_level_str.c_str());
         ImGui::SameLine(col6 + 10);
 
         ImGui::PushItemWidth(col6 * 2 - 10);
@@ -910,7 +1021,7 @@ namespace eka2l1 {
         ImGui::PopItemWidth();
 
         ImGui::SameLine(col6 * 3 + 10);
-        ImGui::Text("Signal level");
+        ImGui::Text("%s", sig_level_str.c_str());
 
         ImGui::SameLine(col6 * 4 + 10);
         ImGui::PushItemWidth(col6 * 2 - 10);
@@ -929,13 +1040,15 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_preferences() {
-        ImGui::Begin("Preferences", &should_show_preferences);
+        const std::string pref_title = common::get_localised_string(localised_strings, "file_menu_prefs_item_name");
+        ImGui::Begin(pref_title.c_str(), &should_show_preferences);
 
         using show_func = std::function<void(imgui_debugger *)>;
-        static std::vector<std::pair<std::string, show_func>> all_prefs = {
-            { "General", &imgui_debugger::show_pref_general },
-            { "System", &imgui_debugger::show_pref_system },
-            { "Personalisation", &imgui_debugger::show_pref_personalisation },
+        std::vector<std::pair<std::string, show_func>> all_prefs = {
+            { common::get_localised_string(localised_strings, "pref_general_title"), &imgui_debugger::show_pref_general },
+            { common::get_localised_string(localised_strings, "pref_system_title"), &imgui_debugger::show_pref_system },
+            { common::get_localised_string(localised_strings, "pref_control_title"), &imgui_debugger::show_pref_control },
+            { common::get_localised_string(localised_strings, "pref_personalize_title"), &imgui_debugger::show_pref_personalisation },
             { "HAL", &imgui_debugger::show_pref_hal }
         };
 
@@ -954,8 +1067,9 @@ namespace eka2l1 {
 
         if (should_notify_reset_for_big_change) {
             ImGui::NewLine();
-            ImGui::TextColored(RED_COLOR, "Please restart the emulator for the changes made to data storage"
-                " and devices to be effective!");
+
+            const std::string restart_need_msg = common::get_localised_string(localised_strings, "pref_restart_needed_for_dvcchange_msg");
+            ImGui::TextColored(RED_COLOR, restart_need_msg.c_str());
         }
         
         ImGui::NewLine();
@@ -964,7 +1078,8 @@ namespace eka2l1 {
         ImGui::SameLine(std::max(0.0f, ImGui::GetWindowSize().x / 2 - 30.0f));
         ImGui::PushItemWidth(30);
 
-        if (ImGui::Button("Save")) {
+        const std::string save_str = common::get_localised_string(localised_strings, "save");
+        if (ImGui::Button(save_str.c_str())) {
             manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
 
             // Save devices.
@@ -1001,19 +1116,27 @@ namespace eka2l1 {
     void imgui_debugger::show_package_manager() {
         // Get package manager
         manager::package_manager *manager = sys->get_manager_system()->get_package_manager();
-        ImGui::Begin("Packages", &should_package_manager, ImGuiWindowFlags_MenuBar);
+
+        const std::string pack_mngr_title = common::get_localised_string(localised_strings, "packages_title");
+        ImGui::Begin(pack_mngr_title.c_str(), &should_package_manager, ImGuiWindowFlags_MenuBar);
 
         if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("Package")) {
-                if (ImGui::MenuItem("Install")) {
+            const std::string package_menu_name = common::get_localised_string(localised_strings, "packages_package_menu_name");
+
+            if (ImGui::BeginMenu(package_menu_name.c_str())) {
+                const std::string install_menu_name = common::get_localised_string(localised_strings, "packages_install_string");
+                const std::string remove_menu_name = common::get_localised_string(localised_strings, "packages_remove_string");
+                const std::string filelist_menu_name = common::get_localised_string(localised_strings, "packages_file_lists_string");
+                
+                if (ImGui::MenuItem(install_menu_name.c_str())) {
                     do_install_package();
                 }
 
-                if (ImGui::MenuItem("Remove", nullptr, &should_package_manager_remove)) {
+                if (ImGui::MenuItem(remove_menu_name.c_str(), nullptr, &should_package_manager_remove)) {
                     should_package_manager_remove = true;
                 }
 
-                if (ImGui::MenuItem("File lists", nullptr, &should_package_manager_display_file_list)) {
+                if (ImGui::MenuItem(filelist_menu_name.c_str(), nullptr, &should_package_manager_display_file_list)) {
                     should_package_manager_display_file_list = true;
                 }
 
@@ -1026,13 +1149,17 @@ namespace eka2l1 {
 
         ImGui::SetColumnWidth(0, ImGui::CalcTextSize("0x11111111").x + 20.0f);
 
+        const std::string name_str = common::get_localised_string(localised_strings, "name");
+        const std::string vendor_str = common::get_localised_string(localised_strings, "packages_package_vendor_string");
+        const std::string drive_str = common::get_localised_string(localised_strings, "packages_package_drive_located_string");
+
         ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "UID");
         ImGui::NextColumn();
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Name");
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", name_str.c_str());
         ImGui::NextColumn();
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Vendor");
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", vendor_str.c_str());
         ImGui::NextColumn();
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "Drive");
+        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", drive_str.c_str());
         ImGui::NextColumn();
 
         ImGuiListClipper clipper(static_cast<int>(manager->package_count()), ImGui::GetTextLineHeight());
@@ -1054,11 +1181,14 @@ namespace eka2l1 {
             }
 
             if (selected_package_index == i && ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem("File lists")) {
+                const std::string filelist_menu_name = common::get_localised_string(localised_strings, "packages_file_lists_string");
+                const std::string remove_menu_name = common::get_localised_string(localised_strings, "packages_remove_string");
+                
+                if (ImGui::MenuItem(filelist_menu_name.c_str())) {
                     should_package_manager_display_file_list = true;
                 }
 
-                if (ImGui::MenuItem("Remove")) {
+                if (ImGui::MenuItem(remove_menu_name.c_str())) {
                     should_package_manager_remove = true;
                 }
 
@@ -1108,14 +1238,16 @@ namespace eka2l1 {
             const std::lock_guard<std::mutex> guard(manager->lockdown);
             const manager::package_info *pkg = manager->package(selected_package_index);
 
-            ImGui::OpenPopup("Info");
+            const std::string info_str = common::get_localised_string(localised_strings, "info");
+            ImGui::OpenPopup(info_str.c_str());
 
-            if (ImGui::BeginPopupModal("Info", &should_package_manager_remove)) {
+            if (ImGui::BeginPopupModal(info_str.c_str(), &should_package_manager_remove)) {
                 if (pkg == nullptr) {
-                    ImGui::Text("No package selected.");
+                    const std::string no_package_str = common::get_localised_string(localised_strings, "packages_no_package_select_msg");
+                    ImGui::Text("%s", no_package_str.c_str());
                 } else {
-                    std::string ask_question = "Are you sure you want to remove the package ("
-                        + common::ucs2_to_utf8(pkg->name) + ")?";
+                    const std::string ask_question = fmt::format(common::get_localised_string(localised_strings,
+                        "packages_remove_confirmation_msg"), common::ucs2_to_utf8(pkg->name));
 
                     ImGui::Text("%s", ask_question.c_str());
                 }
@@ -1124,7 +1256,10 @@ namespace eka2l1 {
 
                 ImGui::SameLine(ImGui::CalcItemWidth() / 2 + 20.0f);
 
-                if (ImGui::Button("Yes")) {
+                const std::string yes_str = common::get_localised_string(localised_strings, "yes");
+                const std::string no_str = common::get_localised_string(localised_strings, "no");
+                    
+                if (ImGui::Button(yes_str.c_str())) {
                     should_package_manager_remove = false;
                     should_package_manager_display_file_list = false;
 
@@ -1135,7 +1270,7 @@ namespace eka2l1 {
 
                 ImGui::SameLine();
 
-                if (ImGui::Button("No")) {
+                if (ImGui::Button(no_str.c_str())) {
                     should_package_manager_remove = false;
                 }
 
@@ -1145,12 +1280,14 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_installer_text_popup() {
-        ImGui::OpenPopup("Installer Text Popup");
+        const std::string installer_popup_title = common::get_localised_string(localised_strings, "installer_text_popup_title");
+
+        ImGui::OpenPopup(installer_popup_title.c_str());
         ImGuiIO &io = ImGui::GetIO();
 
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x / 4, io.DisplaySize.y / 3));
 
-        if (ImGui::BeginPopupModal("Installer Text Popup")) {
+        if (ImGui::BeginPopupModal(installer_popup_title.c_str())) {
             ImGui::Text("%s", installer_text);
             ImGui::NewLine();
 
@@ -1163,7 +1300,10 @@ namespace eka2l1 {
 
             ImGui::SameLine((ImGui::GetWindowWidth() - total_width_button_occupied) / 2);
 
-            if (ImGui::Button("Yes")) {
+            const std::string yes_str = common::get_localised_string(localised_strings, "yes");
+            const std::string no_str = common::get_localised_string(localised_strings, "no");
+
+            if (ImGui::Button(yes_str.c_str())) {
                 installer_text_result = true;
                 installer_cond.notify_one();
 
@@ -1172,7 +1312,7 @@ namespace eka2l1 {
 
             ImGui::SameLine();
 
-            if (!should_package_manager_display_one_button_only && ImGui::Button("No")) {
+            if (!should_package_manager_display_one_button_only && ImGui::Button(no_str.c_str())) {
                 installer_text_result = false;
                 installer_cond.notify_one();
 
@@ -1184,12 +1324,13 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_installer_choose_lang_popup() {
-        ImGui::OpenPopup("Choose the language for this package");
+        const std::string choose_lang_str = common::get_localised_string(localised_strings, "installer_language_choose_title");
+        ImGui::OpenPopup(choose_lang_str.c_str());
 
         ImGuiIO &io = ImGui::GetIO();
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x / 4, io.DisplaySize.y / 3));
 
-        if (ImGui::BeginPopupModal("Choose the language for this package")) {
+        if (ImGui::BeginPopupModal(choose_lang_str.c_str())) {
             for (int i = 0; i < installer_lang_size; i++) {
                 if (ImGui::Selectable(num_to_lang(installer_langs[i]), installer_current_lang_idx == i)) {
                     installer_current_lang_idx = i;
@@ -1203,7 +1344,10 @@ namespace eka2l1 {
 
             ImGui::SameLine((ImGui::GetWindowWidth() - total_width_button_occupied) / 2);
 
-            if (ImGui::Button("OK")) {
+            const std::string ok_str = common::get_localised_string(localised_strings, "ok");
+            const std::string cancel_str = common::get_localised_string(localised_strings, "cancel");
+
+            if (ImGui::Button(ok_str.c_str())) {
                 installer_lang_choose_result = installer_langs[installer_current_lang_idx];
                 installer_cond.notify_one();
 
@@ -1212,7 +1356,7 @@ namespace eka2l1 {
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Cancel")) {
+            if (ImGui::Button(cancel_str.c_str())) {
                 installer_cond.notify_one();
                 should_package_manager_display_language_choose = false;
             }
@@ -1255,25 +1399,36 @@ namespace eka2l1 {
             return;
         }
 
-        ImGui::OpenPopup("Install device wizard");
+        const std::string install_device_wizard_title = common::get_localised_string(localised_strings,
+            "install_device_wizard_title");
+
+        const std::string change_txt = common::get_localised_string(localised_strings, "change");
+
+        ImGui::OpenPopup(install_device_wizard_title.c_str());
         ImGui::SetNextWindowSize(ImVec2(640, 180), ImGuiCond_Once);
 
-        if (ImGui::BeginPopupModal("Install device wizard")) {
+        if (ImGui::BeginPopupModal(install_device_wizard_title.c_str())) {
             switch (device_wizard_state.stage) {
-            case device_wizard::WELCOME_MESSAGE:
-                ImGui::TextWrapped("Welcome to install device wizard. Me, En will guide you through this!");
+            case device_wizard::WELCOME_MESSAGE: {
+                const std::string install_device_welcome_msg = common::get_localised_string(localised_strings,
+                    "install_device_wizard_welcome_msg");
+
+                ImGui::TextWrapped(install_device_welcome_msg.c_str());
                 device_wizard_state.should_continue = true;
                 break;
+            }
 
             case device_wizard::SPECIFY_FILES: {
-                static std::map<device_wizard::installation_type, const char*> installation_type_strings = {
-                    { device_wizard::INSTALLATION_TYPE_RAW_DUMP, "Raw dump" },
-                    { device_wizard::INSTALLATION_TYPE_RPKG, "RPKG" }
+                std::map<device_wizard::installation_type, std::string> installation_type_strings = {
+                    { device_wizard::INSTALLATION_TYPE_RAW_DUMP, common::get_localised_string(localised_strings, "install_device_wizard_raw_dump_type_name") },
+                    { device_wizard::INSTALLATION_TYPE_RPKG, common::get_localised_string(localised_strings, "install_device_wizard_rpkg_type_name") }
                 };
 
-                if (ImGui::BeginCombo("Choose installation method", installation_type_strings[device_wizard_state.device_install_type])) {
+                const std::string choose_msg = common::get_localised_string(localised_strings, "install_device_choose_method_msg");
+
+                if (ImGui::BeginCombo(choose_msg.c_str(), installation_type_strings[device_wizard_state.device_install_type].c_str())) {
                     for (auto &installation: installation_type_strings) {
-                        if (ImGui::Selectable(installation.second, installation.first == device_wizard_state.device_install_type)) {
+                        if (ImGui::Selectable(installation.second.c_str(), installation.first == device_wizard_state.device_install_type)) {
                             device_wizard_state.device_install_type = installation.first;
                         }
                     }
@@ -1281,27 +1436,29 @@ namespace eka2l1 {
                     ImGui::EndCombo();
                 }
                 
-                const char *text_to_instruct = nullptr;
+                std::string text_to_instruct;
                 bool should_choose_folder = false;
 
                 switch (device_wizard_state.device_install_type) {
                 case device_wizard::INSTALLATION_TYPE_RPKG:
-                    text_to_instruct = "Please specify the repackage file (RPKG):";
+                    text_to_instruct = common::get_localised_string(localised_strings, "install_device_rpkg_choose_msg");
                     break;
 
                 case device_wizard::INSTALLATION_TYPE_RAW_DUMP:
-                    text_to_instruct = "Please specify raw Z: drive dump folder:";
+                    text_to_instruct = common::get_localised_string(localised_strings, "install_device_raw_dump_choose_msg");
                     should_choose_folder = true;
                     break;
                 }
 
-                ImGui::TextWrapped("%s", text_to_instruct);
+                ImGui::TextWrapped("%s", text_to_instruct.c_str());
                 ImGui::InputText("##RPKGPath", device_wizard_state.current_rpkg_path.data(),
                     device_wizard_state.current_rpkg_path.size(), ImGuiInputTextFlags_ReadOnly);
 
                 ImGui::SameLine();
 
-                if (ImGui::Button("Change##1")) {
+                const std::string change_btn_1 = change_txt + "##1";
+
+                if (ImGui::Button(change_btn_1.c_str())) {
                     on_pause_toogle(true);
 
                     drivers::open_native_dialog(sys->get_graphics_driver(), "rpkg", [&](const char *result) {
@@ -1317,13 +1474,17 @@ namespace eka2l1 {
 
                 ImGui::Separator();
 
-                ImGui::TextWrapped("Please specify the ROM file:");
+                const std::string choose_rom_msg = common::get_localised_string(localised_strings, "install_device_rom_choose_msg");
+
+                ImGui::TextWrapped("%s", choose_rom_msg.c_str());
                 ImGui::InputText("##ROMPath", device_wizard_state.current_rom_path.data(),
                     device_wizard_state.current_rom_path.size(), ImGuiInputTextFlags_ReadOnly);
 
                 ImGui::SameLine();
 
-                if (ImGui::Button("Change##2")) {
+                const std::string change_btn_2 = change_txt + "##2";
+
+                if (ImGui::Button(change_btn_2.c_str())) {
                     on_pause_toogle(true);
 
                     drivers::open_native_dialog(sys->get_graphics_driver(), "rom", [&](const char *result) {
@@ -1342,7 +1503,8 @@ namespace eka2l1 {
             }
 
             case device_wizard::INSTALL: {
-                ImGui::TextWrapped("Please wait while we install the device!");
+                const std::string wait_msg = common::get_localised_string(localised_strings, "install_device_wait_install_msg");
+                ImGui::TextWrapped("%s", wait_msg.c_str());
 
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 
@@ -1353,19 +1515,24 @@ namespace eka2l1 {
 
                 switch (device_wizard_state.device_install_type) {
                 case device_wizard::INSTALLATION_TYPE_RPKG:
-                    method_text = "Extract the RPKG";
+                    method_text = common::get_localised_string(localised_strings, "install_device_progress_rpkg_msg");
                     break;
 
                 case device_wizard::INSTALLATION_TYPE_RAW_DUMP:
-                    method_text = fmt::format("Copying raw dump ({}%)", device_wizard_state.progress_tracker.load());
+                    method_text = fmt::format(common::get_localised_string(localised_strings, "install_device_progress_raw_dump_msg"),
+                        device_wizard_state.progress_tracker.load());
+
                     break;
                 }
 
                 ImGui::Checkbox(method_text.c_str(), &extract_rpkg_state);
-                ImGui::Checkbox("Copy the ROM", &copy_rom_state);
+                
+                const std::string rom_copy_msg = common::get_localised_string(localised_strings, "install_device_progress_rom_msg");
+                ImGui::Checkbox(rom_copy_msg.c_str(), &copy_rom_state);
 
                 if (device_wizard_state.failure) {
-                    ImGui::TextWrapped("Something wrong happens during the install! Please check the log!");
+                    const std::string wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_install_failure_msg");
+                    ImGui::TextWrapped("%s", wrong_happening_msg.c_str());
                     device_wizard_state.should_continue = true;
                 }
 
@@ -1375,8 +1542,11 @@ namespace eka2l1 {
             }
 
             case device_wizard::ENDING: {
-                ImGui::TextWrapped("Thank you for checking by. En hopes you have a good time!");
-                ImGui::TextWrapped("For any problem, please report to the developers by opening issues!");
+                const std::string thank_msg_1 = common::get_localised_string(localised_strings, "install_device_final_msg_1");
+                const std::string thank_msg_2 = common::get_localised_string(localised_strings, "install_device_final_msg_2");
+
+                ImGui::TextWrapped("%s", thank_msg_1.c_str());
+                ImGui::TextWrapped("%s", thank_msg_2.c_str());
 
                 if (device_wizard_state.install_thread) {
                     device_wizard_state.install_thread->join();
@@ -1397,13 +1567,17 @@ namespace eka2l1 {
             // Align to center!
             ImGui::SameLine((ImGui::GetWindowSize().x - (BUTTON_SIZE.x * 2)) / 2);
 
+            const std::string ok_str = common::get_localised_string(localised_strings, "ok");
+            const std::string yes_str = common::get_localised_string(localised_strings, "yes");
+            const std::string no_str = common::get_localised_string(localised_strings, "no");
+
             if (device_wizard_state.stage == device_wizard::ENDING) {
-                if (ImGui::Button("OK", BUTTON_SIZE)) {
+                if (ImGui::Button(ok_str.c_str(), BUTTON_SIZE)) {
                     should_show_install_device_wizard = false;
                     device_wizard_state.stage = device_wizard::FINAL_FOR_REAL;
                 }
             } else {
-                if (ImGuiButtonToggle("Yes", BUTTON_SIZE, device_wizard_state.should_continue)) {
+                if (ImGuiButtonToggle(yes_str.c_str(), BUTTON_SIZE, device_wizard_state.should_continue)) {
                     device_wizard_state.stage = static_cast<device_wizard::device_wizard_stage>(static_cast<int>(device_wizard_state.stage) + 1);
                     device_wizard_state.should_continue = false;
 
@@ -1464,7 +1638,7 @@ namespace eka2l1 {
 
                 ImGui::SameLine();
 
-                if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button("No", BUTTON_SIZE)) {
+                if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button(no_str.c_str(), BUTTON_SIZE)) {
                     should_show_install_device_wizard = false;
                     device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
                 }
@@ -1474,6 +1648,50 @@ namespace eka2l1 {
         }
     }
 
+    void imgui_debugger::show_mount_sd_card() {
+        if (!sd_card_mount_choosen) {
+            if (!drivers::open_native_dialog(sys->get_graphics_driver(), "", [&](const char *result) {
+                sys->mount(drive_e, drive_media::physical, result, io_attrib_removeable);
+                sd_card_mount_choosen = true;
+            }, true)) {
+                should_show_sd_card_mount = false;
+            }
+        }
+
+        if (sd_card_mount_choosen) {
+            const std::string card_mount_succ_title = common::get_localised_string(localised_strings, "mmc_mount_success_dialog_title");
+            const std::string card_mount_succ_msg = common::get_localised_string(localised_strings, "mmc_mount_success_dialog_msg");
+            const std::string ok_str = common::get_localised_string(localised_strings, "ok");
+
+            ImGui::OpenPopup(card_mount_succ_title.c_str());
+
+            ImVec2 mount_success_window_size = ImVec2(400.0f, 100.0f);
+            mount_success_window_size.x = ImGui::CalcTextSize(card_mount_succ_msg.c_str()).x + 20.0f;
+
+            ImGui::SetNextWindowSize(mount_success_window_size);
+
+            if (ImGui::BeginPopupModal(card_mount_succ_title.c_str())) {
+                ImGui::Text("%s", card_mount_succ_msg.c_str());
+
+                ImGui::NewLine();
+                ImGui::NewLine();
+
+                ImGui::SameLine((mount_success_window_size.x - 30.0f) / 2);
+
+                ImGui::PushItemWidth(30.0f);
+                
+                if (ImGui::Button(ok_str.c_str())) {
+                    should_show_sd_card_mount = false;
+                    sd_card_mount_choosen = false;
+                }
+
+                ImGui::PopItemWidth();
+
+                ImGui::EndPopup();
+            }
+        }
+    }
+    
     void imgui_debugger::show_menu() {
         int num_pops = 0;
 
@@ -1490,11 +1708,17 @@ namespace eka2l1 {
                 num_pops++;
             }
 
-            if (ImGui::BeginMenu("File")) {
-                ImGui::MenuItem("Logger", "CTRL+SHIFT+L", &should_show_logger);
+            const std::string file_menu_item_name = common::get_localised_string(localised_strings, "file_menu_name");
+            
+            if (ImGui::BeginMenu(file_menu_item_name.c_str())) {
+                const std::string logger_item_name = common::get_localised_string(localised_strings, "file_menu_logger_item_name");
+                const std::string launch_app_item_name = common::get_localised_string(localised_strings, "file_menu_launch_apps_item_name");
+                const std::string package_item_name = common::get_localised_string(localised_strings, "file_menu_packages_item_name");
+
+                ImGui::MenuItem(logger_item_name.c_str(), "CTRL+SHIFT+L", &should_show_logger);
 
                 bool last_show_launch = should_show_app_launch;
-                ImGui::MenuItem("Launch apps", "CTRL+R", &should_show_app_launch);
+                ImGui::MenuItem(launch_app_item_name.c_str(), "CTRL+R", &should_show_app_launch);
 
                 if ((last_show_launch != should_show_app_launch) && last_show_launch == false) {
                     should_still_focus_on_keyboard = true;
@@ -1504,66 +1728,124 @@ namespace eka2l1 {
                 if (!dvc_mngr->get_current()) {
                     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 
-                    ImGui::MenuItem("Packages");
+                    ImGui::MenuItem(package_item_name.c_str());
 
                     if (ImGui::IsItemHovered()) {
                         ImGui::PopStyleVar();
-                        ImGui::SetTooltip("Please install a device to access the package manager!");
+
+                        const std::string unavail_tt = common::get_localised_string(localised_strings, "file_menu_packages_item_unavail_msg");
+                        ImGui::SetTooltip(unavail_tt.c_str());
                     } else {
                         ImGui::PopStyleVar();
                     }
                 } else {
-                    if (ImGui::BeginMenu("Packages")) {
-                        ImGui::MenuItem("Install", nullptr, &should_install_package);
-                        ImGui::MenuItem("List", nullptr, &should_package_manager);
+                    if (ImGui::BeginMenu(package_item_name.c_str())) {
+                        const std::string package_install_item_name = common::get_localised_string(localised_strings,
+                            "file_menu_package_submenu_install_item_name");
+
+                        const std::string list_install_item_name = common::get_localised_string(localised_strings,
+                            "file_menu_package_submenu_list_item_name");
+
+                        ImGui::MenuItem(package_install_item_name.c_str(), nullptr, &should_install_package);
+                        ImGui::MenuItem(list_install_item_name.c_str(), nullptr, &should_package_manager);
                         ImGui::EndMenu();
                     }
                 }
 
                 ImGui::Separator();
 
-                ImGui::MenuItem("Install device", nullptr, &should_show_install_device_wizard);
+                const std::string install_device_item_name = common::get_localised_string(localised_strings,
+                    "file_menu_install_device_item_name");
+
+                const std::string mount_mmc_item_name = common::get_localised_string(localised_strings,
+                    "file_menu_mount_sd_item_name");
+                    
+                ImGui::MenuItem(install_device_item_name.c_str(), nullptr, &should_show_install_device_wizard);
+                ImGui::MenuItem(mount_mmc_item_name.c_str(), nullptr, &should_show_sd_card_mount);
 
                 ImGui::Separator();
 
-                ImGui::MenuItem("Preferences", nullptr, &should_show_preferences);
+                const std::string pref_item_name = common::get_localised_string(localised_strings, "file_menu_prefs_item_name");
+                ImGui::MenuItem(pref_item_name.c_str(), nullptr, &should_show_preferences);
 
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Debugger")) {
-                ImGui::MenuItem("Pause", "CTRL+P", &should_pause);
-                ImGui::MenuItem("Stop", nullptr, &should_stop);
+            const std::string debugger_menu_name = common::get_localised_string(localised_strings, "debugger_menu_name");
+
+            if (ImGui::BeginMenu(debugger_menu_name.c_str())) {
+                const std::string pause_item_name = common::get_localised_string(localised_strings, "debugger_menu_pause_item_name");
+                const std::string stop_item_name = common::get_localised_string(localised_strings, "debugger_menu_stop_item_name");
+    
+                ImGui::MenuItem(pause_item_name.c_str(), "CTRL+P", &should_pause);
+                ImGui::MenuItem(stop_item_name.c_str(), nullptr, &should_stop);
 
                 ImGui::Separator();
 
-                ImGui::MenuItem("Disassembler", nullptr, &should_show_disassembler);
+                const std::string disassembler_item_name = common::get_localised_string(localised_strings,
+                    "debugger_menu_disassembler_item_name");
 
-                if (ImGui::BeginMenu("Objects")) {
-                    ImGui::MenuItem("Threads", nullptr, &should_show_threads);
-                    ImGui::MenuItem("Mutexs", nullptr, &should_show_mutexs);
-                    ImGui::MenuItem("Chunks", nullptr, &should_show_chunks);
+                const std::string object_submenu_name = common::get_localised_string(localised_strings,
+                    "debugger_menu_objects_item_name");
+
+                ImGui::MenuItem(disassembler_item_name.c_str(), nullptr, &should_show_disassembler);
+
+                if (ImGui::BeginMenu(object_submenu_name.c_str())) {
+                    const std::string threads_item_name = common::get_localised_string(localised_strings,
+                        "debugger_menu_objects_submenu_threads_item_name");
+
+                    const std::string mutexes_item_name = common::get_localised_string(localised_strings,
+                        "debugger_menu_objects_submenu_mutexes_item_name");
+
+                    const std::string chunks_item_name = common::get_localised_string(localised_strings,
+                        "debugger_menu_objects_submenu_chunks_item_name");
+                        
+                    ImGui::MenuItem(threads_item_name.c_str(), nullptr, &should_show_threads);
+                    ImGui::MenuItem(mutexes_item_name.c_str(), nullptr, &should_show_mutexs);
+                    ImGui::MenuItem(chunks_item_name.c_str(), nullptr, &should_show_chunks);
                     ImGui::EndMenu();
                 }
 
-                if (ImGui::BeginMenu("Services")) {
-                    ImGui::MenuItem("Window tree", nullptr, &should_show_window_tree);
+                const std::string services_submenu_name = common::get_localised_string(localised_strings,
+                    "debugger_menu_services_item_name");
+
+                if (ImGui::BeginMenu(services_submenu_name.c_str())) {
+                    const std::string window_tree_item_name = common::get_localised_string(localised_strings,
+                        "debugger_menu_services_submenu_window_tree_item_name");
+
+                    ImGui::MenuItem(window_tree_item_name.c_str(), nullptr, &should_show_window_tree);
                     ImGui::EndMenu();
                 }
 
                 ImGui::EndMenu();
             }
+            
+            const std::string view_menu_name = common::get_localised_string(localised_strings, "view_menu_name");
 
-            if (ImGui::BeginMenu("View")) {
+            if (ImGui::BeginMenu(view_menu_name.c_str())) {
                 bool fullscreen = renderer->is_fullscreen();
-                ImGui::MenuItem("Fullscreen", nullptr, &fullscreen);
+                bool last_full_status = fullscreen;
+
+                const std::string fullscreen_item_name = common::get_localised_string(localised_strings,
+                    "view_menu_fullscreen_item_name");
+                
+                ImGui::MenuItem(fullscreen_item_name.c_str(), nullptr, &fullscreen);
                 renderer->set_fullscreen(fullscreen);
 
+                if ((fullscreen == false) && (last_full_status != fullscreen)) {
+                    back_from_fullscreen = true;
+                }
+
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Help")) {
-                ImGui::MenuItem("About", nullptr, &should_show_about);
+            const std::string help_menu_name = common::get_localised_string(localised_strings, "help_menu_name");
+
+            if (ImGui::BeginMenu(help_menu_name.c_str())) {
+                const std::string about_item_name = common::get_localised_string(localised_strings,
+                    "help_menu_about_item_name");
+
+                ImGui::MenuItem(about_item_name.c_str(), nullptr, &should_show_about);
                 ImGui::EndMenu();
             }
 
@@ -1611,14 +1893,18 @@ namespace eka2l1 {
 
     void imgui_debugger::show_app_launch() {
         static ImGuiTextFilter app_search_box;
-        ImGui::Begin("App launcher", &should_show_app_launch);
+
+        const std::string app_launcher_title = common::get_localised_string(localised_strings, "app_launcher_title");
+        ImGui::Begin(app_launcher_title.c_str(), &should_show_app_launch);
 
         if (alserv) {
             std::vector<apa_app_registry> &registerations = alserv->get_registerations();
             const float uid_col_size = ImGui::CalcTextSize("00000000").x + 30.0f;
 
             {
-                ImGui::Text("Search ");
+                const std::string search_txt = common::get_localised_string(localised_strings, "search");
+
+                ImGui::Text("%s ", search_txt.c_str());
                 ImGui::SameLine();
 
                 app_search_box.Draw("##AppSearchBox");
@@ -1635,7 +1921,10 @@ namespace eka2l1 {
                 ImGui::TextColored(GUI_COLOR_TEXT_TITLE, " UID");
                 ImGui::NextColumn();
 
-                ImGui::TextColored(GUI_COLOR_TEXT_TITLE, " Name");
+                std::string name_str = " ";
+                name_str += common::get_localised_string(localised_strings, "name");
+
+                ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", name_str.c_str());
                 ImGui::NextColumn();
 
                 ImGui::Separator();
@@ -1698,7 +1987,8 @@ namespace eka2l1 {
             }
             ImGui::Columns(1);
         } else {
-            ImGui::Text("App List Server is not available. Install a device to enable it.");
+            const std::string unavail_msg = common::get_localised_string(localised_strings, "app_launcher_unavail_msg");
+            ImGui::Text("%s", unavail_msg.c_str());
         }
 
         ImGui::End();
@@ -1757,13 +2047,18 @@ namespace eka2l1 {
             first_error = error_queue.front();
         }
 
-        ImGui::OpenPopup("A wild error appears!");
+        const std::string error_title = common::get_localised_string(localised_strings, "error_dialog_title");
+        ImGui::OpenPopup(error_title.c_str());
 
-        if (ImGui::BeginPopupModal("A wild error appears!")) {
+        if (ImGui::BeginPopupModal(error_title.c_str())) {
             ImGui::Text("%s", first_error.c_str());
-            ImGui::Text("Please attach the log and report this to a developer!");
 
-            if (ImGui::Button("OK")) {
+            const std::string attached_msg = common::get_localised_string(localised_strings, "error_dialog_message");
+            const std::string ok_str = common::get_localised_string(localised_strings, "ok");
+
+            ImGui::Text(attached_msg.c_str());
+
+            if (ImGui::Button(ok_str.c_str())) {
                 const std::lock_guard<std::mutex> guard(errors_mut);
                 error_queue.pop();
             }
@@ -1808,6 +2103,11 @@ namespace eka2l1 {
         if (scale.y > 1)
             scale.y--;
     }
+    
+    static void imgui_screen_aspect_resize_keeper(ImGuiSizeCallbackData* data) {
+        float ratio = *reinterpret_cast<float*>(data->UserData);
+        data->DesiredSize.y = data->DesiredSize.x / ratio + ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
+    }
 
     void imgui_debugger::show_screens() {
         // Iterate through all screen from window server
@@ -1824,15 +2124,19 @@ namespace eka2l1 {
                 continue;
             }
 
-            const std::string name = fmt::format("Screen {}", scr->number);
+            const std::string name = fmt::format(common::get_localised_string(localised_strings, "emulated_screen_title"),
+                scr->number);
             eka2l1::vec2 size = scr->current_mode().size;
 
             scr->screen_mutex.lock();
-            ImVec2 rotated_size(size.x + 15.0f, size.y + 35.0f);
+
+            ImVec2 rotated_size(static_cast<float>(size.x), static_cast<float>(size.y));
 
             if (scr->ui_rotation % 180 == 90) {
-                rotated_size.x = size.y + 15.0f;
-                rotated_size.y = size.x + 35.0f;
+                const float temp = rotated_size.x;
+
+                rotated_size.x = rotated_size.y;
+                rotated_size.y = temp;
             }
 
             ImVec2 fullscreen_region = ImVec2(io.DisplaySize.x, io.DisplaySize.y - 60.0f);
@@ -1840,12 +2144,24 @@ namespace eka2l1 {
             const float fullscreen_start_x = 0.0f;
             const float fullscreen_start_y = 30.0f;
 
+            float ratioed = rotated_size.x / rotated_size.y;
+
             if (fullscreen_now) {
                 ImGui::SetNextWindowSize(fullscreen_region);
                 ImGui::SetNextWindowPos(ImVec2(fullscreen_start_x, fullscreen_start_y));
             } else {
-                ImGui::SetNextWindowSize(rotated_size);
+                ImGui::SetNextWindowSize(rotated_size, ImGuiCond_Once);
+
+                if (back_from_fullscreen) {
+                    ImGui::SetNextWindowSize(ImVec2(rotated_size.x * last_scale, rotated_size.y * last_scale));
+                    back_from_fullscreen = false;
+                }
+
+                ImGui::SetNextWindowSizeConstraints(rotated_size, fullscreen_region, imgui_screen_aspect_resize_keeper,
+                    &ratioed);
             }
+            
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
             if (fullscreen_now)
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -1856,18 +2172,26 @@ namespace eka2l1 {
                 active_screen = scr->number;
             }
 
+            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RectOnly) && (conf->hide_mouse_in_screen_space && !io.KeyAlt)) {    
+                ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+            }
+
             ImVec2 winpos = ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin();
 
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
             if (fullscreen_now ? ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right) : ImGui::BeginPopupContextItem(nullptr, ImGuiMouseButton_Right)) {
                 bool orientation_lock = scr->orientation_lock;
-                if (ImGui::BeginMenu("Orientation lock", false)) {
+
+                const std::string orientation_lock_str = common::get_localised_string(localised_strings, "emulated_screen_orientation_lock_item_name");
+                if (ImGui::BeginMenu(orientation_lock_str.c_str(), false)) {
                     orientation_lock = !orientation_lock;
                     ImGui::EndMenu();
                 }
 
                 scr->set_orientation_lock(sys->get_graphics_driver(), orientation_lock);
 
-                if (ImGui::BeginMenu("Rotation")) {
+                const std::string rotation_str = common::get_localised_string(localised_strings, "emulated_screen_rotation_item_name");
+                if (ImGui::BeginMenu(rotation_str.c_str())) {
                     bool selected[4] = { (scr->ui_rotation == 0),
                         (scr->ui_rotation == 90),
                         (scr->ui_rotation == 180),
@@ -1888,7 +2212,8 @@ namespace eka2l1 {
                     ImGui::EndMenu();
                 }
 
-                if (ImGui::BeginMenu("Refresh rate")) {
+                const std::string refresh_str = common::get_localised_string(localised_strings, "emulated_screen_refresh_rate_item_name");
+                if (ImGui::BeginMenu(refresh_str.c_str())) {
                     int current_refresh_rate = scr->refresh_rate;
                     ImGui::SliderInt("##RefreshRate", &current_refresh_rate, 0, 120);
 
@@ -1901,42 +2226,60 @@ namespace eka2l1 {
 
                 ImGui::EndPopup();
             }
+            
+            ImGui::PopStyleVar();
 
             eka2l1::vec2 scale(0, 0);
             get_nice_scale_by_integer(fullscreen_region, ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scale);
 
             if (fullscreen_now) {
-                scr->scale = scale;
+                scr->scale_x = static_cast<float>(scale.x);
+                scr->scale_y = static_cast<float>(scale.y);
             } else {
-                scr->scale = { 1, 1 };
+                scr->scale_x = ImGui::GetWindowSize().x / rotated_size.x;
+                scr->scale_y = scr->scale_x;
+
+                last_scale = scr->scale_x;
             }
 
+            ImVec2 scaled_no_dsa;
+            ImVec2 scaled_dsa;
+
             if (fullscreen_now) {
-                size.x *= scale.x;
-                size.y *= scale.y;
+                scaled_no_dsa.x = static_cast<float>(size.x * scale.x);
+                scaled_no_dsa.y = static_cast<float>(size.y * scale.y);
+
+                const eka2l1::vec2 org_screen_size = scr->size();
+
+                scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.x);
+                scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.y);
 
                 if (scr->ui_rotation % 180 == 0) {
-                    winpos.x += (fullscreen_region.x - size.x) / 2;
-                    winpos.y += (fullscreen_region.y - size.y) / 2;
+                    winpos.x += (fullscreen_region.x - scaled_no_dsa.x) / 2;
+                    winpos.y += (fullscreen_region.y - scaled_no_dsa.y) / 2;
                 } else {
-                    winpos.x += (fullscreen_region.x - size.y) / 2;
-                    winpos.y += (fullscreen_region.y - size.x) / 2;
+                    winpos.x += (fullscreen_region.x - scaled_no_dsa.y) / 2;
+                    winpos.y += (fullscreen_region.y - scaled_no_dsa.x) / 2;
                 }
+            } else {
+                scaled_no_dsa = ImGui::GetWindowSize();
+                scaled_no_dsa.y -= ImGui::GetCurrentWindow()->TitleBarHeight();
+
+                const eka2l1::vec2 size_dsa_org = scr->size();
+
+                scaled_dsa.x = static_cast<float>(size_dsa_org.x) * scr->scale_x;
+                scaled_dsa.y = static_cast<float>(size_dsa_org.y) * scr->scale_y;
             }
 
             scr->absolute_pos.x = static_cast<int>(winpos.x);
             scr->absolute_pos.y = static_cast<int>(winpos.y);
 
-            draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos,
-                ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scr->ui_rotation);
+            draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos, scaled_no_dsa, scr->ui_rotation);
 
             if (scr->dsa_texture) {
-                const eka2l1::vec2 size_dsa = scr->size();
                 const int rotation = (scr->current_mode().rotation + scr->ui_rotation) % 360;
 
-                draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos,
-                    ImVec2(static_cast<float>(size_dsa.x * scr->scale.x), static_cast<float>(size_dsa.y * scr->scale.y)),
-                    rotation);
+                draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos, scaled_dsa, rotation);
             }
 
             scr->screen_mutex.unlock();
@@ -1945,6 +2288,11 @@ namespace eka2l1 {
 
             if (fullscreen_now) {
                 ImGui::PopStyleVar();
+            }
+
+            ImGui::PopStyleVar();
+
+            if (fullscreen_now) {
                 break;
             }
         }
@@ -2146,6 +2494,8 @@ namespace eka2l1 {
                 ImGui::Text("- florastamine");
                 ImGui::Text("- HadesD (Ichiro)");
                 ImGui::Text("- quanshousio");
+                ImGui::Text("- claimmore");
+                ImGui::Text("- stranno");
                 ImGui::EndChild();
             }
 
@@ -2274,6 +2624,10 @@ namespace eka2l1 {
 
         if (should_show_install_device_wizard) {
             show_install_device();
+        }
+
+        if (should_show_sd_card_mount) {
+            show_mount_sd_card();
         }
 
         if (should_show_about) {

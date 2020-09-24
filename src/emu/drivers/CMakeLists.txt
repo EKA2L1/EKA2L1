@@ -21,6 +21,7 @@ add_library(drivers
         include/drivers/graphics/buffer.h
         include/drivers/graphics/emu_window.h
         include/drivers/graphics/fb.h
+        include/drivers/graphics/cursor.h
         include/drivers/graphics/graphics.h
         include/drivers/graphics/shader.h
         include/drivers/graphics/texture.h
@@ -60,10 +61,13 @@ add_library(drivers
 if (NOT ANDROID)
     target_sources(drivers PRIVATE
         include/drivers/graphics/imgui_renderer.h
+        include/drivers/graphics/backend/cursor_glfw.h
         include/drivers/graphics/backend/emu_window_glfw.h
         include/drivers/input/backend/emu_controller_glfw.h
+        src/graphics/cursor.cpp
         src/graphics/emu_window.cpp
         src/graphics/imgui_renderer.cpp
+        src/graphics/backend/cursor_glfw.cpp
         src/graphics/backend/emu_window_glfw.cpp
         src/input/backend/emu_controller_glfw.cpp
         src/input/emu_controller.cpp)

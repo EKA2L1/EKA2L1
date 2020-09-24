@@ -38,6 +38,7 @@ add_library(common
         include/common/ini.h
         include/common/linked.h
         include/common/language.h
+        include/common/localizer.h
         include/common/log.h
         include/common/map.h
         include/common/paint.h
@@ -76,6 +77,7 @@ add_library(common
         src/hash.cpp
         src/ini.cpp
         src/language.cpp
+        src/localizer.cpp
         src/log.cpp
         src/paint.cpp
         src/path.cpp

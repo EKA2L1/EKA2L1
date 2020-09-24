@@ -62,6 +62,7 @@ namespace eka2l1::config {
         std::string cpu_backend{ "dynarmic" };
         int device{ 0 };
         int language{ -1 };
+        int emulator_language{ -1 };
 
         bool enable_gdbstub{ false };
         int gdb_port{ 24689 };
@@ -79,7 +80,7 @@ namespace eka2l1::config {
         bool enable_srv_akn_icon{ false };
         bool enable_srv_akn_skin{ true };
         bool enable_srv_cdl{ true };
-        bool enable_srv_socket{ false };
+        bool enable_srv_socket{ true };
 
         bool fbs_enable_compression_queue{ false };
         bool accurate_ipc_timing{ false };
@@ -87,6 +88,7 @@ namespace eka2l1::config {
 
         bool stop_warn_touch_disabled { false };
         bool dump_imb_range_code { false };
+        bool hide_mouse_in_screen_space { false };
 
         std::vector<keybind> keybinds;
         std::atomic<std::uint16_t> time_getter_sleep_us { 0 };

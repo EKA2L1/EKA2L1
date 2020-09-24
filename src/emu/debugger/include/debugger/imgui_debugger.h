@@ -26,6 +26,7 @@
 #include <thread>
 #include <vector>
 
+#include <common/localizer.h>
 #include <common/queue.h>
 #include <common/types.h>
 #include <common/vecx.h>
@@ -96,6 +97,7 @@ namespace eka2l1 {
 
         bool should_disable_validate_drive;
         bool should_warn_touch_disabled;
+        bool should_show_sd_card_mount;
 
         std::uint32_t active_screen;
 
@@ -147,11 +149,18 @@ namespace eka2l1 {
         window_server *winserv;
         oom_ui_app_server *oom;
 
+        common::string_table localised_strings;
+
         std::mutex errors_mut;
         std::queue<std::string> error_queue;
 
         selected_window_callback_function selected_callback;
         void *selected_callback_data;
+
+        bool back_from_fullscreen;
+        float last_scale;
+
+        int last_cursor;
 
         void show_app_launch();
         void show_empty_device_warn();
@@ -169,6 +178,7 @@ namespace eka2l1 {
 
         void show_pref_personalisation();
         void show_pref_general();
+        void show_pref_control();
         void show_pref_system();
         void show_pref_hal();
 
@@ -180,6 +190,7 @@ namespace eka2l1 {
         // Server debugging
         void show_windows_tree();
         void show_about();
+        void show_mount_sd_card();
 
         void set_language_to_property(const ::language new_one);
 
@@ -206,6 +217,7 @@ namespace eka2l1 {
         eka2l1::vec2 phony_size;
 
         bool should_show_menu_fullscreen;
+        bool sd_card_mount_choosen;
 
     protected:
         void do_install_package();

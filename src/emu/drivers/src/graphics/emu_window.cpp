@@ -22,9 +22,9 @@
 
 namespace eka2l1 {
     namespace drivers {
-        std::unique_ptr<emu_window> new_emu_window(window_type win_type) {
+        std::unique_ptr<emu_window> new_emu_window(const window_api win_type) {
             switch (win_type) {
-            case window_type::glfw: {
+            case window_api::glfw: {
                 return std::make_unique<emu_window_glfw3>();
             }
             }
@@ -32,9 +32,9 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        bool init_window_library(window_type win_type) {
+        bool init_window_library(const window_api win_type) {
             switch (win_type) {
-            case window_type::glfw:
+            case window_api::glfw:
                 return glfwInit() == GLFW_TRUE ? true : false;
 
             default:
@@ -44,9 +44,9 @@ namespace eka2l1 {
             return false;
         }
 
-        bool destroy_window_library(window_type win_type) {
+        bool destroy_window_library(const window_api win_type) {
             switch (win_type) {
-            case window_type::glfw:
+            case window_api::glfw:
                 glfwTerminate();
                 return true;
 

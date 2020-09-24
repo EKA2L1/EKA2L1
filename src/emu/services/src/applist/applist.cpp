@@ -101,6 +101,28 @@ namespace eka2l1 {
             return false;
         }
 
+        std::u16string caption_file_path = eka2l1::replace_extension(path, u"") + u"_caption.rsc";
+        caption_file_path = utils::get_nearest_lang_file(io, caption_file_path, ideal_lang, land_drive);
+        
+        f = io->open_file(caption_file_path, READ_MODE | BIN_MODE);
+
+        if (f) {
+            eka2l1::ro_file_stream caption_file_stream(f.get());
+            if (!caption_file_stream.valid()) {
+                LOG_INFO("Caption file for {} is corrupted!", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
+                    to_std_string(nullptr)));
+            } else {
+                if (!read_caption_data_oldarch(reinterpret_cast<common::ro_stream*>(&caption_file_stream), reg)) {
+                    LOG_INFO("Failed to read caption file for {}", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
+                        to_std_string(nullptr)));
+                }
+            }
+        }
+
+        if (reg.mandatory_info.short_caption.get_length() == 0) {
+            reg.caps.is_hidden = true;
+        }
+        
         regs.push_back(std::move(reg));
         return true;
     }

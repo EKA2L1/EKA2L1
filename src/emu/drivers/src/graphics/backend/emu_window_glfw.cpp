@@ -19,6 +19,8 @@
 
 #include <common/log.h>
 #include <common/raw_bind.h>
+
+#include <drivers/graphics/backend/cursor_glfw.h>
 #include <drivers/graphics/backend/emu_window_glfw.h>
 
 #define CALL_IF_VALID(_a, ...) \
@@ -209,6 +211,25 @@ namespace eka2l1 {
 
         void *emu_window_glfw3::get_userdata() {
             return userdata;
+        }
+
+        bool emu_window_glfw3::set_cursor(cursor *cur) {
+            if (!cur) {
+                return false;
+            }
+
+            cursor_glfw *cur_real = reinterpret_cast<cursor_glfw*>(cur);
+            glfwSetCursor(emu_win, reinterpret_cast<GLFWcursor*>(cur_real->raw_handle()));
+
+            return true;
+        }
+
+        void emu_window_glfw3::cursor_visiblity(const bool visi) {
+            glfwSetInputMode(emu_win, GLFW_CURSOR, visi ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
+        }
+
+        bool emu_window_glfw3::cursor_visiblity() {
+            return (glfwGetInputMode(emu_win, GLFW_CURSOR) != GLFW_CURSOR_HIDDEN);
         }
     }
 }

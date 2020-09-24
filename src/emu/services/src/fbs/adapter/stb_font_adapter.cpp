@@ -136,22 +136,20 @@ namespace eka2l1::epoc::adapter {
             return false;
         }
 
-        int ascent = 0;
-        int descent = 0;
         int gaps = 0;
         int x0, y0, x1, y1;
 
-        stbtt_GetFontVMetrics(info, &ascent, &descent, &gaps);
         stbtt_GetFontBoundingBox(info, &x0, &y0, &x1, &y1);
 
         // TODO: Compensate for aspect ratio. We currently don't have screen ratio, since
         //  no physical screen size is provided
-        metrics.ascent = ascent;
-        metrics.descent = descent;
-        metrics.max_height = ascent + descent;
-        metrics.design_height = ascent + descent;
+        // By the way. Descent is negative (because it follows coordinate)
+        metrics.ascent = y1;
+        metrics.descent = -y0;
+        metrics.max_height = y1 - y0;
+        metrics.design_height = y1 - y0;
         metrics.max_width = x1 - x0;
-        metrics.max_depth = descent;
+        metrics.max_depth = -y0;
         metrics.baseline_correction = 0;
 
         return true;
@@ -260,7 +258,7 @@ namespace eka2l1::epoc::adapter {
         const float scale_factor = static_cast<float>(font_size) / static_cast<float>(wy1 - wy0);
 
         character_metric.width = static_cast<std::int16_t>((x1 - x0) * scale_factor);
-        character_metric.height = font_size;
+        character_metric.height = static_cast<std::int16_t>((y1 - y0) * scale_factor);
         character_metric.horizontal_advance = static_cast<std::int16_t>(adv_width * scale_factor);
         character_metric.horizontal_bearing_x = static_cast<std::int16_t>(left_side_bearing * scale_factor);
 
@@ -272,9 +270,9 @@ namespace eka2l1::epoc::adapter {
 
         stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
 
-        // Calculate vertical advance by ascent - descent + linegap
-        character_metric.vertical_advance = static_cast<std::int16_t>((ascent - descent + linegap) * scale_factor);
-        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(ascent * scale_factor);
+        // Calculate vertical advance by char_ascent - char_descent + linegap
+        character_metric.vertical_advance = static_cast<std::int16_t>((y1 - y0 + linegap) * scale_factor);
+        character_metric.horizontal_bearing_y = static_cast<std::int16_t>(y1 * scale_factor);
 
         // Not caring about vertical placement right now (text placement)
         character_metric.vertical_bearing_y = 0;
@@ -283,6 +281,16 @@ namespace eka2l1::epoc::adapter {
         return true;
     }
 
+    std::uint32_t stb_font_file_adapter::line_gap(const std::size_t idx) {
+        int ascent, descent, linegap = 0;
+        int off = 0;
+
+        stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
+        stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
+
+        return linegap; 
+    }
+    
     void stb_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
         stbtt_FreeBitmap(data, nullptr);
     }

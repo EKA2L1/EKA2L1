@@ -1266,9 +1266,9 @@ namespace eka2l1 {
 
         scr->screen_mutex.lock();
         guest_evt_.adv_pointer_evt_.pos.x = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x)
-            / scr->scale.x);
+            / scr->scale_x);
         guest_evt_.adv_pointer_evt_.pos.y = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y)
-            / scr->scale.y);
+            / scr->scale_y);
 
         const int orgx = guest_evt_.adv_pointer_evt_.pos.x;
         const int orgy = guest_evt_.adv_pointer_evt_.pos.y;
@@ -1339,7 +1339,10 @@ namespace eka2l1 {
 
         case drivers::input_event_type::touch: {
             epoc::screen *scr = get_current_focus_screen();
-            eka2l1::rect screen_rect(scr->absolute_pos, scr->current_mode().size * scr->scale);
+            const eka2l1::vec2 screen_size_scaled(static_cast<int>(std::roundf(scr->current_mode().size.x * scr->scale_x)),
+                static_cast<int>(std::roundf(scr->current_mode().size.y * scr->scale_y)));
+
+            eka2l1::rect screen_rect(scr->absolute_pos, screen_size_scaled);
 
             // For touch, try to map to keycode first...
             // If no correspond mapping is found as key, just treat it as touch

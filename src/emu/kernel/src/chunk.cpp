@@ -51,7 +51,7 @@ namespace eka2l1 {
                 access = access_type::global_access;
                 create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_GLOBAL;
             }
-
+            
             if (attrib == chunk_attrib::anonymous) {
                 // Don't use the name given by that, it's anonymous omg!!!
                 obj_name = "anonymous" + common::to_string(eka2l1::random());
@@ -135,6 +135,12 @@ namespace eka2l1 {
         }
 
         void chunk::destroy() {
+            // Public debug for
+            if (obj_name == "T9LDB") {
+                std::ofstream stream(fmt::format("t9ldb_dump_{}.bin", unique_id()), std::ios_base::binary);
+                stream.write(reinterpret_cast<const char*>(mmc_impl_->host_base()), mmc_impl_->top());
+            }
+
             if (!mmc_impl_unq_)
                 get_own_process()->get_mem_model()->delete_chunk(mmc_impl_);
         }

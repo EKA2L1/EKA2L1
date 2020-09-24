@@ -35,9 +35,6 @@ namespace eka2l1::drivers {
         drivers::audio_driver *aud_;
         std::unique_ptr<drivers::audio_output_stream> stream_;
 
-        std::uint8_t channels_;
-        std::uint16_t freq_;
-
         threadsafe_cn_queue<dsp_buffer> buffers_;
 
         dsp_buffer decoded_;

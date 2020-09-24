@@ -359,11 +359,11 @@ namespace eka2l1 {
 
     static void do_scale_metrics(epoc::open_font_metrics &metrics, const float scale_x, const float scale_y) {
         metrics.max_height = static_cast<std::int16_t>(metrics.max_height * scale_y);
-        metrics.ascent = static_cast<std::int16_t>(metrics.ascent * scale_x);
-        metrics.descent = static_cast<std::int16_t>(metrics.descent * scale_x);
+        metrics.ascent = static_cast<std::int16_t>(metrics.ascent * scale_y);
+        metrics.descent = static_cast<std::int16_t>(metrics.descent * scale_y);
         metrics.design_height = static_cast<std::int16_t>(metrics.design_height * scale_y);
         metrics.max_depth = static_cast<std::int16_t>(metrics.max_depth * scale_y);
-        metrics.max_width = static_cast<std::int16_t>(metrics.max_width * scale_y);
+        metrics.max_width = static_cast<std::int16_t>(metrics.max_width * scale_x);
     }
 
     static std::int32_t calculate_baseline(epoc::font_spec_base &spec) {
@@ -468,6 +468,17 @@ namespace eka2l1 {
         of->face_index_offset = static_cast<int>(info.idx);
         of->vtable = epoc::DEAD_VTABLE;
         of->allocator = epoc::DEAD_ALLOC;
+
+        // Fill basic extended function info
+        if constexpr(std::is_same_v<Q, epoc::open_font_v2>) {
+            of->font_max_ascent = of->metrics.ascent;
+            of->font_max_descent = of->metrics.descent;
+            of->font_standard_descent = of->metrics.descent;
+            of->font_captial_offset = 0;
+
+            // Get the line gap!! This is no stub
+            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx) * scale_factor_y);
+        }
 
         // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer
         // Since I don't know the version that starts using offset yet, we just leave it be this for now
@@ -794,7 +805,7 @@ namespace eka2l1 {
         reinterpret_cast<type*>(bmp_font)->algorithic_style.baseline_offsets_in_pixel,                                      \
         font->of_info.metrics.max_height);                                                                               \
     cache_entry->metric.width = rasterized_width;                                                                           \
-    cache_entry->metric.height = font->of_info.metrics.max_height;                                                       \
+    cache_entry->metric.height = rasterized_height;                                                       \
     cache_entry->metric.bitmap_type = bitmap_type;                                                               \
     const auto cache_entry_ptr = serv->host_ptr_to_guest_general_data(cache_entry).ptr_address();                           \
     if (epoc::does_client_use_pointer_instead_of_offset(this)) {                                                            \

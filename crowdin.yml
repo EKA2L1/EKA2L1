@@ -1,0 +1,3 @@
+files:
+  - source: /src/emu/debugger/resources/local/strings.xml
+    translation: /src/emu/debugger/resources/local-%two_letters_code%/%original_file_name%
