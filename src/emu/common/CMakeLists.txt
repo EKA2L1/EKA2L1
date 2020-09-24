@@ -102,7 +102,9 @@ target_link_libraries(common PRIVATE pugixml)
 
 if (UNIX OR APPLE)
     set_property(TARGET common PROPERTY POSITION_INDEPENDENT_CODE ON)
-    target_link_libraries(common PRIVATE pthread)
+    if (NOT ANDROID)
+        target_link_libraries(common PRIVATE pthread)
+    endif()
 endif ()
 
 execute_process(

@@ -92,16 +92,16 @@
 #endif
 
 #ifdef __ANDROID__
-#define EKA2L1_PLATFORM_ANDROID
+#define EKA2L1_PLATFORM_ANDROID 1
 #endif
 
 #ifdef __EPOC32__
-#define EKA2L1_PLATFORM_SYMBIAN
+#define EKA2L1_PLATFORM_SYMBIAN 1
 
 #if defined(__S60_3X__) || defined(__SERIES60_3X__)
-#define EKA2L1_PLATFORM_S60V3
+#define EKA2L1_PLATFORM_S60V3 1
 #elif defined(__S60_50__)
-#define EKA2L1_PLATFORM_S60V5
+#define EKA2L1_PLATFORM_S60V5 1
 #endif
 #endif
 

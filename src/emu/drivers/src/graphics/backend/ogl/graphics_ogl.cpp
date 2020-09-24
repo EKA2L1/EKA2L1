@@ -19,6 +19,7 @@
 
 #include <common/algorithm.h>
 #include <common/log.h>
+#include <common/platform.h>
 #include <fstream>
 #include <sstream>
 
@@ -80,6 +81,7 @@ namespace eka2l1::drivers {
         color_loc = sprite_program->get_uniform_location("u_color").value_or(-1);
         proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
+        flip_loc = sprite_program->get_uniform_location("u_flip").value_or(-1);
 
         color_loc_fill = fill_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_fill = fill_program->get_uniform_location("u_proj").value_or(-1);
@@ -91,6 +93,7 @@ namespace eka2l1::drivers {
         invert_loc_mask = mask_program->get_uniform_location("u_invert").value_or(-1);
         source_loc_mask = mask_program->get_uniform_location("u_tex").value_or(-1);
         mask_loc_mask = mask_program->get_uniform_location("u_mask").value_or(-1);
+        flip_loc_mask = mask_program->get_uniform_location("u_flip").value_or(-1);
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -309,6 +312,8 @@ namespace eka2l1::drivers {
         } else {
             glUniform4fv((mask_bmp ? color_loc_mask : color_loc), 1, color);
         }
+
+        glUniform1f((mask_bmp ? flip_loc_mask : flip_loc), (flags & bitmap_draw_flag_no_flip) ? 1.0f : -1.0f);
 
         if (mask_bmp) {
             glUniform1f(invert_loc_mask, (flags & bitmap_draw_flag_invert_mask) ? 1.0f : 0.0f);
@@ -615,7 +620,11 @@ namespace eka2l1::drivers {
         }
 
         if (clear_bits & draw_buffer_bit_depth_buffer) {
+#ifdef EKA2L1_PLATFORM_ANDROID
+            glClearDepthf(color_converted[0]);
+#else
             glClearDepth(color_converted[0]);
+#endif
             gl_flags |= GL_DEPTH_BUFFER_BIT;
         }
 

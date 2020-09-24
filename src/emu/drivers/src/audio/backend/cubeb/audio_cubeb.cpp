@@ -56,11 +56,16 @@ namespace eka2l1::drivers {
 
     std::uint32_t cubeb_audio_driver::native_sample_rate() {
         std::uint32_t preferred_rate = 0;
+
+#ifdef EKA2L1_PLATFORM_ANDROID
+        preferred_rate = 48000;
+#else
         const auto result = cubeb_get_preferred_sample_rate(context_, &preferred_rate);
 
         if (result != CUBEB_OK) {
             return 0;
         }
+#endif
 
         return preferred_rate;
     }

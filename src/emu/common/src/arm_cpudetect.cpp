@@ -172,96 +172,96 @@ int get_core_count() {
 }
 #endif
 
-cpu_info::cpu_info() {
-    detect();
-}
+namespace eka2l1::common {
 
-// Detects the various cpu features
-void cpu_info::detect() {
-    // Set some defaults here
-    HTT = false;
+    // Detects the various cpu features
+    void cpu_info::detect() {
+        // Set some defaults here
+        HTT = false;
 #if EKA2L1_ARCH(ARM64)
-    OS64bit = true;
-    CPU64bit = true;
-    Mode64bit = true;
+        OS64bit = true;
+        CPU64bit = true;
+        Mode64bit = true;
 #else
-    OS64bit = false;
-    CPU64bit = false;
-    Mode64bit = false;
+        OS64bit = false;
+        CPU64bit = false;
+        Mode64bit = false;
 #endif
-    vendor = VENDOR_ARM;
+        vendor = VENDOR_ARM;
 
-    // Get the information about the CPU
+        // Get the information about the CPU
 #if !EKA2L1_PLATFORM(LINUX)
-    bool isVFP3 = false;
-    bool isVFP4 = false;
+        bool isVFP3 = false;
+        bool isVFP4 = false;
 #if EKA2L1_PLATFORM(IOS)
-    isVFP3 = true;
-    // Check for swift arch (VFP4)
+        isVFP3 = true;
+        // Check for swift arch (VFP4)
 #ifdef __ARM_ARCH_7S__
-    isVFP4 = true;
+        isVFP4 = true;
 #endif
-    strcpy(brand_string, "Apple A");
-    num_cores = 2;
+        strcpy(brand_string, "Apple A", sizeof(brand_string));
+        num_cores = 2;
 #elif EKA2L1_PLATFORM(UWP)
-    strcpy(brand_string, "Unknown");
-    isVFP3 = true;
-    isVFP4 = false;
-    SYSTEM_INFO sysInfo;
-    GetSystemInfo(&sysInfo);
-    num_cores = sysInfo.dwNumberOfProcessors;
+        strcpy(brand_string, "Unknown", sizeof(brand_string));
+        isVFP3 = true;
+        isVFP4 = false;
+        SYSTEM_INFO sysInfo;
+        GetSystemInfo(&sysInfo);
+        num_cores = sysInfo.dwNumberOfProcessors;
 #else // !EKA2L1_PLATFORM(IOS)
-    strcpy(brand_string, "Unknown");
-    num_cores = 1;
+        strcpy(brand_string, "Unknown");
+        num_cores = 1;
 #endif
-    truncate_cpy(cpu_string, brand_string);
-    // Hardcode this for now
-    bSwp = true;
-    bHalf = true;
-    bThumb = false;
-    bFastMult = true;
-    bVFP = true;
-    bEDSP = true;
-    bThumbEE = isVFP3;
-    bNEON = isVFP3;
-    bVFPv3 = isVFP3;
-    bTLS = true;
-    bVFPv4 = isVFP4;
-    bIDIVa = isVFP4;
-    bIDIVt = isVFP4;
-    bFP = false;
-    bASIMD = false;
+        strncpy(cpu_string, brand_string, sizeof(cpu_string));
+        // Hardcode this for now
+        bSwp = true;
+        bHalf = true;
+        bThumb = false;
+        bFastMult = true;
+        bVFP = true;
+        bEDSP = true;
+        bThumbEE = isVFP3;
+        bNEON = isVFP3;
+        bVFPv3 = isVFP3;
+        bTLS = true;
+        bVFPv4 = isVFP4;
+        bIDIVa = isVFP4;
+        bIDIVt = isVFP4;
+        bFP = false;
+        bASIMD = false;
 #else // EKA2L1_PLATFORM(LINUX)
-    truncate_cpy(cpu_string, GetCPUString().c_str());
-    truncate_cpy(brand_string, GetCPUBrandString().c_str());
+        strncpy(cpu_string, GetCPUString().c_str(), sizeof(cpu_string));
+        strncpy(brand_string, GetCPUBrandString().c_str(), sizeof(brand_string));
 
-    bSwp = CheckCPUFeature("swp");
-    bHalf = CheckCPUFeature("half");
-    bThumb = CheckCPUFeature("thumb");
-    bFastMult = CheckCPUFeature("fastmult");
-    bVFP = CheckCPUFeature("vfp");
-    bEDSP = CheckCPUFeature("edsp");
-    bThumbEE = CheckCPUFeature("thumbee");
-    bNEON = CheckCPUFeature("neon");
-    bVFPv3 = CheckCPUFeature("vfpv3");
-    bTLS = CheckCPUFeature("tls");
-    bVFPv4 = CheckCPUFeature("vfpv4");
-    bIDIVa = CheckCPUFeature("idiva");
-    bIDIVt = CheckCPUFeature("idivt");
-    // Qualcomm Krait supports IDIVA but it doesn't report it. Check for krait (0x4D = Plus, 0x6F = Pro).
-    unsigned short CPUPart = GetCPUPart();
-    if (GetCPUImplementer() == 0x51 && (CPUPart == 0x4D || CPUPart == 0x6F))
-        bIDIVa = bIDIVt = true;
-    // These two require ARMv8 or higher
-    bFP = CheckCPUFeature("fp");
-    bASIMD = CheckCPUFeature("asimd");
-    num_cores = GetCoreCount();
+        bSwp = CheckCPUFeature("swp");
+        bHalf = CheckCPUFeature("half");
+        bThumb = CheckCPUFeature("thumb");
+        bFastMult = CheckCPUFeature("fastmult");
+        bVFP = CheckCPUFeature("vfp");
+        bEDSP = CheckCPUFeature("edsp");
+        bThumbEE = CheckCPUFeature("thumbee");
+        bNEON = CheckCPUFeature("neon");
+        bVFPv3 = CheckCPUFeature("vfpv3");
+        bTLS = CheckCPUFeature("tls");
+        bVFPv4 = CheckCPUFeature("vfpv4");
+        bIDIVa = CheckCPUFeature("idiva");
+        bIDIVt = CheckCPUFeature("idivt");
+        // Qualcomm Krait supports IDIVA but it doesn't report it. Check for krait (0x4D = Plus, 0x6F = Pro).
+        unsigned short CPUPart = GetCPUPart();
+        if (GetCPUImplementer() == 0x51 && (CPUPart == 0x4D || CPUPart == 0x6F))
+            bIDIVa = bIDIVt = true;
+        // These two require ARMv8 or higher
+        bFP = CheckCPUFeature("fp");
+        bASIMD = CheckCPUFeature("asimd");
+        num_cores = GetCoreCount();
 #endif
-#if PPSSPP_ARCH(ARM64)
-    // Whether the above detection failed or not, on ARM64 we do have ASIMD/NEON.
-    bNEON = true;
-    bASIMD = true;
+#if EKA2L1_ARCH(ARM64)
+        // Whether the above detection failed or not, on ARM64 we do have ASIMD/NEON.
+        bNEON = true;
+        bASIMD = true;
 #endif
+    }
+
 }
 
 #endif

@@ -29,6 +29,8 @@
 
 #ifdef _MSC_VER
 #include <spdlog/sinks/msvc_sink.h>
+#elif EKA2L1_PLATFORM_ANDROID
+#include "spdlog/sinks/android_sink.h"
 #endif
 
 #include <spdlog/sinks/base_sink.h>
@@ -92,6 +94,8 @@ namespace eka2l1 {
 
 #ifdef _MSC_VER
             sinks.push_back(std::make_shared<spdlog::sinks::msvc_sink_st>());
+#elif EKA2L1_PLATFORM(ANDROID)
+            sinks.push_back(std::make_shared<spdlog::sinks::android_sink_mt>());
 #endif
 
             spd_logger = std::make_shared<spdlog::logger>("EKA2L1 Logger", begin(sinks), end(sinks));

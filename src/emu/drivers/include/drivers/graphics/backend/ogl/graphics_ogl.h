@@ -66,6 +66,7 @@ namespace eka2l1::drivers {
         GLint color_loc;
         GLint proj_loc;
         GLint model_loc;
+        GLint flip_loc;
 
         GLint color_loc_fill;
         GLint proj_loc_fill;
@@ -77,6 +78,7 @@ namespace eka2l1::drivers {
         GLint invert_loc_mask;
         GLint source_loc_mask;
         GLint mask_loc_mask;
+        GLint flip_loc_mask;
 
         ogl_state backup;
         std::atomic_bool should_stop;

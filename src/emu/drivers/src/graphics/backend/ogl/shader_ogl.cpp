@@ -115,7 +115,7 @@ namespace eka2l1::drivers {
         glCompileShader(vert);
 
         int success;
-        char error[512];
+        char error[512] = {'\0'};
 
         glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
 
