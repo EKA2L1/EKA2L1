@@ -132,7 +132,8 @@ namespace eka2l1 {
         , sd_card_mount_choosen(false) 
         , back_from_fullscreen(false)
         , last_scale(1.0f)
-        , last_cursor(ImGuiMouseCursor_Arrow) {
+        , last_cursor(ImGuiMouseCursor_Arrow)
+        , font_to_use(nullptr) {
         if (conf->emulator_language == -1) {
             conf->emulator_language = static_cast<int>(language::en);
         }
@@ -2562,6 +2563,10 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
+        if (font_to_use) {
+            ImGui::PushFont(font_to_use);
+        }
+
         show_menu();
         handle_shortcuts();
         show_screens();
@@ -2638,6 +2643,10 @@ namespace eka2l1 {
 
         if (should_show_logger) {
             logger->draw("Logger", &should_show_logger);
+        }
+
+        if (font_to_use) {
+            ImGui::PopFont();
         }
     }
 

@@ -35,6 +35,8 @@
 #include <drivers/input/common.h>
 #include <services/window/common.h>
 
+struct ImFont;
+
 namespace eka2l1 {
     namespace service {
         class property;
@@ -219,6 +221,8 @@ namespace eka2l1 {
         bool should_show_menu_fullscreen;
         bool sd_card_mount_choosen;
 
+        ImFont *font_to_use;
+
     protected:
         void do_install_package();
 
@@ -234,6 +238,10 @@ namespace eka2l1 {
 
         system *get_sys() const {
             return sys;
+        }
+
+        void set_font_to_use(ImFont *font) {
+            font_to_use = font;
         }
 
         std::atomic<bool> request_key;
