@@ -36,8 +36,6 @@ namespace eka2l1::mem {
         mem_model_process *own_process_{ nullptr };
 
         std::size_t chunk_id_in_mmp_;
-        vm_address bottom_{ 0 };
-        vm_address top_{ 0 };
 
         std::size_t committed_;
         std::size_t max_size_;
