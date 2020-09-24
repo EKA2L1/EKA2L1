@@ -126,6 +126,16 @@ namespace eka2l1 {
     bool read_icon_data_aif(common::ro_stream *stream, fbs_server *serv, std::vector<apa_app_icon> &icon_list, const address rom_addr = 0);
 
     /**
+     * \brief   Read caption data from localised RSC file
+     * 
+     * \param   stream      A read-only stream contains caption data.
+     * \param   reg         Registeration info to fill captions in.
+     * 
+     * \returns True on success.
+     */
+    bool read_caption_data_oldarch(common::ro_stream *stream, apa_app_registry &reg);
+
+    /**
      * \brief Read localised registeration info from a stream.
      * 
      * \param stream    Read-only stream contains localised registeration info.

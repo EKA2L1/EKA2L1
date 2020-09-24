@@ -25,6 +25,8 @@
 #include <common/path.h>
 #include <common/uid.h>
 
+#include <loader/rsc.h>
+
 #include <utils/cardinality.h>
 #include <utils/consts.h>
 
@@ -496,6 +498,51 @@ namespace eka2l1 {
             stream->seek(lastpos, common::seek_where::beg);
         }
 
+        return true;
+    }
+
+    static bool read_a_caption(common::ro_stream &stream, std::u16string &cap) {
+        std::uint8_t length = 0;
+        std::uint8_t unk2 = 0;
+
+        if (stream.read(&length, 1) != 1) {
+            return false;
+        }
+
+        if (stream.read(&unk2, 1) != 1) {
+            return false;
+        }
+
+        cap.resize(length);
+
+        const std::size_t raw_len_to_read = length * sizeof(char16_t);
+        if (stream.read(&cap[0], raw_len_to_read) != raw_len_to_read) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool read_caption_data_oldarch(common::ro_stream *stream, apa_app_registry &reg) {
+        loader::rsc_file caption_file_rsc_reader(stream);
+        std::vector<std::uint8_t> data = caption_file_rsc_reader.read(1);
+
+        // First string is short caption, second string is long caption
+        std::u16string short_cap;
+        std::u16string long_cap;
+
+        common::ro_buf_stream caption_read_stream(data.data(), data.size());
+        if (!read_a_caption(caption_read_stream, short_cap)) {
+            return false;
+        }
+
+        reg.mandatory_info.short_caption.assign(nullptr, short_cap);
+
+        if (!read_a_caption(caption_read_stream, long_cap)) {
+            return false;
+        }
+
+        reg.mandatory_info.long_caption.assign(nullptr, long_cap);
         return true;
     }
 }
