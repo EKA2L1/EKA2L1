@@ -317,9 +317,10 @@ namespace eka2l1::desktop {
             return;
         }
     }
-
     static const char *DEFAULT_FONT_PATH = "resources//mplus-1m-bold.ttf";
+    static const char *DEFAULT_CHINESE_SIMP_FONT_PATH = "resources//NotoSansSC-Bold.otf";
     static const float DEFAULT_FONT_SIZE = 16;
+    static const float DEFAULT_CHINESE_FONT_SIZE = 20;
 
     static int ui_thread_initialization(emulator &state) {
         // Breath of the UI
@@ -340,18 +341,29 @@ namespace eka2l1::desktop {
             0xFF00, 0xFFEF, // Half-width characters
             0x2000, 0x206F, // General Punctuation
             0x0102, 0x0103, // Vietnamese
+            0x0104, 0x0107, // Polish #1
             0x0110, 0x0111,
+            0x0118, 0x0119, // Polish #2
             0x0128, 0x0129,
+            0x0141, 0x0144, // Polish #3
+            0x015A, 0x015B, // Polish #4
             0x0168, 0x0169,
+            0x0179, 0x017C, // Polish #5
             0x01A0, 0x01A1,
             0x01AF, 0x01B0,
             0x1EA0, 0x1EF9,
+            0x4E00, 0x9FAF, // CJK Ideograms
             0,
         };
 
-        if (!io.Fonts->AddFontFromFileTTF(DEFAULT_FONT_PATH, DEFAULT_FONT_SIZE, nullptr, ranges)) {
-            io.Fonts->AddFontDefault();
+        state.normal_font = io.Fonts->AddFontFromFileTTF(DEFAULT_FONT_PATH, DEFAULT_FONT_SIZE, nullptr, ranges);
+
+        if (!state.normal_font) {
+            state.normal_font = io.Fonts->AddFontDefault();
         }
+
+        state.zh_font = io.Fonts->AddFontFromFileTTF(DEFAULT_CHINESE_SIMP_FONT_PATH, DEFAULT_CHINESE_FONT_SIZE, nullptr,
+            io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
         io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
         io.BackendPlatformName = "EKA2L1";
@@ -416,6 +428,22 @@ namespace eka2l1::desktop {
         return 0;
     }
 
+    static ImFont *ui_thread_get_use_font(emulator &state) {
+        switch (static_cast<language>(state.conf.emulator_language)) {
+        case language::zh:
+            if (state.zh_font) {
+                return state.zh_font;
+            }
+
+            break;
+
+        default:
+            break;
+        }
+
+        return state.normal_font;
+    }
+
     void ui_thread(emulator &state) {
         int result = ui_thread_initialization(state);
 
@@ -478,6 +506,8 @@ namespace eka2l1::desktop {
                     state.window->cursor_visiblity(true);
                 }
             }
+
+            state.debugger->set_font_to_use(ui_thread_get_use_font(state));
             
             // Render the graphics
             state.deb_renderer->draw(state.graphics_driver.get(), cmd_builder.get(), nws.x, nws.y, nwsb.x, nwsb.y);
