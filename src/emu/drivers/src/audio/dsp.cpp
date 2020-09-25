@@ -31,6 +31,10 @@ namespace eka2l1::drivers {
         , buffer_copied_userdata_(nullptr) {
     }
 
+    void dsp_stream::reset_stat() {
+        samples_played_ = 0;
+    }
+
     std::unique_ptr<dsp_stream> new_dsp_out_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend) {
         switch (dsp_backend) {
         case dsp_stream_backend_ffmpeg:
