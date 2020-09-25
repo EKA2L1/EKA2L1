@@ -57,6 +57,7 @@ extern "C" {
     HLE_DISPATCH_FUNC(TInt, EAudioDspStreamGetBalance, TAny *aInstance);
     HLE_DISPATCH_FUNC(TInt, EAudioDspStreamBytesRendered, TAny *aInstance, TUint64 &aBytesRendered);
     HLE_DISPATCH_FUNC(TInt, EAudioDspStreamPosition, TAny *aInstance, TUint64 &aPosition);
+    HLE_DISPATCH_FUNC(TInt, EAudioDspStreamResetStat, TAny *aInstance);
 }
 
 #endif

@@ -23,6 +23,7 @@
 #include "impl.h"
 #include "log.h"
 #include "aud.h"
+#include "softint.h"
 
 #ifdef EKA2
 #include <e32cmn.h>
@@ -44,12 +45,16 @@ CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aSt
 
 void CMMFMdaOutputBufferQueue::WriteAndWait() {
     if (iBufferNodes.IsEmpty()) {
-        iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
-        iStream->RegisterNotifyBufferSent(iStatus);
-        
+        iStream->iState = EMdaStateStop;
         iCopied = NULL;
+
+        iStream->iCallback.MaoscPlayComplete(KErrUnderflow);
+
+        iStream->RegisterNotifyBufferSent(iStatus);
         Cancel();
-        
+
+        iStatus = KErrNone;
+
         return;
     }
 
@@ -85,7 +90,8 @@ void CMMFMdaOutputBufferQueue::RunL() {
         }
     }
 
-    if (iStatus != KErrAbort) {
+    // Stream might been canceled in buffer copied
+    if ((iStatus != KErrAbort) && (iStream->iState == EMdaStatePlay)) {
         WriteAndWait();
     }
 }
@@ -196,7 +202,10 @@ void CMMFMdaAudioOutputStream::Play() {
 }
 
 void CMMFMdaAudioOutputStream::Stop() {
-    if (iState != EMdaStatePlay)
+    // Reset the stat first
+    EAudioDspStreamResetStat(0, iDispatchInstance);
+
+    if (iState == EMdaStateStop)
         return;
 
     iBufferQueue.CleanQueue();
@@ -205,7 +214,8 @@ void CMMFMdaAudioOutputStream::Stop() {
     if (EAudioDspStreamStop(0, iDispatchInstance) != KErrNone) {
         LogOut(MCA_CAT, _L("Failed to stop audio output stream"));
     } else {
-        iState = EMdaStateReady;
+        iState = EMdaStateStop;
+        iCallback.MaoscPlayComplete(KErrCancel);
     }
 }
 
@@ -222,6 +232,10 @@ void CMMFMdaAudioOutputStream::WriteWithQueueL(const TDesC8 &aData) {
 
     TBool isFirst = iBufferQueue.iBufferNodes.IsEmpty();
     iBufferQueue.iBufferNodes.AddLast(*node);
+
+    if (iState == EMdaStateStop) {
+        iState = EMdaStatePlay;
+    }
 
     if (isFirst) {
         iBufferQueue.StartTransfer();
@@ -296,7 +310,7 @@ const TTimeIntervalMicroSeconds &CMMFMdaAudioOutputStream::Position() {
 #ifdef EKA2
     iPosition = TTimeIntervalMicroSeconds(time);
 #else
-    iPosition = TTimeIntervalMicroSeconds(static_cast<TInt>(time));
+    iPosition = TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(time));
 #endif
 
     return iPosition;
@@ -307,14 +321,14 @@ TInt CMMFMdaAudioOutputStream::Pause() {
         return KErrNotReady;
     }
 
-    iState = EMdaStateIdle;
+    iState = EMdaStatePause;
     Stop();
 
     return KErrNone;
 }
 
 TInt CMMFMdaAudioOutputStream::Resume() {
-    if (iState != EMdaStateIdle) {
+    if (iState != EMdaStatePause) {
         return KErrNotReady;
     }
 

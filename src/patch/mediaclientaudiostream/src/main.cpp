@@ -51,6 +51,8 @@ CMdaAudioOutputStream::CMdaAudioOutputStream()
 }
 
 void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
+    LogOut(MCA_CAT, _L("We are openinggggg!"));
+
     TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
 
     // Try to set audio properties
