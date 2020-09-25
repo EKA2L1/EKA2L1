@@ -1383,8 +1383,6 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_install_device() {
-        static ImVec2 BUTTON_SIZE = ImVec2(50, 20);
-
         if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
             device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
             device_wizard_state.failure = false;
@@ -1566,19 +1564,29 @@ namespace eka2l1 {
             ImGui::NewLine();
 
             // Align to center!
-            ImGui::SameLine((ImGui::GetWindowSize().x - (BUTTON_SIZE.x * 2)) / 2);
-
             const std::string ok_str = common::get_localised_string(localised_strings, "ok");
-            const std::string yes_str = common::get_localised_string(localised_strings, "yes");
-            const std::string no_str = common::get_localised_string(localised_strings, "no");
+            const std::string yes_str = common::get_localised_string(localised_strings, "continue");
+            const std::string no_str = common::get_localised_string(localised_strings, "cancel");
+
+            const float yes_str_width = ImGui::CalcTextSize(yes_str.c_str()).x;
+            const float no_str_width = ImGui::CalcTextSize(no_str.c_str()).x;
+            const float ok_str_width = ImGui::CalcTextSize(ok_str.c_str()).x + 10.0f;
+
+            ImVec2 yes_btn_size(yes_str_width + 10.0f, ImGui::GetFontSize() + 10.0f);
+            ImVec2 no_btn_size(no_str_width + 10.0f, ImGui::GetFontSize() + 10.0f);
+            ImVec2 ok_btn_size(ok_str_width + 10.0f, ImGui::GetFontSize() + 10.0f);
 
             if (device_wizard_state.stage == device_wizard::ENDING) {
-                if (ImGui::Button(ok_str.c_str(), BUTTON_SIZE)) {
+                ImGui::SameLine((ImGui::GetWindowSize().x - ok_btn_size.x) / 2);
+
+                if (ImGui::Button(ok_str.c_str(), ok_btn_size)) {
                     should_show_install_device_wizard = false;
                     device_wizard_state.stage = device_wizard::FINAL_FOR_REAL;
                 }
             } else {
-                if (ImGuiButtonToggle(yes_str.c_str(), BUTTON_SIZE, device_wizard_state.should_continue)) {
+                ImGui::SameLine((ImGui::GetWindowSize().x - (yes_str_width + no_str_width)) / 2);
+
+                if (ImGuiButtonToggle(yes_str.c_str(), yes_btn_size, device_wizard_state.should_continue)) {
                     device_wizard_state.stage = static_cast<device_wizard::device_wizard_stage>(static_cast<int>(device_wizard_state.stage) + 1);
                     device_wizard_state.should_continue = false;
 
@@ -1639,7 +1647,7 @@ namespace eka2l1 {
 
                 ImGui::SameLine();
 
-                if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button(no_str.c_str(), BUTTON_SIZE)) {
+                if ((device_wizard_state.stage != device_wizard::INSTALL) && ImGui::Button(no_str.c_str(), no_btn_size)) {
                     should_show_install_device_wizard = false;
                     device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
                 }
@@ -2509,25 +2517,25 @@ namespace eka2l1 {
     void imgui_debugger::show_empty_device_warn() {
         ImGui::OpenPopup("##NoDevicePresent");
         if (ImGui::BeginPopupModal("##NoDevicePresent", &should_show_empty_device_warn)) {
-            ImGui::Text("You have not installed any device. Please install a device or follow the installation instructions on"
-                " EKA2L1's Github Wiki page.");
+            const std::string no_install_str = common::get_localised_string(localised_strings, "no_device_installed_msg");
+            ImGui::Text("%s", no_install_str.c_str());
 
-            static const char *CONTINUE_BUTTON_TITLE = "Continue";
-            static const char *INSTALL_DEVICE_TITLE = "Install device";
+            std::string continue_button_title = common::get_localised_string(localised_strings, "continue");
+            std::string install_device_title = common::get_localised_string(localised_strings, "no_device_installed_opt_install_device_btn_name");
 
-            const float continue_button_title_width = ImGui::CalcTextSize(CONTINUE_BUTTON_TITLE).x;
-            const float install_device_title_width = ImGui::CalcTextSize(INSTALL_DEVICE_TITLE).x;
+            const float continue_button_title_width = ImGui::CalcTextSize(continue_button_title.c_str()).x;
+            const float install_device_title_width = ImGui::CalcTextSize(install_device_title.c_str()).x;
 
             ImGui::NewLine();
             ImGui::SameLine((ImGui::GetWindowSize().x - continue_button_title_width - install_device_title_width - 10.0f) / 2);
 
-            if (ImGui::Button("Continue")) {
+            if (ImGui::Button(continue_button_title.c_str())) {
                 should_show_empty_device_warn = false;
             }
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Install device")) {
+            if (ImGui::Button(install_device_title.c_str())) {
                 should_show_install_device_wizard = true;
                 should_show_empty_device_warn = false;
             }
@@ -2539,14 +2547,18 @@ namespace eka2l1 {
     void imgui_debugger::show_touchscreen_disabled_warn() {
         ImGui::OpenPopup("##TouchscreenDisabledPop");
         if (ImGui::BeginPopupModal("##TouchscreenDisabledPop", nullptr)) {
-            ImGui::Text("Some of your current keybinds are associated with mouse buttons. Therefore"
-                " emulated touchscreen is disabled.");
+            const std::string disabled_msg = common::get_localised_string(localised_strings, "touchscreen_disabled_msg");
+            ImGui::Text("%s", disabled_msg.c_str());
 
-            ImGui::TextColored(RED_COLOR, "Note: ");
+            const std::string note_str = common::get_localised_string(localised_strings, "touchscreen_disabled_note_str");
+            ImGui::TextColored(RED_COLOR, "%s: ", note_str.c_str());
             ImGui::SameLine();
-            ImGui::Text("Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.");
 
-            ImGui::Checkbox("Don't show this again.", &conf->stop_warn_touch_disabled);
+            const std::string note_msg = common::get_localised_string(localised_strings, "touchscreen_disabled_note_msg");
+            ImGui::Text("%s", note_msg.c_str());
+            
+            const std::string no_show = common::get_localised_string(localised_strings, "no_show_option_again_general_msg");
+            ImGui::Checkbox(no_show.c_str(), &conf->stop_warn_touch_disabled);
 
             ImGui::NewLine();
 

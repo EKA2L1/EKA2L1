@@ -14,7 +14,7 @@
     <string name="info">Info</string>
     <string name="warning">Warning</string>
     <string name="cancel">Cancel</string>
-    <string name="cancel">Cancel</string>
+    <string name="continue">Continue</string>
 
     <string name="file_menu_name">File</string>
     <string name="debugger_menu_name">Debugger</string>
@@ -110,7 +110,7 @@
     <string name="installer_language_choose_title">Choose the language for this package</string>
 
     <string name="install_device_wizard_title">Install device wizard</string>
-    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard. This wizard will guide you through device installation process!</string>
+    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard! To get started, please press the "Continue" button.</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Choose installation method</string>
@@ -128,17 +128,24 @@
     <string name="mmc_mount_success_dialog_title">Card mounted successfully!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
 
-    <string name="lang_name_zh">Chinese Simplified</string>
-    <string name="lang_name_en">English</string>
-    <string name="lang_name_fi">Finnish</string>
-    <string name="lang_name_fr">French</string>
-    <string name="lang_name_ru">Russian</string>
-    <string name="lang_name_it">Italian</string>
-    <string name="lang_name_de">German</string>
-    <string name="lang_name_es">Spanish</string>
-    <string name="lang_name_ro">Romanian</string>
-    <string name="lang_name_vi">Vietnamese</string>
-    <string name="lang_name_bp">Portuguese, Brazilian</string>
-    <string name="lang_name_pl">Polish</string>
-    <string name="lang_name_uk">Ukrainian</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1's Github Wiki page.</string>
+    <string name="no_device_installed_opt_install_device_btn_name">Install device</string>
+    <string name="no_show_option_again_general_msg">Don't show this again.</string>
+    <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
+    <string name="touchscreen_disabled_note_str">Note</string>
+    <string name="touchscreen_disabled_note_msg">Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</string>
+
+    <string name="lang_name_zh" translatable="false">简体中文</string>
+    <string name="lang_name_en" translatable="false">English</string>
+    <string name="lang_name_fi" translatable="false">Suomen kieli</string>
+    <string name="lang_name_fr" translatable="false">Français</string>
+    <string name="lang_name_ru" translatable="false">Русский</string>
+    <string name="lang_name_it" translatable="false">Italian</string>
+    <string name="lang_name_de" translatable="false">Deutsch</string>
+    <string name="lang_name_es" translatable="false">Español</string>
+    <string name="lang_name_ro" translatable="false">Român</string>
+    <string name="lang_name_vi" translatable="false">Tiếng Việt</string>
+    <string name="lang_name_bp" translatable="false">Português, Brazilian</string>
+    <string name="lang_name_pl" translatable="false">Polski</string>
+    <string name="lang_name_uk" translatable="false">Українська</string>
 </resources>
