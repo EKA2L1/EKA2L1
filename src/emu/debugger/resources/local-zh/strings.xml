@@ -14,7 +14,7 @@
     <string name="info">信息</string>
     <string name="warning">警告</string>
     <string name="cancel">取消</string>
-    <string name="cancel">取消</string>
+    <string name="continue">Continue</string>
     <string name="file_menu_name">文件</string>
     <string name="debugger_menu_name">调试器</string>
     <string name="view_menu_name">查看</string>
@@ -64,7 +64,7 @@
     <string name="pref_general_debugging_enable_btrace_checkbox_title">启用 B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">启用驱动的内核追踪功能. 启用后大概率会拖慢运行速度.</string>
     <string name="pref_general_utilities_string">工具</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">当鼠标光标在运行模拟程序的窗口内时隐藏。</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Hide mouse cursor when it is inside an emulated screen</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">在您将鼠标与某一键位绑定时, 并且此游戏/应用有内键光标时很有用.\n按住ALT键以让鼠标光标保持可见.</string>
     <string name="pref_system_title">系统</string>
     <string name="pref_system_cpu_option_name">处理器</string>
@@ -94,7 +94,7 @@
     <string name="installer_text_popup_title">安装器弹窗文本</string>
     <string name="installer_language_choose_title">选择本软件包的语言</string>
     <string name="install_device_wizard_title">设备安装向导</string>
-    <string name="install_device_wizard_welcome_msg">欢迎来到设备安装向导. 本向导将引导您来安装设备!</string>
+    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard! To get started, please press the \"Continue\" button.</string>
     <string name="install_device_wizard_raw_dump_type_name">原始堆文件</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">选择安装方式</string>
@@ -110,17 +110,10 @@
     <string name="install_device_final_msg_2">如有任何问题，请通过提交issues向开发人员报告！</string>
     <string name="mmc_mount_success_dialog_title">卡片成功加载！</string>
     <string name="mmc_mount_success_dialog_msg">已安装存储卡/SD卡！存储卡/SD卡上的所有应用程序都已重新加载。</string>
-    <string name="lang_name_zh">简体中文</string>
-    <string name="lang_name_en">英语</string>
-    <string name="lang_name_fi">芬兰语</string>
-    <string name="lang_name_fr">法语</string>
-    <string name="lang_name_ru">俄语</string>
-    <string name="lang_name_it">意大利语</string>
-    <string name="lang_name_de">德语</string>
-    <string name="lang_name_es">西班牙语</string>
-    <string name="lang_name_ro">罗马尼亚语</string>
-    <string name="lang_name_vi">越南语</string>
-    <string name="lang_name_bp">葡萄牙语（巴西）</string>
-    <string name="lang_name_pl">波兰语</string>
-    <string name="lang_name_uk">乌克兰语</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s Github Wiki page.</string>
+    <string name="no_device_installed_opt_install_device_btn_name">Install device</string>
+    <string name="no_show_option_again_general_msg">Don\'t show this again.</string>
+    <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
+    <string name="touchscreen_disabled_note_str">Note</string>
+    <string name="touchscreen_disabled_note_msg">Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</string>
 </resources>
