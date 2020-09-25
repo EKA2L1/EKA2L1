@@ -361,8 +361,11 @@ namespace eka2l1::desktop {
         if (!state.normal_font) {
             state.normal_font = io.Fonts->AddFontDefault();
         }
+        
+        ImFontConfig config;
+        config.MergeMode = true;
 
-        state.zh_font = io.Fonts->AddFontFromFileTTF(DEFAULT_CHINESE_SIMP_FONT_PATH, DEFAULT_CHINESE_FONT_SIZE, nullptr,
+        io.Fonts->AddFontFromFileTTF(DEFAULT_CHINESE_SIMP_FONT_PATH, DEFAULT_CHINESE_FONT_SIZE, &config,
             io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
         io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
@@ -429,18 +432,6 @@ namespace eka2l1::desktop {
     }
 
     static ImFont *ui_thread_get_use_font(emulator &state) {
-        switch (static_cast<language>(state.conf.emulator_language)) {
-        case language::zh:
-            if (state.zh_font) {
-                return state.zh_font;
-            }
-
-            break;
-
-        default:
-            break;
-        }
-
         return state.normal_font;
     }
 

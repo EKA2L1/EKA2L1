@@ -50,8 +50,7 @@ namespace eka2l1::desktop {
         , joystick_controller(nullptr)
         , init_fullscreen(false)
         , winserv(nullptr)
-        , normal_font(nullptr)
-        , zh_font(nullptr) {
+        , normal_font(nullptr) {
     }
 
     void emulator::stage_one() {
