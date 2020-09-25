@@ -14,7 +14,7 @@
     <string name="info">Info</string>
     <string name="warning">Ostrzeżenie</string>
     <string name="cancel">Anuluj</string>
-    <string name="cancel">Anuluj</string>
+    <string name="continue">Continue</string>
     <string name="file_menu_name">Plik</string>
     <string name="debugger_menu_name">Debugger</string>
     <string name="view_menu_name">Widok</string>
@@ -64,7 +64,7 @@
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Włącz B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Włącz trasowanie jądra które może być użyte w sterowniku. Oczekuj spowolnienia po włączeniu.</string>
     <string name="pref_general_utilities_string">Narzędzia</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Ukryj kursor myszy gdy jest na emulowanym ekranie.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Hide mouse cursor when it is inside an emulated screen</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Przydatne, gdy przypiszesz klawisz do myszki i gra/aplikacja ma wbudowany kursor.\nAby sprawić, by kursor myszki się pojawił, przytrzymaj ALT.</string>
     <string name="pref_system_title">System</string>
     <string name="pref_system_cpu_option_name">CPU</string>
@@ -94,7 +94,7 @@
     <string name="installer_text_popup_title">Okienko tekstu instalacji</string>
     <string name="installer_language_choose_title">Wybierz język dla tej paczki</string>
     <string name="install_device_wizard_title">Kreator instalacji urządzenia</string>
-    <string name="install_device_wizard_welcome_msg">Witaj w kreatorze instalacji urządzenia. Ten kreator poprowadzi cię przez proces instalacji urządzenia!</string>
+    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard! To get started, please press the \"Continue\" button.</string>
     <string name="install_device_wizard_raw_dump_type_name">Surowy zrzut</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Wybierz metodę instalacji</string>
@@ -110,17 +110,10 @@
     <string name="install_device_final_msg_2">W razie problemu, zgłoś to twórcom zgłaszając problem!</string>
     <string name="mmc_mount_success_dialog_title">Karta zamontowana poprawnie!</string>
     <string name="mmc_mount_success_dialog_msg">Karta MMC/SD zamontowana! Wszystkie aplikacje na karcie MMC/SD zostały wczytane ponownie.</string>
-    <string name="lang_name_zh">Chiński (pismo uproszczone)</string>
-    <string name="lang_name_en">Angielski</string>
-    <string name="lang_name_fi">Fiński</string>
-    <string name="lang_name_fr">Francuski</string>
-    <string name="lang_name_ru">Rosyjski</string>
-    <string name="lang_name_it">Włoski</string>
-    <string name="lang_name_de">Niemiecki</string>
-    <string name="lang_name_es">Hiszpański</string>
-    <string name="lang_name_ro">Rumuński</string>
-    <string name="lang_name_vi">Wietnamski</string>
-    <string name="lang_name_bp">Portugalski (Brazylia)</string>
-    <string name="lang_name_pl">Polski</string>
-    <string name="lang_name_uk">Ukraiński</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s Github Wiki page.</string>
+    <string name="no_device_installed_opt_install_device_btn_name">Install device</string>
+    <string name="no_show_option_again_general_msg">Don\'t show this again.</string>
+    <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
+    <string name="touchscreen_disabled_note_str">Note</string>
+    <string name="touchscreen_disabled_note_msg">Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</string>
 </resources>
