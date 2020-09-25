@@ -49,6 +49,7 @@
 #include <services/sensor/sensor.h>
 #include <services/shutdown/shutdown.h>
 #include <services/sms/sa/sa.h>
+#include <services/sms/sendas/sendas.h>
 #include <services/socket/socket.h>
 #include <services/sysagt/sysagt.h>
 #include <services/ui/cap/oom_app.h>
@@ -200,6 +201,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, sensor_server);
             CREATE_SERVER(sys, connmonitor_server);
             CREATE_SERVER(sys, drm_notifier_server);
+            CREATE_SERVER(sys, sendas_server);
 
             if (cfg->enable_srv_socket)
                 CREATE_SERVER(sys, socket_server);

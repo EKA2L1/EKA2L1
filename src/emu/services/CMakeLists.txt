@@ -84,6 +84,7 @@ add_library(epocservs
         include/services/sensor/sensor.h
         include/services/shutdown/shutdown.h
         include/services/sms/sa/sa.h
+        include/services/sms/sendas/sendas.h
         include/services/socket/common.h
         include/services/socket/connection.h
         include/services/socket/resolver.h
@@ -182,6 +183,7 @@ add_library(epocservs
         src/sensor/sensor.cpp
         src/shutdown/shutdown.cpp
         src/sms/sa/sa.cpp
+        src/sms/sendas/sendas.cpp
         src/socket/connection.cpp
         src/socket/resolver.cpp
         src/socket/socket.cpp
