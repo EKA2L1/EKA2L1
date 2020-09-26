@@ -115,12 +115,14 @@ void CMMFMdaOutputBufferQueue::DoCancel() {
     iStream->CancelRegisterNotifyBufferSent();
 }
 
-void CMMFMdaOutputBufferQueue::StartTransfer() {
+void CMMFMdaOutputBufferQueue::FixupActiveStatus() {
     if (IsActive()) {
         iStream->RegisterNotifyBufferSent(iStatus);
         Cancel();
     }
+}
 
+void CMMFMdaOutputBufferQueue::StartTransfer() {
     WriteAndWait();
 }
 
@@ -178,6 +180,8 @@ void CMMFMdaAudioOutputStream::ConstructL() {
 
     CActiveScheduler::Add(&iBufferQueue);
     CActiveScheduler::Add(&iOpen);
+
+    iBufferQueue.FixupActiveStatus();
 }
 
 void CMMFMdaAudioOutputStream::NotifyOpenComplete() {

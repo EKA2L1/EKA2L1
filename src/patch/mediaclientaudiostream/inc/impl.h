@@ -48,6 +48,8 @@ struct CMMFMdaOutputBufferQueue: public CActive {
     void WriteAndWait();
     ~CMMFMdaOutputBufferQueue();
 
+    void FixupActiveStatus();
+
     void StartTransfer();
     void CleanQueue();
 
