@@ -130,7 +130,7 @@
     <string name="mmc_mount_success_dialog_title">Card mounted successfully!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
 
-    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1's Github Wiki page.</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1's GitHub wiki page.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Install device</string>
     <string name="no_show_option_again_general_msg">Don't show this again.</string>
     <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
