@@ -39,6 +39,10 @@ namespace eka2l1 {
         class ro_stream;
     }
 
+    namespace kernel {
+        class process;
+    }
+
     namespace epoc::apa {
         struct command_line;
     }
@@ -165,6 +169,8 @@ namespace eka2l1 {
         friend class applist_session;
 
         std::vector<apa_app_registry> regs;
+        std::vector<kernel::process*> runnings;
+
         std::uint32_t flags{ 0 };
 
         std::vector<std::int64_t> watchs_;
@@ -244,8 +250,13 @@ namespace eka2l1 {
          * \brief Get app icon bitmap handles.
          */
         void get_app_icon(service::ipc_context &ctx);
+                
+        void launch_app(service::ipc_context &ctx);
 
         void connect(service::ipc_context &ctx) override;
+
+    protected:
+        bool launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id);
 
     public:
         explicit applist_server(system *sys);
@@ -256,7 +267,7 @@ namespace eka2l1 {
          */
         bool is_oldarch();
 
-        bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter);
+        bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id);
 
         std::mutex list_access_mut_;
 

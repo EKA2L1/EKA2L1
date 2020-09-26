@@ -1983,7 +1983,7 @@ namespace eka2l1 {
                             kernel_system *kern = alserv->get_kernel_object_owner();
 
                             kern->lock();
-                            alserv->launch_app(registerations[i], cmdline);
+                            alserv->launch_app(registerations[i], cmdline, nullptr);
                             kern->unlock();
                         }
                     }
