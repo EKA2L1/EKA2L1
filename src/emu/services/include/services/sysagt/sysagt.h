@@ -42,7 +42,8 @@ namespace eka2l1 {
         system_agent_notify_on_event = 2,
         system_agent_notify_on_any_event = 3,
         system_agent_notify_on_cond = 4,
-        system_agent_notify_event_cancel = 5
+        system_agent_notify_event_cancel = 5,
+        system_agent_set_event_buffer_enabled = 10
     };
 
     struct system_agent_notify_info {
@@ -66,15 +67,30 @@ namespace eka2l1 {
         void connect(service::ipc_context &context) override;
     };
 
+    struct system_agent_event_queue {        
+        system_agent_notify_info info_;
+        bool buffering_;
+
+        std::uint64_t time_expire_;
+
+        explicit system_agent_event_queue()
+            : buffering_(false)
+            , time_expire_(0) {
+        }
+
+        bool listen(system_agent_notify_info &info);
+    };
+
     struct system_agent_session : public service::typical_session {
     protected:
-        system_agent_notify_info info_;
+        system_agent_event_queue queue_;
 
     public:
         explicit system_agent_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void get_state(service::ipc_context *ctx);
         void notify_event(service::ipc_context *ctx, const bool any);
+        void set_event_buffering(service::ipc_context *ctx);
 
         void fetch(service::ipc_context *ctx) override;
     };
