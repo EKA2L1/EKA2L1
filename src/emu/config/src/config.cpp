@@ -112,6 +112,7 @@ namespace eka2l1::config {
         config_file_emit_single(emitter, "stop-warn-touchscreen-disabled", stop_warn_touch_disabled);
         config_file_emit_single(emitter, "dump-imb-range-code", dump_imb_range_code);
         config_file_emit_single(emitter, "hide-mouse-in-screen-space", hide_mouse_in_screen_space);
+        config_file_emit_single(emitter, "enable-nearest-neighbor-filter", nearest_neighbor_filtering);
 
         emitter << YAML::EndMap;
 
@@ -176,6 +177,7 @@ namespace eka2l1::config {
         get_yaml_value(node, "stop-warn-touchscreen-disabled", &stop_warn_touch_disabled, false);
         get_yaml_value(node, "dump-imb-range-code", &dump_imb_range_code, false);
         get_yaml_value(node, "hide-mouse-in-screen-space", &hide_mouse_in_screen_space, false);
+        get_yaml_value(node, "enable-nearest-neighbor-filter", &nearest_neighbor_filtering, false);
 
         YAML::Node keybind_node;
         try {
