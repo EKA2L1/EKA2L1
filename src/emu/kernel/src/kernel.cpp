@@ -168,6 +168,67 @@ namespace eka2l1 {
         arm::dump_context(target_to_stop->get_thread_context());
     }
 
+    bool kernel_system::cpu_exception_handle_unpredictable(arm::core *core, const address occurred) {
+        auto read_crr_func = [&](const address addr) -> std::uint32_t {
+            const std::uint32_t *val = reinterpret_cast<std::uint32_t*>(crr_process()->get_ptr_on_addr_space(addr));
+            return val ? *val : 0;
+        };
+
+        if (!analyser_) {
+            analyser_ = arm::make_analyser(arm::arm_disassembler_backend::capstone, read_crr_func);
+        }
+
+        std::uint32_t inst_value = read_crr_func(occurred & ~1);
+        if (occurred & 1) {
+            // Take only the thumb part
+            inst_value >>= 16;
+        }
+
+        // Find entry in cache
+        auto result_find = cache_inters_.find(inst_value);
+        if (result_find != cache_inters_.end()) {
+            result_find->second(core);
+            return true;
+        }
+
+        auto inst = analyser_->next_instruction(occurred);
+        if (!inst) {
+            return false;
+        }
+
+        switch (inst->iname) {
+        case arm::instruction::MOV: {
+            if ((inst->ops.size() != 2) || (inst->ops[0].type != arm::arm_op_type::op_reg) || (inst->ops[1].type != arm::arm_op_type::op_reg)) {
+                return false;
+            }
+
+            const std::uint32_t source_reg = static_cast<int>(inst->ops[1].reg) - static_cast<int>(arm::reg::R0);
+            const std::uint32_t dest_reg = static_cast<int>(inst->ops[0].reg) - static_cast<int>(arm::reg::R0);
+        
+            auto func_generated = [=](arm::core *core) {
+                auto source_val = core->get_reg(source_reg);
+
+                if (dest_reg == 15) {
+                    core->set_cpsr((source_val & 1) ? (core->get_cpsr() | 0x20) :
+                        (core->get_cpsr() & ~0x20));
+                }
+
+                core->set_reg(dest_reg, source_val);
+            };
+
+            func_generated(core);
+
+            cache_inters_.emplace(inst_value, func_generated);
+            break;
+        }
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
     void kernel_system::cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data) {
         switch (exception_type) {
         case arm::exception_type_access_violation_read:
@@ -179,6 +240,13 @@ namespace eka2l1 {
         case arm::exception_type_undefined_inst:
             LOG_ERROR("Undefined instruction encountered in thread {}", crr_thread()->name());
             break;
+
+        case arm::exception_type_unpredictable:
+            if (!cpu_exception_handle_unpredictable(core, exception_data)) {
+                break;
+            }
+
+            return;
 
         case arm::exception_type_breakpoint:
             for (auto &breakpoint_callback_func: breakpoint_callbacks_) {
