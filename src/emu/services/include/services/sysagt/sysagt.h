@@ -90,6 +90,7 @@ namespace eka2l1 {
 
         void get_state(service::ipc_context *ctx);
         void notify_event(service::ipc_context *ctx, const bool any);
+        void notify_event_cancel(service::ipc_context *ctx);
         void set_event_buffering(service::ipc_context *ctx);
 
         void fetch(service::ipc_context *ctx) override;

@@ -113,6 +113,14 @@ namespace eka2l1 {
         }
     }
 
+    void system_agent_session::notify_event_cancel(service::ipc_context *ctx) {
+        if (!queue_.info_.woke_target_.empty()) {
+            queue_.info_.woke_target_.complete(epoc::error_cancel);
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
     void system_agent_session::set_event_buffering(service::ipc_context *ctx) {
         std::optional<std::uint32_t> enabled = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> interval_in_secs = ctx->get_argument_value<std::uint32_t>(1);
@@ -136,6 +144,10 @@ namespace eka2l1 {
 
         case system_agent_notify_on_event:
             notify_event(ctx, false);
+            break;
+
+        case system_agent_notify_event_cancel:
+            notify_event_cancel(ctx);
             break;
 
         case system_agent_set_event_buffer_enabled:
