@@ -61,6 +61,8 @@ class CMMFMdaOutputOpen: public CIdle {
 public:
     explicit CMMFMdaOutputOpen();
     
+    void FixupActiveStatus();
+    
     void Open(CMMFMdaAudioOutputStream *iStream);
     void DoCancel();
 };

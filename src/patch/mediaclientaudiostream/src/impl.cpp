@@ -148,6 +148,12 @@ void CMMFMdaOutputOpen::DoCancel() {
     User::RequestComplete(statusPointer, KErrCancel);
 }
 
+void CMMFMdaOutputOpen::FixupActiveStatus() {    
+    if (IsActive()) {
+        Cancel();
+    }
+}
+
 /// AUDIO OUTPUT STREAM
 CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
     : iPriority(aPriority)
@@ -181,6 +187,7 @@ void CMMFMdaAudioOutputStream::ConstructL() {
     CActiveScheduler::Add(&iBufferQueue);
     CActiveScheduler::Add(&iOpen);
 
+    iOpen.FixupActiveStatus();
     iBufferQueue.FixupActiveStatus();
 }
 
@@ -197,11 +204,6 @@ void CMMFMdaAudioOutputStream::StartRaw() {
 }
 
 void CMMFMdaAudioOutputStream::Play() {
-    // Simulates that buffer has been written to server
-    if (iOpen.IsActive()) {
-        iOpen.Cancel();
-    }
-
     iOpen.Open(this);
 }
 
