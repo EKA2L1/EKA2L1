@@ -41,6 +41,8 @@
 #include <e32keys.h>
 #include <services/window/window.h>
 
+#include <kernel/kernel.h>
+
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
 
@@ -497,6 +499,28 @@ namespace eka2l1::desktop {
                     state.window->cursor_visiblity(true);
                 }
             }
+
+            // Change screen filtering
+            kernel_system *kern = state.symsys->get_kernel_system();
+
+            kern->lock();
+
+            epoc::screen *screen = state.winserv->get_screens();
+            drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? drivers::filter_option::nearest :
+                drivers::filter_option::linear;
+
+            while (screen) {                
+                screen->screen_mutex.lock();
+
+                cmd_builder->set_texture_filter(screen->screen_texture, filter, filter);
+                cmd_builder->set_texture_filter(screen->dsa_texture, filter, filter);
+
+                screen->screen_mutex.unlock();
+
+                screen = screen->next;
+            }
+
+            kern->unlock();
 
             state.debugger->set_font_to_use(ui_thread_get_use_font(state));
             

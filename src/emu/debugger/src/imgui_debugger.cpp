@@ -660,7 +660,9 @@ namespace eka2l1 {
 
         const std::string utils_sect_title = common::get_localised_string(localised_strings, "pref_general_utilities_string");
         const std::string utils_hide_mouse_str = common::get_localised_string(localised_strings, "pref_general_utilities_hide_cursor_in_screen_space_checkbox_title");
-           
+        const std::string nearest_filtering_str = common::get_localised_string(localised_strings, "pref_general_utilities_nearest_neighbor_filtering_msg");
+        const std::string nearest_filtering_tt = common::get_localised_string(localised_strings, "pref_general_utilities_nearest_neighbor_filtering_tooltip");
+
         ImGui::NewLine();
         ImGui::Text("%s", utils_sect_title.c_str());
         ImGui::Separator();
@@ -669,6 +671,13 @@ namespace eka2l1 {
         if (ImGui::IsItemHovered()) {
             const std::string mouse_hide_tt = common::get_localised_string(localised_strings, "pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg");
             ImGui::SetTooltip("%s", mouse_hide_tt.c_str());
+        }
+
+        const bool previous_filter = conf->nearest_neighbor_filtering;
+        ImGui::Checkbox(nearest_filtering_str.c_str(), &conf->nearest_neighbor_filtering);
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("%s", nearest_filtering_tt.c_str());
         }
 
         const std::map<int, std::string> AVAIL_LANG_LIST = {

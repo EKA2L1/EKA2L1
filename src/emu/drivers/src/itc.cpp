@@ -321,7 +321,7 @@ namespace eka2l1::drivers {
     }
 
     void server_graphics_command_list_builder::set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) {
-        command *cmd = make_command(graphics_driver_set_texture_filter, nullptr, h);
+        command *cmd = make_command(graphics_driver_set_texture_filter, nullptr, h, min, mag);
         get_command_list().add(cmd);
     }
 
