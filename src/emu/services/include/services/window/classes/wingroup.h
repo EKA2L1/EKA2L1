@@ -51,6 +51,7 @@ namespace eka2l1::epoc {
         // ===================== COMMAND OPCODES =======================
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);
         void receive_focus(service::ipc_context &context, ws_cmd &cmd);
+        void add_priority_key(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         eka2l1::vec2 get_origin() override;

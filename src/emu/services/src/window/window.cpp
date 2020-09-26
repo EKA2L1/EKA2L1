@@ -229,33 +229,41 @@ namespace eka2l1::epoc {
         ws_cmd_window_group_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         int device_handle = header->screen_device_handle;
 
-        epoc::screen_device *device_ptr;
+        epoc::screen_device *device_ptr = nullptr;
+        epoc::screen *target_screen = get_ws().get_current_focus_screen();
+        epoc::window *parent_group = target_screen->root.get();
 
-        if (device_handle <= 0) {
-            device_ptr = primary_device;
-        } else {
-            device_ptr = reinterpret_cast<epoc::screen_device *>(get_object(device_handle));
+        if (cmd.header.cmd_len > 8) {
+            if (device_handle <= 0) {
+                device_ptr = primary_device;
+            } else {
+                device_ptr = reinterpret_cast<epoc::screen_device *>(get_object(device_handle));
+            }
+
+            if (!device_ptr) {
+                device_ptr = primary_device;
+            }
+
+            if (device_ptr) {
+                target_screen = device_ptr->scr;
+            }
+
+            parent_group = reinterpret_cast<epoc::window *>(get_object(header->parent_id));
+        
+            if (!parent_group) {
+                LOG_WARN("Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
+                parent_group = target_screen->root.get();
+            }
         }
 
-        if (!device_ptr) {
-            device_ptr = primary_device;
-        }
-
-        epoc::window *parent_group = reinterpret_cast<epoc::window *>(get_object(header->parent_id));
-
-        if (!parent_group) {
-            LOG_WARN("Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
-            parent_group = device_ptr->scr->root.get();
-        }
-
-        window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, device_ptr->scr, parent_group, header->client_handle);
+        window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, target_screen, parent_group, header->client_handle);
         epoc::window_group *group_casted = reinterpret_cast<epoc::window_group *>(group.get());
 
         // If no window group is being focused on the screen, we force the screen to receive this window as focus
         // Else rely on the focus flag.
-        if (!device_ptr->scr->focus || (header->focus)) {
+        if (!target_screen->focus || (header->focus)) {
             group_casted->set_receive_focus(true);
-            device_ptr->scr->update_focus(&get_ws(), nullptr);
+            target_screen->update_focus(&get_ws(), nullptr);
         }
 
         // Give it a nice name.
@@ -735,7 +743,7 @@ namespace eka2l1::epoc {
         ctx.complete(connected_count);
     }
 
-    void window_server_client::get_ready(service::ipc_context &ctx, ws_cmd *cmd, const bool is_redraw) {
+    void window_server_client::get_ready(service::ipc_context &ctx, ws_cmd *cmd, const event_listener_type list_type) {
         epoc::notify_info info;
         info.requester = ctx.msg->own_thr;
 
@@ -748,10 +756,18 @@ namespace eka2l1::epoc {
             info.sts = ctx.msg->request_sts;
         }
 
-        if (is_redraw) {
+        switch (list_type) {
+        case event_listener_type_redraw:
             add_redraw_listener(info);
-        } else {
+            break;
+
+        case event_listener_type_event:
             add_event_listener(info);
+            break;
+
+        case event_listener_type_priority_key:
+            priority_keys.set_listener(info);
+            break;
         }
 
         if (should_finish) {
@@ -784,7 +800,7 @@ namespace eka2l1::epoc {
     
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
-        //LOG_TRACE("Window client op: {}", (int)cmd.header.op);
+        // LOG_TRACE("Window client op: {}", (int)cmd.header.op);
         epoc::version cli_ver = client_version();
 
         // Patching out user opcode.
@@ -880,11 +896,15 @@ namespace eka2l1::epoc {
             break;
 
         case ws_cl_op_event_ready:
-            get_ready(ctx, &cmd, false);
+            get_ready(ctx, &cmd, event_listener_type_event);
             break;
 
         case ws_cl_op_redraw_ready:
-            get_ready(ctx, &cmd, true);
+            get_ready(ctx, &cmd, event_listener_type_redraw);
+            break;
+
+        case ws_cl_op_priority_key_ready:
+            get_ready(ctx, &cmd, event_listener_type_priority_key);
             break;
 
         case ws_cl_op_get_focus_window_group: {
@@ -1493,7 +1513,7 @@ namespace eka2l1 {
         std::uint8_t *loop_begin = emitter.get_writeable_code_ptr();
 
         // Load euser to get WaitForRequest
-        codeseg_ptr seg = kern->get_lib_manager()->load(u"EUSER", nullptr);
+        codeseg_ptr seg = kern->get_lib_manager()->load(u"EUSER");
         if (seg) {
             address wait_for_request_addr = seg->lookup(nullptr, kern->is_eka1() ? 1210 : 604);
 
@@ -1601,7 +1621,7 @@ namespace eka2l1 {
         if (ctx.msg->function & EWservMessAsynchronousService) {
             switch (ctx.msg->function & ~EWservMessAsynchronousService) {
             case ws_cl_op_redraw_ready:
-                clients[ctx.msg->msg_session->unique_id()]->get_ready(ctx, nullptr, true);
+                clients[ctx.msg->msg_session->unique_id()]->get_ready(ctx, nullptr, epoc::event_listener_type_redraw);
                 break;
 
             // Notify when an event is ringing, means that whenever
@@ -1609,7 +1629,7 @@ namespace eka2l1 {
             // created by the same thread as the requester, that requester
             // will be notify
             case ws_cl_op_event_ready:
-                clients[ctx.msg->msg_session->unique_id()]->get_ready(ctx, nullptr, false);
+                clients[ctx.msg->msg_session->unique_id()]->get_ready(ctx, nullptr, epoc::event_listener_type_event);
                 break;
 
             default: {
