@@ -171,11 +171,7 @@ namespace eka2l1::epoc {
             // Do redraw, now!
             {
                 const std::lock_guard<std::mutex> guard(sched->scr->screen_mutex);
-
                 sched->scr->redraw(driver);
-
-                std::uint64_t wait_time = 0;
-                sched->scr->vsync(timing_, wait_time);
             }
 
             kern_->unlock();

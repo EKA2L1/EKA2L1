@@ -294,10 +294,12 @@ namespace eka2l1::epoc {
             context_attach_link.deque();
 
             // Might have to flush sooner, since this window can be used with another
-            flush_queue_to_driver();
+            if (cmd_list && !cmd_list->empty()) {
+                flush_queue_to_driver();
 
-            // Content of the window changed, so call the handler
-            attached_window->take_action_on_change();
+                // Content of the window changed, so call the handler
+                attached_window->take_action_on_change(context.msg->own_thr);
+            }
         }
 
         attached_window = nullptr;

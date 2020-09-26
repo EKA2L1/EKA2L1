@@ -202,11 +202,17 @@ namespace eka2l1::epoc {
         return scr->disp_mode;
     }
 
-    void window_user::take_action_on_change() {
+    void window_user::take_action_on_change(kernel::thread *drawer) {
         // Want to trigger a screen redraw
         if (is_visible()) {
             epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
-            sched->schedule(client->get_ws().get_graphics_driver(), scr, client->get_ws().get_ntimer()->microseconds());
+            ntimer *timing = client->get_ws().get_ntimer();
+            
+            std::uint64_t wait_time = 0;
+            scr->vsync(timing, wait_time);
+            
+            sched->schedule(client->get_ws().get_graphics_driver(), scr, timing->microseconds() + wait_time);
+            drawer->sleep(static_cast<std::uint32_t>(wait_time));
         }
     }
 
@@ -280,7 +286,7 @@ namespace eka2l1::epoc {
         } while (ite != end);
 
         if (any_flush_performed) {
-            take_action_on_change();
+            take_action_on_change(ctx.msg->own_thr);
         }
 
         flags &= ~flags_in_redraw;

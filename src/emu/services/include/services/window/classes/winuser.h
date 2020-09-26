@@ -127,7 +127,7 @@ namespace eka2l1::epoc {
         /**
          * @brief Action that this window does when its content is modified.
          */
-        void take_action_on_change();
+        void take_action_on_change(kernel::thread *drawer);
 
         void queue_event(const epoc::event &evt) override;
 
