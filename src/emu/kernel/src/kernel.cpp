@@ -471,7 +471,7 @@ namespace eka2l1 {
             heap_max = imgs.first->header.heap_size_max;
 
             pr->puid = imgs.first->header.uid3;
-            cs = lib_mngr_->load_as_e32img(*eimg, &(*pr), full_path);
+            cs = lib_mngr_->load_as_e32img(*eimg, full_path);
         }
 
         // Rom image
@@ -491,7 +491,7 @@ namespace eka2l1 {
             heap_max = imgs.second->header.heap_maximum_size;
 
             pr->puid = imgs.second->header.uid3;
-            cs = lib_mngr_->load_as_romimg(*imgs.second, &(*pr), full_path);
+            cs = lib_mngr_->load_as_romimg(*imgs.second, full_path);
         }
 
         if (!cs) {

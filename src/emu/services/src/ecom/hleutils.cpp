@@ -18,8 +18,7 @@ namespace eka2l1::epoc {
         }
 
         // Get the entry of the implementation library
-        codeseg_ptr seg = serv->get_system()->get_lib_manager()->load(dll_entry.name.to_std_string(pr->process()),
-            pr->process());
+        codeseg_ptr seg = serv->get_system()->get_lib_manager()->load(dll_entry.name.to_std_string(pr->process()));
 
         if (!seg) {
             return nullptr;

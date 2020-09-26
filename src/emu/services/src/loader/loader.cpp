@@ -193,7 +193,7 @@ namespace eka2l1 {
             mngr->search_paths.push_back(search_path.std_str());
         }
 
-        codeseg_ptr cs = mngr->load(*lib_path, own_pr);
+        codeseg_ptr cs = mngr->load(*lib_path);
 
         if (!search_list.empty()) {
             mngr->search_paths.erase(mngr->search_paths.end() - search_list.size(), mngr->search_paths.end());
