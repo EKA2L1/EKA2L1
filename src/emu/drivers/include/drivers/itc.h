@@ -111,10 +111,15 @@ namespace eka2l1::drivers {
     bool open_native_dialog(graphics_driver *driver, const char *filter, drivers::graphics_driver_dialog_callback callback, const bool is_folder = false);
 
     struct graphics_command_list {
+        virtual bool empty() const = 0;
     };
 
     struct server_graphics_command_list : public graphics_command_list {
         command_list list_;
+
+        bool empty() const override {
+            return list_.empty();
+        }
     };
 
     class graphics_command_list_builder {
