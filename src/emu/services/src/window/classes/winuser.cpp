@@ -322,6 +322,8 @@ namespace eka2l1::epoc {
         } else {
             flags &= ~(flags_non_fading);
         }
+
+        context.complete(epoc::error_none);
     }
 
     void window_user::set_size(service::ipc_context &context, ws_cmd &cmd) {
@@ -438,8 +440,8 @@ namespace eka2l1::epoc {
     }
     
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        //LOG_TRACE("Window user op: {}", (int)cmd.header.op);
         bool result = execute_command_for_general_node(ctx, cmd);
+        //LOG_TRACE("Window user op: {}", (int)cmd.header.op);
 
         if (result) {
             return;
