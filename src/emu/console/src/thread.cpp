@@ -503,24 +503,26 @@ namespace eka2l1::desktop {
             // Change screen filtering
             kernel_system *kern = state.symsys->get_kernel_system();
 
-            kern->lock();
+            if (kern) {
+                kern->lock();
 
-            epoc::screen *screen = state.winserv->get_screens();
-            drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? drivers::filter_option::nearest :
-                drivers::filter_option::linear;
+                epoc::screen *screen = state.winserv->get_screens();
+                drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? drivers::filter_option::nearest :
+                    drivers::filter_option::linear;
 
-            while (screen) {                
-                screen->screen_mutex.lock();
+                while (screen) {                
+                    screen->screen_mutex.lock();
 
-                cmd_builder->set_texture_filter(screen->screen_texture, filter, filter);
-                cmd_builder->set_texture_filter(screen->dsa_texture, filter, filter);
+                    cmd_builder->set_texture_filter(screen->screen_texture, filter, filter);
+                    cmd_builder->set_texture_filter(screen->dsa_texture, filter, filter);
 
-                screen->screen_mutex.unlock();
+                    screen->screen_mutex.unlock();
 
-                screen = screen->next;
+                    screen = screen->next;
+                }
+
+                kern->unlock();
             }
-
-            kern->unlock();
 
             state.debugger->set_font_to_use(ui_thread_get_use_font(state));
             
