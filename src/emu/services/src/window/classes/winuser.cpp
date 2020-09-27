@@ -278,6 +278,7 @@ namespace eka2l1::epoc {
             if (ctx->recording) {
                 // Still in active state?
                 ctx->cmd_builder->bind_bitmap(driver_win_id);
+                ctx->flushed = true;
             }
 
             ite = ite->next;
