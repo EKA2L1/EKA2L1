@@ -164,26 +164,30 @@ namespace eka2l1::drivers {
             std::optional<dsp_buffer> encoded;
 
             if ((decoded_.size() == 0) || (decoded_.size() == pointer_)) {
+                // Get the next buffer
                 encoded = buffers_.pop();
 
                 if (!encoded) {
                     break;
                 }
-
-                // Callback that internal buffer has been copied
-                {
-                    const std::lock_guard<std::mutex> guard(callback_lock_);
-                    if (buffer_copied_callback_) {
-                        buffer_copied_callback_(buffer_copied_userdata_);
-                    }
-                }
-
+                
                 pointer_ = 0;
 
                 if (format_ == PCM16_FOUR_CC_CODE) {
                     decoded_ = encoded.value();
                 } else {
                     decode_data(encoded.value(), decoded_);
+                }
+                
+                // Callback that internal buffer has been copied
+                {
+                    std::size_t total_sample = (decoded_.size() / sizeof(std::uint16_t));
+                    samples_copied_ += total_sample;
+                    
+                    const std::lock_guard<std::mutex> guard(callback_lock_);
+                    if (buffer_copied_callback_) {
+                        buffer_copied_callback_(buffer_copied_userdata_);
+                    }
                 }
             }
 
@@ -197,6 +201,8 @@ namespace eka2l1::drivers {
             std::memcpy(last_frame_, &decoded_[pointer_ + (frame_to_wrote - 1) * channels_ * sizeof(std::int16_t)], channels_ * sizeof(std::int16_t));
 
             pointer_ += frame_to_wrote * channels_ * sizeof(std::int16_t);
+            samples_played_ += frame_to_wrote * channels_;
+
             frame_wrote += frame_to_wrote;
         }
 
@@ -205,18 +211,14 @@ namespace eka2l1::drivers {
             std::memcpy(&buffer[frame_wrote * channels_], last_frame_, channels_ * sizeof(std::int16_t));
         }
 
-        // TODO: What? Is this right
-        samples_played_ += frame_count * channels_;
-
         return frame_count;
     }
 
     std::uint64_t dsp_output_stream_shared::position() {
-        if (format_ == PCM16_FOUR_CC_CODE) {
-            return samples_played_ * 1000000 / freq_;
-        }
+        return samples_copied_ * 1000000 / freq_;
+    }
 
-        // Letting the backend guess the timestamp will be better in this case.
-        return position_non_pcm16();
+    std::uint64_t dsp_output_stream_shared::real_time_position() {
+        return samples_played_ * 1000000 / freq_;
     }
 }

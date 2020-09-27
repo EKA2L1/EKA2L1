@@ -31,8 +31,6 @@ namespace eka2l1::drivers {
         AVCodecContext *codec_;
         std::uint64_t timestamp_in_base_;
 
-        std::uint64_t position_non_pcm16() override;
-
     public:
         explicit dsp_output_stream_ffmpeg(drivers::audio_driver *aud);
         ~dsp_output_stream_ffmpeg() override;

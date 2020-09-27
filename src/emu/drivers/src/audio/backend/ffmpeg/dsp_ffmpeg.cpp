@@ -126,10 +126,4 @@ namespace eka2l1::drivers {
             }
         }
     }
-
-    std::uint64_t dsp_output_stream_ffmpeg::position_non_pcm16() {
-        // Time in base multiply with time spend per frame in microseconds
-        return common::multiply_and_divide_qwords(timestamp_in_base_, codec_->time_base.num * AV_TIME_BASE,
-            codec_->time_base.den);
-    }
 }
