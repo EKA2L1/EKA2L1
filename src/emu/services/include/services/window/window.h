@@ -260,6 +260,10 @@ namespace eka2l1::epoc {
             redraws.walk(walker, userdata);
         }
 
+        void remove_redraws(void *owner) {
+            redraws.remove_events(owner);
+        }
+
         void deque_redraw(const std::uint32_t handle) {
             redraws.cancel_event_queue(handle);
         }

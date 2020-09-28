@@ -78,7 +78,8 @@ namespace eka2l1::epoc {
         , dmode(dmode)
         , driver_win_id(0)
         , shadow_height(0)
-        , max_pointer_buffer_(0) {
+        , max_pointer_buffer_(0)
+        , last_draw_(0) {
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
             LOG_ERROR("Parent is not a window client type!");
         } else {
@@ -93,6 +94,10 @@ namespace eka2l1::epoc {
         }
 
         set_client_handle(client_handle);
+    }
+
+    window_user::~window_user() {
+        client->remove_redraws(this);
     }
 
     eka2l1::vec2 window_user::get_origin() {
@@ -140,15 +145,6 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    static bool should_purge_window_user_redraw(void *win, epoc::redraw_event &evt) {
-        epoc::window_user *user = reinterpret_cast<epoc::window_user *>(win);
-        if (user->client_handle == evt.handle) {
-            return false;
-        }
-
-        return true;
-    }
-
     void window_user::set_visible(const bool vis) {
         bool should_trigger_redraw = false;
 
@@ -163,7 +159,7 @@ namespace eka2l1::epoc {
         } else {
             // Purge all queued events now that the window is not visible anymore
             client->walk_event(should_purge_window_user, this);
-            client->walk_redraw(should_purge_window_user_redraw, this);
+            client->remove_redraws(this);
         }
 
         if (should_trigger_redraw) {
@@ -208,10 +204,20 @@ namespace eka2l1::epoc {
             epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
             ntimer *timing = client->get_ws().get_ntimer();
             
+            // Limit the framerate, independent from screen vsync
+            const std::uint64_t crr = timing->microseconds();
+            const std::uint64_t time_spend_per_frame_us = 1000000 / scr->refresh_rate;
             std::uint64_t wait_time = 0;
-            scr->vsync(timing, wait_time);
+
+            if (crr - last_draw_ < time_spend_per_frame_us) {
+                wait_time = time_spend_per_frame_us - (crr - last_draw_);
+            } else {
+                wait_time = 0;
+            }
+
+            last_draw_ = crr + wait_time;
             
-            sched->schedule(client->get_ws().get_graphics_driver(), scr, timing->microseconds() + wait_time);
+            sched->schedule(client->get_ws().get_graphics_driver(), scr, crr + wait_time);
             drawer->sleep(static_cast<std::uint32_t>(wait_time));
         }
     }
@@ -317,7 +323,10 @@ namespace eka2l1::epoc {
             redraw_rect_curr.transform_from_symbian_rectangle();
         }
 
+        // remove all pending redraws. End redraw will report invalidates later
+        client->remove_redraws(this);
         flags |= flags_in_redraw;
+
         ctx.complete(epoc::error_none);
     }
 

@@ -147,7 +147,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &redraw_rect) {
-        return redraws.queue_event(epoc::redraw_event{ user->get_client_handle(), redraw_rect.top, redraw_rect.size + redraw_rect.top },
+        return redraws.queue_event(user, epoc::redraw_event{ user->get_client_handle(), redraw_rect.top, redraw_rect.size + redraw_rect.top },
             user->redraw_priority());
     }
 
@@ -568,11 +568,15 @@ namespace eka2l1::epoc {
         auto evt = redraws.get_evt_opt();
 
         if (!evt) {
-            ctx.complete(epoc::error_not_found);
-            return;
+            // Report back a null redraw event
+            epoc::redraw_event evt;
+            std::memset(&evt, 0, sizeof(epoc::redraw_event));
+
+            ctx.write_data_to_descriptor_argument<epoc::redraw_event>(reply_slot, evt);
+        } else {
+            ctx.write_data_to_descriptor_argument<epoc::redraw_event>(reply_slot, evt->evt_);
         }
 
-        ctx.write_data_to_descriptor_argument<epoc::redraw_event>(reply_slot, *evt);
         ctx.complete(epoc::error_none);
     }
 
