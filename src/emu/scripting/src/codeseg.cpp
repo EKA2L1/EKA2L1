@@ -70,7 +70,7 @@ namespace eka2l1::scripting {
         eka2l1::system *sys = get_current_instance();
         hle::lib_manager *libmngr = sys->get_lib_manager();
 
-        codeseg_ptr seg = libmngr->load(common::utf8_to_ucs2(virt_path), pr ? pr->get_process_handle() : nullptr);
+        codeseg_ptr seg = libmngr->load(common::utf8_to_ucs2(virt_path));
 
         if (!seg) {
             throw std::runtime_error("Loading codeseg failed! Does the codeseg file exist, or it's valid?");
