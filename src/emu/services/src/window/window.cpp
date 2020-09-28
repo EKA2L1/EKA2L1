@@ -588,7 +588,7 @@ namespace eka2l1::epoc {
     void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
         // TODO: Epoc < 9
         if (cmd.header.cmd_len == 0) {
-            ctx.complete(primary_device->scr->focus->id);
+            ctx.complete(get_ws().get_current_focus_screen()->focus->id);
             return;
         }
 
