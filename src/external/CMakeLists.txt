@@ -131,10 +131,6 @@ if (BUILD_TOOLS)
     endif()
 endif()
 
-# epocapi
-add_library(epocapi INTERFACE)
-target_include_directories(epocapi INTERFACE epocapi/epoc32/include)
-
 # Find Vulkan SDK
 find_package(Vulkan QUIET)
 
@@ -173,4 +169,3 @@ set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOP
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)
 set (FRSML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/FRSML/include" PARENT_SCOPE)
 set (GLM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/glm" PARENT_SCOPE)
-set (EPOC32_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/epocapi/epoc32/include" PARENT_SCOPE)

@@ -98,6 +98,7 @@ add_library(epocservs
         include/services/ui/view/queue.h
         include/services/ui/view/view.h
         include/services/window/bitmap_cache.h
+        include/services/window/keys.h
         include/services/window/scheduler.h
         include/services/window/screen.h
         include/services/window/window.h

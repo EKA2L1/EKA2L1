@@ -156,7 +156,7 @@ namespace eka2l1::epoc {
             extra_event.type = epoc::event_code::key;
 
             if (!dont_send_extra_key_event) {
-                extra_event.key_evt_.code = epoc::map_scancode_to_keycode(static_cast<TStdScanCode>(
+                extra_event.key_evt_.code = epoc::map_scancode_to_keycode(static_cast<std_scan_code>(
                     evt.key_evt_.scancode));
             }
 
