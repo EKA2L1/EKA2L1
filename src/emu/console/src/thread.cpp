@@ -38,7 +38,6 @@
 #include <drivers/input/common.h>
 #include <drivers/input/emu_controller.h>
 
-#include <e32keys.h>
 #include <services/window/window.h>
 
 void set_mouse_down(void *userdata, const int button, const bool op) {
