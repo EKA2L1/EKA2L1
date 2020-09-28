@@ -131,10 +131,6 @@ if (BUILD_TOOLS)
     endif()
 endif()
 
-# epocapi
-add_library(epocapi INTERFACE)
-target_include_directories(epocapi INTERFACE epocapi/epoc32/include)
-
 # Find Vulkan SDK
 find_package(Vulkan QUIET)
 
