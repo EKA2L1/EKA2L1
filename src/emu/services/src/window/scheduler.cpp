@@ -57,6 +57,8 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::schedule(drivers::graphics_driver *driver, screen *scr, const std::uint64_t time) {
+        const std::lock_guard<std::mutex> guard(lock_);
+        
         // Get screen number
         if (schedules_.size() <= scr->number) {
             return;
@@ -80,6 +82,8 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::unschedule(const int screen_number) {
+        const std::lock_guard<std::mutex> guard(lock_);
+
         if (schedules_.size() <= screen_number) {
             return;
         }
@@ -148,7 +152,10 @@ namespace eka2l1::epoc {
                     if (until_due == 0) {
                         // Invoke the due right away.
                         scr_state.time_expected_redraw = now;
+
+                        lock_.unlock();
                         invoke_due_animation(driver, screen_number);
+                        lock_.lock();
                     } else {
                         scr_state.time_expected_redraw = now + until_due;
                         scr_state.flags = screen_state::scheduled;
@@ -160,33 +167,45 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::invoke_due_animation(drivers::graphics_driver *driver, const int screen_number) {
+        lock_.lock();
+
         anim_schedule *sched = get_scheduled_screen_update(screen_number);
+        epoc::screen *scr = sched->scr;
+
         assert(sched && "The returned schedule should not be nullptr");
 
         sched->scheduled = false;
+
+        lock_.unlock();
 
         {
             kern_->lock();
 
             // Do redraw, now!
             {
-                const std::lock_guard<std::mutex> guard(sched->scr->screen_mutex);
-                sched->scr->redraw(driver);
+                const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+                scr->redraw(driver);
             }
 
             kern_->unlock();
         }
 
         // Transtition the state to inactive.
-        states_[screen_number].flags = screen_state::inactive;
+        {
+            const std::lock_guard<std::mutex> guard(lock_);
+            states_[screen_number].flags = screen_state::inactive;
+        }
     }
 
     void animation_scheduler::idle_callback(drivers::graphics_driver *driver) {
+        lock_.lock();
         callback_scheduled_ = false;
 
         for (int screen_num = 0; screen_num < states_.size(); screen_num++) {
             scan_for_redraw(driver, screen_num, false);
         }
+
+        lock_.unlock();
     }
 
     void animation_scheduler::schedule_scans(drivers::graphics_driver *driver) {

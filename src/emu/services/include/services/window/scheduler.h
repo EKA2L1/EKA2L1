@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <mutex>
 
 namespace eka2l1 {
     class ntimer;
@@ -87,6 +88,7 @@ namespace eka2l1::epoc {
         int callback_evt_;
 
         bool callback_scheduled_;
+        std::mutex lock_;
 
         void schedule_scans(drivers::graphics_driver *driver);
 
