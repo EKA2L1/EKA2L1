@@ -630,6 +630,7 @@ namespace eka2l1 {
 
         const std::string cpu_read_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_read_checkbox_title");
         const std::string cpu_write_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_write_checkbox_title");
+        const std::string cpu_step_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_step_checkbox_title");
         const std::string ipc_str = common::get_localised_string(localised_strings, "pref_general_debugging_ipc_checkbox_title");
         const std::string system_calls_str = common::get_localised_string(localised_strings, "pref_general_debugging_system_calls_checkbox_title");
         const std::string accurate_ipc_timing_str = common::get_localised_string(localised_strings, "pref_general_debugging_ait_checkbox_title");
@@ -656,6 +657,17 @@ namespace eka2l1 {
         if (ImGui::IsItemHovered()) {
             const std::string btrace_tt = common::get_localised_string(localised_strings, "pref_general_debugging_btrace_tooltip_msg");
             ImGui::SetTooltip("%s", btrace_tt.c_str());
+        }
+
+        ImGui::SameLine(col2);
+
+        bool do_we_step = conf->stepping.load();
+        ImGui::Checkbox(cpu_step_str.c_str(), &do_we_step);
+        conf->stepping.store(do_we_step);
+
+        if (ImGui::IsItemHovered()) {
+            const std::string cpu_step_tt = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_step_checkbox_tooltip_msg");
+            ImGui::SetTooltip("%s", cpu_step_tt.c_str());
         }
 
         const std::string utils_sect_title = common::get_localised_string(localised_strings, "pref_general_utilities_string");

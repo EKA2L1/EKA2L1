@@ -452,6 +452,10 @@ namespace eka2l1 {
                 script_hits_the_feels = true;
             }
 #endif
+
+            if (conf->stepping && !should_step) {
+                should_step = true;
+            }
         }
 
         if (kern->crr_thread() == nullptr) {

@@ -91,6 +91,8 @@ namespace eka2l1::config {
         bool hide_mouse_in_screen_space { false };
         bool nearest_neighbor_filtering { false };
 
+        std::atomic<bool> stepping { false };
+
         std::vector<keybind> keybinds;
         std::atomic<std::uint16_t> time_getter_sleep_us { 0 };
 
