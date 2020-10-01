@@ -244,8 +244,6 @@ namespace eka2l1::epoc {
 
     void window_user::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-
-        redraw_region.eliminate(redraw_rect_curr);
         redraw_rect_curr.make_empty();
 
         if (resize_needed) {
@@ -322,6 +320,11 @@ namespace eka2l1::epoc {
             redraw_rect_curr = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
             redraw_rect_curr.transform_from_symbian_rectangle();
         }
+
+        // Remove the given rect from region need to redraw
+        // In case app try to get the invalid region infos inside a redraw!
+        // Yes. THPS. Get invalid region then forgot to free, leak mem all over. I have pain!!
+        redraw_region.eliminate(redraw_rect_curr);
 
         // remove all pending redraws. End redraw will report invalidates later
         client->remove_redraws(this);
