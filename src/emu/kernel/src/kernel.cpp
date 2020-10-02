@@ -910,6 +910,10 @@ namespace eka2l1 {
         return true;
     }
 
+    void kernel_system::stop_cores_idling() {
+        thr_sch_->stop_idling();
+    }
+
     void kernel_system::set_current_language(const language new_lang) {
         lang_ = new_lang;
     }

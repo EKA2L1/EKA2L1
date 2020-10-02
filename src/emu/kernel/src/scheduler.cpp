@@ -58,6 +58,14 @@ namespace eka2l1::kernel {
         std::fill(readys, readys + sizeof(readys) / sizeof(readys[0]), nullptr);
     }
 
+    thread_scheduler::~thread_scheduler() {
+        stop_idling();
+    }
+
+    void thread_scheduler::stop_idling() {
+        idle_cond_var_.notify_all();
+    }
+
     void thread_scheduler::switch_context(kernel::thread *oldt, kernel::thread *newt) {
         if (oldt) {
             oldt->lrt = timing->ticks();
@@ -92,7 +100,16 @@ namespace eka2l1::kernel {
             run_core->load_context(crr_thread->ctx);
             //LOG_TRACE("Switched to {}", crr_thread->name());
         } else {
+            // No current thread is eligible to run. Let the core that this scheduler currently handle sleeps.
             crr_thread = nullptr;
+
+            // Let free access to kernel now
+            kern->unlock();
+
+            std::unique_lock<std::mutex> guard(idle_lock_);
+            idle_cond_var_.wait(guard);
+
+            kern->lock();
         }
     }
 
@@ -146,6 +163,11 @@ namespace eka2l1::kernel {
 
                 next_thread = next_ready_thread();
                 queue_thread_ready(old_friend);
+
+                if (!next_thread) {
+                    // Use our old outdated friend, it seems only one thread exists
+                    next_thread = old_friend;
+                }
             }
         }
 
@@ -218,6 +240,9 @@ namespace eka2l1::kernel {
         thr->state = thread_state::ready;
         queue_thread_ready(thr);
 
+        // Well no need to idle anymore :D
+        idle_cond_var_.notify_one();
+
         return true;
     }
 
@@ -276,7 +301,9 @@ namespace eka2l1::kernel {
 
         thr->state = thread_state::ready;
         queue_thread_ready(thr);
-
+        
+        // Well no need to idle anymore :D
+        idle_cond_var_.notify_one();
         kern->prepare_reschedule();
 
         return true;

@@ -2526,6 +2526,7 @@ namespace eka2l1 {
                 ImGui::Text("- quanshousio");
                 ImGui::Text("- claimmore");
                 ImGui::Text("- stranno");
+                ImGui::Text("- J Adra (Laserdisc)");
                 ImGui::EndChild();
             }
 

@@ -224,7 +224,7 @@ namespace eka2l1::desktop {
             "Having a cyborg as my wife doing dishes and writing the emulator brb",
             "Causing an entire country chaos because of my imagination",
             "Thank you very much for checking out the emulator",
-            "Casually the cause of case files over two decades while staying first-grade"
+            "Casually the cause of case files over two decades while staying first-grade",
             "Stop right there criminal scum!",
             "By Azura By Azura By Azura!",
             "VAC is activating... It's Virtual Assistant Cellphone though, so keep using cheats!",
@@ -462,6 +462,9 @@ namespace eka2l1::desktop {
             if (state.window->should_quit()) {
                 state.should_emu_quit = true;
                 state.should_ui_quit = true;
+
+                kernel_system *kern = state.symsys->get_kernel_system();
+                kern->stop_cores_idling();
 
                 // Notify that debugger is dead
                 state.debugger->notify_clients();

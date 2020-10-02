@@ -640,5 +640,7 @@ namespace eka2l1 {
         void unlock() {
             kern_lock_.unlock();
         }
+
+        void stop_cores_idling();
     };
 }

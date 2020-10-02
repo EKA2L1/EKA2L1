@@ -26,6 +26,7 @@
 #include <common/queue.h>
 
 #include <algorithm>
+#include <condition_variable>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -52,6 +53,7 @@ namespace eka2l1 {
         using uid = std::uint64_t;
 
         class thread_scheduler {
+        private:
             kernel::thread *readys[64];
             std::uint32_t ready_mask[2]{ 0, 0 };
 
@@ -66,6 +68,9 @@ namespace eka2l1 {
             int yield_evt;
             std::uint32_t ticks_yield;
 
+            std::mutex idle_lock_;                      ///< Use for idling in case no thread is eligible to run
+            std::condition_variable idle_cond_var_;     ///< Use for notifying that it's no need to idle anymore.
+
         protected:
             kernel::thread *next_ready_thread();
             void switch_context(kernel::thread *oldt, kernel::thread *newt);
@@ -74,6 +79,9 @@ namespace eka2l1 {
         public:
             // The constructor also register all the needed event
             explicit thread_scheduler(kernel_system *kern, ntimer *timing, arm::core *cpu);
+            ~thread_scheduler();
+
+            void stop_idling();
 
             void queue_thread_ready(kernel::thread *thr);
             void dequeue_thread_from_ready(kernel::thread *thr);
