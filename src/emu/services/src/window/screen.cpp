@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
         : number(number)
         , ui_rotation(0)
         , orientation_lock(true)
-        , refresh_rate(60)
+        , refresh_rate(30)
         , scale_x(1.0f)
         , scale_y(1.0f)
         , screen_texture(0)
