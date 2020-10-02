@@ -166,7 +166,7 @@ namespace eka2l1::kernel {
                 next_thread = next_ready_thread();
                 queue_thread_ready(old_friend);
 
-                if (!next_thread) {
+                if (!next_thread && kern->should_core_idle_when_inactive()) {
                     // Use our old outdated friend, it seems only one thread exists
                     next_thread = old_friend;
                 }
