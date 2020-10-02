@@ -642,5 +642,6 @@ namespace eka2l1 {
         }
 
         void stop_cores_idling();
+        bool should_core_idle_when_inactive();
     };
 }

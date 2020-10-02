@@ -911,7 +911,13 @@ namespace eka2l1 {
     }
 
     void kernel_system::stop_cores_idling() {
-        thr_sch_->stop_idling();
+        if (should_core_idle_when_inactive()) {
+            thr_sch_->stop_idling();
+        }
+    }
+
+    bool kernel_system::should_core_idle_when_inactive() {
+        return conf_->cpu_load_save;
     }
 
     void kernel_system::set_current_language(const language new_lang) {

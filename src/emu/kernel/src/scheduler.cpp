@@ -104,12 +104,14 @@ namespace eka2l1::kernel {
             crr_thread = nullptr;
 
             // Let free access to kernel now
-            kern->unlock();
+            if (kern->should_core_idle_when_inactive()) {
+                kern->unlock();
 
-            std::unique_lock<std::mutex> guard(idle_lock_);
-            idle_cond_var_.wait(guard);
+                std::unique_lock<std::mutex> guard(idle_lock_);
+                idle_cond_var_.wait(guard);
 
-            kern->lock();
+                kern->lock();
+            }
         }
     }
 
@@ -241,7 +243,8 @@ namespace eka2l1::kernel {
         queue_thread_ready(thr);
 
         // Well no need to idle anymore :D
-        idle_cond_var_.notify_one();
+        if (kern->should_core_idle_when_inactive())
+            idle_cond_var_.notify_one();
 
         return true;
     }
@@ -303,7 +306,9 @@ namespace eka2l1::kernel {
         queue_thread_ready(thr);
         
         // Well no need to idle anymore :D
-        idle_cond_var_.notify_one();
+        if (kern->should_core_idle_when_inactive())
+            idle_cond_var_.notify_one();
+        
         kern->prepare_reschedule();
 
         return true;

@@ -90,6 +90,7 @@ namespace eka2l1::config {
         bool dump_imb_range_code { false };
         bool hide_mouse_in_screen_space { false };
         bool nearest_neighbor_filtering { false };
+        bool cpu_load_save { false };
 
         std::atomic<bool> stepping { false };
 
