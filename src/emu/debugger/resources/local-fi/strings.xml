@@ -57,6 +57,8 @@
     <string name="pref_general_debugging_string">Debugging</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU read</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">CPU write</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">System calls</string>
     <string name="pref_general_debugging_ait_checkbox_title">Accurate IPC timing</string>
@@ -66,6 +68,8 @@
     <string name="pref_general_utilities_string">Utilities</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Hide mouse cursor when it is inside an emulated screen</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Useful when you bind a key with your mouse and the game/app has built-in cursor.\nTo make the mouse cursor visible, hold ALT key.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next draw.</string>
     <string name="pref_system_title">System</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Device</string>
@@ -110,7 +114,7 @@
     <string name="install_device_final_msg_2">For any problem, please report to the developers by opening issues!</string>
     <string name="mmc_mount_success_dialog_title">Card mounted successfully!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
-    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s Github Wiki page.</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s GitHub wiki page.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Install device</string>
     <string name="no_show_option_again_general_msg">Don\'t show this again.</string>
     <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
