@@ -31,13 +31,8 @@
 
 #include <e32std.h>
 
-// This sits between the redraw priority (50) and ws events priority (100) of the UI framework.
-// Audio is intensive, we don't want redraw too take two much time, but at same time, we also
-// want input or other events to be responsive and not missing out any events.
-static const TInt KMMFMdaOutputBufferPriority = 70;
-
 CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
-    : CActive(KMMFMdaOutputBufferPriority)
+    : CActive(CActive::EPriorityStandard)
     , iStream(aStream)
     , iCopied(NULL) {
 
@@ -128,6 +123,10 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
     : CIdle(100) {
+}
+
+CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
+    Deque();
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {

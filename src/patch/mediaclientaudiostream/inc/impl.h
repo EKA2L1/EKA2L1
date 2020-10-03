@@ -60,6 +60,7 @@ struct CMMFMdaOutputBufferQueue: public CActive {
 class CMMFMdaOutputOpen: public CIdle {
 public:
     explicit CMMFMdaOutputOpen();
+    ~CMMFMdaOutputOpen();
     
     void FixupActiveStatus();
     
