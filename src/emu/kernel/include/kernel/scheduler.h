@@ -24,6 +24,7 @@
 #include <common/configure.h>
 #include <common/container.h>
 #include <common/queue.h>
+#include <common/sync.h>
 
 #include <algorithm>
 #include <condition_variable>
@@ -68,8 +69,7 @@ namespace eka2l1 {
             int yield_evt;
             std::uint32_t ticks_yield;
 
-            std::mutex idle_lock_;                      ///< Use for idling in case no thread is eligible to run
-            std::condition_variable idle_cond_var_;     ///< Use for notifying that it's no need to idle anymore.
+            common::semaphore idle_sema;
 
         protected:
             kernel::thread *next_ready_thread();

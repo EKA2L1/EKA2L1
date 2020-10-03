@@ -63,7 +63,9 @@ namespace eka2l1::kernel {
     }
 
     void thread_scheduler::stop_idling() {
-        idle_cond_var_.notify_all();
+        if (kern->should_core_idle_when_inactive()) {
+            idle_sema.notify();
+        }
     }
 
     void thread_scheduler::switch_context(kernel::thread *oldt, kernel::thread *newt) {
@@ -106,10 +108,7 @@ namespace eka2l1::kernel {
             // Let free access to kernel now
             if (kern->should_core_idle_when_inactive()) {
                 kern->unlock();
-
-                std::unique_lock<std::mutex> guard(idle_lock_);
-                idle_cond_var_.wait(guard);
-
+                idle_sema.wait();
                 kern->lock();
             }
         }
@@ -152,6 +151,7 @@ namespace eka2l1::kernel {
 
         if (next_thread && next_thread->time == 0) {
             // Restart the time
+            kernel::thread *old_friend = next_thread;
             next_thread->time = next_thread->timeslice;
 
             if (next_thread->scheduler_link.next != next_thread || next_thread->scheduler_link.previous != next_thread) {
@@ -160,16 +160,15 @@ namespace eka2l1::kernel {
                 next_thread = next_thread->scheduler_link.next;
             } else {
                 // Deque the thread from ready queue in order to get the next highest priority and ready thread
-                kernel::thread *old_friend = next_thread;
                 dequeue_thread_from_ready(next_thread);
 
                 next_thread = next_ready_thread();
                 queue_thread_ready(old_friend);
-
-                if (!next_thread && kern->should_core_idle_when_inactive()) {
-                    // Use our old outdated friend, it seems only one thread exists
-                    next_thread = old_friend;
-                }
+            }
+            
+            if (!next_thread && kern->should_core_idle_when_inactive()) {
+                // Use our old outdated friend, it seems only one thread exists
+                next_thread = old_friend;
             }
         }
 
@@ -185,6 +184,10 @@ namespace eka2l1::kernel {
             thr->scheduler_link.next = thr;
             thr->scheduler_link.previous = thr;
 
+            // Well no need to idle anymore :D
+            if (kern->should_core_idle_when_inactive() && !crr_thread)
+                idle_sema.notify();
+
             return;
         }
 
@@ -198,6 +201,10 @@ namespace eka2l1::kernel {
 
         thr->scheduler_link.previous->scheduler_link.next = thr;
         readys[thr->real_priority]->scheduler_link.previous = thr;
+
+        // Well no need to idle anymore :D
+        if (kern->should_core_idle_when_inactive() && !crr_thread)
+            idle_sema.notify();
     }
 
     void thread_scheduler::dequeue_thread_from_ready(kernel::thread *thr) {
@@ -241,10 +248,6 @@ namespace eka2l1::kernel {
 
         thr->state = thread_state::ready;
         queue_thread_ready(thr);
-
-        // Well no need to idle anymore :D
-        if (kern->should_core_idle_when_inactive())
-            idle_cond_var_.notify_one();
 
         return true;
     }
@@ -304,10 +307,6 @@ namespace eka2l1::kernel {
 
         thr->state = thread_state::ready;
         queue_thread_ready(thr);
-        
-        // Well no need to idle anymore :D
-        if (kern->should_core_idle_when_inactive())
-            idle_cond_var_.notify_one();
         
         kern->prepare_reschedule();
 
