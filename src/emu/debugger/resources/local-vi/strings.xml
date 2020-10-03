@@ -14,7 +14,7 @@
     <string name="info">Thông báo</string>
     <string name="warning">Cảnh báo</string>
     <string name="cancel">Huỷ</string>
-    <string name="continue">Continue</string>
+    <string name="continue">Tiếp tục</string>
     <string name="file_menu_name">Tệp tin</string>
     <string name="debugger_menu_name">Trình gỡ lỗi</string>
     <string name="view_menu_name">Hiển thị</string>
@@ -57,6 +57,8 @@
     <string name="pref_general_debugging_string">Gỡ lỗi</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">Đọc CPU</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">Viết CPU</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">System calls</string>
     <string name="pref_general_debugging_ait_checkbox_title">Accurate IPC timing</string>
@@ -64,8 +66,10 @@
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Kích hoạt B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Kích hoạt tính năng lần lại được sử dụng trong driver. Sự chậm lại có thể xảy ra khi kích hoạt.</string>
     <string name="pref_general_utilities_string">Tiện ích</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Hide mouse cursor when it is inside an emulated screen</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Ẩn con trỏ chuột khi nó ở trong một màn hình giả lập</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Có ích khi bạn liên kết một phím với chuột và trò chơi/ứng dụng có sẵn một con trỏ.\nĐể làm con trỏ chuột xuất hiện, nhấn giữ phím ALT.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next draw.</string>
     <string name="pref_system_title">Hệ thống</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Thiết bị</string>
@@ -94,7 +98,7 @@
     <string name="installer_text_popup_title">Popup văn bản của trình cài đặt</string>
     <string name="installer_language_choose_title">Chọn ngôn ngữ cho gói ứng dụng này</string>
     <string name="install_device_wizard_title">Trình cài đặt thiết bị</string>
-    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard! To get started, please press the \"Continue\" button.</string>
+    <string name="install_device_wizard_welcome_msg">Chào mừng bạn tới với trình cài đặt thiết bị. Để bắt đầu, hãy nhấn nút \"Tiếp tục\".</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Chọn phương thức cài đặt</string>
@@ -110,10 +114,10 @@
     <string name="install_device_final_msg_2">Nếu bạn gặp bất kì vấn đề nào, hãy báo cáo tới nhà phát triển bằng cách mở issues!</string>
     <string name="mmc_mount_success_dialog_title">Thẻ được nạp thành công!</string>
     <string name="mmc_mount_success_dialog_msg">Thẻ MMC/SD đã được nạp! Tất cả ứng dụng trên thẻ MMC/SD đã được nạp lại.</string>
-    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s Github Wiki page.</string>
-    <string name="no_device_installed_opt_install_device_btn_name">Install device</string>
-    <string name="no_show_option_again_general_msg">Don\'t show this again.</string>
-    <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
-    <string name="touchscreen_disabled_note_str">Note</string>
-    <string name="touchscreen_disabled_note_msg">Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s GitHub wiki page.</string>
+    <string name="no_device_installed_opt_install_device_btn_name">Cài đặt thiết bị</string>
+    <string name="no_show_option_again_general_msg">Không hiển thị lại.</string>
+    <string name="touchscreen_disabled_msg">Một vài liên kết phím của bạn hiện đang liên quan tới các nút chuột. Vì vậy tính năng màn hình cảm ứng tạm thời ngưng hoạt động.</string>
+    <string name="touchscreen_disabled_note_str">Ghi chú</string>
+    <string name="touchscreen_disabled_note_msg">Màn hình cảm ứng có thể được bật lại bằng cách liên kết lại con trỏ chuột sang các phím.</string>
 </resources>
