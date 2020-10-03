@@ -69,7 +69,7 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Nascondi il cursore del mouse quando è in uno schermo emulato</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Utile quando colleghi un tasto al tuo mouse e il gioco/app ha un cursore incorporato.\nPer rendere visibile il cursore del mouse, tieni premuto il tasto ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next draw.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
     <string name="pref_system_title">Sistema</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Dispositivo</string>
