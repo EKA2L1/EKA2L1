@@ -179,7 +179,7 @@ namespace eka2l1::config {
         get_yaml_value(node, "dump-imb-range-code", &dump_imb_range_code, false);
         get_yaml_value(node, "hide-mouse-in-screen-space", &hide_mouse_in_screen_space, false);
         get_yaml_value(node, "enable-nearest-neighbor-filter", &nearest_neighbor_filtering, false);
-        get_yaml_value(node, "cpu-load-save", &cpu_load_save, false);
+        get_yaml_value(node, "cpu-load-save", &cpu_load_save, true);
 
         YAML::Node keybind_node;
         try {
