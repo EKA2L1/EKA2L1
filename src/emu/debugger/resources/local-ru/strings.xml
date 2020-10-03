@@ -69,7 +69,7 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Скрыть курсор мыши, когда он находится внутри эмулированного экрана</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Полезно, когда вы назначите кнопку мыши и игра/приложение имеет встроенный курсор.\nЧтобы сделать курсор мыши видимым, удерживайте клавишу ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next draw.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
     <string name="pref_system_title">Система</string>
     <string name="pref_system_cpu_option_name">ЦП</string>
     <string name="pref_system_device_option_name">Устройство</string>
