@@ -159,7 +159,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                 epoc::apa::command_line cmdline;
                 cmdline.launch_cmd_ = epoc::apa::command_create;
 
-                svr->launch_app(reg, cmdline);
+                svr->launch_app(reg, cmdline, nullptr);
                 return true;
             }
         }

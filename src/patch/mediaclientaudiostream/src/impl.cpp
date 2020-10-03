@@ -31,13 +31,8 @@
 
 #include <e32std.h>
 
-// This sits between the redraw priority (50) and ws events priority (100) of the UI framework.
-// Audio is intensive, we don't want redraw too take two much time, but at same time, we also
-// want input or other events to be responsive and not missing out any events.
-static const TInt KMMFMdaOutputBufferPriority = 70;
-
 CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aStream)
-    : CActive(KMMFMdaOutputBufferPriority)
+    : CActive(CActive::EPriorityStandard)
     , iStream(aStream)
     , iCopied(NULL) {
 
@@ -115,17 +110,23 @@ void CMMFMdaOutputBufferQueue::DoCancel() {
     iStream->CancelRegisterNotifyBufferSent();
 }
 
-void CMMFMdaOutputBufferQueue::StartTransfer() {
+void CMMFMdaOutputBufferQueue::FixupActiveStatus() {
     if (IsActive()) {
         iStream->RegisterNotifyBufferSent(iStatus);
         Cancel();
     }
+}
 
+void CMMFMdaOutputBufferQueue::StartTransfer() {
     WriteAndWait();
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
     : CIdle(100) {
+}
+
+CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
+    Deque();
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
@@ -144,6 +145,12 @@ void CMMFMdaOutputOpen::Open(CMMFMdaAudioOutputStream *stream) {
 void CMMFMdaOutputOpen::DoCancel() {
     TRequestStatus *statusPointer = &iStatus;
     User::RequestComplete(statusPointer, KErrCancel);
+}
+
+void CMMFMdaOutputOpen::FixupActiveStatus() {    
+    if (IsActive()) {
+        Cancel();
+    }
 }
 
 /// AUDIO OUTPUT STREAM
@@ -178,6 +185,9 @@ void CMMFMdaAudioOutputStream::ConstructL() {
 
     CActiveScheduler::Add(&iBufferQueue);
     CActiveScheduler::Add(&iOpen);
+
+    iOpen.FixupActiveStatus();
+    iBufferQueue.FixupActiveStatus();
 }
 
 void CMMFMdaAudioOutputStream::NotifyOpenComplete() {
@@ -193,11 +203,6 @@ void CMMFMdaAudioOutputStream::StartRaw() {
 }
 
 void CMMFMdaAudioOutputStream::Play() {
-    // Simulates that buffer has been written to server
-    if (iOpen.IsActive()) {
-        iOpen.Cancel();
-    }
-
     iOpen.Open(this);
 }
 

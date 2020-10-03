@@ -108,9 +108,14 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void window_group::add_priority_key(service::ipc_context &context, ws_cmd &cmd) {
+        LOG_TRACE("Add priortiy key stubbed");
+        context.complete(epoc::error_none);
+    }
+
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        //LOG_TRACE("Window group op: {}", cmd.header.op);
         bool result = execute_command_for_general_node(ctx, cmd);
+        //LOG_TRACE("Window group op: {}", cmd.header.op);
 
         if (result) {
             return;
@@ -207,6 +212,10 @@ namespace eka2l1::epoc {
             ctx.complete(priority);
             break;
         }
+
+        case EWsWinOpAddPriorityKey:
+            add_priority_key(ctx, cmd);
+            break;
 
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);

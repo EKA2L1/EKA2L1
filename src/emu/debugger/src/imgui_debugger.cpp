@@ -630,6 +630,7 @@ namespace eka2l1 {
 
         const std::string cpu_read_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_read_checkbox_title");
         const std::string cpu_write_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_write_checkbox_title");
+        const std::string cpu_step_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_step_checkbox_title");
         const std::string ipc_str = common::get_localised_string(localised_strings, "pref_general_debugging_ipc_checkbox_title");
         const std::string system_calls_str = common::get_localised_string(localised_strings, "pref_general_debugging_system_calls_checkbox_title");
         const std::string accurate_ipc_timing_str = common::get_localised_string(localised_strings, "pref_general_debugging_ait_checkbox_title");
@@ -658,9 +659,22 @@ namespace eka2l1 {
             ImGui::SetTooltip("%s", btrace_tt.c_str());
         }
 
+        ImGui::SameLine(col2);
+
+        bool do_we_step = conf->stepping.load();
+        ImGui::Checkbox(cpu_step_str.c_str(), &do_we_step);
+        conf->stepping.store(do_we_step);
+
+        if (ImGui::IsItemHovered()) {
+            const std::string cpu_step_tt = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_step_checkbox_tooltip_msg");
+            ImGui::SetTooltip("%s", cpu_step_tt.c_str());
+        }
+
         const std::string utils_sect_title = common::get_localised_string(localised_strings, "pref_general_utilities_string");
         const std::string utils_hide_mouse_str = common::get_localised_string(localised_strings, "pref_general_utilities_hide_cursor_in_screen_space_checkbox_title");
-           
+        const std::string nearest_filtering_str = common::get_localised_string(localised_strings, "pref_general_utilities_nearest_neighbor_filtering_msg");
+        const std::string nearest_filtering_tt = common::get_localised_string(localised_strings, "pref_general_utilities_nearest_neighbor_filtering_tooltip");
+
         ImGui::NewLine();
         ImGui::Text("%s", utils_sect_title.c_str());
         ImGui::Separator();
@@ -669,6 +683,13 @@ namespace eka2l1 {
         if (ImGui::IsItemHovered()) {
             const std::string mouse_hide_tt = common::get_localised_string(localised_strings, "pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg");
             ImGui::SetTooltip("%s", mouse_hide_tt.c_str());
+        }
+
+        const bool previous_filter = conf->nearest_neighbor_filtering;
+        ImGui::Checkbox(nearest_filtering_str.c_str(), &conf->nearest_neighbor_filtering);
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("%s", nearest_filtering_tt.c_str());
         }
 
         const std::map<int, std::string> AVAIL_LANG_LIST = {
@@ -1983,7 +2004,7 @@ namespace eka2l1 {
                             kernel_system *kern = alserv->get_kernel_object_owner();
 
                             kern->lock();
-                            alserv->launch_app(registerations[i], cmdline);
+                            alserv->launch_app(registerations[i], cmdline, nullptr);
                             kern->unlock();
                         }
                     }
@@ -2505,6 +2526,7 @@ namespace eka2l1 {
                 ImGui::Text("- quanshousio");
                 ImGui::Text("- claimmore");
                 ImGui::Text("- stranno");
+                ImGui::Text("- J Adra (Laserdisc)");
                 ImGui::EndChild();
             }
 

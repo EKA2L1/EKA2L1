@@ -48,6 +48,8 @@ struct CMMFMdaOutputBufferQueue: public CActive {
     void WriteAndWait();
     ~CMMFMdaOutputBufferQueue();
 
+    void FixupActiveStatus();
+
     void StartTransfer();
     void CleanQueue();
 
@@ -58,6 +60,9 @@ struct CMMFMdaOutputBufferQueue: public CActive {
 class CMMFMdaOutputOpen: public CIdle {
 public:
     explicit CMMFMdaOutputOpen();
+    ~CMMFMdaOutputOpen();
+    
+    void FixupActiveStatus();
     
     void Open(CMMFMdaAudioOutputStream *iStream);
     void DoCancel();

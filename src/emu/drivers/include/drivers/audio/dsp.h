@@ -49,6 +49,8 @@ namespace eka2l1::drivers {
     struct dsp_stream {
     protected:
         std::size_t samples_played_;
+        std::size_t samples_copied_;
+
         std::uint32_t freq_;
         std::uint32_t channels_;
 
@@ -80,7 +82,17 @@ namespace eka2l1::drivers {
             return true;
         }
 
+        /**
+         * @brief       Get the position of the stream, calculated with the buffers received from read/write.
+         * @returns     The copied position of the stream.
+         */
         virtual std::uint64_t position() = 0;
+
+        /**
+         * @brief       Get the position of the stream, as the stream is playing.
+         * @returns     The real-time position of the stream.
+         */
+        virtual std::uint64_t real_time_position() = 0;
 
         virtual bool set_properties(const std::uint32_t freq, const std::uint8_t channels) = 0;
         virtual void get_supported_formats(std::vector<four_cc> &cc_list) = 0;

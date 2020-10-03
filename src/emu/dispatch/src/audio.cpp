@@ -542,7 +542,8 @@ namespace eka2l1::dispatch {
                     evt = evt->next_;
                 }
 
-                evt->flags_ |= audio_event::FLAG_COMPLETED;
+                if (evt)
+                    evt->flags_ |= audio_event::FLAG_COMPLETED;
             },
             stream);
 
@@ -640,6 +641,9 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        // Well weird enough this position is calculated from the total sample copied
+        // This is related to THPS. Where it checks for the duration when the buffer has just been copied.
+        // If the duration played drains the buffer, only at that time it starts to supply more audio data.
         *the_time = stream->ll_stream_->position();
         return epoc::error_none;
     }

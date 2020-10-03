@@ -47,6 +47,8 @@
 #include <kernel/ipc.h>
 #include <mem/ptr.h>
 
+#include <cpu/arm_analyser.h>
+
 #include <atomic>
 #include <exception>
 #include <functional>
@@ -280,8 +282,14 @@ namespace eka2l1 {
         common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
         common::identity_container<imb_range_callback> imb_range_callback_funcs_;
 
+        std::unique_ptr<arm::arm_analyser> analyser_;
+
+        using cache_interpreter_func = std::function<void(arm::core *)>;
+        std::map<std::uint32_t, cache_interpreter_func> cache_inters_;
+
     protected:
         void setup_new_process(process_ptr pr);
+        bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
         void cpu_exception_thread_handle(arm::core *core);
 
     public:
@@ -632,5 +640,8 @@ namespace eka2l1 {
         void unlock() {
             kern_lock_.unlock();
         }
+
+        void stop_cores_idling();
+        bool should_core_idle_when_inactive();
     };
 }

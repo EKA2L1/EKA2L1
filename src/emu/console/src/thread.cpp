@@ -40,6 +40,8 @@
 
 #include <services/window/window.h>
 
+#include <kernel/kernel.h>
+
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
 
@@ -221,7 +223,7 @@ namespace eka2l1::desktop {
             "Having a cyborg as my wife doing dishes and writing the emulator brb",
             "Causing an entire country chaos because of my imagination",
             "Thank you very much for checking out the emulator",
-            "Casually the cause of case files over two decades while staying first-grade"
+            "Casually the cause of case files over two decades while staying first-grade",
             "Stop right there criminal scum!",
             "By Azura By Azura By Azura!",
             "VAC is activating... It's Virtual Assistant Cellphone though, so keep using cheats!",
@@ -460,6 +462,9 @@ namespace eka2l1::desktop {
                 state.should_emu_quit = true;
                 state.should_ui_quit = true;
 
+                kernel_system *kern = state.symsys->get_kernel_system();
+                kern->stop_cores_idling();
+
                 // Notify that debugger is dead
                 state.debugger->notify_clients();
 
@@ -495,6 +500,30 @@ namespace eka2l1::desktop {
 
                     state.window->cursor_visiblity(true);
                 }
+            }
+
+            // Change screen filtering
+            kernel_system *kern = state.symsys->get_kernel_system();
+
+            if (kern) {
+                kern->lock();
+
+                epoc::screen *screen = state.winserv->get_screens();
+                drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? drivers::filter_option::nearest :
+                    drivers::filter_option::linear;
+
+                while (screen) {                
+                    screen->screen_mutex.lock();
+
+                    cmd_builder->set_texture_filter(screen->screen_texture, filter, filter);
+                    cmd_builder->set_texture_filter(screen->dsa_texture, filter, filter);
+
+                    screen->screen_mutex.unlock();
+
+                    screen = screen->next;
+                }
+
+                kern->unlock();
             }
 
             state.debugger->set_font_to_use(ui_thread_get_use_font(state));

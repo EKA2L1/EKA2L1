@@ -169,6 +169,10 @@ namespace eka2l1::drivers {
             : first_(nullptr) {
         }
 
+        bool empty() const {
+            return !first_;
+        }
+
         void add(command *cmd_) {
             if (first_ == nullptr) {
                 first_ = cmd_;

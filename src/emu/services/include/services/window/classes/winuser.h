@@ -74,11 +74,15 @@ namespace eka2l1::epoc {
         std::uint32_t max_pointer_buffer_;
         std::vector<epoc::event> pointer_buffer_;
 
+        std::uint64_t last_draw_;
+
         void invalidate(const eka2l1::rect &irect);
 
         explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::window_type type_of_window, const epoc::display_mode dmode,
             const std::uint32_t client_handle);
+
+        ~window_user() override;
 
         epoc::display_mode display_mode() const;
 
@@ -127,7 +131,7 @@ namespace eka2l1::epoc {
         /**
          * @brief Action that this window does when its content is modified.
          */
-        void take_action_on_change();
+        void take_action_on_change(kernel::thread *drawer);
 
         void queue_event(const epoc::event &evt) override;
 

@@ -152,6 +152,10 @@ namespace eka2l1::kernel {
             return mm_impl_.get();
         }
 
+        thread_ptr get_primary_thread() {
+            return primary_thread;
+        }
+
         void logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
         bool logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous);
 

@@ -191,6 +191,10 @@ namespace eka2l1::arm {
                 return;
             }
 
+            case Dynarmic::A32::Exception::UnpredictableInstruction:
+                parent.exception_handler(exception_type_unpredictable, pc);
+                return;
+
             default: {
                 parent.exception_handler(exception_type_unk, pc);
                 break;

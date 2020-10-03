@@ -94,11 +94,11 @@ namespace eka2l1::hle {
     }
 
     static bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, const std::uint32_t iat_offset_from_codebase,
-        kernel::process *pr, loader::e32img_import_block &import_block, uint32_t &crr_idx, codeseg_ptr &parent_codeseg) {
+        loader::e32img_import_block &import_block, uint32_t &crr_idx, codeseg_ptr &parent_codeseg) {
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
         const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
-        codeseg_ptr cs = mngr.load(dll_name, pr);
+        codeseg_ptr cs = mngr.load(dll_name);
 
         if (!cs) {
             LOG_TRACE("Can't find {}", dll_name8);
@@ -123,14 +123,14 @@ namespace eka2l1::hle {
         return true;
     }
 
-    static bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, std::uint8_t *code_addr, kernel::process *pr, loader::e32img_import_block &import_block,
+    static bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, std::uint8_t *code_addr, loader::e32img_import_block &import_block,
         codeseg_ptr &parent_cs) {
         // LOG_INFO("Fixup for: {}", import_block.dll_name);
 
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
         const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
-        codeseg_ptr cs = mngr.load(dll_name, pr);
+        codeseg_ptr cs = mngr.load(dll_name);
 
         if (!cs) {
             LOG_TRACE("Can't find {}", dll_name8);
@@ -158,18 +158,18 @@ namespace eka2l1::hle {
         return true;
     }
 
-    static void buildup_import_fixup_table(loader::e32img *img, kernel::process *pr, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
+    static void buildup_import_fixup_table(loader::e32img *img, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
         if (img->epoc_ver <= epocver::eka2) {
             std::uint32_t track = 0;
 
             for (auto &ib : img->import_section.imports) {
-                pe_fix_up_iat(mem, mngr, img->header.text_size, pr, ib, track, cs);
+                pe_fix_up_iat(mem, mngr, img->header.text_size, ib, track, cs);
             }
         }
 
         if (static_cast<int>(img->epoc_ver) >= static_cast<int>(epocver::epoc93)) {
             for (auto &ib : img->import_section.imports) {
-                elf_fix_up_import_dir(mem, mngr, reinterpret_cast<std::uint8_t*>(&img->data[img->header.code_offset]), pr, ib, cs);
+                elf_fix_up_import_dir(mem, mngr, reinterpret_cast<std::uint8_t*>(&img->data[img->header.code_offset]), ib, cs);
             }
         }
     }
@@ -183,7 +183,7 @@ namespace eka2l1::hle {
         return res;
     }
 
-    static codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr, kernel::process *pr,
+    static codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr,
         const std::u16string &path = u"", const address force_code_addr = 0) {
         std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
         kernel::codeseg_create_info info;
@@ -240,8 +240,7 @@ namespace eka2l1::hle {
         }
 
         // Build import table so that it can patch later
-        buildup_import_fixup_table(img, pr, mem, mngr, cs);
-
+        buildup_import_fixup_table(img, mem, mngr, cs);
         return cs;
     }
 
@@ -345,7 +344,7 @@ namespace eka2l1::hle {
                 const std::string dest_dll_name = eka2l1::replace_extension(original_map_name, ".dll");
 
                 // Try loading original ROM segment
-                codeseg_ptr original_sec = load(common::utf8_to_ucs2(dest_dll_name), nullptr);
+                codeseg_ptr original_sec = load(common::utf8_to_ucs2(dest_dll_name));
 
                 if (!original_sec) {
                     LOG_ERROR("Unable to find original code segment for {}", original_map_name);
@@ -422,7 +421,7 @@ namespace eka2l1::hle {
 
                 // Relocate! Import
                 std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, nullptr, common::utf8_to_ucs2(patch_dll_map),
+                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, common::utf8_to_ucs2(patch_dll_map),
                     code_chunk->base(nullptr).ptr_address());
 
                 if (!patch_seg) {
@@ -476,15 +475,15 @@ namespace eka2l1::hle {
         return rom_drv_;
     }
 
-    codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, kernel::process *pr, const std::u16string &path) {
+    codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, const std::u16string &path) {
         if (auto seg = kern_->get_by_name<kernel::codeseg>(get_e32_codeseg_name_from_path(path))) {
             return seg;
         }
 
-        return import_e32img(&img, mem_, kern_, *this, pr, path);
+        return import_e32img(&img, mem_, kern_, *this, path);
     }
 
-    codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, kernel::process *pr, const std::u16string &path) {
+    codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path) {
         if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
             return seg;
         }
@@ -615,7 +614,7 @@ namespace eka2l1::hle {
                             }
 
                             kernel::codeseg_dependency_info dep_info;
-                            dep_info.dep_ = load_as_romimg(rimg, pr, path_to_dll);
+                            dep_info.dep_ = load_as_romimg(rimg, path_to_dll);
 
                             acs->add_dependency(dep_info);
                         }
@@ -708,7 +707,7 @@ namespace eka2l1::hle {
         return open_and_get(lib_path);
     }
 
-    codeseg_ptr lib_manager::load(const std::u16string &name, kernel::process *pr) {
+    codeseg_ptr lib_manager::load(const std::u16string &name) {
         auto load_depend_on_drive = [&](drive_number drv, const std::u16string &lib_path) -> codeseg_ptr {
             auto entry = io_->get_drive_entry(drv);
 
@@ -726,14 +725,14 @@ namespace eka2l1::hle {
                         return nullptr;
                     }
 
-                    return load_as_romimg(*romimg, pr, lib_path);
+                    return load_as_romimg(*romimg, lib_path);
                 } else {
                     auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
                     if (!e32img) {
                         return nullptr;
                     }
 
-                    return load_as_e32img(*e32img, pr, lib_path);
+                    return load_as_e32img(*e32img, lib_path);
                 }
             }
 
@@ -830,7 +829,7 @@ namespace eka2l1::hle {
             return false;
         }
         
-        codeseg_ptr userlib = load(u"euser.dll", nullptr);
+        codeseg_ptr userlib = load(u"euser.dll");
 
         if (!userlib) {
             LOG_ERROR("Unable to load euser.dll to build EKA1 bootstrap code!");

@@ -306,7 +306,7 @@ namespace eka2l1 {
         shared_chunk_allocator = std::make_unique<epoc::chunk_allocator>(shared_chunk);
         large_chunk_allocator = std::make_unique<epoc::chunk_allocator>(large_chunk);
 
-        if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll", nullptr)) {
+        if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll")) {
             // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#
             // Skip the filler (vtable start address) and the typeinfo
             if (kern->is_eka1()) {

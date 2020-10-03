@@ -636,7 +636,20 @@ namespace eka2l1::drivers {
         helper.pop(min);
         helper.pop(mag);
 
-        texture *texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        texture *texobj = nullptr;
+        
+        if (h & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(h);
+
+            if (!b) {
+                return;
+            }
+
+            texobj = b->tex.get();
+        } else {
+            texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        }
 
         if (!texobj) {
             return;

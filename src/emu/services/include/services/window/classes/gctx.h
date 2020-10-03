@@ -69,6 +69,7 @@ namespace eka2l1::epoc {
         fbsfont *text_font;
 
         bool recording{ false };
+        bool flushed{ false };
 
         brush_style fill_mode;
         pen_style line_mode;

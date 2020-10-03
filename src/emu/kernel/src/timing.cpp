@@ -45,7 +45,7 @@ namespace eka2l1 {
 
     ntimer::~ntimer() {
         should_stop_ = true;
-        should_paused_ = true;
+        should_paused_ = false;
         new_event_avail_var_.notify_one();
 
         timer_thread_->join();
@@ -53,7 +53,7 @@ namespace eka2l1 {
 
     void ntimer::loop() {
         while (!should_stop_) {
-            while (!should_paused_) {
+            while (!should_stop_ && !should_paused_) {
                 const std::optional<std::uint64_t> next_microseconds = advance();
                 std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
 
@@ -62,6 +62,13 @@ namespace eka2l1 {
                 } else {
                     new_event_avail_var_.wait(unqlock);
                 }
+            }
+
+            if (should_paused_) {
+                std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
+                new_event_avail_var_.wait(unqlock, [this]() {
+                    return (should_paused_ == false);
+                });
             }
         }
     }
@@ -201,6 +208,13 @@ namespace eka2l1 {
     }
 
     void ntimer::set_paused(const bool should_pause) {
+        bool last_state = should_paused_;
         should_paused_ = should_pause;
+
+        if (last_state != should_pause) {
+            if (should_pause == false) {
+                new_event_avail_var_.notify_one();
+            }
+        }
     }
 }
