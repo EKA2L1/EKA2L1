@@ -69,7 +69,7 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Mauszeiger ausblenden, wenn er sich innerhalb eines emulierten Bildschirms befindet</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Nützlich, wenn Sie eine Taste mit der Maus verknüpfen und ein Spiel/App einen eingebauten Cursor hat.\nUm den Mauszeiger sichtbar zu machen, drücken Sie ALT-Taste.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next draw.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
     <string name="pref_system_title">System</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Gerät</string>
