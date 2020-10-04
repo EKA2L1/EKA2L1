@@ -24,6 +24,7 @@
 #include <common/algorithm.h>
 #include <common/dynamicfile.h>
 #include <common/path.h>
+#include <common/log.h>
 
 #include <algorithm>
 #include <fstream>
@@ -165,6 +166,7 @@ namespace eka2l1::manager {
         const std::lock_guard<std::mutex> guard(lock);
 
         if (get(firmcode)) {
+            LOG_ERROR("Device already installed ({})!", firmcode);
             return false;
         }
 
@@ -174,6 +176,7 @@ namespace eka2l1::manager {
             "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
         common::dynamic_ifile ifile(lang_path);
         if (ifile.fail()) {
+            LOG_ERROR("Fail to load languages.txt file! (Searched path: {})", lang_path);
             return false;
         }
         std::string line;
