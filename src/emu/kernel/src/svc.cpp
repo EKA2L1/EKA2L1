@@ -3230,6 +3230,19 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t dll_global_data_alloc(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        address the_space = 0;
+        
+        if (!kern->allocate_global_dll_space(create_info->arg0_, create_info->arg1_, the_space, nullptr)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_no_memory);
+            return epoc::error_no_memory;
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -3317,6 +3330,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_get_heap_thread:
             return thread_get_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_dll_global_allocate:
+            return dll_global_data_alloc(kern, attribute, create_info, finish_signal, crr_thread);
 
         default:
             LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -3527,6 +3543,64 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::uint32_t, user_language) {
         return static_cast<std::uint32_t>(kern->get_current_language());
+    }
+
+    BRIDGE_FUNC(std::int32_t, dll_global_data_allocated, const address handle) {
+        return (kern->get_global_dll_space(handle, nullptr) != 0);
+    }
+
+    BRIDGE_FUNC(std::int32_t, dll_global_data_write, const address handle, const std::int32_t pos,
+        epoc::desc8 *data_to_write) {
+        if (pos < 0) {
+            return epoc::error_argument;
+        }
+
+        std::uint8_t *data_ptr = nullptr;
+        std::uint32_t data_space_size = 0;
+
+        if (kern->get_global_dll_space(handle, &data_ptr, &data_space_size) == 0) {
+            return epoc::error_not_ready;
+        }
+
+        const std::uint32_t len_to_write = data_to_write->get_length();
+        if (pos + len_to_write > data_space_size) {
+            return epoc::error_no_memory;
+        }
+
+        char *data_to_write_ptr = data_to_write->get_pointer(kern->crr_process());
+        if (!data_to_write_ptr) {
+            return epoc::error_bad_descriptor;
+        }
+
+        std::memcpy(data_ptr + pos, data_to_write_ptr, len_to_write);
+        return epoc::error_none;
+    }
+    
+    BRIDGE_FUNC(std::int32_t, dll_global_data_read, const address handle, const std::int32_t pos,
+        const std::int32_t size, epoc::des8 *place_to_read_to) {
+        if ((pos < 0) || (size < 0)) {
+            return epoc::error_argument;
+        }
+
+        std::uint8_t *data_ptr = nullptr;
+        std::uint32_t data_space_size = 0;
+
+        if (kern->get_global_dll_space(handle, &data_ptr, &data_space_size) == 0) {
+            return epoc::error_not_ready;
+        }
+
+        const std::uint32_t len_to_read = common::min<std::int32_t>(static_cast<std::uint32_t>(size),
+            common::min<std::uint32_t>(place_to_read_to->get_max_length(kern->crr_process()), data_space_size - pos));
+
+        char *data_to_write_ptr = place_to_read_to->get_pointer(kern->crr_process());
+        if (!data_to_write_ptr) {
+            return epoc::error_bad_descriptor;
+        }
+
+        std::memcpy(place_to_read_to, data_ptr + pos, len_to_read);
+        place_to_read_to->set_length(kern->crr_process(), len_to_read);
+
+        return epoc::error_none;
     }
 
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
@@ -3963,6 +4037,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800060, user_language),
         BRIDGE_REGISTER(0x80006E, time_now),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
+        BRIDGE_REGISTER(0x80007D, dll_global_data_allocated),
+        BRIDGE_REGISTER(0x80007E, dll_global_data_read),
+        BRIDGE_REGISTER(0x80007F, dll_global_data_write),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0x8000A9, library_type_eka1),

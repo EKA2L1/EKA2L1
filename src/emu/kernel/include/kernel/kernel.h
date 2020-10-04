@@ -287,6 +287,10 @@ namespace eka2l1 {
         using cache_interpreter_func = std::function<void(arm::core *)>;
         std::map<std::uint32_t, cache_interpreter_func> cache_inters_;
 
+        kernel::chunk* dll_global_data_chunk_;
+        std::map<address, std::uint64_t> dll_global_data_offset_;
+        std::uint32_t dll_global_data_last_offset_;
+
     protected:
         void setup_new_process(process_ptr pr);
         bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
@@ -643,5 +647,8 @@ namespace eka2l1 {
 
         void stop_cores_idling();
         bool should_core_idle_when_inactive();
+
+        address get_global_dll_space(const address handle, std::uint8_t **data_ptr = nullptr, std::uint32_t *size_of_data = nullptr);
+        bool allocate_global_dll_space(const address handle, const std::uint32_t size, address &data_ptr_guest, std::uint8_t **data_ptr_host = nullptr);
     };
 }

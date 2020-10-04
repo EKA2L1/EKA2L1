@@ -79,7 +79,9 @@ namespace eka2l1 {
         , rom_map_(nullptr)
         , kern_ver_(epocver::epoc94)
         , lang_(language::en)
-        , global_data_chunk_(nullptr) {
+        , global_data_chunk_(nullptr)
+        , dll_global_data_chunk_(nullptr)
+        , dll_global_data_last_offset_(0) {
         thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
@@ -922,6 +924,57 @@ namespace eka2l1 {
 
     void kernel_system::set_current_language(const language new_lang) {
         lang_ = new_lang;
+    }
+
+    address kernel_system::get_global_dll_space(const address handle, std::uint8_t **data_ptr, std::uint32_t *size_of_data) {
+        if (!dll_global_data_chunk_) {
+            return 0;
+        }
+
+        auto find_result = dll_global_data_offset_.find(handle);
+        if (find_result == dll_global_data_offset_.end()) {
+            return 0;
+        }
+
+        if (data_ptr) {
+            *data_ptr = reinterpret_cast<std::uint8_t*>(dll_global_data_chunk_->host_base()) + static_cast<std::uint32_t>(find_result->second);
+        }
+
+        if (size_of_data) {
+            *size_of_data = static_cast<std::uint32_t>(find_result->second >> 32);
+        }
+
+        return static_cast<std::uint32_t>(find_result->second) + dll_global_data_chunk_->base(nullptr).ptr_address();
+    }
+    
+    bool kernel_system::allocate_global_dll_space(const address handle, const std::uint32_t size, 
+        address &data_ptr_guest, std::uint8_t **data_ptr_host) {
+        static constexpr std::uint32_t GLOBAL_DLL_DATA_CHUNK_SIZE = 0x100000;
+        
+        if (!dll_global_data_chunk_) {
+            dll_global_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "EKA1_DllGlobalDataChunk",
+                0, GLOBAL_DLL_DATA_CHUNK_SIZE, static_cast<std::size_t>(GLOBAL_DLL_DATA_CHUNK_SIZE), prot::read_write,
+                kernel::chunk_type::normal, kernel::chunk_access::global, kernel::chunk_attrib::none, 0);
+        }
+
+        auto find_result = dll_global_data_offset_.find(handle);
+        if (find_result != dll_global_data_offset_.end()) {
+            return false;
+        }
+
+        if (dll_global_data_last_offset_ + size > GLOBAL_DLL_DATA_CHUNK_SIZE) {
+            return false;
+        }
+
+        dll_global_data_offset_.emplace(handle, (static_cast<std::uint64_t>(size) << 32) | dll_global_data_last_offset_);
+        data_ptr_guest = dll_global_data_chunk_->base(nullptr).ptr_address() + dll_global_data_last_offset_;
+
+        if (data_ptr_host) {
+            *data_ptr_host = reinterpret_cast<std::uint8_t*>(dll_global_data_chunk_->host_base()) + dll_global_data_last_offset_;
+        }
+        
+        dll_global_data_last_offset_ += size;
+        return true;
     }
 
     struct kernel_info {
