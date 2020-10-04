@@ -57,8 +57,8 @@
     <string name="pref_general_debugging_string">Hata ayıklama</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU okuma</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">CPU yazma</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU adımı</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Bu opsiyon emulatör kapatıldıktan sonra kaydedilmeyecek. GDBStub aktif olduğunda geçersizdir.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Sistem çağrıları</string>
     <string name="pref_general_debugging_ait_checkbox_title">Dakik IPC zamanlaması</string>
@@ -68,8 +68,8 @@
     <string name="pref_general_utilities_string">Araçlar</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Fare imleci emulasyon ekranı içindeyken görünmesin</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Oyun/uygulamanın kendi imleci varsa, fare tuşuna atama yaptığınızda işe yarar.\nFare imlecini görünür yapmak için ALT tuşunu basılı tutun.</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">\"Nearest neighbor\" filterlemesini aktif et</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Bu filter emule edilen ekranın bir dahaki sefer çizilmesinden sonra aktif olur.</string>
     <string name="pref_system_title">Sistem</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Cihaz</string>
@@ -114,7 +114,7 @@
     <string name="install_device_final_msg_2">Her hangi bir problemle karşılaşırsanız lütfen geliştiriciye bildirin!</string>
     <string name="mmc_mount_success_dialog_title">Kart başarıyla tanımlandı!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD kart tanımlandı! MMC/SD-de olan bütün uygulamalar yeniden yüklendi.</string>
-    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s GitHub wiki page.</string>
+    <string name="no_device_installed_msg">Her hangi bir cihaz yüklemediniz. Lütfen bir cihaz yükleyin ve ya EKA2L1-in Github sayfasından yükleme kılavuzuna bakın.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Cihaz yükle</string>
     <string name="no_show_option_again_general_msg">Bir daha gösterme.</string>
     <string name="touchscreen_disabled_msg">Şu anki bazı tuş atamalarınız fare tuşları ile ilgili. Bu yüzden dokunmatik ekran emulasyonu aktif değil.</string>
