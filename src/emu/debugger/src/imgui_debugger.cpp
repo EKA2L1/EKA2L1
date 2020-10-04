@@ -1791,7 +1791,7 @@ namespace eka2l1 {
                     "file_menu_mount_sd_item_name");
                     
                 ImGui::MenuItem(install_device_item_name.c_str(), nullptr, &should_show_install_device_wizard);
-                ImGui::MenuItem(mount_mmc_item_name.c_str(), nullptr, &should_show_sd_card_mount);
+                ImGui::MenuItem(mount_mmc_item_name.c_str(), "CTRL+SHIFT+X", &should_show_sd_card_mount);
 
                 ImGui::Separator();
 
@@ -1902,6 +1902,11 @@ namespace eka2l1 {
                 if (io.KeysDown[KEY_L]) { // Logger
                     should_show_logger = !should_show_logger;
                     io.KeysDown[KEY_L] = false;
+                }
+
+                if (io.KeysDown[KEY_X]) {
+                    should_show_sd_card_mount = !should_show_sd_card_mount;
+                    io.KeysDown[KEY_X] = false;
                 }
 
                 io.KeyShift = false;
