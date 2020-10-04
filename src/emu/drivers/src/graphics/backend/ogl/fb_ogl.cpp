@@ -27,9 +27,11 @@
 
 namespace eka2l1::drivers {
     ogl_framebuffer::ogl_framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_and_stencil_buffer)
-        : framebuffer(color_buffer_list, depth_and_stencil_buffer) {
+        : framebuffer(color_buffer_list, depth_and_stencil_buffer)
+        , last_bind_type(framebuffer_bind_read_draw)
+        , last_fb(-1) {
         glGenFramebuffers(1, &fbo);
-        bind(nullptr);
+        bind(nullptr, framebuffer_bind_read_draw);
 
         // Get max color attachments
         glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &max_color_attachment);
@@ -68,14 +70,39 @@ namespace eka2l1::drivers {
         glDeleteFramebuffers(1, &fbo);
     }
 
-    void ogl_framebuffer::bind(graphics_driver *driver) {
-        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &last_fb);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    static std::pair<GLenum, GLenum> fb_bind_type_to_ogl_enum(const framebuffer_bind_type type) {
+        switch (type) {
+        case framebuffer_bind_draw:
+            return { GL_DRAW_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER_BINDING };
+
+        case framebuffer_bind_read:
+            return { GL_READ_FRAMEBUFFER, GL_READ_FRAMEBUFFER_BINDING };
+
+        case framebuffer_bind_read_draw:
+            return { GL_FRAMEBUFFER, GL_FRAMEBUFFER_BINDING };
+
+        default:
+            break;
+        }
+
+        return { GL_FRAMEBUFFER, GL_FRAMEBUFFER_BINDING };
+    }
+
+    void ogl_framebuffer::bind(graphics_driver *driver, const framebuffer_bind_type type_bind) {
+        auto enums = fb_bind_type_to_ogl_enum(type_bind);
+        glGetIntegerv(enums.second, &last_fb);
+        glBindFramebuffer(enums.first, fbo);
+
+        last_bind_type = type_bind;
     }
 
     void ogl_framebuffer::unbind(graphics_driver *driver) {
-        glBindFramebuffer(GL_FRAMEBUFFER, last_fb);
-        last_fb = 0;
+        if (last_fb != -1) {    
+            auto enums = fb_bind_type_to_ogl_enum(last_bind_type);
+            glBindFramebuffer(enums.first, last_fb);
+            
+            last_fb = -1;
+        }
     }
 
     std::int32_t ogl_framebuffer::set_color_buffer(texture *tex, const std::int32_t position) {

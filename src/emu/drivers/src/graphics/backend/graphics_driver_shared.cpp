@@ -106,11 +106,10 @@ namespace eka2l1::drivers {
         auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
         
         if (fb) {
-            fb->set_color_buffer(tex_to_replace.get(), 1);
-
-            // Setting up read/draw target
-            fb->set_draw_buffer(1);
-            fb->set_read_buffer(0);
+            auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, ds_tex_to_replace.get());
+            
+            fb->bind(driver, framebuffer_bind_read);
+            new_fb->bind(driver, framebuffer_bind_draw);
 
             eka2l1::rect copy_region;
             copy_region.top = { 0, 0 };
@@ -119,10 +118,10 @@ namespace eka2l1::drivers {
 
             fb->blit(copy_region, copy_region, draw_buffer_bit_color_buffer, filter_option::linear);
 
-            fb->set_color_buffer(tex_to_replace.get(), 0);
-            fb->set_depth_stencil_buffer(ds_tex_to_replace.get());      // Depth and stencil content will be new
+            new_fb->unbind(driver);
+            fb->unbind(driver);
 
-            fb->set_draw_buffer(0);
+            fb = std::move(new_fb);
         }
 
         tex = std::move(tex_to_replace);
@@ -299,7 +298,7 @@ namespace eka2l1::drivers {
         }
 
         // Bind the framebuffer
-        bmp->fb->bind(this);
+        bmp->fb->bind(this, framebuffer_bind_read_draw);
         binding = bmp;
 
         // Build projection matrixx
