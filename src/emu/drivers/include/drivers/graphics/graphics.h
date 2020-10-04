@@ -114,7 +114,7 @@ namespace eka2l1::drivers {
         }
 
         virtual void update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
-            const eka2l1::vec2 &dim, const int bpp, const void *data, const std::size_t pixels_per_line = 0)
+            const eka2l1::vec2 &dim, const void *data, const std::size_t pixels_per_line = 0)
             = 0;
 
         virtual void attach_descriptors(drivers::handle h, const int stride, const bool instance_move, const attribute_descriptor *descriptors,

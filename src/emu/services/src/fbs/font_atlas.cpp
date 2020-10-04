@@ -96,8 +96,8 @@ namespace eka2l1::epoc {
                 characters_.emplace(initial_range_.first + i, cinfos[i]);
             }
 
-            atlas_handle_ = drivers::create_bitmap(driver, { width, width });
-            builder->update_bitmap(atlas_handle_, 8, reinterpret_cast<const char *>(atlas_data_.get()),
+            atlas_handle_ = drivers::create_bitmap(driver, { width, width }, 8);
+            builder->update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
                 width * width, { 0, 0 }, { width, width });
         }
 

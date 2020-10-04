@@ -48,14 +48,13 @@ namespace eka2l1::dispatch {
                 const std::lock_guard<std::mutex> guard(scr->screen_mutex);
 
                 if (!scr->dsa_texture) {
-                    scr->dsa_texture = drivers::create_bitmap(driver, screen_size);
+                    scr->dsa_texture = drivers::create_bitmap(driver, screen_size, epoc::get_bpp_from_display_mode(scr->disp_mode));
                 }
 
                 auto command_list = driver->new_command_list();
                 auto command_builder = driver->new_command_builder(command_list.get());
 
-                command_builder->update_bitmap(scr->dsa_texture, epoc::get_bpp_from_display_mode(scr->disp_mode),
-                    reinterpret_cast<const char *>(scr->screen_buffer_chunk->host_base()), buffer_size,
+                command_builder->update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_chunk->host_base()), buffer_size,
                     { 0, 0 }, screen_size);
 
                 command_builder->set_swizzle(scr->dsa_texture, drivers::channel_swizzle::red, drivers::channel_swizzle::green,

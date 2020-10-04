@@ -57,10 +57,10 @@ namespace eka2l1::drivers {
         return copy;
     }
 
-    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size) {
+    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t bpp) {
         drivers::handle handle_num = 0;
 
-        if (send_sync_command(driver, graphics_driver_create_bitmap, size.x, size.y, &handle_num) != 0) {
+        if (send_sync_command(driver, graphics_driver_create_bitmap, size.x, size.y, bpp, &handle_num) != 0) {
             return 0;
         }
 
@@ -159,10 +159,10 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size,
+    void server_graphics_command_list_builder::update_bitmap(drivers::handle h, const char *data, const std::size_t size,
         const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line) {
         // Copy data
-        command *cmd = make_command(graphics_driver_update_bitmap, nullptr, h, make_data_copy(data, size), bpp, size, offset, dim, pixels_per_line);
+        command *cmd = make_command(graphics_driver_update_bitmap, nullptr, h, make_data_copy(data, size), size, offset, dim, pixels_per_line);
         get_command_list().add(cmd);
     }
 

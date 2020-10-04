@@ -128,6 +128,14 @@ namespace eka2l1::epoc {
         return return_ptr;
     }
 
+    static std::uint32_t get_suitable_bpp_for_bitmap(epoc::bitwise_bitmap *bmp) {
+        if (is_palette_bitmap(bmp) || (bmp->header_.bit_per_pixels == 1) || (bmp->header_.bit_per_pixels == 12)) {
+            return 24;
+        }
+
+        return bmp->header_.bit_per_pixels;
+    }
+
     std::uint64_t bitmap_cache::hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp) {
         std::uint64_t hash = 0xB1711A3F;
 
@@ -186,7 +194,9 @@ namespace eka2l1::epoc {
         bool should_upload = true;
         bool should_recreate = true;
 
+        const std::uint32_t suit_bpp = get_suitable_bpp_for_bitmap(bmp);
         auto bitmap_ite = std::find(bitmaps.begin(), bitmaps.end(), bmp);
+
         if (bitmap_ite == bitmaps.end()) {
             // If the bitmap is not in the bitmap array
             if (last_free < MAX_CACHE_SIZE) {
@@ -206,14 +216,18 @@ namespace eka2l1::epoc {
             // Check if we should upload or not, by calculating the hash
             hash = hash_bitwise_bitmap(bmp);
             should_upload = hash != (hashes[idx]);
-            should_recreate = bmp->header_.size_pixels != bitmap_sizes[idx];
+
+            const std::uint32_t bitmap_bpp = static_cast<std::uint32_t>(bitmap_sizes[idx].first >> 32);
+            eka2l1::object_size bitmap_stored_size(static_cast<int>(bitmap_sizes[idx].first), static_cast<int>(bitmap_sizes[idx].second));
+
+            should_recreate = (bmp->header_.size_pixels != bitmap_stored_size) && (bitmap_bpp == suit_bpp);
         }
 
         if (should_recreate) {
             if (driver_textures[idx])
                 builder->destroy_bitmap(driver_textures[idx]);
 
-            driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels);
+            driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels, suit_bpp);
         }
 
         if (should_upload) {
@@ -300,7 +314,7 @@ namespace eka2l1::epoc {
                 break;
             }
 
-            builder->update_bitmap(driver_textures[idx], bpp, data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
+            builder->update_bitmap(driver_textures[idx], data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
             hashes[idx] = hash;
 
             if (bmp->settings_.current_display_mode() == epoc::display_mode::color16mu) {
@@ -310,7 +324,9 @@ namespace eka2l1::epoc {
         }
 
         timestamps[idx] = crr_timestamp;
-        bitmap_sizes[idx] = bmp->header_.size_pixels;
+
+        bitmap_sizes[idx].first = static_cast<std::uint64_t>(bmp->header_.size_pixels.x) | (static_cast<std::uint64_t>(suit_bpp) << 32);
+        bitmap_sizes[idx].second = static_cast<std::uint32_t>(bmp->header_.size_pixels.y);
 
         return driver_textures[idx];
     }

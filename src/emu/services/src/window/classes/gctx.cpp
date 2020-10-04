@@ -57,7 +57,7 @@ namespace eka2l1::epoc {
 
         // Add first command list, binding our window bitmap
         if (attached_window->driver_win_id == 0) {
-            attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size);
+            attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size, 32);
             attached_window->resize_needed = false;
         }
 

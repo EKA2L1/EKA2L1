@@ -150,7 +150,7 @@ namespace eka2l1::epoc {
 
         if (!screen_texture) {
             // Create new one!
-            screen_texture = drivers::create_bitmap(driver, new_size);
+            screen_texture = drivers::create_bitmap(driver, new_size, 32);
         } else {
             cmd_builder->bind_bitmap(screen_texture);
             cmd_builder->resize_bitmap(screen_texture, new_size);

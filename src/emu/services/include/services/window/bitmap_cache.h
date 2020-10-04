@@ -44,7 +44,7 @@ namespace eka2l1::epoc {
         using bitmap_array = std::array<epoc::bitwise_bitmap *, MAX_CACHE_SIZE>;
         using timestamps_array = std::array<std::uint64_t, MAX_CACHE_SIZE>;
         using hashes_array = timestamps_array;
-        using sizes_array = std::array<eka2l1::object_size, MAX_CACHE_SIZE>;
+        using sizes_array = std::array<std::pair<std::uint64_t, std::uint32_t>, MAX_CACHE_SIZE>;
 
     private:
         driver_texture_handle_array driver_textures;
