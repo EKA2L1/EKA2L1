@@ -42,7 +42,7 @@
     <string name="app_launcher_title">Iniciador de aplicativos</string>
     <string name="app_launcher_unavail_msg">App List Server indisponível. Instale um dispositivo para habilitá-lo.</string>
     <string name="error_dialog_title">Um erro brutal aparece</string>
-    <string name="error_dialog_message">Por favor, anexe o registro e reporte isso a um desenvolvedor!</string>
+    <string name="error_dialog_message">Por favor, anexe o registro e reporte ao desenvolvedor!</string>
     <string name="emulated_screen_title">Tela {}</string>
     <string name="emulated_screen_orientation_lock_item_name">Orientação bloqueada</string>
     <string name="emulated_screen_rotation_item_name">Rotação</string>
@@ -114,7 +114,7 @@
     <string name="install_device_final_msg_2">Para qualquer problema, por favor informe aos desenvolvedores abrindo issues no Github!</string>
     <string name="mmc_mount_success_dialog_title">Card montado com sucesso!</string>
     <string name="mmc_mount_success_dialog_msg">Cartão MMC/SD montado! Todos os aplicativos no cartão MMC/SD foram recarregados.</string>
-    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s GitHub wiki page.</string>
+    <string name="no_device_installed_msg">Você não instalou nenhum dispositivo. Por favor instale um dispositivo ou siga as instruções da página do Github do EKA2L1.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Instalar dispositivo</string>
     <string name="no_show_option_again_general_msg">Não mostre isso novamente.</string>
     <string name="touchscreen_disabled_msg">Algumas das suas teclas de atalho estão associadas com os botões do mouse. Portanto, a emulação de touchscreen está desativada.</string>
