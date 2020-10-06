@@ -58,7 +58,7 @@
     <string name="pref_general_debugging_cpu_read_checkbox_title">Leitura da CPU</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">Gravação de CPU</string>
     <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Essa opção não será salva após o desligamento do emulador. Não é efetivo quando o GDBStub está habilitado.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Chamadas do sistema</string>
     <string name="pref_general_debugging_ait_checkbox_title">Tempo preciso para IPC</string>
@@ -68,8 +68,8 @@
     <string name="pref_general_utilities_string">Utilitários</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Ocultar o cursor do mouse quando estiver dentro do espaço da tela</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Útil quando você vincular uma tecla com o mouse e o jogo/aplicativo tem o cursor embutido.\n Para tornar o cursor do mouse visível, mantenha os botões ALT.</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilita a filtragem por vizinhança</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Esse filtro e aplicado na próxima tela que for emulada.</string>
     <string name="pref_system_title">Sistema</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Dispositivo</string>
