@@ -51,8 +51,8 @@ namespace eka2l1::drivers {
         const std::uint16_t get_attribute_count() const;
         const std::uint16_t get_uniform_count() const;
 
-        const std::int8_t get_uniform_binding(const char *name) const;
-        const std::int8_t get_attribute_binding(const char *name) const;
+        const std::int32_t get_uniform_binding(const char *name) const;
+        const std::int32_t get_attribute_binding(const char *name) const;
     };
 
     class shader : public graphics_object {
