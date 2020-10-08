@@ -110,17 +110,4 @@
     <string name="install_device_final_msg_2">如有任何问题，请通过提交issues向开发人员报告！</string>
     <string name="mmc_mount_success_dialog_title">卡片成功加载！</string>
     <string name="mmc_mount_success_dialog_msg">已安装存储卡/SD卡！存储卡/SD卡上的所有应用程序都已重新加载。</string>
-    <string name="lang_name_zh">简体中文</string>
-    <string name="lang_name_en">英语</string>
-    <string name="lang_name_fi">芬兰语</string>
-    <string name="lang_name_fr">法语</string>
-    <string name="lang_name_ru">俄语</string>
-    <string name="lang_name_it">意大利语</string>
-    <string name="lang_name_de">德语</string>
-    <string name="lang_name_es">西班牙语</string>
-    <string name="lang_name_ro">罗马尼亚语</string>
-    <string name="lang_name_vi">越南语</string>
-    <string name="lang_name_bp">葡萄牙语（巴西）</string>
-    <string name="lang_name_pl">波兰语</string>
-    <string name="lang_name_uk">乌克兰语</string>
 </resources>

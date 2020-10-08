@@ -110,17 +110,4 @@
     <string name="install_device_final_msg_2">Nếu bạn gặp bất kì vấn đề nào, hãy báo cáo tới nhà phát triển bằng cách mở issues!</string>
     <string name="mmc_mount_success_dialog_title">Thẻ được nạp thành công!</string>
     <string name="mmc_mount_success_dialog_msg">Thẻ MMC/SD đã được nạp! Tất cả ứng dụng trên thẻ MMC/SD đã được nạp lại.</string>
-    <string name="lang_name_zh">Tiếng Trung Giản thể</string>
-    <string name="lang_name_en">Tiếng Anh</string>
-    <string name="lang_name_fi">Tiếng Phần Lan</string>
-    <string name="lang_name_fr">Tiếng Pháp</string>
-    <string name="lang_name_ru">Tiếng Nga</string>
-    <string name="lang_name_it">Tiếng Ý</string>
-    <string name="lang_name_de">Tiếng Đức</string>
-    <string name="lang_name_es">Tiếng Tây Ban Nha</string>
-    <string name="lang_name_ro">Tiếng Romania</string>
-    <string name="lang_name_vi">Tiếng Việt</string>
-    <string name="lang_name_bp">Tiếng Bồ Đào Nha, Brazil</string>
-    <string name="lang_name_pl">Polish</string>
-    <string name="lang_name_uk">Ukrainian</string>
 </resources>

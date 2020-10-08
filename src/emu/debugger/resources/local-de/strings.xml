@@ -110,17 +110,4 @@
     <string name="install_device_final_msg_2">Bitte melden Sie Probleme den Entwicklern, indem Sie Issues öffnen!</string>
     <string name="mmc_mount_success_dialog_title">Karte erfolgreich gemounted!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD-Karte gemounted! Alle Apps auf der MMC/SD-Karte sind neu geladen.</string>
-    <string name="lang_name_zh">Einfaches Chinesisch</string>
-    <string name="lang_name_en">Englisch</string>
-    <string name="lang_name_fi">Finnisch</string>
-    <string name="lang_name_fr">Französisch</string>
-    <string name="lang_name_ru">Russisch</string>
-    <string name="lang_name_it">Italienisch</string>
-    <string name="lang_name_de">Deutsch</string>
-    <string name="lang_name_es">Spanisch</string>
-    <string name="lang_name_ro">Rumänisch</string>
-    <string name="lang_name_vi">Vietnamesisch</string>
-    <string name="lang_name_bp">Brasilianisches Portugiesisch</string>
-    <string name="lang_name_pl">Polish</string>
-    <string name="lang_name_uk">Ukrainian</string>
 </resources>

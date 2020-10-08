@@ -110,17 +110,4 @@
     <string name="install_device_final_msg_2">En caso de cualquier problema, por favor reporte a los desarrolladores en \'\'opening issues\'\'!</string>
     <string name="mmc_mount_success_dialog_title">Tarjeta montada de manera exitosa!</string>
     <string name="mmc_mount_success_dialog_msg">¡Tarjeta MMC/SD montada! Todas las apps volverán a cargarse desde la Tarjeta MMC/SD.</string>
-    <string name="lang_name_zh">Chinese Simplified</string>
-    <string name="lang_name_en">English</string>
-    <string name="lang_name_fi">Finnish</string>
-    <string name="lang_name_fr">French</string>
-    <string name="lang_name_ru">Russian</string>
-    <string name="lang_name_it">Italian</string>
-    <string name="lang_name_de">German</string>
-    <string name="lang_name_es">Español</string>
-    <string name="lang_name_ro">Romanian</string>
-    <string name="lang_name_vi">Vietnamese</string>
-    <string name="lang_name_bp">Portuguese, Brazilian</string>
-    <string name="lang_name_pl">Polish</string>
-    <string name="lang_name_uk">Ukrainian</string>
 </resources>

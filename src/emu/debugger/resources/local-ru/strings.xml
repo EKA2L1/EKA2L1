@@ -110,17 +110,4 @@
     <string name="install_device_final_msg_2">По любым проблемам, пожалуйста, сообщите разработчикам, открыв тикет на Github!</string>
     <string name="mmc_mount_success_dialog_title">Карта успешно смонтирована!</string>
     <string name="mmc_mount_success_dialog_msg">Карта MMC/SD смонтирована! Все приложения на MMC/SD перезагружены.</string>
-    <string name="lang_name_zh">Китайский (упрощенный)</string>
-    <string name="lang_name_en">Английский</string>
-    <string name="lang_name_fi">Финский</string>
-    <string name="lang_name_fr">Французский</string>
-    <string name="lang_name_ru">Русский</string>
-    <string name="lang_name_it">Итальянский</string>
-    <string name="lang_name_de">Немецкий</string>
-    <string name="lang_name_es">Испанский</string>
-    <string name="lang_name_ro">Румынский</string>
-    <string name="lang_name_vi">Вьетнамский</string>
-    <string name="lang_name_bp">Португальский (Бразилия)</string>
-    <string name="lang_name_pl">Польский</string>
-    <string name="lang_name_uk">Украинский</string>
 </resources>

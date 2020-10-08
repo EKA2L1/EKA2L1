@@ -110,17 +110,4 @@
     <string name="install_device_final_msg_2">У разі виникнення будь-яких проблем, будь ласка, повідомте розробникам, створивши запит на GitHub!</string>
     <string name="mmc_mount_success_dialog_title">Картку успішно під\'єднано!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD картка під\'єднана! Усі застосунки на MMC/SD картці були перезавантажені.</string>
-    <string name="lang_name_zh">Китайська спрощена</string>
-    <string name="lang_name_en">Англійська</string>
-    <string name="lang_name_fi">Фінська</string>
-    <string name="lang_name_fr">Французька</string>
-    <string name="lang_name_ru">Російська</string>
-    <string name="lang_name_it">Італійська</string>
-    <string name="lang_name_de">Німецька</string>
-    <string name="lang_name_es">Іспанська</string>
-    <string name="lang_name_ro">Румунська</string>
-    <string name="lang_name_vi">В\'єтнамська</string>
-    <string name="lang_name_bp">Бразильська португальська</string>
-    <string name="lang_name_pl">Polish</string>
-    <string name="lang_name_uk">Ukrainian</string>
 </resources>
