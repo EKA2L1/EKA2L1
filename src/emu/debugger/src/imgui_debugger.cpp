@@ -706,6 +706,8 @@ namespace eka2l1 {
             { static_cast<int>(language::zh), common::get_localised_string(localised_strings, "lang_name_zh") },
             { static_cast<int>(language::pl), common::get_localised_string(localised_strings, "lang_name_pl") },
             { static_cast<int>(language::uk), common::get_localised_string(localised_strings, "lang_name_uk") },
+            { static_cast<int>(language::tr), common::get_localised_string(localised_strings, "lang_name_tr") },
+            { static_cast<int>(language::az), common::get_localised_string(localised_strings, "lang_name_az") },
         };
         
         ImGui::NewLine();

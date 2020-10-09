@@ -152,4 +152,6 @@
     <string name="lang_name_bp" translatable="false">Português, Brazilian</string>
     <string name="lang_name_pl" translatable="false">Polski</string>
     <string name="lang_name_uk" translatable="false">Українська</string>
+    <string name="lang_name_tr" translatable="false">Türkçe</string>
+    <string name="lang_name_az" translatable="false">Azərbaycan dili</string>
 </resources>
