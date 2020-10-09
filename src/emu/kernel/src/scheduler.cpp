@@ -306,6 +306,8 @@ namespace eka2l1::kernel {
         }
 
         thr->state = thread_state::ready;
+        thr->time = thr->timeslice;
+        
         queue_thread_ready(thr);
         
         kern->prepare_reschedule();
