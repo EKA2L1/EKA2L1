@@ -179,6 +179,7 @@ namespace eka2l1::desktop {
     static int graphics_driver_thread_initialization(emulator &state) {
         // Halloween decoration breath of the graphics
         eka2l1::common::set_thread_name(graphics_driver_thread_name);
+        eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
         if (!drivers::init_window_library(drivers::window_api::glfw)) {
             return -1;
@@ -556,6 +557,8 @@ namespace eka2l1::desktop {
 
     void os_thread(emulator &state) {
         eka2l1::common::set_thread_name(os_thread_name);
+        eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
+
         state.graphics_sema.wait();
 
         // Register SEH handler for this thread

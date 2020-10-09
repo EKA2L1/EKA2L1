@@ -21,6 +21,7 @@
 #include <common/algorithm.h>
 #include <common/chunkyseri.h>
 #include <common/log.h>
+#include <common/thread.h>
 
 #include <kernel/timing.h>
 
@@ -52,6 +53,11 @@ namespace eka2l1 {
     }
 
     void ntimer::loop() {
+        static const char *TIMING_THREAD_NAME = "Timing thread";
+
+        common::set_thread_name(TIMING_THREAD_NAME);
+        common::set_thread_priority(common::thread_priority_very_high);
+
         while (!should_stop_) {
             while (!should_stop_ && !should_paused_) {
                 const std::optional<std::uint64_t> next_microseconds = advance();
