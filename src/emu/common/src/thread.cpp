@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
+ * Copyright (c) 2019 EKA2L1 Team, 2013 Dolphin Emulator Project,
+ * 2020 Yuzu Emulator Project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +29,33 @@
 #include <common/thread.h>
 
 namespace eka2l1::common {
-#if (defined(_WIN32) && defined(_MSC_VER))
+#if EKA2L1_PLATFORM(WIN32)
+    void set_thread_priority(const thread_priority pri) {
+        auto handle = GetCurrentThread();
+        int windows_priority = 0;
+
+        switch (pri) {
+        case thread_priority_low:
+            windows_priority = THREAD_PRIORITY_BELOW_NORMAL;
+            break;
+        case thread_priority_normal:
+            windows_priority = THREAD_PRIORITY_NORMAL;
+            break;
+        case thread_priority_high:
+            windows_priority = THREAD_PRIORITY_ABOVE_NORMAL;
+            break;
+        case thread_priority_very_high:
+            windows_priority = THREAD_PRIORITY_HIGHEST;
+            break;
+        default:
+            windows_priority = THREAD_PRIORITY_NORMAL;
+            break;
+        }
+
+        SetThreadPriority(handle, windows_priority);
+    }
+    
+#if defined(_MSC_VER)
     static constexpr const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
 #pragma pack(push, 8)
@@ -86,6 +111,7 @@ namespace eka2l1::common {
         } __except (EXCEPTION_EXECUTE_HANDLER) {
         }
     }
+#endif
 #else
     void set_thread_name(const char *thread_name) {
 #if EKA2L1_PLATFORM(DARWIN)
@@ -93,6 +119,23 @@ namespace eka2l1::common {
 #else
         pthread_setname_np(pthread_self(), thread_name);
 #endif
+    }
+        
+    void set_thread_priority(const thread_priority pri) {
+        pthread_t this_thread = pthread_self();
+
+        s32 max_prio = sched_get_priority_max(SCHED_OTHER);
+        s32 min_prio = sched_get_priority_min(SCHED_OTHER);
+        u32 level = static_cast<u32>(pri) + 1;
+
+        struct sched_param params;
+        if (max_prio > min_prio) {
+            params.sched_priority = min_prio + ((max_prio - min_prio) * level) / 4;
+        } else {
+            params.sched_priority = min_prio - ((min_prio - max_prio) * level) / 4;
+        }
+
+        pthread_setschedparam(this_thread, SCHED_OTHER, &params);
     }
 #endif
 }
