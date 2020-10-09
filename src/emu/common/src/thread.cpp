@@ -124,9 +124,9 @@ namespace eka2l1::common {
     void set_thread_priority(const thread_priority pri) {
         pthread_t this_thread = pthread_self();
 
-        s32 max_prio = sched_get_priority_max(SCHED_OTHER);
-        s32 min_prio = sched_get_priority_min(SCHED_OTHER);
-        u32 level = static_cast<u32>(pri) + 1;
+        std::int32_t max_prio = sched_get_priority_max(SCHED_OTHER);
+        std::int32_t min_prio = sched_get_priority_min(SCHED_OTHER);
+        std::uint32_t level = static_cast<std::uint32_t>(pri) + 1;
 
         struct sched_param params;
         if (max_prio > min_prio) {
