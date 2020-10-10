@@ -1,6 +1,6 @@
 ---
-name: Describe the problem only
-about: If you don't follow this, your issue is gonna be closed
+name: Need support?
+about: If you need support and don't follow this template, your issue is gonna be closed. Advise to go to Discord, unless you have limited access.
 title: ''
 labels: ''
 assignees: ''
