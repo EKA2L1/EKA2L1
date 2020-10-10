@@ -47,8 +47,8 @@ namespace eka2l1 {
     ntimer::~ntimer() {
         should_stop_ = true;
         should_paused_ = false;
-        new_event_avail_var_.notify_one();
 
+        pause_var_.notify_one();
         timer_thread_->join();
     }
 
@@ -61,18 +61,21 @@ namespace eka2l1 {
         while (!should_stop_) {
             while (!should_stop_ && !should_paused_) {
                 const std::optional<std::uint64_t> next_microseconds = advance();
-                std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
 
-                if (next_microseconds) {
-                    new_event_avail_var_.wait_for(unqlock, std::chrono::microseconds(next_microseconds.value()));
+                if (next_microseconds.has_value()) {
+                    // We only intend to sleep and wake up for new event
+                    // So let's signal the sema again to increase sema count, if not timeout. No block intended
+                    if (!new_event_sema_.wait(next_microseconds.value())) {
+                        new_event_sema_.notify();
+                    }
                 } else {
-                    new_event_avail_var_.wait(unqlock);
+                    new_event_sema_.wait();
                 }
             }
 
             if (should_paused_) {
-                std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
-                new_event_avail_var_.wait(unqlock, [this]() {
+                std::unique_lock<std::mutex> unqlock(pause_lock_);
+                pause_var_.wait(unqlock, [this]() {
                     return (should_paused_ == false);
                 });
             }
@@ -129,7 +132,7 @@ namespace eka2l1 {
         });
 
         if (should_nof) {
-            new_event_avail_var_.notify_one();
+            new_event_sema_.notify();
         }
     }
 
@@ -219,7 +222,7 @@ namespace eka2l1 {
 
         if (last_state != should_pause) {
             if (should_pause == false) {
-                new_event_avail_var_.notify_one();
+                pause_var_.notify_one();
             }
         }
     }

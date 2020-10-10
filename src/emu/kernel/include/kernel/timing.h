@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/queue.h>
+#include <common/sync.h>
 #include <common/time.h>
 
 #include <cstdint>
@@ -61,9 +62,11 @@ namespace eka2l1 {
     private:
         std::vector<event> events_;
         std::mutex lock_;
-        std::mutex new_event_avail_lock_;
 
-        std::condition_variable new_event_avail_var_;
+        std::mutex pause_lock_;
+        std::condition_variable pause_var_;
+
+        common::semaphore new_event_sema_;
 
         std::unique_ptr<common::teletimer> teletimer_;
         std::unique_ptr<std::thread> timer_thread_; ///< Timer thread to executes callbacks
