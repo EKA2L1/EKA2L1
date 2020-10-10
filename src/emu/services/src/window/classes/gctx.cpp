@@ -57,8 +57,15 @@ namespace eka2l1::epoc {
 
         // Add first command list, binding our window bitmap
         if (attached_window->driver_win_id == 0) {
+            kernel_system *kern = context.sys->get_kernel_system();
+
+            // We already completed our request, so it's no fear to unlock the kernel now!
+            kern->unlock();
+
             attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size, 32);
             attached_window->resize_needed = false;
+
+            kern->lock();
         }
 
         recording = true;
@@ -313,7 +320,16 @@ namespace eka2l1::epoc {
     drivers::handle graphic_context::handle_from_bitwise_bitmap(epoc::bitwise_bitmap *bmp) {
         drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
         epoc::bitmap_cache *cacher = client->get_ws().get_bitmap_cache();
-        return cacher->add_or_get(driver, cmd_builder.get(), bmp);
+
+        kernel_system *kern = client->get_ws().get_kernel_system();
+
+        // This call maybe unsafe, as someone may delete our thread before request complete! :((
+        // TODO: Safer condition for unlocking.
+        kern->unlock();
+        drivers::handle h = cacher->add_or_get(driver, cmd_builder.get(), bmp);
+        kern->lock();
+
+        return h;
     }
 
     void graphic_context::draw_bitmap(service::ipc_context &context, ws_cmd &cmd) {
