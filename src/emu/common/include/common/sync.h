@@ -33,7 +33,31 @@ namespace eka2l1::common {
     public:
         explicit semaphore(const int inital = 0);
 
+        /**
+         * @brief       Notify the semaphore.
+         * 
+         * The semaphore count will be increased by the number provided.
+         * 
+         * The count is consecutively increased by 1, and if the internal semaphore count is still
+         * smaller or equal than 0, a thread being held by this semaphore is released.
+         * 
+         * @param       count       The number to increase semaphore count.
+         */
         void notify(const int count = 1);
-        void wait();
+
+        /**
+         * @brief       Wait for the semaphore indefinitely or until a certain amount of time.
+         * 
+         * If the semaphore count is bigger or equal to 0, this is returned immediately. Else
+         * the wait happens.
+         * 
+         * In the case of waiting for a certain amount of time (in microseconds unit), the count
+         * is refunded if timeout is hit. In that case, this function returns true, indicating
+         * that timeout is reached.
+         * 
+         * @param       duration_us The amount of time to wait, in microseconds. Use 0 to wait indefinitely.
+         * @returns     True if timeout is hit.
+         */
+        bool wait(const std::size_t duration_us = 0);
     };
 }

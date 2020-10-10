@@ -37,12 +37,24 @@ namespace eka2l1::common {
         }
     }
 
-    void semaphore::wait() {
+    bool semaphore::wait(const std::size_t duration_us) {
         std::unique_lock<std::mutex> ulock(mut_);
         count_ -= 1;
 
         if (count_ < 0) {
+            if (duration_us > 0) {
+                if (cond_.wait_for(ulock, std::chrono::microseconds(duration_us)) == std::cv_status::timeout) {
+                    // Timeout, refund the wait
+                    count_++;
+                    return true;
+                }
+
+                return false;
+            }
+            
             cond_.wait(ulock);
         }
+
+        return false;
     }
 }
