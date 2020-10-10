@@ -372,7 +372,6 @@ namespace eka2l1::dispatch {
                 const std::lock_guard<std::mutex> guard(epoc_stream->lock_);
 
                 epoc::notify_info &info = epoc_stream->copied_info_;
-
                 kernel_system *kern = info.requester->get_kernel_object_owner();
 
                 kern->lock();
@@ -475,18 +474,8 @@ namespace eka2l1::dispatch {
         ntimer *timing = sys->get_ntimer();
 
         const std::lock_guard<std::mutex> guard(stream->lock_);
+
         stream->copied_info_ = epoc::notify_info { req, sys->get_kernel_system()->crr_thread() };
-        out_stream.register_callback(drivers::dsp_stream_notification_buffer_copied, [](void *userdata) {
-            dsp_epoc_stream *stream = reinterpret_cast<dsp_epoc_stream*>(userdata);
-            epoc::notify_info &info = stream->copied_info_;
-
-            kernel_system *kern = info.requester->get_kernel_object_owner();
-
-            kern->lock();
-            info.complete(epoc::error_none);
-            kern->unlock();
-        }, stream);
-
         return epoc::error_none;
     }
 
