@@ -14,7 +14,7 @@
     <string name="info">Informations</string>
     <string name="warning">ATTENTION</string>
     <string name="cancel">Retour</string>
-    <string name="cancel">Retour</string>
+    <string name="continue">Continue</string>
     <string name="file_menu_name">Fichier</string>
     <string name="debugger_menu_name">Débogueur</string>
     <string name="view_menu_name">Apparence</string>
@@ -57,6 +57,8 @@
     <string name="pref_general_debugging_string">Débogage</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">Charge CPU</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">Écriture CPU</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Libellés système</string>
     <string name="pref_general_debugging_ait_checkbox_title">Chronométrage précis des IPCs</string>
@@ -64,8 +66,10 @@
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Activer le traçage</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Activer le traçage du noyau utilisé sur le disque. Ralentissement à prévoir si activé.</string>
     <string name="pref_general_utilities_string">Utilitaires</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Cacher le curseur de la souris quand il passe devant un écran émulé.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Hide mouse cursor when it is inside an emulated screen</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Utile lorsque vous liez une touche avec votre souris et que le jeu/application a un curseur intégré.\nPour rendre le curseur de la souris visible, maintenez la touche ALT.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
     <string name="pref_system_title">Système</string>
     <string name="pref_system_cpu_option_name">Processeur</string>
     <string name="pref_system_device_option_name">Appareil</string>
@@ -94,7 +98,7 @@
     <string name="installer_text_popup_title">Popup du texte de l\'installation</string>
     <string name="installer_language_choose_title">Choisissez la langue de ce paquet</string>
     <string name="install_device_wizard_title">Assistant d\'installation de l\'appareil</string>
-    <string name="install_device_wizard_welcome_msg">Bienvenue dans l\'assistant d\'installation d\'appareil. Cet assistant vous guidera tout au long du processus d\'installation d\'appareil !</string>
+    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard! To get started, please press the \"Continue\" button.</string>
     <string name="install_device_wizard_raw_dump_type_name">Dossier fourre-tout</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Choisir une méthode d\'installation</string>
@@ -110,4 +114,10 @@
     <string name="install_device_final_msg_2">Pour tout problème, merci de le rapporter aux développeurs en afin de découvrir les causes de celui-ci !</string>
     <string name="mmc_mount_success_dialog_title">La carte a été ajoutée avec succès !</string>
     <string name="mmc_mount_success_dialog_msg">Carte MMC/SD montée ! Toutes les applications présentes sur la carte MMC/SD ont été rechargées.</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s GitHub wiki page.</string>
+    <string name="no_device_installed_opt_install_device_btn_name">Install device</string>
+    <string name="no_show_option_again_general_msg">Don\'t show this again.</string>
+    <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
+    <string name="touchscreen_disabled_note_str">Note</string>
+    <string name="touchscreen_disabled_note_msg">Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</string>
 </resources>

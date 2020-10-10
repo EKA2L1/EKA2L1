@@ -14,7 +14,7 @@
     <string name="info">Інформація</string>
     <string name="warning">Увага</string>
     <string name="cancel">Скасувати</string>
-    <string name="cancel">Скасувати</string>
+    <string name="continue">Продовжити</string>
     <string name="file_menu_name">Файл</string>
     <string name="debugger_menu_name">Налагоджувач</string>
     <string name="view_menu_name">Вигляд</string>
@@ -57,6 +57,8 @@
     <string name="pref_general_debugging_string">Відлагодження</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">Зчитування ЦП</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">Запис ЦП</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">Крок ЦП</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Цю опцію не буде збережено після вимкнення емулятора. Неефективно, коли ввімкнено GDBStub.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Системні виклики</string>
     <string name="pref_general_debugging_ait_checkbox_title">Точна синхронізація IPC</string>
@@ -64,8 +66,10 @@
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Увімкнути B-трасування</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Увімкнути трасування ядра, що використовується в драйвері. Під час увімкнення очікується уповільнення.</string>
     <string name="pref_general_utilities_string">Утиліти</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Приховати курсор миші, коли він перебуває всередині емульованого екрана.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Приховати курсор миші, коли він перебуває всередині емульованого екрана</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Корисно, коли ви призначите кнопку миші, а гра/застосунок має вбудований курсор. \nЩоб зробити курсор миші видимим, утримуйте клавішу ALT.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Увімкнути фільтрацію шляхом найближчого сусіда</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Цей фільтр застосовується після наступного промальовування емульованого екрану.</string>
     <string name="pref_system_title">Системні</string>
     <string name="pref_system_cpu_option_name">Процесор</string>
     <string name="pref_system_device_option_name">Пристрій</string>
@@ -94,7 +98,7 @@
     <string name="installer_text_popup_title">Спливаюче вікно встановника</string>
     <string name="installer_language_choose_title">Виберіть мову для цього пакета</string>
     <string name="install_device_wizard_title">Майстер установлення пристрою</string>
-    <string name="install_device_wizard_welcome_msg">Ласкаво просимо до майстра встановлення пристрою. Цей майстер допоможе вам пройти процес установлення пристрою!</string>
+    <string name="install_device_wizard_welcome_msg">Ласкаво просимо до майстра встановлення пристрою! Щоб розпочати роботу, натисніть кнопку „Продовжити“.</string>
     <string name="install_device_wizard_raw_dump_type_name">Необроблений дамп</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Виберіть спосіб установки</string>
@@ -110,4 +114,10 @@
     <string name="install_device_final_msg_2">У разі виникнення будь-яких проблем, будь ласка, повідомте розробникам, створивши запит на GitHub!</string>
     <string name="mmc_mount_success_dialog_title">Картку успішно під\'єднано!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD картка під\'єднана! Усі застосунки на MMC/SD картці були перезавантажені.</string>
+    <string name="no_device_installed_msg">Ви не встановили жодного пристрою. Будь ласка, встановіть пристрій або дотримуйтесь інструкцій зі встановлення на сторінці EKA2L1 у Github Wiki.</string>
+    <string name="no_device_installed_opt_install_device_btn_name">Установити пристрій</string>
+    <string name="no_show_option_again_general_msg">Не показувати це знову.</string>
+    <string name="touchscreen_disabled_msg">Деякі з ваших поточних сполучень клавіш пов\'язані з кнопками миші. Тому емульований сенсорний екран вимкнено.</string>
+    <string name="touchscreen_disabled_note_str">Примітка</string>
+    <string name="touchscreen_disabled_note_msg">Сенсорний екран може бути повторно включений по підміні кнопок миші клавішами клавіатури.</string>
 </resources>

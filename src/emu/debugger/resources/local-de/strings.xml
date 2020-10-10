@@ -14,7 +14,7 @@
     <string name="info">Info</string>
     <string name="warning">Warnung</string>
     <string name="cancel">Abbrechen</string>
-    <string name="cancel">Abbrechen</string>
+    <string name="continue">Weiter</string>
     <string name="file_menu_name">Datei</string>
     <string name="debugger_menu_name">Debugger</string>
     <string name="view_menu_name">Ansicht</string>
@@ -57,15 +57,19 @@
     <string name="pref_general_debugging_string">Debugging</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU Lesevorgänge</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">CPU Schreibvorgänge</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">System calls</string>
     <string name="pref_general_debugging_ait_checkbox_title">Genaues IPC-Timing</string>
     <string name="pref_general_debugging_ait_tooltip_msg">Verbessert die Genauigkeit des Systems, kann aber zu einer Verlangsamung führen.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">B-Trace aktivieren</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Aktiviere Kernelverfolgung, die im Treiber verwendet wird. Verlangsamung erwartet, wenn aktiviert.</string>
-    <string name="pref_general_utilities_string">Utilities</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Mauszeiger ausblenden, wenn er sich innerhalb eines emulierten Bildschirms befindet.</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Useful when you bind a key with your mouse and the game/app has built-in cursor.\nTo make the mouse cursor visible, hold ALT key.</string>
+    <string name="pref_general_utilities_string">Werkzeuge</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Mauszeiger ausblenden, wenn er sich innerhalb eines emulierten Bildschirms befindet</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Nützlich, wenn Sie eine Taste mit der Maus verknüpfen und ein Spiel/App einen eingebauten Cursor hat.\nUm den Mauszeiger sichtbar zu machen, drücken Sie ALT-Taste.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
     <string name="pref_system_title">System</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Gerät</string>
@@ -94,7 +98,7 @@
     <string name="installer_text_popup_title">Installer Text Popup</string>
     <string name="installer_language_choose_title">Wählen Sie die Sprache für dieses Paket</string>
     <string name="install_device_wizard_title">Geräteinstallations-Assistent</string>
-    <string name="install_device_wizard_welcome_msg">Welcome to install device wizard. This wizard will guide you through device installation process!</string>
+    <string name="install_device_wizard_welcome_msg">Willkommen beim Installationsassistent! Zum Starten drücken Sie bitte den \"Weiter\"-Button.</string>
     <string name="install_device_wizard_raw_dump_type_name">Roh-Dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Installationsmethode auswählen</string>
@@ -106,8 +110,14 @@
     <string name="install_device_progress_rpkg_msg">RPKG entpacken</string>
     <string name="install_device_progress_rom_msg">ROM kopieren</string>
     <string name="install_device_install_failure_msg">Während der Installation ist etwas schiefgelaufen! Bitte überprüfen Sie das Log!</string>
-    <string name="install_device_final_msg_1">Thank you for using the wizard. We hope you have a good time using the emulator!</string>
+    <string name="install_device_final_msg_1">Danke, dass Sie den Wizard verwendet haben. Viel Spaß mit dem Emulator!</string>
     <string name="install_device_final_msg_2">Bitte melden Sie Probleme den Entwicklern, indem Sie Issues öffnen!</string>
     <string name="mmc_mount_success_dialog_title">Karte erfolgreich gemounted!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD-Karte gemounted! Alle Apps auf der MMC/SD-Karte sind neu geladen.</string>
+    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s GitHub wiki page.</string>
+    <string name="no_device_installed_opt_install_device_btn_name">Gerät installieren</string>
+    <string name="no_show_option_again_general_msg">Nicht erneut anzeigen.</string>
+    <string name="touchscreen_disabled_msg">Einige Ihrer aktuellen Tastenkombinationen sind mit den Maustasten verknüpft. Deshalb ist die Emulation des Touchscreens deaktiviert.</string>
+    <string name="touchscreen_disabled_note_str">Hinweis</string>
+    <string name="touchscreen_disabled_note_msg">Touchscreen kann wieder aktiviert werden, indem Sie die Maustaste mit Tastaturtasten neu einbinden.</string>
 </resources>
