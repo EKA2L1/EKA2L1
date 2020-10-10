@@ -562,16 +562,16 @@ namespace eka2l1::desktop {
         state.graphics_sema.wait();
 
         // Register SEH handler for this thread
-#if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER && !defined(NDEBUG)
+#if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
         _set_se_translator(seh_handler_translator_func);
 #endif
 
         while (!state.should_emu_quit) {
-#if !defined(NDEBUG)
+#if ENABLE_SEH_HANDLER
             try {
 #endif
                 state.symsys->loop();
-#if !defined(NDEBUG)
+#if ENABLE_SEH_HANDLER
             } catch (std::exception &exc) {
                 std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
                 state.debugger->queue_error(exc.what());

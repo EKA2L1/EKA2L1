@@ -71,7 +71,7 @@ jobs:
           submodules: recursive
 
       - name: CMake configure
-        run: cmake -B build -DCI=ON -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_BUILD_TYPE=${{ matrix.config }}
 
       - name: CMake build
         run: cmake --build build --config ${{ matrix.config }} --parallel 2
