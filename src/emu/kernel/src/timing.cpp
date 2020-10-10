@@ -48,7 +48,9 @@ namespace eka2l1 {
         should_stop_ = true;
         should_paused_ = false;
 
+        new_event_sema_.notify();
         pause_var_.notify_one();
+
         timer_thread_->join();
     }
 
