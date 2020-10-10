@@ -32,6 +32,12 @@ namespace eka2l1::drivers {
     class graphics_driver;
     class texture;
 
+    enum framebuffer_bind_type {
+        framebuffer_bind_draw = 1 << 0,
+        framebuffer_bind_read = 1 << 1,
+        framebuffer_bind_read_draw = framebuffer_bind_read | framebuffer_bind_draw
+    };
+
     class framebuffer : public graphics_object {
     protected:
         std::vector<texture*> color_buffers;
@@ -59,7 +65,7 @@ namespace eka2l1::drivers {
         framebuffer() = default;
         virtual ~framebuffer(){};
 
-        virtual void bind(graphics_driver *driver) = 0;
+        virtual void bind(graphics_driver *driver, const framebuffer_bind_type type_bind) = 0;
         virtual void unbind(graphics_driver *driver) = 0;
 
         virtual bool set_draw_buffer(const std::int32_t attachment_id) = 0;
@@ -85,7 +91,7 @@ namespace eka2l1::drivers {
         virtual std::int32_t set_color_buffer(texture *tex, const std::int32_t position = -1) = 0;
 
         /**
-         * @brief       Copy content of some buffer to draw buffer.
+         * @brief       Copy content of some framebuffer to draw framebuffer.
          * 
          * @param       source_rect           The source rectangle to copy data from.
          * @param       dest_rect             The destination rectangle to put data to draw buffer.

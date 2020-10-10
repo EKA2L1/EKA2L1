@@ -33,6 +33,14 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
+    bool system_agent_event_queue::listen(system_agent_notify_info &info) {
+        if (!info_.woke_target_.empty()) {
+            return false;
+        }
+
+        info_ = std::move(info);
+        return true;
+    }
 
     system_agent_session::system_agent_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
@@ -63,11 +71,6 @@ namespace eka2l1 {
     }
 
     void system_agent_session::notify_event(service::ipc_context *ctx, const bool any) {
-        if (info_.state_value_) {
-            ctx->complete(epoc::error_in_use);
-            return;
-        }
-
         std::optional<address> uid_des_addr = ctx->get_argument_value<address>(0);
         std::optional<address> state_des_addr = ctx->get_argument_value<address>(1);
 
@@ -86,8 +89,10 @@ namespace eka2l1 {
             return;
         }
 
+        system_agent_notify_info info;
+
         if (any) {
-            info_.uid_nof_ = 0xFFFFFFFF;
+            info.uid_nof_ = 0xFFFFFFFF;
         } else {
             std::uint32_t *uid_to_nof_ptr = reinterpret_cast<std::uint32_t*>(uid_des->get_pointer(own_pr));
             if (!uid_to_nof_ptr) {
@@ -95,12 +100,40 @@ namespace eka2l1 {
                 return;
             }
 
-            info_.uid_nof_ = *uid_to_nof_ptr;
+            info.uid_nof_ = *uid_to_nof_ptr;
         }
 
-        info_.state_value_ = state_des;
-        info_.target_uid_ = uid_des;
-        info_.woke_target_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+        info.state_value_ = state_des;
+        info.target_uid_ = uid_des;
+        info.woke_target_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+
+        if (!queue_.listen(info)) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+    }
+
+    void system_agent_session::notify_event_cancel(service::ipc_context *ctx) {
+        if (!queue_.info_.woke_target_.empty()) {
+            queue_.info_.woke_target_.complete(epoc::error_cancel);
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void system_agent_session::set_event_buffering(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> enabled = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> interval_in_secs = ctx->get_argument_value<std::uint32_t>(1);
+
+        if (!enabled || !interval_in_secs) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        queue_.buffering_ = static_cast<bool>(enabled.value());
+        queue_.time_expire_ = interval_in_secs.value();
+
+        ctx->complete(epoc::error_none);
     }
 
     void system_agent_session::fetch(service::ipc_context *ctx) {
@@ -111,6 +144,14 @@ namespace eka2l1 {
 
         case system_agent_notify_on_event:
             notify_event(ctx, false);
+            break;
+
+        case system_agent_notify_event_cancel:
+            notify_event_cancel(ctx);
+            break;
+
+        case system_agent_set_event_buffer_enabled:
+            set_event_buffering(ctx);
             break;
         
         default:

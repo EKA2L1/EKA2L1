@@ -39,34 +39,14 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::dispatch {
-    struct audio_event {
-        epoc::notify_info info_;
-        std::uint64_t start_ticks_;
-        std::uint64_t start_host_;
-        audio_event *next_;
-
-        enum {
-            FLAG_COMPLETED = 1 << 0
-        };
-
-        std::uint32_t flags_;
-
-        explicit audio_event();
-    };
-
     struct dsp_epoc_stream {
         std::unique_ptr<drivers::dsp_stream> ll_stream_;
-        audio_event evt_queue_;
+        epoc::notify_info copied_info_;
 
         std::mutex lock_;
 
         explicit dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream);
         ~dsp_epoc_stream();
-
-        audio_event *get_event(const eka2l1::ptr<epoc::request_status> req_sts);
-        void delete_event(audio_event *evt);
-
-        void deliver_audio_events(kernel_system *kern, ntimer *timing);
     };
 
     enum dsp_epoc_player_flags {
@@ -99,7 +79,6 @@ namespace eka2l1::dispatch {
         object_manager<dsp_epoc_player> audio_players_;
         object_manager<dsp_epoc_stream> dsp_streams_;
 
-        int audio_nof_complete_evt_;
         ntimer *timing_;
 
         explicit dispatcher();

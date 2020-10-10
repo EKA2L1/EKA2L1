@@ -28,9 +28,6 @@
 [submodule "src/external/pybind11"]
 	path = src/external/pybind11
 	url = https://github.com/pybind/pybind11
-[submodule "src/external/epocapi"]
-	path = src/external/epocapi
-	url = https://github.com/EKA2L1/oss.API_REF.Public_API
 [submodule "src/external/fmt"]
 	path = src/external/fmt
 	url = https://github.com/fmtlib/fmt

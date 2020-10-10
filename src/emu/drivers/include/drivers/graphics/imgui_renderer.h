@@ -38,7 +38,7 @@ namespace eka2l1::drivers {
         drivers::handle ibo;
 
         shader_metadata smeta;
-        std::int8_t proj_matrix_loc;
+        std::int32_t proj_matrix_loc;
 
     public:
         void init(graphics_driver *driver, graphics_command_list_builder *builder);

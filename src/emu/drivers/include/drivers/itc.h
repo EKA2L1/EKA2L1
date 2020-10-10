@@ -48,10 +48,11 @@ namespace eka2l1::drivers {
       * a bitmap for rendering, a render target will be automatically created for it.
       *
       * \param initial_size       The initial size of the bitmap.
+      * \param bpp                Bits per pixel of the bitmap
       * 
       * \returns ID of the bitmap.
       */
-    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size);
+    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t bpp);
 
     /** \brief Create a new shader program.
       *
@@ -111,10 +112,15 @@ namespace eka2l1::drivers {
     bool open_native_dialog(graphics_driver *driver, const char *filter, drivers::graphics_driver_dialog_callback callback, const bool is_folder = false);
 
     struct graphics_command_list {
+        virtual bool empty() const = 0;
     };
 
     struct server_graphics_command_list : public graphics_command_list {
         command_list list_;
+
+        bool empty() const override {
+            return list_.empty();
+        }
     };
 
     class graphics_command_list_builder {
@@ -176,12 +182,11 @@ namespace eka2l1::drivers {
          * \param size              Size of bitmap data.
          * \param offset            The offset of the bitmap (pixels).
          * \param dim               The dimensions of bitmap (pixels).
-         * \param bpp               Number of bits per pixel.
          * \param pixels_per_line   Number of pixels per row. Use 0 for default.
          * 
          * \returns Handle to the texture.
          */
-        virtual void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size,
+        virtual void update_bitmap(drivers::handle h, const char *data, const std::size_t size,
             const eka2l1::vec2 &offset, const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0)
             = 0;
 
@@ -419,7 +424,7 @@ namespace eka2l1::drivers {
 
         void resize_bitmap(drivers::handle h, const eka2l1::vec2 &new_size) override;
 
-        void update_bitmap(drivers::handle h, const int bpp, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
+        void update_bitmap(drivers::handle h, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0) override;
 
         void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const std::uint32_t flags = 0) override;

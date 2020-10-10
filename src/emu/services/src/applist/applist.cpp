@@ -51,6 +51,8 @@ namespace eka2l1 {
         return "!AppListServer";
     }
 
+    static const char16_t *APA_APP_RUNNER = u"apprun.exe";
+
     applist_server::applist_server(system *sys)
         : service::typical_server(sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()))
         , fbsserv(nullptr) {
@@ -557,6 +559,48 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void applist_server::launch_app(service::ipc_context &ctx) {
+        std::optional<std::u16string> cmd_line = ctx.get_argument_value<std::u16string>(0);
+        if (!cmd_line) {
+            LOG_ERROR("Failed to launch a new app! Command line is not available.");
+            ctx.complete(epoc::error_argument);
+
+            return;
+        }
+
+        common::pystr16 cmd_line_py(cmd_line.value());
+        auto arguments = cmd_line_py.split();
+
+        if (arguments.empty()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        // Simply load only
+        codeseg_ptr seg = kern->get_lib_manager()->load(arguments[0].std_str());
+        std::u16string app_launch = APA_APP_RUNNER;
+
+        if (std::get<0>(seg->get_uids()) == epoc::EXECUTABLE_UID) {
+            app_launch = arguments[0].std_str();
+        }
+
+        kernel::uid thread_id = 0;
+        if (!launch_app(app_launch, cmd_line.value(), &thread_id)) {
+            LOG_ERROR("Failed to create new app process (command line: {})", common::ucs2_to_utf8(cmd_line.value()));
+            ctx.complete(epoc::error_no_memory);
+            
+            return;
+        }
+
+        if (kern->is_eka1()) {
+            ctx.write_data_to_descriptor_argument<kernel::uid_eka1>(1, static_cast<kernel::uid_eka1>(thread_id));
+        } else {
+            ctx.write_data_to_descriptor_argument<kernel::uid>(1, thread_id);
+        }
+
+        ctx.complete(epoc::error_none);
+    }
+
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver) {
     }
@@ -568,6 +612,10 @@ namespace eka2l1 {
                 server<applist_server>()->get_app_info(*ctx);
                 break;
     
+            case applist_request_oldarch_start_app:
+                server<applist_server>()->launch_app(*ctx);
+                break;
+
             case applist_request_oldarch_app_icon_by_uid_and_size:
                 server<applist_server>()->get_app_icon(*ctx);
                 break;
@@ -613,7 +661,7 @@ namespace eka2l1 {
         const std::u16string app_path = mandatory_info.app_path.to_std_string(nullptr);
 
         if (caps.flags & apa_capability::built_as_dll) {
-            native_executable_path = u"apprun.exe";
+            native_executable_path = APA_APP_RUNNER;
         } else {
             native_executable_path = mandatory_info.app_path.to_std_string(nullptr);
         }
@@ -625,12 +673,8 @@ namespace eka2l1 {
 
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
-    bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter) {
-        std::u16string executable_to_run;
-        registry.get_launch_parameter(executable_to_run, parameter);
-
-        std::u16string apacmddat = parameter.to_string(is_oldarch());
-        process_ptr pr = kern->spawn_new_process(executable_to_run, is_oldarch() ? apacmddat : u"");
+    bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id) {
+        process_ptr pr = kern->spawn_new_process(exe_path, is_oldarch() ? cmd : u"");
 
         if (!pr) {
             return false;
@@ -639,6 +683,19 @@ namespace eka2l1 {
         if (!is_oldarch()) {
         }
 
+        if (thread_id)
+            *thread_id = pr->get_primary_thread()->unique_id();
+
+        // Add it into our app running list
+        runnings.push_back(pr);
         return pr->run();
+    }
+
+    bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id) {
+        std::u16string executable_to_run;
+        registry.get_launch_parameter(executable_to_run, parameter);
+
+        std::u16string apacmddat = parameter.to_string(is_oldarch());
+        return launch_app(executable_to_run, apacmddat, thread_id);
     }
 }

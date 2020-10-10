@@ -29,7 +29,8 @@ enum TMdaState {
     EMdaStateIdle = 0,
     EMdaStatePlay = 1,
     EMdaStatePause = 2,
-    EMdaStateReady = 3
+    EMdaStateReady = 3,
+    EMdaStateStop = 4
 };
 
 struct TMMFMdaBufferNode: public TDblQueLink {
@@ -47,6 +48,8 @@ struct CMMFMdaOutputBufferQueue: public CActive {
     void WriteAndWait();
     ~CMMFMdaOutputBufferQueue();
 
+    void FixupActiveStatus();
+
     void StartTransfer();
     void CleanQueue();
 
@@ -57,12 +60,17 @@ struct CMMFMdaOutputBufferQueue: public CActive {
 class CMMFMdaOutputOpen: public CIdle {
 public:
     explicit CMMFMdaOutputOpen();
+    ~CMMFMdaOutputOpen();
+    
+    void FixupActiveStatus();
     
     void Open(CMMFMdaAudioOutputStream *iStream);
     void DoCancel();
 };
 
 class CMMFMdaAudioOutputStream {
+    friend struct CMMFMdaOutputBufferQueue;
+
     TAny *iDispatchInstance;
     TInt iPriority;
     TMdaPriorityPreference iPref;

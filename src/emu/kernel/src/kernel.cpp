@@ -79,7 +79,9 @@ namespace eka2l1 {
         , rom_map_(nullptr)
         , kern_ver_(epocver::epoc94)
         , lang_(language::en)
-        , global_data_chunk_(nullptr) {
+        , global_data_chunk_(nullptr)
+        , dll_global_data_chunk_(nullptr)
+        , dll_global_data_last_offset_(0) {
         thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
@@ -168,6 +170,67 @@ namespace eka2l1 {
         arm::dump_context(target_to_stop->get_thread_context());
     }
 
+    bool kernel_system::cpu_exception_handle_unpredictable(arm::core *core, const address occurred) {
+        auto read_crr_func = [&](const address addr) -> std::uint32_t {
+            const std::uint32_t *val = reinterpret_cast<std::uint32_t*>(crr_process()->get_ptr_on_addr_space(addr));
+            return val ? *val : 0;
+        };
+
+        if (!analyser_) {
+            analyser_ = arm::make_analyser(arm::arm_disassembler_backend::capstone, read_crr_func);
+        }
+
+        std::uint32_t inst_value = read_crr_func(occurred & ~1);
+        if (occurred & 1) {
+            // Take only the thumb part
+            inst_value >>= 16;
+        }
+
+        // Find entry in cache
+        auto result_find = cache_inters_.find(inst_value);
+        if (result_find != cache_inters_.end()) {
+            result_find->second(core);
+            return true;
+        }
+
+        auto inst = analyser_->next_instruction(occurred);
+        if (!inst) {
+            return false;
+        }
+
+        switch (inst->iname) {
+        case arm::instruction::MOV: {
+            if ((inst->ops.size() != 2) || (inst->ops[0].type != arm::arm_op_type::op_reg) || (inst->ops[1].type != arm::arm_op_type::op_reg)) {
+                return false;
+            }
+
+            const std::uint32_t source_reg = static_cast<int>(inst->ops[1].reg) - static_cast<int>(arm::reg::R0);
+            const std::uint32_t dest_reg = static_cast<int>(inst->ops[0].reg) - static_cast<int>(arm::reg::R0);
+        
+            auto func_generated = [=](arm::core *core) {
+                auto source_val = core->get_reg(source_reg);
+
+                if (dest_reg == 15) {
+                    core->set_cpsr((source_val & 1) ? (core->get_cpsr() | 0x20) :
+                        (core->get_cpsr() & ~0x20));
+                }
+
+                core->set_reg(dest_reg, source_val);
+            };
+
+            func_generated(core);
+
+            cache_inters_.emplace(inst_value, func_generated);
+            break;
+        }
+
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
     void kernel_system::cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data) {
         switch (exception_type) {
         case arm::exception_type_access_violation_read:
@@ -179,6 +242,13 @@ namespace eka2l1 {
         case arm::exception_type_undefined_inst:
             LOG_ERROR("Undefined instruction encountered in thread {}", crr_thread()->name());
             break;
+
+        case arm::exception_type_unpredictable:
+            if (!cpu_exception_handle_unpredictable(core, exception_data)) {
+                break;
+            }
+
+            return;
 
         case arm::exception_type_breakpoint:
             for (auto &breakpoint_callback_func: breakpoint_callbacks_) {
@@ -471,7 +541,7 @@ namespace eka2l1 {
             heap_max = imgs.first->header.heap_size_max;
 
             pr->puid = imgs.first->header.uid3;
-            cs = lib_mngr_->load_as_e32img(*eimg, &(*pr), full_path);
+            cs = lib_mngr_->load_as_e32img(*eimg, full_path);
         }
 
         // Rom image
@@ -491,7 +561,7 @@ namespace eka2l1 {
             heap_max = imgs.second->header.heap_maximum_size;
 
             pr->puid = imgs.second->header.uid3;
-            cs = lib_mngr_->load_as_romimg(*imgs.second, &(*pr), full_path);
+            cs = lib_mngr_->load_as_romimg(*imgs.second, full_path);
         }
 
         if (!cs) {
@@ -842,8 +912,69 @@ namespace eka2l1 {
         return true;
     }
 
+    void kernel_system::stop_cores_idling() {
+        if (should_core_idle_when_inactive()) {
+            thr_sch_->stop_idling();
+        }
+    }
+
+    bool kernel_system::should_core_idle_when_inactive() {
+        return conf_->cpu_load_save;
+    }
+
     void kernel_system::set_current_language(const language new_lang) {
         lang_ = new_lang;
+    }
+
+    address kernel_system::get_global_dll_space(const address handle, std::uint8_t **data_ptr, std::uint32_t *size_of_data) {
+        if (!dll_global_data_chunk_) {
+            return 0;
+        }
+
+        auto find_result = dll_global_data_offset_.find(handle);
+        if (find_result == dll_global_data_offset_.end()) {
+            return 0;
+        }
+
+        if (data_ptr) {
+            *data_ptr = reinterpret_cast<std::uint8_t*>(dll_global_data_chunk_->host_base()) + static_cast<std::uint32_t>(find_result->second);
+        }
+
+        if (size_of_data) {
+            *size_of_data = static_cast<std::uint32_t>(find_result->second >> 32);
+        }
+
+        return static_cast<std::uint32_t>(find_result->second) + dll_global_data_chunk_->base(nullptr).ptr_address();
+    }
+    
+    bool kernel_system::allocate_global_dll_space(const address handle, const std::uint32_t size, 
+        address &data_ptr_guest, std::uint8_t **data_ptr_host) {
+        static constexpr std::uint32_t GLOBAL_DLL_DATA_CHUNK_SIZE = 0x100000;
+        
+        if (!dll_global_data_chunk_) {
+            dll_global_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "EKA1_DllGlobalDataChunk",
+                0, GLOBAL_DLL_DATA_CHUNK_SIZE, static_cast<std::size_t>(GLOBAL_DLL_DATA_CHUNK_SIZE), prot::read_write,
+                kernel::chunk_type::normal, kernel::chunk_access::global, kernel::chunk_attrib::none, 0);
+        }
+
+        auto find_result = dll_global_data_offset_.find(handle);
+        if (find_result != dll_global_data_offset_.end()) {
+            return false;
+        }
+
+        if (dll_global_data_last_offset_ + size > GLOBAL_DLL_DATA_CHUNK_SIZE) {
+            return false;
+        }
+
+        dll_global_data_offset_.emplace(handle, (static_cast<std::uint64_t>(size) << 32) | dll_global_data_last_offset_);
+        data_ptr_guest = dll_global_data_chunk_->base(nullptr).ptr_address() + dll_global_data_last_offset_;
+
+        if (data_ptr_host) {
+            *data_ptr_host = reinterpret_cast<std::uint8_t*>(dll_global_data_chunk_->host_base()) + dll_global_data_last_offset_;
+        }
+        
+        dll_global_data_last_offset_ += size;
+        return true;
     }
 
     struct kernel_info {

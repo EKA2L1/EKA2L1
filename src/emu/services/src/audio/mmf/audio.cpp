@@ -45,7 +45,7 @@ namespace eka2l1 {
 
     void mmf_audio_server::init(kernel_system *kern) {
         // Determine if the set devsound info is available. This change our opcode list
-        auto seg = kern->get_lib_manager()->load(u"mmfaudioserverproxy.dll", nullptr);
+        auto seg = kern->get_lib_manager()->load(u"mmfaudioserverproxy.dll");
 
         if (seg && seg->export_count() >= 3) {
             // Originally there are only two exports: Open and GetDevSessionHandle

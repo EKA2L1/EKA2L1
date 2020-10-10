@@ -69,7 +69,7 @@ namespace eka2l1::service {
         }
 
         // Try to load euser.
-        codeseg_ptr euser_lib = mngr->load(u"euser.dll", process_);
+        codeseg_ptr euser_lib = mngr->load(u"euser.dll");
 
         if (!euser_lib) {
             return false;

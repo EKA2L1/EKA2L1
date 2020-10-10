@@ -21,6 +21,7 @@
 #include <common/algorithm.h>
 #include <common/chunkyseri.h>
 #include <common/log.h>
+#include <common/thread.h>
 
 #include <kernel/timing.h>
 
@@ -45,15 +46,20 @@ namespace eka2l1 {
 
     ntimer::~ntimer() {
         should_stop_ = true;
-        should_paused_ = true;
+        should_paused_ = false;
         new_event_avail_var_.notify_one();
 
         timer_thread_->join();
     }
 
     void ntimer::loop() {
+        static const char *TIMING_THREAD_NAME = "Timing thread";
+
+        common::set_thread_name(TIMING_THREAD_NAME);
+        common::set_thread_priority(common::thread_priority_very_high);
+
         while (!should_stop_) {
-            while (!should_paused_) {
+            while (!should_stop_ && !should_paused_) {
                 const std::optional<std::uint64_t> next_microseconds = advance();
                 std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
 
@@ -62,6 +68,13 @@ namespace eka2l1 {
                 } else {
                     new_event_avail_var_.wait(unqlock);
                 }
+            }
+
+            if (should_paused_) {
+                std::unique_lock<std::mutex> unqlock(new_event_avail_lock_);
+                new_event_avail_var_.wait(unqlock, [this]() {
+                    return (should_paused_ == false);
+                });
             }
         }
     }
@@ -201,6 +214,13 @@ namespace eka2l1 {
     }
 
     void ntimer::set_paused(const bool should_pause) {
+        bool last_state = should_paused_;
         should_paused_ = should_pause;
+
+        if (last_state != should_pause) {
+            if (should_pause == false) {
+                new_event_avail_var_.notify_one();
+            }
+        }
     }
 }

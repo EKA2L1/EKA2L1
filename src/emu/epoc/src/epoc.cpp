@@ -186,9 +186,15 @@ namespace eka2l1 {
             }
 
             manager::device *dvc = dmngr->get_current();
-            io.set_product_code(dvc->firmware_code);
 
+            if (conf->language == -1) {
+                conf->language = dvc->default_language_code;
+                conf->serialize();
+            }
+
+            io.set_product_code(dvc->firmware_code);
             set_symbian_version_use(dvc->ver);
+
             return true;
         }
 
@@ -446,6 +452,10 @@ namespace eka2l1 {
                 script_hits_the_feels = true;
             }
 #endif
+
+            if (conf->stepping && !should_step) {
+                should_step = true;
+            }
         }
 
         if (kern->crr_thread() == nullptr) {

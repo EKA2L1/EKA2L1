@@ -23,12 +23,18 @@
 namespace eka2l1::drivers {
     dsp_stream::dsp_stream()
         : samples_played_(0)
+        , samples_copied_(0)
         , freq_(0)
         , channels_(0)
         , complete_callback_(nullptr)
         , buffer_copied_callback_(nullptr)
         , complete_userdata_(nullptr)
         , buffer_copied_userdata_(nullptr) {
+    }
+
+    void dsp_stream::reset_stat() {
+        samples_played_ = 0;
+        samples_copied_ = 0;
     }
 
     std::unique_ptr<dsp_stream> new_dsp_out_stream(drivers::audio_driver *aud, const dsp_stream_backend dsp_backend) {

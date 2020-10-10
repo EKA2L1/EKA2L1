@@ -25,21 +25,15 @@ namespace eka2l1::common {
     }
 
     void semaphore::notify(const int count) {
-        const std::unique_lock<std::mutex> ulock(mut_);
+        std::unique_lock<std::mutex> ulock(mut_);
+        int to_dec = count;
 
-        if (count == -1) {
-            cond_.notify_all();
-            count_ = 0;
+        while (to_dec-- > 0) {
+            count_++;
 
-            return;
-        }
-
-        count_ += count;
-
-        int to_start = count;
-
-        while (to_start-- > 0) {
-            cond_.notify_one();
+            if (count_ <= 0) {
+                cond_.notify_one();
+            }
         }
     }
 

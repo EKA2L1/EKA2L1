@@ -50,7 +50,7 @@ namespace eka2l1::drivers {
         }
 
         const auto result = cubeb_stream_init(context_, &stream_, "EKA2L1 StreamPeam",
-            nullptr, nullptr, nullptr, &params, common::max<std::uint32_t>(512U, minimum_latency),
+            nullptr, nullptr, nullptr, &params, common::max<std::uint32_t>((channels == 1) ? 256U : 512U, minimum_latency),
             data_callback_redirector, state_callback_redirector, this);
 
         if (result != CUBEB_OK) {

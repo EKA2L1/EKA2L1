@@ -76,6 +76,8 @@
 #define KEY_P 80
 #define KEY_Q 81
 #define KEY_R 82
+#define KEY_W 87
+#define KEY_X 88
 
 namespace eka2l1 {
     /**

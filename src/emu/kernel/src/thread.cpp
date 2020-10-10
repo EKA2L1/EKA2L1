@@ -248,7 +248,8 @@ namespace eka2l1 {
             , create_time(0)
             , exception_handler(0)
             , exception_mask(0)
-            , trap_stack(0) {
+            , trap_stack(0)
+            , sleep_level(0) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = calculate_thread_priority(owning_process(), pri);
@@ -366,6 +367,10 @@ namespace eka2l1 {
         }
 
         bool thread::sleep(uint32_t ussecs) {
+            if (sleep_level) {
+                return false;
+            }
+
             sleep_level = 0;
 
             while (state == thread_state::run) {
@@ -394,6 +399,7 @@ namespace eka2l1 {
                 signal_request();
             } else {
                 signal_request(sleep_level);
+                sleep_level = 0;
             }
 
             sleep_nof_sts = 0;

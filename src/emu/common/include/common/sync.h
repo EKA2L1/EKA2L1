@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 
@@ -27,7 +28,7 @@ namespace eka2l1::common {
         std::mutex mut_;
         std::condition_variable cond_;
 
-        int count_;
+        std::atomic<int> count_;
 
     public:
         explicit semaphore(const int inital = 0);

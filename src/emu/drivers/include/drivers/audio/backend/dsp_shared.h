@@ -44,8 +44,6 @@ namespace eka2l1::drivers {
         std::mutex callback_lock_;
 
         bool virtual_stop;
-        
-        virtual std::uint64_t position_non_pcm16() = 0;
 
     public:
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);
@@ -68,5 +66,6 @@ namespace eka2l1::drivers {
         virtual bool stop() override;
 
         std::uint64_t position() override;
+        std::uint64_t real_time_position() override;
     };
 }

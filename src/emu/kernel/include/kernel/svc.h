@@ -122,6 +122,7 @@ namespace eka2l1::epoc {
             execute_get_heap_thread = 0x32,
             execute_set_tls = 0x34,
             execute_free_tls = 0x35,
+            execute_dll_global_allocate = 0x37,
             execute_open_debug = 0x3F,
             execute_close_debug = 0x40,
             execute_create_chunk_double_ended = 0x4C,

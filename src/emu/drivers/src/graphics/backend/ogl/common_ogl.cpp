@@ -43,6 +43,9 @@ namespace eka2l1::drivers {
         case filter_option::linear:
             return GL_LINEAR;
 
+        case filter_option::nearest:
+            return GL_NEAREST;
+
         default:
             break;
         }

@@ -47,6 +47,8 @@
 #include <kernel/ipc.h>
 #include <mem/ptr.h>
 
+#include <cpu/arm_analyser.h>
+
 #include <atomic>
 #include <exception>
 #include <functional>
@@ -280,8 +282,18 @@ namespace eka2l1 {
         common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
         common::identity_container<imb_range_callback> imb_range_callback_funcs_;
 
+        std::unique_ptr<arm::arm_analyser> analyser_;
+
+        using cache_interpreter_func = std::function<void(arm::core *)>;
+        std::map<std::uint32_t, cache_interpreter_func> cache_inters_;
+
+        kernel::chunk* dll_global_data_chunk_;
+        std::map<address, std::uint64_t> dll_global_data_offset_;
+        std::uint32_t dll_global_data_last_offset_;
+
     protected:
         void setup_new_process(process_ptr pr);
+        bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
         void cpu_exception_thread_handle(arm::core *core);
 
     public:
@@ -624,13 +636,15 @@ namespace eka2l1 {
             kern_lock_.lock();
         }
 
-        bool try_lock() {
-            return kern_lock_.try_lock();
-        }
-
         // Unlock the kernel
         void unlock() {
             kern_lock_.unlock();
         }
+
+        void stop_cores_idling();
+        bool should_core_idle_when_inactive();
+
+        address get_global_dll_space(const address handle, std::uint8_t **data_ptr = nullptr, std::uint32_t *size_of_data = nullptr);
+        bool allocate_global_dll_space(const address handle, const std::uint32_t size, address &data_ptr_guest, std::uint8_t **data_ptr_host = nullptr);
     };
 }

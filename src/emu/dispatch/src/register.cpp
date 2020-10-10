@@ -56,6 +56,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x4C, eaudio_dsp_out_stream_volume),
         BRIDGE_REGISTER_DISPATCHER(0x4F, eaudio_dsp_stream_bytes_rendered),
         BRIDGE_REGISTER_DISPATCHER(0x50, eaudio_dsp_stream_position),
-        BRIDGE_REGISTER_DISPATCHER(0x52, eaudio_dsp_stream_notify_buffer_ready_cancel)
+        BRIDGE_REGISTER_DISPATCHER(0x52, eaudio_dsp_stream_notify_buffer_ready_cancel),
+        BRIDGE_REGISTER_DISPATCHER(0x53, eaudio_dsp_stream_reset_stat)
     };
 }

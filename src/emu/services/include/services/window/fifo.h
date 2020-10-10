@@ -195,10 +195,17 @@ namespace eka2l1::epoc {
         std::uint32_t queue_event(const event &evt);
     };
 
-    class redraw_fifo : public base_fifo<redraw_event, 32> {
+    struct redraw_event_full {
+        redraw_event evt_;
+        void *owner_;
+    };
+
+    class redraw_fifo : public base_fifo<redraw_event_full, 32> {
     public:
         redraw_fifo()
-            : base_fifo<redraw_event>() {}
-        std::uint32_t queue_event(const redraw_event &evt, const std::uint16_t pri);
+            : base_fifo<redraw_event_full>() {}
+
+        std::uint32_t queue_event(void *owner, const redraw_event &evt, const std::uint16_t pri);
+        void remove_events(void *owner);
     };
 }

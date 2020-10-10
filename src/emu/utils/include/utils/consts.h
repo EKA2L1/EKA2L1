@@ -27,4 +27,7 @@ namespace eka2l1::epoc {
     static constexpr std::int32_t CINT32_MIN = static_cast<std::int32_t>(0x80000000);
 
     using uid = std::uint32_t;
+
+    static constexpr uid DYNAMIC_LIBRARY_UID = 0x10000079;
+    static constexpr uid EXECUTABLE_UID = 0x1000007A;
 }

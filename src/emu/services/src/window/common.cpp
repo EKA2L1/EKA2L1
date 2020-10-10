@@ -181,18 +181,18 @@ namespace eka2l1::epoc {
         return "unk";
     }
 
-    TKeyCode map_scancode_to_keycode(TStdScanCode scan_code) {
-        if (scan_code <= EStdKeyScrollLock) {
+    key_code map_scancode_to_keycode(std_scan_code scan_code) {
+        if (scan_code <= std_key_scroll_lock) {
             return keymap[scan_code];
-        } else if (scan_code > EStdKeyScrollLock && scan_code < EStdKeyF1) {
-            return static_cast<TKeyCode>(scan_code);
-        } else if (scan_code >= EStdKeyF1 && scan_code <= EStdKeyApplication27) {
+        } else if (scan_code > std_key_scroll_lock && scan_code < std_key_f1) {
+            return static_cast<key_code>(scan_code);
+        } else if (scan_code >= std_key_f1 && scan_code <= std_key_application_27) {
             return keymap[scan_code - 67];
         }
-        return EKeyNull;
+        return key_null;
     }
 
-    TStdScanCode map_inputcode_to_scancode(int input_code, int ui_rotation) {
+    std_scan_code map_inputcode_to_scancode(int input_code, int ui_rotation) {
         auto scanmap = &scanmap_0;
         switch (ui_rotation) {
         case 90:
@@ -211,9 +211,9 @@ namespace eka2l1::epoc {
             scanmap = &scanmap_all;
             it = scanmap->find(input_code);
             if (it == scanmap->end())
-                return EStdKeyNull;
+                return std_key_null;
         }
-        return static_cast<TStdScanCode>(it->second);
+        return static_cast<std_scan_code>(it->second);
     }
 
     std::optional<std::uint32_t> map_button_to_inputcode(std::map<std::pair<int, int>, std::uint32_t> &map, int controller_id, int button) {

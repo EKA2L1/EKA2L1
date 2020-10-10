@@ -28,4 +28,19 @@ namespace eka2l1::common {
      * \param thread_name       New name of the thread.
      */
     void set_thread_name(const char *thread_name);
+
+    enum thread_priority {
+        thread_priority_low,
+        thread_priority_normal,
+        thread_priority_high,
+        thread_priority_very_high
+    };
+
+    /**
+     * @brief Set current thread priority
+     * 
+     * @param pri New priority of the thread.
+     * @see   set_thread_name
+     */
+    void set_thread_priority(const thread_priority pri);
 }

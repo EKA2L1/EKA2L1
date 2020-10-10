@@ -88,7 +88,6 @@ namespace eka2l1::desktop {
         std::mutex input_mutex;
 
         ImFont *normal_font;
-        ImFont *zh_font;
 
         explicit emulator();
 

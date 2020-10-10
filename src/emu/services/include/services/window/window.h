@@ -119,6 +119,12 @@ namespace eka2l1::epoc {
         using uid = std::uint32_t;
     };
 
+    enum event_listener_type {
+        event_listener_type_redraw = 0,
+        event_listener_type_event = 1,
+        event_listener_type_priority_key = 2
+    };
+
     struct window_client_obj;
     struct screen_device;
 
@@ -160,6 +166,7 @@ namespace eka2l1::epoc {
 
         epoc::redraw_fifo redraws;
         epoc::event_fifo events;
+        epoc::event_fifo priority_keys;
 
         std::mutex ws_client_lock;
 
@@ -217,7 +224,7 @@ namespace eka2l1::epoc {
             return cli_version;
         }
 
-        void get_ready(service::ipc_context &ctx, ws_cmd *cmd, const bool is_redraw);
+        void get_ready(service::ipc_context &ctx, ws_cmd *cmd, const event_listener_type type);
 
         void execute_command(service::ipc_context &ctx, ws_cmd cmd);
         void execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds);
@@ -251,6 +258,10 @@ namespace eka2l1::epoc {
 
         void walk_redraw(epoc::redraw_fifo::walker_func walker, void *userdata) {
             redraws.walk(walker, userdata);
+        }
+
+        void remove_redraws(void *owner) {
+            redraws.remove_events(owner);
         }
 
         void deque_redraw(const std::uint32_t handle) {

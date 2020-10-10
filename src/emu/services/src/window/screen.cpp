@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
         : number(number)
         , ui_rotation(0)
         , orientation_lock(true)
-        , refresh_rate(60)
+        , refresh_rate(30)
         , scale_x(1.0f)
         , scale_y(1.0f)
         , screen_texture(0)
@@ -150,7 +150,7 @@ namespace eka2l1::epoc {
 
         if (!screen_texture) {
             // Create new one!
-            screen_texture = drivers::create_bitmap(driver, new_size);
+            screen_texture = drivers::create_bitmap(driver, new_size, 32);
         } else {
             cmd_builder->bind_bitmap(screen_texture);
             cmd_builder->resize_bitmap(screen_texture, new_size);

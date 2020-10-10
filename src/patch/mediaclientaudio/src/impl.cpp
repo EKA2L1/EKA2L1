@@ -20,6 +20,7 @@
 #include "dispatch.h"
 #include "impl.h"
 #include "log.h"
+#include "softint.h"
 
 #ifdef EKA2
 #include <e32cmn.h>
@@ -149,16 +150,13 @@ TTimeIntervalMicroSeconds CMMFMdaAudioUtility::CurrentPosition() {
 #ifdef EKA2
     return EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance);
 #else
-    return TTimeIntervalMicroSeconds(TInt64(static_cast<TInt>(EAudioPlayerGetCurrentPlayPos(0, iDispatchInstance))));
+    return TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(EAudioPlayerGetCurrentPlayPos(
+        0, iDispatchInstance)));
 #endif
 }
 
 void CMMFMdaAudioUtility::SetCurrentPosition(const TTimeIntervalMicroSeconds &aPos) {
-#ifdef EKA2
     EAudioPlayerSetCurrentPlayPos(0, iDispatchInstance, aPos.Int64());
-#else
-    EAudioPlayerSetCurrentPlayPos(0, iDispatchInstance, aPos.Int64().GetTInt());
-#endif
 }
 
 TInt CMMFMdaAudioUtility::BitRate(TUint &aBitRate) {

@@ -106,11 +106,10 @@ namespace eka2l1::drivers {
         auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
         
         if (fb) {
-            fb->set_color_buffer(tex_to_replace.get(), 1);
-
-            // Setting up read/draw target
-            fb->set_draw_buffer(1);
-            fb->set_read_buffer(0);
+            auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, ds_tex_to_replace.get());
+            
+            fb->bind(driver, framebuffer_bind_read);
+            new_fb->bind(driver, framebuffer_bind_draw);
 
             eka2l1::rect copy_region;
             copy_region.top = { 0, 0 };
@@ -119,10 +118,10 @@ namespace eka2l1::drivers {
 
             fb->blit(copy_region, copy_region, draw_buffer_bit_color_buffer, filter_option::linear);
 
-            fb->set_color_buffer(tex_to_replace.get(), 0);
-            fb->set_depth_stencil_buffer(ds_tex_to_replace.get());      // Depth and stencil content will be new
+            new_fb->unbind(driver);
+            fb->unbind(driver);
 
-            fb->set_draw_buffer(0);
+            fb = std::move(new_fb);
         }
 
         tex = std::move(tex_to_replace);
@@ -188,7 +187,7 @@ namespace eka2l1::drivers {
     }
 
     void shared_graphics_driver::update_bitmap(drivers::handle h, const std::size_t size, const eka2l1::vec2 &offset,
-        const eka2l1::vec2 &dim, int bpp, const void *data, const std::size_t pixels_per_line) {
+        const eka2l1::vec2 &dim, const void *data, const std::size_t pixels_per_line) {
         // Get our bitmap
         bitmap *bmp = get_bitmap(h);
 
@@ -200,12 +199,12 @@ namespace eka2l1::drivers {
         texture_format data_format = texture_format::none;
         texture_data_type data_type = texture_data_type::ubyte;
 
-        translate_bpp_to_format(bpp, internal_format, data_format, data_type);
+        translate_bpp_to_format(bmp->bpp, internal_format, data_format, data_type);
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
             data_format, data_type, data);
 
-        if (bpp == 16) {
+        if (bmp->bpp == 16) {
             bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
                 channel_swizzle::red, channel_swizzle::one });
         }
@@ -229,7 +228,6 @@ namespace eka2l1::drivers {
     void shared_graphics_driver::update_bitmap(command_helper &helper) {
         drivers::handle handle = 0;
         std::uint8_t *data = nullptr;
-        int bpp = 0;
         std::size_t size = 0;
         eka2l1::vec2 offset;
         eka2l1::vec2 dim;
@@ -237,32 +235,33 @@ namespace eka2l1::drivers {
 
         helper.pop(handle);
         helper.pop(data);
-        helper.pop(bpp);
         helper.pop(size);
         helper.pop(offset);
         helper.pop(dim);
         helper.pop(pixels_per_line);
 
-        update_bitmap(handle, size, offset, dim, bpp, data, pixels_per_line);
+        update_bitmap(handle, size, offset, dim, data, pixels_per_line);
 
         delete data;
     }
 
     void shared_graphics_driver::create_bitmap(command_helper &helper) {
         eka2l1::vec2 size;
+        std::uint32_t bpp = 0;
         drivers::handle *result = nullptr;
 
         helper.pop(size);
+        helper.pop(bpp);
         helper.pop(result);
 
         // Find free slot
         auto slot_free = std::find(bmp_textures.begin(), bmp_textures.end(), nullptr);
 
         if (slot_free != bmp_textures.end()) {
-            *slot_free = std::make_unique<bitmap>(this, size, 32);
+            *slot_free = std::make_unique<bitmap>(this, size, static_cast<int>(bpp));
             *result = std::distance(bmp_textures.begin(), slot_free) + 1;
         } else {
-            bmp_textures.push_back(std::make_unique<bitmap>(this, size, 32));
+            bmp_textures.push_back(std::make_unique<bitmap>(this, size, static_cast<int>(bpp)));
             *result = bmp_textures.size();
         }
 
@@ -299,7 +298,7 @@ namespace eka2l1::drivers {
         }
 
         // Bind the framebuffer
-        bmp->fb->bind(this);
+        bmp->fb->bind(this, framebuffer_bind_read_draw);
         binding = bmp;
 
         // Build projection matrixx
@@ -636,7 +635,20 @@ namespace eka2l1::drivers {
         helper.pop(min);
         helper.pop(mag);
 
-        texture *texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        texture *texobj = nullptr;
+        
+        if (h & HANDLE_BITMAP) {
+            // Bind bitmap as texture
+            bitmap *b = get_bitmap(h);
+
+            if (!b) {
+                return;
+            }
+
+            texobj = b->tex.get();
+        } else {
+            texobj = reinterpret_cast<texture *>(get_graphics_object(h));
+        }
 
         if (!texobj) {
             return;

@@ -51,8 +51,8 @@ namespace eka2l1::renderer {
         drivers::handle tex = 0;
 
         if (as_bitmap) {
-            tex = drivers::create_bitmap(driver, { width, height });
-            builder->update_bitmap(tex, 32, reinterpret_cast<const char *>(dat), width * height * 4,
+            tex = drivers::create_bitmap(driver, { width, height }, 32);
+            builder->update_bitmap(tex, reinterpret_cast<const char *>(dat), width * height * 4,
                 { 0, 0 }, { width, height });
         } else {
             tex = drivers::create_texture(driver, 2, 0, drivers::texture_format::rgba, drivers::texture_format::rgba,

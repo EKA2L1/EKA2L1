@@ -101,7 +101,8 @@ namespace eka2l1::drivers {
     };
 
     enum class filter_option {
-        linear
+        linear,
+        nearest
     };
 
     enum class channel_swizzle : std::uint32_t {

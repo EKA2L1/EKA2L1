@@ -38,6 +38,7 @@
 .global EAudioDspStreamPosition
 .global EAudioDspStreamGetFormat
 .global EAudioDspStreamCancelNotifyBufferSentToDriver
+.global EAudioDspStreamResetStat
 
 EAudioDspOutStreamCreate:
     CallHleDispatch 0x40
@@ -95,3 +96,6 @@ EAudioDspStreamGetFormat:
 
 EAudioDspStreamCancelNotifyBufferSentToDriver:
     CallHleDispatch 0x52
+
+EAudioDspStreamResetStat:
+    CallHleDispatch 0x53

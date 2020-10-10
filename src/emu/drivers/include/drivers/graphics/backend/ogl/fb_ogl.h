@@ -33,7 +33,9 @@ namespace eka2l1::drivers {
     class ogl_framebuffer : public framebuffer {
         std::uint32_t fbo;
 
-        int last_fb{ 0 };
+        int last_fb { -1 };
+        framebuffer_bind_type last_bind_type;
+
         int max_color_attachment { 0 };
 
     public:
@@ -46,7 +48,7 @@ namespace eka2l1::drivers {
 
         ~ogl_framebuffer() override;
 
-        void bind(graphics_driver *driver) override;
+        void bind(graphics_driver *driver, const framebuffer_bind_type type_bind) override;
         void unbind(graphics_driver *driver) override;
         
         std::int32_t set_color_buffer(texture *tex, const std::int32_t position = -1) override;

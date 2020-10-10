@@ -55,7 +55,8 @@ namespace eka2l1::drivers {
 
             buf[name_len] = '\0';
 
-            data.push_back(static_cast<std::uint8_t>(static_cast<std::int8_t>(glGetAttribLocation(program, buf))));
+            std::int32_t location = glGetAttribLocation(program, buf);
+            data.insert(data.end(), reinterpret_cast<std::uint8_t*>(&location), reinterpret_cast<std::uint8_t*>(&location) + sizeof(location));
         }
 
         reinterpret_cast<std::uint16_t *>(&data[0])[1] = static_cast<std::uint16_t>(data.size());
@@ -71,7 +72,8 @@ namespace eka2l1::drivers {
             data.push_back(static_cast<std::uint8_t>(name_len));
             data.insert(data.end(), buf, buf + name_len);
 
-            data.push_back(static_cast<std::uint8_t>(static_cast<std::int8_t>(glGetUniformLocation(program, buf))));
+            std::int32_t location = glGetUniformLocation(program, buf);
+            data.insert(data.end(), reinterpret_cast<std::uint8_t*>(&location), reinterpret_cast<std::uint8_t*>(&location) + sizeof(location));
         }
     }
 

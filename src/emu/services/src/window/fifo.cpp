@@ -121,7 +121,7 @@ namespace eka2l1::epoc {
         return *evt;
     }
 
-    std::uint32_t redraw_fifo::queue_event(const redraw_event &evt, const std::uint16_t pri) {
+    std::uint32_t redraw_fifo::queue_event(void *owner, const redraw_event &evt, const std::uint16_t pri) {
         const std::lock_guard<std::mutex> guard(lock_);
         eka2l1::rect target_queue_rect(evt.top_left, evt.bottom_right);
         target_queue_rect.transform_from_symbian_rectangle();
@@ -129,10 +129,10 @@ namespace eka2l1::epoc {
         std::size_t limit = q_.size();
 
         for (std::size_t i = 0; i < limit; i++) {
-            eka2l1::rect queued_rect(q_[i].evt.top_left, q_[i].evt.bottom_right);
+            eka2l1::rect queued_rect(q_[i].evt.evt_.top_left, q_[i].evt.evt_.bottom_right);
             queued_rect.transform_from_symbian_rectangle();
 
-            if ((q_[i].evt.handle == evt.handle) && target_queue_rect.contains(queued_rect)) {
+            if ((q_[i].evt.evt_.handle == evt.handle) && target_queue_rect.contains(queued_rect)) {
                 // The new redraw rect contains the old queued redraw rect. Remove it to avoid
                 // unneccessary redraws.
                 q_.erase(q_.begin() + i);
@@ -140,7 +140,11 @@ namespace eka2l1::epoc {
             }
         }
         
-        std::uint32_t id = queue_event_dont_care(evt);
+        redraw_event_full full_event;
+        full_event.owner_ = owner;
+        full_event.evt_ = evt;
+        
+        std::uint32_t id = queue_event_dont_care(full_event);
         q_.back().pri = pri;
 
         std::stable_sort(q_.begin(), q_.end(),
@@ -150,5 +154,12 @@ namespace eka2l1::epoc {
 
         // Queue a redraw won't directly trigger a notification.
         return id;
+    }
+
+    void redraw_fifo::remove_events(void *owner) {
+        const std::lock_guard<std::mutex> guard(lock_);
+        common::erase_elements(q_, [owner](fifo_element &elem) -> bool {
+            return elem.evt.owner_ == owner;
+        });
     }
 }
