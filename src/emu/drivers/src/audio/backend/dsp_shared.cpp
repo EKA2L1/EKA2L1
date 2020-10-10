@@ -96,8 +96,6 @@ namespace eka2l1::drivers {
         if (complete_callback_)
             complete_callback_(complete_userdata_);
 
-        // Clear the callback
-        buffer_copied_callback_ = nullptr;
         virtual_stop = true;
 
         // Discard all buffers
