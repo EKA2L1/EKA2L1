@@ -226,7 +226,7 @@ namespace eka2l1::loader {
             stream->read(&img.header.import_offset, 4);
             stream->read(&img.header.code_reloc_offset, 4);
             stream->read(&img.header.data_reloc_offset, 4);
-            stream->read(&img.header.priority, 2);
+            stream->read(&img.header.priority, 4);
 
             img.header.compression_type = 0;
         } else {
