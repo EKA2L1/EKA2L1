@@ -87,10 +87,11 @@ namespace eka2l1::kernel {
 
         exe_path = codeseg->get_full_path();
 
+        // Base on: sprocess.cpp#L245 in kernelhwsrv package
         create_prim_thread(
             codeseg->get_code_run_addr(this), codeseg->get_entry_point(this),
             stack_size, heap_min, heap_max,
-            kernel::thread_priority::priority_absolute_foreground_normal);
+            kernel::thread_priority::priority_normal);
 
         // TODO: Load all references DLL in the export list.
     }
@@ -98,6 +99,7 @@ namespace eka2l1::kernel {
     process::process(kernel_system *kern, memory_system *mem)
         : kernel_obj(kern)
         , mem(mem)
+        , priority(kernel::process_priority::foreground)
         , exit_type(kernel::entity_exit_type::pending) {
         obj_type = kernel::object_type::process;
     }
@@ -128,6 +130,7 @@ namespace eka2l1::kernel {
         , cmd_args(cmd_args)
         , codeseg(nullptr)
         , process_handles(kern, handle_array_owner::process)
+        , priority(kernel::process_priority::foreground)
         , exit_type(kernel::entity_exit_type::pending) {
         obj_type = kernel::object_type::process;
 
