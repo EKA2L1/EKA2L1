@@ -48,8 +48,8 @@ namespace eka2l1 {
         should_stop_ = true;
         should_paused_ = false;
 
-        new_event_sema_.notify();
-        pause_var_.notify_one();
+        new_event_evt_.set();
+        pause_evt_.set();
 
         timer_thread_->join();
     }
@@ -67,19 +67,14 @@ namespace eka2l1 {
                 if (next_microseconds.has_value()) {
                     // We only intend to sleep and wake up for new event
                     // So let's signal the sema again to increase sema count, if not timeout. No block intended
-                    if (!new_event_sema_.wait(next_microseconds.value())) {
-                        new_event_sema_.notify();
-                    }
+                    new_event_evt_.wait_for(next_microseconds.value());
                 } else {
-                    new_event_sema_.wait();
+                    new_event_evt_.wait();
                 }
             }
 
             if (should_paused_) {
-                std::unique_lock<std::mutex> unqlock(pause_lock_);
-                pause_var_.wait(unqlock, [this]() {
-                    return (should_paused_ == false);
-                });
+                pause_evt_.wait();
             }
         }
     }
@@ -134,7 +129,7 @@ namespace eka2l1 {
         });
 
         if (should_nof) {
-            new_event_sema_.notify();
+            new_event_evt_.set();
         }
     }
 
@@ -224,7 +219,7 @@ namespace eka2l1 {
 
         if (last_state != should_pause) {
             if (should_pause == false) {
-                pause_var_.notify_one();
+                pause_evt_.set();
             }
         }
     }

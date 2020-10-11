@@ -63,10 +63,8 @@ namespace eka2l1 {
         std::vector<event> events_;
         std::mutex lock_;
 
-        std::mutex pause_lock_;
-        std::condition_variable pause_var_;
-
-        common::semaphore new_event_sema_;
+        common::event new_event_evt_;
+        common::event pause_evt_;
 
         std::unique_ptr<common::teletimer> teletimer_;
         std::unique_ptr<std::thread> timer_thread_; ///< Timer thread to executes callbacks
