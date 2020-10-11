@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team
+ * Copyright (c) 2019 EKA2L1 Team / 2020 yuzu Emulator Project.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -56,5 +56,40 @@ namespace eka2l1::common {
         }
 
         return false;
+    }
+
+    event::event():
+        is_set_(false) {
+    }
+
+    void event::set() {
+        const std::lock_guard<std::mutex> guard(lock_);
+
+        if (!is_set_) {
+            is_set_ = true;
+            cond_.notify_one();
+        }
+    }
+
+    void event::wait() {
+        std::unique_lock<std::mutex> unq(lock_);
+        cond_.wait(unq, [this] { return is_set_; });
+
+        is_set_ = false;
+    }
+
+    bool event::wait_for(const std::uint64_t duration_us) {
+        std::unique_lock<std::mutex> unq(lock_);
+        
+        if (!cond_.wait_for(unq, std::chrono::microseconds(duration_us), [this] { return is_set_; }))
+            return false;
+
+        is_set_ = false;
+        return true;
+    }
+
+    void event::reset() {
+        const std::lock_guard<std::mutex> guard(lock_);
+        is_set_ = false;
     }
 }

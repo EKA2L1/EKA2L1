@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team
+ * Copyright (c) 2019 EKA2L1 Team / 2020 yuzu Emulator Project.
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -59,5 +59,23 @@ namespace eka2l1::common {
          * @returns     True if timeout is hit.
          */
         bool wait(const std::size_t duration_us = 0);
+    };
+    
+    class event {
+    private:
+        bool is_set_;
+
+        std::condition_variable cond_;
+        std::mutex lock_;
+
+    public:
+        explicit event();
+
+        void set();
+
+        void wait();
+        bool wait_for(const std::uint64_t duration_us);
+
+        void reset();
     };
 }
