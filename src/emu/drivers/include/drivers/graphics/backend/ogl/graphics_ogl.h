@@ -38,8 +38,10 @@ namespace eka2l1::drivers {
         GLint last_array_buffer;
         GLint last_element_array_buffer;
         GLint last_vertex_array;
-        GLint last_blend_src;
-        GLint last_blend_dst;
+        GLint last_blend_src_rgb;
+        GLint last_blend_src_alpha;
+        GLint last_blend_dst_rgb;
+        GLint last_blend_dst_alpha;
         GLint last_blend_equation_rgb;
         GLint last_blend_equation_alpha;
         GLint last_viewport[4];
