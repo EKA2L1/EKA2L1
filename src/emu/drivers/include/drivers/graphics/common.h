@@ -84,6 +84,7 @@ namespace eka2l1::drivers {
     enum class texture_format : std::uint16_t {
         none,
         r,
+        r8,
         rg,
         rgb,
         bgr,

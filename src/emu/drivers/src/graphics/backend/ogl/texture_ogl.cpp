@@ -30,6 +30,9 @@ namespace eka2l1::drivers {
         case texture_format::r:
             return GL_RED;
 
+        case texture_format::r8:
+            return GL_R8;
+
         case texture_format::rg:
             return GL_RG;
 
