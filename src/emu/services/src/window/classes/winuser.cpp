@@ -147,9 +147,12 @@ namespace eka2l1::epoc {
 
     void window_user::set_visible(const bool vis) {
         bool should_trigger_redraw = false;
+        bool current_visible_status = flags & flags_visible;
 
-        if (static_cast<bool>(flags & flags_visible) != vis) {
+        if (current_visible_status != vis) {
             should_trigger_redraw = true;
+        } else {
+            return;
         }
 
         flags &= ~flags_visible;
@@ -159,7 +162,6 @@ namespace eka2l1::epoc {
         } else {
             // Purge all queued events now that the window is not visible anymore
             client->walk_event(should_purge_window_user, this);
-            client->remove_redraws(this);
         }
 
         if (should_trigger_redraw) {
@@ -504,9 +506,9 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetVisible: {
-            const bool op = *reinterpret_cast<bool *>(cmd.data_ptr);
+            const bool visible = *reinterpret_cast<bool *>(cmd.data_ptr);
 
-            set_visible(op);
+            set_visible(visible);
             ctx.complete(epoc::error_none);
 
             break;
@@ -576,6 +578,7 @@ namespace eka2l1::epoc {
         case EWsWinOpInvalidateFull:
         case EWsWinOpInvalidate:
             invalidate(ctx, cmd);
+            break;
 
         case EWsWinOpBeginRedraw:
         case EWsWinOpBeginRedrawFull: {
