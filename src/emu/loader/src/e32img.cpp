@@ -226,8 +226,11 @@ namespace eka2l1::loader {
             stream->read(&img.header.import_offset, 4);
             stream->read(&img.header.code_reloc_offset, 4);
             stream->read(&img.header.data_reloc_offset, 4);
-            stream->read(&img.header.priority, 4);
 
+            std::uint32_t priority_val = 0;
+            stream->read(&priority_val, 4);
+
+            img.header.priority = static_cast<std::uint16_t>(priority_val);
             img.header.compression_type = 0;
         } else {
             img.epoc_ver = epocver::epoc94;
