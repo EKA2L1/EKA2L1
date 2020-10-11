@@ -103,6 +103,10 @@ namespace eka2l1 {
     }
 
     kernel_system::~kernel_system() {
+        reset();
+    }
+
+    void kernel_system::reset() {
         if (rom_map_) {
             common::unmap_file(rom_map_);
         }

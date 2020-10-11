@@ -126,7 +126,16 @@ namespace eka2l1 {
         explicit system_impl(system *parent, drivers::graphics_driver *graphics_driver, drivers::audio_driver *audio_driver,
             config::state *conf);
 
-        ~system_impl(){};
+        ~system_impl() {
+            // We need to clear kernel content first, since some object do references to it,
+            // and if we let it go in destructor it would be messy! :D
+            kern->reset();
+
+            // Now free those pointers...
+            kern.reset();
+            mem.reset();
+            timing.reset();
+        };
 
         void set_graphics_driver(drivers::graphics_driver *graphics_driver);
         void set_audio_driver(drivers::audio_driver *audio_driver);

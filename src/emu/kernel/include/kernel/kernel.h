@@ -302,6 +302,8 @@ namespace eka2l1 {
 
         ~kernel_system();
 
+        void reset();
+
         kernel::thread_scheduler *get_thread_scheduler() {
             return thr_sch_.get();
         }
