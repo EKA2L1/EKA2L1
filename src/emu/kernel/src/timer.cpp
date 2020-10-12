@@ -46,6 +46,7 @@ namespace eka2l1 {
         }
 
         timer::~timer() {
+            timing->unschedule_event(callback_type, reinterpret_cast<std::uint64_t>(&info));
         }
 
         bool timer::after(kernel::thread *requester, epoc::request_status *request_status, std::uint64_t us_signal) {
