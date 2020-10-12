@@ -42,7 +42,9 @@ namespace eka2l1::drivers {
             : codec_(nullptr)
             , format_context_(nullptr)
             , output_encoder_(nullptr)
-            , channel_layout_dest_(0) {
+            , channel_layout_dest_(0)
+            , custom_io_(nullptr)
+            , custom_io_buffer_(nullptr) {
         }
 
         ~player_ffmpeg_request();
