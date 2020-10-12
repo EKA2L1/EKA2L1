@@ -147,7 +147,7 @@ namespace eka2l1::epoc {
 
     void window_user::set_visible(const bool vis) {
         bool should_trigger_redraw = false;
-        bool current_visible_status = flags & flags_visible;
+        bool current_visible_status = (flags & flags_visible) != 0;
 
         if (current_visible_status != vis) {
             should_trigger_redraw = true;
@@ -506,7 +506,7 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetVisible: {
-            const bool visible = *reinterpret_cast<bool *>(cmd.data_ptr);
+            const std::uint32_t visible = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
             set_visible(visible);
             ctx.complete(epoc::error_none);

@@ -643,8 +643,10 @@ namespace eka2l1::drivers {
         glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &backup.last_array_buffer);
         glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &backup.last_element_array_buffer);
         glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &backup.last_vertex_array);
-        glGetIntegerv(GL_BLEND_SRC, &backup.last_blend_src);
-        glGetIntegerv(GL_BLEND_DST, &backup.last_blend_dst);
+        glGetIntegerv(GL_BLEND_SRC_RGB, &backup.last_blend_src_rgb);
+        glGetIntegerv(GL_BLEND_SRC_ALPHA, &backup.last_blend_src_alpha);
+        glGetIntegerv(GL_BLEND_DST_RGB, &backup.last_blend_dst_rgb);
+        glGetIntegerv(GL_BLEND_DST_ALPHA, &backup.last_blend_dst_alpha);
         glGetIntegerv(GL_BLEND_EQUATION_RGB, &backup.last_blend_equation_rgb);
         glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &backup.last_blend_equation_alpha);
         glGetIntegerv(GL_VIEWPORT, backup.last_viewport);
@@ -666,8 +668,10 @@ namespace eka2l1::drivers {
         glBlendEquationSeparate(static_cast<GLenum>(backup.last_blend_equation_rgb),
             static_cast<GLenum>(backup.last_blend_equation_alpha));
 
-        glBlendFunc(static_cast<GLenum>(backup.last_blend_src),
-            static_cast<GLenum>(backup.last_blend_dst));
+        glBlendFuncSeparate(static_cast<GLenum>(backup.last_blend_src_rgb),
+            static_cast<GLenum>(backup.last_blend_dst_rgb),
+            static_cast<GLenum>(backup.last_blend_src_alpha),
+            static_cast<GLenum>(backup.last_blend_dst_alpha));
 
         if (backup.last_enable_blend == GL_TRUE) {
             glEnable(GL_BLEND);
