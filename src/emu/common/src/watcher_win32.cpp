@@ -88,7 +88,7 @@ namespace eka2l1::common {
                         break;
                     }
 
-                    WaitForSingleObject(pending_read_.hEvent, INFINITE);
+                    GetOverlappedResult(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, TRUE);
 
                     std::size_t pointee = 0;
                     directory_changes changes;
@@ -199,7 +199,7 @@ namespace eka2l1::common {
     std::int32_t directory_watcher_impl::watch(const std::string &folder, directory_watcher_callback callback,
         void *callback_userdata, const std::uint32_t masks) {
         const std::lock_guard<std::mutex> guard(lock_);
-        HANDLE h = FindFirstChangeNotificationA(folder.c_str(), false, FILE_NOTIFY_CHANGE_FILE_NAME);
+        HANDLE h = FindFirstChangeNotificationA(folder.c_str(), TRUE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE);
 
         if (!h || h == INVALID_HANDLE_VALUE) {
             LOG_ERROR("Can't create directory watch of folder {}", folder);
