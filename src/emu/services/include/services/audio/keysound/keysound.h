@@ -49,6 +49,7 @@ namespace eka2l1 {
             epoc::keysound::sound_info sound_;
 
             explicit parser_state();
+            void set(epoc::keysound::sound_info &new_sound);
         } state_;
 
     public:

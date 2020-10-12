@@ -58,6 +58,16 @@ namespace eka2l1 {
         , parser_pos_(0) {
     }
 
+    void keysound_session::parser_state::set(epoc::keysound::sound_info &new_sound) {
+        frames_ = 0;
+        ms_ = 0;
+        parser_pos_ = 0;
+        frequency_ = 0;
+        duration_unit_ = 0;
+
+        sound_ = new_sound;
+    }
+
     std::size_t keysound_session::play_sounds(std::int16_t *buffer, std::size_t frames) {
         auto parse_to_get_freq = [this]() -> bool {
             if (state_.sound_.type_ == epoc::keysound::sound_type::sound_type_tone) {
@@ -128,8 +138,8 @@ namespace eka2l1 {
         for (std::size_t t = 0; t < frames; t++) {
             if ((static_cast<double>(state_.frames_) / static_cast<double>(state_.target_freq_) * 1000.0) >= static_cast<double>(state_.ms_)) {
                 if (!parse_to_get_freq()) {
-                    aud_out_->stop();
-                    return t;
+                    std::fill(buffer + t * 2, buffer + frames * 2, 0);
+                    return frames;
                 }
             }
 
@@ -209,7 +219,7 @@ namespace eka2l1 {
             aud_out_->stop();
         }
 
-        state_.sound_ = *info;
+        state_.set(*info);
         aud_out_->start();
 
         ctx->complete(epoc::error_none);
