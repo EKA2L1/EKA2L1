@@ -113,10 +113,16 @@ namespace eka2l1::epoc {
             area.top.x += margin;
         }
 
+        // Complete it first, cause we gonna open up the kernel
+        ctx.complete(epoc::error_none);
+
+        kernel_system *kern = client->get_ws().get_kernel_system();
+
+        kern->unlock();
         text_font->atlas.draw_text(text, area, align, client->get_ws().get_graphics_driver(),
             cmd_builder.get());
 
-        ctx.complete(epoc::error_none);
+        kern->lock();
     }
 
     bool graphic_context::do_command_set_brush_color() {

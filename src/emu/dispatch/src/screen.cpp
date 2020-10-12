@@ -45,10 +45,25 @@ namespace eka2l1::dispatch {
                 const eka2l1::vec2 screen_size = scr->size();
                 const std::size_t buffer_size = scr->size().x * scr->size().y * 4;
 
-                const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+                std::uint64_t next_vsync_us = 0;
+                scr->vsync(sys->get_ntimer(), next_vsync_us);
+
+                if (next_vsync_us) {
+                    kern->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
+                }
+
+                std::unique_lock<std::mutex> guard(scr->screen_mutex);
 
                 if (!scr->dsa_texture) {
-                    scr->dsa_texture = drivers::create_bitmap(driver, screen_size, epoc::get_bpp_from_display_mode(scr->disp_mode));
+                    kern->unlock();
+                    guard.unlock();
+
+                    drivers::handle bitmap_handle = drivers::create_bitmap(driver, screen_size, epoc::get_bpp_from_display_mode(scr->disp_mode));
+                    
+                    kern->lock();
+                    guard.lock();
+
+                    scr->dsa_texture = bitmap_handle;
                 }
 
                 auto command_list = driver->new_command_list();
@@ -61,13 +76,6 @@ namespace eka2l1::dispatch {
                     drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
 
                 driver->submit_command_list(*command_list);
-
-                std::uint64_t next_vsync_us = 0;
-                scr->vsync(sys->get_ntimer(), next_vsync_us);
-
-                if (next_vsync_us) {
-                    kern->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
-                }
             }
 
             scr = scr->next;
