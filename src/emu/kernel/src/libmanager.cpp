@@ -594,7 +594,7 @@ namespace eka2l1::hle {
                             common::ro_buf_stream buf_stream(eka2l1::ptr<std::uint8_t>(romimg_addr).get(mem_), 0xFFFF);
 
                             // Load new romimage and add dependency
-                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_);
+                            loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
                             std::u16string path_to_dll;
 
                             for (std::size_t i = 0; i < search_paths.size(); i++) {
@@ -653,7 +653,7 @@ namespace eka2l1::hle {
                 }
 
                 image_data_stream.seek(0, common::seek_where::beg);
-                auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_);
+                auto parse_result_2 = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version());
                 if (parse_result_2 != std::nullopt) {
                     f->close();
                     result.second = std::move(parse_result_2);
@@ -720,7 +720,7 @@ namespace eka2l1::hle {
                 eka2l1::ro_file_stream image_data_stream(f.get());
 
                 if (entry->media_type == drive_media::rom && io_->is_entry_in_rom(lib_path)) {
-                    auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_);
+                    auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version());
                     if (!romimg) {
                         return nullptr;
                     }

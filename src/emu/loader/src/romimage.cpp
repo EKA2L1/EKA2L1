@@ -26,9 +26,41 @@
 #include <mem/ptr.h>
 
 namespace eka2l1::loader {
-    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem) {
+    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem, const epocver os_ver) {
         romimg img;
-        stream->read(&img, sizeof(rom_image_header));
+
+        img.header.checksum_code = 0;
+        img.header.checksum_data = 0;
+        img.header.sec_info.cap1 = 0;
+        img.header.sec_info.cap2 = 0;
+        img.header.sec_info.secure_id = 0;
+        img.header.sec_info.vendor_id = 0;
+
+        std::uint32_t size_to_initially_read = offsetof(rom_image_header, sec_info);
+        if (stream->read(&(img.header), size_to_initially_read) != size_to_initially_read) {
+            return std::nullopt;
+        }
+
+        // Read platform difference
+        if (os_ver <= epocver::eka2) {
+            if (stream->read(&img.header.checksum_code, 4) != 4) {
+                return std::nullopt;
+            }
+
+            if (stream->read(&img.header.checksum_data, 4) != 4) {
+                return std::nullopt;
+            }
+        } else {
+            if (stream->read(&img.header.sec_info, sizeof(rom_vsec_info)) != sizeof(rom_vsec_info)) {
+                return std::nullopt;
+            }
+        }
+
+        // Read the rest
+        size_to_initially_read = offsetof(rom_image_header, exception_des) - offsetof(rom_image_header, major) + sizeof(rom_image_header::exception_des);
+        if (stream->read(&img.header.major, size_to_initially_read) != size_to_initially_read) {
+            return std::nullopt;
+        }
 
         ptr<uint32_t> export_off(img.header.export_dir_address);
 

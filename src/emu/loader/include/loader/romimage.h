@@ -38,35 +38,37 @@ namespace eka2l1::loader {
     };
 
     struct rom_image_header {
-        uint32_t uid1;
-        uint32_t uid2;
-        uint32_t uid3;
-        uint32_t uid_checksum;
-        uint32_t entry_point;
-        uint32_t code_address;
-        uint32_t data_address;
-        int32_t code_size;
-        int32_t text_size;
-        int32_t data_size;
-        int32_t bss_size;
-        int32_t heap_minimum_size;
-        int32_t heap_maximum_size;
-        int32_t stack_size;
-        uint32_t dll_ref_table_address;
-        int32_t export_dir_count;
-        uint32_t export_dir_address;
+        std::uint32_t uid1;
+        std::uint32_t uid2;
+        std::uint32_t uid3;
+        std::uint32_t uid_checksum;
+        std::uint32_t entry_point;
+        std::uint32_t code_address;
+        std::uint32_t data_address;
+        std::int32_t code_size;
+        std::int32_t text_size;
+        std::int32_t data_size;
+        std::int32_t bss_size;
+        std::int32_t heap_minimum_size;
+        std::int32_t heap_maximum_size;
+        std::int32_t stack_size;
+        std::uint32_t dll_ref_table_address;
+        std::int32_t export_dir_count;
+        std::uint32_t export_dir_address;
         rom_vsec_info sec_info;
-        uint8_t major;
-        uint8_t minor;
-        uint16_t build;
-        uint32_t flags_raw;
-        uint32_t priority;
-        uint32_t data_bss_linear_base_address;
-        uint32_t next_extension_linear_address;
-        uint32_t hardware_variant; //I have no idea what this is exactly
-        uint32_t total_size;
-        uint32_t module;
-        uint32_t exception_des;
+        std::uint32_t checksum_code;
+        std::uint32_t checksum_data;
+        std::uint8_t major;
+        std::uint8_t minor;
+        std::uint16_t build;
+        std::uint32_t flags_raw;
+        std::uint32_t priority;
+        std::uint32_t data_bss_linear_base_address;
+        std::uint32_t next_extension_linear_address;
+        std::uint32_t hardware_variant; //I have no idea what this is exactly
+        std::uint32_t total_size;
+        std::uint32_t module;
+        std::uint32_t exception_des;
     };
 
     struct romimg {
@@ -74,5 +76,5 @@ namespace eka2l1::loader {
         std::vector<uint32_t> exports;
     };
 
-    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem);
+    std::optional<romimg> parse_romimg(common::ro_stream *stream, memory_system *mem, const epocver os_ver);
 }
