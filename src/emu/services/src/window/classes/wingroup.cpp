@@ -45,7 +45,7 @@ namespace eka2l1::epoc {
     void window_group::receive_focus(service::ipc_context &context, ws_cmd &cmd) {
         flags &= ~flag_focus_receiveable;
 
-        if (*reinterpret_cast<bool *>(cmd.data_ptr)) {
+        if (*reinterpret_cast<std::uint32_t *>(cmd.data_ptr)) {
             flags |= flag_focus_receiveable;
 
             LOG_TRACE("Request group {} to enable keyboard focus", common::ucs2_to_utf8(name));

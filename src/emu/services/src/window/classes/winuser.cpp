@@ -336,7 +336,7 @@ namespace eka2l1::epoc {
     }
 
     void window_user::set_non_fading(service::ipc_context &context, ws_cmd &cmd) {
-        const bool non_fading = *reinterpret_cast<bool *>(cmd.data_ptr);
+        const std::uint32_t non_fading = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
         if (non_fading) {
             flags |= flags_non_fading;
