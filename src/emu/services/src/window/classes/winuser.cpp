@@ -508,7 +508,7 @@ namespace eka2l1::epoc {
         case EWsWinOpSetVisible: {
             const std::uint32_t visible = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
-            set_visible(visible);
+            set_visible(visible != 0);
             ctx.complete(epoc::error_none);
 
             break;
