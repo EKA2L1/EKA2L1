@@ -70,6 +70,8 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Útil quando você vincular uma tecla com o mouse e o jogo/aplicativo tem o cursor embutido.\n Para tornar o cursor do mouse visível, mantenha os botões ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilita a filtragem por vizinhança</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Esse filtro e aplicado na próxima tela que for emulada.</string>
+    <string name="pref_general_utilities_integer_scaling_msg">Enable integer scaling</string>
+    <string name="pref_general_utilities_integer_scaling_tooltip">This is a pixel-perfect scaling method, which can help reduce blur significantly.</string>
     <string name="pref_system_title">Sistema</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Dispositivo</string>
