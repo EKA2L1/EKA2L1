@@ -518,6 +518,7 @@ namespace eka2l1 {
 
         // Use a flat array for drive mapping
         std::array<std::pair<drive, bool>, drive_z + 1> mappings;
+        std::map<drive_number, std::vector<std::int64_t>> watches;
 
         constexpr char drive_number_to_ascii(const drive_number drv) {
             return static_cast<char>(drv) + 0x61;
@@ -530,6 +531,10 @@ namespace eka2l1 {
         bool do_mount(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) {
             const std::lock_guard<std::mutex> guard(fs_mutex);
+
+            if (mappings[static_cast<int>(drv)].second) {
+                return false;
+            }
 
             drive &map_drive = mappings[static_cast<int>(drv)].first;
 
@@ -674,7 +679,15 @@ namespace eka2l1 {
 
         bool unmount(const drive_number drv) override {
             if (mappings[static_cast<int>(drv)].second) {
-                mappings[static_cast<int>(drv)].second = true;
+                mappings[static_cast<int>(drv)].second = false;
+
+                for (auto &watch_handle: watches[drv]) {
+                    if (watcher_) {
+                        watcher_->unwatch(static_cast<std::int32_t>(watch_handle));
+                    }
+                }
+
+                watches[drv].clear();
                 return true;
             }
 
@@ -795,11 +808,20 @@ namespace eka2l1 {
                 return -1;
             }
 
+            const std::u16string root = common::lowercase_ucs2_string(eka2l1::root_name(path, true));
+            const drive_number drv = char16_to_drive(root[0]);
+
             if (!watcher_) {
                 watcher_ = std::make_unique<common::directory_watcher>();
             }
 
-            return watcher_->watch(common::ucs2_to_utf8(real_path.value()), callback, callback_userdata, filters);
+            const std::int64_t handle = watcher_->watch(common::ucs2_to_utf8(real_path.value()), callback, callback_userdata, filters);
+            if (handle < 0) {
+                return handle;
+            }
+
+            watches[drv].push_back(handle);
+            return handle;
         }
 
         bool unwatch_directory(const std::int64_t handle) override {
@@ -807,7 +829,18 @@ namespace eka2l1 {
                 return false;
             }
 
-            return watcher_->unwatch(static_cast<std::int32_t>(handle));
+            if (watcher_->unwatch(static_cast<std::int32_t>(handle))) {
+                for (auto &[drive, watch_array]: watches) {
+                    auto ite = std::find(watch_array.begin(), watch_array.end(), handle);
+                    if (ite != watch_array.end()) {
+                        watch_array.erase(ite);
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
         }
         
         void validate_for_host() override {
@@ -1018,6 +1051,18 @@ namespace eka2l1 {
         , attribute(attrib) {
     }
 
+    bool io_drive_callback_free_check_func(drive_change_callback_and_data &elem) {
+        return !elem.first;
+    }
+
+    void io_drive_callback_free_func(drive_change_callback_and_data &elem) {
+        elem.first = nullptr;
+    }
+
+    io_system::io_system()
+        : drive_change_callbacks(io_drive_callback_free_check_func, io_drive_callback_free_func) {
+    }
+
     void io_system::init() {
     }
 
@@ -1053,6 +1098,7 @@ namespace eka2l1 {
 
         for (auto &[id, file_system] : filesystems) {
             if (file_system->mount_volume_from_path(drv, media, attrib, real_path)) {
+                invoke_drive_change_callbacks(drv, drive_action_mount);
                 return true;
             }
         }
@@ -1065,6 +1111,7 @@ namespace eka2l1 {
 
         for (auto &[id, file_system] : filesystems) {
             if (file_system->unmount(drv)) {
+                invoke_drive_change_callbacks(drv, drive_action_unmount);
                 return true;
             }
         }
@@ -1258,6 +1305,8 @@ namespace eka2l1 {
     }
 
     bool io_system::unwatch_directory(const std::int64_t handle) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
         const std::int32_t fs_id = static_cast<std::int32_t>(handle >> 32);
         auto fs_pair = filesystems.find(fs_id);
 
@@ -1269,8 +1318,23 @@ namespace eka2l1 {
     }
 
     void io_system::validate_for_host() {
+        const std::lock_guard<std::mutex> guard(access_lock);
+
         for (auto &filesystem: filesystems) {
             filesystem.second->validate_for_host();
+        }
+    }
+
+    std::size_t io_system::register_drive_change_notify(drive_change_notify_callback callback, void *userdata) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+        return drive_change_callbacks.add(std::make_pair(callback, userdata));
+    }
+    
+    void io_system::invoke_drive_change_callbacks(drive_number drv, drive_action act) {
+        for (auto &callback: drive_change_callbacks) {
+            access_lock.unlock();
+            callback.first(callback.second, drv, act);
+            access_lock.lock();
         }
     }
 

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/buffer.h>
+#include <common/container.h>
 #include <common/types.h>
 #include <common/watcher.h>
 
@@ -235,6 +236,13 @@ namespace eka2l1 {
         ok
     };
 
+    enum drive_action {
+        drive_action_mount = 0,
+        drive_action_unmount = 1
+    };
+
+    using drive_change_notify_callback = std::function<void(void*, drive_number, drive_action)>;
+
     /* \brief An abstract filesystem
     */
     class abstract_file_system {
@@ -304,13 +312,22 @@ namespace eka2l1 {
     using file_system_inst = std::shared_ptr<abstract_file_system>;
     using filesystem_id = std::size_t;
 
+    using drive_change_callback_and_data = std::pair<drive_change_notify_callback, void*>;
+    
     class io_system {
+    private:
         std::map<filesystem_id, file_system_inst> filesystems;
         std::mutex access_lock;
 
         std::atomic<filesystem_id> id_counter;
+        common::identity_container<drive_change_callback_and_data> drive_change_callbacks;
+
+    protected:
+        void invoke_drive_change_callbacks(drive_number drv, drive_action act);
 
     public:
+        explicit io_system();
+
         void init();
 
         void set_product_code(const std::string &pc);
@@ -318,6 +335,8 @@ namespace eka2l1 {
 
         void validate_for_host();
 
+        std::size_t register_drive_change_notify(drive_change_notify_callback callback, void *userdata);
+        
         std::optional<std::u16string> get_raw_path(const std::u16string &path);
 
         /*! \brief Add a new file system to the IO system
