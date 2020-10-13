@@ -70,6 +70,8 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Useful when you bind a key with your mouse and the game/app has built-in cursor.\nTo make the mouse cursor visible, hold ALT key.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">This filter is applied after the next emulated screen draw.</string>
+    <string name="pref_general_utilities_integer_scaling_msg">Enable integer scaling</string>
+    <string name="pref_general_utilities_integer_scaling_tooltip">This is a pixel-perfect scaling method, which can help reduce blur significantly.</string>
     <string name="pref_system_title">System</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Device</string>
