@@ -27,7 +27,7 @@ namespace eka2l1::common {
     static constexpr std::size_t MAX_FILE_INFO_COUNT = 512;
 
     directory_watcher_impl::directory_watcher_impl() {
-        HANDLE stop_event = CreateEvent(nullptr, true, false, TEXT("EDirectoryWatcherStopEvt"));
+        HANDLE stop_event = CreateEvent(nullptr, true, false, nullptr);
 
         if (!stop_event || (stop_event == INVALID_HANDLE_VALUE)) {
             LOG_ERROR("Can't create the event to stop directory watcher thread, abort");
@@ -37,7 +37,7 @@ namespace eka2l1::common {
         ResetEvent(stop_event);
 
         // Create event for notifing new watches
-        HANDLE new_watch_event = CreateEvent(nullptr, true, false, TEXT("EDirectoryWatcherNewWatchEvt"));
+        HANDLE new_watch_event = CreateEvent(nullptr, true, false, nullptr);
 
         if (!new_watch_event || (new_watch_event == INVALID_HANDLE_VALUE)) {
             LOG_ERROR("Can't create the event to notify new watch for watcher thread, abort");
@@ -77,6 +77,10 @@ namespace eka2l1::common {
                 case WAIT_TIMEOUT:
                     LOG_WARN("Waiting for a directory changes timed out.");
                     break;
+
+                case WAIT_FAILED:
+                    LOG_ERROR("Wait directory change failed with error code: {}", GetLastError());
+                    return;
 
                 default: {
                     DWORD buffer_wrote_length = 0;
@@ -163,7 +167,7 @@ namespace eka2l1::common {
     }
 
     bool directory_watcher_impl::unwatch(const std::int32_t watch_handle) {
-        if ((watch_handle <= 2) || (watch_handle > container_.size()) || container_[watch_handle - 1] == nullptr) {
+        if ((watch_handle < 2) || (watch_handle > container_.size()) || container_[watch_handle - 1] == nullptr) {
             return false;
         }
 
@@ -249,7 +253,7 @@ namespace eka2l1::common {
         WaitForSingleObject(added_nof, INFINITE);
         CloseHandle(added_nof);
 
-        return 0;
+        return slot;
     }
 
     bool directory_watcher_impl::unwatch(HANDLE h, const bool is_in_loop) {
