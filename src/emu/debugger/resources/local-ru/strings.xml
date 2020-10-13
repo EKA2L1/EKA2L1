@@ -70,6 +70,8 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Полезно, когда вы назначите кнопку мыши и игра/приложение имеет встроенный курсор.\nЧтобы сделать курсор мыши видимым, удерживайте клавишу ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Включить фильтрацию методом ближайшего соседа</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Этот фильтр применяется после следующей отрисовки эмулированного экрана.</string>
+    <string name="pref_general_utilities_integer_scaling_msg">Enable integer scaling</string>
+    <string name="pref_general_utilities_integer_scaling_tooltip">This is a pixel-perfect scaling method, which can help reduce blur significantly.</string>
     <string name="pref_system_title">Система</string>
     <string name="pref_system_cpu_option_name">ЦП</string>
     <string name="pref_system_device_option_name">Устройство</string>
