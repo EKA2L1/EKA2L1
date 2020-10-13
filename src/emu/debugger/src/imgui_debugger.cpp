@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +15,12 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Copyright 2018-2020 Anton Shepelev (anton.txt@gmail.com)
+ * 
+ * Usage of the works is permitted  provided that this instrument is retained
+ * with the works, so that any entity that uses the works is notified of this
+ * instrument.    DISCLAIMER: THE WORKS ARE WITHOUT WARRANTY. 
  */
 
 #include <cpu/arm_utils.h>
@@ -674,6 +679,8 @@ namespace eka2l1 {
         const std::string utils_hide_mouse_str = common::get_localised_string(localised_strings, "pref_general_utilities_hide_cursor_in_screen_space_checkbox_title");
         const std::string nearest_filtering_str = common::get_localised_string(localised_strings, "pref_general_utilities_nearest_neighbor_filtering_msg");
         const std::string nearest_filtering_tt = common::get_localised_string(localised_strings, "pref_general_utilities_nearest_neighbor_filtering_tooltip");
+        const std::string integer_scaling_str = common::get_localised_string(localised_strings, "pref_general_utilities_integer_scaling_msg");
+        const std::string integer_scaling_tt = common::get_localised_string(localised_strings, "pref_general_utilities_integer_scaling_tooltip");
 
         ImGui::NewLine();
         ImGui::Text("%s", utils_sect_title.c_str());
@@ -690,6 +697,11 @@ namespace eka2l1 {
 
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("%s", nearest_filtering_tt.c_str());
+        }
+
+        ImGui::Checkbox(integer_scaling_str.c_str(), &conf->integer_scaling);
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("%s", integer_scaling_tt.c_str());
         }
 
         const std::map<int, std::string> AVAIL_LANG_LIST = {
@@ -2132,18 +2144,91 @@ namespace eka2l1 {
         imgui_image_rotate(id, base, origin, size, static_cast<float>(rotation));
     }
 
-    static void get_nice_scale_by_integer(ImVec2 out_size, ImVec2 source_size, eka2l1::vec2 &scale) {
+    static void get_nice_scale(ImVec2 out_size, ImVec2 source_size, eka2l1::vec2 &scale, const bool integer_scale) {
         scale.x = scale.y = 1;
 
-        while ((source_size.x * scale.x < out_size.x) && (source_size.y * scale.y < out_size.y)) {
-            scale.x++;
-            scale.y++;
+        if (!integer_scale) {
+            while ((source_size.x * scale.x < out_size.x) && (source_size.y * scale.y < out_size.y)) {
+                scale.x++;
+                scale.y++;
+            }
+
+            if (scale.x > 1)
+                scale.x--;
+            if (scale.y > 1)
+                scale.y--;
+
+            return;
         }
 
-        if (scale.x > 1)
-            scale.x--;
-        if (scale.y > 1)
-            scale.y--;
+        const double in_aspect_ratio = source_size.x / source_size.y;
+        double aspect_normalized = 0.0;
+        double exact_aspect_ratio = 0.0;
+
+        if (in_aspect_ratio > 1.0)
+            aspect_normalized = in_aspect_ratio;
+        else
+            aspect_normalized = 1.0 / in_aspect_ratio;
+
+        exact_aspect_ratio = (aspect_normalized - floor(aspect_normalized)) < 0.01;
+
+        std::int32_t current_scale_x = 0;
+        std::int32_t current_scale_y = 0;
+        std::int32_t max_scale_x = 0;
+        std::int32_t max_scale_y = 0;
+
+        max_scale_x = static_cast<std::int32_t>(floor(static_cast<double>(out_size.x / source_size.x)));
+        max_scale_y = static_cast<std::int32_t>(floor(static_cast<double>(out_size.y / source_size.y)));
+
+        current_scale_x = max_scale_x;
+        current_scale_y = max_scale_y;
+
+        double err_min = -1.0;
+
+        double errpar = 0.0;
+        double srat = 0.0;
+        double errsize = 0.0;
+        double err = 0.0;
+
+        while(true) {
+            const double parrat = static_cast<double>(current_scale_y) / current_scale_x / in_aspect_ratio;
+
+            /* calculate aspect-ratio error: */
+            if (parrat > 1.0 )
+                errpar = parrat;
+            else
+                errpar = 1.0 / parrat;
+
+            srat = common::min<double>(static_cast<double>(max_scale_y) / current_scale_y,
+                static_cast<double>(max_scale_x) / current_scale_x);
+
+            /* calculate size error: */
+            /* if PAR is exact, exclude size error from the fitness function: */
+            if (exact_aspect_ratio)
+                errsize = 1.0;
+            else
+                errsize = std::pow(srat, 1.14f);
+
+            err = errpar * errsize; /* total error */
+
+            /* check for a new optimum: */
+            if ((err < err_min) || (err_min == -1.0)) {
+                scale.x = current_scale_x;
+                scale.y = current_scale_y;
+
+                err_min = err;
+            }
+
+            /* try a smaller magnification: */
+            if (parrat < 1.0)
+                current_scale_x--;
+            else
+                current_scale_y--;		
+
+            /* do not explore magnifications smaller than half the screen: */
+            if (srat >= 2.0)
+                break;
+        }
     }
     
     static void imgui_screen_aspect_resize_keeper(ImGuiSizeCallbackData* data) {
@@ -2181,10 +2266,10 @@ namespace eka2l1 {
                 rotated_size.y = temp;
             }
 
-            ImVec2 fullscreen_region = ImVec2(io.DisplaySize.x, io.DisplaySize.y - 60.0f);
+            ImVec2 fullscreen_region = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
 
             const float fullscreen_start_x = 0.0f;
-            const float fullscreen_start_y = 30.0f;
+            const float fullscreen_start_y = 0.0f;
 
             float ratioed = rotated_size.x / rotated_size.y;
 
@@ -2195,7 +2280,9 @@ namespace eka2l1 {
                 ImGui::SetNextWindowSize(rotated_size, ImGuiCond_Once);
 
                 if (back_from_fullscreen) {
+                    ImGui::SetNextWindowPos(ImVec2(fullscreen_start_x, fullscreen_start_y + 30.0f));
                     ImGui::SetNextWindowSize(ImVec2(rotated_size.x * last_scale, rotated_size.y * last_scale));
+                    
                     back_from_fullscreen = false;
                 }
 
@@ -2272,9 +2359,11 @@ namespace eka2l1 {
             ImGui::PopStyleVar();
 
             eka2l1::vec2 scale(0, 0);
-            get_nice_scale_by_integer(fullscreen_region, ImVec2(static_cast<float>(size.x), static_cast<float>(size.y)), scale);
 
             if (fullscreen_now) {
+                get_nice_scale(fullscreen_region, ImVec2(static_cast<float>(size.x),
+                    static_cast<float>(size.y)), scale, conf->integer_scaling);
+                    
                 scr->scale_x = static_cast<float>(scale.x);
                 scr->scale_y = static_cast<float>(scale.y);
             } else {
@@ -2293,13 +2382,16 @@ namespace eka2l1 {
 
                 const eka2l1::vec2 org_screen_size = scr->size();
 
-                scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.x);
-                scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.y);
-
                 if (scr->ui_rotation % 180 == 0) {
+                    scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.x);
+                    scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.y);
+                    
                     winpos.x += (fullscreen_region.x - scaled_no_dsa.x) / 2;
                     winpos.y += (fullscreen_region.y - scaled_no_dsa.y) / 2;
                 } else {
+                    scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.y);
+                    scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.x);
+                    
                     winpos.x += (fullscreen_region.x - scaled_no_dsa.y) / 2;
                     winpos.y += (fullscreen_region.y - scaled_no_dsa.x) / 2;
                 }
