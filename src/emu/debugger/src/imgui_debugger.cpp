@@ -1683,7 +1683,12 @@ namespace eka2l1 {
     void imgui_debugger::show_mount_sd_card() {
         if (!sd_card_mount_choosen) {
             if (!drivers::open_native_dialog(sys->get_graphics_driver(), "", [&](const char *result) {
-                sys->mount(drive_e, drive_media::physical, result, io_attrib_removeable);
+                io_system *io = sys->get_io_system();
+                
+                io->unmount(drive_e);
+                io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable,
+                    common::utf8_to_ucs2(result));
+
                 sd_card_mount_choosen = true;
             }, true)) {
                 should_show_sd_card_mount = false;
