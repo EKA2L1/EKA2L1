@@ -80,6 +80,8 @@ namespace eka2l1 {
         std::vector<view_data> view_datas;
         file_ownership_list ownership_list;
 
+        drive_number land_drive;
+
         /**
          * @brief Get parameters to launch this app registry.
          * 
@@ -194,8 +196,12 @@ namespace eka2l1 {
         void on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
             common::directory_changes &changes);
 
-        void rescan_registries_oldarch(eka2l1::io_system *io);
-        void rescan_registries_newarch(eka2l1::io_system *io);
+        void on_drive_change(void *userdata, drive_number drv, drive_action act);
+
+        void remove_registries_on_drive(const drive_number drv);
+
+        void rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number num);
+        void rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number num);
 
         void rescan_registries(eka2l1::io_system *io);
 

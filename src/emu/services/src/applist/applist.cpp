@@ -73,6 +73,8 @@ namespace eka2l1 {
         }
 
         apa_app_registry reg;
+
+        reg.land_drive = land_drive;
         reg.rsc_path = path;
         reg.mandatory_info.app_path = eka2l1::replace_extension(path, u".app");     // It seems so.
 
@@ -143,6 +145,8 @@ namespace eka2l1 {
         }
 
         apa_app_registry reg;
+
+        reg.land_drive = land_drive;
         reg.rsc_path = nearest_path;
 
         // Load the resource
@@ -271,6 +275,12 @@ namespace eka2l1 {
         });
     }
 
+    void applist_server::remove_registries_on_drive(const drive_number drv) {
+        common::erase_elements(regs, [drv](const apa_app_registry &reg) {
+            return reg.land_drive == drv;
+        });
+    }
+
     void applist_server::on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
         common::directory_changes &changes) {
         const std::lock_guard<std::mutex> guard(list_access_mut_);
@@ -310,73 +320,98 @@ namespace eka2l1 {
         sort_registry_list();
     }
 
-    void applist_server::rescan_registries_oldarch(eka2l1::io_system *io) {
-        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
-            if (io->get_drive_entry(drv)) {
-                const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
-                auto reg_dir = io->open_dir(base_dir, io_attrib_include_dir);
+    void applist_server::on_drive_change(void *userdata, drive_number drv, drive_action act) {
+        io_system *io = reinterpret_cast<io_system*>(userdata);
 
-                if (reg_dir) {
-                    while (auto ent = reg_dir->get_next_entry()) {
-                        if (ent->type == io_component_type::dir) {
-                            const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
-                                ent->full_path, ent->name + ".aif", true));
-
-                            load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language());    
-                        }
-                    }
-                }
-
-                const std::int64_t watch = io->watch_directory(
-                    base_dir, [this, base_dir, io, drv](void *userdata, common::directory_changes &changes) {
-                        on_register_directory_changes(io, base_dir, drv, changes);
-                    },
-                    nullptr, common::directory_change_move | common::directory_change_last_write);
-
-                if (watch != -1) {
-                    watchs_.push_back(watch);
-                }
+        switch (act) {
+        case drive_action_mount:
+            if (kern->is_eka1()) {
+                rescan_registries_on_drive_oldarch(io, drv);
+            } else {
+                rescan_registries_on_drive_newarch(io, drv);
             }
+
+            sort_registry_list();
+            break;
+
+        case drive_action_unmount:
+            remove_registries_on_drive(drv);
+            break;
+
+        default:
+            break;
         }
     }
 
-    void applist_server::rescan_registries_newarch(eka2l1::io_system *io) {
-        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
-            if (io->get_drive_entry(drv)) {
-                const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-                auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib_include_file);
+    void applist_server::rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number drv) {
+        const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
+        auto reg_dir = io->open_dir(base_dir, io_attrib_include_dir);
 
-                if (reg_dir) {
-                    while (auto ent = reg_dir->get_next_entry()) {
-                        if (ent->type == io_component_type::file) {
-                            load_registry(io, common::utf8_to_ucs2(ent->full_path), drv, kern->get_current_language());
-                        }
-                    }
-                }
+        if (reg_dir) {
+            while (auto ent = reg_dir->get_next_entry()) {
+                if (ent->type == io_component_type::dir) {
+                    const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
+                        ent->full_path, ent->name + ".aif", true));
 
-                const std::int64_t watch = io->watch_directory(
-                    base_dir, [this, base_dir, io, drv](void *userdata, common::directory_changes &changes) {
-                        on_register_directory_changes(io, base_dir, drv, changes);
-                    },
-                    nullptr, common::directory_change_move | common::directory_change_last_write);
-
-                if (watch != -1) {
-                    watchs_.push_back(watch);
+                    load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language());    
                 }
             }
+        }
+
+        const std::int64_t watch = io->watch_directory(
+            base_dir, [this, base_dir, io, drv](void *userdata, common::directory_changes &changes) {
+                on_register_directory_changes(io, base_dir, drv, changes);
+            },
+            nullptr, common::directory_change_move | common::directory_change_last_write);
+
+        if (watch != -1) {
+            watchs_.push_back(watch);
+        }
+    }
+
+    void applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv) {
+        const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
+        auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib_include_file);
+
+        if (reg_dir) {
+            while (auto ent = reg_dir->get_next_entry()) {
+                if (ent->type == io_component_type::file) {
+                    load_registry(io, common::utf8_to_ucs2(ent->full_path), drv, kern->get_current_language());
+                }
+            }
+        }
+
+        const std::int64_t watch = io->watch_directory(
+            base_dir, [this, base_dir, io, drv](void *userdata, common::directory_changes &changes) {
+                on_register_directory_changes(io, base_dir, drv, changes);
+            },
+            nullptr, common::directory_change_move | common::directory_change_last_write);
+
+        if (watch != -1) {
+            watchs_.push_back(watch);
         }
     }
 
     void applist_server::rescan_registries(eka2l1::io_system *io) {        
         LOG_INFO("Loading app registries");
 
-        if (kern->is_eka1()) {
-            rescan_registries_oldarch(io);
-        } else {
-            rescan_registries_newarch(io);
+        for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+            if (io->get_drive_entry(drv)) {
+                if (kern->is_eka1()) {
+                    rescan_registries_on_drive_oldarch(io, drv);
+                } else {
+                    rescan_registries_on_drive_newarch(io, drv);
+                }
+            }
         }
 
         sort_registry_list();
+
+        // Register drive change callback
+        io->register_drive_change_notify([this](void *userdata, drive_number drv, drive_action act) {
+            return on_drive_change(userdata, drv, act);
+        }, io);
+
         LOG_INFO("Done loading!");
     }
 
