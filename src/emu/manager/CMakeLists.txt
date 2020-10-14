@@ -7,6 +7,7 @@ endif ()
 add_library(manager
         include/manager/installation/raw_dump.h
         include/manager/installation/rpkg.h
+        include/manager/app_settings_manager.h
         include/manager/device_manager.h
         include/manager/manager.h
         include/manager/package_manager.h
@@ -19,6 +20,7 @@ add_library(manager
         include/manager/software.h
         src/installation/raw_dump.cpp
         src/installation/rpkg.cpp
+        src/app_settings_manager.cpp
         src/device_manager.cpp
         src/manager.cpp
         src/package_manager.cpp

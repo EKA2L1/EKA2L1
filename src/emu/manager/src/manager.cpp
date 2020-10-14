@@ -43,8 +43,13 @@ namespace eka2l1 {
         return dvmngr.get();
     }
 
+    manager::app_settings *manager_system::get_app_settings() {
+        return app_settings.get();
+    }
+
     void manager_system::init(system *sys, config::state *conf) {
         pkgmngr = std::make_unique<manager::package_manager>(sys, conf);
+        app_settings = std::make_unique<manager::app_settings>(conf);
 
 #ifdef ENABLE_SCRIPTING
         scrmngr = std::make_unique<manager::script_manager>(sys);
