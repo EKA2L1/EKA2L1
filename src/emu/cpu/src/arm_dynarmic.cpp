@@ -126,9 +126,12 @@ namespace eka2l1::arm {
 
         std::uint32_t MemoryReadCode(Dynarmic::A32::VAddr addr) override {
             std::uint32_t code_result = 0;
-            handle_read_status(parent.read_32bit(addr, &code_result), addr);
+            constexpr std::uint32_t UNDEFINED_WORD = 0xE11EFF2F;
 
-            return code_result;
+            bool status = parent.read_32bit(addr, &code_result);
+            handle_read_status(status, addr);
+
+            return status ? code_result : UNDEFINED_WORD;
         }
 
         uint8_t MemoryRead8(Dynarmic::A32::VAddr addr) override {

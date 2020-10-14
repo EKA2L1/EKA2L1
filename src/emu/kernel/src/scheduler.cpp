@@ -346,6 +346,10 @@ namespace eka2l1::kernel {
             thr->owning_process()->finish_logons();
         }
 
+        if (crr_thread == thr) {
+            kern->prepare_reschedule();
+        }
+
         return true;
     }
 }
