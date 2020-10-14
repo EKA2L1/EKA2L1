@@ -1327,7 +1327,9 @@ namespace eka2l1 {
 
     std::size_t io_system::register_drive_change_notify(drive_change_notify_callback callback, void *userdata) {
         const std::lock_guard<std::mutex> guard(access_lock);
-        return drive_change_callbacks.add(std::make_pair(callback, userdata));
+        
+        auto pdat = std::make_pair(callback, userdata);
+        return drive_change_callbacks.add(pdat);
     }
     
     void io_system::invoke_drive_change_callbacks(drive_number drv, drive_action act) {
