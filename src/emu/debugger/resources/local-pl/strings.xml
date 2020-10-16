@@ -116,7 +116,7 @@
     <string name="install_device_final_msg_2">W razie problemu, zgłoś to twórcom zgłaszając problem!</string>
     <string name="mmc_mount_success_dialog_title">Karta zamontowana poprawnie!</string>
     <string name="mmc_mount_success_dialog_msg">Karta MMC/SD zamontowana! Wszystkie aplikacje na karcie MMC/SD zostały wczytane ponownie.</string>
-    <string name="no_device_installed_msg">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1\'s GitHub wiki page.</string>
+    <string name="no_device_installed_msg">Nie zainstalowano żadnego urządzenia. Zainstaluj urządzenie, lub postępuj zgodnie z instrukcjami instalacji dostępnymi na wiki GitHuba EKA2L1.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Zainstaluj urządzenie</string>
     <string name="no_show_option_again_general_msg">Nie pokazuj tego ponownie.</string>
     <string name="touchscreen_disabled_msg">Niektóre z twoich obecnych przypisań klawiszy są powiązane z przyciskami myszki, więc emulacja ekranu dotykowego jest wyłączona.</string>
