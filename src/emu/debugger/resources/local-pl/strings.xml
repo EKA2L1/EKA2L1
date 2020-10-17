@@ -57,8 +57,8 @@
     <string name="pref_general_debugging_string">Debugowanie</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU – odczyt</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">CPU – zapis</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">Krok CPU</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Ta opcja nie zostanie zapisana po wyłączeniu emulatora. Nieefektywne gdy GDBStub jest włączone.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Wywołania systemowe</string>
     <string name="pref_general_debugging_ait_checkbox_title">Dokładne taktowanie IPC</string>
