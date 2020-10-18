@@ -24,7 +24,7 @@
 #include <services/fbs/palette.h>
 #include <services/window/bitmap_cache.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/chunk.h>
 

@@ -36,7 +36,7 @@
 #include <common/path.h>
 #include <common/wildcard.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <vfs/vfs.h>
 

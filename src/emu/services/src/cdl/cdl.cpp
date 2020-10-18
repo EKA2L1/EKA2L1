@@ -19,7 +19,7 @@
 
 #include <common/chunkyseri.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <services/cdl/cdl.h>
 #include <services/cdl/ops.h>

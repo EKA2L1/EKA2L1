@@ -18,7 +18,7 @@
  */
 
 #include <common/log.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 #include <services/framework.h>
 #include <services/utils.h>

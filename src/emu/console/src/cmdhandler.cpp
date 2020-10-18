@@ -23,12 +23,12 @@
 #include <common/pystr.h>
 #include <console/cmdhandler.h>
 #include <console/state.h>
-#include <manager/device_manager.h>
-#include <manager/manager.h>
-#include <manager/package_manager.h>
+#include <system/devices.h>
+
+#include <package/manager.h>
 
 #if ENABLE_SCRIPTING
-#include <manager/script_manager.h>
+#include <scripting/manager.h>
 #include <pybind11/embed.h>
 #endif
 
@@ -73,7 +73,7 @@ bool package_remove_option_handler(eka2l1::common::arg_parser *parser, void *use
     std::uint32_t vuid = common::pystr(uid).as_int<std::uint32_t>();
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
 
-    bool result = emu->symsys->get_manager_system()->get_package_manager()->uninstall_package(vuid);
+    bool result = emu->symsys->get_packages()->uninstall_package(vuid);
 
     if (!result) {
         *err = "Failed to remove package.";
@@ -177,28 +177,6 @@ bool help_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std
     return false;
 }
 
-bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
-    // Base Z drive is mount_z
-    // The RPKG path is the next token
-    const char *path = parser->next_token();
-
-    if (!path) {
-        *err = "RPKG installation failed. No path provided";
-        return false;
-    }
-
-    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
-    std::string firmware_code;
-
-    bool install_result = emu->symsys->install_rpkg(emu->conf.storage + "/drives/z/", path, firmware_code);
-    if (!install_result) {
-        *err = "RPKG installation failed. Something is wrong, see log";
-        return false;
-    }
-
-    return false;
-}
-
 bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
     kernel_system *kern = emu->symsys->get_kernel_system();
@@ -218,7 +196,7 @@ bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata,
 
 bool list_devices_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
-    auto &devices_list = emu->symsys->get_manager_system()->get_device_manager()->get_devices();
+    auto &devices_list = emu->symsys->get_device_manager()->get_devices();
 
     for (std::size_t i = 0; i < devices_list.size(); i++) {
         std::cout << i << " : " << devices_list[i].model << " (" << devices_list[i].firmware_code << ", "

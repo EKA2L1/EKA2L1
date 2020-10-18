@@ -38,7 +38,6 @@
 
 #include <disasm/disasm.h>
 
-#include <epoc/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
 #include <kernel/scheduler.h>
@@ -337,7 +336,7 @@ namespace eka2l1 {
     }
     
     void kernel_system::prepare_reschedule() {
-        sys_->prepare_reschedule();
+        get_cpu()->stop();
     }
 
     void kernel_system::call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,

@@ -19,7 +19,7 @@
  */
 
 #include <common/log.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 
 #include <services/ui/eikappui.h>

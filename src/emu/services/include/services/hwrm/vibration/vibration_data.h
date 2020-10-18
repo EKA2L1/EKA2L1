@@ -28,10 +28,7 @@ namespace eka2l1 {
 
     struct central_repo;
     class io_system;
-
-    namespace manager {
-        class device_manager;
-    }
+    class device_manager;
 
     using property_ptr = service::property *;
 
@@ -54,7 +51,7 @@ namespace eka2l1 {
              * 
              * \internal
              */
-            bool initialise_components(kernel_system *kern, io_system *io, manager::device_manager *mngr);
+            bool initialise_components(kernel_system *kern, io_system *io, device_manager *mngr);
 
             /**
              * \brief Enable vibration to start.
@@ -64,10 +61,10 @@ namespace eka2l1 {
              * \returns True on success.
              * \internal
              */
-            bool enable_vibration(io_system *io, manager::device_manager *mngr);
+            bool enable_vibration(io_system *io, device_manager *mngr);
 
         public:
-            explicit resource_data(kernel_system *kern, io_system *io, manager::device_manager *mngr);
+            explicit resource_data(kernel_system *kern, io_system *io, device_manager *mngr);
         };
     }
 }

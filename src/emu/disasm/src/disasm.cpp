@@ -35,7 +35,7 @@ namespace eka2l1 {
         }
     }
 
-    void disasm::init() {
+    disasm::disasm() {
         cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle);
 
         if (err != CS_ERR_OK) {
@@ -52,7 +52,7 @@ namespace eka2l1 {
         }
     }
 
-    void disasm::shutdown() {
+    disasm::~disasm() {
         cp_insn.reset();
         cs_close(&cp_handle);
     }

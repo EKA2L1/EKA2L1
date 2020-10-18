@@ -22,7 +22,7 @@
 #include <common/cvt.h>
 
 #include <cpu/arm_interface.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>

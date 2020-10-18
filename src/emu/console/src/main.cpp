@@ -45,7 +45,7 @@
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h> // Declaration for graphics driver. Happy!
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <loader/rom.h>
 #include <config/config.h>
 
@@ -91,9 +91,6 @@ int main(int argc, char **argv) {
         // Let's set up this
         eka2l1::common::arg_parser parser(argc, argv);
 
-        parser.add("--irpkg", "Install a repackage file. The installer will auto recognizes "
-                              "the product and system info",
-            rpkg_unpack_option_handler);
         parser.add("--help, --h", "Display helps menu", help_option_handler);
         parser.add("--listapp", "List all installed applications", list_app_option_handler);
         parser.add("--listdevices", "List all installed devices", list_devices_option_handler);

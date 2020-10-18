@@ -25,7 +25,7 @@
 
 namespace eka2l1::epoc {
     akn_skin_icon_config_map::akn_skin_icon_config_map(central_repo_server *cenrep_,
-        manager::device_manager *mngr, io_system *io_, const language lang_)
+        device_manager *mngr, io_system *io_, const language lang_)
         : cenrep_serv_(cenrep_)
         , io_(io_)
         , mngr_(mngr)

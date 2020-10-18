@@ -21,7 +21,7 @@
 #include <scripting/instance.h>
 #include <scripting/mem.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <mem/mem.h>
 #include <utils/des.h>
 

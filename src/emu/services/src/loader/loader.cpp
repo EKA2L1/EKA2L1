@@ -25,7 +25,7 @@
 #include <kernel/kernel.h>
 #include <utils/des.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <loader/romimage.h>

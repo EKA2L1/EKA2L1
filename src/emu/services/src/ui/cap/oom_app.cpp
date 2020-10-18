@@ -25,7 +25,7 @@
 #include <services/window/window.h>
 #include <utils/err.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <vfs/vfs.h>
 

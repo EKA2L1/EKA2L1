@@ -29,8 +29,8 @@
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
 
-#include <manager/device_manager.h>
-#include <manager/manager.h>
+#include <system/devices.h>
+
 
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
@@ -62,10 +62,18 @@ namespace eka2l1::desktop {
 
         // Start to read the configs
         conf.deserialize();
+        app_settings = std::make_unique<config::app_settings>(&conf);
 
-        symsys = std::make_unique<eka2l1::system>(nullptr, nullptr, &conf);
+        system_create_components comp;
+        comp.audio_ = nullptr;
+        comp.graphics_ = nullptr;
+        comp.conf_ = &conf;
+        comp.packages_ = nullptr;
+        comp.settings_ = app_settings.get();
 
-        manager::device_manager *dvcmngr = symsys->get_manager_system()->get_device_manager();
+        symsys = std::make_unique<eka2l1::system>(comp);
+
+        device_manager *dvcmngr = symsys->get_device_manager();
 
         if (dvcmngr->total() > 0) {
             symsys->startup();
@@ -101,8 +109,8 @@ namespace eka2l1::desktop {
 
     bool emulator::stage_two() {
         if (!stage_two_inited) {
-            manager::device_manager *dvcmngr = symsys->get_manager_system()->get_device_manager();
-            manager::device *dvc = dvcmngr->get_current();
+            device_manager *dvcmngr = symsys->get_device_manager();
+            device *dvc = dvcmngr->get_current();
 
             if (!dvc) {
                 LOG_ERROR("No current device is available. Stage two initialisation abort");

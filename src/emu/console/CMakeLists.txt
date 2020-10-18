@@ -4,7 +4,6 @@ endif ()
 
 add_executable(console
         include/console/cmdhandler.h
-        include/console/global.h
         include/console/thread.h
         include/console/seh_handler.h
         src/cmdhandler.cpp
@@ -22,9 +21,9 @@ target_link_libraries(console PRIVATE
         epoc
         epockern
         epocservs
-        manager
         gdbstub
         imgui
+        package
         yaml-cpp)
 
 target_include_directories(console PRIVATE include ${YAML_CPP_INCLUDE_DIR})

@@ -26,7 +26,7 @@
 #include <services/audio/keysound/ringtab.h>
 #include <utils/err.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/process.h>
 
 #include <cmath>

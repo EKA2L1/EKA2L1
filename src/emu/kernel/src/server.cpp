@@ -20,7 +20,6 @@
 
 #include <common/log.h>
 
-#include <epoc/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/server.h>
 #include <kernel/timing.h>

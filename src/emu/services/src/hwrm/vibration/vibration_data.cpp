@@ -28,7 +28,7 @@
 #include <services/context.h>
 
 namespace eka2l1::epoc::hwrm::vibration {
-    bool resource_data::enable_vibration(io_system *io, manager::device_manager *mngr) {
+    bool resource_data::enable_vibration(io_system *io, device_manager *mngr) {
         central_repo_entry *entry = vibra_control_repo_->find_entry(VIBRATION_CONTROL_ENABLE_KEY);
 
         if (!entry) {
@@ -42,7 +42,7 @@ namespace eka2l1::epoc::hwrm::vibration {
         return true;
     }
 
-    bool resource_data::initialise_components(kernel_system *kern, io_system *io, manager::device_manager *mngr) {
+    bool resource_data::initialise_components(kernel_system *kern, io_system *io, device_manager *mngr) {
         // Create and define the property. Remember to destroy later.
         status_prop_ = kern->create<service::property>();
 
@@ -76,7 +76,7 @@ namespace eka2l1::epoc::hwrm::vibration {
         return true;
     }
 
-    resource_data::resource_data(kernel_system *sys, io_system *io, manager::device_manager *mngr)
+    resource_data::resource_data(kernel_system *sys, io_system *io, device_manager *mngr)
         : status_prop_(nullptr)
         , vibra_control_repo_(nullptr) {
         if (!initialise_components(sys, io, mngr)) {

@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <services/msv/msv.h>
 #include <vfs/vfs.h>
 
@@ -31,8 +31,8 @@
 #include <common/cvt.h>
 #include <common/time.h>
 
-#include <manager/device_manager.h>
-#include <manager/manager.h>
+#include <system/devices.h>
+
 
 #include <common/path.h>
 
@@ -89,7 +89,7 @@ namespace eka2l1 {
 
     void msv_server::init() {
         // Instantiate the message folder
-        manager::device_manager *mngr = sys->get_manager_system()->get_device_manager();
+        device_manager *mngr = sys->get_device_manager();
         message_folder_ = eka2l1::add_path(DEFAULT_MSG_DATA_DIR,
             common::utf8_to_ucs2(mngr->get_current()->firmware_code) + u"\\");
 

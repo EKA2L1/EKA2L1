@@ -21,7 +21,7 @@
 #include <loader/rsc.h>
 #include <services/ui/view/view.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 #include <vfs/vfs.h>
 

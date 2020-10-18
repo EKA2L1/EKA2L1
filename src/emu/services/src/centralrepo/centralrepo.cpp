@@ -23,12 +23,11 @@
 #include <common/ini.h>
 #include <common/log.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
+#include <system/devices.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/cre.h>
 #include <services/context.h>
-#include <manager/device_manager.h>
-#include <manager/manager.h>
 
 #include <utils/err.h>
 #include <vfs/vfs.h>
@@ -235,7 +234,7 @@ namespace eka2l1 {
     void central_repo_client_session::init(service::ipc_context *ctx) {
         // The UID repo to load
         const std::uint32_t repo_uid = *ctx->get_argument_value<std::uint32_t>(0);
-        manager::device_manager *mngr = ctx->sys->get_manager_system()->get_device_manager();
+        device_manager *mngr = ctx->sys->get_device_manager();
         eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), mngr, repo_uid);
 
         if (!repo) {
@@ -321,7 +320,7 @@ namespace eka2l1 {
         session_ite->second.handle_message(&ctx);
     }
 
-    int central_repo_server::load_repo_adv(eka2l1::io_system *io, manager::device_manager *mngr, central_repo *repo, const std::uint32_t key,
+    int central_repo_server::load_repo_adv(eka2l1::io_system *io, device_manager *mngr, central_repo *repo, const std::uint32_t key,
         bool scan_org_only) {
         bool is_first_repo = first_repo;
         first_repo ? (first_repo = false) : 0;
@@ -422,7 +421,7 @@ namespace eka2l1 {
      * That's for rollback when calling reset. Any changes in repo will be saved in persists folder
      * of preferable drive (usually internal).
     */
-    eka2l1::central_repo *central_repo_server::load_repo(eka2l1::io_system *io, manager::device_manager *mngr, const std::uint32_t key) {
+    eka2l1::central_repo *central_repo_server::load_repo(eka2l1::io_system *io, device_manager *mngr, const std::uint32_t key) {
         eka2l1::central_repo repo;
         if (load_repo_adv(io, mngr, &repo, key, false) != 0) {
             return nullptr;
@@ -432,7 +431,7 @@ namespace eka2l1 {
         return &repos[key];
     }
 
-    eka2l1::central_repo *central_repo_server::load_repo_with_lookup(eka2l1::io_system *io, manager::device_manager *mngr, const std::uint32_t key) {
+    eka2l1::central_repo *central_repo_server::load_repo_with_lookup(eka2l1::io_system *io, device_manager *mngr, const std::uint32_t key) {
         auto result = repos.find(key);
 
         if (result != repos.end()) {
@@ -444,7 +443,7 @@ namespace eka2l1 {
     }
 
     eka2l1::central_repo *central_repo_server::get_initial_repo(eka2l1::io_system *io,
-        manager::device_manager *mngr, const std::uint32_t key) {
+        device_manager *mngr, const std::uint32_t key) {
         // Load from cache first
         eka2l1::central_repo *repo = backup_cacher.get_cached_repo(key);
 
@@ -559,7 +558,7 @@ namespace eka2l1 {
         }
     }
 
-    int central_repo_client_session::closerep(io_system *io, manager::device_manager *mngr, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
+    int central_repo_client_session::closerep(io_system *io, device_manager *mngr, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
         auto &repo_subsession = repo_subsession_ite->second;
 
         if (repo_id != 0 && repo_subsession.attach_repo->uid != repo_id) {
@@ -593,7 +592,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    int central_repo_client_session::closerep(io_system *io, manager::device_manager *mngr, const std::uint32_t repo_id, const std::uint32_t id) {
+    int central_repo_client_session::closerep(io_system *io, device_manager *mngr, const std::uint32_t repo_id, const std::uint32_t id) {
         auto repo_subsession_ite = client_subsessions.find(id);
 
         if (repo_subsession_ite == client_subsessions.end()) {
@@ -604,7 +603,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_session::close(service::ipc_context *ctx) {
-        manager::device_manager *mngr = ctx->sys->get_manager_system()->get_device_manager();
+        device_manager *mngr = ctx->sys->get_device_manager();
         const int err = closerep(ctx->sys->get_io_system(), mngr, 0, *ctx->get_argument_value<std::uint32_t>(3));
 
         switch (err) {
@@ -638,7 +637,7 @@ namespace eka2l1 {
         auto ss_ite = client_sessions.find(ss_id);
 
         io_system *io = ctx.sys->get_io_system();
-        manager::device_manager *mngr = ctx.sys->get_manager_system()->get_device_manager();
+        device_manager *mngr = ctx.sys->get_device_manager();
 
         if (ss_ite != client_sessions.end()) {
             central_repo_client_session &ss = ss_ite->second;

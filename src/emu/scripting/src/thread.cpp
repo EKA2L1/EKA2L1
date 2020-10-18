@@ -24,7 +24,7 @@
 #include <scripting/process.h>
 #include <scripting/thread.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/thread.h>
 

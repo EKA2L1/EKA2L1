@@ -18,7 +18,7 @@
  */
 
 #include <common/log.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
 #include <services/audio/mmf/audio.h>

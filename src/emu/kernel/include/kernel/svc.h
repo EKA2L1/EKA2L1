@@ -35,8 +35,6 @@
 #include <common/uid.h>
 
 #include <bridge/bridge.h>
-
-#include <epoc/hal.h>
 #include <kernel/libmanager.h>
 
 #include <utils/err.h>

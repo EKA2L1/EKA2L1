@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <loader/rsc.h>
 #include <services/cdl/cdl.h>
 #include <services/cdl/observer.h>

@@ -231,6 +231,5 @@ target_link_libraries(epocservs PRIVATE
         epoc
         epockern
         drivers
-        manager
         stb
         xxHash)

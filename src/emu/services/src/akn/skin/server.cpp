@@ -29,10 +29,8 @@
 #include <common/log.h>
 #include <utils/err.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
-
-#include <manager/manager.h>
 
 namespace eka2l1 {
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
@@ -199,8 +197,8 @@ namespace eka2l1 {
         // Older versions dont use cenrep.
         settings_ = std::make_unique<epoc::akn_ss_settings>(sys->get_io_system(), !svr ? nullptr : reinterpret_cast<central_repo_server *>(&(*svr)));
 
-        icon_config_map_ = std::make_unique<epoc::akn_skin_icon_config_map>(!svr ? nullptr : reinterpret_cast<central_repo_server *>(&(*svr)), sys->get_manager_system()->get_device_manager(),
-            sys->get_io_system(), sys->get_system_language());
+        icon_config_map_ = std::make_unique<epoc::akn_skin_icon_config_map>(!svr ? nullptr : reinterpret_cast<central_repo_server *>(&(*svr)),
+            sys->get_device_manager(), sys->get_io_system(), sys->get_system_language());
 
         fbss = reinterpret_cast<fbs_server *>(&(*kern->get_by_name<service::server>(
             epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version()))));

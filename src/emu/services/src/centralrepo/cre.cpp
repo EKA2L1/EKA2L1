@@ -29,7 +29,7 @@
 #include <utils/des.h>
 #include <vfs/vfs.h>
 
-#include <manager/device_manager.h>
+#include <system/devices.h>
 
 namespace eka2l1 {
     /* 
@@ -241,7 +241,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    void central_repo::write_changes(eka2l1::io_system *io, manager::device_manager *mngr) {
+    void central_repo::write_changes(eka2l1::io_system *io, device_manager *mngr) {
         std::vector<std::uint8_t> bufs;
 
         {
@@ -270,7 +270,7 @@ namespace eka2l1 {
         f->close();
     }
 
-    void central_repo_client_subsession::write_changes(eka2l1::io_system *io, manager::device_manager *mngr) {
+    void central_repo_client_subsession::write_changes(eka2l1::io_system *io, device_manager *mngr) {
         attach_repo->write_changes(io, mngr);
     }
 }

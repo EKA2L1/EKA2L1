@@ -22,7 +22,7 @@
 #include <dispatch/screen.h>
 
 #include <drivers/graphics/graphics.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <services/window/common.h>
 #include <services/window/window.h>

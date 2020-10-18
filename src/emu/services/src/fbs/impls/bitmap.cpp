@@ -32,7 +32,7 @@
 #include <services/fs/fs.h>
 #include <services/window/common.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <utils/err.h>
 #include <vfs/vfs.h>

@@ -20,7 +20,7 @@
 
 #include <common/log.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <services/featmgr/featmgr.h>
 #include <services/featmgr/op.h>
 #include <services/context.h>

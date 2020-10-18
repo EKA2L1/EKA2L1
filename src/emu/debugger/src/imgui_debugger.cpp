@@ -34,7 +34,7 @@
 #include <imgui_internal.h>
 
 #include <disasm/disasm.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 #include <utils/apacmd.h>
 #include <utils/locale.h>
@@ -56,10 +56,11 @@
 #include <drivers/graphics/emu_window.h> // For scancode
 
 #include <config/config.h>
-#include <manager/device_manager.h>
-#include <manager/manager.h>
-#include <manager/installation/raw_dump.h>
-#include <manager/installation/rpkg.h>
+#include <system/devices.h>
+#include <package/manager.h>
+
+#include <system/installation/raw_dump.h>
+#include <system/installation/rpkg.h>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -147,16 +148,14 @@ namespace eka2l1 {
         std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
             false);
 
-        manager_system *mngr = sys->get_manager_system();
-
         // Check if no device is installed
-        manager::device_manager *dvc_mngr = mngr->get_device_manager();
+        device_manager *dvc_mngr = sys->get_device_manager();
         if (dvc_mngr->total() == 0) {
             should_show_empty_device_warn = true;
         }
 
         // Setup hook
-        manager::package_manager *pkg_mngr = mngr->get_package_manager();
+        manager::packages *pkg_mngr = sys->get_packages();
 
         pkg_mngr->show_text = [&](const char *text_buf, const bool one_button) -> bool {
             installer_text = text_buf;
@@ -620,7 +619,7 @@ namespace eka2l1 {
         const std::string data_storage_str = common::get_localised_string(localised_strings, "pref_general_data_storage_string");
 
         if (draw_path_change(data_storage_str.c_str(), change_btn_1.c_str(), conf->storage)) {
-            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+            device_manager *dvc_mngr = sys->get_device_manager();
             dvc_mngr->load_devices();
 
             should_notify_reset_for_big_change = true;
@@ -777,7 +776,7 @@ namespace eka2l1 {
         ImGui::SameLine(col2);
         ImGui::PushItemWidth(col2 - 10);
 
-        manager::device_manager *mngr = sys->get_manager_system()->get_device_manager();
+        device_manager *mngr = sys->get_device_manager();
         mngr->lock.lock();
 
         auto &dvcs = mngr->get_devices();
@@ -1116,7 +1115,7 @@ namespace eka2l1 {
 
         const std::string save_str = common::get_localised_string(localised_strings, "save");
         if (ImGui::Button(save_str.c_str())) {
-            manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+            device_manager *dvc_mngr = sys->get_device_manager();
 
             // Save devices.
             conf->serialize();
@@ -1151,7 +1150,7 @@ namespace eka2l1 {
 
     void imgui_debugger::show_package_manager() {
         // Get package manager
-        manager::package_manager *manager = sys->get_manager_system()->get_package_manager();
+        manager::packages *manager = sys->get_packages();
 
         const std::string pack_mngr_title = common::get_localised_string(localised_strings, "packages_title");
         ImGui::Begin(pack_mngr_title.c_str(), &should_package_manager, ImGuiWindowFlags_MenuBar);
@@ -1626,10 +1625,10 @@ namespace eka2l1 {
                     device_wizard_state.should_continue = false;
 
                     if (device_wizard_state.stage == device_wizard::INSTALL) {
-                        manager::device_manager *manager = sys->get_manager_system()->get_device_manager();
+                        device_manager *manager = sys->get_device_manager();
 
                         device_wizard_state.install_thread = std::make_unique<std::thread>([](
-                                                                                               manager::device_manager *mngr, device_wizard *wizard, config::state *conf) {
+                                                                                               device_manager *mngr, device_wizard *wizard, config::state *conf) {
                             std::string firmware_code;
                             
                             wizard->progress_tracker = 0;
@@ -1773,7 +1772,7 @@ namespace eka2l1 {
                     should_still_focus_on_keyboard = true;
                 }
 
-                manager::device_manager *dvc_mngr = sys->get_manager_system()->get_device_manager();
+                device_manager *dvc_mngr = sys->get_device_manager();
                 if (!dvc_mngr->get_current()) {
                     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 
@@ -2377,18 +2376,21 @@ namespace eka2l1 {
             ImVec2 scaled_dsa;
 
             if (fullscreen_now) {
-                scaled_no_dsa.x = static_cast<float>(size.x * scale.x);
-                scaled_no_dsa.y = static_cast<float>(size.y * scale.y);
-
                 const eka2l1::vec2 org_screen_size = scr->size();
 
                 if (scr->ui_rotation % 180 == 0) {
+                    scaled_no_dsa.x = static_cast<float>(size.x * scale.x);
+                    scaled_no_dsa.y = static_cast<float>(size.y * scale.y);
+
                     scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.x);
                     scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.y);
                     
                     winpos.x += (fullscreen_region.x - scaled_no_dsa.x) / 2;
                     winpos.y += (fullscreen_region.y - scaled_no_dsa.y) / 2;
                 } else {
+                    scaled_no_dsa.x = static_cast<float>(size.x * scale.y);
+                    scaled_no_dsa.y = static_cast<float>(size.y * scale.x);
+
                     scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.y);
                     scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.x);
                     

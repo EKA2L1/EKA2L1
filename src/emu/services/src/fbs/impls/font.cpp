@@ -28,7 +28,7 @@
 #include <common/path.h>
 #include <common/vecx.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <utils/err.h>

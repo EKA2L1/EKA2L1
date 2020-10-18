@@ -27,7 +27,7 @@
 #include <services/window/opheader.h>
 #include <services/window/window.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 #include <common/cvt.h>
 #include <common/log.h>

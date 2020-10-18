@@ -21,7 +21,7 @@
 #include <dispatch/dispatcher.h>
 #include <vfs/vfs.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 #include <kernel/kernel.h>
 #include <utils/err.h>

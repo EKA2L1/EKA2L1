@@ -22,8 +22,8 @@ target_link_libraries(debugger PRIVATE
         epoc
         epockern
         epocservs
-        manager
         imgui
+        package
         pugixml
         stb
         yaml-cpp)

@@ -22,7 +22,7 @@
 #include <services/fbs/fbs.h>
 
 #include <common/cvt.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <loader/mif.h>
 #include <utils/err.h>
 #include <vfs/vfs.h>

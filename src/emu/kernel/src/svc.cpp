@@ -30,7 +30,6 @@
 
 #include <common/configure.h>
 #include <common/common.h>
-#include <epoc/hal.h>
 #include <kernel/svc.h>
 #include <kernel/kernel.h>
 
@@ -66,6 +65,9 @@ namespace eka2l1::epoc {
     // These twos are implemented in dispatcher module. Their implementations should not be here!
     void dispatcher_do_resolve(eka2l1::system *sys, const std::uint32_t ordinal);
     void dispatcher_do_event_add(eka2l1::system *sys, epoc::raw_event &evt);
+
+    int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2);
+    int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data);
 
     static security_policy server_exclamation_point_name_policy({ cap_prot_serv });
 

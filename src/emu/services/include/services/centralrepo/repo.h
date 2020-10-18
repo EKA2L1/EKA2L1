@@ -35,10 +35,7 @@ namespace eka2l1 {
         struct ipc_context;
     }
 
-    namespace manager {
-        class device_manager;
-    }
-
+    class device_manager;
     class central_repo_server;
     class io_system;
 
@@ -109,7 +106,7 @@ namespace eka2l1 {
 
         std::vector<std::uint32_t> deleted_settings;
 
-        void write_changes(eka2l1::io_system *io, manager::device_manager *mngr);
+        void write_changes(eka2l1::io_system *io, device_manager *mngr);
         central_repo_entry *find_entry(const std::uint32_t key);
 
         std::uint32_t get_default_meta_for_new_key(const std::uint32_t key);
@@ -202,7 +199,7 @@ namespace eka2l1 {
         explicit central_repo_client_subsession();
 
         int reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key);
-        void write_changes(eka2l1::io_system *io, manager::device_manager *mngr);
+        void write_changes(eka2l1::io_system *io, device_manager *mngr);
 
         void find(service::ipc_context *ctx);
         void reset(service::ipc_context *ctx);

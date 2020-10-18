@@ -31,7 +31,7 @@
 #include <common/types.h>
 
 #include <common/common.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <loader/rsc.h>
 #include <utils/apacmd.h>

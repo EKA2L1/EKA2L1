@@ -65,7 +65,6 @@ namespace eka2l1 {
     class posix_server;
     class ntimer;
     class memory_system;
-    class manager_system;
     class io_system;
     class system;
     class disasm;

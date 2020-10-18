@@ -21,7 +21,7 @@
 #include <services/audio/mmf/dev.h>
 #include <utils/err.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 
 #include <common/algorithm.h>
