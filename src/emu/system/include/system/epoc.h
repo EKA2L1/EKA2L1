@@ -88,8 +88,6 @@ namespace eka2l1 {
         config::state *conf_;
         config::app_settings *settings_;
 
-        manager::packages *packages_;
-
         explicit system_create_components();
     };
 

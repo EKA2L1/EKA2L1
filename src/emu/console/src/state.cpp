@@ -68,7 +68,6 @@ namespace eka2l1::desktop {
         comp.audio_ = nullptr;
         comp.graphics_ = nullptr;
         comp.conf_ = &conf;
-        comp.packages_ = nullptr;
         comp.settings_ = app_settings.get();
 
         symsys = std::make_unique<eka2l1::system>(comp);

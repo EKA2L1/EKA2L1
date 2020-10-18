@@ -75,8 +75,7 @@ namespace eka2l1 {
         : graphics_(nullptr)
         , audio_(nullptr)
         , conf_(nullptr)
-        , settings_(nullptr)
-        , packages_(nullptr) {
+        , settings_(nullptr) {
 
     }
     
@@ -97,13 +96,13 @@ namespace eka2l1 {
         std::unique_ptr<disasm> disassembler_;
         std::unique_ptr<gdbstub> stub_;
         std::unique_ptr<dispatch::dispatcher> dispatcher_;
+        std::unique_ptr<manager::packages> packages_;
 
         debugger_base *debugger_;
         loader::rom romf_;
 
         config::state *conf_;
         config::app_settings *app_settings_;
-        manager::packages *packages_;
 
         bool reschedule_pending = false;
 
@@ -226,7 +225,7 @@ namespace eka2l1 {
         }
 
         manager::packages *get_packages() {
-            return packages_;
+            return packages_.get();
         }
 
         void set_config(config::state *confs) {
@@ -355,10 +354,7 @@ namespace eka2l1 {
         exit = false;
 
         // Initialize all the system that doesn't depend on others first
-        dvcmngr_ = std::make_unique<device_manager>(conf_);
         timing_ = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
-        disassembler_ = std::make_unique<disasm>();
-        io_ = std::make_unique<io_system>();
 
         file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
         physical_fs_id_ = io_->add_filesystem(physical_fs);
@@ -385,9 +381,13 @@ namespace eka2l1 {
         , adriver(param.audio_)
         , conf_(param.conf_)
         , app_settings_(param.settings_)
-        , packages_(param.packages_)
         , exit(false) {
         cpu_type = arm::string_to_arm_emulator_type(conf_->cpu_backend);
+        dvcmngr_ = std::make_unique<device_manager>(conf_);
+
+        disassembler_ = std::make_unique<disasm>();
+        io_ = std::make_unique<io_system>();
+        packages_ = std::make_unique<manager::packages>(io_.get(), conf_);
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
