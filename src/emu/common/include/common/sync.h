@@ -60,16 +60,16 @@ namespace eka2l1::common {
          */
         bool wait(const std::size_t duration_us = 0);
     };
-    
+
+    class event_impl;
+
     class event {
     private:
-        bool is_set_;
-
-        std::condition_variable cond_;
-        std::mutex lock_;
+        event_impl *impl_;
 
     public:
         explicit event();
+        ~event();
 
         void set();
 
