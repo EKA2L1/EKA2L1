@@ -29,6 +29,7 @@
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
+#include <timeapi.h>
 #endif
 
 namespace eka2l1::common {
@@ -119,5 +120,31 @@ namespace eka2l1::common {
 
     std::unique_ptr<teletimer> make_teletimer(const std::uint32_t target_frequency) {
         return std::make_unique<basic_teletimer_micro>(target_frequency);
+    }
+
+    static constexpr DWORD MILLISECS_SOLUTION_PERIOD_HR = 1;
+    
+    high_resolution_timer_period_guard::high_resolution_timer_period_guard()
+        : set_(false) {
+    }
+
+    high_resolution_timer_period_guard::~high_resolution_timer_period_guard() {
+#if EKA2L1_PLATFORM(WIN32)
+        if (set_) {
+            timeEndPeriod(MILLISECS_SOLUTION_PERIOD_HR);
+        }
+#endif
+    }
+
+    void high_resolution_timer_period_guard::toogle() {
+#if EKA2L1_PLATFORM(WIN32)
+        if (set_) {
+            timeEndPeriod(MILLISECS_SOLUTION_PERIOD_HR);
+        } else {
+            timeBeginPeriod(MILLISECS_SOLUTION_PERIOD_HR);
+        }
+#endif
+
+        set_ = !set_;
     }
 }

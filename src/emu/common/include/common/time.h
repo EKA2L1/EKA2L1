@@ -81,4 +81,15 @@ namespace eka2l1::common {
     };
 
     std::unique_ptr<teletimer> make_teletimer(const std::uint32_t target_frequency);
+
+    struct high_resolution_timer_period_guard {
+    private:
+        bool set_;
+
+    public:
+        explicit high_resolution_timer_period_guard();
+        ~high_resolution_timer_period_guard();
+
+        void toogle();
+    };
 }
