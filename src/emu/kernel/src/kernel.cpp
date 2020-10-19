@@ -61,7 +61,7 @@ namespace eka2l1 {
     }
 
     kernel_system::kernel_system(system *esys, ntimer *timing, io_system *io_sys,
-        config::state *old_conf, loader::rom *rom_info, arm::core *cpu, disasm *disassembler)
+        config::state *old_conf, config::app_settings *settings, loader::rom *rom_info, arm::core *cpu, disasm *disassembler)
         : btrace_inst_(nullptr)
         , lib_mngr_(nullptr)
         , thr_sch_(nullptr)
@@ -69,6 +69,7 @@ namespace eka2l1 {
         , io_(io_sys)
         , sys_(esys)
         , conf_(old_conf)
+        , app_settings_(settings)
         , disassembler_(disassembler)
         , cpu_(cpu)
         , rom_info_(rom_info)

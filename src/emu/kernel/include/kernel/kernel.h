@@ -77,6 +77,7 @@ namespace eka2l1 {
 
     namespace config {
         struct state;
+        class app_settings;
     }
 
     using thread_ptr = kernel::thread *;
@@ -254,6 +255,7 @@ namespace eka2l1 {
         io_system *io_;
         system *sys_;
         config::state *conf_;
+        config::app_settings *app_settings_;
         disasm *disassembler_;
 
         arm::core *cpu_;
@@ -297,7 +299,7 @@ namespace eka2l1 {
 
     public:
         explicit kernel_system(system *esys, ntimer *timing, io_system *io_sys, config::state *conf,
-            loader::rom *rom_info, arm::core *cpu, disasm *diassembler);
+            config::app_settings *settings, loader::rom *rom_info, arm::core *cpu, disasm *diassembler);
 
         ~kernel_system();
 

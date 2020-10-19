@@ -27,3 +27,7 @@ target_link_libraries(epoc PRIVATE
         epocservs
         gdbstub
         package)
+
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
+        target_link_libraries(epoc PRIVATE symemu)
+endif()

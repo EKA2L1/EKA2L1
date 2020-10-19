@@ -98,6 +98,10 @@ namespace eka2l1 {
         std::unique_ptr<dispatch::dispatcher> dispatcher_;
         std::unique_ptr<manager::packages> packages_;
 
+#if ENABLE_SCRIPTING
+        std::unique_ptr<manager::scripts> scripting_;
+#endif
+
         debugger_base *debugger_;
         loader::rom romf_;
 
@@ -228,6 +232,14 @@ namespace eka2l1 {
             return packages_.get();
         }
 
+        manager::scripts *get_scripts() {
+#if ENABLE_SCRIPTING
+            return scripting_.get();
+#else
+            return nullptr;
+#endif
+        }
+
         void set_config(config::state *confs) {
             conf_ = confs;
         }
@@ -337,7 +349,7 @@ namespace eka2l1 {
         while (scripts_dir.next_entry(scripts_entry) == 0) {
             if ((scripts_entry.type == common::FILE_REGULAR) && path_extension(scripts_entry.name) == ".py") {
                 auto module_name = replace_extension(filename(scripts_entry.name), "");
-                mngr.get_script_manager()->import_module(".//scripts//" + module_name);
+                scripting_->import_module(".//scripts//" + module_name);
             }
         }
 
@@ -364,7 +376,7 @@ namespace eka2l1 {
 
         cpu = arm::create_core(cpu_type);
         
-        kern_ = std::make_unique<kernel_system>(parent_, timing_.get(), io_.get(), conf_, &romf_, cpu.get(),
+        kern_ = std::make_unique<kernel_system>(parent_, timing_.get(), io_.get(), conf_, app_settings_, &romf_, cpu.get(),
             disassembler_.get());
 
         epoc::init_panic_descriptions();
@@ -388,6 +400,10 @@ namespace eka2l1 {
         disassembler_ = std::make_unique<disasm>();
         io_ = std::make_unique<io_system>();
         packages_ = std::make_unique<manager::packages>(io_.get(), conf_);
+
+#if ENABLE_SCRIPTING
+        scripting_ = std::make_unique<manager::scripts>(parent);
+#endif
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
@@ -436,7 +452,7 @@ namespace eka2l1 {
         bool script_hits_the_feels = false;
 
 #ifdef ENABLE_SCRIPTING
-        manager::script_manager *scripter = get_script_manager();
+        manager::scripts *scripter = get_scripts();
 #endif
 
         if (stub_->is_server_enabled()) {
@@ -451,7 +467,7 @@ namespace eka2l1 {
             }
         } else {
 #ifdef ENABLE_SCRIPTING
-            if (scripter->last_breakpoint_hit(kern->crr_thread())) {
+            if (scripter->last_breakpoint_hit(kern_->crr_thread())) {
                 should_step = true;
                 script_hits_the_feels = true;
             }
@@ -477,7 +493,7 @@ namespace eka2l1 {
                 if (script_hits_the_feels) {
                     should_step = true;
                     script_hits_the_feels = true;
-                    scripter->reset_breakpoint_hit(cpu.get(), kern->crr_thread());
+                    scripter->reset_breakpoint_hit(cpu.get(), kern_->crr_thread());
                 }
 #endif
 
@@ -587,6 +603,10 @@ namespace eka2l1 {
 
     manager::packages *system::get_packages() {
         return impl->get_packages();
+    }
+
+    manager::scripts *system::get_scripts() {
+        return impl->get_scripts();
     }
 
     void system::set_config(config::state *conf) {

@@ -77,6 +77,7 @@ namespace eka2l1 {
 
     namespace manager {
         class packages;
+        class scripts;
     }
 
     class system_impl;
@@ -126,6 +127,7 @@ namespace eka2l1 {
 
         device_manager *get_device_manager();
         manager::packages *get_packages();
+        manager::scripts *get_scripts();
         memory_system *get_memory_system();
         kernel_system *get_kernel_system();
         hle::lib_manager *get_lib_manager();
