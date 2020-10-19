@@ -50,3 +50,7 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/" "$<TARGET_FILE_DIR:console>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/debugger/resources/" "$<TARGET_FILE_DIR:console>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/debugger/assets/" "$<TARGET_FILE_DIR:console>/resources/")
+
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
+        target_link_libraries(console PRIVATE symemu)
+endif()
