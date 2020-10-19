@@ -83,7 +83,7 @@ namespace eka2l1::manager {
      * allowing users to discover and work with high-level interface of
      * EKA2L1
      */
-    class script_manager {
+    class scripts {
     private:
         std::unordered_map<std::string, pybind11::module> modules;
 
@@ -118,9 +118,8 @@ namespace eka2l1::manager {
         bool call_module_entry(const std::string &module);
 
     public:
-        explicit script_manager() {}
-        explicit script_manager(system *sys);
-        ~script_manager();
+        explicit scripts(system *sys);
+        ~scripts();
 
         bool import_module(const std::string &path);
 

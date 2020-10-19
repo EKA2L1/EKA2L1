@@ -56,7 +56,7 @@ namespace eka2l1::manager {
         , attached_process_(0) {
     }
 
-    script_manager::script_manager(system *sys)
+    scripts::scripts(system *sys)
         : sys(sys)
         , ipc_send_callback_handle(0)
         , ipc_complete_callback_handle(0)
@@ -67,7 +67,7 @@ namespace eka2l1::manager {
         scripting::set_current_instance(sys);
     }
 
-    script_manager::~script_manager() {
+    scripts::~scripts() {
         kernel_system *kern = sys->get_kernel_system();
 
         if (ipc_send_callback_handle)
@@ -93,7 +93,7 @@ namespace eka2l1::manager {
         interpreter.release();
     }
 
-    bool script_manager::import_module(const std::string &path) {
+    bool scripts::import_module(const std::string &path) {
         const std::string name = eka2l1::filename(path);
         if (!interpreter) {
             interpreter = std::make_unique<pybind11::scoped_interpreter>();
@@ -130,7 +130,7 @@ namespace eka2l1::manager {
         return true;
     }
 
-    bool script_manager::call_module_entry(const std::string &module) {
+    bool scripts::call_module_entry(const std::string &module) {
         if (!ipc_send_callback_handle) {
             kernel_system *kern = sys->get_kernel_system();
             
@@ -174,7 +174,7 @@ namespace eka2l1::manager {
         return true;
     }
 
-    void script_manager::call_panics(const std::string &panic_cage, int err_code) {
+    void scripts::call_panics(const std::string &panic_cage, int err_code) {
         std::lock_guard<std::mutex> guard(smutex);
 
         eka2l1::system *crr_instance = scripting::get_current_instance();
@@ -193,19 +193,19 @@ namespace eka2l1::manager {
         scripting::set_current_instance(crr_instance);
     }
 
-    void script_manager::register_panic(const std::string &panic_cage, pybind11::function &func) {
+    void scripts::register_panic(const std::string &panic_cage, pybind11::function &func) {
         panic_functions.push_back(panic_func(panic_cage, func));
     }
 
-    void script_manager::register_reschedule(pybind11::function &func) {
+    void scripts::register_reschedule(pybind11::function &func) {
         reschedule_functions.push_back(func);
     }
 
-    void script_manager::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, pybind11::function &func) {
+    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, pybind11::function &func) {
         ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
     }
 
-    void script_manager::write_breakpoint_block(kernel::process *pr, const vaddress target) {
+    void scripts::write_breakpoint_block(kernel::process *pr, const vaddress target) {
         const vaddress aligned = target & ~1;
 
         std::uint32_t *data = reinterpret_cast<std::uint32_t *>(pr->get_ptr_on_addr_space(aligned));
@@ -228,7 +228,7 @@ namespace eka2l1::manager {
         }
     }
 
-    bool script_manager::write_back_breakpoint(kernel::process *pr, const vaddress target) {
+    bool scripts::write_back_breakpoint(kernel::process *pr, const vaddress target) {
         auto &sources = breakpoints[target & ~1].source_insts_;
         auto source_value = sources.find(pr->get_uid());
 
@@ -243,7 +243,7 @@ namespace eka2l1::manager {
         return true;
     }
 
-    void script_manager::write_back_breakpoints(kernel::process *pr) {
+    void scripts::write_back_breakpoints(kernel::process *pr) {
         for (const auto &[addr, info] : breakpoints) {
             if (!info.list_.empty()) {
                 write_back_breakpoint(pr, info.list_[0].addr_);
@@ -251,7 +251,7 @@ namespace eka2l1::manager {
         }
     }
 
-    void script_manager::write_breakpoint_blocks(kernel::process *pr) {
+    void scripts::write_breakpoint_blocks(kernel::process *pr) {
         for (const auto &[addr, info] : breakpoints) {
             // The address on the info contains information about Thumb/ARM mode
             if (!info.list_.empty())
@@ -259,7 +259,7 @@ namespace eka2l1::manager {
         }
     }
 
-    void script_manager::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, pybind11::function &func) {
+    void scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, pybind11::function &func) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
         breakpoint_info info;
@@ -272,7 +272,7 @@ namespace eka2l1::manager {
         breakpoint_wait_patch.push_back(info);
     }
 
-    void script_manager::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, pybind11::function &func) {
+    void scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, pybind11::function &func) {
         const std::string lib_name_lower = common::lowercase_string(lib_name);
 
         breakpoint_info info;
@@ -285,7 +285,7 @@ namespace eka2l1::manager {
         breakpoint_wait_patch.push_back(info);
     }
 
-    void script_manager::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {
+    void scripts::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
         for (auto &breakpoint : breakpoint_wait_patch) {
@@ -299,7 +299,7 @@ namespace eka2l1::manager {
         }
     }
 
-    void script_manager::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
+    void scripts::patch_unrelocated_hook(const std::uint32_t process_uid, const std::string &name, const address new_code_addr) {
         const std::string lib_name_lower = common::lowercase_string(name);
         for (breakpoint_info &breakpoint: breakpoint_wait_patch) {
             if (((breakpoint.attached_process_ == 0) || (breakpoint.attached_process_ == process_uid)) && (breakpoint.lib_name_ == lib_name_lower)
@@ -314,7 +314,7 @@ namespace eka2l1::manager {
         }
     }
 
-    void script_manager::call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0, const std::uint32_t arg1,
+    void scripts::call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0, const std::uint32_t arg1,
         const std::uint32_t arg2, const std::uint32_t arg3, const std::uint32_t flags,
         kernel::thread *callee) {
         std::lock_guard<std::mutex> guard(smutex);
@@ -333,7 +333,7 @@ namespace eka2l1::manager {
         scripting::set_current_instance(crr_instance);
     }
 
-    void script_manager::call_ipc_complete(const std::string &server_name,
+    void scripts::call_ipc_complete(const std::string &server_name,
         const int opcode, ipc_msg *msg) {
         std::lock_guard<std::mutex> guard(smutex);
 
@@ -352,7 +352,7 @@ namespace eka2l1::manager {
         scripting::set_current_instance(crr_instance);
     }
 
-    void script_manager::call_reschedules() {
+    void scripts::call_reschedules() {
         std::lock_guard<std::mutex> guard(smutex);
 
         eka2l1::system *crr_instance = scripting::get_current_instance();
@@ -369,7 +369,7 @@ namespace eka2l1::manager {
         scripting::set_current_instance(crr_instance);
     }
 
-    bool script_manager::call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid) {
+    bool scripts::call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid) {
         if (breakpoints.find(addr & ~1) == breakpoints.end()) {
             return false;
         }
@@ -391,7 +391,7 @@ namespace eka2l1::manager {
         return true;
     }
     
-    bool script_manager::last_breakpoint_hit(kernel::thread *thr) {
+    bool scripts::last_breakpoint_hit(kernel::thread *thr) {
         if (!thr) {
             return false;
         }
@@ -399,7 +399,7 @@ namespace eka2l1::manager {
         return last_breakpoint_script_hits[thr->unique_id()].hit_;
     }
 
-    void script_manager::reset_breakpoint_hit(arm::core *running_core, kernel::thread *thr) {
+    void scripts::reset_breakpoint_hit(arm::core *running_core, kernel::thread *thr) {
         breakpoint_hit_info &info = last_breakpoint_script_hits[thr->unique_id()];
         write_breakpoint_block(thr->owning_process(), info.addr_);
 
@@ -407,7 +407,7 @@ namespace eka2l1::manager {
         info.hit_ = false;
     }
 
-    void script_manager::handle_breakpoint(arm::core *running_core, kernel::thread *correspond, const std::uint32_t addr) {
+    void scripts::handle_breakpoint(arm::core *running_core, kernel::thread *correspond, const std::uint32_t addr) {
         running_core->stop();
         running_core->save_context(correspond->get_thread_context());
         
@@ -426,7 +426,7 @@ namespace eka2l1::manager {
         }
     }
 
-    void script_manager::handle_process_switch(arm::core *core_switch, kernel::process *old_friend, kernel::process *new_friend) {
+    void scripts::handle_process_switch(arm::core *core_switch, kernel::process *old_friend, kernel::process *new_friend) {
         if (old_friend) {
             write_back_breakpoints(old_friend);
         }
@@ -434,7 +434,7 @@ namespace eka2l1::manager {
         write_breakpoint_blocks(new_friend);
     }
 
-    void script_manager::handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target) {
+    void scripts::handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target) {
         patch_library_hook(name, target->get_export_table_raw());
         patch_unrelocated_hook(attacher ? (attacher->get_uid()) : 0, name, target->is_rom() ? 0 : (target->get_code_run_addr(attacher) - target->get_code_base()));
     }
