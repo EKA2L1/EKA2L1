@@ -58,7 +58,8 @@ namespace eka2l1::epoc {
     }
 
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
-        : window(client, scr, parent, window_kind::group) {
+        : window(client, scr, parent, window_kind::group)
+        , refresh_rate(0) {
         // Create window group as child
         top = std::make_unique<window_top_user>(client, scr, this);
         child = top.get();

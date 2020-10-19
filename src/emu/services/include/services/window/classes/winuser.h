@@ -151,8 +151,6 @@ namespace eka2l1::epoc {
         void get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd);
         void get_invalid_region(service::ipc_context &context, ws_cmd &cmd);
 
-        epoc::window_group *get_group() {
-            return reinterpret_cast<epoc::window_group *>(parent);
-        }
+        epoc::window_group *get_group();
     };
 }

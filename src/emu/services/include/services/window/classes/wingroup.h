@@ -34,6 +34,8 @@ namespace eka2l1::epoc {
         std::unique_ptr<window_top_user> top;
         std::queue<message_data> msg_datas;
 
+        std::uint8_t refresh_rate;
+
         bool can_receive_focus() {
             return flags & flag_focus_receiveable;
         }

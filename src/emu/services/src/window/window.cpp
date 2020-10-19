@@ -44,6 +44,7 @@
 #include <common/log.h>
 #include <common/rgb.h>
 #include <common/time.h>
+#include <config/app_settings.h>
 
 #include <utils/event.h>
 #include <utils/err.h>
@@ -269,6 +270,17 @@ namespace eka2l1::epoc {
         // Give it a nice name.
         // We can give it name with id, but too much hassle
         group_casted->name = common::utf8_to_ucs2(fmt::format("WindowGroup{:X}", header->client_handle));
+
+        kernel::process *mama = ctx.msg->own_thr->owning_process();
+        const epoc::uid app_uid = mama->get_uid();
+
+        kernel_system *kern = ctx.sys->get_kernel_system();
+        eka2l1::config::app_settings *the_settings = kern->get_app_settings();
+        eka2l1::config::app_setting *the_only_setting = the_settings->get_setting(app_uid);
+
+        if (the_only_setting) {
+            group_casted->refresh_rate = the_only_setting->fps;
+        }
 
         std::uint32_t id = add_object(group);
         ctx.complete(id);
