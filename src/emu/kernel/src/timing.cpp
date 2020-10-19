@@ -22,6 +22,7 @@
 #include <common/chunkyseri.h>
 #include <common/log.h>
 #include <common/thread.h>
+#include <common/platform.h>
 
 #include <kernel/timing.h>
 
@@ -35,12 +36,15 @@ namespace eka2l1 {
         CPU_HZ_ = cpu_hz;
         should_stop_ = false;
         should_paused_ = false;
+        acc_level_ = realtime_level_low;
+
         teletimer_ = common::make_teletimer(cpu_hz);
 
         timer_thread_ = std::make_unique<std::thread>([this]() {
             loop();
         });
 
+        set_realtime_level(realtime_level_mid);
         teletimer_->start();
     }
 
@@ -54,6 +58,29 @@ namespace eka2l1 {
         timer_thread_->join();
     }
 
+    void ntimer::set_realtime_level(const realtime_level lvl) {
+        std::unique_lock<std::mutex> unq(lock_);
+        
+        if (acc_level_ == lvl) {
+            return;
+        }
+
+        if (acc_level_ == realtime_level_low) {
+            res_guard_.toogle();
+        }
+
+        switch (lvl) {
+        case realtime_level_low:
+            res_guard_.toogle();
+            break;
+
+        default:
+            break;
+        }
+
+        acc_level_ = lvl;
+    }
+
     void ntimer::loop() {
         static const char *TIMING_THREAD_NAME = "Timing thread";
 
@@ -64,10 +91,17 @@ namespace eka2l1 {
             while (!should_stop_ && !should_paused_) {
                 const std::optional<std::uint64_t> next_microseconds = advance();
 
-                if (next_microseconds.has_value()) {
-                    // We only intend to sleep and wake up for new event
-                    // So let's signal the sema again to increase sema count, if not timeout. No block intended
-                    new_event_evt_.wait_for(next_microseconds.value());
+                if ((next_microseconds.has_value()) && (acc_level_ < realtime_level_high)) {
+#if EKA2L1_PLATFORM(ANDROID)
+                    // Snail speed, let it sleep more.
+                    constexpr std::uint64_t IGNORE_AND_GO_PASS_MICROSECS = 16;
+#else
+                    constexpr std::uint64_t IGNORE_AND_GO_PASS_MICROSECS = 32;
+#endif
+
+                    if (next_microseconds > IGNORE_AND_GO_PASS_MICROSECS) {
+                        new_event_evt_.wait_for(next_microseconds.value());
+                    }
                 } else {
                     new_event_evt_.wait();
                 }

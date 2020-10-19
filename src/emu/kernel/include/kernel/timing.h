@@ -38,6 +38,12 @@ namespace eka2l1 {
         INITIAL_SLICE_LENGTH = 20000
     };
 
+    enum realtime_level {
+        realtime_level_low = 0,
+        realtime_level_mid = 1,
+        realtime_level_high = 2
+    };
+
     struct event_type {
         timed_callback callback;
         std::string name;
@@ -74,6 +80,9 @@ namespace eka2l1 {
 
         std::atomic<bool> should_stop_;
         std::atomic<bool> should_paused_;
+
+        common::high_resolution_timer_period_guard res_guard_;
+        realtime_level acc_level_;
 
     protected:
         void loop();
@@ -144,5 +153,7 @@ namespace eka2l1 {
 
         bool set_clock_frequency_mhz(const std::uint32_t cpu_mhz);
         std::uint32_t get_clock_frequency_mhz();
+
+        void set_realtime_level(const realtime_level lvl);
     };
 }
