@@ -21,6 +21,7 @@
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <config/app_settings.h>
 
 #include <kernel/kernel.h>
 #include <mem/mem.h>
@@ -49,8 +50,7 @@ namespace eka2l1::kernel {
 
         ++thread_count;
 
-        dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(),
-            "dllLockMutexProcess" + common::to_string(puid),
+        dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(), "dllLockMutexProcess" + common::to_string(std::get<2>(uids)),
             false, kernel::access_type::local_access);
     }
 
@@ -68,7 +68,7 @@ namespace eka2l1::kernel {
         // Get security info
         sec_info = codeseg->get_sec_info();
 
-        puid = std::get<2>(codeseg->get_uids());
+        uids = codeseg->get_uids();
         priority = pri;
 
         if (kern->get_epoc_version() >= epocver::eka2) {
@@ -88,10 +88,16 @@ namespace eka2l1::kernel {
         exe_path = codeseg->get_full_path();
 
         // Base on: sprocess.cpp#L245 in kernelhwsrv package
-        create_prim_thread(
-            codeseg->get_code_run_addr(this), codeseg->get_entry_point(this),
-            stack_size, heap_min, heap_max,
+        create_prim_thread(codeseg->get_code_run_addr(this), codeseg->get_entry_point(this), stack_size, heap_min, heap_max,
             kernel::thread_priority::priority_normal);
+
+        // Load preset for compability
+        config::app_settings *settings = kern->get_app_settings();
+        config::app_setting *individual_setting = settings->get_setting(std::get<2>(uids));
+
+        if (individual_setting) {
+            time_delay_ = individual_setting->time_delay;
+        }
 
         // TODO: Load all references DLL in the export list.
     }
@@ -100,7 +106,8 @@ namespace eka2l1::kernel {
         : kernel_obj(kern)
         , mem(mem)
         , priority(kernel::process_priority::foreground)
-        , exit_type(kernel::entity_exit_type::pending) {
+        , exit_type(kernel::entity_exit_type::pending)
+        , time_delay_(0) {
         obj_type = kernel::object_type::process;
     }
 
@@ -168,7 +175,11 @@ namespace eka2l1::kernel {
     }
 
     process_uid_type process::get_uid_type() {
-        return std::tuple(0x1000007A, 0x100039CE, puid);
+        return uids;
+    }
+
+    void process::set_uid_type(const process_uid_type &type) {
+        uids = std::move(type);
     }
 
     kernel_obj_ptr process::get_object(uint32_t handle) {
@@ -316,7 +327,9 @@ namespace eka2l1::kernel {
             return;
         }
 
-        seri.absorb(puid);
+        seri.absorb(std::get<0>(uids));
+        seri.absorb(std::get<1>(uids));
+        seri.absorb(std::get<2>(uids));
 
         kernel::uid prim_thread_id = primary_thread->unique_id();
         seri.absorb(prim_thread_id);

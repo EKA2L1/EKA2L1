@@ -439,6 +439,10 @@ namespace eka2l1 {
             return conf_;
         }
 
+        config::app_settings *get_app_settings() {
+            return app_settings_;
+        }
+
         system *get_system() {
             return sys_;
         }

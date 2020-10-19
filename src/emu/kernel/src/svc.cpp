@@ -265,6 +265,19 @@ namespace eka2l1::epoc {
         type->uid3 = std::get<2>(tup);
     }
 
+    BRIDGE_FUNC(void, process_set_type_eka1, epoc::uid_type *uids, kernel::handle h) {
+        process_ptr pr_real = kern->get<kernel::process>(h);
+
+        if (!pr_real) {
+            LOG_ERROR("ProcessSetType passed invalid handle!");
+            return;
+        }
+
+        if (uids) {
+            pr_real->set_uid_type(std::make_tuple(uids->uid1, uids->uid2, uids->uid3));
+        }
+    }
+
     BRIDGE_FUNC(std::int32_t, process_data_parameter_length, std::int32_t slot) {
         kernel::process *crr_process = kern->crr_process();
 
@@ -4047,6 +4060,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000A9, library_type_eka1),
         BRIDGE_REGISTER(0x8000AA, process_type_eka1),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
+        BRIDGE_REGISTER(0x8000AF, process_set_type_eka1),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
         BRIDGE_REGISTER(0x8000CC, imb_range),

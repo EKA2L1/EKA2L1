@@ -544,7 +544,6 @@ namespace eka2l1 {
             heap_min = imgs.first->header.heap_size_min;
             heap_max = imgs.first->header.heap_size_max;
 
-            pr->puid = imgs.first->header.uid3;
             cs = lib_mngr_->load_as_e32img(*eimg, full_path);
         }
 
@@ -564,7 +563,6 @@ namespace eka2l1 {
             heap_min = imgs.second->header.heap_minimum_size;
             heap_max = imgs.second->header.heap_maximum_size;
 
-            pr->puid = imgs.second->header.uid3;
             cs = lib_mngr_->load_as_romimg(*imgs.second, full_path);
         }
 
@@ -574,7 +572,6 @@ namespace eka2l1 {
         }
 
         LOG_TRACE("Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
-
         pr->construct_with_codeseg(cs, new_stack_size, heap_min, heap_max, pri);
 
         return pr;

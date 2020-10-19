@@ -103,7 +103,7 @@ namespace eka2l1::kernel {
 
         mem::mem_model_process_impl mm_impl_;
 
-        uint32_t puid;
+        process_uid_type uids;
         thread_ptr primary_thread;
 
         std::string process_name;
@@ -134,6 +134,8 @@ namespace eka2l1::kernel {
 
         common::roundabout thread_list;
         chunk_ptr rom_bss_chunk;
+
+        std::uint32_t time_delay_;
 
     protected:
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
@@ -183,7 +185,9 @@ namespace eka2l1::kernel {
         }
 
         process_uid_type get_uid_type();
-        kernel_obj_ptr get_object(uint32_t handle);
+        void set_uid_type(const process_uid_type &type);
+
+        kernel_obj_ptr get_object(const std::uint32_t handle);
 
         void *get_ptr_on_addr_space(address addr);
 
@@ -202,7 +206,7 @@ namespace eka2l1::kernel {
         }
 
         std::uint32_t get_uid() {
-            return puid;
+            return std::get<2>(uids);
         }
 
         void set_flags(const uint32_t new_flags) {
