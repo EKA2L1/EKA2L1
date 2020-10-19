@@ -70,8 +70,8 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Mouse düyməsinə mənimsətmə etdikdə, oyun/proqramın daxili mouse kursoru varsa işə yarayır.\nMouse kursorunu görünür etmək üçün ALT düyməsini basılı tutun.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ən yaxın qonşu filterləməsini aktivləşdir</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Filter ekran növbəti dəfə çəkiləndən sonra aktiv olacaq.</string>
-    <string name="pref_general_utilities_integer_scaling_msg">Tam ədədlə miqyaslamanı aktiv et</string>
-    <string name="pref_general_utilities_integer_scaling_tooltip">This is a pixel-perfect scaling method, which can help reduce blur significantly.</string>
+    <string name="pref_general_utilities_integer_scaling_msg">Tam ədədlə miqyaslandırmanı aktiv et</string>
+    <string name="pref_general_utilities_integer_scaling_tooltip">Bu piksel-mükəmməl miqyaslandırma metodudur, bulanıqlığı böyük ölçüdə azaltmağa kömək edər.</string>
     <string name="pref_system_title">Sistem</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Cihaz</string>
@@ -119,7 +119,7 @@
     <string name="no_device_installed_msg">Siz heç bir cihaz quraşdırmamısınız. Zəhmət olmasa cihaz quraşdırın və ya EKA2L1-in Github səhifəsinə baxış keçirin.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Cihaz quraşdır</string>
     <string name="no_show_option_again_general_msg">Bunu bir daha göstərmə.</string>
-    <string name="touchscreen_disabled_msg">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.</string>
+    <string name="touchscreen_disabled_msg">Bəzi düymə mənimsətmələriniz mouse düymələri ilə əlaqədardır. Buna görə də, sensor ekranın emulyasiyası dayandırıldı.</string>
     <string name="touchscreen_disabled_note_str">Qeyd</string>
     <string name="touchscreen_disabled_note_msg">Sensor ekran mouse düymələrinin klaviatura düymələrinə mənimsədilməsi ilə təkrar aktiv edilə bilər.</string>
 </resources>
