@@ -67,10 +67,10 @@
     <string name="pref_general_debugging_btrace_tooltip_msg">Sürücüdə istifadə olunan \"kernel tracing\"-i aktiv et. Aktiv olduqda yavaşlama gözlənilir.</string>
     <string name="pref_general_utilities_string">Alətlər</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Mouse göstəricisi emulyasiya edilən ekran içində olduqda gizlədilsin</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Useful when you bind a key with your mouse and the game/app has built-in cursor.\nTo make the mouse cursor visible, hold ALT key.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Mouse düyməsinə mənimsətmə etdikdə, oyun/proqramın daxili mouse kursoru varsa işə yarayır.\nMouse kursorunu görünür etmək üçün ALT düyməsini basılı tutun.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ən yaxın qonşu filterləməsini aktivləşdir</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Filter ekran növbəti dəfə çəkiləndən sonra aktiv olacaq.</string>
-    <string name="pref_general_utilities_integer_scaling_msg">Enable integer scaling</string>
+    <string name="pref_general_utilities_integer_scaling_msg">Tam ədədlə miqyaslamanı aktiv et</string>
     <string name="pref_general_utilities_integer_scaling_tooltip">This is a pixel-perfect scaling method, which can help reduce blur significantly.</string>
     <string name="pref_system_title">Sistem</string>
     <string name="pref_system_cpu_option_name">CPU</string>
