@@ -31,8 +31,9 @@ namespace eka2l1::config {
     
     struct app_setting {
     public:
-        std::uint8_t fps;
+        std::uint32_t fps;
         std::uint32_t time_delay;
+        bool child_inherit_setting;
 
         explicit app_setting();
     };

@@ -32,7 +32,8 @@
 namespace eka2l1::config {
     app_setting::app_setting()
         : fps(30)
-        , time_delay(0) {
+        , time_delay(0)
+        , child_inherit_setting(false) {
     }
 
     static void serialize_app_setting(YAML::Emitter &emitter, const app_setting &setting) {
@@ -45,7 +46,8 @@ namespace eka2l1::config {
         #define SETTING(name, variable, default_val)                                         \
             try {                                                                            \
                 setting.variable = node[#name].as<decltype(app_setting::variable)>();        \
-            } catch (...) {                                                                  \
+            } catch (std::exception &e) {                                                                  \
+                LOG_TRACE("{}", e.what());  \
                 setting.variable = default_val;                                              \
             }
         
@@ -68,10 +70,10 @@ namespace eka2l1::config {
         return &(ite->second);
     }
 
-    static const char *COMPAT_DIR_PATH = "\\compat\\";
+    static const char *COMPAT_DIR_PATH = "compat\\";
 
     bool app_settings::load_all_settings() {
-        common::dir_iterator setting_folder(eka2l1::add_path(conf_->storage, COMPAT_DIR_PATH));
+        common::dir_iterator setting_folder(COMPAT_DIR_PATH);
         setting_folder.detail = true;
 
         common::dir_entry setting_entry;
@@ -79,21 +81,23 @@ namespace eka2l1::config {
         while (setting_folder.next_entry(setting_entry) == 0) {
             if ((setting_entry.type == common::FILE_REGULAR) && common::lowercase_string(eka2l1::path_extension(setting_entry.name)) == ".yml") {
                 const common::pystr fname = eka2l1::replace_extension(eka2l1::filename(setting_entry.name), "");
-                const epoc::uid uid = fname.as_int<std::uint32_t>();
+                const epoc::uid uid = fname.as_int<std::uint32_t>(0, 16);
 
-                app_setting target_setting;
-                YAML::Node the_node;
+                if (uid != 0) {
+                    app_setting target_setting;
+                    YAML::Node the_node;
 
-                try {
-                    the_node = YAML::LoadFile(setting_entry.name);
-                } catch (std::exception &exc) {
-                    LOG_ERROR("Encountering error while loading app setting {}. Error message: {}", fname.std_str(),
-                        exc.what());
-                    continue;
+                    try {
+                        the_node = YAML::LoadFile(eka2l1::add_path(setting_folder.dir_name, setting_entry.name));
+                    } catch (std::exception &exc) {
+                        LOG_ERROR("Encountering error while loading app setting {}. Error message: {}", fname.std_str(),
+                            exc.what());
+                        continue;
+                    }
+
+                    deserialize_app_setting(the_node, target_setting);
+                    settings_.emplace(uid, target_setting);
                 }
-
-                deserialize_app_setting(the_node, target_setting);
-                settings_.emplace(uid, target_setting);
             }
         }
 

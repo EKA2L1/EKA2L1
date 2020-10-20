@@ -23,6 +23,7 @@
 
 SETTING(fps, fps, 30)
 SETTING(time-delay, time_delay, 0)
+SETTING(should-child-inherit-setting, child_inherit_setting, true)
 
 #ifdef SETTING
 #undef SETTING
