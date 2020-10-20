@@ -215,11 +215,9 @@ namespace eka2l1::epoc {
             epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
             ntimer *timing = client->get_ws().get_ntimer();
 
-            const std::uint8_t refresh_rate = get_group()->refresh_rate;
-            
             // Limit the framerate, independent from screen vsync
             const std::uint64_t crr = timing->microseconds();
-            const std::uint64_t time_spend_per_frame_us = 1000000 / (refresh_rate ? refresh_rate : scr->refresh_rate);
+            const std::uint64_t time_spend_per_frame_us = 1000000 / scr->refresh_rate;
             std::uint64_t wait_time = 0;
 
             if (crr - last_draw_ < time_spend_per_frame_us) {

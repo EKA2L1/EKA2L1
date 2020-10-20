@@ -59,7 +59,7 @@ namespace eka2l1::epoc {
 
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
         : window(client, scr, parent, window_kind::group)
-        , refresh_rate(0) {
+        , last_refresh_rate(30) {
         // Create window group as child
         top = std::make_unique<window_top_user>(client, scr, this);
         child = top.get();
@@ -114,6 +114,33 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void window_group::set_name(service::ipc_context &context, ws_cmd &cmd) {
+        std::optional<std::u16string> name_re;
+        
+        if (cmd.header.cmd_len > 4) {
+            struct ws_cmd_header_set_name_legacy {
+                std::uint32_t len;
+                eka2l1::ptr<epoc::desc16> name_to_set;
+            };
+
+            kernel::process *requester = context.msg->own_thr->owning_process();
+            epoc::desc16 *des = reinterpret_cast<ws_cmd_header_set_name_legacy*>(cmd.data_ptr)->name_to_set.
+                get(requester);
+
+            name_re = des->to_std_string(requester);
+        } else {
+            name_re = context.get_argument_value<std::u16string>(remote_slot);
+        }
+
+        if (!name_re) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        name = std::move(*name_re);
+        context.complete(epoc::error_none);
+    }
+
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
         //LOG_TRACE("Window group op: {}", cmd.header.op);
@@ -159,16 +186,7 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetName: {
-            auto name_re = ctx.get_argument_value<std::u16string>(remote_slot);
-
-            if (!name_re) {
-                ctx.complete(epoc::error_argument);
-                break;
-            }
-
-            name = std::move(*name_re);
-            ctx.complete(epoc::error_none);
-
+            set_name(ctx, cmd);
             break;
         }                   
 

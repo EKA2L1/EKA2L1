@@ -34,7 +34,7 @@ namespace eka2l1::epoc {
         std::unique_ptr<window_top_user> top;
         std::queue<message_data> msg_datas;
 
-        std::uint8_t refresh_rate;
+        std::uint8_t last_refresh_rate;
 
         bool can_receive_focus() {
             return flags & flag_focus_receiveable;
@@ -54,6 +54,7 @@ namespace eka2l1::epoc {
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);
         void receive_focus(service::ipc_context &context, ws_cmd &cmd);
         void add_priority_key(service::ipc_context &context, ws_cmd &cmd);
+        void set_name(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         eka2l1::vec2 get_origin() override;
