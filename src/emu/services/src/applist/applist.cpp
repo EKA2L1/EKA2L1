@@ -620,7 +620,7 @@ namespace eka2l1 {
         }
 
         kernel::uid thread_id = 0;
-        if (!launch_app(app_launch, cmd_line.value(), &thread_id)) {
+        if (!launch_app(app_launch, cmd_line.value(), &thread_id, ctx.msg->own_thr->owning_process())) {
             LOG_ERROR("Failed to create new app process (command line: {})", common::ucs2_to_utf8(cmd_line.value()));
             ctx.complete(epoc::error_no_memory);
             
@@ -708,7 +708,7 @@ namespace eka2l1 {
 
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
-    bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id) {
+    bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id, kernel::process *requester) {
         process_ptr pr = kern->spawn_new_process(exe_path, is_oldarch() ? cmd : u"");
 
         if (!pr) {
@@ -721,8 +721,11 @@ namespace eka2l1 {
         if (thread_id)
             *thread_id = pr->get_primary_thread()->unique_id();
 
+        if (requester) {
+            requester->add_child_process(pr);
+        }
+
         // Add it into our app running list
-        runnings.push_back(pr);
         return pr->run();
     }
 

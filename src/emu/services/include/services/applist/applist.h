@@ -171,7 +171,6 @@ namespace eka2l1 {
         friend class applist_session;
 
         std::vector<apa_app_registry> regs;
-        std::vector<kernel::process*> runnings;
 
         std::uint32_t flags{ 0 };
 
@@ -262,7 +261,8 @@ namespace eka2l1 {
         void connect(service::ipc_context &ctx) override;
 
     protected:
-        bool launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id);
+        bool launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
+            kernel::process *requester = nullptr);
 
     public:
         explicit applist_server(system *sys);
