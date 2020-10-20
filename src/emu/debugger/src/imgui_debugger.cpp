@@ -46,6 +46,7 @@
 #include <services/applist/applist.h>
 #include <services/ui/cap/eiksrv.h>
 #include <services/ui/cap/oom_app.h>
+#include <services/ui/view/view.h>
 #include <services/window/classes/winbase.h>
 #include <services/window/classes/wingroup.h>
 #include <services/window/classes/winuser.h>
@@ -139,7 +140,8 @@ namespace eka2l1 {
         , back_from_fullscreen(false)
         , last_scale(1.0f)
         , last_cursor(ImGuiMouseCursor_Arrow)
-        , font_to_use(nullptr) {
+        , font_to_use(nullptr)
+        , active_app_config(nullptr) {
         if (conf->emulator_language == -1) {
             conf->emulator_language = static_cast<int>(language::en);
         }
@@ -853,25 +855,108 @@ namespace eka2l1 {
             }
 
             ImGui::PopItemWidth();
-
-            static const char *TIME_UNIT_NAME = "US";
-
-            const std::string time_delay_str = common::get_localised_string(localised_strings, "pref_system_time_delay_option_name");
-
-            ImGui::Text("%s", time_delay_str.c_str());
-            ImGui::SameLine(col2);
-            ImGui::PushItemWidth(col2 - ImGui::CalcTextSize(TIME_UNIT_NAME).x - 15);
-
-            int current_delay = conf->time_getter_sleep_us;
             
-            static constexpr int MIN_TIME_DELAY = 0;
-            static constexpr int MAX_TIME_DELAY = 500;
+            const std::string app_setting_str = common::get_localised_string(localised_strings, "pref_system_app_setting_sect_name");
 
-            if (ImGui::SliderInt(TIME_UNIT_NAME, &current_delay, MIN_TIME_DELAY, MAX_TIME_DELAY)) {
-                if (current_delay != conf->time_getter_sleep_us) {
-                    dvc.time_delay_us = static_cast<std::uint16_t>(current_delay);
-                    conf->time_getter_sleep_us = static_cast<std::uint16_t>(current_delay);
+            ImGui::NewLine();
+            ImGui::Text("%s", app_setting_str.c_str());
+                
+            ImGui::SameLine(col2);
+            ImGui::PushItemWidth(col2 - 10);
+            
+            if (alserv) {
+                kernel_system *kern = sys->get_kernel_system();
+
+                {
+                    kern->lock();
+
+                    auto ui_app_list = eka2l1::get_akn_app_infos(winserv);
+                    akn_running_app_info choosen;
+
+                    if (active_app_config) {
+                        auto find_res = std::find_if(ui_app_list.begin(), ui_app_list.end(), [=](akn_running_app_info &info) {
+                            return info.associated_ == active_app_config;
+                        });
+
+                        if (find_res == ui_app_list.end()) {
+                            active_app_config = nullptr;
+                        } else {
+                            choosen = *find_res;
+                        }
+                    }
+
+                    if (!active_app_config && (!ui_app_list.empty())) {
+                        active_app_config = ui_app_list.front().associated_;
+                        choosen = ui_app_list.front();
+                    }
+
+                    std::string preview = active_app_config ? common::ucs2_to_utf8(choosen.app_name_) : "None";
+
+                    if (ImGui::BeginCombo("##AppListCombo", preview.c_str())) {
+                        for (auto &ui_app: ui_app_list) {
+                            if (!(ui_app.flags_ & akn_running_app_info::FLAG_SYSTEM)) {
+                                const std::string select_name = common::ucs2_to_utf8(ui_app.app_name_) + ((ui_app.flags_ & akn_running_app_info::FLAG_CURRENTLY_PLAY) ?
+                                    fmt::format(" (Active on screen {})", ui_app.screen_number_) : "");
+
+                                if (ImGui::Selectable(select_name.c_str())) {
+                                    active_app_config = ui_app.associated_;
+                                }
+                            }
+                        }
+
+                        ImGui::EndCombo();
+                    }
+
+                    kern->unlock();
                 }
+
+                ImGui::Separator();
+
+                if (active_app_config) {
+                    kern->lock();
+
+                    static const char *TIME_UNIT_NAME = "US";
+
+                    const std::string time_delay_str = common::get_localised_string(localised_strings, "pref_system_time_delay_option_name");
+
+                    ImGui::Text("%s", time_delay_str.c_str());
+                    ImGui::SameLine(col2);
+                    ImGui::PushItemWidth(col2 - ImGui::CalcTextSize(TIME_UNIT_NAME).x - 15);
+
+                    int last_delay = static_cast<int>(active_app_config->get_time_delay());
+                    int current_delay = last_delay;
+                    
+                    static constexpr int MIN_TIME_DELAY = 0;
+                    static constexpr int MAX_TIME_DELAY = 500;
+
+                    if (ImGui::SliderInt(TIME_UNIT_NAME, &current_delay, MIN_TIME_DELAY, MAX_TIME_DELAY)) {
+                        if (current_delay != last_delay) {
+                            active_app_config->set_time_delay(current_delay);
+                        }
+                    }
+
+                    ImGui::PopItemWidth();
+
+                    bool last_setting_inherit = active_app_config->get_child_inherit_setting();
+                    bool new_setting_inherit = last_setting_inherit;
+
+                    const std::string inherit_str = common::get_localised_string(localised_strings, "pref_system_setting_inheritance_option_name");
+                    if (ImGui::Checkbox(inherit_str.c_str(), &new_setting_inherit)) {
+                        if (new_setting_inherit != last_setting_inherit) {
+                            active_app_config->set_child_inherit_setting(new_setting_inherit);
+                        }
+                    }
+
+                    if (ImGui::IsItemHovered()) {
+                        const std::string inherit_tt = common::get_localised_string(localised_strings, "pref_system_setting_inheritance_tooltip_msg");
+                        ImGui::SetTooltip("%s", inherit_tt.c_str());
+                    }
+
+                    kern->unlock();
+                }
+            } else {
+                ImGui::Text("Disabled due to missing components!");
+                ImGui::Separator();
             }
 
             ImGui::PopItemWidth();

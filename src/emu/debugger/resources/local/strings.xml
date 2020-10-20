@@ -87,7 +87,10 @@
     <string name="pref_system_device_option_name">Device</string>
     <string name="pref_system_device_not_found_msg">Device specified in config file not found, resetting default device to the first one.</string>
     <string name="pref_system_language_option_name">Language</string>
+    <string name="pref_system_app_setting_sect_name">App setting for:</string>
     <string name="pref_system_time_delay_option_name">Time delay</string>
+    <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
+    <string name="pref_system_setting_inheritance_tooltip_msg">When this option is enabled, child processes that this app summon will inherits its settings.</string>
     <string name="pref_system_validate_device_btn_title">Validate device</string>
     <string name="pref_system_validate_device_tooltip">Check for faults in device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Disabled because emulated system has started. Restart the emulator to use this option.</string>

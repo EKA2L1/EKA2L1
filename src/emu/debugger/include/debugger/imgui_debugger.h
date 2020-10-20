@@ -222,6 +222,7 @@ namespace eka2l1 {
         bool sd_card_mount_choosen;
 
         ImFont *font_to_use;
+        kernel::process *active_app_config;
 
     protected:
         void do_install_package();
