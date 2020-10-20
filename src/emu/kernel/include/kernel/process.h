@@ -135,11 +135,18 @@ namespace eka2l1::kernel {
         common::roundabout thread_list;
         chunk_ptr rom_bss_chunk;
 
+        std::vector<kernel::process*> child_processes_;
+        kernel::process *parent_process_;
+
         std::uint32_t time_delay_;
+        bool setting_inheritence_;
 
     protected:
+        void reload_compat_setting();
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max, kernel::thread_priority pri);
+
+        void detatch_from_parent();
 
     public:
         uint32_t increase_thread_count() {
@@ -174,6 +181,7 @@ namespace eka2l1::kernel {
 
         ~process() = default;
 
+        void destroy() override;
         bool run();
 
         void set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size);
@@ -258,12 +266,48 @@ namespace eka2l1::kernel {
          */
         bool has(epoc::capability_set &cap_set);
 
+        /**
+         * @brief Attach another process as a child.
+         * 
+         * A child process under the control may inherits settings from its parent. This is a mode that's specifically
+         * exists for emulator usage (when game spawns another process doing actual work for example).
+         * 
+         * The most usage you can see in this exists in the LaunchApp implementation in App List server.
+         * 
+         * @param   pr  The process to be attached as child.
+         */
+        void add_child_process(kernel::process *pr);
+
         entity_exit_type get_exit_type() const {
             return exit_type;
         }
 
         void set_exit_type(const entity_exit_type t) {
             exit_type = t;
+        }
+
+        std::uint32_t get_time_delay() const;
+        void set_time_delay(const std::uint32_t delay);
+        
+        /**
+         * @brief       Get the process where we should inherit settings from.
+         * 
+         * This may stack up for a big while.
+         * 
+         * @returns     Process to get settings from. Return itself if no inheritence is specified.
+         */
+        kernel::process *get_final_setting_process();
+
+        bool get_child_inherit_setting() const {
+            return setting_inheritence_;
+        }
+
+        void set_child_inherit_setting(const bool enable) {
+            setting_inheritence_ = enable;
+        }
+
+        kernel::process *get_parent_process() {
+            return parent_process_;
         }
 
         void do_state(common::chunkyseri &seri);
