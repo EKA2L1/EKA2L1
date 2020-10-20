@@ -551,7 +551,9 @@ namespace eka2l1::epoc {
 
     // TODO (pent0): kernel's home time is currently not accurate enough.
     BRIDGE_FUNC(std::int32_t, time_now, eka2l1::ptr<std::uint64_t> time_ptr, eka2l1::ptr<std::int32_t> utc_offset_ptr) {
-        std::uint64_t *time = time_ptr.get(kern->crr_process());
+        kernel::process *pr = kern->crr_process();
+
+        std::uint64_t *time = time_ptr.get(pr);
         std::int32_t *offset = utc_offset_ptr.get(kern->crr_process());
 
         // The time is since EPOC, we need to convert it to first of AD
@@ -560,7 +562,8 @@ namespace eka2l1::epoc {
 
         if (kern->is_eka1()) {
             // Let it sleeps a bit. There should be some delay...
-            kern->crr_thread()->sleep(kern->get_config()->time_getter_sleep_us);
+            if (pr->get_time_delay())
+                kern->crr_thread()->sleep(pr->get_time_delay());
         }
 
         return epoc::error_none;
