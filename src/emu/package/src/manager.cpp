@@ -41,7 +41,7 @@ namespace eka2l1 {
         static constexpr const char *PACKAGE_FOLDER_PATH = "packages";
 
         packages::packages(io_system *io, config::state *conf)
-            : sys(sys)
+            : sys(io)
             , conf(conf) {
             load_sdb_yaml(add_path(conf->storage, APP_REGISTRY_FILENAME));
             eka2l1::create_directory(add_path(conf->storage, PACKAGE_FOLDER_PATH));
