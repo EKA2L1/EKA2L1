@@ -613,7 +613,9 @@ namespace eka2l1::epoc {
             msg->own_thr->signal_request();
         }
 
-        LOG_TRACE("Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
+
+        if (kern->get_config()->log_ipc)
+            LOG_TRACE("Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg.get(), val);
 
@@ -631,7 +633,8 @@ namespace eka2l1::epoc {
             msg->own_thr->signal_request();
         }
 
-        LOG_TRACE("Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
+        if (kern->get_config()->log_ipc)
+            LOG_TRACE("Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg.get(), dup_handle);
 
@@ -867,7 +870,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE("Receive requested from {}", server->name());
+        if (kern->get_config()->log_ipc)
+            LOG_TRACE("Receive requested from {}", server->name());
 
         server->receive_async_lle(req_sts, data_ptr.cast<service::message2>());
     }
