@@ -30,6 +30,8 @@
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #include <timeapi.h>
+
+#pragma comment(lib, "winmm.lib")
 #endif
 
 namespace eka2l1::common {
