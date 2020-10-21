@@ -122,8 +122,10 @@ namespace eka2l1::common {
         return std::make_unique<basic_teletimer_micro>(target_frequency);
     }
 
+#if EKA2L1_PLATFORM(WIN32)
     static constexpr DWORD MILLISECS_SOLUTION_PERIOD_HR = 1;
-    
+#endif
+
     high_resolution_timer_period_guard::high_resolution_timer_period_guard()
         : set_(false) {
     }
