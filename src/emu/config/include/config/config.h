@@ -94,9 +94,9 @@ namespace eka2l1::config {
         bool cpu_load_save { true };
 
         std::atomic<bool> stepping { false };
+        std::string rtos_level;
 
         std::vector<keybind> keybinds;
-        std::atomic<std::uint16_t> time_getter_sleep_us { 0 };
 
         void serialize();
         void deserialize();
