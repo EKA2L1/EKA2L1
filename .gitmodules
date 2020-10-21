@@ -52,3 +52,6 @@
 [submodule "src/external/ffmpeg"]
 	path = src/external/ffmpeg
 	url = https://github.com/eka2l1/ffmpeg
+[submodule "src/emu/config/compat"]
+	path = src/emu/config/compat
+	url = https://github.com/EKA2L1/compat-config
