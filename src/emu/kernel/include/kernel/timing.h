@@ -155,5 +155,11 @@ namespace eka2l1 {
         std::uint32_t get_clock_frequency_mhz();
 
         void set_realtime_level(const realtime_level lvl);
+        realtime_level get_realtime_level() const {
+            return acc_level_;
+        }
     };
+
+    realtime_level get_realtime_level_from_string(const char *c);
+    const char *get_string_of_realtime_level(const realtime_level lvl);
 }

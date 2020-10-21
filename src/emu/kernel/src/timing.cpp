@@ -257,4 +257,40 @@ namespace eka2l1 {
             }
         }
     }
+    
+    realtime_level get_realtime_level_from_string(const char *c) {
+        const std::string str = common::lowercase_string(std::string(c));
+
+        if (str == "low") {
+            return realtime_level_low;
+        }
+
+        if (str == "mid") {
+            return realtime_level_mid;
+        }
+
+        if (str == "high") {
+            return realtime_level_high;
+        }
+        
+        return realtime_level_mid;
+    }
+    
+    const char *get_string_of_realtime_level(const realtime_level lvl) {
+        switch (lvl) {
+        case realtime_level_low:
+            return "low";
+
+        case realtime_level_high:
+            return "high";
+
+        case realtime_level_mid:
+            return "mid";
+
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
 }

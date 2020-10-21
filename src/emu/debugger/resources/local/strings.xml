@@ -91,12 +91,18 @@
     <string name="pref_system_time_delay_option_name">Time delay</string>
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="pref_system_setting_inheritance_tooltip_msg">When this option is enabled, child processes that this app summon will inherits its settings.</string>
-    <string name="pref_system_app_setting_save_done_msg">App setting for %s is saved to %s</string>
+    <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
     <string name="pref_system_app_setting_save_title">Save the settings</string>
     <string name="pref_system_validate_device_btn_title">Validate device</string>
     <string name="pref_system_validate_device_tooltip">Check for faults in device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Disabled because emulated system has started. Restart the emulator to use this option.</string>
     <string name="pref_system_no_device_present_str">No device present</string>
+    <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
+    <string name="pref_system_real_time_accuracy_tooltip_msg_1">Choose the level of accuracy for timing operations.</string>
+    <string name="pref_system_real_time_accuracy_tooltip_msg_2">The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</string>
+    <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
+    <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
+    <string name="pref_system_real_time_accuracy_level_name_high">High</string>
 
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>

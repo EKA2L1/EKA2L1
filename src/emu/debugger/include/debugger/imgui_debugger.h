@@ -224,6 +224,8 @@ namespace eka2l1 {
         ImFont *font_to_use;
         kernel::process *active_app_config;
 
+        std::string app_setting_msg;        
+
     protected:
         void do_install_package();
 

@@ -84,6 +84,7 @@ const ImVec4 GUI_COLOR_TEXT = RGBA_TO_FLOAT(255, 255, 255, 255);
 const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255.0f);
 
 static const ImVec4 RED_COLOR = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+static const ImVec4 GREEN_COLOR = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
 
 namespace eka2l1 {
     static void language_property_change_handler(void *userdata, service::property *prop) {
@@ -741,6 +742,8 @@ namespace eka2l1 {
                     conf->emulator_language = lang.first;
                     localised_strings = common::get_localised_string_table("resources", "strings.xml",
                         static_cast<language>(conf->emulator_language));
+
+                    app_setting_msg.clear();
                 }
             }
 
@@ -856,12 +859,89 @@ namespace eka2l1 {
             }
 
             ImGui::PopItemWidth();
-            
+
+            kernel_system *kern = sys->get_kernel_system();
+
+            const std::string rt_acc_str = common::get_localised_string(localised_strings, "pref_system_real_time_accuracy_str");
+            ImGui::LabelText("##GrayedRTOSLabel", "%s", rt_acc_str.c_str());
+
+            if (ImGui::IsItemHovered()) {
+                const std::string rt_acc_tt_1 = common::get_localised_string(localised_strings, "pref_system_real_time_accuracy_tooltip_msg_1");
+                const std::string rt_acc_tt_2 = common::get_localised_string(localised_strings, "pref_system_real_time_accuracy_tooltip_msg_2");
+                
+                ImGui::SetTooltip("%s\n%s", rt_acc_tt_1.c_str(), rt_acc_tt_2.c_str());
+            }
+
+            ImGui::SameLine(col2);
+            ImGui::PushItemWidth(col2 - 10);
+
+            std::map<realtime_level, std::string> RTOS_LEVEL_NAME_AND_LEVEL = {
+                { realtime_level_low, common::get_localised_string(localised_strings, "pref_system_real_time_accuracy_level_name_low") },
+                { realtime_level_mid, common::get_localised_string(localised_strings, "pref_system_real_time_accuracy_level_name_mid") },
+                { realtime_level_high, common::get_localised_string(localised_strings, "pref_system_real_time_accuracy_level_name_high") }
+            };
+
+            ntimer *timing = kern->get_ntimer();
+            if (ImGui::BeginCombo("##RTOSLevel", RTOS_LEVEL_NAME_AND_LEVEL[timing->get_realtime_level()].c_str())) {
+                for (const auto &lvl: RTOS_LEVEL_NAME_AND_LEVEL) {
+                    if (ImGui::Selectable(lvl.second.c_str())) {
+                        timing->set_realtime_level(lvl.first);
+                        conf->rtos_level = get_string_of_realtime_level(lvl.first);
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::NewLine();
+
+            io_system *io = sys->get_io_system();
+
+            if (!should_disable_validate_drive) {
+                kern->lock();
+
+                if (!kern->threads_.empty()) {
+                    should_disable_validate_drive = true;
+                }
+
+                kern->unlock();
+            }
+
+            if (should_disable_validate_drive) {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            }
+
+            const std::string validate_device_str = common::get_localised_string(localised_strings,
+                "pref_system_validate_device_btn_title");
+
+            if (ImGui::Button(validate_device_str.c_str())) {
+                LOG_INFO("This might take sometimes! Please wait... The UI is frozen while this is being done.");
+                sys->validate_current_device();
+            }
+
+            if (should_disable_validate_drive) {
+                ImGui::PopItemFlag();
+                ImGui::PopStyleVar();
+            }
+
+            if (ImGui::IsItemHovered()) {
+                const std::string tooltip = common::get_localised_string(localised_strings, "pref_system_validate_device_tooltip");
+                std::string tooltip_disabled = "";
+
+                if (should_disable_validate_drive) {
+                    tooltip_disabled = common::get_localised_string(localised_strings, "pref_system_validate_device_disabled_tooltip");
+                }
+
+                ImGui::SetTooltip("%s\n%s", tooltip.c_str(), tooltip_disabled.c_str());
+            }
+
             const std::string app_setting_str = common::get_localised_string(localised_strings, "pref_system_app_setting_sect_name");
 
             ImGui::NewLine();
             ImGui::Text("%s", app_setting_str.c_str());
-                
+
             ImGui::SameLine(col2);
             ImGui::PushItemWidth(col2 - 10);
             
@@ -889,6 +969,8 @@ namespace eka2l1 {
                     if (!active_app_config && (!ui_app_list.empty())) {
                         active_app_config = ui_app_list.front().associated_;
                         choosen = ui_app_list.front();
+
+                        app_setting_msg.clear();
                     }
 
                     std::string preview = active_app_config ? common::ucs2_to_utf8(choosen.app_name_) : "None";
@@ -901,6 +983,7 @@ namespace eka2l1 {
 
                                 if (ImGui::Selectable(select_name.c_str())) {
                                     active_app_config = ui_app.associated_;
+                                    app_setting_msg.clear();
                                 }
                             }
                         }
@@ -958,7 +1041,12 @@ namespace eka2l1 {
                     const std::string save_the_setting_str = common::get_localised_string(localised_strings, "pref_system_app_setting_save_title");
                     const float save_the_setting_button_size = ImGui::CalcTextSize(save_the_setting_str.c_str()).x + 10.0f;
 
+                    if (!app_setting_msg.empty()) {
+                        ImGui::TextColored(GREEN_COLOR, "%s", app_setting_msg.c_str());
+                    }
+
                     ImGui::NewLine();
+                    
                     ImGui::SameLine(std::max(0.0f, (ImGui::GetWindowSize().x - save_the_setting_button_size) / 2));
                     ImGui::PushItemWidth(save_the_setting_button_size);
 
@@ -971,7 +1059,8 @@ namespace eka2l1 {
                         to_replace.time_delay = active_app_config->get_time_delay();
 
                         if (settings->add_or_replace_setting(active_app_config->get_uid(), to_replace)) {
-
+                            app_setting_msg = common::get_localised_string(localised_strings, "pref_system_app_setting_save_done_msg");
+                            app_setting_msg = fmt::format(app_setting_msg, common::ucs2_to_utf8(choosen.app_name_), choosen.app_uid_);
                         }
                     }
 
@@ -983,49 +1072,6 @@ namespace eka2l1 {
             }
 
             ImGui::PopItemWidth();
-            ImGui::NewLine();
-
-            kernel_system *kern = sys->get_kernel_system();
-            io_system *io = sys->get_io_system();
-
-            if (!should_disable_validate_drive) {
-                kern->lock();
-
-                if (!kern->threads_.empty()) {
-                    should_disable_validate_drive = true;
-                }
-
-                kern->unlock();
-            }
-
-            if (should_disable_validate_drive) {
-                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-            }
-
-            const std::string validate_device_str = common::get_localised_string(localised_strings,
-                "pref_system_validate_device_btn_title");
-
-            if (ImGui::Button(validate_device_str.c_str())) {
-                LOG_INFO("This might take sometimes! Please wait... The UI is frozen while this is being done.");
-                sys->validate_current_device();
-            }
-
-            if (should_disable_validate_drive) {
-                ImGui::PopItemFlag();
-                ImGui::PopStyleVar();
-            }
-
-            if (ImGui::IsItemHovered()) {
-                const std::string tooltip = common::get_localised_string(localised_strings, "pref_system_validate_device_tooltip");
-                std::string tooltip_disabled = "";
-
-                if (should_disable_validate_drive) {
-                    tooltip_disabled = common::get_localised_string(localised_strings, "pref_system_validate_device_disabled_tooltip");
-                }
-
-                ImGui::SetTooltip("%s\n%s", tooltip.c_str(), tooltip_disabled.c_str());
-            }
         }
     
         mngr->lock.unlock();
@@ -1379,7 +1425,7 @@ namespace eka2l1 {
         }
 
         if (should_package_manager_remove) {
-            const std::lock_guard<std::mutex> guard(manager->lockdown);
+            std::unique_lock<std::mutex> guard(manager->lockdown);
             const manager::package_info *pkg = manager->package(selected_package_index);
 
             const std::string info_str = common::get_localised_string(localised_strings, "info");
@@ -1408,7 +1454,9 @@ namespace eka2l1 {
                     should_package_manager_display_file_list = false;
 
                     if (pkg != nullptr) {
+                        guard.unlock();
                         manager->uninstall_package(pkg->id);
+                        guard.lock();
                     }
                 }
 
