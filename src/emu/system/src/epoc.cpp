@@ -367,6 +367,7 @@ namespace eka2l1 {
 
         // Initialize all the system that doesn't depend on others first
         timing_ = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
+        timing_->set_realtime_level(get_realtime_level_from_string(conf_->rtos_level.c_str()));
 
         file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
         physical_fs_id_ = io_->add_filesystem(physical_fs);

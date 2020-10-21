@@ -38,10 +38,7 @@ namespace eka2l1 {
         std::vector<int> languages;
         std::uint32_t machine_uid;
         int default_language_code;
-        std::uint16_t time_delay_us;
     };
-
-    void get_recommended_stat_for_device(const epocver ver, std::uint16_t &time_delay_us);
 
     /*! \brief A manager for all installed devices on this emulator
     */
@@ -49,9 +46,6 @@ namespace eka2l1 {
         std::vector<device> devices;
         device *current;
         config::state *conf;
-
-    protected:
-        void import_device_config_to_global(device *dvc);
 
     public:
         std::mutex lock;
@@ -77,12 +71,9 @@ namespace eka2l1 {
         bool set_current(const std::string &firmcode);
         bool set_current(const std::uint8_t idx);
 
-        bool add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid,
-            const std::uint16_t time_delay_us);
+        bool add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid);
 
         bool delete_device(const std::string &firmcode);
-
-        void set_time_delay_in_us(const std::uint16_t delay_us);
 
         /*! \brief Get the device with the given firmware code.
          *

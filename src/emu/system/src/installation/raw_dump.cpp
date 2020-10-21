@@ -45,10 +45,7 @@ namespace eka2l1::loader {
             return false;
         }
 
-        std::uint16_t time_delay_us = 0;
-        get_recommended_stat_for_device(ver, time_delay_us);
-
-        if (!dvcmngr->add_new_device(platform_name, model, manufacturer, ver, 0, time_delay_us)) {
+        if (!dvcmngr->add_new_device(platform_name, model, manufacturer, ver, 0)) {
             LOG_ERROR("This device ({}) failed to be installed!", platform_name);
             return false;
         }

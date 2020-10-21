@@ -186,10 +186,7 @@ namespace eka2l1::loader {
         // Rename temp folder to its product code
         eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode_low + "\\"));
 
-        std::uint16_t time_delay_us = 0;
-        get_recommended_stat_for_device(ver, time_delay_us);
-
-        if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid, time_delay_us)) {
+        if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid)) {
             LOG_ERROR("This device ({}) failed to be install, revert all changes", firmcode);
             eka2l1::common::remove(add_path(devices_rom_path, firmcode_low + "\\"));
 
