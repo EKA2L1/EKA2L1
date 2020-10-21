@@ -240,7 +240,7 @@ namespace eka2l1 {
 
         if (!kern->is_eka1() && (ctx->msg->function > view_opcode_set_system_default_view)) {
             // This is moved for capability safety in EKA2...
-            ctx->msg->function -= 1;
+            ctx->msg->function += 1;
         }
 
         switch (ctx->msg->function) {
