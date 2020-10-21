@@ -134,8 +134,8 @@ namespace eka2l1 {
 
         void emu_window_glfw3::init(std::string title, vec2 size, const std::uint32_t flags) {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 
             GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 
@@ -148,7 +148,7 @@ namespace eka2l1 {
             emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
 
             if (!emu_win) {
-                LOG_ERROR("Can't create window!");
+                LOG_ERROR("Can't create window! Check if your PC support at least 3.1!");
             }
 
             using namespace std::placeholders;
