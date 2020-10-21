@@ -56,6 +56,7 @@
 
 #include <drivers/graphics/emu_window.h> // For scancode
 
+#include <config/app_settings.h>
 #include <config/config.h>
 #include <system/devices.h>
 #include <package/manager.h>
@@ -866,12 +867,12 @@ namespace eka2l1 {
             
             if (alserv) {
                 kernel_system *kern = sys->get_kernel_system();
+                akn_running_app_info choosen;
 
                 {
                     kern->lock();
 
                     auto ui_app_list = eka2l1::get_akn_app_infos(winserv);
-                    akn_running_app_info choosen;
 
                     if (active_app_config) {
                         auto find_res = std::find_if(ui_app_list.begin(), ui_app_list.end(), [=](akn_running_app_info &info) {
@@ -953,6 +954,28 @@ namespace eka2l1 {
                     }
 
                     kern->unlock();
+
+                    const std::string save_the_setting_str = common::get_localised_string(localised_strings, "pref_system_app_setting_save_title");
+                    const float save_the_setting_button_size = ImGui::CalcTextSize(save_the_setting_str.c_str()).x + 10.0f;
+
+                    ImGui::NewLine();
+                    ImGui::SameLine(std::max(0.0f, (ImGui::GetWindowSize().x - save_the_setting_button_size) / 2));
+                    ImGui::PushItemWidth(save_the_setting_button_size);
+
+                    if (ImGui::Button(save_the_setting_str.c_str())) {
+                        config::app_settings *settings = kern->get_app_settings();
+
+                        config::app_setting to_replace;
+                        to_replace.fps = winserv->get_screen(choosen.screen_number_)->refresh_rate;
+                        to_replace.child_inherit_setting = active_app_config->get_child_inherit_setting();
+                        to_replace.time_delay = active_app_config->get_time_delay();
+
+                        if (settings->add_or_replace_setting(active_app_config->get_uid(), to_replace)) {
+
+                        }
+                    }
+
+                    ImGui::PopItemWidth();
                 }
             } else {
                 ImGui::Text("Disabled due to missing components!");
@@ -960,6 +983,7 @@ namespace eka2l1 {
             }
 
             ImGui::PopItemWidth();
+            ImGui::NewLine();
 
             kernel_system *kern = sys->get_kernel_system();
             io_system *io = sys->get_io_system();
@@ -1284,52 +1308,52 @@ namespace eka2l1 {
 
         ImGuiListClipper clipper(static_cast<int>(manager->package_count()), ImGui::GetTextLineHeight());
 
-        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-            const manager::package_info *pkg = manager->package(i);
-            std::string str = "0x" + common::to_string(pkg->id, std::hex);
+        while (clipper.Step()) {
+            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                const manager::package_info *pkg = manager->package(i);
+                std::string str = "0x" + common::to_string(pkg->id, std::hex);
 
-            ImGui::Text("%s", str.c_str());
-            ImGui::NextColumn();
+                ImGui::Text("%s", str.c_str());
+                ImGui::NextColumn();
 
-            str = common::ucs2_to_utf8(pkg->name);
+                str = common::ucs2_to_utf8(pkg->name);
 
-            if (ImGui::Selectable(str.c_str(), selected_package_index == i)) {
-                if (!should_package_manager_remove) {
-                    selected_package_index = i;
-                    should_package_manager_display_file_list = false;
+                if (ImGui::Selectable(str.c_str(), selected_package_index == i)) {
+                    if (!should_package_manager_remove) {
+                        selected_package_index = i;
+                        should_package_manager_display_file_list = false;
+                    }
                 }
+
+                if (selected_package_index == i && ImGui::BeginPopupContextItem()) {
+                    const std::string filelist_menu_name = common::get_localised_string(localised_strings, "packages_file_lists_string");
+                    const std::string remove_menu_name = common::get_localised_string(localised_strings, "packages_remove_string");
+                    
+                    if (ImGui::MenuItem(filelist_menu_name.c_str())) {
+                        should_package_manager_display_file_list = true;
+                    }
+
+                    if (ImGui::MenuItem(remove_menu_name.c_str())) {
+                        should_package_manager_remove = true;
+                    }
+
+                    ImGui::EndPopup();
+                }
+
+                ImGui::NextColumn();
+
+                str = common::ucs2_to_utf8(pkg->vendor_name);
+
+                ImGui::Text("%s", str.c_str());
+                ImGui::NextColumn();
+
+                str = static_cast<char>(drive_to_char16(pkg->drive));
+                str += ":";
+
+                ImGui::Text("%s", str.c_str());
+                ImGui::NextColumn();
             }
-
-            if (selected_package_index == i && ImGui::BeginPopupContextItem()) {
-                const std::string filelist_menu_name = common::get_localised_string(localised_strings, "packages_file_lists_string");
-                const std::string remove_menu_name = common::get_localised_string(localised_strings, "packages_remove_string");
-                
-                if (ImGui::MenuItem(filelist_menu_name.c_str())) {
-                    should_package_manager_display_file_list = true;
-                }
-
-                if (ImGui::MenuItem(remove_menu_name.c_str())) {
-                    should_package_manager_remove = true;
-                }
-
-                ImGui::EndPopup();
-            }
-
-            ImGui::NextColumn();
-
-            str = common::ucs2_to_utf8(pkg->vendor_name);
-
-            ImGui::Text("%s", str.c_str());
-            ImGui::NextColumn();
-
-            str = static_cast<char>(drive_to_char16(pkg->drive));
-            str += ":";
-
-            ImGui::Text("%s", str.c_str());
-            ImGui::NextColumn();
         }
-
-        clipper.End();
 
         ImGui::Columns(1);
         ImGui::End();
@@ -2076,50 +2100,56 @@ namespace eka2l1 {
                 ImGui::SetColumnWidth(0, uid_col_size);
 
                 ImGuiListClipper clipper;
+                bool should_step = false;
 
-                if (app_search_box.Filters.empty())
+                if (app_search_box.Filters.empty()) {
                     clipper.Begin(static_cast<int>(registerations.size()), ImGui::GetTextLineHeight());
-
-                const int clip_start = (app_search_box.Filters.empty()) ? clipper.DisplayStart : 0;
-                const int clip_end = (app_search_box.Filters.empty()) ? clipper.DisplayEnd : static_cast<int>(registerations.size());
-
-                for (int i = clip_start; i < clip_end; i++) {
-                    std::string name = " ";
-
-                    if (registerations[i].mandatory_info.long_caption.get_length() != 0) {
-                        name += common::ucs2_to_utf8(registerations[i].mandatory_info.long_caption.to_std_string(nullptr));
-                    } else {
-                        name += common::ucs2_to_utf8(registerations[i].mandatory_info.short_caption.to_std_string(nullptr));
-                    }
-
-                    const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
-
-                    if (app_search_box.PassFilter(name.c_str())) {
-                        ImGui::Text("%s", uid_name.c_str());
-                        ImGui::NextColumn();
-
-                        ImGui::Text("%s", name.c_str());
-                        ImGui::NextColumn();
-
-                        if (ImGui::IsItemClicked()) {
-                            // Launch app!
-                            should_show_app_launch = false;
-                            should_still_focus_on_keyboard = true;
-
-                            epoc::apa::command_line cmdline;
-                            cmdline.launch_cmd_ = epoc::apa::command_create;
-
-                            kernel_system *kern = alserv->get_kernel_object_owner();
-
-                            kern->lock();
-                            alserv->launch_app(registerations[i], cmdline, nullptr);
-                            kern->unlock();
-                        }
-                    }
+                    should_step = true;
                 }
 
-                if (app_search_box.Filters.empty())
-                    clipper.End();
+                while (!should_step || clipper.Step()) {
+                    const int clip_start = (app_search_box.Filters.empty()) ? clipper.DisplayStart : 0;
+                    const int clip_end = (app_search_box.Filters.empty()) ? clipper.DisplayEnd : static_cast<int>(registerations.size());
+
+                    for (int i = clip_start; i < clip_end; i++) {
+                        std::string name = " ";
+
+                        if (registerations[i].mandatory_info.long_caption.get_length() != 0) {
+                            name += common::ucs2_to_utf8(registerations[i].mandatory_info.long_caption.to_std_string(nullptr));
+                        } else {
+                            name += common::ucs2_to_utf8(registerations[i].mandatory_info.short_caption.to_std_string(nullptr));
+                        }
+
+                        const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
+
+                        if (app_search_box.PassFilter(name.c_str())) {
+                            ImGui::Text("%s", uid_name.c_str());
+                            ImGui::NextColumn();
+
+                            ImGui::Text("%s", name.c_str());
+                            ImGui::NextColumn();
+
+                            if (ImGui::IsItemClicked()) {
+                                // Launch app!
+                                should_show_app_launch = false;
+                                should_still_focus_on_keyboard = true;
+
+                                epoc::apa::command_line cmdline;
+                                cmdline.launch_cmd_ = epoc::apa::command_create;
+
+                                kernel_system *kern = alserv->get_kernel_object_owner();
+
+                                kern->lock();
+                                alserv->launch_app(registerations[i], cmdline, nullptr);
+                                kern->unlock();
+                            }
+                        }
+                    }
+
+                    if (!should_step) {
+                        break;
+                    }
+                }
 
                 ImGui::EndChild();
             }
@@ -2711,6 +2741,18 @@ namespace eka2l1 {
                 ImGui::Text("(C) 2018- EKA2L1 Team.");
                 ImGui::Text("Thank you for using the emulator!");
                 ImGui::Separator();
+                ImGui::Text("Main developers:");
+                ImGui::Text("- nikita36078 (Android maintainer)");
+                ImGui::Text("- pent0/bent (Desktop maintainer)");
+                ImGui::Separator();
+                ImGui::Text("Contributors:");
+                ImGui::Text("- ssine");
+                ImGui::Text("- Florastamine");
+                ImGui::Text("- quanshousio");
+                ImGui::Text("- agatti");
+                ImGui::Text("- Faalagorn");
+                ImGui::Text("- literalmente-game");
+                ImGui::Separator();
                 ImGui::Text("Honors:");
                 ImGui::Text("- florastamine");
                 ImGui::Text("- HadesD (Ichiro)");
@@ -2719,6 +2761,7 @@ namespace eka2l1 {
                 ImGui::Text("- stranno");
                 ImGui::Text("- J Adra (Laserdisc)");
                 ImGui::Text("- 张 金旭");
+                ImGui::Text("- razvan");
                 ImGui::EndChild();
             }
 

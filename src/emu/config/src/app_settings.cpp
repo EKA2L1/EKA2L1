@@ -73,6 +73,11 @@ namespace eka2l1::config {
     static const char *COMPAT_DIR_PATH = "compat\\";
 
     bool app_settings::load_all_settings() {
+        if (!eka2l1::exists(COMPAT_DIR_PATH)) {
+            eka2l1::create_directories(COMPAT_DIR_PATH);
+            return true;
+        }
+
         common::dir_iterator setting_folder(COMPAT_DIR_PATH);
         setting_folder.detail = true;
 
@@ -105,10 +110,13 @@ namespace eka2l1::config {
     }
 
     void app_settings::save_setting(const epoc::uid id, const app_setting &setting) {
-        std::ofstream stream(eka2l1::add_path(eka2l1::add_path(conf_->storage, COMPAT_DIR_PATH), fmt::format("0x{:X}.yml", id)));
+        std::ofstream stream(eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", id)));
         YAML::Emitter emitter;
 
+        emitter << YAML::BeginMap;
         serialize_app_setting(emitter, setting);
+        emitter << YAML::EndMap;
+
         stream << emitter.c_str();
     }
 

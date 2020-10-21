@@ -91,6 +91,8 @@
     <string name="pref_system_time_delay_option_name">Time delay</string>
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="pref_system_setting_inheritance_tooltip_msg">When this option is enabled, child processes that this app summon will inherits its settings.</string>
+    <string name="pref_system_app_setting_save_done_msg">App setting for %s is saved to %s</string>
+    <string name="pref_system_app_setting_save_title">Save the settings</string>
     <string name="pref_system_validate_device_btn_title">Validate device</string>
     <string name="pref_system_validate_device_tooltip">Check for faults in device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Disabled because emulated system has started. Restart the emulator to use this option.</string>
