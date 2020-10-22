@@ -217,7 +217,7 @@ namespace eka2l1 {
 
         // Respect each section. If one section can't load. That does not mean the further will not load too.
         try {
-            for (auto &node: the_node["MainDevs"]) {
+            for (const auto node: the_node["MainDevs"]) {
                 main_dev_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
@@ -225,7 +225,7 @@ namespace eka2l1 {
         }
 
         try {
-            for (auto &node: the_node["Contributors"]) {
+            for (const auto node: the_node["Contributors"]) {
                 contributors_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
@@ -233,7 +233,7 @@ namespace eka2l1 {
         }
 
         try {
-            for (auto &node: the_node["Honors"]) {
+            for (const auto node: the_node["Honors"]) {
                 honors_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
@@ -241,7 +241,7 @@ namespace eka2l1 {
         }
 
         try {
-            for (auto &node: the_node["TranslatorsDesktop"]) {
+            for (const auto node: the_node["TranslatorsDesktop"]) {
                 translators_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
