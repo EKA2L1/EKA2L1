@@ -464,9 +464,8 @@ namespace eka2l1 {
                     case ss_op::EOpInstall:
                     case ss_op::EOpNull: {
                         if (!skip_next_file) {
-                            extract_file(raw_path, file->idx, crr_blck_idx);
-
                             raw_path = common::lowercase_string(raw_path);
+                            extract_file(raw_path, file->idx, crr_blck_idx);
 
                             if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
                                 LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
