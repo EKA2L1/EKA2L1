@@ -160,6 +160,7 @@ CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback
     , iState(EMdaStateReady)
     , iBufferQueue(this)
     , iOpen()
+    , iSetPriorityUnimplNotified(EFalse) 
     , iCallback(aCallback) {
 }
 
@@ -365,4 +366,12 @@ void CMMFMdaAudioOutputStream::RegisterNotifyBufferSent(TRequestStatus &aStatus)
 
 void CMMFMdaAudioOutputStream::CancelRegisterNotifyBufferSent() {
     EAudioDspStreamCancelNotifyBufferSentToDriver(0, iDispatchInstance);
+}
+
+TBool CMMFMdaAudioOutputStream::IsPriorityUnimplNotified() const {
+    return iSetPriorityUnimplNotified;
+}
+
+void CMMFMdaAudioOutputStream::SetPriorityUnimplNotified() {
+    iSetPriorityUnimplNotified = ETrue;
 }
