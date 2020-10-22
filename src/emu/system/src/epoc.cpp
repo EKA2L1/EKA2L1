@@ -165,7 +165,6 @@ namespace eka2l1 {
 
             // Initialize HLE finally
             dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
-            stub_ = std::make_unique<gdbstub>();
             
             if (!stub_->is_server_enabled() && conf_->enable_gdbstub) {
                 stub_->init(kern_.get(), io_.get());
@@ -400,6 +399,7 @@ namespace eka2l1 {
 
         disassembler_ = std::make_unique<disasm>();
         io_ = std::make_unique<io_system>();
+        stub_ = std::make_unique<gdbstub>();
         packages_ = std::make_unique<manager::packages>(io_.get(), conf_);
 
 #if ENABLE_SCRIPTING
