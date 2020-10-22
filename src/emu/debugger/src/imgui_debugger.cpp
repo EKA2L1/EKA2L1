@@ -75,6 +75,8 @@
 #include <mutex>
 #include <thread>
 
+#include <yaml-cpp/yaml.h>
+
 #define RGBA_TO_FLOAT(r, g, b, a) ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f)
 
 const ImVec4 GUI_COLOR_TEXT_MENUBAR = RGBA_TO_FLOAT(242.0f, 150.0f, 58.0f, 255.0f);
@@ -202,6 +204,49 @@ namespace eka2l1 {
                 install_thread_cond.wait(ul);
             }
         });
+
+        // Load credits
+        YAML::Node the_node;
+
+        try {
+            static constexpr const char *CREDIT_PATH = "resources//credits.yml";
+            the_node = YAML::LoadFile(CREDIT_PATH);
+        } catch (std::exception &e) {
+            LOG_ERROR("Unable to load credits file. Error description: {}", e.what());
+        }
+
+        // Respect each section. If one section can't load. That does not mean the further will not load too.
+        try {
+            for (auto &node: the_node["MainDevs"]) {
+                main_dev_strings.push_back(node.as<std::string>());
+            }
+        } catch (std::exception &e) {
+            LOG_ERROR("Unable to load main developers credits. Error description: {}", e.what());
+        }
+
+        try {
+            for (auto &node: the_node["Contributors"]) {
+                contributors_strings.push_back(node.as<std::string>());
+            }
+        } catch (std::exception &e) {
+            LOG_ERROR("Unable to load contributors credits. Error description: {}", e.what());
+        }
+
+        try {
+            for (auto &node: the_node["Honors"]) {
+                honors_strings.push_back(node.as<std::string>());
+            }
+        } catch (std::exception &e) {
+            LOG_ERROR("Unable to load honors credits. Error description: {}", e.what());
+        }
+
+        try {
+            for (auto &node: the_node["TranslatorsDesktop"]) {
+                translators_strings.push_back(node.as<std::string>());
+            }
+        } catch (std::exception &e) {
+            LOG_ERROR("Unable to load translators credits. Error description: {}", e.what());
+        }
 
         kernel_system *kern = sys->get_kernel_system();
 
@@ -2778,38 +2823,64 @@ namespace eka2l1 {
             ImGui::Columns(2);
 
             if (phony_icon) {
+                ImVec2 the_pos = ImGui::GetWindowSize();
+                the_pos.x = ImGui::GetColumnWidth();
+
+                the_pos.x = (the_pos.x - phony_size.x) / 2.0f;
+                the_pos.y = (the_pos.y - phony_size.y) / 2.0f;
+
+                ImGui::SetCursorPos(the_pos);
                 ImGui::Image(reinterpret_cast<ImTextureID>(phony_icon), ImVec2(static_cast<float>(phony_size.x), static_cast<float>(phony_size.y)));
             }
 
             ImGui::NextColumn();
 
             if (ImGui::BeginChild("##EKA2L1CreditsText")) {
-                ImGui::Text("EKA2L1 - SYMBIAN OS EMULATOR");
+                const std::string title = common::get_localised_string(localised_strings, "credits_title");
+                const std::string copyright = common::get_localised_string(localised_strings, "credits_copyright_text");
+                const std::string thanks = common::get_localised_string(localised_strings, "credits_thanks_text");
+
+                ImGui::Text("%s", title.c_str());
                 ImGui::Separator();
-                ImGui::Text("(C) 2018- EKA2L1 Team.");
-                ImGui::Text("Thank you for using the emulator!");
+
+                ImGui::Text("%s", copyright.c_str());
+                ImGui::Text("%s", thanks.c_str());
                 ImGui::Separator();
-                ImGui::Text("Main developers:");
-                ImGui::Text("- nikita36078 (Android maintainer)");
-                ImGui::Text("- pent0/bent (Desktop maintainer)");
+
+                const std::string main_dev_str = common::get_localised_string(localised_strings, "credits_main_developer_text");
+                ImGui::Text("%s", main_dev_str.c_str());
+
+                for (auto &dev: main_dev_strings) {
+                    ImGui::Text("- %s", dev.c_str());
+                }
+
                 ImGui::Separator();
-                ImGui::Text("Contributors:");
-                ImGui::Text("- ssine");
-                ImGui::Text("- Florastamine");
-                ImGui::Text("- quanshousio");
-                ImGui::Text("- agatti");
-                ImGui::Text("- Faalagorn");
-                ImGui::Text("- literalmente-game");
+
+                const std::string contrib_str = common::get_localised_string(localised_strings, "credits_contributors_text");
+                ImGui::Text("%s", contrib_str.c_str());
+
+                for (auto &contriber: contributors_strings) {
+                    ImGui::Text("- %s", contriber.c_str());
+                }
+                
                 ImGui::Separator();
-                ImGui::Text("Honors:");
-                ImGui::Text("- florastamine");
-                ImGui::Text("- HadesD (Ichiro)");
-                ImGui::Text("- quanshousio");
-                ImGui::Text("- claimmore");
-                ImGui::Text("- stranno");
-                ImGui::Text("- J Adra (Laserdisc)");
-                ImGui::Text("- 张 金旭");
-                ImGui::Text("- razvan");
+
+                const std::string honor_str = common::get_localised_string(localised_strings, "credits_honors_text");
+                ImGui::Text("%s", honor_str.c_str());
+
+                for (auto &honor: honors_strings) {
+                    ImGui::Text("- %s", honor.c_str());
+                }
+
+                ImGui::Separator();
+
+                const std::string translator_str = common::get_localised_string(localised_strings, "credits_translators_text");
+                ImGui::Text("%s", translator_str.c_str());
+
+                for (auto &trans: translators_strings) {
+                    ImGui::Text("- %s", trans.c_str());
+                }
+
                 ImGui::EndChild();
             }
 

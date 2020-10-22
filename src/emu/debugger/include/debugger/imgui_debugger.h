@@ -224,7 +224,12 @@ namespace eka2l1 {
         ImFont *font_to_use;
         kernel::process *active_app_config;
 
-        std::string app_setting_msg;        
+        std::string app_setting_msg;
+
+        std::vector<std::string> main_dev_strings;
+        std::vector<std::string> contributors_strings;
+        std::vector<std::string> honors_strings;
+        std::vector<std::string> translators_strings;
 
     protected:
         void do_install_package();

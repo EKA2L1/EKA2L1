@@ -152,6 +152,14 @@
     <string name="touchscreen_disabled_note_str">Note</string>
     <string name="touchscreen_disabled_note_msg">Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</string>
 
+    <string name="credits_title">EKA2L1 - SYMBIAN OS EMULATOR</string>
+    <string name="credits_copyright_text">(C) 2018- EKA2L1 Team.</string>
+    <string name="credits_thanks_text">Thank you for using the emulator!</string>
+    <string name="credits_main_developer_text">Main developers:</string>
+    <string name="credits_contributors_text">Contributors:</string>
+    <string name="credits_honors_text">Honors:</string>
+    <string name="credits_translators_text">Translators (Desktop):</string>
+
     <string name="lang_name_zh" translatable="false">简体中文</string>
     <string name="lang_name_en" translatable="false">English</string>
     <string name="lang_name_fi" translatable="false">Suomen kieli</string>
