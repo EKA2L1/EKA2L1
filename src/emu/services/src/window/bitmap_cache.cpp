@@ -151,7 +151,7 @@ namespace eka2l1::epoc {
         XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->uid_), sizeof(bw_bmp->uid_));
 
         // Lastly, we needs to hash the data, to see if anything changed
-        XXH64_update(state, base_large_chunk + bw_bmp->data_offset_, bw_bmp->header_.bitmap_size - sizeof(bw_bmp->header_));
+        XXH64_update(state, bw_bmp->data_pointer(base_large_chunk), bw_bmp->header_.bitmap_size - sizeof(bw_bmp->header_));
 
         hash = XXH64_digest(state);
         XXH64_freeState(state);
@@ -231,12 +231,14 @@ namespace eka2l1::epoc {
         }
 
         if (should_upload) {
-            char *data_pointer = reinterpret_cast<char *>(base_large_chunk + bmp->data_offset_);
+            char *data_pointer = reinterpret_cast<char *>(bmp->data_pointer(base_large_chunk));
 
             std::vector<std::uint8_t> decompressed;
             std::uint32_t raw_size = 0;
 
-            if (bmp->header_.compression != bitmap_file_no_compression) {
+            const bitmap_file_compression comp = bmp->compression_type();
+
+            if (comp != bitmap_file_no_compression) {
                 raw_size = bmp->byte_width_ * bmp->header_.size_pixels.y;
                 decompressed.resize(raw_size);
 
@@ -245,7 +247,7 @@ namespace eka2l1::epoc {
                 common::wo_buf_stream dest_stream(&decompressed[0], raw_size);
                 common::ro_buf_stream source_stream(reinterpret_cast<std::uint8_t *>(data_pointer), compressed_size);
 
-                switch (bmp->header_.compression) {
+                switch (comp) {
                 case bitmap_file_byte_rle_compression:
                     eka2l1::decompress_rle<8>(&source_stream, &dest_stream);
                     break;
@@ -263,7 +265,7 @@ namespace eka2l1::epoc {
                     break;
 
                 default:
-                    LOG_ERROR("Unsupported bitmap format to decode {}", bmp->header_.compression);
+                    LOG_ERROR("Unsupported bitmap format to decode {}", static_cast<std::uint32_t>(comp));
                     break;
                 }
 

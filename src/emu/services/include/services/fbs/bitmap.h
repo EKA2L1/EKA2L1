@@ -24,7 +24,33 @@
 #include <services/window/common.h>
 #include <common/uid.h>
 
+namespace eka2l1 {
+    class fbs_server;
+}
+
 namespace eka2l1::epoc {
+    static constexpr epoc::uid bitwise_bitmap_uid = 0x10000040;
+    static constexpr std::uint32_t LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE = 50;
+
+    enum bitmap_file_compression {
+        bitmap_file_no_compression = 0,
+        bitmap_file_byte_rle_compression = 1,
+        bitmap_file_twelve_bit_rle_compression = 2,
+        bitmap_file_sixteen_bit_rle_compression = 3,
+        bitmap_file_twenty_four_bit_rle_compression = 4,
+        bitmap_file_twenty_four_u_bit_rle_compression = 5,
+        bitmap_file_thirty_two_u_bit_rle_compression = 6,
+        bitmap_file_thirty_two_a_bit_rle_compression = 7,
+        bitmap_file_palette_compression = 8
+    };
+
+    enum bitmap_color {
+        monochrome_bitmap = 0,
+        color_bitmap = 1,
+        color_bitmap_with_alpha = 2,
+        color_bitmap_with_alpha_pm = 3
+    };
+
     struct bitwise_bitmap {
         enum settings_flag {
             large_bitmap = 0x00010000,
@@ -63,31 +89,16 @@ namespace eka2l1::epoc {
         int spare1_;
         int data_offset_;
         bool compressed_in_ram_;
+        bool offset_from_me_;
 
         void construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base,
             const bool support_current_display_mode_flag, const bool white_fill = false);
+        
+        void post_construct(fbs_server *serv);
         int copy_data(const bitwise_bitmap &source, uint8_t *base);
-    };
 
-    constexpr epoc::uid bitwise_bitmap_uid = 0x10000040;
-
-    enum bitmap_file_compression {
-        bitmap_file_no_compression = 0,
-        bitmap_file_byte_rle_compression = 1,
-        bitmap_file_twelve_bit_rle_compression = 2,
-        bitmap_file_sixteen_bit_rle_compression = 3,
-        bitmap_file_twenty_four_bit_rle_compression = 4,
-        bitmap_file_twenty_four_u_bit_rle_compression = 5,
-        bitmap_file_thirty_two_u_bit_rle_compression = 6,
-        bitmap_file_thirty_two_a_bit_rle_compression = 7,
-        bitmap_file_palette_compression = 8
-    };
-
-    enum bitmap_color {
-        monochrome_bitmap = 0,
-        color_bitmap = 1,
-        color_bitmap_with_alpha = 2,
-        color_bitmap_with_alpha_pm = 3
+        bitmap_file_compression compression_type() const;
+        std::uint8_t *data_pointer(std::uint8_t *base_large);
     };
 
     bool save_bwbmp_to_file(const std::string &destination, bitwise_bitmap *bitmap, const char *base);

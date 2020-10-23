@@ -281,7 +281,8 @@ namespace eka2l1 {
     enum fbs_load_data_err {
         fbs_load_data_err_none,
         fbs_load_data_err_out_of_mem,
-        fbs_load_data_err_read_decomp_fail
+        fbs_load_data_err_read_decomp_fail,
+        fbs_load_data_err_small_bitmap
     };
 
     struct fbs_bitmap_data_info {
@@ -345,6 +346,16 @@ namespace eka2l1 {
         service::uid init();
 
         void connect(service::ipc_context &context) override;
+
+        /**
+         * @brief       Check if a bitmap is considered to be large bitmap.
+         * 
+         * For legacy level 2 server, the size of compressed must be larger or equal to 2^12 to be consider large.
+         * For newer legacy level, this is always true.
+         * 
+         * @returns     True if it's large.
+         */
+        bool is_large_bitmap(const std::uint32_t compressed_size);
 
         /**
          * \brief  Create a new empty bitmap.
@@ -423,11 +434,11 @@ namespace eka2l1 {
          * 
          * \param mbmf_ The MBM file stream
          * \param idx_ Index of the bitmap in MBM. Index base is 0.
-         * \param err_code Pointer to integer whic will holds error code. Must not be null.
+         * \param err_code Pointer to integer which will holds error code. Must not be null.
          * 
-         * \return Starting offset from the large chunk.
+         * \return Pointer to the data.
          */
-        std::optional<std::size_t> load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code);
+        void *load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code);
 
         /*! \brief Use to Allocate structure from server side.
          *
