@@ -32,15 +32,6 @@ namespace eka2l1 {
 
     void file_parser::parse(std::u16string default_path) {
         memset(parse_.fields, 0, sizeof(parse_.fields));
-        
-        if (name_.find('?') != std::string::npos) {
-            parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_one;
-            name_.erase(std::remove(name_.begin(), name_.end(), '?'), name_.end());
-        }
-        if (name_.find('*') != std::string::npos) {
-            parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_any;
-            name_.erase(std::remove(name_.begin(), name_.end(), '*'), name_.end());
-        }
 
         std::u16string lex[3];
         lex[0] = name_;
@@ -51,6 +42,16 @@ namespace eka2l1 {
         for (auto i = 0; i < LEX_COMPONENTS; i++) {
             done = false;
             for (auto j = 0; j < 3; j++) {
+                if (lex[j].find('?') != std::string::npos) {
+                    parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_one;
+                    name_.erase(std::remove(lex[j].begin(), lex[j].end(), '?'), lex[j].end());
+                }
+                
+                if (lex[j].find('*') != std::string::npos) {
+                    parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_any;
+                    lex[j].erase(std::remove(lex[j].begin(), lex[j].end(), '*'), lex[j].end());
+                }
+                
                 parse_part(i, lex[j]);
 
                 if (j == 0 && done) {
