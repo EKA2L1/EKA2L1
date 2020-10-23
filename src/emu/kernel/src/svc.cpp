@@ -1323,6 +1323,16 @@ namespace eka2l1::epoc {
         return result;
     }
 
+    BRIDGE_FUNC(std::int32_t, mutex_count, kernel::handle h) {
+        mutex_ptr mut = kern->get<kernel::mutex>(h);
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return epoc::error_not_found;
+        }
+
+        return mut->count();
+    }
+
     BRIDGE_FUNC(void, wait_for_any_request) {
         kern->crr_thread()->wait_for_any_request();
     }
@@ -3196,6 +3206,24 @@ namespace eka2l1::epoc {
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
+    
+    std::int32_t thread_set_initial_parameter_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        if (!thr->set_initial_userdata(create_info->arg1_)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_in_use);
+            return epoc::error_in_use;
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
 
     std::int32_t server_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
@@ -3316,6 +3344,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_open_thread_by_id:
             return thread_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_set_initial_parameter_thread:
+            return thread_set_initial_parameter_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_rename_thread:
             return thread_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -4015,6 +4046,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x18, mutex_count),
         BRIDGE_REGISTER(0x19, mutex_wait),
         BRIDGE_REGISTER(0x1A, mutex_signal),
         BRIDGE_REGISTER(0x1B, process_id),

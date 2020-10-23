@@ -111,6 +111,7 @@ namespace eka2l1::epoc {
             execute_create_timer = 0x1B,
             execute_rename_process = 0x20,
             execute_create_thread = 0x27,
+            execute_set_initial_parameter_thread = 0x28,
             execute_open_thread = 0x29,
             execute_open_thread_by_id = 0x2A,
             execute_rename_thread = 0x2C,

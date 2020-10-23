@@ -71,6 +71,10 @@ namespace eka2l1 {
                 return holding;
             }
 
+            int count() const {
+                return lock_count;
+            }
+
             bool signal(kernel::thread *callee);
 
             /*! \brief This update the mutex accordingly to the priority.

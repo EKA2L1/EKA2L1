@@ -130,6 +130,7 @@ namespace eka2l1 {
         };
 
         class thread : public kernel_obj {
+        private:
             friend class eka2l1::kernel_system;
             friend class eka2l1::gdbstub;
 
@@ -212,6 +213,9 @@ namespace eka2l1 {
             std::uint32_t exception_mask;
 
             address trap_stack;
+
+        protected:
+            epoc9_std_epoc_thread_create_info *metadata;
 
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);
@@ -313,6 +317,9 @@ namespace eka2l1 {
 
             bool suspend();
             bool resume();
+
+            bool is_suspended() const;
+            bool set_initial_userdata(const address userdata);
 
             void wait_for_any_request();
             void signal_request(int count = 1);
