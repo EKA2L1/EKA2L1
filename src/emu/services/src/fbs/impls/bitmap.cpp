@@ -450,12 +450,6 @@ namespace eka2l1 {
             // With doing that, we can now finally start loading to bitmap properly. So let's do it,
             // hesistate is bad.
             epoc::bitwise_bitmap *bws_bmp = fbss->allocate_general_data<epoc::bitwise_bitmap>();
-            bws_bmp->header_ = mbmf_.sbm_headers[load_options->bitmap_id];
-
-            if (fbss->legacy_level() == 1) {
-                // Set large bitmap flag so that the data pointer base is in large chunk
-                bws_bmp->settings_.set_large(true);
-            }
 
             // Load the bitmap data to large chunk
             int err_code = fbs_load_data_err_none;
@@ -486,20 +480,18 @@ namespace eka2l1 {
                 }
             }
 
-            // Place holder value indicates we allocate through the large chunk.
-            // If guest uses this, than we are doom. But gonna put it here anyway
-            bws_bmp->pile_ = epoc::MAGIC_FBS_PILE_PTR;
-            bws_bmp->allocator_ = epoc::MAGIC_FBS_HEAP_PTR;
+            // Get display mode
+            loader::sbm_header &header_to_give = mbmf_.sbm_headers[load_options->bitmap_id];
+            const epoc::display_mode dpm = epoc::get_display_mode_from_bpp(header_to_give.bit_per_pixels);
+            bws_bmp->construct(header_to_give, dpm, nullptr, nullptr, support_current_display_mode, false);
 
             bws_bmp->data_offset_ = static_cast<std::uint32_t>(bmp_data_offset.value());
             bws_bmp->compressed_in_ram_ = false;
-            bws_bmp->byte_width_ = get_byte_width(bws_bmp->header_.size_pixels.x, bws_bmp->header_.bit_per_pixels);
-            bws_bmp->uid_ = epoc::bitwise_bitmap_uid;
 
-            // Get display mode
-            const epoc::display_mode dpm = epoc::get_display_mode_from_bpp(bws_bmp->header_.bit_per_pixels);
-            bws_bmp->settings_.initial_display_mode(dpm);
-            bws_bmp->settings_.current_display_mode(dpm);
+            if (fbss->legacy_level() == 1) {
+                // Set large bitmap flag so that the data pointer base is in large chunk
+                bws_bmp->settings_.set_large(true);
+            }
 
             bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share), support_dirty_bitmap);
         }
