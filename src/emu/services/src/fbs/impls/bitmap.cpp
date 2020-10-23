@@ -210,8 +210,9 @@ namespace eka2l1 {
 
         void bitwise_bitmap::post_construct(fbs_server *serv) {
             if (serv->legacy_level() >= 2) {
-                if (header_.compression != epoc::bitmap_file_no_compression)
-                    header_.compression += epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE;
+                if ((header_.compression == epoc::bitmap_file_byte_rle_compression) ||
+                    (header_.compression == epoc::bitmap_file_twelve_bit_rle_compression))
+                header_.compression += epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE;
             }
 
             // Set large bitmap flag so that the data pointer base is in large chunk
@@ -314,14 +315,31 @@ namespace eka2l1 {
             serv_->free_bitmap(this);
     }
 
-    void *fbs_server::load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, int *err_code) {
+    void *fbs_server::load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, std::size_t &size_decomp, int *err_code) {
         *err_code = fbs_load_data_err_none;
+        size_decomp = 0;
 
-        // First, get the size of data when compressed
-        std::size_t size_when_compressed = 0;
-        if (!mbmf_.read_single_bitmap_raw(idx_, nullptr, size_when_compressed)) {
-            *err_code = fbs_load_data_err_read_decomp_fail;
+        if (idx_ >= mbmf_.trailer.count) {
+            *err_code = fbs_load_data_err_invalid_arg;
             return nullptr;
+        }
+
+        std::size_t size_when_compressed = 0;
+
+        if ((legacy_level() >= 2) && (mbmf_.sbm_headers[idx_].compression != epoc::bitmap_file_byte_rle_compression)
+            && (mbmf_.sbm_headers[idx_].compression != epoc::bitmap_file_twelve_bit_rle_compression)) {
+            if (!mbmf_.read_single_bitmap(idx_, nullptr, size_when_compressed)) {
+                *err_code = fbs_load_data_err_read_decomp_fail;
+                return nullptr;
+            } else {
+                size_decomp = size_when_compressed;
+            }
+        } else {
+            // First, get the size of data when compressed
+            if (!mbmf_.read_single_bitmap_raw(idx_, nullptr, size_when_compressed)) {
+                *err_code = fbs_load_data_err_read_decomp_fail;
+                return nullptr;
+            }
         }
 
         // Allocates from the large chunk
@@ -344,7 +362,14 @@ namespace eka2l1 {
 
         // Yay, we manage to alloc memory to load the data in
         // So let's get to work
-        if (!mbmf_.read_single_bitmap_raw(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size)) {
+        bool result_read = false;
+        
+        if (size_decomp)
+            result_read = mbmf_.read_single_bitmap(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size);
+        else
+            result_read = mbmf_.read_single_bitmap_raw(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size);
+
+        if (!result_read) {
             *err_code = fbs_load_data_err_read_decomp_fail;
             return nullptr;
         }
@@ -492,8 +517,9 @@ namespace eka2l1 {
 
             // Load the bitmap data to large chunk
             int err_code = fbs_load_data_err_none;
+            std::size_t size_when_decomp = 0;
 
-            auto bmp_data = fbss->load_data_to_rom(mbmf_, load_options->bitmap_id, &err_code);
+            auto bmp_data = fbss->load_data_to_rom(mbmf_, load_options->bitmap_id, size_when_decomp, &err_code);
             std::uint8_t *bmp_data_base = fbss->get_large_chunk_base();
 
             switch (err_code) {
@@ -532,6 +558,12 @@ namespace eka2l1 {
 
             bws_bmp->construct(header_to_give, dpm, bmp_data, bmp_data_base, support_current_display_mode, false);
             bws_bmp->offset_from_me_ = (err_code == fbs_load_data_err_small_bitmap);
+
+            if (size_when_decomp) {
+                bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len + size_when_decomp);
+                bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
+            }
+
             bws_bmp->post_construct(fbss);
 
             bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share), support_dirty_bitmap);
