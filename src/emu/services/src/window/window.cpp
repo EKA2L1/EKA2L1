@@ -260,19 +260,6 @@ namespace eka2l1::epoc {
         window_client_obj_ptr group = std::make_unique<epoc::window_group>(this, target_screen, parent_group, header->client_handle);
         epoc::window_group *group_casted = reinterpret_cast<epoc::window_group *>(group.get());
 
-        // Set the compat setting
-        kernel::process *mama = ctx.msg->own_thr->owning_process()->get_final_setting_process();
-        const epoc::uid app_uid = mama->get_uid();
-
-        kernel_system *kern = ctx.sys->get_kernel_system();
-
-        eka2l1::config::app_settings *the_settings = kern->get_app_settings();
-        eka2l1::config::app_setting *the_only_setting = the_settings->get_setting(app_uid);
-
-        if (the_only_setting) {
-            group_casted->last_refresh_rate = the_only_setting->fps;
-        }
-
         // If no window group is being focused on the screen, we force the screen to receive this window as focus
         // Else rely on the focus flag.
         if (!target_screen->focus || (header->focus)) {

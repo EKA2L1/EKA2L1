@@ -25,6 +25,10 @@
 
 #include <vector>
 
+namespace eka2l1::kernel {
+    class process;
+}
+
 namespace eka2l1::epoc {
     struct window_top_user;
     using message_data = std::vector<std::uint8_t>;
@@ -35,6 +39,9 @@ namespace eka2l1::epoc {
         std::queue<message_data> msg_datas;
 
         std::uint8_t last_refresh_rate;
+        std::size_t uid_owner_change_callback_handle;
+
+        kernel::process *uid_owner_change_process;
 
         bool can_receive_focus() {
             return flags & flag_focus_receiveable;
@@ -49,6 +56,10 @@ namespace eka2l1::epoc {
 
         explicit window_group(window_server_client_ptr client, screen *scr, epoc::window *parent,
             const std::uint32_t client_handle);
+
+        ~window_group() override;
+
+        void on_owner_process_uid_type_change(const std::uint32_t new_uid);
 
         // ===================== COMMAND OPCODES =======================
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);

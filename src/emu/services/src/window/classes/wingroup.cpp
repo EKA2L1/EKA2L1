@@ -29,6 +29,9 @@
 #include <common/cvt.h>
 #include <common/log.h>
 
+#include <config/app_settings.h>
+#include <kernel/kernel.h>
+
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
@@ -57,14 +60,54 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void window_group::on_owner_process_uid_type_change(const std::uint32_t new_uid) {
+        kernel_system *kern = client->get_ws().get_kernel_system();
+
+        eka2l1::config::app_settings *settings = kern->get_app_settings();
+        eka2l1::config::app_setting *the_setting = settings->get_setting(new_uid);
+
+        if (the_setting) {
+            last_refresh_rate = the_setting->fps;
+        }
+
+        if (this == scr->focus) {
+            scr->refresh_rate = last_refresh_rate;
+        }
+    }
+
+    static void window_group_process_uid_type_change_callback(void *userdata, const kernel::process_uid_type &type) {
+        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(userdata);
+
+        if (group) {
+            group->on_owner_process_uid_type_change(std::get<2>(type));
+        }
+    }
+
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
         : window(client, scr, parent, window_kind::group)
-        , last_refresh_rate(30) {
+        , last_refresh_rate(30)
+        , uid_owner_change_callback_handle(0)
+        , uid_owner_change_process(nullptr) {
         // Create window group as child
         top = std::make_unique<window_top_user>(client, scr, this);
         child = top.get();
 
         set_client_handle(client_handle);
+        
+        kernel::process *current = client->get_client()->owning_process();
+        kernel::process *mama = current->get_final_setting_process();
+
+        on_owner_process_uid_type_change(mama->get_uid());
+        uid_owner_change_callback_handle = mama->register_uid_type_change_callback(this,
+            window_group_process_uid_type_change_callback);
+
+        uid_owner_change_process = mama;
+    }
+
+    window_group::~window_group() {
+        if (uid_owner_change_process) {
+            uid_owner_change_process->unregister_uid_type_change_callback(uid_owner_change_callback_handle);
+        }
     }
 
     eka2l1::vec2 window_group::get_origin() {
