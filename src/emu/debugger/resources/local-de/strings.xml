@@ -77,11 +77,22 @@
     <string name="pref_system_device_option_name">Gerät</string>
     <string name="pref_system_device_not_found_msg">Das in der Konfigurationsdatei angegebene Gerät wurde nicht gefunden, das Standardgerät wird auf das erste zurückgesetzt.</string>
     <string name="pref_system_language_option_name">Sprache</string>
+    <string name="pref_system_app_setting_sect_name">App setting for:</string>
     <string name="pref_system_time_delay_option_name">Zeitverzögerung</string>
+    <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
+    <string name="pref_system_setting_inheritance_tooltip_msg">When this option is enabled, child processes that this app summon will inherits its settings.</string>
+    <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
+    <string name="pref_system_app_setting_save_title">Save the settings</string>
     <string name="pref_system_validate_device_btn_title">Gerät validieren</string>
     <string name="pref_system_validate_device_tooltip">Prüfe auf Fehler im Gerät und behebe sie, sodass EKA2L1 das Gerät emulieren kann.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Deaktiviert, weil Emulator gestartet wurde. Starten Sie den Emulator neu, um diese Option zu verwenden.</string>
     <string name="pref_system_no_device_present_str">Kein Gerät vorhanden</string>
+    <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
+    <string name="pref_system_real_time_accuracy_tooltip_msg_1">Choose the level of accuracy for timing operations.</string>
+    <string name="pref_system_real_time_accuracy_tooltip_msg_2">The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</string>
+    <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
+    <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
+    <string name="pref_system_real_time_accuracy_level_name_high">High</string>
     <string name="pref_control_title">Steuerung</string>
     <string name="pref_control_key_binding_sect_title">Tastenbelegung</string>
     <string name="pref_control_wait_for_key_string">warte auf Tastendruck</string>
@@ -122,4 +133,11 @@
     <string name="touchscreen_disabled_msg">Einige Ihrer aktuellen Tastenkombinationen sind mit den Maustasten verknüpft. Deshalb ist die Emulation des Touchscreens deaktiviert.</string>
     <string name="touchscreen_disabled_note_str">Hinweis</string>
     <string name="touchscreen_disabled_note_msg">Touchscreen kann wieder aktiviert werden, indem Sie die Maustaste mit Tastaturtasten neu einbinden.</string>
+    <string name="credits_title">EKA2L1 - SYMBIAN OS EMULATOR</string>
+    <string name="credits_copyright_text">(C) 2018- EKA2L1 Team.</string>
+    <string name="credits_thanks_text">Thank you for using the emulator!</string>
+    <string name="credits_main_developer_text">Main developers:</string>
+    <string name="credits_contributors_text">Contributors:</string>
+    <string name="credits_honors_text">Honors:</string>
+    <string name="credits_translators_text">Translators (Desktop):</string>
 </resources>
