@@ -327,8 +327,7 @@ namespace eka2l1 {
 
     public:
         explicit io_system();
-
-        void init();
+        ~io_system();
 
         void set_product_code(const std::string &pc);
         void set_epoc_ver(const epocver ver);
@@ -368,10 +367,6 @@ namespace eka2l1 {
         * \params new_path The new path to replaced the old.
         */
         bool rename(const std::u16string &old_path, const std::u16string &new_path);
-
-        /*! \brief Shutdown the IO system.
-        */
-        void shutdown();
 
         /*! \brief Mount a physical path.
         *

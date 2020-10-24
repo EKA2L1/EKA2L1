@@ -59,6 +59,7 @@ OPTION(hide-mouse-in-screen-space, hide_mouse_in_screen_space, false)
 OPTION(enable-nearest-neighbor-filter, nearest_neighbor_filtering, false)
 OPTION(integer-scaling, integer_scaling, true)
 OPTION(cpu-load-save, cpu_load_save, true)
+OPTION(rtos-level, rtos_level, "mid")
 
 #ifdef OPTION
 #undef OPTION

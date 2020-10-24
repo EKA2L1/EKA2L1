@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <services/hwrm/hwrm.h>
 #include <services/hwrm/light/light.h>
 #include <services/hwrm/op.h>
 #include <services/hwrm/vibration/vibration.h>
 #include <utils/err.h>
 
-#include <manager/manager.h>
+
 
 namespace eka2l1 {
     hwrm_session::hwrm_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
@@ -79,7 +79,7 @@ namespace eka2l1 {
 
         light_data_ = std::make_unique<epoc::hwrm::light::resource_data>(kern);
         vibration_data_ = std::make_unique<epoc::hwrm::vibration::resource_data>(kern, sys->get_io_system(),
-            sys->get_manager_system()->get_device_manager());
+            sys->get_device_manager());
 
         return true;
     }

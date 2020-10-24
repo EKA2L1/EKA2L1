@@ -26,23 +26,20 @@
 #include <utils/err.h>
 
 #include <common/log.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 namespace eka2l1::dispatch {
-    dispatcher::dispatcher()
+    dispatcher::dispatcher(kernel_system *kern, ntimer *timing)
         : winserv_(nullptr) {
-    }
-
-    dispatcher::~dispatcher() {
-        shutdown();
-    }
-
-    void dispatcher::init(kernel_system *kern, ntimer *timing) {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(
             eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
 
         // Set global variables
         timing_ = timing;
+    }
+
+    dispatcher::~dispatcher() {
+        shutdown();
     }
 
     void dispatcher::resolve(eka2l1::system *sys, const std::uint32_t function_ord) {

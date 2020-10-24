@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/repo.h>
 #include <services/context.h>
 #include <utils/err.h>
 
-#include <manager/device_manager.h>
-#include <manager/manager.h>
+#include <system/devices.h>
+
 
 #include <algorithm>
 #include <chrono>
@@ -266,7 +266,7 @@ namespace eka2l1 {
 
     void central_repo_client_subsession::reset(service::ipc_context *ctx) {
         io_system *io = ctx->sys->get_io_system();
-        manager::device_manager *mngr = ctx->sys->get_manager_system()->get_device_manager();
+        device_manager *mngr = ctx->sys->get_device_manager();
 
         eka2l1::central_repo *init_repo = server->get_initial_repo(io, mngr, attach_repo->uid);
 

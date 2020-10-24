@@ -80,6 +80,8 @@ class CMMFMdaAudioOutputStream {
     CMMFMdaOutputBufferQueue iBufferQueue;
     CMMFMdaOutputOpen iOpen;
 
+    TBool iSetPriorityUnimplNotified;
+
 public:
     MMdaAudioOutputStreamCallback &iCallback;
 
@@ -119,6 +121,9 @@ public:
 
     void RegisterNotifyBufferSent(TRequestStatus &aStatus);
     void CancelRegisterNotifyBufferSent();
+
+    TBool IsPriorityUnimplNotified() const;
+    void SetPriorityUnimplNotified();
 };
 
 #endif

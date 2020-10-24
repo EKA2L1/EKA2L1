@@ -81,10 +81,8 @@ namespace eka2l1::dispatch {
 
         ntimer *timing_;
 
-        explicit dispatcher();
+        explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();
-
-        void init(kernel_system *kern, ntimer *timing);
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);
         void update_all_screens(eka2l1::system *sys);

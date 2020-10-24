@@ -38,7 +38,6 @@
 
 #include <disasm/disasm.h>
 
-#include <epoc/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
 #include <kernel/scheduler.h>
@@ -62,7 +61,7 @@ namespace eka2l1 {
     }
 
     kernel_system::kernel_system(system *esys, ntimer *timing, io_system *io_sys,
-        config::state *old_conf, loader::rom *rom_info, arm::core *cpu, disasm *disassembler)
+        config::state *old_conf, config::app_settings *settings, loader::rom *rom_info, arm::core *cpu, disasm *disassembler)
         : btrace_inst_(nullptr)
         , lib_mngr_(nullptr)
         , thr_sch_(nullptr)
@@ -70,6 +69,7 @@ namespace eka2l1 {
         , io_(io_sys)
         , sys_(esys)
         , conf_(old_conf)
+        , app_settings_(settings)
         , disassembler_(disassembler)
         , cpu_(cpu)
         , rom_info_(rom_info)
@@ -337,7 +337,7 @@ namespace eka2l1 {
     }
     
     void kernel_system::prepare_reschedule() {
-        sys_->prepare_reschedule();
+        get_cpu()->stop();
     }
 
     void kernel_system::call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,
@@ -544,7 +544,6 @@ namespace eka2l1 {
             heap_min = imgs.first->header.heap_size_min;
             heap_max = imgs.first->header.heap_size_max;
 
-            pr->puid = imgs.first->header.uid3;
             cs = lib_mngr_->load_as_e32img(*eimg, full_path);
         }
 
@@ -564,7 +563,6 @@ namespace eka2l1 {
             heap_min = imgs.second->header.heap_minimum_size;
             heap_max = imgs.second->header.heap_maximum_size;
 
-            pr->puid = imgs.second->header.uid3;
             cs = lib_mngr_->load_as_romimg(*imgs.second, full_path);
         }
 
@@ -574,7 +572,6 @@ namespace eka2l1 {
         }
 
         LOG_TRACE("Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
-
         pr->construct_with_codeseg(cs, new_stack_size, heap_min, heap_max, pri);
 
         return pr;

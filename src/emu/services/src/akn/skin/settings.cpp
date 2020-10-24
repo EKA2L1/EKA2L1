@@ -22,9 +22,9 @@
 #include <services/centralrepo/centralrepo.h>
 
 #include <common/log.h>
-#include <manager/manager.h>
+#include <system/devices.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 namespace eka2l1::epoc {
     enum {
@@ -38,7 +38,7 @@ namespace eka2l1::epoc {
     akn_ss_settings::akn_ss_settings(io_system *io, central_repo_server *svr)
         : io_(io) {
         if (svr) {
-            manager::device_manager *mngr = svr->get_system()->get_manager_system()->get_device_manager();
+            device_manager *mngr = svr->get_system()->get_device_manager();
 
             avkon_rep_ = svr->load_repo_with_lookup(io, mngr, AVKON_UID);
             skins_rep_ = svr->load_repo_with_lookup(io, mngr, PERSONALISATION_UID);

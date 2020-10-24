@@ -211,23 +211,33 @@ namespace eka2l1::epoc {
         }
 
         if (old_focus != focus || new_focus_screen) {
-            if (old_focus && old_focus != closing_group && is_me_currently_focus) {
-                focus->lost_focus();
+            if (old_focus && (old_focus != closing_group) && is_me_currently_focus) {
+                old_focus->last_refresh_rate = focus->scr->refresh_rate;
+                old_focus->lost_focus();
             }
 
             if (new_focus_screen) {
                 serv->set_focus_screen(new_focus_screen);
+
                 alternative_focus->gain_focus();
                 new_focus_screen->fire_focus_change_callbacks();
+
+                refresh_rate = alternative_focus->last_refresh_rate;
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
                 fire_focus_change_callbacks();
+
+                refresh_rate = focus->last_refresh_rate;
             }
         }
 
         return (new_focus_screen ? alternative_focus : focus);
     }
-
+    
+    epoc::window_group *screen::get_group_chain() {
+        return reinterpret_cast<epoc::window_group*>(root->child);
+    }
+    
     void screen::fire_focus_change_callbacks() {
         const std::lock_guard<std::mutex> guard(screen_mutex);
 

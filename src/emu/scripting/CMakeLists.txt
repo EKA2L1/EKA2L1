@@ -7,6 +7,7 @@ add_library(symemu
         include/scripting/instance.h
         include/scripting/process.h
         include/scripting/thread.h
+        include/scripting/manager.h
         include/scripting/mem.h
         include/scripting/message.h
         include/scripting/hook.h
@@ -17,6 +18,7 @@ add_library(symemu
         src/cpu.cpp
         src/emulog.cpp
         src/instance.cpp
+        src/manager.cpp
         src/message.cpp
         src/mem.cpp
         src/hook.cpp
@@ -39,11 +41,14 @@ target_link_libraries(symemu PRIVATE common
         epocio
         epocmem
         epocutils
-        epocservs
-        manager)
+        epocservs)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-    target_link_libraries(symemu PUBLIC pybind11)
+    target_link_libraries(symemu PUBLIC pybind11 pybind11::embed)
+
+    if (NOT MSVC)
+        target_link_libraries(symemu PRIVATE stdc++fs)
+    endif ()
 endif (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 
 if (UNIX OR APPLE)

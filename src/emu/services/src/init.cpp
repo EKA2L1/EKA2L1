@@ -57,14 +57,14 @@
 #include <services/ui/view/view.h>
 #include <services/window/window.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <services/init.h>
 #include <utils/locale.h>
 #include <utils/system.h>
 
 #include <config/config.h>
-#include <manager/device_manager.h>
-#include <manager/manager.h>
+#include <system/devices.h>
+
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -128,7 +128,7 @@ namespace eka2l1::epoc {
     static void initialize_system_properties(eka2l1::system *sys, eka2l1::config::state *cfg) {
         auto lang = epoc::locale_language{ epoc::lang_english, 0, 0, 0, 0, 0, 0, 0 };
         auto locale = epoc::get_locale_info();
-        auto &dvcs = sys->get_manager_system()->get_device_manager()->get_devices();
+        auto &dvcs = sys->get_device_manager()->get_devices();
 
         if (dvcs.size() > cfg->device) {
             auto &dvc = dvcs[cfg->device];

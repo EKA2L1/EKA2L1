@@ -87,10 +87,6 @@ namespace eka2l1 {
             : parent(supreme_mother)
             , file(entry)
             , mem(mem) {
-            init();
-        }
-
-        void init() {
             file_ptr = ptr<std::uint8_t>(file.address_lin).get(mem);
             crr_pos = 0;
         }
@@ -1063,10 +1059,7 @@ namespace eka2l1 {
         : drive_change_callbacks(io_drive_callback_free_check_func, io_drive_callback_free_func) {
     }
 
-    void io_system::init() {
-    }
-
-    void io_system::shutdown() {
+    io_system::~io_system() {
         filesystems.clear();
     }
 

@@ -102,6 +102,8 @@ namespace eka2l1::epoc {
         void set_orientation_lock(drivers::graphics_driver *drv, const bool lock);
 
         // ========================= UTILITIES FUNCTIONS ===========================
+        epoc::window_group *get_group_chain();
+
         /**
          * \brief Get the size of this screen, in pixels.
          */

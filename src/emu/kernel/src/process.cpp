@@ -21,6 +21,7 @@
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <config/app_settings.h>
 
 #include <kernel/kernel.h>
 #include <mem/mem.h>
@@ -49,8 +50,7 @@ namespace eka2l1::kernel {
 
         ++thread_count;
 
-        dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(),
-            "dllLockMutexProcess" + common::to_string(puid),
+        dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(), "dllLockMutexProcess" + common::to_string(std::get<2>(uids)),
             false, kernel::access_type::local_access);
     }
 
@@ -68,7 +68,7 @@ namespace eka2l1::kernel {
         // Get security info
         sec_info = codeseg->get_sec_info();
 
-        puid = std::get<2>(codeseg->get_uids());
+        uids = codeseg->get_uids();
         priority = pri;
 
         if (kern->get_epoc_version() >= epocver::eka2) {
@@ -88,20 +88,12 @@ namespace eka2l1::kernel {
         exe_path = codeseg->get_full_path();
 
         // Base on: sprocess.cpp#L245 in kernelhwsrv package
-        create_prim_thread(
-            codeseg->get_code_run_addr(this), codeseg->get_entry_point(this),
-            stack_size, heap_min, heap_max,
+        create_prim_thread(codeseg->get_code_run_addr(this), codeseg->get_entry_point(this), stack_size, heap_min, heap_max,
             kernel::thread_priority::priority_normal);
 
-        // TODO: Load all references DLL in the export list.
-    }
+        reload_compat_setting();
 
-    process::process(kernel_system *kern, memory_system *mem)
-        : kernel_obj(kern)
-        , mem(mem)
-        , priority(kernel::process_priority::foreground)
-        , exit_type(kernel::entity_exit_type::pending) {
-        obj_type = kernel::object_type::process;
+        // TODO: Load all references DLL in the export list.
     }
 
     static constexpr mem::vm_address get_rom_bss_addr(const mem::mem_model_type type, const bool mem_map_old) {
@@ -120,6 +112,14 @@ namespace eka2l1::kernel {
         return 0;
     }
 
+    static bool is_process_uid_type_change_callback_elem_free(const process_uid_type_change_callback_elem &elem) {
+        return !elem.first;
+    }
+
+    static void make_process_uid_type_change_callback_elem_free(process_uid_type_change_callback_elem &elem) {
+        elem.first = nullptr;
+    }
+
     process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
         const std::u16string &cmd_args)
         : kernel_obj(kern, process_name, nullptr, access_type::local_access)
@@ -130,8 +130,13 @@ namespace eka2l1::kernel {
         , cmd_args(cmd_args)
         , codeseg(nullptr)
         , process_handles(kern, handle_array_owner::process)
+        , flags(0)
         , priority(kernel::process_priority::foreground)
-        , exit_type(kernel::entity_exit_type::pending) {
+        , exit_type(kernel::entity_exit_type::pending)
+        , parent_process_(nullptr)
+        , time_delay_(0) 
+        , setting_inheritence_(true)
+        , uid_change_callbacks(is_process_uid_type_change_callback_elem_free, make_process_uid_type_change_callback_elem_free) {
         obj_type = kernel::object_type::process;
 
         if (!process_name.empty() && process_name.back() == '\0') {
@@ -146,6 +151,10 @@ namespace eka2l1::kernel {
             0, static_cast<address>(mem::MAX_ROM_BSS_SECT_SIZE), mem::MAX_ROM_BSS_SECT_SIZE, prot::read_write,
             kernel::chunk_type::normal, kernel::chunk_access::dll_static_data,
             kernel::chunk_attrib::none, 0x00, false, get_rom_bss_addr(mem->get_model_type(), kern->is_eka1()));
+    }
+
+    void process::destroy() {
+        detatch_from_parent();
     }
 
     void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {
@@ -168,7 +177,31 @@ namespace eka2l1::kernel {
     }
 
     process_uid_type process::get_uid_type() {
-        return std::tuple(0x1000007A, 0x100039CE, puid);
+        return uids;
+    }
+
+    void process::set_uid_type(const process_uid_type &type) {
+        uids = std::move(type);
+        reload_compat_setting();
+
+        for (auto &uid_change_callback: uid_change_callbacks) {
+            uid_change_callback.second(uid_change_callback.first, uids);
+        }
+    }
+
+    std::size_t process::register_uid_type_change_callback(void *userdata, process_uid_type_change_callback callback) {
+        /** 
+         * 我要蟹汤米线。我俄。
+         * 先生，我要蟹汤米线。
+         * 中国人在看，我要蟹汤米线。 谢谢。
+         */
+        auto the_pair = std::make_pair(userdata, callback);
+        return uid_change_callbacks.add(the_pair);
+    }
+
+    bool process::unregister_uid_type_change_callback(const std::size_t handle) {
+        // Tôi đói thật. Tôi muốn ăn bún riêu. Nhưng bh đang là tối...
+        return uid_change_callbacks.remove(handle);
     }
 
     kernel_obj_ptr process::get_object(uint32_t handle) {
@@ -290,6 +323,65 @@ namespace eka2l1::kernel {
         return sec_info.has(cap_set);
     }
 
+    void process::add_child_process(kernel::process *pr) {
+        if (pr->parent_process_) {
+            return;
+        }
+
+        auto ite = std::find(child_processes_.begin(), child_processes_.end(), pr);
+
+        if (ite == child_processes_.end()) {
+            pr->parent_process_ = this;
+            child_processes_.push_back(pr);
+        }
+    }
+
+    void process::detatch_from_parent() {
+        if (parent_process_) {
+            auto &child_array = parent_process_->child_processes_;
+            auto ite = std::find(child_array.begin(), child_array.end(), this);
+
+            if (child_array.end() != ite) {
+                child_array.erase(ite);
+            }
+
+            parent_process_ = nullptr;
+        }
+    }
+
+    void process::reload_compat_setting() {
+        // Load preset for compability
+        config::app_settings *settings = kern->get_app_settings();
+        config::app_setting *individual_setting = settings->get_setting(std::get<2>(uids));
+
+        if (individual_setting) {
+            time_delay_ = individual_setting->time_delay;
+            setting_inheritence_ = individual_setting->child_inherit_setting;
+        } else {
+            time_delay_ = 0;
+        }
+    }
+
+    kernel::process *process::get_final_setting_process() {
+        if (parent_process_ && parent_process_->setting_inheritence_) {
+            return parent_process_->get_final_setting_process();
+        }
+
+        return this;
+    }
+
+    std::uint32_t process::get_time_delay() const {
+        if (parent_process_ && parent_process_->setting_inheritence_) {
+            return parent_process_->get_time_delay();
+        }
+
+        return time_delay_;
+    }
+
+    void process::set_time_delay(const std::uint32_t delay) {
+        time_delay_ = delay;
+    }
+    
     void process::get_memory_info(memory_info &info) {
         info.rt_code_addr = codeseg->get_code_run_addr(this);
         info.rt_const_data_addr = codeseg->get_data_run_addr(this);
@@ -316,7 +408,9 @@ namespace eka2l1::kernel {
             return;
         }
 
-        seri.absorb(puid);
+        seri.absorb(std::get<0>(uids));
+        seri.absorb(std::get<1>(uids));
+        seri.absorb(std::get<2>(uids));
 
         kernel::uid prim_thread_id = primary_thread->unique_id();
         seri.absorb(prim_thread_id);

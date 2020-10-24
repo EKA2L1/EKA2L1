@@ -21,7 +21,7 @@
 #include <loader/rsc.h>
 #include <services/ui/view/view.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 #include <vfs/vfs.h>
 
@@ -156,10 +156,36 @@ namespace eka2l1 {
     }
 
     void view_session::active_view(service::ipc_context *ctx, const bool /*should_complete*/) {
-        std::optional<epoc::uid> custom_message_uid = ctx->get_argument_value<epoc::uid>(1);
-        std::uint8_t *custom_message_buf = ctx->get_descriptor_argument_ptr(2);
-        const std::size_t custom_message_size = ctx->get_argument_data_size(2);
-        std::optional<ui::view::view_id> id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
+        kernel_system *kern = server<view_server>()->get_kernel_object_owner();
+        
+        std::optional<epoc::uid> custom_message_uid;
+        std::optional<ui::view::view_id> id;
+        std::uint8_t *custom_message_buf = nullptr;
+        std::size_t custom_message_size = 0;
+
+        if (kern->is_eka1()) {
+            struct active_view_fundamental_info {
+                ui::view::view_id app_id_;
+                epoc::uid custom_message_uid_;
+                std::uint32_t custom_message_size_;
+            };
+
+            std::optional<active_view_fundamental_info> info = ctx->get_argument_data_from_descriptor<active_view_fundamental_info>(0);
+            if (!info) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            id = info->app_id_;
+            custom_message_uid = info->custom_message_uid_;
+            custom_message_size = info->custom_message_size_;
+            custom_message_buf = ctx->get_descriptor_argument_ptr(1);
+        } else {
+            custom_message_uid = ctx->get_argument_value<epoc::uid>(1);
+            custom_message_buf = ctx->get_descriptor_argument_ptr(2);
+            custom_message_size = ctx->get_argument_data_size(2);
+            id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
+        }
 
         if (!id || !custom_message_uid) {
             ctx->complete(epoc::error_argument);
@@ -210,6 +236,13 @@ namespace eka2l1 {
     }
 
     void view_session::fetch(service::ipc_context *ctx) {
+        kernel_system *kern = server<view_server>()->get_kernel_object_owner();
+
+        if (!kern->is_eka1() && (ctx->msg->function >= view_opcode_set_system_default_view)) {
+            // This is moved for capability safety in EKA2...
+            ctx->msg->function += 1;
+        }
+
         switch (ctx->msg->function) {
         case view_opcode_async_msg_for_client_to_panic: {
             async_message_for_client_to_panic_with(ctx);

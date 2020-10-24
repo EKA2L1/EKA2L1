@@ -31,7 +31,7 @@
 #include <services/ecom/ecom.h>
 #include <vfs/vfs.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <loader/spi.h>
 #include <common/uid.h>
 

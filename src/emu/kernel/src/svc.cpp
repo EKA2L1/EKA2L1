@@ -30,7 +30,6 @@
 
 #include <common/configure.h>
 #include <common/common.h>
-#include <epoc/hal.h>
 #include <kernel/svc.h>
 #include <kernel/kernel.h>
 
@@ -66,6 +65,9 @@ namespace eka2l1::epoc {
     // These twos are implemented in dispatcher module. Their implementations should not be here!
     void dispatcher_do_resolve(eka2l1::system *sys, const std::uint32_t ordinal);
     void dispatcher_do_event_add(eka2l1::system *sys, epoc::raw_event &evt);
+
+    int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2);
+    int do_hal_by_data_num(eka2l1::system *sys, const std::uint32_t data_num, void *data);
 
     static security_policy server_exclamation_point_name_policy({ cap_prot_serv });
 
@@ -261,6 +263,19 @@ namespace eka2l1::epoc {
         type->uid1 = std::get<0>(tup);
         type->uid2 = std::get<1>(tup);
         type->uid3 = std::get<2>(tup);
+    }
+
+    BRIDGE_FUNC(void, process_set_type_eka1, epoc::uid_type *uids, kernel::handle h) {
+        process_ptr pr_real = kern->get<kernel::process>(h);
+
+        if (!pr_real) {
+            LOG_ERROR("ProcessSetType passed invalid handle!");
+            return;
+        }
+
+        if (uids) {
+            pr_real->set_uid_type(std::make_tuple(uids->uid1, uids->uid2, uids->uid3));
+        }
     }
 
     BRIDGE_FUNC(std::int32_t, process_data_parameter_length, std::int32_t slot) {
@@ -536,7 +551,9 @@ namespace eka2l1::epoc {
 
     // TODO (pent0): kernel's home time is currently not accurate enough.
     BRIDGE_FUNC(std::int32_t, time_now, eka2l1::ptr<std::uint64_t> time_ptr, eka2l1::ptr<std::int32_t> utc_offset_ptr) {
-        std::uint64_t *time = time_ptr.get(kern->crr_process());
+        kernel::process *pr = kern->crr_process();
+
+        std::uint64_t *time = time_ptr.get(pr);
         std::int32_t *offset = utc_offset_ptr.get(kern->crr_process());
 
         // The time is since EPOC, we need to convert it to first of AD
@@ -545,7 +562,8 @@ namespace eka2l1::epoc {
 
         if (kern->is_eka1()) {
             // Let it sleeps a bit. There should be some delay...
-            kern->crr_thread()->sleep(kern->get_config()->time_getter_sleep_us);
+            if (pr->get_time_delay())
+                kern->crr_thread()->sleep(pr->get_time_delay());
         }
 
         return epoc::error_none;
@@ -595,7 +613,9 @@ namespace eka2l1::epoc {
             msg->own_thr->signal_request();
         }
 
-        LOG_TRACE("Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
+
+        if (kern->get_config()->log_ipc)
+            LOG_TRACE("Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg.get(), val);
 
@@ -613,7 +633,8 @@ namespace eka2l1::epoc {
             msg->own_thr->signal_request();
         }
 
-        LOG_TRACE("Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
+        if (kern->get_config()->log_ipc)
+            LOG_TRACE("Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg.get(), dup_handle);
 
@@ -849,7 +870,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE("Receive requested from {}", server->name());
+        if (kern->get_config()->log_ipc)
+            LOG_TRACE("Receive requested from {}", server->name());
 
         server->receive_async_lle(req_sts, data_ptr.cast<service::message2>());
     }
@@ -1299,6 +1321,16 @@ namespace eka2l1::epoc {
         const bool result = (mut->holder() == kern->crr_thread());
 
         return result;
+    }
+
+    BRIDGE_FUNC(std::int32_t, mutex_count, kernel::handle h) {
+        mutex_ptr mut = kern->get<kernel::mutex>(h);
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return epoc::error_not_found;
+        }
+
+        return mut->count();
     }
 
     BRIDGE_FUNC(void, wait_for_any_request) {
@@ -3174,6 +3206,24 @@ namespace eka2l1::epoc {
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
+    
+    std::int32_t thread_set_initial_parameter_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        if (!thr->set_initial_userdata(create_info->arg1_)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_in_use);
+            return epoc::error_in_use;
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
 
     std::int32_t server_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
@@ -3294,6 +3344,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_open_thread_by_id:
             return thread_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_set_initial_parameter_thread:
+            return thread_set_initial_parameter_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_rename_thread:
             return thread_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -3993,6 +4046,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x18, mutex_count),
         BRIDGE_REGISTER(0x19, mutex_wait),
         BRIDGE_REGISTER(0x1A, mutex_signal),
         BRIDGE_REGISTER(0x1B, process_id),
@@ -4045,6 +4099,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000A9, library_type_eka1),
         BRIDGE_REGISTER(0x8000AA, process_type_eka1),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
+        BRIDGE_REGISTER(0x8000AF, process_set_type_eka1),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
         BRIDGE_REGISTER(0x8000CC, imb_range),

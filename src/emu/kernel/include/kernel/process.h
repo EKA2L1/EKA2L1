@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/linked.h>
+#include <common/container.h>
 
 #include <kernel/common.h>
 #include <kernel/kernel_obj.h>
@@ -97,13 +98,16 @@ namespace eka2l1::kernel {
     class codeseg;
     using codeseg_ptr = kernel::codeseg *;
 
+    using process_uid_type_change_callback = std::function<void(void*, const process_uid_type &)>;
+    using process_uid_type_change_callback_elem = std::pair<void*, process_uid_type_change_callback>;
+
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
 
         mem::mem_model_process_impl mm_impl_;
 
-        uint32_t puid;
+        process_uid_type uids;
         thread_ptr primary_thread;
 
         std::string process_name;
@@ -135,9 +139,22 @@ namespace eka2l1::kernel {
         common::roundabout thread_list;
         chunk_ptr rom_bss_chunk;
 
+        std::vector<kernel::process*> child_processes_;
+        kernel::process *parent_process_;
+
+        std::uint32_t time_delay_;
+        bool setting_inheritence_;
+
+        // Это оскорбления, первое слово оскорбляет человека, а второе говорят для
+        // увеличения эмоций.
+        common::identity_container<process_uid_type_change_callback_elem> uid_change_callbacks;
+
     protected:
+        void reload_compat_setting();
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max, kernel::thread_priority pri);
+
+        void detatch_from_parent();
 
     public:
         uint32_t increase_thread_count() {
@@ -166,12 +183,12 @@ namespace eka2l1::kernel {
         void construct_with_codeseg(codeseg_ptr codeseg, uint32_t stack_size, uint32_t heap_min, uint32_t heap_max,
             const process_priority pri);
 
-        explicit process(kernel_system *kern, memory_system *mem);
         explicit process(kernel_system *kern, memory_system *mem, const std::string &process_name,
             const std::u16string &exe_path, const std::u16string &cmd_args);
 
         ~process() = default;
 
+        void destroy() override;
         bool run();
 
         void set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size);
@@ -183,7 +200,21 @@ namespace eka2l1::kernel {
         }
 
         process_uid_type get_uid_type();
-        kernel_obj_ptr get_object(uint32_t handle);
+        void set_uid_type(const process_uid_type &type);
+
+        /**
+         * @brief Register a callback when the UID type of this process is changed.
+         * 
+         * @param userdata          The data to passed to the callback when it's called.
+         * @param callback          The callback to register.
+         * 
+         * @returns The handle to the callback.
+         */
+        std::size_t register_uid_type_change_callback(void *userdata, process_uid_type_change_callback callback);
+        
+        bool unregister_uid_type_change_callback(const std::size_t handle);
+
+        kernel_obj_ptr get_object(const std::uint32_t handle);
 
         void *get_ptr_on_addr_space(address addr);
 
@@ -202,7 +233,7 @@ namespace eka2l1::kernel {
         }
 
         std::uint32_t get_uid() {
-            return puid;
+            return std::get<2>(uids);
         }
 
         void set_flags(const uint32_t new_flags) {
@@ -254,12 +285,48 @@ namespace eka2l1::kernel {
          */
         bool has(epoc::capability_set &cap_set);
 
+        /**
+         * @brief Attach another process as a child.
+         * 
+         * A child process under the control may inherits settings from its parent. This is a mode that's specifically
+         * exists for emulator usage (when game spawns another process doing actual work for example).
+         * 
+         * The most usage you can see in this exists in the LaunchApp implementation in App List server.
+         * 
+         * @param   pr  The process to be attached as child.
+         */
+        void add_child_process(kernel::process *pr);
+
         entity_exit_type get_exit_type() const {
             return exit_type;
         }
 
         void set_exit_type(const entity_exit_type t) {
             exit_type = t;
+        }
+
+        std::uint32_t get_time_delay() const;
+        void set_time_delay(const std::uint32_t delay);
+        
+        /**
+         * @brief       Get the process where we should inherit settings from.
+         * 
+         * This may stack up for a big while.
+         * 
+         * @returns     Process to get settings from. Return itself if no inheritence is specified.
+         */
+        kernel::process *get_final_setting_process();
+
+        bool get_child_inherit_setting() const {
+            return setting_inheritence_;
+        }
+
+        void set_child_inherit_setting(const bool enable) {
+            setting_inheritence_ = enable;
+        }
+
+        kernel::process *get_parent_process() {
+            return parent_process_;
         }
 
         void do_state(common::chunkyseri &seri);

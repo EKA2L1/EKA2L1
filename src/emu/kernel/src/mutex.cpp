@@ -33,7 +33,8 @@ namespace eka2l1 {
             : kernel_obj(kern, std::move(name), kern->crr_process(), access)
             , timing(timing)
             , lock_count(0)
-            , holding(nullptr) {
+            , holding(nullptr)
+            , suspend_count(0) {
             obj_type = object_type::mutex;
 
             mutex_event_type = timing->register_event("MutexWaking" + common::to_string(uid),
@@ -288,6 +289,7 @@ namespace eka2l1 {
                 waits.remove(thr);
                 suspended.push(&thr->suspend_link);
 
+                suspend_count++;
                 thr->state = thread_state::wait_mutex_suspend;
 
                 return true;
@@ -322,9 +324,14 @@ namespace eka2l1 {
             thr->suspend_link.deque();
             waits.push(thr);
 
+            suspend_count--;
             thr->state = thread_state::wait_mutex;
 
             return true;
+        }
+
+        int mutex::count() const {
+            return static_cast<int>(waits.size() + suspend_count);
         }
     }
 }

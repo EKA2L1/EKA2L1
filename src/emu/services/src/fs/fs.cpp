@@ -36,7 +36,7 @@
 #include <common/path.h>
 #include <common/wildcard.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <vfs/vfs.h>
 
@@ -561,8 +561,8 @@ namespace eka2l1 {
         } else {
             bool dir = (info.type == io_component_type::dir);
 
-            if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib_internal)) {
-                attrib |= epoc::fs::entry_att_read_only | epoc::fs::entry_att_system;
+            if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib_write_protected)) {
+                attrib |= epoc::fs::entry_att_read_only;
             }
 
             // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).

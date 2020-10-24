@@ -28,7 +28,9 @@
 
 #include <common/queue.h>
 #include <common/sync.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
+#include <package/manager.h>
+#include <config/app_settings.h>
 #include <config/config.h>
 
 #include <debugger/renderer/renderer.h>
@@ -62,6 +64,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<debugger_renderer> deb_renderer;
         std::unique_ptr<imgui_debugger> debugger;
         std::shared_ptr<imgui_logger> logger;
+        std::unique_ptr<config::app_settings> app_settings;
 
         drivers::emu_window_ptr window;
         drivers::emu_controller_ptr joystick_controller;

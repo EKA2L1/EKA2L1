@@ -35,6 +35,32 @@ namespace eka2l1::drivers {
         , should_stop(false) {
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
         list_queue.max_pending_count_ = 128;
+
+        std::vector<std::string> GL_REQUIRED_EXTENSIONS = {
+            "GL_ARB_draw_elements_base_vertex"
+        };
+
+        std::int32_t ext_count = 0;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &ext_count);
+
+        for(std::int32_t i = 0; i < ext_count; i++) {
+            const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
+            auto ite = std::find(GL_REQUIRED_EXTENSIONS.begin(), GL_REQUIRED_EXTENSIONS.end(), 
+                std::string(reinterpret_cast<const char*>(next_extension)));
+
+            if (ite != GL_REQUIRED_EXTENSIONS.end()) {
+                GL_REQUIRED_EXTENSIONS.erase(ite);
+            }
+        }
+
+        if (!GL_REQUIRED_EXTENSIONS.empty()) {
+            LOG_ERROR("Some OpenGL extensions are missing in order for the emulator to work.");
+            LOG_ERROR("Please upgrade your machine! Here is the list of missing extensions.");
+
+            for (const auto &ext_left: GL_REQUIRED_EXTENSIONS) {
+                LOG_ERROR("- {}", ext_left);
+            }
+        }
     }
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";
@@ -370,7 +396,12 @@ namespace eka2l1::drivers {
         helper.pop(vert_off);
 
         std::uint64_t index_off_64 = index_off;
-        glDrawElementsBaseVertex(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off_64), vert_off);
+
+        if (vert_off == 0) {
+            glDrawElements(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off_64));
+        } else {
+            glDrawElementsBaseVertex(prim_mode_to_gl_enum(prim_mode), count, data_format_to_gl_enum(val_type), reinterpret_cast<GLvoid *>(index_off_64), vert_off);
+        }
     }
 
     void ogl_graphics_driver::set_viewport(const eka2l1::rect &viewport) {

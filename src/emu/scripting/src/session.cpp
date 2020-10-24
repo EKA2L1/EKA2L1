@@ -20,7 +20,7 @@
 #include <scripting/instance.h>
 #include <scripting/session.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/session.h>
 

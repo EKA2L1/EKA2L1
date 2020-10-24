@@ -1,4 +1,4 @@
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/codeseg.h>
 #include <kernel/libmanager.h>
 #include <services/ecom/ecom.h>

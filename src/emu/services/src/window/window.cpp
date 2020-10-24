@@ -44,11 +44,12 @@
 #include <common/log.h>
 #include <common/rgb.h>
 #include <common/time.h>
+#include <config/app_settings.h>
 
 #include <utils/event.h>
 #include <utils/err.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/timing.h>
 #include <vfs/vfs.h>

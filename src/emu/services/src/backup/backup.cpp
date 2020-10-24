@@ -22,7 +22,7 @@
 #include <services/backup/backup.h>
 #include <services/context.h>
 #include <utils/err.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 namespace eka2l1 {
     backup_server::backup_server(eka2l1::system *sys)

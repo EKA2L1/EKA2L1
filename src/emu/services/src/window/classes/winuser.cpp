@@ -191,6 +191,15 @@ namespace eka2l1::epoc {
         return (parent_pri + (ordpos << (bits_per_ordpos * shift)));
     }
 
+    epoc::window_group *window_user::get_group() {
+        epoc::window_group *are_you = reinterpret_cast<epoc::window_group *>(parent);
+        while (are_you->type != epoc::window_kind::group) {
+            are_you = reinterpret_cast<epoc::window_group *>(are_you->parent);
+        }
+
+        return are_you;
+    }
+
     eka2l1::vec2 window_user::absolute_position() const {
         return reinterpret_cast<window_user_base *>(parent)->absolute_position() + pos;
     }
@@ -205,7 +214,7 @@ namespace eka2l1::epoc {
         if (is_visible()) {
             epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
             ntimer *timing = client->get_ws().get_ntimer();
-            
+
             // Limit the framerate, independent from screen vsync
             const std::uint64_t crr = timing->microseconds();
             const std::uint64_t time_spend_per_frame_us = 1000000 / scr->refresh_rate;

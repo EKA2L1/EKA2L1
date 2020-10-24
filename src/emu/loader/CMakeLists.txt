@@ -7,6 +7,10 @@ add_library(epocloader
         include/loader/rom.h
         include/loader/romimage.h
         include/loader/rsc.h
+        include/loader/sis_common.h
+        include/loader/sis_fields.h
+        include/loader/sis_old.h
+        include/loader/sis.h
         include/loader/spi.h
         src/e32img.cpp
         src/gdr.cpp
@@ -15,6 +19,9 @@ add_library(epocloader
         src/rom.cpp
         src/romimage.cpp
         src/rsc.cpp
+        src/sis_fields.cpp
+        src/sis_old.cpp
+        src/sis.cpp
         src/spi.cpp
         )
 

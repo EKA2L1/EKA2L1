@@ -25,7 +25,10 @@
 #include <services/ui/cap/sgc.h>
 #include <services/window/window.h>
 
+#include <cstdint>
 #include <mutex>
+#include <string>
+#include <vector>
 
 namespace eka2l1 {
     class window_server;
@@ -120,6 +123,29 @@ namespace eka2l1 {
         eka2l1::ptr<akn_hardware_info> hardware_infos;
     };
 
+    struct akn_running_app_info {
+        std::u16string app_name_;
+        std::uint32_t app_uid_;
+        int screen_number_;
+
+        kernel::process *associated_;
+
+        enum {
+            FLAG_SYSTEM = 0x1,
+            FLAG_BUSY = 0x2,
+            FLAG_DOC_NAME_NOT_A_FILE = 0x4,
+            FLAG_DOES_NOT_RESPOND_TO_SHUTDOWN = 0x8,
+            FLAG_DOES_NOT_RESPOND_SWITCH_FILE_EVENTS = 0x10,
+            FLAG_IS_HIDDEN = 0x20,
+            FLAG_APP_READY = 0x40,
+            FLAG_CURRENTLY_PLAY = 0x100
+        };
+
+        std::uint16_t flags_;
+    };
+
+    std::vector<akn_running_app_info> get_akn_app_infos(window_server *winsrv);
+
     class oom_ui_app_session : public service::typical_session {
         std::int32_t blank_count;
         bool old_layout;
@@ -132,6 +158,7 @@ namespace eka2l1 {
         void redraw_status_pane(service::ipc_context *ctx);
         void fetch(service::ipc_context *ctx) override;
     };
+
 
     static const char *OOM_APP_UI_SERVER_NAME = "101fdfae_10207218_AppServer";
 

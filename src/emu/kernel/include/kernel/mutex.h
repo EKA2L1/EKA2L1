@@ -39,6 +39,8 @@ namespace eka2l1 {
             common::roundabout pendings;
             common::roundabout suspended;
 
+            std::uint32_t suspend_count;
+
             ntimer *timing;
 
             int mutex_event_type;
@@ -70,6 +72,8 @@ namespace eka2l1 {
             kernel::thread *holder() {
                 return holding;
             }
+
+            int count() const;
 
             bool signal(kernel::thread *callee);
 

@@ -22,7 +22,7 @@
 #include <scripting/instance.h>
 
 #include <cpu/arm_interface.h>
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 
 namespace eka2l1::scripting {
     uint32_t cpu::get_register(const int index) {

@@ -103,9 +103,13 @@ namespace eka2l1 {
             kernel_system *kern = info->own_timer->get_kernel_object_owner();
             kern->lock();
 
+            if (!info->own_timer->request_finish()) {
+                kern->unlock();
+                return;
+            }
+
             info->request_status->set(0, kern->is_eka1());
             info->own_thread->signal_request();
-            info->own_timer->request_finish();
 
             kern->unlock();
         }

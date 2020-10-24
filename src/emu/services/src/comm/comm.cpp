@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <services/comm/comm.h>
 
 #include <utils/err.h>

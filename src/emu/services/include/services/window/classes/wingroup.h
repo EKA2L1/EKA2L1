@@ -25,6 +25,10 @@
 
 #include <vector>
 
+namespace eka2l1::kernel {
+    class process;
+}
+
 namespace eka2l1::epoc {
     struct window_top_user;
     using message_data = std::vector<std::uint8_t>;
@@ -33,6 +37,11 @@ namespace eka2l1::epoc {
         std::u16string name;
         std::unique_ptr<window_top_user> top;
         std::queue<message_data> msg_datas;
+
+        std::uint8_t last_refresh_rate;
+        std::size_t uid_owner_change_callback_handle;
+
+        kernel::process *uid_owner_change_process;
 
         bool can_receive_focus() {
             return flags & flag_focus_receiveable;
@@ -48,10 +57,15 @@ namespace eka2l1::epoc {
         explicit window_group(window_server_client_ptr client, screen *scr, epoc::window *parent,
             const std::uint32_t client_handle);
 
+        ~window_group() override;
+
+        void on_owner_process_uid_type_change(const std::uint32_t new_uid);
+
         // ===================== COMMAND OPCODES =======================
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);
         void receive_focus(service::ipc_context &context, ws_cmd &cmd);
         void add_priority_key(service::ipc_context &context, ws_cmd &cmd);
+        void set_name(service::ipc_context &context, ws_cmd &cmd);
         void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         eka2l1::vec2 get_origin() override;

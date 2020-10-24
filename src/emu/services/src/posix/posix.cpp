@@ -26,7 +26,7 @@
 #include <common/path.h>
 #include <common/platform.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 
 #include <utils/err.h>

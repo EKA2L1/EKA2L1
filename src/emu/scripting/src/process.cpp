@@ -24,7 +24,7 @@
 
 #include <common/cvt.h>
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 

@@ -4,7 +4,6 @@ endif ()
 
 add_executable(console
         include/console/cmdhandler.h
-        include/console/global.h
         include/console/thread.h
         include/console/seh_handler.h
         src/cmdhandler.cpp
@@ -22,9 +21,9 @@ target_link_libraries(console PRIVATE
         epoc
         epockern
         epocservs
-        manager
         gdbstub
         imgui
+        package
         yaml-cpp)
 
 target_include_directories(console PRIVATE include ${YAML_CPP_INCLUDE_DIR})
@@ -44,10 +43,16 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:console>/scripts"
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:console>/scripts/disabled"
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:console>/resources"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:console>/compat"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/panic.json" "$<TARGET_FILE_DIR:console>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/domaincli.py" "$<TARGET_FILE_DIR:console>/scripts/disabled/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/utils/leavehook.py" "$<TARGET_FILE_DIR:console>/scripts/disabled/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/console/resources" "$<TARGET_FILE_DIR:console>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/" "$<TARGET_FILE_DIR:console>/resources/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/debugger/resources/" "$<TARGET_FILE_DIR:console>/resources/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/debugger/assets/" "$<TARGET_FILE_DIR:console>/resources/")
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/debugger/assets/" "$<TARGET_FILE_DIR:console>/resources/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/config/compat/" "$<TARGET_FILE_DIR:console>/compat/")
+
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
+        target_link_libraries(console PRIVATE symemu)
+endif()

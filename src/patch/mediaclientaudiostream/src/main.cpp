@@ -92,7 +92,12 @@ void CMdaAudioOutputStream::SetVolume(const TInt aNewVolume) {
 }
 
 void CMdaAudioOutputStream::SetPriority(TInt aPriority, TMdaPriorityPreference aPref) {
+    if (iProperties->IsPriorityUnimplNotified()) {
+        return;
+    }
+
     LogOut(MCA_CAT, _L("WARN:: Set priority unimplemented %d!"), aPriority);
+    iProperties->SetPriorityUnimplNotified();
 }
 
 void CMdaAudioOutputStream::WriteL(const TDesC8 &aData) {

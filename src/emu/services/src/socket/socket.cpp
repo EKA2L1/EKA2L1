@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoc/epoc.h>
+#include <system/epoc.h>
 #include <services/socket/connection.h>
 #include <services/socket/resolver.h>
 #include <services/socket/socket.h>

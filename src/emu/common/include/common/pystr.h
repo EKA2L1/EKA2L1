@@ -219,15 +219,29 @@ namespace eka2l1::common {
                 auto prefix = num_str_.substr(0, 2);
                 bool prefix_found = false;
 
-                if (prefix == "0x") {
-                    base = 16;
-                    prefix_found = true;
-                } else if (prefix == "0b") {
-                    base = 2;
-                    prefix_found = true;
-                } else if (prefix == "0o") {
-                    base = 8;
-                    prefix_found = true;
+                if (static_cast<char>(prefix[0]) == '0') {
+                    switch (static_cast<char>(prefix[1])) {
+                    case 'x':
+                    case 'X':
+                        base = 16;
+                        prefix_found = true;
+                        break;
+
+                    case 'b':
+                    case 'B':
+                        base = 2;
+                        prefix_found = true;
+                        break;
+
+                    case 'o':
+                    case 'O':
+                        base = 8;
+                        prefix_found = true;
+                        break;
+
+                    default:
+                        break;
+                    }
                 }
 
                 if (prefix_found) {

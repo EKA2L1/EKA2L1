@@ -29,7 +29,6 @@
 namespace eka2l1 {
     class memory_system;
 
-    /*! \brief An ARM disassembler. */
     class disasm {
         using insn_ptr = std::unique_ptr<cs_insn, std::function<void(cs_insn *)>>;
         using csh_ptr = std::unique_ptr<csh, std::function<void(csh *)>>;
@@ -38,13 +37,12 @@ namespace eka2l1 {
         insn_ptr cp_insn;
 
     public:
-        void init();
+        explicit disasm();
+        ~disasm();
 
-        /*! \brief Shutdown the disassembler. */
-        void shutdown();
-
-        /*! \brief Disassemble binary code.
-		 * \returns The description of the instruction.
+        /**
+         * @brief Disassemble binary code.
+		 * @returns The description of the instruction.
 		*/
         std::string disassemble(const uint8_t *code, size_t size, uint64_t address, bool thumb);
     };

@@ -249,7 +249,8 @@ namespace eka2l1 {
             , exception_handler(0)
             , exception_mask(0)
             , trap_stack(0)
-            , sleep_level(0) {
+            , sleep_level(0)
+            , metadata(nullptr) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = calculate_thread_priority(owning_process(), pri);
@@ -298,6 +299,8 @@ namespace eka2l1 {
 
             create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
                 name_chunk->base(owner).ptr_address(), epa);
+
+            metadata = reinterpret_cast<epoc9_std_epoc_thread_create_info*>(stack_top_ptr);
 
             // Create local data chunk
             // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
@@ -512,6 +515,20 @@ namespace eka2l1 {
             request_sema->signal(count);
         }
 
+        bool thread::is_suspended() const {
+            return (state == thread_state::create) || (state == thread_state::ready) ||
+                (state == thread_state::wait_fast_sema_suspend) || (state == thread_state::wait_mutex_suspend);
+        }
+        
+        bool thread::set_initial_userdata(const address userdata) {
+            if (!is_suspended() || !metadata) {
+                return false;
+            }
+
+            metadata->ptr = userdata;
+            return true;
+        }
+        
         bool thread::suspend() {
             bool res = scheduler->wait(this);
 
