@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/linked.h>
+#include <common/container.h>
 
 #include <kernel/common.h>
 #include <kernel/kernel_obj.h>
@@ -97,6 +98,9 @@ namespace eka2l1::kernel {
     class codeseg;
     using codeseg_ptr = kernel::codeseg *;
 
+    using process_uid_type_change_callback = std::function<void(void*, const process_uid_type &)>;
+    using process_uid_type_change_callback_elem = std::pair<void*, process_uid_type_change_callback>;
+
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
@@ -141,6 +145,10 @@ namespace eka2l1::kernel {
         std::uint32_t time_delay_;
         bool setting_inheritence_;
 
+        // Это оскорбления, первое слово оскорбляет человека, а второе говорят для
+        // увеличения эмоций.
+        common::identity_container<process_uid_type_change_callback_elem> uid_change_callbacks;
+
     protected:
         void reload_compat_setting();
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
@@ -175,7 +183,6 @@ namespace eka2l1::kernel {
         void construct_with_codeseg(codeseg_ptr codeseg, uint32_t stack_size, uint32_t heap_min, uint32_t heap_max,
             const process_priority pri);
 
-        explicit process(kernel_system *kern, memory_system *mem);
         explicit process(kernel_system *kern, memory_system *mem, const std::string &process_name,
             const std::u16string &exe_path, const std::u16string &cmd_args);
 
@@ -194,6 +201,18 @@ namespace eka2l1::kernel {
 
         process_uid_type get_uid_type();
         void set_uid_type(const process_uid_type &type);
+
+        /**
+         * @brief Register a callback when the UID type of this process is changed.
+         * 
+         * @param userdata          The data to passed to the callback when it's called.
+         * @param callback          The callback to register.
+         * 
+         * @returns The handle to the callback.
+         */
+        std::size_t register_uid_type_change_callback(void *userdata, process_uid_type_change_callback callback);
+        
+        bool unregister_uid_type_change_callback(const std::size_t handle);
 
         kernel_obj_ptr get_object(const std::uint32_t handle);
 

@@ -96,17 +96,6 @@ namespace eka2l1::kernel {
         // TODO: Load all references DLL in the export list.
     }
 
-    process::process(kernel_system *kern, memory_system *mem)
-        : kernel_obj(kern)
-        , mem(mem)
-        , flags(0)
-        , priority(kernel::process_priority::foreground)
-        , exit_type(kernel::entity_exit_type::pending)
-        , parent_process_(nullptr)
-        , time_delay_(0) {
-        obj_type = kernel::object_type::process;
-    }
-
     static constexpr mem::vm_address get_rom_bss_addr(const mem::mem_model_type type, const bool mem_map_old) {
         switch (type) {
         case mem::mem_model_type::moving:
@@ -121,6 +110,14 @@ namespace eka2l1::kernel {
         }
 
         return 0;
+    }
+
+    static bool is_process_uid_type_change_callback_elem_free(const process_uid_type_change_callback_elem &elem) {
+        return !elem.first;
+    }
+
+    static void make_process_uid_type_change_callback_elem_free(process_uid_type_change_callback_elem &elem) {
+        elem.first = nullptr;
     }
 
     process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
@@ -138,7 +135,8 @@ namespace eka2l1::kernel {
         , exit_type(kernel::entity_exit_type::pending)
         , parent_process_(nullptr)
         , time_delay_(0) 
-        , setting_inheritence_(true) {
+        , setting_inheritence_(true)
+        , uid_change_callbacks(is_process_uid_type_change_callback_elem_free, make_process_uid_type_change_callback_elem_free) {
         obj_type = kernel::object_type::process;
 
         if (!process_name.empty() && process_name.back() == '\0') {
@@ -185,6 +183,25 @@ namespace eka2l1::kernel {
     void process::set_uid_type(const process_uid_type &type) {
         uids = std::move(type);
         reload_compat_setting();
+
+        for (auto &uid_change_callback: uid_change_callbacks) {
+            uid_change_callback.second(uid_change_callback.first, uids);
+        }
+    }
+
+    std::size_t process::register_uid_type_change_callback(void *userdata, process_uid_type_change_callback callback) {
+        /** 
+         * 我要蟹汤米线。我俄。
+         * 先生，我要蟹汤米线。
+         * 中国人在看，我要蟹汤米线。 谢谢。
+         */
+        auto the_pair = std::make_pair(userdata, callback);
+        return uid_change_callbacks.add(the_pair);
+    }
+
+    bool process::unregister_uid_type_change_callback(const std::size_t handle) {
+        // Tôi đói thật. Tôi muốn ăn bún riêu. Nhưng bh đang là tối...
+        return uid_change_callbacks.remove(handle);
     }
 
     kernel_obj_ptr process::get_object(uint32_t handle) {
