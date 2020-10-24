@@ -42,16 +42,6 @@ namespace eka2l1 {
         for (auto i = 0; i < LEX_COMPONENTS; i++) {
             done = false;
             for (auto j = 0; j < 3; j++) {
-                if (lex[j].find('?') != std::string::npos) {
-                    parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_one;
-                    name_.erase(std::remove(lex[j].begin(), lex[j].end(), '?'), lex[j].end());
-                }
-                
-                if (lex[j].find('*') != std::string::npos) {
-                    parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_any;
-                    lex[j].erase(std::remove(lex[j].begin(), lex[j].end(), '*'), lex[j].end());
-                }
-                
                 parse_part(i, lex[j]);
 
                 if (j == 0 && done) {
@@ -123,6 +113,14 @@ namespace eka2l1 {
             return;
         }
         if (!done) {
+            if (fname.find('?') != std::string::npos) {
+                parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_one;
+            }
+            
+            if (fname.find('*') != std::string::npos) {
+                parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_any;
+            }
+            
             result += fname;
             done = true;
         }
@@ -134,6 +132,14 @@ namespace eka2l1 {
             return;
         }
         if (!done) {
+            if (ext.find('?') != std::string::npos) {
+                parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_one;
+            }
+            
+            if (ext.find('*') != std::string::npos) {
+                parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_any;
+            }
+
             result += ext;
             done = true;
         }
