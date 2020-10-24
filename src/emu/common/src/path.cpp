@@ -306,6 +306,10 @@ namespace eka2l1 {
             fn = path[i] + fn;
         }
 
+        while (!fn.empty() && static_cast<char>(fn.back()) == '\0') {
+            fn.pop_back();
+        }
+
         return fn;
     }
 
@@ -318,7 +322,7 @@ namespace eka2l1 {
             return path;
         }
 
-        return path.substr(0, path.length() - fn.length() + 1);
+        return path.substr(0, path.length() - fn.length());
     }
 
     std::string absolute_path(std::string str, std::string current_dir, bool symbian_use) {
