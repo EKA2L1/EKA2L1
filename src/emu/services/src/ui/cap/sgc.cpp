@@ -92,7 +92,8 @@ namespace eka2l1::epoc::cap {
     static constexpr int UIK_ORIENTATION_ALTERNATE = 1;
 
     sgc_server::sgc_server()
-        : orientation_prop_(nullptr) {
+        : orientation_prop_(nullptr)
+        , hardware_layout_prop_(nullptr) {
     }
 
     static void update_screen_state_from_wg_callback(void *userdata, epoc::window_group *group) {
@@ -101,8 +102,9 @@ namespace eka2l1::epoc::cap {
 
     bool sgc_server::init(kernel_system *kern, drivers::graphics_driver *driver) {
         orientation_prop_ = kern->create<service::property>();
+        hardware_layout_prop_ = kern->create<service::property>();
 
-        if (!orientation_prop_) {
+        if (!orientation_prop_ || !hardware_layout_prop_) {
             return false;
         }
 
@@ -112,6 +114,11 @@ namespace eka2l1::epoc::cap {
         orientation_prop_->first = UIKON_UID;
         orientation_prop_->second = UIK_PREFERRED_ORIENTATION_KEY;
         orientation_prop_->set_int(UIK_ORIENTATION_NORMAL);
+
+        hardware_layout_prop_->define(service::property_type::int_data, 0);
+        hardware_layout_prop_->first = UIKON_UID;
+        hardware_layout_prop_->second = UIK_CURRENT_HARDWARE_LAYOUT_STATE;
+        hardware_layout_prop_->set_int(0);
 
         winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(
             eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
@@ -148,6 +155,9 @@ namespace eka2l1::epoc::cap {
         return nullptr;
     }
 
+    static constexpr std::uint32_t DYNAMIC_LAYOUT_VARIANT_SWITCH_UID = 0x101F8121;
+    static constexpr std::uint32_t HARDWARE_LAYOUT_SWITCH_UID = 0x10202672;
+
     void sgc_server::update_screen_state_from_wg(epoc::window_group *group) {
         if (!group) {
             return;
@@ -170,6 +180,26 @@ namespace eka2l1::epoc::cap {
                 if (((screen_mode->size.x > screen_mode->size.y) && landspace_bit)
                     || ((screen_mode->size.x < screen_mode->size.y) && !landspace_bit)) {
                     group->scr->set_screen_mode(graphics_driver_, mode);
+
+                    // Force a mode change
+                    const std::int32_t current_layout_state = hardware_layout_prop_->get_int();
+                    auto &hardware_state_array = group->scr->scr_config.hardware_states;
+
+                    for (std::size_t i = 0; i < hardware_state_array.size(); i++) {
+                        if (hardware_state_array[i].state_number == current_layout_state) {
+                            if (hardware_state_array[i].mode_normal == mode) {
+                                orientation_prop_->set_int(UIK_ORIENTATION_NORMAL);
+                            } else {
+                                orientation_prop_->set_int(UIK_ORIENTATION_ALTERNATE);
+                            }
+                        }
+                    }
+
+                    epoc::event the_event;
+                    the_event.type = static_cast<epoc::event_code>(HARDWARE_LAYOUT_SWITCH_UID);
+                    the_event.handle = 0;
+
+                    winserv_->send_event_to_window_groups(the_event);
                     break;
                 }
             }

@@ -159,10 +159,8 @@ namespace eka2l1 {
 
         akn_layout_config akn_config;
 
-        akn_config.num_screen_mode = 1;
-
-        // TODO: Find out what this really does
-        akn_config.num_hardware_mode = 0;
+        akn_config.num_screen_mode = static_cast<std::int32_t>(scr_config->modes.size());
+        akn_config.num_hardware_mode = static_cast<std::int32_t>(scr_config->hardware_states.size());
 
         // Static check on those pointer
         akn_config.screen_modes = sizeof(akn_layout_config);
@@ -171,7 +169,7 @@ namespace eka2l1 {
         std::string result;
         result.append(reinterpret_cast<char *>(&akn_config), sizeof(akn_layout_config));
 
-        for (std::size_t i = 0; i < 1; i++) {
+        for (std::size_t i = 0; i < scr_config->modes.size(); i++) {
             akn_screen_mode_info mode_info;
 
             // TODO: Change this based on user settings
@@ -186,7 +184,16 @@ namespace eka2l1 {
             result.append(reinterpret_cast<char *>(&mode_info), sizeof(akn_screen_mode_info));
         }
 
-        // TODO: Hardware mode
+        for (std::size_t i = 0; i < scr_config->hardware_states.size(); i++) {
+            akn_hardware_info hard_info;
+
+            hard_info.alt_screen_mode = scr_config->hardware_states[i].mode_alternative;
+            hard_info.screen_mode = scr_config->hardware_states[i].mode_normal;
+            hard_info.state_num = scr_config->hardware_states[i].state_number;
+            hard_info.key_mode = scr_config->hardware_states[i].switch_keycode;
+
+            result.append(reinterpret_cast<char*>(&hard_info), sizeof(akn_hardware_info));
+        }
 
         return result;
     }
