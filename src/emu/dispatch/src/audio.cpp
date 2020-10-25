@@ -231,6 +231,7 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        const std::lock_guard<std::mutex> guard(eplayer->impl_->lock_);
         std::uint8_t *notify = eplayer->impl_->get_notify_userdata(nullptr);
 
         if (!notify) {

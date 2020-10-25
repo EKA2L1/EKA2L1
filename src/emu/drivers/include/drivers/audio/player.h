@@ -21,8 +21,8 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
-
 #include <vector>
 
 namespace eka2l1::common {
@@ -53,6 +53,8 @@ namespace eka2l1::drivers {
         finish_callback callback_;
 
     public:
+        std::mutex lock_;
+
         explicit player()
             : volume_(50)
             , balance_(0)
@@ -86,6 +88,8 @@ namespace eka2l1::drivers {
         }
 
         virtual bool set_volume(const std::uint32_t vol) {
+            const std::lock_guard<std::mutex> guard(lock_);
+
             if (vol > max_volume()) {
                 return false;
             }
@@ -99,6 +103,8 @@ namespace eka2l1::drivers {
         }
 
         virtual bool set_balance(const std::int32_t balance) {
+            const std::lock_guard<std::mutex> guard(lock_);
+
             if (balance > 100 || balance < -100) {
                 return false;
             }

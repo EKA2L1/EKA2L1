@@ -27,7 +27,7 @@
 namespace eka2l1::drivers {
     std::size_t player_shared::data_supply_callback(std::int16_t *data, std::size_t size) {
         // Get the oldest request
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request = requests_.front();
 
         std::size_t frame_copied = 0;
@@ -91,8 +91,10 @@ namespace eka2l1::drivers {
 
             // We are drained (out of frame)
             // Call the finish callback
-            if (no_more_way && callback_)
+            if (no_more_way && callback_) {
                 callback_(userdata_.data());
+                callback_ = nullptr;
+            }
         }
 
         return frame_copied;
@@ -105,7 +107,7 @@ namespace eka2l1::drivers {
 
         // Reset the request
         {
-            const std::lock_guard<std::mutex> guard(request_queue_lock_);
+            const std::lock_guard<std::mutex> guard(lock_);
             player_request_instance &request = requests_.front();
 
             reset_request(request);
@@ -142,17 +144,15 @@ namespace eka2l1::drivers {
     }
 
     bool player_shared::notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) {
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
         return player::notify_any_done(callback, data, data_size);
     }
 
     void player_shared::clear_notify_done() {
-        std::unique_lock<std::mutex> guard(request_queue_lock_, std::try_to_lock);
         return player::clear_notify_done();
     }
 
     void player_shared::set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) {
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request = requests_.front();
 
         request->repeat_left_ = repeat_times;
@@ -219,7 +219,7 @@ namespace eka2l1::drivers {
             return 0;
         }
 
-        return request_ref->freq_;;
+        return request_ref->freq_;
     }
 
     std::uint32_t player_shared::get_dest_channel_count() {

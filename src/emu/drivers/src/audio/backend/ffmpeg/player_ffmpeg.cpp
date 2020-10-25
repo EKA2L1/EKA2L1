@@ -112,6 +112,8 @@ namespace eka2l1::drivers {
         player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
 
         request_ff->url_ = url;
+
+        const std::lock_guard<std::mutex> guard(lock_);
         requests_.push(std::move(request));
 
         return true;
@@ -272,6 +274,9 @@ namespace eka2l1::drivers {
             return false;
         }
 
+        const std::lock_guard<std::mutex> guard(lock_);
+        
+        requests_.push(std::move(request));
         return true;
     }
 

@@ -26,6 +26,8 @@
 
 namespace eka2l1::drivers {
     bool player::notify_any_done(finish_callback callback, std::uint8_t *data, const std::size_t data_size) {
+        const std::lock_guard<std::mutex> guard(lock_);
+
         callback_ = callback;
 
         userdata_.resize(data_size);

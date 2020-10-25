@@ -457,7 +457,7 @@ namespace eka2l1::drivers {
         request_wmf->data_pointer_ = 0;
         request_wmf->url_ = url;
 
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
+        const std::lock_guard<std::mutex> guard(lock_);
         requests_.push(std::move(request));
 
         return true;
@@ -472,7 +472,7 @@ namespace eka2l1::drivers {
         // Auto release when ref is to 0.
         request_wmf->custom_stream_ = new rw_stream_com(lower_stream);
 
-        const std::lock_guard<std::mutex> guard(request_queue_lock_);
+        const std::lock_guard<std::mutex> guard(lock_);
         requests_.push(std::move(request));
 
         return true;

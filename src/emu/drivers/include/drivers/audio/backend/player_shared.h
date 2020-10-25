@@ -71,7 +71,6 @@ namespace eka2l1::drivers {
     protected:
         virtual bool is_ready_to_play(player_request_instance &request) = 0;
 
-        std::mutex request_queue_lock_;
         std::queue<player_request_instance> requests_;
         std::vector<player_metadata> metadatas_;
 
