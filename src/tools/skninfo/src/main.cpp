@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/akn/skin/skn.h>
+#include <services/ui/skin/skn.h>
 #include <vfs/vfs.h>
 
 #include <common/cvt.h>
