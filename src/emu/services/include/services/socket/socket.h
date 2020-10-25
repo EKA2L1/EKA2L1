@@ -36,6 +36,8 @@ namespace eka2l1 {
 
     enum socket_opcode {
         socket_pr_find = 0x02,
+        socket_hr_open = 0x28,
+        socket_hr_open_with_connection = 0x3E,
         socket_sr_get_by_number = 0x3F,
         socket_cn_get_long_des_setting = 0x51
     };

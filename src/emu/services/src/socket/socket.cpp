@@ -77,6 +77,14 @@ namespace eka2l1 {
                 pr_find(ctx);
                 return;
 
+            case socket_hr_open:
+                hr_create(ctx, false);
+                break;
+
+            case socket_hr_open_with_connection:
+                hr_create(ctx, true);
+                break;
+
             case socket_sr_get_by_number:
                 sr_get_by_number(ctx);
                 return;
