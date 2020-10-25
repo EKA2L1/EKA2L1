@@ -21,6 +21,7 @@
 
 #include <common/algorithm.h>
 #include <common/log.h>
+#include <common/platform.h>
 
 namespace eka2l1::drivers {
     static long data_callback_redirector(cubeb_stream *stm, void *user,
@@ -44,10 +45,16 @@ namespace eka2l1::drivers {
         params.layout = (channels == 1) ? CUBEB_LAYOUT_MONO : CUBEB_LAYOUT_STEREO;
         params.prefs = CUBEB_STREAM_PREF_NONE;
 
-        std::uint32_t minimum_latency = 100 * sample_rate / 1000; // Firefox default
+        std::uint32_t minimum_latency;
+#ifdef EKA2L1_PLATFORM_ANDROID
+        minimum_latency = 256;
+#else
+        minimum_latency = 100 * sample_rate / 1000; // Firefox default
+
         if (cubeb_get_min_latency(context_, &params, &minimum_latency) != CUBEB_OK) {
             LOG_ERROR("Error trying to get minimum latency. Use default");
         }
+#endif
 
         const auto result = cubeb_stream_init(context_, &stream_, "EKA2L1 StreamPeam",
             nullptr, nullptr, nullptr, &params, common::max<std::uint32_t>((channels == 1) ? 256U : 512U, minimum_latency),
