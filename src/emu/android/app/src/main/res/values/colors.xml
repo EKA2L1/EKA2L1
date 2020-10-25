@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+
+    <color name="file_picker_accent">#ffb62e</color>
+
+    <color name="light_color_primary">#212121</color>
+    <color name="light_color_primary_dark">#1c1c1c</color>
+    <color name="light_color_accent">#ff2e51</color>
+    <color name="light_color_background">#fafafa</color>
+</resources>

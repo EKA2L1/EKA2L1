@@ -1,0 +1,32 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="ru.playsoftware.j2meloader.MainActivity">
+
+    <item
+        android:id="@+id/action_search"
+        android:title="@string/search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_about"
+        android:title="@string/about"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_settings"
+        android:title="@string/settings"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_packages"
+        android:title="@string/packages"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_devices"
+        android:title="@string/devices"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_mount_sd"
+        android:title="@string/mount_sd"
+        app:showAsAction="never" />
+
+</menu>
