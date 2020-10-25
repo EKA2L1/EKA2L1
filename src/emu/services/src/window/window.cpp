@@ -1173,6 +1173,41 @@ namespace eka2l1 {
                 scr.modes.push_back(scr_mode);
             } while (!one_mode_only);
 
+            int total_hardware_state = 0;
+
+            do {
+                std::string current_state_num_str = std::to_string(total_hardware_state);
+                std::string screen_mode_normal_mode_num_key = "S60_HWSTATE_SCREENMODE";
+                screen_mode_normal_mode_num_key += current_state_num_str;
+
+                common::ini_node_ptr mode_normal_node = screen_node->get_as<common::ini_section>()->find(
+                    screen_mode_normal_mode_num_key.c_str());
+
+                std::string screen_mode_alternate_mode_num_key = "S60_HWSTATE_ALT_SCREENMODE";
+                screen_mode_alternate_mode_num_key += current_state_num_str;
+
+                common::ini_node_ptr mode_alternate_node = screen_node->get_as<common::ini_section>()->find(
+                    screen_mode_alternate_mode_num_key.c_str());
+
+                total_hardware_state++;
+
+                epoc::config::hardware_state state_cfg;
+                state_cfg.state_number = total_hardware_state - 1;
+
+                if (mode_normal_node || mode_alternate_node) {
+                    mode_normal_node->get_as<common::ini_pair>()->get(reinterpret_cast
+                        <std::uint32_t *>(&state_cfg.mode_normal), 1, 0);
+
+                    mode_alternate_node->get_as<common::ini_pair>()->get(reinterpret_cast
+                        <std::uint32_t *>(&state_cfg.mode_alternative), 1, 0);
+
+                    // TODO: Switch key
+                    scr.hardware_states.push_back(state_cfg);
+                } else {
+                    break;
+                }
+            } while (true);
+
             screen_configs.push_back(scr);
         } while ((screen_node != nullptr) && (!one_screen_only));
     }
@@ -1790,5 +1825,28 @@ namespace eka2l1 {
         // TODO: Use these parameters.
         initial_repeat_delay_ = initial_time;
         next_repeat_delay_ = next_time;
+    }
+
+    void window_server::send_event_to_window_group(epoc::window_group *group, const epoc::event &evt) {
+        epoc::window_server_client *cli = group->client;
+
+        epoc::event evt_copy = evt;
+        evt_copy.handle = group->client_handle;
+
+        cli->queue_event(evt_copy);
+    }
+
+    void window_server::send_event_to_window_groups(const epoc::event &evt) {
+        epoc::screen *scr = get_screens();
+
+        while (scr) {
+            epoc::window_group *group = scr->get_group_chain();
+            while (group) {
+                send_event_to_window_group(group, evt);
+                group = reinterpret_cast<epoc::window_group*>(group->sibling);
+            }
+
+            scr = scr->next;
+        }
     }
 }
