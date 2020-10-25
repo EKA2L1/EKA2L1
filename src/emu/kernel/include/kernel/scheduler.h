@@ -91,7 +91,7 @@ namespace eka2l1 {
             bool schedule(kernel::thread *thread);
             bool sleep(kernel::thread *thr, uint32_t sl_time, const bool deque = true);
             bool wait(kernel::thread *thr);
-            bool resume(kernel::thread *thr);
+            bool dewait(kernel::thread *thr);
             void unschedule(kernel::thread *thr);
             bool stop(kernel::thread *thr);
 

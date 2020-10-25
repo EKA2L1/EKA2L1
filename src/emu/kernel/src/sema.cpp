@@ -48,7 +48,7 @@ namespace eka2l1 {
 
                         assert(ready_thread->wait_obj == this);
 
-                        ready_thread->get_scheduler()->resume(ready_thread);
+                        ready_thread->get_scheduler()->dewait(ready_thread);
                         ready_thread->wait_obj = nullptr;
                     }
                 }

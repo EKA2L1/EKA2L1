@@ -290,7 +290,7 @@ namespace eka2l1::kernel {
         return true;
     }
 
-    bool thread_scheduler::resume(kernel::thread *thr) {
+    bool thread_scheduler::dewait(kernel::thread *thr) {
         if (thr->scheduler_link.next != nullptr || thr->scheduler_link.previous != nullptr) {
             return false;
         }

@@ -516,7 +516,7 @@ namespace eka2l1 {
         }
 
         bool thread::is_suspended() const {
-            return (state == thread_state::create) || (state == thread_state::ready) ||
+            return (state == thread_state::create) || (state == thread_state::wait) ||
                 (state == thread_state::wait_fast_sema_suspend) || (state == thread_state::wait_mutex_suspend);
         }
         
@@ -530,6 +530,10 @@ namespace eka2l1 {
         }
         
         bool thread::suspend() {
+            if (is_suspended()) {
+                return true;
+            }
+
             bool res = scheduler->wait(this);
 
             if (!res) {
@@ -561,7 +565,11 @@ namespace eka2l1 {
         }
 
         bool thread::resume() {
-            bool res = scheduler->resume(this);
+            if (!is_suspended()) {
+                return true;
+            }
+
+            bool res = scheduler->dewait(this);
 
             if (!res) {
                 return false;

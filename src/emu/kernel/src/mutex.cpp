@@ -55,7 +55,7 @@ namespace eka2l1 {
             while (!suspended.empty()) {
                 thread *thr = E_LOFF(suspended.first()->deque(), thread, suspend_link);
                 thr->wait_obj = nullptr;
-                thr->get_scheduler()->resume(thr);
+                thr->get_scheduler()->dewait(thr);
             }
         }
 
@@ -141,7 +141,7 @@ namespace eka2l1 {
             }
             }
 
-            thread_to_wake->resume();
+            thread_to_wake->scheduler->dewait(thread_to_wake);
         }
 
         void mutex::wait_for(int usecs) {
@@ -183,8 +183,8 @@ namespace eka2l1 {
                     auto elem = pendings.first();
                     kernel::thread *thr = E_LOFF(elem->deque(), thread, pending_link);
 
-                    // Resume from wait, directly use scheduler
-                    thr->get_scheduler()->resume(thr);
+                    // dewait from wait, directly use scheduler
+                    thr->get_scheduler()->dewait(thr);
                     thr->state = thread_state::ready;
                     thr->wait_obj = nullptr;
 
@@ -208,7 +208,7 @@ namespace eka2l1 {
                 kernel::thread *ready_thread = std::move(waits.top());
                 waits.pop();
 
-                ready_thread->get_scheduler()->resume(ready_thread);
+                ready_thread->get_scheduler()->dewait(ready_thread);
                 ready_thread->state = thread_state::ready;
                 ready_thread->wait_obj = nullptr;
 
@@ -229,7 +229,7 @@ namespace eka2l1 {
 
             pendings.push(&thr->pending_link);
 
-            thr->scheduler->resume(thr);
+            thr->scheduler->dewait(thr);
             thr->state = thread_state::hold_mutex_pending;
         }
 
@@ -261,7 +261,7 @@ namespace eka2l1 {
                         waits.remove(thr);
                         pendings.push(&thr->pending_link);
 
-                        thr->get_scheduler()->resume(thr);
+                        thr->get_scheduler()->dewait(thr);
                         thr->state = thread_state::hold_mutex_pending;
                     }
                 }
