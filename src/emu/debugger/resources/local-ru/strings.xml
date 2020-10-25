@@ -87,12 +87,12 @@
     <string name="pref_system_validate_device_tooltip">Проверяет наличие ошибок в устройстве и исправляет их так, чтобы EKA2L1 мог эмулировать устройство.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Отключено, потому что эмулируемая система запущена. Перезапустите эмулятор, чтобы использовать эту опцию.</string>
     <string name="pref_system_no_device_present_str">Нет устройств</string>
-    <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
+    <string name="pref_system_real_time_accuracy_str">Точность в реальном времени</string>
     <string name="pref_system_real_time_accuracy_tooltip_msg_1">Choose the level of accuracy for timing operations.</string>
     <string name="pref_system_real_time_accuracy_tooltip_msg_2">The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</string>
-    <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
-    <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
-    <string name="pref_system_real_time_accuracy_level_name_high">High</string>
+    <string name="pref_system_real_time_accuracy_level_name_low">Низкий</string>
+    <string name="pref_system_real_time_accuracy_level_name_mid">Средний</string>
+    <string name="pref_system_real_time_accuracy_level_name_high">Высокий</string>
     <string name="pref_control_title">Управление</string>
     <string name="pref_control_key_binding_sect_title">Назначение кнопок</string>
     <string name="pref_control_wait_for_key_string">ожидание клавиши</string>
@@ -134,7 +134,7 @@
     <string name="touchscreen_disabled_note_str">Примечание</string>
     <string name="touchscreen_disabled_note_msg">Сенсорный экран может быть включён повторным переназначением кнопок мыши с помощью клавиш клавиатуры.</string>
     <string name="credits_title">EKA2L1 - ЭМУЛЯТОР SYMBIAN OS</string>
-    <string name="credits_copyright_text">(C) 2018- EKA2L1 Team.</string>
+    <string name="credits_copyright_text">(C) 2018- Команда EKA2L1.</string>
     <string name="credits_thanks_text">Спасибо, что используете эмулятор!</string>
     <string name="credits_main_developer_text">Главные разработчики:</string>
     <string name="credits_contributors_text">Участники:</string>
