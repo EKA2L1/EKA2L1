@@ -82,7 +82,7 @@
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="pref_system_setting_inheritance_tooltip_msg">When this option is enabled, child processes that this app summon will inherits its settings.</string>
     <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
-    <string name="pref_system_app_setting_save_title">Save the settings</string>
+    <string name="pref_system_app_setting_save_title">Сохранить настройки</string>
     <string name="pref_system_validate_device_btn_title">Проверить устройство</string>
     <string name="pref_system_validate_device_tooltip">Проверяет наличие ошибок в устройстве и исправляет их так, чтобы EKA2L1 мог эмулировать устройство.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Отключено, потому что эмулируемая система запущена. Перезапустите эмулятор, чтобы использовать эту опцию.</string>
@@ -133,11 +133,11 @@
     <string name="touchscreen_disabled_msg">Некоторые из ваших текущих комбинаций клавиш связаны с кнопками мыши. Поэтому эмулированный сенсорный экран отключен.</string>
     <string name="touchscreen_disabled_note_str">Примечание</string>
     <string name="touchscreen_disabled_note_msg">Сенсорный экран может быть включён повторным переназначением кнопок мыши с помощью клавиш клавиатуры.</string>
-    <string name="credits_title">EKA2L1 - SYMBIAN OS EMULATOR</string>
+    <string name="credits_title">EKA2L1 - ЭМУЛЯТОР SYMBIAN OS</string>
     <string name="credits_copyright_text">(C) 2018- EKA2L1 Team.</string>
-    <string name="credits_thanks_text">Thank you for using the emulator!</string>
-    <string name="credits_main_developer_text">Main developers:</string>
-    <string name="credits_contributors_text">Contributors:</string>
+    <string name="credits_thanks_text">Спасибо, что используете эмулятор!</string>
+    <string name="credits_main_developer_text">Главные разработчики:</string>
+    <string name="credits_contributors_text">Участники:</string>
     <string name="credits_honors_text">Honors:</string>
     <string name="credits_translators_text">Translators (Desktop):</string>
 </resources>
