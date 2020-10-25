@@ -1325,10 +1325,19 @@ namespace eka2l1 {
         }
 
         scr->screen_mutex.lock();
+
+        float factor_to_divide_x = scr->scale_x;
+        float factor_to_divide_y = scr->scale_y;
+
+        if (scr->ui_rotation % 180 != 0) {
+            factor_to_divide_x = scr->scale_y;
+            factor_to_divide_y = scr->scale_x;
+        }
+
         guest_evt_.adv_pointer_evt_.pos.x = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_x_ - scr->absolute_pos.x)
-            / scr->scale_x);
+            / factor_to_divide_x);
         guest_evt_.adv_pointer_evt_.pos.y = static_cast<int>(static_cast<float>(driver_evt_.mouse_.pos_y_ - scr->absolute_pos.y)
-            / scr->scale_y);
+            / factor_to_divide_y);
 
         const int orgx = guest_evt_.adv_pointer_evt_.pos.x;
         const int orgy = guest_evt_.adv_pointer_evt_.pos.y;
@@ -1399,8 +1408,12 @@ namespace eka2l1 {
 
         case drivers::input_event_type::touch: {
             epoc::screen *scr = get_current_focus_screen();
-            const eka2l1::vec2 screen_size_scaled(static_cast<int>(std::roundf(scr->current_mode().size.x * scr->scale_x)),
+            eka2l1::vec2 screen_size_scaled(static_cast<int>(std::roundf(scr->current_mode().size.x * scr->scale_x)),
                 static_cast<int>(std::roundf(scr->current_mode().size.y * scr->scale_y)));
+
+            if (scr->ui_rotation % 180 != 0) {
+                std::swap(screen_size_scaled.x, screen_size_scaled.y);
+            }
 
             eka2l1::rect screen_rect(scr->absolute_pos, screen_size_scaled);
 

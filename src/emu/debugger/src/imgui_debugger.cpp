@@ -2568,9 +2568,9 @@ namespace eka2l1 {
             eka2l1::vec2 scale(0, 0);
 
             if (fullscreen_now) {
-                get_nice_scale(fullscreen_region, ImVec2(static_cast<float>(size.x),
-                    static_cast<float>(size.y)), scale, conf->integer_scaling);
-                    
+                get_nice_scale(fullscreen_region, ImVec2(static_cast<float>(rotated_size.x),
+                    static_cast<float>(rotated_size.y)), scale, conf->integer_scaling);
+                
                 scr->scale_x = static_cast<float>(scale.x);
                 scr->scale_y = static_cast<float>(scale.y);
             } else {
@@ -2583,36 +2583,41 @@ namespace eka2l1 {
             ImVec2 scaled_no_dsa;
             ImVec2 scaled_dsa;
 
+            if (scr->ui_rotation % 180 != 0) {
+                std::swap(scr->scale_x, scr->scale_y);
+            }
+
+            const eka2l1::vec2 size_dsa_org = scr->size();
+
+            // Different dynamic UI rotation, must reverse for DSA
+            if ((scr->ui_rotation % 180) != (scr->current_mode().rotation % 180)) {
+                scaled_dsa.x = static_cast<float>(size_dsa_org.x) * scr->scale_y;
+                scaled_dsa.y = static_cast<float>(size_dsa_org.y) * scr->scale_x;
+            } else {
+                scaled_dsa.x = static_cast<float>(size_dsa_org.x) * scr->scale_x;
+                scaled_dsa.y = static_cast<float>(size_dsa_org.y) * scr->scale_y;
+            }
+
             if (fullscreen_now) {
                 const eka2l1::vec2 org_screen_size = scr->size();
 
-                if (scr->ui_rotation % 180 == 0) {
-                    scaled_no_dsa.x = static_cast<float>(size.x * scale.x);
-                    scaled_no_dsa.y = static_cast<float>(size.y * scale.y);
+                scaled_no_dsa.x = static_cast<float>(size.x * scale.x);
+                scaled_no_dsa.y = static_cast<float>(size.y * scale.y);
 
-                    scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.x);
-                    scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.y);
-                    
-                    winpos.x += (fullscreen_region.x - scaled_no_dsa.x) / 2;
-                    winpos.y += (fullscreen_region.y - scaled_no_dsa.y) / 2;
-                } else {
-                    scaled_no_dsa.x = static_cast<float>(size.x * scale.y);
-                    scaled_no_dsa.y = static_cast<float>(size.y * scale.x);
-
-                    scaled_dsa.x = static_cast<float>(org_screen_size.x * scale.y);
-                    scaled_dsa.y = static_cast<float>(org_screen_size.y * scale.x);
-                    
+                if (scr->ui_rotation % 180 != 0) {
                     winpos.x += (fullscreen_region.x - scaled_no_dsa.y) / 2;
                     winpos.y += (fullscreen_region.y - scaled_no_dsa.x) / 2;
+                } else {
+                    winpos.x += (fullscreen_region.x - scaled_no_dsa.x) / 2;
+                    winpos.y += (fullscreen_region.y - scaled_no_dsa.y) / 2;
                 }
             } else {
                 scaled_no_dsa = ImGui::GetWindowSize();
                 scaled_no_dsa.y -= ImGui::GetCurrentWindow()->TitleBarHeight();
+            }
 
-                const eka2l1::vec2 size_dsa_org = scr->size();
-
-                scaled_dsa.x = static_cast<float>(size_dsa_org.x) * scr->scale_x;
-                scaled_dsa.y = static_cast<float>(size_dsa_org.y) * scr->scale_y;
+            if ((scr->ui_rotation % 180) != 0) {
+                std::swap(scaled_no_dsa.x, scaled_no_dsa.y);
             }
 
             scr->absolute_pos.x = static_cast<int>(winpos.x);
