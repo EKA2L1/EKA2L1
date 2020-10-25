@@ -24,9 +24,9 @@ target_link_libraries(epoc PRIVATE
         epockern
         epocio
         epocloader
+        epocpkg
         epocservs
-        gdbstub
-        package)
+        gdbstub)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         target_link_libraries(epoc PRIVATE symemu)

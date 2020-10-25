@@ -131,6 +131,10 @@ namespace eka2l1 {
             // and if we let it go in destructor it would be messy! :D
             kern_->reset();
 
+#if ENABLE_SCRIPTING
+            scripting_.reset();
+#endif
+
             // Now free those pointers...
             dispatcher_.reset();
             kern_.reset();
