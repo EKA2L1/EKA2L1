@@ -456,5 +456,8 @@ namespace eka2l1 {
 
         void queue_input_from_driver(drivers::input_event &evt);
         void do_base_init();
+
+        void send_event_to_window_group(epoc::window_group *group, const epoc::event &evt);
+        void send_event_to_window_groups(const epoc::event &evt);
     };
 }

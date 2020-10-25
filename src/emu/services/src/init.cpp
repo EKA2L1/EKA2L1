@@ -20,8 +20,8 @@
 
 #include <common/platform.h>
 
-#include <services/akn/icon/icon.h>
-#include <services/akn/skin/server.h>
+#include <services/ui/icon/icon.h>
+#include <services/ui/skin/server.h>
 #include <services/applist/applist.h>
 #include <services/audio/keysound/keysound.h>
 #include <services/audio/mmf/audio.h>

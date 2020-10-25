@@ -20,7 +20,7 @@
 #pragma once
 
 #include <cstdint>
-#include <services/akn/skin/common.h>
+#include <services/ui/skin/common.h>
 
 namespace eka2l1 {
     struct central_repo;

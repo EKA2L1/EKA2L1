@@ -37,10 +37,19 @@ namespace eka2l1::epoc {
             std::string style;
         };
 
+        struct hardware_state {
+            int state_number;
+            int mode_normal;
+            int mode_alternative;
+            int switch_keycode;
+        };
+
         struct screen {
             int screen_number;
             epoc::display_mode disp_mode;
+
             std::vector<screen_mode> modes;
+            std::vector<hardware_state> hardware_states;
         };
     }
 }

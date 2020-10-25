@@ -24,7 +24,7 @@
 #include <common/rgb.h>
 #include <common/types.h>
 #include <common/vecx.h>
-#include <services/akn/skin/common.h>
+#include <services/ui/skin/common.h>
 
 #include <map>
 #include <unordered_map>

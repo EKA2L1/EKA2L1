@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/akn/skin/common.h>
+#include <services/ui/skin/common.h>
 
 #include <optional>
 #include <string>

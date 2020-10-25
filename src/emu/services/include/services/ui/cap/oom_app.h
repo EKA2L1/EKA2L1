@@ -176,6 +176,7 @@ namespace eka2l1 {
         void get_layout_config(service::ipc_context &ctx);
 
         std::string layout_buf;
+
         std::unique_ptr<epoc::cap::sgc_server> sgc;
         std::unique_ptr<epoc::cap::eik_server> eik;
 

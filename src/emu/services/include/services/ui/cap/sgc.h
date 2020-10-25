@@ -43,6 +43,7 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc::cap {
     static constexpr epoc::uid UIKON_UID = 0x101F8773;
+    static constexpr std::uint32_t UIK_CURRENT_HARDWARE_LAYOUT_STATE = 8;
     static constexpr std::uint32_t UIK_PREFERRED_ORIENTATION_KEY = 9;
 
     //  System Graphics Coordination
@@ -88,6 +89,8 @@ namespace eka2l1::epoc::cap {
 
         // Properties
         service::property *orientation_prop_;
+        service::property *hardware_layout_prop_;
+
         drivers::graphics_driver *graphics_driver_;
 
         window_server *winserv_;

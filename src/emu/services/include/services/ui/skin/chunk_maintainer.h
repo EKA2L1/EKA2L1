@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include <services/akn/skin/bitmap_store.h>
-#include <services/akn/skin/common.h>
-#include <services/akn/skin/skn.h>
+#include <services/ui/skin/bitmap_store.h>
+#include <services/ui/skin/common.h>
+#include <services/ui/skin/skn.h>
 #include <services/fbs/fbs.h>
 
 #include <cstdint>

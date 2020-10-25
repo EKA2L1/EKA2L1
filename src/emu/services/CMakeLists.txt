@@ -6,15 +6,6 @@ add_library(epocservs
         include/services/framework.h
         include/services/init.h
         include/services/utils.h
-        include/services/akn/icon/icon.h
-        include/services/akn/skin/chunk_maintainer.h
-        include/services/akn/skin/icon_cfg.h
-        include/services/akn/skin/ops.h
-        include/services/akn/skin/server.h
-        include/services/akn/skin/settings.h
-        include/services/akn/skin/skn.h
-        include/services/akn/skin/bitmap_store.h
-        include/services/akn/skin/utils.h
         include/services/applist/applist.h
         include/services/applist/common.h
         include/services/applist/op.h
@@ -93,10 +84,19 @@ add_library(epocservs
         include/services/ui/cap/eiksrv.h
         include/services/ui/cap/oom_app.h
         include/services/ui/cap/sgc.h
-        include/services/ui/eikappui.h
+        include/services/ui/icon/icon.h
+        include/services/ui/skin/chunk_maintainer.h
+        include/services/ui/skin/icon_cfg.h
+        include/services/ui/skin/ops.h
+        include/services/ui/skin/server.h
+        include/services/ui/skin/settings.h
+        include/services/ui/skin/skn.h
+        include/services/ui/skin/bitmap_store.h
+        include/services/ui/skin/utils.h
         include/services/ui/view/common.h
         include/services/ui/view/queue.h
         include/services/ui/view/view.h
+        include/services/ui/eikappui.h
         include/services/window/bitmap_cache.h
         include/services/window/keys.h
         include/services/window/scheduler.h
@@ -108,16 +108,6 @@ add_library(epocservs
         src/framework.cpp
         src/init.cpp
         src/utils.cpp
-        src/akn/icon/icon.cpp
-        src/akn/icon/init.cpp
-        src/akn/skin/chunk_maintainer.cpp
-        src/akn/skin/icon_cfg.cpp
-        src/akn/skin/ops.cpp
-        src/akn/skin/server.cpp
-        src/akn/skin/settings.cpp
-        src/akn/skin/skn.cpp
-        src/akn/skin/bitmap_store.cpp
-        src/akn/skin/utils.cpp
         src/applist/applist.cpp
         src/applist/common.cpp
         src/applist/registeration.cpp
@@ -192,9 +182,19 @@ add_library(epocservs
         src/ui/cap/eiksrv.cpp
         src/ui/cap/oom_app.cpp
         src/ui/cap/sgc.cpp
-        src/ui/eikappui.cpp
+        src/ui/icon/icon.cpp
+        src/ui/icon/init.cpp
+        src/ui/skin/chunk_maintainer.cpp
+        src/ui/skin/icon_cfg.cpp
+        src/ui/skin/ops.cpp
+        src/ui/skin/server.cpp
+        src/ui/skin/settings.cpp
+        src/ui/skin/skn.cpp
+        src/ui/skin/bitmap_store.cpp
+        src/ui/skin/utils.cpp
         src/ui/view/queue.cpp
         src/ui/view/view.cpp
+        src/ui/eikappui.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/plugins/clickdll.cpp
         src/window/classes/plugins/sprite.cpp
