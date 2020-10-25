@@ -60,9 +60,8 @@ void CMMFMdaAudioOpenComplete::FixupActiveStatus() {
 }
 
 void CMMFMdaAudioOpenComplete::DoCancel() {
-    if (IsActive()) {
-        Cancel();
-    }
+    TRequestStatus *statusPointer = &iStatus;
+    User::RequestComplete(statusPointer, KErrCancel);
 }
 
 CMMFMdaAudioUtility::CMMFMdaAudioUtility(const TInt aPriority, const TMdaPriorityPreference aPref)
