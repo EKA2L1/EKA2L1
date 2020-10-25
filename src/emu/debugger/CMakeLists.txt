@@ -21,9 +21,9 @@ target_link_libraries(debugger PRIVATE
         drivers
         epoc
         epockern
+        epocpkg
         epocservs
         imgui
-        package
         pugixml
         stb
         yaml-cpp)

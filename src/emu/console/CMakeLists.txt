@@ -20,10 +20,10 @@ target_link_libraries(console PRIVATE
         drivers
         epoc
         epockern
+        epocpkg
         epocservs
         gdbstub
         imgui
-        package
         yaml-cpp)
 
 target_include_directories(console PRIVATE include ${YAML_CPP_INCLUDE_DIR})
