@@ -42,6 +42,19 @@ enum TMdaPlayType {
 
 bool TranslateInternalStateToReleasedState(const TMdaState aState, CMdaAudioClipUtility::TState &aReleasedState);
 
+struct CMMFMdaAudioUtility;
+
+struct CMMFMdaAudioOpenComplete: public CIdle {
+public:
+    CMMFMdaAudioOpenComplete();
+    ~CMMFMdaAudioOpenComplete();
+    
+    void Open(CMMFMdaAudioUtility *aUtil);
+    void FixupActiveStatus();
+
+    virtual void DoCancel();
+};
+
 /**
  * @brief Utility class implementation. 
  *
@@ -56,6 +69,7 @@ protected:
     
 private:
     TMdaState iState;
+    CMMFMdaAudioOpenComplete iOpener;
     
 protected:
     TAny *iDispatchInstance;
@@ -115,7 +129,7 @@ public:
 	CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
     static CMMFMdaAudioPlayerUtility *NewL(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
     
-    void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError);
+    virtual void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError);
 };
 
 struct CMMFMdaAudioRecorderUtility : public CMMFMdaAudioUtility {
@@ -127,7 +141,7 @@ public:
 	CMMFMdaAudioRecorderUtility(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
     static CMMFMdaAudioRecorderUtility *NewL(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
     
-    void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError);
+    virtual void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError);
 
     TInt SetDestCodec(TFourCC aDestCodec);
     TInt GetDestCodec(TFourCC &aDestCodec);

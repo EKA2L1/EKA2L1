@@ -32,8 +32,41 @@
 static const TUint32 KBlackListAudioClipFormat[2] = { KUidMdaClipFormatRawAudioDefine, KUidMdaClipFormatAuDefine };
 static const TUint32 KBlackListAudioClipFormatCount = sizeof(KBlackListAudioClipFormat) / sizeof(TUint32);
 
+CMMFMdaAudioOpenComplete::CMMFMdaAudioOpenComplete()
+    : CIdle(100) {
+}
+
+CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
+    Deque();
+}
+
+static TInt OpenCompleteCallback(void *aUserdata) {
+    LogOut(MCA_CAT, _L("Open utility/recorder complete"));
+   
+    CMMFMdaAudioUtility *stream = reinterpret_cast<CMMFMdaAudioUtility*>(aUserdata);
+    stream->TransitionState(EMdaStateReady, KErrNone);
+
+    return 0;
+}
+
+void CMMFMdaAudioOpenComplete::Open(CMMFMdaAudioUtility *aUtil) {
+    Start(TCallBack(OpenCompleteCallback, aUtil));
+}
+
+void CMMFMdaAudioOpenComplete::FixupActiveStatus() {
+    if (IsActive()) {
+        Cancel();
+    }
+}
+
+void CMMFMdaAudioOpenComplete::DoCancel() {
+    if (IsActive()) {
+        Cancel();
+    }
+}
+
 CMMFMdaAudioUtility::CMMFMdaAudioUtility(const TInt aPriority, const TMdaPriorityPreference aPref)
-    : CActive(CActive::EPriorityIdle)
+    : CActive(10000)
     , iPriority(aPriority)
     , iPref(aPref)
     , iState(EMdaStateIdle)
@@ -47,6 +80,9 @@ void CMMFMdaAudioUtility::ConstructL(const TUint32 aInitFlags) {
         User::Leave(KErrGeneral);
     }
 
+    iOpener.FixupActiveStatus();
+
+    CActiveScheduler::Add(&iOpener);
     CActiveScheduler::Add(this);
 }
 
@@ -74,13 +110,23 @@ void CMMFMdaAudioUtility::DoCancel() {
 }
 
 void CMMFMdaAudioUtility::StartListeningForCompletion() {
+    iStatus = KRequestPending;
+
     EAudioPlayerNotifyAnyDone(0, iDispatchInstance, iStatus);
     SetActive();
 }
 
 void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
-        User::Leave(KErrInUse);
+        LogOut(MCA_CAT, _L("Audio supplied while utility is being played."));
+        TransitionState(iState, KErrInUse);
+
+        return;
+    }
+
+    // Cancel if it's being activated
+    if (iState == EMdaStateReady) {
+        iOpener.FixupActiveStatus();
     }
 
     TInt duration = EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length());
@@ -89,12 +135,20 @@ void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
     iDuration = durationObj;
     iPlayType = EMdaPlayTypeFile;
 
-    TransitionState(EMdaStateReady, duration < KErrNone ? duration : KErrNone);
+    iOpener.Open(this);
 }
 
 void CMMFMdaAudioUtility::SupplyData(TDesC8 &aData) {
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
-        User::Leave(KErrInUse);
+        LogOut(MCA_CAT, _L("Audio supplied while utility is being played."));
+        
+        TransitionState(iState, KErrInUse);
+        return;
+    }
+
+    // Cancel if it's being activated
+    if (iState == EMdaStateReady) {
+        iOpener.FixupActiveStatus();
     }
 
     TInt duration = EAudioPlayerSupplyData(0, iDispatchInstance, aData);
@@ -103,16 +157,30 @@ void CMMFMdaAudioUtility::SupplyData(TDesC8 &aData) {
     iDuration = durationObj;
     iPlayType = EMdaPlayTypeBuffer;
     
-    TransitionState(EMdaStateReady, duration < KErrNone ? duration : KErrNone);
+    iOpener.Open(this);
 }
 
 void CMMFMdaAudioUtility::Play() {
-    if (iState == EMdaStateReady) {
-        StartListeningForCompletion();
+    if (iState == EMdaStatePlay) {
+        Cancel();
     }
 
+    if ((iState == EMdaStateReady) || (iState == EMdaStatePlay)) {
+        StartListeningForCompletion();
+    } else {
+        LogOut(MCA_CAT, _L("Can't play audio due to no data not being yet queued."));
+
+        TransitionState(EMdaStateReady, KErrNotReady);
+        return;
+    }
+
+    TransitionState(EMdaStatePlay, KErrNone);
     TInt err = EAudioPlayerPlay(0, iDispatchInstance);
-    TransitionState(EMdaStatePlay, err);
+
+    if (err != KErrNone) {
+        Cancel();
+        TransitionState(EMdaStateReady, err);
+    }
 }
 
 void CMMFMdaAudioUtility::Stop() {
@@ -267,7 +335,7 @@ void CMMFMdaAudioRecorderUtility::OnStateChanged(const TMdaState aCurrentState, 
 	}
 	
 	// TODO: no nullptr? Haha hehe
-	iObserver.MoscoStateChangeEvent(NULL, currentTrans, prevTrans, aError);
+	iObserver.MoscoStateChangeEvent(NULL, prevTrans, currentTrans, aError);
 }
 
 TInt CMMFMdaAudioRecorderUtility::SetDestCodec(TFourCC aDestCodec) {
