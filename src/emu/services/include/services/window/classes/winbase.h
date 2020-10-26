@@ -63,7 +63,7 @@ namespace eka2l1::epoc {
         window *child{ nullptr }; ///< Pointer to the oldest child
 
         // The priority of the window.
-        std::uint16_t priority{ 0 };
+        std::int32_t priority{ 0 };
         std::uint32_t client_handle{ 0 };
 
         window_kind type;
