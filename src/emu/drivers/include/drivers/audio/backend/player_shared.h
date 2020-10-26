@@ -99,7 +99,8 @@ namespace eka2l1::drivers {
         bool set_dest_freq(const std::uint32_t freq) override;
         bool set_dest_channel_count(const std::uint32_t cn) override;
         bool set_dest_encoding(const std::uint32_t enc) override;
-        void set_dest_container_format(const std::uint32_t confor) override;
+        bool set_volume(const std::uint32_t vol) override;
+        void set_dest_container_format(const std::uint32_t confor) override; 
 
         std::uint32_t get_dest_freq() override;
         std::uint32_t get_dest_channel_count() override;

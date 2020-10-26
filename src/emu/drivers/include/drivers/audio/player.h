@@ -88,8 +88,6 @@ namespace eka2l1::drivers {
         }
 
         virtual bool set_volume(const std::uint32_t vol) {
-            const std::lock_guard<std::mutex> guard(lock_);
-
             if (vol > max_volume()) {
                 return false;
             }

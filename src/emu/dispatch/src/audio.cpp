@@ -207,6 +207,8 @@ namespace eka2l1::dispatch {
         info.sts = sts;
 
         if (!eplayer->impl_->notify_any_done([eplayer](std::uint8_t *data) {
+                const std::lock_guard<std::mutex> guard(eplayer->impl_->lock_);
+
                 epoc::notify_info *info = reinterpret_cast<epoc::notify_info *>(data);
                 kernel_system *kern = info->requester->get_kernel_object_owner();
 

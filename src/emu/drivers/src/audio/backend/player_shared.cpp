@@ -93,7 +93,6 @@ namespace eka2l1::drivers {
             // Call the finish callback
             if (no_more_way && callback_) {
                 callback_(userdata_.data());
-                callback_ = nullptr;
             }
         }
 
@@ -160,6 +159,7 @@ namespace eka2l1::drivers {
     }
 
     void player_shared::set_position(const std::uint64_t pos_in_us) {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
@@ -170,6 +170,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_shared::set_dest_freq(const std::uint32_t freq) {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
@@ -181,6 +182,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_shared::set_dest_channel_count(const std::uint32_t cn) {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
@@ -192,6 +194,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_shared::set_dest_encoding(const std::uint32_t enc) {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
@@ -203,6 +206,7 @@ namespace eka2l1::drivers {
     }
 
     void player_shared::set_dest_container_format(const std::uint32_t confor) {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
@@ -212,7 +216,25 @@ namespace eka2l1::drivers {
         request_ref->format_ = confor;
     }
 
+    bool player_shared::set_volume(const std::uint32_t vol) {
+        const std::lock_guard<std::mutex> guard(lock_);
+        player_request_instance &request_ref = requests_.back();
+
+        if (!request_ref) {
+            return false;
+        }
+
+        const bool res = player::set_volume(vol);
+
+        if (output_stream_ && res) {
+            output_stream_->set_volume(static_cast<float>(volume_) / static_cast<float>(max_volume()));
+        }
+
+        return res;
+    }
+    
     std::uint32_t player_shared::get_dest_freq() {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
@@ -223,6 +245,7 @@ namespace eka2l1::drivers {
     }
 
     std::uint32_t player_shared::get_dest_channel_count() {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
@@ -233,6 +256,7 @@ namespace eka2l1::drivers {
     }
 
     std::uint32_t player_shared::get_dest_encoding() {
+        const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();
 
         if (!request_ref) {
