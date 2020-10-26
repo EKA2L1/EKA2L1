@@ -20,15 +20,43 @@ namespace py = pybind11;
 namespace scripting = eka2l1::scripting;
 
 PYBIND11_EMBEDDED_MODULE(symemu, m) {
-    py::enum_<eka2l1::kernel::thread_state>(m, "ThreadState")
-        .value("RUN", eka2l1::kernel::thread_state::run)
-        .value("STOP", eka2l1::kernel::thread_state::stop)
-        .value("WAIT", eka2l1::kernel::thread_state::wait)
-        .value("WAIT_DFC", eka2l1::kernel::thread_state::wait_dfc)
-        .value("WAIT_FAST_SEMA", eka2l1::kernel::thread_state::wait_fast_sema)
-        .value("READY", eka2l1::kernel::thread_state::ready);
+    py::enum_<eka2l1::kernel::thread_state>(m, "ThreadState", R"pbdoc(
+            Representing current state of a thread
+        )pbdoc")
+        .value("RUN", eka2l1::kernel::thread_state::run, R"pbdoc(
+            The thread is running.
+        )pbdoc")
+        .value("STOP", eka2l1::kernel::thread_state::stop, R"pbdoc(
+            The thread has been stopped.
+        )pbdoc")
+        .value("WAIT", eka2l1::kernel::thread_state::wait, R"pbdoc(
+            The thread is being suspended.
+        )pbdoc")
+        .value("WAIT_DFC", eka2l1::kernel::thread_state::wait_dfc, R"pbdoc(
+            The thread is waiting for the DFC queue.
+        )pbdoc")
+        .value("WAIT_FAST_SEMA", eka2l1::kernel::thread_state::wait_fast_sema, R"pbdoc(
+            The thread is currently waiting for a semaphore to be freed.
+        )pbdoc")
+        .value("WAIT_MUTEX", eka2l1::kernel::thread_state::wait_mutex, R"pbdoc(
+            The thread is currently waiting for a mutex to be freed.
+        )pbdoc")
+        .value("WAIT_FAST_SEMA_SUSPENDED", eka2l1::kernel::thread_state::wait_fast_sema_suspend, R"pbdoc(
+            The thread has been suspended while waiting for a fast sema to be freed.
+        )pbdoc")
+        .value("WAIT_MUTEX_SUSPENDED", eka2l1::kernel::thread_state::wait_mutex_suspend, R"pbdoc(
+            The thread has been suspended while waiting for a mutex to be freed.
+        )pbdoc")
+        .value("HOLD_MUTEX_PENDING", eka2l1::kernel::thread_state::hold_mutex_pending, R"pbdoc(
+            The thread has been removed from mutex's waiting queue, and is waiting to accquire the mutex.
+        )pbdoc")
+        .value("READY", eka2l1::kernel::thread_state::ready, R"pbdoc(
+            The thread has been queued to the scheduler and is ready to be ran.
+        )pbdoc");
 
-    py::enum_<eka2l1::kernel::thread_priority>(m, "ThreadPriority")
+    py::enum_<eka2l1::kernel::thread_priority>(m, "ThreadPriority", R"pbdoc(
+            Representing the importance of a thread to be scheduled for running"
+        )pbdoc")
         .value("NULL", eka2l1::kernel::priority_null)
         .value("MUCH_LESS", eka2l1::kernel::priority_much_less)
         .value("LESS", eka2l1::kernel::priority_much_less)
@@ -145,8 +173,7 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def("getState", &scripting::thread::get_state, R"pbdoc(
             Get the current state of the thread. States are defined in ThreadState enum.
         )pbdoc")
-        .def("getPriority", &scripting::thread::get_priority,
-            R"pbdoc(
+        .def("getPriority", &scripting::thread::get_priority, R"pbdoc(
             Get the own process of thread.
         )pbdoc")
         .def("getStackBase", &scripting::thread::get_stack_base, R"pbdoc(
