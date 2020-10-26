@@ -33,11 +33,11 @@ static const TUint32 KBlackListAudioClipFormat[2] = { KUidMdaClipFormatRawAudioD
 static const TUint32 KBlackListAudioClipFormatCount = sizeof(KBlackListAudioClipFormat) / sizeof(TUint32);
 
 CMMFMdaAudioOpenComplete::CMMFMdaAudioOpenComplete()
-    : CIdle(100) {
+    : CIdle(100)
+    , iIsFixup(EFalse) {
 }
 
 CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
-    Deque();
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
@@ -54,14 +54,20 @@ void CMMFMdaAudioOpenComplete::Open(CMMFMdaAudioUtility *aUtil) {
 }
 
 void CMMFMdaAudioOpenComplete::FixupActiveStatus() {
+    iIsFixup = ETrue;
+
     if (IsActive()) {
         Cancel();
     }
+
+    iIsFixup = EFalse;
 }
 
 void CMMFMdaAudioOpenComplete::DoCancel() {
-    TRequestStatus *statusPointer = &iStatus;
-    User::RequestComplete(statusPointer, KErrCancel);
+    if (iIsFixup) {
+        TRequestStatus *statusPointer = &iStatus;
+        User::RequestComplete(statusPointer, KErrCancel);
+    }
 }
 
 CMMFMdaAudioUtility::CMMFMdaAudioUtility(const TInt aPriority, const TMdaPriorityPreference aPref)
@@ -96,7 +102,6 @@ void CMMFMdaAudioUtility::TransitionState(const TMdaState aNewState, const TInt 
 }
 
 CMMFMdaAudioUtility::~CMMFMdaAudioUtility() {
-    Deque();
     EAudioPlayerDestroy(0, iDispatchInstance);
 }
 

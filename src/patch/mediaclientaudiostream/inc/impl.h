@@ -58,6 +58,9 @@ struct CMMFMdaOutputBufferQueue: public CActive {
 };
 
 class CMMFMdaOutputOpen: public CIdle {
+protected:
+    TBool iIsFixup;
+
 public:
     explicit CMMFMdaOutputOpen();
     ~CMMFMdaOutputOpen();

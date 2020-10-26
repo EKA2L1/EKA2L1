@@ -70,7 +70,6 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
 }
 
 CMMFMdaOutputBufferQueue::~CMMFMdaOutputBufferQueue() {
-    Deque();
 }
 
 void CMMFMdaOutputBufferQueue::RunL() {
@@ -122,11 +121,11 @@ void CMMFMdaOutputBufferQueue::StartTransfer() {
 }
 
 CMMFMdaOutputOpen::CMMFMdaOutputOpen()
-    : CIdle(100) {
+    : CIdle(100)
+    , iIsFixup(EFalse) {
 }
 
 CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
-    Deque();
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
@@ -143,14 +142,20 @@ void CMMFMdaOutputOpen::Open(CMMFMdaAudioOutputStream *stream) {
 }
 
 void CMMFMdaOutputOpen::DoCancel() {
-    TRequestStatus *statusPointer = &iStatus;
-    User::RequestComplete(statusPointer, KErrCancel);
+    if (iIsFixup) {
+        TRequestStatus *statusPointer = &iStatus;
+        User::RequestComplete(statusPointer, KErrCancel);
+    }
 }
 
-void CMMFMdaOutputOpen::FixupActiveStatus() {    
+void CMMFMdaOutputOpen::FixupActiveStatus() {
+    iIsFixup = ETrue;
+
     if (IsActive()) {
         Cancel();
     }
+
+    iIsFixup = EFalse;
 }
 
 /// AUDIO OUTPUT STREAM

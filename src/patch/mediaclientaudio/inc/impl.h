@@ -45,6 +45,9 @@ bool TranslateInternalStateToReleasedState(const TMdaState aState, CMdaAudioClip
 struct CMMFMdaAudioUtility;
 
 struct CMMFMdaAudioOpenComplete: public CIdle {
+protected:
+    TBool iIsFixup;
+
 public:
     CMMFMdaAudioOpenComplete();
     ~CMMFMdaAudioOpenComplete();
