@@ -57,4 +57,5 @@
 	url = https://github.com/EKA2L1/compat-config
 [submodule "dynarmic-android"]
 	path = src/external/dynarmic-android
-	url = http://github.com/citra-emu/citra-android
+	url = https://github.com/citra-emu/dynarmic-android
+	branch = master
