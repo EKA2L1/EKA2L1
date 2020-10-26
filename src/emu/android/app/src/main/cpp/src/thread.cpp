@@ -137,6 +137,10 @@ namespace eka2l1::android {
         eka2l1::rect src;
         eka2l1::rect dest;
 
+        epoc::screen *screen = state.winserv->get_screens();
+        drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? drivers::filter_option::nearest :
+                drivers::filter_option::linear;
+
         while (!state.should_ui_quit) {
             epoc::screen *scr = state.winserv->get_screens();
             if (scr) {
@@ -177,9 +181,11 @@ namespace eka2l1::android {
                     dest.top =  eka2l1::vec2(x, y);
                     dest.size = eka2l1::vec2(width, height);
 
+                    cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
                     cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src,
                                              drivers::bitmap_draw_flag_no_flip);
                     if (scr->dsa_texture) {
+                        cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
                         cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src,
                                                  drivers::bitmap_draw_flag_no_flip);
                     }
