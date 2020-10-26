@@ -449,6 +449,9 @@ namespace eka2l1 {
 
     void gdbstub::handle_command_get_thread_infos() {
         kernel::process *crr_process = kern->crr_process();
+        if (!crr_process && current_thread) {
+            crr_process = current_thread->owning_process();
+        }
 
         std::string val = "m";
         
@@ -470,6 +473,9 @@ namespace eka2l1 {
     
     void gdbstub::handle_command_read_threads() {
         kernel::process *crr_process = kern->crr_process();
+        if (!crr_process && current_thread) {
+            crr_process = current_thread->owning_process();
+        }
 
         std::string buffer;
         buffer += "l<?xml version=\"1.0\"?>";
@@ -486,6 +492,7 @@ namespace eka2l1 {
                 buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
                     target_thread->unique_id(), target_thread->name());
             } while (ite != last);
+        } else {
         }
 
         buffer += "</threads>";
