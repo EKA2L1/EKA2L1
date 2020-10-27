@@ -1,3 +1,12 @@
 files:
   - source: /src/emu/debugger/resources/local/strings.xml
     translation: /src/emu/debugger/resources/local-%two_letters_code%/%original_file_name%
+  - source: /src/emu/android/app/src/main/res/values/strings.xml
+    translation: /src/emu/android/app/src/main/res/values-%android_code%/%original_file_name%
+    languages_mapping:
+      android_code:
+        he: iw
+        id: in
+        pt-PT: pt
+        es-ES: es
+        sv-SE: sv
