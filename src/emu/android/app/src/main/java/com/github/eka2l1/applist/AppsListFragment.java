@@ -132,7 +132,7 @@ public class AppsListFragment extends ListFragment {
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.no_devices_found, Toast.LENGTH_SHORT).show();
                         dialog.cancel();
                     }
                 });

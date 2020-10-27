@@ -81,7 +81,7 @@ public class PackageListFragment extends ListFragment {
         int index = info.position;
         AppItem appItem = adapter.getItem(index);
         switch (item.getItemId()) {
-            case R.id.action_context_uninstall:
+            case R.id.action_context_remove:
                 Emulator.uninstallPackage((int) appItem.getUid());
                 preparePackages();
                 Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();

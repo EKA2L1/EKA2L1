@@ -9,6 +9,10 @@
     <string name="devices">Devices</string>
     <string name="processing">Processing...</string>
     <string name="completed">Completed!</string>
+    <string name="remove">Remove</string>
+    <string name="mount_sd">Mount MMC/SD card</string>
+    <string name="no_devices_found">No devices found</string>
+
     <string name="install">Install</string>
     <string name="rpkg" translatable="false">RPKG</string>
     <string name="rom" translatable="false">ROM</string>
@@ -17,8 +21,9 @@
     <string name="raw_dump">Raw dump</string>
     <string name="path_to_raw_dump">Path to raw dump</string>
     <string name="install_method">Install method</string>
+
     <string name="enable_virtual_keyboard">Enable virtual keyboard</string>
-    <string name="uninstall">Uninstall</string>
+
     <string name="layout_edit_finished">Edit mode finished</string>
     <string name="layout_edit_finish">Finish edit mode</string>
     <string name="layout_edit_mode">Keylayout edit mode</string>
@@ -27,9 +32,9 @@
     <string name="hide_buttons">Hide buttons</string>
     <string name="confirmation_required">Confirmation required</string>
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
+
     <string name="about_github" translatable="false">&lt;BR>GitHub: &lt;a href="https://github.com/EKA2L1/EKA2L1">github.com/EKA2L1/EKA2L1&lt;/a></string>
     <string name="about_crowdin" translatable="false">&lt;BR>Crowdin(translation): &lt;a href="https://crowdin.com/project/EKA2L1">crowdin.com/project/EKA2L1&lt;/a></string>
     <string name="about_copyright" translatable="false">&lt;BR>&lt;BR>Copyright 2018-2020 EKA2L1 Team</string>
     <string name="version">Version: </string>
-    <string name="mount_sd">Mount SD/MMC card</string>
 </resources>
