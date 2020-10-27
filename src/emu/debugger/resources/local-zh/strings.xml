@@ -58,7 +58,7 @@
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU读取</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">CPU写入</string>
     <string name="pref_general_debugging_cpu_step_checkbox_title">CPU 步</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">此选项将在仿真器关闭后保存。启用GDBStub 时无效。</string>
     <string name="pref_general_debugging_ipc_checkbox_title">进程间通信</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">系统调用</string>
     <string name="pref_general_debugging_ait_checkbox_title">精准的进程间通信时间</string>
