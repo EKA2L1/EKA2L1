@@ -227,6 +227,11 @@ namespace eka2l1 {
 
     void fs_server_client::volume(service::ipc_context *ctx) {
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
+        
+        if (static_cast<std::uint32_t>(drv) == DEFAULT_DRIVE_NUM) {
+            drv = static_cast<drive_number>(server<fs_server>()->system_drive_prop->get_int());
+        }
+        
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
 #define VOLUME_INFO_GETTERS(info_name)                                                      \

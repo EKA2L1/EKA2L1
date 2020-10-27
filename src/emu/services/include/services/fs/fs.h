@@ -51,6 +51,7 @@ namespace eka2l1 {
     static constexpr std::uint32_t FS_UID = 0x100039E3;
     static constexpr std::uint32_t SYSTEM_DRIVE_KEY = 0x10283049;
     static constexpr std::uint32_t LEX_COMPONENTS = 0x4;
+    static constexpr std::uint32_t DEFAULT_DRIVE_NUM = 0x7FFFFFFF;
 
     class io_system;
 
