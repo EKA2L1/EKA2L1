@@ -46,6 +46,10 @@ namespace eka2l1::kernel {
     }
 
     void msg_queue::cancel_data_available(kernel::thread *requester) {
+        if (!requester) {
+            return;
+        }
+
         auto find_res = std::find_if(avail_notifies_.begin(), avail_notifies_.end(),
             [=](const epoc::notify_info &target_info) {
                 return target_info.requester == requester;
