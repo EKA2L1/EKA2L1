@@ -3537,20 +3537,20 @@ namespace eka2l1::epoc {
         return processed;
     }
 
-    BRIDGE_FUNC(void, thread_read_ipc_to_des8, address source_ptr_addr, epoc::des8 *dest_des, std::int32_t offset, kernel::handle source_thread) {
-        thread_ipc_to_des_eka1(kern, source_ptr_addr, dest_des, offset, source_thread, IPC_DIR_READ | CHUNK_SHIFT_BY_0);
+    BRIDGE_FUNC(std::int32_t, thread_read_ipc_to_des8, address source_ptr_addr, epoc::des8 *dest_des, std::int32_t offset, kernel::handle source_thread) {
+        return thread_ipc_to_des_eka1(kern, source_ptr_addr, dest_des, offset, source_thread, IPC_DIR_READ | CHUNK_SHIFT_BY_0);
     }
     
-    BRIDGE_FUNC(void, thread_read_ipc_to_des16, address source_ptr_addr, epoc::des8 *dest_des, std::int32_t offset, kernel::handle source_thread) {
-        thread_ipc_to_des_eka1(kern, source_ptr_addr, dest_des, offset, source_thread, IPC_DIR_READ | CHUNK_SHIFT_BY_1);
+    BRIDGE_FUNC(std::int32_t, thread_read_ipc_to_des16, address source_ptr_addr, epoc::des8 *dest_des, std::int32_t offset, kernel::handle source_thread) {
+        return thread_ipc_to_des_eka1(kern, source_ptr_addr, dest_des, offset, source_thread, IPC_DIR_READ | CHUNK_SHIFT_BY_1);
     }
 
-    BRIDGE_FUNC(void, thread_write_ipc_to_des8, address dest_ptr_addr, epoc::des8 *source_des, std::int32_t offset, kernel::handle dest_thread) {
-        thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_0);
+    BRIDGE_FUNC(std::int32_t, thread_write_ipc_to_des8, address dest_ptr_addr, epoc::des8 *source_des, std::int32_t offset, kernel::handle dest_thread) {
+        return thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_0);
     }
 
-    BRIDGE_FUNC(void, thread_write_ipc_to_des16, address dest_ptr_addr, epoc::des8 *source_des, std::int32_t offset, kernel::handle dest_thread) {
-        thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_1);
+    BRIDGE_FUNC(std::int32_t, thread_write_ipc_to_des16, address dest_ptr_addr, epoc::des8 *source_des, std::int32_t offset, kernel::handle dest_thread) {
+        return thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_1);
     }
 
     BRIDGE_FUNC(void, thread_request_complete_eka1, address *sts_addr, const std::int32_t code, kernel::handle thread_handle) {
