@@ -33,7 +33,8 @@ namespace eka2l1::epoc {
         , husband_(nullptr)
         , state_(state_none)
         , sync_thread_(nullptr)
-        , sync_status_(0) {
+        , sync_status_(0)
+        , requester_thread_(nullptr) {
         kernel_system *kern = client->get_ws().get_kernel_system();
 
         // Each message is an integer. Allow maximum of 10 messages
@@ -57,6 +58,15 @@ namespace eka2l1::epoc {
 
     dsa::~dsa() {
         do_cancel();
+        
+        if (sync_thread_) {
+            sync_thread_->stop();
+            
+            epoc::chunk_allocator *allocator = client->get_ws().allocator();
+            allocator->free(allocator->to_pointer(sync_status_.ptr_address(), nullptr));
+
+            sync_thread_ = nullptr;
+        }
     }
 
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -67,6 +77,10 @@ namespace eka2l1::epoc {
                 return;
             } else {
                 state_ = state_none;
+
+                if (sync_thread_) {
+                    sync_thread_->resume();
+                }
             }
         }
 
@@ -76,6 +90,13 @@ namespace eka2l1::epoc {
             // First integer looks like a sync status too. Probably for other side around.
             // TODO: Use it.
             window_handle = *(reinterpret_cast<std::uint32_t *>(cmd.data_ptr) + 1);
+            
+            epoc::notify_info to_abort_nof;
+            to_abort_nof.sts = *reinterpret_cast<address*>(cmd.data_ptr);
+            to_abort_nof.requester = ctx.msg->own_thr;
+            requester_thread_ = to_abort_nof.requester;
+
+            dsa_must_abort_queue_->notify_available(to_abort_nof);
         } else {
             window_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
         }
@@ -152,13 +173,11 @@ namespace eka2l1::epoc {
         }
 
         if (sync_thread_) {
-            sync_thread_->stop();
-
-            epoc::chunk_allocator *allocator = client->get_ws().allocator();
-            allocator->free(allocator->to_pointer(sync_status_.ptr_address(), nullptr));
-
-            sync_thread_ = nullptr;
+            sync_thread_->suspend();
         }
+
+        dsa_must_abort_queue_->cancel_data_available(requester_thread_);
+        requester_thread_ = nullptr;
     }
 
     void dsa::get_sync_info(service::ipc_context &ctx, ws_cmd &cmd) {

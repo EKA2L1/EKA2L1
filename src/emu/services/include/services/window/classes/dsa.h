@@ -42,6 +42,8 @@ namespace eka2l1::epoc {
         kernel::thread *sync_thread_;           ///< Thread used for syncing with window operations.
         eka2l1::ptr<epoc::request_status> sync_status_;
 
+        kernel::thread *requester_thread_;
+
         enum state {
             state_none,
             state_prepare,
