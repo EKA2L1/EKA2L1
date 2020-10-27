@@ -195,6 +195,7 @@ public class AppsListFragment extends ListFragment {
     private void mountSdCard(String path) {
         Emulator.mountSdCard(path);
         Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+        prepareApps();
     }
 
     @Override
