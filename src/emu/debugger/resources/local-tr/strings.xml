@@ -77,7 +77,7 @@
     <string name="pref_system_device_option_name">Cihaz</string>
     <string name="pref_system_device_not_found_msg">Yapılandırma dosyasında olan cihaz bulunamadı, varsayılan cihaz ilk cihaz olarak ayarlandı.</string>
     <string name="pref_system_language_option_name">Dil</string>
-    <string name="pref_system_app_setting_sect_name">App setting for:</string>
+    <string name="pref_system_app_setting_sect_name">Uygulama ayarı:</string>
     <string name="pref_system_time_delay_option_name">Zaman gecikmesi</string>
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="pref_system_setting_inheritance_tooltip_msg">When this option is enabled, child processes that this app summon will inherits its settings.</string>
