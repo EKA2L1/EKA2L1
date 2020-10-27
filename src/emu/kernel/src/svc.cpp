@@ -1645,6 +1645,16 @@ namespace eka2l1::epoc {
         return get_call_list_from_codeseg(lib->get_codeseg(), kern->crr_process(), total, ep_list);
     }
 
+    BRIDGE_FUNC(std::int32_t, library_entry_point, kernel::handle h) {
+        kernel::library *lib = kern->get<kernel::library>(h);
+
+        if (!lib) {
+            return epoc::error_bad_handle;
+        }
+
+        return lib->get_codeseg()->get_entry_point(kern->crr_process());
+    }
+
     /************************/
     /* USER SERVER */
     /***********************/
@@ -2406,12 +2416,82 @@ namespace eka2l1::epoc {
         LOG_TRACE("{}", common::ucs2_to_utf8(tdes->to_std_string(kern->crr_process())));
     }
 
-    BRIDGE_FUNC(void, debug_print_eka1, std::int32_t mode, desc16 *tdes) {
-        if (!tdes) {
-            return;
+    std::int32_t debug_command_do_read_write(kernel_system *kern, const std::uint32_t thread_id,
+        const address addr, const address data_ptr, const std::int32_t len, const bool is_write) {
+        if (len < 0) {
+            LOG_ERROR("Invalid length to write.");
+            return epoc::error_argument;
         }
 
-        LOG_TRACE("{}", common::ucs2_to_utf8(tdes->to_std_string(kern->crr_process())));
+        kernel::process *crr = kern->crr_process();
+        epoc::des8 *buf = eka2l1::ptr<epoc::des8>(data_ptr).get(crr);
+
+        kernel::thread *thr_to_operate = kern->get_by_id<kernel::thread>(thread_id);
+        if (!thr_to_operate || !buf) {
+            LOG_ERROR("Invalid thread id or buffer argument!");
+            return epoc::error_argument;
+        }
+
+        if (len > static_cast<std::int32_t>(buf->get_length())) {
+            return epoc::error_overflow;
+        }
+
+        kernel::process *process_to_operate = thr_to_operate->owning_process();
+        std::uint8_t *buf_ptr = reinterpret_cast<std::uint8_t*>(buf->get_pointer_raw(crr));
+
+        std::uint8_t *dest_of_operate = reinterpret_cast<std::uint8_t*>(process_to_operate->
+            get_ptr_on_addr_space(addr));
+
+        if (!dest_of_operate) {
+            LOG_WARN("Destination to operate is null, return success still.");
+            return epoc::error_none;
+        }
+
+        if (is_write) {
+            std::memcpy(dest_of_operate, buf_ptr, len);
+        } else {
+            std::memcpy(buf_ptr, dest_of_operate, len);
+        }
+
+        return epoc::error_none;
+    }
+
+    std::int32_t debug_command_do_print(kernel_system *kern, const address arg0) {
+        kernel::process *crr = kern->crr_process();
+        epoc::desc16 *buf = eka2l1::ptr<epoc::desc16>(arg0).get(crr);
+
+        if (!buf) {
+            return epoc::error_argument;
+        }
+
+        LOG_TRACE("stdout: {}", common::ucs2_to_utf8(buf->to_std_string(crr)));
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, debug_command_execute, debug_cmd_header *header, const address arg0,
+        const address arg1, const address arg2) {
+        if (!header) {
+            return epoc::error_argument;
+        }
+
+        kernel::process *crr = kern->crr_process();
+
+        switch (header->opcode_) {
+        case debug_cmd_opcode_read:
+        case debug_cmd_opcode_write:
+            return debug_command_do_read_write(kern, header->thread_id_, arg0, arg1,
+                static_cast<std::int32_t>(arg2), (header->opcode_ == debug_cmd_opcode_write) ? true : false);
+
+        case debug_cmd_opcode_print:
+            return debug_command_do_print(kern, arg0);
+
+        default: {
+            LOG_ERROR("Unimplemented debug command opcode {}", header->opcode_);
+            break;
+        }
+        }
+
+        return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, btrace_out, const std::uint32_t a0, const std::uint32_t a1, const std::uint32_t a2,
@@ -4073,6 +4153,7 @@ namespace eka2l1::epoc {
         
         // User server calls
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
+        BRIDGE_REGISTER(0x800011, library_entry_point),
         BRIDGE_REGISTER(0x800015, library_entry_point_queries),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
         BRIDGE_REGISTER(0x80001C, process_find_next),
@@ -4119,7 +4200,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
-        BRIDGE_REGISTER(0xC00097, debug_print_eka1),
+        BRIDGE_REGISTER(0xC00097, debug_command_execute),
         BRIDGE_REGISTER(0xC0009F, set_exception_handler_eka1),
         BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
         BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),

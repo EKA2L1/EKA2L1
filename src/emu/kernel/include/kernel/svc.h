@@ -145,6 +145,17 @@ namespace eka2l1::epoc {
         address lib_of_func_ptr_;
     };
 
+    enum debug_cmd_opcode {
+        debug_cmd_opcode_read = 8,
+        debug_cmd_opcode_write = 9,
+        debug_cmd_opcode_print = 14
+    };
+
+    struct debug_cmd_header {
+        std::uint32_t opcode_;
+        std::uint32_t thread_id_;
+    };
+
     ///> @brief The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;
 
