@@ -38,15 +38,19 @@ namespace eka2l1 {
 
     etel_server::etel_server(eka2l1::system *sys)
         : service::typical_server(sys, get_etel_server_name_by_epocver(sys->get_symbian_version_use()))
-        , call_status_prop_(nullptr) {
+        , call_status_prop_(nullptr)
+        , network_bars_prop_(nullptr)
+        , battery_bars_prop_(nullptr)
+        , charger_status_prop_(nullptr) {
         init(sys->get_kernel_system());
     }
 
     void etel_server::init(kernel_system *kern) {
-        if (call_status_prop_) {
+        if (call_status_prop_ || network_bars_prop_ || battery_bars_prop_ || charger_status_prop_) {
             return;
         }
 
+        // Make call status property.
         call_status_prop_ = kern->create<service::property>();
         call_status_prop_->define(service::property_type::int_data, 4);
 
@@ -54,6 +58,33 @@ namespace eka2l1 {
         call_status_prop_->second = epoc::ETEL_PHONE_CURRENT_CALL_UID;
 
         call_status_prop_->set_int(epoc::etel_phone_current_call_none);
+
+        // Make network bars property
+        network_bars_prop_ = kern->create<service::property>();
+        network_bars_prop_->define(service::property_type::int_data, 4);
+
+        network_bars_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
+        network_bars_prop_->second = epoc::ETEL_PHONE_NETWORK_BARS_UID;
+
+        network_bars_prop_->set_int(epoc::ETEL_MAX_BAR_LEVEL * epoc::ETEL_BAR_MULTIPLIER);
+
+        // Make battery bars property.
+        battery_bars_prop_ = kern->create<service::property>();
+        battery_bars_prop_->define(service::property_type::int_data, 4);
+
+        battery_bars_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
+        battery_bars_prop_->second = epoc::ETEL_PHONE_BATTERY_BARS_UID;
+
+        battery_bars_prop_->set_int(epoc::ETEL_MAX_BAR_LEVEL * epoc::ETEL_BAR_MULTIPLIER);
+
+        // Make charger status property
+        charger_status_prop_ = kern->create<service::property>();
+        charger_status_prop_->define(service::property_type::int_data, 4);
+
+        charger_status_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
+        charger_status_prop_->second = epoc::ETEL_PHONE_CHARGER_STATUS_UID;
+
+        charger_status_prop_->set_int(epoc::etel_charger_status_connected);
     }
 
     void etel_server::connect(service::ipc_context &ctx) {

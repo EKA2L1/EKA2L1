@@ -66,6 +66,9 @@ namespace eka2l1 {
     class etel_server : public service::typical_server {
     protected:
         service::property *call_status_prop_;
+        service::property *network_bars_prop_;
+        service::property *battery_bars_prop_;
+        service::property *charger_status_prop_;
 
         void init(kernel_system *kern);
 

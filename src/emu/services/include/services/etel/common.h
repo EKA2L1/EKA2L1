@@ -310,5 +310,18 @@ namespace eka2l1::epoc {
         std::unique_ptr<etel_entity> entity_;
     };
 
+    enum etel_charger_status {
+        etel_charger_status_connected = 0,
+        etel_charger_status_disconnected = 1,
+        etel_charger_status_not_charging = 2
+    };
+
+    static constexpr std::uint32_t ETEL_PHONE_CHARGER_STATUS_UID = 0x100052C9;
     static constexpr std::uint32_t ETEL_PHONE_CURRENT_CALL_UID = 0x100052CB;
+    static constexpr std::uint32_t ETEL_PHONE_BATTERY_BARS_UID = 0x100052D3;
+    static constexpr std::uint32_t ETEL_PHONE_NETWORK_BARS_UID = 0x100052D4;
+
+    static constexpr std::uint32_t ETEL_MAX_BAR_LEVEL = 7;
+    static constexpr std::uint32_t ETEL_MIN_BAR_LEVEL = 0;
+    static constexpr std::uint32_t ETEL_BAR_MULTIPLIER = 14;
 }
