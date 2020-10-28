@@ -40,19 +40,23 @@ namespace eka2l1::drivers {
         switch (bpp) {
         case 8:
             format = texture_format::r;
+            internal_format = texture_format::r8;
             break;
 
         case 16:
             format = texture_format::rgb;
             data_type = texture_data_type::ushort_5_6_5;
+            internal_format = texture_format::rgb;
             break;
 
         case 24:
-            format = texture_format::bgr;
+            format = texture_format::rgb;
+            internal_format = texture_format::rgb;
             break;
 
         case 32:
             format = texture_format::bgra;
+            internal_format = texture_format::bgra;
             break;
 
         default:
@@ -204,24 +208,24 @@ namespace eka2l1::drivers {
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
             data_format, data_type, data);
 
-        if (bmp->bpp == 16) {
-            bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
-                channel_swizzle::red, channel_swizzle::one });
-        }
+        switch (bmp->bpp) {
+            case 8:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
+                                                channel_swizzle::red, channel_swizzle::red });
+                break;
 
-        switch (data_format) {
-        case texture_format::r:
-            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
-                channel_swizzle::red, channel_swizzle::red });
-            break;
+            case 16:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
+                                                channel_swizzle::blue, channel_swizzle::one });
+                break;
 
-        case texture_format::rgb:
-            bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
-                channel_swizzle::blue, channel_swizzle::one });
-            break;
+            case 24:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
+                                                channel_swizzle::red, channel_swizzle::one });
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
     }
 

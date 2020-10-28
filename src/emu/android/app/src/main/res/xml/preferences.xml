@@ -1,0 +1,9 @@
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="pref_enable_virtual_keyboard"
+        android:title="@string/enable_virtual_keyboard" />
+
+</PreferenceScreen>

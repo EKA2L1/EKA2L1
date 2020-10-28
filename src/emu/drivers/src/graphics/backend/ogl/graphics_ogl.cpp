@@ -36,6 +36,7 @@ namespace eka2l1::drivers {
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
         list_queue.max_pending_count_ = 128;
 
+#ifndef EKA2L1_PLATFORM_ANDROID
         std::vector<std::string> GL_REQUIRED_EXTENSIONS = {
             "GL_ARB_draw_elements_base_vertex"
         };
@@ -61,6 +62,7 @@ namespace eka2l1::drivers {
                 LOG_ERROR("- {}", ext_left);
             }
         }
+#endif
     }
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";

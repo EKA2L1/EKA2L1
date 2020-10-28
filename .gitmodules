@@ -55,3 +55,7 @@
 [submodule "src/emu/config/compat"]
 	path = src/emu/config/compat
 	url = https://github.com/EKA2L1/compat-config
+[submodule "dynarmic-android"]
+	path = src/external/dynarmic-android
+	url = https://github.com/citra-emu/dynarmic-android
+	branch = master
