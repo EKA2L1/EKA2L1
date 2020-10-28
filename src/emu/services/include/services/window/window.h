@@ -206,6 +206,7 @@ namespace eka2l1::epoc {
         void get_number_of_screen(service::ipc_context &ctx, ws_cmd &cmd);
         void add_raw_event(service::ipc_context &ctx, ws_cmd &cmd);
         void set_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         void add_redraw_listener(notify_info nof) {
@@ -447,6 +448,16 @@ namespace eka2l1 {
          * @param next_time    The interval between repeat event being generated, counting from the first repeat event.
          */
         void set_keyboard_repeat_rate(const std::uint64_t initial_time, const std::uint64_t next_time);
+
+        /**
+         * @brief Get the interval for repeat event to be generated.
+         * 
+         * All of time arguments are accounted in microseconds.
+         * 
+         * @param initial_time Reference to integer which will contain the delay to emit first repeat event after the first key event.
+         * @param next_time    Reference to integer which will contain the interval between repeat event being generated, counting from the first repeat event.
+         */
+        void get_keyboard_repeat_rate(std::uint64_t &initial_time, std::uint64_t &next_time);
 
         drivers::graphics_driver *get_graphics_driver();
         ntimer *get_ntimer();

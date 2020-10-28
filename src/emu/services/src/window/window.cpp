@@ -803,6 +803,25 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
     
+    void window_server_client::get_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd) {
+        std::uint64_t initial_time = 0;
+        std::uint64_t next_time = 0;
+
+        get_ws().get_keyboard_repeat_rate(initial_time, next_time);
+
+        struct keyboard_repeat_rate_return_struct {
+            std::uint32_t initial_32_;
+            std::uint32_t next_32_;
+        } value_return;
+
+        value_return.initial_32_ = static_cast<std::uint32_t>(initial_time);
+        value_return.next_32_ = static_cast<std::uint32_t>(next_time);
+
+        ctx.write_data_to_descriptor_argument<keyboard_repeat_rate_return_struct>(reply_slot,
+            value_return);
+        ctx.complete(epoc::error_none);
+    }
+
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
         // LOG_TRACE("Window client op: {}", (int)cmd.header.op);
@@ -988,6 +1007,10 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_set_keyboard_repeat_rate:
             set_keyboard_repeat_rate(ctx, cmd);
+            break;
+
+        case ws_cl_op_get_keyboard_repeat_rate:
+            get_keyboard_repeat_rate(ctx, cmd);
             break;
 
         default:
@@ -1840,6 +1863,11 @@ namespace eka2l1 {
         next_repeat_delay_ = next_time;
     }
 
+    void window_server::get_keyboard_repeat_rate(std::uint64_t &initial_time, std::uint64_t &next_time) {
+        initial_time = initial_repeat_delay_;
+        next_time = next_repeat_delay_;
+    }
+    
     void window_server::send_event_to_window_group(epoc::window_group *group, const epoc::event &evt) {
         epoc::window_server_client *cli = group->client;
 
