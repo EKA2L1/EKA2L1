@@ -70,6 +70,7 @@ void CMMFMdaOutputBufferQueue::WriteAndWait() {
 }
 
 CMMFMdaOutputBufferQueue::~CMMFMdaOutputBufferQueue() {
+    Deque();
 }
 
 void CMMFMdaOutputBufferQueue::RunL() {
@@ -126,6 +127,8 @@ CMMFMdaOutputOpen::CMMFMdaOutputOpen()
 }
 
 CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
+    iIsFixup = EFalse;
+    Deque();
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {

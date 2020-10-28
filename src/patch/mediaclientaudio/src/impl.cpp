@@ -38,6 +38,8 @@ CMMFMdaAudioOpenComplete::CMMFMdaAudioOpenComplete()
 }
 
 CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
+    iIsFixup = EFalse;
+    Deque();
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
@@ -102,6 +104,7 @@ void CMMFMdaAudioUtility::TransitionState(const TMdaState aNewState, const TInt 
 }
 
 CMMFMdaAudioUtility::~CMMFMdaAudioUtility() {
+    Deque();
     EAudioPlayerDestroy(0, iDispatchInstance);
 }
 
