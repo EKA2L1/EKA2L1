@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EKA2L1</string>
+    <string name="error">Ошибка</string>
+    <string name="no_data">Нет данных</string>
+    <string name="search">Поиск</string>
+    <string name="about">О программе</string>
+    <string name="settings">Настройки</string>
+    <string name="packages">Пакеты</string>
+    <string name="devices">Устройства</string>
+    <string name="processing">Обработка...</string>
+    <string name="completed">Выполнено!</string>
+    <string name="remove">Удалить</string>
+    <string name="mount_sd">Подключить MMC/SD карту</string>
+    <string name="no_devices_found">Устройства не найдены</string>
+    <string name="install">Установить</string>
+    <string name="path_to_rpkg">Путь к RPKG</string>
+    <string name="path_to_rom">Путь к ROM</string>
+    <string name="raw_dump">Сырой дамп</string>
+    <string name="path_to_raw_dump">Путь к сырому дампу</string>
+    <string name="install_method">Способ установки</string>
+    <string name="enable_virtual_keyboard">Включить виртуальную клавиатуру</string>
+    <string name="layout_edit_finished">Редактирование раскладки завершено</string>
+    <string name="layout_edit_finish">Завершить редактирование раскладки</string>
+    <string name="layout_edit_mode">Режим редактирования раскладки</string>
+    <string name="layout_scale_mode">Режим масштабирования раскладки</string>
+    <string name="layout_switch">Сменить раскладку</string>
+    <string name="hide_buttons">Скрыть кнопки</string>
+    <string name="confirmation_required">Требуется подтверждение</string>
+    <string name="force_close_confirmation">Принудительное закрытие приложения может привести к потере данных или даже полной его неработоспособности!\nПродолжить?</string>
+    <string name="version">Версия: </string>
+</resources>
