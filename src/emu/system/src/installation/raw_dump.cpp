@@ -31,7 +31,7 @@ namespace eka2l1::loader {
         std::atomic<int> &res) {
         const std::string temp_path = add_path(devices_z_path, "temp\\");
         // Rename all file to lowercase
-        common::copy_folder(path_to_dump, temp_path, common::FOLDER_COPY_FLAG_LOWERCASE_NAME, nullptr);
+        common::copy_folder(path_to_dump, temp_path, common::FOLDER_COPY_FLAG_LOWERCASE_NAME, &res);
 
         const epocver ver = determine_rpkg_symbian_version(temp_path);
         std::string platform_name, manufacturer, model;
