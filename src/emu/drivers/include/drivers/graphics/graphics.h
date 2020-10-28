@@ -99,6 +99,10 @@ namespace eka2l1::drivers {
             return api_;
         }
 
+        virtual bool is_stricted() const {
+            return false;
+        }
+
         /**
          * \brief Set a hook when display function is called.
          *

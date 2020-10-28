@@ -32,37 +32,45 @@
 namespace eka2l1::drivers {
     ogl_graphics_driver::ogl_graphics_driver()
         : shared_graphics_driver(graphic_api::opengl)
-        , should_stop(false) {
+        , should_stop(false)
+        , is_gles(false) {
         init_graphics_library(eka2l1::drivers::graphic_api::opengl);
         list_queue.max_pending_count_ = 128;
 
-#ifndef EKA2L1_PLATFORM_ANDROID
-        std::vector<std::string> GL_REQUIRED_EXTENSIONS = {
-            "GL_ARB_draw_elements_base_vertex"
-        };
+        const GLubyte *ver_string = glGetString(GL_VERSION);
+        const char *gles_header = "OpenGL ES";
 
-        std::int32_t ext_count = 0;
-        glGetIntegerv(GL_NUM_EXTENSIONS, &ext_count);
-
-        for(std::int32_t i = 0; i < ext_count; i++) {
-            const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
-            auto ite = std::find(GL_REQUIRED_EXTENSIONS.begin(), GL_REQUIRED_EXTENSIONS.end(), 
-                std::string(reinterpret_cast<const char*>(next_extension)));
-
-            if (ite != GL_REQUIRED_EXTENSIONS.end()) {
-                GL_REQUIRED_EXTENSIONS.erase(ite);
-            }
+        if (ver_string && (strncmp(reinterpret_cast<const char*>(ver_string), gles_header, strlen(gles_header)) == 0)) {
+            is_gles = true;
         }
 
-        if (!GL_REQUIRED_EXTENSIONS.empty()) {
-            LOG_ERROR("Some OpenGL extensions are missing in order for the emulator to work.");
-            LOG_ERROR("Please upgrade your machine! Here is the list of missing extensions.");
+        if (!is_gles) {
+            std::vector<std::string> GL_REQUIRED_EXTENSIONS = {
+                "GL_ARB_draw_elements_base_vertex"
+            };
 
-            for (const auto &ext_left: GL_REQUIRED_EXTENSIONS) {
-                LOG_ERROR("- {}", ext_left);
+            std::int32_t ext_count = 0;
+            glGetIntegerv(GL_NUM_EXTENSIONS, &ext_count);
+
+            for(std::int32_t i = 0; i < ext_count; i++) {
+                const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
+                auto ite = std::find(GL_REQUIRED_EXTENSIONS.begin(), GL_REQUIRED_EXTENSIONS.end(), 
+                    std::string(reinterpret_cast<const char*>(next_extension)));
+
+                if (ite != GL_REQUIRED_EXTENSIONS.end()) {
+                    GL_REQUIRED_EXTENSIONS.erase(ite);
+                }
+            }
+
+            if (!GL_REQUIRED_EXTENSIONS.empty()) {
+                LOG_ERROR("Some OpenGL extensions are missing in order for the emulator to work.");
+                LOG_ERROR("Please upgrade your machine! Here is the list of missing extensions.");
+
+                for (const auto &ext_left: GL_REQUIRED_EXTENSIONS) {
+                    LOG_ERROR("- {}", ext_left);
+                }
             }
         }
-#endif
     }
 
     static constexpr const char *sprite_norm_v_path = "resources//sprite_norm.vert";

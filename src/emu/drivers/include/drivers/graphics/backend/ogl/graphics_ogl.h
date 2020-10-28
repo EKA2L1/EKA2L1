@@ -85,6 +85,8 @@ namespace eka2l1::drivers {
         ogl_state backup;
         std::atomic_bool should_stop;
 
+        bool is_gles;
+
         void do_init();
 
         void clear(command_helper &helper);
@@ -120,5 +122,9 @@ namespace eka2l1::drivers {
         void abort() override;
         void dispatch(command *cmd) override;
         void bind_swapchain_framebuf() override;
+
+        bool is_stricted() const override {
+            return is_gles;
+        }
     };
 }

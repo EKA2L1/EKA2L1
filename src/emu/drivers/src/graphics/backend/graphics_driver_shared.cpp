@@ -32,7 +32,7 @@
 
 namespace eka2l1::drivers {
     static void translate_bpp_to_format(const int bpp, texture_format &internal_format, texture_format &format,
-        texture_data_type &data_type) {
+        texture_data_type &data_type, const bool stricted) {
         // Hope the driver likes this, it always does.
         internal_format = texture_format::rgba;
         data_type = texture_data_type::ubyte;
@@ -40,23 +40,37 @@ namespace eka2l1::drivers {
         switch (bpp) {
         case 8:
             format = texture_format::r;
-            internal_format = texture_format::r8;
+
+            if (stricted)
+                internal_format = texture_format::r8;
+
             break;
 
         case 16:
             format = texture_format::rgb;
             data_type = texture_data_type::ushort_5_6_5;
-            internal_format = texture_format::rgb;
+
+            if (stricted)
+                internal_format = texture_format::rgb;
+
             break;
 
         case 24:
-            format = texture_format::rgb;
-            internal_format = texture_format::rgb;
+            if (stricted) {
+                format = texture_format::rgb;
+                internal_format = texture_format::rgb;
+            } else {
+                format = texture_format::bgr;
+            }
+
             break;
 
         case 32:
             format = texture_format::bgra;
-            internal_format = texture_format::bgra;
+
+            if (stricted)
+                internal_format = texture_format::bgra;
+
             break;
 
         default:
@@ -71,7 +85,7 @@ namespace eka2l1::drivers {
         texture_format data_format = texture_format::none;
         texture_data_type data_type = texture_data_type::ubyte;
 
-        translate_bpp_to_format(bpp, internal_format, data_format, data_type);
+        translate_bpp_to_format(bpp, internal_format, data_format, data_type, driver->is_stricted());
 
         texture->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, data_type, nullptr);
         texture->set_filter_minmag(false, drivers::filter_option::linear);
@@ -203,29 +217,49 @@ namespace eka2l1::drivers {
         texture_format data_format = texture_format::none;
         texture_data_type data_type = texture_data_type::ubyte;
 
-        translate_bpp_to_format(bmp->bpp, internal_format, data_format, data_type);
+        translate_bpp_to_format(bmp->bpp, internal_format, data_format, data_type, is_stricted());
 
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
             data_format, data_type, data);
 
-        switch (bmp->bpp) {
-            case 8:
-                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
-                                                channel_swizzle::red, channel_swizzle::red });
-                break;
+        if (is_stricted()) {
+            switch (bmp->bpp) {
+                case 8:
+                    bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
+                                                    channel_swizzle::red, channel_swizzle::red });
+                    break;
 
-            case 16:
-                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
-                                                channel_swizzle::blue, channel_swizzle::one });
-                break;
+                case 16:
+                    break;
 
-            case 24:
+                case 24:
+                    bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
+                                                    channel_swizzle::red, channel_swizzle::one });
+                    break;
+
+                default:
+                    break;
+            }
+        } else {
+            if (bmp->bpp == 16) {
                 bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
-                                                channel_swizzle::red, channel_swizzle::one });
+                    channel_swizzle::red, channel_swizzle::one });
+            }
+
+            switch (data_format) {
+            case texture_format::r:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
+                    channel_swizzle::red, channel_swizzle::red });
+                break;
+
+            case texture_format::rgb:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
+                    channel_swizzle::blue, channel_swizzle::one });
                 break;
 
             default:
                 break;
+            }
         }
     }
 
