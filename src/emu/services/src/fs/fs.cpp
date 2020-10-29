@@ -504,6 +504,8 @@ namespace eka2l1 {
             return;
         }
 
+        dir.value() = eka2l1::absolute_path(dir.value(), ss_path, true);
+
         bool res = false;
 
         if (*ctx->get_argument_value<std::int32_t>(1)) {
