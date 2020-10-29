@@ -386,15 +386,16 @@ namespace eka2l1::epoc::adapter {
                 info[i].x0 = rect_build[i].x;
                 info[i].y0 = rect_build[i].y;
                 info[i].x1 = rect_build[i].x + rect_build[i].w;
-                info[i].y1 = rect_build[i].y + rect_build[i].h;
+                info[i].y1 = rect_build[i].y + the_chars[i]->metric_->height_in_pixels_;
 
                 const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
                     the_chars[i]->metric_->right_adjust_in_pixels_;
 
                 info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
-                info[i].yoff = font_size - the_chars[i]->metric_->ascent_in_pixels_ * scale_factor;
+                info[i].yoff = -(the_chars[i]->metric_->ascent_in_pixels_ - the_chars[i]->metric_->height_in_pixels_) * scale_factor
+                    + font_size - the_chars[i]->metric_->height_in_pixels_;
                 info[i].xoff2 = info[i].xoff + scale_factor * target_width;
-                info[i].yoff2 =  info[i].yoff + font_size;
+                info[i].yoff2 =  info[i].yoff + (the_chars[i]->metric_->height_in_pixels_ * scale_factor);
                 info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
 
                 loader::gdr::bitmap &bmp = the_chars[i]->data_;
