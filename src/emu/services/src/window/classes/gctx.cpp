@@ -111,7 +111,7 @@ namespace eka2l1::epoc {
         eka2l1::rect area(top_left, bottom_right - top_left);
 
         // Add the baseline offset. Where text will sit on.
-        area.top.y += baseline_offset - text_font->of_info.metrics.ascent;
+        area.top.y += baseline_offset;
 
         if (align == epoc::text_alignment::right) {
             area.top.x -= margin;

@@ -392,8 +392,7 @@ namespace eka2l1::epoc::adapter {
                     the_chars[i]->metric_->right_adjust_in_pixels_;
 
                 info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
-                info[i].yoff = -(the_chars[i]->metric_->ascent_in_pixels_ - the_chars[i]->metric_->height_in_pixels_) * scale_factor
-                    + font_size - the_chars[i]->metric_->height_in_pixels_;
+                info[i].yoff = -(the_chars[i]->metric_->ascent_in_pixels_) * scale_factor;
                 info[i].xoff2 = info[i].xoff + scale_factor * target_width;
                 info[i].yoff2 =  info[i].yoff + (the_chars[i]->metric_->height_in_pixels_ * scale_factor);
                 info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
