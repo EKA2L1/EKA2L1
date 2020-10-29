@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EKA2L1</string>
+    <string name="app_name" translatable="false">EKA2L1</string>
     <string name="error">Error</string>
     <string name="no_data">No data</string>
     <string name="search">Search</string>
