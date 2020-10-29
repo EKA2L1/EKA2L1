@@ -69,6 +69,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     private OverlayView overlayView;
     private long uid;
     private boolean launched;
+    private boolean statusBarEnabled;
     private VirtualKeyboard keyboard;
     private float displayWidth;
     private float displayHeight;
@@ -89,6 +90,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean keyboardEnabled = sharedPreferences.getBoolean("pref_enable_virtual_keyboard", true);
+        statusBarEnabled = sharedPreferences.getBoolean("pref_enable_statusbar", false);
 
         if (keyboardEnabled) {
             keyboard = new VirtualKeyboard(this);
@@ -265,8 +267,10 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
 
     private void hideSystemUI() {
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        if (!statusBarEnabled) {
+            flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        }
         getWindow().getDecorView().setSystemUiVisibility(flags);
     }
 

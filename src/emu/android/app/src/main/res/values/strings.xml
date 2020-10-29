@@ -23,6 +23,7 @@
     <string name="install_method">Install method</string>
 
     <string name="enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="enable_statusbar">Enable statusbar</string>
 
     <string name="layout_edit_finished">Edit mode finished</string>
     <string name="layout_edit_finish">Finish edit mode</string>
