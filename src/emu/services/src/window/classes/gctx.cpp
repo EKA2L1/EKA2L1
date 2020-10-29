@@ -75,6 +75,7 @@ namespace eka2l1::epoc {
         viewport.size = attached_window->size;
 
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
+        cmd_builder->set_depth(false);
 
         if (attached_window->resize_needed) {
             // Try to resize our bitmap. My NVIDIA did forgive me if texture has same spec
@@ -84,6 +85,11 @@ namespace eka2l1::epoc {
 
         cmd_builder->set_viewport(viewport);
         cmd_builder->clear({ 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);
+
+        // Reset clipping. This is not mentioned in doc but is in official source code.
+        // See gc.cpp file. Opcode EWsGcOpActivate
+        clipping_rect.make_empty();
+        clipping_region.make_empty();
 
         do_submit_clipping();
     }
@@ -105,7 +111,7 @@ namespace eka2l1::epoc {
         eka2l1::rect area(top_left, bottom_right - top_left);
 
         // Add the baseline offset. Where text will sit on.
-        area.top.y += baseline_offset;
+        area.top.y += baseline_offset - text_font->of_info.metrics.ascent;
 
         if (align == epoc::text_alignment::right) {
             area.top.x -= margin;
