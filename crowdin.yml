@@ -5,8 +5,35 @@ files:
     translation: /src/emu/android/app/src/main/res/values-%android_code%/%original_file_name%
     languages_mapping:
       android_code:
+        af: af
+        ar: ar
+        az: az
+        bg: bg
+        bn: bn
+        ca: ca
+        cs: cs
+        da: da
+        nl: nl
+        fi: fi
+        fr: fr
+        de: de
+        el: el
+        fa: fa
         he: iw
+        hu: hu
         id: in
+        it: it
+        ja: ja
+        ko: ko
+        no: no
+        pl: pl
         pt-PT: pt
+        ro: ro
+        ru: ru
+        sr: sr
         es-ES: es
         sv-SE: sv
+        th: th
+        tr: tr
+        uk: uk
+        vi: vi
