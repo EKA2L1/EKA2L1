@@ -32,6 +32,11 @@ namespace eka2l1::drivers {
         , buffer_copied_userdata_(nullptr) {
     }
 
+    dsp_output_stream::dsp_output_stream()
+        : dsp_stream()
+        , volume_(50) {
+    }
+
     void dsp_stream::reset_stat() {
         samples_played_ = 0;
         samples_copied_ = 0;

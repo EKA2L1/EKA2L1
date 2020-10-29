@@ -113,6 +113,8 @@ namespace eka2l1::drivers {
         std::uint32_t volume_;
 
     public:
+        explicit dsp_output_stream();
+
         virtual ~dsp_output_stream() = default;
         virtual bool write(const std::uint8_t *data, const std::uint32_t data_size) = 0;
 

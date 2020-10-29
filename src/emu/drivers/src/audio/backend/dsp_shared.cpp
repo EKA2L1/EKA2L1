@@ -22,7 +22,8 @@
 
 namespace eka2l1::drivers {
     dsp_output_stream_shared::dsp_output_stream_shared(drivers::audio_driver *aud)
-        : aud_(aud)
+        : dsp_output_stream()
+        , aud_(aud)
         , pointer_(0)
         , virtual_stop(true) {
         last_frame_[0] = 0;
