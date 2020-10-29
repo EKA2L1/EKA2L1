@@ -26,14 +26,14 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 
 import com.github.eka2l1.applist.AppsListFragment;
+import com.github.eka2l1.base.BaseActivity;
 import com.github.eka2l1.emu.Emulator;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private static final int PERMISSION_REQUEST_CODE = 0;
 

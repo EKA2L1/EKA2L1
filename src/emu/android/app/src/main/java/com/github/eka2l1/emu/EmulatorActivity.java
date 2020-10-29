@@ -76,6 +76,8 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        setTheme(sharedPreferences.getString("pref_theme", "light"));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         FrameLayout layout = findViewById(R.id.emulator_container);
@@ -88,7 +90,6 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         surfaceView.setWillNotDraw(true);
         surfaceView.getHolder().addCallback(this);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean keyboardEnabled = sharedPreferences.getBoolean("pref_enable_virtual_keyboard", true);
         statusBarEnabled = sharedPreferences.getBoolean("pref_enable_statusbar", false);
 
@@ -145,6 +146,14 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    private void setTheme(String theme) {
+        if (theme.equals("dark")) {
+            setTheme(R.style.AppTheme_NoActionBar);
+        } else {
+            setTheme(R.style.AppTheme_Light_NoActionBar);
+        }
     }
 
     private void showExitConfirmation() {

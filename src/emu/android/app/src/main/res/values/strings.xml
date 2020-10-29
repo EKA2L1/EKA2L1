@@ -22,8 +22,11 @@
     <string name="path_to_raw_dump">Path to raw dump</string>
     <string name="install_method">Install method</string>
 
-    <string name="enable_virtual_keyboard">Enable virtual keyboard</string>
-    <string name="enable_statusbar">Enable statusbar</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
 
     <string name="layout_edit_finished">Edit mode finished</string>
     <string name="layout_edit_finish">Finish edit mode</string>

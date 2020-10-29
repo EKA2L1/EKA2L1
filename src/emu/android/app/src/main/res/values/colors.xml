@@ -6,8 +6,16 @@
 
     <color name="file_picker_accent">#ffb62e</color>
 
+    <!--light theme color-->
     <color name="light_color_primary">#212121</color>
     <color name="light_color_primary_dark">#1c1c1c</color>
     <color name="light_color_accent">#ff2e51</color>
     <color name="light_color_background">#fafafa</color>
+
+    <!--dark theme color-->
+    <color name="dark_color_primary">#262e37</color>
+    <color name="dark_color_primary_dark">#20272f</color>
+    <color name="dark_color_accent">#0099ff</color>
+    <color name="dark_color_background">#20272f</color>
+    <color name="dark_color_text_primary">#ffffff</color>
 </resources>
