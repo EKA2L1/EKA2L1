@@ -191,7 +191,7 @@ namespace eka2l1 {
 
         bool closed;
 
-        const char *translate_mode(int mode) {
+        const char *translate_mode(int mode, const bool reopen = false) {
             if (mode & READ_MODE) {
                 if (mode & BIN_MODE) {
                     if (mode & WRITE_MODE) {
@@ -206,10 +206,16 @@ namespace eka2l1 {
                 return "r";
             } else if (mode & WRITE_MODE) {
                 if (mode & BIN_MODE) {
-                    return "wb+";
+                    if (reopen)
+                        return "rb+";
+                    else
+                        return "wb+";
                 }
 
-                return "w";
+                if (reopen)
+                    return "w+";
+                else
+                    return "r+";
             } else if (mode & APPEND_MODE) {
                 if (mode & BIN_MODE) {
                     return "ab+";
@@ -221,7 +227,7 @@ namespace eka2l1 {
             return "";
         }
 
-        const char16_t *translate_mode16(int mode) {
+        const char16_t *translate_mode16(int mode, const bool reopen = false) {
             if (mode & READ_MODE) {
                 if (mode & BIN_MODE) {
                     if (mode & WRITE_MODE) {
@@ -236,10 +242,16 @@ namespace eka2l1 {
                 return u"r";
             } else if (mode & WRITE_MODE) {
                 if (mode & BIN_MODE) {
-                    return u"wb+";
+                    if (reopen)
+                        return u"rb+";
+                    else
+                        return u"wb+";
                 }
 
-                return u"w";
+                if (reopen)
+                    return u"w+";
+                else
+                    return u"r+";
             } else if (mode & APPEND_MODE) {
                 if (mode & BIN_MODE) {
                     return u"ab+";
@@ -385,7 +397,7 @@ namespace eka2l1 {
             const std::string path_utf8 = common::ucs2_to_utf8(physical_path);
 
             // Reopen the file again...
-            file = fopen(path_utf8.c_str(), translate_mode(fmode));
+            file = fopen(path_utf8.c_str(), translate_mode(fmode, true));
             fseek(file, static_cast<long>(saved_pos), SEEK_SET);
 
             return (err_code != 0) ? false : true;
