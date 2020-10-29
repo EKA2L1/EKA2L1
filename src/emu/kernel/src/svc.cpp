@@ -3002,6 +3002,21 @@ namespace eka2l1::epoc {
         return error_code;
     }
 
+    std::int32_t session_share_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        session_ptr ss = kern->get<service::session>(create_info->arg1_);
+        std::int32_t share = create_info->arg2_;
+        if (!ss) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        ss->set_access_type(kernel::access_type::global_access);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     std::int32_t thread_logon_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         // arg0 = thread handle, arg1 = request status
@@ -3409,6 +3424,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_create_session:
             return session_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_share_session:
+            return session_share_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_create_server_global:
             return server_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
