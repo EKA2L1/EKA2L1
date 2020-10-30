@@ -1412,6 +1412,8 @@ namespace eka2l1 {
             return;
         }
 
+        bool shipped = false;
+
         // Translate host event to guest event
         switch (input_event.type_) {
         case drivers::input_event_type::key:
@@ -1419,12 +1421,16 @@ namespace eka2l1 {
             key_shipper.add_new_event(guest_event);
             key_shipper.start_shipping();
 
+            shipped = true;
+
             break;
 
         case drivers::input_event_type::button:
             if (make_button_event(input_mapping.button_input_map, input_event, guest_event)) {
                 key_shipper.add_new_event(guest_event);
                 key_shipper.start_shipping();
+
+                shipped = true;
             }
 
             break;
@@ -1475,6 +1481,8 @@ namespace eka2l1 {
                     key_shipper.add_new_event(guest_event);
                     key_shipper.start_shipping();
                 }
+
+                shipped = true;
             }
 
             break;
@@ -1483,6 +1491,10 @@ namespace eka2l1 {
         default:
             LOG_ERROR("Unknown driver event type {}", static_cast<int>(input_event.type_));
             break;
+        }
+
+        if (shipped) {
+            kern->reset_inactivity_time();
         }
     }
 

@@ -81,7 +81,8 @@ namespace eka2l1 {
         , lang_(language::en)
         , global_data_chunk_(nullptr)
         , dll_global_data_chunk_(nullptr)
-        , dll_global_data_last_offset_(0) {
+        , dll_global_data_last_offset_(0)
+        , inactivity_starts_(0) {
         thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
@@ -1004,5 +1005,18 @@ namespace eka2l1 {
 
     void kernel_system::set_base_time(std::uint64_t time) {
         base_time_ = time;
+    }
+
+    std::uint32_t kernel_system::inactivity_time() {
+        if (!inactivity_starts_) {
+            inactivity_starts_ = timing_->microseconds();
+        }
+
+        return static_cast<std::uint32_t>((timing_->microseconds() - inactivity_starts_) /
+            common::microsecs_per_sec);
+    }
+
+    void kernel_system::reset_inactivity_time() {
+        inactivity_starts_ = timing_->microseconds();
     }
 }

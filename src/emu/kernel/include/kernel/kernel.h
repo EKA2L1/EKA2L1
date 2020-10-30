@@ -291,6 +291,8 @@ namespace eka2l1 {
         kernel::chunk* dll_global_data_chunk_;
         std::map<address, std::uint64_t> dll_global_data_offset_;
         std::uint32_t dll_global_data_last_offset_;
+        
+        std::uint64_t inactivity_starts_;
 
     protected:
         void setup_new_process(process_ptr pr);
@@ -653,5 +655,23 @@ namespace eka2l1 {
 
         address get_global_dll_space(const address handle, std::uint8_t **data_ptr = nullptr, std::uint32_t *size_of_data = nullptr);
         bool allocate_global_dll_space(const address handle, const std::uint32_t size, address &data_ptr_guest, std::uint8_t **data_ptr_host = nullptr);
+
+        /**
+         * @brief Get the inactivity time in seconds.
+         * 
+         * Inactivity time represents the amount of duration which this device has not received any physical
+         * input events.
+         * 
+         * @returns Inactivity time in seconds.
+         */
+        std::uint32_t inactivity_time();
+
+        /**
+         * @brief Reset the inactivity timer.
+         * 
+         * This will count as the device has received a fake physical input. And the timer
+         * will be reseted.
+         */
+        void reset_inactivity_time();
     };
 }
