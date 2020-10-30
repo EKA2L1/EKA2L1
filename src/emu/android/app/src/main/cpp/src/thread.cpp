@@ -31,8 +31,6 @@ namespace eka2l1::android {
     static constexpr const char *ui_thread_name = "UI thread";
     static constexpr const char *graphics_driver_thread_name = "Graphics thread";
 
-    common::semaphore pause_sema;
-
     static int graphics_driver_thread_initialization(emulator &state) {
         // Halloween decoration breath of the graphics
         eka2l1::common::set_thread_name(graphics_driver_thread_name);
@@ -59,11 +57,13 @@ namespace eka2l1::android {
             window->swap_buffer();
             window->poll_events();
 
-            if (state.should_emu_pause) {
+            if (state.should_graphics_pause) {
                 window->destroy_surface();
-                pause_sema.wait();
+                state.pause_graphics_sema.wait();
+
                 window->create_surface();
                 window->make_current();
+                state.pause_sema.notify();
             }
         });
         return 0;
@@ -233,7 +233,8 @@ namespace eka2l1::android {
 #endif
             if (state.should_emu_pause) {
                 state.symsys->pause();
-                pause_sema.wait();
+                state.should_graphics_pause = true;
+                state.pause_sema.wait();
                 state.symsys->unpause();
             }
         }
@@ -259,14 +260,16 @@ namespace eka2l1::android {
     }
 
     void init_threads(emulator &state) {
+        state.should_graphics_pause = false;
         state.should_emu_pause = false;
         // Continue graphics initialization
         state.graphics_sema.notify();
     }
 
     void start_threads(emulator &state) {
+        state.should_graphics_pause = false;
         state.should_emu_pause = false;
-        pause_sema.notify();
+        state.pause_graphics_sema.notify();
     }
 
     void pause_threads(emulator &state) {
