@@ -15,5 +15,9 @@
         android:defaultValue="false"
         android:key="pref_enable_statusbar"
         android:title="@string/pref_enable_statusbar" />
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="pref_enable_wakelock"
+        android:title="@string/pref_wakelock" />
 
 </PreferenceScreen>

@@ -27,6 +27,7 @@
     <string name="pref_theme_dark">Dark</string>
     <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
     <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
 
     <string name="layout_edit_finished">Edit mode finished</string>
     <string name="layout_edit_finish">Finish edit mode</string>

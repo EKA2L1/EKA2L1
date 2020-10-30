@@ -91,6 +91,10 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         surfaceView.getHolder().addCallback(this);
 
         boolean keyboardEnabled = sharedPreferences.getBoolean("pref_enable_virtual_keyboard", true);
+        boolean wakelockEnabled = sharedPreferences.getBoolean("pref_enable_wakelock", false);
+        if (wakelockEnabled) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
         statusBarEnabled = sharedPreferences.getBoolean("pref_enable_statusbar", false);
 
         if (keyboardEnabled) {
