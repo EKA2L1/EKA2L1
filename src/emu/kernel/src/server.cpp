@@ -143,6 +143,7 @@ namespace eka2l1 {
                     msg->own_thr, kernel::owner_type::thread);
 
                 std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
+                msg->thread_handle_low = dat_hle->client_thread_handle;
             } else {
                 message2 *dat_hle = request_data.get(request_own_thread->owning_process());
 

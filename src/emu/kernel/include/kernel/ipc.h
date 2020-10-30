@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <kernel/common.h>
+
 #include <mem/ptr.h>
 #include <memory>
 
@@ -81,6 +83,7 @@ namespace eka2l1 {
     }
 
     enum class ipc_message_status {
+        none,
         delivered,
         accepted,
         completed
@@ -95,15 +98,15 @@ namespace eka2l1 {
         int function;
         ipc_arg args;
         service::session *msg_session;
-        int session_ptr_lle = 0; // This should be null because the server check for it
+        int session_ptr_lle; // This should be null because the server check for it
 
         eka2l1::ptr<epoc::request_status> request_sts;
 
         // Status of the message, if it's accepted or delivered
         ipc_message_status msg_status;
-        uint32_t id;
-
+        std::uint32_t id;
         std::uint32_t attrib = 0;
+        kernel::handle thread_handle_low = 0;
 
         enum {
             MSG_ATTRIB_LOCK_FREE = 0x1
@@ -123,9 +126,7 @@ namespace eka2l1 {
             return attrib & MSG_ATTRIB_LOCK_FREE;
         }
 
-        ipc_msg() {}
-        ipc_msg(kernel::thread *own)
-            : own_thr(own) {}
+        explicit ipc_msg(kernel::thread *own);
     };
 
     using ipc_msg_ptr = std::shared_ptr<ipc_msg>;

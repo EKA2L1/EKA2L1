@@ -52,4 +52,16 @@ namespace eka2l1 {
     ipc_arg_type ipc_arg::get_arg_type(int slot) {
         return static_cast<ipc_arg_type>((flag >> (slot * 3)) & 7);
     }
+
+    ipc_msg::ipc_msg(kernel::thread *own)
+        : own_thr(own)
+        , function(0)
+        , msg_session(nullptr)
+        , session_ptr_lle(0)
+        , request_sts(0)
+        , msg_status(ipc_message_status::none)
+        , id(0)
+        , attrib(0)
+        , thread_handle_low(0) {
+    }
 }

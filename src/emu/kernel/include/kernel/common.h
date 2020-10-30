@@ -48,6 +48,10 @@ namespace eka2l1::hle {
 }
 
 namespace eka2l1::kernel {
+    using handle = std::uint32_t;
+    using uid = std::uint64_t;
+    using uid_eka1 = std::uint32_t;
+
     enum class entity_exit_type {
         kill = 0,
         terminate = 1,

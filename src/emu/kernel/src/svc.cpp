@@ -613,6 +613,9 @@ namespace eka2l1::epoc {
             msg->own_thr->signal_request();
         }
 
+        if (msg->thread_handle_low) {
+            kern->close(msg->thread_handle_low);
+        }
 
         if (kern->get_config()->log_ipc)
             LOG_TRACE("Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
