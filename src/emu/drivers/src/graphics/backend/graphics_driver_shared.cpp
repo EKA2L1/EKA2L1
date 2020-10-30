@@ -727,7 +727,10 @@ namespace eka2l1::drivers {
         if (final_result == NFD_OKAY) {
             (*callback)(out_path);
         } else {
-            LOG_ERROR("Error happened when using native dialog: {}", static_cast<int>(final_result));
+            if (final_result != NFD_CANCEL) {
+                LOG_ERROR("Error happened when using native dialog: {}, message: {}",
+                    static_cast<int>(final_result), NFD_GetError());
+            }
         }
 
         free(out_path);
