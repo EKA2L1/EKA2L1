@@ -3004,8 +3004,8 @@ namespace eka2l1::epoc {
 
     std::int32_t session_share_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg1 = session handle, arg2 = TAttachMode
         session_ptr ss = kern->get<service::session>(create_info->arg1_);
-        std::int32_t share = create_info->arg2_;
         if (!ss) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
             return epoc::error_bad_handle;
