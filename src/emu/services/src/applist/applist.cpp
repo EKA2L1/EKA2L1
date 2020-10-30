@@ -636,6 +636,25 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void applist_server::is_program(service::ipc_context &ctx) {
+        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(0);
+
+        if (!path.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+        
+        hle::lib_manager *lmngr = kern->get_lib_manager();
+        std::int32_t is_program = false;
+
+        if (lmngr->load(path.value())) {
+            is_program = true;
+        }
+
+        ctx.write_data_to_descriptor_argument<std::int32_t>(1, is_program);
+        ctx.complete(epoc::error_none);
+    }
+
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver) {
     }
@@ -649,6 +668,10 @@ namespace eka2l1 {
     
             case applist_request_oldarch_start_app:
                 server<applist_server>()->launch_app(*ctx);
+                break;
+
+            case applist_request_oldarch_is_program:
+                server<applist_server>()->is_program(*ctx);
                 break;
 
             case applist_request_oldarch_app_icon_by_uid_and_size:

@@ -257,6 +257,7 @@ namespace eka2l1 {
         void get_app_icon(service::ipc_context &ctx);
                 
         void launch_app(service::ipc_context &ctx);
+        void is_program(service::ipc_context &ctx);
 
         void connect(service::ipc_context &ctx) override;
 
