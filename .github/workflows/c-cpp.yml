@@ -46,6 +46,7 @@ jobs:
     steps:
       - name: Set up build environment (macos-latest)
         run: |
+          sudo xcode-select -s "/Applications/Xcode_11.7.app"
           brew install ccache
           echo "::add-path::/usr/local/opt/ccache/libexec"
           echo "::set-env name=CCACHE_DIR::/tmp/ccache"
