@@ -22,6 +22,7 @@ package com.github.eka2l1;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -55,6 +56,7 @@ public class MainActivity extends BaseActivity {
 
     private void initialize() {
         Emulator.initializeFolders(this);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
         AppsListFragment appsListFragment = new AppsListFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
