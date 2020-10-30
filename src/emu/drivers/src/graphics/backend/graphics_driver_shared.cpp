@@ -230,6 +230,8 @@ namespace eka2l1::drivers {
                     break;
 
                 case 16:
+                    bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
+                                                    channel_swizzle::blue, channel_swizzle::one });
                     break;
 
                 case 24:
