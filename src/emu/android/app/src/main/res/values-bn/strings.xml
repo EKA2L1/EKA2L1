@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">ত্রুটি</string>
+    <string name="no_data">কোন তথ্য-উপাত্ত নেই</string>
+    <string name="search">অনুসন্ধান</string>
+    <string name="about">সম্বন্ধে</string>
+    <string name="settings">সেটিংস</string>
+    <string name="packages">প্যাকেজসমূহ</string>
+    <string name="devices">ডিভাইসসমূহ</string>
+    <string name="processing">প্রক্রিয়া চলছে...</string>
+    <string name="completed">সম্পন্ন হয়েছে!</string>
+    <string name="remove">সরিয়ে ফেলুন</string>
+    <string name="mount_sd">এমএমসি/এসডি কার্ড মাউন্ট করুন</string>
+    <string name="no_devices_found">কোন ডিভাইস খুঁজে পাওয়া যায় নি</string>
+    <string name="install">ইনস্টল</string>
+    <string name="path_to_rpkg">RPKG খোঁজার স্থান</string>
+    <string name="path_to_rom">ROM খোঁজার স্থান</string>
+    <string name="raw_dump">অমিশ্রিত ডাম্প</string>
+    <string name="path_to_raw_dump">অমিশ্রিত ডাম্প খোঁজার স্থান</string>
+    <string name="install_method">ইনস্টল পদ্ধতি</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
+    <string name="layout_edit_finished">সম্পাদনা মোডে কাজ শেষ</string>
+    <string name="layout_edit_finish">সম্পাদন মোড শেষ করুন</string>
+    <string name="layout_edit_mode">কি লেআউট সম্পাদন মোড</string>
+    <string name="layout_scale_mode">কি লেআউট পুনঃআকৃতি মোড</string>
+    <string name="layout_switch">কি লেআউট বদলান</string>
+    <string name="hide_buttons">বাটনসমূহ লুকান</string>
+    <string name="confirmation_required">অনুমোদন প্রয়োজন</string>
+    <string name="force_close_confirmation">সরাসরি বন্ধ করার ফলে ডাটা ক্ষতিগ্রস্ত অথবা সম্পূর্ণভাবে ভেঙ্গে যেতে পারে\nএগিয়ে যাবেন?</string>
+    <string name="version">সংস্করণ: </string>
+</resources>
