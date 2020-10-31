@@ -19,10 +19,13 @@
 
 package com.github.eka2l1.filepicker;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
+import androidx.preference.PreferenceManager;
 
+import com.github.eka2l1.R;
 import com.nononsenseapps.filepicker.AbstractFilePickerActivity;
 import com.nononsenseapps.filepicker.AbstractFilePickerFragment;
 
@@ -37,6 +40,13 @@ public class FilteredFilePickerActivity extends AbstractFilePickerActivity<File>
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String theme = preferences.getString("pref_theme", "light");
+        if ("dark".equals(theme)) {
+            setTheme(R.style.FilePickerTheme);
+        } else {
+            setTheme(R.style.FilePickerTheme_Light);
+        }
         super.onCreate(savedInstanceState);
         extensions = getIntent().getStringArrayExtra(EXTRA_EXTENSIONS);
         if (extensions == null) {

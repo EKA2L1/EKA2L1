@@ -69,12 +69,15 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     private OverlayView overlayView;
     private long uid;
     private boolean launched;
+    private boolean statusBarEnabled;
     private VirtualKeyboard keyboard;
     private float displayWidth;
     private float displayHeight;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        setTheme(sharedPreferences.getString("pref_theme", "light"));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         FrameLayout layout = findViewById(R.id.emulator_container);
@@ -87,8 +90,12 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         surfaceView.setWillNotDraw(true);
         surfaceView.getHolder().addCallback(this);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean keyboardEnabled = sharedPreferences.getBoolean("pref_enable_virtual_keyboard", true);
+        boolean wakelockEnabled = sharedPreferences.getBoolean("pref_enable_wakelock", false);
+        if (wakelockEnabled) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+        statusBarEnabled = sharedPreferences.getBoolean("pref_enable_statusbar", false);
 
         if (keyboardEnabled) {
             keyboard = new VirtualKeyboard(this);
@@ -143,6 +150,14 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    private void setTheme(String theme) {
+        if (theme.equals("dark")) {
+            setTheme(R.style.AppTheme_NoActionBar);
+        } else {
+            setTheme(R.style.AppTheme_Light_NoActionBar);
+        }
     }
 
     private void showExitConfirmation() {
@@ -265,8 +280,10 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
 
     private void hideSystemUI() {
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        if (!statusBarEnabled) {
+            flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        }
         getWindow().getDecorView().setSystemUiVisibility(flags);
     }
 

@@ -66,6 +66,7 @@ namespace eka2l1::android {
 
         std::atomic<bool> should_emu_quit;
         std::atomic<bool> should_emu_pause;
+        std::atomic<bool> should_graphics_pause;
         std::atomic<bool> surface_inited;
         std::atomic<bool> should_ui_quit;
         std::atomic<bool> stage_two_inited;
@@ -73,6 +74,8 @@ namespace eka2l1::android {
         bool first_time;
 
         common::semaphore graphics_sema;
+        common::semaphore pause_sema;
+        common::semaphore pause_graphics_sema;
 
         config::state conf;
         window_server *winserv;

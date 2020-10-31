@@ -126,7 +126,8 @@ namespace eka2l1::epoc {
             execute_close_debug = 0x40,
             execute_create_chunk_double_ended = 0x4C,
             execute_create_chunk_double_ended_global = 0x4D,
-            execute_free_up_system = 0x52           ///< Free system memory (Unconfirmed).
+            execute_free_up_system = 0x52,           ///< Free system memory (Unconfirmed).
+            execute_share_session = 0x54
         };
 
         std::uint32_t arg0_;

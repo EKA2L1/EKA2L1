@@ -493,7 +493,8 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpSetExtent: {
+        case EWsWinOpSetExtent:
+        case EWsWinOpSetExtentErr: {
             ws_cmd_set_extent *extent = reinterpret_cast<decltype(extent)>(cmd.data_ptr);
             set_extent(extent->pos, extent->size);
             ctx.complete(epoc::error_none);
