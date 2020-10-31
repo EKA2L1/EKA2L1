@@ -121,8 +121,14 @@ namespace eka2l1 {
         void file_att(service::ipc_context *ctx);
         void file_set_att(service::ipc_context *ctx);
 
-        void new_file_subsession(service::ipc_context *ctx, bool overwrite = false,
-            bool temporary = false);
+        enum exist_check_mode {
+            exist_mode_dont_care = 0,
+            exist_mode_neccessary = 1,
+            exist_mode_must_not = 2
+        };
+
+        void new_file_subsession(service::ipc_context *ctx, const exist_check_mode existence,
+            bool overwrite = false, bool temporary = false);
 
         void file_size(service::ipc_context *ctx);
         void file_set_size(service::ipc_context *ctx);

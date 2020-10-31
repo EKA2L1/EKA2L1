@@ -519,31 +519,11 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_open(service::ipc_context *ctx) {
-        std::optional<std::u16string> name_res = ctx->get_argument_value<std::u16string>(0);
-        std::optional<int> open_mode_res = ctx->get_argument_value<std::int32_t>(1);
-
-        if (!name_res || !open_mode_res) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
-
-        // LOG_TRACE("Opening exist {}", common::ucs2_to_utf8(*name_res));
-
-        *name_res = get_full_symbian_path(ss_path, name_res.value());
-
-        // Don't open file if it doesn't exist
-        if (!ctx->sys->get_io_system()->exist(*name_res)) {
-            LOG_TRACE("IO component not exists: {} {}", common::ucs2_to_utf8(*name_res), ctx->msg->function);
-
-            ctx->complete(epoc::error_not_found);
-            return;
-        }
-
-        new_file_subsession(ctx);
+        new_file_subsession(ctx, exist_mode_neccessary, false);
     }
 
     void fs_server_client::file_replace(service::ipc_context *ctx) {
-        new_file_subsession(ctx, true);
+        new_file_subsession(ctx, exist_mode_dont_care, true);
     }
 
     void fs_server_client::file_temp(service::ipc_context *ctx) {
@@ -588,28 +568,11 @@ namespace eka2l1 {
 
         // Arg2 take the temp path
         ctx->write_arg(2, full_path);
-
         ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_create(service::ipc_context *ctx) {
-        std::optional<std::u16string> name_res = ctx->get_argument_value<std::u16string>(0);
-        std::optional<std::int32_t> open_mode_res = ctx->get_argument_value<std::int32_t>(1);
-
-        if (!name_res || !open_mode_res) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
-
-        *name_res = get_full_symbian_path(ss_path, name_res.value());
-
-        // If the file already exist, stop
-        if (ctx->sys->get_io_system()->exist(*name_res)) {
-            ctx->complete(epoc::error_already_exists);
-            return;
-        }
-
-        new_file_subsession(ctx, true);
+        new_file_subsession(ctx, exist_mode_must_not, true);
     }
 
     void fs_server_client::file_duplicate(service::ipc_context *ctx) {
@@ -741,7 +704,8 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void fs_server_client::new_file_subsession(service::ipc_context *ctx, bool overwrite, bool temporary) {
+    void fs_server_client::new_file_subsession(service::ipc_context *ctx, const exist_check_mode existence,
+        bool overwrite, bool temporary) {
         std::optional<std::u16string> name_res = ctx->get_argument_value<std::u16string>(0);
         std::optional<std::int32_t> open_mode_res = ctx->get_argument_value<std::int32_t>(1);
 
@@ -753,11 +717,13 @@ namespace eka2l1 {
         *name_res = get_full_symbian_path(ss_path, *name_res);
         std::string name_utf8 = common::ucs2_to_utf8(*name_res);
 
+        io_system *io = ctx->sys->get_io_system();
+
         {
             auto file_dir = eka2l1::file_directory(*name_res);
 
             // Do a check to return epoc::error_path_not_found
-            if (!ctx->sys->get_io_system()->exist(file_dir)) {
+            if (!io->exist(file_dir)) {
                 LOG_TRACE("Base directory of file {} not found", name_utf8);
 
                 ctx->complete(epoc::error_path_not_found);
@@ -765,8 +731,25 @@ namespace eka2l1 {
             }
         }
 
-        LOG_INFO("Opening file: {}, raw mode {}", name_utf8, open_mode_res.value());
+        const bool is_it_avail = io->exist(name_res.value());
 
+        if (is_it_avail && (existence == exist_mode_must_not)) {
+            LOG_ERROR("Trying to open existing file: {}, while the requirement open mode forbidded this!",
+                name_utf8);
+
+            ctx->complete(epoc::error_already_exists);
+            return;
+        }
+
+        if (!is_it_avail && (existence == exist_mode_neccessary)) {
+            LOG_ERROR("Trying to open a non-existence file: {} while the open mode requires its availbility!",
+                name_utf8);
+
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        LOG_INFO("Opening file: {}, raw mode {}", name_utf8, open_mode_res.value());
         int handle = new_node(ctx->sys->get_io_system(), ctx->msg->own_thr, *name_res,
             *open_mode_res, overwrite, temporary);
 
