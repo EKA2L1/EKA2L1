@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">EKA2L1</string>
     <string name="error">Error</string>
     <string name="no_data">No hay datos</string>
     <string name="search">Buscar</string>
@@ -19,14 +18,19 @@
     <string name="raw_dump">Raw dump</string>
     <string name="path_to_raw_dump">Directorio al raw dump</string>
     <string name="install_method">Método de instalación</string>
-    <string name="enable_virtual_keyboard">Habilitar teclado virtual</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
     <string name="layout_edit_finished">Modo de edición finalizado</string>
     <string name="layout_edit_finish">Finalizar modo de edición</string>
-    <string name="layout_edit_mode">Modo de edición de posición de los controles</string>
-    <string name="layout_scale_mode">Modo de cambio de tamaño de los controles</string>
-    <string name="layout_switch">Alternar posición de controles</string>
-    <string name="hide_buttons">Hide buttons</string>
-    <string name="confirmation_required">Confirmation required</string>
-    <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
-    <string name="version">Version: </string>
+    <string name="layout_edit_mode">Cambiar posición de los controles</string>
+    <string name="layout_scale_mode">Cambiar tamaño de los controles</string>
+    <string name="layout_switch">Alternar controles</string>
+    <string name="hide_buttons">Ocultar botones</string>
+    <string name="confirmation_required">Se requiere confirmación</string>
+    <string name="force_close_confirmation">¡Forzar el cierre de la aplicación puede resultar en pérdida de datos o incluso dañarlos permanentemente!\n¿Desea proceder?</string>
+    <string name="version">Versión: </string>
 </resources>
