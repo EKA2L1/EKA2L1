@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">EKA2L1</string>
     <string name="error">错误</string>
     <string name="no_data">无数据</string>
     <string name="search">搜索</string>
@@ -19,7 +18,12 @@
     <string name="raw_dump">Raw dump</string>
     <string name="path_to_raw_dump">Path to raw dump</string>
     <string name="install_method">安装方式</string>
-    <string name="enable_virtual_keyboard">启用虚拟键盘</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
     <string name="layout_edit_finished">编辑完成</string>
     <string name="layout_edit_finish">保存键位</string>
     <string name="layout_edit_mode">编辑键位</string>
