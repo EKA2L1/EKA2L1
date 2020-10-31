@@ -320,6 +320,7 @@ namespace eka2l1::desktop {
         }
     }
     static const char *DEFAULT_FONT_PATH = "resources//mplus-1m-bold.ttf";
+    static const char *DEFAULT_BENGALI_FONT_PATH = "resources//NotoSansBengali-Bold.ttf";
     static const char *DEFAULT_CHINESE_SIMP_FONT_PATH = "resources//NotoSansSC-Bold.otf";
     static const float DEFAULT_FONT_SIZE = 18;
     static const float DEFAULT_CHINESE_FONT_SIZE = 20;
@@ -358,6 +359,10 @@ namespace eka2l1::desktop {
             0,
         };
 
+        static const ImWchar ranges_bengali[] = {
+            0x0980, 0x09FF
+        };
+
         state.normal_font = io.Fonts->AddFontFromFileTTF(DEFAULT_FONT_PATH, DEFAULT_FONT_SIZE, nullptr, ranges);
 
         if (!state.normal_font) {
@@ -369,6 +374,9 @@ namespace eka2l1::desktop {
 
         io.Fonts->AddFontFromFileTTF(DEFAULT_CHINESE_SIMP_FONT_PATH, DEFAULT_CHINESE_FONT_SIZE, &config,
             io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+
+        io.Fonts->AddFontFromFileTTF(DEFAULT_BENGALI_FONT_PATH, DEFAULT_CHINESE_FONT_SIZE, &config,
+            ranges_bengali);
 
         io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
         io.BackendPlatformName = "EKA2L1";
