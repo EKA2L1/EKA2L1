@@ -341,7 +341,7 @@ namespace eka2l1 {
         fbs_server *fbss{ nullptr };
         int input_handler_evt_;
 
-        bool key_block_active{ false };
+        bool key_block_active{ true };
 
         chunk_ptr ws_global_mem_chunk;
         chunk_ptr ws_code_chunk;
