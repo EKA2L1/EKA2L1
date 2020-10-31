@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Error</string>
+    <string name="no_data">No data</string>
+    <string name="search">Search</string>
+    <string name="about">About</string>
+    <string name="settings">Settings</string>
+    <string name="packages">Packages</string>
+    <string name="devices">Devices</string>
+    <string name="processing">Processing...</string>
+    <string name="completed">Completed!</string>
+    <string name="remove">Remove</string>
+    <string name="mount_sd">Mount MMC/SD card</string>
+    <string name="no_devices_found">No devices found</string>
+    <string name="install">Install</string>
+    <string name="path_to_rpkg">Path to RPKG</string>
+    <string name="path_to_rom">Path to ROM</string>
+    <string name="raw_dump">Raw dump</string>
+    <string name="path_to_raw_dump">Path to raw dump</string>
+    <string name="install_method">Install method</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
+    <string name="layout_edit_finished">Edit mode finished</string>
+    <string name="layout_edit_finish">Finish edit mode</string>
+    <string name="layout_edit_mode">Keylayout edit mode</string>
+    <string name="layout_scale_mode">Keylayout resize mode</string>
+    <string name="layout_switch">Switch keylayout</string>
+    <string name="hide_buttons">Hide buttons</string>
+    <string name="confirmation_required">Confirmation required</string>
+    <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
+    <string name="version">Version: </string>
+</resources>
