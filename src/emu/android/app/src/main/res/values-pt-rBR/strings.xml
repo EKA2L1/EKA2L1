@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">EKA2L1</string>
     <string name="error">Erro</string>
     <string name="no_data">Não há dados</string>
     <string name="search">Pesquisar</string>
@@ -19,7 +18,12 @@
     <string name="raw_dump">Dump Raw</string>
     <string name="path_to_raw_dump">Caminho para o dump bruto</string>
     <string name="install_method">Método de instalação</string>
-    <string name="enable_virtual_keyboard">Teclado virtual disponível</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
     <string name="layout_edit_finished">Modo de edição concluído</string>
     <string name="layout_edit_finish">Encerrar o modo de edição</string>
     <string name="layout_edit_mode">Editar teclas</string>
