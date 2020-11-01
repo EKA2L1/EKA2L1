@@ -421,6 +421,10 @@ namespace eka2l1::manager {
                 info.addr_ = cur_addr;
 
                 write_back_breakpoint(correspond->owning_process(), cur_addr);
+
+                correspond->get_thread_context().pc = addr;
+                
+                running_core->set_pc(addr);
                 running_core->imb_range(addr, last_breakpoint_script_size_);
             }
         }
