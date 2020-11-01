@@ -464,6 +464,8 @@ namespace eka2l1 {
             do {
                 kernel::thread *target_thread = E_LOFF(ite, kernel::thread, process_thread_link);
                 val += fmt::format("{:x},", target_thread->unique_id());
+
+                ite = ite->next;
             } while (ite != last);
         }
 
@@ -491,6 +493,8 @@ namespace eka2l1 {
                 kernel::thread *target_thread = E_LOFF(ite, kernel::thread, process_thread_link);
                 buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
                     target_thread->unique_id(), target_thread->name());
+
+                ite = ite->next;
             } while (ite != last);
         } else {
         }
