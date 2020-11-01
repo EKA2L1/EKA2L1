@@ -89,7 +89,7 @@ namespace eka2l1::config {
         bool stop_warn_touch_disabled { false };
         bool dump_imb_range_code { false };
         bool hide_mouse_in_screen_space { false };
-        bool nearest_neighbor_filtering { false };
+        bool nearest_neighbor_filtering { true };
         bool integer_scaling { true };
         bool cpu_load_save { true };
 
