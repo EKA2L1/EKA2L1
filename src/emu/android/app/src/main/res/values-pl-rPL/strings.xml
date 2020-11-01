@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EKA2L1</string>
+    <string name="error">Błąd</string>
+    <string name="no_data">Brak danych</string>
+    <string name="search">Wyszukaj</string>
+    <string name="about">O programie</string>
+    <string name="settings">Ustawienia</string>
+    <string name="packages">Paczki</string>
+    <string name="devices">Urządzenia</string>
+    <string name="processing">Przetwarzanie...</string>
+    <string name="completed">Ukończono!</string>
+    <string name="remove">Usuń</string>
+    <string name="mount_sd">Zamontuj kartę MMC/SD</string>
+    <string name="no_devices_found">Nie znaleziono urządzeń</string>
+    <string name="install">Zainstaluj</string>
+    <string name="path_to_rpkg">Ścieżka do RPKG</string>
+    <string name="path_to_rom">Ścieżka do ROM</string>
+    <string name="raw_dump">Surowy zrzut</string>
+    <string name="path_to_raw_dump">Ścieżka do surowego zrzutu</string>
+    <string name="install_method">Metoda instalacji</string>
+    <string name="enable_virtual_keyboard">Włącz klawiaturę wirtualną</string>
+    <string name="layout_edit_finished">Tryb edycji został zakończony</string>
+    <string name="layout_edit_finish">Zakończ tryb edycji</string>
+    <string name="layout_edit_mode">Tryb edycji układu klawiszy</string>
+    <string name="layout_scale_mode">Tryb zmiany układu klawiszy</string>
+    <string name="layout_switch">Zmień układ klawiszy</string>
+    <string name="hide_buttons">Ukryj przyciski</string>
+    <string name="confirmation_required">Wymagane potwierdzenie</string>
+    <string name="force_close_confirmation">Wymuszenie zamknięcia aplikacji może spowodować utratę danych lub nawet całkowicie ją zepsuć!\nKontynuować?</string>
+    <string name="version">Wersja: </string>
+</resources>

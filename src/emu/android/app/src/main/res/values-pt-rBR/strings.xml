@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Erro</string>
+    <string name="no_data">Não há dados</string>
+    <string name="search">Pesquisar</string>
+    <string name="about">Sobre</string>
+    <string name="settings">Configurações</string>
+    <string name="packages">Pacotes</string>
+    <string name="devices">Dispositivos</string>
+    <string name="processing">Processando...</string>
+    <string name="completed">Pronto!</string>
+    <string name="remove">Remover</string>
+    <string name="mount_sd">Montar cartões MMC/SD</string>
+    <string name="no_devices_found">Nenhum dispositivo encontrado</string>
+    <string name="install">Instalar</string>
+    <string name="path_to_rpkg">Caminho para RPKG</string>
+    <string name="path_to_rom">Caminho para a ROM</string>
+    <string name="raw_dump">Dump Raw</string>
+    <string name="path_to_raw_dump">Caminho para o dump bruto</string>
+    <string name="install_method">Método de instalação</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
+    <string name="layout_edit_finished">Modo de edição concluído</string>
+    <string name="layout_edit_finish">Encerrar o modo de edição</string>
+    <string name="layout_edit_mode">Editar teclas</string>
+    <string name="layout_scale_mode">Editar tamanho dos botões</string>
+    <string name="layout_switch">Alterar layout dos botões</string>
+    <string name="hide_buttons">Ocultar botões</string>
+    <string name="confirmation_required">Confirmação necessária</string>
+    <string name="force_close_confirmation">O fechamento forçado do aplicativo pode resultar em perda de dados ou até mesmo interrompê-lo completamente!\nContinuar?</string>
+    <string name="version">Versão: </string>
+</resources>

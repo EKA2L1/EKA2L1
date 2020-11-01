@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Lỗi</string>
+    <string name="no_data">Không có dữ liệu</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="about">Giới thiệu</string>
+    <string name="settings">Cài đặt</string>
+    <string name="packages">Các gói</string>
+    <string name="devices">Thiết bị</string>
+    <string name="processing">Đang xử lý...</string>
+    <string name="completed">Đã hoàn thành!</string>
+    <string name="remove">Xóa bỏ</string>
+    <string name="mount_sd">Lắp thẻ MMC/SD</string>
+    <string name="no_devices_found">Không tìm thấy thiết bị</string>
+    <string name="install">Cài đặt</string>
+    <string name="path_to_rpkg">Đường dẫn tới RPKG</string>
+    <string name="path_to_rom">Đường dẫn tới ROM</string>
+    <string name="raw_dump">Raw dump</string>
+    <string name="path_to_raw_dump">Path to raw dump</string>
+    <string name="install_method">Phương thức cài đặt</string>
+    <string name="pref_theme">Chủ đề</string>
+    <string name="pref_theme_light">Sáng</string>
+    <string name="pref_theme_dark">Tối</string>
+    <string name="pref_enable_virtual_keyboard">Hiển thị bàn phím ảo</string>
+    <string name="pref_enable_statusbar">Bật thanh trạng thái</string>
+    <string name="pref_wakelock">Giữ màn hình bật</string>
+    <string name="layout_edit_finished">Đã hoàn tất chế độ chỉnh sửa</string>
+    <string name="layout_edit_finish">Hoàn thành chế độ chỉnh sửa</string>
+    <string name="layout_edit_mode">Chế độ chỉnh sửa cấu trúc phím</string>
+    <string name="layout_scale_mode">Chế độ thay đổi kích cỡ cấu trúc phím</string>
+    <string name="layout_switch">Chuyển bố cục phím</string>
+    <string name="hide_buttons">Ẩn nút</string>
+    <string name="confirmation_required">Yêu cầu xác nhận</string>
+    <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
+    <string name="version">Phiên bản: </string>
+</resources>

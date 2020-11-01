@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Error</string>
+    <string name="no_data">No hay datos</string>
+    <string name="search">Buscar</string>
+    <string name="about">Acerca de</string>
+    <string name="settings">Configuración</string>
+    <string name="packages">Packages</string>
+    <string name="devices">Dispositivos</string>
+    <string name="processing">Procesando...</string>
+    <string name="completed">¡Completado!</string>
+    <string name="remove">Eliminar</string>
+    <string name="mount_sd">Montar tarjeta MMC/SD</string>
+    <string name="no_devices_found">Ningún dispositivo encontrado</string>
+    <string name="install">Instalar</string>
+    <string name="path_to_rpkg">Directorio del RPKG</string>
+    <string name="path_to_rom">Directorio de la ROM</string>
+    <string name="raw_dump">Raw dump</string>
+    <string name="path_to_raw_dump">Directorio al raw dump</string>
+    <string name="install_method">Método de instalación</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
+    <string name="layout_edit_finished">Modo de edición finalizado</string>
+    <string name="layout_edit_finish">Finalizar modo de edición</string>
+    <string name="layout_edit_mode">Cambiar posición de los controles</string>
+    <string name="layout_scale_mode">Cambiar tamaño de los controles</string>
+    <string name="layout_switch">Alternar controles</string>
+    <string name="hide_buttons">Ocultar botones</string>
+    <string name="confirmation_required">Se requiere confirmación</string>
+    <string name="force_close_confirmation">¡Forzar el cierre de la aplicación puede resultar en pérdida de datos o incluso dañarlos permanentemente!\n¿Desea proceder?</string>
+    <string name="version">Versión: </string>
+</resources>
