@@ -606,7 +606,7 @@ namespace eka2l1 {
 
         // Reserve some space in left and right. Observed shows some apps outwrite their
         // available data region, a little bit, hopefully.
-        static constexpr std::uint32_t MAXIMUM_RESERVED_HEIGHT = 100;
+        static constexpr std::uint32_t MAXIMUM_RESERVED_HEIGHT = 50;
         static constexpr std::uint32_t PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE = 15;
 
         std::uint32_t final_reserve_each_side = common::min<std::uint32_t>(MAXIMUM_RESERVED_HEIGHT,
