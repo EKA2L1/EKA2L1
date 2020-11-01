@@ -116,5 +116,9 @@ namespace eka2l1 {
 
             return true;
         }
+
+        int semaphore::count() const {
+            return avail_count;
+        }
     }
 }

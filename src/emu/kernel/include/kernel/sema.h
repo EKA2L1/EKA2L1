@@ -54,6 +54,8 @@ namespace eka2l1 {
             bool unsuspend_waiting_thread(thread *thr);
 
             void priority_change();
+
+            int count() const;
         };
     }
 }

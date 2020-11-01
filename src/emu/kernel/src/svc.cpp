@@ -1233,6 +1233,16 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, semaphore_count, kernel::handle h) {
+        sema_ptr sema = kern->get<kernel::semaphore>(h);
+
+        if (!sema) {
+            return epoc::error_bad_handle;
+        }
+
+        return sema->count();
+    }
+
     BRIDGE_FUNC(void, semaphore_signal, kernel::handle h) {
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
@@ -1244,6 +1254,16 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, semaphore_signal_n, kernel::handle h, std::int32_t sig_count) {
+        sema_ptr sema = kern->get<kernel::semaphore>(h);
+
+        if (!sema) {
+            return;
+        }
+
+        sema->signal(sig_count);
+    }
+
+    BRIDGE_FUNC(void, semaphore_signal_n_eka1, std::int32_t sig_count, kernel::handle h) {
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
         if (!sema) {
@@ -3240,6 +3260,34 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t process_logon_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *pr = kern->get<kernel::process>(create_info->arg0_);
+        if (!pr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        pr->logon(create_info->arg1_, false);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t process_logon_cancel_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+                                    epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *pr = kern->get<kernel::process>(create_info->arg0_);
+        if (!pr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        pr->logon_cancel(create_info->arg1_, false);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     std::int32_t thread_open_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *target_process = target_thread->owning_process();
@@ -3462,6 +3510,12 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_rename_process:
             return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_logon_process:
+            return process_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_logon_cancel_process:
+            return process_logon_cancel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_panic_thread:
             return thread_panic_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -4156,6 +4210,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x19, mutex_wait),
         BRIDGE_REGISTER(0x1A, mutex_signal),
         BRIDGE_REGISTER(0x1B, process_id),
+        BRIDGE_REGISTER(0x29, semaphore_count),
         BRIDGE_REGISTER(0x2A, semaphore_wait),
         BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
@@ -4185,6 +4240,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80001C, process_find_next),
         BRIDGE_REGISTER(0x80001E, process_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
+        BRIDGE_REGISTER(0x80002C, semaphore_signal_n_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
         BRIDGE_REGISTER(0x800033, thread_find_next),
         BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
@@ -4215,6 +4271,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal),
         BRIDGE_REGISTER(0xC0002E, server_receive),
+        BRIDGE_REGISTER(0xC0002F, server_cancel),
         BRIDGE_REGISTER(0xC00030, set_session_ptr),
         BRIDGE_REGISTER(0xC00031, session_send_eka1),
         BRIDGE_REGISTER(0xC00034, thread_resume),
