@@ -68,7 +68,7 @@
     <string name="pref_general_utilities_string">工具</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">当鼠标在模拟器窗口内时隐藏光标</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">在您将鼠标与某一键位绑定时, 并且此游戏/应用有内键光标时很有用.\n按住ALT键以让鼠标光标保持可见.</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">启用最近邻域过滤</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">此过滤器将在下次模拟屏幕绘图时启用。</string>
     <string name="pref_general_utilities_integer_scaling_msg">启动整比缩放</string>
     <string name="pref_general_utilities_integer_scaling_tooltip">这是一种完美的像素缩放方式，可以大幅降低模糊程序。</string>
@@ -79,7 +79,7 @@
     <string name="pref_system_language_option_name">语言</string>
     <string name="pref_system_app_setting_sect_name">应用设置：</string>
     <string name="pref_system_time_delay_option_name">延迟时间</string>
-    <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
+    <string name="pref_system_setting_inheritance_option_name">设置继承</string>
     <string name="pref_system_setting_inheritance_tooltip_msg">如果启用此选项，此应用唤启的子进程将继承其设置。</string>
     <string name="pref_system_app_setting_save_done_msg">{} 的应用设置已保存到 {:X}</string>
     <string name="pref_system_app_setting_save_title">保存设置</string>
