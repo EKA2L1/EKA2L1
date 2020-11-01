@@ -239,13 +239,17 @@ namespace eka2l1 {
         bool support_dirty_bitmap;
         epoc::notify_info compress_done_nof;
 
-        explicit fbsbitmap(fbs_server *srv, epoc::bitwise_bitmap *bitmap, const bool shared, const bool support_dirty_bitmap)
+        std::uint32_t reserved_height_each_side_;
+
+        explicit fbsbitmap(fbs_server *srv, epoc::bitwise_bitmap *bitmap, const bool shared,
+            const bool support_dirty_bitmap, const std::uint32_t reserved_height_each_size = 0)
             : fbsobj(fbsobj_kind::bitmap)
             , bitmap_(bitmap)
             , serv_(srv)
             , shared_(shared)
             , clean_bitmap(nullptr)
-            , support_dirty_bitmap(support_dirty_bitmap) {
+            , support_dirty_bitmap(support_dirty_bitmap)
+            , reserved_height_each_side_(reserved_height_each_size) {
         }
 
         ~fbsbitmap() override;

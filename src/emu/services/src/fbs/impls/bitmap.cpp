@@ -324,7 +324,8 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        std::size_t size_when_compressed = 0;
+        std::size_t size_when_compressed = get_byte_width(mbmf_.sbm_headers[idx_].size_pixels.x,
+            mbmf_.sbm_headers[idx_].bit_per_pixels) * mbmf_.sbm_headers[idx_].size_pixels.y;
 
         if ((legacy_level() >= 2) && (mbmf_.sbm_headers[idx_].compression != epoc::bitmap_file_byte_rle_compression)
             && (mbmf_.sbm_headers[idx_].compression != epoc::bitmap_file_twelve_bit_rle_compression)) {
@@ -560,7 +561,9 @@ namespace eka2l1 {
             bws_bmp->offset_from_me_ = (err_code == fbs_load_data_err_small_bitmap);
 
             if (size_when_decomp) {
-                bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len + size_when_decomp);
+                bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len +
+                    size_when_decomp);
+
                 bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
             }
 
@@ -601,8 +604,26 @@ namespace eka2l1 {
 
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
 
+        // Reserve some space in left and right. Observed shows some apps outwrite their
+        // available data region, a little bit, hopefully.
+        static constexpr std::uint32_t MAXIMUM_RESERVED_HEIGHT = 100;
+        static constexpr std::uint32_t PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE = 15;
+
+        std::uint32_t final_reserve_each_side = common::min<std::uint32_t>(MAXIMUM_RESERVED_HEIGHT,
+            info.size_.y * PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE / 100);
+
+        eka2l1::vec2 size_reserved = info.size_;
+
+        // Data size fixed
+        if (info.data_size_) {
+            final_reserve_each_side = 0;
+        } else {
+            size_reserved.y += final_reserve_each_side * 2;
+        }
+
         // Calculate the size
-        std::size_t alloc_bytes = (info.data_size_ == 0) ? calculate_aligned_bitmap_bytes(info.size_, info.dpm_) : info.data_size_;
+        std::size_t alloc_bytes = (info.data_size_ == 0) ? calculate_aligned_bitmap_bytes(
+            size_reserved, info.dpm_) : info.data_size_;
         
         void *data = nullptr;
         std::uint8_t *base = nullptr;
@@ -629,10 +650,6 @@ namespace eka2l1 {
             }
         }
 
-        if (info.data_) {
-            std::memcpy(data, info.data_, alloc_bytes);
-        }
-
         loader::sbm_header header;
         header.compression = info.comp_;
         header.bitmap_size = static_cast<std::uint32_t>(alloc_bytes + sizeof(loader::sbm_header));
@@ -647,8 +664,17 @@ namespace eka2l1 {
         bws_bmp->offset_from_me_ = smol;
         bws_bmp->post_construct(this);
 
-        fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty);
+        // Skip reserved spaces.
+        const std::size_t reserved_bytes = (bws_bmp->byte_width_ * final_reserve_each_side);
 
+        bws_bmp->data_offset_ += static_cast<std::int32_t>(reserved_bytes);
+        data = reinterpret_cast<std::uint8_t*>(data) + reserved_bytes;
+
+        if (info.data_) {
+            std::memcpy(data, info.data_, alloc_bytes);
+        }
+
+        fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty, final_reserve_each_side);
         return bmp;
     }
 
@@ -657,15 +683,17 @@ namespace eka2l1 {
             return false;
         }
 
+        const std::size_t reserved_bytes = bmp->reserved_height_each_side_ * bmp->bitmap_->byte_width_;
+
         // First, free the bitmap pixels.
         if (bmp->bitmap_->offset_from_me_) {
-            if (!shared_chunk_allocator->free(bmp->bitmap_->data_pointer(base_large_chunk))) {
+            if (!shared_chunk_allocator->free(bmp->bitmap_->data_pointer(base_large_chunk) - reserved_bytes)) {
                 return false;
             }
         } else {
-            if (!large_chunk_allocator->free(bmp->bitmap_->data_pointer(base_large_chunk))) {
+            if (!large_chunk_allocator->free(bmp->bitmap_->data_pointer(base_large_chunk) - reserved_bytes)) {
                 return false;
-            }            
+            }
         }
 
         // Free the bitwise bitmap.
@@ -772,8 +800,16 @@ namespace eka2l1 {
         const auto fbss = server<fbs_server>();
         const epoc::handle handle = *(ctx->get_argument_value<std::uint32_t>(0));
         fbsbitmap *bmp = fbss->get<fbsbitmap>(handle);
+
         if (!bmp) {
             ctx->complete(epoc::error_bad_handle);
+            return;
+        }
+
+        if (fbss->legacy_level() >= 2) {
+            LOG_ERROR("Resize bitmap not supported currently for legacy level 2!");
+            ctx->complete(epoc::error_not_supported);
+
             return;
         }
 
