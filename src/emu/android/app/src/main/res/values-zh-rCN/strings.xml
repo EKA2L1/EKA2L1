@@ -15,8 +15,8 @@
     <string name="install">安装</string>
     <string name="path_to_rpkg">RPKG路径</string>
     <string name="path_to_rom">ROM路径</string>
-    <string name="raw_dump">原始堆文件</string>
-    <string name="path_to_raw_dump">原始堆文件路径</string>
+    <string name="raw_dump">原始转储文件</string>
+    <string name="path_to_raw_dump">原始转储文件路径</string>
     <string name="install_method">安装方式</string>
     <string name="pref_theme">主题</string>
     <string name="pref_theme_light">浅色</string>
@@ -32,5 +32,5 @@
     <string name="hide_buttons">隐藏虚拟按键</string>
     <string name="confirmation_required">需要确认</string>
     <string name="force_close_confirmation">强制关闭应用程序可能会导致数据丢失甚至损坏！\n继续?</string>
-    <string name="version">版本：</string>
+    <string name="version">版本： </string>
 </resources>
