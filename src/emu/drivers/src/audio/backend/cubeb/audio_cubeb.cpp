@@ -30,16 +30,6 @@ namespace eka2l1::drivers {
     cubeb_audio_driver::cubeb_audio_driver()
         : context_(nullptr)
         , init_(false) {
-#if EKA2L1_PLATFORM(WIN32)
-        HRESULT hr = S_OK;
-        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-
-        if (hr != S_OK) {
-            LOG_CRITICAL("Failed to initialize COM");
-            return;
-        }
-#endif
-
         if (cubeb_init(&context_, "EKA2L1 Audio Driver", nullptr) != CUBEB_OK) {
             LOG_CRITICAL("Can't initialize Cubeb audio driver!");
             return;

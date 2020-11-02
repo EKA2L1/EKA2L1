@@ -566,6 +566,16 @@ namespace eka2l1::desktop {
     }
 
     void os_thread(emulator &state) {
+#if EKA2L1_PLATFORM(WIN32)
+        HRESULT hr = S_OK;
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
+
+        if (hr != S_OK) {
+            LOG_CRITICAL("Failed to initialize COM");
+            return;
+        }
+#endif
+
         eka2l1::common::set_thread_name(os_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
@@ -597,9 +607,23 @@ namespace eka2l1::desktop {
 
         state.symsys.reset();
         state.graphics_sema.notify();
+
+#if EKA2L1_PLATFORM(WIN32)
+        CoUninitialize();
+#endif
     }
 
     int emulator_entry(emulator &state) {
+#if EKA2L1_PLATFORM(WIN32)
+        HRESULT hr = S_OK;
+        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
+
+        if (hr != S_OK) {
+            LOG_CRITICAL("Failed to initialize COM");
+            return 0;
+        }
+#endif
+
         const bool result = state.stage_two();
 
         // Instantiate UI and High-level interface threads
@@ -619,6 +643,10 @@ namespace eka2l1::desktop {
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();
+
+#if EKA2L1_PLATFORM(WIN32)
+        CoUninitialize();
+#endif
 
         return 0;
     }
