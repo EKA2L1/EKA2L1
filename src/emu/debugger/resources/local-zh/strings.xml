@@ -57,7 +57,7 @@
     <string name="pref_general_debugging_string">调试中</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU读取</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">CPU写入</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU步</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU步进</string>
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">此选项将不会在模拟器关闭后保存，当GDBStub启用时则无效。</string>
     <string name="pref_general_debugging_ipc_checkbox_title">进程间通信</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">系统调用</string>
