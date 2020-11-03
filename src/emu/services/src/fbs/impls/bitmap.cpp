@@ -612,29 +612,30 @@ namespace eka2l1 {
         std::uint32_t final_reserve_each_side = common::min<std::uint32_t>(MAXIMUM_RESERVED_HEIGHT,
             info.size_.y * PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE / 100);
 
-        eka2l1::vec2 size_reserved = info.size_;
-
         // Data size fixed
         if (info.data_size_) {
             final_reserve_each_side = 0;
-        } else {
-            size_reserved.y += final_reserve_each_side * 2;
         }
 
         // Calculate the size
-        std::size_t alloc_bytes = (info.data_size_ == 0) ? calculate_aligned_bitmap_bytes(
-            size_reserved, info.dpm_) : info.data_size_;
+        const std::size_t byte_width = get_byte_width(info.size_.x, epoc::get_bpp_from_display_mode(info.dpm_));
+
+        std::size_t original_bytes = (info.data_size_ == 0) ? calculate_aligned_bitmap_bytes(
+            info.size_, info.dpm_) : info.data_size_;
+
+        std::size_t alloc_bytes = original_bytes + final_reserve_each_side * byte_width * 2;
         
         void *data = nullptr;
         std::uint8_t *base = nullptr;
         bool smol = false;
 
-        if ((alloc_bytes > 0) && alloc_data) {
+        if ((original_bytes > 0) && alloc_data) {
             // Allocates from the large chunk
             // Align them with 4 bytes
+            std::size_t org_dest_size = common::align(original_bytes, 4);
             std::size_t avail_dest_size = common::align(alloc_bytes, 4);
 
-            if (!is_large_bitmap(static_cast<std::uint32_t>(avail_dest_size))) {
+            if (!is_large_bitmap(static_cast<std::uint32_t>(org_dest_size))) {
                 base = reinterpret_cast<std::uint8_t*>(bws_bmp);
                 data = shared_chunk_allocator->allocate(avail_dest_size);
 
@@ -671,7 +672,7 @@ namespace eka2l1 {
         data = reinterpret_cast<std::uint8_t*>(data) + reserved_bytes;
 
         if (info.data_) {
-            std::memcpy(data, info.data_, alloc_bytes);
+            std::memcpy(data, info.data_, common::min<std::size_t>(info.data_size_, original_bytes));
         }
 
         fbsbitmap *bmp = make_new<fbsbitmap>(this, bws_bmp, false, support_dirty, final_reserve_each_side);
