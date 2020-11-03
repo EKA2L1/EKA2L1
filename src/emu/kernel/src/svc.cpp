@@ -4230,6 +4230,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8D, locked_inc_32),
         BRIDGE_REGISTER(0x8E, locked_dec_32),
         BRIDGE_REGISTER(0xBC, user_svr_rom_header_address),
+        BRIDGE_REGISTER(0xBE, math_rand),
         BRIDGE_REGISTER(0xFE, static_call_list),
         
         // User server calls
