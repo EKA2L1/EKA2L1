@@ -19,6 +19,7 @@
 
 #include <common/log.h>
 #include <common/raw_bind.h>
+#include <common/platform.h>
 
 #include <drivers/graphics/backend/cursor_glfw.h>
 #include <drivers/graphics/backend/emu_window_glfw.h>
@@ -134,8 +135,12 @@ namespace eka2l1 {
 
         void emu_window_glfw3::init(std::string title, vec2 size, const std::uint32_t flags) {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#if EKA2L1_PLATFORM(MACOS)
+            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#endif
 
             GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 
@@ -148,7 +153,21 @@ namespace eka2l1 {
             emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
 
             if (!emu_win) {
-                LOG_ERROR("Can't create window! Check if your PC support at least 3.1!");
+                // Try to create OpenGL 3.1    
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+                
+#if EKA2L1_PLATFORM(MACOS)
+                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#endif
+
+                emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
+
+                if (!emu_win) {
+                    LOG_ERROR("Can't create window! Check if your PC support at least 3.1!");
+                    return;
+                }
             }
 
             using namespace std::placeholders;
