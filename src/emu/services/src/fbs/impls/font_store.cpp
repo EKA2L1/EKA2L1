@@ -74,6 +74,13 @@ namespace eka2l1::epoc {
 
         return nullptr;
     }
+
+    open_font_info *font_store::seek_the_font_by_id(std::uint32_t index) {
+        if (index >= open_font_store.size()) {
+            return nullptr;
+        }
+        return &open_font_store[index];
+    }
     
     open_font_info *font_store::seek_the_open_font(epoc::font_spec_base &spec) {
         open_font_info *best = nullptr;
