@@ -86,6 +86,19 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode
 
 static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny *aAddress, const TSize aSize, const TDisplayMode aMode) {
     CFbsDrawDevice *device = NULL;
+    const TUint16 wordModePaletteEntriesCount = 16;
+
+    // Adjust the address. Some mode has start of screen buffer storing external data.
+    // 12bpp and 16bpp stores 16 word palette entries.
+    switch (aMode) {
+    case EColor4K:
+    case EColor64K:
+        aAddress = reinterpret_cast<TUint8*>(aAddress) + wordModePaletteEntriesCount * sizeof(TUint16);
+        break;
+
+    default:
+        break;
+    }
 
     switch (aMode) {
     case EColor64K:
