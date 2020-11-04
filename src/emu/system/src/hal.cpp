@@ -47,6 +47,8 @@
     sys->add_new_hal(cage, hal_com);
 
 namespace eka2l1::epoc {
+    static constexpr std::uint32_t HAL_CONTRAST_MAX = 100;
+
     hal::hal(eka2l1::system *sys)
         : sys(sys) {}
 
@@ -382,6 +384,10 @@ namespace eka2l1::epoc {
 
         case kernel::hal_data_eka1_tick_period:
             *reinterpret_cast<std::uint32_t*>(data) = 1000000 / epoc::TICK_TIMER_HZ;
+            break;
+
+        case kernel::hal_data_eka1_display_contrast_max:
+            *reinterpret_cast<std::uint32_t*>(data) = HAL_CONTRAST_MAX;
             break;
 
         case kernel::hal_data_eka1_screen_info: {
