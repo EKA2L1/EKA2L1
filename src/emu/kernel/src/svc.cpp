@@ -402,6 +402,17 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, process_set_priority_eka1, std::int32_t process_priority, kernel::handle h) {
+        process_ptr pr = kern->get<kernel::process>(h);
+
+        if (!pr) {
+            return epoc::error_bad_handle;
+        }
+
+        pr->set_priority(static_cast<eka2l1::kernel::process_priority>(process_priority));
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, process_priority, kernel::handle h) {
         process_ptr pr = kern->get<kernel::process>(h);
 
@@ -4270,6 +4281,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000CC, imb_range),
         BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
         BRIDGE_REGISTER(0xC0001D, process_resume),
+        BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC0002F, server_cancel),
@@ -4285,6 +4297,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC0007B, add_event),
         BRIDGE_REGISTER(0xC00097, debug_command_execute),
         BRIDGE_REGISTER(0xC0009F, set_exception_handler_eka1),
         BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
