@@ -72,8 +72,20 @@ namespace eka2l1::dispatch {
                 command_builder->update_bitmap(scr->dsa_texture, reinterpret_cast<const char*>(scr->screen_buffer_ptr()),
                     buffer_size, { 0, 0 }, screen_size);
 
-                command_builder->set_swizzle(scr->dsa_texture, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
-                    drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+                // NOTE: This is a hack for some apps that dont fill alpha
+                // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
+                switch (scr->disp_mode) {
+                case epoc::display_mode::color16m:
+                case epoc::display_mode::color16mu:
+                case epoc::display_mode::color16ma:
+                    command_builder->set_swizzle(scr->dsa_texture, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                        drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
+
+                    break;
+
+                default:
+                    break;
+                }
 
                 driver->submit_command_list(*command_list);
             }
