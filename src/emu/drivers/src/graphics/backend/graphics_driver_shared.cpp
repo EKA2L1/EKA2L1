@@ -46,6 +46,13 @@ namespace eka2l1::drivers {
 
             break;
 
+        case 12:
+            format = texture_format::rgba;
+            internal_format = texture_format::rgba4;
+            data_type = texture_data_type::ushort_4_4_4_4;
+
+            break;
+
         case 16:
             format = texture_format::rgb;
             data_type = texture_data_type::ushort_5_6_5;
@@ -90,11 +97,6 @@ namespace eka2l1::drivers {
         texture->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), internal_format, data_format, data_type, nullptr);
         texture->set_filter_minmag(false, drivers::filter_option::linear);
         texture->set_filter_minmag(true, drivers::filter_option::linear);
-
-        if (bpp == 16) {
-            texture->set_channel_swizzle({ drivers::channel_swizzle::blue, drivers::channel_swizzle::green,
-                drivers::channel_swizzle::red, drivers::channel_swizzle::one });
-        }
 
         return texture;
     }
@@ -243,9 +245,9 @@ namespace eka2l1::drivers {
                     break;
             }
         } else {
-            if (bmp->bpp == 16) {
-                bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
-                    channel_swizzle::red, channel_swizzle::one });
+            if (bmp->bpp == 12) {
+                bmp->tex->set_channel_swizzle({ channel_swizzle::green, channel_swizzle::blue,
+                    channel_swizzle::alpha, channel_swizzle::one });
             }
 
             switch (data_format) {
