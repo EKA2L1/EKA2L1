@@ -22,6 +22,7 @@
 
 #include <e32std.h>
 
+#include "drawdvc12.h"
 #include "drawdvc16.h"
 #include "drawdvc32.h"
 
@@ -33,6 +34,10 @@ public:                                                                     \
     virtual void Update();                                                  \
     virtual void Update(const TRegion &aRegion);                            \
     virtual void UpdateRegion(const TRect &aRect)                          
+
+class CFbsTwelveBitScreenDrawDevice : public CFbsTwelveBitDrawDevice {
+    SCRDVC_DECL();
+};
 
 class CFbsSixteenBitScreenDrawDevice : public CFbsSixteenBitDrawDevice {
     SCRDVC_DECL();

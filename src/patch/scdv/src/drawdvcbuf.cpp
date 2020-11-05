@@ -18,6 +18,7 @@
  */
 
 #include "drawdvcbuf.h"
+
 #include "scdv/log.h"
 #include "scdv/sv.h"
 
