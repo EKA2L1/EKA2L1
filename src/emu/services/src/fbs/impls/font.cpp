@@ -417,6 +417,27 @@ namespace eka2l1 {
     }
 
     void fbscli::typeface_support(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> font_idx = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<epoc::typeface_support> support = ctx->get_argument_data_from_descriptor<epoc::typeface_support>(1);
+
+        if (!support || !font_idx) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        fbs_server *serv = server<fbs_server>();
+        epoc::open_font_info *info = serv->persistent_font_store.seek_the_font_by_id(font_idx.value());
+
+        if (!info) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        support->info_.name = info->face_attrib.name.to_std_string(nullptr);
+        support->is_scalable_ = false;
+
+        ctx->write_data_to_descriptor_argument(1, support);
+        ctx->complete(epoc::error_none);
     }
 
     template <typename T, typename Q>

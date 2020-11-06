@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "drawdvc12.h"
 #include "drawdvc16.h"
 #include "drawdvc24.h"
 #include "drawdvc32.h"
@@ -39,6 +40,15 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
         Scdv::Log("INFO:: A new 24 bit bitmap device has been instantiated!");
+
+        break;
+
+    case EColor4K:
+        newDevice = new (ELeave) CFbsTwelveBitDrawDevice;
+        CleanupStack::PushL(newDevice);
+        User::LeaveIfError(reinterpret_cast<CFbsTwelveBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
+
+        Scdv::Log("INFO:: A new 16 bit bitmap device has been instantiated!");
 
         break;
 
@@ -86,8 +96,30 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode
 
 static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny *aAddress, const TSize aSize, const TDisplayMode aMode) {
     CFbsDrawDevice *device = NULL;
+    const TUint16 wordModePaletteEntriesCount = 16;
+
+    // Adjust the address. Some mode has start of screen buffer storing external data.
+    // 12bpp and 16bpp stores 16 word palette entries.
+    switch (aMode) {
+    case EColor4K:
+    case EColor64K:
+        aAddress = reinterpret_cast<TUint8*>(aAddress) + wordModePaletteEntriesCount * sizeof(TUint16);
+        break;
+
+    default:
+        break;
+    }
 
     switch (aMode) {
+    case EColor4K:
+        device = new (ELeave) CFbsTwelveBitScreenDrawDevice;
+        CleanupStack::PushL(device);
+        User::LeaveIfError(reinterpret_cast<CFbsTwelveBitScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
+
+        Scdv::Log("INFO:: A new 12 bit screen device has been instantiated!");
+
+        break;
+
     case EColor64K:
         device = new (ELeave) CFbsSixteenBitScreenDrawDevice;
         CleanupStack::PushL(device);

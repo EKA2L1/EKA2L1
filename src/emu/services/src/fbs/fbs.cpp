@@ -129,6 +129,11 @@ namespace eka2l1 {
             num_typefaces(ctx);
             break;
         }
+                              
+        case fbs_typeface_support: {
+            typeface_support(ctx);
+            break;
+        }
 
         case fbs_nearest_font_design_height_in_pixels:
         case fbs_nearest_font_design_height_in_twips:

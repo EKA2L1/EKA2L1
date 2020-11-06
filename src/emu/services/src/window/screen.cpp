@@ -82,6 +82,7 @@ namespace eka2l1::epoc {
         , scr_config(scr_conf)
         , crr_mode(1)
         , next(nullptr)
+        , screen_buffer_chunk(nullptr)
         , focus(nullptr) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
         disp_mode = scr_conf.disp_mode;
@@ -325,5 +326,22 @@ namespace eka2l1::epoc {
         // Abadon our UI rotation
         ui_rotation = 0;
         orientation_lock = true;
+    }
+
+    std::uint8_t *screen::screen_buffer_ptr() {
+        std::uint8_t *right_address = reinterpret_cast<std::uint8_t*>(screen_buffer_chunk->host_base());
+        const std::uint32_t WORD_PALETTE_ENTRIES_COUNT = 16;
+
+        switch (disp_mode) {
+        case display_mode::color4k:
+        case display_mode::color64k:
+            right_address += sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
+            break;
+
+        default:
+            break;
+        }
+
+        return right_address;
     }
 }

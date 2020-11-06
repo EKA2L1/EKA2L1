@@ -22,7 +22,7 @@
 #include <sstream>
 
 namespace eka2l1::common {
-    arg_parser::arg_parser(const int argc, char **argv)
+    arg_parser::arg_parser(const int argc, const char **argv)
         : argc(argc)
         , argv(argv)
         , counter(1) {

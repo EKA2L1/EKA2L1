@@ -73,29 +73,6 @@ namespace eka2l1::epoc {
         return return_ptr;
     }
 
-    static char *convert_twelve_bpp_to_twenty_four_bpp_bitmap(epoc::bitwise_bitmap *bw_bmp,
-        const std::uint32_t *original_ptr, std::vector<char> &converted_pool) {
-        std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
-        converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
-
-        char *return_ptr = &converted_pool[0];
-        const std::uint16_t *source = reinterpret_cast<const std::uint16_t*>(original_ptr);
-
-        for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
-            for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
-                const std::size_t location = y * byte_width_converted + x * 3;
-                std::uint16_t value = source[y * bw_bmp->byte_width_ / 2 + x];
-
-                // Kind of black magic, get bits from byte
-                return_ptr[location] = (value & 0xF) * 17;
-                return_ptr[location + 1] = ((value >> 4) & 0xF) * 17;
-                return_ptr[location + 2] = ((value >> 8) & 0xF) * 17;
-            }
-        }
-
-        return return_ptr;
-    }
-
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
         const std::uint8_t *original_ptr, std::vector<char> &converted_pool) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
@@ -129,7 +106,7 @@ namespace eka2l1::epoc {
     }
 
     static std::uint32_t get_suitable_bpp_for_bitmap(epoc::bitwise_bitmap *bmp) {
-        if (is_palette_bitmap(bmp) || (bmp->header_.bit_per_pixels == 1) || (bmp->header_.bit_per_pixels == 12)) {
+        if (is_palette_bitmap(bmp) || (bmp->header_.bit_per_pixels == 1)) {
             return 24;
         }
 
@@ -296,15 +273,6 @@ namespace eka2l1::epoc {
             switch (bpp) {
             case 1:
                 data_pointer = converted_one_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
-                    converted);
-                bpp = 24;
-                raw_size = static_cast<std::uint32_t>(converted.size());
-                pixels_per_line = 0;
-
-                break;
-
-            case 12:
-                data_pointer = convert_twelve_bpp_to_twenty_four_bpp_bitmap(bmp, reinterpret_cast<const std::uint32_t *>(data_pointer),
                     converted);
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());

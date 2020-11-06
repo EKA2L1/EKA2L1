@@ -654,6 +654,7 @@ namespace eka2l1::epoc {
         { KEY_F2, std_key_device_1 },
         { KEY_ENTER, std_key_device_3 },
         { KEY_SLASH, std_key_hash },
+        { KEY_BACKSPACE, std_key_backspace },
         { KEY_STAR, '*' },
         { KEY_NUM0, '0' },
         { KEY_NUM1, '1' },

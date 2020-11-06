@@ -49,6 +49,7 @@
 #include <utils/event.h>
 #include <utils/err.h>
 
+#include <system/devices.h>
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/timing.h>
@@ -1077,6 +1078,10 @@ namespace eka2l1 {
     }
 
     void window_server::parse_wsini() {
+        static const std::map<std::string, epoc::display_mode> FORCE_DISPLAY_MODE_MAP = {
+            { "rh-29", epoc::display_mode::color4k }
+        };
+        
         common::ini_node_ptr window_mode_node = ws_config.find("WINDOWMODE");
         epoc::display_mode scr_mode_global = epoc::display_mode::color16ma;
 
@@ -1088,7 +1093,23 @@ namespace eka2l1 {
 
             window_mode_pair->get(modes);
 
-            scr_mode_global = epoc::string_to_display_mode(modes[0]);
+            device_manager *mngr = sys->get_device_manager();
+            device *current_dvc = mngr->get_current();
+
+            bool use_in_ini = true;
+
+            if (current_dvc) {
+                const std::string firmware_code = common::lowercase_string(current_dvc->firmware_code);
+                const auto force_result = FORCE_DISPLAY_MODE_MAP.find(firmware_code);
+
+                if (force_result != FORCE_DISPLAY_MODE_MAP.end()) {
+                    scr_mode_global = force_result->second;
+                    use_in_ini = false;
+                }
+            }
+            
+            if (use_in_ini)
+                scr_mode_global = epoc::string_to_display_mode(modes[0]);
         }
 
         common::ini_node *screen_node = nullptr;

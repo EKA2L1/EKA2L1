@@ -105,6 +105,12 @@ namespace eka2l1::epoc {
         epoc::window_group *get_group_chain();
 
         /**
+         * @brief       Get the start pointer to write screen data.
+         * @returns     Pointer to the start of the screen data.
+         */
+        std::uint8_t *screen_buffer_ptr();
+
+        /**
          * \brief Get the size of this screen, in pixels.
          */
         eka2l1::vec2 size() const;

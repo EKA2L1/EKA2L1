@@ -44,11 +44,13 @@ namespace eka2l1::desktop {
     void os_thread(emulator &state);
 
     /**
-     * \brief Entry to emulator.
+     * @brief Entry to emulator.
      *
      * This function spawns all necessary threads.
      *
-     * \brief state State of the emulator.
+     * In addition, you can provide extra command line argument to configure the emulator!.
+     * 
+     * @param state State of the emulator.
      */
-    int emulator_entry(emulator &state);
+    int emulator_entry(emulator &state, const int argc, const char **argv);
 }

@@ -47,6 +47,7 @@
         UpdateScreen(1, iScreenNumber, 1, &updateRect);                             \
     }
 
+SCRDVC_IMPL(CFbsTwelveBitScreenDrawDevice, CFbsTwelveBitDrawDevice)
 SCRDVC_IMPL(CFbsSixteenBitScreenDrawDevice, CFbsSixteenBitDrawDevice)
 
 #ifdef EKA2

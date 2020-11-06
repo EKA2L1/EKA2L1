@@ -392,7 +392,7 @@ namespace eka2l1::drivers {
             return false;
         }
 
-        if (!(*new_codec->supported_samplerates) || !(*new_codec->channel_layouts)) {
+        if (!(new_codec->supported_samplerates) || !(new_codec->channel_layouts)) {
             // One of those arrays is empty. Return
             LOG_ERROR("Supported sample rates or supported channel layouts array is empty!");
             return false;

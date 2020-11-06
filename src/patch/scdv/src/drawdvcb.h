@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCDV_DVC_TWELVE_BITS_H_
-#define SCDV_DVC_TWELVE_BITS_H_
+#ifndef SCDV_DVC_DVC_BB_BITS_H_
+#define SCDV_DVC_DVC_BB_BITS_H_
 
 #include "drawdvcbuf.h"
 

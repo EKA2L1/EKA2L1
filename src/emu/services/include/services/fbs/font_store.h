@@ -63,6 +63,7 @@ namespace eka2l1::epoc {
 
         open_font_info *seek_the_open_font(epoc::font_spec_base &spec);
         open_font_info *seek_the_font_by_uid(const epoc::uid the_uid);
+        open_font_info *seek_the_font_by_id(std::uint32_t index);
 
         const std::size_t number_of_fonts() const {
             return open_font_store.size();

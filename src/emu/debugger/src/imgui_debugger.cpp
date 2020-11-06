@@ -282,7 +282,8 @@ namespace eka2l1 {
             KEY_NUM8,
             KEY_NUM9,
             KEY_SLASH,
-            KEY_STAR
+            KEY_STAR,
+            KEY_BACKSPACE
         };
         key_binder_state.target_key_name = {
             "KEY_UP",
@@ -303,7 +304,8 @@ namespace eka2l1 {
             "KEY_NUM8",
             "KEY_NUM9",
             "KEY_SLASH",
-            "KEY_STAR"
+            "KEY_STAR",
+            "KEY_BACKSPACE"
         };
         key_binder_state.key_bind_name = {
             { KEY_UP, "KEY_UP" },
@@ -324,7 +326,8 @@ namespace eka2l1 {
             { KEY_NUM8, "KEY_NUM8" },
             { KEY_NUM9, "KEY_NUM9" },
             { KEY_SLASH, "KEY_SLASH" },
-            { KEY_STAR, "KEY_STAR" }
+            { KEY_STAR, "KEY_STAR" },
+            { KEY_BACKSPACE, "KEY_BACKSPACE" }
         };
 
         key_binder_state.need_key = std::vector<bool>(key_binder_state.BIND_NUM, false);

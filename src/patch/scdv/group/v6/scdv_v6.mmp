@@ -25,6 +25,7 @@ SOURCE        drawdvcbuf.cpp
 SOURCE        drawdvcalgo.cpp
 SOURCE        drawdvc24.cpp
 SOURCE        drawdvc16.cpp
+SOURCE        drawdvc12.cpp
 SOURCE        drawdvcscr.cpp
 SOURCE        instantiate.cpp
 SOURCE        dispatch.s

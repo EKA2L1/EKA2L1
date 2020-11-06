@@ -41,7 +41,7 @@ namespace eka2l1::common {
     */
     class arg_parser {
         int argc;
-        char **argv;
+        const char **argv;
 
         int counter{ 0 };
 
@@ -56,7 +56,7 @@ namespace eka2l1::common {
         std::vector<arg_info> infos;
 
     public:
-        explicit arg_parser(const int argc, char **argv);
+        explicit arg_parser(const int argc, const char **argv);
         bool add(const std::string &option, const std::string &help,
             arg_handler_function handler);
 

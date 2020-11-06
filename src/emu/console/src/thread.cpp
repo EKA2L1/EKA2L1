@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/arghandler.h>
 #include <common/configure.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -25,6 +26,7 @@
 #include <common/time.h>
 #include <common/vecx.h>
 #include <common/version.h>
+#include <console/cmdhandler.h>
 #include <console/seh_handler.h>
 #include <console/state.h>
 #include <console/thread.h>
@@ -41,6 +43,10 @@
 #include <services/window/window.h>
 
 #include <kernel/kernel.h>
+
+#if EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
+#endif
 
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
@@ -568,7 +574,7 @@ namespace eka2l1::desktop {
     void os_thread(emulator &state) {
 #if EKA2L1_PLATFORM(WIN32)
         HRESULT hr = S_OK;
-        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
+        hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
         if (hr != S_OK) {
             LOG_CRITICAL("Failed to initialize COM");
@@ -579,6 +585,10 @@ namespace eka2l1::desktop {
         eka2l1::common::set_thread_name(os_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
+        if (!state.stage_two())
+            return;
+
+        state.init_event.set();
         state.graphics_sema.wait();
 
         // Register SEH handler for this thread
@@ -613,33 +623,59 @@ namespace eka2l1::desktop {
 #endif
     }
 
-    int emulator_entry(emulator &state) {
-#if EKA2L1_PLATFORM(WIN32)
-        HRESULT hr = S_OK;
-        hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
-
-        if (hr != S_OK) {
-            LOG_CRITICAL("Failed to initialize COM");
-            return 0;
-        }
-#endif
-
-        const bool result = state.stage_two();
+    int emulator_entry(emulator &state, const int argc, const char **argv) {
+        state.stage_one();
 
         // Instantiate UI and High-level interface threads
-        std::thread ui_thread_obj(ui_thread, std::ref(state));
-        std::unique_ptr<std::thread> os_thread_obj;
+        std::thread os_thread_obj(os_thread, std::ref(state));
+        state.init_event.wait();
         
-        if (result)
-            os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
+        eka2l1::common::arg_parser parser(argc, argv);
 
+        parser.add("--help, --h", "Display helps menu", help_option_handler);
+        parser.add("--listapp", "List all installed applications", list_app_option_handler);
+        parser.add("--listdevices", "List all installed devices", list_devices_option_handler);
+        parser.add("--app, --a, --run", "Run an app with given name or UID, or the absolute virtual path to executable.\n"
+                                        "\t\t\t  See list of apps with --listapp.\n"
+                                        "\t\t\t  Extra command line arguments can be passed to the application.\n"
+                                        "\n"
+                                        "\t\t\t  Some example:\n"
+                                        "\t\t\t    eka2l1 --run C:\\sys\\bin\\BitmapTest.exe \"--hi --arg 5\"\n"
+                                        "\t\t\t    eka2l1 --run Bounce\n"
+                                        "\t\t\t    eka2l1 --run 0x200412ED\n",
+            app_specifier_option_handler);
+
+        parser.add("--install, --i", "Install a SIS.", app_install_option_handler);
+        parser.add("--remove, --r", "Remove an package.", package_remove_option_handler);
+        parser.add("--fullscreen", "Display the emulator in fullscreen.", fullscreen_option_handler);
+
+#if ENABLE_SCRIPTING
+        parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
+#endif
+
+        if (argc > 1) {
+            std::string err;
+            state.should_emu_quit = !parser.parse(&state, &err);
+
+            if (state.should_emu_quit) {
+                // Notify the OS thread that is still sleeping, waiting for
+                // graphics sema to be freed.
+                state.graphics_sema.notify();
+
+                std::cout << err << std::endl;
+                os_thread_obj.join();
+
+                return -1;
+            }
+        }
+
+        std::thread ui_thread_obj(ui_thread, std::ref(state));
+        
         // Run graphics driver on main entry.
         graphics_driver_thread(state);
 
         // Wait for OS thread to die
-        if (os_thread_obj) {
-            os_thread_obj->join();
-        }
+        os_thread_obj.join();
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();
