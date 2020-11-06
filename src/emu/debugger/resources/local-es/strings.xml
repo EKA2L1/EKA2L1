@@ -6,7 +6,7 @@
     <string name="load">Cargar</string>
     <string name="save">Guardar</string>
     <string name="ok">OK</string>
-    <string name="yes">Si</string>
+    <string name="yes">OK</string>
     <string name="no">No</string>
     <string name="general">General</string>
     <string name="search">Buscar</string>
@@ -69,9 +69,9 @@
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Ocultar el cursor del mouse cuando se está dentro de una pantalla de emulación</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Es útil cuando configuras un botón a tu mouse y el juego o aplicación hace uso del cursor.\nPara hacer el cursor visible, mantenga presionada la tecla ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilitar filtro nearest neighbor</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Este filtro sera aplicado en la siguiente pantalla dibujada.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Este filtro sera aplicado en la siguiente pantalla emulada.</string>
     <string name="pref_general_utilities_integer_scaling_msg">Habilitar integer scaling</string>
-    <string name="pref_general_utilities_integer_scaling_tooltip">Este es un método de escalado perfecto para píxeles, puede ayudar a reducir el desenfoque (blur) significativamente.</string>
+    <string name="pref_general_utilities_integer_scaling_tooltip">Este es un método de escalado pixel-perfect, puede ayudar a reducir el desenfoque (blur) significativamente.</string>
     <string name="pref_system_title">Sistema</string>
     <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">Dispositivo</string>
@@ -111,7 +111,7 @@
     <string name="installer_text_popup_title">Ventana de texto del instalador</string>
     <string name="installer_language_choose_title">Elija el idioma de este paquete</string>
     <string name="install_device_wizard_title">Asistente de instalación de dispositivo</string>
-    <string name="install_device_wizard_welcome_msg">¡Bienvenido al asistente de instalación de dispositivos! Para empezar, pulse el botón \"Continuar\".</string>
+    <string name="install_device_wizard_welcome_msg">¡Bienvenido al asistente de instalación de dispositivos! Para empezar, pulse el botón Continuar.</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Elija su método de instalación</string>
