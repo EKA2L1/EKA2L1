@@ -34,7 +34,7 @@ namespace eka2l1::drivers {
 
     dsp_output_stream::dsp_output_stream()
         : dsp_stream()
-        , volume_(50) {
+        , volume_(100) {
     }
 
     void dsp_stream::reset_stat() {
