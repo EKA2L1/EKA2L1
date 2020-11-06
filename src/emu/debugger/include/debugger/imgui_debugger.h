@@ -105,7 +105,7 @@ namespace eka2l1 {
 
         struct key_binder {
             std::vector<bool> need_key;
-            static constexpr int BIND_NUM = 19;
+            static constexpr int BIND_NUM = 20;
             std::array<std::uint32_t, BIND_NUM> target_key;
             std::array<std::string, BIND_NUM> target_key_name;
             std::map<std::uint32_t, std::string> key_bind_name;
