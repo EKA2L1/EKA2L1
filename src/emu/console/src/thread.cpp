@@ -617,7 +617,7 @@ namespace eka2l1::desktop {
 
         state.symsys.reset();
         state.graphics_sema.notify();
-        
+
 #if EKA2L1_PLATFORM(WIN32)
         CoUninitialize();
 #endif
@@ -679,6 +679,10 @@ namespace eka2l1::desktop {
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();
+
+#if EKA2L1_PLATFORM(WIN32)
+        CoUninitialize();
+#endif
 
         return 0;
     }

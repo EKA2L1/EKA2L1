@@ -15,15 +15,15 @@
     <string name="install">安装</string>
     <string name="path_to_rpkg">RPKG路径</string>
     <string name="path_to_rom">ROM路径</string>
-    <string name="raw_dump">Raw dump</string>
-    <string name="path_to_raw_dump">Path to raw dump</string>
+    <string name="raw_dump">原始转储文件</string>
+    <string name="path_to_raw_dump">原始转储文件路径</string>
     <string name="install_method">安装方式</string>
-    <string name="pref_theme">Theme</string>
-    <string name="pref_theme_light">Light</string>
-    <string name="pref_theme_dark">Dark</string>
-    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
-    <string name="pref_enable_statusbar">Enable statusbar</string>
-    <string name="pref_wakelock">Keep screen on</string>
+    <string name="pref_theme">主题</string>
+    <string name="pref_theme_light">浅色</string>
+    <string name="pref_theme_dark">深色</string>
+    <string name="pref_enable_virtual_keyboard">启用虚拟键盘</string>
+    <string name="pref_enable_statusbar">启用状态栏</string>
+    <string name="pref_wakelock">保持屏幕常亮</string>
     <string name="layout_edit_finished">编辑完成</string>
     <string name="layout_edit_finish">保存键位</string>
     <string name="layout_edit_mode">编辑键位</string>
@@ -32,5 +32,5 @@
     <string name="hide_buttons">隐藏虚拟按键</string>
     <string name="confirmation_required">需要确认</string>
     <string name="force_close_confirmation">强制关闭应用程序可能会导致数据丢失甚至损坏！\n继续?</string>
-    <string name="version">版本：</string>
+    <string name="version">版本： </string>
 </resources>
