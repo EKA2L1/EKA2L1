@@ -658,6 +658,10 @@ namespace eka2l1::desktop {
             state.should_emu_quit = !parser.parse(&state, &err);
 
             if (state.should_emu_quit) {
+                // Notify the OS thread that is still sleeping, waiting for
+                // graphics sema to be freed.
+                state.graphics_sema.notify();
+
                 std::cout << err << std::endl;
                 os_thread_obj.join();
 
