@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/arghandler.h>
 #include <common/configure.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -25,6 +26,7 @@
 #include <common/time.h>
 #include <common/vecx.h>
 #include <common/version.h>
+#include <console/cmdhandler.h>
 #include <console/seh_handler.h>
 #include <console/state.h>
 #include <console/thread.h>
@@ -621,10 +623,47 @@ namespace eka2l1::desktop {
 #endif
     }
 
-    int emulator_entry(emulator &state) {
+    int emulator_entry(emulator &state, const int argc, const char **argv) {
+        state.stage_one();
+
         // Instantiate UI and High-level interface threads
         std::thread os_thread_obj(os_thread, std::ref(state));
         state.init_event.wait();
+        
+        eka2l1::common::arg_parser parser(argc, argv);
+
+        parser.add("--help, --h", "Display helps menu", help_option_handler);
+        parser.add("--listapp", "List all installed applications", list_app_option_handler);
+        parser.add("--listdevices", "List all installed devices", list_devices_option_handler);
+        parser.add("--app, --a, --run", "Run an app with given name or UID, or the absolute virtual path to executable.\n"
+                                        "\t\t\t  See list of apps with --listapp.\n"
+                                        "\t\t\t  Extra command line arguments can be passed to the application.\n"
+                                        "\n"
+                                        "\t\t\t  Some example:\n"
+                                        "\t\t\t    eka2l1 --run C:\\sys\\bin\\BitmapTest.exe \"--hi --arg 5\"\n"
+                                        "\t\t\t    eka2l1 --run Bounce\n"
+                                        "\t\t\t    eka2l1 --run 0x200412ED\n",
+            app_specifier_option_handler);
+
+        parser.add("--install, --i", "Install a SIS.", app_install_option_handler);
+        parser.add("--remove, --r", "Remove an package.", package_remove_option_handler);
+        parser.add("--fullscreen", "Display the emulator in fullscreen.", fullscreen_option_handler);
+
+#if ENABLE_SCRIPTING
+        parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
+#endif
+
+        if (argc > 1) {
+            std::string err;
+            state.should_emu_quit = !parser.parse(&state, &err);
+
+            if (state.should_emu_quit) {
+                std::cout << err << std::endl;
+                os_thread_obj.join();
+
+                return -1;
+            }
+        }
 
         std::thread ui_thread_obj(ui_thread, std::ref(state));
         

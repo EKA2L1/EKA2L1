@@ -106,7 +106,6 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
     }
 
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
-    emu->stage_two();
 
     // Get app list server
     kernel_system *kern = emu->symsys->get_kernel_system();
