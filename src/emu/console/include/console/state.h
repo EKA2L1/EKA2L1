@@ -78,6 +78,7 @@ namespace eka2l1::desktop {
         bool init_fullscreen;
 
         common::semaphore graphics_sema;
+        common::event init_event;
 
         config::state conf;
         window_server *winserv;

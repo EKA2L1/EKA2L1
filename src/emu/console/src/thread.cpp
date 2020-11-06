@@ -42,6 +42,10 @@
 
 #include <kernel/kernel.h>
 
+#if EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
+#endif
+
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
 
@@ -566,9 +570,23 @@ namespace eka2l1::desktop {
     }
 
     void os_thread(emulator &state) {
+#if EKA2L1_PLATFORM(WIN32)
+        HRESULT hr = S_OK;
+        hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
+        if (hr != S_OK) {
+            LOG_CRITICAL("Failed to initialize COM");
+            return;
+        }
+#endif
+
         eka2l1::common::set_thread_name(os_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
+        if (!state.stage_two())
+            return;
+
+        state.init_event.set();
         state.graphics_sema.wait();
 
         // Register SEH handler for this thread
@@ -597,25 +615,24 @@ namespace eka2l1::desktop {
 
         state.symsys.reset();
         state.graphics_sema.notify();
+        
+#if EKA2L1_PLATFORM(WIN32)
+        CoUninitialize();
+#endif
     }
 
     int emulator_entry(emulator &state) {
-        const bool result = state.stage_two();
-
         // Instantiate UI and High-level interface threads
-        std::thread ui_thread_obj(ui_thread, std::ref(state));
-        std::unique_ptr<std::thread> os_thread_obj;
-        
-        if (result)
-            os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
+        std::thread os_thread_obj(os_thread, std::ref(state));
+        state.init_event.wait();
 
+        std::thread ui_thread_obj(ui_thread, std::ref(state));
+        
         // Run graphics driver on main entry.
         graphics_driver_thread(state);
 
         // Wait for OS thread to die
-        if (os_thread_obj) {
-            os_thread_obj->join();
-        }
+        os_thread_obj.join();
 
         // Wait for the UI to be killed next. Resources of the UI need to be destroyed before ending graphics driver life.
         ui_thread_obj.join();

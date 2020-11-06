@@ -236,10 +236,8 @@ namespace eka2l1::drivers {
 
     player_wmf::player_wmf(audio_driver *driver)
         : player_shared(driver) {
-        HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-
         // Startup media foundation!
-        hr = MFStartup(MF_VERSION);
+        MFStartup(MF_VERSION);
     }
 
     void player_wmf::get_more_data(player_request_instance &request) {
