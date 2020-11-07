@@ -129,7 +129,8 @@ namespace eka2l1 {
         ~system_impl() {
             // We need to clear kernel content first, since some object do references to it,
             // and if we let it go in destructor it would be messy! :D
-            kern_->reset();
+            if (kern_)
+                kern_->reset();
 
 #if ENABLE_SCRIPTING
             scripting_.reset();
