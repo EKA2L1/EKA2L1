@@ -123,6 +123,10 @@ namespace eka2l1::epoc {
         evts_.push_back(evt);
     }
 
+    static const bool is_device_std_key(const std_scan_code code) {
+        return (code >= std_key_device_0) && (code <= std_key_device_27);
+    }
+
     void window_key_shipper::start_shipping() {
         if (evts_.empty()) {
             return;
@@ -142,10 +146,14 @@ namespace eka2l1::epoc {
 
             bool dont_send_extra_key_event = false;
 
-            if (!serv_->key_block_active) {	
+            // TODO: My assumption... For now.
+            const bool repeatable = !is_device_std_key(static_cast<epoc::std_scan_code>(
+                evt.key_evt_.scancode));
+
+            if (!serv_->key_block_active && !repeatable) {	
                 // Don't block simultaneous key presses.	
-                // Also looks like the ::key event are ignored. TODO(pent0): Only these buttons?	
-                dont_send_extra_key_event = true;	
+                // Also looks like the application buttons key event is disabled... TODO?	
+                dont_send_extra_key_event = true;
             } else {	
                 dont_send_extra_key_event = (evt.type != epoc::event_code::key_down);	
             }
@@ -153,15 +161,25 @@ namespace eka2l1::epoc {
             epoc::event extra_event = evt;
             extra_event.type = epoc::event_code::key;
 
+            kernel_system *kern = focus->client->get_ws().get_kernel_system();
+            ntimer *timing = kern->get_ntimer();
+
+            const std::uint32_t the_code = epoc::map_scancode_to_keycode(static_cast<std_scan_code>(
+                evt.key_evt_.scancode));
+
+            const std::uint64_t data_for_repeatable = extra_event.key_evt_.scancode | (static_cast<std::uint64_t>(
+                extra_event.key_evt_.code) << 32);
+
             if (!dont_send_extra_key_event) {
-                extra_event.key_evt_.code = epoc::map_scancode_to_keycode(static_cast<std_scan_code>(
-                    evt.key_evt_.scancode));
+                extra_event.key_evt_.code = the_code;
+                extra_event.time = kern->home_time();
+
+                if (repeatable)
+                    extra_event.key_evt_.modifiers = event_modifier_repeatable;
             }
 
             evt.handle = focus->get_client_handle();
             extra_event.handle = focus->get_client_handle();
-
-            kernel_system *kern = focus->client->get_ws().get_kernel_system();
 
             kern->lock();
             focus->queue_event(evt);
@@ -172,7 +190,14 @@ namespace eka2l1::epoc {
                 kern->lock();
                 focus->queue_event(extra_event);
                 kern->unlock();
+
+                if ((evt.type == epoc::event_code::key_down) && repeatable) {
+                    timing->schedule_event(serv_->initial_repeat_delay_, serv_->repeatable_event_, data_for_repeatable);
+                }
             }
+
+            if ((evt.type == epoc::event_code::key_up) && repeatable)
+                timing->unschedule_event(serv_->repeatable_event_, data_for_repeatable);
 
             // Iterates through key capture requests and deliver those in needs.key_capture_request_queue &rqueue = key_capture_requests[extra_key_evt.key_evt_.code];
             window_server::key_capture_request_queue &rqueue = serv_->key_capture_requests[evt.key_evt_.code];

@@ -352,6 +352,8 @@ namespace eka2l1 {
         std::uint64_t initial_repeat_delay_;       ///< Time before first repeat event generated after the key event.
         std::uint64_t next_repeat_delay_;          ///< Time that the next repeat event after the previous being generated.
 
+        int repeatable_event_;
+
         void init(service::ipc_context &ctx);
         void send_to_command_buffer(service::ipc_context &ctx);
 
@@ -369,6 +371,7 @@ namespace eka2l1 {
         void handle_input_from_driver(drivers::input_event input_event);
         void init_screens();
         void init_ws_mem();
+        void init_repeatable();
         void emit_ws_thread_code();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);

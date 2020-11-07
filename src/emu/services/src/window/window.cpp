@@ -1308,7 +1308,8 @@ namespace eka2l1 {
         // For up and down events, the keycode will always be 0
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
-        guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
+        guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::released) ? epoc::event_code::key_up
+            : epoc::event_code::key_down;
         
         std::optional<std::uint32_t> key_received = epoc::map_key_to_inputcode(map, driver_evt_.key_.code_);
         bool found_correspond_mapping = true;
@@ -1426,8 +1427,9 @@ namespace eka2l1 {
 
     void window_server::handle_input_from_driver(drivers::input_event input_event) {
         epoc::event guest_event;
+
         epoc::window *root_current = get_current_focus_screen()->root->child;
-        guest_event.time = input_event.time_;
+        guest_event.time = kern->home_time();
 
         if (!root_current) {
             return;
@@ -1677,8 +1679,45 @@ namespace eka2l1 {
         parse_wsini();
         init_screens();
         init_ws_mem();
+        init_repeatable();
 
         loaded = true;
+    }
+
+    void window_server::init_repeatable() {
+        initial_repeat_delay_ = epoc::WS_DEFAULT_KEYBOARD_REPEAT_INIT_DELAY;
+        next_repeat_delay_ = epoc::WS_DEFAULT_KEYBOARD_REPEAT_NEXT_DELAY;
+
+        repeatable_event_ = kern->get_ntimer()->register_event("WsRepeatableKeyEvent",
+            [this](std::uint64_t data, std::uint64_t microsecs_late) {
+                const std::uint32_t scancode = static_cast<std::uint32_t>(data);
+                const std::uint32_t code = static_cast<std::uint32_t>(data >> 32);
+
+                epoc::event repeatable_evt;
+                ntimer *timing = kern->get_ntimer();
+                
+                kern->lock();
+
+                repeatable_evt.type = epoc::event_code::key;
+
+                repeatable_evt.handle = get_focus()->client_handle;
+                repeatable_evt.time = kern->home_time();
+                repeatable_evt.key_evt_.code = code;
+                repeatable_evt.key_evt_.scancode = scancode;
+                repeatable_evt.key_evt_.repeats = 1;
+
+                // TODO: Mark the modifiers currently being held in the server,
+                // and add them to the flags here!
+                repeatable_evt.key_evt_.modifiers = epoc::event_modifier_repeatable;
+
+                kern->reset_inactivity_time();
+                get_focus()->queue_event(repeatable_evt);
+
+                kern->unlock();
+                
+                // Schedule next repeat
+                timing->schedule_event(next_repeat_delay_, repeatable_event_, data);
+            });
     }
 
     void window_server::connect(service::ipc_context &ctx) {

@@ -104,34 +104,34 @@ namespace eka2l1::epoc {
         blank
     };
 
-    enum class event_modifier {
-        repeatable = 0x001,
-        keypad = 0x002,
-        left_alt = 0x004,
-        right_alt = 0x008,
-        alt = 0x010,
-        left_ctrl = 0x020,
-        right_ctrl = 0x040,
-        ctrl = 0x080,
-        left_shift = 0x100,
-        right_shift = 0x200,
-        shift = 0x400,
-        left_func = 0x800,
-        right_func = 0x1000,
-        func = 0x2000,
-        caps_lock = 0x4000,
-        num_lock = 0x8000,
-        scroll_lock = 0x10000,
-        key_up = 0x20000,
-        special = 0x40000,
-        double_click = 0x80000,
-        modifier_pure_key_code = 0x100000,
-        cancel_rot = 0x200000,
-        no_rot = 0x0,
-        rotate90 = 0x400000,
-        rotate180 = 0x800000,
-        rotate270 = 0x1000000,
-        all_mods = 0x1FFFFFFF
+    enum event_modifier {
+        event_modifier_repeatable = 0x001,
+        event_modifier_keypad = 0x002,
+        event_modifier_left_alt = 0x004,
+        event_modifier_right_alt = 0x008,
+        event_modifier_alt = 0x010,
+        event_modifier_left_ctrl = 0x020,
+        event_modifier_right_ctrl = 0x040,
+        event_modifier_ctrl = 0x080,
+        event_modifier_left_shift = 0x100,
+        event_modifier_right_shift = 0x200,
+        event_modifier_shift = 0x400,
+        event_modifier_left_func = 0x800,
+        event_modifier_right_func = 0x1000,
+        event_modifier_func = 0x2000,
+        event_modifier_caps_lock = 0x4000,
+        event_modifier_num_lock = 0x8000,
+        event_modifier_scroll_lock = 0x10000,
+        event_modifier_key_up = 0x20000,
+        event_modifier_special = 0x40000,
+        event_modifier_double_click = 0x80000,
+        event_modifier_pure_key_code = 0x100000,
+        event_modifier_cancel_rot = 0x200000,
+        event_modifier_no_rot = 0x0,
+        event_modifier_rotate90 = 0x400000,
+        event_modifier_rotate180 = 0x800000,
+        event_modifier_rotate270 = 0x1000000,
+        event_modifier_all_mods = 0x1FFFFFFF
     };
 
     enum class event_type {
@@ -700,6 +700,8 @@ namespace eka2l1::epoc {
     static constexpr std::uint8_t WS_MINOR_VER = 0;
     static constexpr std::uint16_t WS_V6_BUILD_VER = 139;
     static constexpr std::uint16_t WS_V93_BUILD_VER = 171;
+    static constexpr std::uint64_t WS_DEFAULT_KEYBOARD_REPEAT_INIT_DELAY = 300000;
+    static constexpr std::uint64_t WS_DEFAULT_KEYBOARD_REPEAT_NEXT_DELAY = 100000;
 
     key_code map_scancode_to_keycode(std_scan_code scan_code);
     std_scan_code map_inputcode_to_scancode(int input_code, int ui_rotation);
