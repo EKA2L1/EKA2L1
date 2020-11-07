@@ -478,7 +478,9 @@ namespace eka2l1::desktop {
                 state.should_ui_quit = true;
 
                 kernel_system *kern = state.symsys->get_kernel_system();
-                kern->stop_cores_idling();
+
+                if (kern)
+                    kern->stop_cores_idling();
 
                 // Notify that debugger is dead
                 state.debugger->notify_clients();
@@ -585,8 +587,7 @@ namespace eka2l1::desktop {
         eka2l1::common::set_thread_name(os_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
-        if (!state.stage_two())
-            return;
+        const bool success = state.stage_two();
 
         state.init_event.set();
         state.graphics_sema.wait();
@@ -596,7 +597,7 @@ namespace eka2l1::desktop {
         _set_se_translator(seh_handler_translator_func);
 #endif
 
-        while (!state.should_emu_quit) {
+        while (success && !state.should_emu_quit) {
 #if ENABLE_SEH_HANDLER
             try {
 #endif
@@ -615,9 +616,12 @@ namespace eka2l1::desktop {
             }
         }
 
-        state.symsys.reset();
-        state.graphics_sema.notify();
+        if (success) {
+            state.symsys.reset();
+        }
 
+        state.graphics_sema.notify();
+        
 #if EKA2L1_PLATFORM(WIN32)
         CoUninitialize();
 #endif
