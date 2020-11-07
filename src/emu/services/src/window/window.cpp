@@ -1269,7 +1269,8 @@ namespace eka2l1 {
         , ws_global_mem_allocator(nullptr)
         , sync_thread_code_offset(0)
         , initial_repeat_delay_(0)
-        , next_repeat_delay_(0) {
+        , next_repeat_delay_(0)
+        , repeatable_event_(0) {
         REGISTER_IPC(window_server, init, EWservMessInit,
             "Ws::Init");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessCommandBuffer,
@@ -1711,6 +1712,10 @@ namespace eka2l1 {
                 repeatable_evt.key_evt_.modifiers = epoc::event_modifier_repeatable;
 
                 kern->reset_inactivity_time();
+
+                // TODO: When we queued this the event up event may already been queued.
+                // We have to make sure it's queued before event up, if there's something
+                // wrong popping up...
                 get_focus()->queue_event(repeatable_evt);
 
                 kern->unlock();
