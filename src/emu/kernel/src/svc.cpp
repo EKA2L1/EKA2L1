@@ -1390,9 +1390,8 @@ namespace eka2l1::epoc {
         const std::string name = name_des_ptr->to_std_string(pr);
 
         //LOG_TRACE("Finding object name: {}", name);
-        if (handle->handle == 0) {
-            // We start at the next index
-            handle->handle = -1;
+        if (handle->handle < 0) {
+            return epoc::error_argument;
         }
 
         std::optional<eka2l1::find_handle> info = kern->find_object(name, handle->handle + 1,
@@ -1427,13 +1426,12 @@ namespace eka2l1::epoc {
         const std::string match_str = common::ucs2_to_utf8(match->to_std_string(pr));
         std::int32_t handle_start_searching = *start_container_handle;
 
-        //LOG_TRACE("Finding object name: {}", name);
-        if (handle_start_searching > 0) {
-            // We start at the next index
-            handle_start_searching += 1;
+        if (handle_start_searching < 0) {
+            return epoc::error_argument;
         }
 
-        std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching,
+        //LOG_TRACE("Finding object name: {}", name);
+        std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching + 1,
             static_cast<kernel::object_type>(obj_type), true);
 
         if (!info) {

@@ -844,7 +844,7 @@ namespace eka2l1 {
         switch (type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                                       \
     case kernel::object_type::obj_type: {                                                      \
-        auto res = std::find_if(obj_map.begin() + start, obj_map.end(), [&](const auto &rhs) { \
+        auto res = std::find_if(obj_map.begin() + start - 1, obj_map.end(), [&](const auto &rhs) { \
             std::string to_compare = "";                                                       \
             if (use_full_name) {                                                               \
                 rhs->full_name(to_compare);                                                    \
@@ -855,7 +855,7 @@ namespace eka2l1 {
         });                                                                                    \
         if (res == obj_map.end())                                                              \
             return std::nullopt;                                                               \
-        handle_find_info.index = static_cast<int>(std::distance(obj_map.begin(), res));        \
+        handle_find_info.index = static_cast<int>(std::distance(obj_map.begin(), res)) + 1;    \
         handle_find_info.object_id = (*res)->unique_id();                                      \
         handle_find_info.obj = reinterpret_cast<kernel_obj_ptr>(res->get());                   \
         return handle_find_info;                                                               \
