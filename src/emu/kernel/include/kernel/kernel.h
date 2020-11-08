@@ -135,9 +135,10 @@ namespace eka2l1 {
     }
 
     struct find_handle {
-        int index;
-        std::uint64_t object_id;
-        kernel_obj_ptr obj;
+        int index;                  ///< Index of the object in the separate object container.
+                                    ///< On EKA2L1 this index starts from 1.
+        std::uint64_t object_id;    ///< The ID of the kernel object.
+        kernel_obj_ptr obj;         ///< The corresponded kernel object found.
     };
 
     namespace arm {

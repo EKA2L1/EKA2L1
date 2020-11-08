@@ -841,6 +841,7 @@ namespace eka2l1 {
         find_handle handle_find_info;
         std::regex filter(common::wildcard_to_regex_string(name));
 
+        // NOTE: See about the starting index of find handle info in the struct's document!
         switch (type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                                       \
     case kernel::object_type::obj_type: {                                                      \
