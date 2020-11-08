@@ -123,8 +123,8 @@ namespace eka2l1::epoc {
         evts_.push_back(evt);
     }
 
-    static const bool is_device_std_key(const std_scan_code code) {
-        return (code >= std_key_device_0) && (code <= std_key_device_27);
+    static const bool is_device_std_key_not_repeatable(const std_scan_code code) {
+        return (code >= std_key_device_0) && (code <= std_key_device_1);
     }
 
     void window_key_shipper::start_shipping() {
@@ -147,8 +147,9 @@ namespace eka2l1::epoc {
             bool dont_send_extra_key_event = false;
 
             // TODO: My assumption... For now.
-            const bool repeatable = !is_device_std_key(static_cast<epoc::std_scan_code>(
-                evt.key_evt_.scancode));
+            // Actually this smells like a hack
+            const bool repeatable = !is_device_std_key_not_repeatable(static_cast
+                <epoc::std_scan_code>(evt.key_evt_.scancode));
 
             if (!serv_->key_block_active && !repeatable) {	
                 // Don't block simultaneous key presses.	
