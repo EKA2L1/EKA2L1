@@ -312,7 +312,6 @@ public class VirtualKeyboard implements Overlay, Runnable {
     protected VirtualKey[] keypad;
     private VirtualKey[] associatedKeys;
 
-    ///private KeyRepeater repeater;
     protected LayoutListener listener;
 
     private Paint drawPaint = new Paint();
@@ -378,7 +377,6 @@ public class VirtualKeyboard implements Overlay, Runnable {
         visible = true;
         hider = new Thread(this, "MIDletVirtualKeyboard");
         hider.start();
-        //repeater = new KeyRepeater();
     }
 
     protected void resetLayout(int variant) {
@@ -849,7 +847,6 @@ public class VirtualKeyboard implements Overlay, Runnable {
                     if (aKeypad.contains(x, y)) {
                         associatedKeys[pointer] = aKeypad;
                         aKeypad.setSelected(true);
-                        //repeater.add(aKeypad);
                         Emulator.pressKey(associatedKeys[pointer].getKeyCode(), 0);
                         if (associatedKeys[pointer].getSecondKeyCode() != 0) {
                             Emulator.pressKey(associatedKeys[pointer].getSecondKeyCode(), 0);
@@ -906,7 +903,6 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 if (associatedKeys[pointer] == null) {
                     pointerPressed(pointer, x, y);
                 } else if (!associatedKeys[pointer].contains(x, y)) {
-                    //repeater.remove(associatedKeys[pointer]);
                     Emulator.pressKey(associatedKeys[pointer].getKeyCode(), 1);
                     if (associatedKeys[pointer].getSecondKeyCode() != 0) {
                         Emulator.pressKey(associatedKeys[pointer].getSecondKeyCode(), 1);
@@ -982,7 +978,6 @@ public class VirtualKeyboard implements Overlay, Runnable {
                 return checkPointerHandled(x, y);
             }
             if (associatedKeys[pointer] != null) {
-                //repeater.remove(associatedKeys[pointer]);
                 Emulator.pressKey(associatedKeys[pointer].getKeyCode(), 1);
                 if (associatedKeys[pointer].getSecondKeyCode() != 0) {
                     Emulator.pressKey(associatedKeys[pointer].getSecondKeyCode(), 1);
