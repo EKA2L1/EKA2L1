@@ -75,6 +75,7 @@ namespace eka2l1::kernel {
 
             if (oldt->state == thread_state::run) {
                 oldt->state = thread_state::ready;
+                oldt->time = oldt->timeslice;
             }
         }
 
