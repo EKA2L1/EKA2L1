@@ -187,3 +187,9 @@ Java_com_github_eka2l1_emu_Emulator_mountSdCard(JNIEnv *env, jclass clazz, jstri
 
     state->launcher->mount_sd_card(cpath);
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_loadConfig(JNIEnv *env, jclass clazz) {
+    state->launcher->load_config();
+}

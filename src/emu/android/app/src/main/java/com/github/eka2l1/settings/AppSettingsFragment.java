@@ -27,17 +27,25 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 
-public class SettingsFragment extends PreferenceFragmentCompat {
+public class AppSettingsFragment extends PreferenceFragmentCompat {
+    public static final String APP_UID_KEY = "appUid";
+
+    private AppDataStore dataStore;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.preferences, rootKey);
+        Bundle args = getArguments();
+        long uid = args.getLong(APP_UID_KEY, 0);
+        String uidStr = Long.toHexString(uid).toUpperCase();
+        dataStore = AppDataStore.getAppStore(uidStr);
+        PreferenceManager preferenceManager = getPreferenceManager();
+        preferenceManager.setPreferenceDataStore(dataStore);
+        setPreferencesFromResource(R.xml.preferences_app, rootKey);
     }
 
     @Override
@@ -47,20 +55,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.settings);
-        setPreferenceClickListener(new GeneralSettingsFragment(), "pref_general");
-        setPreferenceClickListener(new SystemSettingsFragment(), "pref_system");
-        setPreferenceClickListener(new KeyMapperFragment(), "pref_keymapper");
     }
 
-    private void setPreferenceClickListener(Fragment fragment, String preferenceName) {
-        Preference preference = findPreference(preferenceName);
-        preference.setOnPreferenceClickListener(pref -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .commit();
-            return true;
-        });
+    @Override
+    public void onPause() {
+        super.onPause();
+        dataStore.save();
     }
 
     @Override

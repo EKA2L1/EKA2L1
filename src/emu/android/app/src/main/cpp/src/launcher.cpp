@@ -143,4 +143,8 @@ namespace eka2l1::android {
         io->mount_physical_path(drive_e, drive_media::physical,
                 io_attrib_removeable, upath);
     }
+
+    void launcher::load_config() {
+        conf->deserialize();
+    }
 }

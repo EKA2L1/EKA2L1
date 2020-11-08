@@ -12,4 +12,14 @@
         <item>light</item>
         <item>dark</item>
     </string-array>
+    <string-array name="pref_system_real_time_accuracy_entries">
+        <item>@string/pref_system_real_time_accuracy_level_name_low</item>
+        <item>@string/pref_system_real_time_accuracy_level_name_mid</item>
+        <item>@string/pref_system_real_time_accuracy_level_name_high</item>
+    </string-array>
+    <string-array name="pref_system_real_time_accuracy_values" translatable="false">
+        <item>low</item>
+        <item>mid</item>
+        <item>high</item>
+    </string-array>
 </resources>
