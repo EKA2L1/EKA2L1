@@ -20,22 +20,21 @@
 package com.github.eka2l1.base;
 
 import android.annotation.SuppressLint;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.settings.AppDataStore;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = preferences.getString("pref_theme", "light");
+        AppDataStore dataStore = AppDataStore.getEmulatorStore();
+        String theme = dataStore.getString("theme", "light");
         if (theme.equals("dark")) {
             setTheme(R.style.AppTheme);
         } else {

@@ -45,5 +45,6 @@ namespace eka2l1::android {
         std::vector<std::string> get_packages();
         void uninstall_package(std::uint32_t uid);
         void mount_sd_card(std::string &path);
+        void load_config();
     };
 }
