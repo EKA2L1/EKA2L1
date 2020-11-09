@@ -299,7 +299,7 @@ namespace eka2l1 {
         }
 
         for (int64_t i = path.length(); i >= 0; --i) {
-            if (is_separator(path[i])) {
+            if (is_separator(path[i]) || (static_cast<char>(path[i]) == ':')) {
                 break;
             }
 
