@@ -654,7 +654,7 @@ namespace eka2l1 {
 
         loader::sbm_header header;
         header.compression = info.comp_;
-        header.bitmap_size = static_cast<std::uint32_t>(alloc_bytes + sizeof(loader::sbm_header));
+        header.bitmap_size = static_cast<std::uint32_t>(original_bytes + sizeof(loader::sbm_header));
         header.size_pixels = info.size_;
         header.color = get_bitmap_color_type_from_display_mode(info.dpm_);
         header.header_len = sizeof(loader::sbm_header);
