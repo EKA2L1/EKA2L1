@@ -2960,9 +2960,18 @@ namespace eka2l1 {
     }
 
     void imgui_debugger::show_debugger(std::uint32_t width, std::uint32_t height, std::uint32_t fb_width, std::uint32_t fb_height) {
+        bool pushed = false;
+        
         if (font_to_use) {
             ImGui::PushFont(font_to_use);
+            pushed = true;
         }
+
+        auto cleanup_show = [pushed]() {
+            if (pushed) {
+                ImGui::PopFont();
+            }
+        };
 
         show_menu();
         handle_shortcuts();
@@ -2971,11 +2980,15 @@ namespace eka2l1 {
 
         if (should_show_empty_device_warn) {
             show_empty_device_warn();
+            cleanup_show();
+
             return;
         }
 
         if (should_warn_touch_disabled) {
             show_touchscreen_disabled_warn();
+            cleanup_show();
+
             return;
         }
 
@@ -3042,9 +3055,7 @@ namespace eka2l1 {
             logger->draw("Logger", &should_show_logger);
         }
 
-        if (font_to_use) {
-            ImGui::PopFont();
-        }
+        cleanup_show();
     }
 
     void imgui_debugger::wait_for_debugger() {
