@@ -454,7 +454,7 @@ namespace eka2l1::common {
                             total_size += entry.size;
                         } else {
                             if (!no_copy) {
-                                if (!common::copy_file(iterator.dir_name + name_to_use, eka2l1::add_path(dest_folder_to_reside, top_path) +
+                                if (!common::copy_file(iterator.dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) +
                                     eka2l1::get_separator() + name_to_use, true)) {
                                     return false;
                                 }
