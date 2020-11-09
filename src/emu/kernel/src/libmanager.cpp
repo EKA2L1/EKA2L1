@@ -744,21 +744,32 @@ namespace eka2l1::hle {
         // Create a new codeseg, we should try search these files
         // Absolute yet ?
         if (!eka2l1::has_root_dir(lib_path)) {
+            auto org_root_name = eka2l1::root_name(lib_path, true);
+            auto fname = eka2l1::filename(lib_path, true);
+
             // Nope ? We need to cycle through all possibilities
             for (std::size_t i = 0; i < search_paths.size(); i++) {
                 lib_path.clear();
                 bool only_once = eka2l1::has_root_name(search_paths[i]);
-               
+
+                if (only_once && !org_root_name.empty()) {
+                    continue;
+                }
+
                 for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
                     const char16_t drvc = drive_to_char16(drv);
 
-                    if (!only_once) {
-                        lib_path = drvc;
-                        lib_path += u':';
+                    if (!org_root_name.empty()) {
+                        lib_path += org_root_name;
+                    } else {
+                        if (!only_once) {
+                            lib_path = drvc;
+                            lib_path += u':';
+                        }
                     }
 
                     lib_path += search_paths[i];
-                    lib_path += name;
+                    lib_path += fname;
 
                     if (io_->exist(lib_path)) {
                         auto result = load_depend_on_drive(drv, lib_path);
@@ -768,7 +779,7 @@ namespace eka2l1::hle {
                         }
                     }
 
-                    if (only_once)
+                    if (only_once || !org_root_name.empty())
                         break;
                 }
             }
