@@ -1919,7 +1919,7 @@ namespace eka2l1 {
 
             ImGui::OpenPopup(card_mount_succ_title.c_str());
 
-            ImVec2 mount_success_window_size = ImVec2(400.0f, 100.0f);
+            ImVec2 mount_success_window_size = ImVec2(400.0f, 150.0f);
             mount_success_window_size.x = ImGui::CalcTextSize(card_mount_succ_msg.c_str()).x + 20.0f;
 
             ImGui::SetNextWindowSize(mount_success_window_size);
@@ -1930,8 +1930,10 @@ namespace eka2l1 {
                 ImGui::NewLine();
                 ImGui::NewLine();
 
-                ImGui::SameLine((mount_success_window_size.x - 30.0f) / 2);
+                const std::string launch_app_str = common::get_localised_string(localised_strings, "file_menu_launch_apps_item_name");
+                const float size_x_buttons = ImGui::CalcTextSize(launch_app_str.c_str()).x + 30.0f + 20.0f;
 
+                ImGui::SameLine((mount_success_window_size.x - size_x_buttons) / 2);
                 ImGui::PushItemWidth(30.0f);
                 
                 if (ImGui::Button(ok_str.c_str())) {
@@ -1940,6 +1942,13 @@ namespace eka2l1 {
                 }
 
                 ImGui::PopItemWidth();
+                ImGui::SameLine();
+
+                if (ImGui::Button(launch_app_str.c_str())) {
+                    should_show_sd_card_mount = false;
+                    sd_card_mount_choosen = false;
+                    should_show_app_launch = true;
+                }
 
                 ImGui::EndPopup();
             }
