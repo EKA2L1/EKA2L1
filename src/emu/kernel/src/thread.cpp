@@ -515,6 +515,10 @@ namespace eka2l1 {
             request_sema->signal(count);
         }
 
+        std::int32_t thread::request_count() {
+            return request_sema->count();
+        }
+
         bool thread::is_suspended() const {
             return (state == thread_state::create) || (state == thread_state::wait) ||
                 (state == thread_state::wait_fast_sema_suspend) || (state == thread_state::wait_mutex_suspend);

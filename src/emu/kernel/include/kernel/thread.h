@@ -323,6 +323,7 @@ namespace eka2l1 {
 
             void wait_for_any_request();
             void signal_request(int count = 1);
+            std::int32_t request_count();
 
             void set_priority(const thread_priority new_pri);
 
