@@ -43,7 +43,7 @@
     <string name="app_launcher_unavail_msg">App List Server şu an kullanılabilir değil. Aktif etmek için bir cihaz kurun.</string>
     <string name="app_launcher_switch_to_style_title">Switch to</string>
     <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_morden_str">Morden</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">Tanımlayanaman bir hata ortaya çıktı</string>
     <string name="error_dialog_message">Lütfen log-u ekleyip bunu geliştiriciye bildirin!</string>
     <string name="emulated_screen_title">Ekran {}</string>
