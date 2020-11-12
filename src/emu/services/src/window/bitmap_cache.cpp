@@ -21,6 +21,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/fbs/fbs.h>
 #include <services/fbs/palette.h>
 #include <services/window/bitmap_cache.h>
 
@@ -40,14 +41,18 @@
 
 namespace eka2l1::epoc {
     bitmap_cache::bitmap_cache(kernel_system *kern_)
-        : base_large_chunk(nullptr)
+        : fbss_(nullptr)
         , kern(kern_) {
         std::fill(driver_textures.begin(), driver_textures.end(), 0);
         std::fill(hashes.begin(), hashes.end(), 0);
     }
 
     bool is_palette_bitmap(epoc::bitwise_bitmap *bw_bmp) {
-        const epoc::display_mode dsp = bw_bmp->settings_.current_display_mode();
+        epoc::display_mode dsp = bw_bmp->settings_.current_display_mode();
+        if (dsp == epoc::display_mode::none) {
+            dsp = bw_bmp->settings_.initial_display_mode();
+        }
+
         return (dsp == epoc::display_mode::color16) || (dsp == epoc::display_mode::color256);
     }
 
@@ -74,29 +79,34 @@ namespace eka2l1::epoc {
     }
 
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
-        const std::uint8_t *original_ptr, std::vector<char> &converted_pool) {
+        const std::uint8_t *original_ptr, std::vector<char> &converted_pool, epoc::palette_256 &the_palette) {
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         converted_pool.resize(byte_width_converted * bw_bmp->header_.size_pixels.y);
 
         char *return_ptr = &converted_pool[0];
 
+        epoc::display_mode dsp = bw_bmp->settings_.current_display_mode();
+        if (dsp == epoc::display_mode::none) {
+            dsp = bw_bmp->settings_.initial_display_mode();
+        }
+
         for (std::size_t y = 0; y < bw_bmp->header_.size_pixels.y; y++) {
             for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
-                switch (bw_bmp->settings_.current_display_mode()) {
+                switch (dsp) {
                 case epoc::display_mode::color256: {
                     const std::uint8_t palette_index = original_ptr[y * bw_bmp->byte_width_ + x];
-                    const std::uint32_t palette_color = epoc::color_256_palette[palette_index];
+                    const std::uint32_t palette_color = the_palette[palette_index];
                     const std::size_t location = byte_width_converted * y + x * 3;
 
-                    return_ptr[location] = palette_color & 0xFF;
+                    return_ptr[location + 2] = palette_color & 0xFF;
                     return_ptr[location + 1] = (palette_color >> 8) & 0xFF;
-                    return_ptr[location + 2] = (palette_color >> 16) & 0xFF;
+                    return_ptr[location] = (palette_color >> 16) & 0xFF;
 
                     break;
                 }
 
                 default:
-                    LOG_ERROR("Unhandled display mode to convert {}", static_cast<int>(bw_bmp->settings_.current_display_mode()));
+                    LOG_ERROR("Unhandled display mode to convert {}", static_cast<int>(dsp));
                     break;
                 }
             }
@@ -128,7 +138,7 @@ namespace eka2l1::epoc {
         XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->uid_), sizeof(bw_bmp->uid_));
 
         // Lastly, we needs to hash the data, to see if anything changed
-        XXH64_update(state, bw_bmp->data_pointer(base_large_chunk), bw_bmp->header_.bitmap_size - sizeof(bw_bmp->header_));
+        XXH64_update(state, bw_bmp->data_pointer(fbss_), bw_bmp->header_.bitmap_size - sizeof(bw_bmp->header_));
 
         hash = XXH64_digest(state);
         XXH64_freeState(state);
@@ -158,9 +168,11 @@ namespace eka2l1::epoc {
 
     drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
         epoc::bitwise_bitmap *bmp) {
-        if (!base_large_chunk) {
-            chunk_ptr ch = kern->get_by_name<kernel::chunk>("FbsLargeChunk");
-            base_large_chunk = reinterpret_cast<std::uint8_t*>(ch->host_base());
+        if (!fbss_) {
+            server_ptr ss = kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
+                kern->get_epoc_version()));
+
+            fbss_ = reinterpret_cast<fbs_server*>(ss);
         }
 
         std::int64_t idx = 0;
@@ -208,7 +220,7 @@ namespace eka2l1::epoc {
         }
 
         if (should_upload) {
-            char *data_pointer = reinterpret_cast<char *>(bmp->data_pointer(base_large_chunk));
+            char *data_pointer = reinterpret_cast<char *>(bmp->data_pointer(fbss_));
 
             std::vector<std::uint8_t> decompressed;
             std::uint32_t raw_size = 0;
@@ -262,7 +274,8 @@ namespace eka2l1::epoc {
             // GPU don't support them. Convert them on CPU
             if (is_palette_bitmap(bmp)) {
                 data_pointer = converted_palette_bitmap_to_twenty_four_bitmap(bmp, reinterpret_cast<const std::uint8_t *>(data_pointer),
-                    converted);
+                    converted, epoc::get_suitable_palette_256(kern->get_epoc_version()));
+
                 bpp = 24;
                 raw_size = static_cast<std::uint32_t>(converted.size());
 
@@ -287,7 +300,12 @@ namespace eka2l1::epoc {
             builder->update_bitmap(driver_textures[idx], data_pointer, raw_size, { 0, 0 }, bmp->header_.size_pixels, pixels_per_line);
             hashes[idx] = hash;
 
-            if (bmp->settings_.current_display_mode() == epoc::display_mode::color16mu) {
+            epoc::display_mode dsp = bmp->settings_.current_display_mode();
+            if (dsp == epoc::display_mode::none) {
+                dsp = bmp->settings_.initial_display_mode();
+            }
+            
+            if (dsp == epoc::display_mode::color16mu) {
                 builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                     drivers::channel_swizzle::blue, drivers::channel_swizzle::one);
             }
