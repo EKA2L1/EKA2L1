@@ -43,7 +43,7 @@
     <string name="app_launcher_unavail_msg">应用列表服务器不可用，请安装设备来启用。</string>
     <string name="app_launcher_switch_to_style_title">切换到</string>
     <string name="app_launcher_style_classical_str">经典</string>
-    <string name="app_launcher_style_morden_str">现代</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">一只野生的错误出现了</string>
     <string name="error_dialog_message">请附上运行日志文件并提交给开发者！</string>
     <string name="emulated_screen_title">屏幕{}</string>
