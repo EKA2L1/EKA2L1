@@ -86,6 +86,8 @@ add_library(epocservs
         include/services/ui/cap/oom_app.h
         include/services/ui/cap/sgc.h
         include/services/ui/icon/icon.h
+        include/services/ui/plugins/keylocknof.h
+        include/services/ui/plugins/notenof.h
         include/services/ui/skin/chunk_maintainer.h
         include/services/ui/skin/icon_cfg.h
         include/services/ui/skin/ops.h
@@ -98,7 +100,6 @@ add_library(epocservs
         include/services/ui/view/queue.h
         include/services/ui/view/view.h
         include/services/ui/eikappui.h
-        include/services/ui/notenof.h
         include/services/window/bitmap_cache.h
         include/services/window/keys.h
         include/services/window/scheduler.h
@@ -187,6 +188,8 @@ add_library(epocservs
         src/ui/cap/sgc.cpp
         src/ui/icon/icon.cpp
         src/ui/icon/init.cpp
+        src/ui/plugins/keylocknof.cpp
+        src/ui/plugins/notenof.cpp
         src/ui/skin/chunk_maintainer.cpp
         src/ui/skin/icon_cfg.cpp
         src/ui/skin/ops.cpp
@@ -198,7 +201,6 @@ add_library(epocservs
         src/ui/view/queue.cpp
         src/ui/view/view.cpp
         src/ui/eikappui.cpp
-        src/ui/notenof.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/plugins/clickdll.cpp
         src/window/classes/plugins/sprite.cpp

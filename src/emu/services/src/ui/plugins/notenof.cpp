@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/ui/notenof.h>
+#include <services/ui/plugins/notenof.h>
 #include <kernel/kernel.h>
 
 #include <utils/err.h>
