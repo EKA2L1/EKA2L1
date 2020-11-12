@@ -41,6 +41,9 @@
     <string name="help_menu_about_item_name">Über</string>
     <string name="app_launcher_title">App Launcher</string>
     <string name="app_launcher_unavail_msg">App List Server ist nicht verfügbar. Installieren Sie ein Gerät, um ihn zu aktivieren.</string>
+    <string name="app_launcher_switch_to_style_title">Switch to</string>
+    <string name="app_launcher_style_classical_str">Classical</string>
+    <string name="app_launcher_style_morden_str">Morden</string>
     <string name="error_dialog_title">Ein wilder Fehler erscheint</string>
     <string name="error_dialog_message">Bitte hängen Sie das Log an und melden Sie es einem Entwickler!</string>
     <string name="emulated_screen_title">Bildschirm {}</string>
