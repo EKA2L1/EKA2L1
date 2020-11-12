@@ -455,6 +455,14 @@ namespace eka2l1 {
                     return false;
                 }
 
+                // Add other bitwise bitmap members
+                // EKA1 bitmap only stops at data offset.
+                size_of_source += offsetof(epoc::bitwise_bitmap, data_offset_) + sizeof(epoc::bitwise_bitmap::data_offset_)
+                    - sizeof(loader::sbm_header);
+
+                // Size of the bitmap is aligned by 4.
+                size_of_source = common::align(size_of_source, 4);
+
                 icon_list[i * 2 + 1].bmp_ = nullptr;
                 icon_list[i * 2 + 1].bmp_rom_addr_ = icon_list[i * 2].bmp_rom_addr_ + size_of_source;
             } else {
