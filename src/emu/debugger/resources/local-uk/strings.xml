@@ -41,9 +41,9 @@
     <string name="help_menu_about_item_name">Про програму</string>
     <string name="app_launcher_title">Панель запуску застосунків</string>
     <string name="app_launcher_unavail_msg">Сервер списку застосунків недоступний. Установіть пристрій, щоб увімкнути його.</string>
-    <string name="app_launcher_switch_to_style_title">Switch to</string>
-    <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_morden_str">Morden</string>
+    <string name="app_launcher_switch_to_style_title">Перемкнути на</string>
+    <string name="app_launcher_style_classical_str">Класичний</string>
+    <string name="app_launcher_style_modern_str">Сучасний</string>
     <string name="error_dialog_title">З\'являється дика помилка</string>
     <string name="error_dialog_message">Будь ласка, прикріпіть журнал і повідомте розробника!</string>
     <string name="emulated_screen_title">Екран {}</string>
