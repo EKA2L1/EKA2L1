@@ -100,6 +100,10 @@ namespace eka2l1 {
             start_notifier(ctx);
             break;
 
+        case notifier_cancel:
+            ctx->complete(epoc::error_none);
+            break;
+
         case notifier_start_from_dll:
         case notifier_start_from_dll_and_get_response:
             // From doc: This function has never been implemented on any Symbian OS version.
