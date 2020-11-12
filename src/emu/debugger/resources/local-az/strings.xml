@@ -43,7 +43,7 @@
     <string name="app_launcher_unavail_msg">App List Xidməti əlçatan deyil. Fəal etmək üçün bir cihaz quraşdırın.</string>
     <string name="app_launcher_switch_to_style_title">Switch to</string>
     <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_morden_str">Morden</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">Bilinməyən bir xəta göründü</string>
     <string name="error_dialog_message">Zəhmət olmasa jurnala əlavə edib tərtibatçıya xəbər verin!</string>
     <string name="emulated_screen_title">Ekran {}</string>
