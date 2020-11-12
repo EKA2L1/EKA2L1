@@ -43,7 +43,7 @@
     <string name="app_launcher_unavail_msg">Serwer listy aplikacji jest niedostępny. Zainstaluj urządzenie by go wyłączyć.</string>
     <string name="app_launcher_switch_to_style_title">Switch to</string>
     <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_morden_str">Morden</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">Pojawił się dziki błąd</string>
     <string name="error_dialog_message">Załącz log i zgłoś to do twórcy!</string>
     <string name="emulated_screen_title">Ekran {}</string>
