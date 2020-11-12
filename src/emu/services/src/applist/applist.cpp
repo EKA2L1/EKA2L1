@@ -759,4 +759,31 @@ namespace eka2l1 {
         std::u16string apacmddat = parameter.to_string(is_oldarch());
         return launch_app(executable_to_run, apacmddat, thread_id);
     }
+
+    std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon(apa_app_registry &registry, const std::int8_t index) {
+        epoc::bitwise_bitmap *real_bmp = nullptr;
+        epoc::bitwise_bitmap *real_mask_bmp = nullptr;
+
+        if (index * 2 >= registry.app_icons.size()) {
+            return std::nullopt;
+        }
+
+        if (registry.app_icons[index * 2].bmp_)
+            real_bmp = registry.app_icons[index * 2].bmp_->bitmap_;
+        else
+            real_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry. app_icons[index * 2].bmp_rom_addr_).get(
+                sys->get_memory_system());
+
+        if (!real_bmp) {
+            return std::nullopt;
+        }
+            
+        if (registry.app_icons[index * 2 + 1].bmp_)
+            real_mask_bmp = registry.app_icons[index * 2 + 1].bmp_->bitmap_;
+        else
+            real_mask_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry.app_icons[index * 2 + 1].bmp_rom_addr_).get(
+                sys->get_memory_system());
+
+        return std::make_optional(std::make_pair(real_bmp, real_mask_bmp));
+    }
 }

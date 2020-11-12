@@ -43,6 +43,10 @@ namespace eka2l1 {
         class process;
     }
 
+    namespace epoc {
+        struct bitwise_bitmap;
+    }
+
     namespace epoc::apa {
         struct command_line;
     }
@@ -61,6 +65,8 @@ namespace eka2l1 {
         fbsbitmap *bmp_;
         address bmp_rom_addr_;
     };
+
+    using apa_app_masked_icon_bitmap = std::pair<epoc::bitwise_bitmap*, epoc::bitwise_bitmap*>;
 
     struct apa_app_registry {
         apa_app_info mandatory_info;
@@ -275,6 +281,7 @@ namespace eka2l1 {
         bool is_oldarch();
 
         bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id);
+        std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::int8_t index);
 
         std::mutex list_access_mut_;
 
