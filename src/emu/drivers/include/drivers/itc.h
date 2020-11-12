@@ -486,4 +486,9 @@ namespace eka2l1::drivers {
         void set_swizzle(drivers::handle h, drivers::channel_swizzle r, drivers::channel_swizzle g, drivers::channel_swizzle b,
             drivers::channel_swizzle a) override;
     };
+
+    struct graphics_command_callback_data {
+        drivers::graphics_command_list_builder *builder_;
+        void *userdata_;
+    };
 }

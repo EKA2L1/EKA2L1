@@ -189,18 +189,32 @@ namespace eka2l1::drivers {
             const ImDrawList *cmd_list = draw_data->CmdLists[n];
 
             for (auto pcmd = cmd_list->CmdBuffer.begin(); pcmd != cmd_list->CmdBuffer.end(); pcmd++) {
+                // Make this scissor follow Y axis down by negative the Y size
+                // User callback can disable by themself the clipping.
+                eka2l1::rect clip_rect(
+                    eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.y) },
+                    eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), -static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
+
+                cmd_builder->clip_rect(clip_rect);
+                
                 if (pcmd->UserCallback) {
-                    pcmd->UserCallback(cmd_list, pcmd);
+                    ImDrawCmd cmd_copy = *pcmd;
+                    
+                    drivers::graphics_command_callback_data data;
+
+                    data.builder_ = cmd_builder;
+                    data.userdata_ = pcmd->UserCallbackData;
+
+                    cmd_copy.UserCallbackData = &data;
+                    cmd_copy.UserCallback(cmd_list, &cmd_copy);
+            
+                    // Bind them back, in case buffer bindings are modified
+                    cmd_builder->bind_buffer(vbo);
+                    cmd_builder->bind_buffer(ibo);
+                    
+                    cmd_builder->use_program(shader);
                 } else {
                     cmd_builder->bind_texture(reinterpret_cast<drivers::handle>(pcmd->TextureId), 0);
-
-                    // Make this scissor follow Y axis down by negative the Y size
-                    eka2l1::rect clip_rect(
-                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.x), static_cast<int>(pcmd->ClipRect.y) },
-                        eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), -static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
-
-                    cmd_builder->clip_rect(clip_rect);
-
                     cmd_builder->draw_indexed(drivers::graphics_primitive_mode::triangles, pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? drivers::data_format::word : drivers::data_format::uint,
                         elem_offset + pcmd->IdxOffset * sizeof(ImDrawIdx), vert_offset + pcmd->VtxOffset);
                 }
