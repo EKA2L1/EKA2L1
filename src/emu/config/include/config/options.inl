@@ -60,6 +60,7 @@ OPTION(enable-nearest-neighbor-filter, nearest_neighbor_filtering, true)
 OPTION(integer-scaling, integer_scaling, true)
 OPTION(cpu-load-save, cpu_load_save, true)
 OPTION(rtos-level, rtos_level, "mid")
+OPTION(ui-new-style, ui_new_style, true)
 
 #ifdef OPTION
 #undef OPTION

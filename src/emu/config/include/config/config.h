@@ -96,6 +96,8 @@ namespace eka2l1::config {
         std::atomic<bool> stepping { false };
         std::string rtos_level;
 
+        bool ui_new_style { true };
+
         std::vector<keybind> keybinds;
 
         void serialize();
