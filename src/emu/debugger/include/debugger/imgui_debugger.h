@@ -36,6 +36,7 @@
 #include <services/window/common.h>
 
 struct ImFont;
+struct ImGuiTextFilter;
 
 namespace eka2l1 {
     namespace service {
@@ -90,6 +91,7 @@ namespace eka2l1 {
         bool should_package_manager_display_language_choose;
 
         bool should_show_app_launch;
+        bool should_app_launch_use_new_style;
         bool should_still_focus_on_keyboard;
         bool should_show_install_device_wizard;
         bool should_show_about;
@@ -165,6 +167,9 @@ namespace eka2l1 {
         int last_cursor;
 
         void show_app_launch();
+        void show_app_list_classical(ImGuiTextFilter &filter);
+        void show_app_list_with_icons(ImGuiTextFilter &filter);
+
         void show_empty_device_warn();
         void show_touchscreen_disabled_warn();
 
@@ -216,6 +221,8 @@ namespace eka2l1 {
         std::condition_variable debug_cv;
 
         drivers::handle phony_icon;
+        drivers::handle icon_placeholder_icon;
+
         eka2l1::vec2 phony_size;
 
         bool should_show_menu_fullscreen;

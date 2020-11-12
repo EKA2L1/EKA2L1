@@ -46,6 +46,9 @@
 
     <string name="app_launcher_title">App launcher</string>
     <string name="app_launcher_unavail_msg">App List Server is not available. Install a device to enable it.</string>
+    <string name="app_launcher_switch_to_style_title">Switch to</string>
+    <string name="app_launcher_style_classical_str">Classical</string>
+    <string name="app_launcher_style_morden_str">Morden</string>
 
     <string name="error_dialog_title">A wild error appears</string>
     <string name="error_dialog_message">Please attach the log and report this to a developer!</string>
