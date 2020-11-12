@@ -21,10 +21,10 @@
 #pragma once
 
 #include <services/framework.h>
+#include <services/notifier/plugin.h>
 #include <kernel/server.h>
 
 namespace eka2l1 {
-
     enum notifier_opcode {
         notifier_notify,
         notifier_info_print,
@@ -41,9 +41,12 @@ namespace eka2l1 {
     std::string get_notifier_server_name_by_epocver(const epocver ver);
 
     class notifier_server : public service::typical_server {
+        std::vector<epoc::notifier::plugin_instance> plugins_;
+
     public:
         explicit notifier_server(eka2l1::system *sys);
 
+        epoc::notifier::plugin_base *get_plugin(const epoc::uid id);
         void connect(service::ipc_context &context) override;
     };
 
@@ -51,5 +54,6 @@ namespace eka2l1 {
         explicit notifier_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
+        void start_notifier(service::ipc_context *ctx);
     };
 }

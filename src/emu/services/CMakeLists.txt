@@ -66,6 +66,7 @@ add_library(epocservs
         include/services/loader/op.h
         include/services/msv/msv.h
         include/services/notifier/notifier.h
+        include/services/notifier/queries.h
         include/services/posix/posix.h
         include/services/posix/op.h
         include/services/remcon/common.h
@@ -97,6 +98,7 @@ add_library(epocservs
         include/services/ui/view/queue.h
         include/services/ui/view/view.h
         include/services/ui/eikappui.h
+        include/services/ui/notenof.h
         include/services/window/bitmap_cache.h
         include/services/window/keys.h
         include/services/window/scheduler.h
@@ -166,6 +168,7 @@ add_library(epocservs
         src/msv/msv.cpp
         src/msv/registry.cpp
         src/notifier/notifier.cpp
+        src/notifier/queries.cpp
         src/posix/posix.cpp
         src/remcon/common.cpp
         src/remcon/controller.cpp
@@ -195,6 +198,7 @@ add_library(epocservs
         src/ui/view/queue.cpp
         src/ui/view/view.cpp
         src/ui/eikappui.cpp
+        src/ui/notenof.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/plugins/clickdll.cpp
         src/window/classes/plugins/sprite.cpp
