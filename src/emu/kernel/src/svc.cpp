@@ -1940,6 +1940,17 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(thr->get_exit_type());
     }
 
+    BRIDGE_FUNC(std::int32_t, thread_request_count, const kernel::handle h) {
+        kernel::thread *thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            LOG_ERROR("Thread with handle 0x{:X} not found, returning 0", h);
+            return 0;
+        }
+
+        return thr->request_count();
+    }
+
     BRIDGE_FUNC(std::int32_t, process_open_by_id, std::uint32_t id, const epoc::owner_type owner) {
         auto pr = kern->get_by_id<kernel::process>(id);
 
@@ -4222,6 +4233,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, semaphore_count),
         BRIDGE_REGISTER(0x2A, semaphore_wait),
         BRIDGE_REGISTER(0x32, thread_id),
+        BRIDGE_REGISTER(0x3C, thread_request_count),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
         BRIDGE_REGISTER(0x4F, uchar_fold),
         BRIDGE_REGISTER(0x51, uchar_lowercase),
