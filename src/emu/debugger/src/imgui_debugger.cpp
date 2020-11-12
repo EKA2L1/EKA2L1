@@ -2351,7 +2351,7 @@ namespace eka2l1 {
                     collision_rect.Max.x += ImGui::GetWindowContentRegionWidth() - ICON_BORDER_SELC * 2;
                     collision_rect.Max.y += ICON_BORDER_SELC + scaled_icon_size;
 
-                    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow) &&
+                    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
                         ImGui::IsMouseHoveringRect(collision_rect.Min, collision_rect.Max, true)) {
                         ImGui::GetWindowDrawList()->AddRectFilled(collision_rect.Min, collision_rect.Max,
                             0x80E6E6AD, 1.0f);
