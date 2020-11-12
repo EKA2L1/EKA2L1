@@ -43,7 +43,7 @@
     <string name="app_launcher_unavail_msg">Служба App List недоступна. Установите устройство для её включения.</string>
     <string name="app_launcher_switch_to_style_title">Switch to</string>
     <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_morden_str">Morden</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">Появляется дикая ошибка</string>
     <string name="error_dialog_message">Пожалуйста, приложите лог и сообщите об этом разработчику!</string>
     <string name="emulated_screen_title">Экран {}</string>
