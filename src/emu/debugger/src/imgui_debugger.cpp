@@ -2289,10 +2289,11 @@ namespace eka2l1 {
         static constexpr float ICON_PADDING = 5.0f;
         static constexpr float ICON_PADDING_X = 10.0f;
 
-        const int yadv = static_cast<int>(ICON_SIZE + ICON_PADDING);
+        const float scaled_icon_size = ICON_SIZE * conf->ui_scale;
+        const int yadv = static_cast<int>(scaled_icon_size + ICON_PADDING);
 
         if (search.Filters.empty()) {
-            clipper.Begin(static_cast<int>(registerations.size()), yadv);
+            clipper.Begin(static_cast<int>(registerations.size()), static_cast<float>(yadv));
             should_step = true;
         }
 
@@ -2332,7 +2333,7 @@ namespace eka2l1 {
                     bool was_hovered = false;
 
                     ImVec2 offset_text_start;
-                    offset_text_start.x += static_cast<float>(offset_display.x) + ICON_SIZE + ICON_PADDING_X; 
+                    offset_text_start.x += static_cast<float>(offset_display.x) + scaled_icon_size + ICON_PADDING_X; 
                     offset_text_start.y = cursor_pos_y + padding_builtin + yadv * passed;
 
                     ImRect collision_rect;
@@ -2348,7 +2349,7 @@ namespace eka2l1 {
 
                     collision_rect.Max = collision_start;
                     collision_rect.Max.x += ImGui::GetWindowContentRegionWidth() - ICON_BORDER_SELC * 2;
-                    collision_rect.Max.y += ICON_BORDER_SELC + ICON_SIZE;
+                    collision_rect.Max.y += ICON_BORDER_SELC + scaled_icon_size;
 
                     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow) &&
                         ImGui::IsMouseHoveringRect(collision_rect.Min, collision_rect.Max, true)) {
@@ -2367,7 +2368,7 @@ namespace eka2l1 {
                     data->cache_ = winserv->get_bitmap_cache();
                     data->driver_ = sys->get_graphics_driver();
                     data->offset_ = offset_display;
-                    data->target_height_ = ICON_SIZE;
+                    data->target_height_ = scaled_icon_size;
 
                     bool should_draw_icon = false;
 
@@ -2399,12 +2400,11 @@ namespace eka2l1 {
                     }
 
                     if (should_draw_icon) {
-                        ImGui::GetWindowDrawList()->AddCallback(app_list_icon_bitmap_draw_callback,
-                            data);
+                        ImGui::GetWindowDrawList()->AddCallback(app_list_icon_bitmap_draw_callback, data);
                     }
 
                     const float height_of_text = ImGui::CalcTextSize(name.c_str()).y + ImGui::CalcTextSize(" UID: ").y;
-                    offset_text_start.y += (ICON_SIZE - height_of_text - ImGui::GetStyle().ItemSpacing.y) / 2;
+                    offset_text_start.y += (scaled_icon_size - height_of_text - ImGui::GetStyle().ItemSpacing.y) / 2;
 
                     ImGui::SetCursorPos(offset_text_start);
                     ImGui::Text("%s", name.c_str());
@@ -2467,7 +2467,7 @@ namespace eka2l1 {
 
                     const std::string switch_style_name = common::get_localised_string(localised_strings,
                         should_app_launch_use_new_style ?   "app_launcher_style_classical_str" :
-                                                            "app_launcher_style_morden_str");
+                                                            "app_launcher_style_modern_str");
 
                     const std::string final_switch_str = switch_title + " " + switch_style_name;
 
