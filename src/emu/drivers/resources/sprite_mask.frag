@@ -10,6 +10,8 @@ in vec2 r_texcoord;
 out vec4 o_color;
 
 void main() {
-    vec4 mask_pixel = abs(vec4(u_invert) - texture(u_mask, r_texcoord));
-    o_color =  mask_pixel * texture(u_tex, r_texcoord) * (u_color / 255.0);
+    float mask_value = abs(u_invert - texture(u_mask, r_texcoord).r);
+
+    o_color =  texture(u_tex, r_texcoord) * (u_color / 255.0);
+    o_color.a = o_color.a * mask_value;
 }
