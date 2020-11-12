@@ -41,6 +41,9 @@
     <string name="help_menu_about_item_name">Giới thiệu</string>
     <string name="app_launcher_title">Trình khởi chạy ứng dụng</string>
     <string name="app_launcher_unavail_msg">Dịch vụ liệt kê ứng dụng hiện không tồn tại. Cài đặt một thiết bị để khởi tạo nó.</string>
+    <string name="app_launcher_switch_to_style_title">Switch to</string>
+    <string name="app_launcher_style_classical_str">Classical</string>
+    <string name="app_launcher_style_morden_str">Morden</string>
     <string name="error_dialog_title">Lỗi xuất hiện</string>
     <string name="error_dialog_message">Hãy lấy file log và báo cáo lỗi này cho nhà phát triển!</string>
     <string name="emulated_screen_title">Màn hình {}</string>
