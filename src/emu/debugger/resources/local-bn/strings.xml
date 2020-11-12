@@ -41,6 +41,9 @@
     <string name="help_menu_about_item_name">সম্বন্ধে</string>
     <string name="app_launcher_title">অ্যাপ লঞ্চার</string>
     <string name="app_launcher_unavail_msg">অ্যাপ লিস্ট সার্ভারটি উপলব্ধ নয়। সচল করতে একটি ডিভাইস ইনস্টল করুন।.</string>
+    <string name="app_launcher_switch_to_style_title">Switch to</string>
+    <string name="app_launcher_style_classical_str">Classical</string>
+    <string name="app_launcher_style_morden_str">Morden</string>
     <string name="error_dialog_title">একটি ভয়ানক ত্রুটি হাজির</string>
     <string name="error_dialog_message">অনুগ্রহ করে লগ ফাইলটি সংযুক্ত করে ডেভেলপারের কাছে জানিয়ে দিন!</string>
     <string name="emulated_screen_title">স্ক্রিন {}</string>
