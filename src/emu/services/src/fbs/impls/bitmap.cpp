@@ -272,12 +272,13 @@ namespace eka2l1 {
             return static_cast<bitmap_file_compression>(header_.compression);
         }
         
-        std::uint8_t *bitwise_bitmap::data_pointer(std::uint8_t *base_large) {
-            if (offset_from_me_) {
+        std::uint8_t *bitwise_bitmap::data_pointer(fbs_server *ss) {
+            // Use traditional method for on-rom bitmap that does not have additional info
+            if (!allocator_ || !pile_ || !ss->is_large_bitmap(header_.bitmap_size - sizeof(loader::sbm_header))) {
                 return reinterpret_cast<std::uint8_t*>(this) + data_offset_;
             }
 
-            return base_large + data_offset_;
+            return ss->get_large_chunk_base() + data_offset_;
         }
     }
     
@@ -688,11 +689,11 @@ namespace eka2l1 {
 
         // First, free the bitmap pixels.
         if (bmp->bitmap_->offset_from_me_) {
-            if (!shared_chunk_allocator->free(bmp->bitmap_->data_pointer(base_large_chunk) - reserved_bytes)) {
+            if (!shared_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
                 return false;
             }
         } else {
-            if (!large_chunk_allocator->free(bmp->bitmap_->data_pointer(base_large_chunk) - reserved_bytes)) {
+            if (!large_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
                 return false;
             }
         }
@@ -893,7 +894,7 @@ namespace eka2l1 {
     }
 
     namespace epoc {
-        bool save_bwbmp_to_file(const std::string &destination, epoc::bitwise_bitmap *bitmap, const char *base) {
+        bool save_bwbmp_to_file(const std::string &destination, epoc::bitwise_bitmap *bitmap, const char *base, const epocver sysver) {
             if (bitmap->header_.compression != epoc::bitmap_file_no_compression) {
                 return false;
             }
@@ -985,7 +986,7 @@ namespace eka2l1 {
                     for (std::size_t y = 0; y < bitmap->header_.size_pixels.y; y++) {
                         for (std::size_t x = 0; x < bitmap->header_.size_pixels.x; x++) {
                             const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t *>(packed_data + y * byte_width + x);
-                            std::uint32_t palette_color = epoc::color_256_palette[pixel];
+                            std::uint32_t palette_color = epoc::get_suitable_palette_256(sysver)[pixel];
 
                             file.write(reinterpret_cast<const char *>(&palette_color) + 2, 1);
                             file.write(reinterpret_cast<const char *>(&palette_color) + 1, 1);

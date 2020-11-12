@@ -98,7 +98,7 @@ namespace eka2l1::epoc {
         int copy_data(const bitwise_bitmap &source, uint8_t *base);
 
         bitmap_file_compression compression_type() const;
-        std::uint8_t *data_pointer(std::uint8_t *base_large);
+        std::uint8_t *data_pointer(fbs_server *serv);
     };
 
     bool save_bwbmp_to_file(const std::string &destination, bitwise_bitmap *bitmap, const char *base);

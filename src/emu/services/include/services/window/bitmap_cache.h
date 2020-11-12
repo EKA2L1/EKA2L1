@@ -33,6 +33,7 @@
 
 namespace eka2l1 {
     class kernel_system;
+    class fbs_server;
 }
 
 namespace eka2l1::epoc {
@@ -53,7 +54,7 @@ namespace eka2l1::epoc {
         hashes_array hashes;
         sizes_array bitmap_sizes;
 
-        std::uint8_t *base_large_chunk;
+        fbs_server *fbss_;
 
         kernel_system *kern;
         drivers::graphics_driver *driver;
