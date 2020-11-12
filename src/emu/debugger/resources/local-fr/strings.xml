@@ -43,7 +43,7 @@
     <string name="app_launcher_unavail_msg">Le serveur de liste d\'applications n\'est pas disponible. Installez un appareil pour l\'activer.</string>
     <string name="app_launcher_switch_to_style_title">Switch to</string>
     <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_morden_str">Morden</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">Une erreur sauvage est apparue</string>
     <string name="error_dialog_message">Signalez le problème à un développeur en joignant le journal d\'erreur (présent dans votre dossier racine) !</string>
     <string name="emulated_screen_title">Écran {}</string>
