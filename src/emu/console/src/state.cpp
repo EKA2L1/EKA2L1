@@ -48,6 +48,11 @@ namespace eka2l1::desktop {
         , logger(nullptr)
         , window(nullptr)
         , joystick_controller(nullptr)
+        , should_emu_quit(false)
+        , should_emu_pause(false)
+        , should_ui_quit(false)
+        , stage_two_inited(false)
+        , first_time(true)
         , init_fullscreen(false)
         , winserv(nullptr)
         , normal_font(nullptr) {
