@@ -25,6 +25,8 @@
 #include <utils/consts.h>
 #include <utils/err.h>
 
+#include <common/cvt.h>
+
 namespace eka2l1 {
     std::string get_notifier_server_name_by_epocver(const epocver ver) {
         if (ver <= epocver::eka2) {
@@ -94,8 +96,30 @@ namespace eka2l1 {
         plug->handle(request_data, respond_data, complete_info);
     }
     
+    void notifier_client_session::info_print(service::ipc_context *ctx) {
+        std::optional<std::u16string> to_display = ctx->get_argument_value<std::u16string>(0);
+
+        if (!to_display.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // TODO: Add dialog to display this string
+        LOG_INFO("Trying to display: {}", common::ucs2_to_utf8(to_display.value()));
+        ctx->complete(epoc::error_none);
+    }
+
     void notifier_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case notifier_notify:
+            LOG_TRACE("Notifier opcode: notify stubbed");
+            ctx->complete(epoc::error_none);
+            break;
+
+        case notifier_info_print:
+            info_print(ctx);
+            break;
+
         case notifier_start:
             start_notifier(ctx);
             break;

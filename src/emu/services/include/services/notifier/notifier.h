@@ -55,5 +55,6 @@ namespace eka2l1 {
 
         void fetch(service::ipc_context *ctx) override;
         void start_notifier(service::ipc_context *ctx);
+        void info_print(service::ipc_context *ctx);
     };
 }
