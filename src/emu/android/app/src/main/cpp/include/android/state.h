@@ -82,6 +82,8 @@ namespace eka2l1::android {
 
         std::mutex input_mutex;
 
+        explicit emulator();
+
         void stage_one();
         bool stage_two();
     };

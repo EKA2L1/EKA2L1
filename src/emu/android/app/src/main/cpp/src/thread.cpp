@@ -260,8 +260,6 @@ namespace eka2l1::android {
     }
 
     void init_threads(emulator &state) {
-        state.should_graphics_pause = false;
-        state.should_emu_pause = false;
         // Continue graphics initialization
         state.graphics_sema.notify();
     }
