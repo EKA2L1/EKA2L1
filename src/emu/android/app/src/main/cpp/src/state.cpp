@@ -111,6 +111,9 @@ namespace eka2l1::android {
             kernel_system *kern = symsys->get_kernel_system();
             hle::lib_manager *libmngr = kern->get_lib_manager();
 
+            // Start the bootload
+            kern->start_bootload();
+
             libmngr->load_patch_libraries(".//patch//");
             stage_two_inited = true;
         }
