@@ -99,7 +99,7 @@ namespace eka2l1::epoc {
             execute_open_chunk_global = 0x02,
             execute_chunk_adjust = 0x03,
             execute_compress_heap = 0x04,
-            execute_open_handle = 0x0E,
+            execute_open_find_handle = 0x0E,
             execute_duplicate_handle = 0x0F,
             execute_close_handle = 0x10,
             execute_create_server_global = 0x15,

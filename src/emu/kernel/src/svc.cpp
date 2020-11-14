@@ -1394,7 +1394,7 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        std::optional<eka2l1::find_handle> info = kern->find_object(name, handle->handle + 1,
+        std::optional<eka2l1::find_handle> info = kern->find_object(name, handle->handle,
             static_cast<kernel::object_type>(obj_type), true);
 
         if (!info) {
@@ -1431,7 +1431,7 @@ namespace eka2l1::epoc {
         }
 
         //LOG_TRACE("Finding object name: {}", name);
-        std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching + 1,
+        std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching,
             static_cast<kernel::object_type>(obj_type), true);
 
         if (!info) {
@@ -2480,11 +2480,23 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        if (len > static_cast<std::int32_t>(buf->get_length())) {
-            return epoc::error_overflow;
+        kernel::process *process_to_operate = thr_to_operate->owning_process();
+
+        if (is_write) {
+            if (len > static_cast<std::int32_t>(buf->get_length())) {
+                return epoc::error_overflow;
+            }
+        } else {
+            if (len > static_cast<std::int32_t>(buf->get_max_length(process_to_operate))) {
+                return epoc::error_underflow;
+            }
         }
 
-        kernel::process *process_to_operate = thr_to_operate->owning_process();
+        if (process_to_operate->is_kernel_process()) {
+            LOG_WARN("App trying to write to kernel process. Nothing is changed.");
+            return epoc::error_none;
+        }
+
         std::uint8_t *buf_ptr = reinterpret_cast<std::uint8_t*>(buf->get_pointer_raw(crr));
 
         std::uint8_t *dest_of_operate = reinterpret_cast<std::uint8_t*>(process_to_operate->
@@ -3162,6 +3174,27 @@ namespace eka2l1::epoc {
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
     }
 
+    
+    std::int32_t open_object_through_find_handle_eka1(kernel_system *kern, const std::uint32_t attribute,
+        epoc::eka1_executor *create_info, epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        const std::uint32_t handle_find = create_info->arg1_;
+        kernel_obj_ptr obj = kern->get_object_from_find_handle(handle_find);
+
+        if (!obj) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        kernel::handle h = kern->mirror(obj, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
     std::int32_t close_handle_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         const std::int32_t close_result = kern->close(create_info->arg0_);
@@ -3482,6 +3515,9 @@ namespace eka2l1::epoc {
         case epoc::eka1_executor::execute_open_chunk_global:
         case epoc::eka1_executor::execute_open_mutex_global:
             return open_object_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_open_find_handle:
+            return open_object_through_find_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_chunk_adjust:
             return chunk_adjust_eka1(kern, attribute, create_info, finish_signal, crr_thread);
