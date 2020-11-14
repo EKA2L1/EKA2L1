@@ -112,22 +112,13 @@ namespace eka2l1::kernel {
         }
 
         if (data_size_align != 0) {
-            bool is_in_bss_rom_region = false;
-
             if (!data_addr) {
                 dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
                     prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
             } else {
-                // NOTE: For ROM chunk data base is the BSS address
-                dt_chunk = new_foe->get_rom_bss_chunk();
-
-                if (data_base < dt_chunk->base(new_foe).ptr_address()) {
-                    dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                        prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous,
-                        0x00, false, data_base, nullptr);
-                } else {
-                    is_in_bss_rom_region = true;
-                }
+                dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
+                    prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous,
+                    0x00, false, data_base, nullptr);
             }
 
             if (!dt_chunk) {
@@ -136,10 +127,6 @@ namespace eka2l1::kernel {
 
             data_base_ptr = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
             the_addr_of_data_run = dt_chunk->base(new_foe).ptr_address();
-
-            if (is_in_bss_rom_region) {
-                data_base_ptr += (data_base - the_addr_of_data_run);
-            }
 
             // Confirmed that if data is in ROM, only BSS is reserved
             std::copy(constant_data.get(), constant_data.get() + data_size, data_base_ptr); // .data
