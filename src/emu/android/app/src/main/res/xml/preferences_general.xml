@@ -23,7 +23,7 @@
         android:key="enable-wakelock"
         android:title="@string/pref_wakelock" />
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="enable-nearest-neighbor-filter"
         android:title="@string/pref_general_utilities_nearest_neighbor_filtering_msg" />
 </PreferenceScreen>
