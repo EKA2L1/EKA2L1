@@ -878,7 +878,6 @@ namespace eka2l1 {
             std::string to_compare = "";                                                       \
             if (use_full_name) {                                                               \
                 rhs->full_name(to_compare);                                                    \
-                LOG_TRACE("{}", to_compare);                                                   \
             } else {                                                                           \
                 to_compare = rhs->name();                                                      \
             }                                                                                  \
