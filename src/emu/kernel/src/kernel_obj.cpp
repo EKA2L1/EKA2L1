@@ -60,7 +60,7 @@ namespace eka2l1 {
                 name_will_full += "::";
             }
 
-            name_will_full += obj_name;
+            name_will_full += name();
         }
     }
 }
