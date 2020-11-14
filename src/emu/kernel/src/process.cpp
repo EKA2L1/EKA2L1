@@ -35,6 +35,26 @@
 #include <mem/process.h>
 
 namespace eka2l1::kernel {
+    std::int32_t process::refresh_generation() {
+        if (flags & FLAG_KERNEL_PROCESS) {
+            return 0;
+        }
+
+        const epoc::uid this_uid = std::get<2>(uids);
+        std::int32_t max_generation = 0;
+
+        for (auto &pr_raw: kern->processes_) {
+            kernel::process *pr = reinterpret_cast<kernel::process*>(pr_raw.get());
+            if ((this_uid == std::get<2>(pr->uids)) && pr->access_count > 0) {
+                // If they have same name, increase the generation
+                if (common::compare_ignore_case(obj_name.c_str(), pr->obj_name.c_str()) == 0)
+                    max_generation = common::max<std::int32_t>(pr->generation_, max_generation);
+            }
+        }
+
+        return max_generation + 1;
+    }
+
     void process::create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
         uint32_t heap_max, kernel::thread_priority pri) {
         primary_thread
@@ -100,7 +120,8 @@ namespace eka2l1::kernel {
         switch (type) {
         case mem::mem_model_type::moving:
         case mem::mem_model_type::multiple:
-            return (mem_map_old ? mem::dll_static_data_eka1 : mem::dll_static_data) + mem::ROM_BSS_START_OFFSET;
+            return (mem_map_old ? (mem::rom_bss_eka1 + mem::ROM_BSS_START_OFFSET_EKA1) :
+                (mem::dll_static_data + mem::ROM_BSS_START_OFFSET));
 
         case mem::mem_model_type::flexible:
             return mem::dll_static_data_flexible + mem::ROM_BSS_START_OFFSET;
@@ -136,6 +157,7 @@ namespace eka2l1::kernel {
         , parent_process_(nullptr)
         , time_delay_(0) 
         , setting_inheritence_(true)
+        , generation_(0)
         , uid_change_callbacks(is_process_uid_type_change_callback_elem_free, make_process_uid_type_change_callback_elem_free) {
         obj_type = kernel::object_type::process;
 
@@ -145,16 +167,25 @@ namespace eka2l1::kernel {
 
         // Create mem model implementation
         mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem->get_model_type());
-
-        // Create a ROM BSS chunk for this process
-        rom_bss_chunk = kern->create<kernel::chunk>(mem, this, fmt::format("RomBssChunkProcess{}", uid),
-            0, static_cast<address>(mem::MAX_ROM_BSS_SECT_SIZE), mem::MAX_ROM_BSS_SECT_SIZE, prot::read_write,
-            kernel::chunk_type::normal, kernel::chunk_access::dll_static_data,
-            kernel::chunk_attrib::none, 0x00, false, get_rom_bss_addr(mem->get_model_type(), kern->is_eka1()));
+        generation_ = refresh_generation();
     }
 
     void process::destroy() {
         detatch_from_parent();
+    }
+
+    std::string process::name() const {
+        std::string org = fmt::format("{}[{:08x}]", obj_name, std::get<2>(uids));
+        if (!is_kernel_process()) {
+            org += fmt::format("{:04x}", generation_ & 0xFFFF);
+        }
+
+        return org;
+    }
+
+    void process::rename(const std::string &new_name) {
+        kernel_obj::rename(new_name);
+        generation_ = refresh_generation();
     }
 
     void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {
@@ -182,6 +213,8 @@ namespace eka2l1::kernel {
 
     void process::set_uid_type(const process_uid_type &type) {
         uids = std::move(type);
+        generation_ = refresh_generation();
+        
         reload_compat_setting();
 
         for (auto &uid_change_callback: uid_change_callbacks) {

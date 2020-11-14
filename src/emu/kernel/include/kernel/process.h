@@ -105,6 +105,12 @@ namespace eka2l1::kernel {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
 
+        enum {
+            FLAG_NONE = 0,
+            FLAG_KERNEL_PROCESS = 1 << 0,
+            FLAG_CRITICAL = 1 << 1
+        };
+
         mem::mem_model_process_impl mm_impl_;
 
         process_uid_type uids;
@@ -131,13 +137,12 @@ namespace eka2l1::kernel {
         std::vector<epoc::notify_info> logon_requests;
         std::vector<epoc::notify_info> rendezvous_requests;
 
-        uint32_t thread_count = 0;
+        std::uint32_t thread_count = 0;
 
         mutex_ptr dll_lock;
         epoc::security_info sec_info;
 
         common::roundabout thread_list;
-        chunk_ptr rom_bss_chunk;
 
         std::vector<kernel::process*> child_processes_;
         kernel::process *parent_process_;
@@ -145,11 +150,15 @@ namespace eka2l1::kernel {
         std::uint32_t time_delay_;
         bool setting_inheritence_;
 
+        std::int32_t generation_;
+
         // Это оскорбления, первое слово оскорбляет человека, а второе говорят для
         // увеличения эмоций.
         common::identity_container<process_uid_type_change_callback_elem> uid_change_callbacks;
 
     protected:
+        std::int32_t refresh_generation();
+
         void reload_compat_setting();
         void create_prim_thread(uint32_t code_addr, uint32_t ep_off, uint32_t stack_size, uint32_t heap_min,
             uint32_t heap_max, kernel::thread_priority pri);
@@ -190,6 +199,9 @@ namespace eka2l1::kernel {
 
         void destroy() override;
         bool run();
+
+        std::string name() const override;
+        void rename(const std::string &new_name) override;
 
         void set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size);
         std::optional<pass_arg> get_arg_slot(uint8_t slot);
@@ -236,7 +248,19 @@ namespace eka2l1::kernel {
             return std::get<2>(uids);
         }
 
-        void set_flags(const uint32_t new_flags) {
+        void set_is_kernel_process(const bool value) {
+            flags &= ~FLAG_KERNEL_PROCESS;
+
+            if (value) {
+                flags |= FLAG_KERNEL_PROCESS;
+            }
+        }
+
+        bool is_kernel_process() const {
+            return flags & FLAG_KERNEL_PROCESS;
+        }
+
+        void set_flags(const std::uint32_t new_flags) {
             flags = new_flags;
         }
 
@@ -248,10 +272,6 @@ namespace eka2l1::kernel {
 
         process_priority get_priority() const {
             return priority;
-        }
-
-        chunk_ptr get_rom_bss_chunk() const {
-            return rom_bss_chunk;
         }
 
         epoc::security_info get_sec_info();
