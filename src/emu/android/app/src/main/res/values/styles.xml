@@ -27,6 +27,7 @@
 
     <style name="AppTheme.OverflowMenu" parent="@style/Widget.AppCompat.PopupMenu.Overflow">
         <item name="android:popupBackground">@color/dark_color_primary_dark</item>
+        <item name="overlapAnchor">false</item>
     </style>
 
     <style name="PopupMenuTextAppearanceHeader" parent="@style/TextAppearance.AppCompat.Widget.PopupMenu.Header">
