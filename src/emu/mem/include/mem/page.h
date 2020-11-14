@@ -42,7 +42,8 @@ namespace eka2l1::mem {
         kernel_mapping_end = 0xFFFF0000,
         rom_eka1 = 0x50000000,
         rom_eka1_end = 0x60000000,
-        dll_static_data_eka1 = 0x80000000,
+        rom_bss_eka1 = 0x80000000,
+        dll_static_data_eka1 = 0x86000000,
         dll_static_data_eka1_end = 0x88000000,
         ram_code_addr_eka1 = 0xE0000000,
         ram_code_addr_eka1_end = 0xF0000000,
@@ -90,6 +91,7 @@ namespace eka2l1::mem {
     constexpr std::uint32_t PAGE_PER_TABLE_SHIFT_20B = 8;
 
     constexpr const std::uint32_t ROM_BSS_START_OFFSET = 0x6000000;
+    constexpr const std::uint32_t ROM_BSS_START_OFFSET_EKA1 = 0;
     constexpr const std::size_t MAX_ROM_BSS_SECT_SIZE = 0x2000000;
 
     /**
