@@ -33,6 +33,24 @@
 #include <services/window/window.h>
 
 namespace eka2l1::android {
+    emulator::emulator()
+        : symsys(nullptr)
+        , graphics_driver(nullptr)
+        , audio_driver(nullptr)
+        , launcher(nullptr)
+        , logger(nullptr)
+        , window(nullptr)
+        , joystick_controller(nullptr)
+        , should_emu_quit(false)
+        , should_emu_pause(false)
+        , should_ui_quit(false)
+        , stage_two_inited(false)
+        , should_graphics_pause(false)
+        , surface_inited(false)
+        , first_time(true)
+        , winserv(nullptr) {
+    }
+
     void emulator::stage_one() {
         // Initialize the logger
         log::setup_log(nullptr);
