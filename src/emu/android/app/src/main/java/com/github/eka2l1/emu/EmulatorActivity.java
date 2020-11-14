@@ -71,6 +71,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     private long uid;
     private boolean launched;
     private boolean statusBarEnabled;
+    private boolean actionBarEnabled;
     private VirtualKeyboard keyboard;
     private float displayWidth;
     private float displayHeight;
@@ -97,11 +98,15 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         if (wakelockEnabled) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        actionBarEnabled = dataStore.getBoolean("enable-actionbar", true);
         statusBarEnabled = dataStore.getBoolean("enable-statusbar", false);
 
         if (keyboardEnabled) {
             keyboard = new VirtualKeyboard(this);
             setVirtualKeyboard();
+        }
+        if (!actionBarEnabled) {
+            getSupportActionBar().hide();
         }
 
         Intent intent = getIntent();
@@ -149,7 +154,11 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            showExitConfirmation();
+            if (actionBarEnabled) {
+                showExitConfirmation();
+            } else {
+                openOptionsMenu();
+            }
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -184,7 +193,9 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (keyboard != null) {
+        if (id == R.id.action_exit) {
+            showExitConfirmation();
+        } else if (keyboard != null) {
             handleVkOptions(id);
         }
         return super.onOptionsItemSelected(item);

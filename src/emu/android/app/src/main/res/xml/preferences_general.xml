@@ -11,6 +11,10 @@
         android:key="enable-virtual-keyboard"
         android:title="@string/pref_enable_virtual_keyboard" />
     <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="enable-actionbar"
+        android:title="@string/pref_enable_actionbar" />
+    <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="enable-statusbar"
         android:title="@string/pref_enable_statusbar" />
