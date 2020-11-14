@@ -152,6 +152,14 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     }
 
     @Override
+    public void openOptionsMenu() {
+        if (!actionBarEnabled) {
+            showSystemUI();
+        }
+        super.openOptionsMenu();
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (actionBarEnabled) {
@@ -184,8 +192,9 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.emulator, menu);
         if (keyboard != null) {
-            inflater.inflate(R.menu.emulator, menu);
+            inflater.inflate(R.menu.emulator_keys, menu);
         }
         return super.onCreateOptionsMenu(menu);
     }
@@ -299,6 +308,10 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN;
         }
         getWindow().getDecorView().setSystemUiVisibility(flags);
+    }
+
+    private void showSystemUI() {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
     }
 
     private void updateScreenSize() {
