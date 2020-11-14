@@ -158,6 +158,13 @@ namespace eka2l1::loader {
             break;
         }
 
+        case 2: {
+            eka2l1::decompress_rle<12>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
+            dest_max = dest_stream.tell();
+
+            break;
+        }
+
         case 3: {
             eka2l1::decompress_rle<16>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
             dest_max = dest_stream.tell();
