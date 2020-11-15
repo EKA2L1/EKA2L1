@@ -38,6 +38,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.Keycode;
 
 public class KeyMapperFragment extends Fragment implements View.OnClickListener {
@@ -111,7 +112,10 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
                     } else {
                         deleteDuplicates(canvasKey);
                         androidToSymbian.put(keyCode, canvasKey);
+
                         KeyMapper.saveArrayPref(androidToSymbian);
+                        Emulator.loadConfig();
+
                         dialog.dismiss();
                         return true;
                     }

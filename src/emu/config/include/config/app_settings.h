@@ -61,5 +61,7 @@ namespace eka2l1::config {
          * @see         get_setting
          */
         bool add_or_replace_setting(const epoc::uid app_uid, const app_setting &setting_to_add);
+
+        void update_setting(const epoc::uid app_uid);
     };
 }

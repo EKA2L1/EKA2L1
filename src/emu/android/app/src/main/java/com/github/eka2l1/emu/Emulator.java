@@ -171,4 +171,10 @@ public class Emulator {
     public static native void mountSdCard(String path);
 
     public static native void loadConfig();
+
+    public static native void setLanguage(int languageId);
+
+    public static native void setRtosLevel(int level);
+
+    public static native void updateAppSetting(int uid);
 }

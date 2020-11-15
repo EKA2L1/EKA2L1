@@ -31,6 +31,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.emu.Emulator;
 
 public class GeneralSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
@@ -56,6 +57,7 @@ public class GeneralSettingsFragment extends PreferenceFragmentCompat {
     public void onPause() {
         super.onPause();
         dataStore.save();
+        Emulator.loadConfig();
     }
 
     @Override
