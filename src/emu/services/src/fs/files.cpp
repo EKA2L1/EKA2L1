@@ -623,7 +623,7 @@ namespace eka2l1 {
         std::optional<entry_info> info = io->get_entry_info(f->file_name());
         assert(info);
 
-        const std::uint32_t attrib = build_attribute_from_entry_info(info.value());
+        const std::uint32_t attrib = epoc::fs::build_attribute_from_entry_info(info.value());
         ctx->write_data_to_descriptor_argument(0, attrib);
         ctx->complete(epoc::error_none);
     }

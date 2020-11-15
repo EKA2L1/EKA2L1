@@ -26,7 +26,9 @@
 #include <utils/des.h>
 #include <utils/locale.h>
 
-namespace eka2l1::epoc {
+namespace eka2l1 {
+    struct entry_info;
+    class io_system;
 }
 
 namespace eka2l1::epoc::fs {
@@ -194,4 +196,6 @@ namespace eka2l1::epoc::fs {
     };
 
     std::string get_server_name_through_epocver(const epocver ver);
+    std::uint32_t build_attribute_from_entry_info(entry_info &info);
+    void build_symbian_entry_from_emulator_entry(io_system *io, entry_info &info, epoc::fs::entry &sym_entry);
 }

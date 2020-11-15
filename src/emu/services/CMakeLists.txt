@@ -158,6 +158,7 @@ add_library(epocservs
         src/fs/files.cpp
         src/fs/fs.cpp
         src/fs/parser.cpp
+        src/fs/std.cpp
         src/hwrm/hwrm.cpp
         src/hwrm/light/light_data.cpp
         src/hwrm/light/light.cpp
