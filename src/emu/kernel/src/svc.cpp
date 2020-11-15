@@ -739,7 +739,7 @@ namespace eka2l1::epoc {
         client_ptr = reinterpret_cast<std::uint8_t*>(the_des->get_pointer_raw(callee_process));
 
         if (read && (size_of_work > copy_info.target_length)) {
-            return epoc::error_underflow;
+            size_of_work = copy_info.target_length;
         }
 
         // In write, size of work is the size to write to
@@ -3689,6 +3689,35 @@ namespace eka2l1::epoc {
         return thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_1);
     }
 
+    static std::int32_t thread_get_des_length_general(kernel_system *kern, eka2l1::ptr<epoc::des8> des_addr, kernel::handle owner_thread_h, const bool need_max_len) {
+        kernel::thread *owner_thread = kern->get<kernel::thread>(owner_thread_h);
+
+        if (!owner_thread) {
+            return epoc::error_argument;
+        }
+
+        kernel::process *own_pr = owner_thread->owning_process();
+        epoc::des8 *the_des = des_addr.get(own_pr);
+
+        if (!the_des || !the_des->is_valid_descriptor()) {
+            return epoc::error_bad_descriptor;
+        }
+
+        if (need_max_len) {
+            return the_des->get_max_length(own_pr);
+        }
+
+        return the_des->get_length();
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_get_des_length, eka2l1::ptr<epoc::des8> des_addr, kernel::handle owner_thread_h) {
+        return thread_get_des_length_general(kern, des_addr, owner_thread_h, false);
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_get_des_max_length, eka2l1::ptr<epoc::des8> des_addr, kernel::handle owner_thread_h) {
+        return thread_get_des_length_general(kern, des_addr, owner_thread_h, true);
+    }
+
     BRIDGE_FUNC(void, thread_request_complete_eka1, address *sts_addr, const std::int32_t code, kernel::handle thread_handle) {
         kernel::thread *thr = kern->get<kernel::thread>(thread_handle);
 
@@ -3866,7 +3895,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_descriptor;
         }
 
-        std::memcpy(place_to_read_to, data_ptr + pos, len_to_read);
+        std::memcpy(data_to_write_ptr, data_ptr + pos, len_to_read);
         place_to_read_to->set_length(kern->crr_process(), len_to_read);
 
         return epoc::error_none;
@@ -4301,6 +4330,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80002C, semaphore_signal_n_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
         BRIDGE_REGISTER(0x800033, thread_find_next),
+        BRIDGE_REGISTER(0x800040, thread_get_des_length),
+        BRIDGE_REGISTER(0x800041, thread_get_des_max_length),
         BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
         BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
         BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),
