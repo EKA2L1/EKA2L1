@@ -720,6 +720,15 @@ namespace eka2l1::drivers {
             0.0f, -1.0f, 1.0f);
     }
 
+    void shared_graphics_driver::set_ortho_size(command_helper &helper) {
+        eka2l1::vec2 size;
+        helper.pop(size);
+
+        projection_matrix = glm::identity<glm::mat4>();
+        projection_matrix = glm::ortho(0.0f, static_cast<float>(size.x), static_cast<float>(size.y),
+            0.0f, -1.0f, 1.0f);
+    }
+
     void shared_graphics_driver::native_dialog(command_helper &helper) {
 #ifndef EKA2L1_PLATFORM_ANDROID
         const char *filter = nullptr;
@@ -840,6 +849,10 @@ namespace eka2l1::drivers {
             set_swapchain_size(helper);
             break;
         }
+
+        case graphics_driver_set_ortho_size:
+            set_ortho_size(helper);
+            break;
 
         case graphics_driver_set_swizzle: {
             set_swizzle(helper);

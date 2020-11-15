@@ -335,4 +335,9 @@ namespace eka2l1::drivers {
         command *cmd = make_command(graphics_driver_set_swapchain_size, nullptr, swsize);
         get_command_list().add(cmd);
     }
+
+    void server_graphics_command_list_builder::set_ortho_size(const eka2l1::vec2 &osize) {
+        command *cmd = make_command(graphics_driver_set_ortho_size, nullptr, osize);
+        get_command_list().add(cmd);
+    }
 }

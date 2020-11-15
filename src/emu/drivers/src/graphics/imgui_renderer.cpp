@@ -120,6 +120,8 @@ namespace eka2l1::drivers {
 
         const eka2l1::vec2 swapchain_size(fb_width, fb_height);
         cmd_builder->set_swapchain_size(swapchain_size);
+        cmd_builder->set_ortho_size(eka2l1::vec2(static_cast<int>(io.DisplaySize.x), static_cast<int>(
+            io.DisplaySize.y)));
 
         // Backup GL state
         cmd_builder->backup_state();
