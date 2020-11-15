@@ -31,16 +31,18 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.emu.Emulator;
 
 public class AppSettingsFragment extends PreferenceFragmentCompat {
     public static final String APP_UID_KEY = "appUid";
 
     private AppDataStore dataStore;
+    private long uid;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         Bundle args = getArguments();
-        long uid = args.getLong(APP_UID_KEY, 0);
+        uid = args.getLong(APP_UID_KEY, 0);
         String uidStr = Long.toHexString(uid).toUpperCase();
         dataStore = AppDataStore.getAppStore(uidStr);
         PreferenceManager preferenceManager = getPreferenceManager();
@@ -61,6 +63,7 @@ public class AppSettingsFragment extends PreferenceFragmentCompat {
     public void onPause() {
         super.onPause();
         dataStore.save();
+        Emulator.updateAppSetting((int) uid);
     }
 
     @Override

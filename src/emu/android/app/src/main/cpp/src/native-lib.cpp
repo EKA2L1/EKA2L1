@@ -193,3 +193,21 @@ JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_loadConfig(JNIEnv *env, jclass clazz) {
     state->launcher->load_config();
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_setLanguage(JNIEnv *env, jclass clazz, jint language_id) {
+    state->launcher->set_language(language_id);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_setRtosLevel(JNIEnv *env, jclass clazz, jint level) {
+    state->launcher->set_rtos_level(level);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_updateAppSetting(JNIEnv *env, jclass clazz, jint uid) {
+    state->launcher->update_app_setting(uid);
+}

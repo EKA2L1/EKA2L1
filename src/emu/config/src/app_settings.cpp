@@ -132,4 +132,31 @@ namespace eka2l1::config {
         save_setting(app_uid, setting_to_add);
         return true;
     }
+
+    void app_settings::update_setting(const epoc::uid app_uid) {
+        const std::string setting_file = eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", app_uid));
+
+        if (!eka2l1::exists(setting_file)) {
+            return;
+        }
+
+        app_setting target_setting;
+        YAML::Node the_node;
+
+        try {
+            the_node = YAML::LoadFile(setting_file);
+        } catch (std::exception &exc) {
+            LOG_ERROR("Encountering error while loading app setting {}. Error message: {}", setting_file,
+                exc.what());
+        }
+
+        deserialize_app_setting(the_node, target_setting);
+
+        auto it = settings_.find(app_uid);
+        if (it != settings_.end()) {
+            it->second = target_setting;
+        } else {
+            settings_.emplace(app_uid, target_setting);
+        }
+    }
 }
