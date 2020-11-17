@@ -18,12 +18,12 @@
  */
 
 #include <mda/common/audio.h>
+#include <Log.h>
+#include <AudCommon.h>
+#include <SoftInt.h>
 
 #include "dispatch.h"
 #include "impl.h"
-#include "log.h"
-#include "aud.h"
-#include "softint.h"
 
 #ifdef EKA2
 #include <e32cmn.h>
@@ -132,7 +132,7 @@ CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
-    LogOut(MCA_CAT, _L("Open complete"));
+    LogOut(KMcaCat, _L("Open complete"));
    
     CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream*>(aUserdata);
     stream->iCallback.MaoscOpenComplete(KErrNone);
@@ -207,7 +207,7 @@ void CMMFMdaAudioOutputStream::StartRaw() {
     iState = EMdaStatePlay;
 
     if (EAudioDspStreamStart(0, iDispatchInstance) != KErrNone) {
-        LogOut(MCA_CAT, _L("Failed to start audio output stream"));
+        LogOut(KMcaCat, _L("Failed to start audio output stream"));
     }
 }
 
@@ -226,7 +226,7 @@ void CMMFMdaAudioOutputStream::Stop() {
     iBufferQueue.Cancel();
 
     if (EAudioDspStreamStop(0, iDispatchInstance) != KErrNone) {
-        LogOut(MCA_CAT, _L("Failed to stop audio output stream"));
+        LogOut(KMcaCat, _L("Failed to stop audio output stream"));
     } else {
         iState = EMdaStateStop;
         iCallback.MaoscPlayComplete(KErrCancel);
@@ -235,7 +235,7 @@ void CMMFMdaAudioOutputStream::Stop() {
 
 void CMMFMdaAudioOutputStream::WriteL(const TDesC8 &aData) {
     if (EAudioDspOutStreamWrite(0, iDispatchInstance, aData.Ptr(), aData.Size()) != KErrNone) {
-        LogOut(MCA_CAT, _L("Error sending buffer!"));
+        LogOut(KMcaCat, _L("Error sending buffer!"));
         return;
     }
 }
@@ -260,7 +260,7 @@ TInt CMMFMdaAudioOutputStream::MaxVolume() const {
     const TInt result = EAudioDspOutStreamMaxVolume(0, iDispatchInstance);
 
     if (result < 0) {
-        LogOut(MCA_CAT, _L("ERR:: Max volume returns error code %d"), result);
+        LogOut(KMcaCat, _L("ERR:: Max volume returns error code %d"), result);
         return 0;
     }
 
@@ -275,7 +275,7 @@ TInt CMMFMdaAudioOutputStream::GetVolume() const {
     const TInt result = EAudioDspOutStreamGetVolume(0, iDispatchInstance);
 
     if (result < 0) {
-        LogOut(MCA_CAT, _L("ERR:: Get volume returns error code %d"), result);
+        LogOut(KMcaCat, _L("ERR:: Get volume returns error code %d"), result);
         return 0;
     }
 
@@ -307,7 +307,7 @@ TUint64 CMMFMdaAudioOutputStream::BytesRendered() const {
     const TInt result = EAudioDspStreamBytesRendered(0, iDispatchInstance, rendered);
 
     if (result != KErrNone) {
-        LogOut(MCA_CAT, _L("ERR:: Unable to get number of bytes rendered!"));
+        LogOut(KMcaCat, _L("ERR:: Unable to get number of bytes rendered!"));
     }
 
     return rendered;
@@ -318,7 +318,7 @@ const TTimeIntervalMicroSeconds &CMMFMdaAudioOutputStream::Position() {
     const TInt result = EAudioDspStreamPosition(0, iDispatchInstance, time);
 
     if (result != KErrNone) {
-        LogOut(MCA_CAT, _L("ERR:: Unable to get stream position!"));
+        LogOut(KMcaCat, _L("ERR:: Unable to get stream position!"));
     }
 
 #ifdef EKA2
