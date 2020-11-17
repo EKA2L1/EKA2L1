@@ -118,7 +118,7 @@ namespace eka2l1::kernel {
                     prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
             } else {
                 dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                    prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous,
+                    prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::dll_static_data, kernel::chunk_attrib::anonymous,
                     0x00, false, data_base, nullptr);
             }
 
