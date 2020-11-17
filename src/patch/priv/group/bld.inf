@@ -2,4 +2,4 @@ PRJ_PLATFORMS
 DEFAULT
 
 PRJ_MMPFILES
-pcommon.mmp
+priv.mmp

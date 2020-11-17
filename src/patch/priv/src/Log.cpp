@@ -20,12 +20,13 @@
 #ifdef EKA2
 #include <e32debug.h>
 #else
-#include "debug.h"
+#include <e32svr.h>
 #endif
 
 #include <f32file.h>
 #include <e32std.h>
-#include "log.h"
+
+#include <Log.h>
 
 class TDesOverflowHandler : public TDes16Overflow {
     virtual void Overflow(TDes16 &) {
@@ -35,10 +36,6 @@ class TDesOverflowHandler : public TDes16Overflow {
 
 void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...) {
     HBufC *newString = HBufC::NewL(256);
-    
-#ifndef EKA2
-    HBufC *newStringFinal = HBufC::NewL(256);
-#endif
 
     VA_LIST list;
     VA_START(list, aMessage);
@@ -48,20 +45,8 @@ void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...) {
     TPtr stringDes = newString->Des();
     stringDes.AppendFormatList(aMessage, list, &handler);
 
-#ifdef EKA2
     RDebug::Print(_L("[%S] %S"), &aCategory, &stringDes);
-#else
-    TPtr stringDesFinal = newStringFinal->Des();
-    stringDesFinal.AppendFormat(_L("[%S] %S"), &handler, &aCategory, &stringDes);
-
-    DebugPrint16(stringDesFinal);
-#endif
 
     User::Free(newString);
-    
-#ifndef EKA2
-    User::Free(newStringFinal);
-#endif
-    
     VA_END(list);
 }

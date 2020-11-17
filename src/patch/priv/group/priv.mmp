@@ -1,0 +1,14 @@
+TARGET		    priv.lib
+TARGETTYPE	    lib
+UID			    0
+
+SYSTEMINCLUDE   ..\inc \epoc32\include
+
+SOURCEPATH	    ..\src
+
+LIBRARY		    euser.lib
+
+SOURCE          AudCommon.cpp
+SOURCE		    HwrmBase.cpp
+SOURCE          HwrmVibra.cpp
+SOURCE          Log.cpp

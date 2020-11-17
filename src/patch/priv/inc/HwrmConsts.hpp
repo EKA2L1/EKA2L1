@@ -17,13 +17,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
-#define MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
+#ifndef __HWRM_CONSTS_HPP__
+#define __HWRM_CONSTS_HPP__
 
 #include <e32std.h>
 
-_LIT(MCA_CAT, "MediaClientAudioStream");
+_LIT(KHWRMServerName, "!HWRMServer");
+_LIT(KHWRMLogCategory, "HWRMCli");
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
+const TUint32 KHWRMServerVerMajor = 1;
+const TUint32 KHWRMServerVerMinor = 1;
+const TUint32 KHWRMServerVerBuild = 1;
+const TUint32 KHWRMDefaultAsyncSlots = 12;
+
+enum THWRMServiceFactoryOpcode {
+    EHWRMServiceFactoryCreateVibra = 0,
+    EHWRMServiceFactoryCreateLight = 1
+};
+
+enum THWRMVibraServiceOpcode {
+    EHWRMVibraStartDefaultIntensity = 2000,
+    EHWRMVibraStart = 2001,
+    EHWRMVibraStop = 2002,
+    EHWRMVibraCleanup = 2003,
+    EHWRMVibraRelease = 2004
+};
 
 #endif

@@ -17,9 +17,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <e32std.h>
+#ifndef __HWRM_VIB_HPP__
+#define __HWRM_VIB_HPP__
 
-extern "C" {
-    void DebugPrint(TDesC8 &str);
-    void DebugPrint16(TDesC16 &str); 
-}
+#include <HwrmBase.hpp>
+
+class RHWRMVibraRaw {
+private:
+    RHWRMResourceClient iResource;
+
+public:
+    TInt Connect();
+    void Close();
+
+    TInt StartVibra(TUint16 aDuration);
+    TInt StartVibra(TUint16 aDuration, TUint16 aIntensity);
+
+    TInt StopVibra();
+};
+
+#endif

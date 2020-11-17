@@ -17,19 +17,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PCOMMON_INT_H_
-#define PCOMMON_INT_H_
+#ifndef __HWRM_HPP__
+#define __HWRM_HPP__
 
-#include <e32def.h>
+#include <e32base.h>
+#include <e32std.h>
 
-#ifndef EKA2
-inline TInt64 MakeSoftwareInt64FromHardwareUint64(const TUint64 aOriginal) {
-    return TInt64(static_cast<TUint>(aOriginal >> 32), static_cast<TUint>(aOriginal));
-}
+enum THWRMResourceType {
+    EHWRMResourceTypeVibra = 0,
+    EHWRMResourceTypeLight = 1
+};
 
-inline TUint64 MakeHardwareUint64FromSoftwareInt64(const TInt64 aOriginal) {
-    return (aOriginal.High() << 32) | aOriginal.Low();
-}
-#endif
+class RHWRMResourceClient: public RSessionBase {
+public:
+    TInt Connect(THWRMResourceType aType);
+
+    TInt ExecuteCommand(const TInt aCommand, const TIpcArgs &aArgs);
+    void ExecuteAsyncCommand(const TInt aCommand, const TIpcArgs &aArgs, TRequestStatus &aStatus);
+
+    TVersion ServerVersion();
+};
 
 #endif
