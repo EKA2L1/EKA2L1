@@ -1,0 +1,8 @@
+EXPORTS
+	StartVibraL__17CVibraControlImplUs @ 1 NONAME R3UNUSED ; CVibraControlImpl::StartVibraL(unsigned short)
+	NewL__12VibraFactory @ 2 NONAME R3UNUSED ; VibraFactory::NewL(void)
+	NewL__12VibraFactoryP21MVibraControlObserver @ 3 NONAME R3UNUSED ; VibraFactory::NewL(MVibraControlObserver *)
+	NewLC__12VibraFactoryP21MVibraControlObserver @ 4 NONAME R3UNUSED ; VibraFactory::NewLC(MVibraControlObserver *)
+	StartVibraL__17CVibraControlImplUsi @ 5 NONAME R3UNUSED ; CVibraControlImpl::StartVibraL(unsigned short, int)
+	StopVibraL__17CVibraControlImpl @ 6 NONAME R3UNUSED ; CVibraControlImpl::StopVibraL(void)
+	VibraSettings__C17CVibraControlImpl @ 7 NONAME R3UNUSED ; CVibraControlImpl::VibraSettings(void) const
