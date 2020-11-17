@@ -46,6 +46,10 @@ namespace eka2l1::loader {
     struct mbm_trailer {
         std::uint32_t count;
         std::vector<std::uint32_t> sbm_offsets;
+
+        explicit mbm_trailer()
+            : count(0) {
+        }
     };
 
     struct mbm_header {
@@ -61,8 +65,10 @@ namespace eka2l1::loader {
         mbm_trailer trailer;
 
         std::vector<sbm_header> sbm_headers;
-
         common::ro_stream *stream;
+
+        // What index you want to load, throw hear before calling do_read_headers.
+        std::vector<std::size_t> index_to_loads;
 
         bool do_read_headers();
         bool valid();
@@ -72,7 +78,17 @@ namespace eka2l1::loader {
         }
 
         /**
+         * @brief       Check if the header for a bitmap has been loaded yet?
+         * 
+         * @param       index         The index of the bitmap to check.
+         * @returns     True on loaded.
+         */
+        bool is_header_loaded(const std::size_t index) const;
+
+        /**
          * \brief Read a bitmap to a buffer at given index in the MBM.
+         * 
+         * Failure may be caused if the header is not yet loaded for the bitmap.
          * 
          * \returns On success, returns true, and dest_max is written back with total
          *          of bytes written in.
@@ -83,6 +99,9 @@ namespace eka2l1::loader {
 
         /**
          * \brief Read raw bitmap data to a buffer with given bitmap index.
+         * 
+         * Failure may be caused if the header is not yet loaded for the bitmap.
+         * 
          * \returns On success, returns true, and dest_max is written back with total
          *          of bytes written in.
          *          On failure, dest_max should contains the size of the bitmap data.

@@ -485,7 +485,9 @@ namespace eka2l1 {
         if (!bmp) {
             // Let's load the MBM from file first
             eka2l1::ro_file_stream stream_(source);
+
             loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream *>(&stream_));
+            mbmf_.index_to_loads.push_back(load_options->bitmap_id);
 
             if (!mbmf_.do_read_headers()) {
                 ctx->complete(epoc::error_corrupt);
@@ -493,8 +495,7 @@ namespace eka2l1 {
             }
 
             // Let's do an insanity check. Is the bitmap index client given us is not valid ?
-            // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 5.
-            if (mbmf_.trailer.count <= load_options->bitmap_id) {
+            if (!mbmf_.is_header_loaded(load_options->bitmap_id)) {
                 ctx->complete(epoc::error_not_found);
                 return;
             }
