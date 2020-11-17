@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-.include "../../../pcommon/inc/sv.S"
+.include "../../../priv/inc/sv.S"
 
 .global UpdateScreen
 .global FastBlit

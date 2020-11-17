@@ -19,7 +19,7 @@
  
 #ifdef EKA2
 
-#include "scdv/log.h"
+#include <Log.h>
 #include "scdv/panic.h"
 #include "scdv/sv.h"
 
@@ -152,7 +152,7 @@ CFbsThirtyTwoBitsDrawDevice::PWriteRgbToAddressFunc CFbsThirtyTwoBitsDrawDevice:
         return (DisplayMode() == EColor16MA) ? WriteRgb32ToAddressBlend : WriteRgb32ToAddressAlpha;
 
     default:
-        Scdv::Log("Unimplemented graphics drawing mode: %d", (TInt)aDrawMode);
+        LogOut(KScdvCat, _L("Unimplemented graphics drawing mode: %d"), (TInt)aDrawMode);
         break;
     }
 
@@ -220,7 +220,7 @@ void CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, 
 }
 
 void CFbsThirtyTwoBitsDrawDevice::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer) {
-    Scdv::Log("Write rgb alpha multi for 16bit mode todo!");
+    LogOut(KScdvCat, _L("Write rgb alpha multi for 16bit mode todo!"));
 }
 
 void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode) {
@@ -292,7 +292,7 @@ TInt CFbsTwentyfourBitUnsignedByteDrawDevice::Construct(TSize aSize, TInt aDataS
 }
 
 TInt CFbsThirtyTwoBitsDrawDevice::Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY) {
-    Scdv::Log("Set called with %d %d, unimplemented", aFactorX, aFactorY);
+    LogOut(KScdvCat, _L("Set called with %d %d, unimplemented"), aFactorX, aFactorY);
     return KErrNone;
 }
 
@@ -321,7 +321,7 @@ TInt CFbsThirtyTwoBitsDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterf
         break;
     }
 
-    //Scdv::Log("ERR:: Interface not supported %d", aInterfaceId);
+    //LogOut(KScdvCat, _L("ERR:: Interface not supported %d"), aInterfaceId);
     return KErrNotSupported;
 }
 

@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "drawdvcbuf.h"
+#include <Log.h>
 
-#include "scdv/log.h"
+#include "drawdvcbuf.h"
 #include "scdv/sv.h"
 
 CFbsDrawDeviceBuffer::CFbsDrawDeviceBuffer()
@@ -50,7 +50,7 @@ TDisplayMode CFbsDrawDeviceBuffer::ScanLineDisplayMode() const {
 }
 
 TInt CFbsDrawDeviceBuffer::InitScreen() {
-    Scdv::Log("Init screen called on unsupported draw device!");
+    LogOut(KScdvCat, _L("Init screen called on unsupported draw device!"));
     return KErrNotSupported;
 }
 
@@ -59,11 +59,11 @@ void CFbsDrawDeviceBuffer::SetBits(TAny *aBits) {
 }
 
 void CFbsDrawDeviceBuffer::SetAutoUpdate(TBool aValue) {
-    Scdv::Log("Auto update not supported!");
+    LogOut(KScdvCat, _L("Auto update not supported!"));
 }
 
 void CFbsDrawDeviceBuffer::SetDisplayMode(CFbsDrawDevice *aDrawDevice) {
-    Scdv::Log("Set display mode on draw device base has no effect");
+    LogOut(KScdvCat, _L("Set display mode on draw device base has no effect"));
 }
 
 void CFbsDrawDeviceBuffer::SetDitherOrigin(const TPoint &aDitherOrigin) {
@@ -112,7 +112,7 @@ TBool CFbsDrawDeviceBuffer::SetOrientation(TOrientation aOri) {
     if (aOri > EOrientationRotate270 || aOri < EOrientationNormal)
         return EFalse;
 
-    Scdv::Log("Orientation set to %d", aOri);
+    LogOut(KScdvCat, _L("Orientation set to %d"), aOri);
     iOrientation = aOri;
     return ETrue;
 }

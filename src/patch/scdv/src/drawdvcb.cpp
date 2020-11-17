@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scdv/log.h"
-#include "scdv/panic.h"
+#include <Log.h>
 
+#include "scdv/panic.h"
 #include "drawdvcb.h"
 
 TUint8 *CFbsDrawDeviceByteBuffer::GetPixelStartAddress(TInt aX, TInt aY) const {
@@ -92,7 +92,7 @@ void CFbsDrawDeviceByteBuffer::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TIn
 }
 
 void CFbsDrawDeviceByteBuffer::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer) {
-    Scdv::Log("Write rgb alpha multi not supported!");
+    LogOut(KScdvCat, _L("Write rgb alpha multi not supported!"));
 }
 
 void CFbsDrawDeviceByteBuffer::WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode) {
