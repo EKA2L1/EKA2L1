@@ -20,12 +20,12 @@
 #include <mdaaudiosampleeditor.h>
 #include <mda/common/resource.h>
 
-#include "aud.h"
-#include "debug.h"
+#include <AudCommon.h>
+#include <Log.h>
+
 #include "common.h"
 #include "dispatch.h"
 #include "impl.h"
-#include "log.h"
 
 #include <e32std.h>
 
@@ -48,20 +48,20 @@ void CMdaAudioRecorderUtility::OpenFileL(const TDesC& aFileName) {
 }
 
 void CMdaAudioRecorderUtility::OpenDesL(const TDesC8& aDescriptor) {
-    LogOut(MCA_CAT, _L("Unimplemented function to open recorder utility with descriptor to play!"));
+    LogOut(KMcaCat, _L("Unimplemented function to open recorder utility with descriptor to play!"));
 }
 
 void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat* aFormat, TMdaPackage* aArg1,	
 	TMdaPackage* aArg2) {
 	if (!aLocation) {
-		LogOut(MCA_CAT, _L("Clip location is null!"));
+		LogOut(KMcaCat, _L("Clip location is null!"));
 		User::Leave(KErrArgument);
 
 		return;
 	}
 
 	if (aLocation->Type() != KUidMdaClipLocation) {
-		LogOut(MCA_CAT, _L("Clip location package is corrupted!"));
+		LogOut(KMcaCat, _L("Clip location package is corrupted!"));
 		User::Leave(KErrArgument);
 
 		return;
@@ -75,7 +75,7 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat
 	} else if (aLocation->Uid() == KUidMdaDesResLoc) {
 		supplyUrl = EFalse;
 	} else {
-		LogOut(MCA_CAT, _L("Unknown MDA clip location type 0x%08x"), aLocation->Uid().iUid);
+		LogOut(KMcaCat, _L("Unknown MDA clip location type 0x%08x"), aLocation->Uid().iUid);
 		User::Leave(KErrArgument);
 
 		return;
@@ -90,7 +90,7 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat
 	}
 
 	if (aFormat->Type() != KUidMdaClipFormat) {
-		LogOut(MCA_CAT, _L("Audio format package is corrupted!"));
+		LogOut(KMcaCat, _L("Audio format package is corrupted!"));
 		User::Leave(KErrArgument);
 
 		return;
@@ -133,7 +133,7 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat
 				break;
 
 			default:
-				LogOut(MCA_CAT, _L("Invalid pcm wav codec bits!"));
+				LogOut(KMcaCat, _L("Invalid pcm wav codec bits!"));
 
 				User::Leave(KErrNotSupported);
 				return;
@@ -143,14 +143,14 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat
 		}
 		
 		default:
-			LogOut(MCA_CAT, _L("Unsupported or unkown encoding UID 0x%08x"), aArg1->Uid().iUid);
+			LogOut(KMcaCat, _L("Unsupported or unkown encoding UID 0x%08x"), aArg1->Uid().iUid);
 			User::Leave(KErrNotSupported);
 
 			return;
 		}
 
 		if (iProperties->SetDestCodec(auEncodingCC) != KErrNone) {
-			LogOut(MCA_CAT, _L("Error setting output codec in recorder utility. Ignored."));
+			LogOut(KMcaCat, _L("Error setting output codec in recorder utility. Ignored."));
 		}
 	}
 
@@ -159,7 +159,7 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat
 		TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings*>(aArg2);
 
 		if ((settings->Type() != KUidMdaDataTypeSettings) || (settings->Uid() != KUidMdaMediaTypeAudio)) {
-			LogOut(MCA_CAT, _L("Settings package is corrupted!"));
+			LogOut(KMcaCat, _L("Settings package is corrupted!"));
 			User::Leave(KErrArgument);
 
 			return;
@@ -169,7 +169,7 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat
 		const TInt realChannelCount = ConvertChannelEnumToNum(settings->iChannels);
 
 		if ((realSampleRate == -1) || (realChannelCount == -1)) {
-			LogOut(MCA_CAT, _L("Invalid destination sample rate or channel count enum in setting package, ignored"));
+			LogOut(KMcaCat, _L("Invalid destination sample rate or channel count enum in setting package, ignored"));
 		} else {
 			iProperties->SetDestSampleRate(realSampleRate);
 			iProperties->SetDestChannelCount(realChannelCount);
@@ -178,7 +178,7 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation* aLocation, TMdaClipFormat
 }
 
 void CMdaAudioRecorderUtility::SetAudioDeviceMode(CMdaAudioRecorderUtility::TDeviceMode aMode) {
-	LogOut(MCA_CAT, _L("Audio device mode set to %d"), static_cast<TInt>(aMode));
+	LogOut(KMcaCat, _L("Audio device mode set to %d"), static_cast<TInt>(aMode));
 }
 
 TInt CMdaAudioRecorderUtility::MaxVolume() {
@@ -186,7 +186,7 @@ TInt CMdaAudioRecorderUtility::MaxVolume() {
 }
 
 TInt CMdaAudioRecorderUtility::MaxGain() {
-	LogOut(MCA_CAT, _L("Unimplemented function getting recorder's max gain"));
+	LogOut(KMcaCat, _L("Unimplemented function getting recorder's max gain"));
 	return 0;
 }
 
@@ -195,11 +195,11 @@ void CMdaAudioRecorderUtility::SetVolume(TInt aVolume) {
 }
 
 void CMdaAudioRecorderUtility::SetGain(TInt aGain) {
-	LogOut(MCA_CAT, _L("Unimplemented function setting recorder's gain"));
+	LogOut(KMcaCat, _L("Unimplemented function setting recorder's gain"));
 }
 
 void CMdaAudioRecorderUtility::SetVolumeRamp(const TTimeIntervalMicroSeconds& aRampDuration) {
-	LogOut(MCA_CAT, _L("Unimplemented function setting recorder's volume ramp"));
+	LogOut(KMcaCat, _L("Unimplemented function setting recorder's volume ramp"));
 }
 
 CMdaAudioClipUtility::TState CMdaAudioRecorderUtility::State() {
@@ -216,12 +216,12 @@ void CMdaAudioRecorderUtility::Close() {
 }
 
 void CMdaAudioRecorderUtility::PlayL() {
-	LogOut(MCA_CAT, _L("Try to play bzzz bzzz"));
+	LogOut(KMcaCat, _L("Try to play bzzz bzzz"));
 	iProperties->Play();
 }
 
 void CMdaAudioRecorderUtility::RecordL() {
-	LogOut(MCA_CAT, _L("Unimplemented feature recording!"));
+	LogOut(KMcaCat, _L("Unimplemented feature recording!"));
 }
 
 void CMdaAudioRecorderUtility::Stop() {
@@ -229,7 +229,7 @@ void CMdaAudioRecorderUtility::Stop() {
 }
 
 void CMdaAudioRecorderUtility::CropL() {
-	LogOut(MCA_CAT, _L("Unimplement feature cropping!"));
+	LogOut(KMcaCat, _L("Unimplement feature cropping!"));
 }
 
 void CMdaAudioRecorderUtility::SetPosition(const TTimeIntervalMicroSeconds& aPosition) {
@@ -241,7 +241,7 @@ const TTimeIntervalMicroSeconds& CMdaAudioRecorderUtility::Position() {
 }
 
 const TTimeIntervalMicroSeconds& CMdaAudioRecorderUtility::RecordTimeAvailable() {
-	LogOut(MCA_CAT, _L("Unimplemented feature get available record time"));
+	LogOut(KMcaCat, _L("Unimplemented feature get available record time"));
 
 #ifdef EKA2
 	return 0;
@@ -256,16 +256,16 @@ const TTimeIntervalMicroSeconds& CMdaAudioRecorderUtility::Duration() {
 }
 
 void CMdaAudioRecorderUtility::SetPlayWindow(const TTimeIntervalMicroSeconds& aStart, const TTimeIntervalMicroSeconds& aEnd) {
-	LogOut(MCA_CAT, _L("Unimplemented function setting play window"));
+	LogOut(KMcaCat, _L("Unimplemented function setting play window"));
 }
 
 void CMdaAudioRecorderUtility::ClearPlayWindow() {
-	LogOut(MCA_CAT, _L("Unimplemented function clearing play window!"));
+	LogOut(KMcaCat, _L("Unimplemented function clearing play window!"));
 }
 
 void CMdaAudioRecorderUtility::SetRepeats(TInt aRepeatNumberOfTimes, const TTimeIntervalMicroSeconds& aTrailingSilence) {
 	if ((aRepeatNumberOfTimes < 0) && (aRepeatNumberOfTimes != KMdaRepeatForever)) {
-		LogOut(MCA_CAT, _L("Invalid repeat numbers %d, set repeats does not do anything"), aRepeatNumberOfTimes);
+		LogOut(KMcaCat, _L("Invalid repeat numbers %d, set repeats does not do anything"), aRepeatNumberOfTimes);
 		return;
 	}
 
@@ -273,11 +273,11 @@ void CMdaAudioRecorderUtility::SetRepeats(TInt aRepeatNumberOfTimes, const TTime
 }
 
 void CMdaAudioRecorderUtility::SetMaxWriteLength(TInt aMaxWriteLength) {
-	LogOut(MCA_CAT, _L("Unimplemented function setting max write length"));
+	LogOut(KMcaCat, _L("Unimplemented function setting max write length"));
 }
 
 void CMdaAudioRecorderUtility::CropFromBeginningL() {
-	LogOut(MCA_CAT, _L("Unimplemented function cropping from beginning!"));
+	LogOut(KMcaCat, _L("Unimplemented function cropping from beginning!"));
 }
 
 #if (MCA_NEW >= 3)
@@ -289,56 +289,56 @@ EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const RFile& aFile) {
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const TMMSource& aSource) {
-	LogOut(MCA_CAT, _L("Unimplemented open file for recorder utility with MMSource!"));
+	LogOut(KMcaCat, _L("Unimplemented open file for recorder utility with MMSource!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const RFile& aFile, TUid aRecordControllerUid, TUid aPlaybackControllerUid, TUid aDestinationFormatUid,
     TFourCC aDestinationDataType) {
-	LogOut(MCA_CAT, _L("Unimplemented function open file using RFile with custom controller UID"));
+	LogOut(KMcaCat, _L("Unimplemented function open file using RFile with custom controller UID"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const TMMSource& aSource, TUid aRecordControllerUid, TUid aPlaybackControllerUid, TUid aDestinationFormatUid,
     TFourCC aDestinationDataType) {
-	LogOut(MCA_CAT, _L("Unimplemented function open file using MMSource with custom controller UID"));
+	LogOut(KMcaCat, _L("Unimplemented function open file using MMSource with custom controller UID"));
 }
 
 EXPORT_C TMMFDurationInfo CMdaAudioRecorderUtility::Duration(TTimeIntervalMicroSeconds& aDuration) {
-	LogOut(MCA_CAT, _L("Unimplemented function getting duration with returned detail!"));
+	LogOut(KMcaCat, _L("Unimplemented function getting duration with returned detail!"));
 	return EMMFDurationInfoUnknown;
 }
 
 EXPORT_C MMMFDRMCustomCommand* CMdaAudioRecorderUtility::GetDRMCustomCommand() {
-	LogOut(MCA_CAT, _L("Get DRM custom command unimplemented!"));
+	LogOut(KMcaCat, _L("Get DRM custom command unimplemented!"));
 	return NULL;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::RegisterAudioResourceNotification(MMMFAudioResourceNotificationCallback& aCallback,TUid aNotificationEventUid,const TDesC8& aNotificationRegistrationData) {
-	LogOut(MCA_CAT, _L("Register audio resource notification unimplemented!"));
+	LogOut(KMcaCat, _L("Register audio resource notification unimplemented!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::CancelRegisterAudioResourceNotification(TUid aNotificationEventId) {
-	LogOut(MCA_CAT, _L("Cancel register audio resource notification unimplemented"));
+	LogOut(KMcaCat, _L("Cancel register audio resource notification unimplemented"));
 	return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::WillResumePlay() {
-	LogOut(MCA_CAT, _L("Will resume play unimplemented"));
+	LogOut(KMcaCat, _L("Will resume play unimplemented"));
 	return KErrNone;
 }
 	
 EXPORT_C TInt CMdaAudioRecorderUtility::SetThreadPriorityPlayback(const TThreadPriority& aThreadPriority) const {
-	LogOut(MCA_CAT, _L("Set thread priority playback ignored"));
+	LogOut(KMcaCat, _L("Set thread priority playback ignored"));
 	return KErrNone;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::SetThreadPriorityRecord(const TThreadPriority& aThreadPriority) const {
-	LogOut(MCA_CAT, _L("Set thread priority record ignored"));
+	LogOut(KMcaCat, _L("Set thread priority record ignored"));
 	return KErrNone;
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::UseSharedHeap() {
-	LogOut(MCA_CAT, _L("Using shared heap for recorder utility"));
+	LogOut(KMcaCat, _L("Using shared heap for recorder utility"));
 }
 
 #endif
@@ -346,29 +346,29 @@ EXPORT_C void CMdaAudioRecorderUtility::UseSharedHeap() {
 #if (MCA_NEW >= 2)
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const TDesC& aFileName, TUid aRecordControllerUid,
 	TUid aPlaybackControllerUid, TUid aDestinationFormatUid, TFourCC aDestinationDataType) {
-	LogOut(MCA_CAT, _L("Unimplemented function to open recorder utility with file name to play/record!"));
+	LogOut(KMcaCat, _L("Unimplemented function to open recorder utility with file name to play/record!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenDesL(TDes8& aDescriptor) {
-    LogOut(MCA_CAT, _L("Unimplemented function to open recorder utility with descriptor to play/record!"));
+    LogOut(KMcaCat, _L("Unimplemented function to open recorder utility with descriptor to play/record!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenUrlL(const TDesC& aUrl, TInt aIapId, TUid aRecordControllerUid, TUid aPlaybackControllerUid,
     TUid aDestinationFormatUid, TFourCC aDestinationDataType) {
-	LogOut(MCA_CAT, _L("Unimplemented function open URL with custom controller UID"));
+	LogOut(KMcaCat, _L("Unimplemented function open URL with custom controller UID"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenUrlL(const TDesC& aUrl, TInt aIapId, const TDesC8& aMimeType) {
-	LogOut(MCA_CAT, _L("Unimplemented function open URL with custom MIME type!"));
+	LogOut(KMcaCat, _L("Unimplemented function open URL with custom MIME type!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenDesL(TDes8& aDescriptor, TUid aRecordControllerUid, TUid aPlaybackControllerUid,
 	TUid aDestinationFormatUid, TFourCC aDestinationDataType) {
-	LogOut(MCA_CAT, _L("Unimplemented function open descriptor with custom controller ID"));
+	LogOut(KMcaCat, _L("Unimplemented function open descriptor with custom controller ID"));
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::GetGain(TInt& aGain) {
-	LogOut(MCA_CAT, _L("Get gain for recorder unimplemented!"));
+	LogOut(KMcaCat, _L("Get gain for recorder unimplemented!"));
 	return KErrNotSupported;
 }
 
@@ -387,61 +387,61 @@ EXPORT_C TInt CMdaAudioRecorderUtility::GetPlaybackBalance(TInt& aBalance) {
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::SetRecordBalance(TInt aBalance) {
-	LogOut(MCA_CAT, _L("Set record balance unimplemented!"));
+	LogOut(KMcaCat, _L("Set record balance unimplemented!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::GetRecordBalance(TInt& aBalance) {
-	LogOut(MCA_CAT, _L("Get record balance unimplemented!"));
+	LogOut(KMcaCat, _L("Get record balance unimplemented!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::GetNumberOfMetaDataEntries(TInt& aNumEntries) {
-	LogOut(MCA_CAT, _L("Get number of metadata entries unimplemented!"));
+	LogOut(KMcaCat, _L("Get number of metadata entries unimplemented!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C CMMFMetaDataEntry* CMdaAudioRecorderUtility::GetMetaDataEntryL(TInt aMetaDataIndex) {
-	LogOut(MCA_CAT, _L("Get metadata entry unimplemented!"));
+	LogOut(KMcaCat, _L("Get metadata entry unimplemented!"));
 	return NULL;
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::AddMetaDataEntryL(CMMFMetaDataEntry& aMetaDataEntry) {
-	LogOut(MCA_CAT, _L("Add metadata entry unimplemented!"));
+	LogOut(KMcaCat, _L("Add metadata entry unimplemented!"));
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::RemoveMetaDataEntry(TInt aMetaDataIndex) {
-	LogOut(MCA_CAT, _L("Remove metadata entry unimplemented!"));
+	LogOut(KMcaCat, _L("Remove metadata entry unimplemented!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::ReplaceMetaDataEntryL(TInt aMetaDataIndex, CMMFMetaDataEntry& aMetaDataEntry) {
-	LogOut(MCA_CAT, _L("Replace metadata entry unimplemented"));
+	LogOut(KMcaCat, _L("Replace metadata entry unimplemented"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetPriority(TInt aPriority, TMdaPriorityPreference aPref) {
-	LogOut(MCA_CAT, _L("Set priority unimplemented!"));
+	LogOut(KMcaCat, _L("Set priority unimplemented!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedDestinationDataTypesL(RArray<TFourCC>& aSupportedDataTypes) {
-	LogOut(MCA_CAT, _L("Get supported destination data types unimplemented!"));
+	LogOut(KMcaCat, _L("Get supported destination data types unimplemented!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationDataTypeL(TFourCC aDataType) {
-	LogOut(MCA_CAT, _L("Set destination data type unimplemented!"));
+	LogOut(KMcaCat, _L("Set destination data type unimplemented!"));
 }
 
 EXPORT_C TFourCC CMdaAudioRecorderUtility::DestinationDataTypeL() {
-	LogOut(MCA_CAT, _L("Get destination data type unimplemented!"));
+	LogOut(KMcaCat, _L("Get destination data type unimplemented!"));
 	return TFourCC(0, 0, 0, 0);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationBitRateL(TUint aBitRate) {
-	LogOut(MCA_CAT, _L("Set destination bitrate unimplemented!"));
+	LogOut(KMcaCat, _L("Set destination bitrate unimplemented!"));
 }
 
 EXPORT_C TUint CMdaAudioRecorderUtility::DestinationBitRateL() {
-	LogOut(MCA_CAT, _L("Destination bitrate unimplemented!"));
+	LogOut(KMcaCat, _L("Destination bitrate unimplemented!"));
 	return 0;
 }
 
@@ -451,7 +451,7 @@ EXPORT_C TUint CMdaAudioRecorderUtility::SourceBitRateL() {
 	TInt err = iProperties->BitRate(bitRate);
 	
 	if (err < KErrNone) {
-		LogOut(MCA_CAT, _L("Error while getting source bitrate!"));
+		LogOut(KMcaCat, _L("Error while getting source bitrate!"));
 		return 0;
 	}
 
@@ -460,7 +460,7 @@ EXPORT_C TUint CMdaAudioRecorderUtility::SourceBitRateL() {
 #endif
 
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedBitRatesL(RArray<TUint>& aSupportedBitRates) {
-	LogOut(MCA_CAT, _L("Get supported bitrate unimplemented!"));
+	LogOut(KMcaCat, _L("Get supported bitrate unimplemented!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationSampleRateL(TUint aSampleRate) {
@@ -478,7 +478,7 @@ EXPORT_C TUint CMdaAudioRecorderUtility::DestinationSampleRateL() {
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedSampleRatesL(RArray<TUint>& aSupportedSampleRates) {
-	LogOut(MCA_CAT, _L("Get supported sample rate unimplemented!"));
+	LogOut(KMcaCat, _L("Get supported sample rate unimplemented!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationFormatL(TUid aFormatUid) {
@@ -496,73 +496,73 @@ EXPORT_C TUid CMdaAudioRecorderUtility::DestinationFormatL() {
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationNumberOfChannelsL(TUint aNumberOfChannels) {
-	LogOut(MCA_CAT, _L("Set destination number of channels unimplemented!"));
+	LogOut(KMcaCat, _L("Set destination number of channels unimplemented!"));
 }
 
 EXPORT_C TUint CMdaAudioRecorderUtility::DestinationNumberOfChannelsL(){ 
-	LogOut(MCA_CAT, _L("Get destination number of channels unimplemented!"));
+	LogOut(KMcaCat, _L("Get destination number of channels unimplemented!"));
 	return 0;
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedNumberOfChannelsL(RArray<TUint>& aSupportedNumChannels) {
-	LogOut(MCA_CAT, _L("Get supported number of channels unimplemented!"));
+	LogOut(KMcaCat, _L("Get supported number of channels unimplemented!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::RegisterForAudioLoadingNotification(MAudioLoadingObserver& aCallback) {
-	LogOut(MCA_CAT, _L("Register for audio loading notification unimplemented!"));
+	LogOut(KMcaCat, _L("Register for audio loading notification unimplemented!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::GetAudioLoadingProgressL(TInt& aPercentageComplete) {
-	LogOut(MCA_CAT, _L("Get audio loading progress stubbed"));
+	LogOut(KMcaCat, _L("Get audio loading progress stubbed"));
 	aPercentageComplete = 100;
 }
 
 EXPORT_C const CMMFControllerImplementationInformation& CMdaAudioRecorderUtility::AudioPlayControllerImplementationInformationL() {
-	LogOut(MCA_CAT, _L("Unimplemented function get audio play impl info!"));
+	LogOut(KMcaCat, _L("Unimplemented function get audio play impl info!"));
 	CMMFControllerImplementationInformation *info = NULL;
 	return *info;
 }
 
 EXPORT_C const CMMFControllerImplementationInformation& CMdaAudioRecorderUtility::AudioRecorderControllerImplementationInformationL() {
-	LogOut(MCA_CAT, _L("Unimplemented function get record play impl info!"));
+	LogOut(KMcaCat, _L("Unimplemented function get record play impl info!"));
 	CMMFControllerImplementationInformation *info = NULL;
 	return *info;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::RecordControllerCustomCommandSync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2, TDes8& aDataFrom) {
-	LogOut(MCA_CAT, _L("Record controller custom command sync unimplemented (has data from)!"));
+	LogOut(KMcaCat, _L("Record controller custom command sync unimplemented (has data from)!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::RecordControllerCustomCommandSync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2) {
-	LogOut(MCA_CAT, _L("Record controller custom command sync unimplemented (no data from)!"));
+	LogOut(KMcaCat, _L("Record controller custom command sync unimplemented (no data from)!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::RecordControllerCustomCommandAsync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2, TDes8& aDataFrom, TRequestStatus& aStatus) {
-	LogOut(MCA_CAT, _L("Record controller custom command async unimplemented (has data from)!"));
+	LogOut(KMcaCat, _L("Record controller custom command async unimplemented (has data from)!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::RecordControllerCustomCommandAsync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2, TRequestStatus& aStatus) {
-	LogOut(MCA_CAT, _L("Record controller custom command async unimplemented (no data from)!"));
+	LogOut(KMcaCat, _L("Record controller custom command async unimplemented (no data from)!"));
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::PlayControllerCustomCommandSync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2, TDes8& aDataFrom) {
-	LogOut(MCA_CAT, _L("Play controller custom command sync unimplemented (has data from)!"));
+	LogOut(KMcaCat, _L("Play controller custom command sync unimplemented (has data from)!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioRecorderUtility::PlayControllerCustomCommandSync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2) {
-	LogOut(MCA_CAT, _L("Play controller custom command sync unimplemented (no data from)!"));
+	LogOut(KMcaCat, _L("Play controller custom command sync unimplemented (no data from)!"));
 	return KErrNotSupported;
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::PlayControllerCustomCommandAsync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2, TDes8& aDataFrom, TRequestStatus& aStatus) {
-	LogOut(MCA_CAT, _L("Play controller custom command async unimplemented (has data from)!"));
+	LogOut(KMcaCat, _L("Play controller custom command async unimplemented (has data from)!"));
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::PlayControllerCustomCommandAsync(const TMMFMessageDestinationPckg& aDestination, TInt aFunction, const TDesC8& aDataTo1, const TDesC8& aDataTo2, TRequestStatus& aStatus) {
-	LogOut(MCA_CAT, _L("Play controller custom command async unimplemented! (no data from)"));
+	LogOut(KMcaCat, _L("Play controller custom command async unimplemented! (no data from)"));
 }
 #endif
 
