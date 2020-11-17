@@ -72,6 +72,27 @@ namespace eka2l1 {
     namespace hle {
         using export_table = std::vector<std::uint32_t>;
         using symbols = std::vector<std::string>;
+        using patch_route_info = std::pair<std::uint32_t, std::uint32_t>;
+
+        struct patch_info {
+            std::string name_;
+            std::uint32_t req_uid2_;
+            std::uint32_t req_uid3_;
+
+            codeseg_ptr patch_;
+            std::vector<patch_route_info> routes_;
+        };
+
+        enum load_patch_infos_state {
+            PATCH_IDLE = 0,
+            PATCH_IMPORT_IMAGES = 1,
+            PATCH_DEPENDENCIES = 2
+        };
+
+        struct patch_pending_entry {
+            codeseg_ptr dest_;
+            patch_info *info_;
+        };
 
         /**
          * \brief Manage libraries and HLE functions.
@@ -91,11 +112,15 @@ namespace eka2l1 {
             kernel::chunk *bootstrap_chunk_;
             bool log_svc{ false };
 
+            std::vector<patch_info> patches_;
+            std::vector<patch_pending_entry> patch_pendings_;
+
         protected:
             const std::uint8_t *entry_points_call_routine_;
             const std::uint8_t *thread_entry_routine_;
 
             drive_number get_drive_rom();
+            void apply_pending_patches();
 
         public:
             std::map<sid, epoc_import_func> svc_funcs_;
@@ -133,6 +158,7 @@ namespace eka2l1 {
             codeseg_ptr load_as_romimg(loader::romimg &img, const std::u16string &path = u"");
 
             void load_patch_libraries(const std::string &patch_folder);
+            bool try_apply_patch(codeseg_ptr original);
 
             system *get_sys();
         };

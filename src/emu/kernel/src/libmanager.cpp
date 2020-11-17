@@ -241,6 +241,8 @@ namespace eka2l1::hle {
 
         // Build import table so that it can patch later
         buildup_import_fixup_table(img, mem, mngr, cs);
+        mngr.try_apply_patch(cs);
+
         return cs;
     }
 
@@ -290,8 +292,20 @@ namespace eka2l1::hle {
         }
     }
 
-    static void patch_original_codeseg(common::ini_section &section, memory_system *mem, codeseg_ptr source_seg,
+    static void patch_original_codeseg(std::vector<patch_route_info> &infos, memory_system *mem, codeseg_ptr source_seg,
         codeseg_ptr dest_seg) {
+        for (auto &rinfo : infos) {
+            if (dest_seg->is_rom()) {
+                patch_rom_export(mem, source_seg, dest_seg, rinfo.first, rinfo.second);
+            }
+
+            dest_seg->set_export(rinfo.second, source_seg->lookup(nullptr, rinfo.first));
+        }
+
+        dest_seg->set_export_table_fixed(true);
+    }
+
+    static void get_route_from_ini_section(common::ini_section &section, std::vector<patch_route_info> &infos) {
         for (auto &pair_node : section) {
             common::ini_pair *pair = pair_node->get_as<common::ini_pair>();
             const std::uint32_t source_export = pair->key_as<std::uint32_t>();
@@ -299,11 +313,7 @@ namespace eka2l1::hle {
             std::uint32_t dest_export = 0;
             pair->get(&dest_export, 1, 0);
 
-            if (dest_seg->is_rom()) {
-                patch_rom_export(mem, source_seg, dest_seg, source_export, dest_export);
-            }
-
-            dest_seg->set_export(dest_export, source_seg->lookup(nullptr, source_export));
+            infos.push_back({ source_export, dest_export });
         }
     }
 
@@ -338,20 +348,15 @@ namespace eka2l1::hle {
         common::dir_iterator iterator(patch_folder);
         common::dir_entry entry;
 
+        patches_.clear();
+
+        std::vector<std::string> patch_image_paths;
+
         while (iterator.next_entry(entry) == 0) {
             if (common::lowercase_string(eka2l1::path_extension(entry.name)) == ".map") {
-                const std::string original_map_name = eka2l1::filename(entry.name);
-                const std::string dest_dll_name = eka2l1::replace_extension(original_map_name, ".dll");
-
-                // Try loading original ROM segment
-                codeseg_ptr original_sec = load(common::utf8_to_ucs2(dest_dll_name));
-
-                if (!original_sec) {
-                    LOG_ERROR("Unable to find original code segment for {}", original_map_name);
-                    continue;
-                }
-
+                const std::string original_map_name = eka2l1::replace_extension(eka2l1::filename(entry.name), "");
                 const std::string patch_map_path = eka2l1::add_path(patch_folder, entry.name);
+
                 epocver start_ver = kern_->get_epoc_version();
 
                 std::string patch_dll_map;
@@ -388,58 +393,41 @@ namespace eka2l1::hle {
 
                     LOG_TRACE("Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
                 }
+                
+                patch_image_paths.push_back(patch_dll_map);
+                patch_info the_patch;
 
-                // We want to patch ROM image though. Do it.
-                auto e32imgfile = eka2l1::physical_file_proxy(patch_dll_map, READ_MODE | BIN_MODE);
-                eka2l1::ro_file_stream image_data_stream(e32imgfile.get());
-
-                // Try to load them to ROM section
-                auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
-
-                if (!e32img) {
-                    // Ignore.
-                    continue;
-                }
-
-                // Create the code chunk in ROM
-                kernel::chunk *code_chunk = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, "",
-                    0, static_cast<eka2l1::address>(e32img->header.code_size), e32img->header.code_size, prot::read_write_exec,
-                    kernel::chunk_type::normal, kernel::chunk_access::rom, kernel::chunk_attrib::anonymous);
-
-                if (!code_chunk) {
-                    continue;
-                }
-
-                // Relocate imports (yes we want to make codeseg object think this is a ROM image)
-                const std::uint32_t code_delta = code_chunk->base(nullptr).ptr_address() - e32img->header.code_base;
-
-                for (auto &export_entry : e32img->ed.syms) {
-                    export_entry += code_delta;
-                }
-
-                memory_system *mem = kern_->get_memory_system();
-
-                // Relocate! Import
-                std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-                codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, common::utf8_to_ucs2(patch_dll_map),
-                    code_chunk->base(nullptr).ptr_address());
-
-                if (!patch_seg) {
-                    continue;
-                }
-
-                patch_seg->attach(nullptr, true);
+                the_patch.name_ = original_map_name;
+                the_patch.patch_ = nullptr;
+                the_patch.req_uid2_ = 0;
+                the_patch.req_uid3_ = 0;
 
                 // Look for map file. These describes the export maps.
                 // This function will replace original ROM subroutines with route to these functions.
                 common::ini_file map_file_parser;
                 map_file_parser.load(patch_map_path.c_str());
 
+                // Get the requirements
+                common::ini_section *req_section = map_file_parser.find("requirements")->get_as<common::ini_section>();
+                if (req_section) {
+                    common::ini_pair *u2 = req_section->find("uid2")->get_as<common::ini_pair>();
+                    if (u2) {
+                        u2->get(&the_patch.req_uid2_, 1, 0);
+                    }
+
+                    common::ini_pair *u3 = req_section->find("uid3")->get_as<common::ini_pair>();
+                    if (u3) {
+                        u3->get(&the_patch.req_uid3_, 1, 0);
+                    }
+                } else {
+                    LOG_TRACE("Patch {} has no hard requirements", entry.name);
+                }
+
                 // Patch out the shared segment first
                 common::ini_section *shared_section = map_file_parser.find("shared")->get_as<common::ini_section>();
 
                 if (shared_section) {
-                    patch_original_codeseg(*shared_section, mem, patch_seg, original_sec);
+                    get_route_from_ini_section(*shared_section, the_patch.routes_);
                 } else {
                     LOG_TRACE("Shared section not found for patch DLL {}", entry.name);
                 }
@@ -450,13 +438,97 @@ namespace eka2l1::hle {
                     common::ini_section *indi_section = map_file_parser.find(alone_section_name)->get_as<common::ini_section>();
 
                     if (indi_section) {
-                        patch_original_codeseg(*indi_section, mem, patch_seg, original_sec);
+                        get_route_from_ini_section(*indi_section, the_patch.routes_);
                     } else {
                         LOG_TRACE("Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
                             entry.name);
                     }
                 }
+
+                patches_.push_back(the_patch);
             }
+        }
+
+        for (std::size_t i = 0; i < patch_image_paths.size(); i++) {
+            // We want to patch ROM image though. Do it.
+            auto e32imgfile = eka2l1::physical_file_proxy(patch_image_paths[i], READ_MODE | BIN_MODE);
+            eka2l1::ro_file_stream image_data_stream(e32imgfile.get());
+
+            // Try to load them to ROM section
+            auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
+
+            if (!e32img) {
+                // Ignore.
+                continue;
+            }
+
+            // Create the code chunk in ROM
+            kernel::chunk *code_chunk = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, "",
+                0, static_cast<eka2l1::address>(e32img->header.code_size), e32img->header.code_size, prot::read_write_exec,
+                kernel::chunk_type::normal, kernel::chunk_access::rom, kernel::chunk_attrib::anonymous);
+
+            if (!code_chunk) {
+                continue;
+            }
+
+            // Relocate imports (yes we want to make codeseg object think this is a ROM image)
+            const std::uint32_t code_delta = code_chunk->base(nullptr).ptr_address() - e32img->header.code_base;
+
+            for (auto &export_entry : e32img->ed.syms) {
+                export_entry += code_delta;
+            }
+
+            memory_system *mem = kern_->get_memory_system();
+
+            // Relocate! Import
+            std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
+            codeseg_ptr patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, common::utf8_to_ucs2(patch_image_paths[i]),
+                code_chunk->base(nullptr).ptr_address());
+
+            if (!patch_seg) {
+                continue;
+            }
+
+            patch_seg->attach(nullptr, true);
+            patches_[i].patch_ = patch_seg;
+        }
+
+        apply_pending_patches();
+    }
+
+    bool lib_manager::try_apply_patch(codeseg_ptr original) {
+        const std::string org_name = original->name();
+        const auto the_uids =  original->get_uids();
+
+        for (auto &patch: patches_) {
+            if (common::compare_ignore_case(org_name.c_str(), patch.name_.c_str()) == 0) {
+                const bool uid2_sas = (!patch.req_uid2_ || (patch.req_uid2_ == std::get<1>(the_uids)));
+                const bool uid3_sas = (!patch.req_uid3_ || (patch.req_uid3_ == std::get<2>(the_uids)));
+
+                if (uid2_sas && uid3_sas) {
+                    if (!patch.patch_) {
+                        patch_pending_entry entry;
+                        entry.info_ = &patch;
+                        entry.dest_ = original;
+
+                        patch_pendings_.push_back(entry);
+                    } else {
+                        patch_original_codeseg(patch.routes_, kern_->get_memory_system(), patch.patch_,
+                            original);
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+     
+    void lib_manager::apply_pending_patches() {
+        for (auto &pending_entry: patch_pendings_) {
+            patch_original_codeseg(pending_entry.info_->routes_, kern_->get_memory_system(), pending_entry.info_->patch_,
+                pending_entry.dest_);
         }
     }
 
@@ -511,7 +583,7 @@ namespace eka2l1::hle {
         info.exception_descriptor = romimg.header.exception_des;
         info.constant_data = reinterpret_cast<std::uint8_t *>(mem_->get_real_pointer(romimg.header.data_address));
 
-        const std::string seg_name = (path.empty()) ? "codeseg" : common::ucs2_to_utf8(eka2l1::replace_extension(eka2l1::filename(path), u""));
+        const std::string seg_name = (path.empty()) ? "codeseg" : common::ucs2_to_utf8(eka2l1::filename(path));
 
         auto cs = kern_->create<kernel::codeseg>(seg_name, info);
 
@@ -624,6 +696,7 @@ namespace eka2l1::hle {
         };
 
         dig_dependencies(&romimg.header, cs);
+        try_apply_patch(cs);
 
         return cs;
     }

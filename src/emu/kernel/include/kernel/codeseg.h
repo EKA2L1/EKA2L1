@@ -131,6 +131,8 @@ namespace eka2l1::kernel {
         std::vector<std::uint64_t> relocation_list;
         codeseg_state state;
 
+        bool export_table_fixed_;
+
     public:
         /*! \brief Create a new codeseg
          *
@@ -233,6 +235,7 @@ namespace eka2l1::kernel {
 
         // Use for patching
         void set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address);
+        void set_export_table_fixed(const bool is_fixed);
         address relocate(kernel::process *pr, const address addr_on_base);
     };
 }

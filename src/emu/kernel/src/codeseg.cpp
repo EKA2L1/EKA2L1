@@ -29,7 +29,8 @@
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
         : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
-        , state(codeseg_state_none) {
+        , state(codeseg_state_none)
+        , export_table_fixed_(false) {
         std::copy(info.uids, info.uids + 3, uids);
         code_base = info.code_base;
         data_base = info.data_base;
@@ -342,7 +343,7 @@ namespace eka2l1::kernel {
     address codeseg::lookup(kernel::process *pr, const std::uint32_t ord) {
         const address lookup_res = lookup_no_relocate(ord);
 
-        if (code_addr != 0 || !lookup_res) {
+        if (code_addr != 0 || !lookup_res || export_table_fixed_) {
             return lookup_res;
         }
 
@@ -427,6 +428,10 @@ namespace eka2l1::kernel {
         }
 
         export_table[ordinal - 1] = address.ptr_address();
+    }
+
+    void codeseg::set_export_table_fixed(const bool is_fixed) {
+        export_table_fixed_ = is_fixed;
     }
 
     bool codeseg::add_premade_entry_point(const address addr) {
