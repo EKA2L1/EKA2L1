@@ -82,11 +82,14 @@ namespace eka2l1 {
         memory_system *mem;
 
         std::uint8_t *file_ptr;
+        std::u16string input_path;
 
-        rom_file(memory_system *mem, loader::rom *supreme_mother, loader::rom_entry entry)
+        explicit rom_file(memory_system *mem, loader::rom *supreme_mother, loader::rom_entry entry,
+            const std::u16string &inpp)
             : parent(supreme_mother)
             , file(entry)
-            , mem(mem) {
+            , mem(mem)
+            , input_path(inpp) {
             file_ptr = ptr<std::uint8_t>(file.address_lin).get(mem);
             crr_pos = 0;
         }
@@ -169,7 +172,7 @@ namespace eka2l1 {
         }
 
         std::u16string file_name() const override {
-            return file.name;
+            return input_path;
         }
 
         bool close() override {
@@ -997,7 +1000,7 @@ namespace eka2l1 {
                 return physical_file_system::open_file(new_path, mode);
             }
 
-            return std::make_unique<rom_file>(mem, rom_cache, *entry);
+            return std::make_unique<rom_file>(mem, rom_cache, *entry, path);
         }
 
         std::optional<entry_info> get_entry_info(const std::u16string &path) override {
