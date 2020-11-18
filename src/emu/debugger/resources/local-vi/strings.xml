@@ -54,7 +54,6 @@
     <string name="pref_personalize_background_string">Hình nền</string>
     <string name="pref_personalize_transparency_string">Độ trong suốt</string>
     <string name="pref_personalize_ui_scale_string">Độ phóng giao diện</string>
-    <string name="pref_personalize_font_string">Phông chữ</string>
     <string name="pref_general_title">Chung</string>
     <string name="pref_general_data_storage_string">Nơi lưu trữ dữ liệu</string>
     <string name="pref_general_debugging_string">Gỡ lỗi</string>
