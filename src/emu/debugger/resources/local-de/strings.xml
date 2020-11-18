@@ -54,7 +54,6 @@
     <string name="pref_personalize_background_string">Hintergrund</string>
     <string name="pref_personalize_transparency_string">Transparenz</string>
     <string name="pref_personalize_ui_scale_string">UI-Skalierung</string>
-    <string name="pref_personalize_font_string">Schriftart</string>
     <string name="pref_general_title">Allgemein</string>
     <string name="pref_general_data_storage_string">Datenspeicher</string>
     <string name="pref_general_debugging_string">Debugging</string>
