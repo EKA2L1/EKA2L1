@@ -54,7 +54,6 @@
     <string name="pref_personalize_background_string">Arxaplan</string>
     <string name="pref_personalize_transparency_string">Şəffaflıq</string>
     <string name="pref_personalize_ui_scale_string">İİ ölçüsü</string>
-    <string name="pref_personalize_font_string">Şrift</string>
     <string name="pref_general_title">Ümumi</string>
     <string name="pref_general_data_storage_string">Anbar</string>
     <string name="pref_general_debugging_string">Sazlama</string>
