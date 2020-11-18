@@ -65,7 +65,19 @@ namespace eka2l1 {
             auto wstr = converter.from_bytes(reinterpret_cast<const char*>(&str[0]),
                             reinterpret_cast<const char*>(&str[0] + str.size()));
 
-            if (wstr.back() == u'\0') {
+            if (wstr.back() == L'\0') {
+                wstr.pop_back();
+            }
+
+            return wstr;
+        }
+        
+        std::wstring utf8_to_wstr(const std::string &str) {
+            std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+            auto wstr = converter.from_bytes(reinterpret_cast<const char*>(&str[0]),
+                            reinterpret_cast<const char*>(&str[0] + str.size()));
+
+            if (wstr.back() == L'\0') {
                 wstr.pop_back();
             }
 

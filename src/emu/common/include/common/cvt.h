@@ -32,6 +32,7 @@ namespace eka2l1 {
         std::string ucs2_to_utf8(const std::u16string &str);
         std::u16string utf8_to_ucs2(const std::string &str);
         std::wstring ucs2_to_wstr(const std::u16string &str);
+        std::wstring utf8_to_wstr(const std::string &str);
 
         /*! \brief Convert something to string. */
         template <class T>
