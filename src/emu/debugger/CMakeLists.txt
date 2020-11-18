@@ -8,6 +8,14 @@ add_library(debugger
         src/debugger.cpp
         src/imgui_debugger.cpp
         src/logger.cpp
+        src/elements/imgui_debugger_about.cpp
+        src/elements/imgui_debugger_app_launcher.cpp
+        src/elements/imgui_debugger_emu_screen.cpp
+        src/elements/imgui_debugger_install_device.cpp
+        src/elements/imgui_debugger_os_debug.cpp
+        src/elements/imgui_debugger_package.cpp
+        src/elements/imgui_debugger_prefs.cpp
+        src/elements/imgui_debugger_user_utils.cpp
         src/renderer/common.cpp
         src/renderer/renderer.cpp
         src/renderer/spritesheet.cpp
