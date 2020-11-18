@@ -54,7 +54,6 @@
     <string name="pref_personalize_background_string">ব্যাকগ্রাউন্ড</string>
     <string name="pref_personalize_transparency_string">স্বচ্ছতা</string>
     <string name="pref_personalize_ui_scale_string">ইউআই স্কেল</string>
-    <string name="pref_personalize_font_string">ফন্ট</string>
     <string name="pref_general_title">সাধারণ</string>
     <string name="pref_general_data_storage_string">ডেটা স্টোরেজ</string>
     <string name="pref_general_debugging_string">ডিবাগিং</string>
