@@ -179,6 +179,8 @@ namespace eka2l1::loader {
         e32img img;
         const std::size_t file_size = stream->size();
 
+        stream->seek(0, common::seek_where::beg);
+
         stream->read(&img.header.uid1, 4);
         stream->read(&img.header.uid2, 4);
         stream->read(&img.header.uid3, 4);
