@@ -17,9 +17,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <e32std.h>
+#include <HwrmVibra.hpp>
+#include <HwrmConsts.hpp>
 
-extern "C" {
-    void DebugPrint(TDesC8 &str);
-    void DebugPrint16(TDesC16 &str); 
+TInt RHWRMVibraRaw::Connect() {
+    return iResource.Connect(EHWRMResourceTypeVibra);
+}
+
+void RHWRMVibraRaw::Close() {
+    iResource.ExecuteCommand(EHWRMVibraCleanup, TIpcArgs());
+    iResource.Close();
+}
+
+TInt RHWRMVibraRaw::StartVibra(TUint16 aDuration) {
+    return iResource.ExecuteCommand(EHWRMVibraStartDefaultIntensity, TIpcArgs(aDuration));
+}
+
+TInt RHWRMVibraRaw::StartVibra(TUint16 aDuration, TUint16 aIntensity) {
+    return iResource.ExecuteCommand(EHWRMVibraStart, TIpcArgs(aDuration, aIntensity));
+}
+
+TInt RHWRMVibraRaw::StopVibra() {
+    return iResource.ExecuteCommand(EHWRMVibraStop, TIpcArgs());
 }

@@ -91,6 +91,8 @@ const ImVec4 GUI_COLOR_TEXT_SELECTED = RGBA_TO_FLOAT(125.0f, 251.0f, 143.0f, 255
 static const ImVec4 RED_COLOR = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 static const ImVec4 GREEN_COLOR = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
 
+static std::uint32_t HOVERED_COLOUR_ABGR = 0x80E6E6AD;
+
 namespace eka2l1 {
     static void language_property_change_handler(void *userdata, service::property *prop) {
         imgui_debugger *debugger = reinterpret_cast<imgui_debugger *>(userdata);
@@ -578,8 +580,7 @@ namespace eka2l1 {
 
         const std::string transparency_str = common::get_localised_string(localised_strings, "pref_personalize_transparency_string");
         const std::string ui_scale_str = common::get_localised_string(localised_strings, "pref_personalize_ui_scale_string");
-        const std::string font_str = common::get_localised_string(localised_strings, "pref_personalize_font_string");
-
+        
         ImGui::Text("%s ", transparency_str.c_str());
         ImGui::SameLine();
         ImGui::SliderInt("##BackgroundTransparency", &conf->bkg_transparency, 0, 255);
@@ -589,28 +590,6 @@ namespace eka2l1 {
         const bool ret = ImGui::InputFloat("##UIScale", &conf->ui_scale, 0.1f);
         if (ret && conf->ui_scale <= 1e-6) {
             conf->ui_scale = 0.5;
-        }
-
-        ImGui::NewLine();
-        ImGui::Text("%s", font_str.c_str());
-        ImGui::Separator();
-
-        ImGui::Text("%s         ", path_str.c_str());
-        ImGui::SameLine();
-        ImGui::InputText("##FontPath", conf->font_path.data(), conf->font_path.size(), ImGuiInputTextFlags_ReadOnly);
-        ImGui::SameLine();
-
-        const std::string replace_str = common::get_localised_string(localised_strings, "replace");
-        if (ImGui::Button(replace_str.c_str())) {
-            on_pause_toogle(true);
-
-            drivers::open_native_dialog(sys->get_graphics_driver(), "ttf", [&](const char *result) {
-                conf->font_path = result;
-                conf->serialize();
-            });
-
-            should_pause = false;
-            on_pause_toogle(false);
         }
 
         ImGui::Separator();
@@ -2259,8 +2238,8 @@ namespace eka2l1 {
         }
         
         eka2l1::rect dest_rect;
-        dest_rect.top.x = static_cast<int>(cmd->ClipRect.x) + tt->offset_.x;
-        dest_rect.top.y = static_cast<int>(cmd->ClipRect.y) + tt->offset_.y;
+        dest_rect.top.x = tt->offset_.x;
+        dest_rect.top.y = tt->offset_.y;
 
         dest_rect.size.x = static_cast<int>(tt->target_height_);
         dest_rect.size.y = static_cast<int>(tt->target_height_);
@@ -2289,8 +2268,7 @@ namespace eka2l1 {
         static constexpr float ICON_PADDING = 5.0f;
         static constexpr float ICON_PADDING_X = 10.0f;
 
-        const float scaled_icon_size = ICON_SIZE * conf->ui_scale;
-        const int yadv = static_cast<int>(scaled_icon_size + ICON_PADDING);
+        const int yadv = static_cast<int>(ICON_SIZE + ICON_PADDING);
 
         if (search.Filters.empty()) {
             clipper.Begin(static_cast<int>(registerations.size()), static_cast<float>(yadv));
@@ -2300,6 +2278,11 @@ namespace eka2l1 {
         const float padding_builtin = ImGui::GetStyle().WindowPadding.y;
 
         eka2l1::vec2 offset_display;
+        eka2l1::vec2 content_start;
+
+        content_start.x = static_cast<int>(ImGui::GetWindowPos().x);
+        content_start.y = static_cast<int>(ImGui::GetWindowPos().y);
+
         offset_display.x = static_cast<int>(ImGui::GetStyle().WindowPadding.x);
         offset_display.y = static_cast<int>(padding_builtin);
 
@@ -2333,7 +2316,7 @@ namespace eka2l1 {
                     bool was_hovered = false;
 
                     ImVec2 offset_text_start;
-                    offset_text_start.x += static_cast<float>(offset_display.x) + scaled_icon_size + ICON_PADDING_X; 
+                    offset_text_start.x += static_cast<float>(offset_display.x) + ICON_SIZE + ICON_PADDING_X; 
                     offset_text_start.y = cursor_pos_y + padding_builtin + yadv * passed;
 
                     ImRect collision_rect;
@@ -2349,12 +2332,12 @@ namespace eka2l1 {
 
                     collision_rect.Max = collision_start;
                     collision_rect.Max.x += ImGui::GetWindowContentRegionWidth() - ICON_BORDER_SELC * 2;
-                    collision_rect.Max.y += ICON_BORDER_SELC + scaled_icon_size;
+                    collision_rect.Max.y += ICON_BORDER_SELC + ICON_SIZE;
 
                     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
                         ImGui::IsMouseHoveringRect(collision_rect.Min, collision_rect.Max, true)) {
                         ImGui::GetWindowDrawList()->AddRectFilled(collision_rect.Min, collision_rect.Max,
-                            0x80E6E6AD, 1.0f);
+                            HOVERED_COLOUR_ABGR, 1.0f);
 
                         was_hovered = true;
                     }
@@ -2367,8 +2350,8 @@ namespace eka2l1 {
 
                     data->cache_ = winserv->get_bitmap_cache();
                     data->driver_ = sys->get_graphics_driver();
-                    data->offset_ = offset_display;
-                    data->target_height_ = scaled_icon_size;
+                    data->offset_ = offset_display + content_start;
+                    data->target_height_ = ICON_SIZE;
 
                     bool should_draw_icon = false;
 
@@ -2404,7 +2387,7 @@ namespace eka2l1 {
                     }
 
                     const float height_of_text = ImGui::CalcTextSize(name.c_str()).y + ImGui::CalcTextSize(" UID: ").y;
-                    offset_text_start.y += (scaled_icon_size - height_of_text - ImGui::GetStyle().ItemSpacing.y) / 2;
+                    offset_text_start.y += (ICON_SIZE - height_of_text - ImGui::GetStyle().ItemSpacing.y) / 2;
 
                     ImGui::SetCursorPos(offset_text_start);
                     ImGui::Text("%s", name.c_str());

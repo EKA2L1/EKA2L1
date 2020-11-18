@@ -31,7 +31,6 @@
 
 #include <system/devices.h>
 
-
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
 
@@ -142,7 +141,9 @@ namespace eka2l1::desktop {
             // Load patch libraries
             kernel_system *kern = symsys->get_kernel_system();
             hle::lib_manager *libmngr = kern->get_lib_manager();
-            io_system *io = symsys->get_io_system();
+
+            // Start the bootload
+            kern->start_bootload();
 
             libmngr->load_patch_libraries(".//patch//");
             stage_two_inited = true;

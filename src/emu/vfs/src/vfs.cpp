@@ -1013,7 +1013,7 @@ namespace eka2l1 {
             }
 
             entry_info info;
-            info.type = entry->attrib & 0x10 ? io_component_type::dir : io_component_type::drive;
+            info.type = (entry->attrib & 0x10) ? io_component_type::dir : io_component_type::file;
             info.has_raw_attribute = true;
             info.raw_attribute = entry->attrib;
             info.size = entry->size;

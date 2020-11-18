@@ -33,10 +33,41 @@ namespace eka2l1 {
 
     shutdown_session::shutdown_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(svr, client_ss_uid, client_ver) {
-        
     }
     
+    void shutdown_session::request_notify(service::ipc_context *context) {
+        if (!nof_.empty()) {
+            context->complete(epoc::error_in_use);
+            return;
+        }
+
+        nof_ = epoc::notify_info(context->msg->request_sts, context->msg->own_thr);
+    }
+
+    void shutdown_session::cancel_notify(service::ipc_context *context) {
+        if (nof_.empty()) {
+            context->complete(epoc::error_not_ready);
+            return;
+        }
+
+        nof_.complete(epoc::error_cancel);
+        context->complete(epoc::error_none);
+    }
+
     void shutdown_session::fetch(service::ipc_context *context) {
+        switch (context->msg->function) {
+        case shutdown_server_notify:
+            request_notify(context);
+            return;
+
+        case shutdown_server_notify_cancel:
+            cancel_notify(context);
+            return;
+
+        default:
+            break;
+        }
+
         LOG_ERROR("Unimplemented shutdown server opcode: {}", context->msg->function);
     }
 

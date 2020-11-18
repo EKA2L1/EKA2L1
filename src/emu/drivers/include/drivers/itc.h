@@ -365,6 +365,16 @@ namespace eka2l1::drivers {
 
         virtual void set_swapchain_size(const eka2l1::vec2 &swsize) = 0;
 
+        /**
+         * @brief Set the size of the display in ortho matrix.
+         * 
+         * By default the size of swapchain is used for the ortho matrix, everytime the swapchain size
+         * is set. This overrides that.
+         * 
+         * @param osize     Size to set in the ortho matrix.
+         */
+        virtual void set_ortho_size(const eka2l1::vec2 &osize) = 0;
+
         // TODO: Document
         virtual void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) = 0;
 
@@ -480,6 +490,8 @@ namespace eka2l1::drivers {
         void destroy_bitmap(drivers::handle h) override;
 
         void set_swapchain_size(const eka2l1::vec2 &swsize) override;
+        
+        void set_ortho_size(const eka2l1::vec2 &osize) override;
 
         void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) override;
 

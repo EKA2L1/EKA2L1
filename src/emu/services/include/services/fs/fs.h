@@ -92,7 +92,6 @@ namespace eka2l1 {
         bool operator()(const utf16_str &x, const utf16_str &y) const;
     };
 
-    std::uint32_t build_attribute_from_entry_info(entry_info &info);
     std::u16string get_full_symbian_path(const std::u16string &session_path, const std::u16string &target_path);
 
     struct fs_server_client : public service::typical_session {

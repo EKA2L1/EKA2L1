@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project.
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +19,7 @@
 
 #pragma once
 
+#include <services/framework.h>
 #include <kernel/server.h>
 
 namespace eka2l1 {
@@ -42,10 +42,16 @@ namespace eka2l1 {
         EBakOpCodeStopNotifications
     };
 
-    class backup_server : public service::server {
-        void get_backup_operation_state(service::ipc_context &ctx);
-
+    class backup_server : public service::typical_server {
     public:
         explicit backup_server(eka2l1::system *sys);
+        void connect(service::ipc_context &context) override;
+    };
+
+    struct backup_client_session : public service::typical_session {
+        explicit backup_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
+        
+        void fetch(service::ipc_context *ctx) override;
+        void get_backup_operation_state(service::ipc_context *ctx);
     };
 }

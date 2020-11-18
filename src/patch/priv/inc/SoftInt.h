@@ -17,13 +17,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-.align 4
+#ifndef PCOMMON_INT_H_
+#define PCOMMON_INT_H_
 
-.global DebugPrint
-.global DebugPrint16
+#include <e32def.h>
 
-DebugPrint:
-    swi 0xC10001
-    
-DebugPrint16:
-    swi 0xC10002
+#ifndef EKA2
+typedef unsigned long long TUint64;
+
+inline TInt64 MakeSoftwareInt64FromHardwareUint64(const TUint64 aOriginal) {
+    return TInt64(static_cast<TUint>(aOriginal >> 32), static_cast<TUint>(aOriginal));
+}
+
+inline TUint64 MakeHardwareUint64FromSoftwareInt64(const TInt64 aOriginal) {
+    return (static_cast<TUint64>(aOriginal.High()) << 32) | aOriginal.Low();
+}
+#endif
+
+#endif

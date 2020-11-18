@@ -9,10 +9,10 @@
 
 TARGET		  mediaclientaudiostream_v80.dll
 TARGETTYPE	  dll
-UID			 0x10003B19 0xed5d920e
+UID			 0x10003B19 0xee000001
 
-USERINCLUDE	 ..\..\inc ..\..\..\pcommon\inc
-SYSTEMINCLUDE   \epoc32\include
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include  ..\..\..\priv\inc
 
 SOURCEPATH	  ..\..\src
 
@@ -22,9 +22,9 @@ SOURCE        impl.cpp
 
 nostrictdef
 
-DEFFILE ..\..\eabi\mediaclientaudiostream_v80.def
+DEFFILE         ..\..\eabi\mediaclientaudiostream_v80.def
 
-LIBRARY		 euser.lib efsrv.lib
-STATICLIBRARY    pcommon.lib
+LIBRARY		    euser.lib efsrv.lib
+STATICLIBRARY   priv.lib
 MACRO            __SERIES80__
 

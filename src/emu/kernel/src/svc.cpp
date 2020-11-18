@@ -739,7 +739,7 @@ namespace eka2l1::epoc {
         client_ptr = reinterpret_cast<std::uint8_t*>(the_des->get_pointer_raw(callee_process));
 
         if (read && (size_of_work > copy_info.target_length)) {
-            return epoc::error_underflow;
+            size_of_work = copy_info.target_length;
         }
 
         // In write, size of work is the size to write to
@@ -1394,7 +1394,7 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        std::optional<eka2l1::find_handle> info = kern->find_object(name, handle->handle + 1,
+        std::optional<eka2l1::find_handle> info = kern->find_object(name, handle->handle,
             static_cast<kernel::object_type>(obj_type), true);
 
         if (!info) {
@@ -1431,7 +1431,7 @@ namespace eka2l1::epoc {
         }
 
         //LOG_TRACE("Finding object name: {}", name);
-        std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching + 1,
+        std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching,
             static_cast<kernel::object_type>(obj_type), true);
 
         if (!info) {
@@ -2480,11 +2480,23 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        if (len > static_cast<std::int32_t>(buf->get_length())) {
-            return epoc::error_overflow;
+        kernel::process *process_to_operate = thr_to_operate->owning_process();
+
+        if (is_write) {
+            if (len > static_cast<std::int32_t>(buf->get_length())) {
+                return epoc::error_overflow;
+            }
+        } else {
+            if (len > static_cast<std::int32_t>(buf->get_max_length(process_to_operate))) {
+                return epoc::error_underflow;
+            }
         }
 
-        kernel::process *process_to_operate = thr_to_operate->owning_process();
+        if (process_to_operate->is_kernel_process()) {
+            LOG_WARN("App trying to write to kernel process. Nothing is changed.");
+            return epoc::error_none;
+        }
+
         std::uint8_t *buf_ptr = reinterpret_cast<std::uint8_t*>(buf->get_pointer_raw(crr));
 
         std::uint8_t *dest_of_operate = reinterpret_cast<std::uint8_t*>(process_to_operate->
@@ -3162,6 +3174,27 @@ namespace eka2l1::epoc {
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
     }
 
+    
+    std::int32_t open_object_through_find_handle_eka1(kernel_system *kern, const std::uint32_t attribute,
+        epoc::eka1_executor *create_info, epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        const std::uint32_t handle_find = create_info->arg1_;
+        kernel_obj_ptr obj = kern->get_object_from_find_handle(handle_find);
+
+        if (!obj) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        kernel::handle h = kern->mirror(obj, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
     std::int32_t close_handle_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         const std::int32_t close_result = kern->close(create_info->arg0_);
@@ -3483,6 +3516,9 @@ namespace eka2l1::epoc {
         case epoc::eka1_executor::execute_open_mutex_global:
             return open_object_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+        case epoc::eka1_executor::execute_open_find_handle:
+            return open_object_through_find_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
         case epoc::eka1_executor::execute_chunk_adjust:
             return chunk_adjust_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
@@ -3651,6 +3687,35 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, thread_write_ipc_to_des16, address dest_ptr_addr, epoc::des8 *source_des, std::int32_t offset, kernel::handle dest_thread) {
         return thread_ipc_to_des_eka1(kern, dest_ptr_addr, source_des, offset, dest_thread, IPC_DIR_WRITE | CHUNK_SHIFT_BY_1);
+    }
+
+    static std::int32_t thread_get_des_length_general(kernel_system *kern, eka2l1::ptr<epoc::des8> des_addr, kernel::handle owner_thread_h, const bool need_max_len) {
+        kernel::thread *owner_thread = kern->get<kernel::thread>(owner_thread_h);
+
+        if (!owner_thread) {
+            return epoc::error_argument;
+        }
+
+        kernel::process *own_pr = owner_thread->owning_process();
+        epoc::des8 *the_des = des_addr.get(own_pr);
+
+        if (!the_des || !the_des->is_valid_descriptor()) {
+            return epoc::error_bad_descriptor;
+        }
+
+        if (need_max_len) {
+            return the_des->get_max_length(own_pr);
+        }
+
+        return the_des->get_length();
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_get_des_length, eka2l1::ptr<epoc::des8> des_addr, kernel::handle owner_thread_h) {
+        return thread_get_des_length_general(kern, des_addr, owner_thread_h, false);
+    }
+
+    BRIDGE_FUNC(std::int32_t, thread_get_des_max_length, eka2l1::ptr<epoc::des8> des_addr, kernel::handle owner_thread_h) {
+        return thread_get_des_length_general(kern, des_addr, owner_thread_h, true);
     }
 
     BRIDGE_FUNC(void, thread_request_complete_eka1, address *sts_addr, const std::int32_t code, kernel::handle thread_handle) {
@@ -3830,7 +3895,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_descriptor;
         }
 
-        std::memcpy(place_to_read_to, data_ptr + pos, len_to_read);
+        std::memcpy(data_to_write_ptr, data_ptr + pos, len_to_read);
         place_to_read_to->set_length(kern->crr_process(), len_to_read);
 
         return epoc::error_none;
@@ -4265,6 +4330,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80002C, semaphore_signal_n_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
         BRIDGE_REGISTER(0x800033, thread_find_next),
+        BRIDGE_REGISTER(0x800040, thread_get_des_length),
+        BRIDGE_REGISTER(0x800041, thread_get_des_max_length),
         BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
         BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
         BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),

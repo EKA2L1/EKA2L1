@@ -19,7 +19,7 @@
 
 #include <cdsb.h>
 
-#include "scdv/log.h"
+#include "log.h"
 #include "scdv/panic.h"
 #include "scdv/sv.h"
 
@@ -83,7 +83,8 @@ TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aS
 
     iScreenNum = screenNum;
 
-    Scdv::Log("New direct screen bitmap created for screen %d, double buffer: %d", screenNum, iFlags & CDirectScreenBitmap::EDoubleBuffer);
+    LogOut(KScdvCat, _L("New direct screen bitmap created for screen %d, double buffer: %d"),
+        screenNum, iFlags & CDirectScreenBitmap::EDoubleBuffer);
 
     return KErrNone;
 }

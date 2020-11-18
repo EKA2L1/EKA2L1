@@ -43,16 +43,6 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
-    namespace epoc::fs {
-        std::string get_server_name_through_epocver(const epocver ver) {
-            if (ver < epocver::eka2) {
-                return "FileServer";
-            }
-
-            return "!FileServer";
-        }
-    }
-
     static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
         const char16_t drive_dos_char = drive_to_char16(drive);
         const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
@@ -443,16 +433,29 @@ namespace eka2l1 {
     }
 
     void fs_server_client::notify_change(service::ipc_context *ctx) {
+        kernel_system *kern = ctx->sys->get_kernel_system();
         notify_entry entry;
 
         entry.match_pattern = ".*";
         entry.type = static_cast<notify_type>(*ctx->get_argument_value<std::int32_t>(0));
         entry.info = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
 
+        if (kern->is_eka1()) {
+            std::optional<address> notify_reqaddr = ctx->get_argument_value<address>(1);
+            if (!notify_reqaddr.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            entry.info.sts = notify_reqaddr.value();
+            ctx->complete(epoc::error_none);
+        }
+
         notify_entries.push_back(entry);
     }
 
     void fs_server_client::notify_change_ex(service::ipc_context *ctx) {
+        kernel_system *kern = ctx->sys->get_kernel_system();
         std::optional<utf16_str> wildcard_match = ctx->get_argument_value<utf16_str>(1);
 
         if (!wildcard_match) {
@@ -464,6 +467,17 @@ namespace eka2l1 {
         entry.match_pattern = common::wildcard_to_regex_string(common::ucs2_to_utf8(*wildcard_match));
         entry.type = static_cast<notify_type>(*ctx->get_argument_value<std::int32_t>(0));
         entry.info = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+
+        if (kern->is_eka1()) {
+            std::optional<address> notify_reqaddr = ctx->get_argument_value<address>(2);
+            if (!notify_reqaddr.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            entry.info.sts = notify_reqaddr.value();
+            ctx->complete(epoc::error_none);
+        }
 
         notify_entries.push_back(entry);
 
@@ -555,30 +569,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    std::uint32_t build_attribute_from_entry_info(entry_info &info) {
-        std::uint32_t attrib = epoc::fs::entry_att_normal;
-
-        if (info.has_raw_attribute) {
-            attrib = info.raw_attribute;
-        } else {
-            bool dir = (info.type == io_component_type::dir);
-
-            if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib_write_protected)) {
-                attrib |= epoc::fs::entry_att_read_only;
-            }
-
-            // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).
-
-            if (dir) {
-                attrib |= epoc::fs::entry_att_dir;
-            } else {
-                attrib |= epoc::fs::entry_att_archive;
-            }
-        }
-
-        return attrib;
-    }
-
     void fs_server_client::entry(service::ipc_context *ctx) {
         std::optional<std::u16string> fname_op = ctx->get_argument_value<std::u16string>(0);
 
@@ -604,26 +594,7 @@ namespace eka2l1 {
         }
 
         epoc::fs::entry entry;
-        entry.size = static_cast<std::uint32_t>(entry_hle->size);
-        entry.size_high = static_cast<std::uint32_t>(entry_hle->size >> 32);
-
-        entry.attrib = build_attribute_from_entry_info(entry_hle.value());
-        entry.name = fname;
-        entry.modified = epoc::time{ entry_hle->last_write };
-
-        // Stub some dead value for debugging
-        entry.uid1 = entry.uid2 = entry.uid3 = 0xDEADBEEF;
-        
-        if (entry_hle->type == io_component_type::file) {
-            // Temporarily open it to read UIDs
-            symfile f = io->open_file(fname, READ_MODE | BIN_MODE);
-
-            if (f) {
-                f->read_file(&entry.uid1, sizeof(entry.uid1), 1);
-                f->read_file(&entry.uid2, sizeof(entry.uid2), 1);
-                f->read_file(&entry.uid3, sizeof(entry.uid3), 1);
-            }
-        }
+        epoc::fs::build_symbian_entry_from_emulator_entry(io, entry_hle.value(), entry);
 
         ctx->write_data_to_descriptor_argument<epoc::fs::entry>(1, entry, nullptr, true);
         ctx->complete(epoc::error_none);

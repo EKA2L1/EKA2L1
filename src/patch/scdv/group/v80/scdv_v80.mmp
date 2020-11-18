@@ -10,15 +10,14 @@
 TARGET        scdv_v80.dll
 
 TARGETTYPE	  dll
-UID			 0x10003B19 0xed8dfe98
+UID			  0x10003B19 0xee000002
 
-USERINCLUDE	 ..\..\inc  ..\..\..\pcommon\inc
-SYSTEMINCLUDE   \epoc32\include
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
 
-SOURCEPATH	  ..\..\src
+SOURCEPATH	    ..\..\src
 
 SOURCE        panic.cpp
-SOURCE        log.cpp
 SOURCE        scdv.cpp
 SOURCE        drawdvcb.cpp
 SOURCE        drawdvcbuf.cpp
@@ -31,13 +30,11 @@ SOURCE        instantiate.cpp
 SOURCE        cdsb.cpp
 SOURCE        dispatch.s
 
-DEFFILE ..\..\eabi\scdv_v80.def
+DEFFILE       ..\..\eabi\scdv_v80.def
 
 nostrictdef
 
 LIBRARY		  euser.lib gdi.lib hal.lib
-STATICLIBRARY pcommon.lib
-
-CAPABILITY   SwEvent
+STATICLIBRARY priv.lib
 
 MACRO        __SERIES80__

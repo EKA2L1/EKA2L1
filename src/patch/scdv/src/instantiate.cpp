@@ -39,7 +39,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
-        Scdv::Log("INFO:: A new 24 bit bitmap device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 24 bit bitmap device has been instantiated!"));
 
         break;
 
@@ -48,7 +48,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwelveBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
-        Scdv::Log("INFO:: A new 16 bit bitmap device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 16 bit bitmap device has been instantiated!"));
 
         break;
 
@@ -57,7 +57,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsSixteenBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
-        Scdv::Log("INFO:: A new 16 bit bitmap device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 16 bit bitmap device has been instantiated!"));
 
         break;
 
@@ -67,7 +67,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
-        Scdv::Log("INFO:: A new 24 bit alpha bitmap device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 24 bit alpha bitmap device has been instantiated!"));
 
         break;
 
@@ -76,13 +76,13 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitUnsignedByteDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
 
-        Scdv::Log("INFO:: A new 32 bit bitmap device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 32 bit bitmap device has been instantiated!"));
 
         break;
 #endif
 
     default:
-        Scdv::Log("ERR:: Unsupported or unimplemented format for bitmap device %d", aDispMode);
+        LogOut(KScdvCat, _L("ERR:: Unsupported or unimplemented format for bitmap device %d"), aDispMode);
         Scdv::Panic(Scdv::EPanicUnsupported);
     }
 
@@ -116,7 +116,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsTwelveBitScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
 
-        Scdv::Log("INFO:: A new 12 bit screen device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 12 bit screen device has been instantiated!"));
 
         break;
 
@@ -125,7 +125,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsSixteenBitScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
 
-        Scdv::Log("INFO:: A new 16 bit screen device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 16 bit screen device has been instantiated!"));
 
         break;
 
@@ -135,7 +135,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitUnsignedByteScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
 
-        Scdv::Log("INFO:: A new 24 bit unsigned byte screen device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 24 bit unsigned byte screen device has been instantiated!"));
 
         break;
 
@@ -144,13 +144,13 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
 
-        Scdv::Log("INFO:: A new 24 bit alpha screen device has been instantiated!");
+        LogOut(KScdvCat, _L("INFO:: A new 24 bit alpha screen device has been instantiated!"));
 
         break;
 #endif
 
     default:
-        Scdv::Log("ERROR:: Unsupported display mode for screen device %d", (TInt)aMode);
+        LogOut(KScdvCat, _L("ERROR:: Unsupported display mode for screen device %d"), (TInt)aMode);
         Scdv::Panic(Scdv::EPanicUnsupported);
 
         return NULL;

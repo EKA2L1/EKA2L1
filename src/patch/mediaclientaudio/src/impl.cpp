@@ -17,10 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <Log.h>
+#include <SoftInt.h>
+
 #include "dispatch.h"
 #include "impl.h"
-#include "log.h"
-#include "softint.h"
 
 #ifdef EKA2
 #include <e32cmn.h>
@@ -43,7 +44,7 @@ CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
 }
 
 static TInt OpenCompleteCallback(void *aUserdata) {
-    LogOut(MCA_CAT, _L("Open utility/recorder complete"));
+    LogOut(KMcaCat, _L("Open utility/recorder complete"));
    
     CMMFMdaAudioUtility *stream = reinterpret_cast<CMMFMdaAudioUtility*>(aUserdata);
     stream->TransitionState(EMdaStateReady, KErrNone);
@@ -125,7 +126,7 @@ void CMMFMdaAudioUtility::StartListeningForCompletion() {
 
 void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
-        LogOut(MCA_CAT, _L("Audio supplied while utility is being played."));
+        LogOut(KMcaCat, _L("Audio supplied while utility is being played."));
         TransitionState(iState, KErrInUse);
 
         return;
@@ -147,7 +148,7 @@ void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
 
 void CMMFMdaAudioUtility::SupplyData(TDesC8 &aData) {
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
-        LogOut(MCA_CAT, _L("Audio supplied while utility is being played."));
+        LogOut(KMcaCat, _L("Audio supplied while utility is being played."));
         
         TransitionState(iState, KErrInUse);
         return;
@@ -175,7 +176,7 @@ void CMMFMdaAudioUtility::Play() {
     if ((iState == EMdaStateReady) || (iState == EMdaStatePlay)) {
         StartListeningForCompletion();
     } else {
-        LogOut(MCA_CAT, _L("Can't play audio due to no data not being yet queued."));
+        LogOut(KMcaCat, _L("Can't play audio due to no data not being yet queued."));
 
         TransitionState(EMdaStateReady, KErrNotReady);
         return;
@@ -377,7 +378,7 @@ TInt CMMFMdaAudioRecorderUtility::SetDestContainerFormat(const TUint32 aUid) {
 	// Check if the audio clip format is in our blacklist first
 	for (TUint32 i = 0; i < KBlackListAudioClipFormatCount; i++) {
 		if (aUid == KBlackListAudioClipFormat[i]) {
-			LogOut(MCA_CAT, _L("Unsupport audio format with UID 0x%08x"), aUid);
+			LogOut(KMcaCat, _L("Unsupport audio format with UID 0x%08x"), aUid);
 			return KErrNotSupported;
 		}
 	}
@@ -395,7 +396,7 @@ TInt CMMFMdaAudioRecorderUtility::SetDestContainerFormat(const TUint32 aUid) {
 		break;
 
 	default:
-		LogOut(MCA_CAT, _L("Audio format to translate to FourCC undefined 0x%08x"), aUid);
+		LogOut(KMcaCat, _L("Audio format to translate to FourCC undefined 0x%08x"), aUid);
 		return KErrNotSupported;
 	}
 

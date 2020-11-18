@@ -318,6 +318,10 @@ namespace eka2l1 {
                 load_phone_module(ctx);
                 break;
 
+            case epoc::etel_old_unload_phone_module:
+                close_phone_module(ctx);
+                break;
+
             case epoc::etel_old_enumerate_phones:
                 enumerate_phones(ctx);
                 break;

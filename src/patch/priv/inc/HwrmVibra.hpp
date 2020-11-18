@@ -17,13 +17,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
-#define MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
+#ifndef __HWRM_VIB_HPP__
+#define __HWRM_VIB_HPP__
 
-#include <e32std.h>
+#include <HwrmBase.hpp>
 
-_LIT(MCA_CAT, "MediaClientAudioStream");
+class RHWRMVibraRaw {
+private:
+    RHWRMResourceClient iResource;
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
+public:
+    TInt Connect();
+    void Close();
+
+    TInt StartVibra(TUint16 aDuration);
+    TInt StartVibra(TUint16 aDuration, TUint16 aIntensity);
+
+    TInt StopVibra();
+};
 
 #endif

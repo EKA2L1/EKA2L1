@@ -48,15 +48,15 @@ jobs:
         run: |
           sudo xcode-select -s "/Applications/Xcode_11.7.app"
           brew install ccache
-          echo "::add-path::/usr/local/opt/ccache/libexec"
-          echo "::set-env name=CCACHE_DIR::/tmp/ccache"
+          echo "/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
+          echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
         if: matrix.os == 'macos-latest'
 
       - name: Set up build environment (ubuntu-latest)
         run: |
           sudo apt-get update
           sudo apt-get -y install ccache libgtk-3-dev libpulse-dev libasound2-dev pulseaudio
-          echo "::set-env name=CCACHE_DIR::/tmp/ccache"
+          echo "CCACHE_DIR=/tmp/ccache" >> $GITHUB_ENV
         if: matrix.os == 'ubuntu-latest'
 
       - uses: actions/cache@v1

@@ -9,10 +9,10 @@
 
 TARGET		  mediaclientaudio_v80.dll
 TARGETTYPE	  dll
-UID			 0x10003B19 0xed5d920d
+UID			 0x10003B19 0xee000003
 
-USERINCLUDE	    ..\..\inc ..\..\..\pcommon\inc
-SYSTEMINCLUDE   \epoc32\include
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
 
 SOURCEPATH	    ..\..\src
 
@@ -25,8 +25,8 @@ SOURCE          player.cpp
 
 nostrictdef
 
-LIBRARY		euser.lib efsrv.lib
-STATICLIBRARY   pcommon.lib
+LIBRARY		    euser.lib efsrv.lib
+STATICLIBRARY   priv.lib
 
 DEFFILE ..\..\eabi\mediaclientaudio_v80.def
 

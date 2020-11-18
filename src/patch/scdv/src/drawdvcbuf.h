@@ -20,9 +20,10 @@
 #ifndef SCDV_DVC_BUF_H_
 #define SCDV_DVC_BUF_H_
 
+#include <Log.h>
+
 #include "scdv/blit.h"
 #include "scdv/draw.h"
-#include "scdv/log.h"
 
 #include "drawdvcalgo.h"
 

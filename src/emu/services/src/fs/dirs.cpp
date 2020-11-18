@@ -125,11 +125,10 @@ namespace eka2l1 {
             return;
         }
 
+        io_system *io = ctx->sys->get_io_system();
         directory *dir = reinterpret_cast<directory *>(dir_node->vfs_node.get());
 
         epoc::fs::entry entry;
-        entry.attrib = 0;
-
         std::optional<entry_info> info = dir->get_next_entry();
 
         if (!info) {
@@ -137,29 +136,7 @@ namespace eka2l1 {
             return;
         }
 
-        if (info->has_raw_attribute) {
-            entry.attrib |= info->raw_attribute;
-        } else {
-            switch (info->attribute) {
-            case io_attrib_hidden: {
-                entry.attrib = epoc::fs::entry_att_hidden;
-                break;
-            }
-
-            default:
-                break;
-            }
-
-            if (info->type == io_component_type::dir) {
-                entry.attrib |= epoc::fs::entry_att_dir;
-            } else {
-                entry.attrib |= epoc::fs::entry_att_archive;
-            }
-        }
-
-        entry.size = static_cast<std::uint32_t>(info->size);
-        entry.name = common::utf8_to_ucs2(info->full_path);
-        entry.modified = epoc::time{ info->last_write };
+        epoc::fs::build_symbian_entry_from_emulator_entry(io, info.value(), entry);
 
         ctx->write_data_to_descriptor_argument<epoc::fs::entry>(1, entry);
         ctx->complete(epoc::error_none);
@@ -198,12 +175,12 @@ namespace eka2l1 {
         size_t entry_no_name_size = epoc::fs::entry_standard_size + 4 + 8;
 
         kernel_system *kern = ctx->sys->get_kernel_system();
+        io_system *io = ctx->sys->get_io_system();
+
         const bool should_support_64bit_size = kern->get_epoc_version() >= epocver::epoc95;
 
         while (entry_buf < entry_buf_end) {
             epoc::fs::entry entry;
-            entry.attrib = 0;
-
             std::optional<entry_info> info = dir->peek_next_entry();
 
             if (!info) {
@@ -218,32 +195,7 @@ namespace eka2l1 {
                 break;
             }
 
-            if (info->has_raw_attribute) {
-                entry.attrib = info->raw_attribute;
-            } else {
-                entry.attrib |= epoc::fs::entry_att_normal;
-
-                switch (info->attribute) {
-                case io_attrib_hidden: {
-                    entry.attrib |= epoc::fs::entry_att_hidden;
-                    break;
-                }
-
-                default:
-                    break;
-                }
-
-                if (info->type == io_component_type::dir) {
-                    entry.attrib |= epoc::fs::entry_att_dir;
-                } else {
-                    entry.attrib |= epoc::fs::entry_att_archive;
-                }
-            }
-
-            entry.size = static_cast<std::uint32_t>(info->size);
-            entry.name = common::utf8_to_ucs2(info->name);
-            entry.modified = epoc::time{ info->last_write };
-
+            epoc::fs::build_symbian_entry_from_emulator_entry(io, info.value(), entry);
             const std::uint32_t entry_write_size = epoc::fs::entry_standard_size + 4;
 
             memcpy(entry_buf, &entry, entry_write_size);

@@ -111,16 +111,14 @@ namespace eka2l1 {
 
             virtual void open_to(process *own) {}
 
-            /*! \brief Get the name of the object.
-             * \returns Object name.
-            */
-            std::string name() const {
+            std::string raw_name() const {
                 return obj_name;
             }
 
-            /*! \brief Get the kernel system that own this object. 
-                \returns The kernel system.
-            */
+            virtual std::string name() const {
+                return raw_name();
+            }
+
             kernel_system *get_kernel_object_owner() const {
                 return kern;
             }
@@ -153,8 +151,9 @@ namespace eka2l1 {
                 return this->uid;
             }
 
-            /*! \brief Rename the kernel object. 
-             * \param new_name The new name of object.
+            /** 
+             * @brief Rename the kernel object. 
+             * @param new_name The new name of object.
              */
             virtual void rename(const std::string &new_name) {
                 obj_name = new_name;

@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scdv/log.h"
+#include <Log.h>
 #include "scdv/panic.h"
 
 #include "drawdvc24.h"
@@ -99,7 +99,7 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 aRe
         break;
 
     default:
-        Scdv::Log("ERR: Unsupported graphics context draw mode %d", aDrawMode);
+        LogOut(KScdvCat, _L("ERR: Unsupported graphics context draw mode %d"), aDrawMode);
         break;
     }
 }

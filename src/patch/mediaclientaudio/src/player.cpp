@@ -19,11 +19,11 @@
 
 #include <mdaaudiosampleplayer.h>
 #include <mda/common/resource.h>
+#include <Log.h>
 
 #include "common.h"
 #include "dispatch.h"
 #include "impl.h"
-#include "log.h"
 
 #include <e32std.h>
 
@@ -110,7 +110,7 @@ EXPORT_C void CMdaAudioPlayerUtility::OpenFileL(const TDesC &aFileName) {
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenDesL(const TDesC8 &aDescriptor) {
-    LogOut(MCA_CAT, _L("Unimplemented function to open audio player stream with descriptor!"));
+    LogOut(KMcaCat, _L("Unimplemented function to open audio player stream with descriptor!"));
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenUrlL(const TDesC &aUrl, TInt aIapId, const TDesC8 &aMimeType) {
@@ -162,7 +162,7 @@ EXPORT_C TInt CMdaAudioPlayerUtility::GetBalance(TInt &aBalance) {
 
 #if (MCA_NEW == 3)
 EXPORT_C TMMFDurationInfo CMdaAudioPlayerUtility::Duration(TTimeIntervalMicroSeconds &aDuration) {
-    LogOut(MCA_CAT, _L("Unimplemented function to get duration with state!"));
+    LogOut(KMcaCat, _L("Unimplemented function to get duration with state!"));
     return EMMFDurationInfoUnknown;
 }
 
@@ -174,7 +174,7 @@ EXPORT_C void CMdaAudioPlayerUtility::OpenFileL(const RFile &aFile) {
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::OpenFileL(const TMMSource &aSource) {
-    LogOut(MCA_CAT, _L("Unimplemented function to open file with MMsource!"));
+    LogOut(KMcaCat, _L("Unimplemented function to open file with MMsource!"));
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::GetBitRate(TUint &aBitRate) {
@@ -185,66 +185,66 @@ EXPORT_C TInt CMdaAudioPlayerUtility::GetBitRate(TUint &aBitRate) {
 /// UNIMPLEMENT ALL THE WAY
 #if (MCA_NEW >= 2)
 EXPORT_C TInt CMdaAudioPlayerUtility::SetPriority(TInt aPriority, TMdaPriorityPreference aPref) {
-    LogOut(MCA_CAT, _L("Unimplemented function set priority!"));
+    LogOut(KMcaCat, _L("Unimplemented function set priority!"));
     return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::GetNumberOfMetaDataEntries(TInt &aNumEntries) {
-    LogOut(MCA_CAT, _L("Unimplemented function get number of metadata entries!"));
+    LogOut(KMcaCat, _L("Unimplemented function get number of metadata entries!"));
     return KErrNotSupported;
 }
 
 EXPORT_C CMMFMetaDataEntry *CMdaAudioPlayerUtility::GetMetaDataEntryL(TInt aMetaDataIndex) {
-    LogOut(MCA_CAT, _L("Unimplemented function get metadata entry!"));
+    LogOut(KMcaCat, _L("Unimplemented function get metadata entry!"));
     return NULL;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::SetPlayWindow(const TTimeIntervalMicroSeconds &aStart,
     const TTimeIntervalMicroSeconds &aEnd) {
-    LogOut(MCA_CAT, _L("Unimplemented function set play window!"));
+    LogOut(KMcaCat, _L("Unimplemented function set play window!"));
     return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::ClearPlayWindow() {
-    LogOut(MCA_CAT, _L("Unimplemented function clear play window!"));
+    LogOut(KMcaCat, _L("Unimplemented function clear play window!"));
     return KErrNotSupported;
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::RegisterForAudioLoadingNotification(MAudioLoadingObserver &aCallback) {
-    LogOut(MCA_CAT, _L("Unimplemented function register audio loading nof!"));
+    LogOut(KMcaCat, _L("Unimplemented function register audio loading nof!"));
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::GetAudioLoadingProgressL(TInt &aPercentageComplete) {
-    LogOut(MCA_CAT, _L("Unimplemented function get audio loading progress!"));
+    LogOut(KMcaCat, _L("Unimplemented function get audio loading progress!"));
 }
 
 EXPORT_C const CMMFControllerImplementationInformation &CMdaAudioPlayerUtility::ControllerImplementationInformationL() {
-    LogOut(MCA_CAT, _L("Unimplemented function get controller impl info!"));
+    LogOut(KMcaCat, _L("Unimplemented function get controller impl info!"));
     CMMFControllerImplementationInformation *info = NULL;
     return *info;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::CustomCommandSync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2, TDes8 &aDataFrom) {
-    LogOut(MCA_CAT, _L("Custom command not supported!"));
+    LogOut(KMcaCat, _L("Custom command not supported!"));
     return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::CustomCommandSync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2) {
-    LogOut(MCA_CAT, _L("Custom command not supported!"));
+    LogOut(KMcaCat, _L("Custom command not supported!"));
     return KErrNotSupported;
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::CustomCommandAsync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2, TDes8 &aDataFrom, TRequestStatus &aStatus) {
-    LogOut(MCA_CAT, _L("Custom command not supported!"));
+    LogOut(KMcaCat, _L("Custom command not supported!"));
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::CustomCommandAsync(const TMMFMessageDestinationPckg &aDestination, TInt aFunction, const TDesC8 &aDataTo1, const TDesC8 &aDataTo2, TRequestStatus &aStatus) {
-    LogOut(MCA_CAT, _L("Custom command not supported!"));
+    LogOut(KMcaCat, _L("Custom command not supported!"));
 }
 
 void CMdaAudioPlayerUtility::SetRepeats(TInt aRepeatNumberOfTimes, const TTimeIntervalMicroSeconds &aTrailingSilence) {
     if ((aRepeatNumberOfTimes < 0) && (aRepeatNumberOfTimes != KMdaRepeatForever)) {
-        LogOut(MCA_CAT, _L("Invalid repeat numbers %d, set repeats does not do anything"), aRepeatNumberOfTimes);
+        LogOut(KMcaCat, _L("Invalid repeat numbers %d, set repeats does not do anything"), aRepeatNumberOfTimes);
         return;
     }
 
@@ -252,38 +252,38 @@ void CMdaAudioPlayerUtility::SetRepeats(TInt aRepeatNumberOfTimes, const TTimeIn
 }
 
 void CMdaAudioPlayerUtility::SetVolumeRamp(const TTimeIntervalMicroSeconds &aRampDuration) {
-    LogOut(MCA_CAT, _L("Set volume ramp!"));
+    LogOut(KMcaCat, _L("Set volume ramp!"));
 }
 #endif
 
 #if (MCA_NEW == 3)
 EXPORT_C MMMFDRMCustomCommand *CMdaAudioPlayerUtility::GetDRMCustomCommand() {
-    LogOut(MCA_CAT, _L("Get DRM custom command not supported!"));
+    LogOut(KMcaCat, _L("Get DRM custom command not supported!"));
     return NULL;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::RegisterAudioResourceNotification(MMMFAudioResourceNotificationCallback &aCallback, TUid aNotificationEventUid, const TDesC8 &aNotificationRegistrationData) {
-    LogOut(MCA_CAT, _L("Register audio resource nof not supported!"));
+    LogOut(KMcaCat, _L("Register audio resource nof not supported!"));
     return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::CancelRegisterAudioResourceNotification(TUid aNotificationEventId) {
-    LogOut(MCA_CAT, _L("Cancel register audio resource nof not supported!"));
+    LogOut(KMcaCat, _L("Cancel register audio resource nof not supported!"));
     return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::WillResumePlay() {
-    LogOut(MCA_CAT, _L("Will resume play unimplemented"));
+    LogOut(KMcaCat, _L("Will resume play unimplemented"));
     return KErrNotSupported;
 }
 
 EXPORT_C TInt CMdaAudioPlayerUtility::SetThreadPriority(const TThreadPriority &aThreadPriority) const {
-    LogOut(MCA_CAT, _L("Set thread priority not supported!"));
+    LogOut(KMcaCat, _L("Set thread priority not supported!"));
     return KErrNotSupported;
 }
 
 EXPORT_C void CMdaAudioPlayerUtility::UseSharedHeap() {
-    LogOut(MCA_CAT, _L("Use shared heap for this player utility instance"));
+    LogOut(KMcaCat, _L("Use shared heap for this player utility instance"));
 }
 #endif
 /// == END REPROXY ==

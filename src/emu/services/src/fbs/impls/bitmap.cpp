@@ -327,21 +327,12 @@ namespace eka2l1 {
 
         std::size_t size_when_compressed = get_byte_width(mbmf_.sbm_headers[idx_].size_pixels.x,
             mbmf_.sbm_headers[idx_].bit_per_pixels) * mbmf_.sbm_headers[idx_].size_pixels.y;
-
-        if ((legacy_level() >= 2) && (mbmf_.sbm_headers[idx_].compression != epoc::bitmap_file_byte_rle_compression)
-            && (mbmf_.sbm_headers[idx_].compression != epoc::bitmap_file_twelve_bit_rle_compression)) {
-            if (!mbmf_.read_single_bitmap(idx_, nullptr, size_when_compressed)) {
-                *err_code = fbs_load_data_err_read_decomp_fail;
-                return nullptr;
-            } else {
-                size_decomp = size_when_compressed;
-            }
+        
+        if (!mbmf_.read_single_bitmap(idx_, nullptr, size_when_compressed)) {
+            *err_code = fbs_load_data_err_read_decomp_fail;
+            return nullptr;
         } else {
-            // First, get the size of data when compressed
-            if (!mbmf_.read_single_bitmap_raw(idx_, nullptr, size_when_compressed)) {
-                *err_code = fbs_load_data_err_read_decomp_fail;
-                return nullptr;
-            }
+            size_decomp = size_when_compressed;
         }
 
         // Allocates from the large chunk
@@ -364,12 +355,7 @@ namespace eka2l1 {
 
         // Yay, we manage to alloc memory to load the data in
         // So let's get to work
-        bool result_read = false;
-        
-        if (size_decomp)
-            result_read = mbmf_.read_single_bitmap(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size);
-        else
-            result_read = mbmf_.read_single_bitmap_raw(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size);
+        bool result_read = mbmf_.read_single_bitmap(idx_, reinterpret_cast<std::uint8_t *>(data), avail_dest_size);
 
         if (!result_read) {
             *err_code = fbs_load_data_err_read_decomp_fail;
@@ -499,7 +485,9 @@ namespace eka2l1 {
         if (!bmp) {
             // Let's load the MBM from file first
             eka2l1::ro_file_stream stream_(source);
+
             loader::mbm_file mbmf_(reinterpret_cast<common::ro_stream *>(&stream_));
+            mbmf_.index_to_loads.push_back(load_options->bitmap_id);
 
             if (!mbmf_.do_read_headers()) {
                 ctx->complete(epoc::error_corrupt);
@@ -507,8 +495,7 @@ namespace eka2l1 {
             }
 
             // Let's do an insanity check. Is the bitmap index client given us is not valid ?
-            // What i mean, maybe it's out of range. There may be only 5 bitmaps, but client gives us index 5.
-            if (mbmf_.trailer.count <= load_options->bitmap_id) {
+            if (!mbmf_.is_header_loaded(load_options->bitmap_id)) {
                 ctx->complete(epoc::error_not_found);
                 return;
             }
@@ -561,13 +548,10 @@ namespace eka2l1 {
             bws_bmp->construct(header_to_give, dpm, bmp_data, bmp_data_base, support_current_display_mode, false);
             bws_bmp->offset_from_me_ = (err_code == fbs_load_data_err_small_bitmap);
 
-            if (size_when_decomp) {
-                bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len +
-                    size_when_decomp);
+            bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len +
+                size_when_decomp);
 
-                bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
-            }
-
+            bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
             bws_bmp->post_construct(fbss);
 
             bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share), support_dirty_bitmap);

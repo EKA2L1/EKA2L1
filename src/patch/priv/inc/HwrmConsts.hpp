@@ -17,19 +17,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PCOMMON_INT_H_
-#define PCOMMON_INT_H_
+#ifndef __HWRM_CONSTS_HPP__
+#define __HWRM_CONSTS_HPP__
 
-#include <e32def.h>
+#include <e32std.h>
 
-#ifndef EKA2
-inline TInt64 MakeSoftwareInt64FromHardwareUint64(const TUint64 aOriginal) {
-    return TInt64(static_cast<TUint>(aOriginal >> 32), static_cast<TUint>(aOriginal));
-}
+_LIT(KHWRMServerName, "!HWRMServer");
+_LIT(KHWRMLogCategory, "HWRMCli");
 
-inline TUint64 MakeHardwareUint64FromSoftwareInt64(const TInt64 aOriginal) {
-    return (aOriginal.High() << 32) | aOriginal.Low();
-}
-#endif
+const TUint32 KHWRMServerVerMajor = 1;
+const TUint32 KHWRMServerVerMinor = 1;
+const TUint32 KHWRMServerVerBuild = 1;
+const TUint32 KHWRMDefaultAsyncSlots = 12;
+
+enum THWRMServiceFactoryOpcode {
+    EHWRMServiceFactoryCreateVibra = 0,
+    EHWRMServiceFactoryCreateLight = 1
+};
+
+enum THWRMVibraServiceOpcode {
+    EHWRMVibraStartDefaultIntensity = 2000,
+    EHWRMVibraStart = 2001,
+    EHWRMVibraStop = 2002,
+    EHWRMVibraCleanup = 2003,
+    EHWRMVibraRelease = 2004
+};
 
 #endif

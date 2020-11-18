@@ -47,6 +47,10 @@ namespace eka2l1::loader {
         return (header.uids.uid1 == 0x10000037) && (header.uids.uid2 == 0x10000042);
     }
 
+    bool mbm_file::is_header_loaded(const std::size_t index) const {
+        return (trailer.count > 0) && (index < trailer.count) && (trailer.sbm_offsets[index]);
+    }
+
     bool mbm_file::do_read_headers() {
         if (stream->read(&header, sizeof(header)) != sizeof(header)) {
             return false;
@@ -64,22 +68,39 @@ namespace eka2l1::loader {
         }
 
         trailer.sbm_offsets.resize(trailer.count);
+        std::fill(trailer.sbm_offsets.begin(), trailer.sbm_offsets.end(), 0);
+
         sbm_headers.resize(trailer.count);
 
-        for (std::size_t i = 0; i < trailer.sbm_offsets.size(); i++) {
-            if (stream->read(&trailer.sbm_offsets[i], 4) != 4) {
+        auto do_load_header = [this](const std::size_t index) {
+            stream->seek(header.trailer_off + (index + 1) * 4, common::seek_where::beg);
+
+            if (stream->read(&trailer.sbm_offsets[index], 4) != 4) {
                 return false;
             }
 
             // Remember the current offseet first
-            const auto crr_offset = stream->tell();
-            stream->seek(trailer.sbm_offsets[i], common::seek_where::beg);
+            stream->seek(trailer.sbm_offsets[index], common::seek_where::beg);
 
-            if (!sbm_headers[i].internalize(*stream)) {
+            if (!sbm_headers[index].internalize(*stream)) {
                 return false;
             }
 
-            stream->seek(crr_offset, common::seek_where::beg);
+            return true;
+        };
+
+        if (index_to_loads.empty()) {
+            for (std::size_t i = 0; i < trailer.sbm_offsets.size(); i++) {
+                if (!do_load_header(i))
+                    return false;
+            }
+        } else {
+            for (const std::size_t i: index_to_loads) {
+                if (!do_load_header(i))
+                    return false;
+            }
+
+            index_to_loads.clear();
         }
 
         return valid();
@@ -87,7 +108,7 @@ namespace eka2l1::loader {
 
     bool mbm_file::read_single_bitmap_raw(const std::size_t index, std::uint8_t *dest,
         std::size_t &dest_max) {
-        if (index >= trailer.count) {
+        if (!is_header_loaded(index)) {
             return false;
         }
 
@@ -123,7 +144,7 @@ namespace eka2l1::loader {
 
     bool mbm_file::read_single_bitmap(const std::size_t index, std::uint8_t *dest,
         std::size_t &dest_max) {
-        if (index >= trailer.count) {
+        if (!is_header_loaded(index)) {
             return false;
         }
 
@@ -158,6 +179,13 @@ namespace eka2l1::loader {
             break;
         }
 
+        case 2: {
+            eka2l1::decompress_rle<12>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
+            dest_max = dest_stream.tell();
+
+            break;
+        }
+
         case 3: {
             eka2l1::decompress_rle<16>(stream, reinterpret_cast<common::wo_stream *>(&dest_stream));
             dest_max = dest_stream.tell();
@@ -186,6 +214,10 @@ namespace eka2l1::loader {
     }
 
     bool mbm_file::save_bitmap_to_file(const std::size_t index, const char *name) {
+        if (!is_header_loaded(index)) {
+            return false;
+        }
+
         std::size_t uncompressed_size = 0;
 
         if (!read_single_bitmap(index, nullptr, uncompressed_size)) {

@@ -82,7 +82,8 @@ namespace eka2l1 {
         , global_data_chunk_(nullptr)
         , dll_global_data_chunk_(nullptr)
         , dll_global_data_last_offset_(0)
-        , inactivity_starts_(0) {
+        , inactivity_starts_(0)
+        , nanokern_pr_(nullptr) {
         thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
 
         // Instantiate btrace
@@ -268,6 +269,33 @@ namespace eka2l1 {
         }
 
         cpu_exception_thread_handle(core);
+    }
+
+    void kernel_system::setup_nanokern_controller() {
+        static const char *SUPERVISOR_THREAD_NAME = "Supervisor";
+        static const char16_t *KERN_EXE_NAME = u"ekern.exe";
+        static const std::uint32_t BOOTLOADER_UID = 0x100000B9;
+
+        // Create kernel process. This process will be forever queued
+        nanokern_pr_ = spawn_new_process(KERN_EXE_NAME);
+        if (nanokern_pr_) {
+            nanokern_pr_->set_is_kernel_process(true);
+            
+            // Try to set to the bootloader UID? (Wait is this the one)
+            auto current_uid_type = nanokern_pr_->get_uid_type();
+            std::get<2>(current_uid_type) = BOOTLOADER_UID;
+
+            nanokern_pr_->set_uid_type(current_uid_type);
+
+            // Create supervisor thread
+            create<kernel::thread>(mem_, timing_, nanokern_pr_, kernel::access_type::local_access,
+                SUPERVISOR_THREAD_NAME, nanokern_pr_->get_entry_point_address(), 1000, 0, 1000, false);
+        }
+    }
+
+    void kernel_system::start_bootload() {
+        // Disable these
+        //setup_nanokern_controller();
     }
 
     void kernel_system::install_memory(memory_system *new_mem) {
@@ -511,7 +539,7 @@ namespace eka2l1 {
         }
 
         std::string path8 = common::ucs2_to_utf8(path);
-        std::string process_name = eka2l1::filename(path8);
+        std::string process_name = eka2l1::replace_extension(eka2l1::filename(path8), "");
 
         /* Create process through kernel system. */
         process_ptr pr = create<kernel::process>(mem_, process_name, path, cmd_arg);
@@ -839,7 +867,8 @@ namespace eka2l1 {
 
     std::optional<find_handle> kernel_system::find_object(const std::string &name, int start, kernel::object_type type, const bool use_full_name) {
         find_handle handle_find_info;
-        std::regex filter(common::wildcard_to_regex_string(name));
+        std::regex filter(common::wildcard_to_regex_string(name), std::regex_constants::icase);
+        start = (start & FIND_HANDLE_IDX_MASK) + 1;
 
         // NOTE: See about the starting index of find handle info in the struct's document!
         switch (type) {
@@ -856,7 +885,9 @@ namespace eka2l1 {
         });                                                                                    \
         if (res == obj_map.end())                                                              \
             return std::nullopt;                                                               \
-        handle_find_info.index = static_cast<int>(std::distance(obj_map.begin(), res)) + 1;    \
+        handle_find_info.index = ((static_cast<std::uint32_t>(std::distance(obj_map.begin(),   \
+            res)) + 1) & FIND_HANDLE_IDX_MASK) | (static_cast<std::uint32_t>(type) <<          \
+            FIND_HANDLE_OBJ_TYPE_SHIFT);                                                       \
         handle_find_info.object_id = (*res)->unique_id();                                      \
         handle_find_info.obj = reinterpret_cast<kernel_obj_ptr>(res->get());                   \
         return handle_find_info;                                                               \
@@ -884,6 +915,41 @@ namespace eka2l1 {
         }
 
         return std::nullopt;
+    }
+
+    kernel_obj_ptr kernel_system::get_object_from_find_handle(const std::uint32_t find_handle) {
+        const std::uint32_t index = (find_handle & FIND_HANDLE_IDX_MASK) - 1;
+        const kernel::object_type objtype = static_cast<kernel::object_type>(find_handle >> FIND_HANDLE_OBJ_TYPE_SHIFT);
+
+        switch (objtype) {
+#define GET_OBJECT(typename, container)             \
+    case kernel::object_type::typename: {           \
+        if (index >= container.size())              \
+            return nullptr;                         \
+        return container[index].get();              \
+    }
+        GET_OBJECT(mutex, mutexes_)
+        GET_OBJECT(sema, semas_)
+        GET_OBJECT(chunk, chunks_)
+        GET_OBJECT(thread, threads_)
+        GET_OBJECT(process, processes_)
+        GET_OBJECT(change_notifier, change_notifiers_)
+        GET_OBJECT(library, libraries_)
+        GET_OBJECT(codeseg, codesegs_)
+        GET_OBJECT(server, servers_)
+        GET_OBJECT(prop, props_)
+        GET_OBJECT(prop_ref, prop_refs_)
+        GET_OBJECT(session, sessions_)
+        GET_OBJECT(timer, timers_)
+        GET_OBJECT(msg_queue, message_queues_)
+
+        default:
+            break;
+
+#undef GET_OBJECT
+        }
+
+        return nullptr;
     }
 
     bool kernel_system::should_terminate() {

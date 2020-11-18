@@ -19,10 +19,10 @@
 
 #include <mda/common/audio.h>
 #include <mda/common/resource.h>
+#include <Log.h>
 
 #include "dispatch.h"
 #include "impl.h"
-#include "log.h"
 #include "main.h"
 
 #include <e32std.h>
@@ -51,7 +51,7 @@ CMdaAudioOutputStream::CMdaAudioOutputStream()
 }
 
 void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
-    LogOut(MCA_CAT, _L("We are openinggggg!"));
+    LogOut(KMcaCat, _L("We are openinggggg!"));
 
     TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
 
@@ -59,7 +59,7 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
     const TInt result = iProperties->SetAudioProperties(settings->iSampleRate, settings->iChannels);
 
     if (result != KErrNone) {
-        LogOut(MCA_CAT, _L("ERR:: Unable to set audio properties on stream opening!"));
+        LogOut(KMcaCat, _L("ERR:: Unable to set audio properties on stream opening!"));
 
         // Further error should not enable stream write.
         iProperties->iCallback.MaoscOpenComplete(result);
@@ -74,7 +74,7 @@ void CMdaAudioOutputStream::SetAudioPropertiesL(TInt aSampleRate, TInt aChannels
     const TInt result = iProperties->SetAudioProperties(aSampleRate, aChannels);
 
     if (result != KErrNone) {
-        LogOut(MCA_CAT, _L("ERR:: Set audio properties failed!"));
+        LogOut(KMcaCat, _L("ERR:: Set audio properties failed!"));
         User::Leave(result);
     }
 }
@@ -96,7 +96,7 @@ void CMdaAudioOutputStream::SetPriority(TInt aPriority, TMdaPriorityPreference a
         return;
     }
 
-    LogOut(MCA_CAT, _L("WARN:: Set priority unimplemented %d!"), aPriority);
+    LogOut(KMcaCat, _L("WARN:: Set priority unimplemented %d!"), aPriority);
     iProperties->SetPriorityUnimplNotified();
 }
 
@@ -148,7 +148,7 @@ TFourCC CMdaAudioOutputStream::DataType() const {
     const TInt result = iProperties->DataType(format);
 
     if (result != KErrNone) {
-        LogOut(MCA_CAT, _L("ERR:: Unable to get data type!"));
+        LogOut(KMcaCat, _L("ERR:: Unable to get data type!"));
     }
 
     return format;
@@ -156,35 +156,35 @@ TFourCC CMdaAudioOutputStream::DataType() const {
 
 #ifdef MMF_BASE_CLIENT_UTILITY
 TInt CMdaAudioOutputStream::RegisterAudioResourceNotification(MMMFAudioResourceNotificationCallback &aCallback, TUid aNotificationEventUid, const TDesC8 &aNotificationRegistrationData) {
-    LogOut(MCA_CAT, _L("WARN:: Register audio notification not supported!"));
+    LogOut(KMcaCat, _L("WARN:: Register audio notification not supported!"));
     return KErrNotSupported;
 }
 
 TInt CMdaAudioOutputStream::CancelRegisterAudioResourceNotification(TUid aNotificationEventId) {
-    LogOut(MCA_CAT, _L("WARN:: Cancel register audio notification not supported!"));
+    LogOut(KMcaCat, _L("WARN:: Cancel register audio notification not supported!"));
     return KErrNotSupported;
 }
 #endif
 
 TInt CMdaAudioOutputStream::WillResumePlay() {
-    LogOut(MCA_CAT, _L("WARN:: Will resume play not supported!"));
+    LogOut(KMcaCat, _L("WARN:: Will resume play not supported!"));
     return KErrNotSupported;
 }
 
 TAny *CMdaAudioOutputStream::CustomInterface(TUid aInterfaceId) {
-    LogOut(MCA_CAT, _L("WARN:: Custom interface not supported!"));
+    LogOut(KMcaCat, _L("WARN:: Custom interface not supported!"));
     return NULL;
 }
 
 // Note: Special functions
 
 TInt CMdaAudioOutputStream::KeepOpenAtEnd() {
-    LogOut(MCA_CAT, _L("WARN:: Keep open at end not supported!"));
+    LogOut(KMcaCat, _L("WARN:: Keep open at end not supported!"));
     return KErrNotSupported;
 }
 
 TInt CMdaAudioOutputStream::RequestStop() {
-    LogOut(MCA_CAT, _L("WARN:: Request stop not supported!"));
+    LogOut(KMcaCat, _L("WARN:: Request stop not supported!"));
     return KErrNotSupported;
 }
 

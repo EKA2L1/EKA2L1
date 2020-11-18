@@ -17,36 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef EKA2
-#include <e32debug.h>
-#else
-#include "debug.h"
-#endif
+#ifndef MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
+#define MEDIA_CLIENT_AUDIO_STREAM_LOG_H_
 
 #include <e32std.h>
-#include "scdv/log.h"
-#include "scdv/panic.h"
 
-class TDesOverflowHandler : public TDes8Overflow {
-    virtual void Overflow(TDes8 &) {
-        Panic(Scdv::EPanicLogFailure);
-    }
-};
+_LIT(KMcaCat, "MediaClientAudioStream");
+_LIT(KScdvCat, "SCDV-HLE");
 
-void DoScdvLog(const char *aFormat, VA_LIST list) {
-    TPtrC8 baseFormat(reinterpret_cast<const TUint8 *>(aFormat));
-    HBufC8 *newString = HBufC8::NewL(baseFormat.Length() * 2);
+void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
 
-    TDesOverflowHandler handler;
-
-    TPtr8 stringDes = newString->Des();
-    stringDes.AppendFormatList(baseFormat, list, &handler);
-
-#ifdef EKA2
-    RDebug::Printf("%S", &stringDes);
-#else
-    DebugPrint(stringDes);
 #endif
-
-    User::Free(newString);
-}

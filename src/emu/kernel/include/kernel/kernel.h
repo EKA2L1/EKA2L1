@@ -134,8 +134,12 @@ namespace eka2l1 {
         }
     }
 
+    static constexpr std::uint32_t FIND_HANDLE_IDX_MASK = 0xFFFFFFF;
+    static constexpr std::uint32_t FIND_HANDLE_OBJ_TYPE_MASK = 0xF0000000;
+    static constexpr std::uint32_t FIND_HANDLE_OBJ_TYPE_SHIFT = 28;
+
     struct find_handle {
-        int index;                  ///< Index of the object in the separate object container.
+        std::uint32_t index;                  ///< Index of the object in the separate object container.
                                     ///< On EKA2L1 this index starts from 1.
         std::uint64_t object_id;    ///< The ID of the kernel object.
         kernel_obj_ptr obj;         ///< The corresponded kernel object found.
@@ -294,9 +298,12 @@ namespace eka2l1 {
         std::uint32_t dll_global_data_last_offset_;
         
         std::uint64_t inactivity_starts_;
+        kernel::process *nanokern_pr_;
 
     protected:
         void setup_new_process(process_ptr pr);
+        void setup_nanokern_controller();
+
         bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
         void cpu_exception_thread_handle(arm::core *core);
 
@@ -640,6 +647,8 @@ namespace eka2l1 {
             T *obj = create<T>(creation_args...);
             return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
         }
+        
+        kernel_obj_ptr get_object_from_find_handle(const std::uint32_t find_handle);
 
         // Lock the kernel
         void lock() {
@@ -674,5 +683,14 @@ namespace eka2l1 {
          * will be reseted.
          */
         void reset_inactivity_time();
+
+        /**
+         * @brief Start the bootload procedures.
+         * 
+         * The function setups kernel components like real phone.
+         * 
+         * This include spawning neccessary proccesses.
+         */
+        void start_bootload();
     };
 }

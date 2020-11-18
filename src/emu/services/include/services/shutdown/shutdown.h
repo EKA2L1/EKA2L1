@@ -18,6 +18,7 @@
  */
 
 #include <services/framework.h>
+#include <utils/reqsts.h>
 
 namespace eka2l1 {
     std::string get_shutdown_server_name_through_epocver(const epocver ver);
@@ -31,9 +32,15 @@ namespace eka2l1 {
     };
 
     class shutdown_session: public service::typical_session {
+        epoc::notify_info nof_;
+
     public:
         explicit shutdown_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
+        
         void fetch(service::ipc_context *context) override;
+        
+        void request_notify(service::ipc_context *context);
+        void cancel_notify(service::ipc_context *context);
     };
 
     class shutdown_server: public service::typical_server {

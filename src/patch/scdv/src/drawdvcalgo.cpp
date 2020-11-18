@@ -17,8 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <Log.h>
+
 #include "drawdvcalgo.h"
-#include "scdv/log.h"
 #include "scdv/panic.h"
 
 /**
@@ -177,7 +178,7 @@ void CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(TInt aX, TInt aY, TI
 }
 
 void PanicAtTheEndOfTheWorld() {
-    Scdv::Log("Trying to read/write a line but out of bounds");
+    LogOut(KScdvCat, _L("Trying to read/write a line but out of bounds"));
     Scdv::Panic(Scdv::EPanicOutOfBounds);
 }
 
@@ -254,7 +255,7 @@ void CFbsDrawDeviceAlgorithm::ReadLine(TInt aX, TInt aY, TInt aLength, TAny *aBu
 #endif
 
         default:
-            Scdv::Log("Unsupported color format to transform %d", aDispMode);
+            LogOut(KScdvCat, _L("Unsupported color format to transform %d"), aDispMode);
             return;
         }
 
@@ -312,7 +313,7 @@ void CFbsDrawDeviceAlgorithm::ReadLine(TInt aX, TInt aY, TInt aLength, TAny *aBu
 #endif
 
         case EColor4K:
-            Scdv::Log("Trying to get 12bpp color line, warning unstable!");
+            LogOut(KScdvCat, _L("Trying to get 12bpp color line, warning unstable!"));
 
             if (ite & 1) {
                 bufferByte[ite++] |= (colorTransformed & 0xF) << 4;
@@ -343,14 +344,14 @@ void CFbsDrawDeviceAlgorithm::WriteBinaryLine(TInt aX, TInt aY, TUint32 *aBuffer
 
 // TODO
 void CFbsDrawDeviceAlgorithm::WriteBinaryLineVertical(TInt aX, TInt aY, TUint32 *aBuffer, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode, TBool aUp) {
-    Scdv::Log("ERR: Write binary line vertical is not supported! TODO");
+    LogOut(KScdvCat, _L("ERR: Write binary line vertical is not supported! TODO"));
 }
 
 void CFbsDrawDeviceAlgorithm::WriteRgbAlphaLine(TInt aX, TInt aY, TInt aLength, TUint8 *aRgbBuffer, TUint8 *aMaskBuffer, CGraphicsContext::TDrawMode aDrawMode) {
-    Scdv::Log("ERR: Write RGB alpha line not supported! TODO!");
+    LogOut(KScdvCat, _L("ERR: Write RGB alpha line not supported! TODO!"));
 }
 void CFbsDrawDeviceAlgorithm::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer) {
-    Scdv::Log("ERR: Write RGB alpha multi not supported! TODO!");
+    LogOut(KScdvCat, _L("ERR: Write RGB alpha multi not supported! TODO!"));
 }
 
 void CFbsDrawDeviceAlgorithm::WriteRgbAlphaLine(TInt aX, TInt aY, TInt aLength,
@@ -358,16 +359,16 @@ void CFbsDrawDeviceAlgorithm::WriteRgbAlphaLine(TInt aX, TInt aY, TInt aLength,
     const TUint8 *aBuffer2,
     const TUint8 *aMaskBuffer,
     CGraphicsContext::TDrawMode aDrawMode) {
-    Scdv::Log("ERR: Write RGB alpha line extended not supported! TODO!");
+    LogOut(KScdvCat, _L("ERR: Write RGB alpha line extended not supported! TODO!"));
 }
 
 TInt CFbsDrawDeviceAlgorithm::GetInterface(TInt aInterfaceId, TAny *&aInterface) {
-    Scdv::Log("ERR: Get interface not supported! TODO!");
+    LogOut(KScdvCat, _L("ERR: Get interface not supported! TODO!"));
     return KErrNotSupported;
 }
 
 void CFbsDrawDeviceAlgorithm::SwapWidthAndHeight() {
-    Scdv::Log("Swap width and height not supported! TODO!");
+    LogOut(KScdvCat, _L("Swap width and height not supported! TODO!"));
 }
 
 TRgb CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(TRgb aBufferColor, TRgb aWriteColor, const CGraphicsContext::TDrawMode aDrawMode) {
@@ -402,7 +403,7 @@ TRgb CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(TRgb aBufferColor, TRgb aWrit
         break;
 
     default:
-        Scdv::Log("ERR: Unsupported graphics context draw mode %d", aDrawMode);
+        LogOut(KScdvCat, _L("ERR: Unsupported graphics context draw mode %d"), aDrawMode);
         break;
     }
 

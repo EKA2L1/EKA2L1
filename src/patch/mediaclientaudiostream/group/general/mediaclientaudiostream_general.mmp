@@ -7,25 +7,25 @@
 ============================================================================
 */
 
-TARGET		  mediaclientaudiostream_general.dll
-TARGETTYPE	  dll
-UID			 0x10003B19 0xed5d920e
+TARGET		    mediaclientaudiostream_general.dll
+TARGETTYPE	    dll
+UID			    0x10003B19 0xee000001
 
-USERINCLUDE	 ..\..\inc ..\..\..\pcommon\inc
-SYSTEMINCLUDE   \epoc32\include
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
 
-SOURCEPATH	  ..\..\src
+SOURCEPATH	    ..\..\src
 
-SOURCE        main.cpp
-SOURCE        dispatch.s
-SOURCE        impl.cpp
+SOURCE          main.cpp
+SOURCE          dispatch.s
+SOURCE          impl.cpp
 
-DEFFILE ..\..\eabi\mediaclientaudiostream_general.def
+DEFFILE         ..\..\eabi\mediaclientaudiostream_general.def
 
 nostrictdef
 
-LIBRARY		 euser.lib mediaclient.lib efsrv.lib
-STATICLIBRARY    pcommon.lib
+LIBRARY		    euser.lib mediaclient.lib efsrv.lib
+STATICLIBRARY   priv.lib
 
 DEBUGGABLE_UDEBONLY
 

@@ -17,22 +17,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCDV_LOG_H_
-#define SCDV_LOG_H_
+#ifndef __HWRM_HPP__
+#define __HWRM_HPP__
 
-#include <e32def.h>
+#include <e32base.h>
+#include <e32std.h>
 
-void DoScdvLog(const char *aFormat, VA_LIST list);
+enum THWRMResourceType {
+    EHWRMResourceTypeVibra = 0,
+    EHWRMResourceTypeLight = 1
+};
 
-namespace Scdv {
-    inline void Log(const char *aFormat, ...) {
-        VA_LIST list;
-        VA_START(list, aFormat);
-        
-        DoScdvLog(aFormat, list);
-        
-        VA_END(list);
-    }
+class RHWRMResourceClient: public RSessionBase {
+public:
+    TInt Connect(THWRMResourceType aType);
+
+    TInt ExecuteCommand(const TInt aCommand, const TIpcArgs &aArgs);
+    void ExecuteAsyncCommand(const TInt aCommand, const TIpcArgs &aArgs, TRequestStatus &aStatus);
+
+    TVersion ServerVersion();
 };
 
 #endif

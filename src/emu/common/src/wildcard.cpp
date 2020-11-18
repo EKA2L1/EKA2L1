@@ -28,8 +28,8 @@ namespace eka2l1::common {
         regexstr = replace_all<char>(regexstr, ".", std::string("\\") + ".");
         regexstr = replace_all<char>(regexstr, "?", ".");
         regexstr = replace_all<char>(regexstr, "*", ".*");
-        regexstr = replace_all<char>(regexstr, "[", "(");
-        regexstr = replace_all<char>(regexstr, "]", ")");
+        regexstr = replace_all<char>(regexstr, "[", "\\[");
+        regexstr = replace_all<char>(regexstr, "]", "\\]");
 
         return regexstr;
     }
@@ -40,8 +40,8 @@ namespace eka2l1::common {
         regexstr = replace_all<wchar_t>(regexstr, L".", std::wstring(L"\\") + L".");
         regexstr = replace_all<wchar_t>(regexstr, L"?", L".");
         regexstr = replace_all<wchar_t>(regexstr, L"*", L".*");
-        regexstr = replace_all<wchar_t>(regexstr, L"[", L"(");
-        regexstr = replace_all<wchar_t>(regexstr, L"]", L")");
+        regexstr = replace_all<wchar_t>(regexstr, L"[", L"\\[");
+        regexstr = replace_all<wchar_t>(regexstr, L"]", L"\\]");
 
         return regexstr;
     }
