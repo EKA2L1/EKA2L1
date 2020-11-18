@@ -21,6 +21,7 @@
 
 #include <services/framework.h>
 #include <kernel/server.h>
+#include <utils/reqsts.h>
 
 namespace eka2l1 {
     enum TBaBakOpCode {
@@ -49,9 +50,20 @@ namespace eka2l1 {
     };
 
     struct backup_client_session : public service::typical_session {
+    private:
+        enum {
+            FLAG_OBSERVER_PRESENT = 1 << 0
+        };
+
+        std::uint32_t flags_;
+        epoc::notify_info nof_;
+
+    public:
         explicit backup_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
         
         void fetch(service::ipc_context *ctx) override;
         void get_backup_operation_state(service::ipc_context *ctx);
+        void set_backup_operation_observer_present(service::ipc_context *ctx);
+        void backup_operation_ready(service::ipc_context *ctx);
     };
 }

@@ -42,7 +42,8 @@ namespace eka2l1 {
 
     backup_client_session::backup_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
-        : service::typical_session(serv, ss_id, client_version) {
+        : service::typical_session(serv, ss_id, client_version)
+        , flags_(0) {
     }
 
     void backup_client_session::get_backup_operation_state(service::ipc_context *ctx) {
@@ -54,8 +55,30 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void backup_client_session::set_backup_operation_observer_present(service::ipc_context *ctx) {
+        flags_ |= FLAG_OBSERVER_PRESENT;
+        ctx->complete(epoc::error_none);
+    }
+
+    void backup_client_session::backup_operation_ready(service::ipc_context *ctx) {
+        if (!nof_.empty()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
+        nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
     void backup_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case EBakOpCodeSetBackupOperationObserverIsPresent:
+            set_backup_operation_observer_present(ctx);
+            return;
+
+        case EBakOpCodeBackupOperationEventReady:
+            backup_operation_ready(ctx);
+            return;
+
         case EBakOpCodeGetBackupOperationState:
             get_backup_operation_state(ctx);
             return;
@@ -65,6 +88,6 @@ namespace eka2l1 {
         }
 
         LOG_ERROR("Unimplemented opcode for backup server server 0x{:X}", ctx->msg->function);
-        ctx->complete(epoc::error_none);
+        //ctx->complete(epoc::error_none);
     }
 }
