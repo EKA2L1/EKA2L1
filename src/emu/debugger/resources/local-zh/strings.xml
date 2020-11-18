@@ -41,6 +41,9 @@
     <string name="help_menu_about_item_name">关于</string>
     <string name="app_launcher_title">应用启动器</string>
     <string name="app_launcher_unavail_msg">应用列表服务器不可用，请安装设备来启用。</string>
+    <string name="app_launcher_switch_to_style_title">切换到</string>
+    <string name="app_launcher_style_classical_str">经典</string>
+    <string name="app_launcher_style_modern_str">现代</string>
     <string name="error_dialog_title">一只野生的错误出现了</string>
     <string name="error_dialog_message">请附上运行日志文件并提交给开发者！</string>
     <string name="emulated_screen_title">屏幕{}</string>
@@ -51,7 +54,6 @@
     <string name="pref_personalize_background_string">背景</string>
     <string name="pref_personalize_transparency_string">透明度</string>
     <string name="pref_personalize_ui_scale_string">界面缩放</string>
-    <string name="pref_personalize_font_string">字体</string>
     <string name="pref_general_title">通用</string>
     <string name="pref_general_data_storage_string">数据存储</string>
     <string name="pref_general_debugging_string">调试中</string>

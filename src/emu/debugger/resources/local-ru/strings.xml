@@ -41,6 +41,9 @@
     <string name="help_menu_about_item_name">О программе</string>
     <string name="app_launcher_title">Запуск приложений</string>
     <string name="app_launcher_unavail_msg">Служба App List недоступна. Установите устройство для её включения.</string>
+    <string name="app_launcher_switch_to_style_title">Switch to</string>
+    <string name="app_launcher_style_classical_str">Classical</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">Появляется дикая ошибка</string>
     <string name="error_dialog_message">Пожалуйста, приложите лог и сообщите об этом разработчику!</string>
     <string name="emulated_screen_title">Экран {}</string>
@@ -51,7 +54,6 @@
     <string name="pref_personalize_background_string">Фон</string>
     <string name="pref_personalize_transparency_string">Прозрачность</string>
     <string name="pref_personalize_ui_scale_string">Масштаб интерфейса</string>
-    <string name="pref_personalize_font_string">Шрифт</string>
     <string name="pref_general_title">Общее</string>
     <string name="pref_general_data_storage_string">Хранилище данных</string>
     <string name="pref_general_debugging_string">Отладка</string>

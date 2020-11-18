@@ -41,6 +41,9 @@
     <string name="help_menu_about_item_name">Sobre</string>
     <string name="app_launcher_title">Iniciador de aplicativos</string>
     <string name="app_launcher_unavail_msg">App List Server indisponível. Instale um dispositivo para habilitá-lo.</string>
+    <string name="app_launcher_switch_to_style_title">Switch to</string>
+    <string name="app_launcher_style_classical_str">Classical</string>
+    <string name="app_launcher_style_modern_str">Modern</string>
     <string name="error_dialog_title">Um erro brutal aparece</string>
     <string name="error_dialog_message">Por favor, anexe o registro e reporte ao desenvolvedor!</string>
     <string name="emulated_screen_title">Tela {}</string>
@@ -51,7 +54,6 @@
     <string name="pref_personalize_background_string">Plano de fundo</string>
     <string name="pref_personalize_transparency_string">Transparência</string>
     <string name="pref_personalize_ui_scale_string">Escala da interface</string>
-    <string name="pref_personalize_font_string">Fonte</string>
     <string name="pref_general_title">Definições gerais</string>
     <string name="pref_general_data_storage_string">Armazenamento de dados</string>
     <string name="pref_general_debugging_string">Depuração</string>

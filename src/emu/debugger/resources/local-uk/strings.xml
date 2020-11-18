@@ -41,6 +41,9 @@
     <string name="help_menu_about_item_name">Про програму</string>
     <string name="app_launcher_title">Панель запуску застосунків</string>
     <string name="app_launcher_unavail_msg">Сервер списку застосунків недоступний. Установіть пристрій, щоб увімкнути його.</string>
+    <string name="app_launcher_switch_to_style_title">Перемкнути на</string>
+    <string name="app_launcher_style_classical_str">Класичний</string>
+    <string name="app_launcher_style_modern_str">Сучасний</string>
     <string name="error_dialog_title">З\'являється дика помилка</string>
     <string name="error_dialog_message">Будь ласка, прикріпіть журнал і повідомте розробника!</string>
     <string name="emulated_screen_title">Екран {}</string>
@@ -51,7 +54,6 @@
     <string name="pref_personalize_background_string">Тло</string>
     <string name="pref_personalize_transparency_string">Прозорість</string>
     <string name="pref_personalize_ui_scale_string">Масштаб інтерфейсу</string>
-    <string name="pref_personalize_font_string">Шрифт</string>
     <string name="pref_general_title">Загальні</string>
     <string name="pref_general_data_storage_string">Сховище даних</string>
     <string name="pref_general_debugging_string">Відлагодження</string>
@@ -67,9 +69,9 @@
     <string name="pref_general_debugging_btrace_tooltip_msg">Увімкнути трасування ядра, що використовується в драйвері. Під час увімкнення очікується уповільнення.</string>
     <string name="pref_general_utilities_string">Утиліти</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Приховати курсор миші, коли він перебуває всередині емульованого екрана</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Корисно, коли ви призначите кнопку миші, а гра/застосунок має вбудований курсор. \nЩоб зробити курсор миші видимим, утримуйте клавішу ALT.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Корисно, коли ви призначите кнопку миші, а гра/застосунок має вбудований курсор. Щоб зробити курсор миші видимим, утримуйте клавішу ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Увімкнути фільтрацію шляхом найближчого сусіда</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Цей фільтр застосовується після наступного промальовування емульованого екрану.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Цей фільтр застосовується після наступного промальовування емульованого екрана.</string>
     <string name="pref_general_utilities_integer_scaling_msg">Увімкнути цілочислове масштабування</string>
     <string name="pref_general_utilities_integer_scaling_tooltip">Це метод масштабування з точністю до пікселя, який може допомогти значно зменшити розмиття.</string>
     <string name="pref_system_title">Системні</string>
@@ -126,13 +128,13 @@
     <string name="install_device_final_msg_1">Дякуємо за використання майстра встановлення. Сподіваємося, вам сподобається емулятор!</string>
     <string name="install_device_final_msg_2">У разі виникнення будь-яких проблем, будь ласка, повідомте розробникам, створивши запит на GitHub!</string>
     <string name="mmc_mount_success_dialog_title">Картку успішно під\'єднано!</string>
-    <string name="mmc_mount_success_dialog_msg">MMC/SD картка під\'єднана! Усі застосунки на MMC/SD картці були перезавантажені.</string>
+    <string name="mmc_mount_success_dialog_msg">MMC/SD картку під\'єднано! Усі застосунки на MMC/SD картці перезавантажено.</string>
     <string name="no_device_installed_msg">Ви не встановили жодного пристрою. Будь ласка, встановіть пристрій або дотримуйтесь інструкцій зі встановлення на сторінці EKA2L1 у Github Wiki.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Установити пристрій</string>
     <string name="no_show_option_again_general_msg">Не показувати це знову.</string>
     <string name="touchscreen_disabled_msg">Деякі з ваших поточних сполучень клавіш пов\'язані з кнопками миші. Тому емульований сенсорний екран вимкнено.</string>
     <string name="touchscreen_disabled_note_str">Примітка</string>
-    <string name="touchscreen_disabled_note_msg">Сенсорний екран може бути повторно включений по підміні кнопок миші клавішами клавіатури.</string>
+    <string name="touchscreen_disabled_note_msg">Сенсорний екран можна повторно ввімкнути, підмінивши кнопки миші клавішами клавіатури.</string>
     <string name="credits_title">EKA2L1 - ЕМУЛЯТОР ОС SYMBIAN</string>
     <string name="credits_copyright_text">(C) 2018- Команда EKA2L1.</string>
     <string name="credits_thanks_text">Дякуємо Вам за використання емулятора!</string>
