@@ -120,7 +120,9 @@ namespace eka2l1 {
             const std::uint8_t *thread_entry_routine_;
 
             drive_number get_drive_rom();
+
             void apply_pending_patches();
+            void apply_trick_or_treat_algo();
 
         public:
             std::map<sid, epoc_import_func> svc_funcs_;

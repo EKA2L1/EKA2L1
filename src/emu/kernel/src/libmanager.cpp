@@ -494,31 +494,56 @@ namespace eka2l1::hle {
         }
 
         apply_pending_patches();
+        apply_trick_or_treat_algo();
     }
 
-    bool lib_manager::try_apply_patch(codeseg_ptr original) {
-        const std::string org_name = original->name();
-        const auto the_uids =  original->get_uids();
+    static bool does_condition_meet_for_patch(codeseg_ptr original, patch_info &patch, const bool check_name) {
+        if (!check_name) {  
+            const std::string org_name = original->name();
+            const auto the_uids =  original->get_uids();
 
-        for (auto &patch: patches_) {
             if (common::compare_ignore_case(org_name.c_str(), patch.name_.c_str()) == 0) {
                 const bool uid2_sas = (!patch.req_uid2_ || (patch.req_uid2_ == std::get<1>(the_uids)));
                 const bool uid3_sas = (!patch.req_uid3_ || (patch.req_uid3_ == std::get<2>(the_uids)));
 
                 if (uid2_sas && uid3_sas) {
-                    if (!patch.patch_) {
-                        patch_pending_entry entry;
-                        entry.info_ = &patch;
-                        entry.dest_ = original;
-
-                        patch_pendings_.push_back(entry);
-                    } else {
-                        patch_original_codeseg(patch.routes_, kern_->get_memory_system(), patch.patch_,
-                            original);
-                    }
-
                     return true;
                 }
+            }
+        }
+
+        return false;
+    }
+
+    void lib_manager::apply_trick_or_treat_algo() {
+        for (auto &patch: patches_) {
+            codeseg_ptr cc = load(common::utf8_to_ucs2(patch.name_));
+
+            if (cc && does_condition_meet_for_patch(cc, patch, false)) { 
+                patch_original_codeseg(patch.routes_, kern_->get_memory_system(), patch.patch_, cc);
+            }
+        }        
+    }
+
+    bool lib_manager::try_apply_patch(codeseg_ptr original) {
+        if (!original) {
+            return false;
+        }
+
+        for (auto &patch: patches_) {
+            if (does_condition_meet_for_patch(original, patch, true)) {
+                if (!patch.patch_) {
+                    patch_pending_entry entry;
+                    entry.info_ = &patch;
+                    entry.dest_ = original;
+
+                    patch_pendings_.push_back(entry);
+                } else {
+                    patch_original_codeseg(patch.routes_, kern_->get_memory_system(), patch.patch_,
+                        original);
+                }
+
+                return true;
             }
         }
 
