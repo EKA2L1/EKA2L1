@@ -25,12 +25,14 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -48,6 +50,7 @@ import com.github.eka2l1.emu.EmulatorActivity;
 import com.github.eka2l1.filepicker.FilteredFilePickerActivity;
 import com.github.eka2l1.filepicker.FilteredFilePickerFragment;
 import com.github.eka2l1.info.AboutDialogFragment;
+import com.github.eka2l1.settings.AppSettingsFragment;
 import com.github.eka2l1.settings.SettingsFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.nononsenseapps.filepicker.FilePickerActivity;
@@ -276,5 +279,32 @@ public class AppsListFragment extends ListFragment {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getActivity().getMenuInflater();
+        inflater.inflate(R.menu.context_appslist, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        int index = info.position;
+        AppItem appItem = adapter.getItem(index);
+        switch (item.getItemId()) {
+            case R.id.action_context_settings:
+                AppSettingsFragment appSettingsFragment = new AppSettingsFragment();
+                Bundle args = new Bundle();
+                args.putLong(AppSettingsFragment.APP_UID_KEY, appItem.getUid());
+                appSettingsFragment.setArguments(args);
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.container, appSettingsFragment)
+                        .addToBackStack(null)
+                        .commit();
+                break;
+        }
+        return super.onContextItemSelected(item);
     }
 }

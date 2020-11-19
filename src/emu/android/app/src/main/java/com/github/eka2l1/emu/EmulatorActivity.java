@@ -22,12 +22,12 @@ package com.github.eka2l1.emu;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Process;
+import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -48,10 +48,11 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.overlay.VirtualKeyboard;
+import com.github.eka2l1.settings.AppDataStore;
+import com.github.eka2l1.settings.KeyMapper;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -70,14 +71,16 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     private long uid;
     private boolean launched;
     private boolean statusBarEnabled;
+    private boolean actionBarEnabled;
     private VirtualKeyboard keyboard;
     private float displayWidth;
     private float displayHeight;
+    private SparseIntArray androidToSymbian;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        setTheme(sharedPreferences.getString("pref_theme", "light"));
+        AppDataStore dataStore = AppDataStore.getEmulatorStore();
+        setTheme(dataStore.getString("theme", "light"));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
         FrameLayout layout = findViewById(R.id.emulator_container);
@@ -90,16 +93,20 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         surfaceView.setWillNotDraw(true);
         surfaceView.getHolder().addCallback(this);
 
-        boolean keyboardEnabled = sharedPreferences.getBoolean("pref_enable_virtual_keyboard", true);
-        boolean wakelockEnabled = sharedPreferences.getBoolean("pref_enable_wakelock", false);
+        boolean keyboardEnabled = dataStore.getBoolean("enable-virtual-keyboard", true);
+        boolean wakelockEnabled = dataStore.getBoolean("enable-wakelock", false);
         if (wakelockEnabled) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        statusBarEnabled = sharedPreferences.getBoolean("pref_enable_statusbar", false);
+        actionBarEnabled = dataStore.getBoolean("enable-actionbar", true);
+        statusBarEnabled = dataStore.getBoolean("enable-statusbar", false);
 
         if (keyboardEnabled) {
             keyboard = new VirtualKeyboard(this);
             setVirtualKeyboard();
+        }
+        if (!actionBarEnabled) {
+            getSupportActionBar().hide();
         }
 
         Intent intent = getIntent();
@@ -111,6 +118,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         displayWidth = display.getWidth();
         displayHeight = display.getHeight();
+        androidToSymbian = KeyMapper.getArrayPref();
     }
 
     @Override
@@ -144,9 +152,21 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     }
 
     @Override
+    public void openOptionsMenu() {
+        if (!actionBarEnabled) {
+            showSystemUI();
+        }
+        super.openOptionsMenu();
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            showExitConfirmation();
+            if (actionBarEnabled) {
+                showExitConfirmation();
+            } else {
+                openOptionsMenu();
+            }
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -172,8 +192,9 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.emulator, menu);
         if (keyboard != null) {
-            inflater.inflate(R.menu.emulator, menu);
+            inflater.inflate(R.menu.emulator_keys, menu);
         }
         return super.onCreateOptionsMenu(menu);
     }
@@ -181,7 +202,9 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (keyboard != null) {
+        if (id == R.id.action_exit) {
+            showExitConfirmation();
+        } else if (keyboard != null) {
             handleVkOptions(id);
         }
         return super.onOptionsItemSelected(item);
@@ -255,7 +278,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         keyboard.setColor(VirtualKeyboard.OUTLINE, vkAlpha | 0xFFFFFF);
         keyboard.setView(overlayView);
 
-        File keylayoutFile = new File(getFilesDir(), "keylayout");
+        File keylayoutFile = new File(Emulator.EMULATOR_DIR, "keylayout");
         if (keylayoutFile.exists()) {
             try {
                 FileInputStream fis = new FileInputStream(keylayoutFile);
@@ -287,6 +310,10 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         getWindow().getDecorView().setSystemUiVisibility(flags);
     }
 
+    private void showSystemUI() {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+    }
+
     private void updateScreenSize() {
         RectF screen = new RectF(0, 0, displayWidth, displayHeight);
         if (keyboard != null) {
@@ -294,11 +321,16 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         }
     }
 
+    private int convertAndroidKeyCode(int keyCode) {
+        return androidToSymbian.get(keyCode, Integer.MAX_VALUE);
+    }
+
     private class OverlayView extends View {
 
         public OverlayView(Context context) {
             super(context);
             setWillNotDraw(false);
+            setFocusableInTouchMode(true);
         }
 
         @Override
@@ -312,6 +344,32 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
             updateScreenSize();
+        }
+
+        @Override
+        public boolean onKeyDown(int keyCode, KeyEvent event) {
+            keyCode = convertAndroidKeyCode(keyCode);
+            if (keyCode == Integer.MAX_VALUE) {
+                return false;
+            }
+            if (event.getRepeatCount() == 0) {
+                if (keyboard == null || !keyboard.keyPressed(keyCode)) {
+                    Emulator.pressKey(keyCode, 0);
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onKeyUp(int keyCode, KeyEvent event) {
+            keyCode = convertAndroidKeyCode(keyCode);
+            if (keyCode == Integer.MAX_VALUE) {
+                return false;
+            }
+            if (keyboard == null || !keyboard.keyReleased(keyCode)) {
+                Emulator.pressKey(keyCode, 1);
+            }
+            return true;
         }
 
         @Override

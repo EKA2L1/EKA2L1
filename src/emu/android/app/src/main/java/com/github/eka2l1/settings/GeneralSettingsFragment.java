@@ -27,17 +27,21 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.emu.Emulator;
 
-public class SettingsFragment extends PreferenceFragmentCompat {
+public class GeneralSettingsFragment extends PreferenceFragmentCompat {
+    private AppDataStore dataStore;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.preferences, rootKey);
+        dataStore = AppDataStore.getEmulatorStore();
+        PreferenceManager preferenceManager = getPreferenceManager();
+        preferenceManager.setPreferenceDataStore(dataStore);
+        setPreferencesFromResource(R.xml.preferences_general, rootKey);
     }
 
     @Override
@@ -46,21 +50,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         setHasOptionsMenu(true);
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle(R.string.settings);
-        setPreferenceClickListener(new GeneralSettingsFragment(), "pref_general");
-        setPreferenceClickListener(new SystemSettingsFragment(), "pref_system");
-        setPreferenceClickListener(new KeyMapperFragment(), "pref_keymapper");
+        actionBar.setTitle(R.string.pref_general_title);
     }
 
-    private void setPreferenceClickListener(Fragment fragment, String preferenceName) {
-        Preference preference = findPreference(preferenceName);
-        preference.setOnPreferenceClickListener(pref -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .commit();
-            return true;
-        });
+    @Override
+    public void onPause() {
+        super.onPause();
+        dataStore.save();
+        Emulator.loadConfig();
     }
 
     @Override

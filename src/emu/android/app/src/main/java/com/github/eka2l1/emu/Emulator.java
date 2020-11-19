@@ -35,7 +35,8 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public class Emulator {
-    private static final String EMULATOR_DIR = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+    public static final String EMULATOR_DIR = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+    public static final String COMPAT_DIR = EMULATOR_DIR + "compat/";
 
     private static boolean init;
     private static boolean load;
@@ -168,4 +169,12 @@ public class Emulator {
     public static native void uninstallPackage(int uid);
 
     public static native void mountSdCard(String path);
+
+    public static native void loadConfig();
+
+    public static native void setLanguage(int languageId);
+
+    public static native void setRtosLevel(int level);
+
+    public static native void updateAppSetting(int uid);
 }

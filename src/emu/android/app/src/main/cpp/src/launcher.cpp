@@ -27,19 +27,24 @@
 #include <system/installation/rpkg.h>
 #include <common/path.h>
 #include <common/fileutils.h>
+#include <utils/locale.h>
+#include <utils/system.h>
 
 namespace eka2l1::android {
 
     launcher::launcher(eka2l1::system *sys)
-            :sys(sys)
-            , conf(sys->get_config())
+        :sys(sys)
+        , conf(sys->get_config())
+        , kern(sys->get_kernel_system())
+        , alserv(nullptr)
     {
+        if (kern) {
+            alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
+                    kern->get_epoc_version())));
+        }
     }
 
     std::vector<std::string> launcher::get_apps() {
-        kernel_system *kern = sys->get_kernel_system();
-        applist_server *alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
-                kern->get_epoc_version())));
         std::vector<apa_app_registry> &registerations = alserv->get_registerations();
         std::vector<std::string> info;
         for (auto &reg : registerations) {
@@ -52,9 +57,6 @@ namespace eka2l1::android {
     }
 
     void launcher::launch_app(std::uint32_t uid) {
-        kernel_system *kern = sys->get_kernel_system();
-        applist_server *alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
-                kern->get_epoc_version())));
         apa_app_registry *reg = alserv->get_registration(uid);
 
         epoc::apa::command_line cmdline;
@@ -81,8 +83,35 @@ namespace eka2l1::android {
         return info;
     }
 
+    void launcher::set_language_to_property(const language new_one) {
+        property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+        auto current_lang = lang_prop->get_pkg<epoc::locale_language>();
+
+        if (!current_lang) {
+            return;
+        }
+
+        current_lang->language = static_cast<epoc::language>(new_one);
+        lang_prop->set<epoc::locale_language>(current_lang.value());
+    }
+
+    void launcher::set_language_current(const language lang) {
+        conf->language = static_cast<int>(lang);
+        sys->set_system_language(lang);
+        set_language_to_property(lang);
+    }
+
     void launcher::set_current_device(std::uint32_t id) {
         device_manager *dvc_mngr = sys->get_device_manager();
+        auto &dvcs = dvc_mngr->get_devices();
+
+        if (conf->device != id) {
+            // Check if the language currently in config exists in the new device
+            if (std::find(dvcs[id].languages.begin(), dvcs[id].languages.end(), conf->language) == dvcs[id].languages.end()) {
+                set_language_current(static_cast<language>(dvcs[id].default_language_code));
+            }
+        }
+
         conf->device = id;
         conf->serialize();
         dvc_mngr->set_current(id);
@@ -142,5 +171,21 @@ namespace eka2l1::android {
         io->unmount(drive_e);
         io->mount_physical_path(drive_e, drive_media::physical,
                 io_attrib_removeable, upath);
+    }
+
+    void launcher::load_config() {
+        conf->deserialize();
+    }
+
+    void launcher::set_language(std::uint32_t language_id) {
+        set_language_current(static_cast<language>(language_id));
+    }
+
+    void launcher::set_rtos_level(std::uint32_t level) {
+        kern->get_ntimer()->set_realtime_level(static_cast<realtime_level>(level));
+    }
+
+    void launcher::update_app_setting(std::uint32_t uid) {
+        kern->get_app_settings()->update_setting(uid);
     }
 }

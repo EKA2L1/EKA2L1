@@ -1,23 +1,14 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <ListPreference
-        android:defaultValue="light"
-        android:entries="@array/pref_theme_entries"
-        android:entryValues="@array/pref_theme_values"
-        android:key="pref_theme"
-        android:title="@string/pref_theme" />
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="pref_enable_virtual_keyboard"
-        android:title="@string/pref_enable_virtual_keyboard" />
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="pref_enable_statusbar"
-        android:title="@string/pref_enable_statusbar" />
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="pref_enable_wakelock"
-        android:title="@string/pref_wakelock" />
+    <Preference
+        android:key="pref_general"
+        android:title="@string/pref_general_title" />
+    <Preference
+        android:key="pref_system"
+        android:title="@string/pref_system_title" />
+    <Preference
+        android:key="pref_keymapper"
+        android:title="@string/pref_control_key_binding_sect_title" />
 
 </PreferenceScreen>

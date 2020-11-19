@@ -27,17 +27,40 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.emu.Emulator;
 
-public class SettingsFragment extends PreferenceFragmentCompat {
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class SystemSettingsFragment extends PreferenceFragmentCompat {
+    private AppDataStore dataStore;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.preferences, rootKey);
+        dataStore = AppDataStore.getEmulatorStore();
+        PreferenceManager preferenceManager = getPreferenceManager();
+        preferenceManager.setPreferenceDataStore(dataStore);
+        setPreferencesFromResource(R.xml.preferences_system, rootKey);
+        Preference languagePreference = findPreference("language");
+        languagePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+            Emulator.setLanguage(Integer.parseInt((String) newValue));
+            return true;
+        });
+        Preference rtosLevelPreference = findPreference("rtos-level");
+        rtosLevelPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+            Emulator.setRtosLevel(getRtosLevelValue((String) newValue));
+            return true;
+        });
+    }
+
+    private int getRtosLevelValue(String str) {
+        String[] rtosArray = getResources().getStringArray(R.array.pref_system_real_time_accuracy_values);
+        return new ArrayList<>(Arrays.asList(rtosArray)).indexOf(str);
     }
 
     @Override
@@ -46,21 +69,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         setHasOptionsMenu(true);
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle(R.string.settings);
-        setPreferenceClickListener(new GeneralSettingsFragment(), "pref_general");
-        setPreferenceClickListener(new SystemSettingsFragment(), "pref_system");
-        setPreferenceClickListener(new KeyMapperFragment(), "pref_keymapper");
+        actionBar.setTitle(R.string.pref_system_title);
     }
 
-    private void setPreferenceClickListener(Fragment fragment, String preferenceName) {
-        Preference preference = findPreference(preferenceName);
-        preference.setOnPreferenceClickListener(pref -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .commit();
-            return true;
-        });
+    @Override
+    public void onPause() {
+        super.onPause();
+        dataStore.save();
+        Emulator.loadConfig();
     }
 
     @Override

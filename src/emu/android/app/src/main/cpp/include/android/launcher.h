@@ -31,6 +31,11 @@ namespace eka2l1::android {
     class launcher {
         eka2l1::system *sys;
         config::state *conf;
+        eka2l1::kernel_system *kern;
+        applist_server *alserv;
+
+        void set_language_to_property(const language new_one);
+        void set_language_current(const language lang);
 
     public:
         explicit launcher(eka2l1::system *sys);
@@ -45,5 +50,9 @@ namespace eka2l1::android {
         std::vector<std::string> get_packages();
         void uninstall_package(std::uint32_t uid);
         void mount_sd_card(std::string &path);
+        void load_config();
+        void set_language(std::uint32_t language_id);
+        void set_rtos_level(std::uint32_t level);
+        void update_app_setting(std::uint32_t uid);
     };
 }
