@@ -12,7 +12,7 @@
     <string name="remove">移除</string>
     <string name="mount_sd">挂载MMC/SD卡</string>
     <string name="no_devices_found">未找到设备</string>
-    <string name="exit">Exit</string>
+    <string name="exit">退出</string>
     <string name="install">安装</string>
     <string name="path_to_rpkg">RPKG路径</string>
     <string name="path_to_rom">ROM路径</string>
@@ -26,7 +26,7 @@
     <string name="pref_theme_light">浅色</string>
     <string name="pref_theme_dark">深色</string>
     <string name="pref_enable_virtual_keyboard">启用虚拟键盘</string>
-    <string name="pref_enable_actionbar">Enable ActionBar</string>
+    <string name="pref_enable_actionbar">启用动作栏</string>
     <string name="pref_enable_statusbar">启用状态栏</string>
     <string name="pref_wakelock">保持屏幕常亮</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">启用最近邻域过滤</string>
@@ -39,9 +39,9 @@
     <string name="pref_system_setting_inheritance_option_name">设置继承</string>
     <string name="emulated_screen_rotation_item_name">旋转</string>
     <string name="emulated_screen_refresh_rate_item_name">刷新率</string>
-    <string name="mapping_dialog_title">Press a key</string>
-    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
-    <string name="reset_mapping">Reset</string>
+    <string name="mapping_dialog_title">按下一个键</string>
+    <string name="mapping_dialog_message" formatted="false">当前映射：%1$s</string>
+    <string name="reset_mapping">重置</string>
     <string name="layout_edit_finished">编辑完成</string>
     <string name="layout_edit_finish">保存键位</string>
     <string name="layout_edit_mode">编辑键位</string>
