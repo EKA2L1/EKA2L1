@@ -352,4 +352,13 @@ namespace eka2l1::mem {
     void multiple_mem_model_chunk::map_to_cpu(mem_model_process *pr) {
         do_selection_cpu_memory_manipulation(false);
     }
+
+    multiple_mem_model_chunk::~multiple_mem_model_chunk() {
+        // Decommit the whole things
+        decommit(0, max_size_);
+
+        // Ignore the result, just unmap things
+        if (!is_external_host)
+            common::unmap_memory(host_base_, max_size_);
+    }
 }

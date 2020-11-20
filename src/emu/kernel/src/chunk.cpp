@@ -137,6 +137,8 @@ namespace eka2l1 {
         void chunk::destroy() {
             if (!mmc_impl_unq_)
                 get_own_process()->get_mem_model()->delete_chunk(mmc_impl_);
+            else
+                mmc_impl_unq_.reset();
         }
 
         void chunk::open_to(process *own) {

@@ -85,13 +85,6 @@ namespace eka2l1::mem {
     void multiple_mem_model_process::delete_chunk(mem_model_chunk *chunk) {
         multiple_mem_model_chunk *mul_chunk = reinterpret_cast<multiple_mem_model_chunk *>(chunk);
 
-        // Decommit the whole things
-        mul_chunk->decommit(0, mul_chunk->max_size_);
-
-        // Ignore the result, just unmap things
-        if (!mul_chunk->is_external_host)
-            common::unmap_memory(mul_chunk->host_base_, mul_chunk->max_size_);
-
         for (std::size_t i = 0; i < chunks_.size(); i++) {
             if (chunks_[i].get() == mul_chunk) {
                 chunks_[i].reset();
