@@ -49,6 +49,9 @@ namespace eka2l1::epoc {
 
     class object_container {
     public:
+        virtual ~object_container() {}
+
+        virtual void clear() = 0;
         virtual bool remove(ref_count_object *obj) = 0;
     };
 
