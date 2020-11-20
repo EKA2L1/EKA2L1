@@ -355,16 +355,16 @@ namespace eka2l1 {
                         if (std::find(dvcs[i].languages.begin(), dvcs[i].languages.end(), conf->language) == dvcs[i].languages.end()) {
                             set_language_current(static_cast<language>(dvcs[i].default_language_code));
                         }
+
+                        conf->device = static_cast<int>(i);
+                        conf->serialize();
+
+                        mngr->lock.unlock();
+                        sys->set_device(static_cast<std::uint8_t>(i));
+                        mngr->lock.lock();
+
+                        should_notify_reset_for_big_change = true;
                     }
-
-                    conf->device = static_cast<int>(i);
-                    conf->serialize();
-
-                    mngr->lock.unlock();
-                    mngr->set_current(static_cast<std::uint8_t>(i));
-                    mngr->lock.lock();
-
-                    should_notify_reset_for_big_change = true;
                 }
             }
 
@@ -465,6 +465,16 @@ namespace eka2l1 {
             if (should_disable_validate_drive) {
                 ImGui::PopItemFlag();
                 ImGui::PopStyleVar();
+            }
+            
+            const std::string rescan_device_str = common::get_localised_string(localised_strings,
+                "pref_system_rescan_devices_title");
+
+            ImGui::SameLine();
+            if (ImGui::Button(rescan_device_str.c_str())) {
+                mngr->lock.unlock();
+                sys->rescan_devices(drive_z);
+                mngr->lock.lock();
             }
 
             if (ImGui::IsItemHovered()) {

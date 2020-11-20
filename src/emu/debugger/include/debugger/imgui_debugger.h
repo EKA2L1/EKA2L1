@@ -64,6 +64,7 @@ namespace eka2l1 {
 
         bool should_pause;
         bool should_stop;
+        bool should_reset;
         bool should_load_state;
         bool should_save_state;
         bool should_package_manager;
@@ -238,8 +239,11 @@ namespace eka2l1 {
         std::vector<std::string> honors_strings;
         std::vector<std::string> translators_strings;
 
+        std::size_t sys_reset_callback_h;
+
     protected:
         void do_install_package();
+        void on_system_reset(system *sys);
 
     public:
         explicit imgui_debugger(eka2l1::system *sys, imgui_logger *logger);

@@ -73,6 +73,7 @@ namespace eka2l1 {
         , logger(logger)
         , should_stop(false)
         , should_pause(false)
+        , should_reset(false)
         , should_show_threads(false)
         , should_show_mutexs(false)
         , should_show_chunks(false)
@@ -115,7 +116,8 @@ namespace eka2l1 {
         , last_scale(1.0f)
         , last_cursor(ImGuiMouseCursor_Arrow)
         , font_to_use(nullptr)
-        , active_app_config(nullptr) {
+        , active_app_config(nullptr)
+        , sys_reset_callback_h(0) {
         if (conf->emulator_language == -1) {
             conf->emulator_language = static_cast<int>(language::en);
         }
@@ -220,20 +222,12 @@ namespace eka2l1 {
             LOG_ERROR("Unable to load translators credits. Error description: {}", e.what());
         }
 
-        kernel_system *kern = sys->get_kernel_system();
+        on_system_reset(sys);
 
-        if (kern) {
-            alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
-                kern->get_epoc_version())));
-            winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
-                kern->get_epoc_version())));
-            oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(kern->get_by_name<service::server>("101fdfae_10207218_AppServer"));
-
-            property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
-
-            if (lang_prop)
-                lang_prop->add_data_change_callback(this, language_property_change_handler);
-        }
+        // Register system reset callback
+        sys_reset_callback_h = sys->add_system_reset_callback([this](system *sys) {
+            on_system_reset(sys);
+        });
 
         key_binder_state.target_key = {
             KEY_UP,
@@ -336,6 +330,25 @@ namespace eka2l1 {
         if (device_wizard_state.install_thread) {
             device_wizard_state.install_thread->join();
         }
+
+        sys->remove_system_reset_callback(sys_reset_callback_h);
+    }
+
+    void imgui_debugger::on_system_reset(system *the_sys) {
+        kernel_system *kern = the_sys->get_kernel_system();
+
+        if (kern) {
+            alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
+                kern->get_epoc_version())));
+            winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
+                kern->get_epoc_version())));
+            oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(kern->get_by_name<service::server>("101fdfae_10207218_AppServer"));
+
+            property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+
+            if (lang_prop)
+                lang_prop->add_data_change_callback(this, language_property_change_handler);
+        }
     }
 
     config::state *imgui_debugger::get_config() {
@@ -426,9 +439,11 @@ namespace eka2l1 {
             if (ImGui::BeginMenu(debugger_menu_name.c_str())) {
                 const std::string pause_item_name = common::get_localised_string(localised_strings, "debugger_menu_pause_item_name");
                 const std::string stop_item_name = common::get_localised_string(localised_strings, "debugger_menu_stop_item_name");
-    
+                const std::string restart_item_name = common::get_localised_string(localised_strings, "debugger_menu_restart_item_name");
+ 
                 ImGui::MenuItem(pause_item_name.c_str(), "CTRL+P", &should_pause);
                 ImGui::MenuItem(stop_item_name.c_str(), nullptr, &should_stop);
+                ImGui::MenuItem(restart_item_name.c_str(), nullptr, &should_reset);
 
                 ImGui::Separator();
 
@@ -640,6 +655,11 @@ namespace eka2l1 {
 
         if (should_show_logger) {
             logger->draw("Logger", &should_show_logger);
+        }
+
+        if (should_reset) {
+            sys->reset();
+            should_reset = false;
         }
 
         cleanup_show();
