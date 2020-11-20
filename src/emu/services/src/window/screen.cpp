@@ -130,6 +130,10 @@ namespace eka2l1::epoc {
             cmd_builder->destroy_bitmap(screen_texture);
         }
 
+        if (dsa_texture) {
+            cmd_builder->destroy_bitmap(dsa_texture);
+        }
+
         driver->submit_command_list(*cmd_list);
     }
 
