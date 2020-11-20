@@ -498,18 +498,20 @@ namespace eka2l1::hle {
     }
 
     static bool does_condition_meet_for_patch(codeseg_ptr original, patch_info &patch, const bool check_name) {
-        if (!check_name) {  
+        if (check_name) {  
             const std::string org_name = original->name();
-            const auto the_uids =  original->get_uids();
 
-            if (common::compare_ignore_case(org_name.c_str(), patch.name_.c_str()) == 0) {
-                const bool uid2_sas = (!patch.req_uid2_ || (patch.req_uid2_ == std::get<1>(the_uids)));
-                const bool uid3_sas = (!patch.req_uid3_ || (patch.req_uid3_ == std::get<2>(the_uids)));
-
-                if (uid2_sas && uid3_sas) {
-                    return true;
-                }
+            if (common::compare_ignore_case(org_name.c_str(), patch.name_.c_str()) != 0) {
+                return false;
             }
+        }
+
+        const auto the_uids =  original->get_uids();
+        const bool uid2_sas = (!patch.req_uid2_ || (patch.req_uid2_ == std::get<1>(the_uids)));
+        const bool uid3_sas = (!patch.req_uid3_ || (patch.req_uid3_ == std::get<2>(the_uids)));
+
+        if (uid2_sas && uid3_sas) {
+            return true;
         }
 
         return false;
@@ -517,12 +519,9 @@ namespace eka2l1::hle {
 
     void lib_manager::apply_trick_or_treat_algo() {
         for (auto &patch: patches_) {
+            // Auto apply
             codeseg_ptr cc = load(common::utf8_to_ucs2(patch.name_));
-
-            if (cc && does_condition_meet_for_patch(cc, patch, false)) { 
-                patch_original_codeseg(patch.routes_, kern_->get_memory_system(), patch.patch_, cc);
-            }
-        }        
+        }
     }
 
     bool lib_manager::try_apply_patch(codeseg_ptr original) {
