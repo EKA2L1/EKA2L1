@@ -1289,6 +1289,8 @@ namespace eka2l1 {
             delete screens;
             screens = next;
         }
+
+        bmp_cache.clean(drv);
     }
 
     drivers::graphics_driver *window_server::get_graphics_driver() {
