@@ -273,6 +273,7 @@ namespace eka2l1 {
 
     public:
         explicit applist_server(system *sys);
+        ~applist_server() override;
 
         /**
          * @brief       Check if applist server instantiated needs to be worked on old architecture.

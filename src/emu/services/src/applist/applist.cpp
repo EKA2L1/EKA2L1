@@ -58,6 +58,14 @@ namespace eka2l1 {
         , fbsserv(nullptr) {
     }
 
+    applist_server::~applist_server() {
+        io_system *io = sys->get_io_system();
+
+        for (const auto w: watchs_) {
+            io->unwatch_directory(w);    
+        }
+    }
+    
     bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
         const language ideal_lang) {
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
