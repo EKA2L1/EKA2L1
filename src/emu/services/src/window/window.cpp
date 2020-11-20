@@ -1289,7 +1289,8 @@ namespace eka2l1 {
             delete screens;
             screens = next;
         }
-
+        
+        get_ntimer()->remove_event(repeatable_event_);
         bmp_cache.clean(drv);
     }
 
