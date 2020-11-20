@@ -90,12 +90,15 @@ namespace eka2l1::desktop {
         std::array<std::unique_ptr<drivers::cursor>, 20> mouse_cursors;
 
         std::mutex input_mutex;
-
         ImFont *normal_font;
+
+        std::size_t sys_reset_cbh;
 
         explicit emulator();
 
         void stage_one();
         bool stage_two();
+
+        void on_system_reset(system *the_sys);
     };
 }
