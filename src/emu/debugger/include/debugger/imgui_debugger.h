@@ -240,6 +240,7 @@ namespace eka2l1 {
         std::vector<std::string> translators_strings;
 
         std::size_t sys_reset_callback_h;
+        std::atomic<bool> in_reset;
 
     protected:
         void do_install_package();
@@ -261,6 +262,10 @@ namespace eka2l1 {
 
         void set_font_to_use(ImFont *font) {
             font_to_use = font;
+        }
+
+        bool is_in_reset() const {
+            return in_reset.load();
         }
 
         std::atomic<bool> request_key;

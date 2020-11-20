@@ -50,8 +50,6 @@
 
 void set_mouse_down(void *userdata, const int button, const bool op) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
-
-    const std::lock_guard<std::mutex> guard(emu->input_mutex);
     emu->mouse_down[button] = op;
 }
 
@@ -74,16 +72,20 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
  */
 static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int button, int action) {
     float mouse_pos_x = static_cast<float>(mouse_pos.x), mouse_pos_y = static_cast<float>(mouse_pos.y);
-
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+
+    const std::lock_guard<std::mutex> guard(emu->lockdown);
+
     auto mouse_evt = make_mouse_event_driver(mouse_pos_x, mouse_pos_y, button, action);
 
-    if ((emu->symsys) && emu->winserv) {
-        const float scale = emu->symsys->get_config()->ui_scale;
-        mouse_pos_x /= scale;
-        mouse_pos_y /= scale;
+    if (emu->should_guest_take_events()) {
+        if ((emu->symsys) && emu->winserv) {
+            const float scale = emu->symsys->get_config()->ui_scale;
+            mouse_pos_x /= scale;
+            mouse_pos_y /= scale;
 
-        emu->winserv->queue_input_from_driver(mouse_evt);
+            emu->winserv->queue_input_from_driver(mouse_evt);
+        }
     }
 
     if (emu->debugger->request_key && !emu->debugger->key_set) {
@@ -99,18 +101,20 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int 
     }
 }
 
-static eka2l1::drivers::input_event on_controller_button_event(eka2l1::window_server *winserv, int jid, int button, bool is_press) {
+static eka2l1::drivers::input_event make_controller_event_driver(int jid, int button, bool is_press) {
     eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::button;
     evt.button_.button_ = button;
     evt.button_.controller_ = jid;
     evt.button_.state_ = is_press ? eka2l1::drivers::button_state::pressed : eka2l1::drivers::button_state::released;
-    if (winserv) winserv->queue_input_from_driver(evt);
+
     return evt;
 }
 
 static void on_ui_window_mouse_scrolling(void *userdata, eka2l1::vec2d v) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
+    const std::lock_guard<std::mutex> guard(emu->lockdown);
+
     emu->mouse_scroll = v;
 }
 
@@ -120,8 +124,12 @@ static void on_ui_window_touch_move(void *userdata, eka2l1::vec2 v) {
     // Make repeat event for button 0 (left mouse click)
     auto mouse_evt = make_mouse_event_driver(static_cast<float>(v.x), static_cast<float>(v.y), 0, 1);
 
-    if (emu->winserv)
-        emu->winserv->queue_input_from_driver(mouse_evt);
+    const std::lock_guard<std::mutex> guard(emu->lockdown);
+
+    if (emu->should_guest_take_events()) {
+        if (emu->winserv)
+            emu->winserv->queue_input_from_driver(mouse_evt);
+    }
 }
 
 static eka2l1::drivers::input_event make_key_event_driver(const int key, const eka2l1::drivers::key_state key_state) {
@@ -144,9 +152,12 @@ static void on_ui_window_key_release(void *userdata, const int key) {
 
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::released);
-
-    if (emu->winserv)
-        emu->winserv->queue_input_from_driver(key_evt);
+    
+    const std::lock_guard<std::mutex> guard(emu->lockdown);
+    if (emu->should_guest_take_events()) {
+        if (emu->winserv)
+            emu->winserv->queue_input_from_driver(key_evt);
+    }
 }
 
 static eka2l1::drivers::input_event on_ui_window_key_press(void *userdata, const int key) {
@@ -162,8 +173,11 @@ static eka2l1::drivers::input_event on_ui_window_key_press(void *userdata, const
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::pressed);
 
-    if (emu->winserv)
-        emu->winserv->queue_input_from_driver(key_evt);
+    const std::lock_guard<std::mutex> guard(emu->lockdown);
+    if (emu->should_guest_take_events()) {
+        if (emu->winserv)
+            emu->winserv->queue_input_from_driver(key_evt);
+    }
 
     return key_evt;
 }
@@ -279,7 +293,15 @@ namespace eka2l1::desktop {
 
         state.joystick_controller = drivers::new_emu_controller(eka2l1::drivers::controller_type::glfw);
         state.joystick_controller->on_button_event = [&](int jid, int button, bool pressed) {
-            auto evt = on_controller_button_event(state.winserv, jid, button, pressed);
+            const std::lock_guard<std::mutex> guard(state.lockdown);
+            auto evt = make_controller_event_driver(jid, button, pressed);
+
+            if (state.should_guest_take_events()) {
+                if (state.winserv) {
+                    state.winserv->queue_input_from_driver(evt);
+                }
+            }
+
             if (state.debugger->request_key && !state.debugger->key_set) {
                 state.debugger->key_evt = evt;
                 state.debugger->key_set = true;
@@ -493,9 +515,13 @@ namespace eka2l1::desktop {
                 state.should_emu_quit = true;
             }
 
-            for (std::uint8_t i = 0; i < 5; i++) {
-                io.MouseDown[i] = state.mouse_down[i] || state.window->get_mouse_button_hold(i);
-                set_mouse_down(&state, i, false);
+            {
+                const std::lock_guard<std::mutex> guard(state.lockdown);
+
+                for (std::uint8_t i = 0; i < 5; i++) {
+                    io.MouseDown[i] = state.mouse_down[i] || state.window->get_mouse_button_hold(i);
+                    set_mouse_down(&state, i, false);
+                }
             }
 
             const vec2d mouse_pos = state.window->get_mouse_pos();

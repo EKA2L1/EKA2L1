@@ -165,4 +165,12 @@ namespace eka2l1::desktop {
             libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
         }
     }
+
+    bool emulator::should_guest_take_events() {
+        if (!debugger) {
+            return true;
+        }
+
+        return winserv && !debugger->is_in_reset();
+    }
 }

@@ -89,7 +89,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<drivers::cursor_controller> mouse_cursor_controller;
         std::array<std::unique_ptr<drivers::cursor>, 20> mouse_cursors;
 
-        std::mutex input_mutex;
+        std::mutex lockdown;
         ImFont *normal_font;
 
         std::size_t sys_reset_cbh;
@@ -100,5 +100,6 @@ namespace eka2l1::desktop {
         bool stage_two();
 
         void on_system_reset(system *the_sys);
+        bool should_guest_take_events();
     };
 }

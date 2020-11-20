@@ -359,8 +359,13 @@ namespace eka2l1 {
                         conf->device = static_cast<int>(i);
                         conf->serialize();
 
+                        // Hamburger!!!!!!!! :L
                         mngr->lock.unlock();
+                        in_reset = true;
+
                         sys->set_device(static_cast<std::uint8_t>(i));
+
+                        in_reset = false;
                         mngr->lock.lock();
 
                         should_notify_reset_for_big_change = true;

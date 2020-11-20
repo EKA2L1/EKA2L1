@@ -117,7 +117,8 @@ namespace eka2l1 {
         , last_cursor(ImGuiMouseCursor_Arrow)
         , font_to_use(nullptr)
         , active_app_config(nullptr)
-        , sys_reset_callback_h(0) {
+        , sys_reset_callback_h(0)
+        , in_reset(false) {
         if (conf->emulator_language == -1) {
             conf->emulator_language = static_cast<int>(language::en);
         }
@@ -658,7 +659,10 @@ namespace eka2l1 {
         }
 
         if (should_reset) {
+            in_reset = true;
             sys->reset();
+
+            in_reset = false;
             should_reset = false;
         }
 
