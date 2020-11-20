@@ -266,7 +266,7 @@ namespace eka2l1::mem {
             return MEM_MODEL_CHUNK_ERR_INVALID_REGION;
         }
 
-        if (create_info.flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) {
+        if ((create_info.flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (create_info.flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA)) {
             is_local = true;
         } else {
             is_local = false;
