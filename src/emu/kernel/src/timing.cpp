@@ -134,8 +134,12 @@ namespace eka2l1 {
             });
 
             unq.unlock();
-            event_types_[evt.event_type]
-                .callback(evt.event_user_data, static_cast<int>(global_timer - evt.event_time));
+
+            if (event_types_[evt.event_type].callback) {
+                event_types_[evt.event_type]
+                    .callback(evt.event_user_data, static_cast<int>(global_timer - evt.event_time));
+            }
+
             unq.lock();
         }
 
