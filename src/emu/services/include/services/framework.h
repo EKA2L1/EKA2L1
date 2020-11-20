@@ -43,6 +43,9 @@ namespace eka2l1::service {
         std::atomic<uid> uid_counter{ 1 };
 
     public:
+        ~normal_object_container() override;
+        void clear() override;
+
         template <typename T>
         T *get(const service::uid id) {
             const std::lock_guard<std::mutex> guard(obj_lock);
