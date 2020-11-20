@@ -900,24 +900,20 @@ namespace eka2l1 {
         ctx->complete(true);
     }
 
-    void fbsfont::deref() {
-        if (count == 1) {
-            // Free atlas + bitmap
-            atlas.free(serv->get_graphics_driver());
-            std::uint8_t *font_ptr = serv->get_shared_chunk_base() + guest_font_offset;
+    fbsfont::~fbsfont() {
+        // Free atlas + bitmap
+        atlas.free(serv->get_graphics_driver());
+        std::uint8_t *font_ptr = serv->get_shared_chunk_base() + guest_font_offset;
 
-            switch (serv->legacy_level()) {
-            case 2:
-                serv->destroy_bitmap_font<epoc::bitmapfont_v1>(reinterpret_cast<epoc::bitmapfont_v1*>(font_ptr));
-                break;
+        switch (serv->legacy_level()) {
+        case 2:
+            serv->destroy_bitmap_font<epoc::bitmapfont_v1>(reinterpret_cast<epoc::bitmapfont_v1*>(font_ptr));
+            break;
 
-            default:
-                serv->destroy_bitmap_font<epoc::bitmapfont_v2>(reinterpret_cast<epoc::bitmapfont_v2*>(font_ptr));
-                break;
-            }
+        default:
+            serv->destroy_bitmap_font<epoc::bitmapfont_v2>(reinterpret_cast<epoc::bitmapfont_v2*>(font_ptr));
+            break;
         }
-
-        epoc::ref_count_object::deref();
     }
     
     fbsfont *fbs_server::get_font(const service::uid id) {
