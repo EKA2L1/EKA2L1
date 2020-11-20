@@ -84,31 +84,16 @@ namespace eka2l1 {
         , dll_global_data_last_offset_(0)
         , inactivity_starts_(0)
         , nanokern_pr_(nullptr) {
-        thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
-
-        // Instantiate btrace
-        btrace_inst_ = std::make_unique<kernel::btrace>(this, io_);
-
-        // Create real time IPC event
-        realtime_ipc_signal_evt_ = timing->register_event("RealTimeIpc", [this](std::uint64_t userdata, std::uint64_t cycles_late) {
-            kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
-            assert(thr);
-
-            lock();
-            thr->signal_request();
-            unlock();
-        });
-
-        // Get base time
-        base_time_ = common::get_current_time_in_microseconds_since_1ad();
-        locale_ = std::make_unique<std::locale>("");
-    }
-
-    kernel_system::~kernel_system() {
         reset();
     }
 
-    void kernel_system::reset() {
+    kernel_system::~kernel_system() {
+        wipeout();
+    }
+
+    void kernel_system::wipeout() {
+        timing_->remove_event(realtime_ipc_signal_evt_);
+
         if (rom_map_) {
             common::unmap_file(rom_map_);
         }
@@ -137,7 +122,34 @@ namespace eka2l1 {
         OBJECT_CONTAINER_CLEANUP(codesegs_);
         OBJECT_CONTAINER_CLEANUP(message_queues_);
 
-        btrace_inst_->close_trace_session();
+        if (btrace_inst_)
+            btrace_inst_->close_trace_session();
+    }
+
+    void kernel_system::reset() {
+        wipeout();
+
+        thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
+
+        // Instantiate btrace
+        btrace_inst_ = std::make_unique<kernel::btrace>(this, io_);
+
+        // Create real time IPC event
+        realtime_ipc_signal_evt_ = timing_->register_event("RealTimeIpc", [this](std::uint64_t userdata, std::uint64_t cycles_late) {
+            kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
+            assert(thr);
+
+            lock();
+            thr->signal_request();
+            unlock();
+        });
+
+        // Get base time
+        base_time_ = common::get_current_time_in_microseconds_since_1ad();
+        locale_ = std::make_unique<std::locale>("");
+
+        // Clear CPU caches. No reason to keep it.
+        cpu_->clear_instruction_cache();
     }
 
     void kernel_system::cpu_exception_thread_handle(arm::core *core) {

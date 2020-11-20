@@ -313,6 +313,7 @@ namespace eka2l1 {
 
         ~kernel_system();
 
+        void wipeout();
         void reset();
 
         kernel::thread_scheduler *get_thread_scheduler() {
