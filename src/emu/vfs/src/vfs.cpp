@@ -950,6 +950,11 @@ namespace eka2l1 {
         bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
             return false;
         }
+        
+        bool install_memory(memory_system *new_mem) {
+            mem = new_mem;
+            return true;
+        }
 
         bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) override {
@@ -1331,6 +1336,18 @@ namespace eka2l1 {
         for (auto &filesystem: filesystems) {
             filesystem.second->validate_for_host();
         }
+    }
+    
+    bool io_system::install_memory(memory_system *mem) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+        bool res = false;
+
+        for (auto &filesystem: filesystems) {
+            if (filesystem.second->install_memory(mem))
+                res = true;
+        }
+
+        return res;
     }
 
     std::size_t io_system::register_drive_change_notify(drive_change_notify_callback callback, void *userdata) {

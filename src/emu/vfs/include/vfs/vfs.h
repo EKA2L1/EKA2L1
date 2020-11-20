@@ -299,6 +299,10 @@ namespace eka2l1 {
             return false;
         }
         
+        virtual bool install_memory(memory_system *mem) {
+            return false;
+        }
+
         /**
          * @brief Validate the filesystem for host to be able to use it.
          */
@@ -437,6 +441,8 @@ namespace eka2l1 {
             void *callback_userdata, const std::uint32_t filters);
 
         bool unwatch_directory(const std::int64_t handle);
+
+        bool install_memory(memory_system *mem);
     };
 
     symfile physical_file_proxy(const std::string &path, int mode);
