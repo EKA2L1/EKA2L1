@@ -421,6 +421,9 @@ namespace eka2l1 {
         }
 
         clear_all_sessions();
+        
+        font_obj_container.clear();
+        obj_con.clear();
 
         // Destroy chunks.
         if (shared_chunk)
