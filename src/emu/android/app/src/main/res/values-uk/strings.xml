@@ -26,7 +26,7 @@
     <string name="pref_theme_light">Світла</string>
     <string name="pref_theme_dark">Темна</string>
     <string name="pref_enable_virtual_keyboard">Увімкнути віртуальну клавіатуру</string>
-    <string name="pref_enable_actionbar">Enable ActionBar</string>
+    <string name="pref_enable_actionbar">Увімкнути панель дій</string>
     <string name="pref_enable_statusbar">Увімкнути рядок стану</string>
     <string name="pref_wakelock">Не вимикати екран</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Увімкнути фільтрацію шляхом найближчого сусіда</string>
@@ -39,9 +39,9 @@
     <string name="pref_system_setting_inheritance_option_name">Успадкування налаштувань</string>
     <string name="emulated_screen_rotation_item_name">Поворот екрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частота оновлення</string>
-    <string name="mapping_dialog_title">Press a key</string>
+    <string name="mapping_dialog_title">Натисніть кнопку</string>
     <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
-    <string name="reset_mapping">Reset</string>
+    <string name="reset_mapping">Скинути</string>
     <string name="layout_edit_finished">Режим редагування завершено</string>
     <string name="layout_edit_finish">Завершити режим редагування</string>
     <string name="layout_edit_mode">Режим редагування розкладки</string>
