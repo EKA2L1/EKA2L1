@@ -40,7 +40,7 @@
     <string name="emulated_screen_rotation_item_name">Поворот екрана</string>
     <string name="emulated_screen_refresh_rate_item_name">Частота оновлення</string>
     <string name="mapping_dialog_title">Натисніть кнопку</string>
-    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
+    <string name="mapping_dialog_message" formatted="false">Поточне зіставлення: %1$s</string>
     <string name="reset_mapping">Скинути</string>
     <string name="layout_edit_finished">Режим редагування завершено</string>
     <string name="layout_edit_finish">Завершити режим редагування</string>
