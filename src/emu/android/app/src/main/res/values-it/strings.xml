@@ -3,9 +3,9 @@
     <string name="error">Errore</string>
     <string name="no_data">Nessun dato disponibile</string>
     <string name="search">Cerca</string>
-    <string name="about">Su di Noi</string>
+    <string name="about">Informazioni</string>
     <string name="settings">Impostazioni</string>
-    <string name="packages">Pacchetti</string>
+    <string name="packages">App installate</string>
     <string name="devices">Dispositivi</string>
     <string name="processing">In elaborazione...</string>
     <string name="completed">Completato!</string>
@@ -40,7 +40,7 @@
     <string name="emulated_screen_rotation_item_name">Rotazione</string>
     <string name="emulated_screen_refresh_rate_item_name">Frequenza di aggiornamento</string>
     <string name="mapping_dialog_title">Premi un tasto</string>
-    <string name="mapping_dialog_message" formatted="false">Mapping corrente: %1$s</string>
+    <string name="mapping_dialog_message" formatted="false">Tasto corrente: %1$s</string>
     <string name="reset_mapping">Ripristina</string>
     <string name="layout_edit_finished">Modifica terminata</string>
     <string name="layout_edit_finish">Termina modifica tasti</string>
