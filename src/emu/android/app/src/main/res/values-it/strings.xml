@@ -31,6 +31,6 @@
     <string name="layout_switch">Cambia tastiera</string>
     <string name="hide_buttons">Nascondi tasti</string>
     <string name="confirmation_required">Conferma necessaria</string>
-    <string name="force_close_confirmation">Forzare la chiusura dell'app può comportare la perdita dei dati o al danneggiamento della stessa!\nVuoi continuare?</string>
+    <string name="force_close_confirmation">Forzare la chiusura dell'app puo' comportare la perdita dei dati o al danneggiamento della stessa!\nVuoi continuare?</string>
     <string name="version">Versione: </string>
 </resources>
