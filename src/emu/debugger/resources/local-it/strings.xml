@@ -41,9 +41,9 @@
     <string name="help_menu_about_item_name">Su di Noi</string>
     <string name="app_launcher_title">Launcher app</string>
     <string name="app_launcher_unavail_msg">Il Server Elenco App non è disponibile. Installa un dispositivo per abilitarlo.</string>
-    <string name="app_launcher_switch_to_style_title">Switch to</string>
-    <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_modern_str">Modern</string>
+    <string name="app_launcher_switch_to_style_title">Passa a</string>
+    <string name="app_launcher_style_classical_str">Classico</string>
+    <string name="app_launcher_style_modern_str">Moderno</string>
     <string name="error_dialog_title">Un errore selvaggio compare</string>
     <string name="error_dialog_message">Sei pregato di allegare il registro e segnalarlo ad uno sviluppatore!</string>
     <string name="emulated_screen_title">Schermo {}</string>
