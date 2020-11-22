@@ -662,7 +662,9 @@ namespace eka2l1::epoc {
 
     void window_server_client::set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_set_window_group_ordinal_position *set = reinterpret_cast<decltype(set)>(cmd.data_ptr);
-        epoc::window_group *group = get_ws().get_group_from_id(set->identifier);
+        
+        window_server &serv = get_ws();
+        epoc::window_group *group = serv.get_group_from_id(set->identifier);
 
         if (!group || group->type != window_kind::group) {
             ctx.complete(epoc::error_argument);

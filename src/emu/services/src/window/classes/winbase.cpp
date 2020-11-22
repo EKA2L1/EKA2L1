@@ -99,6 +99,11 @@ namespace eka2l1::epoc {
     void window::set_position(const int new_pos) {
         if (check_order_change(new_pos)) {
             move_window(parent, new_pos);
+
+            if (type == epoc::window_kind::group) {
+                window_server &serv = client->get_ws();
+                scr->update_focus(&serv, nullptr);
+            }
         }
     }
 
