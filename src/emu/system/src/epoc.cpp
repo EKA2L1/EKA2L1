@@ -251,7 +251,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            if (!reset()) {
+            if (!reset(false)) {
                 return false;
             }
 
@@ -436,7 +436,7 @@ namespace eka2l1 {
         void mount(drive_number drv, const drive_media media, std::string path,
             const std::uint32_t attrib = io_attrib_none);
 
-        bool reset();
+        bool reset(const bool lock_sys);
 
         void load_scripts();
         void do_state(common::chunkyseri &seri);
@@ -694,7 +694,11 @@ namespace eka2l1 {
         exit = true;
     }
 
-    bool system_impl::reset() {
+    bool system_impl::reset(const bool lock_sys) {
+        if (lock_sys) {
+            start_access();
+        }
+
         exit = false;
 
         dispatcher_.reset();
@@ -726,12 +730,20 @@ namespace eka2l1 {
             common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
 
         if (!load_rom(rom_path)) {
+            if (lock_sys) {
+                end_access();
+            }
+
             return false;
         }
 
         // Setup outsiders
         setup_outsider();
         invoke_system_reset_callbacks();
+
+        if (lock_sys) {
+            end_access();
+        }
 
         return true;
     }
@@ -882,7 +894,7 @@ namespace eka2l1 {
     }
 
     bool system::reset() {
-        return impl->reset();
+        return impl->reset(true);
     }
 
     void system::load_scripts() {
