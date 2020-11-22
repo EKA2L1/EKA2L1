@@ -147,6 +147,10 @@ namespace eka2l1::arm {
             return true;
         }
 
+        virtual void set_asid(std::uint8_t num) = 0;
+        virtual std::uint8_t get_asid() const = 0;
+        virtual std::uint8_t get_max_asid_available() const = 0;
+
         virtual std::uint32_t get_num_instruction_executed() = 0;
     };
 }

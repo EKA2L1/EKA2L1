@@ -392,4 +392,16 @@ namespace eka2l1::arm {
     std::uint32_t dynarmic_core::get_num_instruction_executed() {
         return ticks_executed;
     }
+
+    void dynarmic_core::set_asid(std::uint8_t num) {
+        return jit->SetAsid(num);
+    }
+
+    std::uint8_t dynarmic_core::get_asid() const {
+        return jit->Asid();
+    }
+
+    std::uint8_t dynarmic_core::get_max_asid_available() const {
+        return jit->MaxAsidAvailable();
+    }
 }
