@@ -112,6 +112,7 @@ namespace eka2l1::epoc {
             execute_create_sema = 0x19,
             execute_open_sema_global = 0x1A,
             execute_create_timer = 0x1B,
+            execute_open_process_by_id = 0x1F,
             execute_rename_process = 0x20,
             execute_logon_process = 0x25,
             execute_logon_cancel_process = 0x26,

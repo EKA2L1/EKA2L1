@@ -3393,6 +3393,27 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t process_open_by_id_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *pr = kern->get_by_id<kernel::process>(create_info->arg1_);
+
+        if (!pr) {
+            LOG_ERROR("Unable to find process with ID: {}", create_info->arg1_);
+            
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        const kernel::handle h = kern->open_handle(pr, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
     std::int32_t thread_open_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *target_process = target_thread->owning_process();
@@ -3788,6 +3809,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_kill_thread:
             return thread_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_open_process_by_id:
+            return process_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_rename_process:
             return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
