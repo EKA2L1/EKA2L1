@@ -1627,7 +1627,6 @@ namespace eka2l1::epoc {
             return 0;
         }
 
-        LOG_TRACE("Value returned. 0x{:X}", static_cast<std::int32_t>(func_addr.value()));
         return *func_addr;
     }
 
