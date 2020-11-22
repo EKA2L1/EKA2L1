@@ -25,6 +25,7 @@
 #include <kernel/chunk.h>
 #include <kernel/codeseg.h>
 #include <kernel/kernel_obj.h>
+#include <kernel/ldd.h>
 #include <kernel/library.h>
 #include <kernel/libmanager.h>
 #include <kernel/msgqueue.h>
@@ -128,6 +129,10 @@ namespace eka2l1 {
             return kernel::object_type::prop_ref;
         } else if constexpr (std::is_same_v<T, kernel::msg_queue>) {
             return kernel::object_type::msg_queue;
+        } else if constexpr (std::is_same_v<T, ldd::factory>) {
+            return kernel::object_type::logical_device;
+        } else if constexpr (std::is_same_v<T, ldd::channel>) {
+            return kernel::object_type::logical_channel;
         } else {
             throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
             return kernel::object_type::unk;
@@ -250,6 +255,8 @@ namespace eka2l1 {
         std::vector<kernel_obj_unq_ptr> codesegs_;
         std::vector<kernel_obj_unq_ptr> timers_;
         std::vector<kernel_obj_unq_ptr> message_queues_;
+        std::vector<kernel_obj_unq_ptr> logical_devices_;
+        std::vector<kernel_obj_unq_ptr> logical_channels_;
 
         std::unique_ptr<kernel::btrace> btrace_inst_;
         std::unique_ptr<hle::lib_manager> lib_mngr_;
@@ -535,6 +542,8 @@ namespace eka2l1 {
                 OBJECT_SEARCH(session, sessions_)
                 OBJECT_SEARCH(timer, timers_)
                 OBJECT_SEARCH(msg_queue, message_queues_)
+                OBJECT_SEARCH(logical_device, logical_devices_)
+                OBJECT_SEARCH(logical_channel, logical_channels_)
 
 #undef OBJECT_SEARCH
 
@@ -587,6 +596,8 @@ namespace eka2l1 {
                 OBJECT_SEARCH(session, sessions_)
                 OBJECT_SEARCH(timer, timers_)
                 OBJECT_SEARCH(msg_queue, message_queues_)
+                OBJECT_SEARCH(logical_device, logical_devices_)
+                OBJECT_SEARCH(logical_channel, logical_channels_)
 
 #undef OBJECT_SEARCH
 
@@ -597,15 +608,10 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        /*! \brief Create and add to object array.
-        */
-        template <typename T, typename... args>
-        T *create(args... creation_arg) {
+        template <typename T>
+        T *add_object(std::unique_ptr<T> &obj) {
             constexpr kernel::object_type obj_type = get_object_type<T>();
-            std::unique_ptr<T> obj = std::make_unique<T>(this, creation_arg...);
-
-            const kernel::uid obj_uid = obj->unique_id();
-
+            
 #define ADD_OBJECT_TO_CONTAINER(type, container, additional_setup) \
     case type:                                                     \
         additional_setup;                                          \
@@ -627,12 +633,26 @@ namespace eka2l1 {
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::change_notifier, change_notifiers_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::codeseg, codesegs_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::logical_device, logical_devices_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::logical_channel, logical_channels_, )
 
             default:
                 break;
             }
 
             return nullptr;
+
+#undef ADD_OBJECT_TO_CONTAINER
+        }
+
+        /*! \brief Create and add to object array.
+        */
+        template <typename T, typename... args>
+        T *create(args... creation_arg) {
+            constexpr kernel::object_type obj_type = get_object_type<T>();
+            std::unique_ptr<T> obj = std::make_unique<T>(this, creation_arg...);
+
+            return add_object<T>(obj);
         }
 
         template <typename T, typename... args>

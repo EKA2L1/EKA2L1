@@ -121,6 +121,8 @@ namespace eka2l1 {
         OBJECT_CONTAINER_CLEANUP(libraries_);
         OBJECT_CONTAINER_CLEANUP(codesegs_);
         OBJECT_CONTAINER_CLEANUP(message_queues_);
+        OBJECT_CONTAINER_CLEANUP(logical_channels_);
+        OBJECT_CONTAINER_CLEANUP(logical_devices_);
 
         if (btrace_inst_)
             btrace_inst_->close_trace_session();
@@ -530,6 +532,8 @@ namespace eka2l1 {
             OBJECT_SEARCH(session, sessions_)
             OBJECT_SEARCH(timer, timers_)
             OBJECT_SEARCH(msg_queue, message_queues_)
+            OBJECT_SEARCH(logical_device, logical_devices_)
+            OBJECT_SEARCH(logical_channel, logical_channels_)
 
 #undef OBJECT_SEARCH
 
@@ -919,6 +923,8 @@ namespace eka2l1 {
             OBJECT_SEARCH(session, sessions_)
             OBJECT_SEARCH(timer, timers_)
             OBJECT_SEARCH(msg_queue, message_queues_)
+            OBJECT_SEARCH(logical_device, logical_devices_)
+            OBJECT_SEARCH(logical_channel, logical_channels_)
 
 #undef OBJECT_SEARCH
 
