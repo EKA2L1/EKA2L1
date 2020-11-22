@@ -54,7 +54,7 @@
     <string name="pref_personalize_background_string">Background</string>
     <string name="pref_personalize_transparency_string">Transparency</string>
     <string name="pref_personalize_ui_scale_string">UI scale</string>
-    <string name="pref_general_title">General</string>
+    <string name="pref_general_title">Generale</string>
     <string name="pref_general_data_storage_string">Data storage</string>
     <string name="pref_general_debugging_string">Debugging</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU read</string>
@@ -101,7 +101,7 @@
     <string name="pref_hal_battery_level_string">Battery level</string>
     <string name="pref_hal_signal_level_string">Signal level</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage and devices to be effective</string>
-    <string name="packages_title">Packages</string>
+    <string name="packages_title">Pachete</string>
     <string name="packages_package_menu_name">Package</string>
     <string name="packages_install_string">Install</string>
     <string name="packages_remove_string">Remove</string>

@@ -41,9 +41,9 @@
     <string name="help_menu_about_item_name">Sobre</string>
     <string name="app_launcher_title">Iniciador de aplicativos</string>
     <string name="app_launcher_unavail_msg">App List Server indisponível. Instale um dispositivo para habilitá-lo.</string>
-    <string name="app_launcher_switch_to_style_title">Switch to</string>
-    <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_modern_str">Modern</string>
+    <string name="app_launcher_switch_to_style_title">Trocar para</string>
+    <string name="app_launcher_style_classical_str">Clássico</string>
+    <string name="app_launcher_style_modern_str">Moderno</string>
     <string name="error_dialog_title">Um erro brutal aparece</string>
     <string name="error_dialog_message">Por favor, anexe o registro e reporte ao desenvolvedor!</string>
     <string name="emulated_screen_title">Tela {}</string>
