@@ -289,18 +289,36 @@ namespace eka2l1 {
         });
     }
 
+    static const char *OLDARCH_REG_FILE_EXT = ".aif";
+    static const char *NEWARCH_REG_FILE_EXT = ".r??";
+    static const char16_t *NEWARCH_REG_FILE_SEARCH_WILDCARD16 = u"*.r??";
+
     void applist_server::on_register_directory_changes(eka2l1::io_system *io, const std::u16string &base, drive_number land_drive,
         common::directory_changes &changes) {
         const std::lock_guard<std::mutex> guard(list_access_mut_);
 
         for (auto &change : changes) {
+            const std::string ext = eka2l1::path_extension(change.filename_);
+            if (is_oldarch() && (common::compare_ignore_case(ext.c_str(), OLDARCH_REG_FILE_EXT) != 0)) {
+                continue;
+            } else if (!is_oldarch()) {
+                if (common::match_wildcard_in_string(ext, std::string(NEWARCH_REG_FILE_EXT), true) > 0) {
+                    continue;
+                }
+            }
+
             const std::u16string rsc_path = eka2l1::add_path(base, common::utf8_to_ucs2(change.filename_));
 
             switch (change.change_) {
             case common::directory_change_action_created:
             case common::directory_change_action_moved_to:
-                if (!change.filename_.empty())
-                    load_registry(io, rsc_path, land_drive);
+                if (!change.filename_.empty()) {
+                    if (is_oldarch()) {
+                        load_registry_oldarch(io, rsc_path, land_drive);
+                    } else {
+                        load_registry(io, rsc_path, land_drive);
+                    }
+                }
 
                 break;
 
@@ -316,7 +334,11 @@ namespace eka2l1 {
             case common::directory_change_action_modified:
                 // Delete the registry and then load it again
                 delete_registry(rsc_path);
-                load_registry(io, rsc_path, land_drive);
+
+                if (is_oldarch())
+                    load_registry_oldarch(io, rsc_path, land_drive);
+                else
+                    load_registry(io, rsc_path, land_drive);
 
                 break;
 
@@ -359,7 +381,7 @@ namespace eka2l1 {
             while (auto ent = reg_dir->get_next_entry()) {
                 if (ent->type == io_component_type::dir) {
                     const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
-                        ent->full_path, ent->name + ".aif", true));
+                        ent->full_path, ent->name + OLDARCH_REG_FILE_EXT, true));
 
                     load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language());    
                 }
@@ -379,7 +401,7 @@ namespace eka2l1 {
 
     void applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv) {
         const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-        auto reg_dir = io->open_dir(base_dir + u"*.r*", io_attrib_include_file);
+        auto reg_dir = io->open_dir(base_dir + NEWARCH_REG_FILE_SEARCH_WILDCARD16, io_attrib_include_file);
 
         if (reg_dir) {
             while (auto ent = reg_dir->get_next_entry()) {
