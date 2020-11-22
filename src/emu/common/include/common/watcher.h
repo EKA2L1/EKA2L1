@@ -75,6 +75,8 @@ namespace eka2l1::common {
         /**
          * \brief   Watch a directory.
          * 
+         * Recurisve and non-recursive currently depends on the behaviour of the implementation :(
+         * 
          * \param   folder                The path to the folder
          * \param   callback              The callback which is invoked on folder changes.
          * \param   callback_userdata     The userdata that will be passed to the callback.

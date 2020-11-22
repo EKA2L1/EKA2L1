@@ -52,9 +52,11 @@ namespace eka2l1::common {
         waits_.push_back(stop_event);
         waits_.push_back(new_watch_event);
 
-        pending_read_.hEvent = CreateEvent(nullptr, true, false, nullptr);
+        pending_read_.hEvent = CreateEvent(nullptr, false, false, nullptr);
         pending_read_.Offset = 0;
         pending_read_.OffsetHigh = 0;
+        pending_read_.Internal = NULL;
+        pending_read_.InternalHigh = NULL;
 
         file_infos_.resize(MAX_FILE_INFO_COUNT * FILE_INFO_MAX_SIZE);
 
@@ -86,60 +88,73 @@ namespace eka2l1::common {
                     DWORD buffer_wrote_length = 0;
                     auto &callback = callbacks_[which - WAIT_OBJECT_0 - 2];
 
+                    HANDLE current_event = pending_read_.hEvent;
+
+                    std::memset(&pending_read_, 0, sizeof(pending_read_));
+                    pending_read_.hEvent = current_event;
+
                     if (!ReadDirectoryChangesW(dirs_[which - WAIT_OBJECT_0 - 2], &file_infos_[0], static_cast<DWORD>(file_infos_.size()),
-                            false, callback.filters_, &buffer_wrote_length, &pending_read_, nullptr)) {
+                            TRUE, callback.filters_, nullptr, &pending_read_, nullptr)) {
                         LOG_WARN("Can't read directory changes. Report empty changes.");
                         break;
                     }
 
-                    GetOverlappedResult(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, TRUE);
+                    const std::uint32_t MAX_WAIT_OVERLAPPED = 3000;
 
-                    std::size_t pointee = 0;
-                    directory_changes changes;
+                    if (GetOverlappedResultEx(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, MAX_WAIT_OVERLAPPED, FALSE)) {
+                        std::size_t pointee = 0;
+                        directory_changes changes;
 
-                    while (pointee < buffer_wrote_length) {
-                        FILE_NOTIFY_INFORMATION *info = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(&file_infos_[pointee]);
+                        while (pointee < buffer_wrote_length) {
+                            FILE_NOTIFY_INFORMATION *info = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(&file_infos_[pointee]);
 
-                        std::u16string filename(reinterpret_cast<char16_t *>(info->FileName), info->FileNameLength / 2);
-                        directory_change change;
-                        change.change_ = 0;
-                        change.filename_ = common::ucs2_to_utf8(filename);
+                            std::u16string filename(reinterpret_cast<char16_t *>(info->FileName), info->FileNameLength / 2);
+                            directory_change change;
+                            change.change_ = 0;
+                            change.filename_ = common::ucs2_to_utf8(filename);
 
-                        switch (info->Action) {
-                        case FILE_ACTION_ADDED:
-                            change.change_ |= directory_change_action_created;
-                            break;
+                            switch (info->Action) {
+                            case FILE_ACTION_ADDED:
+                                change.change_ |= directory_change_action_created;
+                                break;
 
-                        case FILE_ACTION_REMOVED:
-                            change.change_ |= directory_change_action_delete;
-                            break;
+                            case FILE_ACTION_REMOVED:
+                                change.change_ |= directory_change_action_delete;
+                                break;
 
-                        case FILE_ACTION_RENAMED_NEW_NAME:
-                            change.change_ |= directory_change_action_moved_to;
-                            break;
+                            case FILE_ACTION_RENAMED_NEW_NAME:
+                                change.change_ |= directory_change_action_moved_to;
+                                break;
 
-                        case FILE_ACTION_RENAMED_OLD_NAME:
-                            change.change_ |= directory_change_action_moved_from;
-                            break;
+                            case FILE_ACTION_RENAMED_OLD_NAME:
+                                change.change_ |= directory_change_action_moved_from;
+                                break;
 
-                        case FILE_ACTION_MODIFIED:
-                            change.change_ |= directory_change_action_modified;
-                            break;
+                            case FILE_ACTION_MODIFIED:
+                                change.change_ |= directory_change_action_modified;
+                                break;
 
-                        default:
-                            break;
+                            default:
+                                break;
+                            }
+
+                            changes.push_back(change);
+                            pointee += info->NextEntryOffset;
+
+                            if (info->NextEntryOffset == 0) {
+                                break;
+                            }
                         }
 
-                        changes.push_back(change);
-                        pointee += info->NextEntryOffset;
+                        // Invoke callback
+                        callback.callback_pair_.first(callback.callback_pair_.second, changes);
+                    } else {
+                        DWORD err_res = GetLastError();
 
-                        if (info->NextEntryOffset == 0) {
-                            break;
+                        if ((err_res == ERROR_IO_PENDING) || (err_res == WAIT_TIMEOUT)) {
+                            CancelIoEx(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_);
                         }
                     }
-
-                    // Invoke callback
-                    callback.callback_pair_.first(callback.callback_pair_.second, changes);
 
                     // Register again
                     if (!FindNextChangeNotification(waits_[which - WAIT_OBJECT_0])) {
@@ -210,8 +225,8 @@ namespace eka2l1::common {
             return 0;
         }
 
-        HANDLE dir_handle = CreateFileA(folder.c_str(), GENERIC_READ | GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+        HANDLE dir_handle = CreateFileA(folder.c_str(), GENERIC_READ, FILE_LIST_DIRECTORY,
+            nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
             nullptr);
 
         if (dir_handle == INVALID_HANDLE_VALUE) {
