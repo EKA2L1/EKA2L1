@@ -80,8 +80,8 @@ namespace eka2l1 {
 
         void *get_real_pointer(const address addr, const mem::asid optional_asid = -1);
 
-        bool read(const address addr, void *data, uint32_t size);
-        bool write(const address addr, void *data, uint32_t size);
+        bool read(const address addr, void *data, std::uint32_t size);
+        bool write(const address addr, void *data, std::uint32_t size);
 
         template <typename T>
         T read(const address addr) {

@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/atomic.h>
+
 #include <mem/page.h>
 #include <memory>
 
@@ -60,6 +62,22 @@ namespace eka2l1::mem {
 
         void map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm);
         void unmap_from_cpu(const vm_address addr, const std::size_t size);
+        
+        /**
+         * @brief   Execute an exclusive write.
+         * @returns -1 on invalid address, 0 on write failure, 1 on success.
+         */
+        template <typename T>
+        std::int32_t write_exclusive(const address addr, T value, T expected,
+            const mem::asid optional_asid = -1) {
+            auto *real_ptr = reinterpret_cast<volatile T*>(get_host_pointer(addr, optional_asid));
+
+            if (!real_ptr) {
+                return -1;
+            }
+
+            return static_cast<std::int32_t>(common::atomic_compare_and_swap<T>(real_ptr, value, expected));
+        }
 
         /**
          * \brief Set current MMU's address space.

@@ -41,6 +41,22 @@ namespace eka2l1::mem {
         cpu->write_16bit = [this](const vm_address addr, std::uint16_t* data) { return write_16bit_data(addr, data); };
         cpu->write_32bit = [this](const vm_address addr, std::uint32_t* data) { return write_32bit_data(addr, data); };
         cpu->write_64bit = [this](const vm_address addr, std::uint64_t* data) { return write_64bit_data(addr, data); };
+
+        cpu->exclusive_write_8bit = [this](const vm_address addr, std::uint8_t value, std::uint8_t expected) {
+            return write_exclusive<std::uint8_t>(addr, value, expected);
+        };
+
+        cpu->exclusive_write_16bit = [this](const vm_address addr, std::uint16_t value, std::uint16_t expected) {
+            return write_exclusive<std::uint16_t>(addr, value, expected);
+        };
+
+        cpu->exclusive_write_32bit = [this](const vm_address addr, std::uint32_t value, std::uint32_t expected) {
+            return write_exclusive<std::uint32_t>(addr, value, expected);
+        };
+
+        cpu->exclusive_write_64bit = [this](const vm_address addr, std::uint64_t value, std::uint64_t expected) {
+            return write_exclusive<std::uint64_t>(addr, value, expected);
+        };
     }
 
     void mmu_base::map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm) {
