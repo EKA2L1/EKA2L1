@@ -178,6 +178,22 @@ namespace eka2l1::arm {
             handle_write_status(parent.write_64bit(addr, &value), addr);
         }
 
+        bool MemoryWriteExclusive8(Dynarmic::A32::VAddr addr, std::uint8_t value, std::uint8_t expected) {
+            return parent.exclusive_write_8bit(addr, value, expected);
+        }
+
+        bool MemoryWriteExclusive16(Dynarmic::A32::VAddr addr, std::uint16_t value, std::uint16_t expected) {
+            return parent.exclusive_write_16bit(addr, value, expected);
+        }
+
+        bool MemoryWriteExclusive32(Dynarmic::A32::VAddr addr, std::uint32_t value, std::uint32_t expected) {
+            return parent.exclusive_write_32bit(addr, value, expected);
+        }
+
+        bool MemoryWriteExclusive64(Dynarmic::A32::VAddr addr, std::uint64_t value, std::uint64_t expected) {
+            return parent.exclusive_write_64bit(addr, value, expected);
+        }
+
         void InterpreterFallback(Dynarmic::A32::VAddr addr, size_t num_insts) override {
             LOG_ERROR("Interpreter fallback!");
         }
