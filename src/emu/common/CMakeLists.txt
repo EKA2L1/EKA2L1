@@ -14,6 +14,7 @@ endif ()
 
 add_library(common
         include/common/arghandler.h
+        include/common/atomic.h
         include/common/advstream.h
         include/common/allocator.h
         include/common/algorithm.h
@@ -59,6 +60,7 @@ add_library(common
         include/common/virtualmem.h
         include/common/watcher.h
         include/common/wildcard.h
+        src/atomic.cpp
         src/arghandler.cpp
         src/armemitter.cpp
         src/allocator.cpp
