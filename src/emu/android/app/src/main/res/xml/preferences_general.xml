@@ -1,27 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <ListPreference
-        android:defaultValue="light"
-        android:entries="@array/pref_theme_entries"
-        android:entryValues="@array/pref_theme_values"
-        android:key="theme"
-        android:title="@string/pref_theme" />
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="enable-virtual-keyboard"
-        android:title="@string/pref_enable_virtual_keyboard" />
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="enable-actionbar"
-        android:title="@string/pref_enable_actionbar" />
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="enable-statusbar"
-        android:title="@string/pref_enable_statusbar" />
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="enable-wakelock"
-        android:title="@string/pref_wakelock" />
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="enable-nearest-neighbor-filter"

@@ -33,7 +33,7 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        AppDataStore dataStore = AppDataStore.getEmulatorStore();
+        AppDataStore dataStore = AppDataStore.getAndroidStore();
         String theme = dataStore.getString("theme", "light");
         if (theme.equals("dark")) {
             setTheme(R.style.AppTheme);

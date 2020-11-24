@@ -120,6 +120,7 @@ namespace eka2l1::config {
             return;
         }
 
+        keybinds.clear();
         for (size_t i = 0; i < keybind_node.size(); i++) {
             keybind kb;
             kb.target = keybind_node[i]["target"].as<std::uint32_t>();

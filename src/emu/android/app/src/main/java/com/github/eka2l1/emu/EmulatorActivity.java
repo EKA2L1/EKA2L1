@@ -79,7 +79,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        AppDataStore dataStore = AppDataStore.getEmulatorStore();
+        AppDataStore dataStore = AppDataStore.getAndroidStore();
         setTheme(dataStore.getString("theme", "light"));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);

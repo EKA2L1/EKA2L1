@@ -27,17 +27,28 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 
-public class SettingsFragment extends PreferenceFragmentCompat {
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class AndroidSettingsFragment extends PreferenceFragmentCompat {
+    private AppDataStore dataStore;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.preferences, rootKey);
+        dataStore = AppDataStore.getAndroidStore();
+        PreferenceManager preferenceManager = getPreferenceManager();
+        preferenceManager.setPreferenceDataStore(dataStore);
+        setPreferencesFromResource(R.xml.preferences_android, rootKey);
+    }
+
+    private int getRtosLevelValue(String str) {
+        String[] rtosArray = getResources().getStringArray(R.array.pref_system_real_time_accuracy_values);
+        return new ArrayList<>(Arrays.asList(rtosArray)).indexOf(str);
     }
 
     @Override
@@ -46,22 +57,13 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         setHasOptionsMenu(true);
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle(R.string.settings);
-        setPreferenceClickListener(new AndroidSettingsFragment(), "pref_android");
-        setPreferenceClickListener(new GeneralSettingsFragment(), "pref_general");
-        setPreferenceClickListener(new SystemSettingsFragment(), "pref_system");
-        setPreferenceClickListener(new KeyMapperFragment(), "pref_keymapper");
+        actionBar.setTitle(R.string.pref_android_title);
     }
 
-    private void setPreferenceClickListener(Fragment fragment, String preferenceName) {
-        Preference preference = findPreference(preferenceName);
-        preference.setOnPreferenceClickListener(pref -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .commit();
-            return true;
-        });
+    @Override
+    public void onPause() {
+        super.onPause();
+        dataStore.save();
     }
 
     @Override

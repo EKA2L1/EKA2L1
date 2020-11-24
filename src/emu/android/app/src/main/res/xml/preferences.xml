@@ -2,6 +2,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <Preference
+        android:key="pref_android"
+        android:title="@string/pref_android_title" />
+    <Preference
         android:key="pref_general"
         android:title="@string/pref_general_title" />
     <Preference

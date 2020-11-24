@@ -25,6 +25,7 @@
 
     <string name="pref_general_title">General</string>
     <string name="pref_system_title">System</string>
+    <string name="pref_android_title" translatable="false">Android</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>
     <string name="pref_theme">Theme</string>
     <string name="pref_theme_light">Light</string>

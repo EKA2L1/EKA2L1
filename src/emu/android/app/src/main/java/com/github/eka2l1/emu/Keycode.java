@@ -40,7 +40,7 @@ public class Keycode {
     public static final int KEY_FIRE = 257;
     public static final int KEY_SOFT_LEFT = 290;
     public static final int KEY_SOFT_RIGHT = 291;
-    public static final int KEY_CLEAR = -8;
-    public static final int KEY_SEND = -10;
-    public static final int KEY_END = -11;
+    public static final int KEY_CLEAR = 259;
+    public static final int KEY_SEND = 10;
+    public static final int KEY_END = 11;
 }
