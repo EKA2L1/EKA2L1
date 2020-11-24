@@ -96,7 +96,7 @@
     <string name="pref_system_real_time_accuracy_level_name_mid">Sedang</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Tinggi</string>
     <string name="pref_control_title">Kontrol</string>
-    <string name="pref_control_key_binding_sect_title">Pengikatan kunci</string>
+    <string name="pref_control_key_binding_sect_title">Atur tombol</string>
     <string name="pref_control_wait_for_key_string">waiting for key</string>
     <string name="pref_hal_battery_level_string">Level baterai</string>
     <string name="pref_hal_signal_level_string">Level sinyal</string>
