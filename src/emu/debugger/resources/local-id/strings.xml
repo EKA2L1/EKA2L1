@@ -2,10 +2,10 @@
 <resources>
     <string name="path">Jalur</string>
     <string name="change">Ubah</string>
-    <string name="replace">Timpa</string>
+    <string name="replace">Ganti</string>
     <string name="load">Muat</string>
     <string name="save">Simpan</string>
-    <string name="ok">OK</string>
+    <string name="ok">Oke</string>
     <string name="yes">Ya</string>
     <string name="no">Tidak</string>
     <string name="general">Umum</string>
@@ -17,13 +17,13 @@
     <string name="continue">Lanjutkan</string>
     <string name="file_menu_name">Berkas</string>
     <string name="debugger_menu_name">Debugger</string>
-    <string name="view_menu_name">Lihat</string>
+    <string name="view_menu_name">Tampilan</string>
     <string name="help_menu_name">Bantuan</string>
-    <string name="file_menu_logger_item_name">Logger</string>
+    <string name="file_menu_logger_item_name">Pencatat Log</string>
     <string name="file_menu_launch_apps_item_name">Jalankan Aplikasi</string>
     <string name="file_menu_packages_item_name">Paket</string>
-    <string name="file_menu_packages_item_unavail_msg">Harap instal perangkat untuk mengakses pengelola paket!</string>
-    <string name="file_menu_package_submenu_install_item_name">Instal</string>
+    <string name="file_menu_packages_item_unavail_msg">Harap install perangkat untuk mengakses pengelola paket!</string>
+    <string name="file_menu_package_submenu_install_item_name">Install</string>
     <string name="file_menu_package_submenu_list_item_name">Daftar</string>
     <string name="file_menu_install_device_item_name">Instal Perangkat Device</string>
     <string name="file_menu_mount_sd_item_name">Pasang MMC/SD Card</string>
@@ -103,7 +103,7 @@
     <string name="pref_restart_needed_for_dvcchange_msg">Harap mulai ulang emulator agar perubahan yang dilakukan pada penyimpanan data dan perangkat menjadi efektif</string>
     <string name="packages_title">Paket</string>
     <string name="packages_package_menu_name">Paket</string>
-    <string name="packages_install_string">Instal</string>
+    <string name="packages_install_string">Install</string>
     <string name="packages_remove_string">Hapus</string>
     <string name="packages_file_lists_string">Daftar berkas</string>
     <string name="packages_no_package_select_msg">Tidak ada paket yang dipilih.</string>
