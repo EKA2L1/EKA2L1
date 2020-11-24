@@ -166,7 +166,7 @@ namespace eka2l1::kernel {
         }
 
         // Create mem model implementation
-        mm_impl_ = mem::make_new_mem_model_process(mem->get_mmu(), mem->get_model_type());
+        mm_impl_ = mem::make_new_mem_model_process(mem->get_control(), mem->get_model_type());
         generation_ = refresh_generation();
     }
 
@@ -266,7 +266,7 @@ namespace eka2l1::kernel {
     }
 
     void *process::get_ptr_on_addr_space(address addr) {
-        return mem->get_mmu()->get_host_pointer(mm_impl_->address_space_id(), addr);
+        return mem->get_control()->get_host_pointer(mm_impl_->address_space_id(), addr);
     }
 
     // EKA2L1 doesn't use multicore yet, so rendezvous and logon

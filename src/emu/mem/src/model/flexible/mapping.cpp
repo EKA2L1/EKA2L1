@@ -20,8 +20,7 @@
 #include <mem/model/flexible/addrspace.h>
 #include <mem/model/flexible/mapping.h>
 #include <mem/model/flexible/memobj.h>
-#include <mem/model/flexible/mmu.h>
-#include <mem/mmu.h>
+#include <mem/model/flexible/control.h>
 
 #include <common/log.h>
 
@@ -58,7 +57,7 @@ namespace eka2l1::mem::flexible {
                 LOG_WARN("Unable to allocate all pages given in the mapping instantiate parameter");
             }
             
-            base_ = sect->beg_ + (offset << owner_->mmu_->page_size_bits_);
+            base_ = sect->beg_ + (offset << owner_->control_->page_size_bits_);
         } else {
             base_ = forced;
         }
@@ -75,40 +74,40 @@ namespace eka2l1::mem::flexible {
             // Too far
             return false;
         }
-        
-        mmu_base *mmu = owner_->mmu_;
 
-        const std::uint32_t start_offset = + (index << mmu->page_size_bits_);
+        control_base *control = owner_->control_;
+
+        const std::uint32_t start_offset = + (index << control->page_size_bits_);
 
         vm_address start_addr = base_ + start_offset;
-        const vm_address end_addr = start_addr + static_cast<vm_address>(count << mmu->page_size_bits_);
+        const vm_address end_addr = start_addr + static_cast<vm_address>(count << control->page_size_bits_);
 
-        const std::size_t page_size = mmu->page_size();
+        const std::size_t page_size = control->page_size();
         std::uint8_t *starting_point_host = reinterpret_cast<std::uint8_t*>(obj->ptr()) + start_offset;
 
         page_table *faulty = nullptr;
 
         while (start_addr < end_addr) {
-            const std::uint32_t ptoff = start_addr >> mmu->page_table_index_shift_;
+            const std::uint32_t ptoff = start_addr >> control->page_table_index_shift_;
             
-            std::uint32_t next_end_addr = ((ptoff + 1) << mmu->chunk_shift_);
+            std::uint32_t next_end_addr = ((ptoff + 1) << control->chunk_shift_);
             next_end_addr = std::min<std::uint32_t>(next_end_addr, end_addr);
 
-            std::uint32_t start_page_index = (start_addr >> mmu->page_index_shift_);
-            const std::uint32_t end_page_index = (next_end_addr >> mmu->page_index_shift_);
+            std::uint32_t start_page_index = (start_addr >> control->page_index_shift_);
+            const std::uint32_t end_page_index = (next_end_addr >> control->page_index_shift_);
 
             // Try to get the page table from daddy
             page_table *tbl = owner_->dir_->get_page_table(start_addr);
 
             if (!tbl) {
                 // Ask the MMU to create a new page table and assign it
-                tbl = mmu->create_new_page_table();
+                tbl = control->create_new_page_table();
                 tbl->idx_ = ptoff;
                 owner_->dir_->set_page_table(ptoff, tbl);
             }
 
             while (start_page_index < end_page_index) {
-                page_info *info = tbl->get_page_info(start_page_index & mmu->page_index_mask_);
+                page_info *info = tbl->get_page_info(start_page_index & control->page_index_mask_);
                 if (info) {
                     info->host_addr = starting_point_host;
                     info->perm = permissions;
@@ -130,21 +129,21 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
-        mmu_base *mmu = owner_->mmu_;
+        control_base *control = owner_->control_;
 
-        vm_address start_addr = base_ + (index_start << mmu->page_size_bits_);
-        const vm_address end_addr = start_addr + static_cast<vm_address>(count << mmu->page_size_bits_);
+        vm_address start_addr = base_ + (index_start << control->page_size_bits_);
+        const vm_address end_addr = start_addr + static_cast<vm_address>(count << control->page_size_bits_);
 
-        const std::size_t page_size = mmu->page_size();
+        const std::size_t page_size = control->page_size();
 
         while (start_addr < end_addr) {
-            const std::uint32_t ptoff = start_addr >> mmu->chunk_shift_;
+            const std::uint32_t ptoff = start_addr >> control->chunk_shift_;
             
-            std::uint32_t next_end_addr = ((ptoff + 1) << mmu->chunk_shift_);
+            std::uint32_t next_end_addr = ((ptoff + 1) << control->chunk_shift_);
             next_end_addr = std::min<std::uint32_t>(next_end_addr, end_addr);
 
-            std::uint32_t start_page_index = (start_addr >> mmu->page_index_shift_) & mmu->page_index_mask_;
-            const std::uint32_t end_page_index = (next_end_addr >> mmu->page_index_shift_) & mmu->page_index_mask_;
+            std::uint32_t start_page_index = (start_addr >> control->page_index_shift_) & control->page_index_mask_;
+            const std::uint32_t end_page_index = (next_end_addr >> control->page_index_shift_) & control->page_index_mask_;
 
             // Try to get the page table from daddy
             page_table *tbl = owner_->dir_->get_page_table(start_addr);

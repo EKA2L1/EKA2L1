@@ -18,7 +18,7 @@
  */
 
 #include <mem/model/flexible/chunk.h>
-#include <mem/model/flexible/mmu.h>
+#include <mem/model/flexible/control.h>
 #include <mem/model/flexible/process.h>
 
 #include <common/log.h>
@@ -26,8 +26,8 @@
 namespace eka2l1::mem::flexible {
     static constexpr vm_address INVALID_ADDR = 0xDEADBEEF;
 
-    flexible_mem_model_chunk::flexible_mem_model_chunk(mmu_base *mmu, const asid id)
-        : mem_model_chunk(mmu, id)
+    flexible_mem_model_chunk::flexible_mem_model_chunk(control_base *control, const asid id)
+        : mem_model_chunk(control, id)
         , max_size_(0)
         , committed_(0)
         , flags_(0)
@@ -43,13 +43,13 @@ namespace eka2l1::mem::flexible {
         flags_ = create_info.flags;
 
         const std::uint32_t total_pages_occupied = static_cast<std::uint32_t>((create_info.size +
-            mmu_->page_size() - 1) >> mmu_->page_size_bits_);
-        max_size_ = total_pages_occupied << mmu_->page_size_bits_;
+            control_->page_size() - 1) >> control_->page_size_bits_);
+        max_size_ = total_pages_occupied << control_->page_size_bits_;
         bottom_ = 0;
         top_ = 0;
 
         // Create the mem object and page allocator
-        mem_obj_ = std::make_unique<memory_object>(mmu_, total_pages_occupied, create_info.host_map);
+        mem_obj_ = std::make_unique<memory_object>(control_, total_pages_occupied, create_info.host_map);
         
         if (!(create_info.flags & MEM_MODEL_CHUNK_TYPE_NORMAL))
             page_bma_ = std::make_unique<common::bitmap_allocator>(total_pages_occupied);
@@ -58,8 +58,8 @@ namespace eka2l1::mem::flexible {
 
         if (!owner_) {
             // Treats this as for kernel
-            mmu_flexible *fl_mmu = reinterpret_cast<mmu_flexible*>(mmu_);
-            fixed_mapping_ = std::make_unique<mapping>(fl_mmu->kern_addr_space_.get());
+            control_flexible *fl_control = reinterpret_cast<control_flexible*>(control_);
+            fixed_mapping_ = std::make_unique<mapping>(fl_control->kern_addr_space_.get());
             fixed_mapping_->instantiate(total_pages_occupied, flags_, fixed_addr_);
 
             // Add this mapping to memobj's mapping
@@ -70,8 +70,8 @@ namespace eka2l1::mem::flexible {
     }
 
     std::size_t flexible_mem_model_chunk::commit(const vm_address offset, const std::size_t size) {
-        int total_page_to_commit = static_cast<int>((size + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
-        const vm_address dropping_place = static_cast<vm_address>(offset >> mmu_->page_size_bits_);
+        int total_page_to_commit = static_cast<int>((size + control_->page_size() - 1) >> control_->page_size_bits_);
+        const vm_address dropping_place = static_cast<vm_address>(offset >> control_->page_size_bits_);
 
         // Change the protection of the correspond region in memory object.
         if (!mem_obj_->commit(dropping_place, total_page_to_commit, permission_)) {
@@ -80,7 +80,7 @@ namespace eka2l1::mem::flexible {
         }
 
         committed_ += (total_page_to_commit - (page_bma_ ? (page_bma_->allocated_count(dropping_place,
-            dropping_place + total_page_to_commit - 1)) : 0)) << mmu_->page_size_bits_;
+            dropping_place + total_page_to_commit - 1)) : 0)) << control_->page_size_bits_;
 
         // Force fill as allocated
         if (page_bma_) {
@@ -91,8 +91,8 @@ namespace eka2l1::mem::flexible {
     }
 
     void flexible_mem_model_chunk::decommit(const vm_address offset, const std::size_t size) {
-        const std::size_t total_page_to_decommit = (size + mmu_->page_size() - 1) >> mmu_->page_size_bits_;
-        const vm_address dropping_place = static_cast<vm_address>(offset >> mmu_->page_size_bits_);
+        const std::size_t total_page_to_decommit = (size + control_->page_size() - 1) >> control_->page_size_bits_;
+        const vm_address dropping_place = static_cast<vm_address>(offset >> control_->page_size_bits_);
 
         // Change the protection of the correspond region in memory object.
         if (!mem_obj_->decommit(dropping_place, total_page_to_decommit)) {
@@ -105,11 +105,11 @@ namespace eka2l1::mem::flexible {
             page_bma_->free(dropping_place, static_cast<int>(total_page_to_decommit));
         }
 
-        committed_ -= static_cast<std::uint32_t>(total_page_to_decommit << mmu_->page_size_bits_);
+        committed_ -= static_cast<std::uint32_t>(total_page_to_decommit << control_->page_size_bits_);
     }
 
     bool flexible_mem_model_chunk::allocate(const std::size_t size) {
-        const int total_page_to_allocate = static_cast<int>((size + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
+        const int total_page_to_allocate = static_cast<int>((size + control_->page_size() - 1) >> control_->page_size_bits_);
         int page_allocated = total_page_to_allocate;
         
         const int page_offset = page_bma_->allocate_from(0, page_allocated);
@@ -124,16 +124,18 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
-        commit(page_offset << mmu_->page_size_bits_, size);
+        commit(page_offset << control_->page_size_bits_, size);
         return true;
     }
 
-    void flexible_mem_model_chunk::unmap_from_cpu(mem_model_process *pr) {
-        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process*>(pr), false);
+    void flexible_mem_model_chunk::unmap_from_cpu(mem_model_process *pr, mmu_base *mmu) {
+        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process*>(pr),
+            mmu, false);
     }
 
-    void flexible_mem_model_chunk::map_to_cpu(mem_model_process *pr) {
-        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process*>(pr), true);
+    void flexible_mem_model_chunk::map_to_cpu(mem_model_process *pr, mmu_base *mmu) {
+        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process*>(pr),
+            mmu, true);
     }
 
     const vm_address flexible_mem_model_chunk::base(mem_model_process *process) {

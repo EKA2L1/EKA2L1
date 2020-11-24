@@ -26,18 +26,17 @@
 #include <memory>
 #include <vector>
 
-namespace eka2l1::mem {
-}
-
 namespace eka2l1::mem::flexible {
     struct mapping;
+
+    struct control_flexible;
     struct mmu_flexible;
 
     struct address_space {
         page_directory *dir_;
         std::vector<mapping*> mappings_;
 
-        mmu_flexible *mmu_;
+        control_flexible *control_;
 
         linear_section local_data_sec_;
         linear_section shared_data_sec_;
@@ -45,7 +44,7 @@ namespace eka2l1::mem::flexible {
         linear_section dll_static_data_sec_;
 
     public:
-        explicit address_space(mmu_flexible *mmu);
+        explicit address_space(control_flexible *ctrl);
 
         /**
          * @brief   Get the ID of this address space.

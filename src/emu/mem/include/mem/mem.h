@@ -21,6 +21,7 @@
 
 #include <mem/common.h>
 #include <mem/mmu.h>
+#include <mem/control.h>
 #include <mem/page.h>
 
 #include <array>
@@ -32,7 +33,9 @@ namespace eka2l1 {
 
     namespace mem {
         class mmu_base;
-        using mmu_impl = std::unique_ptr<mmu_base>;
+        class control_base;
+
+        using control_impl = std::unique_ptr<control_base>;
 
         struct page_table_allocator;
         using page_table_allocator_impl = std::unique_ptr<page_table_allocator>;
@@ -49,21 +52,22 @@ namespace eka2l1 {
     class memory_system {
         friend class system;
 
-        mem::mmu_impl impl_;
+        mem::control_impl impl_;
         mem::page_table_allocator_impl alloc_;
 
         void *rom_map_;
         std::size_t rom_size_;
 
         mem::vm_address rom_addr_;
-        arm::core *cpu_;
         config::state *conf_;
 
     public:
-        explicit memory_system(arm::core *core, config::state *conf, const mem::mem_model_type model_type, const bool mem_map_old);
+        explicit memory_system(config::state *conf, const mem::mem_model_type model_type,
+            const bool mem_map_old);
+
         ~memory_system();
 
-        mem::mmu_base *get_mmu() {
+        mem::control_base *get_control() {
             return impl_.get();
         }
 
@@ -71,6 +75,7 @@ namespace eka2l1 {
             return impl_->model_type();
         }
 
+        mem::mmu_base *get_mmu(arm::core *cc);
         const int get_page_size() const;
 
         void *get_real_pointer(const address addr, const mem::asid optional_asid = -1);

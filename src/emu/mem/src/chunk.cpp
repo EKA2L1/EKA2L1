@@ -18,6 +18,7 @@
  */
 
 #include <mem/chunk.h>
+#include <mem/control.h>
 #include <mem/mmu.h>
 #include <mem/model/flexible/chunk.h>
 #include <mem/model/multiple/chunk.h>
@@ -28,27 +29,27 @@
 
 namespace eka2l1::mem {
     const vm_address mem_model_chunk::bottom() const {
-        return bottom_ << mmu_->page_size_bits_;
+        return bottom_ << control_->page_size_bits_;
     }
 
     const vm_address mem_model_chunk::top() const {
-        return top_ << mmu_->page_size_bits_;
+        return top_ << control_->page_size_bits_;
     }
     
     bool mem_model_chunk::adjust(const vm_address bottom, const vm_address top) {
-        const std::size_t top_page_off = ((top + mmu_->page_size() - 1) >> mmu_->page_size_bits_);
-        const std::size_t bottom_page_off = (bottom >> mmu_->page_size_bits_);
+        const std::size_t top_page_off = ((top + control_->page_size() - 1) >> control_->page_size_bits_);
+        const std::size_t bottom_page_off = (bottom >> control_->page_size_bits_);
 
         // Check the top
         // Top offset adjusted smaller than current top offset
         if (top_page_off < top_) {
             // Decommit
-            decommit(static_cast<vm_address>(top_page_off << mmu_->page_size_bits_),
-                (top_ - top_page_off) << mmu_->page_size_bits_);
+            decommit(static_cast<vm_address>(top_page_off << control_->page_size_bits_),
+                (top_ - top_page_off) << control_->page_size_bits_);
         } else if (top_page_off > top_) {
             // We must commit more memory
-            commit(static_cast<vm_address>(top_ << mmu_->page_size_bits_),
-                (top_page_off - top_) << mmu_->page_size_bits_);
+            commit(static_cast<vm_address>(top_ << control_->page_size_bits_),
+                (top_page_off - top_) << control_->page_size_bits_);
         }
 
         top_ = static_cast<vm_address>(top_page_off);
@@ -58,12 +59,12 @@ namespace eka2l1::mem {
             // Check the bottom
             if (bottom_page_off > bottom_) {
                 // Decommit
-                decommit(static_cast<vm_address>(bottom_ << mmu_->page_size_bits_),
-                    (bottom_page_off - bottom_) << mmu_->page_size_bits_);
+                decommit(static_cast<vm_address>(bottom_ << control_->page_size_bits_),
+                    (bottom_page_off - bottom_) << control_->page_size_bits_);
             } else if (bottom_page_off < bottom_) {
                 // We must commit more memory
-                commit(static_cast<vm_address>(bottom_page_off << mmu_->page_size_bits_),
-                    (bottom_ - bottom_page_off) << mmu_->page_size_bits_);
+                commit(static_cast<vm_address>(bottom_page_off << control_->page_size_bits_),
+                    (bottom_ - bottom_page_off) << control_->page_size_bits_);
             }
 
             bottom_ = static_cast<vm_address>(bottom_page_off);
@@ -73,7 +74,7 @@ namespace eka2l1::mem {
     }
 
     void mem_model_chunk::manipulate_cpu_map(common::bitmap_allocator *allocator, mem_model_process *process,
-        const bool map) {
+        mmu_base *mmu, const bool map) {
         // Get the base address for this process
         const vm_address base_addr = base(process);
         
@@ -84,10 +85,10 @@ namespace eka2l1::mem {
 
         auto do_the_map = [&](const std::uint32_t start_index, const std::uint32_t page_count) {
             if (map) {
-                mmu_->map_to_cpu(base_addr + (start_index << mmu_->page_size_bits_), page_count << mmu_->page_size_bits_,
-                    reinterpret_cast<std::uint8_t *>(host_base()) + (start_index << mmu_->page_size_bits_), permission_);
+                mmu->map_to_cpu(base_addr + (start_index << control_->page_size_bits_), page_count << control_->page_size_bits_,
+                    reinterpret_cast<std::uint8_t *>(host_base()) + (start_index << control_->page_size_bits_), permission_);
             } else {
-                mmu_->unmap_from_cpu(base_addr + (start_index << mmu_->page_size_bits_), page_count << mmu_->page_size_bits_);
+                mmu->unmap_from_cpu(base_addr + (start_index << control_->page_size_bits_), page_count << control_->page_size_bits_);
             }
         };
 
@@ -127,15 +128,15 @@ namespace eka2l1::mem {
         }
     }
     
-    mem_model_chunk_impl make_new_mem_model_chunk(mmu_base *mmu, const asid addr_space_id,
+    mem_model_chunk_impl make_new_mem_model_chunk(control_base *control, const asid addr_space_id,
         const mem_model_type mmt) {
         switch (mmt) {
         case mem_model_type::multiple: {
-            return std::make_unique<multiple_mem_model_chunk>(mmu, addr_space_id);
+            return std::make_unique<multiple_mem_model_chunk>(control, addr_space_id);
         }
 
         case mem_model_type::flexible:
-            return std::make_unique<flexible::flexible_mem_model_chunk>(mmu, addr_space_id);
+            return std::make_unique<flexible::flexible_mem_model_chunk>(control, addr_space_id);
 
         default:
             break;

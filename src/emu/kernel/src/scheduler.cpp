@@ -38,6 +38,7 @@ namespace eka2l1::kernel {
         : kern(kern)
         , timing(timing)
         , run_core(cpu)
+        , core_mmu(nullptr)
         , crr_thread(nullptr)
         , crr_process(nullptr) {
         wakeup_evt = timing->get_register_event("SchedulerWakeUpThread");
@@ -79,6 +80,12 @@ namespace eka2l1::kernel {
             }
         }
 
+        memory_system *mem = kern->get_memory_system();
+        
+        if (!core_mmu) {
+            core_mmu = mem->get_mmu(run_core);
+        }
+
         if (newt) {
             // cancel wake up
             // timing->unschedule_event(wakeup_evt, newt->unique_id());
@@ -88,16 +95,14 @@ namespace eka2l1::kernel {
 
             if (crr_process != newt->owning_process()) {
                 if (crr_process) {
-                    crr_process->get_mem_model()->unmap_from_cpu();
+                    crr_process->get_mem_model()->unmap_from_cpu(core_mmu);
                 }
 
                 kern->call_process_switch_callbacks(run_core, crr_process, newt->owning_process());
                 crr_process = newt->owning_process();
 
-                memory_system *mem = kern->get_memory_system();
-                mem->get_mmu()->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
-
-                crr_process->get_mem_model()->remap_to_cpu();
+                core_mmu->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
+                crr_process->get_mem_model()->remap_to_cpu(core_mmu);
             }
 
             run_core->load_context(crr_thread->ctx);

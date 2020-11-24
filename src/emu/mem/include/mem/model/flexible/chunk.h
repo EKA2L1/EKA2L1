@@ -46,7 +46,7 @@ namespace eka2l1::mem::flexible {
         std::unique_ptr<mapping> fixed_mapping_;
 
     public:
-        explicit flexible_mem_model_chunk(mmu_base *mmu, const asid id);
+        explicit flexible_mem_model_chunk(control_base *control, const asid id);
         ~flexible_mem_model_chunk() override;
         
         const vm_address base(mem_model_process *process) override;
@@ -68,7 +68,7 @@ namespace eka2l1::mem::flexible {
 
         bool allocate(const std::size_t size) override;
 
-        void unmap_from_cpu(mem_model_process *pr) override;
-        void map_to_cpu(mem_model_process *pr) override;
+        void unmap_from_cpu(mem_model_process *pr, mmu_base *mmu) override;
+        void map_to_cpu(mem_model_process *pr, mmu_base *mmu) override;
     };
 }

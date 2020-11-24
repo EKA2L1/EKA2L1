@@ -39,7 +39,7 @@ namespace eka2l1::mem::flexible {
         std::vector<flexible_mem_model_chunk_attach_info> attachs_;
 
     public:
-        explicit flexible_mem_model_process(mmu_base *mmu);
+        explicit flexible_mem_model_process(control_base *control);
 
         const asid address_space_id() const override;
         int create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) override;
@@ -50,7 +50,7 @@ namespace eka2l1::mem::flexible {
         bool attach_chunk(mem_model_chunk *chunk) override;
         bool detach_chunk(mem_model_chunk *chunk) override;
 
-        void unmap_from_cpu() override;
-        void remap_to_cpu() override;
+        void unmap_from_cpu(mmu_base *mmu) override;
+        void remap_to_cpu(mmu_base *mmu) override;
     };
 }

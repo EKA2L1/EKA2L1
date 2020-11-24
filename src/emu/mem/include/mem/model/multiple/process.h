@@ -40,7 +40,7 @@ namespace eka2l1::mem {
         multiple_mem_model_chunk *allocate_chunk_struct_ptr();
 
     public:
-        explicit multiple_mem_model_process(mmu_base *mmu);
+        explicit multiple_mem_model_process(control_base *ctrl);
 
         ~multiple_mem_model_process() override {
         }
@@ -57,7 +57,7 @@ namespace eka2l1::mem {
         bool attach_chunk(mem_model_chunk *chunk) override;
         bool detach_chunk(mem_model_chunk *chunk) override;
 
-        void unmap_from_cpu() override;
-        void remap_to_cpu() override;
+        void unmap_from_cpu(mmu_base *mmu) override;
+        void remap_to_cpu(mmu_base *mmu) override;
     };
 };

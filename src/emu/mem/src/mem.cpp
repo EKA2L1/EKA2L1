@@ -33,17 +33,20 @@
 #include <algorithm>
 
 namespace eka2l1 {
-    memory_system::memory_system(arm::core *core, config::state *conf, const mem::mem_model_type model_type, const bool mem_map_old)
-        : cpu_(core)
-        , conf_(conf) {
+    memory_system::memory_system(config::state *conf, const mem::mem_model_type model_type, const bool mem_map_old)
+        : conf_(conf) {
         alloc_ = std::make_unique<mem::basic_page_table_allocator>();
-        impl_ = mem::make_new_mmu(alloc_.get(), cpu_, conf_, 12, mem_map_old, model_type);
+        impl_ = mem::make_new_control(alloc_.get(), conf_, 12, mem_map_old, model_type);
     }
 
     memory_system::~memory_system() {
         if (rom_map_) {
             common::unmap_file(rom_map_);
         }
+    }
+
+    mem::mmu_base *memory_system::get_mmu(arm::core *cc) {
+        return impl_->get_or_create_mmu(cc);
     }
 
     void *memory_system::get_real_pointer(const address addr, const mem::asid optional_asid) {

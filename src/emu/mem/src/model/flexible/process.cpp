@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mem/model/flexible/control.h>
 #include <mem/model/flexible/process.h>
-#include <mem/model/flexible/mmu.h>
 
 #include <common/log.h>
 
@@ -27,16 +27,16 @@ namespace eka2l1::mem::flexible {
         return addr_space_->id();
     }
 
-    flexible_mem_model_process::flexible_mem_model_process(mmu_base *mmu)
-        : mem_model_process(mmu) {
-        addr_space_ = std::make_unique<address_space>(reinterpret_cast<mmu_flexible*>(mmu));
+    flexible_mem_model_process::flexible_mem_model_process(control_base *control)
+        : mem_model_process(control) {
+        addr_space_ = std::make_unique<address_space>(reinterpret_cast<control_flexible*>(control));
     }
 
     int flexible_mem_model_process::create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) {
-        mmu_flexible *fl_mmu = reinterpret_cast<mmu_flexible*>(mmu_);
+        control_flexible *fl_control = reinterpret_cast<control_flexible*>(control_);
 
         // Allocate a new chunk struct
-        flexible_mem_model_chunk *new_chunk_flexible = fl_mmu->chunk_mngr_->new_chunk(mmu_, addr_space_->id());
+        flexible_mem_model_chunk *new_chunk_flexible = fl_control->chunk_mngr_->new_chunk(control_, addr_space_->id());
 
         if (!new_chunk_flexible) {
             LOG_ERROR("Unable to instantiate new chunk struct!");
@@ -49,7 +49,7 @@ namespace eka2l1::mem::flexible {
 
         if (result != 0) {
             // Failed to initialize new chunk, so destroy the pointer allocated for it.
-            fl_mmu->chunk_mngr_->destroy(new_chunk_flexible);
+            fl_control->chunk_mngr_->destroy(new_chunk_flexible);
             return result;
         }
 
@@ -57,7 +57,7 @@ namespace eka2l1::mem::flexible {
         if (!attach_chunk(new_chunk_flexible)) {
             // Failed, again free the chunk
             LOG_ERROR("Failed to attach to newly created chunk!");
-            fl_mmu->chunk_mngr_->destroy(new_chunk_flexible);
+            fl_control->chunk_mngr_->destroy(new_chunk_flexible);
 
             return -1;
         }
@@ -71,8 +71,8 @@ namespace eka2l1::mem::flexible {
         // First, try to detach ourself from this chunk
         if (detach_chunk(chunk)) {
             // Mark this chunk in manager as free
-            mmu_flexible *fl_mmu = reinterpret_cast<mmu_flexible*>(mmu_);
-            fl_mmu->chunk_mngr_->destroy(reinterpret_cast<flexible_mem_model_chunk*>(chunk));
+            control_flexible *fl_control = reinterpret_cast<control_flexible*>(control_);
+            fl_control->chunk_mngr_->destroy(reinterpret_cast<flexible_mem_model_chunk*>(chunk));
         }
     }
 
@@ -100,7 +100,7 @@ namespace eka2l1::mem::flexible {
         attach_info.map_ = std::make_unique<mapping>(addr_space_.get());
 
         // Try to instantiate this mapping
-        if (!attach_info.map_->instantiate(chunk->max() >> mmu_->page_size_bits_, fl_chunk->flags_, fl_chunk->fixed_addr_)) {
+        if (!attach_info.map_->instantiate(chunk->max() >> control_->page_size_bits_, fl_chunk->flags_, fl_chunk->fixed_addr_)) {
             LOG_ERROR("Unable to make new mapping to the address space {}", addr_space_->id());
             return false;
         }
@@ -138,20 +138,20 @@ namespace eka2l1::mem::flexible {
             || (flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA) || (flags & MEM_MODEL_CHUNK_REGION_USER_CODE);
     }
 
-    void flexible_mem_model_process::unmap_from_cpu() {
+    void flexible_mem_model_process::unmap_from_cpu(mmu_base *mmu) {
         for (auto &attached: attachs_) {
             if (should_do_cpu_manipulate(attached.chunk_->flags_)) {
                 // This chunk has it address not fixed, so unmap from the CPU
-                attached.chunk_->unmap_from_cpu(this);
+                attached.chunk_->unmap_from_cpu(this, mmu);
             }
         }
     }
 
-    void flexible_mem_model_process::remap_to_cpu() {
+    void flexible_mem_model_process::remap_to_cpu(mmu_base *mmu) {
         for (auto &attached: attachs_) {
             if (should_do_cpu_manipulate(attached.chunk_->flags_)) {
                 // This chunk has it address not fixed, so map to the CPU
-                attached.chunk_->map_to_cpu(this);
+                attached.chunk_->map_to_cpu(this, mmu);
             }
         }
     }

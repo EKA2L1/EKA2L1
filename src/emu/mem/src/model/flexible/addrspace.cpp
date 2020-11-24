@@ -18,16 +18,16 @@
  */
 
 #include <mem/model/flexible/addrspace.h>
-#include <mem/model/flexible/mmu.h>
+#include <mem/model/flexible/control.h>
 
 namespace eka2l1::mem::flexible {
-    address_space::address_space(mmu_flexible *mmu)
-        : mmu_(mmu)
-        , local_data_sec_(local_data, shared_data, mmu->page_size())
-        , shared_data_sec_(shared_data, ram_drive, mmu->page_size())
-        , ram_code_sec_(ram_code_addr, dll_static_data_flexible, mmu->page_size())
-        , dll_static_data_sec_(dll_static_data_flexible, rom, mmu->page_size()) {
-        dir_ = mmu_->dir_mngr_->allocate(mmu);
+    address_space::address_space(control_flexible *control)
+        : control_(control)
+        , local_data_sec_(local_data, shared_data, control->page_size())
+        , shared_data_sec_(shared_data, ram_drive, control->page_size())
+        , ram_code_sec_(ram_code_addr, dll_static_data_flexible, control->page_size())
+        , dll_static_data_sec_(dll_static_data_flexible, rom, control->page_size()) {
+        dir_ = control->dir_mngr_->allocate(control);
     }
 
     const asid address_space::id() const {
@@ -35,7 +35,7 @@ namespace eka2l1::mem::flexible {
     }
 
     linear_section *address_space::section(const std::uint32_t flags) {
-        mmu_flexible *fl_mmu = reinterpret_cast<mmu_flexible*>(mmu_);
+        control_flexible *fl_mmu = reinterpret_cast<control_flexible*>(control_);
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
             // Avoid separate code section now since complicated. TODO (pent0)

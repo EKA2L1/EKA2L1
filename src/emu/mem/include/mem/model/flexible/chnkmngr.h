@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace eka2l1::mem {
-    class mmu_base;
+    class control_base;
 }
 
 namespace eka2l1::mem::flexible {
@@ -43,7 +43,7 @@ namespace eka2l1::mem::flexible {
          * @brief       Make a new flexible chunk struct.
          * @returns     Pointer to the chunk on success.
          */
-        flexible_mem_model_chunk *new_chunk(mmu_base *mmu, const asid id);
+        flexible_mem_model_chunk *new_chunk(control_base *control, const asid id);
 
         /**
          * @brief       Destroy an allocated chunk.

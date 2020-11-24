@@ -65,6 +65,8 @@ namespace eka2l1 {
             kernel_system *kern;
             arm::core *run_core;
 
+            mem::mmu_base *core_mmu;
+
             int wakeup_evt;
             int yield_evt;
             std::uint32_t ticks_yield;

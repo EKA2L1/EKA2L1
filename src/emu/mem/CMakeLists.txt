@@ -8,12 +8,14 @@ add_library(epocmem
         include/mem/model/flexible/mapping.h
         include/mem/model/flexible/memobj.h
         include/mem/model/flexible/process.h
+        include/mem/model/multiple/control.h
         include/mem/model/multiple/chunk.h
         include/mem/model/multiple/mmu.h
         include/mem/model/multiple/process.h
         include/mem/model/section.h
         include/mem/chunk.h
         include/mem/common.h
+        include/mem/control.h
         include/mem/mmu.h
         include/mem/page.h
         include/mem/process.h
@@ -21,6 +23,7 @@ add_library(epocmem
         src/mem.cpp
         src/allocator/std_page_allocator.cpp
         src/model/flexible/addrspace.cpp
+        src/model/flexible/control.cpp
         src/model/flexible/chunk.cpp
         src/model/flexible/chnkmngr.cpp
         src/model/flexible/dirmngr.cpp
@@ -28,10 +31,12 @@ add_library(epocmem
         src/model/flexible/memobj.cpp
         src/model/flexible/process.cpp
         src/model/flexible/mmu.cpp
+        src/model/multiple/control.cpp
         src/model/multiple/chunk.cpp
         src/model/multiple/mmu.cpp
         src/model/multiple/process.cpp
         src/chunk.cpp
+        src/control.cpp
         src/mmu.cpp
         src/page.cpp
         src/process.cpp
