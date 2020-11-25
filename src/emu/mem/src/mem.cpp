@@ -33,10 +33,11 @@
 #include <algorithm>
 
 namespace eka2l1 {
-    memory_system::memory_system(config::state *conf, const mem::mem_model_type model_type, const bool mem_map_old)
+    memory_system::memory_system(arm::exclusive_monitor *monitor, config::state *conf,
+        const mem::mem_model_type model_type, const bool mem_map_old)
         : conf_(conf) {
         alloc_ = std::make_unique<mem::basic_page_table_allocator>();
-        impl_ = mem::make_new_control(alloc_.get(), conf_, 12, mem_map_old, model_type);
+        impl_ = mem::make_new_control(monitor, alloc_.get(), conf_, 12, mem_map_old, model_type);
     }
 
     memory_system::~memory_system() {

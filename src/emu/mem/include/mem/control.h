@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/atomic.h>
+
 #include <mem/common.h>
 #include <mem/page.h>
 
@@ -29,6 +31,7 @@ namespace eka2l1 {
 
     namespace arm {
         class core;
+        class exclusive_monitor;
     }
 }
 
@@ -48,6 +51,8 @@ namespace eka2l1::mem {
         page_table_allocator *alloc_;
         config::state *conf_;
 
+        arm::exclusive_monitor *exclusive_monitor_;
+
     public:
         std::size_t page_size_bits_; ///< The number of bits of page size.
         std::uint32_t offset_mask_;
@@ -62,8 +67,8 @@ namespace eka2l1::mem {
         bool mem_map_old_; ///< Should we use EKA1 mem map model?
 
     public:
-        explicit control_base(page_table_allocator *alloc, config::state *conf,
-            std::size_t psize_bits = 10, const bool mem_map_old = false);
+        explicit control_base(arm::exclusive_monitor *monitor, page_table_allocator *alloc,
+            config::state *conf, std::size_t psize_bits = 10, const bool mem_map_old = false);
 
         virtual ~control_base();
 
@@ -95,6 +100,23 @@ namespace eka2l1::mem {
         virtual void *get_host_pointer(const asid id, const vm_address addr) = 0;
 
         /**
+         * @brief   Execute an exclusive write.
+         * @returns -1 on invalid address, 0 on write failure, 1 on success.
+         */
+        template <typename T>
+        std::int32_t write_exclusive(const address addr, T value, T expected,
+            const mem::asid optional_asid = -1) {
+            auto *real_ptr = reinterpret_cast<volatile T*>(get_host_pointer(optional_asid,
+                addr));
+
+            if (!real_ptr) {
+                return -1;
+            }
+
+            return static_cast<std::int32_t>(common::atomic_compare_and_swap<T>(real_ptr, value, expected));
+        }
+
+        /**
          * \brief Create a new page table.
          * 
          * The new page table will not be assigned to any existing page directory, until
@@ -120,6 +142,6 @@ namespace eka2l1::mem {
     
     using control_impl = std::unique_ptr<control_base>;
 
-    control_impl make_new_control(page_table_allocator *alloc, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
+    control_impl make_new_control(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model);
 }

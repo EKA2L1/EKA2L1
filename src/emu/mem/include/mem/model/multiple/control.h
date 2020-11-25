@@ -43,7 +43,7 @@ namespace eka2l1::mem {
         std::vector<std::unique_ptr<mmu_multiple>> mmus_;
 
     public:
-        explicit control_multiple(page_table_allocator *alloc, config::state *conf, std::size_t psize_bits = 10, const bool mem_map_old = false);
+        explicit control_multiple(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, std::size_t psize_bits = 10, const bool mem_map_old = false);
         ~control_multiple() override;
 
         mmu_base *get_or_create_mmu(arm::core *cc) override;

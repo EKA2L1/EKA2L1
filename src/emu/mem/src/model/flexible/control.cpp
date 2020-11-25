@@ -22,8 +22,8 @@
 namespace eka2l1::mem::flexible {
     static constexpr std::uint32_t MAX_PAGE_DIR_ALLOW = 512;
 
-    control_flexible::control_flexible(page_table_allocator *alloc, config::state *conf, std::size_t psize_bits, const bool mem_map_old)
-        : control_base(alloc, conf, psize_bits, mem_map_old)
+    control_flexible::control_flexible(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, std::size_t psize_bits, const bool mem_map_old)
+        : control_base(monitor, alloc, conf, psize_bits, mem_map_old)
         , rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? rom_eka1_end : global_data, page_size())
         , code_sec_(ram_code_addr, dll_static_data, page_size())
         , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size())  {

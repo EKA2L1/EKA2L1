@@ -62,8 +62,8 @@ namespace eka2l1 {
         config::state *conf_;
 
     public:
-        explicit memory_system(config::state *conf, const mem::mem_model_type model_type,
-            const bool mem_map_old);
+        explicit memory_system(arm::exclusive_monitor *monitor, config::state *conf,
+            const mem::mem_model_type model_type, const bool mem_map_old);
 
         ~memory_system();
 

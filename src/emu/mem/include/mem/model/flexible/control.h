@@ -48,7 +48,7 @@ namespace eka2l1::mem::flexible {
         std::vector<std::unique_ptr<mmu_flexible>> mmus_;
 
     public:
-        explicit control_flexible(page_table_allocator *alloc, config::state *conf, std::size_t psize_bits = 10, const bool mem_map_old = false);
+        explicit control_flexible(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, std::size_t psize_bits = 10, const bool mem_map_old = false);
         ~control_flexible() override;
 
         mmu_base *get_or_create_mmu(arm::core *cc) override;

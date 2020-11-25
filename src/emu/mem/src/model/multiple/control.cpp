@@ -21,8 +21,8 @@
 #include <common/log.h>
 
 namespace eka2l1::mem {
-    control_multiple::control_multiple(page_table_allocator *alloc, config::state *conf, std::size_t psize_bits, const bool mem_map_old)
-        : control_base(alloc, conf, psize_bits, mem_map_old)
+    control_multiple::control_multiple(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, std::size_t psize_bits, const bool mem_map_old)
+        : control_base(monitor, alloc, conf, psize_bits, mem_map_old)
         , global_dir_(page_size_bits_, 0)
         , user_global_sec_(mem_map_old ? shared_data_eka1 : shared_data, mem_map_old ? shared_data_end_eka1 : ram_drive, page_size())
         , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : dll_static_data, page_size())

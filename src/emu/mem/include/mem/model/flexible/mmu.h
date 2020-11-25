@@ -28,6 +28,8 @@ namespace eka2l1::mem::flexible {
     public:
         explicit mmu_flexible(control_base *manager, arm::core *cpu, config::state *conf);
 
+        void *get_host_pointer(const vm_address addr) override;
+
         const asid current_addr_space() const override;
         bool set_current_addr_space(const asid id) override;
     };

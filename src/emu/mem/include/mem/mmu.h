@@ -40,6 +40,8 @@ namespace eka2l1::mem {
      */
     class mmu_base {
     protected:
+        friend class control_base;
+
         control_base *manager_;
 
         bool read_8bit_data(const vm_address addr, std::uint8_t *data);
@@ -62,15 +64,19 @@ namespace eka2l1::mem {
 
         void map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm);
         void unmap_from_cpu(const vm_address addr, const std::size_t size);
-        
+
+        /**
+         * \brief Get host pointer of a virtual address, in the specified address space.
+         */
+        virtual void *get_host_pointer(const vm_address addr) = 0;
+
         /**
          * @brief   Execute an exclusive write.
          * @returns -1 on invalid address, 0 on write failure, 1 on success.
          */
         template <typename T>
-        std::int32_t write_exclusive(const address addr, T value, T expected,
-            const mem::asid optional_asid = -1) {
-            auto *real_ptr = reinterpret_cast<volatile T*>(get_host_pointer(addr, optional_asid));
+        std::int32_t write_exclusive(const address addr, T value, T expected) {
+            auto *real_ptr = reinterpret_cast<volatile T*>(get_host_pointer(addr));
 
             if (!real_ptr) {
                 return -1;
@@ -85,7 +91,6 @@ namespace eka2l1::mem {
          * \param id The ASID of the target address space
          */
         virtual bool set_current_addr_space(const asid id) = 0;
-
         virtual const asid current_addr_space() const = 0;
     };
 }

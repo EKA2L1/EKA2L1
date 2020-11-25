@@ -47,4 +47,12 @@ namespace eka2l1::mem::flexible {
         cur_dir_ = associated_dir;
         return true;
     }
+
+    void *mmu_flexible::get_host_pointer(const vm_address addr) {
+        if (!cur_dir_) {
+            return nullptr;
+        }
+
+        return cur_dir_->get_pointer(addr);
+    }
 }

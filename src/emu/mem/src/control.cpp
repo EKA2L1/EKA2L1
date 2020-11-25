@@ -17,6 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cpu/arm_interface.h>
+
 #include <mem/control.h>
 #include <mem/mmu.h>
 
@@ -24,11 +26,13 @@
 #include <mem/model/multiple/control.h>
 
 namespace eka2l1::mem {
-    control_base::control_base(page_table_allocator *alloc, config::state *conf, std::size_t psize_bits, const bool mem_map_old)
+    control_base::control_base(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf,
+        std::size_t psize_bits, const bool mem_map_old)
         : alloc_(alloc)
         , conf_(conf)
         , page_size_bits_(psize_bits)
-        , mem_map_old_(mem_map_old) {
+        , mem_map_old_(mem_map_old)
+        , exclusive_monitor_(monitor) {
         if (psize_bits == 20) {
             offset_mask_ = OFFSET_MASK_20B;
             page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_20B;
@@ -48,6 +52,48 @@ namespace eka2l1::mem {
             chunk_size_ = CHUNK_SIZE_12B;
             page_per_tab_shift_ = PAGE_PER_TABLE_SHIFT_12B;
         }
+
+        if (exclusive_monitor_) {
+            exclusive_monitor_->read_8bit = [this](arm::core *core, const vm_address addr, std::uint8_t* data) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->read_8bit_data(addr, data);
+            };
+            
+            exclusive_monitor_->read_16bit = [this](arm::core *core, const vm_address addr, std::uint16_t* data) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->read_16bit_data(addr, data); 
+            };
+
+            exclusive_monitor_->read_32bit = [this](arm::core *core, const vm_address addr, std::uint32_t* data) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->read_32bit_data(addr, data);
+            };
+
+            exclusive_monitor_->read_64bit = [this](arm::core *core, const vm_address addr, std::uint64_t* data) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->read_64bit_data(addr, data);
+            };
+
+            exclusive_monitor_->write_8bit = [this](arm::core *core, const vm_address addr, std::uint8_t value, std::uint8_t expected) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->write_exclusive<std::uint8_t>(addr, value, expected);
+            };
+
+            exclusive_monitor_->write_16bit = [this](arm::core *core, const vm_address addr, std::uint16_t value, std::uint16_t expected) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->write_exclusive<std::uint16_t>(addr, value, expected);
+            };
+
+            exclusive_monitor_->write_32bit = [this](arm::core *core, const vm_address addr, std::uint32_t value, std::uint32_t expected) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->write_exclusive<std::uint32_t>(addr, value, expected);
+            };
+
+            exclusive_monitor_->write_64bit = [this](arm::core *core, const vm_address addr, std::uint64_t value, std::uint64_t expected) {
+                mmu_base *mm = get_or_create_mmu(core);
+                return mm->write_exclusive<std::uint64_t>(addr, value, expected);
+            };
+        }
     }
     
     control_base::~control_base() {
@@ -57,15 +103,15 @@ namespace eka2l1::mem {
         return alloc_->create_new(page_size_bits_);
     }
     
-    control_impl make_new_control(page_table_allocator *alloc, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
+    control_impl make_new_control(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model) {
         switch (model) {
         case mem_model_type::multiple: {
-            return std::make_unique<control_multiple>(alloc, conf, psize_bits, mem_map_old);
+            return std::make_unique<control_multiple>(monitor, alloc, conf, psize_bits, mem_map_old);
         }
 
         case mem_model_type::flexible: {
-            return std::make_unique<flexible::control_flexible>(alloc, conf, psize_bits, mem_map_old);
+            return std::make_unique<flexible::control_flexible>(monitor, alloc, conf, psize_bits, mem_map_old);
         }
 
         default:
