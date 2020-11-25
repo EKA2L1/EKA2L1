@@ -74,6 +74,7 @@ namespace eka2l1 {
 
             loader::show_text_func show_text;
             loader::choose_lang_func choose_lang;
+            loader::var_value_resolver_func var_resolver;
 
             explicit packages(io_system *sys, config::state *conf);
 

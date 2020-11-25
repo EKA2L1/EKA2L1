@@ -231,6 +231,10 @@ namespace eka2l1 {
                     interpreter.choose_lang = choose_lang;
                 }
 
+                if (var_resolver) {
+                    interpreter.var_resolver = var_resolver;
+                }
+
                 interpreter.interpret(progress);
                 install_controller(&res.controller, drive);
             } else {

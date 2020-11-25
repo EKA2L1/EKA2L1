@@ -70,8 +70,16 @@
 #include <system/devices.h>
 #include <system/software.h>
 #include <package/manager.h>
+#include <services/window/window.h>
+#include <services/window/screen.h>
 
 namespace eka2l1 {
+    #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
+
+    enum hal_entry {
+        #include <kernel/hal.def>
+    };
+
     system_create_components::system_create_components()
         : graphics_(nullptr)
         , audio_(nullptr)
@@ -105,6 +113,7 @@ namespace eka2l1 {
 
         debugger_base *debugger_;
         loader::rom romf_;
+        window_server *winserv_;
 
         config::state *conf_;
         config::app_settings *app_settings_;
@@ -164,7 +173,26 @@ namespace eka2l1 {
 
             // Initialize HLE finally
             dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
-            
+
+            winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
+                kern_->get_epoc_version())));
+            packages_->var_resolver = [&](const int int_val) -> int {
+                switch (int_val) {
+                // HAL Display X
+                case hal_entry_display_screen_x_pixels:
+                    return winserv_->get_screen(0)->size().x;
+
+                case hal_entry_display_screen_y_pixels:
+                    return winserv_->get_screen(0)->size().y;
+
+                case hal_entry_machine_uid:
+                    return 0x20014DDD;
+                    //return current_dvc->machine_uid;
+                }
+
+                return 0;
+            };
+
             if (!stub_->is_server_enabled() && conf_->enable_gdbstub) {
                 stub_->init(kern_.get(), io_.get());
                 stub_->toggle_server(true);

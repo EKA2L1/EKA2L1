@@ -214,19 +214,6 @@ namespace eka2l1 {
                     return static_cast<int>(current_controllers.top()->chosen_lang);
                 }
 
-                /*
-                // HAL Display X
-                case hal_entry_display_screen_x_pixels:
-                    return winserv->get_screen(0)->size().x;
-
-                case hal_entry_display_screen_y_pixels:
-                    return winserv->get_screen(0)->size().y;
-
-                case hal_entry_machine_uid:
-                    return 0x20014DDD;
-                    //return current_dvc->machine_uid;
-                */
-
                 default:
                     break;
                 }
@@ -428,26 +415,35 @@ namespace eka2l1 {
                         bool yes_choosen = true;
 
                         if (show_text) {
-                            yes_choosen = show_text(reinterpret_cast<const char *>(buf.data()), false);
+                            show_text(reinterpret_cast<const char *>(buf.data()), true);
                         }
 
                         LOG_INFO("EOpText: {}", reinterpret_cast<const char *>(buf.data()));
 
                         switch (file->op_op) {
                         case 1 << 10: { // Skip next files
-                            skip_next_file = true;
+                            if (show_text) {
+                                yes_choosen = show_text("Skip next file?", false);
+                            }
+
+                            if (yes_choosen) {
+                                skip_next_file = true;
+                            }
                             break;
                         }
 
                         case 1 << 11:
                         case 1 << 12: { // Abort
-                            mngr->delete_files_and_bucket(current_controllers.top()->info.uid.uid);
                             const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controllers.top()->info.uid.uid);
 
                             LOG_ERROR("{}", err_string);
 
                             if (show_text) {
-                                show_text(err_string.c_str(), false);
+                                yes_choosen = show_text(err_string.c_str(), false);
+                            }
+
+                            if (!yes_choosen) {
+                                mngr->delete_files_and_bucket(current_controllers.top()->info.uid.uid);
                             }
 
                             break;
