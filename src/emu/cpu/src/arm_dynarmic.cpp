@@ -237,22 +237,24 @@ namespace eka2l1::arm {
     };
 
     std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::unique_ptr<dynarmic_core_callback> &callback, void *table,
-        std::shared_ptr<dynarmic_core_cp15> cp15) {
+        std::shared_ptr<dynarmic_core_cp15> cp15, Dynarmic::ExclusiveMonitor *monitor) {
         Dynarmic::A32::UserConfig config;
         config.callbacks = callback.get();
         config.coprocessors[15] = cp15;
         config.page_table = reinterpret_cast<decltype(config.page_table)>(table);
+        config.global_monitor = monitor;
 
         return std::make_unique<Dynarmic::A32::Jit>(config);
     }
 
-    dynarmic_core::dynarmic_core() {
+    dynarmic_core::dynarmic_core(arm::exclusive_monitor *monitor) {
         std::shared_ptr<dynarmic_core_cp15> cp15 = std::make_shared<dynarmic_core_cp15>();
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 
         std::fill(page_dyn.begin(), page_dyn.end(), nullptr);
 
-        jit = make_jit(cb, &page_dyn, cp15);
+        auto monitor_bb = reinterpret_cast<dynarmic_exclusive_monitor*>(monitor);
+        jit = make_jit(cb, &page_dyn, cp15, &monitor_bb->monitor_);
     }
 
     dynarmic_core::~dynarmic_core() {
@@ -419,5 +421,89 @@ namespace eka2l1::arm {
 
     std::uint8_t dynarmic_core::get_max_asid_available() const {
         return jit->MaxAsidAvailable();
+    }
+
+    dynarmic_exclusive_monitor::dynarmic_exclusive_monitor(const std::size_t processor_count)
+        : monitor_(processor_count) {
+    }
+
+    std::uint8_t dynarmic_exclusive_monitor::exclusive_read8(core *cc, address vaddr) {
+        return monitor_.ReadAndMark<std::uint8_t>(cc->core_number(), vaddr, [&]() -> std::uint8_t {
+            // TODO: Access violation if there is
+            std::uint8_t val = 0;
+            read_8bit(cc, vaddr, &val);
+
+            return val;
+        });
+    }
+    
+    std::uint16_t dynarmic_exclusive_monitor::exclusive_read16(core *cc, address vaddr) {
+        return monitor_.ReadAndMark<std::uint16_t>(cc->core_number(), vaddr, [&]() -> std::uint16_t {
+            // TODO: Access violation if there is
+            std::uint16_t val = 0;
+            read_16bit(cc, vaddr, &val);
+
+            return val;
+        });
+    }
+
+    std::uint32_t dynarmic_exclusive_monitor::exclusive_read32(core *cc, address vaddr) {
+        return monitor_.ReadAndMark<std::uint32_t>(cc->core_number(), vaddr, [&]() -> std::uint32_t {
+            // TODO: Access violation if there is
+            std::uint32_t val = 0;
+            read_32bit(cc, vaddr, &val);
+
+            return val;
+        });
+    }
+
+    std::uint64_t dynarmic_exclusive_monitor::exclusive_read64(core *cc, address vaddr) {
+        return monitor_.ReadAndMark<std::uint64_t>(cc->core_number(), vaddr, [&]() -> std::uint64_t {
+            // TODO: Access violation if there is
+            std::uint64_t val = 0;
+            read_64bit(cc, vaddr, &val);
+
+            return val;
+        });
+    }
+    
+    void dynarmic_exclusive_monitor::clear_exclusive() {
+        monitor_.Clear();
+    }
+
+    bool dynarmic_exclusive_monitor::exclusive_write8(core *cc, address vaddr, std::uint8_t value) {
+        return monitor_.DoExclusiveOperation<std::uint8_t>(cc->core_number(), vaddr, [&](std::uint8_t expected) -> bool {
+            const std::int32_t res = write_8bit(cc, vaddr, value, expected);
+
+            // TODO: Parse access violation errors
+            return res > 0;
+        });
+    }
+
+    bool dynarmic_exclusive_monitor::exclusive_write16(core *cc, address vaddr, std::uint16_t value) {
+        return monitor_.DoExclusiveOperation<std::uint16_t>(cc->core_number(), vaddr, [&](std::uint16_t expected) -> bool {
+            const std::int32_t res = write_16bit(cc, vaddr, value, expected);
+
+            // TODO: Parse access violation errors
+            return res > 0;
+        });
+    }
+
+    bool dynarmic_exclusive_monitor::exclusive_write32(core *cc, address vaddr, std::uint32_t value) {
+        return monitor_.DoExclusiveOperation<std::uint32_t>(cc->core_number(), vaddr, [&](std::uint32_t expected) -> bool {
+            const std::int32_t res = write_32bit(cc, vaddr, value, expected);
+
+            // TODO: Parse access violation errors
+            return res > 0;
+        });
+    }
+    
+    bool dynarmic_exclusive_monitor::exclusive_write64(core *cc, address vaddr, std::uint64_t value) {
+        return monitor_.DoExclusiveOperation<std::uint64_t>(cc->core_number(), vaddr, [&](std::uint64_t expected) -> bool {
+            const std::int32_t res = write_64bit(cc, vaddr, value, expected);
+
+            // TODO: Parse access violation errors
+            return res > 0;
+        });
     }
 }

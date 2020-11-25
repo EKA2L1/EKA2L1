@@ -20,12 +20,14 @@
 #pragma once
 
 #include <cpu/arm_interface.h>
+
+#include <cstdint>
 #include <memory>
 
 namespace eka2l1 {
     namespace arm {
-        class core;
         using core_instance = std::unique_ptr<core>;
+        using exclusive_monitor_instance = std::unique_ptr<exclusive_monitor>;
 
         /**
          * \brief Create a new ARM CPU core.
@@ -35,6 +37,8 @@ namespace eka2l1 {
          * 
          * \returns An instance to the CPU executor.
          */
-        core_instance create_core(arm_emulator_type arm_type);
+        core_instance create_core(exclusive_monitor *monitor, arm_emulator_type arm_type);
+
+        exclusive_monitor_instance create_exclusive_monitor(arm_emulator_type arm_type, const std::size_t core_count); 
     }
 }

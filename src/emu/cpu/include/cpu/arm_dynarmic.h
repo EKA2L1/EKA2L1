@@ -23,6 +23,7 @@
 
 #include <dynarmic/A32/a32.h>
 #include <dynarmic/A32/config.h>
+#include <dynarmic/exclusive_monitor.h>
 
 #include <map>
 #include <memory>
@@ -33,6 +34,29 @@ namespace eka2l1 {
     namespace arm {
         class dynarmic_core_callback;
 
+        class dynarmic_exclusive_monitor: public exclusive_monitor {
+        private:
+            friend class dynarmic_core;
+            Dynarmic::ExclusiveMonitor monitor_;
+    
+        public:
+            explicit dynarmic_exclusive_monitor(const std::size_t processor_count);
+
+            ~dynarmic_exclusive_monitor() override {
+            }
+
+            std::uint8_t exclusive_read8(core *cc, address vaddr) override;
+            std::uint16_t exclusive_read16(core *cc, address vaddr) override;
+            std::uint32_t exclusive_read32(core *cc, address vaddr) override;
+            std::uint64_t exclusive_read64(core *cc, address vaddr) override;
+            void clear_exclusive() override;
+
+            bool exclusive_write8(core *cc, address vaddr, std::uint8_t value) override;
+            bool exclusive_write16(core *cc, address vaddr, std::uint16_t value) override;
+            bool exclusive_write32(core *cc, address vaddr, std::uint32_t value) override;
+            bool exclusive_write64(core *cc, address vaddr, std::uint64_t value) override;
+        };
+        
         class dynarmic_core : public core {
             friend class dynarmic_core_callback;
 
@@ -46,7 +70,7 @@ namespace eka2l1 {
             std::uint32_t ticks_target{ 0 };
 
         public:
-            explicit dynarmic_core();
+            explicit dynarmic_core(arm::exclusive_monitor *monitor);
             ~dynarmic_core() override;
 
             void run(const std::uint32_t instruction_count) override;

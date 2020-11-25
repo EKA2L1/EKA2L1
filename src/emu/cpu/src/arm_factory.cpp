@@ -22,13 +22,28 @@
 #include <cpu/arm_factory.h>
 
 namespace eka2l1::arm {
-    core_instance create_core(arm_emulator_type arm_type) {
+    core_instance create_core(exclusive_monitor *monitor, arm_emulator_type arm_type) {
         switch (arm_type) {
         case arm_emulator_type::unicorn:
             return nullptr;
 
         case arm_emulator_type::dynarmic:
-            return std::make_unique<dynarmic_core>();
+            return std::make_unique<dynarmic_core>(monitor);
+        default:
+            break;
+        }
+
+        return nullptr;
+    }
+
+    exclusive_monitor_instance create_exclusive_monitor(arm_emulator_type arm_type, const std::size_t core_count) {
+        switch (arm_type) {
+        case arm_emulator_type::unicorn:
+            return nullptr;
+
+        case arm_emulator_type::dynarmic:
+            return std::make_unique<dynarmic_exclusive_monitor>(core_count);
+
         default:
             break;
         }
