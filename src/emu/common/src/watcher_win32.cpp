@@ -26,7 +26,18 @@ namespace eka2l1::common {
     static constexpr std::size_t FILE_INFO_MAX_SIZE = sizeof(FILE_NOTIFY_INFORMATION) + 16;
     static constexpr std::size_t MAX_FILE_INFO_COUNT = 512;
 
-    directory_watcher_impl::directory_watcher_impl() {
+    static const char *KERN32_MODULE_NAME = "kernel32.dll";
+    static const char *OVERLAPPED_EX_FUNC_NAME = "GetOverlappedResultEx";
+
+    directory_watcher_impl::directory_watcher_impl()
+        : overlapped_ex_func_(nullptr) {
+        HMODULE kern32_module = LoadLibraryA(KERN32_MODULE_NAME);
+
+        if (kern32_module) {
+            overlapped_ex_func_ = reinterpret_cast<get_overlapped_result_ex_proc>(
+                GetProcAddress(kern32_module, OVERLAPPED_EX_FUNC_NAME));
+        }
+
         HANDLE stop_event = CreateEvent(nullptr, true, false, nullptr);
 
         if (!stop_event || (stop_event == INVALID_HANDLE_VALUE)) {
@@ -101,7 +112,30 @@ namespace eka2l1::common {
 
                     const std::uint32_t MAX_WAIT_OVERLAPPED = 3000;
 
-                    if (GetOverlappedResultEx(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, MAX_WAIT_OVERLAPPED, FALSE)) {
+                    BOOL op_success = false;
+                    DWORD op_error = 0;
+
+                    if (overlapped_ex_func_) {
+                        op_success = GetOverlappedResultEx(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, MAX_WAIT_OVERLAPPED, FALSE);
+                    
+                        if (!op_success) {
+                            op_error = GetLastError();
+                        }
+                    } else {
+                        DWORD waitres = WaitForSingleObject(pending_read_.hEvent, MAX_WAIT_OVERLAPPED);
+                        
+                        if (waitres == WAIT_OBJECT_0) {
+                            op_success = GetOverlappedResult(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, FALSE);
+
+                            if (!op_success) {
+                                op_error = GetLastError();
+                            }
+                        } else {
+                            op_error = waitres;
+                        }
+                    }
+
+                    if (op_success) {
                         std::size_t pointee = 0;
                         directory_changes changes;
 
@@ -149,9 +183,7 @@ namespace eka2l1::common {
                         // Invoke callback
                         callback.callback_pair_.first(callback.callback_pair_.second, changes);
                     } else {
-                        DWORD err_res = GetLastError();
-
-                        if ((err_res == ERROR_IO_PENDING) || (err_res == WAIT_TIMEOUT)) {
+                        if ((op_error == ERROR_IO_PENDING) || (op_error == WAIT_TIMEOUT)) {
                             CancelIoEx(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_);
                         }
                     }
