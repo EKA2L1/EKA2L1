@@ -116,7 +116,7 @@ namespace eka2l1::common {
                     DWORD op_error = 0;
 
                     if (overlapped_ex_func_) {
-                        op_success = GetOverlappedResultEx(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, MAX_WAIT_OVERLAPPED, FALSE);
+                        op_success = overlapped_ex_func_(dirs_[which - WAIT_OBJECT_0 - 2], &pending_read_, &buffer_wrote_length, MAX_WAIT_OVERLAPPED, FALSE);
                     
                         if (!op_success) {
                             op_error = GetLastError();
