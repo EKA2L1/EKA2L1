@@ -57,6 +57,8 @@ namespace eka2l1 {
                 thr->wait_obj = nullptr;
                 thr->get_scheduler()->dewait(thr);
             }
+
+            timing->remove_event(mutex_event_type);
         }
 
         void mutex::wait() {
