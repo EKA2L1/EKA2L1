@@ -703,6 +703,10 @@ namespace eka2l1 {
             kern_->reset();
         }
 
+        if (timing_) {
+            timing_->reset();
+        }
+
         hals_.clear();
     
         device *dvc = dvcmngr_->get_current();
