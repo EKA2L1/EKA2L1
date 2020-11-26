@@ -89,20 +89,25 @@ namespace eka2l1::kernel {
         if (newt) {
             // cancel wake up
             // timing->unschedule_event(wakeup_evt, newt->unique_id());
-
             crr_thread = newt;
             crr_thread->state = thread_state::run;
+            
+            mem::mem_model_process *mm_process = crr_process->get_mem_model();
 
             if (crr_process != newt->owning_process()) {
                 if (crr_process) {
-                    crr_process->get_mem_model()->unmap_from_cpu(core_mmu);
+                    mm_process->unmap_from_cpu(core_mmu);
                 }
 
                 kern->call_process_switch_callbacks(run_core, crr_process, newt->owning_process());
-                crr_process = newt->owning_process();
 
-                core_mmu->set_current_addr_space(crr_process->get_mem_model()->address_space_id());
-                crr_process->get_mem_model()->remap_to_cpu(core_mmu);
+                crr_process = newt->owning_process();
+                mm_process = crr_process->get_mem_model();
+
+                core_mmu->set_current_addr_space(mm_process->address_space_id());
+                mm_process->remap_to_cpu(core_mmu);
+
+                run_core->set_asid(mm_process->address_space_id());
             }
 
             run_core->load_context(crr_thread->ctx);
