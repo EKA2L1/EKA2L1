@@ -86,10 +86,13 @@ namespace eka2l1 {
 
     protected:
         void loop();
+        void wipeout();
 
     public:
         explicit ntimer(const std::uint32_t cpu_hz);
         ~ntimer();
+
+        void reset();
 
         inline int64_t ms_to_cycles(int ms) {
             return CPU_HZ_ / 1000 * ms;

@@ -39,23 +39,41 @@ namespace eka2l1 {
         acc_level_ = realtime_level_low;
 
         teletimer_ = common::make_teletimer(cpu_hz);
-
-        timer_thread_ = std::make_unique<std::thread>([this]() {
-            loop();
-        });
-
         set_realtime_level(realtime_level_mid);
-        teletimer_->start();
     }
 
     ntimer::~ntimer() {
+        wipeout();
+    }
+
+    void ntimer::wipeout() {
         should_stop_ = true;
         should_paused_ = false;
 
         new_event_evt_.set();
         pause_evt_.set();
 
-        timer_thread_->join();
+        if (timer_thread_) {
+            timer_thread_->join();
+        }
+
+        events_.clear();
+        teletimer_->stop();
+    }
+
+    void ntimer::reset() {
+        wipeout();
+
+        should_stop_ = false;
+
+        new_event_evt_.reset();
+        pause_evt_.reset();
+        
+        timer_thread_ = std::make_unique<std::thread>([this]() {
+            loop();
+        });
+        
+        teletimer_->start();
     }
 
     void ntimer::set_realtime_level(const realtime_level lvl) {
@@ -235,7 +253,7 @@ namespace eka2l1 {
         const std::lock_guard<std::mutex> guard(lock_);
 
         for (uint32_t i = 0; i < event_types_.size(); i++) {
-            if (event_types_[i].name == name) {
+            if ((event_types_[i].name == name) && (event_types_[i].callback != nullptr)) {
                 return i;
             }
         }
