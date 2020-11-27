@@ -53,11 +53,7 @@ add_subdirectory(glm)
 # Dynarmic: disable tests
 option(DYNARMIC_TESTS "Enable dynarmic tests" OFF)
 option(DYNARMIC_NO_BUNDLED_FMT "No bundled fmt for Dynarmic" ON)
-if (ANDROID)
-    add_subdirectory(dynarmic-android)
-else()
-    add_subdirectory(dynarmic)
-endif()
+add_subdirectory(dynarmic)
 
 # GLFW - Disable docs, tests and examples
 option(GLFW_BUILD_DOCS "Build glfw documents" OFF)

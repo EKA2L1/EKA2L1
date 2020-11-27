@@ -21,7 +21,7 @@
 	url = https://github.com/g-truc/glm
 [submodule "dynarmic"]
 	path = src/external/dynarmic
-	url = https://github.com/merrymage/dynarmic
+	url = https://github.com/EKA2L1/dynarmic
 [submodule "ext-boost"]
 	path = src/external/ext-boost
 	url = https://github.com/MerryMage/ext-boost
