@@ -118,10 +118,10 @@ namespace eka2l1::kernel {
                     prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
             } else {
                 kernel::chunk_access acc = kernel::chunk_access::dll_static_data;
-                if (!kern->is_eka1()) {
-                    if ((data_base >= mem::local_data) && (data_base <= mem::dll_static_data)) {
-                        acc = kernel::chunk_access::local;
-                    }
+
+                // TODO: Remove this specific stuff
+                if ((data_base >= mem::local_data) && (data_base <= (kern->is_eka1() ? mem::dll_static_data : mem::shared_data_eka1))) {
+                    acc = kernel::chunk_access::local;
                 }
 
                 dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
