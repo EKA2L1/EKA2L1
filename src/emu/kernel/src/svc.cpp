@@ -1167,6 +1167,26 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(chunk->committed());
     }
 
+    BRIDGE_FUNC(std::int32_t, chunk_bottom, kernel::handle h) {
+        chunk_ptr chunk = kern->get<kernel::chunk>(h);
+
+        if (!chunk) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(chunk->bottom_offset());
+    }
+
+    BRIDGE_FUNC(std::int32_t, chunk_top, kernel::handle h) {
+        chunk_ptr chunk = kern->get<kernel::chunk>(h);
+
+        if (!chunk) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(chunk->top_offset());
+    }
+
     BRIDGE_FUNC(std::int32_t, chunk_adjust, kernel::handle h, std::int32_t type, std::int32_t a1, std::int32_t a2) {
         chunk_ptr chunk = kern->get<kernel::chunk>(h);
 
@@ -2465,7 +2485,7 @@ namespace eka2l1::epoc {
         }
 
         if (!queue->receive(data, length)) {
-            return epoc::error_underflow;
+            return epoc::error_underflow;   
         }
 
         return epoc::error_none;
@@ -4590,6 +4610,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x82, set_trap_handler),
         BRIDGE_REGISTER(0x8D, locked_inc_32),
         BRIDGE_REGISTER(0x8E, locked_dec_32),
+        BRIDGE_REGISTER(0xB0, chunk_bottom),
+        BRIDGE_REGISTER(0xB1, chunk_top),
         BRIDGE_REGISTER(0xBC, user_svr_rom_header_address),
         BRIDGE_REGISTER(0xBE, math_rand),
         BRIDGE_REGISTER(0xFE, static_call_list),

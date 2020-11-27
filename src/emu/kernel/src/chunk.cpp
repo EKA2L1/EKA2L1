@@ -157,6 +157,14 @@ namespace eka2l1 {
             return mmc_impl_->committed();
         }
 
+        const std::uint32_t chunk::bottom_offset() const {
+            return mmc_impl_->bottom();
+        }
+
+        const std::uint32_t chunk::top_offset() const {
+            return mmc_impl_->top();
+        }
+
         bool chunk::commit(uint32_t offset, size_t size) {
             if (type != kernel::chunk_type::disconnected) {
                 return false;
