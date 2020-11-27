@@ -100,6 +100,7 @@ add_library(epocservs
         include/services/ui/view/queue.h
         include/services/ui/view/view.h
         include/services/ui/eikappui.h
+        include/services/unipertar/unipertar.h
         include/services/window/bitmap_cache.h
         include/services/window/keys.h
         include/services/window/scheduler.h
@@ -202,6 +203,7 @@ add_library(epocservs
         src/ui/view/queue.cpp
         src/ui/view/view.cpp
         src/ui/eikappui.cpp
+        src/unipertar/unipertar.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/plugins/clickdll.cpp
         src/window/classes/plugins/sprite.cpp
