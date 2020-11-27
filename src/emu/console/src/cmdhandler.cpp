@@ -102,6 +102,8 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
 
         if (cmdlinestr.substr(0, 2) == "--") {
             cmdlinestr = "";
+        } else {
+            parser->next_token();
         }
     }
 
