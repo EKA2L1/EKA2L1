@@ -519,6 +519,10 @@ namespace eka2l1::loader {
         read_header_and_resource_index(buf);
     }
 
+    rsc_file_morden::~rsc_file_morden() {
+
+    }
+
     enum {
         LOOKUP_TABLE_START_OFFSET = 11
     };
@@ -730,6 +734,9 @@ namespace eka2l1::loader {
     rsc_file_legacy::rsc_file_legacy(common::ro_stream *seri)
         : lookup_mode_(false) {
         read_header(seri);
+    }
+
+    rsc_file_legacy::~rsc_file_legacy() {
     }
 
     void rsc_file::instantiate_impl(common::ro_stream *stream) {

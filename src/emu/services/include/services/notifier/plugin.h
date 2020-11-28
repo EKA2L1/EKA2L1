@@ -40,6 +40,9 @@ namespace eka2l1::epoc::notifier {
             : kern_(kern) {
         }
 
+        virtual ~plugin_base() {
+        }
+
         /**
          * @brief       Get the unique id of this plugin.
          * @returns     UID of the plugin.

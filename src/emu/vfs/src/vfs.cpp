@@ -951,7 +951,7 @@ namespace eka2l1 {
             return false;
         }
         
-        bool install_memory(memory_system *new_mem) {
+        bool install_memory(memory_system *new_mem) override {
             mem = new_mem;
             return true;
         }

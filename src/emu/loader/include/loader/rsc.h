@@ -39,6 +39,9 @@ namespace eka2l1 {
 namespace eka2l1::loader {
     class rsc_file_impl_base {
     public:
+        virtual ~rsc_file_impl_base() {
+        }
+
         virtual std::vector<std::uint8_t> read(const int res_id) = 0;
         virtual std::uint16_t get_total_resources() const = 0;
 
@@ -77,6 +80,7 @@ namespace eka2l1::loader {
 
     public:
         explicit rsc_file_legacy(common::ro_stream *seri);
+        ~rsc_file_legacy() override;
 
         void read_internal(const int res_id, std::vector<std::uint8_t> &buffer, const bool is_lookup = false);
         std::vector<std::uint8_t> read(const int res_id) override;
@@ -135,6 +139,7 @@ namespace eka2l1::loader {
 
     public:
         explicit rsc_file_morden(common::ro_stream *seri);
+        ~rsc_file_morden() override;
 
         std::vector<std::uint8_t> read(const int res_id) override;
         std::uint32_t get_uid(const int idx) override;

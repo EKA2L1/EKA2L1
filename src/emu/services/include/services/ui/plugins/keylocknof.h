@@ -47,6 +47,9 @@ namespace eka2l1::epoc::notifier {
             , locked_(false) {
         }
 
+        ~keylock_plugin() override {
+        }
+
         epoc::uid unique_id() const override {
             return 0x100059B0;
         }

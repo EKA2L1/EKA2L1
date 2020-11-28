@@ -58,6 +58,9 @@ namespace eka2l1::epoc::notifier {
             , outstanding_(false) {
         }
 
+        ~note_display_plugin() override {
+        }
+
         void set_note_display_callback(note_display_callback callback) {
             callback_ = callback;
         }
