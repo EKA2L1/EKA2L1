@@ -53,6 +53,7 @@ import com.github.eka2l1.R;
 import com.github.eka2l1.emu.overlay.VirtualKeyboard;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.settings.KeyMapper;
+import com.github.eka2l1.util.LogUtils;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -204,10 +205,22 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         int id = item.getItemId();
         if (id == R.id.action_exit) {
             showExitConfirmation();
+        } else if (id == R.id.action_save_log) {
+            saveLog();
         } else if (keyboard != null) {
             handleVkOptions(id);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void saveLog() {
+        try {
+            LogUtils.writeLog();
+            Toast.makeText(this, R.string.log_saved, Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, R.string.error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void handleVkOptions(int id) {
