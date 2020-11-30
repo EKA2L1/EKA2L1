@@ -391,9 +391,14 @@ namespace eka2l1::epoc {
             return;
         }
 
-        evt.evt.handle = group->client_handle;
+        get_ws().send_event_to_window_group(group, evt.evt);
+        ctx.complete(epoc::error_none);
+    }
 
-        group->client->queue_event(evt.evt);
+    void window_server_client::send_event_to_all_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group*>(cmd.data_ptr);
+        get_ws().send_event_to_window_groups(evt.evt);
+
         ctx.complete(epoc::error_none);
     }
 
@@ -852,7 +857,12 @@ namespace eka2l1::epoc {
         case ws_cl_op_send_event_to_window_group: {
             send_event_to_window_group(ctx, cmd);
             break;
-        }   
+        }
+
+        case ws_cl_op_send_event_to_all_window_groups: {
+            send_event_to_all_window_groups(ctx, cmd);
+            break;
+        }
 
         case ws_cl_op_send_message_to_window_group: {
             send_message_to_window_group(ctx, cmd);
