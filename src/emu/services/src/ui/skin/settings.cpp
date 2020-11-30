@@ -22,6 +22,8 @@
 #include <services/centralrepo/centralrepo.h>
 
 #include <common/log.h>
+#include <common/cvt.h>
+
 #include <system/devices.h>
 
 #include <system/epoc.h>
@@ -66,19 +68,21 @@ namespace eka2l1::epoc {
     static bool read_pid(central_repo_entry *entry_, pid &pid_, const int base = 16, const bool uid_only = false) {
         pid_.second = 0;
 
-        if (entry_->data.etype != central_repo_entry_type::string) {
+        if (entry_->data.etype != central_repo_entry_type::string16) {
             LOG_ERROR("Data of entry PID is not buffer. Reading PID failed!");
             return false;
         }
 
-        if (entry_->data.strd.length() <= 8 || uid_only) {
+        const std::string uid_in_str = common::ucs2_to_utf8(entry_->data.str16d);
+
+        if (uid_in_str.length() <= 8 || uid_only) {
             // Only UID
-            pid_.first = std::strtoul(entry_->data.strd.data(), nullptr, base);
+            pid_.first = std::strtoul(uid_in_str.data(), nullptr, base);
             return true;
         }
 
-        const std::string uid = entry_->data.strd.substr(0, 8);
-        const std::string timestamp = entry_->data.strd.substr(8);
+        const std::string uid = uid_in_str.substr(0, 8);
+        const std::string timestamp = uid_in_str.substr(8);
 
         // Set UID and timestamp
         pid_.first = std::strtoul(uid.data(), nullptr, base);

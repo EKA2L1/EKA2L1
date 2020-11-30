@@ -741,7 +741,7 @@ namespace eka2l1 {
         };
 
         if (!oom->get_eik_server()) {
-            oom->init(sys->get_kernel_system());
+            oom->init(sys->get_kernel_system(), sys->get_io_system(), sys->get_device_manager());
         }
 
         epoc::cap::eik_server *eik = oom->get_eik_server();

@@ -21,6 +21,7 @@
 #include <services/context.h>
 #include <services/framework.h>
 #include <kernel/server.h>
+#include <services/ui/cap/coestorage.h>
 #include <services/ui/cap/eiksrv.h>
 #include <services/ui/cap/sgc.h>
 #include <services/window/window.h>
@@ -179,6 +180,7 @@ namespace eka2l1 {
 
         std::unique_ptr<epoc::cap::sgc_server> sgc;
         std::unique_ptr<epoc::cap::eik_server> eik;
+        std::unique_ptr<epoc::coe_data_storage> coe_storage;
 
         window_server *winsrv{ nullptr };
 
@@ -194,9 +196,11 @@ namespace eka2l1 {
         void update_key_block_mode(service::ipc_context &ctx);
         void redraw_status_pane();
 
+        void init_fep_default_data();
+
     public:
         explicit oom_ui_app_server(eka2l1::system *sys);
-        void init(kernel_system *kern);
+        void init(kernel_system *kern, io_system *io, device_manager *mngr);
 
         epoc::cap::eik_server *get_eik_server() {
             return eik.get();
