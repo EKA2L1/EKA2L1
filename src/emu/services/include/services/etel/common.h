@@ -105,6 +105,7 @@ namespace eka2l1::epoc {
         etel_mobile_phone_get_identity_caps = 20043,
         etel_mobile_phone_get_indicator = 20046,
         etel_mobile_phone_get_indicator_caps = 20047,
+        etel_mobile_phone_get_network_caps = 20052,
         etel_mobile_phone_get_network_registration_status = 20054, 
         etel_mobile_phone_get_signal_strength = 20060, 
         etel_mobile_phone_notify_network_registration_status_change = 20092,
@@ -176,6 +177,20 @@ namespace eka2l1::epoc {
     enum etel_mobile_phone_indicator_caps {
         etel_mobile_phone_indicator_cap_get = 1 << 0,
         etel_mobile_phone_indicator_cap_notify_change = 1 << 1
+    };
+
+    enum etel_mobile_phone_network_caps {
+        etel_mobile_phone_network_cap_get_registration_status = 1 << 0,
+        etel_mobile_phone_network_cap_notify_registration_status = 1 << 1,
+        etel_mobile_phone_network_cap_get_current_mode = 1 << 2,
+        etel_mobile_phone_network_cap_notify_mode = 1 << 3,
+        etel_mobile_phone_network_cap_get_current_network = 1 << 4,
+        etel_mobile_phone_network_cap_notify_current_network = 1 << 5,
+        etel_mobile_phone_network_cap_get_home_network = 1 << 6,
+        etel_mobile_phone_network_cap_get_detected_networks = 1 << 7,
+        etel_mobile_phone_network_cap_manual_network_selection = 1 << 8,
+        etel_mobile_phone_network_cap_get_nitz_info = 1 << 9,
+        etel_mobile_phone_network_cap_notify_nitz_info = 1 << 10
     };
 
     enum etel_mobile_phone_indicator {

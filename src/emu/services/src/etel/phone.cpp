@@ -114,6 +114,17 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_phone_subsession::get_network_caps(service::ipc_context *ctx) {
+        LOG_TRACE("Get network caps hardcoded");
+
+        const std::uint32_t network_caps = epoc::etel_mobile_phone_network_cap_get_current_network
+            | epoc::etel_mobile_phone_network_cap_get_home_network;
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, network_caps);
+
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_phone_subsession::get_network_registration_status(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE("Get network registration status hardcoded");
         const std::uint32_t network_registration_status = epoc::etel_mobile_phone_registered_on_home_network;
@@ -251,6 +262,10 @@ namespace eka2l1 {
 
             case epoc::etel_mobile_phone_get_indicator:
                 get_indicator(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_get_network_caps:
+                get_network_caps(ctx);
                 break;
 
             case epoc::etel_mobile_phone_get_network_registration_status:
