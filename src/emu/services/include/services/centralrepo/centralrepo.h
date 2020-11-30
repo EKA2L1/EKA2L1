@@ -66,7 +66,7 @@ namespace eka2l1 {
         friend struct central_repo_client_session;
 
         // Cached repos. The key is the owner of the repo.
-        std::unordered_map<std::uint32_t, central_repo> repos;
+        std::unordered_map<std::uint32_t, std::unique_ptr<central_repo>> repos;
         std::unordered_map<std::uint64_t, central_repo_client_session> client_sessions;
 
         central_repos_cacher backup_cacher;

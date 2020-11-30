@@ -47,12 +47,12 @@ namespace eka2l1 {
         }
 
         if (tok == "string8") {
-            t = central_repo_entry_type::string;
+            t = central_repo_entry_type::string8;
             return true;
         }
 
         if (tok == "string") {
-            t = central_repo_entry_type::string;
+            t = central_repo_entry_type::string16;
             return true;
         }
 
@@ -62,7 +62,7 @@ namespace eka2l1 {
         }
 
         if (tok == "binary") {
-            t = central_repo_entry_type::string;
+            t = central_repo_entry_type::string8;
             return true;
         }
 
@@ -175,8 +175,14 @@ namespace eka2l1 {
                 break;
             }
 
-            case central_repo_entry_type::string: {
+            case central_repo_entry_type::string8:
+            case central_repo_entry_type::string16: {
                 entry.data.strd = p->get<common::ini_value>(1)->get_value();
+                if (entry.data.etype == central_repo_entry_type::string16) {
+                    entry.data.str16d = common::utf8_to_ucs2(entry.data.strd);
+                    entry.data.strd.clear();
+                }
+
                 break;
             }
 
@@ -262,7 +268,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::rescan_drives(eka2l1::io_system *io) {
-        for (drive_number d = drive_z; d >= drive_a; d = static_cast<drive_number>(static_cast<int>(d) - 1)) {
+        for (drive_number d = drive_a; d <= drive_z; d = static_cast<drive_number>(static_cast<int>(d) + 1)) {
             std::optional<eka2l1::drive> drv = io->get_drive_entry(d);
 
             if (!drv) {
@@ -427,16 +433,16 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        repos.emplace(key, std::move(repo));
-        return &repos[key];
+        repos.emplace(key, std::make_unique<eka2l1::central_repo>(repo));
+        return repos[key].get();
     }
 
     eka2l1::central_repo *central_repo_server::load_repo_with_lookup(eka2l1::io_system *io, device_manager *mngr, const std::uint32_t key) {
         auto result = repos.find(key);
 
         if (result != repos.end()) {
-            result->second.access_count++;
-            return &result->second;
+            result->second->access_count++;
+            return result->second.get();
         }
 
         return load_repo(io, mngr, key);
