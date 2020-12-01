@@ -45,25 +45,13 @@
 #include <common/time.h>
 #include <common/types.h>
 
-#if EKA2L1_PLATFORM(WIN32)
-#pragma comment(lib, "wldap32.lib")
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "winmm.lib")
-#pragma comment(lib, "crypt32.lib")
-#pragma comment(lib, "Normaliz.lib")
-#endif
-
-#if EKA2L1_PLATFORM(WIN32)
-#include <Windows.h>
-#endif
-
 #include <chrono>
 #include <ctime>
 #include <utils/err.h>
 
 namespace eka2l1 {
     namespace ldd {    
-        std::unique_ptr<factory> load_factory(system *sys, const std::string &name);
+        std::unique_ptr<factory> load_factory(system *ss, const std::string &name);
     }
 }
 
