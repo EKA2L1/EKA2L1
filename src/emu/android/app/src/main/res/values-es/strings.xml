@@ -12,7 +12,7 @@
     <string name="remove">Eliminar</string>
     <string name="mount_sd">Montar tarjeta MMC/SD</string>
     <string name="no_devices_found">Ningún dispositivo encontrado</string>
-    <string name="exit">Exit</string>
+    <string name="exit">Salir</string>
     <string name="install">Instalar</string>
     <string name="path_to_rpkg">Directorio del RPKG</string>
     <string name="path_to_rom">Directorio de la ROM</string>
@@ -26,7 +26,7 @@
     <string name="pref_theme_light">Claro</string>
     <string name="pref_theme_dark">Oscuro</string>
     <string name="pref_enable_virtual_keyboard">Habilitar teclado virtual</string>
-    <string name="pref_enable_actionbar">Enable ActionBar</string>
+    <string name="pref_enable_actionbar">Habilitar ActionBar</string>
     <string name="pref_enable_statusbar">Mostrar la barra de estado</string>
     <string name="pref_wakelock">Mantener pantalla por encima</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilitar filtro nearest neighbor</string>
@@ -39,8 +39,8 @@
     <string name="pref_system_setting_inheritance_option_name">Configuración de inheritance</string>
     <string name="emulated_screen_rotation_item_name">Rotación</string>
     <string name="emulated_screen_refresh_rate_item_name">Frecuencia de refresco</string>
-    <string name="mapping_dialog_title">Press a key</string>
-    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
+    <string name="mapping_dialog_title">Presione una tecla</string>
+    <string name="mapping_dialog_message" formatted="false">Mapping actual: %1$s</string>
     <string name="reset_mapping">Reset</string>
     <string name="layout_edit_finished">Modo de edición finalizado</string>
     <string name="layout_edit_finish">Finalizar modo de edición</string>
