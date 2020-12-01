@@ -339,7 +339,7 @@ public class VirtualKeyboard implements Overlay, Runnable {
         keypad[KEY_SOFT_RIGHT] = new VirtualKey(Keycode.KEY_SOFT_RIGHT, "R");
 
         keypad[KEY_DIAL] = new VirtualKey(Keycode.KEY_SEND, "D");
-        keypad[KEY_CANCEL] = new VirtualKey(Keycode.KEY_END, "C");
+        keypad[KEY_CANCEL] = new VirtualKey(Keycode.KEY_CLEAR, "C");
 
         keypad[KEY_UP_LEFT] = new VirtualKey(Keycode.KEY_UP, Keycode.KEY_LEFT, ARROW_UP_LEFT);
         keypad[KEY_UP] = new VirtualKey(Keycode.KEY_UP, ARROW_UP);

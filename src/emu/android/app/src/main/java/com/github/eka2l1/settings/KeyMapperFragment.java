@@ -60,7 +60,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         setupButton(R.id.virtual_key_left_soft, Keycode.KEY_SOFT_LEFT);
         setupButton(R.id.virtual_key_right_soft, Keycode.KEY_SOFT_RIGHT);
         setupButton(R.id.virtual_key_d, Keycode.KEY_SEND);
-        setupButton(R.id.virtual_key_c, Keycode.KEY_END);
+        setupButton(R.id.virtual_key_c, Keycode.KEY_CLEAR);
         setupButton(R.id.virtual_key_left, Keycode.KEY_LEFT);
         setupButton(R.id.virtual_key_right, Keycode.KEY_RIGHT);
         setupButton(R.id.virtual_key_up, Keycode.KEY_UP);
