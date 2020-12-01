@@ -78,7 +78,8 @@ namespace eka2l1::epoc {
         etel_old_call_answer_incoming_call = 50,
         etel_old_call_hang_up = 51,
         etel_old_call_set_fax_setting = 72,
-        etel_old_get_tsy_version_number = 77
+        etel_old_get_tsy_version_number = 77,
+        etel_old_gsm_phone_get_phone_id = 1000
     };
 
     enum etel_opcode {
@@ -329,6 +330,27 @@ namespace eka2l1::epoc {
         etel_charger_status_connected = 0,
         etel_charger_status_disconnected = 1,
         etel_charger_status_not_charging = 2
+    };
+
+    enum {
+        MAX_MANUFACTURER_ID_LENGTH = 50,
+        MAX_MODEL_ID_LENGTH = 50,
+        MAX_REVISION_ID_LENGTH = 50,
+        MAX_SERIAL_NUMBER_LENGTH = 50
+    };
+
+    struct etel_phone_id_base {
+        epoc::buf_static<char16_t, MAX_MANUFACTURER_ID_LENGTH> manu_;
+        epoc::buf_static<char16_t, MAX_MODEL_ID_LENGTH> model_id_;
+    };
+
+    struct etel_phone_id_v0: public etel_phone_id_base {
+        epoc::buf_static<char16_t, MAX_REVISION_ID_LENGTH> revision_id_;
+        epoc::buf_static<char16_t, MAX_SERIAL_NUMBER_LENGTH> serial_num_;
+    };
+
+    struct etel_phone_id_v1: public etel_phone_id_base {
+        epoc::buf_static<char16_t, MAX_SERIAL_NUMBER_LENGTH> serial_num_;
     };
 
     static constexpr std::uint32_t ETEL_PHONE_CHARGER_STATUS_UID = 0x100052C9;
