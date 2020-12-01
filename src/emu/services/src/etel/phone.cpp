@@ -24,6 +24,9 @@
 
 #include <common/cvt.h>
 
+#include <system/epoc.h>
+#include <system/devices.h>
+
 namespace eka2l1 {
     etel_phone_subsession::etel_phone_subsession(etel_session *session, etel_phone *phone, bool oldarch)
         : etel_subsession(session)
@@ -146,14 +149,33 @@ namespace eka2l1 {
     }
 
     static const std::u16string EXAMPLE_VALID_IMI_CODE = u"540806859904945";
+    static const std::u16string EXAMPLE_VALID_REVISION = u"1.0.0";
 
     void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get phone id hardcoded, random generated beforehand");
+        epoc::etel_phone_id_v0 oldver;
+        epoc::etel_phone_id_v1 newver;
 
-        phone_id_info_v1 id_info;
-        id_info.the_id_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+        epoc::etel_phone_id_base &base_to_fill = (oldarch_) ? static_cast<epoc::etel_phone_id_base&>(oldver)
+            : static_cast<epoc::etel_phone_id_base&>(newver);
 
-        ctx->write_data_to_descriptor_argument<phone_id_info_v1>(0, id_info);
+        device_manager *dmngr = ctx->sys->get_device_manager();
+        device *dcrr = dmngr->get_current();
+
+        base_to_fill.manu_.assign(nullptr, common::utf8_to_ucs2(dcrr->manufacturer));
+        base_to_fill.model_id_.assign(nullptr, common::utf8_to_ucs2(dcrr->model));
+
+        if (oldarch_) {
+            // TODO: What lmao
+            oldver.revision_id_.assign(nullptr, EXAMPLE_VALID_REVISION);
+            oldver.serial_num_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+
+            ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v0>(0, oldver);
+        } else {
+            newver.serial_num_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+
+            ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v1>(0, newver);
+        }
+
         ctx->complete(epoc::error_none);
     }
 
@@ -228,6 +250,10 @@ namespace eka2l1 {
 
             case epoc::etel_old_phone_get_line_info:
                 get_line_info(ctx);
+                break;
+
+            case epoc::etel_old_gsm_phone_get_phone_id:
+                get_phone_id(ctx);
                 break;
 
             default:

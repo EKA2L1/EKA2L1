@@ -36,8 +36,6 @@ namespace eka2l1 {
         }
     };
 
-    using phone_id_info_v1 = subscriber_id_info_v1;
-
     struct etel_phone : public etel_entity {
         epoc::etel_phone_status status_;
         epoc::etel_phone_info info_;
