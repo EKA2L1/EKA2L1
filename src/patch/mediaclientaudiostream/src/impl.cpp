@@ -173,8 +173,8 @@ CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback
 }
 
 CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
-    iOpen.Deque();
-    iBufferQueue.Deque();
+    iOpen.Cancel();
+    iBufferQueue.Cancel();
 
     EAudioDspStreamDestroy(0, iDispatchInstance);
 }
