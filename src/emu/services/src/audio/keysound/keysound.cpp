@@ -19,6 +19,7 @@
 
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
+#include <dispatch/dispatcher.h>
 #include <drivers/audio/audio.h>
 
 #include <services/audio/keysound/keysound.h>
@@ -197,6 +198,14 @@ namespace eka2l1 {
     }
 
     void keysound_session::play_key(service::ipc_context *ctx) {
+        dispatch::dispatcher *dserv = ctx->sys->get_dispatcher();
+        if (!dserv->get_audren_sema()->free()) {
+            // shut up we are in gamer mode
+            // NOTE: This is a hack. On real phone there's a priority system (active objects) for this stuffs.
+            ctx->complete(epoc::error_none);
+            return;
+        }
+
         std::optional<std::uint16_t> key = ctx->get_argument_value<std::uint16_t>(0);
         std::optional<std::uint8_t> repeat = ctx->get_argument_value<std::uint8_t>(1);
 

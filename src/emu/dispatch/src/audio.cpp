@@ -36,8 +36,26 @@
 #include <utils/des.h>
 
 namespace eka2l1::dispatch {
-    dsp_epoc_stream::dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream)
-        : ll_stream_(std::move(stream)) {
+    dsp_epoc_audren_sema::dsp_epoc_audren_sema()
+        : own_(0) {
+    }
+
+    bool dsp_epoc_audren_sema::free() const {
+        return !own_.load();
+    }
+
+    // Argument reserved
+    void dsp_epoc_audren_sema::acquire(void * /* owner */) {
+        own_++;
+    }
+
+    void dsp_epoc_audren_sema::release(void * /* owner */) {
+        own_--;
+    }
+    
+    dsp_epoc_stream::dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream, dsp_epoc_audren_sema *sema)
+        : ll_stream_(std::move(stream))
+        , audren_sema_(sema) {
     }
 
     dsp_epoc_stream::~dsp_epoc_stream() {
@@ -55,7 +73,9 @@ namespace eka2l1::dispatch {
             return 0;
         }
 
-        std::unique_ptr<dsp_epoc_player> player_epoc = std::make_unique<dsp_epoc_player>(player_new, init_flags);
+        std::unique_ptr<dsp_epoc_player> player_epoc = std::make_unique<dsp_epoc_player>(player_new,
+            dispatcher->get_audren_sema(), init_flags);
+
         return dispatcher->audio_players_.add_object(player_epoc);
     }
 
@@ -63,8 +83,19 @@ namespace eka2l1::dispatch {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::audio_driver *aud_driver = sys->get_audio_driver();
 
+        dsp_epoc_player *eplayer = dispatcher->audio_players_.get_object(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        if (eplayer->impl_->is_playing()) {
+            eplayer->impl_->stop();
+            eplayer->audren_sema_->release(eplayer);
+        }
+
         if (!dispatcher->audio_players_.remove_object(handle.ptr_address())) {
-            return epoc::error_not_found;
+            return epoc::error_general;
         }
 
         return epoc::error_none;
@@ -145,6 +176,7 @@ namespace eka2l1::dispatch {
             return epoc::error_general;
         }
 
+        eplayer->audren_sema_->acquire(eplayer);
         return epoc::error_none;
     }
 
@@ -160,6 +192,7 @@ namespace eka2l1::dispatch {
             return epoc::error_general;
         }
 
+        eplayer->audren_sema_->free();
         return epoc::error_none;
     }
 
@@ -365,7 +398,7 @@ namespace eka2l1::dispatch {
         }
 
         drivers::dsp_stream *ll_stream_ptr = ll_stream.get();
-        auto stream_new = std::make_unique<dsp_epoc_stream>(ll_stream);
+        auto stream_new = std::make_unique<dsp_epoc_stream>(ll_stream, dispatcher->get_audren_sema());
 
         stream_new->ll_stream_->register_callback(
             drivers::dsp_stream_notification_buffer_copied, [](void *userdata) {
@@ -393,6 +426,11 @@ namespace eka2l1::dispatch {
 
         if (!stream) {
             return epoc::error_bad_handle;
+        }
+
+        if (stream->ll_stream_->is_playing() || stream->ll_stream_->is_recording()) {
+            stream->ll_stream_->stop();
+            stream->audren_sema_->release(stream);
         }
 
         dispatcher->dsp_streams_.remove_object(handle.ptr_address());
@@ -428,6 +466,7 @@ namespace eka2l1::dispatch {
             return epoc::error_general;
         }
 
+        stream->audren_sema_->acquire(stream);
         return epoc::error_none;
     }
 
@@ -443,6 +482,7 @@ namespace eka2l1::dispatch {
             return epoc::error_general;
         }
 
+        stream->audren_sema_->release(stream);
         return epoc::error_none;
     }
 

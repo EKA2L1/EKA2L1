@@ -27,6 +27,7 @@
 #include <utils/des.h>
 #include <utils/reqsts.h>
 
+#include <atomic>
 #include <vector>
 #include <memory>
 
@@ -39,13 +40,17 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::dispatch {
+    struct dsp_epoc_audren_sema;
+
     struct dsp_epoc_stream {
         std::unique_ptr<drivers::dsp_stream> ll_stream_;
         epoc::notify_info copied_info_;
 
+        dsp_epoc_audren_sema *audren_sema_;
+
         std::mutex lock_;
 
-        explicit dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream);
+        explicit dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream, dsp_epoc_audren_sema *sema);
         ~dsp_epoc_stream();
     };
 
@@ -59,9 +64,12 @@ namespace eka2l1::dispatch {
         std::unique_ptr<drivers::player> impl_;
         std::uint32_t flags_;
 
-        explicit dsp_epoc_player(std::unique_ptr<drivers::player> &impl, const std::uint32_t init_flags)
+        dsp_epoc_audren_sema *audren_sema_;
+
+        explicit dsp_epoc_player(std::unique_ptr<drivers::player> &impl, dsp_epoc_audren_sema *sema, const std::uint32_t init_flags)
             : impl_(std::move(impl))
-            , flags_(init_flags) {
+            , flags_(init_flags)
+            , audren_sema_(sema) {
         }
 
         bool should_prepare_play_when_queue() const {
@@ -69,8 +77,22 @@ namespace eka2l1::dispatch {
         }
     };
 
+    struct dsp_epoc_audren_sema {
+        std::atomic<std::int64_t> own_;
+
+    public:
+        explicit dsp_epoc_audren_sema();
+
+        bool free() const;
+
+        // Argument reserved
+        void acquire(void * /* owner */);
+        void release(void * /* owner */);
+    };
+
     struct dispatcher {
     private:
+        std::unique_ptr<dsp_epoc_audren_sema> audren_sema_;
         void shutdown();
 
     public:
@@ -83,6 +105,8 @@ namespace eka2l1::dispatch {
 
         explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();
+
+        dsp_epoc_audren_sema *get_audren_sema();
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);
         void update_all_screens(eka2l1::system *sys);

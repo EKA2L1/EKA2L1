@@ -136,6 +136,7 @@ namespace eka2l1::drivers {
         virtual std::uint32_t get_dest_encoding() = 0;
         
         virtual bool prepare_play_newest() = 0;
+        virtual bool is_playing() const = 0;
     };
 
     enum player_type {

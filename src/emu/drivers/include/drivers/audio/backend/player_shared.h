@@ -107,5 +107,9 @@ namespace eka2l1::drivers {
         std::uint32_t get_dest_encoding() override;
 
         bool prepare_play_newest() override;
+
+        bool is_playing() const override {
+            return output_stream_->is_playing();
+        }
     };
 }

@@ -106,6 +106,9 @@ namespace eka2l1::drivers {
 
         virtual void *get_userdata(dsp_stream_notification_type nof_type) = 0;
         virtual void reset_stat();
+
+        virtual bool is_playing() const = 0;
+        virtual bool is_recording() const = 0;
     };
 
     struct dsp_output_stream : public dsp_stream {
@@ -128,6 +131,14 @@ namespace eka2l1::drivers {
 
         virtual std::uint32_t max_volume() const {
             return 100;
+        }
+
+        virtual bool is_playing() const override {
+            return false;
+        }
+
+        virtual bool is_recording() const override {
+            return false;
         }
     };
 

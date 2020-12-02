@@ -233,6 +233,7 @@ target_include_directories(epocservs PUBLIC
 
 target_link_libraries(epocservs PUBLIC
         common
+        epocdispatch
         epocio
         epocloader
         epocmem
