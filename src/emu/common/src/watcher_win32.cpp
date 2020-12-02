@@ -110,7 +110,7 @@ namespace eka2l1::common {
                         break;
                     }
 
-                    const std::uint32_t MAX_WAIT_OVERLAPPED = 3000;
+                    const std::uint32_t MAX_WAIT_OVERLAPPED = 300;
 
                     BOOL op_success = false;
                     DWORD op_error = 0;
