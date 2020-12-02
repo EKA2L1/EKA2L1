@@ -333,6 +333,8 @@ namespace eka2l1 {
                 cpu_->set_pc(jump_back & ~0b1);
                 cpu_->set_cpsr(cpu_->get_cpsr() | ((jump_back & 0b1) ? 0x20 : 0));
             }
+
+            crr_thread()->add_last_syscall(ordinal);
         };
 
         cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) {

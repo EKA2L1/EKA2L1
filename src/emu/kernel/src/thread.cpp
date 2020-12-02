@@ -718,6 +718,20 @@ namespace eka2l1 {
 
             return trap_popped;
         }
+
+        static constexpr std::uint32_t MAX_SYSCALL_STACK = 4;
+
+        std::uint32_t thread::last_syscall() const {
+            return last_syscalls.back();
+        }
+
+        void thread::add_last_syscall(const std::uint32_t syscall) {
+            last_syscalls.push(syscall);
+
+            if (last_syscalls.size() == MAX_SYSCALL_STACK) {
+                last_syscalls.pop();
+            }
+        }
     }
 
     namespace epoc {

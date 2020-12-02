@@ -216,6 +216,7 @@ namespace eka2l1 {
 
         protected:
             epoc9_std_epoc_thread_create_info *metadata;
+            std::queue<std::uint32_t> last_syscalls;
 
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);
@@ -367,6 +368,9 @@ namespace eka2l1 {
             }
 
             void owning_process(kernel::process *pr);
+
+            std::uint32_t last_syscall() const;
+            void add_last_syscall(const std::uint32_t syscall);
 
             thread_state current_state() const {
                 return state;
