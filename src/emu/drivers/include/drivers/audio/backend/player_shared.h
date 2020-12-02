@@ -109,7 +109,7 @@ namespace eka2l1::drivers {
         bool prepare_play_newest() override;
 
         bool is_playing() const override {
-            return output_stream_->is_playing();
+            return (output_stream_ && output_stream_->is_playing());
         }
     };
 }
