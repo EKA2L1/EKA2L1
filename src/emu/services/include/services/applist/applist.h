@@ -261,6 +261,8 @@ namespace eka2l1 {
          * \brief Get app icon bitmap handles.
          */
         void get_app_icon(service::ipc_context &ctx);
+
+        void get_native_executable_name_if_non_native(service::ipc_context &ctx);
                 
         void launch_app(service::ipc_context &ctx);
         void is_program(service::ipc_context &ctx);

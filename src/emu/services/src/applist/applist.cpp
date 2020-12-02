@@ -685,6 +685,26 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void applist_server::get_native_executable_name_if_non_native(service::ipc_context &ctx) {
+        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(1);
+
+        if (!path.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+        
+        hle::lib_manager *lmngr = kern->get_lib_manager();
+
+        if (!lmngr->load(path.value())) {
+            LOG_TRACE("The file requested is non-native! Stubbed");
+        }
+
+        ctx.set_descriptor_argument_length(0, 0);
+
+        LOG_TRACE("No opaque data is written (stubbed).");
+        ctx.complete(0);
+    }
+
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver) {
     }
@@ -736,6 +756,10 @@ namespace eka2l1 {
 
             case applist_request_app_icon_filename:
                 server<applist_server>()->get_app_icon_file_name(*ctx);
+                break;
+
+            case applist_request_get_executable_name_if_non_native:
+                server<applist_server>()->get_native_executable_name_if_non_native(*ctx);
                 break;
 
             default:
