@@ -510,9 +510,6 @@ namespace eka2l1::epoc {
             }
         }
 
-        LOG_WARN("TLS for 0x{:x}, thread {} return 0, may results unexpected crash", static_cast<std::uint32_t>(h),
-            thr->name());
-
         return eka2l1::ptr<void>(0);
     }
 
