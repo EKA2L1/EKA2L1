@@ -449,6 +449,8 @@ namespace eka2l1::hle {
             }
         }
 
+        additional_mode_ = PREFER_ROM;
+
         for (std::size_t i = 0; i < patch_image_paths.size(); i++) {
             // We want to patch ROM image though. Do it.
             auto e32imgfile = eka2l1::physical_file_proxy(patch_image_paths[i], READ_MODE | BIN_MODE);
@@ -492,6 +494,8 @@ namespace eka2l1::hle {
             patch_seg->attach(nullptr, true);
             patches_[i].patch_ = patch_seg;
         }
+
+        additional_mode_ = 0;
 
         apply_pending_patches();
         apply_trick_or_treat_algo();
@@ -734,7 +738,7 @@ namespace eka2l1::hle {
                 result{ std::nullopt, std::nullopt };
 
             if (io_->exist(lib_path)) {
-                symfile f = io_->open_file(path, READ_MODE | BIN_MODE);
+                symfile f = io_->open_file(path, READ_MODE | BIN_MODE | additional_mode_);
                 if (!f) {
                     return result;
                 }
@@ -809,14 +813,14 @@ namespace eka2l1::hle {
             auto entry = io_->get_drive_entry(drv);
 
             if (entry) {
-                symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE);
+                symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE | additional_mode_);
                 if (!f) {
                     return nullptr;
                 }
 
                 eka2l1::ro_file_stream image_data_stream(f.get());
 
-                if (entry->media_type == drive_media::rom && io_->is_entry_in_rom(lib_path)) {
+                if (f->is_in_rom()) {
                     auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version());
                     if (!romimg) {
                         return nullptr;
@@ -1062,9 +1066,10 @@ namespace eka2l1::hle {
         , io_(ios)
         , mem_(mems)
         , bootstrap_chunk_(nullptr)
+        , rom_drv_(drive_invalid)
+        , additional_mode_(0)
         , entry_points_call_routine_(nullptr)
-        , thread_entry_routine_(nullptr)
-        , rom_drv_(drive_invalid) { 
+        , thread_entry_routine_(nullptr) { 
         hle::symbols sb;
         std::string lib_name;
 

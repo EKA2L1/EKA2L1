@@ -119,6 +119,8 @@ namespace eka2l1 {
             const std::uint8_t *entry_points_call_routine_;
             const std::uint8_t *thread_entry_routine_;
 
+            std::uint32_t additional_mode_;
+
             drive_number get_drive_rom();
 
             void apply_pending_patches();
