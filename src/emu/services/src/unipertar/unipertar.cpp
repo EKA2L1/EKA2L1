@@ -38,8 +38,22 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version) {
     }
 
+    void unipertar_session::drm_open_file(service::ipc_context *ctx) {
+        LOG_TRACE("Open DRM file stubbed to not supported!");
+        ctx->complete(epoc::error_not_supported);
+    }
+
     void unipertar_session::fetch(service::ipc_context *ctx) {
-        LOG_ERROR("Unimplemented opcode for Unipertar server 0x{:X}", ctx->msg->function);
-        ctx->complete(epoc::error_none);
+        switch (ctx->msg->function) {
+        case unipertar_drm_open_file:
+            drm_open_file(ctx);
+            break;
+
+        default:
+            LOG_ERROR("Unimplemented opcode for Unipertar server 0x{:X}", ctx->msg->function);
+            ctx->complete(epoc::error_none);
+
+            break;
+        }
     }
 }

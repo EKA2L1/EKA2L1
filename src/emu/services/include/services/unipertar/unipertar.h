@@ -23,6 +23,14 @@
 #include <services/framework.h>
 
 namespace eka2l1 {
+    enum unipertar_opcode {
+        unipertar_drm_open_file = 16,
+        unipertar_drm_read_file = 19,
+        unipertar_drm_size_file = 20,
+        unipertar_drm_seek_file = 21,
+        unipertar_drm_close_file = 22
+    };
+
     class unipertar_server : public service::typical_server {
     public:
         explicit unipertar_server(eka2l1::system *sys);
@@ -33,6 +41,7 @@ namespace eka2l1 {
     struct unipertar_session : public service::typical_session {
         explicit unipertar_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
+        void drm_open_file(service::ipc_context *ctx);
         void fetch(service::ipc_context *ctx) override;
     };
 }
