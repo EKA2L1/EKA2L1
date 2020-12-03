@@ -1000,9 +1000,11 @@ namespace eka2l1 {
             }
 
             auto entry = burn_tree_find_entry(common::ucs2_to_utf8(new_path));
+            auto ff = physical_file_system::open_file(new_path, mode);
 
-            if (!entry) {
-                return physical_file_system::open_file(new_path, mode);
+            // Dont change order!
+            if (!entry || (!(mode & PREFER_ROM) && (ff->size() != entry->size))) {
+                return ff;
             }
 
             return std::make_unique<rom_file>(mem, rom_cache, *entry, path);
