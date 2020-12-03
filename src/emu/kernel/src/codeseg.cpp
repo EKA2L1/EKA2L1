@@ -163,6 +163,10 @@ namespace eka2l1::kernel {
                     const std::uint32_t offset_to_apply = (import >> 32) & 0xFFFFFFFF;
 
                     const address addr = dependency.dep_->lookup(new_foe, ord);
+                    if (!addr) {
+                        LOG_ERROR("Invalid ordinal {}, requested from {}", ord, dependency.dep_->name());
+                    }
+
                     *reinterpret_cast<std::uint32_t*>(&code_base_ptr[offset_to_apply]) = addr + adj;
                 }
             }
