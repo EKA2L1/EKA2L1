@@ -51,7 +51,7 @@
 
 namespace eka2l1 {
     namespace ldd {    
-        std::unique_ptr<factory> load_factory(system *ss, const std::string &name);
+        extern std::unique_ptr<factory> load_factory(system *ss, const std::string &name);
     }
 }
 
