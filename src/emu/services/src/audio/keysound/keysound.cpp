@@ -199,9 +199,11 @@ namespace eka2l1 {
 
     void keysound_session::play_key(service::ipc_context *ctx) {
         dispatch::dispatcher *dserv = ctx->sys->get_dispatcher();
-        if (!dserv->get_audren_sema()->free()) {
+        if (/*!dserv->get_audren_sema()->free()*/ true) {
             // shut up we are in gamer mode
             // NOTE: This is a hack. On real phone there's a priority system (active objects) for this stuffs.
+            // NOTE2: It should not even be played in many situations. May relate to key block mode. Repeat count 1.
+            // But afaik repeat count 1 is correct (what the OSS do, so weird).
             ctx->complete(epoc::error_none);
             return;
         }
