@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="path">Polku</string>
-    <string name="change">Change</string>
+    <string name="change">Vaihda</string>
     <string name="replace">Korvaa</string>
     <string name="load">Lataa</string>
     <string name="save">Tallenna</string>
