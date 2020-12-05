@@ -199,6 +199,8 @@ namespace eka2l1::drivers {
         /**
          * \brief Draw a bitmap to currently binded bitmap.
          *
+         * The only limitation is origin is hard-coded to the center of the bitmap for rotation purpose.
+         * 
          * \param h            The handle of the bitmap to blit.
          * \param maskh        The handle of the mask to apply to this bitmap. Use 0 for none.
          * \param pos          The position of the bitmap on the screen.
