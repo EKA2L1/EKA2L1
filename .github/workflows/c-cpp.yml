@@ -36,6 +36,8 @@ jobs:
   build:
     needs: [move-tag]
     runs-on: ${{ matrix.os }}
+    env:
+      cache-version: v1
 
     strategy:
       fail-fast: false
@@ -62,8 +64,8 @@ jobs:
       - uses: actions/cache@v1
         with:
           path: /tmp/ccache
-          key: ccache-${{ matrix.os }}-${{ matrix.config }}-${{ github.sha }}
-          restore-keys: ccache-${{ matrix.os }}-${{ matrix.config }}-
+          key: ccache-${{ env.cache-version }}-${{ matrix.os }}-${{ matrix.config }}-${{ github.sha }}
+          restore-keys: ccache-${{ env.cache-version }}-${{ matrix.os }}-${{ matrix.config }}-
         if: matrix.os != 'windows-latest'
 
       - uses: actions/checkout@v2
