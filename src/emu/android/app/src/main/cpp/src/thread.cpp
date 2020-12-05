@@ -158,8 +158,9 @@ namespace eka2l1::android {
 
                 for (std::uint32_t i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
                     scr->screen_mutex.lock();
+                    auto &crr_mode = scr->current_mode();
 
-                    eka2l1::vec2 size = scr->current_mode().size;
+                    eka2l1::vec2 size = crr_mode.size;
                     src.size = size;
 
                     float mult = (float)(state.window->window_width) / size.x;
@@ -182,11 +183,11 @@ namespace eka2l1::android {
                     dest.size = eka2l1::vec2(width, height);
 
                     cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
-                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src,
+                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, 0.0f,
                                              drivers::bitmap_draw_flag_no_flip);
                     if (scr->dsa_texture) {
                         cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
-                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src,
+                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, static_cast<float>(crr_mode.rotation),
                                                  drivers::bitmap_draw_flag_no_flip);
                     }
                     scr->screen_mutex.unlock();
