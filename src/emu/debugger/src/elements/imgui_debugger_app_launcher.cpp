@@ -146,7 +146,7 @@ namespace eka2l1 {
         source_rect.top.y = 0;
         source_rect.size = eka2l1::vec2(0, 0);
 
-        dat->builder_->draw_bitmap(icon_tex, icon_mask_tex, dest_rect, source_rect,
+        dat->builder_->draw_bitmap(icon_tex, icon_mask_tex, dest_rect, source_rect, 0.0f,
             drivers::bitmap_draw_flag_invert_mask | drivers::bitmap_draw_flag_no_flip);
 
         delete tt;

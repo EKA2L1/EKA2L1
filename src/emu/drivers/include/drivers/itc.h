@@ -203,9 +203,11 @@ namespace eka2l1::drivers {
          * \param maskh        The handle of the mask to apply to this bitmap. Use 0 for none.
          * \param pos          The position of the bitmap on the screen.
          * \param source_rect  The source rectangle to strip.
+         * \param rotation     The rotation in degrees.
          * \param flags        Drawing flags.
          */
-        virtual void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const std::uint32_t flags = 0) = 0;
+        virtual void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect,
+            const eka2l1::rect &source_rect, const float rotation = 0.0f, const std::uint32_t flags = 0) = 0;
 
         /**
          * \brief Draw a rectangle with brush color.
@@ -443,7 +445,8 @@ namespace eka2l1::drivers {
         void update_bitmap(drivers::handle h, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0) override;
 
-        void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const std::uint32_t flags = 0) override;
+        void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect,
+            const float rotation = 0.0f, const std::uint32_t flags = 0) override;
 
         void draw_rectangle(const eka2l1::rect &target_rect) override;
 
