@@ -546,7 +546,9 @@ namespace eka2l1 {
 
     bool system_impl::pause() {
         paused = true;
-        kern_->stop_cores_idling();
+
+        if (kern_)
+            kern_->stop_cores_idling();
 
         const std::lock_guard<std::mutex> guard(mut);
 
