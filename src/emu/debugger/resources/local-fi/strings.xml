@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Asetukset</string>
     <string name="debugger_menu_pause_item_name">Pause</string>
     <string name="debugger_menu_stop_item_name">Stop</string>
+    <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">Disassembler</string>
     <string name="debugger_menu_objects_item_name">Objects</string>
     <string name="debugger_menu_services_item_name">Palvelut</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
     <string name="pref_system_app_setting_save_title">Tallenna asetukset</string>
     <string name="pref_system_validate_device_btn_title">Validate device</string>
-    <string name="pref_system_validate_device_tooltip">Check for faults in device and fix them so that EKA2L1 can emulate the device.</string>
+    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Disabled because emulated system has started. Restart the emulator to use this option.</string>
     <string name="pref_system_no_device_present_str">No device present</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
     <string name="pref_system_real_time_accuracy_level_name_high">High</string>
+    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>
     <string name="pref_control_wait_for_key_string">waiting for key</string>
     <string name="pref_hal_battery_level_string">Akun varaus</string>
     <string name="pref_hal_signal_level_string">Signaalin taso</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Käynnistä emulaattori uudelleen, jotta tietojen tallennustilaan ja laitteisiin tehdyt muutokset tulisivat käyttöön</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
     <string name="packages_title">Paketit</string>
     <string name="packages_package_menu_name">Paketti</string>
     <string name="packages_install_string">Asenna</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">Pääkehittäjät:</string>
     <string name="credits_contributors_text">Contributors:</string>
     <string name="credits_honors_text">Honors:</string>
-    <string name="credits_translators_text">Kääntäjät (Työpöytä):</string>
+    <string name="credits_translators_text">Translators:</string>
 </resources>
