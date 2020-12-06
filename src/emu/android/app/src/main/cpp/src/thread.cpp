@@ -122,28 +122,23 @@ namespace eka2l1::android {
         return 0;
     }
 
-    static eka2l1::vec2 get_screen_rotate_origin(const eka2l1::vec2 &size, const int rotation) {
-        eka2l1::vec2 origin = eka2l1::vec2(0, 0);
-
+    static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
         switch (rotation) {
         case 90:
-            origin.y = -size.y;
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
             break;
 
         case 180:
-            origin.x = -size.x;
-            origin.y = -size.y;
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
             break;
 
         case 270:
-            origin.x = -size.x;
+            origin_normal_rect.top.y += origin_normal_rect.size.y;
             break;
 
         default:
             break;
         }
-
-        return origin;
     }
 
     void ui_thread(emulator &state) {
@@ -211,6 +206,7 @@ namespace eka2l1::android {
                                              drivers::bitmap_draw_flag_no_flip);
                     if (scr->dsa_texture) {
                         cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
+                        advance_dsa_pos_around_origin(dest, crr_mode.rotation);
 
                         // Rotate back to original size
                         if (crr_mode.rotation % 180 != 0) {
@@ -218,8 +214,8 @@ namespace eka2l1::android {
                             std::swap(src.size.x, src.size.y);
                         }
 
-                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, get_screen_rotate_origin(dest.size, crr_mode.rotation),
-                                                static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
+                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src,eka2l1::vec2(0, 0),
+                                static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
                     }
 
                     scr->screen_mutex.unlock();
