@@ -449,6 +449,10 @@ namespace eka2l1 {
     std::size_t kernel_system::register_imb_range_callback(imb_range_callback callback) {
         return imb_range_callback_funcs_.add(callback);
     }
+
+    std::size_t kernel_system::register_ldd_factory_request_callback(ldd_factory_request_callback callback) {
+        return ldd_factory_req_callback_funcs_.add(callback);
+    }
     
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
         return ipc_send_callbacks_.remove(handle);
@@ -476,6 +480,21 @@ namespace eka2l1 {
 
     bool kernel_system::unregister_imb_range_callback(const std::size_t handle) {
         return imb_range_callback_funcs_.remove(handle);
+    }
+
+    bool kernel_system::unregister_ldd_factory_request_callback(const std::size_t handle) {
+        return ldd_factory_req_callback_funcs_.remove(handle);
+    }
+
+    ldd::factory_instantiate_func kernel_system::suitable_ldd_instantiate_func(const char *name) {
+        for (auto &ldd_factory_req_callback_func: ldd_factory_req_callback_funcs_) {
+            auto res = ldd_factory_req_callback_func(name);
+            if (res) {
+                return res;
+            }
+        }
+
+        return nullptr;
     }
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {

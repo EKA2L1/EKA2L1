@@ -9,12 +9,10 @@ add_executable(ekatests
     ${CORE_TEST_FILES})
 
 
-# NOTE: Keep the order of ldd and kern
 target_link_libraries(ekatests PRIVATE
     Catch2
     common
     epocio
-    epocldd
     epockern
     epocloader
     epocservs)

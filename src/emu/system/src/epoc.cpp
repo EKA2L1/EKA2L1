@@ -56,6 +56,7 @@
 
 #include <dispatch/dispatcher.h>
 #include <kernel/libmanager.h>
+#include <ldd/collection.h>
 #include <loader/rom.h>
 #include <kernel/timing.h>
 #include <services/init.h>
@@ -133,7 +134,9 @@ namespace eka2l1 {
         std::optional<filesystem_id> physical_fs_id_;
 
         system *parent_;
+
         std::size_t gdb_stub_breakpoint_callback_handle_;
+        std::size_t ldd_request_load_callback_handle_;
 
         common::identity_container<system_reset_callback_type> reset_callbacks_;
 
@@ -214,6 +217,9 @@ namespace eka2l1 {
                     }
                 });
             }
+
+            ldd_request_load_callback_handle_ = kern_->register_ldd_factory_request_callback(
+                &ldd::get_factory_func);
         }
 
         void set_symbian_version_use(const epocver ever) {
@@ -416,7 +422,7 @@ namespace eka2l1 {
         }
 
         gdbstub *get_gdb_stub() {
-            return stub_.get();;
+            return stub_.get();
         }
 
         drivers::graphics_driver *get_graphic_driver() {
@@ -706,6 +712,10 @@ namespace eka2l1 {
         }
 
         exit = false;
+
+        // Unregister HLE stuffs
+        kern_->unregister_ldd_factory_request_callback(ldd_request_load_callback_handle_);
+        kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
 
         dispatcher_.reset();
         

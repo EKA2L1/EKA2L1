@@ -225,6 +225,13 @@ namespace eka2l1 {
      */
     using imb_range_callback = std::function<void(kernel::process*, address, const std::size_t)>;
 
+    /**
+     * @brief Callback invoked when an LDD is requested to be loaded.
+     * 
+     * @param name          Name of the LDD. 
+     */
+    using ldd_factory_request_callback = std::function<ldd::factory_instantiate_func(const char*)>;
+
     struct kernel_global_data {
         kernel::char_set char_set_;
 
@@ -294,6 +301,7 @@ namespace eka2l1 {
         common::identity_container<process_switch_callback> process_switch_callback_funcs_;
         common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
         common::identity_container<imb_range_callback> imb_range_callback_funcs_;
+        common::identity_container<ldd_factory_request_callback> ldd_factory_req_callback_funcs_;
 
         std::unique_ptr<arm::arm_analyser> analyser_;
 
@@ -345,6 +353,7 @@ namespace eka2l1 {
         std::size_t register_process_switch_callback(process_switch_callback callback);
         std::size_t register_codeseg_loaded_callback(codeseg_loaded_callback callback);
         std::size_t register_imb_range_callback(imb_range_callback callback);
+        std::size_t register_ldd_factory_request_callback(ldd_factory_request_callback callback);
         
         bool unregister_codeseg_loaded_callback(const std::size_t handle);
         bool unregister_ipc_send_callback(const std::size_t handle);
@@ -353,6 +362,9 @@ namespace eka2l1 {
         bool unregister_breakpoint_hit_callback(const std::size_t handle);
         bool unregister_process_switch_callback(const std::size_t handle);
         bool unregister_imb_range_callback(const std::size_t handle);
+        bool unregister_ldd_factory_request_callback(const std::size_t handle);
+
+        ldd::factory_instantiate_func suitable_ldd_instantiate_func(const char *name);
 
         kernel::uid next_uid() const;
         std::uint64_t home_time();

@@ -49,10 +49,6 @@
 #include <ctime>
 #include <utils/err.h>
 
-namespace eka2l1::ldd {
-    factory_instantiate_func get_factory_func(const char *name);
-}
-
 namespace eka2l1::epoc {
     // These twos are implemented in dispatcher module. Their implementations should not be here!
     void dispatcher_do_resolve(eka2l1::system *sys, const std::uint32_t ordinal);
@@ -3588,7 +3584,7 @@ namespace eka2l1::epoc {
         // Search if this driver exists first
         ldd::factory *existing = kern->get_by_name<ldd::factory>(ldd_name);
         if (!existing) {
-            auto factory_func = ldd::get_factory_func(ldd_name.c_str());
+            auto factory_func = kern->suitable_ldd_instantiate_func(ldd_name.c_str());
             ldd::factory_instance factory_inst = nullptr;
             
             if (factory_func)
