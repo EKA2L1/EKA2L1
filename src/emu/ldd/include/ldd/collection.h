@@ -23,5 +23,5 @@
 #include <string>
 
 namespace eka2l1::ldd {
-    std::unique_ptr<factory> load_factory(system *ss, const std::string &name);
+    factory_instantiate_func get_factory_func(const char *name);
 }

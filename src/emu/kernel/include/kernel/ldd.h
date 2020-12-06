@@ -72,5 +72,6 @@ namespace eka2l1::ldd {
         virtual std::unique_ptr<channel> make_channel(epoc::version ver) = 0;
     };
 
+    typedef std::unique_ptr<factory> (*factory_instantiate_func)(system *sys);
     using factory_instance = std::unique_ptr<factory>;
 }

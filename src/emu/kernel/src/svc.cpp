@@ -49,10 +49,8 @@
 #include <ctime>
 #include <utils/err.h>
 
-namespace eka2l1 {
-    namespace ldd {    
-        extern std::unique_ptr<factory> load_factory(system *ss, const std::string &name);
-    }
+namespace eka2l1::ldd {
+    factory_instantiate_func get_factory_func(const char *name);
 }
 
 namespace eka2l1::epoc {
@@ -3590,15 +3588,20 @@ namespace eka2l1::epoc {
         // Search if this driver exists first
         ldd::factory *existing = kern->get_by_name<ldd::factory>(ldd_name);
         if (!existing) {
-            auto factory_obj = ldd::load_factory(kern->get_system(), ldd_name);
-            if (!factory_obj) {
+            auto factory_func = ldd::get_factory_func(ldd_name.c_str());
+            ldd::factory_instance factory_inst = nullptr;
+            
+            if (factory_func)
+                factory_inst = factory_func(kern->get_system());
+
+            if (!factory_inst) {
                 LOG_ERROR("Unable to load LDD with name {}", ldd_name);
                 
                 finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
                 return epoc::error_general;
             }
             
-            existing = kern->add_object(factory_obj);
+            existing = kern->add_object(factory_inst);
             existing->install();
         }
 

@@ -27,8 +27,6 @@
 #include <string>
 
 namespace eka2l1::ldd {
-    typedef std::unique_ptr<factory> (*factory_instantiate_func)(system *sys);
-
     #define FACTORY_DECLARE(type)                                               \
         std::unique_ptr<factory> factory_create_##type(system *ss) {             \
             return std::make_unique<type>(ss->get_kernel_system(), ss);         \
@@ -43,10 +41,10 @@ namespace eka2l1::ldd {
         FACTORY_REGISTER("gd1drv", mmcif_factory)
     };
 
-    std::unique_ptr<factory> load_factory(system *sys, const std::string &name) {
+    factory_instantiate_func get_factory_func(const char *name) {
         auto res = insts_map.find(name);
         if (res != insts_map.end()) {
-            return res->second(sys);
+            return res->second;
         }
 
         return nullptr;
