@@ -13,6 +13,7 @@
     <string name="mount_sd">Під\'єднати MMC/SD картку</string>
     <string name="no_devices_found">Пристроїв не знайдено</string>
     <string name="exit">Вихід</string>
+    <string name="save_log">Save log</string>
     <string name="install">Установити</string>
     <string name="path_to_rpkg">Шлях до RPKG</string>
     <string name="path_to_rom">Шлях до ROM</string>
@@ -50,5 +51,6 @@
     <string name="hide_buttons">Приховати кнопки</string>
     <string name="confirmation_required">Необхідне підтвердження</string>
     <string name="force_close_confirmation">Примусове закриття застосунку може призвести до втрати даних або навіть до повного виведення його з ладу!\nПродовжити?</string>
+    <string name="log_saved">Log has been saved</string>
     <string name="version">Версія: </string>
 </resources>
