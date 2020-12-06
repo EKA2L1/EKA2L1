@@ -13,6 +13,7 @@
     <string name="mount_sd">挂载MMC/SD卡</string>
     <string name="no_devices_found">未找到设备</string>
     <string name="exit">退出</string>
+    <string name="save_log">Save log</string>
     <string name="install">安装</string>
     <string name="path_to_rpkg">RPKG路径</string>
     <string name="path_to_rom">ROM路径</string>
@@ -50,5 +51,6 @@
     <string name="hide_buttons">隐藏虚拟按键</string>
     <string name="confirmation_required">需要确认</string>
     <string name="force_close_confirmation">强制关闭应用程序可能会导致数据丢失甚至损坏！\n继续?</string>
+    <string name="log_saved">Log has been saved</string>
     <string name="version">版本： </string>
 </resources>
