@@ -12,7 +12,7 @@
     <string name="remove">Remover</string>
     <string name="mount_sd">Montar cartões MMC/SD</string>
     <string name="no_devices_found">Nenhum dispositivo encontrado</string>
-    <string name="exit">Exit</string>
+    <string name="exit">Sair</string>
     <string name="install">Instalar</string>
     <string name="path_to_rpkg">Caminho para RPKG</string>
     <string name="path_to_rom">Caminho para a ROM</string>
@@ -22,13 +22,13 @@
     <string name="pref_general_title">Geral</string>
     <string name="pref_system_title">Sistema</string>
     <string name="pref_control_key_binding_sect_title">Combinações de tecla</string>
-    <string name="pref_theme">Theme</string>
-    <string name="pref_theme_light">Light</string>
-    <string name="pref_theme_dark">Dark</string>
-    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
-    <string name="pref_enable_actionbar">Enable ActionBar</string>
-    <string name="pref_enable_statusbar">Enable statusbar</string>
-    <string name="pref_wakelock">Keep screen on</string>
+    <string name="pref_theme">Tema</string>
+    <string name="pref_theme_light">Claro</string>
+    <string name="pref_theme_dark">Escuro</string>
+    <string name="pref_enable_virtual_keyboard">Ativar o teclado virtual</string>
+    <string name="pref_enable_actionbar">Ativar Barra de Ação</string>
+    <string name="pref_enable_statusbar">Ativar barra de status</string>
+    <string name="pref_wakelock">Manter a tela ligada</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilita a filtragem por vizinhança</string>
     <string name="pref_system_language_option_name">Idioma</string>
     <string name="pref_system_real_time_accuracy_str">Precisão em tempo real</string>
@@ -39,9 +39,9 @@
     <string name="pref_system_setting_inheritance_option_name">Configuração de herança</string>
     <string name="emulated_screen_rotation_item_name">Rotação</string>
     <string name="emulated_screen_refresh_rate_item_name">Taxa de atualização</string>
-    <string name="mapping_dialog_title">Press a key</string>
-    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
-    <string name="reset_mapping">Reset</string>
+    <string name="mapping_dialog_title">Aperte qualquer botão</string>
+    <string name="mapping_dialog_message" formatted="false">Mapeamento atual: %1$s</string>
+    <string name="reset_mapping">Restaurar</string>
     <string name="layout_edit_finished">Modo de edição concluído</string>
     <string name="layout_edit_finish">Encerrar o modo de edição</string>
     <string name="layout_edit_mode">Editar teclas</string>
