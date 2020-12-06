@@ -166,8 +166,9 @@ namespace eka2l1::drivers {
         get_command_list().add(cmd);
     }
 
-    void server_graphics_command_list_builder::draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const std::uint32_t flags) {
-        command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, maskh, dest_rect, source_rect, flags);
+    void server_graphics_command_list_builder::draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const eka2l1::vec2 &origin,
+        const float rotation, const std::uint32_t flags) {
+        command *cmd = make_command(graphics_driver_draw_bitmap, nullptr, h, maskh, dest_rect, source_rect, origin, rotation, flags);
         get_command_list().add(cmd);
     }
 

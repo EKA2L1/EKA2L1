@@ -38,7 +38,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
-import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.Keycode;
 
 public class KeyMapperFragment extends Fragment implements View.OnClickListener {
@@ -61,7 +60,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         setupButton(R.id.virtual_key_left_soft, Keycode.KEY_SOFT_LEFT);
         setupButton(R.id.virtual_key_right_soft, Keycode.KEY_SOFT_RIGHT);
         setupButton(R.id.virtual_key_d, Keycode.KEY_SEND);
-        setupButton(R.id.virtual_key_c, Keycode.KEY_END);
+        setupButton(R.id.virtual_key_c, Keycode.KEY_CLEAR);
         setupButton(R.id.virtual_key_left, Keycode.KEY_LEFT);
         setupButton(R.id.virtual_key_right, Keycode.KEY_RIGHT);
         setupButton(R.id.virtual_key_up, Keycode.KEY_UP);
@@ -112,9 +111,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
                     } else {
                         deleteDuplicates(canvasKey);
                         androidToSymbian.put(keyCode, canvasKey);
-
                         KeyMapper.saveArrayPref(androidToSymbian);
-                        Emulator.loadConfig();
 
                         dialog.dismiss();
                         return true;

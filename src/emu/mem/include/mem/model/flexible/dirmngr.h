@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace eka2l1::mem {
-    class mmu_base;
+    class control_base;
 }
 
 namespace eka2l1::mem::flexible {
@@ -44,12 +44,12 @@ namespace eka2l1::mem::flexible {
         /**
          * @brief   Allocate a new page directory.
          * 
-         * @param   mmu     Pointer to the Memory Management Unit.
+         * @param   cntr     Pointer to the Memory Control.
          * @returns Pointer to a new page directory on success.
          * 
          * @see     free
          */
-        page_directory *allocate(mmu_base *mmu);
+        page_directory *allocate(control_base *cntr);
 
         /**
          * @brief   Get an existing page directory.

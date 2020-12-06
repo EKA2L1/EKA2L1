@@ -19,109 +19,29 @@
 
 #include <algorithm>
 #include <mem/model/multiple/mmu.h>
+#include <mem/model/multiple/control.h>
 
 namespace eka2l1::mem {
-    mmu_multiple::mmu_multiple(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits, const bool mem_map_old)
-        : mmu_base(alloc, cpu, conf, psize_bits, mem_map_old)
-        , cur_dir_(nullptr)
-        , global_dir_(page_size_bits_, 0)
-        , user_global_sec_(mem_map_old ? shared_data_eka1 : shared_data, mem_map_old ? shared_data_end_eka1 : ram_drive, page_size())
-        , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : dll_static_data, page_size())
-        , user_rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? rom_eka1_end : global_data, page_size())
-        , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size()) {
-        cur_dir_ = &global_dir_;
-    }
-
-    asid mmu_multiple::rollover_fresh_addr_space() {
-        // Try to find existing unoccpied page directory
-        for (std::size_t i = 0; i < dirs_.size(); i++) {
-            if (!dirs_[i]->occupied()) {
-                dirs_[i]->occupied_ = true;
-                return dirs_[i]->id();
-            }
-        }
-
-        // 256 is the maximum number of page directories we allow, no more.
-        if (dirs_.size() == 255) {
-            return -1;
-        }
-
-        // Create new one. We would start at offset 1, since 0 is for global page directory.
-        dirs_.push_back(std::make_unique<page_directory>(page_size_bits_, static_cast<asid>(dirs_.size() + 1)));
-        dirs_.back()->occupied_ = true;
-
-        return static_cast<asid>(dirs_.size());
+    mmu_multiple::mmu_multiple(control_base *manager, arm::core *cpu, config::state *conf)
+        : mmu_base(manager, cpu, conf)
+        , cur_dir_(nullptr) {
+        cur_dir_ = &(reinterpret_cast<control_multiple*>(manager)->global_dir_);
     }
 
     bool mmu_multiple::set_current_addr_space(const asid id) {
+        control_multiple *ctrl_mul = reinterpret_cast<control_multiple*>(manager_);
+
         if (id == 0) {
-            cur_dir_ = &global_dir_;
+            cur_dir_ = &ctrl_mul->global_dir_;
             return true;
         }
 
-        if (id != 0 && dirs_.size() < id) {
+        if (id != 0 && ctrl_mul->dirs_.size() < id) {
             return false;
         }
 
-        cur_dir_ = dirs_[id - 1].get();
+        cur_dir_ = ctrl_mul->dirs_[id - 1].get();
         return true;
-    }
-
-    void mmu_multiple::assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags, asid *id_list, const std::uint32_t id_list_size) {
-        // Extract the page directory offset
-        const std::uint32_t pde_off = linear_addr >> page_table_index_shift_;
-        const std::uint32_t last_off = tab ? tab->idx_ : 0;
-
-        if (tab) {
-            tab->idx_ = pde_off;
-        }
-
-        auto switch_page_table = [=](page_directory *target_dir) {
-            if (tab) {
-                target_dir->set_page_table(last_off, nullptr);
-            }
-
-            target_dir->set_page_table(pde_off, tab);
-        };
-
-        if (id_list != nullptr) {
-            for (std::uint32_t i = 0; i < id_list_size; i++) {
-                if (id_list[i] <= dirs_.size()) {
-                    switch_page_table(dirs_[id_list[i] - 1].get());
-                }
-            }
-
-            return;
-        }
-
-        if (flags & MMU_ASSIGN_LOCAL_GLOBAL_REGION) {
-            // Iterates through all page directories and assign it
-            switch_page_table(&global_dir_);
-
-            for (auto &pde : dirs_) {
-                switch_page_table(pde.get());
-            }
-        } else {
-            if (flags & MMU_ASSIGN_GLOBAL) {
-                // Assign the table to global directory
-                switch_page_table(&global_dir_);
-            } else {
-                switch_page_table(cur_dir_);
-            }
-        }
-    }
-
-    void *mmu_multiple::get_host_pointer(const asid id, const vm_address addr) {
-        if (id > 0 && dirs_.size() < id) {
-            return nullptr;
-        }
-
-        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= ram_code_addr_eka1)) ||
-            addr >= shared_data) {
-            return global_dir_.get_pointer(addr);
-        }
-
-        return (id == -1) ? cur_dir_->get_pointer(addr) : ((id == 0) ? global_dir_.get_pointer(addr) : dirs_[id - 1]->get_pointer(addr));
     }
 
     page_table *mmu_multiple::get_page_table_by_addr(const vm_address addr) {
@@ -134,5 +54,13 @@ namespace eka2l1::mem {
         }
 
         return 0;
+    }
+
+    void *mmu_multiple::get_host_pointer(const vm_address addr) {
+        if (!cur_dir_) {
+            return nullptr;
+        }
+
+        return cur_dir_->get_pointer(addr);
     }
 }

@@ -112,11 +112,17 @@ namespace eka2l1::drivers {
     bool open_native_dialog(graphics_driver *driver, const char *filter, drivers::graphics_driver_dialog_callback callback, const bool is_folder = false);
 
     struct graphics_command_list {
+        virtual ~graphics_command_list() {
+        }
+
         virtual bool empty() const = 0;
     };
 
     struct server_graphics_command_list : public graphics_command_list {
         command_list list_;
+
+        ~server_graphics_command_list() override {
+        }
 
         bool empty() const override {
             return list_.empty();
@@ -193,13 +199,19 @@ namespace eka2l1::drivers {
         /**
          * \brief Draw a bitmap to currently binded bitmap.
          *
+         * The only limitation is origin is hard-coded to the center of the bitmap for rotation purpose.
+         * 
          * \param h            The handle of the bitmap to blit.
          * \param maskh        The handle of the mask to apply to this bitmap. Use 0 for none.
-         * \param pos          The position of the bitmap on the screen.
+         * \param dest_rect    The destination rectangle of the bitmap on the screen.
          * \param source_rect  The source rectangle to strip.
+         * \param origin       The origin to which the rotation is based on.
+         * \param rotation     The rotation in degrees.
          * \param flags        Drawing flags.
          */
-        virtual void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const std::uint32_t flags = 0) = 0;
+        virtual void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect,
+            const eka2l1::rect &source_rect, const eka2l1::vec2 &origin = eka2l1::vec2(0, 0),
+            const float rotation = 0.0f, const std::uint32_t flags = 0) = 0;
 
         /**
          * \brief Draw a rectangle with brush color.
@@ -437,7 +449,8 @@ namespace eka2l1::drivers {
         void update_bitmap(drivers::handle h, const char *data, const std::size_t size, const eka2l1::vec2 &offset,
             const eka2l1::vec2 &dim, const std::size_t pixels_per_line = 0) override;
 
-        void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const std::uint32_t flags = 0) override;
+        void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect,
+            const eka2l1::vec2 &origin = eka2l1::vec2(0, 0), const float rotation = 0.0f, const std::uint32_t flags = 0) override;
 
         void draw_rectangle(const eka2l1::rect &target_rect) override;
 

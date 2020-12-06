@@ -96,7 +96,7 @@ namespace eka2l1::epoc {
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
         const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
-        cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, 0);
+        cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f, 0);
         ctx.complete(epoc::error_none);
     }
 
@@ -401,7 +401,8 @@ namespace eka2l1::epoc {
                 drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
         }
 
-        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, flags);
+        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, eka2l1::vec2(0, 0),
+            0.0f, flags);
         cmd_builder->set_blend_mode(false);
 
         if (swizzle_alteration) {

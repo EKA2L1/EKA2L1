@@ -31,25 +31,27 @@ namespace eka2l1::common {
 }
 
 namespace eka2l1::mem {
+    class control_base;
     class mmu_base;
+
     struct mem_model_process;
 
     struct mem_model_chunk {
         prot permission_;
 
     protected:
-        mmu_base *mmu_;
+        control_base *control_;
         asid addr_space_id_;
 
         vm_address bottom_;
         vm_address top_;
 
         void manipulate_cpu_map(common::bitmap_allocator *allocator, mem_model_process *process,
-            const bool map);
+            mmu_base *mmu, const bool map);
 
     public:
-        explicit mem_model_chunk(mmu_base *mmu, const asid id)
-            : mmu_(mmu)
+        explicit mem_model_chunk(control_base *control, const asid id)
+            : control_(control)
             , addr_space_id_(id)
             , bottom_(0)
             , top_(0) {
@@ -87,18 +89,18 @@ namespace eka2l1::mem {
          * 
          * This is support for some JIT's context switching.
          */
-        virtual void unmap_from_cpu(mem_model_process *process) = 0;
+        virtual void unmap_from_cpu(mem_model_process *process, mmu_base *mmu) = 0;
 
         /**
          * \brief Map the committed region to CPU.
          * 
          * This is support for some JIT's context switching.
          */
-        virtual void map_to_cpu(mem_model_process *process) = 0;
+        virtual void map_to_cpu(mem_model_process *process, mmu_base *mmu) = 0;
     };
 
     using mem_model_chunk_impl = std::unique_ptr<mem_model_chunk>;
 
-    mem_model_chunk_impl make_new_mem_model_chunk(mmu_base *mmu, const asid addr_space_id,
+    mem_model_chunk_impl make_new_mem_model_chunk(control_base *control, const asid addr_space_id,
         const mem_model_type mmt);
 }

@@ -263,7 +263,8 @@ namespace eka2l1 {
             { static_cast<int>(language::uk), common::get_localised_string(localised_strings, "lang_name_uk") },
             { static_cast<int>(language::tr), common::get_localised_string(localised_strings, "lang_name_tr") },
             { static_cast<int>(language::az), common::get_localised_string(localised_strings, "lang_name_az") },
-            { static_cast<int>(language::bn), common::get_localised_string(localised_strings, "lang_name_bn") }
+            { static_cast<int>(language::bn), common::get_localised_string(localised_strings, "lang_name_bn") },
+            { static_cast<int>(language::id), common::get_localised_string(localised_strings, "lang_name_id") }
         };
         
         ImGui::NewLine();
@@ -355,16 +356,21 @@ namespace eka2l1 {
                         if (std::find(dvcs[i].languages.begin(), dvcs[i].languages.end(), conf->language) == dvcs[i].languages.end()) {
                             set_language_current(static_cast<language>(dvcs[i].default_language_code));
                         }
+
+                        conf->device = static_cast<int>(i);
+                        conf->serialize();
+
+                        // Hamburger!!!!!!!! :L
+                        mngr->lock.unlock();
+                        in_reset = true;
+
+                        sys->set_device(static_cast<std::uint8_t>(i));
+
+                        in_reset = false;
+                        mngr->lock.lock();
+
+                        should_notify_reset_for_big_change = true;
                     }
-
-                    conf->device = static_cast<int>(i);
-                    conf->serialize();
-
-                    mngr->lock.unlock();
-                    mngr->set_current(static_cast<std::uint8_t>(i));
-                    mngr->lock.lock();
-
-                    should_notify_reset_for_big_change = true;
                 }
             }
 
@@ -465,6 +471,16 @@ namespace eka2l1 {
             if (should_disable_validate_drive) {
                 ImGui::PopItemFlag();
                 ImGui::PopStyleVar();
+            }
+            
+            const std::string rescan_device_str = common::get_localised_string(localised_strings,
+                "pref_system_rescan_devices_title");
+
+            ImGui::SameLine();
+            if (ImGui::Button(rescan_device_str.c_str())) {
+                mngr->lock.unlock();
+                sys->rescan_devices(drive_z);
+                mngr->lock.lock();
             }
 
             if (ImGui::IsItemHovered()) {
@@ -726,7 +742,7 @@ namespace eka2l1 {
         };
 
         if (!oom->get_eik_server()) {
-            oom->init(sys->get_kernel_system());
+            oom->init(sys->get_kernel_system(), sys->get_io_system(), sys->get_device_manager());
         }
 
         epoc::cap::eik_server *eik = oom->get_eik_server();

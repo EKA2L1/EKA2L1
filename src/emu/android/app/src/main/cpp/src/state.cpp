@@ -109,13 +109,6 @@ namespace eka2l1::android {
 
             LOG_INFO("Device being used: {} ({})", dvc->model, dvc->firmware_code);
 
-            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(
-                    common::lowercase_string(dvc->firmware_code), "SYM.ROM"))));
-
-            if (!res) {
-                return false;
-            }
-
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,

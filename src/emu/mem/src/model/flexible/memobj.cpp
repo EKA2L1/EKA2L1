@@ -20,22 +20,22 @@
 #include <mem/model/flexible/addrspace.h>
 #include <mem/model/flexible/memobj.h>
 #include <mem/model/flexible/mapping.h>
-#include <mem/mmu.h>
+#include <mem/model/flexible/control.h>
 
 #include <common/algorithm.h>
 #include <common/log.h>
 #include <common/virtualmem.h>
 
 namespace eka2l1::mem::flexible {
-    memory_object::memory_object(mmu_base *mmu, const std::size_t page_count, void *external_host)
+    memory_object::memory_object(control_base *ctrl, const std::size_t page_count, void *external_host)
         : data_(external_host)
         , page_occupied_(page_count)
-        , mmu_(mmu)
+        , control_(ctrl)
         , external_(false) {
         if (data_) {
             external_ = true;
         } else {
-            data_ = common::map_memory(page_count * mmu->page_size());
+            data_ = common::map_memory(page_count * ctrl->page_size());
 
             if (!data_) {
                 LOG_ERROR("Unable to allocate virtual memory for this memory object (page count = {})",
@@ -46,7 +46,7 @@ namespace eka2l1::mem::flexible {
 
     memory_object::~memory_object() {
         if (data_ && !external_) {
-            common::unmap_memory(data_, page_occupied_ * mmu_->page_size());
+            common::unmap_memory(data_, page_occupied_ * control_->page_size());
         }
     }
 
@@ -55,8 +55,8 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
-        const std::uint32_t start_offset = page_offset << mmu_->page_size_bits_;
-        const std::uint32_t size_to_commit = static_cast<std::uint32_t>(total_pages << mmu_->page_size_bits_);
+        const std::uint32_t start_offset = page_offset << control_->page_size_bits_;
+        const std::uint32_t size_to_commit = static_cast<std::uint32_t>(total_pages << control_->page_size_bits_);
 
         if (!external_) {
             const bool alloc_result = common::commit(reinterpret_cast<std::uint8_t*>(data_) + start_offset,
@@ -67,16 +67,22 @@ namespace eka2l1::mem::flexible {
             }
         }
 
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible*>(control_);
+
         // Map to all mappings
         for (auto &mapping: mappings_) {
             if (!mapping->map(this, page_offset, total_pages, perm)) {
                 LOG_WARN("Unable to map committed memory to a mapping!");
             }
+            
+            for (auto &mm: ctrl_fx->mmus_) {
+                if (mapping->owner_->id() == mm->current_addr_space()) {
+                    // Map it to CPU right away
+                    mm->map_to_cpu(mapping->base_ + start_offset, size_to_commit, reinterpret_cast<std::uint8_t*>(data_) +
+                        start_offset, perm);
 
-            if (mapping->owner_->id() == mmu_->current_addr_space()) {
-                // Map it to CPU right away
-                mmu_->map_to_cpu(mapping->base_ + start_offset, size_to_commit, reinterpret_cast<std::uint8_t*>(data_) +
-                    start_offset, perm);
+                    break;
+                }
             }
         }
 
@@ -88,8 +94,8 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
-        const std::uint32_t start_offset = page_offset << mmu_->page_size_bits_;
-        const std::uint32_t size_to_decommit = static_cast<std::uint32_t>(total_pages << mmu_->page_size_bits_);
+        const std::uint32_t start_offset = page_offset << control_->page_size_bits_;
+        const std::uint32_t size_to_decommit = static_cast<std::uint32_t>(total_pages << control_->page_size_bits_);
 
         if (!external_) {
             const bool deresult = common::decommit(reinterpret_cast<std::uint8_t*>(data_) + start_offset,
@@ -100,15 +106,20 @@ namespace eka2l1::mem::flexible {
             }
         }
 
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible*>(control_);
+
         // Unmap decomitted memory from all mappings
         for (auto &mapping: mappings_) {
             if (!mapping->unmap(page_offset, total_pages)) {
                 LOG_WARN("Unable to unmap decommitted memory from a mapping!");
             }
             
-            if (mapping->owner_->id() == mmu_->current_addr_space()) {
-                // Unmap from to CPU right away
-                mmu_->unmap_from_cpu(mapping->base_ + start_offset, size_to_decommit);
+            for (auto &mm: ctrl_fx->mmus_) {
+                if (mapping->owner_->id() == mm->current_addr_space()) {
+                    // Unmap from to CPU right away
+                    mm->unmap_from_cpu(mapping->base_ + start_offset, size_to_decommit);
+                    break;
+                }
             }
         }
 

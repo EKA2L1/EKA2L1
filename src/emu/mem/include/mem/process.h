@@ -28,19 +28,20 @@
 
 namespace eka2l1::mem {
     struct mem_model_chunk;
-    class mmu_base;
-
     struct mem_model_process;
+
+    class control_base;
+    class mmu_base;
 
     /**
      * \brief A component in process implementation, that provides memory manipulation of process address space.
      */
     struct mem_model_process {
-        mmu_base *mmu_;
+        control_base *control_;
 
     public:
-        explicit mem_model_process(mmu_base *mmu)
-            : mmu_(mmu) {
+        explicit mem_model_process(control_base *control)
+            : control_(control) {
         }
 
         virtual ~mem_model_process() {
@@ -56,11 +57,11 @@ namespace eka2l1::mem {
         virtual bool attach_chunk(mem_model_chunk *chunk) = 0;
         virtual bool detach_chunk(mem_model_chunk *chunk) = 0;
 
-        virtual void unmap_from_cpu() = 0;
-        virtual void remap_to_cpu() = 0;
+        virtual void unmap_from_cpu(mmu_base *mmu) = 0;
+        virtual void remap_to_cpu(mmu_base *mmu) = 0;
     };
 
     using mem_model_process_impl = std::unique_ptr<mem_model_process>;
 
-    mem_model_process_impl make_new_mem_model_process(mmu_base *mmu, const mem_model_type model);
+    mem_model_process_impl make_new_mem_model_process(control_base *control, const mem_model_type model);
 }

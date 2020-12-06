@@ -55,6 +55,7 @@
 #include <services/ui/cap/oom_app.h>
 #include <services/ui/eikappui.h>
 #include <services/ui/view/view.h>
+#include <services/unipertar/unipertar.h>
 #include <services/window/window.h>
 
 #include <system/epoc.h>
@@ -225,6 +226,7 @@ namespace eka2l1 {
                 CREATE_SERVER(sys, akn_skin_server);
 
             CREATE_SERVER(sys, system_agent_server);
+            CREATE_SERVER(sys, unipertar_server);
 
             epoc::initialize_system_properties(sys, cfg);
         }

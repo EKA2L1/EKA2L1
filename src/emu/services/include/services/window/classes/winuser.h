@@ -77,6 +77,7 @@ namespace eka2l1::epoc {
         std::uint64_t last_draw_;
 
         void invalidate(const eka2l1::rect &irect);
+        void wipeout();
 
         explicit window_user(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::window_type type_of_window, const epoc::display_mode dmode,

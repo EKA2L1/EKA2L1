@@ -36,6 +36,7 @@ namespace eka2l1 {
         std::vector<epoc::keysound::context> contexts_; ///< Context stack describes sound to play when key action trigger.
 
         std::unique_ptr<drivers::audio_output_stream> aud_out_;
+        std::uint8_t previous_repeat_;
 
         struct parser_state {
             std::uint32_t frames_;
@@ -51,6 +52,8 @@ namespace eka2l1 {
             explicit parser_state();
             void set(epoc::keysound::sound_info &new_sound);
         } state_;
+
+        void play_sid(const std::uint32_t sid);
 
     public:
         explicit keysound_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version);

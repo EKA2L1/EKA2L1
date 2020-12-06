@@ -24,7 +24,7 @@
 #include <utils/err.h>
 
 #include <system/devices.h>
-
+#include <common/cvt.h>
 
 #include <algorithm>
 #include <chrono>
@@ -329,12 +329,16 @@ namespace eka2l1 {
         }
 
         case cen_rep_set_string: {
-            if (entry->data.etype != central_repo_entry_type::string) {
+            if ((entry->data.etype != central_repo_entry_type::string8) || (entry->data.etype != central_repo_entry_type::string16)) {
                 ctx->complete(epoc::error_argument);
                 break;
             }
 
             entry->data.strd = *ctx->get_argument_value<std::string>(1);
+            if (entry->data.etype == central_repo_entry_type::string16) {
+                entry->data.str16d = common::utf8_to_ucs2(entry->data.strd);
+            }
+
             break;
         }
 
@@ -396,13 +400,16 @@ namespace eka2l1 {
         }
 
         case cen_rep_get_string: {
-            if (entry->data.etype != central_repo_entry_type::string) {
+            if (entry->data.etype == central_repo_entry_type::string8) {
+                ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
+                    static_cast<std::uint32_t>(entry->data.strd.length()));
+            } else if (entry->data.etype == central_repo_entry_type::string16) {
+                ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.str16d[0]),
+                    static_cast<std::uint32_t>(entry->data.str16d.length() * 2));
+            } else {
                 ctx->complete(epoc::error_argument);
                 return;
             }
-
-            ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
-                static_cast<std::uint32_t>(entry->data.strd.length()));
 
             break;
         }
@@ -450,6 +457,7 @@ namespace eka2l1 {
 
         // Set found count to 0
         found_uid_result_array[0] = 0;
+        std::string cache_arg;
 
         for (auto &entry : attach_repo->entries) {
             // Try to match the key first
@@ -498,12 +506,32 @@ namespace eka2l1 {
 
             case cen_rep_find_eq_string:
             case cen_rep_find_neq_string: {
-                if (entry.data.etype != central_repo_entry_type::string) {
-                    // It must be string type
-                    break;
+                bool is_ok = false;
+
+                if (cache_arg.empty()) {
+                    auto ss = ctx->get_argument_value<std::string>(1);
+
+                    if (!ss.has_value()) {
+                        ctx->complete(epoc::error_argument);
+                        return;
+                    }
+
+                    cache_arg = ss.value();
                 }
 
-                if (static_cast<std::string>(entry.data.strd) == ctx->get_argument_value<std::string>(1)) {
+                if (entry.data.etype == central_repo_entry_type::string8) {
+                    // It must be string type
+                    is_ok = (entry.data.strd == cache_arg);
+                } else if (entry.data.etype == central_repo_entry_type::string16) {
+                    if ((cache_arg.size() / 2) == (entry.data.str16d.size())) {
+                        is_ok = std::memcmp(cache_arg.data(), entry.data.str16d.data(), cache_arg.size());   
+                    }
+                } else {
+                    ctx->complete(epoc::error_argument);
+                    return;
+                }
+
+                if (is_ok) {
                     if (!find_not_eq) {
                         key_found = entry.key;
                     }

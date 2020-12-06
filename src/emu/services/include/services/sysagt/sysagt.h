@@ -89,6 +89,7 @@ namespace eka2l1 {
         explicit system_agent_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void get_state(service::ipc_context *ctx);
+        void get_multiple_states(service::ipc_context *ctx);
         void notify_event(service::ipc_context *ctx, const bool any);
         void notify_event_cancel(service::ipc_context *ctx);
         void set_event_buffering(service::ipc_context *ctx);

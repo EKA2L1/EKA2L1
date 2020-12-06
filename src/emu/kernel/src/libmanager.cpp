@@ -449,6 +449,9 @@ namespace eka2l1::hle {
             }
         }
 
+        const std::uint32_t last_add_mode = additional_mode_;
+        additional_mode_ = 0;
+
         for (std::size_t i = 0; i < patch_image_paths.size(); i++) {
             // We want to patch ROM image though. Do it.
             auto e32imgfile = eka2l1::physical_file_proxy(patch_image_paths[i], READ_MODE | BIN_MODE);
@@ -493,23 +496,27 @@ namespace eka2l1::hle {
             patches_[i].patch_ = patch_seg;
         }
 
+        additional_mode_ = last_add_mode;
+
         apply_pending_patches();
         apply_trick_or_treat_algo();
     }
 
     static bool does_condition_meet_for_patch(codeseg_ptr original, patch_info &patch, const bool check_name) {
-        if (!check_name) {  
+        if (check_name) {  
             const std::string org_name = original->name();
-            const auto the_uids =  original->get_uids();
 
-            if (common::compare_ignore_case(org_name.c_str(), patch.name_.c_str()) == 0) {
-                const bool uid2_sas = (!patch.req_uid2_ || (patch.req_uid2_ == std::get<1>(the_uids)));
-                const bool uid3_sas = (!patch.req_uid3_ || (patch.req_uid3_ == std::get<2>(the_uids)));
-
-                if (uid2_sas && uid3_sas) {
-                    return true;
-                }
+            if (common::compare_ignore_case(org_name.c_str(), patch.name_.c_str()) != 0) {
+                return false;
             }
+        }
+
+        const auto the_uids =  original->get_uids();
+        const bool uid2_sas = (!patch.req_uid2_ || (patch.req_uid2_ == std::get<1>(the_uids)));
+        const bool uid3_sas = (!patch.req_uid3_ || (patch.req_uid3_ == std::get<2>(the_uids)));
+
+        if (uid2_sas && uid3_sas) {
+            return true;
         }
 
         return false;
@@ -517,12 +524,9 @@ namespace eka2l1::hle {
 
     void lib_manager::apply_trick_or_treat_algo() {
         for (auto &patch: patches_) {
+            // Auto apply
             codeseg_ptr cc = load(common::utf8_to_ucs2(patch.name_));
-
-            if (cc && does_condition_meet_for_patch(cc, patch, false)) { 
-                patch_original_codeseg(patch.routes_, kern_->get_memory_system(), patch.patch_, cc);
-            }
-        }        
+        }
     }
 
     bool lib_manager::try_apply_patch(codeseg_ptr original) {
@@ -735,7 +739,7 @@ namespace eka2l1::hle {
                 result{ std::nullopt, std::nullopt };
 
             if (io_->exist(lib_path)) {
-                symfile f = io_->open_file(path, READ_MODE | BIN_MODE);
+                symfile f = io_->open_file(path, READ_MODE | BIN_MODE | additional_mode_);
                 if (!f) {
                     return result;
                 }
@@ -810,14 +814,14 @@ namespace eka2l1::hle {
             auto entry = io_->get_drive_entry(drv);
 
             if (entry) {
-                symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE);
+                symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE | additional_mode_);
                 if (!f) {
                     return nullptr;
                 }
 
                 eka2l1::ro_file_stream image_data_stream(f.get());
 
-                if (entry->media_type == drive_media::rom && io_->is_entry_in_rom(lib_path)) {
+                if (f->is_in_rom()) {
                     auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version());
                     if (!romimg) {
                         return nullptr;
@@ -1063,9 +1067,10 @@ namespace eka2l1::hle {
         , io_(ios)
         , mem_(mems)
         , bootstrap_chunk_(nullptr)
+        , rom_drv_(drive_invalid)
+        , additional_mode_(0)
         , entry_points_call_routine_(nullptr)
-        , thread_entry_routine_(nullptr)
-        , rom_drv_(drive_invalid) { 
+        , thread_entry_routine_(nullptr) { 
         hle::symbols sb;
         std::string lib_name;
 
@@ -1113,6 +1118,9 @@ namespace eka2l1::hle {
             search_paths.push_back(u"\\System\\Fep\\");
         } else {
             search_paths.push_back(u"\\Sys\\Bin\\");
+            
+            // Circumvent ROM vs ROFS issue at the moment.
+            additional_mode_ = PREFER_PHYSICAL;
         }
     }
     

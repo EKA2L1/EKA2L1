@@ -22,14 +22,14 @@
 #include <mem/process.h>
 
 namespace eka2l1::mem {
-    mem_model_process_impl make_new_mem_model_process(mmu_base *mmu, const mem_model_type model) {
+    mem_model_process_impl make_new_mem_model_process(control_base *ctrl, const mem_model_type model) {
         switch (model) {
         case mem_model_type::multiple: {
-            return std::make_unique<multiple_mem_model_process>(mmu);
+            return std::make_unique<multiple_mem_model_process>(ctrl);
         }
 
         case mem_model_type::flexible:
-            return std::make_unique<flexible::flexible_mem_model_process>(mmu);
+            return std::make_unique<flexible::flexible_mem_model_process>(ctrl);
 
         default:
             break;

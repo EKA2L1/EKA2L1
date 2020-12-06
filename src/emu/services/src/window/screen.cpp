@@ -60,7 +60,7 @@ namespace eka2l1::epoc {
 
             // Draw it onto current binding buffer
             builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(winuser->pos, { 0, 0 }),
-                eka2l1::rect({ 0, 0 }, winuser->size), 0);
+                eka2l1::rect({ 0, 0 }, winuser->size), eka2l1::vec2(0, 0), 0.0f, 0);
 
             total_redrawed_++;
 
@@ -128,6 +128,10 @@ namespace eka2l1::epoc {
 
         if (screen_texture) {
             cmd_builder->destroy_bitmap(screen_texture);
+        }
+
+        if (dsa_texture) {
+            cmd_builder->destroy_bitmap(dsa_texture);
         }
 
         driver->submit_command_list(*cmd_list);

@@ -100,6 +100,11 @@ namespace eka2l1 {
         save_devices();
     }
 
+    void device_manager::clear() {
+        const std::lock_guard<std::mutex> guard(lock);
+        devices.clear();
+    }
+
     device *device_manager::get(const std::string &firmcode) {
         auto result = std::find_if(devices.begin(), devices.end(),
             [&](const device &dvc) { return dvc.firmware_code == firmcode; });

@@ -37,6 +37,8 @@
 #include <services/window/window.h>
 
 namespace eka2l1::desktop {
+    static const char *PATCH_FOLDER_PATH = ".//patch//";
+
     emulator::emulator()
         : symsys(nullptr)
         , graphics_driver_thread(nullptr)
@@ -54,7 +56,8 @@ namespace eka2l1::desktop {
         , first_time(true)
         , init_fullscreen(false)
         , winserv(nullptr)
-        , normal_font(nullptr) {
+        , normal_font(nullptr)
+        , sys_reset_cbh(0) {
     }
 
     void emulator::stage_one() {
@@ -98,8 +101,10 @@ namespace eka2l1::desktop {
             symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib_internal);
             symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib_removeable);
             
-            winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>(
-                eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
+            on_system_reset(symsys.get());
+            sys_reset_cbh = symsys->add_system_reset_callback([this](system *the_sys) {
+                on_system_reset(the_sys);
+            });
         }
 
         first_time = true;
@@ -122,13 +127,6 @@ namespace eka2l1::desktop {
             
             LOG_INFO("Device being used: {} ({})", dvc->model, dvc->firmware_code);
 
-            bool res = symsys->load_rom(add_path(conf.storage, add_path("roms", add_path(
-                common::lowercase_string(dvc->firmware_code), "SYM.ROM"))));
-
-            if (!res) {
-                return false;
-            }
-
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
@@ -145,10 +143,34 @@ namespace eka2l1::desktop {
             // Start the bootload
             kern->start_bootload();
 
-            libmngr->load_patch_libraries(".//patch//");
+            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
             stage_two_inited = true;
         }
 
         return true;
+    }
+
+    void emulator::on_system_reset(system *the_sys) {
+        winserv = reinterpret_cast<eka2l1::window_server *>(the_sys->get_kernel_system()->get_by_name<eka2l1::service::server>(
+            eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
+
+        // Load patch libraries
+        if (stage_two_inited) {
+            kernel_system *kern = symsys->get_kernel_system();
+            hle::lib_manager *libmngr = kern->get_lib_manager();
+
+            // Start the bootload
+            kern->start_bootload();
+
+            libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
+        }
+    }
+
+    bool emulator::should_guest_take_events() {
+        if (!debugger) {
+            return true;
+        }
+
+        return winserv && !debugger->is_in_reset();
     }
 }

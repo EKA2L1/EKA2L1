@@ -48,19 +48,18 @@ namespace eka2l1::mem {
         std::unique_ptr<common::bitmap_allocator> page_bma_;
         linear_section *get_section(const std::uint32_t flags);
 
-        void do_selection_cpu_memory_manipulation(const bool unmap);
+        void do_selection_cpu_memory_manipulation(mmu_base *mmu, const bool unmap);
 
     public:
         bool is_local{ false };
         bool is_code { false };
         bool is_external_host{ false };
 
-        explicit multiple_mem_model_chunk(mmu_base *mmu, const asid id)
-            : mem_model_chunk(mmu, id) {
+        explicit multiple_mem_model_chunk(control_base *control, const asid id)
+            : mem_model_chunk(control, id) {
         }
 
-        ~multiple_mem_model_chunk() override {
-        }
+        ~multiple_mem_model_chunk() override;
 
         const vm_address base(mem_model_process *process) override {
             return base_;
@@ -85,7 +84,7 @@ namespace eka2l1::mem {
 
         bool allocate(const std::size_t size) override;
 
-        void unmap_from_cpu(mem_model_process *pr) override;
-        void map_to_cpu(mem_model_process *pr) override;
+        void unmap_from_cpu(mem_model_process *pr, mmu_base *mmu) override;
+        void map_to_cpu(mem_model_process *pr, mmu_base *mmu) override;
     };
 }

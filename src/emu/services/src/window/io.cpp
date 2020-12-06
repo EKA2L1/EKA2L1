@@ -144,20 +144,12 @@ namespace eka2l1::epoc {
             evt.key_evt_.scancode = epoc::map_inputcode_to_scancode(evt.key_evt_.scancode,
                 ui_rotation);
 
-            bool dont_send_extra_key_event = false;
+            bool dont_send_extra_key_event = (evt.type != epoc::event_code::key_down);
 
             // TODO: My assumption... For now.
             // Actually this smells like a hack
             const bool repeatable = !is_device_std_key_not_repeatable(static_cast
                 <epoc::std_scan_code>(evt.key_evt_.scancode));
-
-            if (!serv_->key_block_active && !repeatable) {	
-                // Don't block simultaneous key presses.	
-                // Also looks like the application buttons key event is disabled... TODO?	
-                dont_send_extra_key_event = true;
-            } else {	
-                dont_send_extra_key_event = (evt.type != epoc::event_code::key_down);	
-            }
 
             epoc::event extra_event = evt;
             extra_event.type = epoc::event_code::key;

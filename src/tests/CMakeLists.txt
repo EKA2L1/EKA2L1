@@ -8,6 +8,7 @@ add_executable(ekatests
     ${COMMON_TEST_FILES}
     ${CORE_TEST_FILES})
 
+
 target_link_libraries(ekatests PRIVATE
     Catch2
     common

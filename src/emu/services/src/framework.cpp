@@ -24,6 +24,15 @@
 #include <services/utils.h>
 
 namespace eka2l1::service {
+    normal_object_container::~normal_object_container() {
+        clear();
+    }
+
+    void normal_object_container::clear() {
+        const std::lock_guard<std::mutex> guard(obj_lock);
+        objs.clear();
+    }
+
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
         const std::lock_guard<std::mutex> guard(obj_lock);
 

@@ -165,7 +165,7 @@ namespace eka2l1 {
                 emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
 
                 if (!emu_win) {
-                    LOG_ERROR("Can't create window! Check if your PC support at least 3.1!");
+                    LOG_ERROR("Can't create window! Check if your PC support at least OpenGL 3.1!");
                     return;
                 }
             }

@@ -59,9 +59,6 @@ namespace eka2l1 {
         using core_instance = std::unique_ptr<core>;
     }
 
-    class debugger_base;
-    using hal_instance = std::unique_ptr<epoc::hal>;
-
     namespace loader {
         struct rom;
     }
@@ -80,7 +77,13 @@ namespace eka2l1 {
         class scripts;
     }
 
+    class debugger_base;
+
+    class system;
     class system_impl;
+
+    using hal_instance = std::unique_ptr<epoc::hal>;
+    using system_reset_callback_type = std::function<void(system *)>;
 
     struct system_create_components {
         drivers::graphics_driver *graphics_;
@@ -146,16 +149,14 @@ namespace eka2l1 {
         void mount(drive_number drv, const drive_media media, std::string path,
             const std::uint32_t attrib = io_attrib_none);
 
-        void reset();
+        bool reset();
 
         bool pause();
         bool unpause();
         void load_scripts();
 
         bool set_device(const std::uint8_t idx);
-
         bool install_package(std::u16string path, drive_number drv);
-        bool load_rom(const std::string &path);
 
         void request_exit();
         bool should_exit() const;
@@ -167,5 +168,9 @@ namespace eka2l1 {
         void set_system_language(const language new_lang);
 
         void validate_current_device();
+        bool rescan_devices(const drive_number drvrom);
+
+        std::size_t add_system_reset_callback(system_reset_callback_type type);
+        bool remove_system_reset_callback(const std::size_t h);
     };
 }

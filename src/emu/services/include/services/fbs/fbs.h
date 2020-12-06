@@ -228,7 +228,7 @@ namespace eka2l1 {
             : fbsobj(fbsobj_kind::font) {
         }
 
-        void deref() override;
+        ~fbsfont() override;
     };
 
     struct fbsbitmap : public fbsobj {

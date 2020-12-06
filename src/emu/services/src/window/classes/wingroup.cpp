@@ -281,6 +281,8 @@ namespace eka2l1::epoc {
 
         default: {
             LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
+            ctx.complete(epoc::error_none);
+
             break;
         }
         }

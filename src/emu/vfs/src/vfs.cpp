@@ -950,6 +950,11 @@ namespace eka2l1 {
         bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
             return false;
         }
+        
+        bool install_memory(memory_system *new_mem) override {
+            mem = new_mem;
+            return true;
+        }
 
         bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
             const std::u16string &physical_path) override {
@@ -995,9 +1000,11 @@ namespace eka2l1 {
             }
 
             auto entry = burn_tree_find_entry(common::ucs2_to_utf8(new_path));
+            auto ff = physical_file_system::open_file(new_path, mode);
 
-            if (!entry) {
-                return physical_file_system::open_file(new_path, mode);
+            // Dont change order!
+            if (!entry || ((mode & PREFER_PHYSICAL) && (ff->size() != entry->size))) {
+                return ff;
             }
 
             return std::make_unique<rom_file>(mem, rom_cache, *entry, path);
@@ -1331,6 +1338,18 @@ namespace eka2l1 {
         for (auto &filesystem: filesystems) {
             filesystem.second->validate_for_host();
         }
+    }
+    
+    bool io_system::install_memory(memory_system *mem) {
+        const std::lock_guard<std::mutex> guard(access_lock);
+        bool res = false;
+
+        for (auto &filesystem: filesystems) {
+            if (filesystem.second->install_memory(mem))
+                res = true;
+        }
+
+        return res;
     }
 
     std::size_t io_system::register_drive_change_notify(drive_change_notify_callback callback, void *userdata) {

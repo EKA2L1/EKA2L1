@@ -28,5 +28,9 @@
         android:id="@+id/action_mount_sd"
         android:title="@string/mount_sd"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_save_log"
+        android:title="@string/save_log"
+        app:showAsAction="never" />
 
 </menu>

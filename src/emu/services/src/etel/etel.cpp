@@ -330,6 +330,10 @@ namespace eka2l1 {
                 get_phone_info_by_index(ctx);
                 break;
 
+            case epoc::etel_old_line_enumerate_call:
+                line_enumerate_call(ctx);
+                break;
+
             default:
                 std::optional<std::uint32_t> subsess_id = ctx->get_argument_value<std::uint32_t>(3);
 

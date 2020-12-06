@@ -99,5 +99,7 @@ namespace eka2l1::epoc {
          *          purged from cache
          */
         bool remove(epoc::bitwise_bitmap *bmp);
+
+        void clean(drivers::graphics_driver *drv);
     };
 }

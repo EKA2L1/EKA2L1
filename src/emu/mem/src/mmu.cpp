@@ -21,37 +21,16 @@
 #include <cpu/arm_interface.h>
 #include <config/config.h>
 #include <mem/mmu.h>
+#include <mem/control.h>
 
 #include <mem/model/flexible/mmu.h>
 #include <mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
-    mmu_base::mmu_base(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits, const bool mem_map_old)
-        : alloc_(alloc)
+    mmu_base::mmu_base(control_base *manager, arm::core *cpu, config::state *conf)
+        : manager_(manager)
         , cpu_(cpu)
-        , conf_(conf)
-        , page_size_bits_(psize_bits)
-        , mem_map_old_(mem_map_old) {
-        if (psize_bits == 20) {
-            offset_mask_ = OFFSET_MASK_20B;
-            page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_20B;
-            page_index_mask_ = PAGE_INDEX_MASK_20B;
-            page_index_shift_ = PAGE_INDEX_SHIFT_20B;
-            chunk_shift_ = CHUNK_SHIFT_20B;
-            chunk_mask_ = CHUNK_MASK_20B;
-            chunk_size_ = CHUNK_SIZE_20B;
-            page_per_tab_shift_ = PAGE_PER_TABLE_SHIFT_20B;
-        } else {
-            offset_mask_ = OFFSET_MASK_12B;
-            page_table_index_shift_ = PAGE_TABLE_INDEX_SHIFT_12B;
-            page_index_mask_ = PAGE_INDEX_MASK_12B;
-            page_index_shift_ = PAGE_INDEX_SHIFT_12B;
-            chunk_shift_ = CHUNK_SHIFT_12B;
-            chunk_mask_ = CHUNK_MASK_12B;
-            chunk_size_ = CHUNK_SIZE_12B;
-            page_per_tab_shift_ = PAGE_PER_TABLE_SHIFT_12B;
-        }
-
+        , conf_(conf) {
         // Set CPU read/write functions
         cpu->read_8bit = [this](const vm_address addr, std::uint8_t* data) { return read_8bit_data(addr, data); };
         cpu->read_16bit = [this](const vm_address addr, std::uint16_t* data) { return read_16bit_data(addr, data); };
@@ -62,10 +41,22 @@ namespace eka2l1::mem {
         cpu->write_16bit = [this](const vm_address addr, std::uint16_t* data) { return write_16bit_data(addr, data); };
         cpu->write_32bit = [this](const vm_address addr, std::uint32_t* data) { return write_32bit_data(addr, data); };
         cpu->write_64bit = [this](const vm_address addr, std::uint64_t* data) { return write_64bit_data(addr, data); };
-    }
 
-    page_table *mmu_base::create_new_page_table() {
-        return alloc_->create_new(page_size_bits_);
+        cpu->exclusive_write_8bit = [this](const vm_address addr, std::uint8_t value, std::uint8_t expected) {
+            return write_exclusive<std::uint8_t>(addr, value, expected);
+        };
+
+        cpu->exclusive_write_16bit = [this](const vm_address addr, std::uint16_t value, std::uint16_t expected) {
+            return write_exclusive<std::uint16_t>(addr, value, expected);
+        };
+
+        cpu->exclusive_write_32bit = [this](const vm_address addr, std::uint32_t value, std::uint32_t expected) {
+            return write_exclusive<std::uint32_t>(addr, value, expected);
+        };
+
+        cpu->exclusive_write_64bit = [this](const vm_address addr, std::uint64_t value, std::uint64_t expected) {
+            return write_exclusive<std::uint64_t>(addr, value, expected);
+        };
     }
 
     void mmu_base::map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm) {
@@ -76,28 +67,12 @@ namespace eka2l1::mem {
         cpu_->unmap_memory(addr, size);
     }
 
-    mmu_impl make_new_mmu(page_table_allocator *alloc, arm::core *cpu, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
-        const mem_model_type model) {
-        switch (model) {
-        case mem_model_type::multiple: {
-            return std::make_unique<mmu_multiple>(alloc, cpu, conf, psize_bits, mem_map_old);
-        }
-
-        case mem_model_type::flexible: {
-            return std::make_unique<flexible::mmu_flexible>(alloc, cpu, conf, psize_bits, mem_map_old);
-        }
-
-        default:
-            break;
-        }
-
-        return nullptr;
-    }
-    
     /// ================== MISCS ====================
 
     bool mmu_base::read_8bit_data(const vm_address addr, std::uint8_t *data) {
-        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(get_host_pointer(-1, addr));
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(manager_->
+            get_host_pointer(current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }
@@ -112,7 +87,9 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::read_16bit_data(const vm_address addr, std::uint16_t *data) {
-        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(get_host_pointer(-1, addr));
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(manager_->
+            get_host_pointer(current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }
@@ -127,7 +104,9 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::read_32bit_data(const vm_address addr, std::uint32_t *data) {
-        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(get_host_pointer(-1, addr));
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(manager_->
+            get_host_pointer(current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }
@@ -142,7 +121,9 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::read_64bit_data(const vm_address addr, std::uint64_t *data) {
-        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(get_host_pointer(-1, addr));
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(manager_->
+            get_host_pointer(current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }
@@ -157,7 +138,9 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::write_8bit_data(const vm_address addr, std::uint8_t *data) {
-        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(get_host_pointer(-1, addr));
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(manager_->
+            get_host_pointer(current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }
@@ -172,7 +155,9 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::write_16bit_data(const vm_address addr, std::uint16_t *data) {
-        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(get_host_pointer(-1, addr));
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(manager_->
+            get_host_pointer(current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }
@@ -187,7 +172,9 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::write_32bit_data(const vm_address addr, std::uint32_t *data) {
-        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(get_host_pointer(-1, addr));
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(manager_->get_host_pointer(
+            current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }
@@ -202,7 +189,9 @@ namespace eka2l1::mem {
     }
 
     bool mmu_base::write_64bit_data(const vm_address addr, std::uint64_t *data) {
-        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(get_host_pointer(-1, addr));
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(manager_->
+            get_host_pointer(current_addr_space(), addr));
+
         if (!ptr) {
             return false;
         }

@@ -70,6 +70,48 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void system_agent_session::get_multiple_states(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> count = ctx->get_argument_value<std::uint32_t>(0);
+
+        if (!count.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        const std::uint32_t size_expected = count.value() * sizeof(epoc::uid);
+        const std::size_t size_of_sources = ctx->get_argument_max_data_size(1);
+        const std::size_t size_of_dest = ctx->get_argument_max_data_size(2);
+
+        std::uint32_t *sources = reinterpret_cast<std::uint32_t*>(ctx->
+            get_descriptor_argument_ptr(1));
+
+        std::uint32_t *dest = reinterpret_cast<std::uint32_t*>(ctx->
+            get_descriptor_argument_ptr(2));
+
+        if ((size_of_sources < size_expected) || (size_of_dest < size_expected)
+            || !sources || !dest) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        kernel_system *kern = ctx->sys->get_kernel_system();
+
+        for (std::uint32_t i = 0; i < count.value(); i++) {
+            property_ptr prop = kern->get_prop(SYSTEM_AGENT_PROPERTY_CATEGORY,
+                sources[i]);
+
+            if (!prop) {
+                LOG_INFO("System Agent can't find state with UID 0x{:X}, set result to 0", sources[i]);
+                dest[i] = 0;
+            } else {
+                dest[i] = static_cast<std::uint32_t>(prop->get_int());
+            }
+        }
+
+        ctx->set_descriptor_argument_length(2, size_expected);
+        ctx->complete(epoc::error_none);
+    }
+
     void system_agent_session::notify_event(service::ipc_context *ctx, const bool any) {
         std::optional<address> uid_des_addr = ctx->get_argument_value<address>(0);
         std::optional<address> state_des_addr = ctx->get_argument_value<address>(1);
@@ -140,6 +182,10 @@ namespace eka2l1 {
         switch (ctx->msg->function) {
         case system_agent_get_state:
             get_state(ctx);
+            break;
+
+        case system_agent_get_multiple_states:
+            get_multiple_states(ctx);
             break;
 
         case system_agent_notify_on_event:

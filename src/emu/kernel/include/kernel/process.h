@@ -349,7 +349,7 @@ namespace eka2l1::kernel {
             return parent_process_;
         }
 
-        void do_state(common::chunkyseri &seri);
+        void do_state(common::chunkyseri &seri) override;
 
         common::roundabout &get_thread_list() {
             return thread_list;

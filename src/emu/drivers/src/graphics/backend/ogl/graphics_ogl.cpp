@@ -224,6 +224,12 @@ namespace eka2l1::drivers {
         eka2l1::rect source_rect;
         helper.pop(source_rect);
 
+        eka2l1::vec2 origin = eka2l1::vec2(0, 0);
+        helper.pop(origin);
+
+        float rotation = 0.0f;
+        helper.pop(rotation);
+
         struct sprite_vertex {
             float top[2];
             float coord[2];
@@ -332,7 +338,11 @@ namespace eka2l1::drivers {
             dest_rect.size.y = source_rect.size.y;
         }
 
-        model_matrix = glm::scale(model_matrix, glm::vec3(dest_rect.size.x, dest_rect.size.y, 0.0f));
+        model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(origin.x), static_cast<float>(origin.y), 0.0f)); 
+        model_matrix = glm::rotate(model_matrix, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+        model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(-origin.x), static_cast<float>(-origin.y), 0.0f));
+
+        model_matrix = glm::scale(model_matrix, glm::vec3(dest_rect.size.x, dest_rect.size.y, 1.0f));
 
         glUniformMatrix4fv((mask_bmp ? model_loc_mask : model_loc), 1, false, glm::value_ptr(model_matrix));
         glUniformMatrix4fv((mask_bmp ? proj_loc_mask : proj_loc), 1, false, glm::value_ptr(projection_matrix));

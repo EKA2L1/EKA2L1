@@ -23,16 +23,16 @@ namespace eka2l1::mem::flexible {
     chunk_manager::chunk_manager() {
     }
 
-    flexible_mem_model_chunk *chunk_manager::new_chunk(mmu_base *mmu, const asid id) {
+    flexible_mem_model_chunk *chunk_manager::new_chunk(control_base *ctrl, const asid id) {
         for (std::size_t i = 0; i < chunks_.size(); i++) {
             if (!chunks_[i]) {
-                chunks_[i] = std::make_unique<flexible_mem_model_chunk>(mmu, id);
+                chunks_[i] = std::make_unique<flexible_mem_model_chunk>(ctrl, id);
                 return chunks_[i].get();
             }
         }
 
         // Push new chunk into it
-        chunks_.push_back(std::make_unique<flexible_mem_model_chunk>(mmu, id));
+        chunks_.push_back(std::make_unique<flexible_mem_model_chunk>(ctrl, id));
         return chunks_.back().get();
     }
 

@@ -19,6 +19,7 @@
 
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
+#include <dispatch/dispatcher.h>
 #include <drivers/audio/audio.h>
 
 #include <services/audio/keysound/keysound.h>
@@ -36,7 +37,8 @@ namespace eka2l1 {
     // Reference from GUID-1A9B515C-C20F-4EC7-B62A-223B219BBC4E, Belle devlib
     // Implementation based of original S^3 open source code and documentation.
     keysound_session::keysound_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
-        : service::typical_session(svr, client_ss_uid, client_version) {
+        : service::typical_session(svr, client_ss_uid, client_version)
+        , previous_repeat_(0) {
         drivers::audio_driver *aud_driver = svr->get_system()->get_audio_driver();
 
         if (aud_driver) {
@@ -196,22 +198,62 @@ namespace eka2l1 {
     }
 
     void keysound_session::play_key(service::ipc_context *ctx) {
-        LOG_TRACE("Trying to play key with scancode 0x{:x}, stubbed", ctx->get_argument_value<std::uint32_t>(0).value());
+        dispatch::dispatcher *dserv = ctx->sys->get_dispatcher();
+        if (/*!dserv->get_audren_sema()->free()*/ true) {
+            // shut up we are in gamer mode
+            // NOTE: This is a hack. On real phone there's a priority system (active objects) for this stuffs.
+            // NOTE2: It should not even be played in many situations. May relate to key block mode. Repeat count 1.
+            // But afaik repeat count 1 is correct (what the OSS do, so weird).
+            ctx->complete(epoc::error_none);
+            return;
+        }
+
+        std::optional<std::uint16_t> key = ctx->get_argument_value<std::uint16_t>(0);
+        std::optional<std::uint8_t> repeat = ctx->get_argument_value<std::uint8_t>(1);
+
+        if (!key.has_value() || !repeat.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
         ctx->complete(epoc::error_none);
+
+        // Parse repeat
+        std::uint8_t type_for_keysound = 0;
+
+        if (repeat.value() == 0) {
+            type_for_keysound = 0;      // Short sound
+        } else {
+            if (previous_repeat_ == 0) {
+                type_for_keysound = 1;      // Long key sound
+            } else {
+                type_for_keysound = 2;      // Repeat key sound
+            }
+        }
+
+        epoc::keysound::context cctx = contexts_.back();
+        auto res = std::find_if(cctx.infos_.begin(), cctx.infos_.end(), [=](const epoc::keysound::sound_trigger_info &info) {
+            return (info.key == key.value()) && (info.type == type_for_keysound);
+        });
+
+        if (res != cctx.infos_.end()) {
+            if (res->sid == epoc::keysound::NO_SOUND_ID) {
+                return;
+            } else {
+                play_sid(res->sid);
+            }
+        }
     }
 
-    void keysound_session::play_sid(service::ipc_context *ctx) {
-        LOG_TRACE("Trying to play sound with ID 0x{:x}, stubbed", ctx->get_argument_value<std::uint32_t>(0).value());
-        epoc::keysound::sound_info *info = server<keysound_server>()->get_sound(ctx->get_argument_value<std::uint32_t>(0).value());
+    void keysound_session::play_sid(const std::uint32_t sid) {
+        epoc::keysound::sound_info *info = server<keysound_server>()->get_sound(sid);
 
         if (!info) {
-            ctx->complete(epoc::error_not_found);
             return;
         }
 
         if (info->type_ == epoc::keysound::sound_type::sound_type_file) {
             LOG_WARN("Sound type file unsupported, skip. Please revisit");
-            ctx->complete(epoc::error_none);
             return;
         }
 
@@ -221,8 +263,11 @@ namespace eka2l1 {
 
         state_.set(*info);
         aud_out_->start();
+    }
 
+    void keysound_session::play_sid(service::ipc_context *ctx) {
         ctx->complete(epoc::error_none);
+        play_sid(ctx->get_argument_value<std::uint32_t>(0).value());
     }
 
     void keysound_session::add_sids(service::ipc_context *ctx) {

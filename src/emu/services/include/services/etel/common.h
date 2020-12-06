@@ -78,7 +78,8 @@ namespace eka2l1::epoc {
         etel_old_call_answer_incoming_call = 50,
         etel_old_call_hang_up = 51,
         etel_old_call_set_fax_setting = 72,
-        etel_old_get_tsy_version_number = 77
+        etel_old_get_tsy_version_number = 77,
+        etel_old_gsm_phone_get_phone_id = 1000
     };
 
     enum etel_opcode {
@@ -105,6 +106,7 @@ namespace eka2l1::epoc {
         etel_mobile_phone_get_identity_caps = 20043,
         etel_mobile_phone_get_indicator = 20046,
         etel_mobile_phone_get_indicator_caps = 20047,
+        etel_mobile_phone_get_network_caps = 20052,
         etel_mobile_phone_get_network_registration_status = 20054, 
         etel_mobile_phone_get_signal_strength = 20060, 
         etel_mobile_phone_notify_network_registration_status_change = 20092,
@@ -176,6 +178,20 @@ namespace eka2l1::epoc {
     enum etel_mobile_phone_indicator_caps {
         etel_mobile_phone_indicator_cap_get = 1 << 0,
         etel_mobile_phone_indicator_cap_notify_change = 1 << 1
+    };
+
+    enum etel_mobile_phone_network_caps {
+        etel_mobile_phone_network_cap_get_registration_status = 1 << 0,
+        etel_mobile_phone_network_cap_notify_registration_status = 1 << 1,
+        etel_mobile_phone_network_cap_get_current_mode = 1 << 2,
+        etel_mobile_phone_network_cap_notify_mode = 1 << 3,
+        etel_mobile_phone_network_cap_get_current_network = 1 << 4,
+        etel_mobile_phone_network_cap_notify_current_network = 1 << 5,
+        etel_mobile_phone_network_cap_get_home_network = 1 << 6,
+        etel_mobile_phone_network_cap_get_detected_networks = 1 << 7,
+        etel_mobile_phone_network_cap_manual_network_selection = 1 << 8,
+        etel_mobile_phone_network_cap_get_nitz_info = 1 << 9,
+        etel_mobile_phone_network_cap_notify_nitz_info = 1 << 10
     };
 
     enum etel_mobile_phone_indicator {
@@ -314,6 +330,27 @@ namespace eka2l1::epoc {
         etel_charger_status_connected = 0,
         etel_charger_status_disconnected = 1,
         etel_charger_status_not_charging = 2
+    };
+
+    enum {
+        MAX_MANUFACTURER_ID_LENGTH = 50,
+        MAX_MODEL_ID_LENGTH = 50,
+        MAX_REVISION_ID_LENGTH = 50,
+        MAX_SERIAL_NUMBER_LENGTH = 50
+    };
+
+    struct etel_phone_id_base {
+        epoc::buf_static<char16_t, MAX_MANUFACTURER_ID_LENGTH> manu_;
+        epoc::buf_static<char16_t, MAX_MODEL_ID_LENGTH> model_id_;
+    };
+
+    struct etel_phone_id_v0: public etel_phone_id_base {
+        epoc::buf_static<char16_t, MAX_REVISION_ID_LENGTH> revision_id_;
+        epoc::buf_static<char16_t, MAX_SERIAL_NUMBER_LENGTH> serial_num_;
+    };
+
+    struct etel_phone_id_v1: public etel_phone_id_base {
+        epoc::buf_static<char16_t, MAX_SERIAL_NUMBER_LENGTH> serial_num_;
     };
 
     static constexpr std::uint32_t ETEL_PHONE_CHARGER_STATUS_UID = 0x100052C9;

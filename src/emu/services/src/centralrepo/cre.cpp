@@ -159,8 +159,13 @@ namespace eka2l1 {
                     break;
                 }
 
-                case central_repo_entry_type::string: {
+                case central_repo_entry_type::string8: {
                     entry_type = 2;
+                    break;
+                }
+
+                case central_repo_entry_type::string16: {
+                    entry_type = 3;
                     break;
                 }
 
@@ -182,9 +187,13 @@ namespace eka2l1 {
                 break;
             }
 
-            case 2:
+            case 2: {
+                entry.data.etype = central_repo_entry_type::string8;
+                break;
+            }
+
             case 3: {
-                entry.data.etype = central_repo_entry_type::string;
+                entry.data.etype = central_repo_entry_type::string16;
                 break;
             }
 
@@ -213,8 +222,14 @@ namespace eka2l1 {
                 break;
             }
 
-            case central_repo_entry_type::string: {
+            case central_repo_entry_type::string8: {
                 epoc::absorb_des_string(entry.data.strd, seri, false);
+                break;
+            }
+
+            case central_repo_entry_type::string16: {
+                // TODO: Use compression
+                epoc::absorb_des_string(entry.data.str16d, seri, false);
                 break;
             }
 

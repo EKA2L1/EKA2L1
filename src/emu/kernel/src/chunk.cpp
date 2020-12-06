@@ -112,7 +112,7 @@ namespace eka2l1 {
                 mmp = own_process->get_mem_model();
                 mmp->create_chunk(mmc_impl_, create_info);
             } else {
-                mmc_impl_unq_ = mem::make_new_mem_model_chunk(mem->get_mmu(), 0, mem->get_model_type());
+                mmc_impl_unq_ = mem::make_new_mem_model_chunk(mem->get_control(), 0, mem->get_model_type());
                 mmc_impl_unq_->do_create(create_info);
 
                 mmc_impl_ = mmc_impl_unq_.get();
@@ -137,6 +137,8 @@ namespace eka2l1 {
         void chunk::destroy() {
             if (!mmc_impl_unq_)
                 get_own_process()->get_mem_model()->delete_chunk(mmc_impl_);
+            else
+                mmc_impl_unq_.reset();
         }
 
         void chunk::open_to(process *own) {
@@ -153,6 +155,14 @@ namespace eka2l1 {
 
         const std::size_t chunk::committed() const {
             return mmc_impl_->committed();
+        }
+
+        const std::uint32_t chunk::bottom_offset() const {
+            return mmc_impl_->bottom();
+        }
+
+        const std::uint32_t chunk::top_offset() const {
+            return mmc_impl_->top();
         }
 
         bool chunk::commit(uint32_t offset, size_t size) {

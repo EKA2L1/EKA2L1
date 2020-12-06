@@ -30,6 +30,9 @@
 #include <Windows.h>
 
 namespace eka2l1::common {
+    typedef BOOL (*get_overlapped_result_ex_proc)(HANDLE hFile, LPOVERLAPPED lpOverlapped,    
+        LPDWORD lpNumberOfBytesTransferred, DWORD dwMilliseconds, BOOL bAlertable);
+
     struct directory_watcher_impl {
         std::unique_ptr<std::thread> wait_thread_;
 
@@ -45,6 +48,8 @@ namespace eka2l1::common {
 
         std::function<void()> proceed_on_;
         std::mutex lock_;
+
+        get_overlapped_result_ex_proc overlapped_ex_func_;
 
     protected:
         bool unwatch(HANDLE h, const bool is_in_loop);

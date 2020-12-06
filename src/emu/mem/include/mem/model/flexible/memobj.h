@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace eka2l1::mem {
-    class mmu_base;
+    class control_base;
 }
 
 namespace eka2l1::mem::flexible {
@@ -39,13 +39,13 @@ namespace eka2l1::mem::flexible {
         void *data_;                    ///< Pointer to the virtual memory allocated from host.
         std::size_t page_occupied_;     ///< Number of pages this memory object occupied.
 
-        mmu_base *mmu_;
+        control_base *control_;
         bool external_;
 
         std::vector<mapping*> mappings_;
 
     public:
-        explicit memory_object(mmu_base *mmu, const std::size_t page_count, void *external_host);
+        explicit memory_object(control_base *ctrl, const std::size_t page_count, void *external_host);
 
         ~memory_object();
 

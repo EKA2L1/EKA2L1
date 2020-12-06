@@ -67,5 +67,9 @@ namespace eka2l1::drivers {
 
         std::uint64_t position() override;
         std::uint64_t real_time_position() override;
+
+        virtual bool is_playing() const override {
+            return (stream_ && stream_->is_playing());
+        }
     };
 }

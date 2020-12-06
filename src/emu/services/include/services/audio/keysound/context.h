@@ -29,6 +29,7 @@ namespace eka2l1::common {
 
 namespace eka2l1::epoc::keysound {
     using sound_id = std::uint16_t;
+    static constexpr sound_id NO_SOUND_ID = 1000;
 
     struct sound_trigger_info {
         sound_id sid;

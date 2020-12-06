@@ -18,18 +18,19 @@
  */
 
 #include <mem/model/flexible/dirmngr.h>
-#include <mem/mmu.h>
+#include <mem/control.h>
 
 namespace eka2l1::mem::flexible {
     page_directory_manager::page_directory_manager(const std::uint32_t max_dir_count) {
         dirs_.resize(max_dir_count);
     }
 
-    page_directory *page_directory_manager::allocate(mmu_base *mmu) {
+    page_directory *page_directory_manager::allocate(control_base *cntr) {
         // Search for empty, or unoccupied directory (freed)
         for (std::size_t i = 0; i < dirs_.size(); i++) {
             if (!dirs_[i]) {
-                dirs_[i] = std::make_unique<page_directory>(mmu->page_size(), static_cast<asid>(i));
+                dirs_[i] = std::make_unique<page_directory>(cntr->page_size(),
+                    static_cast<asid>(i));
             }
 
             if (!dirs_[i]->occupied_) {

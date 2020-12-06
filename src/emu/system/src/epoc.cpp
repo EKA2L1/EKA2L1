@@ -19,11 +19,10 @@
  */
 
 #include <common/configure.h>
-#include <system/epoc.h>
-#include <kernel/process.h>
 
 #include <common/algorithm.h>
 #include <common/chunkyseri.h>
+#include <common/container.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/log.h>
@@ -33,9 +32,10 @@
 
 #include <disasm/disasm.h>
 
-#include <loader/e32img.h>
-
+#include <system/consts.h>
 #include <system/hal.h>
+#include <system/epoc.h>
+
 #include <utils/panic.h>
 
 #ifdef ENABLE_SCRIPTING
@@ -56,6 +56,7 @@
 
 #include <dispatch/dispatcher.h>
 #include <kernel/libmanager.h>
+#include <ldd/collection.h>
 #include <loader/rom.h>
 #include <kernel/timing.h>
 #include <services/init.h>
@@ -68,9 +69,18 @@
 #include <config/config.h>
 
 #include <system/devices.h>
+#include <system/software.h>
 #include <package/manager.h>
+#include <services/window/window.h>
+#include <services/window/screen.h>
 
 namespace eka2l1 {
+    #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
+
+    enum hal_entry {
+        #include <kernel/hal.def>
+    };
+
     system_create_components::system_create_components()
         : graphics_(nullptr)
         , audio_(nullptr)
@@ -83,6 +93,8 @@ namespace eka2l1 {
         std::mutex mut;
 
         arm::core_instance cpu;
+        arm::exclusive_monitor_instance exmonitor;
+
         arm_emulator_type cpu_type;
 
         drivers::graphics_driver *gdriver;
@@ -104,14 +116,15 @@ namespace eka2l1 {
 
         debugger_base *debugger_;
         loader::rom romf_;
+        window_server *winserv_;
 
         config::state *conf_;
         config::app_settings *app_settings_;
 
         bool reschedule_pending = false;
 
-        bool exit = false;
-        bool paused = false;
+        std::atomic<bool> exit = false;
+        std::atomic<bool> paused = false;
 
         std::unordered_map<uint32_t, hal_instance> hals_;
 
@@ -121,23 +134,28 @@ namespace eka2l1 {
         std::optional<filesystem_id> physical_fs_id_;
 
         system *parent_;
+
         std::size_t gdb_stub_breakpoint_callback_handle_;
+        std::size_t ldd_request_load_callback_handle_;
+
+        common::identity_container<system_reset_callback_type> reset_callbacks_;
 
     public:
         explicit system_impl(system *parent, system_create_components &param);
 
         ~system_impl() {
-            // We need to clear kernel content first, since some object do references to it,
+            // Reset dispatchers...
+            dispatcher_.reset();
+
+            // We need to clear kernel content second, since some object do references to it,
             // and if we let it go in destructor it would be messy! :D
             if (kern_)
-                kern_->reset();
+                kern_->wipeout();
 
 #if ENABLE_SCRIPTING
             scripting_.reset();
 #endif
 
-            // Now free those pointers...
-            dispatcher_.reset();
             kern_.reset();
             mem_.reset();
             timing_.reset();
@@ -150,17 +168,7 @@ namespace eka2l1 {
             debugger_ = new_debugger;
         }
 
-        void set_symbian_version_use(const epocver ever) {
-            io_->set_epoc_ver(ever);
-
-            // Use flexible model on 9.5 and onwards.
-            mem_ = std::make_unique<memory_system>(cpu.get(), conf_, (kern_->get_epoc_version() >= epocver::epoc95) ? mem::mem_model_type::flexible
-                : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
-
-            // Install memory to the kernel, then set epoc version
-            kern_->install_memory(mem_.get());
-            kern_->set_epoc_version(ever);
-    
+        void setup_outsider() {
             service::init_services(parent_);
 
             // Try to set system language
@@ -170,7 +178,26 @@ namespace eka2l1 {
 
             // Initialize HLE finally
             dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
-            
+
+            winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
+                kern_->get_epoc_version())));
+            packages_->var_resolver = [&](const int int_val) -> int {
+                switch (int_val) {
+                // HAL Display X
+                case hal_entry_display_screen_x_pixels:
+                    return winserv_->get_screen(0)->size().x;
+
+                case hal_entry_display_screen_y_pixels:
+                    return winserv_->get_screen(0)->size().y;
+
+                case hal_entry_machine_uid:
+                    return 0x20014DDD;
+                    //return current_dvc->machine_uid;
+                }
+
+                return 0;
+            };
+
             if (!stub_->is_server_enabled() && conf_->enable_gdbstub) {
                 stub_->init(kern_.get(), io_.get());
                 stub_->toggle_server(true);
@@ -190,30 +217,124 @@ namespace eka2l1 {
                     }
                 });
             }
+
+            ldd_request_load_callback_handle_ = kern_->register_ldd_factory_request_callback(
+                &ldd::get_factory_func);
+        }
+
+        void set_symbian_version_use(const epocver ever) {
+            io_->set_epoc_ver(ever);
+
+            // Use flexible model on 9.5 and onwards.
+            mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, (kern_->get_epoc_version() >= epocver::epoc95) ?
+                mem::mem_model_type::flexible : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
+
+            io_->install_memory(mem_.get());
+
+            // Install memory to the kernel, then set epoc version
+            kern_->install_memory(mem_.get());
+            kern_->set_epoc_version(ever);
+        }
+
+        void start_access() {
+            paused = true;
+
+            if (kern_) {
+                kern_->stop_cores_idling();
+            }
+
+            mut.lock();
+        }
+
+        void end_access() {
+            paused = false;
+            mut.unlock();
         }
 
         bool set_device(const std::uint8_t idx) {
+            start_access();
             bool result = dvcmngr_->set_current(idx);
 
             if (!result) {
                 return false;
             }
 
-            device *dvc = dvcmngr_->get_current();
-
-            if (conf_->language == -1) {
-                conf_->language = dvc->default_language_code;
-                conf_->serialize();
+            if (!reset(false)) {
+                return false;
             }
 
-            io_->set_product_code(dvc->firmware_code);
-            set_symbian_version_use(dvc->ver);
+            end_access();
+            return true;
+        }
+        
+        bool rescan_devices(const drive_number romdrv) {
+            bool actually_found = false;
+
+            {
+                start_access();
+
+                std::optional<eka2l1::drive> drventry = io_->get_drive_entry(romdrv);
+                if (!drventry.has_value()) {
+                    return false;
+                }
+
+                dvcmngr_->clear();
+
+                common::dir_iterator ite(drventry->real_path);
+                ite.detail = true;
+
+                common::dir_entry firm_entry;
+
+                while (ite.next_entry(firm_entry) == 0) {
+                    if (firm_entry.type == common::file_type::FILE_DIRECTORY) {
+                        const std::string full_entry_path = eka2l1::add_path(drventry->real_path,
+                            firm_entry.name);
+
+                        const epocver ver = loader::determine_rpkg_symbian_version(full_entry_path);
+
+                        std::string manu, firm_name, model;
+                        loader::determine_rpkg_product_info(full_entry_path, manu, firm_name, model);
+
+                        LOG_INFO("Found a device: {} ({})", model, firm_name);
+
+                        if (!dvcmngr_->add_new_device(firm_name, model, manu, ver, 0)) {
+                            LOG_ERROR("Unable to add this device, silently ignore!");
+                        } else {
+                            actually_found = true;
+                        }
+                    }
+                }
+
+                dvcmngr_->save_devices();
+                end_access();
+            }
+
+            if (actually_found) {
+                conf_->device = 0;
+                conf_->serialize();
+
+                set_device(0);
+            }
 
             return true;
         }
 
         void validate_current_device() {
             io_->validate_for_host();
+        }
+        
+        std::size_t add_system_reset_callback(system_reset_callback_type type) {
+            return reset_callbacks_.add(type);
+        }
+
+        bool remove_system_reset_callback(const std::size_t h) {
+            return reset_callbacks_.remove(h);
+        }
+
+        void invoke_system_reset_callbacks() {
+            for (auto cb: reset_callbacks_) {
+                cb(parent_);
+            }
         }
 
         void set_cpu_executor_type(const arm_emulator_type type) {
@@ -301,7 +422,7 @@ namespace eka2l1 {
         }
 
         gdbstub *get_gdb_stub() {
-            return stub_.get();;
+            return stub_.get();
         }
 
         drivers::graphics_driver *get_graphic_driver() {
@@ -323,7 +444,7 @@ namespace eka2l1 {
         void mount(drive_number drv, const drive_media media, std::string path,
             const std::uint32_t attrib = io_attrib_none);
 
-        void reset();
+        bool reset(const bool lock_sys);
 
         void load_scripts();
         void do_state(common::chunkyseri &seri);
@@ -376,11 +497,9 @@ namespace eka2l1 {
         file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
         physical_fs_id_ = io_->add_filesystem(physical_fs);
 
-        file_system_inst rom_fs = create_rom_filesystem(nullptr, mem_.get(), epocver::epoc94, "");
-        rom_fs_id_ = io_->add_filesystem(rom_fs);
+        exmonitor = arm::create_exclusive_monitor(cpu_type, 1);
+        cpu = arm::create_core(exmonitor.get(), cpu_type);
 
-        cpu = arm::create_core(cpu_type);
-        
         kern_ = std::make_unique<kernel_system>(parent_, timing_.get(), io_.get(), conf_, app_settings_, &romf_, cpu.get(),
             disassembler_.get());
 
@@ -434,6 +553,11 @@ namespace eka2l1 {
     bool system_impl::pause() {
         paused = true;
 
+        if (kern_)
+            kern_->stop_cores_idling();
+
+        const std::lock_guard<std::mutex> guard(mut);
+
         if (timing_)
             timing_->set_paused(true);
 
@@ -443,6 +567,8 @@ namespace eka2l1 {
     bool system_impl::unpause() {
         paused = false;
 
+        const std::lock_guard<std::mutex> guard(mut);
+
         if (timing_)
             timing_->set_paused(false);
 
@@ -450,6 +576,8 @@ namespace eka2l1 {
     }
 
     int system_impl::loop() {
+        const std::lock_guard<std::mutex> guard(mut);
+
         if (paused) {
             return 1;
         }
@@ -546,20 +674,19 @@ namespace eka2l1 {
 
         romf_ = std::move(*romf_res);
 
-        if (rom_fs_id_) {
-            io_->remove_filesystem(rom_fs_id_.value());
+        if (!rom_fs_id_.has_value()) {
+            auto current_device = dvcmngr_->get_current();
+
+            if (!current_device) {
+                return false;
+            }
+
+            file_system_inst rom_fs = create_rom_filesystem(&romf_, mem_.get(),
+                get_symbian_version_use(), current_device->firmware_code);
+
+            rom_fs_id_ = io_->add_filesystem(rom_fs);
         }
 
-        auto current_device = dvcmngr_->get_current();
-
-        if (!current_device) {
-            return false;
-        }
-
-        file_system_inst rom_fs = create_rom_filesystem(&romf_, mem_.get(),
-            get_symbian_version_use(), current_device->firmware_code);
-
-        rom_fs_id_ = io_->add_filesystem(rom_fs);
         bool res1 = kern_->map_rom(romf_.header.rom_base, path);
 
         if (!res1) {
@@ -579,8 +706,62 @@ namespace eka2l1 {
         exit = true;
     }
 
-    void system_impl::reset() {
+    bool system_impl::reset(const bool lock_sys) {
+        if (lock_sys) {
+            start_access();
+        }
+
         exit = false;
+
+        // Unregister HLE stuffs
+        kern_->unregister_ldd_factory_request_callback(ldd_request_load_callback_handle_);
+        kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
+
+        dispatcher_.reset();
+        
+        if (kern_) {
+            kern_->reset();
+        }
+
+        if (timing_) {
+            timing_->reset();
+        }
+
+        hals_.clear();
+    
+        device *dvc = dvcmngr_->get_current();
+
+        if (conf_->language == -1) {
+            conf_->language = dvc->default_language_code;
+            conf_->serialize();
+        }
+
+        io_->set_product_code(dvc->firmware_code);
+        set_symbian_version_use(dvc->ver);
+
+        cpu->clear_instruction_cache();
+        
+        // Load ROM
+        const std::string rom_path = add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(
+            common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
+
+        if (!load_rom(rom_path)) {
+            if (lock_sys) {
+                end_access();
+            }
+
+            return false;
+        }
+
+        // Setup outsiders
+        setup_outsider();
+        invoke_system_reset_callbacks();
+
+        if (lock_sys) {
+            end_access();
+        }
+
+        return true;
     }
 
     void system_impl::add_new_hal(uint32_t hal_category, hal_instance &hal_com) {
@@ -728,21 +909,16 @@ namespace eka2l1 {
         return impl->mount(drv, media, path, attrib);
     }
 
-    void system::reset() {
-        return impl->reset();
+    bool system::reset() {
+        return impl->reset(true);
     }
 
     void system::load_scripts() {
         return impl->load_scripts();
     }
 
-    /*! \brief Install a SIS/SISX. */
     bool system::install_package(std::u16string path, drive_number drv) {
         return impl->install_package(path, drv);
-    }
-
-    bool system::load_rom(const std::string &path) {
-        return impl->load_rom(path);
     }
 
     void system::request_exit() {
@@ -775,5 +951,17 @@ namespace eka2l1 {
 
     void system::validate_current_device() {
         impl->validate_current_device();
+    }
+    
+    std::size_t system::add_system_reset_callback(system_reset_callback_type cb) {
+        return impl->add_system_reset_callback(cb);
+    }
+
+    bool system::remove_system_reset_callback(const std::size_t h) {
+        return impl->remove_system_reset_callback(h);
+    }
+
+    bool system::rescan_devices(const drive_number romdrv) {
+        return impl->rescan_devices(romdrv);
     }
 }

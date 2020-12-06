@@ -73,7 +73,8 @@ namespace eka2l1 {
         none,
         integer,
         real,
-        string
+        string8,
+        string16
     };
 
     static constexpr int cenrep_pma_ver = 3;

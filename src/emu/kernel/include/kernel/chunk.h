@@ -157,6 +157,9 @@ namespace eka2l1 {
             const std::size_t max_size() const;
             const std::size_t committed() const;
 
+            const std::uint32_t bottom_offset() const;
+            const std::uint32_t top_offset() const;
+
             void *host_base();
         };
     }

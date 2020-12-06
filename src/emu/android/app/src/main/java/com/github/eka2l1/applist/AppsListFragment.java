@@ -52,11 +52,13 @@ import com.github.eka2l1.filepicker.FilteredFilePickerFragment;
 import com.github.eka2l1.info.AboutDialogFragment;
 import com.github.eka2l1.settings.AppSettingsFragment;
 import com.github.eka2l1.settings.SettingsFragment;
+import com.github.eka2l1.util.LogUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.nononsenseapps.filepicker.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -276,6 +278,15 @@ public class AppsListFragment extends ListFragment {
                 i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
                 i.putExtra(FilePickerActivity.EXTRA_START_PATH, FilteredFilePickerFragment.getLastPath());
                 startActivityForResult(i, SDCARD_CODE);
+                break;
+            case R.id.action_save_log:
+                try {
+                    LogUtils.writeLog();
+                    Toast.makeText(getActivity(), R.string.log_saved, Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getActivity(), R.string.error, Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
         return super.onOptionsItemSelected(item);

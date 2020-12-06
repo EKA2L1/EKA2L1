@@ -18,10 +18,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/buffer.h>
+#include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/pystr.h>
 
+#include <loader/rsc.h>
+#include <utils/bafl.h>
+
+#include <services/centralrepo/centralrepo.h>
+#include <services/ui/cap/consts.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/window/window.h>
 #include <services/window/classes/wingroup.h>
@@ -43,7 +50,7 @@ namespace eka2l1 {
 
     epoc::cap::sgc_server *oom_ui_app_server::get_sgc_server() {
         if (!sgc) {
-            init(sys->get_kernel_system());
+            init(sys->get_kernel_system(), sys->get_io_system(), sys->get_device_manager());
         }
 
         return sgc.get();
@@ -251,11 +258,37 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
-    void oom_ui_app_server::init(kernel_system *kern) {
+    void oom_ui_app_server::init(kernel_system *kern, io_system *io, device_manager *mngr) {
         const std::lock_guard<std::mutex> guard(lock);
+
+        auto cenrep = reinterpret_cast<central_repo_server*>(kern->get_by_name<service::server>(
+            CENTRAL_REPO_SERVER_NAME));
 
         sgc = std::make_unique<epoc::cap::sgc_server>();
         eik = std::make_unique<epoc::cap::eik_server>(kern);
+
+        if (cenrep) {
+            coe_storage = std::make_unique<epoc::coe_data_storage>(cenrep, io, mngr);
+
+            const std::u16string EIKSRV_RSC_FILE_PATH = u"z:\\resource\\uiklaf\\eikpriv.rsc";        
+            const std::u16string designated_file = utils::get_nearest_lang_file(io, EIKSRV_RSC_FILE_PATH,
+                kern->get_current_language(), drive_z);
+
+            symfile resource_priv = io->open_file(designated_file, READ_MODE | BIN_MODE);
+            if (resource_priv) {
+                ro_file_stream resource_priv_fstream(resource_priv.get());
+                loader::rsc_file resource_priv_parser(reinterpret_cast<common::ro_stream*>(&resource_priv_fstream));
+
+                auto data = resource_priv_parser.read(epoc::FEP_RESOURCE_ID);
+                common::chunkyseri seri(data.data(), data.size(), common::chunkyseri_mode::SERI_MODE_READ);
+                
+                std::u16string dll_filename_fep;
+                loader::absorb_resource_string(seri, dll_filename_fep);
+
+                coe_storage->default_fep(dll_filename_fep);
+                coe_storage->serialize();
+            }
+        }
 
         get_sgc_server()->init(kern, sys->get_graphics_driver());
         eik->init(kern);

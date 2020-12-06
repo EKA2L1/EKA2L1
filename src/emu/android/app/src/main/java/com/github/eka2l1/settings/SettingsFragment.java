@@ -47,6 +47,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.settings);
+        setPreferenceClickListener(new AndroidSettingsFragment(), "pref_android");
         setPreferenceClickListener(new GeneralSettingsFragment(), "pref_general");
         setPreferenceClickListener(new SystemSettingsFragment(), "pref_system");
         setPreferenceClickListener(new KeyMapperFragment(), "pref_keymapper");

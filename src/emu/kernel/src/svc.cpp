@@ -45,18 +45,6 @@
 #include <common/time.h>
 #include <common/types.h>
 
-#if EKA2L1_PLATFORM(WIN32)
-#pragma comment(lib, "wldap32.lib")
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "winmm.lib")
-#pragma comment(lib, "crypt32.lib")
-#pragma comment(lib, "Normaliz.lib")
-#endif
-
-#if EKA2L1_PLATFORM(WIN32)
-#include <Windows.h>
-#endif
-
 #include <chrono>
 #include <ctime>
 #include <utils/err.h>
@@ -79,19 +67,38 @@ namespace eka2l1::epoc {
         return kern->crr_thread()->get_tls_slot(addr, addr);
     }
 
-    static std::optional<std::u16string> get_dll_full_path(kernel_system *kern, const std::uint32_t addr) {
+    static codeseg_ptr get_codeseg_from_addr(kernel_system *kern, kernel::process *pr, const std::uint32_t addr,
+        const bool ep) {
         hle::lib_manager &mngr = *kern->get_lib_manager();
-        kernel::process *crr_process = kern->crr_process();
 
         for (const auto &seg_obj : kern->get_codeseg_list()) {
             codeseg_ptr seg = reinterpret_cast<codeseg_ptr>(seg_obj.get());
+            
+            bool cond2 = (ep && (seg->get_entry_point(pr) == addr));
+            if (!cond2) {
+                const address beg = seg->get_code_run_addr(pr);
+                const address end = seg->get_text_size() + beg;
 
-            if (seg && seg->get_entry_point(crr_process) == addr) {
-                return seg->get_full_path();
+                if ((beg <= addr) && (addr <= end)) {
+                    cond2 = true;
+                }
+            }
+
+            if (seg && cond2) {
+                return seg;
             }
         }
 
-        return std::optional<std::u16string>{};
+        return nullptr;
+    }
+
+    static std::optional<std::u16string> get_dll_full_path(kernel_system *kern, const std::uint32_t addr) {
+        codeseg_ptr ss = get_codeseg_from_addr(kern, kern->crr_process(), addr, true);
+        if (ss) {
+            return ss->get_full_path();
+        }
+
+        return std::nullopt;
     }
 
     static address get_exception_descriptor_addr(kernel_system *kern, address runtime_addr) {
@@ -496,9 +503,6 @@ namespace eka2l1::epoc {
                 return tls.pointer;
             }
         }
-
-        LOG_WARN("TLS for 0x{:x}, thread {} return 0, may results unexpected crash", static_cast<std::uint32_t>(h),
-            thr->name());
 
         return eka2l1::ptr<void>(0);
     }
@@ -1140,6 +1144,26 @@ namespace eka2l1::epoc {
         }
 
         return static_cast<std::int32_t>(chunk->committed());
+    }
+
+    BRIDGE_FUNC(std::int32_t, chunk_bottom, kernel::handle h) {
+        chunk_ptr chunk = kern->get<kernel::chunk>(h);
+
+        if (!chunk) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(chunk->bottom_offset());
+    }
+
+    BRIDGE_FUNC(std::int32_t, chunk_top, kernel::handle h) {
+        chunk_ptr chunk = kern->get<kernel::chunk>(h);
+
+        if (!chunk) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(chunk->top_offset());
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_adjust, kernel::handle h, std::int32_t type, std::int32_t a1, std::int32_t a2) {
@@ -2440,7 +2464,7 @@ namespace eka2l1::epoc {
         }
 
         if (!queue->receive(data, length)) {
-            return epoc::error_underflow;
+            return epoc::error_underflow;   
         }
 
         return epoc::error_none;
@@ -2511,6 +2535,13 @@ namespace eka2l1::epoc {
             std::memcpy(dest_of_operate, buf_ptr, len);
         } else {
             std::memcpy(buf_ptr, dest_of_operate, len);
+        }
+
+        // Check if we should recompile
+        codeseg_ptr ss = get_codeseg_from_addr(kern, process_to_operate, addr, false);
+
+        if (ss) {
+            kern->get_cpu()->imb_range(addr, len);
         }
 
         return epoc::error_none;
@@ -3341,6 +3372,27 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t process_open_by_id_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *pr = kern->get_by_id<kernel::process>(create_info->arg1_);
+
+        if (!pr) {
+            LOG_ERROR("Unable to find process with ID: {}", create_info->arg1_);
+            
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        const kernel::handle h = kern->open_handle(pr, get_handle_owner_from_eka1_attribute(attribute));
+
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
     std::int32_t thread_open_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *target_process = target_thread->owning_process();
@@ -3428,6 +3480,27 @@ namespace eka2l1::epoc {
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
+    
+    std::int32_t thread_get_own_process_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg1_);
+
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
+            return epoc::error_not_found;
+        }
+
+        // Doc said this is process-relative handle
+        kernel::handle h = kern->open_handle_with_thread(target_thread, thr->owning_process(),
+            kernel::owner_type::process);
+
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
 
     std::int32_t server_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
@@ -3497,6 +3570,160 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t add_logical_device_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::library *ldd_lib = kern->get<kernel::library>(create_info->arg0_);
+        if (!ldd_lib) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        const std::string ldd_name = common::lowercase_string(eka2l1::replace_extension(
+            eka2l1::filename(ldd_lib->get_codeseg()->name()), ""));
+
+        // Search if this driver exists first
+        ldd::factory *existing = kern->get_by_name<ldd::factory>(ldd_name);
+        if (!existing) {
+            auto factory_func = kern->suitable_ldd_instantiate_func(ldd_name.c_str());
+            ldd::factory_instance factory_inst = nullptr;
+            
+            if (factory_func)
+                factory_inst = factory_func(kern->get_system());
+
+            if (!factory_inst) {
+                LOG_ERROR("Unable to load LDD with name {}", ldd_name);
+                
+                finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+                return epoc::error_general;
+            }
+            
+            existing = kern->add_object(factory_inst);
+            existing->install();
+        }
+
+        if (!existing) {
+            LOG_ERROR("Unable to add LDD with name {} to kernel object list!", ldd_name);
+
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        existing->increase_access_count();
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+
+        return epoc::error_none;
+    }
+
+    std::int32_t create_logical_channel_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // Structure:
+        // Arg  |   Type    |               Usage
+        // =====================================================
+        //  0   |   Out     |   Handle to the channel
+        //  1   |   In      |      Name of LDD
+        //  2   |   In      |      Name of PDD
+        //  3   |   In      |   Descriptor, content
+        //      |           |   - Version (4 bytes)
+        //      |           |   - Unit (4 bytes)
+        //      |           |   - Info descriptor (Pointer size)
+        //      |           |   - Unk?
+        struct logical_channel_extra_create_info {
+            epoc::version ver_;
+            std::uint32_t unit_;
+            eka2l1::ptr<epoc::desc8> info_;
+            std::uint32_t unkC_;
+        };
+
+        kernel::process *target_pr = target_thread->owning_process();
+
+        epoc::desc16 *ldd_name_des = eka2l1::ptr<epoc::desc16>(create_info->arg1_).get(target_pr);
+        epoc::desc16 *pdd_name_des = eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_pr);
+        epoc::desc8 *extra_info_des = eka2l1::ptr<epoc::desc8>(create_info->arg3_).get(target_pr);
+
+        if (!ldd_name_des || !extra_info_des) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::string ldd_name;
+        std::string pdd_name;
+
+        ldd_name = common::ucs2_to_utf8(ldd_name_des->to_std_string(target_pr));
+        if (pdd_name_des) {
+            pdd_name = common::ucs2_to_utf8(pdd_name_des->to_std_string(target_pr));
+        }
+
+        logical_channel_extra_create_info *extra_info = reinterpret_cast<
+            decltype(extra_info)>(extra_info_des->get_pointer(target_pr));
+
+        if (ldd_name.empty() || !extra_info) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        ldd::factory *ff = kern->get_by_name<ldd::factory>(ldd_name);
+
+        if (!ff) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_ready);
+            return epoc::error_not_ready;
+        }
+
+        auto chn = ff->make_channel(extra_info->ver_);
+        if (!chn) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        ldd::channel *added_chn = kern->add_object(chn);
+        if (!added_chn) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        added_chn->set_owner(target_pr);
+
+        kernel::handle fin_handle = kern->open_handle_with_thread(target_thread, added_chn,
+            get_handle_owner_from_eka1_attribute(attribute));
+
+        if (fin_handle == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, fin_handle);
+    }
+
+    std::int32_t free_logical_device_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *target_pr = target_thread->owning_process();
+        epoc::desc16 *ldd_name_des = eka2l1::ptr<epoc::desc16>(create_info->arg0_).get(target_pr);
+
+        if (!ldd_name_des) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_argument;
+        }
+
+        std::string ldd_name;
+        ldd_name = common::ucs2_to_utf8(ldd_name_des->to_std_string(target_pr));
+        
+        ldd::factory *ff = kern->get_by_name<ldd::factory>(ldd_name);
+
+        if (!ff) {
+            LOG_ERROR("Logical device named: {} not found to free!", ldd_name);
+
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+            return epoc::error_none;
+        }
+
+        ff->decrease_access_count();
+        if (ff->get_access_count() == 0) {
+            kern->destroy(ff);
+        }
+    
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -3555,6 +3782,9 @@ namespace eka2l1::epoc {
         case epoc::eka1_executor::execute_open_thread_by_id:
             return thread_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+        case epoc::eka1_executor::execute_get_thread_own_process:
+            return thread_get_own_process_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
         case epoc::eka1_executor::execute_set_initial_parameter_thread:
             return thread_set_initial_parameter_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
@@ -3563,6 +3793,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_kill_thread:
             return thread_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_open_process_by_id:
+            return process_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         case epoc::eka1_executor::execute_rename_process:
             return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
@@ -3602,6 +3835,15 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_dll_global_allocate:
             return dll_global_data_alloc(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_add_logical_device:
+            return add_logical_device_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_free_logical_device:
+            return free_logical_device_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_create_logical_channel:
+            return create_logical_channel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         default:
             LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -3926,6 +4168,41 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, bus_dev_open_socket, const std::uint32_t unkpadding, epoc::desc16 *ldd_name,
+        epoc::desc16 *pdd_name) {
+        if (ldd_name) {
+            kernel::process *own_pr = kern->crr_process();
+
+            const std::u16string ldd_name_str = ldd_name->to_std_string(own_pr);
+            std::u16string pdd_name_str;
+
+            if (pdd_name)
+                pdd_name_str = pdd_name->to_std_string(own_pr);
+
+            LOG_TRACE("Ldd name: {}, Pdd name: {}", common::ucs2_to_utf8(ldd_name_str),
+                common::ucs2_to_utf8(pdd_name_str));
+        }
+
+        LOG_TRACE("Busdev socket opening stubbed with number 0");
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, logical_channel_do_control, const kernel::handle h, const int func,
+        eka2l1::ptr<void> arg1, eka2l1::ptr<void> arg2) {
+        ldd::channel *chn = kern->get<ldd::channel>(h);
+
+        if (!chn) {
+            return epoc::error_not_found;
+        }
+
+        return chn->do_control(kern->crr_thread(), func, arg1, arg2);
+    }
+
+    BRIDGE_FUNC(std::int32_t, logical_channel_do_control_eka1, const int func, eka2l1::ptr<void> arg1,
+        eka2l1::ptr<void> arg2, const kernel::handle h) {
+        return logical_channel_do_control(kern, h, func, arg1, arg2);
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),
@@ -4194,6 +4471,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x05, tick_count),
+        BRIDGE_REGISTER(0x0B, math_rand),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
         BRIDGE_REGISTER(0x11, mutex_wait),
@@ -4340,6 +4618,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x82, set_trap_handler),
         BRIDGE_REGISTER(0x8D, locked_inc_32),
         BRIDGE_REGISTER(0x8E, locked_dec_32),
+        BRIDGE_REGISTER(0xB0, chunk_bottom),
+        BRIDGE_REGISTER(0xB1, chunk_top),
         BRIDGE_REGISTER(0xBC, user_svr_rom_header_address),
         BRIDGE_REGISTER(0xBE, math_rand),
         BRIDGE_REGISTER(0xFE, static_call_list),
@@ -4379,11 +4659,13 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000AA, process_type_eka1),
         BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
         BRIDGE_REGISTER(0x8000AF, process_set_type_eka1),
+        BRIDGE_REGISTER(0x8000B7, bus_dev_open_socket),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
         BRIDGE_REGISTER(0x8000C2, get_inactivity_time),
         BRIDGE_REGISTER(0x8000CC, imb_range),
         BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
+        BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal),

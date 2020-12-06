@@ -122,6 +122,25 @@ namespace eka2l1::android {
         return 0;
     }
 
+    static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
+        switch (rotation) {
+        case 90:
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
+            break;
+
+        case 180:
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
+            break;
+
+        case 270:
+            origin_normal_rect.top.y += origin_normal_rect.size.y;
+            break;
+
+        default:
+            break;
+        }
+    }
+
     void ui_thread(emulator &state) {
         int result = ui_thread_initialization(state);
 
@@ -158,8 +177,9 @@ namespace eka2l1::android {
 
                 for (std::uint32_t i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
                     scr->screen_mutex.lock();
+                    auto &crr_mode = scr->current_mode();
 
-                    eka2l1::vec2 size = scr->current_mode().size;
+                    eka2l1::vec2 size = crr_mode.size;
                     src.size = size;
 
                     float mult = (float)(state.window->window_width) / size.x;
@@ -182,13 +202,22 @@ namespace eka2l1::android {
                     dest.size = eka2l1::vec2(width, height);
 
                     cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
-                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src,
+                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0,0), 0.0f,
                                              drivers::bitmap_draw_flag_no_flip);
                     if (scr->dsa_texture) {
                         cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
-                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src,
-                                                 drivers::bitmap_draw_flag_no_flip);
+                        advance_dsa_pos_around_origin(dest, crr_mode.rotation);
+
+                        // Rotate back to original size
+                        if (crr_mode.rotation % 180 != 0) {
+                            std::swap(dest.size.x, dest.size.y);
+                            std::swap(src.size.x, src.size.y);
+                        }
+
+                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src,eka2l1::vec2(0, 0),
+                                static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
                     }
+
                     scr->screen_mutex.unlock();
                 }
                 cmd_builder->load_backup_state();

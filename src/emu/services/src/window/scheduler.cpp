@@ -68,6 +68,9 @@ namespace eka2l1::epoc {
                 timing_->unschedule_event(anim_due_evt_, reinterpret_cast<std::uint64_t>(&callback_datas_[i]));
             }
         }
+
+        timing_->remove_event(callback_evt_);
+        timing_->remove_event(anim_due_evt_);
     }
 
     void animation_scheduler::schedule(drivers::graphics_driver *driver, screen *scr, const std::uint64_t time) {

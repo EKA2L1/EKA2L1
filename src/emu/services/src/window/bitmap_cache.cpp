@@ -29,6 +29,9 @@
 #include <kernel/kernel.h>
 #include <kernel/chunk.h>
 
+#include <drivers/itc.h>
+#include <drivers/graphics/graphics.h>
+
 #include <algorithm>
 
 #include <common/buffer.h>
@@ -45,6 +48,19 @@ namespace eka2l1::epoc {
         , kern(kern_) {
         std::fill(driver_textures.begin(), driver_textures.end(), 0);
         std::fill(hashes.begin(), hashes.end(), 0);
+    }
+
+    void bitmap_cache::clean(drivers::graphics_driver *drv) {
+        auto llist = drv->new_command_list();
+        auto builder = drv->new_command_builder(llist.get());
+
+        for (const auto tex_handle: driver_textures) {
+            if (tex_handle) {
+                builder->destroy_bitmap(tex_handle);
+            }
+        }
+
+        drv->submit_command_list(*llist);
     }
 
     bool is_palette_bitmap(epoc::bitwise_bitmap *bw_bmp) {

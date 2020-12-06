@@ -97,7 +97,24 @@ namespace eka2l1::epoc {
     }
 
     window_user::~window_user() {
+        wipeout();
         client->remove_redraws(this);
+    }
+
+    void window_user::wipeout() {
+        // Remove driver bitmap
+        if (driver_win_id) {
+            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
+
+            // Queue a resize command
+            auto cmd_list = drv->new_command_list();
+            auto cmd_builder = drv->new_command_builder(cmd_list.get());
+
+            cmd_builder->destroy_bitmap(driver_win_id);
+            drv->submit_command_list(*cmd_list);
+
+            driver_win_id = 0;
+        }
     }
 
     eka2l1::vec2 window_user::get_origin() {
@@ -377,22 +394,9 @@ namespace eka2l1::epoc {
         set_visible(false);
         remove_from_sibling_list();
 
-        // Remove driver bitmap
-        if (driver_win_id) {
-            drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
-
-            // Queue a resize command
-            auto cmd_list = drv->new_command_list();
-            auto cmd_builder = drv->new_command_builder(cmd_list.get());
-
-            cmd_builder->destroy_bitmap(driver_win_id);
-            drv->submit_command_list(*cmd_list);
-
-            driver_win_id = 0;
-        }
+        wipeout();
 
         context.complete(epoc::error_none);
-
         client->delete_object(cmd.obj_handle);
     }
 
@@ -673,6 +677,8 @@ namespace eka2l1::epoc {
 
         default: {
             LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
+            ctx.complete(epoc::error_none);
+
             break;
         }
         }

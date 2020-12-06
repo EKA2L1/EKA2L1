@@ -391,9 +391,14 @@ namespace eka2l1::epoc {
             return;
         }
 
-        evt.evt.handle = group->client_handle;
+        get_ws().send_event_to_window_group(group, evt.evt);
+        ctx.complete(epoc::error_none);
+    }
 
-        group->client->queue_event(evt.evt);
+    void window_server_client::send_event_to_all_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
+        ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group*>(cmd.data_ptr);
+        get_ws().send_event_to_window_groups(evt.evt);
+
         ctx.complete(epoc::error_none);
     }
 
@@ -662,7 +667,9 @@ namespace eka2l1::epoc {
 
     void window_server_client::set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_set_window_group_ordinal_position *set = reinterpret_cast<decltype(set)>(cmd.data_ptr);
-        epoc::window_group *group = get_ws().get_group_from_id(set->identifier);
+        
+        window_server &serv = get_ws();
+        epoc::window_group *group = serv.get_group_from_id(set->identifier);
 
         if (!group || group->type != window_kind::group) {
             ctx.complete(epoc::error_argument);
@@ -850,7 +857,12 @@ namespace eka2l1::epoc {
         case ws_cl_op_send_event_to_window_group: {
             send_event_to_window_group(ctx, cmd);
             break;
-        }   
+        }
+
+        case ws_cl_op_send_event_to_all_window_groups: {
+            send_event_to_all_window_groups(ctx, cmd);
+            break;
+        }
 
         case ws_cl_op_send_message_to_window_group: {
             send_message_to_window_group(ctx, cmd);
@@ -1289,6 +1301,9 @@ namespace eka2l1 {
             delete screens;
             screens = next;
         }
+        
+        get_ntimer()->remove_event(repeatable_event_);
+        bmp_cache.clean(drv);
     }
 
     drivers::graphics_driver *window_server::get_graphics_driver() {

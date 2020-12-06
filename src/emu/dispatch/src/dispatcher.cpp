@@ -34,6 +34,8 @@ namespace eka2l1::dispatch {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(
             eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
 
+        audren_sema_ = std::make_unique<dsp_epoc_audren_sema>();
+
         // Set global variables
         timing_ = timing;
     }
@@ -67,6 +69,10 @@ namespace eka2l1::dispatch {
             dispatch::update_screen(sys, 0, scr->number, 1, &up_rect);
             scr = scr->next;
         }
+    }
+
+    dsp_epoc_audren_sema *dispatcher::get_audren_sema() {
+        return audren_sema_.get();
     }
 }
 

@@ -84,31 +84,16 @@ namespace eka2l1 {
         , dll_global_data_last_offset_(0)
         , inactivity_starts_(0)
         , nanokern_pr_(nullptr) {
-        thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
-
-        // Instantiate btrace
-        btrace_inst_ = std::make_unique<kernel::btrace>(this, io_);
-
-        // Create real time IPC event
-        realtime_ipc_signal_evt_ = timing->register_event("RealTimeIpc", [this](std::uint64_t userdata, std::uint64_t cycles_late) {
-            kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
-            assert(thr);
-
-            lock();
-            thr->signal_request();
-            unlock();
-        });
-
-        // Get base time
-        base_time_ = common::get_current_time_in_microseconds_since_1ad();
-        locale_ = std::make_unique<std::locale>("");
-    }
-
-    kernel_system::~kernel_system() {
         reset();
     }
 
-    void kernel_system::reset() {
+    kernel_system::~kernel_system() {
+        wipeout();
+    }
+
+    void kernel_system::wipeout() {
+        timing_->remove_event(realtime_ipc_signal_evt_);
+
         if (rom_map_) {
             common::unmap_file(rom_map_);
         }
@@ -136,8 +121,37 @@ namespace eka2l1 {
         OBJECT_CONTAINER_CLEANUP(libraries_);
         OBJECT_CONTAINER_CLEANUP(codesegs_);
         OBJECT_CONTAINER_CLEANUP(message_queues_);
+        OBJECT_CONTAINER_CLEANUP(logical_channels_);
+        OBJECT_CONTAINER_CLEANUP(logical_devices_);
 
-        btrace_inst_->close_trace_session();
+        if (btrace_inst_)
+            btrace_inst_->close_trace_session();
+    }
+
+    void kernel_system::reset() {
+        wipeout();
+
+        thr_sch_ = std::make_unique<kernel::thread_scheduler>(this, timing_, cpu_);
+
+        // Instantiate btrace
+        btrace_inst_ = std::make_unique<kernel::btrace>(this, io_);
+
+        // Create real time IPC event
+        realtime_ipc_signal_evt_ = timing_->register_event("RealTimeIpc", [this](std::uint64_t userdata, std::uint64_t cycles_late) {
+            kernel::thread *thr = get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
+            assert(thr);
+
+            lock();
+            thr->signal_request();
+            unlock();
+        });
+
+        // Get base time
+        base_time_ = common::get_current_time_in_microseconds_since_1ad();
+        locale_ = std::make_unique<std::locale>("");
+
+        // Clear CPU caches. No reason to keep it.
+        cpu_->clear_instruction_cache();
     }
 
     void kernel_system::cpu_exception_thread_handle(arm::core *core) {
@@ -319,6 +333,8 @@ namespace eka2l1 {
                 cpu_->set_pc(jump_back & ~0b1);
                 cpu_->set_cpsr(cpu_->get_cpsr() | ((jump_back & 0b1) ? 0x20 : 0));
             }
+
+            crr_thread()->add_last_syscall(ordinal);
         };
 
         cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) {
@@ -433,6 +449,10 @@ namespace eka2l1 {
     std::size_t kernel_system::register_imb_range_callback(imb_range_callback callback) {
         return imb_range_callback_funcs_.add(callback);
     }
+
+    std::size_t kernel_system::register_ldd_factory_request_callback(ldd_factory_request_callback callback) {
+        return ldd_factory_req_callback_funcs_.add(callback);
+    }
     
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
         return ipc_send_callbacks_.remove(handle);
@@ -460,6 +480,21 @@ namespace eka2l1 {
 
     bool kernel_system::unregister_imb_range_callback(const std::size_t handle) {
         return imb_range_callback_funcs_.remove(handle);
+    }
+
+    bool kernel_system::unregister_ldd_factory_request_callback(const std::size_t handle) {
+        return ldd_factory_req_callback_funcs_.remove(handle);
+    }
+
+    ldd::factory_instantiate_func kernel_system::suitable_ldd_instantiate_func(const char *name) {
+        for (auto &ldd_factory_req_callback_func: ldd_factory_req_callback_funcs_) {
+            auto res = ldd_factory_req_callback_func(name);
+            if (res) {
+                return res;
+            }
+        }
+
+        return nullptr;
     }
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
@@ -518,6 +553,8 @@ namespace eka2l1 {
             OBJECT_SEARCH(session, sessions_)
             OBJECT_SEARCH(timer, timers_)
             OBJECT_SEARCH(msg_queue, message_queues_)
+            OBJECT_SEARCH(logical_device, logical_devices_)
+            OBJECT_SEARCH(logical_channel, logical_channels_)
 
 #undef OBJECT_SEARCH
 
@@ -907,6 +944,8 @@ namespace eka2l1 {
             OBJECT_SEARCH(session, sessions_)
             OBJECT_SEARCH(timer, timers_)
             OBJECT_SEARCH(msg_queue, message_queues_)
+            OBJECT_SEARCH(logical_device, logical_devices_)
+            OBJECT_SEARCH(logical_channel, logical_channels_)
 
 #undef OBJECT_SEARCH
 

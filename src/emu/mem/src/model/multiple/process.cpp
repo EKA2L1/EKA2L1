@@ -18,7 +18,7 @@
  */
 
 #include <mem/model/multiple/chunk.h>
-#include <mem/model/multiple/mmu.h>
+#include <mem/model/multiple/control.h>
 #include <mem/model/multiple/process.h>
 
 #include <common/algorithm.h>
@@ -28,11 +28,11 @@
 #include <cpu/arm_interface.h>
 
 namespace eka2l1::mem {
-    multiple_mem_model_process::multiple_mem_model_process(mmu_base *mmu)
-        : mem_model_process(mmu)
-        , addr_space_id_(mmu->rollover_fresh_addr_space())
-        , user_local_sec_(local_data, mmu->mem_map_old_ ? shared_data_eka1 : shared_data, mmu->page_size())
-        , user_dll_static_data_sec_(mmu->mem_map_old_ ? rom_bss_eka1 : dll_static_data, mmu->mem_map_old_ ? dll_static_data_eka1_end : shared_data, mmu->page_size()) {
+    multiple_mem_model_process::multiple_mem_model_process(control_base *ctrl)
+        : mem_model_process(ctrl)
+        , addr_space_id_(ctrl->rollover_fresh_addr_space())
+        , user_local_sec_(local_data, ctrl->mem_map_old_ ? shared_data_eka1 : shared_data, ctrl->page_size())
+        , user_dll_static_data_sec_(ctrl->mem_map_old_ ? rom_bss_eka1 : dll_static_data, ctrl->mem_map_old_ ? dll_static_data_eka1_end : shared_data, ctrl->page_size()) {
     }
 
     static constexpr std::size_t MAX_CHUNK_ALLOW_PER_PROCESS = 512;
@@ -45,7 +45,7 @@ namespace eka2l1::mem {
         // Iterate and search for free slot
         for (std::size_t i = 0; i < chunks_.size(); i++) {
             if (!chunks_[i]) {
-                chunks_[i] = std::make_unique<multiple_mem_model_chunk>(mmu_, addr_space_id_);
+                chunks_[i] = std::make_unique<multiple_mem_model_chunk>(control_, addr_space_id_);
 
                 chunks_[i]->chunk_id_in_mmp_ = i + 1;
                 chunks_[i]->own_process_ = this;
@@ -54,7 +54,7 @@ namespace eka2l1::mem {
             }
         }
 
-        chunks_.push_back(std::make_unique<multiple_mem_model_chunk>(mmu_, addr_space_id_));
+        chunks_.push_back(std::make_unique<multiple_mem_model_chunk>(control_, addr_space_id_));
 
         chunks_.back()->chunk_id_in_mmp_ = chunks_.size();
         chunks_.back()->own_process_ = this;
@@ -63,7 +63,7 @@ namespace eka2l1::mem {
     }
 
     void *multiple_mem_model_process::get_pointer(const vm_address addr) {
-        return mmu_->get_host_pointer(addr_space_id_, addr);
+        return control_->get_host_pointer(addr_space_id_, addr);
     }
 
     int multiple_mem_model_process::create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) {
@@ -75,7 +75,7 @@ namespace eka2l1::mem {
         }
 
         mchunk->own_process_ = this;
-        mchunk->granularity_shift_ = mmu_->chunk_shift_;
+        mchunk->granularity_shift_ = control_->chunk_shift_;
 
         chunk = reinterpret_cast<mem_model_chunk *>(mchunk);
 
@@ -84,13 +84,6 @@ namespace eka2l1::mem {
 
     void multiple_mem_model_process::delete_chunk(mem_model_chunk *chunk) {
         multiple_mem_model_chunk *mul_chunk = reinterpret_cast<multiple_mem_model_chunk *>(chunk);
-
-        // Decommit the whole things
-        mul_chunk->decommit(0, mul_chunk->max_size_);
-
-        // Ignore the result, just unmap things
-        if (!mul_chunk->is_external_host)
-            common::unmap_memory(mul_chunk->host_base_, mul_chunk->max_size_);
 
         for (std::size_t i = 0; i < chunks_.size(); i++) {
             if (chunks_[i].get() == mul_chunk) {
@@ -121,8 +114,8 @@ namespace eka2l1::mem {
         // Assign page tables
         for (std::size_t i = 0; i < mul_chunk->page_tabs_.size(); i++) {
             if (mul_chunk->page_tabs_[i] != 0xFFFFFFFF) {
-                mmu_->assign_page_table(mmu_->get_page_table_by_id(mul_chunk->page_tabs_[i]),
-                    static_cast<vm_address>(mul_chunk->base_ + (i << mmu_->page_size_bits_)),
+                control_->assign_page_table(control_->get_page_table_by_id(mul_chunk->page_tabs_[i]),
+                    static_cast<vm_address>(mul_chunk->base_ + (i << control_->page_size_bits_)),
                     0, &addr_space_id_, 1);
             }
         }
@@ -150,7 +143,7 @@ namespace eka2l1::mem {
         // Unassign page tables
         for (std::size_t i = 0; i < mul_chunk->page_tabs_.size(); i++) {
             if (mul_chunk->page_tabs_[i] != 0xFFFFFFFF) {
-                mmu_->assign_page_table(nullptr, static_cast<vm_address>(mul_chunk->base_ + (i << mmu_->page_size_bits_)),
+                control_->assign_page_table(nullptr, static_cast<vm_address>(mul_chunk->base_ + (i << control_->page_size_bits_)),
                     0, &addr_space_id_, 1);
             }
         }
@@ -158,24 +151,24 @@ namespace eka2l1::mem {
         return true;
     }
 
-    void multiple_mem_model_process::unmap_from_cpu() {
-        if (!mmu_->cpu_->should_clear_old_memory_map()) {
+    void multiple_mem_model_process::unmap_from_cpu(mmu_base *mmu) {
+        if (!mmu->cpu_->should_clear_old_memory_map()) {
             return;
         }
 
         for (auto &c : chunks_) {
             if (c && (c->is_local || c->is_code)) {
                 // Local
-                c->unmap_from_cpu(this);
+                c->unmap_from_cpu(this, mmu);
             }
         }
     }
 
-    void multiple_mem_model_process::remap_to_cpu() {
+    void multiple_mem_model_process::remap_to_cpu(mmu_base *mmu) {
         for (auto &c : chunks_) {
             if (c && (c->is_local || c->is_code)) {
                 // Local
-                c->map_to_cpu(this);
+                c->map_to_cpu(this, mmu);
             }
         }
     }

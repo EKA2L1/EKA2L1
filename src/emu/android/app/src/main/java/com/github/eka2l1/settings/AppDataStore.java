@@ -63,6 +63,11 @@ public class AppDataStore extends PreferenceDataStore {
         return new AppDataStore(file);
     }
 
+    public static AppDataStore getAndroidStore() {
+        File file = new File(Emulator.EMULATOR_DIR, "android.yml");
+        return new AppDataStore(file);
+    }
+
     public static AppDataStore getAppStore(String uid) {
         File file = new File(Emulator.COMPAT_DIR, uid + ".yml");
         return new AppDataStore(file);

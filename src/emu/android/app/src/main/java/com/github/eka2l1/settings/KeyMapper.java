@@ -57,6 +57,7 @@ public class KeyMapper {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        Emulator.loadConfig();
     }
 
     public static SparseIntArray getArrayPref() {
@@ -72,10 +73,15 @@ public class KeyMapper {
             e.printStackTrace();
         }
         if (keyBinds != null) {
-            for (Object obj : keyBinds) {
-                String str = yaml.dump(obj);
-                KeyBind bind = yaml.loadAs(str, KeyBind.class);
-                intArray.append(bind.source.data.keycode, bind.target);
+            try {
+                for (Object obj : keyBinds) {
+                    String str = yaml.dump(obj);
+                    KeyBind bind = yaml.loadAs(str, KeyBind.class);
+                    intArray.append(bind.source.data.keycode, bind.target);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                initArray(intArray);
             }
         } else {
             initArray(intArray);
@@ -104,7 +110,7 @@ public class KeyMapper {
         intDict.put(KeyEvent.KEYCODE_SOFT_LEFT, Keycode.KEY_SOFT_LEFT);
         intDict.put(KeyEvent.KEYCODE_SOFT_RIGHT, Keycode.KEY_SOFT_RIGHT);
         intDict.put(KeyEvent.KEYCODE_CALL, Keycode.KEY_SEND);
-        intDict.put(KeyEvent.KEYCODE_ENDCALL, Keycode.KEY_END);
+        intDict.put(KeyEvent.KEYCODE_ENDCALL, Keycode.KEY_CLEAR);
     }
 
     private static class KeyBind {
