@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Tuỳ chỉnh</string>
     <string name="debugger_menu_pause_item_name">Tạm dừng</string>
     <string name="debugger_menu_stop_item_name">Ngừng</string>
+    <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">Trình đảo mã</string>
     <string name="debugger_menu_objects_item_name">Các đối tượng</string>
     <string name="debugger_menu_services_item_name">Dịch vụ</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
     <string name="pref_system_app_setting_save_title">Lưu các hiệu chỉnh</string>
     <string name="pref_system_validate_device_btn_title">Làm chuẩn thiết bị</string>
-    <string name="pref_system_validate_device_tooltip">Kiểm tra các lỗi của thiết bị và sửa chúng để EKA2L1 có thể giả lập thiết bị.</string>
+    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Vô hiệu hóa vì hệ thống giả lập đã bắt đầu. Khởi động lại giả lập để sử dụng tùy chọn này.</string>
     <string name="pref_system_no_device_present_str">Không có thiết bị nào</string>
     <string name="pref_system_real_time_accuracy_str">Độ chính xác về thời gian thực</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Thấp</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Trung</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Cao</string>
+    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
     <string name="pref_control_title">Điều khiển</string>
     <string name="pref_control_key_binding_sect_title">Liên kết phím</string>
     <string name="pref_control_wait_for_key_string">chờ phím</string>
     <string name="pref_hal_battery_level_string">Mức pin</string>
     <string name="pref_hal_signal_level_string">Mức sóng</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Làm ơn hãy khởi động lại giả lập để những thay đổi tới nơi chứa giữ liệu và thiết bị được kích hoạt</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
     <string name="packages_title">Các gói</string>
     <string name="packages_package_menu_name">Gói</string>
     <string name="packages_install_string">Cài đặt</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">Lập trình chính:</string>
     <string name="credits_contributors_text">Người cộng tác:</string>
     <string name="credits_honors_text">Nhà đóng góp:</string>
-    <string name="credits_translators_text">Dịch viên (bản máy tính):</string>
+    <string name="credits_translators_text">Translators:</string>
 </resources>
