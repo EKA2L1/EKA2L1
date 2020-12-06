@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Настройки</string>
     <string name="debugger_menu_pause_item_name">Пауза</string>
     <string name="debugger_menu_stop_item_name">Стоп</string>
+    <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">Дизассемблер</string>
     <string name="debugger_menu_objects_item_name">Объекты</string>
     <string name="debugger_menu_services_item_name">Службы</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">Настройки приложения для {} сохранены с именем файла: {:X}</string>
     <string name="pref_system_app_setting_save_title">Сохранить настройки</string>
     <string name="pref_system_validate_device_btn_title">Проверить устройство</string>
-    <string name="pref_system_validate_device_tooltip">Проверяет наличие ошибок в устройстве и исправляет их так, чтобы EKA2L1 мог эмулировать устройство.</string>
+    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Отключено, потому что эмулируемая система запущена. Перезапустите эмулятор, чтобы использовать эту опцию.</string>
     <string name="pref_system_no_device_present_str">Нет устройств</string>
     <string name="pref_system_real_time_accuracy_str">Точность в реальном времени</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Низкий</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Средний</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Высокий</string>
+    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
     <string name="pref_control_title">Управление</string>
     <string name="pref_control_key_binding_sect_title">Назначение кнопок</string>
     <string name="pref_control_wait_for_key_string">ожидание клавиши</string>
     <string name="pref_hal_battery_level_string">Уровень батареи</string>
     <string name="pref_hal_signal_level_string">Уровень сигнала</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Пожалуйста, перезапустите эмулятор, чтобы изменения хранилища данных и устройств вступили в силу</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
     <string name="packages_title">Пакеты</string>
     <string name="packages_package_menu_name">Пакет</string>
     <string name="packages_install_string">Установить</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">Главные разработчики:</string>
     <string name="credits_contributors_text">Участники:</string>
     <string name="credits_honors_text">Благодарность:</string>
-    <string name="credits_translators_text">Переводчики (ПК):</string>
+    <string name="credits_translators_text">Translators:</string>
 </resources>
