@@ -122,6 +122,30 @@ namespace eka2l1::android {
         return 0;
     }
 
+    static eka2l1::vec2 get_screen_rotate_origin(const eka2l1::vec2 &size, const int rotation) {
+        eka2l1::vec2 origin = eka2l1::vec2(0, 0);
+
+        switch (rotation) {
+        case 90:
+            origin.y = -size.y;
+            break;
+
+        case 180:
+            origin.x = -size.x;
+            origin.y = -size.y;
+            break;
+
+        case 270:
+            origin.x = -size.x;
+            break;
+
+        default:
+            break;
+        }
+
+        return origin;
+    }
+
     void ui_thread(emulator &state) {
         int result = ui_thread_initialization(state);
 
@@ -183,13 +207,21 @@ namespace eka2l1::android {
                     dest.size = eka2l1::vec2(width, height);
 
                     cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
-                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, 0.0f,
+                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0,0), 0.0f,
                                              drivers::bitmap_draw_flag_no_flip);
                     if (scr->dsa_texture) {
                         cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
-                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, static_cast<float>(crr_mode.rotation),
-                                                 drivers::bitmap_draw_flag_no_flip);
+
+                        // Rotate back to original size
+                        if (crr_mode.rotation % 180 != 0) {
+                            std::swap(dest.size.x, dest.size.y);
+                            std::swap(src.size.x, src.size.y);
+                        }
+
+                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, get_screen_rotate_origin(dest.size, crr_mode.rotation),
+                                                static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
                     }
+
                     scr->screen_mutex.unlock();
                 }
                 cmd_builder->load_backup_state();

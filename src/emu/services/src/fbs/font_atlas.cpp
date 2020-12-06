@@ -185,7 +185,8 @@ namespace eka2l1::epoc {
             dest_rect.size.y = static_cast<int>(info.yoff2 - info.yoff);
 
             if ((dest_rect.size.x != 0) && (dest_rect.size.y != 0) && (source_rect.size.x != 0) && (source_rect.size.y != 0)) {
-                builder->draw_bitmap(atlas_handle_, 0, dest_rect, source_rect, 0.0f, drivers::bitmap_draw_flag_use_brush);
+                builder->draw_bitmap(atlas_handle_, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f,
+                    drivers::bitmap_draw_flag_use_brush);
             }
 
             // TODO: Newline
