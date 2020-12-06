@@ -449,7 +449,8 @@ namespace eka2l1::hle {
             }
         }
 
-        additional_mode_ = PREFER_ROM;
+        const std::uint32_t last_add_mode = additional_mode_;
+        additional_mode_ = 0;
 
         for (std::size_t i = 0; i < patch_image_paths.size(); i++) {
             // We want to patch ROM image though. Do it.
@@ -495,7 +496,7 @@ namespace eka2l1::hle {
             patches_[i].patch_ = patch_seg;
         }
 
-        additional_mode_ = 0;
+        additional_mode_ = last_add_mode;
 
         apply_pending_patches();
         apply_trick_or_treat_algo();
@@ -1117,6 +1118,9 @@ namespace eka2l1::hle {
             search_paths.push_back(u"\\System\\Fep\\");
         } else {
             search_paths.push_back(u"\\Sys\\Bin\\");
+            
+            // Circumvent ROM vs ROFS issue at the moment.
+            additional_mode_ = PREFER_PHYSICAL;
         }
     }
     

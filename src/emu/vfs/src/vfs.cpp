@@ -1003,7 +1003,7 @@ namespace eka2l1 {
             auto ff = physical_file_system::open_file(new_path, mode);
 
             // Dont change order!
-            if (!entry || (!(mode & PREFER_ROM) && (ff->size() != entry->size))) {
+            if (!entry || ((mode & PREFER_PHYSICAL) && (ff->size() != entry->size))) {
                 return ff;
             }
 
