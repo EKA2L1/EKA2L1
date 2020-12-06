@@ -163,7 +163,7 @@
     <string name="credits_main_developer_text">Main developers:</string>
     <string name="credits_contributors_text">Contributors:</string>
     <string name="credits_honors_text">Honors:</string>
-    <string name="credits_translators_text">Translators (Desktop):</string>
+    <string name="credits_translators_text">Translators:</string>
 
     <string name="lang_name_zh" translatable="false">简体中文</string>
     <string name="lang_name_en" translatable="false">English</string>
@@ -181,4 +181,5 @@
     <string name="lang_name_tr" translatable="false">Türkçe</string>
     <string name="lang_name_az" translatable="false">Azərbaycan dili</string>
     <string name="lang_name_bn" translatable="false">বাংলা</string>
+    <string name="lang_name_id" translatable="false">Bahasa Indonesia</string>
 </resources>
