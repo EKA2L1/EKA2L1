@@ -13,6 +13,7 @@
     <string name="mount_sd">Lắp thẻ MMC/SD</string>
     <string name="no_devices_found">Không tìm thấy thiết bị</string>
     <string name="exit">Exit</string>
+    <string name="save_log">Save log</string>
     <string name="install">Cài đặt</string>
     <string name="path_to_rpkg">Đường dẫn tới RPKG</string>
     <string name="path_to_rom">Đường dẫn tới ROM</string>
@@ -50,5 +51,6 @@
     <string name="hide_buttons">Ẩn nút</string>
     <string name="confirmation_required">Yêu cầu xác nhận</string>
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
+    <string name="log_saved">Log has been saved</string>
     <string name="version">Phiên bản: </string>
 </resources>
