@@ -30,7 +30,7 @@
     <string name="file_menu_prefs_item_name">Preferensi</string>
     <string name="debugger_menu_pause_item_name">Tunda</string>
     <string name="debugger_menu_stop_item_name">Berhenti</string>
-    <string name="debugger_menu_restart_item_name">Restart</string>
+    <string name="debugger_menu_restart_item_name">Mulai Ulang</string>
     <string name="debugger_menu_disassembler_item_name">Disassembler</string>
     <string name="debugger_menu_objects_item_name">Objek</string>
     <string name="debugger_menu_services_item_name">Layanan</string>
@@ -87,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">Setelan aplikasi untuk {} disimpan dengan nama file: {:X}</string>
     <string name="pref_system_app_setting_save_title">Simpan pengaturan</string>
     <string name="pref_system_validate_device_btn_title">Validasi perangkat</string>
-    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
+    <string name="pref_system_validate_device_tooltip">Periksa kesalahan pada perangkat saat ini dan perbaiki sehingga EKA2L1 dapat menjalankan emulasi perangkat.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Dinonaktifkan karena sistem yang diemulasi telah dimulai. Mulai ulang emulator untuk menggunakan opsi ini.</string>
     <string name="pref_system_no_device_present_str">Tidak ada perangkat</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
@@ -96,8 +96,8 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Rendah</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Sedang</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Tinggi</string>
-    <string name="pref_system_rescan_devices_title">Rescan devices</string>
-    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
+    <string name="pref_system_rescan_devices_title">Pindai ulang perangkat</string>
+    <string name="pref_system_rescan_devices_description_msg">Periksa perangkat yang tidak diimpor dan perbaiki info yang ada</string>
     <string name="pref_control_title">Kontrol</string>
     <string name="pref_control_key_binding_sect_title">Atur tombol</string>
     <string name="pref_control_wait_for_key_string">waiting for key</string>
