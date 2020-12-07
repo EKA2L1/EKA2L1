@@ -96,14 +96,15 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Thấp</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Trung</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Cao</string>
-    <string name="pref_system_rescan_devices_title">Rescan devices</string>
-    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
+    <string name="pref_system_rescan_devices_title">Quét lại các thiết bị</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos
+Kiểm tra xem có thiết bị nào chưa được thêm hay không và sửa thông tin của các thiết bị đã có</string>
     <string name="pref_control_title">Điều khiển</string>
     <string name="pref_control_key_binding_sect_title">Liên kết phím</string>
     <string name="pref_control_wait_for_key_string">chờ phím</string>
     <string name="pref_hal_battery_level_string">Mức pin</string>
     <string name="pref_hal_signal_level_string">Mức sóng</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Khởi động lại giả lập để các thay đổi có hiệu lực</string>
     <string name="packages_title">Các gói</string>
     <string name="packages_package_menu_name">Gói</string>
     <string name="packages_install_string">Cài đặt</string>
