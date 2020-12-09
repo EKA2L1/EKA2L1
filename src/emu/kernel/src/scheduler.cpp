@@ -92,7 +92,7 @@ namespace eka2l1::kernel {
             crr_thread = newt;
             crr_thread->state = thread_state::run;
             
-            mem::mem_model_process *mm_process = crr_process->get_mem_model();
+            mem::mem_model_process *mm_process = crr_process ? crr_process->get_mem_model() : nullptr;
 
             if (crr_process != newt->owning_process()) {
                 if (crr_process) {
