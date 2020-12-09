@@ -384,6 +384,13 @@ namespace eka2l1 {
         bool flush() override {
             WARN_CLOSE
 
+            if (!(fmode & WRITE_MODE)) {
+                // Undefined behaviour on all platforms.
+                // On Linux errno is set to EBADF but we dont want to handle
+                // platform-specific here.
+                return true;
+            }
+
             return (fflush(file) == 0);
         }
 

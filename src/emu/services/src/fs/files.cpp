@@ -326,7 +326,10 @@ namespace eka2l1 {
 
         file *vfs_file = reinterpret_cast<file *>(node->vfs_node.get());
 
+        // On Symbian, read-only file is fine with flushing. The VFS is changed to reflect this behaviour.
         if (!vfs_file->flush()) {
+            LOG_ERROR("Fail flushing file with path {}", common::ucs2_to_utf8(vfs_file->file_name()));
+
             ctx->complete(epoc::error_general);
             return;
         }
