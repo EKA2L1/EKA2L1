@@ -58,7 +58,9 @@ namespace eka2l1::drivers {
             return data_callback(buffer, nb_frames);
         });
 
-        stream_->set_volume(static_cast<float>(volume_) / 100.0f);
+        if (stream_)
+            stream_->set_volume(static_cast<float>(volume_) / 100.0f);
+
         return true;
     }
 
