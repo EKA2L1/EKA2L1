@@ -119,7 +119,7 @@
     <string name="install_device_wizard_welcome_msg">Ласкаво просимо до майстра встановлення пристрою! Щоб розпочати роботу, натисніть кнопку „Продовжити“.</string>
     <string name="install_device_wizard_raw_dump_type_name">Необроблений дамп</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
-    <string name="install_device_choose_method_msg">Виберіть спосіб установки</string>
+    <string name="install_device_choose_method_msg">Виберіть спосіб установлення</string>
     <string name="install_device_rpkg_choose_msg">Будь ласка, вкажіть файл RPKG:</string>
     <string name="install_device_raw_dump_choose_msg">Будь ласка, вкажіть папку необробленого дампа диска Z:</string>
     <string name="install_device_rom_choose_msg">Будь ласка, вкажіть ROM файл:</string>
