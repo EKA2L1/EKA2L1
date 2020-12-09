@@ -43,6 +43,9 @@ namespace eka2l1 {
     };
 
     enum socket_opcode_old {
+        socket_old_num_pr = 0x00,
+        socket_old_pr_info = 0x01,
+        socket_old_pr_find = 0x02,
         socket_old_hr_open = 0x24,
         socket_old_hr_get_host_name = 0x28,
         socket_old_hr_set_host_name = 0x29,

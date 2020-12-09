@@ -64,6 +64,10 @@ namespace eka2l1 {
     void socket_client_session::fetch(service::ipc_context *ctx) {
         if (is_oldarch()) {
             switch (ctx->msg->function) {
+            case socket_old_pr_find:
+                pr_find(ctx);
+                return;
+
             case socket_old_hr_open:
                 hr_create(ctx, false);
                 return;
