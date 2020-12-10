@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Asetukset</string>
     <string name="debugger_menu_pause_item_name">Pause</string>
     <string name="debugger_menu_stop_item_name">Stop</string>
+    <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">Disassembler</string>
     <string name="debugger_menu_objects_item_name">Objects</string>
     <string name="debugger_menu_services_item_name">Palvelut</string>
@@ -73,7 +74,7 @@
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Tämä suodatin otetaan käyttöön seuraavan emuloidun näytön piirroksen jälkeen.</string>
     <string name="pref_general_utilities_integer_scaling_msg">Enable integer scaling</string>
-    <string name="pref_general_utilities_integer_scaling_tooltip">This is a pixel-perfect scaling method, which can help reduce blur significantly.</string>
+    <string name="pref_general_utilities_integer_scaling_tooltip">Tämä on pikselin tarkka skaalaus menetelmä, joka voi auttaa vähentämään sumeutta merkittävästi.</string>
     <string name="pref_system_title">Järjestelmä</string>
     <string name="pref_system_cpu_option_name">Prosessori</string>
     <string name="pref_system_device_option_name">Laite</string>
@@ -86,21 +87,23 @@
     <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
     <string name="pref_system_app_setting_save_title">Tallenna asetukset</string>
     <string name="pref_system_validate_device_btn_title">Validate device</string>
-    <string name="pref_system_validate_device_tooltip">Check for faults in device and fix them so that EKA2L1 can emulate the device.</string>
-    <string name="pref_system_validate_device_disabled_tooltip">Disabled because emulated system has started. Restart the emulator to use this option.</string>
+    <string name="pref_system_validate_device_tooltip">Tarkista nykyisen laitteen viat ja korjaa ne niin, että EKA2L1 voi emuloida laitetta.</string>
+    <string name="pref_system_validate_device_disabled_tooltip">Pois käytöstä, koska emuloitu järjestelmä on käynnistynyt. Käynnistä emulaattori uudelleen käyttääksesi tätä vaihtoehtoa.</string>
     <string name="pref_system_no_device_present_str">No device present</string>
-    <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
-    <string name="pref_system_real_time_accuracy_tooltip_msg_1">Choose the level of accuracy for timing operations.</string>
-    <string name="pref_system_real_time_accuracy_tooltip_msg_2">The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</string>
+    <string name="pref_system_real_time_accuracy_str">Reaaliaikainen tarkkuus</string>
+    <string name="pref_system_real_time_accuracy_tooltip_msg_1">Valitse tarkkuuden taso ajoitusta varten.</string>
+    <string name="pref_system_real_time_accuracy_tooltip_msg_2">Mitä korkeampi taso on, sitä enemmän suorittimen tehoja kulutetaan, mutta mahdollisesti nopeampi käyttö joissakin sovelluksissa!</string>
     <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
     <string name="pref_system_real_time_accuracy_level_name_high">High</string>
+    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>
     <string name="pref_control_wait_for_key_string">waiting for key</string>
     <string name="pref_hal_battery_level_string">Akun varaus</string>
     <string name="pref_hal_signal_level_string">Signaalin taso</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Käynnistä emulaattori uudelleen, jotta tietojen tallennustilaan ja laitteisiin tehdyt muutokset tulisivat käyttöön</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
     <string name="packages_title">Paketit</string>
     <string name="packages_package_menu_name">Paketti</string>
     <string name="packages_install_string">Asenna</string>
@@ -116,7 +119,7 @@
     <string name="install_device_wizard_welcome_msg">Tervetuloa asentamaan ohjain! Päästäksesi alkuun, paina \"Jatka\" -painiketta.</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
-    <string name="install_device_choose_method_msg">Choose installation method</string>
+    <string name="install_device_choose_method_msg">Valitse asennusmenetelmä</string>
     <string name="install_device_rpkg_choose_msg">Please specify the repackage file (RPKG):</string>
     <string name="install_device_raw_dump_choose_msg">Please specify raw Z: drive dump folder:</string>
     <string name="install_device_rom_choose_msg">Please specify the ROM file:</string>
@@ -139,7 +142,7 @@
     <string name="credits_copyright_text">(C) 2018- EKA2L1 Tiimi.</string>
     <string name="credits_thanks_text">Kiitos emulaattorin käytöstä!</string>
     <string name="credits_main_developer_text">Pääkehittäjät:</string>
-    <string name="credits_contributors_text">Contributors:</string>
-    <string name="credits_honors_text">Honors:</string>
-    <string name="credits_translators_text">Kääntäjät (Työpöytä):</string>
+    <string name="credits_contributors_text">Kehittäjät:</string>
+    <string name="credits_honors_text">Kunnianosoitukset:</string>
+    <string name="credits_translators_text">Kääntäjät:</string>
 </resources>

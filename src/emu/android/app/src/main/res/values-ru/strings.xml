@@ -13,6 +13,7 @@
     <string name="mount_sd">Подключить MMC/SD карту</string>
     <string name="no_devices_found">Устройства не найдены</string>
     <string name="exit">Выход</string>
+    <string name="save_log">Save log</string>
     <string name="install">Установить</string>
     <string name="path_to_rpkg">Путь к RPKG</string>
     <string name="path_to_rom">Путь к ROM</string>
@@ -50,5 +51,6 @@
     <string name="hide_buttons">Скрыть кнопки</string>
     <string name="confirmation_required">Требуется подтверждение</string>
     <string name="force_close_confirmation">Принудительное закрытие приложения может привести к потере данных или даже полной его неработоспособности!\nПродолжить?</string>
+    <string name="log_saved">Log has been saved</string>
     <string name="version">Версия: </string>
 </resources>

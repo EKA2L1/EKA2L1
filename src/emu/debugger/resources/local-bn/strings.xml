@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">পছন্দসমূহ</string>
     <string name="debugger_menu_pause_item_name">বিরাম</string>
     <string name="debugger_menu_stop_item_name">থামুন</string>
+    <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">বিচ্ছিন্নকারী</string>
     <string name="debugger_menu_objects_item_name">অবজেক্টস</string>
     <string name="debugger_menu_services_item_name">পরিষেবাদি</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">{} এর জন্য অ্যাপ সেটিং তা সংরক্ষণ করা হয়েছে যে ফাইলনেমে: {:X}</string>
     <string name="pref_system_app_setting_save_title">সেটিংসমূহ সংরক্ষণ করুন</string>
     <string name="pref_system_validate_device_btn_title">ডিভাইস বৈধ করুন</string>
-    <string name="pref_system_validate_device_tooltip">ডিভাইসে ভুলত্রুটি চেক করুন এবং সংশোধন করুন যাতে EKA2L1 এই ডিভাইসটি ইমুলেট করতে পারে।.</string>
+    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">ইমুলেটেড সিস্টেম চালু হওয়ার কারণে নিষ্ক্রিয় হয়েছে। এই অপশনটি ব্যবহার করতে ইমুলেটরটি রিস্টার্ট করুন।.</string>
     <string name="pref_system_no_device_present_str">কোন ডিভাইস বিদ্যমান নেই</string>
     <string name="pref_system_real_time_accuracy_str">রিয়াল-টাইম যথার্থতা</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">নিম্ন</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">মাঝারি</string>
     <string name="pref_system_real_time_accuracy_level_name_high">উচ্চ</string>
+    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
     <string name="pref_control_title">নিয়ন্ত্রণ</string>
     <string name="pref_control_key_binding_sect_title">কি বাইন্ডিং</string>
     <string name="pref_control_wait_for_key_string">কি এর জন্য অপেক্ষা হচ্ছে</string>
     <string name="pref_hal_battery_level_string">ব্যাটারি লেভেল</string>
     <string name="pref_hal_signal_level_string">সিগন্যাল লেভেল</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">ডাটা স্টোরেজ এবং ডিভাইসসমূহের পরিবর্তনগুলি কার্যকর হওয়ার জন্য অনুগ্রহ করে ইমুলেটরটি পুনরায় চালু করুন।</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
     <string name="packages_title">প্যাকেজসমূহ</string>
     <string name="packages_package_menu_name">প্যাকেজ</string>
     <string name="packages_install_string">ইনস্টল</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">মূল ডেভেলপারসমুহ:</string>
     <string name="credits_contributors_text">অবদানকারী:</string>
     <string name="credits_honors_text">সম্মাননা:</string>
-    <string name="credits_translators_text">অনুবাদক (ডেস্কটপ):</string>
+    <string name="credits_translators_text">Translators:</string>
 </resources>

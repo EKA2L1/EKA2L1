@@ -13,7 +13,8 @@
     <string name="mount_sd">Pasang MMC/SD Card</string>
     <string name="no_devices_found">Tidak ada perangkat device yang ditemukan</string>
     <string name="exit">Keluar</string>
-    <string name="install">Instal</string>
+    <string name="save_log">Simpan log</string>
+    <string name="install">Install</string>
     <string name="path_to_rpkg">Jalur ke RPKG</string>
     <string name="path_to_rom">Jalur ke ROM</string>
     <string name="raw_dump">Raw dump</string>
@@ -21,7 +22,7 @@
     <string name="install_method">Metode Install</string>
     <string name="pref_general_title">Umum</string>
     <string name="pref_system_title">Sistem</string>
-    <string name="pref_control_key_binding_sect_title">Pengikatan kunci</string>
+    <string name="pref_control_key_binding_sect_title">Atur tombol</string>
     <string name="pref_theme">Tema</string>
     <string name="pref_theme_light">Terang</string>
     <string name="pref_theme_dark">Gelap</string>
@@ -50,5 +51,6 @@
     <string name="hide_buttons">Sembunyikan tombol</string>
     <string name="confirmation_required">Konfirmasi diperlukan</string>
     <string name="force_close_confirmation">Menutup paksa aplikasi dapat mengakibatkan hilangnya data atau bahkan korup sama sekali!\nLanjutkan?</string>
+    <string name="log_saved">Log telah disimpan</string>
     <string name="version">Versi: </string>
 </resources>

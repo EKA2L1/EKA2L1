@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Ustawienia</string>
     <string name="debugger_menu_pause_item_name">Pauza</string>
     <string name="debugger_menu_stop_item_name">Zatrzymaj</string>
+    <string name="debugger_menu_restart_item_name">Uruchom ponownie</string>
     <string name="debugger_menu_disassembler_item_name">Dezasembler</string>
     <string name="debugger_menu_objects_item_name">Obiekty</string>
     <string name="debugger_menu_services_item_name">Usługi</string>
@@ -41,9 +42,9 @@
     <string name="help_menu_about_item_name">O programie</string>
     <string name="app_launcher_title">Launcher aplikacji</string>
     <string name="app_launcher_unavail_msg">Serwer listy aplikacji jest niedostępny. Zainstaluj urządzenie by go wyłączyć.</string>
-    <string name="app_launcher_switch_to_style_title">Switch to</string>
-    <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_modern_str">Modern</string>
+    <string name="app_launcher_switch_to_style_title">Przełącz na</string>
+    <string name="app_launcher_style_classical_str">Klasyczny</string>
+    <string name="app_launcher_style_modern_str">Nowoczesny</string>
     <string name="error_dialog_title">Pojawił się dziki błąd</string>
     <string name="error_dialog_message">Załącz log i zgłoś to do twórcy!</string>
     <string name="emulated_screen_title">Ekran {}</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">Ustawienie aplikacji dla {} zapisane z nazwą pliku: {:X}</string>
     <string name="pref_system_app_setting_save_title">Zapisz ustawienia</string>
     <string name="pref_system_validate_device_btn_title">Sprawdź urządzenie</string>
-    <string name="pref_system_validate_device_tooltip">Sprawdź usterki w urządzeniu i napraw je tak, aby EKA2L1 mógł emulować to urządzenie.</string>
+    <string name="pref_system_validate_device_tooltip">Sprawdź usterki w obecnym urządzeniu i napraw je tak, aby EKA2L1 mógł emulować to urządzenie.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Wyłączone, ponieważ emulowany system został uruchomiony. Uruchom ponownie emulator by użyć tej opcji.</string>
     <string name="pref_system_no_device_present_str">Brak urządzenia</string>
     <string name="pref_system_real_time_accuracy_str">Dokładność w czasie rzeczywistym</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Niski</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Średni</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Wysoki</string>
+    <string name="pref_system_rescan_devices_title">Przeskanuj ponownie urządzenia</string>
+    <string name="pref_system_rescan_devices_description_msg">Sprawdź czy są jakieś niezaimportowane urządzenia i popraw informacje istniejących</string>
     <string name="pref_control_title">Sterowanie</string>
     <string name="pref_control_key_binding_sect_title">Przypisania klawiszy</string>
     <string name="pref_control_wait_for_key_string">oczekiwanie na klawisz</string>
     <string name="pref_hal_battery_level_string">Poziom baterii</string>
     <string name="pref_hal_signal_level_string">Poziom sygnału</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Uruchom ponownie emulator by zmiany w przechowywaniu danych i urządzeniach odniosły skutek</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Uruchom ponownie emulator by zmiany w przechowywaniu danych odniosły skutek</string>
     <string name="packages_title">Paczki</string>
     <string name="packages_package_menu_name">Paczka</string>
     <string name="packages_install_string">Zainstaluj</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">Główni twórcy:</string>
     <string name="credits_contributors_text">Kontrybutorzy:</string>
     <string name="credits_honors_text">Uznania:</string>
-    <string name="credits_translators_text">Tłumacze (Desktop):</string>
+    <string name="credits_translators_text">Tłumacze:</string>
 </resources>

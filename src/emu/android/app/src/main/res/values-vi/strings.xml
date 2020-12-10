@@ -12,12 +12,13 @@
     <string name="remove">Xóa bỏ</string>
     <string name="mount_sd">Lắp thẻ MMC/SD</string>
     <string name="no_devices_found">Không tìm thấy thiết bị</string>
-    <string name="exit">Exit</string>
+    <string name="exit">Thoát</string>
+    <string name="save_log">Lưu log</string>
     <string name="install">Cài đặt</string>
     <string name="path_to_rpkg">Đường dẫn tới RPKG</string>
     <string name="path_to_rom">Đường dẫn tới ROM</string>
-    <string name="raw_dump">Raw dump</string>
-    <string name="path_to_raw_dump">Path to raw dump</string>
+    <string name="raw_dump">Thư mục raw</string>
+    <string name="path_to_raw_dump">Đường dẫn đến raw dump</string>
     <string name="install_method">Phương thức cài đặt</string>
     <string name="pref_general_title">Chung</string>
     <string name="pref_system_title">Hệ thống</string>
@@ -26,7 +27,7 @@
     <string name="pref_theme_light">Sáng</string>
     <string name="pref_theme_dark">Tối</string>
     <string name="pref_enable_virtual_keyboard">Hiển thị bàn phím ảo</string>
-    <string name="pref_enable_actionbar">Enable ActionBar</string>
+    <string name="pref_enable_actionbar">Bật thanh Hành động</string>
     <string name="pref_enable_statusbar">Bật thanh trạng thái</string>
     <string name="pref_wakelock">Giữ màn hình bật</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Bật màng lọc hàng xóm gần nhất</string>
@@ -39,9 +40,9 @@
     <string name="pref_system_setting_inheritance_option_name">Kế thừa hiệu chỉnh</string>
     <string name="emulated_screen_rotation_item_name">Xoay màn hình</string>
     <string name="emulated_screen_refresh_rate_item_name">Tần số làm mới</string>
-    <string name="mapping_dialog_title">Press a key</string>
-    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
-    <string name="reset_mapping">Reset</string>
+    <string name="mapping_dialog_title">Bấm phím bất kì</string>
+    <string name="mapping_dialog_message" formatted="false">Lưu với phím: %1$s</string>
+    <string name="reset_mapping">Cài đặt lại</string>
     <string name="layout_edit_finished">Đã hoàn tất chế độ chỉnh sửa</string>
     <string name="layout_edit_finish">Hoàn thành chế độ chỉnh sửa</string>
     <string name="layout_edit_mode">Chế độ chỉnh sửa cấu trúc phím</string>
@@ -49,6 +50,7 @@
     <string name="layout_switch">Chuyển bố cục phím</string>
     <string name="hide_buttons">Ẩn nút</string>
     <string name="confirmation_required">Yêu cầu xác nhận</string>
-    <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
+    <string name="force_close_confirmation">Bắt buộc đóng ứng dụng có thể dẫn đến mất dữ liệu hoặc thậm chí hư hỏng!\nBạn vẫn muốn thoát?</string>
+    <string name="log_saved">Log đã được lưu</string>
     <string name="version">Phiên bản: </string>
 </resources>

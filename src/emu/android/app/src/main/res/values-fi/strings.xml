@@ -13,6 +13,7 @@
     <string name="mount_sd">Mount MMC/SD card</string>
     <string name="no_devices_found">Laitteita ei löytynyt</string>
     <string name="exit">Exit</string>
+    <string name="save_log">Save log</string>
     <string name="install">Asenna</string>
     <string name="path_to_rpkg">Polku RPKG:hen</string>
     <string name="path_to_rom">Polku ROM:iin</string>
@@ -31,7 +32,7 @@
     <string name="pref_wakelock">Pidä näyttö päällä</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_system_language_option_name">Kieli</string>
-    <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
+    <string name="pref_system_real_time_accuracy_str">Reaaliaikainen tarkkuus</string>
     <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
     <string name="pref_system_real_time_accuracy_level_name_high">High</string>
@@ -50,5 +51,6 @@
     <string name="hide_buttons">Piilota painikkeet</string>
     <string name="confirmation_required">Vahvistus vaaditaan</string>
     <string name="force_close_confirmation">Sovelluksen sulkeminen voi johtaa tietojen menetykseen tai jopa rikkoa sen kokonaan!\nJatketaanko?</string>
+    <string name="log_saved">Log has been saved</string>
     <string name="version">Versio: </string>
 </resources>

@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Préférences</string>
     <string name="debugger_menu_pause_item_name">Pause</string>
     <string name="debugger_menu_stop_item_name">Stop</string>
+    <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">Désassembleur</string>
     <string name="debugger_menu_objects_item_name">Objets</string>
     <string name="debugger_menu_services_item_name">Services</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
     <string name="pref_system_app_setting_save_title">Save the settings</string>
     <string name="pref_system_validate_device_btn_title">Valider l\'appareil</string>
-    <string name="pref_system_validate_device_tooltip">Vérifiez les défauts de l\'appareil et corrigez-les afin que EKA2L1 puisse émuler l\'appareil.</string>
+    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Désactivé parce que le système émulé a démarré. Redémarrez l\'émulateur pour utiliser cette option.</string>
     <string name="pref_system_no_device_present_str">Aucun appareil présent</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
     <string name="pref_system_real_time_accuracy_level_name_high">High</string>
+    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
     <string name="pref_control_title">Contrôles</string>
     <string name="pref_control_key_binding_sect_title">Touches</string>
     <string name="pref_control_wait_for_key_string">en l\'attente d\'une touche</string>
     <string name="pref_hal_battery_level_string">Niveau de batterie</string>
     <string name="pref_hal_signal_level_string">Niveau du signal</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Veuillez redémarrer l\'émulateur pour que les modifications apportées au stockage de données et aux appareils soient effectives</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
     <string name="packages_title">Paquets</string>
     <string name="packages_package_menu_name">Paquet</string>
     <string name="packages_install_string">Installer</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">Main developers:</string>
     <string name="credits_contributors_text">Contributors:</string>
     <string name="credits_honors_text">Honors:</string>
-    <string name="credits_translators_text">Translators (Desktop):</string>
+    <string name="credits_translators_text">Translators:</string>
 </resources>

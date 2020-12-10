@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Preferências</string>
     <string name="debugger_menu_pause_item_name">Pausar</string>
     <string name="debugger_menu_stop_item_name">Parar</string>
+    <string name="debugger_menu_restart_item_name">Reiniciar</string>
     <string name="debugger_menu_disassembler_item_name">Desmontar</string>
     <string name="debugger_menu_objects_item_name">Objetos</string>
     <string name="debugger_menu_services_item_name">Serviços</string>
@@ -95,6 +96,8 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Baixa</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Média</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Alta</string>
+    <string name="pref_system_rescan_devices_title">Reescanear dispositivos</string>
+    <string name="pref_system_rescan_devices_description_msg">Verifique qualquer dispositivo não importado e corrija as informações do existente</string>
     <string name="pref_control_title">Controle</string>
     <string name="pref_control_key_binding_sect_title">Combinações de tecla</string>
     <string name="pref_control_wait_for_key_string">Esperando por tecla</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">Principais desenvolvedores:</string>
     <string name="credits_contributors_text">Colaboradores:</string>
     <string name="credits_honors_text">Honras:</string>
-    <string name="credits_translators_text">Tradutores (Desktop):</string>
+    <string name="credits_translators_text">Tradutores:</string>
 </resources>

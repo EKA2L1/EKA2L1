@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Tuỳ chỉnh</string>
     <string name="debugger_menu_pause_item_name">Tạm dừng</string>
     <string name="debugger_menu_stop_item_name">Ngừng</string>
+    <string name="debugger_menu_restart_item_name">Khởi động lại</string>
     <string name="debugger_menu_disassembler_item_name">Trình đảo mã</string>
     <string name="debugger_menu_objects_item_name">Các đối tượng</string>
     <string name="debugger_menu_services_item_name">Dịch vụ</string>
@@ -41,9 +42,9 @@
     <string name="help_menu_about_item_name">Giới thiệu</string>
     <string name="app_launcher_title">Trình khởi chạy ứng dụng</string>
     <string name="app_launcher_unavail_msg">Dịch vụ liệt kê ứng dụng hiện không tồn tại. Cài đặt một thiết bị để khởi tạo nó.</string>
-    <string name="app_launcher_switch_to_style_title">Switch to</string>
-    <string name="app_launcher_style_classical_str">Classical</string>
-    <string name="app_launcher_style_modern_str">Modern</string>
+    <string name="app_launcher_switch_to_style_title">Chuyển sang</string>
+    <string name="app_launcher_style_classical_str">Kiểu cổ điển</string>
+    <string name="app_launcher_style_modern_str">Kiểu hiện đại</string>
     <string name="error_dialog_title">Lỗi xuất hiện</string>
     <string name="error_dialog_message">Hãy lấy file log và báo cáo lỗi này cho nhà phát triển!</string>
     <string name="emulated_screen_title">Màn hình {}</string>
@@ -59,7 +60,7 @@
     <string name="pref_general_debugging_string">Gỡ lỗi</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">Đọc CPU</string>
     <string name="pref_general_debugging_cpu_write_checkbox_title">Viết CPU</string>
-    <string name="pref_general_debugging_cpu_step_checkbox_title">CPU step</string>
+    <string name="pref_general_debugging_cpu_step_checkbox_title">Bước CPU</string>
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Lựa chọn này sẽ không được lưu sau khi giả lập thoát. Vô tác dụng khi GDBStub đang được bật.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Hàm gọi hệ thống</string>
@@ -83,10 +84,10 @@
     <string name="pref_system_time_delay_option_name">Khoảng chậm thời gian</string>
     <string name="pref_system_setting_inheritance_option_name">Kế thừa hiệu chỉnh</string>
     <string name="pref_system_setting_inheritance_tooltip_msg">Khi lựa chọn này được hiệu hóa, chương trình con mà ứng dụng này gọi ra sẽ kế thừa hiệu chỉnh.</string>
-    <string name="pref_system_app_setting_save_done_msg">App setting for {} is saved with filename: {:X}</string>
+    <string name="pref_system_app_setting_save_done_msg">Cài đặt cho app {} đã được lưu với tên: {:X}</string>
     <string name="pref_system_app_setting_save_title">Lưu các hiệu chỉnh</string>
     <string name="pref_system_validate_device_btn_title">Làm chuẩn thiết bị</string>
-    <string name="pref_system_validate_device_tooltip">Kiểm tra các lỗi của thiết bị và sửa chúng để EKA2L1 có thể giả lập thiết bị.</string>
+    <string name="pref_system_validate_device_tooltip">Kiểm tra và sửa lỗi của thiết bị hiện tại để EKA2L1 có thể giả lập thiết bị.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Vô hiệu hóa vì hệ thống giả lập đã bắt đầu. Khởi động lại giả lập để sử dụng tùy chọn này.</string>
     <string name="pref_system_no_device_present_str">Không có thiết bị nào</string>
     <string name="pref_system_real_time_accuracy_str">Độ chính xác về thời gian thực</string>
@@ -95,12 +96,15 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Thấp</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Trung</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Cao</string>
+    <string name="pref_system_rescan_devices_title">Quét lại các thiết bị</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos
+Kiểm tra xem có thiết bị nào chưa được thêm hay không và sửa thông tin của các thiết bị đã có</string>
     <string name="pref_control_title">Điều khiển</string>
     <string name="pref_control_key_binding_sect_title">Liên kết phím</string>
     <string name="pref_control_wait_for_key_string">chờ phím</string>
     <string name="pref_hal_battery_level_string">Mức pin</string>
     <string name="pref_hal_signal_level_string">Mức sóng</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Làm ơn hãy khởi động lại giả lập để những thay đổi tới nơi chứa giữ liệu và thiết bị được kích hoạt</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Khởi động lại giả lập để các thay đổi có hiệu lực</string>
     <string name="packages_title">Các gói</string>
     <string name="packages_package_menu_name">Gói</string>
     <string name="packages_install_string">Cài đặt</string>
@@ -114,7 +118,7 @@
     <string name="installer_language_choose_title">Chọn ngôn ngữ cho gói ứng dụng này</string>
     <string name="install_device_wizard_title">Trình cài đặt thiết bị</string>
     <string name="install_device_wizard_welcome_msg">Chào mừng bạn tới với trình cài đặt thiết bị. Để bắt đầu, hãy nhấn nút \"Tiếp tục\".</string>
-    <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
+    <string name="install_device_wizard_raw_dump_type_name">Thư mục raw</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Chọn phương thức cài đặt</string>
     <string name="install_device_rpkg_choose_msg">Hãy trỏ tới file RPKG:</string>
@@ -141,5 +145,5 @@
     <string name="credits_main_developer_text">Lập trình chính:</string>
     <string name="credits_contributors_text">Người cộng tác:</string>
     <string name="credits_honors_text">Nhà đóng góp:</string>
-    <string name="credits_translators_text">Dịch viên (bản máy tính):</string>
+    <string name="credits_translators_text">Người dịch:</string>
 </resources>

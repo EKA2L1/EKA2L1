@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">Налаштування</string>
     <string name="debugger_menu_pause_item_name">Призупинити</string>
     <string name="debugger_menu_stop_item_name">Зупинити</string>
+    <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">Дизасемблер</string>
     <string name="debugger_menu_objects_item_name">Об\'єкти</string>
     <string name="debugger_menu_services_item_name">Служби</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">Налаштування застосунку для {} збережено з іменем файлу: {:X}</string>
     <string name="pref_system_app_setting_save_title">Зберегти налаштування</string>
     <string name="pref_system_validate_device_btn_title">Перевірити пристрій</string>
-    <string name="pref_system_validate_device_tooltip">Перевірити наявність несправностей у пристрої та виправити їх, щоб EKA2L1 зміг емулювати пристрій.</string>
+    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Вимкнено, оскільки розпочато емуляцію системи. Перезапустіть емулятор, щоб скористатися цією опцією.</string>
     <string name="pref_system_no_device_present_str">Пристрої відсутні</string>
     <string name="pref_system_real_time_accuracy_str">Точність у реальному часі</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Низький</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Середній</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Високий</string>
+    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
     <string name="pref_control_title">Керування</string>
     <string name="pref_control_key_binding_sect_title">Призначення клавіш</string>
     <string name="pref_control_wait_for_key_string">Очікування клавіші</string>
     <string name="pref_hal_battery_level_string">Рівень заряду батареї</string>
     <string name="pref_hal_signal_level_string">Рівень сигналу</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Будь ласка, перезапустіть емулятор, щоб зміни, внесені до сховища даних та пристроїв, набули чинності.</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
     <string name="packages_title">Пакети</string>
     <string name="packages_package_menu_name">Пакет</string>
     <string name="packages_install_string">Установити</string>
@@ -116,7 +119,7 @@
     <string name="install_device_wizard_welcome_msg">Ласкаво просимо до майстра встановлення пристрою! Щоб розпочати роботу, натисніть кнопку „Продовжити“.</string>
     <string name="install_device_wizard_raw_dump_type_name">Необроблений дамп</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
-    <string name="install_device_choose_method_msg">Виберіть спосіб установки</string>
+    <string name="install_device_choose_method_msg">Виберіть спосіб установлення</string>
     <string name="install_device_rpkg_choose_msg">Будь ласка, вкажіть файл RPKG:</string>
     <string name="install_device_raw_dump_choose_msg">Будь ласка, вкажіть папку необробленого дампа диска Z:</string>
     <string name="install_device_rom_choose_msg">Будь ласка, вкажіть ROM файл:</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">Головні розробники:</string>
     <string name="credits_contributors_text">Помічники:</string>
     <string name="credits_honors_text">Пошана:</string>
-    <string name="credits_translators_text">Перекладачі (ПК):</string>
+    <string name="credits_translators_text">Translators:</string>
 </resources>

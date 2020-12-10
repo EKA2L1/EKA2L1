@@ -30,6 +30,7 @@
     <string name="file_menu_prefs_item_name">首选项</string>
     <string name="debugger_menu_pause_item_name">暂停</string>
     <string name="debugger_menu_stop_item_name">停止</string>
+    <string name="debugger_menu_restart_item_name">重启</string>
     <string name="debugger_menu_disassembler_item_name">反汇编器</string>
     <string name="debugger_menu_objects_item_name">对象</string>
     <string name="debugger_menu_services_item_name">服务</string>
@@ -86,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">{}的应用设置已保存到{:X}</string>
     <string name="pref_system_app_setting_save_title">保存设置</string>
     <string name="pref_system_validate_device_btn_title">校验设备</string>
-    <string name="pref_system_validate_device_tooltip">检查与修复设备内的错误，以便EKA2L1对设备进行模拟。</string>
+    <string name="pref_system_validate_device_tooltip">检查与修复当前设备内的错误，以便EKA2L1对设备进行模拟。</string>
     <string name="pref_system_validate_device_disabled_tooltip">以因模拟的系统已经启动而禁用，重启模拟器以使用本选项。</string>
     <string name="pref_system_no_device_present_str">当前没有设备</string>
     <string name="pref_system_real_time_accuracy_str">实时精度</string>
@@ -95,12 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">低</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">中</string>
     <string name="pref_system_real_time_accuracy_level_name_high">高</string>
+    <string name="pref_system_rescan_devices_title">重新扫描设备</string>
+    <string name="pref_system_rescan_devices_description_msg">检查任何未导入的设备并更正现有的信息</string>
     <string name="pref_control_title">控制</string>
     <string name="pref_control_key_binding_sect_title">按键绑定</string>
     <string name="pref_control_wait_for_key_string">等待按键</string>
     <string name="pref_hal_battery_level_string">电池电量</string>
     <string name="pref_hal_signal_level_string">信号强度</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">请重启模拟器以使对数据存储和设备所作的更改生效</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">请重启模拟器以使对数据存储所作的更改生效</string>
     <string name="packages_title">包</string>
     <string name="packages_package_menu_name">包</string>
     <string name="packages_install_string">安装</string>
@@ -141,5 +144,5 @@
     <string name="credits_main_developer_text">主要开发人员：</string>
     <string name="credits_contributors_text">贡献者：</string>
     <string name="credits_honors_text">荣誉：</string>
-    <string name="credits_translators_text">翻译 (桌面)：</string>
+    <string name="credits_translators_text">翻译人员：</string>
 </resources>

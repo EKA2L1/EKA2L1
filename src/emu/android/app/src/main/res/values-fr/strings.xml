@@ -13,6 +13,7 @@
     <string name="mount_sd">Installer une carte MMC/SD</string>
     <string name="no_devices_found">No devices found</string>
     <string name="exit">Exit</string>
+    <string name="save_log">Save log</string>
     <string name="install">Installer</string>
     <string name="path_to_rpkg">Path to RPKG</string>
     <string name="path_to_rom">Path to ROM</string>
@@ -50,5 +51,6 @@
     <string name="hide_buttons">Hide buttons</string>
     <string name="confirmation_required">Confirmation required</string>
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
+    <string name="log_saved">Log has been saved</string>
     <string name="version">Version: </string>
 </resources>
