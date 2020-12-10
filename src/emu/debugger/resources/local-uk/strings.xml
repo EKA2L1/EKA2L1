@@ -103,7 +103,7 @@
     <string name="pref_control_wait_for_key_string">Очікування клавіші</string>
     <string name="pref_hal_battery_level_string">Рівень заряду батареї</string>
     <string name="pref_hal_signal_level_string">Рівень сигналу</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Будь ласка, перезапустіть емулятор, щоб зміни, внесені до сховища даних, набули чинності</string>
     <string name="packages_title">Пакети</string>
     <string name="packages_package_menu_name">Пакет</string>
     <string name="packages_install_string">Установити</string>
