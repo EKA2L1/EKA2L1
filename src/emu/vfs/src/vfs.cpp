@@ -803,6 +803,23 @@ namespace eka2l1 {
         }
 
         std::unique_ptr<file> open_file(const std::u16string &path, const int mode) override {
+            const std::u16string &root = eka2l1::root_name(path, true);
+
+            if (!root.empty()) {
+                const drive_number drv = char16_to_drive(root[0]);
+                
+                if (!mappings[static_cast<int>(drv)].second) {
+                    return false;
+                }
+
+                if ((mode & WRITE_MODE) && (mappings[static_cast<int>(drv)].first.attribute & io_attrib_write_protected)) {
+                    LOG_ERROR("Request to open {} with write mode, but the drive is write-protected!",
+                        common::ucs2_to_utf8(path));
+
+                    return nullptr;
+                }
+            }
+
             std::optional<std::u16string> real_path = get_real_physical_path(path);
 
             if (!real_path) {
