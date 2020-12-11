@@ -26,7 +26,7 @@
     <string name="file_menu_package_submenu_install_item_name">Asenna</string>
     <string name="file_menu_package_submenu_list_item_name">List</string>
     <string name="file_menu_install_device_item_name">Asenna laite</string>
-    <string name="file_menu_mount_sd_item_name">Mount MMC/SD card</string>
+    <string name="file_menu_mount_sd_item_name">Liitä MMC/SD-kortti</string>
     <string name="file_menu_prefs_item_name">Asetukset</string>
     <string name="debugger_menu_pause_item_name">Pause</string>
     <string name="debugger_menu_stop_item_name">Stop</string>
