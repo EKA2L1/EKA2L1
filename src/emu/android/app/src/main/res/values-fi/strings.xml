@@ -10,7 +10,7 @@
     <string name="processing">Käsitellään...</string>
     <string name="completed">Suoritettu!</string>
     <string name="remove">Poista</string>
-    <string name="mount_sd">Mount MMC/SD card</string>
+    <string name="mount_sd">Liitä MMC/SD-kortti</string>
     <string name="no_devices_found">Laitteita ei löytynyt</string>
     <string name="exit">Exit</string>
     <string name="save_log">Save log</string>
