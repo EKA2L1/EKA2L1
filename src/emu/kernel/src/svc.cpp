@@ -2917,7 +2917,9 @@ namespace eka2l1::epoc {
             max_size = common::align(description->max_size_, mem->get_page_size());
 
             if (description->is_code_) {
+                // On EKA1 the local code chunk is in code region...
                 init_prot = prot::read_write_exec;
+                access_type = kernel::chunk_access::code;
             }
         } else {
             epoc::eka1_double_ended_create_description *description = 
