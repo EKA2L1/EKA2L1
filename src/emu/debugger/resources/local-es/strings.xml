@@ -119,10 +119,10 @@
     <string name="install_device_wizard_welcome_msg">¡Bienvenido al asistente de instalación de dispositivos! Para empezar, pulse el botón Continuar.</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
-    <string name="install_device_choose_method_msg">Elija su método de instalación</string>
-    <string name="install_device_rpkg_choose_msg">Por favor especifique el archivo RPKG:</string>
-    <string name="install_device_raw_dump_choose_msg">Por favor especifique la carpeta raw Z: donde se encuentra el dump del dispositivo:</string>
-    <string name="install_device_rom_choose_msg">Por favor especifique el archivo ROM:</string>
+    <string name="install_device_choose_method_msg">Elija el método de instalación</string>
+    <string name="install_device_rpkg_choose_msg">Especifique el archivo RPKG:</string>
+    <string name="install_device_raw_dump_choose_msg">Especifique la carpeta raw Z: donde se encuentra el dump del dispositivo:</string>
+    <string name="install_device_rom_choose_msg">Especifique el archivo ROM:</string>
     <string name="install_device_wait_install_msg">Por favor, espere mientras se instala el dispositivo.</string>
     <string name="install_device_progress_raw_dump_msg">Copiando raw dump ({}%)</string>
     <string name="install_device_progress_rpkg_msg">Extraer el RPKG</string>
