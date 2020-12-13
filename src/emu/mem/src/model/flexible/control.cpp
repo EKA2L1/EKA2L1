@@ -82,6 +82,27 @@ namespace eka2l1::mem::flexible {
         return target_dir->get_pointer(addr);
     }
     
+    page_info *control_flexible::get_page_info(const asid id, const vm_address addr) {
+        if ((id <= 0) || (addr >= (mem_map_old_ ? rom_eka1 : rom))) {
+            // Directory của kernel
+            return kern_addr_space_->dir_->get_page_info(addr);
+        }
+
+        //if (id == -1) {
+        //   return cur_dir_->get_pointer(addr);
+        //}
+
+        // Tìm page directory trong quản lý - Find page directory in manager
+        page_directory *target_dir = dir_mngr_->get(id);
+
+        // Nếu null thì toang, rút
+        if (!target_dir) {
+            return nullptr;
+        }
+
+        return target_dir->get_page_info(addr);
+    }
+
     asid control_flexible::rollover_fresh_addr_space() {
         page_directory *new_dir = dir_mngr_->allocate(this);
 

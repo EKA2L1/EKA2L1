@@ -108,6 +108,8 @@ namespace eka2l1::arm {
         memory_operation_64bit_func read_64bit;
         memory_operation_64bit_func write_64bit;
 
+        memory_operation_32bit_func read_code;
+
         memory_operation_ew_8bit_func exclusive_write_8bit;
         memory_operation_ew_16bit_func exclusive_write_16bit;
         memory_operation_ew_32bit_func exclusive_write_32bit;
@@ -167,10 +169,10 @@ namespace eka2l1::arm {
 
         virtual void prepare_rescheduling() = 0;
         virtual bool is_thumb_mode() = 0;
-        virtual void page_table_changed() = 0;
 
-        virtual void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) = 0;
-        virtual void unmap_memory(address addr, size_t size) = 0;
+        virtual void set_tlb_page(const address vaddr, std::uint8_t *ptr, prot protection) = 0;
+        virtual void dirty_tlb_page(const address addr) = 0;
+        virtual void flush_tlb() = 0;
 
         virtual void clear_instruction_cache() = 0;
         virtual void imb_range(address addr, std::size_t size) = 0;

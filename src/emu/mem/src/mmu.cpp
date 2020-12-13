@@ -36,6 +36,7 @@ namespace eka2l1::mem {
         cpu->read_16bit = [this](const vm_address addr, std::uint16_t* data) { return read_16bit_data(addr, data); };
         cpu->read_32bit = [this](const vm_address addr, std::uint32_t* data) { return read_32bit_data(addr, data); };
         cpu->read_64bit = [this](const vm_address addr, std::uint64_t* data) { return read_64bit_data(addr, data); };
+        cpu->read_code = [this](const vm_address addr, std::uint32_t *data) { return read_code(addr, data); };
 
         cpu->write_8bit = [this](const vm_address addr, std::uint8_t* data) { return write_8bit_data(addr, data); };
         cpu->write_16bit = [this](const vm_address addr, std::uint16_t* data) { return write_16bit_data(addr, data); };
@@ -60,22 +61,29 @@ namespace eka2l1::mem {
     }
 
     void mmu_base::map_to_cpu(const vm_address addr, const std::size_t size, void *ptr, const prot perm) {
-        cpu_->map_backing_mem(addr, size, reinterpret_cast<std::uint8_t *>(ptr), perm);
+        //cpu_->map_backing_mem(addr, size, reinterpret_cast<std::uint8_t *>(ptr), perm);
     }
 
     void mmu_base::unmap_from_cpu(const vm_address addr, const std::size_t size) {
-        cpu_->unmap_memory(addr, size);
+        const std::uint32_t psize = manager_->page_size();
+        vm_address addr_temp = addr;
+
+        for (std::size_t i = 0; i < size / psize; i++) {
+            cpu_->dirty_tlb_page(addr_temp);
+            addr_temp += psize;
+        }
     }
 
     /// ================== MISCS ====================
 
     bool mmu_base::read_8bit_data(const vm_address addr, std::uint8_t *data) {
-        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(manager_->
-            get_host_pointer(current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_);
 
         *data = *ptr;
 
@@ -83,16 +91,20 @@ namespace eka2l1::mem {
             LOG_TRACE("Read 1 byte from address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 
     bool mmu_base::read_16bit_data(const vm_address addr, std::uint16_t *data) {
-        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(manager_->
-            get_host_pointer(current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_));
 
         *data = *ptr;
 
@@ -100,16 +112,20 @@ namespace eka2l1::mem {
             LOG_TRACE("Read 2 bytes from address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 
     bool mmu_base::read_32bit_data(const vm_address addr, std::uint32_t *data) {
-        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(manager_->
-            get_host_pointer(current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_));
 
         *data = *ptr;
 
@@ -117,16 +133,20 @@ namespace eka2l1::mem {
             LOG_TRACE("Read 4 bytes from address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 
     bool mmu_base::read_64bit_data(const vm_address addr, std::uint64_t *data) {
-        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(manager_->
-            get_host_pointer(current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_));
 
         *data = *ptr;
 
@@ -134,16 +154,20 @@ namespace eka2l1::mem {
             LOG_TRACE("Read 8 bytes from address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 
     bool mmu_base::write_8bit_data(const vm_address addr, std::uint8_t *data) {
-        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(manager_->
-            get_host_pointer(current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_);
 
         *ptr = *data;
 
@@ -151,16 +175,20 @@ namespace eka2l1::mem {
             LOG_TRACE("Write 1 byte to address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 
     bool mmu_base::write_16bit_data(const vm_address addr, std::uint16_t *data) {
-        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(manager_->
-            get_host_pointer(current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_));
 
         *ptr = *data;
 
@@ -168,16 +196,20 @@ namespace eka2l1::mem {
             LOG_TRACE("Write 2 bytes to address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 
     bool mmu_base::write_32bit_data(const vm_address addr, std::uint32_t *data) {
-        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(manager_->get_host_pointer(
-            current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_));
 
         *ptr = *data;
 
@@ -185,16 +217,20 @@ namespace eka2l1::mem {
             LOG_TRACE("Write 4 bytes to address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
         return true;
     }
 
     bool mmu_base::write_64bit_data(const vm_address addr, std::uint64_t *data) {
-        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(manager_->
-            get_host_pointer(current_addr_space(), addr));
-
-        if (!ptr) {
+        page_info *inf = manager_->get_page_info(current_addr_space(), addr);
+        if (!inf || !inf->host_addr) {
             return false;
         }
+
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
+            (addr & manager_->offset_mask_));
 
         *ptr = *data;
 
@@ -202,6 +238,21 @@ namespace eka2l1::mem {
             LOG_TRACE("Write 8 bytes to address 0x{:X}", addr);
         }
 
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+            inf->perm);
+
+        return true;
+    }
+
+    bool mmu_base::read_code(const vm_address addr, std::uint32_t *data) {
+        std::uint32_t *code = reinterpret_cast<std::uint32_t*>(manager_->get_host_pointer(
+            current_addr_space(), addr));
+
+        if (!code) {
+            return false;
+        }
+
+        *data = *code;
         return true;
     }
 }

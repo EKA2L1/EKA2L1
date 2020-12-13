@@ -51,7 +51,7 @@ option (GLM_TEST_ENABLE "Enable glm tests" OFF)
 add_subdirectory(glm)
 
 # Dynarmic: disable tests
-option(DYNARMIC_TESTS "Enable dynarmic tests" OFF)
+option(DYNARMIC_TESTS "Enable dynarmic tests" ON)
 option(DYNARMIC_NO_BUNDLED_FMT "No bundled fmt for Dynarmic" ON)
 add_subdirectory(dynarmic)
 

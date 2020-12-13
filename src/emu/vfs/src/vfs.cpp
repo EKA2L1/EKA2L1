@@ -809,7 +809,7 @@ namespace eka2l1 {
                 const drive_number drv = char16_to_drive(root[0]);
                 
                 if (!mappings[static_cast<int>(drv)].second) {
-                    return false;
+                    return nullptr;
                 }
 
                 if ((mode & WRITE_MODE) && (mappings[static_cast<int>(drv)].first.attribute & io_attrib_write_protected)) {

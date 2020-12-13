@@ -63,8 +63,7 @@ namespace eka2l1 {
             std::unique_ptr<Dynarmic::A32::Jit> jit;
             std::unique_ptr<dynarmic_core_callback> cb;
 
-            std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
-                page_dyn;
+            Dynarmic::TLB<9> tlb_obj;
 
             std::uint32_t ticks_executed{ 0 };
             std::uint32_t ticks_target{ 0 };
@@ -106,11 +105,9 @@ namespace eka2l1 {
 
             bool is_thumb_mode() override;
 
-            void page_table_changed() override;
-
-            void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) override;
-
-            void unmap_memory(address addr, size_t size) override;
+            void set_tlb_page(address vaddr, std::uint8_t *ptr, prot protection) override;
+            void dirty_tlb_page(address addr) override;
+            void flush_tlb() override;
 
             void clear_instruction_cache() override;
 
