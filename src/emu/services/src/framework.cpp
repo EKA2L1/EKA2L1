@@ -68,10 +68,6 @@ namespace eka2l1::service {
     std::optional<epoc::version> typical_server::get_version(service::ipc_context *ctx) {
         kernel_system *kern = ctx->sys->get_kernel_system();
         std::optional<epoc::version> ver = get_server_version(kern, ctx);
-        
-        if (ver)
-            LOG_TRACE("Requested server version: {}.{}.{}", ver.value().major, ver.value().minor, ver.value().build);
-
         return ver;
     }
 
@@ -96,7 +92,7 @@ namespace eka2l1::service {
         auto ss_ite = sessions.find(process_msg->msg_session->unique_id());
 
         if (ss_ite == sessions.end()) {
-            LOG_TRACE("Can't find responsible server-side session to client session with ID {}",
+            LOG_TRACE(SERVICE_TRACK, "Can't find responsible server-side session to client session with ID {}",
                 process_msg->msg_session->unique_id());
 
             return;

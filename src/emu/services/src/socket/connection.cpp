@@ -30,13 +30,13 @@ namespace eka2l1::epoc::socket {
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
             default:
-                LOG_ERROR("Unimplemented socket connection opcode: {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
                 break;
             }
         } else {
             switch (ctx->msg->function) {
             default:
-                LOG_ERROR("Unimplemented socket connection opcode: {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket connection opcode: {}", ctx->msg->function);
                 break;
             }
         }

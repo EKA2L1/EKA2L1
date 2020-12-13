@@ -113,7 +113,7 @@ namespace eka2l1 {
             }
         }
     
-        LOG_ERROR("Unimplemented opcode for Socket server 0x{:X}", ctx->msg->function);
+        LOG_ERROR(SERVICE_ESOCK, "Unimplemented opcode for Socket server 0x{:X}", ctx->msg->function);
     }
 
     void socket_client_session::sr_get_by_number(eka2l1::service::ipc_context *ctx) {
@@ -126,12 +126,12 @@ namespace eka2l1 {
     }
     
     void socket_client_session::cn_get_long_des_setting(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("CnGetLongDesSetting stubbed");
+        LOG_TRACE(SERVICE_ESOCK, "CnGetLongDesSetting stubbed");
         ctx->complete(epoc::error_none);
     }
 
     void socket_client_session::pr_find(service::ipc_context *ctx) {
-        LOG_TRACE("Protocol find stubbed with not found!");
+        LOG_TRACE(SERVICE_ESOCK, "Protocol find stubbed with not found!");
         ctx->complete(epoc::error_not_found);
     }
 

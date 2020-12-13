@@ -169,7 +169,7 @@ namespace eka2l1 {
         const bool compress_result = compress_data(bmp, data_base, new_data, estimated_size);
 
         if (!compress_result) {
-            LOG_ERROR("Unable to compress bitmap {}", bmp->id);
+            LOG_ERROR(SERVICE_FBS, "Unable to compress bitmap {}", bmp->id);
 
             // Cleanup
             serv_->free_large_data(new_data);
@@ -201,7 +201,7 @@ namespace eka2l1 {
         // Mark old bitmap as dirty
         bmp->bitmap_->settings_.dirty_bitmap(true);
 
-        LOG_TRACE("Bitmap ID {} compressed with ratio {}%, clean bitmap ID {}", bmp->id, static_cast<int>(static_cast<double>(estimated_size) / static_cast<double>(org_size) * 100.0), clean_bitmap->id);
+        LOG_TRACE(SERVICE_FBS, "Bitmap ID {} compressed with ratio {}%, clean bitmap ID {}", bmp->id, static_cast<int>(static_cast<double>(estimated_size) / static_cast<double>(org_size) * 100.0), clean_bitmap->id);
     }
 
     void compress_queue::run() {

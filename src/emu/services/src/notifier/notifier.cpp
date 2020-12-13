@@ -72,7 +72,7 @@ namespace eka2l1 {
 
         epoc::notifier::plugin_base *plug = server<notifier_server>()->get_plugin(plugin_uid.value());
         if (!plug) {
-            LOG_ERROR("Can't find the plugin with UID 0x{:X}. This is fine (but take note).", plugin_uid.value());
+            LOG_ERROR(ESERVICE_NOTIFIER, "Can't find the plugin with UID 0x{:X}. This is fine (but take note).", plugin_uid.value());
             ctx->complete(epoc::error_none);
 
             return;
@@ -105,14 +105,14 @@ namespace eka2l1 {
         }
 
         // TODO: Add dialog to display this string
-        LOG_INFO("Trying to display: {}", common::ucs2_to_utf8(to_display.value()));
+        LOG_INFO(ESERVICE_NOTIFIER, "Trying to display: {}", common::ucs2_to_utf8(to_display.value()));
         ctx->complete(epoc::error_none);
     }
 
     void notifier_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case notifier_notify:
-            LOG_TRACE("Notifier opcode: notify stubbed");
+            LOG_TRACE(ESERVICE_NOTIFIER, "Notifier opcode: notify stubbed");
             ctx->complete(epoc::error_none);
             break;
 
@@ -136,7 +136,7 @@ namespace eka2l1 {
             return;
 
         default:
-            LOG_ERROR("Unimplemented opcode for Notifier server 0x{:X}", ctx->msg->function);
+            LOG_ERROR(ESERVICE_NOTIFIER, "Unimplemented opcode for Notifier server 0x{:X}", ctx->msg->function);
             break;
         }
     }

@@ -98,7 +98,7 @@ namespace eka2l1 {
             stream.zfree = nullptr;
 
             if (inflateInit(&stream) != MZ_OK) {
-                LOG_ERROR("Can not intialize inflate stream");
+                LOG_ERROR(PACKAGE, "Can not intialize inflate stream");
             }
 
             flate::inflate_data(&stream, compressed.compressed_data.data(),
@@ -115,7 +115,7 @@ namespace eka2l1 {
             std::string rp = eka2l1::file_directory(path);
             eka2l1::create_directories(rp);
 
-            LOG_INFO("Write to: {}", path);
+            LOG_INFO(PACKAGE, "Write to: {}", path);
 
             FILE *temp = fopen(path.c_str(), "wb");
             fwrite(data.data(), 1, data.size(), temp);
@@ -150,7 +150,7 @@ namespace eka2l1 {
 
             if (compressed.algorithm == sis_compressed_algorithm::deflated) {
                 if (inflateInit(&stream) != MZ_OK) {
-                    LOG_ERROR("Can not intialize inflate stream");
+                    LOG_ERROR(PACKAGE, "Can not intialize inflate stream");
                 }
             }
 
@@ -163,7 +163,7 @@ namespace eka2l1 {
                 data_stream->read(&temp_chunk[0], grab);
 
                 if (!data_stream->valid()) {
-                    LOG_ERROR("Stream fail, skipping this file, should report to developers.");
+                    LOG_ERROR(PACKAGE, "Stream fail, skipping this file, should report to developers.");
                     return;
                 }
 
@@ -173,7 +173,7 @@ namespace eka2l1 {
                     auto res = flate::inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
 
                     if (!res) {
-                        LOG_ERROR("Uncompress failed! Report to developers");
+                        LOG_ERROR(PACKAGE, "Uncompress failed! Report to developers");
                         return;
                     }
 
@@ -188,7 +188,7 @@ namespace eka2l1 {
 
             if (compressed.algorithm == sis_compressed_algorithm::deflated) {
                 if (total_inflated_size != compressed.uncompressed_size) {
-                    LOG_ERROR("Sanity check failed: Total inflated size not equal to specified uncompress size "
+                    LOG_ERROR(PACKAGE, "Sanity check failed: Total inflated size not equal to specified uncompress size "
                               "in SISCompressed ({} vs {})!",
                         total_inflated_size, compressed.uncompressed_size);
                 }
@@ -242,7 +242,7 @@ namespace eka2l1 {
             if ((expr->left_expr && (expr->left_expr->op == ss_expr_op::EPrimTypeString)) ||
                 (expr->right_expr && (expr->right_expr->op == ss_expr_op::EPrimTypeString))) {
                 if (expr->left_expr->op != expr->right_expr->op) {
-                    LOG_ERROR("String expression can only be compared with string expression");
+                    LOG_ERROR(PACKAGE, "String expression can only be compared with string expression");
                     return -1;
                 }
 
@@ -278,7 +278,7 @@ namespace eka2l1 {
                 }
 
                 default: {
-                    LOG_WARN("Unhandled string op type: {}", static_cast<int>(expr->op));
+                    LOG_WARN(PACKAGE, "Unhandled string op type: {}", static_cast<int>(expr->op));
                     pass = -1;
                     break;
                 }
@@ -349,7 +349,7 @@ namespace eka2l1 {
 
             default: {
                 pass = -1;
-                LOG_WARN("Unimplemented operation {} for expression", static_cast<int>(expr->op));
+                LOG_WARN(PACKAGE, "Unimplemented operation {} for expression", static_cast<int>(expr->op));
                 break;
             }
             }
@@ -375,7 +375,7 @@ namespace eka2l1 {
                     std::string error_string = fmt::format("Abort choosing language, leading to installation canceled for controller 0x{:X}!",
                         controller->info.uid.uid);
 
-                    LOG_ERROR("{}", error_string);
+                    LOG_ERROR(PACKAGE, "{}", error_string);
 
                     if (show_text) {
                         show_text(error_string.c_str(), true);
@@ -418,7 +418,7 @@ namespace eka2l1 {
                             show_text(reinterpret_cast<const char *>(buf.data()), true);
                         }
 
-                        LOG_INFO("EOpText: {}", reinterpret_cast<const char *>(buf.data()));
+                        LOG_INFO(PACKAGE, "EOpText: {}", reinterpret_cast<const char *>(buf.data()));
 
                         switch (file->op_op) {
                         case 1 << 10: { // Skip next files
@@ -436,7 +436,7 @@ namespace eka2l1 {
                         case 1 << 12: { // Abort
                             const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controllers.top()->info.uid.uid);
 
-                            LOG_ERROR("{}", err_string);
+                            LOG_ERROR(PACKAGE, "{}", err_string);
 
                             if (show_text) {
                                 yes_choosen = show_text(err_string.c_str(), false);
@@ -464,11 +464,11 @@ namespace eka2l1 {
                             extract_file(raw_path, file->idx, crr_blck_idx);
 
                             if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
-                                LOG_INFO("Detected an SmartInstaller SIS, path at: {}", raw_path);
+                                LOG_INFO(PACKAGE, "Detected an SmartInstaller SIS, path at: {}", raw_path);
                                 mngr->install_package(common::utf8_to_ucs2(raw_path), drive_c, progress);
                             }
 
-                            LOG_INFO("EOpInstall: {}", raw_path);
+                            LOG_INFO(PACKAGE, "EOpInstall: {}", raw_path);
 
                             // Add to bucket
                             mngr->add_to_file_bucket(current_controllers.top()->info.uid.uid, install_path);

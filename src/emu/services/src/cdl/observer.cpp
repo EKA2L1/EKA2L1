@@ -38,7 +38,7 @@ namespace eka2l1::epoc {
         symfile rsc_file = io->open_file(ref_rsc_path, READ_MODE | BIN_MODE);
 
         if (!rsc_file) {
-            LOG_ERROR("Can't find reference resource file for CDL instance: {}", common::ucs2_to_utf8(path));
+            LOG_ERROR(SERVICE_CDLENG, "Can't find reference resource file for CDL instance: {}", common::ucs2_to_utf8(path));
             return false;
         }
 

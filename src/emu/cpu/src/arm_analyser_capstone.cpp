@@ -85,7 +85,7 @@ namespace eka2l1::arm {
         cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_ARM, &cp_handle_arm);
 
         if (err != CS_ERR_OK) {
-            LOG_ERROR("ARM analyser handle can't be initialized");
+            LOG_ERROR(CPU, "ARM analyser handle can't be initialized");
         }
 
         err = cs_open(CS_ARCH_ARM, CS_MODE_THUMB, &cp_handle_thumb);
@@ -94,7 +94,7 @@ namespace eka2l1::arm {
         cs_option(cp_handle_thumb, CS_OPT_DETAIL, CS_OPT_ON);
 
         if (err != CS_ERR_OK) {
-            LOG_ERROR("THUMB analyser handle can't be initialized");
+            LOG_ERROR(CPU, "THUMB analyser handle can't be initialized");
         }
 
         insns = cs_malloc(cp_handle_thumb);
@@ -124,7 +124,7 @@ namespace eka2l1::arm {
 
         if (total_pass == 0) {
             // Silent
-            // LOG_ERROR("Can't disassemble {} inst with given addr: 0x{:X}", thumb ? "thumb" : "arm", addr);
+            // LOG_ERROR(CPU, "Can't disassemble {} inst with given addr: 0x{:X}", thumb ? "thumb" : "arm", addr);
             return nullptr;
         }
 

@@ -123,7 +123,7 @@ namespace eka2l1::drivers {
 
         if (!success) {
             glGetShaderInfoLog(vert, 512, nullptr, error);
-            LOG_ERROR("Error while compiling vertex shader: {}, abort", error);
+            LOG_ERROR(DRIVER_GRAPHICS, "Error while compiling vertex shader: {}, abort", error);
 
             glDeleteShader(vert);
             return false;
@@ -137,7 +137,7 @@ namespace eka2l1::drivers {
 
         if (!success) {
             glGetShaderInfoLog(frag, 512, nullptr, error);
-            LOG_ERROR("Error while compiling fragment shader: {}, abort", error);
+            LOG_ERROR(DRIVER_GRAPHICS, "Error while compiling fragment shader: {}, abort", error);
 
             glDeleteShader(vert);
             glDeleteShader(frag);
@@ -154,7 +154,7 @@ namespace eka2l1::drivers {
 
         if (!success) {
             glGetProgramInfoLog(program, 512, nullptr, error);
-            LOG_ERROR("Error while linking shader program: {}", error);
+            LOG_ERROR(DRIVER_GRAPHICS, "Error while linking shader program: {}", error);
         }
 
         glDeleteShader(vert);

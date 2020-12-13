@@ -73,7 +73,7 @@ namespace eka2l1::epoc::msv {
         symfile entry_file = io_->open_file(msg_entries_file, READ_MODE | BIN_MODE);
 
         if (!entry_file) {
-            LOG_ERROR("Unable to open entries file to load entries list!");
+            LOG_ERROR(SERVICE_MSV, "Unable to open entries file to load entries list!");
             return false;
         }
 
@@ -96,7 +96,7 @@ namespace eka2l1::epoc::msv {
         // Now that we complete the tree, load all the data
         for (std::size_t i = 0; i < entries_.size(); i++) {
             if (!load_entry_data(entries_[i])) {
-                LOG_WARN("Unable to load entry data for entry ID {}", entries_[i].id_);
+                LOG_WARN(SERVICE_MSV, "Unable to load entry data for entry ID {}", entries_[i].id_);
             }
         }
 
@@ -110,7 +110,7 @@ namespace eka2l1::epoc::msv {
         symfile entry_file = io_->open_file(msg_entries_file, WRITE_MODE | BIN_MODE);
 
         if (!entry_file) {
-            LOG_ERROR("Unable to open entries file to update entries list!");
+            LOG_ERROR(SERVICE_MSV, "Unable to open entries file to update entries list!");
             return false;
         }
 
@@ -125,7 +125,7 @@ namespace eka2l1::epoc::msv {
             index_info.flags_ = entries_[i].flags_;
 
             if (entry_file->write_file(&index_info, sizeof(entry_index_info), 1) != sizeof(entry_index_info)) {
-                LOG_ERROR("Unable to update MSV entry number {} (write failure)", i);
+                LOG_ERROR(SERVICE_MSV, "Unable to update MSV entry number {} (write failure)", i);
                 return false;
             }
         }
@@ -198,14 +198,14 @@ namespace eka2l1::epoc::msv {
         std::optional<std::u16string> file_path = get_entry_data_file(ent);
 
         if (!file_path) {
-            LOG_ERROR("Unable to construct entry data path for entry ID {}", ent.id_);
+            LOG_ERROR(SERVICE_MSV, "Unable to construct entry data path for entry ID {}", ent.id_);
             return false;
         }
 
         symfile entry_file = io_->open_file(file_path.value(), WRITE_MODE | BIN_MODE);
 
         if (!entry_file) {
-            LOG_ERROR("Unable to open entry data file!");
+            LOG_ERROR(SERVICE_MSV, "Unable to open entry data file!");
             return false;
         }
 
@@ -232,14 +232,14 @@ namespace eka2l1::epoc::msv {
         std::optional<std::u16string> file_path = get_entry_data_file(ent);
 
         if (!file_path) {
-            LOG_ERROR("Unable to construct entry data path for entry ID {}", ent.id_);
+            LOG_ERROR(SERVICE_MSV, "Unable to construct entry data path for entry ID {}", ent.id_);
             return false;
         }
 
         symfile entry_file = io_->open_file(file_path.value(), READ_MODE | BIN_MODE);
 
         if (!entry_file) {
-            LOG_ERROR("Unable to open entry data file!");
+            LOG_ERROR(SERVICE_MSV, "Unable to open entry data file!");
             return false;
         }
 
@@ -333,7 +333,7 @@ namespace eka2l1::epoc::msv {
         symfile nearest_default_entries_file_io = io_->open_file(nearest_default_entries_file, READ_MODE | BIN_MODE);
 
         if (!nearest_default_entries_file_io) {
-            LOG_ERROR("Unable to create standard entries (default msgs file not found!)");
+            LOG_ERROR(SERVICE_MSV, "Unable to create standard entries (default msgs file not found!)");
             return false;
         }
 
@@ -343,7 +343,7 @@ namespace eka2l1::epoc::msv {
         auto entries_info_buf = nearest_default_entries_loader.read(1);
 
         if (entries_info_buf.size() < 2) {
-            LOG_ERROR("Default messages file is corrupted, unable to create standard msg entries!");
+            LOG_ERROR(SERVICE_MSV, "Default messages file is corrupted, unable to create standard msg entries!");
             return false;
         }
 

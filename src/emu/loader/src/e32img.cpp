@@ -50,50 +50,50 @@ namespace eka2l1::loader {
         const std::uint16_t ept = static_cast<std::uint16_t>((flag >> 0x5) & 7);
 
         if (abi == 1) {
-            LOG_INFO("ABI: EABI");
+            LOG_INFO(LOADER, "ABI: EABI");
         } else {
-            LOG_INFO("ABI: GCC98r2");
+            LOG_INFO(LOADER, "ABI: GCC98r2");
         }
 
         if (fixed) {
-            LOG_INFO("Address type: Fixed");
+            LOG_INFO(LOADER, "Address type: Fixed");
         } else {
-            LOG_INFO("Address type: None");
+            LOG_INFO(LOADER, "Address type: None");
         }
 
         if (ept == 0) {
-            LOG_INFO("Entry point type: EKA1");
+            LOG_INFO(LOADER, "Entry point type: EKA1");
         } else {
-            LOG_INFO("Entry point type: EKA2");
+            LOG_INFO(LOADER, "Entry point type: EKA2");
         }
     }
 
     static void dump_image_info(const e32img &img) {
-        LOG_INFO("Image dump info:");
+        LOG_INFO(LOADER, "Image dump info:");
 
         if (img.has_extended_header) {
-            LOG_INFO("V-Format used, too tired \\_(-.-)_/");
+            LOG_INFO(LOADER, "V-Format used, too tired \\_(-.-)_/");
         }
 
         dump_flag_info(img.header.flags);
 
         switch (img.header.cpu) {
         case e32_cpu::armv5:
-            LOG_INFO("Detected: ARMv5");
+            LOG_INFO(LOADER, "Detected: ARMv5");
             break;
         case e32_cpu::armv6:
-            LOG_INFO("Detected: ARMv6");
+            LOG_INFO(LOADER, "Detected: ARMv6");
             break;
         case e32_cpu::armv4:
-            LOG_INFO("Detected: ARMv4");
+            LOG_INFO(LOADER, "Detected: ARMv4");
             break;
         default:
-            LOG_INFO("Invalid cpu specified in EKA2 Image Header. Maybe x86 or undetected");
+            LOG_INFO(LOADER, "Invalid cpu specified in EKA2 Image Header. Maybe x86 or undetected");
             break;
         }
 
-        LOG_INFO("Total dll count: {}", img.header.dll_ref_table_count);
-        LOG_INFO("Import offsets: {}", img.header.import_offset);
+        LOG_INFO(LOADER, "Total dll count: {}", img.header.dll_ref_table_count);
+        LOG_INFO(LOADER, "Import offsets: {}", img.header.import_offset);
     }
 
     static void read_relocations(common::ro_stream *stream, e32_reloc_section &section, uint32_t offset) {
@@ -310,7 +310,7 @@ namespace eka2l1::loader {
             size_t bytes_read = stream->read(temp_buf.data(), static_cast<uint32_t>(temp_buf.size()));
 
             if (bytes_read != temp_buf.size()) {
-                LOG_ERROR("File reading improperly");
+                LOG_ERROR(LOADER, "File reading improperly");
             }
 
             if (ctype == compress_type::deflate_c) {

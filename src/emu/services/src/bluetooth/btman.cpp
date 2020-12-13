@@ -46,7 +46,7 @@ namespace eka2l1 {
     }
 
     void btman_client_session::fetch(service::ipc_context *ctx) {
-        LOG_ERROR("Unimplemented opcode for Btman server 0x{:X}", ctx->msg->function);
+        LOG_ERROR(SERVICE_BLUETOOTH, "Unimplemented opcode for Btman server 0x{:X}", ctx->msg->function);
         ctx->complete(epoc::error_none);
     }
 }

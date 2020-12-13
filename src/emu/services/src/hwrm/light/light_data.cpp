@@ -30,7 +30,7 @@ namespace eka2l1::epoc::hwrm::light {
         infos_prop_ = kern->create<service::property>();
 
         if (!infos_prop_) {
-            LOG_ERROR("Failed to create light service's status property! Abort.");
+            LOG_ERROR(SERVICE_HWRM, "Failed to create light service's status property! Abort.");
             return false;
         }
 
@@ -49,7 +49,7 @@ namespace eka2l1::epoc::hwrm::light {
 
         // Publish the default value of the property
         if (!infos_prop_->set(reinterpret_cast<std::uint8_t *>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
-            LOG_ERROR("Failed to publish default value of light infos to created property. Abort.");
+            LOG_ERROR(SERVICE_HWRM, "Failed to publish default value of light infos to created property. Abort.");
             return false;
         }
 
@@ -64,7 +64,7 @@ namespace eka2l1::epoc::hwrm::light {
         });
 
         if (find_result == infos_.end()) {
-            LOG_ERROR("Can't find light target: {}", static_cast<int>(light_target));
+            LOG_ERROR(SERVICE_HWRM, "Can't find light target: {}", static_cast<int>(light_target));
             return false;
         }
 
@@ -73,7 +73,7 @@ namespace eka2l1::epoc::hwrm::light {
 
         // Publish the resource to property.
         if (!infos_prop_->set(reinterpret_cast<std::uint8_t *>(&infos_[0]), MAXIMUM_LIGHT * sizeof(target_info))) {
-            LOG_ERROR("Failed to publish updated value of light infos to light status property. Abort.");
+            LOG_ERROR(SERVICE_HWRM, "Failed to publish updated value of light infos to light status property. Abort.");
             return false;
         }
 
@@ -83,7 +83,7 @@ namespace eka2l1::epoc::hwrm::light {
 
     resource_data::resource_data(kernel_system *sys) {
         if (!initialise_components(sys)) {
-            LOG_ERROR("Unable to initialise light resource data!");
+            LOG_ERROR(SERVICE_HWRM, "Unable to initialise light resource data!");
         }
     }
 }

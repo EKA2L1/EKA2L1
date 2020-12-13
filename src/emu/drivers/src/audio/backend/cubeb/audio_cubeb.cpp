@@ -31,7 +31,7 @@ namespace eka2l1::drivers {
         : context_(nullptr)
         , init_(false) {
         if (cubeb_init(&context_, "EKA2L1 Audio Driver", nullptr) != CUBEB_OK) {
-            LOG_CRITICAL("Can't initialize Cubeb audio driver!");
+            LOG_CRITICAL(DRIVER_AUD, "Can't initialize Cubeb audio driver!");
             return;
         }
 

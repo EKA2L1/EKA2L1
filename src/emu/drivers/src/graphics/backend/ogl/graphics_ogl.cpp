@@ -63,11 +63,11 @@ namespace eka2l1::drivers {
             }
 
             if (!GL_REQUIRED_EXTENSIONS.empty()) {
-                LOG_ERROR("Some OpenGL extensions are missing in order for the emulator to work.");
-                LOG_ERROR("Please upgrade your machine! Here is the list of missing extensions.");
+                LOG_ERROR(DRIVER_GRAPHICS, "Some OpenGL extensions are missing in order for the emulator to work.");
+                LOG_ERROR(DRIVER_GRAPHICS, "Please upgrade your machine! Here is the list of missing extensions.");
 
                 for (const auto &ext_left: GL_REQUIRED_EXTENSIONS) {
-                    LOG_ERROR("- {}", ext_left);
+                    LOG_ERROR(DRIVER_GRAPHICS, "- {}", ext_left);
                 }
             }
         }
@@ -193,7 +193,7 @@ namespace eka2l1::drivers {
         bitmap *bmp = get_bitmap(to_draw);
 
         if (!bmp) {
-            LOG_ERROR("Invalid bitmap handle to draw");
+            LOG_ERROR(DRIVER_GRAPHICS, "Invalid bitmap handle to draw");
             return;
         }
 
@@ -206,7 +206,7 @@ namespace eka2l1::drivers {
             mask_bmp = get_bitmap(mask_to_use);
 
             if (!mask_bmp) {
-                LOG_ERROR("Mask handle was provided but invalid!");
+                LOG_ERROR(DRIVER_GRAPHICS, "Mask handle was provided but invalid!");
                 return;
             }
         }
@@ -877,7 +877,7 @@ namespace eka2l1::drivers {
             std::optional<server_graphics_command_list> list = list_queue.pop();
 
             if (!list) {
-                LOG_ERROR("Corrupted graphics command list! Emulation halt.");
+                LOG_ERROR(DRIVER_GRAPHICS, "Corrupted graphics command list! Emulation halt.");
                 break;
             }
 

@@ -39,7 +39,7 @@ namespace eka2l1::mem::flexible {
         linear_section *sect = owner_->section(flags);
 
         if (!sect) {
-            LOG_ERROR("Instantiate new mapping failed because section with this flags not found: 0x{:X}", flags);
+            LOG_ERROR(MEMORY, "Instantiate new mapping failed because section with this flags not found: 0x{:X}", flags);
             return false;
         }
 
@@ -49,12 +49,12 @@ namespace eka2l1::mem::flexible {
             const int offset = sect->alloc_.allocate_from(0, total_page, false);
 
             if (offset == -1) {
-                LOG_ERROR("Unable to instantiate new mapping on ASID 0x{:X}, out of virtual memory", owner_->id());
+                LOG_ERROR(MEMORY, "Unable to instantiate new mapping on ASID 0x{:X}, out of virtual memory", owner_->id());
                 return false;
             }
 
             if (total_page != static_cast<int>(page_occupied)) {
-                LOG_WARN("Unable to allocate all pages given in the mapping instantiate parameter");
+                LOG_WARN(MEMORY, "Unable to allocate all pages given in the mapping instantiate parameter");
             }
             
             base_ = sect->beg_ + (offset << owner_->control_->page_size_bits_);
@@ -150,7 +150,7 @@ namespace eka2l1::mem::flexible {
 
             if (!tbl) {
                 // Oops, you are unmapping something that has not even mapped
-                // LOG_WARN("Trying to unmap a region that doesn't have a page table!");
+                // LOG_WARN(MEMORY, "Trying to unmap a region that doesn't have a page table!");
                 continue;
             }
 

@@ -116,28 +116,28 @@ namespace eka2l1 {
         }
 
         size_t write_file(const void *data, uint32_t size, uint32_t count) override {
-            LOG_ERROR("Can't write into ROM!");
+            LOG_ERROR(VFS, "Can't write into ROM!");
             return -1;
         }
 
         std::uint64_t seek(std::int64_t seek_off, file_seek_mode where) override {
             if (where == file_seek_mode::beg || where == file_seek_mode::address) {
                 if (seek_off < 0) {
-                    LOG_ERROR("Attempting to seek set with negative offset ({})", seek_off);
+                    LOG_ERROR(VFS, "Attempting to seek set with negative offset ({})", seek_off);
                     return 0xFFFFFFFFFFFFFFFF;
                 }
 
                 crr_pos = seek_off;
             } else if (where == file_seek_mode::crr) {
                 if (crr_pos + seek_off < 0) {
-                    LOG_ERROR("Attempting to seek current with offset that makes file pointer negative ({})", seek_off);
+                    LOG_ERROR(VFS, "Attempting to seek current with offset that makes file pointer negative ({})", seek_off);
                     return 0xFFFFFFFFFFFFFFFF;
                 }
 
                 crr_pos += seek_off;
             } else {
                 if (crr_pos + size() + seek_off < 0) {
-                    LOG_ERROR("Attempting to seek end with offset that makes file pointer negative ({})", seek_off);
+                    LOG_ERROR(VFS, "Attempting to seek end with offset that makes file pointer negative ({})", seek_off);
                     return 0xFFFFFFFFFFFFFFFF;
                 }
 
@@ -268,7 +268,7 @@ namespace eka2l1 {
 
 #define WARN_CLOSE \
     if (closed)    \
-        LOG_WARN("File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
+        LOG_WARN(VFS, "File {} closed but operation still continues", common::ucs2_to_utf8(input_name));
 
         physical_file(const utf16_str &vfs_path, const utf16_str &real_path, const int mode)
             : file(nullptr) {
@@ -296,10 +296,10 @@ namespace eka2l1 {
 
             physical_path = real_path;
 
-            // LOG_TRACE("Open with mode: {}", cmode);
+            // LOG_TRACE(VFS, "Open with mode: {}", cmode);
 
             if (!file) {
-                LOG_ERROR("Can't open file: {}", common::ucs2_to_utf8(real_path));
+                LOG_ERROR(VFS, "Can't open file: {}", common::ucs2_to_utf8(real_path));
                 return;
             }
 
@@ -361,7 +361,7 @@ namespace eka2l1 {
 
             if (where == file_seek_mode::beg) {
                 if (seek_off < 0) {
-                    LOG_ERROR("Attempting to seek set with negative offset ({})", seek_off);
+                    LOG_ERROR(VFS, "Attempting to seek set with negative offset ({})", seek_off);
                     return 0xFFFFFFFFFFFFFFFF;
                 }
 
@@ -590,7 +590,7 @@ namespace eka2l1 {
 
             if (drv.media_type == drive_media::rom) {
                 if (firmcode.empty()) {
-                    LOG_ERROR("IO error: No device has been set for the emulator.");
+                    LOG_ERROR(VFS, "IO error: No device has been set for the emulator.");
                     return u"";
                 }
 
@@ -813,7 +813,7 @@ namespace eka2l1 {
                 }
 
                 if ((mode & WRITE_MODE) && (mappings[static_cast<int>(drv)].first.attribute & io_attrib_write_protected)) {
-                    LOG_ERROR("Request to open {} with write mode, but the drive is write-protected!",
+                    LOG_ERROR(VFS, "Request to open {} with write mode, but the drive is write-protected!",
                         common::ucs2_to_utf8(path));
 
                     return nullptr;
@@ -880,7 +880,7 @@ namespace eka2l1 {
         
         void validate_for_host() override {
            if (common::is_platform_case_sensitive()) {
-                LOG_INFO("Iterating through all emulated drive to lowercase all filesystem entities!");
+                LOG_INFO(VFS, "Iterating through all emulated drive to lowercase all filesystem entities!");
 
                 for (auto &mapping: mappings) {
                     if (!mapping.second) {
@@ -1004,7 +1004,7 @@ namespace eka2l1 {
 
         std::unique_ptr<file> open_file(const std::u16string &path, const int mode) override {
             if (mode & WRITE_MODE) {
-                LOG_ERROR("Opening a read-only file (ROM + ROFS) with write mode");
+                LOG_ERROR(VFS, "Opening a read-only file (ROM + ROFS) with write mode");
                 return nullptr;
             }
 

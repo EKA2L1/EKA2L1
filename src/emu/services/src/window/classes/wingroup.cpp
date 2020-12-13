@@ -51,9 +51,9 @@ namespace eka2l1::epoc {
         if (*reinterpret_cast<std::uint32_t *>(cmd.data_ptr)) {
             flags |= flag_focus_receiveable;
 
-            LOG_TRACE("Request group {} to enable keyboard focus", common::ucs2_to_utf8(name));
+            LOG_TRACE(SERVICE_WINDOW, "Request group {} to enable keyboard focus", common::ucs2_to_utf8(name));
         } else {
-            LOG_TRACE("Request group {} to disable keyboard focus", common::ucs2_to_utf8(name));
+            LOG_TRACE(SERVICE_WINDOW, "Request group {} to disable keyboard focus", common::ucs2_to_utf8(name));
         }
 
         scr->update_focus(&client->get_ws(), nullptr);
@@ -137,13 +137,13 @@ namespace eka2l1::epoc {
     
     void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
         // Warn myself in the future!
-        LOG_WARN("Set cursor text is mostly a stubbed now");
+        LOG_WARN(SERVICE_WINDOW, "Set cursor text is mostly a stubbed now");
 
         ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
         auto window_user_to_set = reinterpret_cast<window_user *>(client->get_object(cmd_set->win));
 
         if (!window_user_to_set || (window_user_to_set->type != window_kind::client)) {
-            LOG_ERROR("Window not found or not client kind to set text cursor");
+            LOG_ERROR(SERVICE_WINDOW, "Window not found or not client kind to set text cursor");
             context.complete(epoc::error_not_found);
             return;
         }
@@ -153,7 +153,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::add_priority_key(service::ipc_context &context, ws_cmd &cmd) {
-        LOG_TRACE("Add priortiy key stubbed");
+        LOG_TRACE(SERVICE_WINDOW, "Add priortiy key stubbed");
         context.complete(epoc::error_none);
     }
 
@@ -186,7 +186,7 @@ namespace eka2l1::epoc {
 
     void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
-        //LOG_TRACE("Window group op: {}", cmd.header.op);
+        //LOG_TRACE(SERVICE_WINDOW, "Window group op: {}", cmd.header.op);
 
         if (result) {
             return;
@@ -249,7 +249,7 @@ namespace eka2l1::epoc {
         case EWsWinOpDisableFocusChangeEvents:
         case EWsWinOpDisableGroupListChangeEvents:
         case EWsWinOpEnableOnEvents: {
-            LOG_TRACE("Currently not support lock/unlock event for window server");
+            LOG_TRACE(SERVICE_WINDOW, "Currently not support lock/unlock event for window server");
             ctx.complete(epoc::error_none);
 
             break;
@@ -280,7 +280,7 @@ namespace eka2l1::epoc {
             break;
 
         default: {
-            LOG_ERROR("Unimplemented window group opcode 0x{:X}!", cmd.header.op);
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented window group opcode 0x{:X}!", cmd.header.op);
             ctx.complete(epoc::error_none);
 
             break;

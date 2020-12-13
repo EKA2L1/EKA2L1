@@ -117,12 +117,12 @@ namespace eka2l1::epoc::msv {
                 add_entry_to_mtm_list(path_lower);
                 return true;
             } else {
-                LOG_ERROR("Unable to install MTM group due to file being corrupted {}", common::ucs2_to_utf8(path));
+                LOG_ERROR(SERVICE_MSV, "Unable to install MTM group due to file being corrupted {}", common::ucs2_to_utf8(path));
                 return false;
             }
         }
 
-        LOG_ERROR("Unable to install MTM group due to unrecognised file {}", common::ucs2_to_utf8(path));
+        LOG_ERROR(SERVICE_MSV, "Unable to install MTM group due to unrecognised file {}", common::ucs2_to_utf8(path));
         return false;
     }
 
@@ -144,7 +144,7 @@ namespace eka2l1::epoc::msv {
         symfile list_file = io_->open_file(list_path_, READ_MODE | BIN_MODE);
 
         if (!list_file) {
-            LOG_TRACE("MTM registry file not yet present");
+            LOG_TRACE(SERVICE_MSV, "MTM registry file not yet present");
             return;
         }
 
@@ -167,7 +167,7 @@ namespace eka2l1::epoc::msv {
         symfile list_file = io_->open_file(list_path_, WRITE_MODE | BIN_MODE);
 
         if (!list_file) {
-            LOG_TRACE("MTM registry file can not be open for write");
+            LOG_TRACE(SERVICE_MSV, "MTM registry file can not be open for write");
             return;
         }
 

@@ -295,10 +295,10 @@ namespace eka2l1 {
                         std::string manu, firm_name, model;
                         loader::determine_rpkg_product_info(full_entry_path, manu, firm_name, model);
 
-                        LOG_INFO("Found a device: {} ({})", model, firm_name);
+                        LOG_INFO(SYSTEM, "Found a device: {} ({})", model, firm_name);
 
                         if (!dvcmngr_->add_new_device(firm_name, model, manu, ver, 0)) {
-                            LOG_ERROR("Unable to add this device, silently ignore!");
+                            LOG_ERROR(SYSTEM, "Unable to add this device, silently ignore!");
                         } else {
                             actually_found = true;
                         }
@@ -660,7 +660,7 @@ namespace eka2l1 {
         symfile f = eka2l1::physical_file_proxy(path, READ_MODE | BIN_MODE);
 
         if (!f || !f->valid()) {
-            LOG_ERROR("ROM file not present: {}", path);
+            LOG_ERROR(SYSTEM, "ROM file not present: {}", path);
             return false;
         }
 

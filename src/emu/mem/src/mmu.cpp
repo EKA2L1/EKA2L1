@@ -80,7 +80,7 @@ namespace eka2l1::mem {
         *data = *ptr;
 
         if (conf_->log_read) {
-            LOG_TRACE("Read 1 byte from address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Read 1 byte from address 0x{:X}", addr);
         }
 
         return true;
@@ -97,7 +97,7 @@ namespace eka2l1::mem {
         *data = *ptr;
 
         if (conf_->log_read) {
-            LOG_TRACE("Read 2 bytes from address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Read 2 bytes from address 0x{:X}", addr);
         }
 
         return true;
@@ -114,7 +114,7 @@ namespace eka2l1::mem {
         *data = *ptr;
 
         if (conf_->log_read) {
-            LOG_TRACE("Read 4 bytes from address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Read 4 bytes from address 0x{:X}", addr);
         }
 
         return true;
@@ -131,7 +131,7 @@ namespace eka2l1::mem {
         *data = *ptr;
 
         if (conf_->log_read) {
-            LOG_TRACE("Read 8 bytes from address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Read 8 bytes from address 0x{:X}", addr);
         }
 
         return true;
@@ -148,7 +148,7 @@ namespace eka2l1::mem {
         *ptr = *data;
 
         if (conf_->log_write) {
-            LOG_TRACE("Write 1 byte to address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Write 1 byte to address 0x{:X}", addr);
         }
 
         return true;
@@ -165,7 +165,7 @@ namespace eka2l1::mem {
         *ptr = *data;
 
         if (conf_->log_write) {
-            LOG_TRACE("Write 2 bytes to address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Write 2 bytes to address 0x{:X}", addr);
         }
 
         return true;
@@ -182,7 +182,7 @@ namespace eka2l1::mem {
         *ptr = *data;
 
         if (conf_->log_write) {
-            LOG_TRACE("Write 4 bytes to address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Write 4 bytes to address 0x{:X}", addr);
         }
 
         return true;
@@ -199,7 +199,7 @@ namespace eka2l1::mem {
         *ptr = *data;
 
         if (conf_->log_write) {
-            LOG_TRACE("Write 8 bytes to address 0x{:X}", addr);
+            LOG_TRACE(MEMORY, "Write 8 bytes to address 0x{:X}", addr);
         }
 
         return true;

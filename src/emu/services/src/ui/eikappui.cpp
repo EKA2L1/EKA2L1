@@ -72,7 +72,7 @@ namespace eka2l1 {
     // TODO: Make a resource reader and read from the config resource file
     void eikappui_server::get_debug_preferences(service::ipc_context &ctx) {
         debug_preferences preferences;
-        LOG_TRACE("GetDebugPreferences stubbed");
+        LOG_TRACE(SERVICE_UI, "GetDebugPreferences stubbed");
 
         std::string buf = preferences.to_buf();
 
@@ -129,7 +129,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_WARN("Unimplemented app ui session opcode 0x{:X}", ctx->msg->function);
+            LOG_WARN(SERVICE_UI, "Unimplemented app ui session opcode 0x{:X}", ctx->msg->function);
             break;
         }
     }

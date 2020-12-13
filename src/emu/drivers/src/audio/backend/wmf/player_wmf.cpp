@@ -324,7 +324,7 @@ namespace eka2l1::drivers {
         HRESULT hr = MFCreateMediaType(&partial_type);
 
         if (!SUCCEEDED(hr)) {
-            LOG_ERROR("Unable to create new media type to specify output stream to PCM16");
+            LOG_ERROR(DRIVER_AUD, "Unable to create new media type to specify output stream to PCM16");
             return false;
         }
 
@@ -364,7 +364,7 @@ namespace eka2l1::drivers {
             __uuidof(meta_provider), reinterpret_cast<LPVOID *>(&meta_provider));
 
         if (!SUCCEEDED(hr)) {
-            LOG_ERROR("Unable to get meta provider service for reader stream!");
+            LOG_ERROR(DRIVER_AUD, "Unable to get meta provider service for reader stream!");
             return false;
         }
 
@@ -374,7 +374,7 @@ namespace eka2l1::drivers {
         SafeRelease(&meta_provider);
 
         if (!SUCCEEDED(hr)) {
-            LOG_ERROR("Unable to query metadata interface!");
+            LOG_ERROR(DRIVER_AUD, "Unable to query metadata interface!");
             return false;
         }
 
@@ -382,7 +382,7 @@ namespace eka2l1::drivers {
         hr = metas->GetAllPropertyNames(&metadata_keys);
 
         if (!SUCCEEDED(hr)) {
-            LOG_ERROR("Unable to get all property names from metadata interface");
+            LOG_ERROR(DRIVER_AUD, "Unable to get all property names from metadata interface");
             SafeRelease(&metas);
 
             return false;
@@ -394,7 +394,7 @@ namespace eka2l1::drivers {
         hr = PropVariantToStringVectorAlloc(metadata_keys, &metadata_key_strings, &metadata_key_total);
 
         if (!SUCCEEDED(hr)) {
-            LOG_ERROR("Unable to convert prop variant to string vector!");
+            LOG_ERROR(DRIVER_AUD, "Unable to convert prop variant to string vector!");
             SafeRelease(&metas);
             return false;
         }
@@ -435,12 +435,12 @@ namespace eka2l1::drivers {
             reinterpret_cast<LPCWSTR>(url_16.c_str()), nullptr, &request_wmf->reader_);
 
         if (!SUCCEEDED(hr)) {
-            LOG_ERROR("Unable to queue new play URL {} (can't open source reader)", request_wmf->url_);
+            LOG_ERROR(DRIVER_AUD, "Unable to queue new play URL {} (can't open source reader)", request_wmf->url_);
             return false;
         }
 
         if (!configure_stream_for_pcm(*request_wmf)) {
-            LOG_ERROR("Error while configure WMF stream!");
+            LOG_ERROR(DRIVER_AUD, "Error while configure WMF stream!");
             SafeRelease(&request_wmf->reader_);
             return false;
         }
@@ -497,7 +497,7 @@ namespace eka2l1::drivers {
 
         // Seek the source stream to time stamp first
         if (!set_position_for_custom_format(request, time_stamp_source)) {
-            LOG_ERROR("Unable to set position to do reading for transcode!");
+            LOG_ERROR(DRIVER_AUD, "Unable to set position to do reading for transcode!");
             return;
         }
 
@@ -512,7 +512,7 @@ namespace eka2l1::drivers {
                 nullptr, &stream_flags, &time_stamp_of_reading_sample_in_wm_tu, &samples);
 
             if ((result != S_OK) || !samples || (stream_flags & MF_SOURCE_READERF_ENDOFSTREAM)) {
-                LOG_TRACE("End of stream sooner then expected, stopping transcode");
+                LOG_TRACE(DRIVER_AUD, "End of stream sooner then expected, stopping transcode");
                 return;
             }
 
@@ -529,14 +529,14 @@ namespace eka2l1::drivers {
         HRESULT result = reader->GetCurrentMediaType(stream_idx, &source_current_output_reader_type);
 
         if (result != S_OK) {
-            LOG_ERROR("Unable to get current reader media type!");
+            LOG_ERROR(DRIVER_AUD, "Unable to get current reader media type!");
             return false;
         }
 
         result = writer->SetInputMediaType(stream_idx, source_current_output_reader_type, nullptr);
         
         if (result != S_OK) {
-            LOG_ERROR("Unable to set writer input media type!");
+            LOG_ERROR(DRIVER_AUD, "Unable to set writer input media type!");
             return false;
         }
 
@@ -544,7 +544,7 @@ namespace eka2l1::drivers {
         result = writer->AddStream(write_media_type, out_stream_idx);
 
         if (result != S_OK) {
-            LOG_ERROR("Unable to add new stream to MF sink writer!");
+            LOG_ERROR(DRIVER_AUD, "Unable to add new stream to MF sink writer!");
             return false;
         }
 
@@ -560,7 +560,7 @@ namespace eka2l1::drivers {
 
         HRESULT result = MFCreateSinkWriterFromURL(reinterpret_cast<LPCWSTR>(url_16_new.c_str()), nullptr, nullptr, &request_wmf->writer_);
         if (result != S_OK) {
-            LOG_ERROR("Unable to create sink writer to do cropping!");
+            LOG_ERROR(DRIVER_AUD, "Unable to create sink writer to do cropping!");
             return false;
         }
 
@@ -568,7 +568,7 @@ namespace eka2l1::drivers {
         bool res = configure_transcode_stream(request_wmf->writer_, request_wmf->reader_, request_wmf->output_type_, &out_stream_index);
 
         if (!res) {
-            LOG_ERROR("Unable to configure sink writer for cropping!");
+            LOG_ERROR(DRIVER_AUD, "Unable to configure sink writer for cropping!");
             SafeRelease(&request_wmf->writer_);
 
             return false;
@@ -587,7 +587,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::record() {
-        LOG_ERROR("Record for WMF unimplemented!");
+        LOG_ERROR(DRIVER_AUD, "Record for WMF unimplemented!");
         return true;
     }
 
@@ -665,7 +665,7 @@ namespace eka2l1::drivers {
                 return true;
             }
 
-            LOG_ERROR("Encoding for destination not set!");
+            LOG_ERROR(DRIVER_AUD, "Encoding for destination not set!");
             return false;
         }
 
@@ -686,7 +686,7 @@ namespace eka2l1::drivers {
                 if (SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &output_support_cn)) &&
                     SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &output_support_freq))) {
                     if ((output_support_freq >= freq) && (output_support_cn == request_wmf->channels_)) {
-                        LOG_TRACE("Destination sample rate is set to nearest supported: {}", output_support_freq);
+                        LOG_TRACE(DRIVER_AUD, "Destination sample rate is set to nearest supported: {}", output_support_freq);
                         return request_wmf->set_output_type(type);
                     }
                 }
@@ -715,7 +715,7 @@ namespace eka2l1::drivers {
                 return true;
             }
 
-            LOG_ERROR("Encoding for destination not set!");
+            LOG_ERROR(DRIVER_AUD, "Encoding for destination not set!");
             return false;
         }
 
@@ -764,7 +764,7 @@ namespace eka2l1::drivers {
             HRESULT hr = MFCreateSourceReaderFromByteStream(stream, nullptr, &request_wmf->reader_);
 
             if (!SUCCEEDED(hr)) {
-                LOG_ERROR("Unable to queue new custom stream (can't open source reader)");
+                LOG_ERROR(DRIVER_AUD, "Unable to queue new custom stream (can't open source reader)");
                 return false;
             }
         } else {
@@ -774,7 +774,7 @@ namespace eka2l1::drivers {
         }
 
         if (!configure_stream_for_pcm(*request_wmf)) {
-            LOG_ERROR("Error while configure WMF stream!");
+            LOG_ERROR(DRIVER_AUD, "Error while configure WMF stream!");
             SafeRelease(&request_wmf->reader_);
             return false;
         }

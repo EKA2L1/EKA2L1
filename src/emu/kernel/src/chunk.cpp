@@ -128,7 +128,7 @@ namespace eka2l1 {
                 std::fill(base_ptr + bottom, base_ptr + top, clear_byte);
             }
 
-            LOG_INFO("Chunk created: {}, base (in parent): 0x{:x}, max size: 0x{:x} type: {}, access: {}{}", obj_name,
+            LOG_INFO(KERNEL, "Chunk created: {}, base (in parent): 0x{:x}, max size: 0x{:x} type: {}, access: {}{}", obj_name,
                 mmc_impl_->base(mmp), max_size, (type == chunk_type::normal ? "normal" : (type == chunk_type::disconnected ? "disconnected" : "double ended")),
                 (chnk_access == chunk_access::local ? "local" : (chnk_access == chunk_access::code ? "code " : "global")),
                 (attrib == chunk_attrib::anonymous ? ", anonymous" : ""));

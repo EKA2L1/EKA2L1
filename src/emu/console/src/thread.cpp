@@ -332,7 +332,7 @@ namespace eka2l1::desktop {
         int result = graphics_driver_thread_initialization(state);
 
         if (result != 0) {
-            LOG_ERROR("Graphics driver initialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "Graphics driver initialization failed with code {}", result);
             return;
         }
 
@@ -343,7 +343,7 @@ namespace eka2l1::desktop {
         result = graphics_driver_thread_deinitialization(state);
 
         if (result != 0) {
-            LOG_ERROR("Graphics driver deinitialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "Graphics driver deinitialization failed with code {}", result);
             return;
         }
     }
@@ -477,7 +477,7 @@ namespace eka2l1::desktop {
         int result = ui_thread_initialization(state);
 
         if (result != 0) {
-            LOG_ERROR("UI thread initialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "UI thread initialization failed with code {}", result);
             return;
         }
 
@@ -594,7 +594,7 @@ namespace eka2l1::desktop {
         result = ui_thread_deinitialization(state);
 
         if (result != 0) {
-            LOG_ERROR("UI thread deinitialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "UI thread deinitialization failed with code {}", result);
             return;
         }
     }
@@ -605,7 +605,7 @@ namespace eka2l1::desktop {
         hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
         if (hr != S_OK) {
-            LOG_CRITICAL("Failed to initialize COM");
+            LOG_CRITICAL(FRONTEND_CMDLINE, "Failed to initialize COM");
             return;
         }
 #endif

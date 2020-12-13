@@ -302,7 +302,7 @@ namespace eka2l1 {
                             result = common::copy_file(wizard->current_rom_path, add_path(rom_directory, "SYM.ROM"), true);
 
                             if (!result) {
-                                LOG_ERROR("Unable to copy ROM to target ROM directory!");
+                                LOG_ERROR(FRONTEND_UI, "Unable to copy ROM to target ROM directory!");
                                 wizard->copy_rom_done = false;
                                 return;
                             }

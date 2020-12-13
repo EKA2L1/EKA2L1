@@ -39,7 +39,7 @@ namespace eka2l1 {
     }
 
     void unipertar_session::drm_open_file(service::ipc_context *ctx) {
-        LOG_TRACE("Open DRM file stubbed to not supported!");
+        LOG_TRACE(SERVICE_UNIPERTAR, "Open DRM file stubbed to not supported!");
         ctx->complete(epoc::error_not_supported);
     }
 
@@ -50,7 +50,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unimplemented opcode for Unipertar server 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_UNIPERTAR, "Unimplemented opcode for Unipertar server 0x{:X}", ctx->msg->function);
             ctx->complete(epoc::error_none);
 
             break;

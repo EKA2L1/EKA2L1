@@ -134,7 +134,7 @@ namespace eka2l1 {
 // For debug purpose, uncomment the log
 #define HANDLE_CLIENT_IPC(name, op, debug_func_str)     \
     case (op): {                                        \
-        name(ctx); /*LOG_TRACE("{}", debug_func_str);*/ \
+        name(ctx); /*LOG_TRACE(SERVICE_EFSRV, "{}", debug_func_str);*/ \
         break;                                          \
     }
 
@@ -198,7 +198,7 @@ namespace eka2l1 {
             break;
 
         default: {
-            LOG_ERROR("Unknown FSServer client opcode {}!", ctx->msg->function);
+            LOG_ERROR(SERVICE_EFSRV, "Unknown FSServer client opcode {}!", ctx->msg->function);
             break;
         }
 
@@ -481,7 +481,7 @@ namespace eka2l1 {
 
         notify_entries.push_back(entry);
 
-        LOG_TRACE("Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
+        LOG_TRACE(SERVICE_EFSRV, "Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
     }
 
     void fs_server_client::notify_change_cancel_ex(service::ipc_context *ctx) { 
@@ -580,7 +580,7 @@ namespace eka2l1 {
         std::u16string fname = std::move(*fname_op);
         fname = get_full_symbian_path(ss_path, fname);
 
-        LOG_INFO("Get entry of: {}", common::ucs2_to_utf8(fname));
+        LOG_INFO(SERVICE_EFSRV, "Get entry of: {}", common::ucs2_to_utf8(fname));
 
         bool dir = false;
 
@@ -612,7 +612,7 @@ namespace eka2l1 {
         }
 
         const std::u16string fname = get_full_symbian_path(ss_path, fname_op.value());
-        LOG_INFO("Set entry of: {}", common::ucs2_to_utf8(fname));
+        LOG_INFO(SERVICE_EFSRV, "Set entry of: {}", common::ucs2_to_utf8(fname));
 
         io_system *io = ctx->sys->get_io_system();
 
@@ -661,7 +661,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_WARN("Unhandled close type for node type {}", static_cast<int>(node->vfs_node->type));
+            LOG_WARN(SERVICE_EFSRV, "Unhandled close type for node type {}", static_cast<int>(node->vfs_node->type));
             break;
         }
     }

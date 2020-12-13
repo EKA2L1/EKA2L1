@@ -76,7 +76,7 @@ namespace eka2l1::common {
             timer_ = NULL;
 
             if (!evt_) {
-                LOG_ERROR("Fail to create the Win32 event with error code: {}", GetLastError());
+                LOG_ERROR(COMMON, "Fail to create the Win32 event with error code: {}", GetLastError());
             }
         }
 
@@ -88,14 +88,14 @@ namespace eka2l1::common {
         void set() {
             if (evt_) {
                 if (!SetEvent(evt_)) {
-                    LOG_ERROR("Fail to set Win32 event with error code: {}", GetLastError());
+                    LOG_ERROR(COMMON, "Fail to set Win32 event with error code: {}", GetLastError());
                 }
             }
         }
 
         void wait() {
             if (WaitForSingleObject(evt_, INFINITE) == WAIT_FAILED) {
-                LOG_ERROR("Fail to wait for Win32 event with error code: {}", GetLastError());
+                LOG_ERROR(COMMON, "Fail to wait for Win32 event with error code: {}", GetLastError());
             }
         }
 
@@ -116,7 +116,7 @@ namespace eka2l1::common {
                 timer_ = CreateWaitableTimer(NULL, TRUE, NULL);
 
                 if (!timer_) {
-                    LOG_ERROR("Fail to create waitable timer for Win32 with error code: {}", GetLastError());
+                    LOG_ERROR(COMMON, "Fail to create waitable timer for Win32 with error code: {}", GetLastError());
                     return false;
                 }
             }
@@ -129,7 +129,7 @@ namespace eka2l1::common {
             time_to_pass.QuadPart = -static_cast<std::int64_t>(duration_us * 10);
 
             if (!SetWaitableTimer(timer_, &time_to_pass, 0, NULL, NULL, FALSE)) {
-                LOG_ERROR("Failed to set Win32 waitable timer with error code: {}", GetLastError());
+                LOG_ERROR(COMMON, "Failed to set Win32 waitable timer with error code: {}", GetLastError());
                 return false;
             }
 
@@ -148,7 +148,7 @@ namespace eka2l1::common {
                 return false;
 
             default:
-                LOG_ERROR("Waiting for Win32 event with timeout failed with error code: {}", GetLastError());
+                LOG_ERROR(COMMON, "Waiting for Win32 event with timeout failed with error code: {}", GetLastError());
                 break;
             }
 

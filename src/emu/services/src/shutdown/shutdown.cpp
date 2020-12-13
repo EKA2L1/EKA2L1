@@ -68,7 +68,7 @@ namespace eka2l1 {
             break;
         }
 
-        LOG_ERROR("Unimplemented shutdown server opcode: {}", context->msg->function);
+        LOG_ERROR(SERVICE_SHUTDOWN, "Unimplemented shutdown server opcode: {}", context->msg->function);
     }
 
     shutdown_server::shutdown_server(eka2l1::system *sys)

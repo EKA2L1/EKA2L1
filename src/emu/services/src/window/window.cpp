@@ -169,7 +169,7 @@ namespace eka2l1::epoc {
         const std::uint32_t idx = handle & 0xFFFF;
 
         if (idx > objects.size() || idx == 0) {
-            LOG_WARN("Object handle is invalid {}", handle);
+            LOG_WARN(SERVICE_WINDOW, "Object handle is invalid {}", handle);
             return nullptr;
         }
 
@@ -180,7 +180,7 @@ namespace eka2l1::epoc {
         const std::uint32_t idx = handle & 0xFFFF;
 
         if (idx > objects.size() || idx == 0) {
-            LOG_WARN("Object handle is invalid {}", handle);
+            LOG_WARN(SERVICE_WINDOW, "Object handle is invalid {}", handle);
             return false;
         }
 
@@ -189,7 +189,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_screen_device(service::ipc_context &ctx, ws_cmd &cmd) {
-        LOG_INFO("Create screen device.");
+        LOG_INFO(SERVICE_WINDOW, "Create screen device.");
 
         ws_cmd_screen_device_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
 
@@ -197,7 +197,7 @@ namespace eka2l1::epoc {
         epoc::screen *target_screen = get_ws().get_screen((cmd.header.cmd_len == 0) ? 0 : header->num_screen);
 
         if (!target_screen) {
-            LOG_ERROR("Can't find screen object with number {}", header->num_screen);
+            LOG_ERROR(SERVICE_WINDOW, "Can't find screen object with number {}", header->num_screen);
             ctx.complete(epoc::error_not_found);
             return;
         }
@@ -224,7 +224,7 @@ namespace eka2l1::epoc {
     void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd) {
         THotKey key = *reinterpret_cast<THotKey *>(cmd.data_ptr);
 
-        LOG_WARN("Unknown restore key op.");
+        LOG_WARN(SERVICE_WINDOW, "Unknown restore key op.");
     }
 
     void window_server_client::create_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -253,7 +253,7 @@ namespace eka2l1::epoc {
             parent_group = reinterpret_cast<epoc::window *>(get_object(header->parent_id));
         
             if (!parent_group) {
-                LOG_WARN("Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
+                LOG_WARN(SERVICE_WINDOW, "Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
                 parent_group = target_screen->root.get();
             }
         }
@@ -281,13 +281,13 @@ namespace eka2l1::epoc {
         epoc::window *parent = reinterpret_cast<epoc::window *>(get_object(header->parent));
 
         if (!parent) {
-            LOG_WARN("Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
+            LOG_WARN(SERVICE_WINDOW, "Unable to find parent for new window with ID = 0x{:x}. Use root", header->parent);
             ctx.complete(epoc::error_argument);
             return;
         }
 
         if (parent->type != window_kind::group && parent->type != window_kind::client) {
-            LOG_ERROR("The parent of window user must be a group or another user!");
+            LOG_ERROR(SERVICE_WINDOW, "The parent of window user must be a group or another user!");
             ctx.complete(epoc::error_argument);
             return;
         }
@@ -310,7 +310,7 @@ namespace eka2l1::epoc {
         epoc::window *win = reinterpret_cast<epoc::window *>(get_object(sprite_header->window_handle));
 
         if (!win) {
-            LOG_WARN("Window handle is invalid! Abort");
+            LOG_WARN(SERVICE_WINDOW, "Window handle is invalid! Abort");
             ctx.complete(epoc::error_argument);
             return;
         }
@@ -325,14 +325,14 @@ namespace eka2l1::epoc {
 
         const std::u16string dll_name(dll_name_ptr, dll_name_length);
 
-        LOG_TRACE("Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
+        LOG_TRACE(SERVICE_WINDOW, "Create ANIMDLL for {}, stubbed object", common::ucs2_to_utf8(dll_name));
 
         window_client_obj_ptr animdll = std::make_unique<epoc::anim_dll>(this, nullptr);
         ctx.complete(add_object(animdll));
     }
 
     void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd &cmd) {
-        LOG_TRACE("Create CLICKDLL (button click sound plugin), stubbed object");
+        LOG_TRACE(SERVICE_WINDOW, "Create CLICKDLL (button click sound plugin), stubbed object");
 
         window_client_obj_ptr clickdll = std::make_unique<epoc::click_dll>(this, nullptr);
         ctx.complete(add_object(clickdll));
@@ -466,7 +466,7 @@ namespace eka2l1::epoc {
             group = get_ws().get_group_from_id(find_info->previous_id);
 
             if (!group) {
-                LOG_ERROR("Previous group sibling not found with id {}", find_info->previous_id);
+                LOG_ERROR(SERVICE_WINDOW, "Previous group sibling not found with id {}", find_info->previous_id);
                 ctx.complete(epoc::error_not_found);
                 return;
             }
@@ -517,7 +517,7 @@ namespace eka2l1::epoc {
             group = get_ws().get_group_from_id(prev_id);
 
             if (!group) {
-                LOG_ERROR("Previous group sibling not found with id {}", prev_id);
+                LOG_ERROR(SERVICE_WINDOW, "Previous group sibling not found with id {}", prev_id);
                 ctx.complete(epoc::error_not_found);
                 return;
             }
@@ -553,7 +553,7 @@ namespace eka2l1::epoc {
         epoc::window_group *win = get_ws().get_group_from_id(group_id);
 
         if (!win || win->type != window_kind::group) {
-            LOG_TRACE("Can't find group with id {}", group_id);
+            LOG_TRACE(SERVICE_WINDOW, "Can't find group with id {}", group_id);
             ctx.complete(epoc::error_argument);
             return;
         }
@@ -607,7 +607,7 @@ namespace eka2l1::epoc {
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
         if (!scr) {
-            LOG_ERROR("Invalid screen number {}", screen_num);
+            LOG_ERROR(SERVICE_WINDOW, "Invalid screen number {}", screen_num);
             ctx.complete(epoc::error_argument);
             return;
         }
@@ -691,7 +691,7 @@ namespace eka2l1::epoc {
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
         if (!scr) {
-            LOG_ERROR("Can't find screen object with number {}, using the default screen", screen_num);
+            LOG_ERROR(SERVICE_WINDOW, "Can't find screen object with number {}, using the default screen", screen_num);
             scr = get_ws().get_current_focus_screen();
         }
 
@@ -708,7 +708,7 @@ namespace eka2l1::epoc {
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
         if (!scr) {
-            LOG_ERROR("Can't find requested screen {}, use focus one", screen_num);
+            LOG_ERROR(SERVICE_WINDOW, "Can't find requested screen {}, use focus one", screen_num);
             scr = get_ws().get_current_focus_screen();
         }
 
@@ -800,7 +800,7 @@ namespace eka2l1::epoc {
             evt.from_eka1_event(evt_eka1);
         }
 
-        LOG_TRACE("Add raw event stubbed, event type {}", evt.type_);
+        LOG_TRACE(SERVICE_WINDOW, "Add raw event stubbed, event type {}", evt.type_);
         ctx.complete(epoc::error_none);
     }
     
@@ -832,7 +832,7 @@ namespace eka2l1::epoc {
 
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
-        // LOG_TRACE("Window client op: {}", (int)cmd.header.op);
+        // LOG_TRACE(SERVICE_WINDOW, "Window client op: {}", (int)cmd.header.op);
         epoc::version cli_ver = client_version();
 
         // Patching out user opcode.
@@ -874,7 +874,7 @@ namespace eka2l1::epoc {
             break;
 
         case ws_cl_op_compute_mode: {
-            LOG_TRACE("Setting compute mode not supported, instead stubbed");
+            LOG_TRACE(SERVICE_WINDOW, "Setting compute mode not supported, instead stubbed");
             ctx.complete(epoc::error_none);
 
             break;
@@ -1027,7 +1027,7 @@ namespace eka2l1::epoc {
             break;
 
         default:
-            LOG_INFO("Unimplemented ClOp: 0x{:x}", cmd.header.op);
+            LOG_INFO(SERVICE_WINDOW, "Unimplemented ClOp: 0x{:x}", cmd.header.op);
             break;
         }
     }
@@ -1077,7 +1077,7 @@ namespace eka2l1 {
         auto wsini_path_host = io->get_raw_path(wsini_path);
 
         if (!wsini_path_host) {
-            LOG_ERROR("Can't find the window config file, app using window server will broken");
+            LOG_ERROR(SERVICE_WINDOW, "Can't find the window config file, app using window server will broken");
             return;
         }
 
@@ -1085,7 +1085,7 @@ namespace eka2l1 {
         int err = ws_config.load(wsini_path_host_utf8.c_str());
 
         if (err != 0) {
-            LOG_ERROR("Loading wsini file broke with code {}", err);
+            LOG_ERROR(SERVICE_WINDOW, "Loading wsini file broke with code {}", err);
         }
     }
 
@@ -1427,7 +1427,7 @@ namespace eka2l1 {
         }
 
         // use on debugging
-        // LOG_TRACE("touch position ({}, {}), type {}", guest_evt_.adv_pointer_evt_.pos.x, guest_evt_.adv_pointer_evt_.pos.y, guest_evt_.adv_pointer_evt_.evtype);
+        // LOG_TRACE(SERVICE_WINDOW, "touch position ({}, {}), type {}", guest_evt_.adv_pointer_evt_.pos.x, guest_evt_.adv_pointer_evt_.pos.y, guest_evt_.adv_pointer_evt_.evtype);
         scr->screen_mutex.unlock();
     }
 
@@ -1528,7 +1528,7 @@ namespace eka2l1 {
         }
 
         default:
-            LOG_ERROR("Unknown driver event type {}", static_cast<int>(input_event.type_));
+            LOG_ERROR(SERVICE_WINDOW, "Unknown driver event type {}", static_cast<int>(input_event.type_));
             break;
         }
 
@@ -1801,7 +1801,7 @@ namespace eka2l1 {
                 break;
 
             default: {
-                LOG_TRACE("Unhandle async code: {}", ctx.msg->function & ~EWservMessAsynchronousService);
+                LOG_TRACE(SERVICE_WINDOW, "Unhandle async code: {}", ctx.msg->function & ~EWservMessAsynchronousService);
                 break;
             }
             }
@@ -1874,7 +1874,7 @@ namespace eka2l1 {
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
-            LOG_TRACE("Screen number {} doesnt exist", scr_num);
+            LOG_TRACE(SERVICE_WINDOW, "Screen number {} doesnt exist", scr_num);
             return false;
         }
 
@@ -1891,7 +1891,7 @@ namespace eka2l1 {
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
-            LOG_TRACE("Screen number {} doesnt exist", scr_num);
+            LOG_TRACE(SERVICE_WINDOW, "Screen number {} doesnt exist", scr_num);
             return 0;
         }
 
@@ -1905,7 +1905,7 @@ namespace eka2l1 {
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
-            LOG_TRACE("Screen number {} doesnt exist", scr_num);
+            LOG_TRACE(SERVICE_WINDOW, "Screen number {} doesnt exist", scr_num);
             return false;
         }
 

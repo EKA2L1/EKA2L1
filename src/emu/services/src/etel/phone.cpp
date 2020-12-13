@@ -83,7 +83,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_identity_caps(service::ipc_context *ctx) {
-        LOG_TRACE("Get identity caps hardcoded");
+        LOG_TRACE(SERVICE_ETEL, "Get identity caps hardcoded");
 
         const std::uint32_t caps = epoc::etel_mobile_phone_identity_cap_get_manufacturer 
             | epoc::etel_mobile_phone_identity_cap_get_model 
@@ -96,7 +96,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_indicator_caps(service::ipc_context *ctx) {
-        LOG_TRACE("Get indicator caps hardcoded");
+        LOG_TRACE(SERVICE_ETEL, "Get indicator caps hardcoded");
 
         const std::uint32_t action_caps = epoc::etel_mobile_phone_indicator_cap_get;
         const std::uint32_t indicator_caps = epoc::etel_mobile_phone_indicator_charger_connected
@@ -110,7 +110,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_indicator(service::ipc_context *ctx) {
-        LOG_TRACE("Get indicator hardcoded");
+        LOG_TRACE(SERVICE_ETEL, "Get indicator hardcoded");
         const std::uint32_t indicator = epoc::etel_mobile_phone_indicator_network_avail;
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(0, indicator);
@@ -118,7 +118,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_network_caps(service::ipc_context *ctx) {
-        LOG_TRACE("Get network caps hardcoded");
+        LOG_TRACE(SERVICE_ETEL, "Get network caps hardcoded");
 
         const std::uint32_t network_caps = epoc::etel_mobile_phone_network_cap_get_current_network
             | epoc::etel_mobile_phone_network_cap_get_home_network;
@@ -129,7 +129,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_network_registration_status(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get network registration status hardcoded");
+        LOG_TRACE(SERVICE_ETEL, "Get network registration status hardcoded");
         const std::uint32_t network_registration_status = epoc::etel_mobile_phone_registered_on_home_network;
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(0, network_registration_status);
@@ -137,7 +137,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_home_network(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get home network hardcoded");
+        LOG_TRACE(SERVICE_ETEL, "Get home network hardcoded");
         std::optional<epoc::etel_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
 
         network_info->mode_ = phone_->network_info_.mode_;
@@ -180,7 +180,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_subscriber_id(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get subscriber id hardcoded, random generated beforehand");
+        LOG_TRACE(SERVICE_ETEL, "Get subscriber id hardcoded, random generated beforehand");
 
         subscriber_id_info_v1 id_info;
         id_info.the_id_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
@@ -190,7 +190,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_current_network(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get current network hardcoded");  
+        LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");  
         std::optional<epoc::etel_phone_network_info> network_info = 
             ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
         epoc::etel_phone_location_area *phone_location_area = 
@@ -226,13 +226,13 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_current_network_cancel(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get current network cancel stubbed");
+        LOG_TRACE(SERVICE_ETEL, "Get current network cancel stubbed");
 
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_network_registration_status_cancel(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE("Get network registration status cancel stubbed");
+        LOG_TRACE(SERVICE_ETEL, "Get network registration status cancel stubbed");
 
         ctx->complete(epoc::error_none);
     }
@@ -257,7 +257,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR("Unimplemented etel phone opcode {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
                 break;
             }
         } else {
@@ -339,7 +339,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR("Unimplemented etel phone opcode {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
                 break;
             }
         }

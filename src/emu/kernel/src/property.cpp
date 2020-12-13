@@ -56,7 +56,7 @@ namespace eka2l1 {
             data_len = pre_allocated;
 
             if (pre_allocated > 512) {
-                LOG_WARN("Property trying to alloc more then 512 bytes, limited to 512 bytes");
+                LOG_WARN(KERNEL, "Property trying to alloc more then 512 bytes, limited to 512 bytes");
                 data_len = 512;
             }
         }

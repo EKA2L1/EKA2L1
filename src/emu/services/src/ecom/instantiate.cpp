@@ -74,7 +74,7 @@ namespace eka2l1 {
 
         if (!get_resolved_implementations(implementations, interface_uid, params, match_type)) {
             if (err) {
-                LOG_TRACE("Unable to find interface UID: 0x{:X} to get resolved implementation!", interface_uid);
+                LOG_TRACE(SERVICE_ECOM, "Unable to find interface UID: 0x{:X} to get resolved implementation!", interface_uid);
 
                 *err = epoc::ecom_no_interface_identified;
                 return false;
@@ -186,7 +186,7 @@ namespace eka2l1 {
             }
 
             if (ctx->msg->function == ecom_get_custom_resolved_creation_method) {
-                LOG_WARN("Get custom resolved creation method is currently stubbed to be same as non-custom variant!");
+                LOG_WARN(SERVICE_ECOM, "Get custom resolved creation method is currently stubbed to be same as non-custom variant!");
             }
 
             if (!server<ecom_server>()->get_resolved_impl_dll_info(ctx->msg->own_thr, (*uids)[epoc::ecom_impl_uid_index],
@@ -199,7 +199,7 @@ namespace eka2l1 {
         }
 
         default: {
-            LOG_ERROR("Unimplemented get creation method op: 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_ECOM, "Unimplemented get creation method op: 0x{:X}", ctx->msg->function);
             return;
         }
         }

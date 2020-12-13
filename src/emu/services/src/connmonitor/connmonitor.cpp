@@ -76,7 +76,7 @@ namespace eka2l1 {
         }
 
         default: {
-            LOG_ERROR("Unimplemented opcode for ConnectionMonitorServer 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_CONNMONITOR, "Unimplemented opcode for ConnectionMonitorServer 0x{:X}", ctx->msg->function);
             break;
         }
         }

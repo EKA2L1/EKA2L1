@@ -72,7 +72,7 @@ namespace eka2l1::epoc {
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         if (state_ != state_none) {
             if (state_ != state_completed) {
-                LOG_ERROR("Requesting access on a DSA in progress");
+                LOG_ERROR(SERVICE_WINDOW, "Requesting access on a DSA in progress");
                 ctx.complete(epoc::error_argument);
                 return;
             } else {
@@ -105,7 +105,7 @@ namespace eka2l1::epoc {
 
         // what the fuck msvc
         if ((!user) || (user->type != epoc::window_kind::client)) {
-            LOG_ERROR("Invalid window handle given 0x{:X}", window_handle);
+            LOG_ERROR(SERVICE_WINDOW, "Invalid window handle given 0x{:X}", window_handle);
             ctx.complete(epoc::error_argument);
             return;
         }
@@ -116,13 +116,13 @@ namespace eka2l1::epoc {
         // But what is the point... To override a DSA? Should that be possible...
         // TODO: Verify...
         if (husband_->is_dsa_active()) {
-            LOG_WARN("Husband window is currently active in a DSA, silently pass");
+            LOG_WARN(SERVICE_WINDOW, "Husband window is currently active in a DSA, silently pass");
 
             ctx.complete(0);
             return;
         }
 
-        LOG_TRACE("DSA requested for window {}", user->id);
+        LOG_TRACE(SERVICE_WINDOW, "DSA requested for window {}", user->id);
 
         state_ = state_prepare;
         husband_->set_dsa_active(true);
@@ -220,7 +220,7 @@ namespace eka2l1::epoc {
                 break;
 
             default:
-                LOG_ERROR("Unimplemented DSA opcode {}", cmd.header.op);
+                LOG_ERROR(SERVICE_WINDOW, "Unimplemented DSA opcode {}", cmd.header.op);
                 break;
             }
         } else {
@@ -249,7 +249,7 @@ namespace eka2l1::epoc {
                 break;
 
             default: {
-                LOG_ERROR("Unimplemented DSA opcode {}", cmd.header.op);
+                LOG_ERROR(SERVICE_WINDOW, "Unimplemented DSA opcode {}", cmd.header.op);
                 break;
             }
             }

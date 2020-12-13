@@ -47,7 +47,7 @@ namespace eka2l1::config {
             try {                                                                            \
                 setting.variable = node[#name].as<decltype(app_setting::variable)>();        \
             } catch (std::exception &e) {                                                                  \
-                LOG_TRACE("{}", e.what());  \
+                LOG_TRACE(CONFIG, "{}", e.what());  \
                 setting.variable = default_val;                                              \
             }
         
@@ -95,7 +95,7 @@ namespace eka2l1::config {
                     try {
                         the_node = YAML::LoadFile(eka2l1::add_path(setting_folder.dir_name, setting_entry.name));
                     } catch (std::exception &exc) {
-                        LOG_ERROR("Encountering error while loading app setting {}. Error message: {}", fname.std_str(),
+                        LOG_ERROR(CONFIG, "Encountering error while loading app setting {}. Error message: {}", fname.std_str(),
                             exc.what());
                         continue;
                     }
@@ -146,7 +146,7 @@ namespace eka2l1::config {
         try {
             the_node = YAML::LoadFile(setting_file);
         } catch (std::exception &exc) {
-            LOG_ERROR("Encountering error while loading app setting {}. Error message: {}", setting_file,
+            LOG_ERROR(CONFIG, "Encountering error while loading app setting {}. Error message: {}", setting_file,
                 exc.what());
         }
 

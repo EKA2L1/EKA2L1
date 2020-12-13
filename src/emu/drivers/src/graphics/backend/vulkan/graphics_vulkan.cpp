@@ -43,32 +43,32 @@ namespace eka2l1::drivers {
         int32_t /*messageCode*/, const char * /*pLayerPrefix*/, const char *pMessage, void * /*pUserData*/) {
         switch (flags) {
         case VK_DEBUG_REPORT_INFORMATION_BIT_EXT: {
-            LOG_INFO("{}", pMessage);
+            LOG_INFO(DRIVER_GRAPHICS, "{}", pMessage);
             break;
         }
 
         case VK_DEBUG_REPORT_WARNING_BIT_EXT: {
-            LOG_WARN("{}", pMessage);
+            LOG_WARN(DRIVER_GRAPHICS, "{}", pMessage);
             break;
         }
 
         case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT: {
-            LOG_WARN("Performance: {}", pMessage);
+            LOG_WARN(DRIVER_GRAPHICS, "Performance: {}", pMessage);
             break;
         }
 
         case VK_DEBUG_REPORT_ERROR_BIT_EXT: {
-            LOG_ERROR("{}", pMessage);
+            LOG_ERROR(DRIVER_GRAPHICS, "{}", pMessage);
             break;
         }
 
         case VK_DEBUG_REPORT_DEBUG_BIT_EXT: {
-            LOG_TRACE("{}", pMessage);
+            LOG_TRACE(DRIVER_GRAPHICS, "{}", pMessage);
             break;
         }
 
         default: {
-            LOG_INFO("{}", pMessage);
+            LOG_INFO(DRIVER_GRAPHICS, "{}", pMessage);
             break;
         }
         }
@@ -103,7 +103,7 @@ namespace eka2l1::drivers {
             result = add_layer_if_avail("VK_LAYER_GOOGLE_unique_objects");
 
             if (!result) {
-                LOG_ERROR("Instance can't be created, needed validation layers not found!");
+                LOG_ERROR(DRIVER_GRAPHICS, "Instance can't be created, needed validation layers not found!");
                 return false;
             }
         }
@@ -129,7 +129,7 @@ namespace eka2l1::drivers {
         try {
             inst_ = vk::createInstanceUnique(instance_create_info);
         } catch (std::exception &e) {
-            LOG_ERROR("Instance creation failed with error: {}", e.what());
+            LOG_ERROR(DRIVER_GRAPHICS, "Instance creation failed with error: {}", e.what());
             return false;
         }
 
@@ -179,7 +179,7 @@ namespace eka2l1::drivers {
         }
         }
 
-        LOG_TRACE("Found device: {}, score: {}", prop.deviceName, scr);
+        LOG_TRACE(DRIVER_GRAPHICS, "Found device: {}, score: {}", prop.deviceName, scr);
 
         return scr;
     }
@@ -188,7 +188,7 @@ namespace eka2l1::drivers {
         {
             auto dvcs = inst_->enumeratePhysicalDevices();
             if (dvcs.size() == 0) {
-                LOG_ERROR("No physical devices found for Vulkan!");
+                LOG_ERROR(DRIVER_GRAPHICS, "No physical devices found for Vulkan!");
                 return false;
             }
 
@@ -204,7 +204,7 @@ namespace eka2l1::drivers {
             }
 
             phys_dvc_ = std::move(dvcs[idx]);
-            LOG_TRACE("Choosing device: {}", phys_dvc_.getProperties().deviceName);
+            LOG_TRACE(DRIVER_GRAPHICS, "Choosing device: {}", phys_dvc_.getProperties().deviceName);
         }
 
         std::uint32_t queue_index = 0xFFFF;
@@ -240,7 +240,7 @@ namespace eka2l1::drivers {
 
         // If no queue satisfy that last test, we failed. Bye!
         if (queue_index == 0xFFFF) {
-            LOG_ERROR("No queue presents support graphics. Abort");
+            LOG_ERROR(DRIVER_GRAPHICS, "No queue presents support graphics. Abort");
             return false;
         }
 
@@ -263,7 +263,7 @@ namespace eka2l1::drivers {
         try {
             surface_ = inst_->createWin32SurfaceKHRUnique(surface_create_info);
         } catch (std::exception &ex) {
-            LOG_ERROR("Create Win32 Vulkan surface failed with error: {}", ex.what());
+            LOG_ERROR(DRIVER_GRAPHICS, "Create Win32 Vulkan surface failed with error: {}", ex.what());
             return false;
         }
 
@@ -273,7 +273,7 @@ namespace eka2l1::drivers {
         try {
             surface_ = inst_->createAndroidSurfaceKHRUnique(surface_create_info);
         } catch (std::exception &ex) {
-            LOG_ERROR("Create Android Vulkan surface failed with error: {}", ex.what());
+            LOG_ERROR(DRIVER_GRAPHICS, "Create Android Vulkan surface failed with error: {}", ex.what());
             return false;
         }
 #else
@@ -282,7 +282,7 @@ namespace eka2l1::drivers {
         try {
             surface_ = inst_->createXcbSurfaceKHRUnique(surface_create_info);
         } catch (std::exception &ex) {
-            LOG_ERROR("Create XCB Vulkan surface failed with error: {}", ex.what());
+            LOG_ERROR(DRIVER_GRAPHICS, "Create XCB Vulkan surface failed with error: {}", ex.what());
             return false;
         }
 #endif

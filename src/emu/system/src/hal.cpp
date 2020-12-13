@@ -147,7 +147,7 @@ namespace eka2l1::epoc {
 
         void get_video_info_from_scr_object(epoc::screen *scr, const epoc::display_mode &mode, epoc::video_info_v1 &info) {
             if (mode != scr->disp_mode) {
-                LOG_WARN("Trying to get video info with a different display mode {}", static_cast<int>(mode));
+                LOG_WARN(SYSTEM, "Trying to get video info with a different display mode {}", static_cast<int>(mode));
             }
 
             info.size_in_pixels_ = scr->size();
@@ -304,7 +304,7 @@ namespace eka2l1::epoc {
         hal *hal_com = sys->get_hal(static_cast<std::uint16_t>(cage));
 
         if (!hal_com) {
-            LOG_TRACE("HAL cagetory not found or unimplemented: 0x{:x} (for function: 0x{:x})",
+            LOG_TRACE(SYSTEM, "HAL cagetory not found or unimplemented: 0x{:x} (for function: 0x{:x})",
                 cage, func);
 
             return epoc::error_not_found;
@@ -313,7 +313,7 @@ namespace eka2l1::epoc {
         int ret = hal_com->do_hal(func, a1, a2, static_cast<std::uint16_t>(cage >> 16));
 
         if (ret == -1) {
-            LOG_WARN("Unimplemented HAL function, cagetory: 0x{:x}, function: 0x{:x}",
+            LOG_WARN(SYSTEM, "Unimplemented HAL function, cagetory: 0x{:x}, function: 0x{:x}",
                 cage, func);
         }
 
@@ -351,7 +351,7 @@ namespace eka2l1::epoc {
         machine_info_v1 *info = reinterpret_cast<machine_info_v1*>(buf->get_pointer_raw(pr));
 
         if (!info) {
-            LOG_ERROR("Trying to get machine info but buffer is null!");
+            LOG_ERROR(SYSTEM, "Trying to get machine info but buffer is null!");
             return -1;
         }
 
@@ -401,7 +401,7 @@ namespace eka2l1::epoc {
         }
 
         default:
-            LOG_ERROR("Unimplemented HAL function handler for key {}", data_num);
+            LOG_ERROR(SYSTEM, "Unimplemented HAL function handler for key {}", data_num);
             return -1;
         }
 

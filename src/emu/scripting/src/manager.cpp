@@ -113,7 +113,7 @@ namespace eka2l1::manager {
             } catch (py::error_already_set &exec) {
                 const char *description = exec.what();
 
-                LOG_WARN("Script compile error: {}", description);
+                LOG_WARN(SCRIPTING, "Script compile error: {}", description);
                 fs::current_path(crr_path);
 
                 return false;
@@ -167,7 +167,7 @@ namespace eka2l1::manager {
         try {
             modules[module].attr("scriptEntry")();
         } catch (py::error_already_set &exec) {
-            LOG_ERROR("Error executing script entry of {}: {}", module, exec.what());
+            LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, exec.what());
             return false;
         }
 
@@ -185,7 +185,7 @@ namespace eka2l1::manager {
                 try {
                     panic_function.second(err_code);
                 } catch (py::error_already_set &exec) {
-                    LOG_WARN("Script interpreted error: {}", exec.what());
+                    LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
                 }
             }
         }
@@ -326,7 +326,7 @@ namespace eka2l1::manager {
             try {
                 ipc_func(arg0, arg1, arg2, arg3, flags, std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(callee)));
             } catch (py::error_already_set &exec) {
-                LOG_WARN("Script interpreted error: {}", exec.what());
+                LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
             }
         }
 
@@ -345,7 +345,7 @@ namespace eka2l1::manager {
                 ipc_func(std::make_unique<scripting::ipc_message_wrapper>(
                     reinterpret_cast<std::uint64_t>(msg)));
             } catch (py::error_already_set &exec) {
-                LOG_WARN("Script interpreted error: {}", exec.what());
+                LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
             }
         }
 
@@ -362,7 +362,7 @@ namespace eka2l1::manager {
             try {
                 reschedule_func();
             } catch (py::error_already_set &exec) {
-                LOG_WARN("Script interpreted error: {}", exec.what());
+                LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
             }
         }
 
@@ -384,7 +384,7 @@ namespace eka2l1::manager {
             try {
                 info.invoke_();
             } catch (py::error_already_set &exec) {
-                LOG_WARN("Script interpreted error: {}", exec.what());
+                LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
             }
         }
 

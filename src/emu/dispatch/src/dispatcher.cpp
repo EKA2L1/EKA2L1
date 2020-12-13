@@ -48,7 +48,7 @@ namespace eka2l1::dispatch {
         auto dispatch_find_result = dispatch::dispatch_funcs.find(function_ord);
 
         if (dispatch_find_result == dispatch::dispatch_funcs.end()) {
-            LOG_ERROR("Can't find dispatch function {}", function_ord);
+            LOG_ERROR(HLE_DISPATCHER, "Can't find dispatch function {}", function_ord);
             return;
         }
 
@@ -91,7 +91,7 @@ namespace eka2l1::epoc {
             break;
 
         default:
-            LOG_WARN("Unhandled raw event {}", static_cast<int>(evt.type_));
+            LOG_WARN(HLE_DISPATCHER, "Unhandled raw event {}", static_cast<int>(evt.type_));
             break;
         }
     }

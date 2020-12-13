@@ -32,7 +32,7 @@ namespace eka2l1::common {
 
         ~benchmarker() {
             auto end = std::chrono::steady_clock::now();
-            LOG_TRACE("Function {} runned in {} ms ({} s)", bench_func, std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), std::chrono::duration_cast<std::chrono::seconds>(end - start).count());
+            LOG_TRACE(COMMON, "Function {} runned in {} ms ({} s)", bench_func, std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), std::chrono::duration_cast<std::chrono::seconds>(end - start).count());
         }
     };
 }

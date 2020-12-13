@@ -139,12 +139,12 @@ namespace eka2l1 {
         std::uint32_t *buffer_raw = reinterpret_cast<std::uint32_t *>(buf->get_pointer_raw(pr));
 
         if (!buffer_raw) {
-            LOG_ERROR("Can't get change buffer raw pointer!");
+            LOG_ERROR(SERVICE_MSV, "Can't get change buffer raw pointer!");
             return;
         }
 
         if (buf->get_max_length(pr) < 3 * sizeof(std::uint32_t)) {
-            LOG_ERROR("Insufficent change buffer size");
+            LOG_ERROR(SERVICE_MSV, "Insufficent change buffer size");
             return;
         }
 
@@ -251,7 +251,7 @@ namespace eka2l1 {
             break;
 
         default: {
-            LOG_ERROR("Unimplemented opcode for MsvServer 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_MSV, "Unimplemented opcode for MsvServer 0x{:X}", ctx->msg->function);
             break;
         }
         }
@@ -266,7 +266,7 @@ namespace eka2l1 {
         epoc::des8 *select = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[1]).get(own_pr);
 
         if (!listen(info, change, select)) {
-            LOG_ERROR("Request listen on an already-listening MSV session");
+            LOG_ERROR(SERVICE_MSV, "Request listen on an already-listening MSV session");
             ctx->complete(epoc::error_in_use);
         }
     }

@@ -231,7 +231,7 @@ namespace eka2l1::common::armgen {
         operand2(arm_reg base, shift_type stype, arm_reg shift_reg) // RSR
         {
             type = TYPE_RSR;
-            LOG_ERROR_IF(!(type != ST_RRX), "Invalid operand2: RRX does not take a register shift amount");
+            LOG_ERROR_IF(COMMON, !(type != ST_RRX), "Invalid operand2: RRX does not take a register shift amount");
             index_or_shift = shift_reg;
             shift = stype;
             value = base;
@@ -243,29 +243,29 @@ namespace eka2l1::common::armgen {
                 shift = 0;
             switch (stype) {
             case ST_LSL:
-                LOG_ERROR_IF(shift >= 32, "Invalid operand2: LSL %u", shift);
+                LOG_ERROR_IF(COMMON, shift >= 32, "Invalid operand2: LSL %u", shift);
                 break;
             case ST_LSR:
-                LOG_ERROR_IF(shift > 32, "Invalid operand2: LSR %u", shift);
+                LOG_ERROR_IF(COMMON, shift > 32, "Invalid operand2: LSR %u", shift);
                 if (!shift)
                     stype = ST_LSL;
                 if (shift == 32)
                     shift = 0;
                 break;
             case ST_ASR:
-                LOG_ERROR_IF(shift >= 32, "Invalid operand2: ASR %u", shift);
+                LOG_ERROR_IF(COMMON, shift >= 32, "Invalid operand2: ASR %u", shift);
                 if (!shift)
                     stype = ST_LSL;
                 if (shift == 32)
                     shift = 0;
                 break;
             case ST_ROR:
-                LOG_ERROR_IF(shift >= 32, "Invalid operand2: ROR %u", shift);
+                LOG_ERROR_IF(COMMON, shift >= 32, "Invalid operand2: ROR %u", shift);
                 if (!shift)
                     stype = ST_LSL;
                 break;
             case ST_RRX:
-                LOG_ERROR_IF(!(shift == 0), "Invalid operand2: RRX does not take an immediate shift amount");
+                LOG_ERROR_IF(COMMON, !(shift == 0), "Invalid operand2: RRX does not take an immediate shift amount");
                 stype = ST_ROR;
                 break;
             }
@@ -286,7 +286,7 @@ namespace eka2l1::common::armgen {
             case TYPE_RSR:
                 return RSR();
             default:
-                LOG_ERROR_IF(!(false), "GetData with Invalid Type");
+                LOG_ERROR_IF(COMMON, !(false), "GetData with Invalid Type");
                 return 0;
             }
         }
@@ -301,40 +301,40 @@ namespace eka2l1::common::armgen {
 
         std::uint32_t IMMSR() // IMM shifted register
         {
-            LOG_ERROR_IF(!(type == TYPE_IMMSREG), "IMMSR must be imm shifted register");
+            LOG_ERROR_IF(COMMON, !(type == TYPE_IMMSREG), "IMMSR must be imm shifted register");
             return ((index_or_shift & 0x1f) << 7 | (shift << 5) | value);
         }
 
         std::uint32_t RSR() // Register shifted register
         {
-            LOG_ERROR_IF(!(type == TYPE_RSR), "RSR must be RSR Of Course");
+            LOG_ERROR_IF(COMMON, !(type == TYPE_RSR), "RSR must be RSR Of Course");
             return (index_or_shift << 8) | (shift << 5) | 0x10 | value;
         }
 
         std::uint32_t Rm() const {
-            LOG_ERROR_IF(!(type == TYPE_REG), "Rm must be with Reg");
+            LOG_ERROR_IF(COMMON, !(type == TYPE_REG), "Rm must be with Reg");
             return value;
         }
 
         std::uint32_t Imm5() const {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm5 not IMM value");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm5 not IMM value");
             return ((value & 0x0000001F) << 7);
         }
 
         std::uint32_t Imm8() const {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm8Rot not IMM value");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8Rot not IMM value");
             return value & 0xFF;
         }
 
         std::uint32_t Imm8Rot() const // IMM8 with Rotation
         {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm8Rot not IMM value");
-            LOG_ERROR_IF((rotation & 0xE1) == 0, "Invalid operand2: immediate rotation %u", rotation);
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8Rot not IMM value");
+            LOG_ERROR_IF(COMMON, (rotation & 0xE1) == 0, "Invalid operand2: immediate rotation %u", rotation);
             return (1 << 25) | (rotation << 7) | (value & 0x000000FF);
         }
 
         std::uint32_t Imm12() const {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm12 not IMM");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm12 not IMM");
             return (value & 0x00000FFF);
         }
 
@@ -344,12 +344,12 @@ namespace eka2l1::common::armgen {
             // expand a 8bit IMM to a 32bit value and gives you some rotation as
             // well.
             // Each rotation rotates to the right by 2 bits
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm12Mod not IMM");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm12Mod not IMM");
             return ((rotation & 0xF) << 8) | (value & 0xFF);
         }
 
         std::uint32_t Imm16() const {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm16 not IMM");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm16 not IMM");
             return ((value & 0xF000) << 4) | (value & 0x0FFF);
         }
 
@@ -359,23 +359,23 @@ namespace eka2l1::common::armgen {
 
         std::uint32_t Imm16High() const // Returns high 16bits
         {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm16 not IMM");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm16 not IMM");
             return (((value >> 16) & 0xF000) << 4) | ((value >> 16) & 0x0FFF);
         }
 
         std::uint32_t Imm24() const {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm16 not IMM");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm16 not IMM");
             return (value & 0x0FFFFFFF);
         }
 
         // NEON and ASIMD specific
         std::uint32_t Imm8ASIMD() const {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm8ASIMD not IMM");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8ASIMD not IMM");
             return ((value & 0x80) << 17) | ((value & 0x70) << 12) | (value & 0xF);
         }
 
         std::uint32_t Imm8VFP() const {
-            LOG_ERROR_IF(!((type == TYPE_IMM)), "Imm8VFP not IMM");
+            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8VFP not IMM");
             return ((value & 0xF0) << 12) | (value & 0xF);
         }
     };
@@ -838,7 +838,7 @@ namespace eka2l1::common::armgen {
         }
         void VMOV_neon(std::uint32_t Size, arm_reg Vd, std::uint32_t imm);
         void VMOV_neon(std::uint32_t Size, arm_reg Vd, float imm) {
-            LOG_ERROR_IF(!(Size == F_32), "Expecting F_32 immediate for VMOV_neon float arg.");
+            LOG_ERROR_IF(COMMON, !(Size == F_32), "Expecting F_32 immediate for VMOV_neon float arg.");
             union {
                 float f;
                 std::uint32_t u;

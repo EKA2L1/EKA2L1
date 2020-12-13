@@ -438,7 +438,7 @@ namespace eka2l1::common {
                                     
                                     if (progress) {
                                         total_copied += entry.size;
-                                        *progress = total_copied * 100 / total_size;
+                                        *progress = static_cast<int>(total_copied * 100 / total_size);
                                     }
                                 }
                             }

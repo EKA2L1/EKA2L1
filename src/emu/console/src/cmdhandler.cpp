@@ -142,7 +142,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             process_ptr pr = kern->spawn_new_process(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr));
 
             if (!pr) {
-                LOG_ERROR("Unable to launch process: {}", tokstr);
+                LOG_ERROR(FRONTEND_CMDLINE, "Unable to launch process: {}", tokstr);
             } else {
                 pr->run();
             }

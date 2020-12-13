@@ -134,7 +134,7 @@ namespace eka2l1::common {
         int *dest_i = reinterpret_cast<int *>(dest);
 
         if (size > dest_size) {
-            LOG_ERROR("Can't decompress: unsufficent memory (needed: 0x{:X} vs provided 0x{:X})", size, dest_size);
+            LOG_ERROR(COMMON, "Can't decompress: unsufficent memory (needed: 0x{:X} vs provided 0x{:X})", size, dest_size);
             return -1;
         }
 

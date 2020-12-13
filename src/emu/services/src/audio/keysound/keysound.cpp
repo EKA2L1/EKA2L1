@@ -253,7 +253,7 @@ namespace eka2l1 {
         }
 
         if (info->type_ == epoc::keysound::sound_type::sound_type_file) {
-            LOG_WARN("Sound type file unsupported, skip. Please revisit");
+            LOG_WARN(SERVICE_KEYSOUND, "Sound type file unsupported, skip. Please revisit");
             return;
         }
 
@@ -300,7 +300,7 @@ namespace eka2l1 {
                 info.type_ = epoc::keysound::sound_type::sound_type_file;
 
                 // Filename
-                LOG_TRACE("Load filename sound TODO. Please notice this");
+                LOG_TRACE(SERVICE_KEYSOUND, "Load filename sound TODO. Please notice this");
                 break;
             }
 
@@ -391,15 +391,15 @@ namespace eka2l1 {
         }
 
         default:
-            LOG_ERROR("Unimplemented keysound server opcode: {}", ctx->msg->function);
+            LOG_ERROR(SERVICE_KEYSOUND, "Unimplemented keysound server opcode: {}", ctx->msg->function);
             break;
         }
     }
 
-    static constexpr const char *KEYSOUND_SERVER_NAME = "KeySoundServer";
+    static constexpr const char *SERVICE_KEYSOUND_SERVER_NAME = "KeySoundServer";
 
     keysound_server::keysound_server(system *sys)
-        : service::typical_server(sys, KEYSOUND_SERVER_NAME)
+        : service::typical_server(sys, SERVICE_KEYSOUND_SERVER_NAME)
         , inited_(false) {
     }
 

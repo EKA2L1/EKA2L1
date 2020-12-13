@@ -29,7 +29,7 @@ namespace eka2l1::epoc {
         , ver_(std::move(platform_version))
         , importer_lang_(lang) {
         if (!read_master_chunk()) {
-            LOG_ERROR("Reading master chunk failed!");
+            LOG_ERROR(SERVICE_UI, "Reading master chunk failed!");
         }
     }
 
@@ -45,7 +45,7 @@ namespace eka2l1::epoc {
         }
 
         if (master_chunk_type != as_desc_skin_desc) {
-            LOG_ERROR("Master chunk of file corrupted!");
+            LOG_ERROR(SERVICE_UI, "Master chunk of file corrupted!");
             return false;
         }
 
@@ -108,7 +108,7 @@ namespace eka2l1::epoc {
             }
 
             default: {
-                LOG_ERROR("Unhandled chunk type: {}", chunk_type);
+                LOG_ERROR(SERVICE_UI, "Unhandled chunk type: {}", chunk_type);
                 base_offset += chunk_size;
 
                 break;
@@ -228,7 +228,7 @@ namespace eka2l1::epoc {
             }
 
             default: {
-                LOG_ERROR("Unknown class def chunk type: {}", chunk_type);
+                LOG_ERROR(SERVICE_UI, "Unknown class def chunk type: {}", chunk_type);
                 break;
             }
             }
@@ -401,7 +401,7 @@ namespace eka2l1::epoc {
             stream_->read(base_offset + skn_desc_dfo_effect_output_layer_mode, &effects[i].output_layer_mode, 1);
 
             if (effects[i].input_layer_a_mode > 8 || effects[i].input_layer_b_index > 8 || effects[i].output_layer_index > 8) {
-                LOG_ERROR("Invalid effect input/output mode!");
+                LOG_ERROR(SERVICE_UI, "Invalid effect input/output mode!");
                 return;
             }
 
@@ -409,7 +409,7 @@ namespace eka2l1::epoc {
             stream_->read(base_offset + skn_desc_dfo_effect_param_count, &param_count, 2);
 
             if (param_count > 0x40) {
-                LOG_ERROR("Parameters count exceed maximum: {} (vs 64), skip this effect queue", param_count);
+                LOG_ERROR(SERVICE_UI, "Parameters count exceed maximum: {} (vs 64), skip this effect queue", param_count);
                 return;
             }
 
@@ -437,12 +437,12 @@ namespace eka2l1::epoc {
         stream_->read(base_offset + skn_desc_dfo_effect_queue_effect_count, &effect_count, 2);
 
         if (effect_queue.input_layer_mode > 8 || effect_queue.output_layer_mode > 8 || effect_count > 64) {
-            LOG_ERROR("Corrupted effect queue chunk!");
+            LOG_ERROR(SERVICE_UI, "Corrupted effect queue chunk!");
             return;
         }
 
         if (effect_count > 0x20) {
-            LOG_ERROR("Effect count exceed maximum {} (vs 32), skipping this effect.", effect_count);
+            LOG_ERROR(SERVICE_UI, "Effect count exceed maximum {} (vs 32), skipping this effect.", effect_count);
             return;
         }
 

@@ -42,7 +42,7 @@ namespace eka2l1::epoc {
                 reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + 4);
 
             std::u16string dll_click_name(dll_click_name_ptr, dll_click_name_length);
-            LOG_TRACE("Stubbed EWsClickOpLoad (loading click DLL {})", common::ucs2_to_utf8(dll_click_name));
+            LOG_TRACE(SERVICE_WINDOW, "Stubbed EWsClickOpLoad (loading click DLL {})", common::ucs2_to_utf8(dll_click_name));
 
             ctx.complete(epoc::error_none);
 
@@ -50,14 +50,14 @@ namespace eka2l1::epoc {
         }
 
         case EWsClickOpCommandReply: {
-            LOG_TRACE("ClickOpCommandReply stubbed with KErrNone");
+            LOG_TRACE(SERVICE_WINDOW, "ClickOpCommandReply stubbed with KErrNone");
             ctx.complete(epoc::error_none);
 
             break;
         }
 
         default: {
-            LOG_ERROR("Unimplemented ClickDll opcode: 0x{:x}", cmd.header.op);
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented ClickDll opcode: 0x{:x}", cmd.header.op);
             break;
         }
         }

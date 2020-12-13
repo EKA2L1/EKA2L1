@@ -47,7 +47,7 @@ namespace eka2l1::epoc {
             break;
         }
 
-        LOG_ERROR("Cannot translate rotation {} to an orientation, returns default", rotate);
+        LOG_ERROR(SERVICE_WINDOW, "Cannot translate rotation {} to an orientation, returns default", rotate);
         return epoc::graphics_orientation::normal;
     }
 
@@ -69,7 +69,7 @@ namespace eka2l1::epoc {
             }
         }
 
-        LOG_ERROR("Unable to set size and orientation: mode not found!");
+        LOG_ERROR(SERVICE_WINDOW, "Unable to set size and orientation: mode not found!");
         ctx.complete(epoc::error_not_supported);
     }
 
@@ -288,7 +288,7 @@ namespace eka2l1::epoc {
             break;
 
         default: {
-            LOG_WARN("Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
+            LOG_WARN(SERVICE_WINDOW, "Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
             break;
         }
         }

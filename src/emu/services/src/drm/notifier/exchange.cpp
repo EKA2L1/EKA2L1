@@ -81,7 +81,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unidentified DRM event type to notify: {}", event);
+            LOG_ERROR(SERVICE_DRMSYS, "Unidentified DRM event type to notify: {}", event);
             return false;
         }
 

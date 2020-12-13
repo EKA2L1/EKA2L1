@@ -47,7 +47,7 @@ namespace eka2l1::epoc::hwrm::vibration {
         status_prop_ = kern->create<service::property>();
 
         if (!status_prop_) {
-            LOG_ERROR("Failed to create light service's status property! Abort.");
+            LOG_ERROR(SERVICE_HWRM, "Failed to create light service's status property! Abort.");
             return false;
         }
 
@@ -80,7 +80,7 @@ namespace eka2l1::epoc::hwrm::vibration {
         : status_prop_(nullptr)
         , vibra_control_repo_(nullptr) {
         if (!initialise_components(sys, io, mngr)) {
-            LOG_ERROR("Unable to initialise light resource data!");
+            LOG_ERROR(SERVICE_HWRM, "Unable to initialise light resource data!");
         }
     }
 }

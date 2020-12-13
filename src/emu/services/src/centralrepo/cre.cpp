@@ -277,7 +277,7 @@ namespace eka2l1 {
         symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
 
         if (!f) {
-            LOG_ERROR("Can't write CRE changes, opening {} failed", common::ucs2_to_utf8(p));
+            LOG_ERROR(SERVICE_CENREP, "Can't write CRE changes, opening {} failed", common::ucs2_to_utf8(p));
             return;
         }
 

@@ -332,7 +332,7 @@ namespace eka2l1 {
         if (!dvcs.empty() && (conf->device >= dvcs.size())) {
             const std::string device_not_found_msg_log = common::get_localised_string(localised_strings, "pref_system_device_not_found_msg");
 
-            LOG_WARN("{}", device_not_found_msg_log);
+            LOG_WARN(FRONTEND_UI, "{}", device_not_found_msg_log);
             conf->device = 0;
         }
 
@@ -464,7 +464,7 @@ namespace eka2l1 {
                 "pref_system_validate_device_btn_title");
 
             if (ImGui::Button(validate_device_str.c_str())) {
-                LOG_INFO("This might take sometimes! Please wait... The UI is frozen while this is being done.");
+                LOG_INFO(FRONTEND_UI, "This might take sometimes! Please wait... The UI is frozen while this is being done.");
                 sys->validate_current_device();
             }
 

@@ -1,0 +1,82 @@
+/*
+ * Copyright (c) 2020 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef LOGCLASS
+#define LOGCLASS(name, nice_name)
+#endif
+
+LOGCLASS(FRONTEND_UI, "UI")
+LOGCLASS(FRONTEND_CMDLINE, "Command line")
+
+LOGCLASS(CONFIG, "Config")
+LOGCLASS(CPU, "CPU")
+LOGCLASS(KERNEL, "Kernel")
+LOGCLASS(GDBSTUB, "Gdbstub")
+LOGCLASS(LOADER, "Loader")
+LOGCLASS(MEMORY, "Memory")
+LOGCLASS(SYSTEM, "System")
+
+LOGCLASS(LDD, "Logical device driver")
+LOGCLASS(LDD_MMCIF, "Mmc driver")
+
+LOGCLASS(SERVICE_TRACK, "Service tracking")
+LOGCLASS(SERVICE_APPLIST, "Applist")
+LOGCLASS(SERVICE_KEYSOUND, "Keysound")
+LOGCLASS(SERVICE_BLUETOOTH, "Bluetooth")
+LOGCLASS(SERVICE_BACKUP, "Backup")
+LOGCLASS(SERVICE_CDLENG, "Cdl Engine")
+LOGCLASS(SERVICE_CENREP, "Central Repository")
+LOGCLASS(SERVICE_ECOMM, "Comm service")
+LOGCLASS(SERVICE_CONNMONITOR, "Connection monitor")
+LOGCLASS(SERVICE_EFSRV, "File service")
+LOGCLASS(SERVICE_DRMSYS, "DRM system")
+LOGCLASS(SERVICE_ECOM, "Plugin service")
+LOGCLASS(SERVICE_ETEL, "Telecom service")
+LOGCLASS(SERVICE_FBS, "Font and bitmap service")
+LOGCLASS(SERVICE_FEATMGR, "Feature manager service")
+LOGCLASS(SERVICE_MSV, "Message database manager")
+LOGCLASS(SERVICE_LOADER, "Loader service")
+LOGCLASS(SERVICE_NOTIFIER, "Notifier service")
+LOGCLASS(SERVICE_POSIX, "Posix service")
+LOGCLASS(SERVICE_REMCON, "Remote connection service")
+LOGCLASS(SERVICE_SENSOR, "Sensor service")
+LOGCLASS(SERVICE_SMS, "SMS operations")
+LOGCLASS(SERVICE_SHUTDOWN, "Shutdown service")
+LOGCLASS(SERVICE_SYSAGT, "System agent")
+LOGCLASS(SERVICE_ESOCK, "Socket service")
+LOGCLASS(SERVICE_UI, "UI services collection")
+LOGCLASS(SERVICE_UNIPERTAR, "Unipertar")
+LOGCLASS(SERVICE_HWRM, "HWRM service")
+LOGCLASS(SERVICE_WINDOW, "Window service")
+LOGCLASS(SERVICE_MMFAUD, "MMF Audio service")
+LOGCLASS(SERVICE_INSTALL, "Install service")
+
+LOGCLASS(DRIVER_AUD, "Audio driver")
+LOGCLASS(DRIVER_GRAPHICS, "Graphics driver")
+LOGCLASS(VFS, "Virtual file system")
+LOGCLASS(UTILS, "Guest utils")
+
+LOGCLASS(COMMON, "Common functions")
+LOGCLASS(DISASM, "Disassembler")
+LOGCLASS(PACKAGE, "Packages")
+LOGCLASS(SCRIPTING, "Scripting")
+
+LOGCLASS(HLE_AUD, "HLE Audio player")
+LOGCLASS(HLE_SCRDVC, "Screen device")
+LOGCLASS(HLE_DISPATCHER, "HLE dispatch manager")

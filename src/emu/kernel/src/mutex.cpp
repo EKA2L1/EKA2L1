@@ -109,14 +109,14 @@ namespace eka2l1 {
             kernel::thread *thread_to_wake = reinterpret_cast<kernel::thread *>(userdata);
 
             if (!thread_to_wake || thread_to_wake->get_object_type() != kernel::object_type::thread) {
-                LOG_ERROR("Waking up invalid object!!!!!");
+                LOG_ERROR(KERNEL, "Waking up invalid object!!!!!");
                 return;
             }
 
             switch (thread_to_wake->current_state()) {
             case thread_state::hold_mutex_pending: {
                 if (thread_to_wake->pending_link.alone()) {
-                    LOG_ERROR("Thread request to wake up with this mutex is not in hold pending queue");
+                    LOG_ERROR(KERNEL, "Thread request to wake up with this mutex is not in hold pending queue");
                     return;
                 }
 
@@ -129,7 +129,7 @@ namespace eka2l1 {
                 auto thr_ite = std::find(waits.begin(), waits.end(), thread_to_wake);
 
                 if (thr_ite == waits.end()) {
-                    LOG_ERROR("Thread request to wake up with this mutex is not in hold pending queue");
+                    LOG_ERROR(KERNEL, "Thread request to wake up with this mutex is not in hold pending queue");
                     return;
                 }
 
@@ -138,7 +138,7 @@ namespace eka2l1 {
             }
 
             default: {
-                LOG_ERROR("Unknown thread state to wake up");
+                LOG_ERROR(KERNEL, "Unknown thread state to wake up");
                 return;
             }
             }
@@ -155,12 +155,12 @@ namespace eka2l1 {
 
         bool mutex::signal(kernel::thread *callee) {
             if (!holding) {
-                LOG_ERROR("Signal a mutex that's not held by any thread");
+                LOG_ERROR(KERNEL, "Signal a mutex that's not held by any thread");
                 return false;
             }
 
             if (holding != callee) {
-                LOG_ERROR("Calling signal with the caller not being the holder");
+                LOG_ERROR(KERNEL, "Calling signal with the caller not being the holder");
                 return false;
             }
 
@@ -272,7 +272,7 @@ namespace eka2l1 {
             }
 
             default: {
-                LOG_ERROR("Unknown thread state");
+                LOG_ERROR(KERNEL, "Unknown thread state");
                 break;
             }
             }
@@ -284,7 +284,7 @@ namespace eka2l1 {
                 const auto thr_ite = std::find(waits.begin(), waits.end(), thr);
 
                 if (thr_ite == waits.end()) {
-                    LOG_ERROR("Thread given is not found in waits");
+                    LOG_ERROR(KERNEL, "Thread given is not found in waits");
                     return false;
                 }
 
@@ -303,7 +303,7 @@ namespace eka2l1 {
             }
 
             default: {
-                LOG_ERROR("Unknown thread state");
+                LOG_ERROR(KERNEL, "Unknown thread state");
                 break;
             }
             }
@@ -314,12 +314,12 @@ namespace eka2l1 {
         bool mutex::unsuspend_thread(thread *thr) {
             // Putting this thread into another suspend state
             if (thr->current_state() != thread_state::wait_mutex_suspend) {
-                LOG_ERROR("Calling mutex to unsuspended a thread that's not suspended");
+                LOG_ERROR(KERNEL, "Calling mutex to unsuspended a thread that's not suspended");
                 return false;
             }
 
             if (thr->suspend_link.alone()) {
-                LOG_ERROR("Thread given is not found in suspended");
+                LOG_ERROR(KERNEL, "Thread given is not found in suspended");
                 return false;
             }
 

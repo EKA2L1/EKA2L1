@@ -218,7 +218,7 @@ namespace eka2l1 {
         }
 
         case fbs_bitmap_bg_compress: {
-            //LOG_WARN("BitmapBgCompress stubbed with 0");
+            //LOG_WARN(SERVICE_FBS, "BitmapBgCompress stubbed with 0");
             //ctx->complete(epoc::error_none);
             background_compress_bitmap(ctx);
             break;
@@ -229,7 +229,7 @@ namespace eka2l1 {
             break;
 
         default: {
-            LOG_ERROR("Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_FBS, "Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;
         }
         }
@@ -292,7 +292,7 @@ namespace eka2l1 {
                             .second;
 
         if (!shared_chunk || !large_chunk) {
-            LOG_CRITICAL("Can't create shared chunk and large chunk of FBS, exiting");
+            LOG_CRITICAL(SERVICE_FBS, "Can't create shared chunk and large chunk of FBS, exiting");
             return;
         }
 
@@ -300,7 +300,7 @@ namespace eka2l1 {
             "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
 
         if (!large_bitmap_access_mutex) {
-            LOG_WARN("Large bitmap access mutex fail to create!");
+            LOG_WARN(SERVICE_FBS, "Large bitmap access mutex fail to create!");
         }
 
         memory_system *mem = sys->get_memory_system();
@@ -332,7 +332,7 @@ namespace eka2l1 {
             }
 
             if (bmp_font_vtab == 0) {
-                LOG_ERROR("Unable to find vtable address of CBitmapFont!");
+                LOG_ERROR(SERVICE_FBS, "Unable to find vtable address of CBitmapFont!");
             }
             
             if (kern->is_eka1()) {
@@ -380,7 +380,7 @@ namespace eka2l1 {
 
     void *fbs_server::allocate_general_data_impl(const std::size_t s) {
         if (!shared_chunk || !shared_chunk_allocator) {
-            LOG_CRITICAL("FBS server hasn't initialized yet");
+            LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return nullptr;
         }
 
@@ -389,7 +389,7 @@ namespace eka2l1 {
 
     bool fbs_server::free_general_data_impl(const void *ptr) {
         if (!shared_chunk || !shared_chunk_allocator) {
-            LOG_CRITICAL("FBS server hasn't initialized yet");
+            LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return false;
         }
 
@@ -398,7 +398,7 @@ namespace eka2l1 {
 
     void *fbs_server::allocate_large_data(const std::size_t s) {
         if (!large_chunk || !large_chunk_allocator) {
-            LOG_CRITICAL("FBS server hasn't initialized yet");
+            LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return nullptr;
         }
 
@@ -407,7 +407,7 @@ namespace eka2l1 {
 
     bool fbs_server::free_large_data(const void *ptr) {
         if (!large_chunk || !large_chunk_allocator) {
-            LOG_CRITICAL("FBS server hasn't initialized yet");
+            LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return false;
         }
 

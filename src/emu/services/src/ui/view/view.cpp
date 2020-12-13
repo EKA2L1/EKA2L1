@@ -67,7 +67,7 @@ namespace eka2l1 {
         }
 
         if (!f) {
-            LOG_WARN("Can't find priority set resource file for view server! Priority set to standard 0.");
+            LOG_WARN(SERVICE_UI, "Can't find priority set resource file for view server! Priority set to standard 0.");
             return true;
         }
 
@@ -141,7 +141,7 @@ namespace eka2l1 {
         const std::size_t event_buf_size = ctx->get_argument_data_size(0);
 
         if (event_buf_size < sizeof(ui::view::view_event)) {
-            LOG_ERROR("Size of view event buffer is not sufficient enough!");
+            LOG_ERROR(SERVICE_UI, "Size of view event buffer is not sufficient enough!");
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -284,13 +284,13 @@ namespace eka2l1 {
             break;
 
         case view_opcode_set_background_color: {
-            LOG_WARN("SetBackgroundColor stubbed");
+            LOG_WARN(SERVICE_UI, "SetBackgroundColor stubbed");
             ctx->complete(epoc::error_none);
             break;
         }
 
         default:
-            LOG_ERROR("Unimplemented view session opcode {}", ctx->msg->function);
+            LOG_ERROR(SERVICE_UI, "Unimplemented view session opcode {}", ctx->msg->function);
             break;
         }
     }

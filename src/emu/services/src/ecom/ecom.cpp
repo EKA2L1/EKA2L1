@@ -89,7 +89,7 @@ namespace eka2l1 {
 
         if (!ecom_private_dir) {
             // Again folder not found or error from our side
-            LOG_ERROR("Private directory of ecom can't be accessed");
+            LOG_ERROR(SERVICE_ECOM, "Private directory of ecom can't be accessed");
             return {};
         }
 
@@ -144,7 +144,7 @@ namespace eka2l1 {
     ecom_interface_info *ecom_server::get_interface(const epoc::uid interface_uid) {
         if (!init) {
             if (!load_plugins(sys->get_io_system())) {
-                LOG_ERROR("An error happens with initialization of ECom");
+                LOG_ERROR(SERVICE_ECOM, "An error happens with initialization of ECom");
             }
 
             init = true;
@@ -164,7 +164,7 @@ namespace eka2l1 {
     bool ecom_server::get_resolved_implementations(std::vector<ecom_implementation_info_ptr> &collect_vector, const epoc::uid interface_uid, const ecom_resolver_params &params, const bool generic_wildcard_match) {
         if (!init) {
             if (!load_plugins(sys->get_io_system())) {
-                LOG_ERROR("An error happens with initialization of ECom");
+                LOG_ERROR(SERVICE_ECOM, "An error happens with initialization of ECom");
             }
 
             init = true;
@@ -257,7 +257,7 @@ namespace eka2l1 {
             bool result = spi.do_state(seri);
 
             if (!result) {
-                LOG_TRACE("SPI file {} corrupted!", archive);
+                LOG_TRACE(SERVICE_ECOM, "SPI file {} corrupted!", archive);
                 return false;
             }
 
@@ -266,7 +266,7 @@ namespace eka2l1 {
                     common::utf8_to_ucs2(entry.name), &entry.file[0], entry.file.size(), drv);
 
                 if (!result) {
-                    LOG_WARN("Can't load and install plugin \"{}\"", entry.name);
+                    LOG_WARN(SERVICE_ECOM, "Can't load and install plugin \"{}\"", entry.name);
                 }
             }
         }
@@ -298,7 +298,7 @@ namespace eka2l1 {
 
         auto plugin_dir = io->open_dir(plugin_dir_path, io_attrib_include_file);
         if (!plugin_dir) {
-            LOG_TRACE("Plugins directory for drive {} not found!",
+            LOG_TRACE(SERVICE_ECOM, "Plugins directory for drive {} not found!",
                 static_cast<char>(plugin_dir_path[0]));
 
             return false;
@@ -315,7 +315,7 @@ namespace eka2l1 {
             f->close();
 
             if (!load_and_install_plugin_from_buffer(common::utf8_to_ucs2(entry->full_path), &dat[0], dat.size(), drv)) {
-                LOG_ERROR("Can't load and install plugins description {}", entry->name);
+                LOG_ERROR(SERVICE_ECOM, "Can't load and install plugins description {}", entry->name);
                 return false;
             }
         }
@@ -328,7 +328,7 @@ namespace eka2l1 {
     void ecom_server::connect(service::ipc_context &ctx) {
         if (!init) {
             if (!load_plugins(ctx.sys->get_io_system())) {
-                LOG_ERROR("An error happens with initialization of ECom");
+                LOG_ERROR(SERVICE_ECOM, "An error happens with initialization of ECom");
             }
         }
 
@@ -361,7 +361,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unimplemented ecom session opcode {}", ctx->msg->function);
+            LOG_ERROR(SERVICE_ECOM, "Unimplemented ecom session opcode {}", ctx->msg->function);
             break;
         }
     }

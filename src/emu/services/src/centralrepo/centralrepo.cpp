@@ -132,7 +132,7 @@ namespace eka2l1 {
                 }
 
                 default: {
-                    LOG_ERROR("Unsupported metadata INI node type");
+                    LOG_ERROR(SERVICE_CENREP, "Unsupported metadata INI node type");
                     return false;
                 }
                 }
@@ -244,7 +244,7 @@ namespace eka2l1 {
         eka2l1::central_repo *repo = server->load_repo_with_lookup(ctx->sys->get_io_system(), mngr, repo_uid);
 
         if (!repo) {
-            LOG_TRACE("Repository not found with UID 0x{:X}", repo_uid);
+            LOG_TRACE(SERVICE_CENREP, "Repository not found with UID 0x{:X}", repo_uid);
             ctx->complete(epoc::error_not_found);
             return;
         }
@@ -317,7 +317,7 @@ namespace eka2l1 {
         auto session_ite = client_sessions.find(session_uid);
 
         if (session_ite == client_sessions.end()) {
-            LOG_ERROR("Session ID passed not found 0x{:X}", session_uid);
+            LOG_ERROR(SERVICE_CENREP, "Session ID passed not found 0x{:X}", session_uid);
             ctx.complete(epoc::error_argument);
 
             return;
@@ -368,7 +368,7 @@ namespace eka2l1 {
                     symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
 
                     if (!repofile) {
-                        LOG_ERROR("Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
+                        LOG_ERROR(SERVICE_CENREP, "Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
                         avail_drives.pop_back();
 
                         return -1;
@@ -383,7 +383,7 @@ namespace eka2l1 {
                     common::chunkyseri seri(&buf[0], buf.size(), common::SERI_MODE_READ);
 
                     if (int err = do_state_for_cre(seri, *repo)) {
-                        LOG_ERROR("Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
+                        LOG_ERROR(SERVICE_CENREP, "Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
                         avail_drives.pop_back();
 
                         return -1;
@@ -484,7 +484,7 @@ namespace eka2l1 {
             auto subsession_ite = client_subsessions.find(subsession_uid);
 
             if (subsession_ite == client_subsessions.end()) {
-                LOG_ERROR("Subsession ID passed not found 0x{:X}", subsession_uid);
+                LOG_ERROR(SERVICE_CENREP, "Subsession ID passed not found 0x{:X}", subsession_uid);
                 ctx->complete(epoc::error_argument);
 
                 return;
@@ -558,7 +558,7 @@ namespace eka2l1 {
             break;
 
         default: {
-            LOG_ERROR("Unhandled message opcode for cenrep 0x{:X]", ctx->msg->function);
+            LOG_ERROR(SERVICE_CENREP, "Unhandled message opcode for cenrep 0x{:X]", ctx->msg->function);
             break;
         }
         }
@@ -568,14 +568,14 @@ namespace eka2l1 {
         auto &repo_subsession = repo_subsession_ite->second;
 
         if (repo_id != 0 && repo_subsession.attach_repo->uid != repo_id) {
-            LOG_CRITICAL("Fail safe check: REPO id != provided id");
+            LOG_CRITICAL(SERVICE_CENREP, "Fail safe check: REPO id != provided id");
             return -2;
         }
 
         // Sensei, did i do it correct
         // Save it and than wipe it out
         repo_subsession.write_changes(io, mngr);
-        LOG_TRACE("Repo 0x{:X}: changes saved", repo_subsession.attach_repo->uid);
+        LOG_TRACE(SERVICE_CENREP, "Repo 0x{:X}: changes saved", repo_subsession.attach_repo->uid);
 
         // Remove from attach
         auto &all_attached = repo_subsession.attach_repo->attached;
@@ -590,7 +590,7 @@ namespace eka2l1 {
         if (repo_subsession.attach_repo->access_count > 0) {
             repo_subsession.attach_repo->access_count--;
         } else {
-            LOG_ERROR("Repo 0x{:X} has access count to be negative!", repo_subsession.attach_repo->uid);
+            LOG_ERROR(SERVICE_CENREP, "Repo 0x{:X} has access count to be negative!", repo_subsession.attach_repo->uid);
         }
 
         // Bie...
@@ -629,7 +629,7 @@ namespace eka2l1 {
         }
 
         default: {
-            LOG_ERROR("Unknown return error from closerep {}", err);
+            LOG_ERROR(SERVICE_CENREP, "Unknown return error from closerep {}", err);
             break;
         }
         }

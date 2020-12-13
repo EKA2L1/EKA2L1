@@ -30,6 +30,12 @@
 namespace eka2l1 {
     extern bool already_setup;
 
+    enum log_class {
+        #define LOGCLASS(name, nice_name) name,
+        #include <common/logclass.def>
+        #undef LOGCLASS
+    };
+
     class base_logger {
     public:
         virtual void log(const char *fmt, ...) = 0;
@@ -48,18 +54,18 @@ namespace eka2l1 {
 }
 
 #ifdef DISABLE_LOGGING
-#define LOG_TRACE(fmt, ...)
-#define LOG_DEBUG(fmt, ...)
-#define LOG_INFO(fmt, ...)
-#define LOG_WARN(fmt, ...)
-#define LOG_ERROR(fmt, ...)
-#define LOG_CRITICAL(fmt, ...)
-#define LOG_TRACE_IF(flag, fmt, ...)
-#define LOG_DEBUG_IF(flag, fmt, ...)
-#define LOG_INFO_IF(flag, fmt, ...)
-#define LOG_WARN_IF(flag, fmt, ...)
-#define LOG_ERROR_IF(flag, fmt, ...)
-#define LOG_CRITICAL_IF(flag, fmt, ...)
+#define LOG_TRACE(class, fmt, ...)
+#define LOG_DEBUG(class, fmt, ...)
+#define LOG_INFO(class, fmt, ...)
+#define LOG_WARN(class, fmt, ...)
+#define LOG_ERROR(class, fmt, ...)
+#define LOG_CRITICAL(class, fmt, ...)
+#define LOG_TRACE_IF(class, flag, fmt, ...)
+#define LOG_DEBUG_IF(class, flag, fmt, ...)
+#define LOG_INFO_IF(class, flag, fmt, ...)
+#define LOG_WARN_IF(class, flag, fmt, ...)
+#define LOG_ERROR_IF(class, flag, fmt, ...)
+#define LOG_CRITICAL_IF(class, flag, fmt, ...)
 #else
 #ifdef ENABLE_SCRIPTING
 #define COND_CHECK if (eka2l1::log::spd_logger)
@@ -69,29 +75,29 @@ namespace eka2l1 {
 #define COND_CHECK_AND
 #endif
 
-#define LOG_TRACE(fmt, ...) COND_CHECK eka2l1::log::spd_logger->trace("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_DEBUG(fmt, ...) COND_CHECK eka2l1::log::spd_logger->debug("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...) COND_CHECK eka2l1::log::spd_logger->info("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_WARN(fmt, ...) COND_CHECK eka2l1::log::spd_logger->warn("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...) COND_CHECK eka2l1::log::spd_logger->error("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_CRITICAL(fmt, ...) COND_CHECK eka2l1::log::spd_logger->critical("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_TRACE(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->trace("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_DEBUG(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->debug("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_INFO(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->info("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_WARN(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->warn("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_ERROR(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->error("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#define LOG_CRITICAL(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->critical("{:s}: " fmt, __FUNCTION__, ##__VA_ARGS__)
 
-#define LOG_TRACE_IF(flag, fmt, ...) \
+#define LOG_TRACE_IF(class, flag, fmt, ...) \
     if (flag COND_CHECK_AND)         \
     eka2l1::log::spd_logger->trace("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_DEBUG_IF(flag, fmt, ...) \
+#define LOG_DEBUG_IF(class, flag, fmt, ...) \
     if (flag COND_CHECK_AND)         \
     eka2l1::log::spd_logger->debug("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_INFO_IF(flag, fmt, ...) \
+#define LOG_INFO_IF(class, flag, fmt, ...) \
     if (flag COND_CHECK_AND)        \
     eka2l1::log::spd_logger->info("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_WARN_IF(flag, fmt, ...) \
+#define LOG_WARN_IF(class, flag, fmt, ...) \
     if (flag COND_CHECK_AND)        \
     eka2l1::log::spd_logger->warn("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_ERROR_IF(flag, fmt, ...) \
+#define LOG_ERROR_IF(class, flag, fmt, ...) \
     if (flag COND_CHECK_AND)         \
     eka2l1::log::spd_logger->error("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
-#define LOG_CRITICAL_IF(flag, fmt, ...) \
+#define LOG_CRITICAL_IF(class, flag, fmt, ...) \
     if (flag COND_CHECK_AND)            \
     eka2l1::log::spd_logger->critical("[{:s}]:  " fmt, __FUNCTION__, ##__VA_ARGS__)
 #endif

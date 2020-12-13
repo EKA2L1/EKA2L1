@@ -50,7 +50,7 @@ namespace eka2l1::epoc::notifier {
             seri.absorb(unk);
 
             std::string to_display(reinterpret_cast<const char*>(data_ptr + sizeof(std::uint16_t) + sizeof(char)));
-            LOG_TRACE("Trying to display dialog type: {} with message: {}", type, to_display);
+            LOG_TRACE(SERVICE_UI, "Trying to display dialog type: {} with message: {}", type, to_display);
 
             if (callback_) {
                 callback_(static_cast<note_type>(type), to_display, complete_info);
@@ -60,7 +60,7 @@ namespace eka2l1::epoc::notifier {
                 outstanding_ = false;
             }
         } else {
-            LOG_INFO("Note display currently unsupported for EKA2.");
+            LOG_INFO(SERVICE_UI, "Note display currently unsupported for EKA2.");
 
             complete_info.complete(epoc::error_none);
             outstanding_ = false;

@@ -38,7 +38,7 @@ namespace eka2l1::epoc::etel {
             return false;
         }
 
-        LOG_TRACE("Loading TSY temporary stubbed with module name {}", module_name);
+        LOG_TRACE(SERVICE_ETEL, "Loading TSY temporary stubbed with module name {}", module_name);
 
         // TODO: We need to give it a proper info
         // Give a line first, add it to phone later

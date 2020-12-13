@@ -187,7 +187,7 @@ namespace eka2l1 {
             static constexpr const char *CREDIT_PATH = "resources//credits.yml";
             the_node = YAML::LoadFile(CREDIT_PATH);
         } catch (std::exception &e) {
-            LOG_ERROR("Unable to load credits file. Error description: {}", e.what());
+            LOG_ERROR(FRONTEND_UI, "Unable to load credits file. Error description: {}", e.what());
         }
 
         // Respect each section. If one section can't load. That does not mean the further will not load too.
@@ -196,7 +196,7 @@ namespace eka2l1 {
                 main_dev_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
-            LOG_ERROR("Unable to load main developers credits. Error description: {}", e.what());
+            LOG_ERROR(FRONTEND_UI, "Unable to load main developers credits. Error description: {}", e.what());
         }
 
         try {
@@ -204,7 +204,7 @@ namespace eka2l1 {
                 contributors_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
-            LOG_ERROR("Unable to load contributors credits. Error description: {}", e.what());
+            LOG_ERROR(FRONTEND_UI, "Unable to load contributors credits. Error description: {}", e.what());
         }
 
         try {
@@ -212,7 +212,7 @@ namespace eka2l1 {
                 honors_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
-            LOG_ERROR("Unable to load honors credits. Error description: {}", e.what());
+            LOG_ERROR(FRONTEND_UI, "Unable to load honors credits. Error description: {}", e.what());
         }
 
         try {
@@ -220,7 +220,7 @@ namespace eka2l1 {
                 translators_strings.push_back(node.as<std::string>());
             }
         } catch (std::exception &e) {
-            LOG_ERROR("Unable to load translators credits. Error description: {}", e.what());
+            LOG_ERROR(FRONTEND_UI, "Unable to load translators credits. Error description: {}", e.what());
         }
 
         on_system_reset(sys);

@@ -235,7 +235,7 @@ namespace eka2l1 {
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
 #define VOLUME_INFO_GETTERS(info_name)                                                      \
-    LOG_WARN("Volume size stubbed with 1GB");                                               \
+    LOG_WARN(SERVICE_EFSRV, "Volume size stubbed with 1GB");                                               \
     fill_drive_info(reinterpret_cast<epoc::fs::drive_info_v1*>(&info_name.drv_info),        \
         io_drive.has_value() ? &io_drive.value() : nullptr, cli_ver);                       \
     info_name.uid = drv;                                                                    \
@@ -289,7 +289,7 @@ namespace eka2l1 {
             bool result = true;
 
             // Check if drive is safe to remove. Yes ?
-            LOG_WARN("Checking if drive is finalised, stubbed");
+            LOG_WARN(SERVICE_EFSRV, "Checking if drive is finalised, stubbed");
             ctx->write_data_to_descriptor_argument(2, result);
             break;
         }
@@ -302,14 +302,14 @@ namespace eka2l1 {
             param.rec_read_buf_size = 8192;
             param.rec_write_buf_size = 16384;
 
-            LOG_INFO("IOParamInfo stubbed");
+            LOG_INFO(SERVICE_EFSRV, "IOParamInfo stubbed");
             ctx->write_data_to_descriptor_argument(2, param);
 
             break;
         }
 
         default: {
-            LOG_ERROR("Unimplemented extended query drive opcode: 0x{:x}", static_cast<int>(query_cmd));
+            LOG_ERROR(SERVICE_EFSRV, "Unimplemented extended query drive opcode: 0x{:x}", static_cast<int>(query_cmd));
             break;
         }
         }

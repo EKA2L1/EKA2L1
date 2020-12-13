@@ -520,7 +520,7 @@ namespace eka2l1 {
             epoc::open_font_glyph_cache_v1 *cache = serv->allocate_general_data<epoc::open_font_glyph_cache_v1>();
 
             if (!cache) {
-                LOG_WARN("Unable to supply empty cache for EKA1's open font!");
+                LOG_WARN(SERVICE_FBS, "Unable to supply empty cache for EKA1's open font!");
             } else {
                 cache->entry_ = 0;      // Purposedly make nullptr entry so that the cache is empty
                 of->glyph_cache_offset = static_cast<std::int32_t>(serv->host_ptr_to_guest_general_data(cache)
@@ -787,9 +787,9 @@ namespace eka2l1 {
             server<fbs_server>()->shared_chunk->host_base()));
 
         if (codepoint & 0x80000000) {
-            //LOG_DEBUG("Trying to rasterize glyph index {}", codepoint & ~0x80000000);
+            //LOG_DEBUG(SERVICE_FBS, "Trying to rasterize glyph index {}", codepoint & ~0x80000000);
         } else {
-            //LOG_DEBUG("Trying to rasterize character '{}' (code {})", static_cast<char>(codepoint), codepoint);
+            //LOG_DEBUG(SERVICE_FBS, "Trying to rasterize character '{}' (code {})", static_cast<char>(codepoint), codepoint);
         }
 
         int rasterized_width = 0;
@@ -956,7 +956,7 @@ namespace eka2l1 {
                 auto folder = io->open_dir(fonts_folder_path, io_attrib_include_file);
 
                 if (folder) {
-                    LOG_TRACE("Found font folder: {}", common::ucs2_to_utf8(fonts_folder_path));
+                    LOG_TRACE(SERVICE_FBS, "Found font folder: {}", common::ucs2_to_utf8(fonts_folder_path));
                     load_fonts_from_directory(io, folder.get());
                 }
                 // TODO: Implement FS callback

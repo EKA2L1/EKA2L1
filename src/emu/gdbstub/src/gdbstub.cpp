@@ -149,7 +149,7 @@ namespace eka2l1 {
             return hex - 'A' + 0xA;
         }
 
-        LOG_ERROR("Invalid nibble: {:c} {:02x}", hex, hex);
+        LOG_ERROR(GDBSTUB, "Invalid nibble: {:c} {:02x}", hex, hex);
         return 0;
     }
 
@@ -279,7 +279,7 @@ namespace eka2l1 {
         std::size_t received_size = recv(gdbserver_socket, reinterpret_cast<char *>(&c), 1, MSG_WAITALL);
 
         if (received_size != 1) {
-            LOG_ERROR("recv failed : {}", received_size);
+            LOG_ERROR(GDBSTUB, "recv failed : {}", received_size);
             this->shutdown_gdb();
         }
 
@@ -323,7 +323,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_DEBUG("gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
+        LOG_DEBUG(GDBSTUB, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
             bp->second.len, bp->second.addr, static_cast<int>(type));
 
         if (type == breakpoint_type::Execute) {
@@ -385,7 +385,7 @@ namespace eka2l1 {
         }
 
         if (bp->second.active && (addr >= bp->second.addr && addr < bp->second.addr + len)) {
-            LOG_DEBUG(
+            LOG_DEBUG(GDBSTUB, 
                 "Found breakpoint type {} @ {:08x}, range: {:08x}"
                 " - {:08x} ({:x} bytes)",
                 static_cast<int>(type), addr, bp->second.addr, bp->second.addr + len, len);
@@ -403,7 +403,7 @@ namespace eka2l1 {
     void gdbstub::send_packet(const char packet) {
         std::size_t sent_size = send(gdbserver_socket, &packet, 1, 0);
         if (sent_size != 1) {
-            LOG_ERROR("send failed");
+            LOG_ERROR(GDBSTUB, "send failed");
         }
     }
 
@@ -421,7 +421,7 @@ namespace eka2l1 {
 
         command_length = static_cast<std::uint32_t>(strlen(reply));
         if (command_length + 4 > sizeof(command_buffer)) {
-            LOG_ERROR("command_buffer overflow in send_reply");
+            LOG_ERROR(GDBSTUB, "command_buffer overflow in send_reply");
             return;
         }
 
@@ -438,7 +438,7 @@ namespace eka2l1 {
         while (left > 0) {
             int sent_size = send(gdbserver_socket, reinterpret_cast<char *>(ptr), left, 0);
             if (sent_size < 0) {
-                LOG_ERROR("gdb: send failed");
+                LOG_ERROR(GDBSTUB, "gdb: send failed");
                 return shutdown_gdb();
             }
 
@@ -505,7 +505,7 @@ namespace eka2l1 {
 
     /// Handle query command from gdb client.
     void gdbstub::handle_query() {
-        LOG_DEBUG("gdb: query '{}'", command_buffer + 1);
+        LOG_DEBUG(GDBSTUB, "gdb: query '{}'", command_buffer + 1);
         const char *query = reinterpret_cast<const char *>(command_buffer + 1);
 
         if (strcmp(query, "TStatus") == 0) {
@@ -588,11 +588,11 @@ namespace eka2l1 {
             gdb_hex_to_mem(reinterpret_cast<std::uint8_t*>(target_string.data()),
                 reinterpret_cast<const std::uint8_t*>(hex_data.data()), hex_data.length());
 
-            LOG_INFO("Argument {} {}", i, target_string);
+            LOG_INFO(GDBSTUB, "Argument {} {}", i, target_string);
 
             if (i == 0) {
                 if (!eka2l1::has_root_dir(target_string)) {
-                    LOG_ERROR("Please specify absolute path of this DLL/EXE in emulated device!");
+                    LOG_ERROR(GDBSTUB, "Please specify absolute path of this DLL/EXE in emulated device!");
                 }
 
                 target_codeseg_path = target_string;
@@ -715,7 +715,7 @@ namespace eka2l1 {
             std::string reply = fmt::format("F{:02x};{}", read, binary_data_response);
             send_reply(reply.c_str());  
         } else {
-            LOG_ERROR("Unknown vFile command {}", cmd);
+            LOG_ERROR(GDBSTUB, "Unknown vFile command {}", cmd);
             send_reply("");
         }
     }
@@ -756,7 +756,7 @@ namespace eka2l1 {
             buffer += fmt::format("{};", extra_pair);
         }
 
-        LOG_DEBUG("Response: {}", buffer);
+        LOG_DEBUG(GDBSTUB, "Response: {}", buffer);
         send_reply(buffer.c_str());
     }
 
@@ -770,18 +770,18 @@ namespace eka2l1 {
             // ignore ack
             return;
         } else if (c == 0x03) {
-            LOG_INFO("gdb: found break command");
+            LOG_INFO(GDBSTUB, "gdb: found break command");
             halt_loop = true;
             send_signal(current_thread, SIGTRAP);
             return;
         } else if (c != GDB_STUB_START) {
-            LOG_DEBUG("gdb: read invalid byte {:02x}", c);
+            LOG_DEBUG(GDBSTUB, "gdb: read invalid byte {:02x}", c);
             return;
         }
 
         while ((c = read_byte()) != GDB_STUB_END) {
             if (command_length >= sizeof(command_buffer)) {
-                LOG_ERROR("gdb: command_buffer overflow");
+                LOG_ERROR(GDBSTUB, "gdb: command_buffer overflow");
                 send_packet(GDB_STUB_NACK);
                 return;
             }
@@ -794,7 +794,7 @@ namespace eka2l1 {
         std::uint8_t checksum_calculated = calculate_checksum(command_buffer, command_length);
 
         if (checksum_received != checksum_calculated) {
-            LOG_ERROR(
+            LOG_ERROR(GDBSTUB, 
                 "gdb: invalid checksum: calculated {:02x} and read {:02x} for ${}# (length: {})",
                 checksum_calculated, checksum_received, command_buffer, command_length);
 
@@ -823,7 +823,7 @@ namespace eka2l1 {
         t.tv_usec = 0;
 
         if (select(gdbserver_socket + 1, &fd_socket, nullptr, nullptr, &t) < 0) {
-            LOG_ERROR("select failed");
+            LOG_ERROR(GDBSTUB, "select failed");
             return false;
         }
 
@@ -956,7 +956,7 @@ namespace eka2l1 {
             addr += process_codeseg->get_data_run_addr(current_thread->owning_process());
         }
 
-        LOG_DEBUG("gdb: addr: {:08x} len: {:08x}", addr, len);
+        LOG_DEBUG(GDBSTUB, "gdb: addr: {:08x} len: {:08x}", addr, len);
 
         if (len * 2 > sizeof(reply)) {
             send_reply("E01");
@@ -1082,7 +1082,7 @@ namespace eka2l1 {
 
         p.insert({ addr, br });
 
-        LOG_DEBUG("gdb: added {} breakpoint: {:08x} bytes at {:08x}", static_cast<int>(type), br.len, br.addr);
+        LOG_DEBUG(GDBSTUB, "gdb: added {} breakpoint: {:08x} bytes at {:08x}", static_cast<int>(type), br.len, br.addr);
 
         return true;
     }
@@ -1188,7 +1188,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_DEBUG("Packet: {}", command_buffer);
+        LOG_DEBUG(GDBSTUB, "Packet: {}", command_buffer);
 
         switch (command_buffer[0]) {
         case 'q':
@@ -1202,7 +1202,7 @@ namespace eka2l1 {
             break;
         case 'k':
             shutdown_gdb();
-            LOG_INFO("killed by gdb");
+            LOG_INFO(GDBSTUB, "killed by gdb");
             return;
         case 'g':
             read_registers();
@@ -1300,7 +1300,7 @@ namespace eka2l1 {
         breakpoints_write.clear();
 
         // Start gdb server
-        LOG_INFO("Starting GDB server on port {}...", port);
+        LOG_INFO(GDBSTUB, "Starting GDB server on port {}...", port);
 
         sockaddr_in saddr_server = {};
         saddr_server.sin_family = AF_INET;
@@ -1313,7 +1313,7 @@ namespace eka2l1 {
 
         int tmpsock = static_cast<int>(socket(PF_INET, SOCK_STREAM, 0));
         if (tmpsock == -1) {
-            LOG_ERROR("Failed to create gdb socket");
+            LOG_ERROR(GDBSTUB, "Failed to create gdb socket");
         }
 
         // Set socket to SO_REUSEADDR so it can always bind on the same port
@@ -1321,21 +1321,21 @@ namespace eka2l1 {
         if (setsockopt(tmpsock, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse_enabled,
                 sizeof(reuse_enabled))
             < 0) {
-            LOG_ERROR("Failed to set gdb socket option");
+            LOG_ERROR(GDBSTUB, "Failed to set gdb socket option");
         }
 
         const sockaddr *server_addr = reinterpret_cast<const sockaddr *>(&saddr_server);
         socklen_t server_addrlen = sizeof(saddr_server);
         if (bind(tmpsock, server_addr, server_addrlen) < 0) {
-            LOG_ERROR("Failed to bind gdb socket");
+            LOG_ERROR(GDBSTUB, "Failed to bind gdb socket");
         }
 
         if (listen(tmpsock, 1) < 0) {
-            LOG_ERROR("Failed to listen to gdb socket");
+            LOG_ERROR(GDBSTUB, "Failed to listen to gdb socket");
         }
 
         // Wait for gdb to connect
-        LOG_INFO("Waiting for gdb to connect...");
+        LOG_INFO(GDBSTUB, "Waiting for gdb to connect...");
         sockaddr_in saddr_client;
         sockaddr *client_addr = reinterpret_cast<sockaddr *>(&saddr_client);
         socklen_t client_addrlen = sizeof(saddr_client);
@@ -1346,9 +1346,9 @@ namespace eka2l1 {
             halt_loop = false;
             step_loop = false;
 
-            LOG_ERROR("Failed to accept gdb client");
+            LOG_ERROR(GDBSTUB, "Failed to accept gdb client");
         } else {
-            LOG_INFO("Client connected.");
+            LOG_INFO(GDBSTUB, "Client connected.");
             saddr_client.sin_addr.s_addr = ntohl(saddr_client.sin_addr.s_addr);
         }
 
@@ -1395,7 +1395,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_INFO("Stopping GDB ...");
+        LOG_INFO(GDBSTUB, "Stopping GDB ...");
         if (gdbserver_socket != -1) {
             shutdown(gdbserver_socket, SHUT_RDWR);
             gdbserver_socket = -1;
@@ -1405,7 +1405,7 @@ namespace eka2l1 {
         WSACleanup();
 #endif
 
-        LOG_INFO("GDB stopped.");
+        LOG_INFO(GDBSTUB, "GDB stopped.");
     }
 
     bool gdbstub::is_server_enabled() {

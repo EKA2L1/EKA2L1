@@ -95,7 +95,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        LOG_TRACE("File opened {}", common::ucs2_to_utf8(path));
+        LOG_TRACE(SERVICE_POSIX, "File opened {}", common::ucs2_to_utf8(path));
 
         terrno = 0;
         return suit_fid;

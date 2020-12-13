@@ -59,7 +59,7 @@ namespace eka2l1 {
         property_ptr prop = kern->get_prop(SYSTEM_AGENT_PROPERTY_CATEGORY, uid.value());
 
         if (!prop) {
-            LOG_INFO("System Agent can't find state with UID 0x{:X}", uid.value());
+            LOG_INFO(SERVICE_SYSAGT, "System Agent can't find state with UID 0x{:X}", uid.value());
 
             ctx->complete(epoc::error_not_found);
             return;
@@ -101,7 +101,7 @@ namespace eka2l1 {
                 sources[i]);
 
             if (!prop) {
-                LOG_INFO("System Agent can't find state with UID 0x{:X}, set result to 0", sources[i]);
+                LOG_INFO(SERVICE_SYSAGT, "System Agent can't find state with UID 0x{:X}, set result to 0", sources[i]);
                 dest[i] = 0;
             } else {
                 dest[i] = static_cast<std::uint32_t>(prop->get_int());
@@ -201,7 +201,7 @@ namespace eka2l1 {
             break;
         
         default:
-            LOG_ERROR("Unimplemented opcode for System Agent server 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_SYSAGT, "Unimplemented opcode for System Agent server 0x{:X}", ctx->msg->function);
             break;
         }
     }
