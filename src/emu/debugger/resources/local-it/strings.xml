@@ -30,7 +30,7 @@
     <string name="file_menu_prefs_item_name">Impostazioni</string>
     <string name="debugger_menu_pause_item_name">Pausa</string>
     <string name="debugger_menu_stop_item_name">Interrompi</string>
-    <string name="debugger_menu_restart_item_name">Restart</string>
+    <string name="debugger_menu_restart_item_name">Riavvia</string>
     <string name="debugger_menu_disassembler_item_name">Disassemblatore</string>
     <string name="debugger_menu_objects_item_name">Oggetti</string>
     <string name="debugger_menu_services_item_name">Servizi</string>
@@ -87,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">L\'impostazione dell\'app per {} è salvata col nome: {:X}</string>
     <string name="pref_system_app_setting_save_title">Salva le impostazioni</string>
     <string name="pref_system_validate_device_btn_title">Convalida dispositivo</string>
-    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
+    <string name="pref_system_validate_device_tooltip">Controlla eventuali guasti nel dispositivo e li risolve affinché EKA2L1 possa emularlo.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Disabilitato perché il sistema emulato è avviato. Riavvia l\'emulatore per usare quest\'opzione.</string>
     <string name="pref_system_no_device_present_str">Nessun dispositivo presente</string>
     <string name="pref_system_real_time_accuracy_str">Accuratezza in tempo reale</string>
@@ -96,14 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Basso</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Medio</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Alto</string>
-    <string name="pref_system_rescan_devices_title">Rescan devices</string>
-    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
+    <string name="pref_system_rescan_devices_title">Ricarica dispositivi</string>
+    <string name="pref_system_rescan_devices_description_msg">Ricerca eventuali dispositivi non importati e corregge le informazioni degli esistenti</string>
     <string name="pref_control_title">Controllo</string>
     <string name="pref_control_key_binding_sect_title">Associa tasti</string>
     <string name="pref_control_wait_for_key_string">in attesa del tasto</string>
     <string name="pref_hal_battery_level_string">Livello della batteria</string>
     <string name="pref_hal_signal_level_string">Livello del segnale</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Riavvia l\'emulatore per rendere effettive le modifiche apportate all\'archiviazione dei dati</string>
     <string name="packages_title">Pacchetti</string>
     <string name="packages_package_menu_name">Pacchetto</string>
     <string name="packages_install_string">Installa</string>
@@ -144,5 +144,5 @@
     <string name="credits_main_developer_text">Sviluppatori principali:</string>
     <string name="credits_contributors_text">Collaboratori:</string>
     <string name="credits_honors_text">Onori:</string>
-    <string name="credits_translators_text">Translators:</string>
+    <string name="credits_translators_text">Traduttori:</string>
 </resources>
