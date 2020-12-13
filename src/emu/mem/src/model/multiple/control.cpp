@@ -125,7 +125,7 @@ namespace eka2l1::mem {
             return nullptr;
         }
 
-        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= ram_code_addr_eka1)) ||
+        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= dll_static_data_eka1_end)) ||
             (!mem_map_old_ && (addr >= shared_data))) {
             return global_dir_.get_pointer(addr);
         }
@@ -138,7 +138,7 @@ namespace eka2l1::mem {
             return nullptr;
         }
 
-        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= ram_code_addr_eka1)) ||
+        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= dll_static_data_eka1_end)) ||
             (!mem_map_old_ && (addr >= shared_data))) {
             return global_dir_.get_page_info(addr);
         }
