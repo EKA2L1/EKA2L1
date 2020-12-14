@@ -28,8 +28,8 @@ int main(int argc, char **argv) {
     eka2l1::log::setup_log(nullptr);
 
     if (argc <= 1) {
-        LOG_ERROR("No file provided!");
-        LOG_INFO("Usage: skninfo [filename].");
+        LOG_ERROR(SYSTEM, "No file provided!");
+        LOG_INFO(SYSTEM, "Usage: skninfo [filename].");
 
         return -1;
     }
@@ -40,15 +40,15 @@ int main(int argc, char **argv) {
     eka2l1::epoc::skn_file sknf(reinterpret_cast<eka2l1::common::ro_stream *>(&f_stream));
 
     // Print out skin name
-    LOG_INFO("Skin name: {}, language: {}", eka2l1::common::ucs2_to_utf8(sknf.skin_name_.name),
+    LOG_INFO(SYSTEM, "Skin name: {}, language: {}", eka2l1::common::ucs2_to_utf8(sknf.skin_name_.name),
         num_to_lang(sknf.skin_name_.lang));
 
-    LOG_INFO("Compiler version: {}.{}", sknf.info_.version >> 16, sknf.info_.version & 0xFFFF);
-    LOG_INFO("Platform: {}.{}", sknf.info_.plat >> 8, sknf.info_.plat & 0xFF);
-    LOG_INFO("Author: {}", sknf.info_.author.empty() ? "Unknown" : eka2l1::common::ucs2_to_utf8(sknf.info_.author));
+    LOG_INFO(SYSTEM, "Compiler version: {}.{}", sknf.info_.version >> 16, sknf.info_.version & 0xFFFF);
+    LOG_INFO(SYSTEM, "Platform: {}.{}", sknf.info_.plat >> 8, sknf.info_.plat & 0xFF);
+    LOG_INFO(SYSTEM, "Author: {}", sknf.info_.author.empty() ? "Unknown" : eka2l1::common::ucs2_to_utf8(sknf.info_.author));
 
     if (!sknf.info_.copyright.empty()) {
-        LOG_INFO("{}", eka2l1::common::ucs2_to_utf8(sknf.info_.copyright));
+        LOG_INFO(SYSTEM, "{}", eka2l1::common::ucs2_to_utf8(sknf.info_.copyright));
     }
 
     std::string listed_name = "Associated filenames: \n";
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
             filename_.first);
     }
 
-    LOG_INFO("{}", listed_name);
+    LOG_INFO(SYSTEM, "{}", listed_name);
 
     return 0;
 }
