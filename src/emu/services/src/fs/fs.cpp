@@ -172,6 +172,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(create_private_path, epoc::fs_msg_create_private_path, "Fs::CreatePrivatePath");
             HANDLE_CLIENT_IPC(notify_change_ex, epoc::fs_msg_notify_change_ex, "Fs::NotifyChangeEx");
             HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
+            HANDLE_CLIENT_IPC(notify_change_cancel, epoc::fs_msg_notify_change_cancel, "Fs::NotifyChangeCancel");            // Same implementation on emulator.
             HANDLE_CLIENT_IPC(notify_change_cancel_ex, epoc::fs_msg_notify_change_cancel_ex, "Fs::NotifyChangeCancelEx");
             HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
             HANDLE_CLIENT_IPC(rmdir, epoc::fs_msg_rmdir, "Fs::RmDir");
@@ -484,6 +485,15 @@ namespace eka2l1 {
         LOG_TRACE(SERVICE_EFSRV, "Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
     }
 
+    void fs_server_client::notify_change_cancel(service::ipc_context *ctx) {
+        for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
+            it->info.complete(epoc::error_cancel);
+        }
+
+        notify_entries.clear();
+        ctx->complete(epoc::error_none);
+    }
+    
     void fs_server_client::notify_change_cancel_ex(service::ipc_context *ctx) { 
         address request_status_addr = ctx->get_argument_value<address>(0).value();
         for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
