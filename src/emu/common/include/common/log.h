@@ -39,6 +39,17 @@ namespace eka2l1 {
 
     const char *log_class_to_string(const log_class cls);
 
+    class log_filterings {
+    private:
+        spdlog::level::level_enum levels_[LOG_CLASS_COUNT];
+
+    public:
+        explicit log_filterings();
+        
+        bool set_minimum_level(const log_class cls, const spdlog::level::level_enum level);
+        bool is_passed(const log_class cls, const spdlog::level::level_enum level);
+    };
+
     class base_logger {
     public:
         virtual void log(const char *fmt, ...) = 0;
@@ -48,11 +59,13 @@ namespace eka2l1 {
     /*! \brief Contains function to setup logging. */
     namespace log {
         extern std::shared_ptr<spdlog::logger> spd_logger;
+        extern std::unique_ptr<log_filterings> filterings;
 
-        /*! \brief Set up the logging.
-		    \param gui_logger The extra logger you want to provide to the emulator.
+        /**
+         * \brief Set up the logging.
+         * \param extra_logger The extra logger you want to provide to the emulator.
 		*/
-        void setup_log(std::shared_ptr<base_logger> gui_logger);
+        void setup_log(std::shared_ptr<base_logger> extra_logger);
     }
 }
 
@@ -71,36 +84,36 @@ namespace eka2l1 {
 #define LOG_CRITICAL_IF(class, flag, fmt, ...)
 #else
 #ifdef ENABLE_SCRIPTING
-#define COND_CHECK if (eka2l1::log::spd_logger)
-#define COND_CHECK_AND &&eka2l1::log::spd_logger
+#define COND_CHECK(class, serv) if (eka2l1::log::spd_logger && eka2l1::log::filterings->is_passed(class, spdlog::level::serv)) 
+#define COND_CHECK_AND(class, serv) &&eka2l1::log::spd_logger && eka2l1::log::filterings->is_passed(class, spdlog::level::serv)
 #else
-#define COND_CHECK
-#define COND_CHECK_AND
+#define COND_CHECK(class, serv) if (eka2l1::log::filterings->is_passed(class, spdlog::level::serv))
+#define COND_CHECK_AND(class, serv) &&eka2l1::log::filterings->is_passed(class, spdlog::level::serv)
 #endif
 
-#define LOG_TRACE(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->trace("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
-#define LOG_DEBUG(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->debug("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
-#define LOG_INFO(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->info("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
-#define LOG_WARN(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->warn("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
-#define LOG_ERROR(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->error("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
-#define LOG_CRITICAL(class, fmt, ...) COND_CHECK eka2l1::log::spd_logger->critical("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
+#define LOG_TRACE(class, fmt, ...) COND_CHECK(class, trace) eka2l1::log::spd_logger->trace("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
+#define LOG_DEBUG(class, fmt, ...) COND_CHECK(class, debug) eka2l1::log::spd_logger->debug("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
+#define LOG_INFO(class, fmt, ...) COND_CHECK(class, info) eka2l1::log::spd_logger->info("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
+#define LOG_WARN(class, fmt, ...) COND_CHECK(class, warn) eka2l1::log::spd_logger->warn("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
+#define LOG_ERROR(class, fmt, ...) COND_CHECK(class, err) eka2l1::log::spd_logger->error("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
+#define LOG_CRITICAL(class, fmt, ...) COND_CHECK(class, critical) eka2l1::log::spd_logger->critical("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
 
 #define LOG_TRACE_IF(class, flag, fmt, ...) \
-    if (flag COND_CHECK_AND)         \
+    if (flag COND_CHECK_AND(class, trace))         \
     eka2l1::log::spd_logger->trace("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
 #define LOG_DEBUG_IF(class, flag, fmt, ...) \
-    if (flag COND_CHECK_AND)         \
+    if (flag COND_CHECK_AND(class, debug))         \
     eka2l1::log::spd_logger->debug("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
 #define LOG_INFO_IF(class, flag, fmt, ...) \
-    if (flag COND_CHECK_AND)        \
+    if (flag COND_CHECK_AND(class, info))        \
     eka2l1::log::spd_logger->info("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
 #define LOG_WARN_IF(class, flag, fmt, ...) \
-    if (flag COND_CHECK_AND)        \
+    if (flag COND_CHECK_AND(class, warn))        \
     eka2l1::log::spd_logger->warn("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
 #define LOG_ERROR_IF(class, flag, fmt, ...) \
-    if (flag COND_CHECK_AND)         \
+    if (flag COND_CHECK_AND(class, err))         \
     eka2l1::log::spd_logger->error("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
 #define LOG_CRITICAL_IF(class, flag, fmt, ...) \
-    if (flag COND_CHECK_AND)            \
+    if (flag COND_CHECK_AND(class, critical))            \
     eka2l1::log::spd_logger->critical("{:s}:{} [{:s}]: " fmt, __FILE__, __LINE__, log_class_to_string(class), ##__VA_ARGS__)
 #endif
