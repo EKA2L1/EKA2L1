@@ -39,10 +39,18 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void vibration_resource::vibrate_cleanup(service::ipc_context &ctx) {
+        ctx.complete(epoc::error_none);
+    }
+
     void vibration_resource::execute_command(service::ipc_context &ctx) {
         switch (ctx.msg->function) {
         case hwrm_vibrate_start_with_default_intensity:
             vibrate_with_default_intensity(ctx);
+            break;
+
+        case hwrm_vibrate_cleanup:
+            vibrate_cleanup(ctx);
             break;
 
         default:

@@ -40,6 +40,19 @@
 namespace eka2l1 {
     bool already_setup = false;
 
+    const char *log_class_to_string(const log_class cls) {
+        if (cls >= LOG_CLASS_COUNT) {
+            return nullptr;
+        }
+
+        #define LOGCLASS(name, short_nice_name, nice_name) short_nice_name,
+        static const char *LOG_CLASS_NAME_ARRAYS[LOG_CLASS_COUNT] = {
+            #include <common/logclass.def>
+        };
+
+        return LOG_CLASS_NAME_ARRAYS[static_cast<int>(cls)];
+    }
+
     namespace log {
         std::shared_ptr<spdlog::logger> spd_logger;
 
@@ -105,7 +118,7 @@ namespace eka2l1 {
                 std::cerr << "spdlog error: " << msg << std::endl;
             });
 
-            spdlog::set_pattern("%^%L { %v }%$");
+            spdlog::set_pattern("%L %^%v%$");
             spdlog::set_level(spdlog::level::trace);
 
             spd_logger->flush_on(spdlog::level::debug);

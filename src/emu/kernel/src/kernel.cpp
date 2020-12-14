@@ -150,6 +150,8 @@ namespace eka2l1 {
         base_time_ = common::get_current_time_in_microseconds_since_1ad();
         locale_ = std::make_unique<std::locale>("");
 
+        dll_global_data_chunk_ = nullptr;
+
         // Clear CPU caches. No reason to keep it.
         cpu_->clear_instruction_cache();
     }

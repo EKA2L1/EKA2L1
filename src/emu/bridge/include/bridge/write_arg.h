@@ -40,7 +40,7 @@ namespace eka2l1 {
 
         template <typename T>
         void write_to_fpr(arm::core *cpu, const arg_layout &arg) {
-            LOG_WARN("Writing to FPR unimplemented");
+            LOG_WARN(BRIDGE, "Writing to FPR unimplemented");
         }
 
         template <typename T>

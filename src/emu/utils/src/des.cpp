@@ -53,7 +53,7 @@ namespace eka2l1::epoc {
             const std::uint32_t max_len = get_max_length(pr);
 
             if (new_len > max_len) {
-                LOG_ERROR(EUTILS, "Length being set greater than maximum (max {} vs set {})",
+                LOG_ERROR(UTILS, "Length being set greater than maximum (max {} vs set {})",
                     max_len, new_len);
             }
         }
