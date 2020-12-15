@@ -81,7 +81,7 @@ std::vector<function> read_idt(const fs::path &path) {
         auto where = line.find("Name=");
 
         if (where == std::string::npos) {
-            LOG_ERROR(SYSTEM, "Unable to interpret IDT line: {}", lc);
+            LOG_ERROR(eka2l1::SYSTEM, "Unable to interpret IDT line: {}", lc);
             continue;
         }
 
@@ -140,7 +140,7 @@ std::vector<function> read_idt(const fs::path &path) {
 
         if (!result) {
             fts[num - 1] = function(cooked, common::hash(raw_sauce));
-            LOG_INFO(SYSTEM, "{}", cooked);
+            LOG_INFO(eka2l1::SYSTEM, "{}", cooked);
         } else {
             for (uint32_t i = 0; i < raw_sauce.length(); i++) {
                 if (raw_sauce[i] == '"') {
@@ -149,7 +149,7 @@ std::vector<function> read_idt(const fs::path &path) {
             }
 
             fts[num - 1] = function(raw_sauce, common::hash(raw_sauce));
-            LOG_INFO(SYSTEM, "{}", raw_sauce);
+            LOG_INFO(eka2l1::SYSTEM, "{}", raw_sauce);
             free(cooked_sauce);
         }
 
@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
     emitter << YAML::Value << YAML::BeginMap;
 
     for (auto lib : libs) {
-        LOG_INFO(SYSTEM, "Lib: {}", lib.string());
+        LOG_INFO(eka2l1::SYSTEM, "Lib: {}", lib.string());
 
         auto funcs = read_idt(lib);
 
