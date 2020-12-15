@@ -49,6 +49,6 @@ namespace eka2l1::scripting {
             arg_counter++;
         }
 
-        LOG_INFO("{}", format_res);
+        LOG_INFO(SCRIPTING, "{}", format_res);
     }
 }

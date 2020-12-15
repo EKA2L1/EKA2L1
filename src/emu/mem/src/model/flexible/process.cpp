@@ -39,7 +39,7 @@ namespace eka2l1::mem::flexible {
         flexible_mem_model_chunk *new_chunk_flexible = fl_control->chunk_mngr_->new_chunk(control_, addr_space_->id());
 
         if (!new_chunk_flexible) {
-            LOG_ERROR("Unable to instantiate new chunk struct!");
+            LOG_ERROR(MEMORY, "Unable to instantiate new chunk struct!");
             return -1;
         }
 
@@ -56,7 +56,7 @@ namespace eka2l1::mem::flexible {
         // Attach ourself to the chunk
         if (!attach_chunk(new_chunk_flexible)) {
             // Failed, again free the chunk
-            LOG_ERROR("Failed to attach to newly created chunk!");
+            LOG_ERROR(MEMORY, "Failed to attach to newly created chunk!");
             fl_control->chunk_mngr_->destroy(new_chunk_flexible);
 
             return -1;
@@ -101,7 +101,7 @@ namespace eka2l1::mem::flexible {
 
         // Try to instantiate this mapping
         if (!attach_info.map_->instantiate(chunk->max() >> control_->page_size_bits_, fl_chunk->flags_, fl_chunk->fixed_addr_)) {
-            LOG_ERROR("Unable to make new mapping to the address space {}", addr_space_->id());
+            LOG_ERROR(MEMORY, "Unable to make new mapping to the address space {}", addr_space_->id());
             return false;
         }
 

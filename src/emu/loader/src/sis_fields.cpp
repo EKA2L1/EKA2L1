@@ -163,10 +163,10 @@ namespace eka2l1 {
             stream->read(reinterpret_cast<char *>(&info.install_type), 1);
             stream->read(reinterpret_cast<char *>(&info.install_flags), 1);
 
-            LOG_INFO("UID: 0x{:x}", info.uid.uid);
-            LOG_INFO("Creation date: {}/{}/{}", info.creation_date.date.year, info.creation_date.date.month,
+            LOG_INFO(LOADER, "UID: 0x{:x}", info.uid.uid);
+            LOG_INFO(LOADER, "Creation date: {}/{}/{}", info.creation_date.date.year, info.creation_date.date.month,
                 info.creation_date.date.day);
-            LOG_INFO("Creation time: {}:{}:{}", info.creation_date.time.hours, info.creation_date.time.minutes,
+            LOG_INFO(LOADER, "Creation time: {}:{}:{}", info.creation_date.time.hours, info.creation_date.time.minutes,
                 info.creation_date.time.secs);
 
             valid_offset();
@@ -178,7 +178,7 @@ namespace eka2l1 {
             sis_header header;
             stream->read(reinterpret_cast<char *>(&header), sizeof(sis_header));
 
-            LOG_INFO("Header UID: 0x{:x}", header.uid3);
+            LOG_INFO(LOADER, "Header UID: 0x{:x}", header.uid3);
 
             return header;
         }
@@ -292,7 +292,7 @@ namespace eka2l1 {
                     inflate(&stream, Z_NO_FLUSH);
                     inflateEnd(&stream);
 
-                    LOG_INFO("Inflating chunk, size: {}", us);
+                    LOG_INFO(LOADER, "Inflating chunk, size: {}", us);
                 }
             }
 
@@ -344,12 +344,12 @@ namespace eka2l1 {
 
             contents.controller = parse_controller();
 
-            LOG_INFO("Current stream position: {}, compressed data size: {}", stream->tellg(), compress_data.uncompressed_size);
+            LOG_INFO(LOADER, "Current stream position: {}, compressed data size: {}", stream->tellg(), compress_data.uncompressed_size);
             assert((uint64_t)stream->tellg() == compress_data.uncompressed_size);
 
             switch_stream();
 
-            LOG_INFO("Pos after reading controller: {}", stream->tellg());
+            LOG_INFO(LOADER, "Pos after reading controller: {}", stream->tellg());
 
             contents.data = parse_data();
             valid_offset();
@@ -365,7 +365,7 @@ namespace eka2l1 {
             controller.info = parse_info();
             controller.options = parse_supported_options();
             controller.langs = parse_supported_langs();
-            LOG_INFO("Prequisites read position: {}", stream->tellg());
+            LOG_INFO(LOADER, "Prequisites read position: {}", stream->tellg());
             controller.prerequisites = parse_prerequisites();
             controller.properties = parse_properties();
 
@@ -444,10 +444,10 @@ namespace eka2l1 {
             parse_field_child(&pre);
             pre.target_devices = parse_array();
 
-            LOG_INFO("Position after reading targets pres: {}", stream->tellg());
+            LOG_INFO(LOADER, "Position after reading targets pres: {}", stream->tellg());
             pre.dependencies = parse_array();
 
-            LOG_INFO("Position after reading all pres: {}", stream->tellg());
+            LOG_INFO(LOADER, "Position after reading all pres: {}", stream->tellg());
 
             valid_offset();
 
@@ -483,7 +483,7 @@ namespace eka2l1 {
         sis_properties sis_parser::parse_properties() {
             sis_properties properties;
 
-            LOG_INFO("Properties read position: {}", stream->tellg());
+            LOG_INFO(LOADER, "Properties read position: {}", stream->tellg());
             parse_field_child(&properties);
             properties.properties = parse_array();
 
@@ -569,7 +569,7 @@ namespace eka2l1 {
                 filename_ascii[i] = (char)(des.target.unicode_string[i]);
             }
 
-            LOG_INFO("File detected: {}", filename_ascii);
+            LOG_INFO(LOADER, "File detected: {}", filename_ascii);
 
             stream->read(reinterpret_cast<char *>(&des.op), 4);
             stream->read(reinterpret_cast<char *>(&des.op_op), 4);

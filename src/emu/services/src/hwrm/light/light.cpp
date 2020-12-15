@@ -62,7 +62,7 @@ namespace eka2l1::epoc {
 
     void light_resource::get_supported_targets(service::ipc_context &ctx) {
         // Which do we supported? Primary display light? primary keyboard light? etc...
-        LOG_TRACE("Light resource's get supported targets stubbed with -1 (all permitted)");
+        LOG_TRACE(SERVICE_HWRM, "Light resource's get supported targets stubbed with -1 (all permitted)");
         std::uint32_t support_mask = static_cast<std::uint32_t>(-1);
 
         ctx.write_data_to_descriptor_argument(0, support_mask);
@@ -91,7 +91,7 @@ namespace eka2l1::epoc {
         }
 
         default:
-            LOG_ERROR("Unimplemented operation for light resource: {} ({})", light_op_to_string(ctx.msg->function),
+            LOG_ERROR(SERVICE_HWRM, "Unimplemented operation for light resource: {} ({})", light_op_to_string(ctx.msg->function),
                 ctx.msg->function);
             break;
         }

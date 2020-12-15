@@ -41,7 +41,7 @@ namespace eka2l1::common {
         HANDLE stop_event = CreateEvent(nullptr, true, false, nullptr);
 
         if (!stop_event || (stop_event == INVALID_HANDLE_VALUE)) {
-            LOG_ERROR("Can't create the event to stop directory watcher thread, abort");
+            LOG_ERROR(COMMON, "Can't create the event to stop directory watcher thread, abort");
             return;
         }
 
@@ -51,7 +51,7 @@ namespace eka2l1::common {
         HANDLE new_watch_event = CreateEvent(nullptr, true, false, nullptr);
 
         if (!new_watch_event || (new_watch_event == INVALID_HANDLE_VALUE)) {
-            LOG_ERROR("Can't create the event to notify new watch for watcher thread, abort");
+            LOG_ERROR(COMMON, "Can't create the event to notify new watch for watcher thread, abort");
             CloseHandle(stop_event);
 
             return;
@@ -88,11 +88,11 @@ namespace eka2l1::common {
                     continue;
 
                 case WAIT_TIMEOUT:
-                    LOG_WARN("Waiting for a directory changes timed out.");
+                    LOG_WARN(COMMON, "Waiting for a directory changes timed out.");
                     break;
 
                 case WAIT_FAILED:
-                    LOG_ERROR("Wait directory change failed with error code: {}", GetLastError());
+                    LOG_ERROR(COMMON, "Wait directory change failed with error code: {}", GetLastError());
                     return;
 
                 default: {
@@ -106,7 +106,7 @@ namespace eka2l1::common {
 
                     if (!ReadDirectoryChangesW(dirs_[which - WAIT_OBJECT_0 - 2], &file_infos_[0], static_cast<DWORD>(file_infos_.size()),
                             TRUE, callback.filters_, nullptr, &pending_read_, nullptr)) {
-                        LOG_WARN("Can't read directory changes. Report empty changes.");
+                        LOG_WARN(COMMON, "Can't read directory changes. Report empty changes.");
                         break;
                     }
 
@@ -190,7 +190,7 @@ namespace eka2l1::common {
 
                     // Register again
                     if (!FindNextChangeNotification(waits_[which - WAIT_OBJECT_0])) {
-                        LOG_WARN("Can't find next change notifications, closing it down!");
+                        LOG_WARN(COMMON, "Can't find next change notifications, closing it down!");
                         unwatch(waits_[which - WAIT_OBJECT_0], true);
                     }
 
@@ -253,7 +253,7 @@ namespace eka2l1::common {
         HANDLE h = FindFirstChangeNotificationA(folder.c_str(), TRUE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE);
 
         if (!h || h == INVALID_HANDLE_VALUE) {
-            LOG_ERROR("Can't create directory watch of folder {}", folder);
+            LOG_ERROR(COMMON, "Can't create directory watch of folder {}", folder);
             return 0;
         }
 
@@ -262,7 +262,7 @@ namespace eka2l1::common {
             nullptr);
 
         if (dir_handle == INVALID_HANDLE_VALUE) {
-            LOG_ERROR("Can't open directory handle");
+            LOG_ERROR(COMMON, "Can't open directory handle");
             FindCloseChangeNotification(h);
             return 0;
         }
@@ -328,7 +328,7 @@ namespace eka2l1::common {
         // Remove the callback and the waits
         proceed_on_ = [&]() {
             if (!FindCloseChangeNotification(h)) {
-                LOG_ERROR("Can't close watch handle");
+                LOG_ERROR(COMMON, "Can't close watch handle");
                 result = false;
 
                 if (removed_nof)
@@ -340,7 +340,7 @@ namespace eka2l1::common {
             auto wait_ite = std::find(waits_.begin(), waits_.end(), h);
 
             if (wait_ite == waits_.end()) {
-                LOG_ERROR("This should not happens, a wait object not in wait list but in container list");
+                LOG_ERROR(COMMON, "This should not happens, a wait object not in wait list but in container list");
 
                 result = false;
 

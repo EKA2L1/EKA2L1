@@ -47,7 +47,7 @@ namespace eka2l1::loader {
         }
 
         if (!dvcmngr->add_new_device(platform_name, model, manufacturer, ver, 0)) {
-            LOG_ERROR("This device ({}) failed to be installed!", platform_name);
+            LOG_ERROR(SYSTEM, "This device ({}) failed to be installed!", platform_name);
             return false;
         }
 

@@ -51,7 +51,7 @@ namespace eka2l1::loader {
             = fopen(real_path.c_str(), "wb");
 
         if (!wf) {
-            LOG_INFO("Skipping with real path: {}, dir: {}", real_path, dir);
+            LOG_INFO(SYSTEM, "Skipping with real path: {}, dir: {}", real_path, dir);
             return false;
         }
 
@@ -155,7 +155,7 @@ namespace eka2l1::loader {
                 break;
             }
 
-            LOG_INFO("Extracting: {}", common::ucs2_to_utf8(entry.path));
+            LOG_INFO(SYSTEM, "Extracting: {}", common::ucs2_to_utf8(entry.path));
 
             if (!extract_file(devices_rom_path, f, entry)) {
                 break;
@@ -174,7 +174,7 @@ namespace eka2l1::loader {
         std::string model;
 
         if (!determine_rpkg_product_info(folder_extracted, manufacturer, firmcode, model)) {
-            LOG_ERROR("Revert all changes");
+            LOG_ERROR(SYSTEM, "Revert all changes");
             eka2l1::common::remove(add_path(devices_rom_path, "\\temp\\"));
 
             return false;
@@ -187,7 +187,7 @@ namespace eka2l1::loader {
         eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode_low + "\\"));
 
         if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid)) {
-            LOG_ERROR("This device ({}) failed to be install, revert all changes", firmcode);
+            LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
             eka2l1::common::remove(add_path(devices_rom_path, firmcode_low + "\\"));
 
             return false;

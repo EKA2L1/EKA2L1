@@ -78,14 +78,14 @@ namespace eka2l1 {
         bool semaphore::suspend_waiting_thread(thread *thr) {
             // Putting this thread into another suspend state
             if (thr->current_state() != thread_state::wait_fast_sema) {
-                LOG_ERROR("Calling semaphore to suspend a thread that's not waiting");
+                LOG_ERROR(KERNEL, "Calling semaphore to suspend a thread that's not waiting");
                 return false;
             }
 
             const auto thr_ite = std::find(waits.begin(), waits.end(), thr);
 
             if (thr_ite == waits.end()) {
-                LOG_ERROR("Thread given is not found in waits");
+                LOG_ERROR(KERNEL, "Thread given is not found in waits");
                 return false;
             }
 
@@ -100,12 +100,12 @@ namespace eka2l1 {
         bool semaphore::unsuspend_waiting_thread(thread *thr) {
             // Putting this thread into another suspend state
             if (thr->current_state() != thread_state::wait_fast_sema_suspend) {
-                LOG_ERROR("Calling semaphore to unsuspended a thread that's not suspended");
+                LOG_ERROR(KERNEL, "Calling semaphore to unsuspended a thread that's not suspended");
                 return false;
             }
 
             if (thr->suspend_link.alone()) {
-                LOG_ERROR("Thread given is not found in suspended");
+                LOG_ERROR(KERNEL, "Thread given is not found in suspended");
                 return false;
             }
 

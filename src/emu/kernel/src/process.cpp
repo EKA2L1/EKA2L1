@@ -102,7 +102,7 @@ namespace eka2l1::kernel {
                 }
             }
 
-            LOG_INFO("Process {} capabilities: {}", process_name, all_caps.empty() ? "None" : all_caps);
+            LOG_INFO(KERNEL, "Process {} capabilities: {}", process_name, all_caps.empty() ? "None" : all_caps);
         }
 
         exe_path = codeseg->get_full_path();
@@ -306,7 +306,7 @@ namespace eka2l1::kernel {
 
         for (auto &ren : rendezvous_requests) {
             ren.complete(rendezvous_reason);
-            LOG_TRACE("Rendezvous to: {}", ren.requester->name());
+            LOG_TRACE(KERNEL, "Rendezvous to: {}", ren.requester->name());
         }
 
         rendezvous_requests.clear();

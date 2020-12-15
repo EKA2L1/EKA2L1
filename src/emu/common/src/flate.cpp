@@ -42,7 +42,7 @@ namespace eka2l1 {
                     return true;
                 }
 
-                LOG_ERROR("Inflate failed description: {}", mz_error(res));
+                LOG_ERROR(COMMON, "Inflate failed description: {}", mz_error(res));
 
                 if (out_size)
                     *out_size = CHUNK_MAX_INFLATED_SIZE - stream->avail_out;
@@ -134,7 +134,7 @@ namespace eka2l1 {
             // to the length array
             void huffman_len(uint32_t *lengths, const node *nodes, int cnode, int len) {
                 if (++len > HUFFMAN_MAX_CODELENGTH) {
-                    LOG_ERROR("Buffer overflowed for huffman");
+                    LOG_ERROR(COMMON, "Buffer overflowed for huffman");
                     return;
                 }
 
@@ -177,7 +177,7 @@ namespace eka2l1 {
 
             bool huffman(const int *freq, uint32_t num_codes, int *huffman) {
                 if (num_codes > HUFFMAN_MAX_CODELENGTH) {
-                    LOG_ERROR("Too much codes for huffman decoding!");
+                    LOG_ERROR(COMMON, "Too much codes for huffman decoding!");
                     return false;
                 }
 
@@ -214,7 +214,7 @@ namespace eka2l1 {
                 }
 
                 if (!valid(reinterpret_cast<uint32_t *>(huffman), num_codes)) {
-                    LOG_ERROR("Huffman invalid code!");
+                    LOG_ERROR(COMMON, "Huffman invalid code!");
                     return false;
                 };
 
@@ -355,7 +355,7 @@ namespace eka2l1 {
 
             void decoding(const int *huffman, uint32_t num_codes, uint32_t *decode_tree, int sym_base) {
                 if (!valid(reinterpret_cast<const uint32_t *>(huffman), num_codes)) {
-                    LOG_ERROR("Decoding failed: Huffman codes invalid!");
+                    LOG_ERROR(COMMON, "Decoding failed: Huffman codes invalid!");
                     return;
                 }
 
@@ -424,7 +424,7 @@ namespace eka2l1 {
                     } else {
                         while (rl > 0) {
                             if (p > end) {
-                                LOG_ERROR("Externalize error: Invalid inflate data!");
+                                LOG_ERROR(COMMON, "Externalize error: Invalid inflate data!");
                                 return;
                             }
 
@@ -439,7 +439,7 @@ namespace eka2l1 {
                         memmove((void *const) & list[1], (const void *const) & list[0], (size_t)c);
 
                         if (p > end) {
-                            LOG_ERROR("Externalize error: Invalid inflate data!");
+                            LOG_ERROR(COMMON, "Externalize error: Invalid inflate data!");
                             return;
                         }
 
@@ -450,7 +450,7 @@ namespace eka2l1 {
                 // Run length still left
                 while (rl > 0) {
                     if (p > end) {
-                        LOG_ERROR("Externalize error: Invalid inflate data!");
+                        LOG_ERROR(COMMON, "Externalize error: Invalid inflate data!");
                         return;
                     }
 
@@ -480,7 +480,7 @@ namespace eka2l1 {
                     if (ptr == end) {
                         // Are we here already
                         start = ptr;
-                        LOG_ERROR("Buffer overflow when write output bits!");
+                        LOG_ERROR(COMMON, "Buffer overflow when write output bits!");
                         ptr = start;
                     }
 
@@ -611,7 +611,7 @@ namespace eka2l1 {
                         count += remain;
 
                 } else {
-                    LOG_ERROR("Bit input read underflow!");
+                    LOG_ERROR(COMMON, "Bit input read underflow!");
                     tbits = bits;
                     count -= size;
 
@@ -723,10 +723,10 @@ namespace eka2l1 {
 
             if (huffman::valid(encode.lit_len, ENCODING_LITERAL_LEN)) {
                 if (!huffman::valid(encode.dist, ENCODING_DISTS)) {
-                    LOG_ERROR("Inflate stream invalid!");
+                    LOG_ERROR(COMMON, "Inflate stream invalid!");
                 }
             } else {
-                LOG_ERROR("Inflate stream invalid!");
+                LOG_ERROR(COMMON, "Inflate stream invalid!");
                 return;
             }
 

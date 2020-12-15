@@ -101,7 +101,7 @@ namespace eka2l1::epoc {
             }
 
             default: {
-                LOG_ERROR("Unhandled purge of event type: {}", static_cast<int>(q_[i].evt.type));
+                LOG_ERROR(SERVICE_WINDOW, "Unhandled purge of event type: {}", static_cast<int>(q_[i].evt.type));
                 assert(false);
 
                 break;

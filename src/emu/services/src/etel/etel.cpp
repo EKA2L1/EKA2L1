@@ -195,7 +195,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Opening {} from session", common::ucs2_to_utf8(name_of_object.value()));
+        LOG_TRACE(SERVICE_ETEL, "Opening {} from session", common::ucs2_to_utf8(name_of_object.value()));
 
         epoc::etel_module_entry *entry = nullptr;
         if (!mngr_.get_entry_by_name(common::ucs2_to_utf8(name_of_object.value()), &entry)) {
@@ -214,7 +214,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unsupported entry type of etel module {}", static_cast<int>(entry->entity_->type()));
+            LOG_ERROR(SERVICE_ETEL, "Unsupported entry type of etel module {}", static_cast<int>(entry->entity_->type()));
             ctx->complete(epoc::error_general);
             return;
         }
@@ -231,13 +231,13 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Opening {} from session", common::ucs2_to_utf8(name_of_object.value()));
+        LOG_TRACE(SERVICE_ETEL, "Opening {} from session", common::ucs2_to_utf8(name_of_object.value()));
 
         // Try to get the subsession
         std::optional<std::uint32_t> subsession_handle = ctx->get_argument_value<std::uint32_t>(2);
 
         if (!subsession_handle || subsession_handle.value() > subsessions_.size()) {
-            LOG_ERROR("Subsession handle not available");
+            LOG_ERROR(SERVICE_ETEL, "Subsession handle not available");
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -262,10 +262,10 @@ namespace eka2l1 {
                 // Create the subsession
                 new_sub = std::make_unique<etel_line_subsession>(this, *line_ite, server<etel_server>()->is_oldarch());
             } else {
-                LOG_ERROR("Unable to open subsession with object name {}", common::ucs2_to_utf8(name_of_object.value()));
+                LOG_ERROR(SERVICE_ETEL, "Unable to open subsession with object name {}", common::ucs2_to_utf8(name_of_object.value()));
             }
         } else {
-            LOG_ERROR("Unhandled subsession type to open from {}", static_cast<int>(sub->type()));
+            LOG_ERROR(SERVICE_ETEL, "Unhandled subsession type to open from {}", static_cast<int>(sub->type()));
         }
 
         if (!new_sub) {
@@ -288,7 +288,7 @@ namespace eka2l1 {
     }
 
     void etel_session::query_tsy_functionality(service::ipc_context *ctx) {
-        LOG_TRACE("Query TSY functionality stubbed");
+        LOG_TRACE(SERVICE_ETEL, "Query TSY functionality stubbed");
         ctx->complete(epoc::error_none);
     }
 
@@ -344,7 +344,7 @@ namespace eka2l1 {
                     }
                 }
 
-                LOG_ERROR("Unimplemented ETel server opcode {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_ETEL, "Unimplemented ETel server opcode {}", ctx->msg->function);
                 break;
             }
         } else {
@@ -399,7 +399,7 @@ namespace eka2l1 {
                     }
                 }
 
-                LOG_ERROR("Unimplemented ETel server opcode {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_ETEL, "Unimplemented ETel server opcode {}", ctx->msg->function);
                 break;
             }
         }

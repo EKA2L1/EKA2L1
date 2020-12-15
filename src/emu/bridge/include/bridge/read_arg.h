@@ -60,7 +60,7 @@ namespace eka2l1 {
 		*/
         template <typename T>
         T read_from_fpr(arm::core *cpu, const arg_layout &arg) {
-            LOG_WARN("Reading from FPR unimplemented");
+            LOG_WARN(BRIDGE, "Reading from FPR unimplemented");
             return T{};
         }
 

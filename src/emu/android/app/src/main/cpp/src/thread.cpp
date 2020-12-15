@@ -82,7 +82,7 @@ namespace eka2l1::android {
         int result = graphics_driver_thread_initialization(state);
 
         if (result != 0) {
-            LOG_ERROR("Graphics driver initialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "Graphics driver initialization failed with code {}", result);
             return;
         }
 
@@ -92,7 +92,7 @@ namespace eka2l1::android {
         result = graphics_driver_thread_deinitialization(state);
 
         if (result != 0) {
-            LOG_ERROR("Graphics driver deinitialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "Graphics driver deinitialization failed with code {}", result);
             return;
         }
     }
@@ -145,7 +145,7 @@ namespace eka2l1::android {
         int result = ui_thread_initialization(state);
 
         if (result != 0) {
-            LOG_ERROR("UI thread initialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "UI thread initialization failed with code {}", result);
             return;
         }
 
@@ -239,7 +239,7 @@ namespace eka2l1::android {
         result = ui_thread_deinitialization(state);
 
         if (result != 0) {
-            LOG_ERROR("UI thread deinitialization failed with code {}", result);
+            LOG_ERROR(FRONTEND_CMDLINE, "UI thread deinitialization failed with code {}", result);
             return;
         }
     }
@@ -255,7 +255,7 @@ namespace eka2l1::android {
             state.symsys->loop();
 #if !defined(NDEBUG)
             } catch (std::exception &exc) {
-                LOG_ERROR("Main loop exited with exception: ", exc.what());
+                LOG_ERROR(FRONTEND_CMDLINE, "Main loop exited with exception: ", exc.what());
                 state.should_emu_quit = true;
                 break;
             }

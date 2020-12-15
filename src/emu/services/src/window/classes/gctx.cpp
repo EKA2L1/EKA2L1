@@ -154,7 +154,7 @@ namespace eka2l1::epoc {
             break;
 
         default:
-            LOG_WARN("Unhandled brush style {}", static_cast<std::int32_t>(fill_mode));
+            LOG_WARN(SERVICE_WINDOW, "Unhandled brush style {}", static_cast<std::int32_t>(fill_mode));
             return false;
         }
 
@@ -184,7 +184,7 @@ namespace eka2l1::epoc {
             break;
 
         default:
-            LOG_WARN("Unhandled pen style {}", static_cast<std::int32_t>(fill_mode));
+            LOG_WARN(SERVICE_WINDOW, "Unhandled pen style {}", static_cast<std::int32_t>(fill_mode));
             return false;
         }
 
@@ -664,7 +664,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
-        //LOG_TRACE("Graphics context opcode {}", cmd.header.op);
+        //LOG_TRACE(SERVICE_WINDOW, "Graphics context opcode {}", cmd.header.op);
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
         // General rules: Stub to err_none = nullptr, implement = function pointer
@@ -760,7 +760,7 @@ namespace eka2l1::epoc {
 #define FIND_OPCODE(op, table)                                               \
     auto result = table.find(op);                                            \
     if (result == table.end() || !result->second.first) {                    \
-        LOG_WARN("Unimplemented graphics context opcode {}", cmd.header.op); \
+        LOG_WARN(SERVICE_WINDOW, "Unimplemented graphics context opcode {}", cmd.header.op); \
         return;                                                              \
     }                                                                        \
     handler = result->second.first;                                          \

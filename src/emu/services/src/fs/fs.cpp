@@ -134,7 +134,7 @@ namespace eka2l1 {
 // For debug purpose, uncomment the log
 #define HANDLE_CLIENT_IPC(name, op, debug_func_str)     \
     case (op): {                                        \
-        name(ctx); /*LOG_TRACE("{}", debug_func_str);*/ \
+        name(ctx); /*LOG_TRACE(SERVICE_EFSRV, "{}", debug_func_str);*/ \
         break;                                          \
     }
 
@@ -172,6 +172,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(create_private_path, epoc::fs_msg_create_private_path, "Fs::CreatePrivatePath");
             HANDLE_CLIENT_IPC(notify_change_ex, epoc::fs_msg_notify_change_ex, "Fs::NotifyChangeEx");
             HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
+            HANDLE_CLIENT_IPC(notify_change_cancel, epoc::fs_msg_notify_change_cancel, "Fs::NotifyChangeCancel");            // Same implementation on emulator.
             HANDLE_CLIENT_IPC(notify_change_cancel_ex, epoc::fs_msg_notify_change_cancel_ex, "Fs::NotifyChangeCancelEx");
             HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
             HANDLE_CLIENT_IPC(rmdir, epoc::fs_msg_rmdir, "Fs::RmDir");
@@ -198,7 +199,7 @@ namespace eka2l1 {
             break;
 
         default: {
-            LOG_ERROR("Unknown FSServer client opcode {}!", ctx->msg->function);
+            LOG_ERROR(SERVICE_EFSRV, "Unknown FSServer client opcode {}!", ctx->msg->function);
             break;
         }
 
@@ -481,9 +482,18 @@ namespace eka2l1 {
 
         notify_entries.push_back(entry);
 
-        LOG_TRACE("Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
+        LOG_TRACE(SERVICE_EFSRV, "Notify requested with wildcard: {}", common::ucs2_to_utf8(*wildcard_match));
     }
 
+    void fs_server_client::notify_change_cancel(service::ipc_context *ctx) {
+        for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
+            it->info.complete(epoc::error_cancel);
+        }
+
+        notify_entries.clear();
+        ctx->complete(epoc::error_none);
+    }
+    
     void fs_server_client::notify_change_cancel_ex(service::ipc_context *ctx) { 
         address request_status_addr = ctx->get_argument_value<address>(0).value();
         for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
@@ -580,7 +590,7 @@ namespace eka2l1 {
         std::u16string fname = std::move(*fname_op);
         fname = get_full_symbian_path(ss_path, fname);
 
-        LOG_INFO("Get entry of: {}", common::ucs2_to_utf8(fname));
+        LOG_INFO(SERVICE_EFSRV, "Get entry of: {}", common::ucs2_to_utf8(fname));
 
         bool dir = false;
 
@@ -612,7 +622,7 @@ namespace eka2l1 {
         }
 
         const std::u16string fname = get_full_symbian_path(ss_path, fname_op.value());
-        LOG_INFO("Set entry of: {}", common::ucs2_to_utf8(fname));
+        LOG_INFO(SERVICE_EFSRV, "Set entry of: {}", common::ucs2_to_utf8(fname));
 
         io_system *io = ctx->sys->get_io_system();
 
@@ -661,7 +671,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_WARN("Unhandled close type for node type {}", static_cast<int>(node->vfs_node->type));
+            LOG_WARN(SERVICE_EFSRV, "Unhandled close type for node type {}", static_cast<int>(node->vfs_node->type));
             break;
         }
     }

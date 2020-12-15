@@ -30,7 +30,7 @@ namespace eka2l1::common {
         instance_ = inotify_init();
 
         if (instance_ == -1) {
-            LOG_ERROR("Error creating INotify instance!");
+            LOG_ERROR(COMMON, "Error creating INotify instance!");
             return;
         }
 
@@ -56,7 +56,7 @@ namespace eka2l1::common {
                 const ssize_t length = read(instance_, &events_[0], events_.size());
 
                 if (length == -1) {
-                    LOG_ERROR("Error reading notify event!");
+                    LOG_ERROR(COMMON, "Error reading notify event!");
                     should_stop = true;
                 }
 
@@ -144,7 +144,7 @@ namespace eka2l1::common {
         const bool remove_result = (inotify_rm_watch(instance_, watch_handle) != -1);
 
         if (!remove_result) {
-            LOG_WARN("Can not removing watch from inotify!");
+            LOG_WARN(COMMON, "Can not removing watch from inotify!");
         }
 
         return true;
@@ -177,7 +177,7 @@ namespace eka2l1::common {
         const int wd_handle = inotify_add_watch(instance_, folder.c_str(), IN_CREATE | IN_DELETE | IN_MODIFY);
 
         if (wd_handle == -1) {
-            LOG_ERROR("Error creating new inotify watch!");
+            LOG_ERROR(COMMON, "Error creating new inotify watch!");
             return 0;
         }
 

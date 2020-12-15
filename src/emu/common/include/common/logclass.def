@@ -1,0 +1,83 @@
+/*
+ * Copyright (c) 2020 EKA2L1 Team.
+ * 
+ * This file is part of EKA2L1 project.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef LOGCLASS
+#define LOGCLASS(name, short_nice_name, nice_name)
+#endif
+
+LOGCLASS(FRONTEND_UI, "Frontend.UI", "UI")
+LOGCLASS(FRONTEND_CMDLINE, "Frontend.Cmdline", "Command line")
+
+LOGCLASS(CONFIG, "Config", "Config")
+LOGCLASS(CPU, "CPU", "CPU")
+LOGCLASS(KERNEL, "Kernel", "Kernel")
+LOGCLASS(GDBSTUB, "Gdbstub", "Gdbstub")
+LOGCLASS(LOADER, "Loader", "Loader")
+LOGCLASS(MEMORY, "Memory", "Memory")
+LOGCLASS(SYSTEM, "System", "System")
+LOGCLASS(BRIDGE, "Bridge", "Bridge")
+
+LOGCLASS(LDD, "Ldd", "Logical device driver")
+LOGCLASS(LDD_MMCIF, "Ldd.MmcIf", "Mmc driver")
+
+LOGCLASS(SERVICE_TRACK, "Service.Track", "Service tracking")
+LOGCLASS(SERVICE_APPLIST, "Service.Applist", "Applist")
+LOGCLASS(SERVICE_KEYSOUND, "Service.Keysound", "Keysound")
+LOGCLASS(SERVICE_BLUETOOTH, "Service.Bluetooth", "Bluetooth")
+LOGCLASS(SERVICE_BACKUP, "Service.Backup", "Backup")
+LOGCLASS(SERVICE_CDLENG, "Service.CdlEng", "Cdl Engine")
+LOGCLASS(SERVICE_CENREP, "Service.CenRep", "Central Repository")
+LOGCLASS(SERVICE_ECOMM, "Service.Ecomm", "Comm service")
+LOGCLASS(SERVICE_CONNMONITOR, "Service.ConnMonitor", "Connection monitor")
+LOGCLASS(SERVICE_EFSRV, "Service.EFsrv", "File service")
+LOGCLASS(SERVICE_DRMSYS, "Service.Drm", "DRM system")
+LOGCLASS(SERVICE_ECOM, "Service.Ecom", "Plugin service")
+LOGCLASS(SERVICE_ETEL, "Service.Etel", "Telecom service")
+LOGCLASS(SERVICE_FBS, "Service.Fbs", "Font and bitmap service")
+LOGCLASS(SERVICE_FEATMGR, "Service.Featmgr", "Feature manager service")
+LOGCLASS(SERVICE_MSV, "Service.Msv", "Message database manager")
+LOGCLASS(SERVICE_LOADER, "Service.Loader", "Loader service")
+LOGCLASS(SERVICE_NOTIFIER, "Service.Notifier", "Notifier service")
+LOGCLASS(SERVICE_POSIX, "Service.Posix", "Posix service")
+LOGCLASS(SERVICE_REMCON, "Service.Remcon", "Remote connection service")
+LOGCLASS(SERVICE_SENSOR, "Service.Sensor", "Sensor service")
+LOGCLASS(SERVICE_SMS, "Service.Sms", "SMS operations")
+LOGCLASS(SERVICE_SHUTDOWN, "Service.Shutdown", "Shutdown service")
+LOGCLASS(SERVICE_SYSAGT, "Service.Sysagt", "System agent")
+LOGCLASS(SERVICE_ESOCK, "Service.Esock", "Socket service")
+LOGCLASS(SERVICE_UI, "Service.UI", "UI services collection")
+LOGCLASS(SERVICE_UNIPERTAR, "Service.Unipertar", "Unipertar")
+LOGCLASS(SERVICE_HWRM, "Service.HWRM", "HWRM service")
+LOGCLASS(SERVICE_WINDOW, "Service.Window", "Window service")
+LOGCLASS(SERVICE_MMFAUD, "Service.MMFAudio", "MMF Audio service")
+LOGCLASS(SERVICE_INSTALL, "Service.Install", "Install service")
+
+LOGCLASS(DRIVER_AUD, "Driver.Audio", "Audio driver")
+LOGCLASS(DRIVER_GRAPHICS, "Driver.Graphics", "Graphics driver")
+LOGCLASS(VFS, "VFS", "Virtual file system")
+LOGCLASS(UTILS, "Utils", "Guest utils")
+
+LOGCLASS(COMMON, "Common", "Common functions")
+LOGCLASS(DISASM, "Disasm", "Disassembler")
+LOGCLASS(PACKAGE, "Packages", "Packages")
+LOGCLASS(SCRIPTING, "Scripting", "Scripting")
+
+LOGCLASS(HLE_AUD, "Hle.Audio", "HLE Audio player")
+LOGCLASS(HLE_SCRDVC, "Hle.ScrDvc", "Screen device")
+LOGCLASS(HLE_DISPATCHER, "Hle.Dispatcher", "HLE dispatch manager")

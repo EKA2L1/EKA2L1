@@ -72,20 +72,20 @@ namespace eka2l1 {
 
         if (blank_count == 0) {
             // No way... This is impossible
-            LOG_ERROR("App session has blank count negative before called blank screen");
+            LOG_ERROR(SERVICE_UI, "App session has blank count negative before called blank screen");
             ctx->complete(epoc::error_abort);
 
             return;
         }
 
-        LOG_TRACE("Blanking screen in AKNCAP session stubbed");
+        LOG_TRACE(SERVICE_UI, "Blanking screen in AKNCAP session stubbed");
         ctx->complete(epoc::error_none);
     }
 
     void oom_ui_app_session::unblank_screen(service::ipc_context *ctx) {
         blank_count--;
 
-        LOG_TRACE("Unblanking screen in AKNCAP session stubbed");
+        LOG_TRACE(SERVICE_UI, "Unblanking screen in AKNCAP session stubbed");
         ctx->complete(epoc::error_none);
     }
 
@@ -133,14 +133,14 @@ namespace eka2l1 {
             break;
 
         default: {
-            LOG_WARN("Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with epoc::error_none", ctx->msg->function);
+            LOG_WARN(SERVICE_UI, "Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with epoc::error_none", ctx->msg->function);
             ctx->complete(epoc::error_none);
         }
         }
     }
 
     void oom_ui_app_server::redraw_status_pane() {
-        LOG_TRACE("Status pane redrawed");
+        LOG_TRACE(SERVICE_UI, "Status pane redrawed");
     }
 
     static std::uint32_t calculate_screen_style_hash(const std::string &style) {

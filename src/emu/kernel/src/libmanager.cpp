@@ -101,7 +101,7 @@ namespace eka2l1::hle {
         codeseg_ptr cs = mngr.load(dll_name);
 
         if (!cs) {
-            LOG_TRACE("Can't find {}", dll_name8);
+            LOG_TRACE(KERNEL, "Can't find {}", dll_name8);
             return false;
         }
 
@@ -116,7 +116,7 @@ namespace eka2l1::hle {
 
         // Add dependency for the codeseg
         if (!parent_codeseg->add_dependency(dependency_info)) {
-            LOG_ERROR("Fail to add a codeseg as dependency!");
+            LOG_ERROR(KERNEL, "Fail to add a codeseg as dependency!");
             return false;
         }
 
@@ -125,7 +125,7 @@ namespace eka2l1::hle {
 
     static bool elf_fix_up_import_dir(memory_system *mem, hle::lib_manager &mngr, std::uint8_t *code_addr, loader::e32img_import_block &import_block,
         codeseg_ptr &parent_cs) {
-        // LOG_INFO("Fixup for: {}", import_block.dll_name);
+        // LOG_INFO(KERNEL, "Fixup for: {}", import_block.dll_name);
 
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
         const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
@@ -133,7 +133,7 @@ namespace eka2l1::hle {
         codeseg_ptr cs = mngr.load(dll_name);
 
         if (!cs) {
-            LOG_TRACE("Can't find {}", dll_name8);
+            LOG_TRACE(KERNEL, "Can't find {}", dll_name8);
             return false;
         }
         
@@ -235,7 +235,7 @@ namespace eka2l1::hle {
         codeseg_ptr cs = kern->create<kernel::codeseg>(get_e32_codeseg_name_from_path(path), info);
         
         if (!cs) {
-            LOG_ERROR("E32 image loading failed!");
+            LOG_ERROR(KERNEL, "E32 image loading failed!");
             return nullptr;
         }
 
@@ -271,7 +271,7 @@ namespace eka2l1::hle {
         std::uint8_t *dest_ptr_host = reinterpret_cast<std::uint8_t *>(mem->get_real_pointer(dest_ptr & ~1));
 
         if (!dest_ptr_host) {
-            LOG_WARN("Unable to patch export {} of {} due to export not exist", source_export, source_seg->name());
+            LOG_WARN(KERNEL, "Unable to patch export {} of {} due to export not exist", source_export, source_seg->name());
             return;
         }
 
@@ -377,7 +377,7 @@ namespace eka2l1::hle {
                         continue;
                     }
 
-                    LOG_TRACE("Using dll {} as patch dll for map file {}", source_dll_name, original_map_name);
+                    LOG_TRACE(KERNEL, "Using dll {} as patch dll for map file {}", source_dll_name, original_map_name);
                     break;
                 }
 
@@ -387,11 +387,11 @@ namespace eka2l1::hle {
                     patch_dll_map = eka2l1::add_path(patch_folder, source_dll_name);
 
                     if (!eka2l1::exists(patch_dll_map)) {
-                        LOG_ERROR("Can't find suitable patch DLL for map {}", original_map_name);
+                        LOG_ERROR(KERNEL, "Can't find suitable patch DLL for map {}", original_map_name);
                         continue;
                     }
 
-                    LOG_TRACE("Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
+                    LOG_TRACE(KERNEL, "Using general DLL {} as patch DLL for map file {}", source_dll_name, original_map_name);
                 }
                 
                 patch_image_paths.push_back(patch_dll_map);
@@ -420,7 +420,7 @@ namespace eka2l1::hle {
                         u3->get(&the_patch.req_uid3_, 1, 0);
                     }
                 } else {
-                    LOG_TRACE("Patch {} has no hard requirements", entry.name);
+                    LOG_TRACE(KERNEL, "Patch {} has no hard requirements", entry.name);
                 }
 
                 // Patch out the shared segment first
@@ -429,7 +429,7 @@ namespace eka2l1::hle {
                 if (shared_section) {
                     get_route_from_ini_section(*shared_section, the_patch.routes_);
                 } else {
-                    LOG_TRACE("Shared section not found for patch DLL {}", entry.name);
+                    LOG_TRACE(KERNEL, "Shared section not found for patch DLL {}", entry.name);
                 }
 
                 const char *alone_section_name = epocver_to_string(kern_->get_epoc_version());
@@ -440,7 +440,7 @@ namespace eka2l1::hle {
                     if (indi_section) {
                         get_route_from_ini_section(*indi_section, the_patch.routes_);
                     } else {
-                        LOG_TRACE("Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
+                        LOG_TRACE(KERNEL, "Seperate section not found for epoc version {} of patch DLL {}", static_cast<int>(kern_->get_epoc_version()),
                             entry.name);
                     }
                 }
@@ -672,7 +672,7 @@ namespace eka2l1::hle {
                             }
 
                             if (*(the_word - traced) != ep_org) {
-                                LOG_ERROR("Unable to find DLL image for entry point address: 0x{:X}", ep_org);
+                                LOG_ERROR(KERNEL, "Unable to find DLL image for entry point address: 0x{:X}", ep_org);
                             } else {
                                 entry_point -= traced * sizeof(address);
                                 the_word -= traced;
@@ -913,7 +913,7 @@ namespace eka2l1::hle {
         auto res = svc_funcs_.find(svcnum);
 
         if (res == svc_funcs_.end()) {
-            LOG_ERROR("Unimplement system call: 0x{:X}!", svcnum);
+            LOG_ERROR(KERNEL, "Unimplement system call: 0x{:X}!", svcnum);
 
             kern_->unlock();
             return false;
@@ -922,7 +922,7 @@ namespace eka2l1::hle {
         epoc_import_func func = res->second;
 
         if (kern_->get_config()->log_svc) {
-            LOG_TRACE("Calling SVC 0x{:x} {}", svcnum, func.name);
+            LOG_TRACE(KERNEL, "Calling SVC 0x{:x} {}", svcnum, func.name);
         }
 
         func.func(kern_, kern_->crr_process(), kern_->get_cpu());
@@ -938,14 +938,14 @@ namespace eka2l1::hle {
             kernel::chunk_attrib::none);
 
         if (!bootstrap_chunk_) {
-            LOG_ERROR("Failed to create bootstrap chunk for EKA1 thread!");
+            LOG_ERROR(KERNEL, "Failed to create bootstrap chunk for EKA1 thread!");
             return false;
         }
         
         codeseg_ptr userlib = load(u"euser.dll");
 
         if (!userlib) {
-            LOG_ERROR("Unable to load euser.dll to build EKA1 bootstrap code!");
+            LOG_ERROR(KERNEL, "Unable to load euser.dll to build EKA1 bootstrap code!");
             return false;
         }
 
@@ -1155,7 +1155,7 @@ namespace eka2l1::epoc {
     bool get_image_info(hle::lib_manager *mngr, const std::u16string &name, epoc::lib_info &linfo) {
         auto imgs = mngr->try_search_and_parse(name);
 
-        LOG_TRACE("Get Info of {}", common::ucs2_to_utf8(name));
+        LOG_TRACE(KERNEL, "Get Info of {}", common::ucs2_to_utf8(name));
 
         if (!imgs.first && !imgs.second) {
             return false;

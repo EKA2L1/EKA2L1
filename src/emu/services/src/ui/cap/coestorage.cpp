@@ -78,7 +78,7 @@ namespace eka2l1::epoc {
             var.str16d = the_fep;
 
             if (!rep->add_new_entry(fep_framework_repo_key_default_fepid, var)) {
-                LOG_WARN("Unable to add default fepid entry to cenrep");
+                LOG_WARN(SERVICE_UI, "Unable to add default fepid entry to cenrep");
             }
         } else {
             ccre->data.str16d = the_fep;

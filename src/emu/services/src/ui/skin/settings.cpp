@@ -47,21 +47,21 @@ namespace eka2l1::epoc {
             theme_rep_ = svr->load_repo_with_lookup(io, mngr, THEMES_UID);
 
             if (read_default_skin_id()) {
-                LOG_INFO("Default skin UID: 0x{:X}, timestamp: {}", default_skin_pid_.first, default_skin_pid_.second);
+                LOG_INFO(SERVICE_UI, "Default skin UID: 0x{:X}, timestamp: {}", default_skin_pid_.first, default_skin_pid_.second);
             }
 
             if (read_active_skin_id()) {
-                LOG_INFO("Active skin UID: 0x{:X}, timestamp: {}", active_skin_pid_.first, active_skin_pid_.second);
+                LOG_INFO(SERVICE_UI, "Active skin UID: 0x{:X}, timestamp: {}", active_skin_pid_.first, active_skin_pid_.second);
             }
 
             read_ah_mirroring_active();
             read_highlight_anim_enabled();
 
             // Dump the info
-            LOG_INFO("Arabic/hebrew mirroring active: {}", ah_mirroring_active ? "True" : "False");
-            LOG_INFO("Highlight anim enabled: {}", highlight_anim_enabled ? "True" : "False");
+            LOG_INFO(SERVICE_UI, "Arabic/hebrew mirroring active: {}", ah_mirroring_active ? "True" : "False");
+            LOG_INFO(SERVICE_UI, "Highlight anim enabled: {}", highlight_anim_enabled ? "True" : "False");
         } else {
-            LOG_WARN("Central repository server not provided. Configuration will be tough");
+            LOG_WARN(SERVICE_UI, "Central repository server not provided. Configuration will be tough");
         }
     }
 
@@ -69,7 +69,7 @@ namespace eka2l1::epoc {
         pid_.second = 0;
 
         if (entry_->data.etype != central_repo_entry_type::string16) {
-            LOG_ERROR("Data of entry PID is not buffer. Reading PID failed!");
+            LOG_ERROR(SERVICE_UI, "Data of entry PID is not buffer. Reading PID failed!");
             return false;
         }
 
@@ -93,7 +93,7 @@ namespace eka2l1::epoc {
 
     bool akn_ss_settings::read_default_skin_id() {
         if (!skins_rep_) {
-            LOG_ERROR("Skin repository failed to load!");
+            LOG_ERROR(SERVICE_UI, "Skin repository failed to load!");
             return false;
         }
 
@@ -104,7 +104,7 @@ namespace eka2l1::epoc {
             default_skin_entry = skins_rep_->find_entry(DEFAULT_SKIN_ID_KEY);
 
             if (!default_skin_entry) {
-                LOG_ERROR("Can't read default skin id!");
+                LOG_ERROR(SERVICE_UI, "Can't read default skin id!");
                 return false;
             }
 
@@ -137,7 +137,7 @@ namespace eka2l1::epoc {
 
     bool akn_ss_settings::read_active_skin_id() {
         if (!skins_rep_) {
-            LOG_ERROR("Skin repository failed to load!");
+            LOG_ERROR(SERVICE_UI, "Skin repository failed to load!");
             return false;
         }
 
@@ -145,7 +145,7 @@ namespace eka2l1::epoc {
         central_repo_entry *default_skin_entry = skins_rep_->find_entry(ACTIVE_SKIN_UID_KEY);
 
         if (!default_skin_entry) {
-            LOG_ERROR("Can't read active skin id!");
+            LOG_ERROR(SERVICE_UI, "Can't read active skin id!");
             return false;
         }
 

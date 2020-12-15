@@ -122,7 +122,7 @@ namespace eka2l1::epoc {
                 }
 
                 default:
-                    LOG_ERROR("Unhandled display mode to convert {}", static_cast<int>(dsp));
+                    LOG_ERROR(SERVICE_WINDOW, "Unhandled display mode to convert {}", static_cast<int>(dsp));
                     break;
                 }
             }
@@ -270,7 +270,7 @@ namespace eka2l1::epoc {
                     break;
 
                 default:
-                    LOG_ERROR("Unsupported bitmap format to decode {}", static_cast<std::uint32_t>(comp));
+                    LOG_ERROR(SERVICE_WINDOW, "Unsupported bitmap format to decode {}", static_cast<std::uint32_t>(comp));
                     break;
                 }
 

@@ -458,7 +458,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Loading bitmap from: {}, id: {}", common::ucs2_to_utf8(source->file_name()),
+        LOG_TRACE(SERVICE_FBS, "Loading bitmap from: {}, id: {}", common::ucs2_to_utf8(source->file_name()),
             load_options->bitmap_id);
 
         fbsbitmap *bmp = nullptr;
@@ -520,21 +520,21 @@ namespace eka2l1 {
                 break;
 
             case fbs_load_data_err_out_of_mem: {
-                LOG_ERROR("Can't allocate data for storing bitmap!");
+                LOG_ERROR(SERVICE_FBS, "Can't allocate data for storing bitmap!");
                 ctx->complete(epoc::error_no_memory);
 
                 return;
             }
 
             case fbs_load_data_err_read_decomp_fail: {
-                LOG_ERROR("Can't read or decompress bitmap data, possibly corrupted.");
+                LOG_ERROR(SERVICE_FBS, "Can't read or decompress bitmap data, possibly corrupted.");
                 ctx->complete(epoc::error_corrupt);
 
                 return;
             }
 
             default: {
-                LOG_ERROR("Unknown error code from loading uncompressed bitmap!");
+                LOG_ERROR(SERVICE_FBS, "Unknown error code from loading uncompressed bitmap!");
                 ctx->complete(epoc::error_general);
 
                 return;
@@ -793,7 +793,7 @@ namespace eka2l1 {
         }
 
         if (fbss->legacy_level() >= 2) {
-            LOG_ERROR("Resize bitmap not supported currently for legacy level 2!");
+            LOG_ERROR(SERVICE_FBS, "Resize bitmap not supported currently for legacy level 2!");
             ctx->complete(epoc::error_not_supported);
 
             return;

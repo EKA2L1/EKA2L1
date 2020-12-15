@@ -179,7 +179,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            LOG_INFO("Package UID: 0x{:x}", info.id);
+            LOG_INFO(PACKAGE, "Package UID: 0x{:x}", info.id);
 
             for (auto &wrap_file_des : ctrl->install_block.files.fields) {
                 const loader::sis_file_des *file_des = reinterpret_cast<loader::sis_file_des *>(wrap_file_des.get());
@@ -260,7 +260,7 @@ namespace eka2l1 {
                 show_text("Installation done!", true);
             }
 
-            LOG_TRACE("Installation done!");
+            LOG_TRACE(PACKAGE, "Installation done!");
 
             return true;
         }

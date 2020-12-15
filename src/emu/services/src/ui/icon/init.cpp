@@ -51,7 +51,7 @@ namespace eka2l1 {
         symfile config_file = io->open_file(path, READ_MODE | BIN_MODE);
 
         if (!config_file) {
-            LOG_ERROR("Can't find akniconsrv.rsc! Initialisation failed!");
+            LOG_ERROR(SERVICE_UI, "Can't find akniconsrv.rsc! Initialisation failed!");
             return;
         }
 
@@ -77,7 +77,7 @@ namespace eka2l1 {
             auto data = config_rsc.read(idx);
 
             if (data.size() != 4) {
-                LOG_ERROR("Try reading config depth, but size of resource is not equal to 4");
+                LOG_ERROR(SERVICE_UI, "Try reading config depth, but size of resource is not equal to 4");
             } else {
                 switch (*reinterpret_cast<std::uint32_t *>(&data[0])) {
                 case 0: {
@@ -100,7 +100,7 @@ namespace eka2l1 {
             auto data = config_rsc.read(idx);
 
             if (data.size() != 4) {
-                LOG_ERROR("Try reading config mask depth, but size of resource is not equal to 4");
+                LOG_ERROR(SERVICE_UI, "Try reading config mask depth, but size of resource is not equal to 4");
             } else {
                 if (*reinterpret_cast<std::uint32_t *>(&data[0]) == 0) {
                     return epoc::display_mode::gray2;

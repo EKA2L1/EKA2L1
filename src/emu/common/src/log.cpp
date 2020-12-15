@@ -40,8 +40,39 @@
 namespace eka2l1 {
     bool already_setup = false;
 
+    const char *log_class_to_string(const log_class cls) {
+        if (cls >= LOG_CLASS_COUNT) {
+            return nullptr;
+        }
+
+        #define LOGCLASS(name, short_nice_name, nice_name) short_nice_name,
+        static const char *LOG_CLASS_NAME_ARRAYS[LOG_CLASS_COUNT] = {
+            #include <common/logclass.def>
+        };
+
+        return LOG_CLASS_NAME_ARRAYS[static_cast<int>(cls)];
+    }
+
+    log_filterings::log_filterings() {
+        std::fill(levels_, levels_ + LOG_CLASS_COUNT, spdlog::level::trace);
+    }
+
+    bool log_filterings::set_minimum_level(const log_class cls, const spdlog::level::level_enum level) {
+        if (cls >= LOG_CLASS_COUNT) {
+            return false;
+        }
+
+        levels_[static_cast<int>(cls)] = level;
+        return true;
+    }
+
+    bool log_filterings::is_passed(const log_class cls, const spdlog::level::level_enum level) {
+        return (cls < LOG_CLASS_COUNT) && (level >= levels_[static_cast<int>(cls)]);
+    }
+
     namespace log {
         std::shared_ptr<spdlog::logger> spd_logger;
+        std::unique_ptr<log_filterings> filterings;
 
         struct imgui_logger_sink : public spdlog::sinks::base_sink<std::mutex> {
             explicit imgui_logger_sink(std::shared_ptr<base_logger> _logger)
@@ -98,18 +129,20 @@ namespace eka2l1 {
             sinks.push_back(std::make_shared<spdlog::sinks::android_sink_mt>());
 #endif
 
-            spd_logger = std::make_shared<spdlog::logger>("EKA2L1 Logger", begin(sinks), end(sinks));
+            spd_logger = std::make_unique<spdlog::logger>("EKA2L1 Logger", begin(sinks), end(sinks));
             spdlog::set_default_logger(spd_logger);
 
             spdlog::set_error_handler([](const std::string &msg) {
                 std::cerr << "spdlog error: " << msg << std::endl;
             });
 
-            spdlog::set_pattern("%^%L { %v }%$");
+            spdlog::set_pattern("%L %^%v%$");
             spdlog::set_level(spdlog::level::trace);
 
             spd_logger->flush_on(spdlog::level::debug);
 
+            // Setup the filterings
+            filterings = std::make_unique<log_filterings>();
             already_setup = true;
         }
     }

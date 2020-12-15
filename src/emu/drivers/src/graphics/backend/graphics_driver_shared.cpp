@@ -335,7 +335,7 @@ namespace eka2l1::drivers {
         bitmap *bmp = get_bitmap(h);
 
         if (!bmp) {
-            LOG_ERROR("Bitmap handle invalid to be binded");
+            LOG_ERROR(DRIVER_GRAPHICS, "Bitmap handle invalid to be binded");
             return;
         }
 
@@ -362,7 +362,7 @@ namespace eka2l1::drivers {
         helper.pop(h);
 
         if ((h & ~HANDLE_BITMAP) > bmp_textures.size()) {
-            LOG_ERROR("Invalid bitmap handle to destroy");
+            LOG_ERROR(DRIVER_GRAPHICS, "Invalid bitmap handle to destroy");
             return;
         }
 
@@ -376,7 +376,7 @@ namespace eka2l1::drivers {
         bitmap *bmp = get_bitmap(h);
 
         if (!bmp) {
-            LOG_ERROR("Bitmap handle invalid to be binded");
+            LOG_ERROR(DRIVER_GRAPHICS, "Bitmap handle invalid to be binded");
             return;
         }
 
@@ -417,7 +417,7 @@ namespace eka2l1::drivers {
 
         auto obj = make_shader(this);
         if (!obj->create(this, vert_data, vert_size, frag_data, frag_size)) {
-            LOG_ERROR("Fail to create shader");
+            LOG_ERROR(DRIVER_GRAPHICS, "Fail to create shader");
             return;
         }
 
@@ -746,7 +746,7 @@ namespace eka2l1::drivers {
             (*callback)(out_path);
         } else {
             if (final_result != NFD_CANCEL) {
-                LOG_ERROR("Error happened when using native dialog: {}, message: {}",
+                LOG_ERROR(DRIVER_GRAPHICS, "Error happened when using native dialog: {}, message: {}",
                     static_cast<int>(final_result), NFD_GetError());
             }
         }
@@ -864,7 +864,7 @@ namespace eka2l1::drivers {
             break;
 
         default:
-            LOG_ERROR("Unimplemented opcode {} for graphics driver", cmd->opcode_);
+            LOG_ERROR(DRIVER_GRAPHICS, "Unimplemented opcode {} for graphics driver", cmd->opcode_);
             break;
         }
     }

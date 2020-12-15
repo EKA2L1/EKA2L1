@@ -34,7 +34,7 @@ namespace eka2l1::loader {
         common::ini_file platform_ini;
 
         if (platform_ini.load(platform_ini_path.c_str()) != 0) {
-            LOG_ERROR("Unable to load platform.txt in Z:\\Resources\\Versions.");
+            LOG_ERROR(SYSTEM, "Unable to load platform.txt in Z:\\Resources\\Versions.");
             return false;
         }
 
@@ -84,13 +84,13 @@ namespace eka2l1::loader {
             }
 
             default: {
-                LOG_WARN("Unsupport Symbian version {}, will default to 9.4", major, minor);
+                LOG_WARN(SYSTEM, "Unsupport Symbian version {}, will default to 9.4", major, minor);
                 break;
             }
             }
         } else {
-            LOG_ERROR("Symbian platform.txt found, but one of two needed nodes weren't present");
-            LOG_ERROR("SymbianOSMajorVersion and SymbianOSMinorVersion. Report to developers for investigation.");
+            LOG_ERROR(SYSTEM, "Symbian platform.txt found, but one of two needed nodes weren't present");
+            LOG_ERROR(SYSTEM, "SymbianOSMajorVersion and SymbianOSMinorVersion. Report to developers for investigation.");
         }
 
         return true;
@@ -130,7 +130,7 @@ namespace eka2l1::loader {
             auto version_strings = sis_filename.split('.');
 
             if (version_strings.size() < 2) {
-                LOG_ERROR("Unable to extract symbian version from second method! Default to v94");
+                LOG_ERROR(SYSTEM, "Unable to extract symbian version from second method! Default to v94");
             } else {
                 // Try to strip series60v. 9 is the length of that.
                 version_strings[0] = version_strings[0].substr(9, std::string::npos);
@@ -153,12 +153,12 @@ namespace eka2l1::loader {
         epocver target_ver = epocver::epoc94;
 
         if (!determine_rpkg_symbian_version_through_platform_file(extracted_path, target_ver)) {
-            LOG_WARN("First method determining Symbian version failed, second one begins");
+            LOG_WARN(SYSTEM, "First method determining Symbian version failed, second one begins");
 
             if (!determine_rpkg_symbian_version_through_series60_sis(extracted_path, target_ver)) {
-                LOG_ERROR("Second method determining Symbian version failed! Default version is 9.4!");
-                LOG_INFO("You can manually edit the Symbian version in devices.yml after this device successfully installed.");
-                LOG_INFO("Contact the developer to help improve the automation this process");
+                LOG_ERROR(SYSTEM, "Second method determining Symbian version failed! Default version is 9.4!");
+                LOG_INFO(SYSTEM, "You can manually edit the Symbian version in devices.yml after this device successfully installed.");
+                LOG_INFO(SYSTEM, "Contact the developer to help improve the automation this process");
             }
         }
 
@@ -172,7 +172,7 @@ namespace eka2l1::loader {
         common::ini_file product_ini;
 
         if (product_ini.load(product_ini_path.c_str(), false) != 0) {
-            LOG_ERROR("Failed to load the file.");
+            LOG_ERROR(SYSTEM, "Failed to load the file.");
             return false;
         }
 
@@ -199,7 +199,7 @@ namespace eka2l1::loader {
         std::string line_buffer;
 
         if (sw_file.fail()) {
-            LOG_ERROR("Can't load sw.txt!");
+            LOG_ERROR(SYSTEM, "Can't load sw.txt!");
             return false;
         }
         
@@ -218,7 +218,7 @@ namespace eka2l1::loader {
 
         common::dynamic_ifile model_file(add_path(version_folder, "model.txt"));
         if (model_file.fail()) {
-            LOG_ERROR("Can't load model.txt, use backup!");
+            LOG_ERROR(SYSTEM, "Can't load model.txt, use backup!");
             model = sw_infos[0].std_str();
         } else {
             model_file.getline(model);
@@ -229,10 +229,10 @@ namespace eka2l1::loader {
 
     bool determine_rpkg_product_info(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
         if (!determine_rpkg_product_info_from_platform_txt(extracted_path, manufacturer, firmcode, model)) {
-            LOG_WARN("First method of determining product info failed, start the second one.");
+            LOG_WARN(SYSTEM, "First method of determining product info failed, start the second one.");
 
             if (!determine_rpkg_product_info_from_various_txts(extracted_path, manufacturer, firmcode, model)) {
-                LOG_ERROR("Second method of determining product info failed!");
+                LOG_ERROR(SYSTEM, "Second method of determining product info failed!");
                 return false;
             }
         }

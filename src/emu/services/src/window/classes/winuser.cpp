@@ -81,7 +81,7 @@ namespace eka2l1::epoc {
         , max_pointer_buffer_(0)
         , last_draw_(0) {
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
-            LOG_ERROR("Parent is not a window client type!");
+            LOG_ERROR(SERVICE_WINDOW, "Parent is not a window client type!");
         } else {
             if (parent->type == epoc::window_kind::client) {
                 // Inherits parent's size
@@ -132,7 +132,7 @@ namespace eka2l1::epoc {
     void window_user::queue_event(const epoc::event &evt) {
         if (!is_visible()) {
             // TODO: Im not sure... I think it can certainly receive
-            LOG_TRACE("The client window 0x{:X} is not visible, and can't receive any events", id);
+            LOG_TRACE(SERVICE_WINDOW, "The client window 0x{:X} is not visible, and can't receive any events", id);
             return;
         }
 
@@ -331,12 +331,12 @@ namespace eka2l1::epoc {
 
         client->trigger_redraw();
 
-        // LOG_DEBUG("End redraw to window 0x{:X}!", id);
+        // LOG_DEBUG(SERVICE_WINDOW, "End redraw to window 0x{:X}!", id);
         ctx.complete(epoc::error_none);
     }
 
     void window_user::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
-        // LOG_TRACE("Begin redraw to window 0x{:X}!", id);
+        // LOG_TRACE(SERVICE_WINDOW, "Begin redraw to window 0x{:X}!", id);
         if (flags & flags_in_redraw) {
             ctx.complete(epoc::error_in_use);
             return;
@@ -401,7 +401,7 @@ namespace eka2l1::epoc {
     }
 
     void window_user::store_draw_commands(service::ipc_context &ctx, ws_cmd &cmd) {
-        LOG_TRACE("Store draw command stubbed");
+        LOG_TRACE(SERVICE_WINDOW, "Store draw command stubbed");
         ctx.complete(epoc::error_none);
     }
 
@@ -409,7 +409,7 @@ namespace eka2l1::epoc {
         ws_cmd_alloc_pointer_buffer *alloc_params = reinterpret_cast<ws_cmd_alloc_pointer_buffer *>(cmd.data_ptr);
 
         if ((alloc_params->max_points >= 100) || (alloc_params->max_points == 0)) {
-            LOG_ERROR("Suspicious alloc pointer buffer max points detected ({})", alloc_params->max_points);
+            LOG_ERROR(SERVICE_WINDOW, "Suspicious alloc pointer buffer max points detected ({})", alloc_params->max_points);
             context.complete(epoc::error_argument);
 
             return;
@@ -475,7 +475,7 @@ namespace eka2l1::epoc {
     
     void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
-        //LOG_TRACE("Window user op: {}", (int)cmd.header.op);
+        //LOG_TRACE(SERVICE_WINDOW, "Window user op: {}", (int)cmd.header.op);
 
         if (result) {
             return;
@@ -487,7 +487,7 @@ namespace eka2l1::epoc {
         case EWsWinOpRequiredDisplayMode: {
             // On s60 and fowards, this method is ignored. So even with lower version, just ignore
             // them. Like they don't mean anything.
-            LOG_TRACE("SetRequiredDisplayMode ignored.");
+            LOG_TRACE(SERVICE_WINDOW, "SetRequiredDisplayMode ignored.");
             [[fallthrough]];
         }
 
@@ -650,19 +650,19 @@ namespace eka2l1::epoc {
             break;
 
         case EWsWinOpSetShape:
-            LOG_WARN("SetShape stubbed");
+            LOG_WARN(SERVICE_WINDOW, "SetShape stubbed");
 
             ctx.complete(epoc::error_none);
             break;
 
         case EWsWinOpSetCornerType:
-            LOG_WARN("SetCornerType stubbed");
+            LOG_WARN(SERVICE_WINDOW, "SetCornerType stubbed");
 
             ctx.complete(epoc::error_none);
             break;
 
         case EWsWinOpSetColor:
-            LOG_WARN("SetColor stubbed");
+            LOG_WARN(SERVICE_WINDOW, "SetColor stubbed");
 
             ctx.complete(epoc::error_none);
             break;
@@ -676,7 +676,7 @@ namespace eka2l1::epoc {
             break;
 
         default: {
-            LOG_ERROR("Unimplemented window user opcode 0x{:X}!", cmd.header.op);
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented window user opcode 0x{:X}!", cmd.header.op);
             ctx.complete(epoc::error_none);
 
             break;

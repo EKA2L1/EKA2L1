@@ -88,7 +88,7 @@ namespace eka2l1::epoc::notifier {
             break;
 
         default:
-            LOG_WARN("Unimplemented keylock notifier reason handling: {}", reason);
+            LOG_WARN(SERVICE_UI, "Unimplemented keylock notifier reason handling: {}", reason);
         }
 
         seri_write.absorb(enabled_bval);

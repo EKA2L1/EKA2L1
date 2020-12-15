@@ -105,7 +105,7 @@ namespace eka2l1::common {
         absorb(ca);
 
         if (mode == SERI_MODE_READ && ca != cookie) {
-            LOG_ERROR("Marker failed for {} ({} vs {})", name, cookie, ca);
+            LOG_ERROR(COMMON, "Marker failed for {} ({} vs {})", name, cookie, ca);
             return false;
         }
 
@@ -120,7 +120,7 @@ namespace eka2l1::common {
             absorb(found_ver);
 
             if (found_ver < ver_min || found_ver > ver) {
-                LOG_ERROR("Chunk section {} has version that is not in range ({}-{})", ver_min, ver);
+                LOG_ERROR(COMMON, "Chunk section {} has version that is not in range ({}-{})", ver_min, ver);
                 return chunkyseri_section(name, nullptr, -1);
             }
 

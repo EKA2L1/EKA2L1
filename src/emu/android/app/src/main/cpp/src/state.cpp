@@ -55,7 +55,7 @@ namespace eka2l1::android {
         // Initialize the logger
         log::setup_log(nullptr);
 
-        LOG_INFO("EKA2L1 v0.0.1 ({}-{})", GIT_BRANCH, GIT_COMMIT_HASH);
+        LOG_INFO(FRONTEND_CMDLINE,  "EKA2L1 v0.0.1 ({}-{})", GIT_BRANCH, GIT_COMMIT_HASH);
 
         // Start to read the configs
         conf.deserialize();
@@ -75,8 +75,8 @@ namespace eka2l1::android {
             symsys->startup();
 
             if (!symsys->set_device(conf.device)) {
-                LOG_ERROR("Failed to set a device, device index is out of range (device index in config file is: {})", conf.device);
-                LOG_INFO("We are setting the default device back to the first device on the installed list for you");
+                LOG_ERROR(FRONTEND_CMDLINE,  "Failed to set a device, device index is out of range (device index in config file is: {})", conf.device);
+                LOG_INFO(FRONTEND_CMDLINE,  "We are setting the default device back to the first device on the installed list for you");
 
                 conf.device = 0;
                 symsys->set_device(0);
@@ -103,11 +103,11 @@ namespace eka2l1::android {
             device *dvc = dvcmngr->get_current();
 
             if (!dvc) {
-                LOG_ERROR("No current device is available. Stage two initialisation abort");
+                LOG_ERROR(FRONTEND_CMDLINE,  "No current device is available. Stage two initialisation abort");
                 return false;
             }
 
-            LOG_INFO("Device being used: {} ({})", dvc->model, dvc->firmware_code);
+            LOG_INFO(FRONTEND_CMDLINE,  "Device being used: {} ({})", dvc->model, dvc->firmware_code);
 
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.

@@ -49,7 +49,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unimplemented remcon opcode {}", ctx->msg->function);
+            LOG_ERROR(SERVICE_REMCON, "Unimplemented remcon opcode {}", ctx->msg->function);
         }
     }
 
@@ -85,7 +85,7 @@ namespace eka2l1 {
         else
             name_ = "Empty";
 
-        LOG_INFO("Remcon session set player type with name: {}, client type: {},"
+        LOG_INFO(SERVICE_REMCON, "Remcon session set player type with name: {}, client type: {},"
                  " player type: {}, player subtype: {}",
             name_, epoc::remcon::client_type_to_string(type_),
             epoc::remcon::player_type_to_string(information_.type_),

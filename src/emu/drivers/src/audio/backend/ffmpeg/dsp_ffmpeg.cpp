@@ -58,21 +58,21 @@ namespace eka2l1::drivers {
         auto find_result = FOUR_CC_TO_FFMPEG_CODEC_MAP.find(fmt);
 
         if (find_result == FOUR_CC_TO_FFMPEG_CODEC_MAP.end()) {
-            LOG_ERROR("Four CC format not supported!");
+            LOG_ERROR(DRIVER_AUD, "Four CC format not supported!");
             return false;
         }
 
         AVCodec *decoder = avcodec_find_decoder(find_result->second);
 
         if (!decoder) {
-            LOG_ERROR("Decoder not supported by ffmpeg!");
+            LOG_ERROR(DRIVER_AUD, "Decoder not supported by ffmpeg!");
             return false;
         }
 
         codec_ = avcodec_alloc_context3(decoder);
 
         if (!codec_) {
-            LOG_ERROR("Can't alloc decode context!");
+            LOG_ERROR(DRIVER_AUD, "Can't alloc decode context!");
             return false;
         }
 
@@ -105,7 +105,7 @@ namespace eka2l1::drivers {
                     0, nullptr);
 
                 if (swr_init(swr) < 0) {
-                    LOG_ERROR("Error initializing SWR context");
+                    LOG_ERROR(DRIVER_AUD, "Error initializing SWR context");
                     av_frame_free(&frame);
 
                     return;
@@ -118,7 +118,7 @@ namespace eka2l1::drivers {
                 swr_free(&swr);
 
                 if (result < 0) {
-                    LOG_ERROR("Error resample audio data!");
+                    LOG_ERROR(DRIVER_AUD, "Error resample audio data!");
                     return;
                 }
             } else {

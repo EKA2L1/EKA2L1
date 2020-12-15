@@ -82,7 +82,7 @@ namespace eka2l1 {
                 return 23;
 
             default: {
-                LOG_WARN("Undefined priority.");
+                LOG_WARN(KERNEL, "Undefined priority.");
                 break;
             }
             }
@@ -109,7 +109,7 @@ namespace eka2l1 {
             case process_priority::real_time_svr:
                 return 7;
             default: {
-                LOG_WARN("Undefined process priority");
+                LOG_WARN(KERNEL, "Undefined process priority");
                 break;
             }
             }
@@ -439,18 +439,18 @@ namespace eka2l1 {
 
                 switch (exit_type) {
                 case kernel::entity_exit_type::panic:
-                    LOG_TRACE("Thread {} panicked with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
+                    LOG_TRACE(KERNEL, "Thread {} panicked with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
                         exit_description ? (std::string("(") + *exit_description + ")") : "");
                     break;
 
                 case kernel::entity_exit_type::kill:
-                    LOG_TRACE("Thread {} forcefully killed with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
+                    LOG_TRACE(KERNEL, "Thread {} forcefully killed with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
                         exit_description ? (std::string("(") + *exit_description + ")") : "");
                     break;
 
                 case kernel::entity_exit_type::terminate:
                 case kernel::entity_exit_type::pending:
-                    LOG_TRACE("Thread {} terminated peacefully with category: {} and exit code: {}", obj_name, exit_category_u8,
+                    LOG_TRACE(KERNEL, "Thread {} terminated peacefully with category: {} and exit code: {}", obj_name, exit_category_u8,
                         reason, exit_description ? (std::string("(") + *exit_description + ")") : "");
                     break;
 

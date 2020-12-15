@@ -25,14 +25,14 @@
 
 namespace eka2l1::arm {
     void dump_context(const core::thread_context &uni) {
-        LOG_TRACE("CPU context: ");
-        LOG_TRACE("pc: 0x{:x}", uni.pc);
-        LOG_TRACE("lr: 0x{:x}", uni.lr);
-        LOG_TRACE("sp: 0x{:x}", uni.sp);
-        LOG_TRACE("cpsr: 0x{:x}", uni.cpsr);
+        LOG_TRACE(CPU, "CPU context: ");
+        LOG_TRACE(CPU, "pc: 0x{:x}", uni.pc);
+        LOG_TRACE(CPU, "lr: 0x{:x}", uni.lr);
+        LOG_TRACE(CPU, "sp: 0x{:x}", uni.sp);
+        LOG_TRACE(CPU, "cpsr: 0x{:x}", uni.cpsr);
 
         for (std::size_t i = 0; i < uni.cpu_registers.size(); i++) {
-            LOG_TRACE("r{}: 0x{:x}", i, uni.cpu_registers[i]);
+            LOG_TRACE(CPU, "r{}: 0x{:x}", i, uni.cpu_registers[i]);
         }
     }
 

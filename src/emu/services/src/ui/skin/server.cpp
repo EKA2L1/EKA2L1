@@ -147,7 +147,7 @@ namespace eka2l1 {
         }
 
         default: {
-            LOG_ERROR("Unimplemented opcode: {}", epoc::akn_skin_server_opcode_to_str(static_cast<const epoc::akn_skin_server_opcode>(ctx->msg->function)));
+            LOG_ERROR(SERVICE_UI, "Unimplemented opcode: {}", epoc::akn_skin_server_opcode_to_str(static_cast<const epoc::akn_skin_server_opcode>(ctx->msg->function)));
 
             break;
         }
@@ -178,7 +178,7 @@ namespace eka2l1 {
         const std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_pid);
 
         if (!skin_path.has_value()) {
-            LOG_ERROR("Unable to find active skin file!");
+            LOG_ERROR(SERVICE_UI, "Unable to find active skin file!");
             return;
         }
 

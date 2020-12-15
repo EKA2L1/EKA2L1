@@ -49,7 +49,7 @@ namespace eka2l1 {
             if (ctx->msg->function >= 1000) {
                 resource_->execute_command(*ctx);
             } else {
-                LOG_ERROR("Unimplemented opcode for HWMR session 0x{:X}", ctx->msg->function);
+                LOG_ERROR(SERVICE_HWRM, "Unimplemented opcode for HWMR session 0x{:X}", ctx->msg->function);
             }
 
             break;
@@ -65,7 +65,7 @@ namespace eka2l1 {
     void hwrm_server::connect(service::ipc_context &ctx) {
         if (!light_data_ || !vibration_data_) {
             if (!init()) {
-                LOG_ERROR("Fail to initialise HWRM service shared data!");
+                LOG_ERROR(SERVICE_HWRM, "Fail to initialise HWRM service shared data!");
             }
         }
 

@@ -60,7 +60,7 @@ namespace eka2l1::loader {
             package_files.push_back(dest);
             symfile f = io->open_file(dest, WRITE_MODE | BIN_MODE);
 
-            LOG_TRACE("Installing file {}", common::ucs2_to_utf8(dest));
+            LOG_TRACE(PACKAGE, "Installing file {}", common::ucs2_to_utf8(dest));
 
             size_t left = file.record.len;
             size_t chunk = 0x2000;

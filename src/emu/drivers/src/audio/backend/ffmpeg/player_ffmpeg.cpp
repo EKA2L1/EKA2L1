@@ -48,7 +48,7 @@ namespace eka2l1::drivers {
 
     static bool open_ffmpeg_stream(player_ffmpeg_request &request) {
         if (avformat_find_stream_info(request.format_context_, nullptr) < 0) {
-            LOG_ERROR("Error while finding stream info of input {}", request.url_);
+            LOG_ERROR(DRIVER_AUD, "Error while finding stream info of input {}", request.url_);
             avformat_free_context(request.format_context_);
 
             return false;
@@ -65,7 +65,7 @@ namespace eka2l1::drivers {
                 AVOutputFormat *format = av_guess_format(nullptr, request.url_.c_str(), nullptr);
 
                 if (!format) {
-                    LOG_ERROR("Error while finding responsible audio decoder of input {}", request.url_);
+                    LOG_ERROR(DRIVER_AUD, "Error while finding responsible audio decoder of input {}", request.url_);
                     avformat_free_context(request.format_context_);
                     av_free_packet(&request.packet_);
 
@@ -93,7 +93,7 @@ namespace eka2l1::drivers {
         request.codec_ = preallocated_context;
 
         if (avcodec_open2(request.codec_, request.format_context_->audio_codec, nullptr) < 0) {
-            LOG_ERROR("Unable to open codec of stream url {}", request.url_);
+            LOG_ERROR(DRIVER_AUD, "Unable to open codec of stream url {}", request.url_);
 
             avformat_free_context(request.format_context_);
             av_free_packet(&request.packet_);
@@ -158,7 +158,7 @@ namespace eka2l1::drivers {
             AVFrame *frame = av_frame_alloc();
 
             if (avcodec_receive_frame(request_ff->codec_, frame) < 0) {
-                LOG_ERROR("Error while decoding a frame!");
+                LOG_ERROR(DRIVER_AUD, "Error while decoding a frame!");
                 av_frame_free(&frame);
                 request_ff->flags_ |= 1;
                 return;
@@ -184,7 +184,7 @@ namespace eka2l1::drivers {
                     0, nullptr);
 
                 if (swr_init(swr) < 0) {
-                    LOG_ERROR("Error initializing SWR context");
+                    LOG_ERROR(DRIVER_AUD, "Error initializing SWR context");
                     av_frame_free(&frame);
 
                     return;
@@ -197,7 +197,7 @@ namespace eka2l1::drivers {
                 swr_free(&swr);
 
                 if (result < 0) {
-                    LOG_ERROR("Error resample audio data!");
+                    LOG_ERROR(DRIVER_AUD, "Error resample audio data!");
                     request_ff->flags_ |= 1;
                     return;
                 }
@@ -287,7 +287,7 @@ namespace eka2l1::drivers {
 
         // The unit is microseconds
         if (avformat_seek_file(request_ff->format_context_, -1, INT64_MIN, pos_in_us, INT64_MAX, 0) < 0) {
-            LOG_ERROR("Error seeking the stream!");
+            LOG_ERROR(DRIVER_AUD, "Error seeking the stream!");
             return false;
         }
 
@@ -295,12 +295,12 @@ namespace eka2l1::drivers {
     }
 
     bool player_ffmpeg::crop() {
-        LOG_ERROR("Crop audio operation unsupported in FFMPEG backend");
+        LOG_ERROR(DRIVER_AUD, "Crop audio operation unsupported in FFMPEG backend");
         return false;
     }
 
     bool player_ffmpeg::record() {
-        LOG_ERROR("Record audio operation unsupported in FFMPEG backend");
+        LOG_ERROR(DRIVER_AUD, "Record audio operation unsupported in FFMPEG backend");
         return false;
     }
 
@@ -312,7 +312,7 @@ namespace eka2l1::drivers {
         }
 
         if (!request_ff->output_encoder_) {
-            LOG_ERROR("No encoder is initialized!");
+            LOG_ERROR(DRIVER_AUD, "No encoder is initialized!");
             return false;
         }
 
@@ -335,7 +335,7 @@ namespace eka2l1::drivers {
         }
 
         if (!request_ff->output_encoder_) {
-            LOG_ERROR("No encoder is initialized!");
+            LOG_ERROR(DRIVER_AUD, "No encoder is initialized!");
             return false;
         }
 
@@ -388,13 +388,13 @@ namespace eka2l1::drivers {
 
         AVCodec *new_codec = avcodec_find_encoder(codec_id);
         if (!new_codec) {
-            LOG_ERROR("Unable to find new encoder for codec id {}", codec_id);
+            LOG_ERROR(DRIVER_AUD, "Unable to find new encoder for codec id {}", codec_id);
             return false;
         }
 
         if (!(new_codec->supported_samplerates) || !(new_codec->channel_layouts)) {
             // One of those arrays is empty. Return
-            LOG_ERROR("Supported sample rates or supported channel layouts array is empty!");
+            LOG_ERROR(DRIVER_AUD, "Supported sample rates or supported channel layouts array is empty!");
             return false;
         }
 
@@ -428,7 +428,7 @@ namespace eka2l1::drivers {
         };
         
         if (avformat_open_input(&request_ff->format_context_, request_ff->url_.c_str(), nullptr, nullptr) < 0) {
-            LOG_ERROR("Error while opening AVFormat Input!");
+            LOG_ERROR(DRIVER_AUD, "Error while opening AVFormat Input!");
             avformat_free_context(request_ff->format_context_);
 
             request_ff->format_context_ = nullptr;

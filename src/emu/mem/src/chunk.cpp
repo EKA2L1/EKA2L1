@@ -79,7 +79,7 @@ namespace eka2l1::mem {
         const vm_address base_addr = base(process);
         
         if (!base_addr) {
-            LOG_ERROR("Unable to get base address of this chunk!");
+            LOG_ERROR(MEMORY, "Unable to get base address of this chunk!");
             return;
         }
 

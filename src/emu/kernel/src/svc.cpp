@@ -134,7 +134,7 @@ namespace eka2l1::epoc {
         kernel::thread_local_data *local_data = current_local_data(kern);
 
         if (local_data->heap.ptr_address() == 0) {
-            LOG_WARN("Allocator is not available.");
+            LOG_WARN(KERNEL, "Allocator is not available.");
         }
 
         return local_data->heap;
@@ -184,7 +184,7 @@ namespace eka2l1::epoc {
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
-            LOG_ERROR("process_exit_type: Invalid process");
+            LOG_ERROR(KERNEL, "process_exit_type: Invalid process");
             return 0;
         }
 
@@ -201,7 +201,7 @@ namespace eka2l1::epoc {
         process_ptr cr_process = kern->crr_process();
 
         if (!pr_real) {
-            LOG_ERROR("Svcprocess_filename: Invalid process");
+            LOG_ERROR(KERNEL, "Svcprocess_filename: Invalid process");
             return;
         }
 
@@ -229,7 +229,7 @@ namespace eka2l1::epoc {
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
-            LOG_ERROR("process_get_id: Invalid process");
+            LOG_ERROR(KERNEL, "process_get_id: Invalid process");
             return epoc::error_bad_handle;
         }
 
@@ -240,7 +240,7 @@ namespace eka2l1::epoc {
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
-            LOG_ERROR("Svcprocess_type: Invalid process");
+            LOG_ERROR(KERNEL, "Svcprocess_type: Invalid process");
             return;
         }
 
@@ -258,7 +258,7 @@ namespace eka2l1::epoc {
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
-            LOG_ERROR("Svcprocess_type: Invalid process");
+            LOG_ERROR(KERNEL, "Svcprocess_type: Invalid process");
             return;
         }
 
@@ -276,7 +276,7 @@ namespace eka2l1::epoc {
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
-            LOG_ERROR("ProcessSetType passed invalid handle!");
+            LOG_ERROR(KERNEL, "ProcessSetType passed invalid handle!");
             return;
         }
 
@@ -289,14 +289,14 @@ namespace eka2l1::epoc {
         kernel::process *crr_process = kern->crr_process();
 
         if (slot >= 16 || slot < 0) {
-            LOG_ERROR("Invalid slot (slot: {} >= 16 or < 0)", slot);
+            LOG_ERROR(KERNEL, "Invalid slot (slot: {} >= 16 or < 0)", slot);
             return epoc::error_argument;
         }
 
         auto slot_ptr = crr_process->get_arg_slot(slot);
 
         if (!slot_ptr || !slot_ptr->used) {
-            LOG_ERROR("Getting descriptor length of unused slot: {}", slot);
+            LOG_ERROR(KERNEL, "Getting descriptor length of unused slot: {}", slot);
             return epoc::error_not_found;
         }
 
@@ -307,19 +307,19 @@ namespace eka2l1::epoc {
         kernel::process *pr = kern->crr_process();
 
         if (slot_num >= 16 || slot_num < 0) {
-            LOG_ERROR("Invalid slot (slot: {} >= 16 or < 0)", slot_num);
+            LOG_ERROR(KERNEL, "Invalid slot (slot: {} >= 16 or < 0)", slot_num);
             return epoc::error_argument;
         }
 
         auto slot = *pr->get_arg_slot(slot_num);
 
         if (!slot.used) {
-            LOG_ERROR("Parameter slot unused, error: {}", slot_num);
+            LOG_ERROR(KERNEL, "Parameter slot unused, error: {}", slot_num);
             return epoc::error_not_found;
         }
 
         if (length < slot.data.size()) {
-            LOG_ERROR("Given length is not large enough to slot length ({} vs {})",
+            LOG_ERROR(KERNEL, "Given length is not large enough to slot length ({} vs {})",
                 length, slot.data.size());
             return epoc::error_no_memory;
         }
@@ -341,14 +341,14 @@ namespace eka2l1::epoc {
         }
 
         if (slot_num < 0 || slot_num >= 16) {
-            LOG_ERROR("Invalid parameter slot: {}, slot number must be in range of 0-15", slot_num);
+            LOG_ERROR(KERNEL, "Invalid parameter slot: {}, slot number must be in range of 0-15", slot_num);
             return epoc::error_argument;
         }
 
         auto slot = *pr->get_arg_slot(slot_num);
 
         if (slot.used) {
-            LOG_ERROR("Can't set parameter of an used slot: {}", slot_num);
+            LOG_ERROR(KERNEL, "Can't set parameter of an used slot: {}", slot_num);
             return epoc::error_in_use;
         }
 
@@ -370,7 +370,7 @@ namespace eka2l1::epoc {
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
-            LOG_WARN("Process not found with handle: 0x{:x}", h);
+            LOG_WARN(KERNEL, "Process not found with handle: 0x{:x}", h);
             return;
         }
 
@@ -517,7 +517,7 @@ namespace eka2l1::epoc {
         slot->pointer = data_set;
 
         kernel::thread *thr = kern->crr_thread();
-        LOG_TRACE("TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<std::uint32_t>(h), data_set.ptr_address(),
+        LOG_TRACE(KERNEL, "TLS set for 0x{:x}, ptr: 0x{:x}, thread {}", static_cast<std::uint32_t>(h), data_set.ptr_address(),
             thr->name());
 
         return epoc::error_none;
@@ -527,19 +527,19 @@ namespace eka2l1::epoc {
         kernel::thread *thr = kern->crr_thread();
         thr->close_tls_slot(*thr->get_tls_slot(h, h));
 
-        LOG_TRACE("TLS slot closed for 0x{:x}, thread {}", static_cast<std::uint32_t>(h), thr->name());
+        LOG_TRACE(KERNEL, "TLS slot closed for 0x{:x}, thread {}", static_cast<std::uint32_t>(h), thr->name());
     }
 
     BRIDGE_FUNC(void, dll_filename, std::int32_t entry_addr, eka2l1::ptr<epoc::des8> full_path_ptr) {
         std::optional<std::u16string> dll_full_path = get_dll_full_path(kern, entry_addr);
 
         if (!dll_full_path) {
-            LOG_WARN("Unable to find DLL name for address: 0x{:x}", entry_addr);
+            LOG_WARN(KERNEL, "Unable to find DLL name for address: 0x{:x}", entry_addr);
             return;
         }
 
         std::string path_utf8 = common::ucs2_to_utf8(*dll_full_path);
-        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<std::uint32_t>(entry_addr),
+        LOG_TRACE(KERNEL, "Find DLL for address 0x{:x} with name: {}", static_cast<std::uint32_t>(entry_addr),
             path_utf8);
 
         kernel::process *crr_pr = kern->crr_process();
@@ -633,7 +633,7 @@ namespace eka2l1::epoc {
         }
 
         if (kern->get_config()->log_ipc)
-            LOG_TRACE("Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
+            LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg.get(), val);
 
@@ -652,7 +652,7 @@ namespace eka2l1::epoc {
         }
 
         if (kern->get_config()->log_ipc)
-            LOG_TRACE("Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
+            LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg.get(), dup_handle);
 
@@ -837,7 +837,7 @@ namespace eka2l1::epoc {
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
-            LOG_ERROR("Thread handle invalid 0x{:x}", h);
+            LOG_ERROR(KERNEL, "Thread handle invalid 0x{:x}", h);
             return;
         }
 
@@ -849,7 +849,7 @@ namespace eka2l1::epoc {
         eka2l1::ipc_msg_ptr msg = kern->get_msg(h);
 
         if (!msg) {
-            LOG_ERROR("Thread handle invalid 0x{:x}", h);
+            LOG_ERROR(KERNEL, "Thread handle invalid 0x{:x}", h);
             return;
         }
 
@@ -864,7 +864,7 @@ namespace eka2l1::epoc {
         // Exclamination point at the beginning of server name requires ProtServ
         if (!server_name.empty() && server_name[0] == '!') {
             if (!crr_pr->satisfy(server_exclamation_point_name_policy)) {
-                LOG_ERROR("Process {} try to create a server with exclamination point at the beginning of name ({}),"
+                LOG_ERROR(KERNEL, "Process {} try to create a server with exclamination point at the beginning of name ({}),"
                           " but doesn't have ProtServ",
                     crr_pr->name(), server_name);
 
@@ -875,7 +875,7 @@ namespace eka2l1::epoc {
         auto handle = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(), server_name).first;
 
         if (handle != kernel::INVALID_HANDLE) {
-            LOG_TRACE("Server {} created", server_name);
+            LOG_TRACE(KERNEL, "Server {} created", server_name);
         }
 
         return handle;
@@ -889,7 +889,7 @@ namespace eka2l1::epoc {
         }
 
         if (kern->get_config()->log_ipc)
-            LOG_TRACE("Receive requested from {}", server->name());
+            LOG_TRACE(KERNEL, "Receive requested from {}", server->name());
 
         server->receive_async_lle(req_sts, data_ptr.cast<service::message2>());
     }
@@ -912,7 +912,7 @@ namespace eka2l1::epoc {
             return epoc::error_general;
         }
 
-        LOG_TRACE("New session connected to {} with handle {}", server->name(), session_and_handle.first);
+        LOG_TRACE(KERNEL, "New session connected to {} with handle {}", server->name(), session_and_handle.first);
         session_and_handle.second->set_associated_handle(session_and_handle.first);
 
         return session_and_handle.first;
@@ -925,7 +925,7 @@ namespace eka2l1::epoc {
         server_ptr server = kern->get_by_name<service::server>(server_name);
 
         if (!server) {
-            LOG_TRACE("Create session to unexist server: {}", server_name);
+            LOG_TRACE(KERNEL, "Create session to unexist server: {}", server_name);
             return epoc::error_not_found;
         }
 
@@ -937,7 +937,7 @@ namespace eka2l1::epoc {
         server_ptr server = kern->get<service::server>(h);
 
         if (!server) {
-            LOG_TRACE("Create session to unexist server handle: {}", h);
+            LOG_TRACE(KERNEL, "Create session to unexist server handle: {}", h);
             return epoc::error_not_found;
         }
 
@@ -963,7 +963,7 @@ namespace eka2l1::epoc {
 
     static std::int32_t session_send_general(kernel_system *kern, kernel::handle h, std::int32_t ord, const std::uint32_t *ipc_args,
         eka2l1::ptr<epoc::request_status> status, const bool no_header_flag, const bool sync) {
-        // LOG_TRACE("Send using handle: {}", (h & 0x8000) ? (h & ~0x8000) : (h));
+        // LOG_TRACE(KERNEL, "Send using handle: {}", (h & 0x8000) ? (h & ~0x8000) : (h));
         process_ptr crr_pr = kern->crr_process();
 
         // Dispatch the header
@@ -990,11 +990,11 @@ namespace eka2l1::epoc {
         }
 
         if (!status) {
-            LOG_TRACE("Sending a blind sync message");
+            LOG_TRACE(KERNEL, "Sending a blind sync message");
         }
 
         if (kern->get_config()->log_ipc) {
-            LOG_TRACE("Sending {} sync to {}", ord, ss->get_server()->name());
+            LOG_TRACE(KERNEL, "Sending {} sync to {}", ord, ss->get_server()->name());
         }
 
         const std::string server_name = ss->get_server()->name();
@@ -1026,7 +1026,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(eka2l1::ptr<void>, leave_start) {
         kernel::thread *thr = kern->crr_thread();
-        LOG_CRITICAL("Leave started! Guess leave code: {}", static_cast<std::int32_t>(kern->get_cpu()->get_reg(0)));
+        LOG_CRITICAL(KERNEL, "Leave started! Guess leave code: {}", static_cast<std::int32_t>(kern->get_cpu()->get_reg(0)));
 
         thr->increase_leave_depth();
 
@@ -1038,10 +1038,10 @@ namespace eka2l1::epoc {
         thr->decrease_leave_depth();
 
         if (thr->is_invalid_leave()) {
-            LOG_CRITICAL("Invalid leave, leave depth is negative!");
+            LOG_CRITICAL(KERNEL, "Invalid leave, leave depth is negative!");
         }
 
-        LOG_TRACE("Leave trapped by trap handler.");
+        LOG_TRACE(KERNEL, "Leave trapped by trap handler.");
     }
 
     BRIDGE_FUNC(std::int32_t, debug_mask) {
@@ -1261,7 +1261,7 @@ namespace eka2l1::epoc {
         }
 
         if (!kern->is_eka1() && timeout) {
-            LOG_WARN("Semaphore timeout unimplemented");
+            LOG_WARN(KERNEL, "Semaphore timeout unimplemented");
         }
 
         sema->wait();
@@ -1413,7 +1413,7 @@ namespace eka2l1::epoc {
         
         const std::string name = name_des_ptr->to_std_string(pr);
 
-        //LOG_TRACE("Finding object name: {}", name);
+        //LOG_TRACE(KERNEL, "Finding object name: {}", name);
         if (handle->handle < 0) {
             return epoc::error_argument;
         }
@@ -1454,7 +1454,7 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        //LOG_TRACE("Finding object name: {}", name);
+        //LOG_TRACE(KERNEL, "Finding object name: {}", name);
         std::optional<eka2l1::find_handle> info = kern->find_object(match_str, handle_start_searching,
             static_cast<kernel::object_type>(obj_type), true);
 
@@ -1506,7 +1506,7 @@ namespace eka2l1::epoc {
             static_cast<kernel::object_type>(obj_type));
 
         if (!obj) {
-            LOG_ERROR("Can't open object: {}", obj_name);
+            LOG_ERROR(KERNEL, "Can't open object: {}", obj_name);
             return epoc::error_not_found;
         }
 
@@ -1651,7 +1651,7 @@ namespace eka2l1::epoc {
     }
     
     BRIDGE_FUNC(std::uint32_t, library_entry_call_start, const address addr) {
-        LOG_TRACE("Starting address 0x{:X}", addr);
+        LOG_TRACE(KERNEL, "Starting address 0x{:X}", addr);
         return epoc::error_none;
     }
 
@@ -1770,7 +1770,7 @@ namespace eka2l1::epoc {
         if (thr_handle == kernel::INVALID_HANDLE) {
             return epoc::error_general;
         } else {
-            LOG_TRACE("Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", thr_name,
+            LOG_TRACE(KERNEL, "Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", thr_name,
                 info->func_ptr, info->user_stack_size);
         }
 
@@ -1813,7 +1813,7 @@ namespace eka2l1::epoc {
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
-            LOG_ERROR("Thread not found with handle {}", h);
+            LOG_ERROR(KERNEL, "Thread not found with handle {}", h);
             return;
         }
 
@@ -1832,7 +1832,7 @@ namespace eka2l1::epoc {
 
         std::string new_name = name->to_std_string(pr);
 
-        LOG_TRACE("Thread with last name: {} renamed to {}", thr->name(), new_name);
+        LOG_TRACE(KERNEL, "Thread with last name: {} renamed to {}", thr->name(), new_name);
 
         thr->rename(new_name);
         return epoc::error_none;
@@ -1859,7 +1859,7 @@ namespace eka2l1::epoc {
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
-            LOG_ERROR("invalid thread handle 0x{:x}", h);
+            LOG_ERROR(KERNEL, "invalid thread handle 0x{:x}", h);
             return;
         }
 
@@ -1880,7 +1880,7 @@ namespace eka2l1::epoc {
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
-            LOG_ERROR("invalid thread handle 0x{:x}", h);
+            LOG_ERROR(KERNEL, "invalid thread handle 0x{:x}", h);
             return;
         }
 
@@ -1941,7 +1941,7 @@ namespace eka2l1::epoc {
         kernel::thread *thr = kern->get_by_id<kernel::thread>(id);
 
         if (!thr) {
-            LOG_ERROR("Unable to find thread with ID: {}", id);
+            LOG_ERROR(KERNEL, "Unable to find thread with ID: {}", id);
             return epoc::error_not_found;
         }
 
@@ -1968,7 +1968,7 @@ namespace eka2l1::epoc {
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
-            LOG_ERROR("Thread with handle 0x{:X} not found, returning 0", h);
+            LOG_ERROR(KERNEL, "Thread with handle 0x{:X} not found, returning 0", h);
             return 0;
         }
 
@@ -1979,7 +1979,7 @@ namespace eka2l1::epoc {
         auto pr = kern->get_by_id<kernel::process>(id);
 
         if (!pr) {
-            LOG_ERROR("Unable to find process with ID: {}", id);
+            LOG_ERROR(KERNEL, "Unable to find process with ID: {}", id);
             return epoc::error_not_found;
         }
 
@@ -2000,7 +2000,7 @@ namespace eka2l1::epoc {
         property_ptr prop = kern->get_prop(cage, key);
 
         if (!prop) {
-            LOG_WARN("Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
+            LOG_WARN(KERNEL, "Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
             return epoc::error_not_found;
         }
 
@@ -2016,7 +2016,7 @@ namespace eka2l1::epoc {
         property_ptr prop = kern->get_prop(cage, key);
 
         if (!prop) {
-            LOG_WARN("Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
+            LOG_WARN(KERNEL, "Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
             return epoc::error_not_found;
         }
 
@@ -2044,10 +2044,10 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, property_attach, std::int32_t cage, std::int32_t val, epoc::owner_type owner) {
         property_ptr prop = kern->get_prop(cage, val);
 
-        LOG_TRACE("Attach to property with category: 0x{:x}, key: 0x{:x}", cage, val);
+        LOG_TRACE(KERNEL, "Attach to property with category: 0x{:x}, key: 0x{:x}", cage, val);
 
         if (!prop) {
-            LOG_WARN("Property (0x{:x}, 0x{:x}) has not been defined before, undefined behavior may rise", cage, val);
+            LOG_WARN(KERNEL, "Property (0x{:x}, 0x{:x}) has not been defined before, undefined behavior may rise", cage, val);
 
             prop = kern->create<service::property>();
 
@@ -2087,12 +2087,12 @@ namespace eka2l1::epoc {
             break;
 
         default: {
-            LOG_WARN("Unknown property type, exit with epoc::error_general.");
+            LOG_WARN(KERNEL, "Unknown property type, exit with epoc::error_general.");
             return epoc::error_argument;
         }
         }
 
-        LOG_TRACE("Define to property with category: 0x{:x}, key: 0x{:x}, type: {}", cage, key,
+        LOG_TRACE(KERNEL, "Define to property with category: 0x{:x}, key: 0x{:x}, type: {}", cage, key,
             prop_type == service::property_type::int_data ? "int" : "bin");
 
         property_ptr prop = kern->get_prop(cage, key);
@@ -2488,7 +2488,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE("{}", tdes->to_std_string(kern->crr_process()));
+        LOG_TRACE(KERNEL, "{}", tdes->to_std_string(kern->crr_process()));
     }
 
     BRIDGE_FUNC(void, debug_print16, desc16 *tdes) {
@@ -2496,13 +2496,13 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_TRACE("{}", common::ucs2_to_utf8(tdes->to_std_string(kern->crr_process())));
+        LOG_TRACE(KERNEL, "{}", common::ucs2_to_utf8(tdes->to_std_string(kern->crr_process())));
     }
 
     std::int32_t debug_command_do_read_write(kernel_system *kern, const std::uint32_t thread_id,
         const address addr, const address data_ptr, const std::int32_t len, const bool is_write) {
         if (len < 0) {
-            LOG_ERROR("Invalid length to write.");
+            LOG_ERROR(KERNEL, "Invalid length to write.");
             return epoc::error_argument;
         }
 
@@ -2511,7 +2511,7 @@ namespace eka2l1::epoc {
 
         kernel::thread *thr_to_operate = kern->get_by_id<kernel::thread>(thread_id);
         if (!thr_to_operate || !buf) {
-            LOG_ERROR("Invalid thread id or buffer argument!");
+            LOG_ERROR(KERNEL, "Invalid thread id or buffer argument!");
             return epoc::error_argument;
         }
 
@@ -2528,7 +2528,7 @@ namespace eka2l1::epoc {
         }
 
         if (process_to_operate->is_kernel_process()) {
-            LOG_WARN("App trying to write to kernel process. Nothing is changed.");
+            LOG_WARN(KERNEL, "App trying to write to kernel process. Nothing is changed.");
             return epoc::error_none;
         }
 
@@ -2538,7 +2538,7 @@ namespace eka2l1::epoc {
             get_ptr_on_addr_space(addr));
 
         if (!dest_of_operate) {
-            LOG_WARN("Destination to operate is null, return success still.");
+            LOG_WARN(KERNEL, "Destination to operate is null, return success still.");
             return epoc::error_none;
         }
 
@@ -2566,7 +2566,7 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        LOG_TRACE("stdout: {}", common::ucs2_to_utf8(buf->to_std_string(crr)));
+        LOG_TRACE(KERNEL, "stdout: {}", common::ucs2_to_utf8(buf->to_std_string(crr)));
         return epoc::error_none;
     }
 
@@ -2588,7 +2588,7 @@ namespace eka2l1::epoc {
             return debug_command_do_print(kern, arg0);
 
         default: {
-            LOG_ERROR("Unimplemented debug command opcode {}", header->opcode_);
+            LOG_ERROR(KERNEL, "Unimplemented debug command opcode {}", header->opcode_);
             break;
         }
         }
@@ -2614,7 +2614,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, get_global_userdata) {
-        //LOG_INFO("get_global_userdata stubbed with zero");
+        //LOG_INFO(KERNEL, "get_global_userdata stubbed with zero");
         return 0;
     }
 
@@ -2650,7 +2650,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, raise_exception, kernel::handle h, std::int32_t type) {
-        LOG_ERROR("Exception with type {} is thrown", type);
+        LOG_ERROR(KERNEL, "Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2665,7 +2665,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, raise_exception_eka1, std::int32_t type, kernel::handle h) {
-        LOG_ERROR("Exception with type {} is thrown", type);
+        LOG_ERROR(KERNEL, "Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2680,7 +2680,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, is_exception_handled, kernel::handle h, std::int32_t type, bool aSwExcInProgress) {
-        LOG_ERROR("Exception with type {} is thrown", type);
+        LOG_ERROR(KERNEL, "Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2753,7 +2753,7 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, add_event, epoc::raw_event *evt) {
         if (!evt) {
-            LOG_ERROR("Event to add is null, ignored");
+            LOG_ERROR(KERNEL, "Event to add is null, ignored");
             return;
         }
 
@@ -2807,11 +2807,11 @@ namespace eka2l1::epoc {
         std::optional<std::u16string> dll_full_path = get_dll_full_path(kern, entry_addr);
 
         if (!dll_full_path) {
-            LOG_WARN("Unable to find DLL name for address: 0x{:x}", entry_addr);
+            LOG_WARN(KERNEL, "Unable to find DLL name for address: 0x{:x}", entry_addr);
             return;
         }
 
-        LOG_TRACE("Find DLL for address 0x{:x} with name: {}", static_cast<std::uint32_t>(entry_addr), common::ucs2_to_utf8(*dll_full_path));
+        LOG_TRACE(KERNEL, "Find DLL for address 0x{:x} with name: {}", static_cast<std::uint32_t>(entry_addr), common::ucs2_to_utf8(*dll_full_path));
         full_path_ptr->assign(kern->crr_process(), dll_full_path.value());
     }
 
@@ -2820,12 +2820,12 @@ namespace eka2l1::epoc {
         kernel_obj_ptr the_object = kern->get_kernel_obj_raw(h);
 
         if (!the_object) {
-            LOG_WARN("Trying to get handle info of an invalid handle: 0x{:X}, ignored", h);
+            LOG_WARN(KERNEL, "Trying to get handle info of an invalid handle: 0x{:X}, ignored", h);
             return;
         }
 
         if (!info) {
-            LOG_WARN("Trying to get handle info but the information struct is null!");
+            LOG_WARN(KERNEL, "Trying to get handle info but the information struct is null!");
             return;
         }
 
@@ -3067,7 +3067,7 @@ namespace eka2l1::epoc {
             return epoc::error_general;
         }
 
-        LOG_TRACE("Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", common::ucs2_to_utf8(name),
+        LOG_TRACE(KERNEL, "Thread {} created with start pc = 0x{:x}, stack size = 0x{:x}", common::ucs2_to_utf8(name),
             description->func_, description->stack_size_);
 
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
@@ -3089,7 +3089,7 @@ namespace eka2l1::epoc {
         server_ptr server = kern->get_by_name<service::server>(server_name);
 
         if (!server) {
-            LOG_TRACE("Create session to unexist server: {}", server_name);
+            LOG_TRACE(KERNEL, "Create session to unexist server: {}", server_name);
 
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
             return epoc::error_not_found;
@@ -3197,12 +3197,12 @@ namespace eka2l1::epoc {
             break;
 
         default:
-            LOG_ERROR("Unhandled object open with name: {}", obj_name);
+            LOG_ERROR(KERNEL, "Unhandled object open with name: {}", obj_name);
             return epoc::error_none;
         }
 
         if (!obj_ptr) {
-            LOG_ERROR("Unable to find object with name: {}", obj_name);
+            LOG_ERROR(KERNEL, "Unable to find object with name: {}", obj_name);
             
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
             return epoc::error_not_found;
@@ -3390,7 +3390,7 @@ namespace eka2l1::epoc {
         kernel::process *pr = kern->get_by_id<kernel::process>(create_info->arg1_);
 
         if (!pr) {
-            LOG_ERROR("Unable to find process with ID: {}", create_info->arg1_);
+            LOG_ERROR(KERNEL, "Unable to find process with ID: {}", create_info->arg1_);
             
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
             return epoc::error_not_found;
@@ -3438,7 +3438,7 @@ namespace eka2l1::epoc {
         kernel::thread *thr = kern->get_by_id<kernel::thread>(create_info->arg1_);
 
         if (!thr) {
-            LOG_ERROR("Unable to find thread with ID: {}", create_info->arg1_);
+            LOG_ERROR(KERNEL, "Unable to find thread with ID: {}", create_info->arg1_);
             
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
             return epoc::error_not_found;
@@ -3534,7 +3534,7 @@ namespace eka2l1::epoc {
             return epoc::error_general;
         }
 
-        LOG_TRACE("Server {} created", server_name_in_str);
+        LOG_TRACE(KERNEL, "Server {} created", server_name_in_str);
         return do_handle_write(kern, create_info, finish_signal, target_thread, h);
     }
 
@@ -3604,7 +3604,7 @@ namespace eka2l1::epoc {
                 factory_inst = factory_func(kern->get_system());
 
             if (!factory_inst) {
-                LOG_ERROR("Unable to load LDD with name {}", ldd_name);
+                LOG_ERROR(KERNEL, "Unable to load LDD with name {}", ldd_name);
                 
                 finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
                 return epoc::error_general;
@@ -3615,7 +3615,7 @@ namespace eka2l1::epoc {
         }
 
         if (!existing) {
-            LOG_ERROR("Unable to add LDD with name {} to kernel object list!", ldd_name);
+            LOG_ERROR(KERNEL, "Unable to add LDD with name {} to kernel object list!", ldd_name);
 
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
             return epoc::error_general;
@@ -3722,7 +3722,7 @@ namespace eka2l1::epoc {
         ldd::factory *ff = kern->get_by_name<ldd::factory>(ldd_name);
 
         if (!ff) {
-            LOG_ERROR("Logical device named: {} not found to free!", ldd_name);
+            LOG_ERROR(KERNEL, "Logical device named: {} not found to free!", ldd_name);
 
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
             return epoc::error_none;
@@ -3742,7 +3742,7 @@ namespace eka2l1::epoc {
         kernel::thread *crr_thread = kern->crr_thread();
 
         if (kern->get_config()->log_svc) {
-            LOG_TRACE("Calling executor function 0x{:X}", attribute & 0xFF);
+            LOG_TRACE(KERNEL, "Calling executor function 0x{:X}", attribute & 0xFF);
         }
 
         switch (attribute & 0xFF) {
@@ -3859,7 +3859,7 @@ namespace eka2l1::epoc {
             return create_logical_channel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         default:
-            LOG_ERROR("Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
+            LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
             break;
         }
 
@@ -3867,7 +3867,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, heap_created, std::uint32_t max_size, const std::uint32_t used_size, const std::uint32_t addr) {
-        LOG_TRACE("New heap created at address = 0x{:X}, allocated size = 0x{:X}, max size = 0x{:X}", addr, used_size, max_size);
+        LOG_TRACE(KERNEL, "New heap created at address = 0x{:X}, allocated size = 0x{:X}, max size = 0x{:X}", addr, used_size, max_size);
     }
 
     BRIDGE_FUNC(address, push_trap_frame, eka2l1::ptr<kernel::trap> new_trap_frame) {
@@ -3877,7 +3877,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(address, pop_trap_frame) {
         const address result = kern->crr_thread()->pop_trap_frame();
         if (result == 0) {
-            LOG_ERROR("Trap frame popped from already empty stack!");
+            LOG_ERROR(KERNEL, "Trap frame popped from already empty stack!");
         }
 
         return result;
@@ -3983,7 +3983,7 @@ namespace eka2l1::epoc {
         epoc::request_status *sts = eka2l1::ptr<epoc::request_status>(*sts_addr).get(thr->owning_process());
 
         if (!sts) {
-            LOG_ERROR("Status for request complete is null!");
+            LOG_ERROR(KERNEL, "Status for request complete is null!");
             return;
         }
 
@@ -3997,7 +3997,7 @@ namespace eka2l1::epoc {
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
-            LOG_WARN("Process not found with handle: 0x{:x}", h);
+            LOG_WARN(KERNEL, "Process not found with handle: 0x{:x}", h);
             return;
         }
 
@@ -4192,11 +4192,11 @@ namespace eka2l1::epoc {
             if (pdd_name)
                 pdd_name_str = pdd_name->to_std_string(own_pr);
 
-            LOG_TRACE("Ldd name: {}, Pdd name: {}", common::ucs2_to_utf8(ldd_name_str),
+            LOG_TRACE(KERNEL, "Ldd name: {}, Pdd name: {}", common::ucs2_to_utf8(ldd_name_str),
                 common::ucs2_to_utf8(pdd_name_str));
         }
 
-        LOG_TRACE("Busdev socket opening stubbed with number 0");
+        LOG_TRACE(KERNEL, "Busdev socket opening stubbed with number 0");
         return epoc::error_none;
     }
 

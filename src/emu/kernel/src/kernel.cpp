@@ -150,6 +150,8 @@ namespace eka2l1 {
         base_time_ = common::get_current_time_in_microseconds_since_1ad();
         locale_ = std::make_unique<std::locale>("");
 
+        dll_global_data_chunk_ = nullptr;
+
         // Clear CPU caches. No reason to keep it.
         cpu_->clear_instruction_cache();
     }
@@ -162,7 +164,7 @@ namespace eka2l1 {
                 (core->get_cpsr() & 0x20) ? 2 : 4, core->get_pc(),
                 (core->get_cpsr() & 0x20) ? true : false);
 
-            LOG_TRACE("Last instruction: {} (0x{:x})", disassemble_inst, (core->get_cpsr() & 0x20)
+            LOG_TRACE(KERNEL, "Last instruction: {} (0x{:x})", disassemble_inst, (core->get_cpsr() & 0x20)
                     ? *reinterpret_cast<std::uint16_t *>(pc_data)
                     : *reinterpret_cast<std::uint32_t *>(pc_data));
         }
@@ -174,7 +176,7 @@ namespace eka2l1 {
                 core->get_lr() % 2 != 0 ? 2 : 4, core->get_lr() - core->get_lr() % 2,
                 core->get_lr() % 2 != 0 ? true : false);
 
-            LOG_TRACE("LR instruction: {} (0x{:x})", disassemble_inst, (core->get_lr() % 2 != 0)
+            LOG_TRACE(KERNEL, "LR instruction: {} (0x{:x})", disassemble_inst, (core->get_lr() % 2 != 0)
                     ? *reinterpret_cast<std::uint16_t *>(pc_data)
                     : *reinterpret_cast<std::uint32_t *>(pc_data));
         }
@@ -255,12 +257,12 @@ namespace eka2l1 {
         switch (exception_type) {
         case arm::exception_type_access_violation_read:
         case arm::exception_type_access_violation_write:
-            LOG_ERROR("Access violation {} address 0x{:X} in thread {}", (exception_type == arm::exception_type_access_violation_read) ?
+            LOG_ERROR(KERNEL, "Access violation {} address 0x{:X} in thread {}", (exception_type == arm::exception_type_access_violation_read) ?
                       "reading" : "writing", exception_data, crr_thread()->name());
             break;
 
         case arm::exception_type_undefined_inst:
-            LOG_ERROR("Undefined instruction encountered in thread {}", crr_thread()->name());
+            LOG_ERROR(KERNEL, "Undefined instruction encountered in thread {}", crr_thread()->name());
             break;
 
         case arm::exception_type_unpredictable:
@@ -278,7 +280,7 @@ namespace eka2l1 {
             return;
 
         default:
-            LOG_ERROR("Unknown exception encountered in thread {}", crr_thread()->name());
+            LOG_ERROR(KERNEL, "Unknown exception encountered in thread {}", crr_thread()->name());
             break;
         }
 
@@ -637,7 +639,7 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        LOG_TRACE("Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
+        LOG_TRACE(KERNEL, "Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
         pr->construct_with_codeseg(cs, new_stack_size, heap_min, heap_max, pri);
 
         return pr;
@@ -1003,7 +1005,7 @@ namespace eka2l1 {
             return false;
         }
 
-        LOG_TRACE("Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map_));
+        LOG_TRACE(KERNEL, "Rom mapped to address: 0x{:x}", reinterpret_cast<std::uint64_t>(rom_map_));
 
         // Don't care about the result as long as it's not null.
         kernel::chunk *rom_chunk = create<kernel::chunk>(mem_, nullptr, "ROM", 0, static_cast<address>(rom_size),
@@ -1011,7 +1013,7 @@ namespace eka2l1 {
             kernel::chunk_attrib::none, 0x00, false, addr, rom_map_);
 
         if (!rom_chunk) {
-            LOG_ERROR("Can't create ROM chunk!");
+            LOG_ERROR(KERNEL, "Can't create ROM chunk!");
 
             common::unmap_file(rom_map_);
             return false;

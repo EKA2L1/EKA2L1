@@ -96,7 +96,7 @@ namespace eka2l1 {
                 const std::size_t packed_size = get_argument_data_size(idx);
 
                 if (packed_size != sizeof(T)) {
-                    LOG_WARN("Getting packed struct with mismatch size ({} vs {}), size to get "
+                    LOG_WARN(SERVICE_TRACK, "Getting packed struct with mismatch size ({} vs {}), size to get "
                              "will be automatically clamped",
                         packed_size, sizeof(T));
                 }

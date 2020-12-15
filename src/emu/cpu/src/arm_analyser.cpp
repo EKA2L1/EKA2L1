@@ -97,7 +97,7 @@ namespace eka2l1::arm {
 
                     case instruction::BX: {
                         if (inst->ops[0].type == op_reg && inst->ops[0].reg == arm::reg::R12 && ip != 0) {
-                            // LOG_TRACE("Branching 0x{:X}, addr 0x{:X}", ip, baddr);
+                            // LOG_TRACE(CPU, "Branching 0x{:X}, addr 0x{:X}", ip, baddr);
 
                             add_func(ip);
                             ip = 0;
@@ -126,7 +126,7 @@ namespace eka2l1::arm {
                                 }
                             }
 
-                            // LOG_TRACE("Branching 0x{:X}, addr 0x{:X}", boff, baddr);
+                            // LOG_TRACE(CPU, "Branching 0x{:X}, addr 0x{:X}", boff, baddr);
                             add_func(boff);
                         }
 

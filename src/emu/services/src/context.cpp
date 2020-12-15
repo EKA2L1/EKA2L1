@@ -362,7 +362,7 @@ namespace eka2l1 {
                     return;
                 }
 
-                LOG_WARN("Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
+                LOG_WARN(SERVICE_TRACK, "Unimplemented IPC call: 0x{:x} for server: {}", func, obj_name);
                 return;
             }
 
@@ -372,7 +372,7 @@ namespace eka2l1 {
             context.msg = process_msg;
 
             if (conf->log_ipc) {
-                LOG_INFO("Calling IPC: {}, id: {}", ipf.name, func);
+                LOG_INFO(SERVICE_TRACK, "Calling IPC: {}, id: {}", ipf.name, func);
             }
 
             ipf.wrapper(context);

@@ -149,7 +149,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("{}", (int)settings->conf_.rate_);
+        LOG_TRACE(SERVICE_MMFAUD, "{}", (int)settings->conf_.rate_);
         conf_ = settings->conf_;
         ctx->complete(epoc::error_none);
     }
@@ -211,11 +211,11 @@ namespace eka2l1 {
         std::optional<std::string> arg1 = ctx->get_argument_value<std::string>(1);
         std::optional<std::string> arg2 = ctx->get_argument_value<std::string>(2);
 
-        LOG_TRACE("Async command stubbed");
+        LOG_TRACE(SERVICE_MMFAUD, "Async command stubbed");
     }
 
     void mmf_dev_server_session::request_resource_notification(service::ipc_context *ctx) {
-        LOG_TRACE("Request resource notification stubbed");
+        LOG_TRACE(SERVICE_MMFAUD, "Request resource notification stubbed");
         ctx->complete(epoc::error_none);
     }
 
@@ -333,7 +333,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unimplemented MMF dev server session opcode {}", ctx->msg->function);
+            LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
             break;
         }
     }

@@ -195,7 +195,7 @@ namespace eka2l1::arm {
         }
 
         void InterpreterFallback(Dynarmic::A32::VAddr addr, size_t num_insts) override {
-            LOG_ERROR("Interpreter fallback!");
+            LOG_ERROR(CPU, "Interpreter fallback!");
         }
 
         void ExceptionRaised(uint32_t pc, Dynarmic::A32::Exception exception) override {
@@ -334,7 +334,7 @@ namespace eka2l1::arm {
         ctx.lr = get_lr();
 
         if (!ctx.pc) {
-            LOG_WARN("Dynarmic save context with PC = 0");
+            LOG_WARN(CPU, "Dynarmic save context with PC = 0");
         }
 
         ctx.wrwr = cb->get_cp15()->get_wrwr();

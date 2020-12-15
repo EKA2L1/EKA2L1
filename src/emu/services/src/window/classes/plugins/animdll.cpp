@@ -33,21 +33,21 @@ namespace eka2l1::epoc {
 
         switch (op) {
         case ws_anim_dll_op_create_instance: {
-            LOG_TRACE("AnimDll::CreateInstance stubbed with a anim handle (>= 0)");
+            LOG_TRACE(SERVICE_WINDOW, "AnimDll::CreateInstance stubbed with a anim handle (>= 0)");
             ctx.complete(user_count++);
 
             break;
         }
 
         case ws_anim_dll_op_command_reply: {
-            LOG_TRACE("AnimDll command reply stubbed!");
+            LOG_TRACE(SERVICE_WINDOW, "AnimDll command reply stubbed!");
             ctx.complete(epoc::error_none);
 
             break;
         }
 
         default: {
-            LOG_ERROR("Unimplemented AnimDll opcode: 0x{:x}", cmd.header.op);
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented AnimDll opcode: 0x{:x}", cmd.header.op);
             break;
         }
         }

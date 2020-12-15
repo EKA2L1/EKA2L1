@@ -38,7 +38,7 @@ namespace eka2l1::mem::flexible {
             data_ = common::map_memory(page_count * ctrl->page_size());
 
             if (!data_) {
-                LOG_ERROR("Unable to allocate virtual memory for this memory object (page count = {})",
+                LOG_ERROR(MEMORY, "Unable to allocate virtual memory for this memory object (page count = {})",
                     page_count);
             }
         }
@@ -72,7 +72,7 @@ namespace eka2l1::mem::flexible {
         // Map to all mappings
         for (auto &mapping: mappings_) {
             if (!mapping->map(this, page_offset, total_pages, perm)) {
-                LOG_WARN("Unable to map committed memory to a mapping!");
+                LOG_WARN(MEMORY, "Unable to map committed memory to a mapping!");
             }
             
             for (auto &mm: ctrl_fx->mmus_) {
@@ -111,7 +111,7 @@ namespace eka2l1::mem::flexible {
         // Unmap decomitted memory from all mappings
         for (auto &mapping: mappings_) {
             if (!mapping->unmap(page_offset, total_pages)) {
-                LOG_WARN("Unable to unmap decommitted memory from a mapping!");
+                LOG_WARN(MEMORY, "Unable to unmap decommitted memory from a mapping!");
             }
             
             for (auto &mm: ctrl_fx->mmus_) {

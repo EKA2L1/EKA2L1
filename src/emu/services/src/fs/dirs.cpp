@@ -36,7 +36,7 @@ namespace eka2l1 {
     void fs_server_client::open_dir(service::ipc_context *ctx) {
         auto dir = ctx->get_argument_value<std::u16string>(0);
 
-        LOG_TRACE("Opening directory: {}", common::ucs2_to_utf8(*dir));
+        LOG_TRACE(SERVICE_EFSRV, "Opening directory: {}", common::ucs2_to_utf8(*dir));
 
         if (!dir) {
             ctx->complete(epoc::error_argument);
@@ -83,7 +83,7 @@ namespace eka2l1 {
 
         uid_type type = *ctx->get_argument_data_from_descriptor<uid_type>(2);
 
-        LOG_TRACE("UID requested: 0x{}, 0x{}, 0x{}", type.uid[0], type.uid[1], type.uid[2]);
+        LOG_TRACE(SERVICE_EFSRV, "UID requested: 0x{}, 0x{}, 0x{}", type.uid[0], type.uid[1], type.uid[2]);
 
         int dir_handle_i = static_cast<int>(dir_handle);
 
@@ -185,7 +185,7 @@ namespace eka2l1 {
 
             if (!info) {
                 entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
-                LOG_TRACE("Queried entries: 0x{:x}", queried_entries);
+                LOG_TRACE(SERVICE_EFSRV, "Queried entries: 0x{:x}", queried_entries);
                 ctx->complete(epoc::error_eof);
 
                 return;
@@ -216,7 +216,7 @@ namespace eka2l1 {
 
         entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
 
-        LOG_TRACE("Queried entries: 0x{:x}", queried_entries);
+        LOG_TRACE(SERVICE_EFSRV, "Queried entries: 0x{:x}", queried_entries);
 
         ctx->complete(epoc::error_none);
     }

@@ -113,7 +113,7 @@ namespace eka2l1::mem {
                         break;
                     }
                 }
-                //LOG_TRACE("Mapped to CPU: 0x{:X}, size 0x{:X}", off_start_just_mapped, size_just_mapped);
+                //LOG_TRACE(MEMORY, "Mapped to CPU: 0x{:X}, size 0x{:X}", off_start_just_mapped, size_just_mapped);
             }
 
             if (ptid == 0xFFFFFFFF) {
@@ -204,7 +204,7 @@ namespace eka2l1::mem {
 
             // Unmap the rest
             if (size_just_unmapped != 0) {
-                //LOG_TRACE("Unmapped from CPU: 0x{:X}, size 0x{:X}", off_start_just_unmapped, size_just_unmapped);
+                //LOG_TRACE(MEMORY, "Unmapped from CPU: 0x{:X}, size 0x{:X}", off_start_just_unmapped, size_just_unmapped);
                 for (auto &mm: mul_ctrl->mmus_) {
                     if (!own_process_ || mul_process->addr_space_id_ == mm->current_addr_space()) {
                         mm->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
@@ -217,7 +217,7 @@ namespace eka2l1::mem {
             if (!is_external_host) {
                 if (!common::decommit(reinterpret_cast<std::uint8_t *>(host_base_) + (ps_off << control_->page_size_bits_) + pt_base,
                         page_num << control_->page_size_bits_)) {
-                    LOG_ERROR("Can't decommit a page from host memory");
+                    LOG_ERROR(MEMORY, "Can't decommit a page from host memory");
                 }
             }
 

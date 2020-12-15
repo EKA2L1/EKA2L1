@@ -69,7 +69,7 @@ namespace eka2l1::dispatch {
         auto player_new = drivers::new_audio_player(aud_driver, drivers::get_suitable_player_type());
 
         if (!player_new) {
-            LOG_ERROR("Unable to instantiate new audio player!");
+            LOG_ERROR(HLE_AUD, "Unable to instantiate new audio player!");
             return 0;
         }
 
@@ -393,7 +393,7 @@ namespace eka2l1::dispatch {
         auto ll_stream = drivers::new_dsp_out_stream(aud_driver, drivers::dsp_stream_backend_ffmpeg);
 
         if (!ll_stream) {
-            LOG_ERROR("Unable to create new DSP out stream!");
+            LOG_ERROR(HLE_AUD, "Unable to create new DSP out stream!");
             return 0;
         }
 

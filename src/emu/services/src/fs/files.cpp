@@ -187,7 +187,7 @@ namespace eka2l1 {
 
         // This is trying to prevent from data corruption that will affect the host
         if (size >= common::GB(1)) {
-            LOG_ERROR("File trying to resize to 1GB, operation not permitted");
+            LOG_ERROR(SERVICE_EFSRV, "File trying to resize to 1GB, operation not permitted");
             ctx->complete(epoc::error_too_big);
 
             return;
@@ -328,7 +328,7 @@ namespace eka2l1 {
 
         // On Symbian, read-only file is fine with flushing. The VFS is changed to reflect this behaviour.
         if (!vfs_file->flush()) {
-            LOG_ERROR("Fail flushing file with path {}", common::ucs2_to_utf8(vfs_file->file_name()));
+            LOG_ERROR(SERVICE_EFSRV, "Fail flushing file with path {}", common::ucs2_to_utf8(vfs_file->file_name()));
 
             ctx->complete(epoc::error_general);
             return;
@@ -430,7 +430,7 @@ namespace eka2l1 {
             static char ZERO_BYTE = 0;
 
             if (vfs_file->write_file(&ZERO_BYTE, 1, static_cast<std::uint32_t>(write_pos - size_of_file)) != write_pos - size_of_file) {
-                LOG_WARN("Unable to supply stubbed bytes for beyond file size write operation!");
+                LOG_WARN(SERVICE_EFSRV, "Unable to supply stubbed bytes for beyond file size write operation!");
             }
         }
 
@@ -438,7 +438,7 @@ namespace eka2l1 {
         vfs_file->seek(write_pos, file_seek_mode::beg);
         size_t wrote_size = vfs_file->write_file(write_data.value().data(), 1, write_len);
 
-        //LOG_TRACE("File {} wroted with size: {}, at {}", common::ucs2_to_utf8(vfs_file->file_name()), wrote_size, write_pos);
+        //LOG_TRACE(SERVICE_EFSRV, "File {} wroted with size: {}, at {}", common::ucs2_to_utf8(vfs_file->file_name()), wrote_size, write_pos);
 
         ctx->complete(epoc::error_none);
     }
@@ -487,7 +487,7 @@ namespace eka2l1 {
         size_t read_finish_len = vfs_file->read_file(read_data.data(), 1, read_len);
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<uint8_t *>(read_data.data()), static_cast<std::uint32_t>(read_finish_len));
 
-        //LOG_TRACE("Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
+        //LOG_TRACE(SERVICE_EFSRV, "Readed {} from {} to address 0x{:x}", read_finish_len, read_pos, ctx->msg->args.args[0]);
         ctx->complete(epoc::error_none);
     }
 
@@ -541,7 +541,7 @@ namespace eka2l1 {
         utf16_str full_path = get_full_symbian_path(ss_path, dir_create.value());
 
         if (!io->exist(full_path)) {
-            LOG_TRACE("Directory for temp file not exists", common::ucs2_to_utf8(full_path));
+            LOG_TRACE(SERVICE_EFSRV, "Directory for temp file not exists", common::ucs2_to_utf8(full_path));
 
             ctx->complete(epoc::error_path_not_found);
             return;
@@ -556,7 +556,7 @@ namespace eka2l1 {
         symfile f = io->open_file(full_path, WRITE_MODE);
         f->close();
 
-        LOG_INFO("Opening temp file: {}", common::ucs2_to_utf8(full_path));
+        LOG_INFO(SERVICE_EFSRV, "Opening temp file: {}", common::ucs2_to_utf8(full_path));
         int handle = new_node(ctx->sys->get_io_system(), ctx->msg->own_thr, full_path,
             *ctx->get_argument_value<std::int32_t>(1), true, true);
 
@@ -565,7 +565,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Handle opened: {}", handle);
+        LOG_TRACE(SERVICE_EFSRV, "Handle opened: {}", handle);
 
         ctx->write_data_to_descriptor_argument<int>(3, handle);
 
@@ -599,7 +599,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_adopt(service::ipc_context *ctx) {
-        LOG_TRACE("Fs::FileAdopt stubbed");
+        LOG_TRACE(SERVICE_EFSRV, "Fs::FileAdopt stubbed");
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, ctx->get_argument_value<std::uint32_t>(0).value());
         ctx->complete(epoc::error_none);
@@ -727,7 +727,7 @@ namespace eka2l1 {
 
             // Do a check to return epoc::error_path_not_found
             if (!io->exist(file_dir)) {
-                LOG_TRACE("Base directory of file {} not found", name_utf8);
+                LOG_TRACE(SERVICE_EFSRV, "Base directory of file {} not found", name_utf8);
 
                 ctx->complete(epoc::error_path_not_found);
                 return;
@@ -737,7 +737,7 @@ namespace eka2l1 {
         const bool is_it_avail = io->exist(name_res.value());
 
         if (is_it_avail && (existence == exist_mode_must_not)) {
-            LOG_ERROR("Trying to open existing file: {}, while the requirement open mode forbidded this!",
+            LOG_ERROR(SERVICE_EFSRV, "Trying to open existing file: {}, while the requirement open mode forbidded this!",
                 name_utf8);
 
             ctx->complete(epoc::error_already_exists);
@@ -745,14 +745,14 @@ namespace eka2l1 {
         }
 
         if (!is_it_avail && (existence == exist_mode_neccessary)) {
-            LOG_ERROR("Trying to open a non-existence file: {} while the open mode requires its availbility!",
+            LOG_ERROR(SERVICE_EFSRV, "Trying to open a non-existence file: {} while the open mode requires its availbility!",
                 name_utf8);
 
             ctx->complete(epoc::error_not_found);
             return;
         }
 
-        LOG_INFO("Opening file: {}, raw mode {}", name_utf8, open_mode_res.value());
+        LOG_INFO(SERVICE_EFSRV, "Opening file: {}, raw mode {}", name_utf8, open_mode_res.value());
         int handle = new_node(ctx->sys->get_io_system(), ctx->msg->own_thr, *name_res,
             *open_mode_res, overwrite, temporary);
 
@@ -761,7 +761,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Handle opened: {}", handle);
+        LOG_TRACE(SERVICE_EFSRV, "Handle opened: {}", handle);
 
         ctx->write_data_to_descriptor_argument<int>(3, handle);
         ctx->complete(epoc::error_none);
@@ -842,7 +842,7 @@ namespace eka2l1 {
         new_node->vfs_node = io->open_file(name, access_mode);
 
         if (!new_node->vfs_node) {
-            LOG_TRACE("Can't open file {}", common::ucs2_to_utf8(name));
+            LOG_TRACE(SERVICE_EFSRV, "Can't open file {}", common::ucs2_to_utf8(name));
             return epoc::error_not_found;
         }
 

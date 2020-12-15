@@ -103,7 +103,7 @@ namespace eka2l1 {
 
         const std::string name_process = eka2l1::filename(common::ucs2_to_utf8(*process_name16));
 
-        LOG_TRACE("Trying to summon: {}", name_process);
+        LOG_TRACE(SERVICE_LOADER, "Trying to summon: {}", name_process);
 
         std::u16string pext = path_extension(*process_name16);
 
@@ -116,7 +116,7 @@ namespace eka2l1 {
         process_ptr pr = kern->spawn_new_process(*process_name16, *process_args, uid3, stack_size);
 
         if (!pr) {
-            LOG_DEBUG("Try spawning process {} failed", name_process);
+            LOG_DEBUG(SERVICE_LOADER, "Try spawning process {} failed", name_process);
             ctx.complete(epoc::error_not_found);
             return;
         }
@@ -200,7 +200,7 @@ namespace eka2l1 {
         }
 
         if (!cs) {
-            LOG_DEBUG("Try loading {} to {} failed", lib_name, own_pr->name());
+            LOG_DEBUG(SERVICE_LOADER, "Try loading {} to {} failed", lib_name, own_pr->name());
             ctx.complete(epoc::error_not_found);
             return;
         }
@@ -209,7 +209,7 @@ namespace eka2l1 {
         auto lib_handle_and_obj = ctx.sys->get_kernel_system()->create_and_add_thread<kernel::library>(
             static_cast<kernel::owner_type>(handle_owner), ctx.msg->own_thr, cs);
 
-        LOG_TRACE("Loaded library: {}", lib_name);
+        LOG_TRACE(SERVICE_LOADER, "Loaded library: {}", lib_name);
 
         if (info) {
             own_pr->signal_dll_lock(ctx.msg->own_thr);

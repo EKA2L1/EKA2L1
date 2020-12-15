@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
     eka2l1::log::setup_log(nullptr);
 
     if (argc <= 1) {
-        LOG_ERROR("No file provided!");
-        LOG_INFO("Usage: mbm2bmp [filename].");
+        LOG_ERROR(eka2l1::SYSTEM, "No file provided!");
+        LOG_INFO(eka2l1::SYSTEM, "Usage: mbm2bmp [filename].");
 
         return -1;
     }
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     std::uint8_t *mbm_ptr = reinterpret_cast<std::uint8_t *>(eka2l1::common::map_file(target_mbm));
 
     if (!mbm_ptr) {
-        LOG_ERROR("Try to map MBM file to memory but failed, exiting...");
+        LOG_ERROR(eka2l1::SYSTEM, "Try to map MBM file to memory but failed, exiting...");
         return -2;
     }
 
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     eka2l1::loader::mbm_file mbmf(reinterpret_cast<eka2l1::common::ro_stream *>(&stream));
 
     if (!mbmf.do_read_headers()) {
-        LOG_ERROR("Reading MBM header failed! At least one magic value doesn't match!");
+        LOG_ERROR(eka2l1::SYSTEM, "Reading MBM header failed! At least one magic value doesn't match!");
         return -3;
     }
 
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
         std::string bmp_name = eka2l1::replace_extension(eka2l1::filename(target_mbm), "");
         bmp_name += "_" + eka2l1::common::to_string(i) + ".bmp";
         if (!mbmf.save_bitmap_to_file(i, bmp_name.c_str())) {
-            LOG_ERROR("Can't save bitmap number {}!", i);
+            LOG_ERROR(eka2l1::SYSTEM, "Can't save bitmap number {}!", i);
         }
     }
 

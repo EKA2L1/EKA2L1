@@ -142,7 +142,7 @@ namespace eka2l1 {
         const std::lock_guard<std::mutex> guard(lock);
 
         if (get(firmcode)) {
-            LOG_ERROR("Device already installed ({})!", firmcode);
+            LOG_ERROR(SYSTEM, "Device already installed ({})!", firmcode);
             return false;
         }
 
@@ -152,7 +152,7 @@ namespace eka2l1 {
             "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
         common::dynamic_ifile ifile(lang_path);
         if (ifile.fail()) {
-            LOG_ERROR("Fail to load languages.txt file! (Searched path: {})", lang_path);
+            LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {})", lang_path);
             return false;
         }
         std::string line;

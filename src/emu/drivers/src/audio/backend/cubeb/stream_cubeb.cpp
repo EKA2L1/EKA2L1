@@ -52,7 +52,7 @@ namespace eka2l1::drivers {
         minimum_latency = 100 * sample_rate / 1000; // Firefox default
 
         if (cubeb_get_min_latency(context_, &params, &minimum_latency) != CUBEB_OK) {
-            LOG_ERROR("Error trying to get minimum latency. Use default");
+            LOG_ERROR(DRIVER_AUD, "Error trying to get minimum latency. Use default");
         }
 #endif
 
@@ -61,7 +61,7 @@ namespace eka2l1::drivers {
             data_callback_redirector, state_callback_redirector, this);
 
         if (result != CUBEB_OK) {
-            LOG_CRITICAL("Error trying to initialize cubeb stream!");
+            LOG_CRITICAL(DRIVER_AUD, "Error trying to initialize cubeb stream!");
             return;
         }
     }

@@ -124,7 +124,7 @@ namespace eka2l1::drivers {
             break;
 
         default:
-            LOG_ERROR("Unsupport notification type!");
+            LOG_ERROR(DRIVER_AUD, "Unsupport notification type!");
             break;
         }
     }
@@ -138,7 +138,7 @@ namespace eka2l1::drivers {
             return buffer_copied_userdata_;
 
         default:
-            LOG_ERROR("Unsupport notification type!");
+            LOG_ERROR(DRIVER_AUD, "Unsupport notification type!");
             break;
         }
 

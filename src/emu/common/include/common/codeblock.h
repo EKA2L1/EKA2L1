@@ -92,7 +92,7 @@ namespace eka2l1::common {
         // These CANNOT be nested. We rely on the memory protection starting at READ|WRITE after start and reset.
         void begin_write(size_t sizeEstimate = 1) {
             if (writeStart_) {
-                LOG_ERROR("Can't do nested code block write");
+                LOG_ERROR(COMMON, "Can't do nested code block write");
             }
 
             // In case the last block made the current page exec/no-write, let's fix that.

@@ -35,7 +35,11 @@ namespace eka2l1::epoc {
             return;
         }
 
-        LOG_INFO("Vibrating the phone for {} milliseconds //-(o_o)-\\", duration_in_millis.value());
+        LOG_INFO(SERVICE_HWRM, "Vibrating the phone for {} milliseconds //-(o_o)-\\", duration_in_millis.value());
+        ctx.complete(epoc::error_none);
+    }
+
+    void vibration_resource::vibrate_cleanup(service::ipc_context &ctx) {
         ctx.complete(epoc::error_none);
     }
 
@@ -45,8 +49,12 @@ namespace eka2l1::epoc {
             vibrate_with_default_intensity(ctx);
             break;
 
+        case hwrm_vibrate_cleanup:
+            vibrate_cleanup(ctx);
+            break;
+
         default:
-            LOG_ERROR("Unimplemented operation for vibration resource: ({})", ctx.msg->function);
+            LOG_ERROR(SERVICE_HWRM, "Unimplemented operation for vibration resource: ({})", ctx.msg->function);
             ctx.complete(epoc::error_none);
             break;
         }

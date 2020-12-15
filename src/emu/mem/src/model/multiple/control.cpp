@@ -115,7 +115,7 @@ namespace eka2l1::mem {
                 // Assign the table to global directory
                 switch_page_table(&global_dir_);
             } else {
-                LOG_TRACE("Unreachable!!!");
+                LOG_TRACE(MEMORY, "Unreachable!!!");
             }
         }
     }

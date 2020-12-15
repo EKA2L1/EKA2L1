@@ -117,7 +117,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unimplemented MMF audio server session opcode {}", ctx->msg->function);
+            LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF audio server session opcode {}", ctx->msg->function);
             break;
         }
     }

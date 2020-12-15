@@ -160,6 +160,7 @@ namespace eka2l1 {
         void notify_change_ex(service::ipc_context *ctx);
         void notify_change(service::ipc_context *ctx);
         void notify_change_cancel_ex(service::ipc_context *ctx);
+        void notify_change_cancel(service::ipc_context *ctx);
 
         void mkdir(service::ipc_context *ctx);
         void rmdir(service::ipc_context *ctx);

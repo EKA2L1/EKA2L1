@@ -415,7 +415,7 @@ namespace eka2l1 {
         }
 
         default:
-            LOG_ERROR("Invalid cenrep entry get type!");
+            LOG_ERROR(SERVICE_CENREP, "Invalid cenrep entry get type!");
             ctx->complete(epoc::error_not_found);
             return;
         }
@@ -450,7 +450,7 @@ namespace eka2l1 {
         const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(2) / sizeof(std::uint32_t)) - 1;
 
         if (!filter || !found_uid_result_array) {
-            LOG_ERROR("Trying to find equal value in cenrep, but arguments are invalid!");
+            LOG_ERROR(SERVICE_CENREP, "Trying to find equal value in cenrep, but arguments are invalid!");
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -548,7 +548,7 @@ namespace eka2l1 {
                 break;
 
             default: {
-                LOG_ERROR("Unimplemented Cenrep's find function for opcode {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_CENREP, "Unimplemented Cenrep's find function for opcode {}", ctx->msg->function);
                 break;
             }
             }
@@ -608,7 +608,7 @@ namespace eka2l1 {
         }
 
         default: {
-            LOG_TRACE("Unknown returns code {} from add_notify_request, set status to epoc::error_none", err);
+            LOG_TRACE(SERVICE_CENREP, "Unknown returns code {} from add_notify_request, set status to epoc::error_none", err);
             ctx->complete(epoc::error_none);
 
             break;
@@ -664,12 +664,12 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
-        LOG_TRACE("TransactionStart stubbed");
+        LOG_TRACE(SERVICE_CENREP, "TransactionStart stubbed");
         ctx->complete(epoc::error_none);
     }
 
     void central_repo_client_subsession::cancel_transaction(service::ipc_context *ctx) {
-        LOG_TRACE("TransactionCancel stubbed");
+        LOG_TRACE(SERVICE_CENREP, "TransactionCancel stubbed");
         ctx->complete(epoc::error_none);
     }
 }

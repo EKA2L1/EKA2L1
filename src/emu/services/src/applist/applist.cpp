@@ -76,7 +76,7 @@ namespace eka2l1 {
 
         eka2l1::ro_file_stream std_rsc_raw(f.get());
         if (!std_rsc_raw.valid()) {
-            LOG_ERROR("Registry file {} is invalid!", common::ucs2_to_utf8(path));
+            LOG_ERROR(SERVICE_APPLIST, "Registry file {} is invalid!", common::ucs2_to_utf8(path));
             return false;
         }
 
@@ -121,11 +121,11 @@ namespace eka2l1 {
         if (f) {
             eka2l1::ro_file_stream caption_file_stream(f.get());
             if (!caption_file_stream.valid()) {
-                LOG_INFO("Caption file for {} is corrupted!", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
+                LOG_INFO(SERVICE_APPLIST, "Caption file for {} is corrupted!", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
                     to_std_string(nullptr)));
             } else {
                 if (!read_caption_data_oldarch(reinterpret_cast<common::ro_stream*>(&caption_file_stream), reg)) {
-                    LOG_INFO("Failed to read caption file for {}", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
+                    LOG_INFO(SERVICE_APPLIST, "Failed to read caption file for {}", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
                         to_std_string(nullptr)));
                 }
             }
@@ -237,7 +237,7 @@ namespace eka2l1 {
                 reg, land_drive);
         }
 
-        LOG_INFO("Found app: {}, uid: 0x{:X}",
+        LOG_INFO(SERVICE_APPLIST, "Found app: {}, uid: 0x{:X}",
             common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr)),
             reg.mandatory_info.uid);
 
@@ -423,7 +423,7 @@ namespace eka2l1 {
     }
 
     void applist_server::rescan_registries(eka2l1::io_system *io) {        
-        LOG_INFO("Loading app registries");
+        LOG_INFO(SERVICE_APPLIST, "Loading app registries");
 
         for (drive_number drv = drive_z; drv >= drive_a; drv--) {
             if (io->get_drive_entry(drv)) {
@@ -442,7 +442,7 @@ namespace eka2l1 {
             return on_drive_change(userdata, drv, act);
         }, io);
 
-        LOG_INFO("Done loading!");
+        LOG_INFO(SERVICE_APPLIST, "Done loading!");
     }
 
     bool applist_server::is_oldarch() {
@@ -501,7 +501,7 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE("Asking permission to launch: {}, accepted", common::ucs2_to_utf8(*exe_name));
+        LOG_TRACE(SERVICE_APPLIST, "Asking permission to launch: {}, accepted", common::ucs2_to_utf8(*exe_name));
         ctx.complete(true);
     }
 
@@ -518,7 +518,7 @@ namespace eka2l1 {
     }
 
     void applist_server::app_language(service::ipc_context &ctx) {
-        LOG_TRACE("AppList::AppLanguage stubbed to returns ELangEnglish");
+        LOG_TRACE(SERVICE_APPLIST, "AppList::AppLanguage stubbed to returns ELangEnglish");
 
         language default_lang = language::en;
 
@@ -627,7 +627,7 @@ namespace eka2l1 {
     void applist_server::launch_app(service::ipc_context &ctx) {
         std::optional<std::u16string> cmd_line = ctx.get_argument_value<std::u16string>(0);
         if (!cmd_line) {
-            LOG_ERROR("Failed to launch a new app! Command line is not available.");
+            LOG_ERROR(SERVICE_APPLIST, "Failed to launch a new app! Command line is not available.");
             ctx.complete(epoc::error_argument);
 
             return;
@@ -651,7 +651,7 @@ namespace eka2l1 {
 
         kernel::uid thread_id = 0;
         if (!launch_app(app_launch, cmd_line.value(), &thread_id, ctx.msg->own_thr->owning_process())) {
-            LOG_ERROR("Failed to create new app process (command line: {})", common::ucs2_to_utf8(cmd_line.value()));
+            LOG_ERROR(SERVICE_APPLIST, "Failed to create new app process (command line: {})", common::ucs2_to_utf8(cmd_line.value()));
             ctx.complete(epoc::error_no_memory);
             
             return;
@@ -696,12 +696,12 @@ namespace eka2l1 {
         hle::lib_manager *lmngr = kern->get_lib_manager();
 
         if (!lmngr->load(path.value())) {
-            LOG_TRACE("The file requested is non-native! Stubbed");
+            LOG_TRACE(SERVICE_APPLIST, "The file requested is non-native! Stubbed");
         }
 
         ctx.set_descriptor_argument_length(0, 0);
 
-        LOG_TRACE("No opaque data is written (stubbed).");
+        LOG_TRACE(SERVICE_APPLIST, "No opaque data is written (stubbed).");
         ctx.complete(0);
     }
 
@@ -729,7 +729,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR("Unimplemented applist opcode {}", ctx->msg->function);
+                LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode {}", ctx->msg->function);
                 break;
             }
         } else {
@@ -763,7 +763,7 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR("Unimplemented applist opcode 0x{:X}", ctx->msg->function);
+                LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
                 break;
             }
         }

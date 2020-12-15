@@ -193,7 +193,7 @@ namespace eka2l1 {
             break;
 
         default:
-            LOG_ERROR("Unimplemented DRMNotifier opcode 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_DRMSYS, "Unimplemented DRMNotifier opcode 0x{:X}", ctx->msg->function);
             break;
         }
     }

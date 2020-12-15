@@ -75,7 +75,7 @@ namespace eka2l1::mem::flexible {
 
         // Change the protection of the correspond region in memory object.
         if (!mem_obj_->commit(dropping_place, total_page_to_commit, permission_)) {
-            LOG_ERROR("Unable to commit chunk memory to host!");
+            LOG_ERROR(MEMORY, "Unable to commit chunk memory to host!");
             return 0;
         }
 
@@ -96,7 +96,7 @@ namespace eka2l1::mem::flexible {
 
         // Change the protection of the correspond region in memory object.
         if (!mem_obj_->decommit(dropping_place, total_page_to_decommit)) {
-            LOG_ERROR("Unable to decommit chunk memory from host!");
+            LOG_ERROR(MEMORY, "Unable to decommit chunk memory from host!");
             return;
         }
 
@@ -115,7 +115,7 @@ namespace eka2l1::mem::flexible {
         const int page_offset = page_bma_->allocate_from(0, page_allocated);
 
         if ((page_allocated != total_page_to_allocate) || (page_offset == -1)) {
-            LOG_ERROR("Unable to allocate requested size!");
+            LOG_ERROR(MEMORY, "Unable to allocate requested size!");
 
             if (page_offset != -1) {
                 page_bma_->free(page_offset, page_allocated);

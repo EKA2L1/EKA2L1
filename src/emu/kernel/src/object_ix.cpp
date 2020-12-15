@@ -141,7 +141,7 @@ namespace eka2l1::kernel {
             return objects[info.object_ix_index].object;
         }
 
-        LOG_WARN("Can't find object with handle: 0x{:x}", handle);
+        LOG_WARN(KERNEL, "Can't find object with handle: 0x{:x}", handle);
 
         return nullptr;
     }
@@ -154,7 +154,6 @@ namespace eka2l1::kernel {
             kernel_obj_ptr obj = objects[info.object_ix_index].object;
 
             if (!obj) {
-                LOG_TRACE("WASDDS");
                 return -1;
             }
 
@@ -187,7 +186,6 @@ namespace eka2l1::kernel {
             return ret_value;
         }
 
-        LOG_TRACE("WASDDS");
         return -1;
     }
 

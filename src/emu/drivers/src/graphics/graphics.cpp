@@ -30,7 +30,7 @@ namespace eka2l1::drivers {
         error_code = glad_glGetError();
 
         if (error_code != GL_NO_ERROR) {
-            LOG_ERROR("{} encounters error {}", name, error_code);
+            LOG_ERROR(DRIVER_GRAPHICS, "{} encounters error {}", name, error_code);
         }
     }
 

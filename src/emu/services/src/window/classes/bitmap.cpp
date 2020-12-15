@@ -40,7 +40,7 @@ namespace eka2l1::epoc {
             context.complete(epoc::error_none);
             client->delete_object(cmd.obj_handle);
         } else {
-            LOG_ERROR("Unimplemented wsbitmap opcode {}", cmd.header.op);
+            LOG_ERROR(SERVICE_WINDOW, "Unimplemented wsbitmap opcode {}", cmd.header.op);
         }
     }
 }

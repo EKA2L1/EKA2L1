@@ -91,6 +91,6 @@ namespace eka2l1::epoc::socket {
             }
         }
 
-        LOG_ERROR("Unimplemented socket host resolver opcode: {}", ctx->msg->function);
+        LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket host resolver opcode: {}", ctx->msg->function);
     }
 }

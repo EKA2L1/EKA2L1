@@ -38,7 +38,7 @@ namespace eka2l1 {
     }
 
     void install_client_session::fetch(service::ipc_context *ctx) {
-        LOG_ERROR("Unimplemented opcode for InstallServer 0x{:X}", ctx->msg->function);
+        LOG_ERROR(SERVICE_INSTALL, "Unimplemented opcode for InstallServer 0x{:X}", ctx->msg->function);
         ctx->complete(epoc::error_none);
     }
 }

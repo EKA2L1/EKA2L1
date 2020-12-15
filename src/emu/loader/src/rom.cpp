@@ -114,7 +114,7 @@ namespace eka2l1::loader {
         readed_size += stream->read(&entry.name_len, 1);
 
         if (readed_size != 10) {
-            LOG_ERROR("Can't read entry header!");
+            LOG_ERROR(LOADER, "Can't read entry header!");
             return entry;
         }
 
@@ -123,7 +123,7 @@ namespace eka2l1::loader {
         entry.name.resize(entry.name_len);
 
         if (stream->read(entry.name.data(), 2 * entry.name_len) != (2 * entry.name_len)) {
-            LOG_ERROR("Can't read entry name!");
+            LOG_ERROR(LOADER, "Can't read entry name!");
         }
 
         if (entry.attrib & static_cast<int>(file_attrib::dir)) {
@@ -146,7 +146,7 @@ namespace eka2l1::loader {
         const auto old_off = stream->tell();
 
         if (stream->read(&dir.size, 4) != 4) {
-            LOG_ERROR("Can't read directory size!");
+            LOG_ERROR(LOADER, "Can't read directory size!");
             return dir;
         }
 
@@ -175,12 +175,12 @@ namespace eka2l1::loader {
         root_dir rdir;
 
         if (stream->read(&rdir.hardware_variant, 4) != 4) {
-            LOG_ERROR("Can't read hardware variant of root directory!");
+            LOG_ERROR(LOADER, "Can't read hardware variant of root directory!");
             return rdir;
         }
 
         if (stream->read(&rdir.addr_lin, 4) != 4) {
-            LOG_ERROR("Can't read linear address of root directory!");
+            LOG_ERROR(LOADER, "Can't read linear address of root directory!");
             return rdir;
         }
 
@@ -194,7 +194,7 @@ namespace eka2l1::loader {
         root_dir_list list;
 
         if (stream->read(&list.num_root_dirs, 4) != 4) {
-            LOG_ERROR("Can't read number of directories in root directory!");
+            LOG_ERROR(LOADER, "Can't read number of directories in root directory!");
             return list;
         }
 

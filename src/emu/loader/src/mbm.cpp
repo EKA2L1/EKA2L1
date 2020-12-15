@@ -201,7 +201,7 @@ namespace eka2l1::loader {
         }
 
         default: {
-            LOG_ERROR("Unsupport RLE compression type {}", single_bm_header.compression);
+            LOG_ERROR(LOADER, "Unsupport RLE compression type {}", single_bm_header.compression);
             stream->seek(crr_pos, common::beg);
 
             return false;

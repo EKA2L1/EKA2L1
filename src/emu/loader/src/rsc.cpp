@@ -134,7 +134,7 @@ namespace eka2l1::loader {
             }
 
             if (read_size_bytes <= 0 || read_size_bytes > max) {
-                LOG_WARN("Size of resource is larger than maximum size decompress buffer container can hold, truncing down ({} vs {})",
+                LOG_WARN(LOADER, "Size of resource is larger than maximum size decompress buffer container can hold, truncing down ({} vs {})",
                     max, read_size_bytes);
             }
 
@@ -379,7 +379,7 @@ namespace eka2l1::loader {
 
     std::vector<std::uint8_t> rsc_file_morden::read(const int res_id) {
         if (!own_res_id(res_id)) {
-            LOG_ERROR("RSC file doesn't own the resource id: 0x{:X}", res_id);
+            LOG_ERROR(LOADER, "RSC file doesn't own the resource id: 0x{:X}", res_id);
             return std::vector<std::uint8_t>{};
         }
 
@@ -411,7 +411,7 @@ namespace eka2l1::loader {
         int err_code = decompress(&data[0], size_of_largest_resource_when_uncompressed, res_index);
 
         if (err_code < 0) {
-            LOG_ERROR("RSC file decompress encounters error: 0x{:X}", err_code);
+            LOG_ERROR(LOADER, "RSC file decompress encounters error: 0x{:X}", err_code);
             return std::vector<std::uint8_t>{};
         }
 
@@ -761,7 +761,7 @@ namespace eka2l1::loader {
 
     std::vector<std::uint8_t> rsc_file::read(const int res_id) {
         if (!impl_) {
-            LOG_ERROR("RSC implementation has not been created!");
+            LOG_ERROR(LOADER, "RSC implementation has not been created!");
             return std::vector<std::uint8_t>{};
         }
 
@@ -770,7 +770,7 @@ namespace eka2l1::loader {
 
     std::uint32_t rsc_file::get_uid(const int idx) {
         if (!impl_) {
-            LOG_ERROR("RSC implementation has not been created!");
+            LOG_ERROR(LOADER, "RSC implementation has not been created!");
             return 0;
         }
 
@@ -779,7 +779,7 @@ namespace eka2l1::loader {
 
     std::uint16_t rsc_file::get_total_resources() const {
         if (!impl_) {
-            LOG_ERROR("RSC implementation has not been created!");
+            LOG_ERROR(LOADER, "RSC implementation has not been created!");
             return 0;
         }
 
@@ -788,7 +788,7 @@ namespace eka2l1::loader {
 
     bool rsc_file::confirm_signature() {
         if (!impl_) {
-            LOG_ERROR("RSC implementation has not been created!");
+            LOG_ERROR(LOADER, "RSC implementation has not been created!");
             return false;
         }
 

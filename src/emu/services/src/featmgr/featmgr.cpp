@@ -89,7 +89,7 @@ namespace eka2l1 {
         symfile cfg_file = io->open_file(u"Z:\\private\\102744CA\\featreg.cfg", READ_MODE | BIN_MODE);
 
         if (!cfg_file) {
-            LOG_WARN("Feature registration config file not present!");
+            LOG_WARN(SERVICE_FEATMGR, "Feature registration config file not present!");
             return false;
         }
 
@@ -130,7 +130,7 @@ namespace eka2l1 {
             bool succ = load_featmgr_configs(ctx.sys->get_io_system());
 
             if (!succ) {
-                LOG_ERROR("Error loading feature manager server config!");
+                LOG_ERROR(SERVICE_FEATMGR, "Error loading feature manager server config!");
             }
 
             do_feature_scanning(ctx.sys);

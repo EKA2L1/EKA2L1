@@ -44,14 +44,14 @@ namespace eka2l1::ldd {
 
     std::int32_t mmcif_channel::do_control(kernel::thread *r, const std::uint32_t n, const eka2l1::ptr<void> arg1,
         const eka2l1::ptr<void> arg2) {
-        LOG_TRACE("Unimplemented control opcode {}", n);
+        LOG_TRACE(LDD_MMCIF, "Unimplemented control opcode {}", n);
         return 0;
     }
 
     std::int32_t mmcif_channel::do_request(epoc::notify_info info, const std::uint32_t n,
         const eka2l1::ptr<void> arg1, const eka2l1::ptr<void> arg2,
         const bool is_supervisor) {
-        LOG_TRACE("Unimplemented request opcode {}", n);
+        LOG_TRACE(LDD_MMCIF, "Unimplemented request opcode {}", n);
         return 0;
     }
 }

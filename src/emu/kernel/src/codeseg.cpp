@@ -146,8 +146,8 @@ namespace eka2l1::kernel {
             data_base_ptr = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(data_addr));
         }
         
-        LOG_INFO("{} runtime code: 0x{:x}", name(), the_addr_of_code_run);
-        LOG_INFO("{} runtime data: 0x{:x}", name(), the_addr_of_data_run);
+        LOG_INFO(KERNEL, "{} runtime code: 0x{:x}", name(), the_addr_of_code_run);
+        LOG_INFO(KERNEL, "{} runtime data: 0x{:x}", name(), the_addr_of_data_run);
 
         attaches.push_back({ new_foe, dt_chunk, code_chunk });
         
@@ -164,7 +164,7 @@ namespace eka2l1::kernel {
 
                     const address addr = dependency.dep_->lookup(new_foe, ord);
                     if (!addr) {
-                        LOG_ERROR("Invalid ordinal {}, requested from {}", ord, dependency.dep_->name());
+                        LOG_ERROR(KERNEL, "Invalid ordinal {}, requested from {}", ord, dependency.dep_->name());
                     }
 
                     *reinterpret_cast<std::uint32_t*>(&code_base_ptr[offset_to_apply]) = addr + adj;
@@ -200,7 +200,7 @@ namespace eka2l1::kernel {
                     continue;
 
                 default:
-                    LOG_ERROR("Unknown code relocation type {}", static_cast<std::uint32_t>(rel_type));
+                    LOG_ERROR(KERNEL, "Unknown code relocation type {}", static_cast<std::uint32_t>(rel_type));
                     break;
                 }
 

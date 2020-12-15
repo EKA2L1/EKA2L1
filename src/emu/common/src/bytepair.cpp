@@ -197,7 +197,7 @@ namespace eka2l1 {
             compress_stream->read(buf.data(), buf.size());
 
             if (buf.data() == nullptr) {
-                LOG_ERROR("Buffer is null! Size: {}", idx_tab.page_size[page]);
+                LOG_ERROR(COMMON, "Buffer is null! Size: {}", idx_tab.page_size[page]);
                 return 0;
             }
 

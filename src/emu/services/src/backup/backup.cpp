@@ -47,7 +47,7 @@ namespace eka2l1 {
     }
 
     void backup_client_session::get_backup_operation_state(service::ipc_context *ctx) {
-        LOG_TRACE("GetBackupOperationState stubbed with false");
+        LOG_TRACE(SERVICE_BACKUP, "GetBackupOperationState stubbed with false");
 
         bool state = false;
 
@@ -87,7 +87,7 @@ namespace eka2l1 {
             break;
         }
 
-        LOG_ERROR("Unimplemented opcode for backup server server 0x{:X}", ctx->msg->function);
+        LOG_ERROR(SERVICE_BACKUP, "Unimplemented opcode for backup server server 0x{:X}", ctx->msg->function);
         //ctx->complete(epoc::error_none);
     }
 }
