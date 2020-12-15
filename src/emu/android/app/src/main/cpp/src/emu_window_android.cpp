@@ -164,48 +164,48 @@ namespace eka2l1 {
 
         void emu_window_android::init_gl() {
             if (egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY); egl_display == EGL_NO_DISPLAY) {
-                LOG_CRITICAL("eglGetDisplay() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglGetDisplay() failed");
                 return;
             }
             if (eglInitialize(egl_display, 0, 0) != EGL_TRUE) {
-                LOG_CRITICAL("eglInitialize() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglInitialize() failed");
                 return;
             }
             if (EGLint egl_num_configs{}; eglChooseConfig(egl_display, egl_fake_attribs.data(), &egl_config, 1,
                                                           &egl_num_configs) != EGL_TRUE) {
-                LOG_CRITICAL("eglChooseConfig() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
                 return;
             }
 
             if (egl_surface = eglCreatePbufferSurface(egl_display, egl_config, egl_pbuffer_attribs);
                     egl_surface == EGL_NO_SURFACE) {
-                LOG_CRITICAL("eglCreatePbufferSurface() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglCreatePbufferSurface() failed");
                 return;
             }
 
             if (egl_context = eglCreateContext(egl_display, egl_config, 0, egl_context_attribs.data());
                     egl_context == EGL_NO_CONTEXT) {
-                LOG_CRITICAL("eglCreateContext() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglCreateContext() failed");
                 return;
             }
             if (eglSurfaceAttrib(egl_display, egl_surface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_DESTROYED) !=
                 EGL_TRUE) {
-                LOG_CRITICAL("eglSurfaceAttrib() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglSurfaceAttrib() failed");
                 return;
             }
             if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE) {
-                LOG_CRITICAL("eglMakeCurrent() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglMakeCurrent() failed");
                 return;
             }
             if (!gladLoadGLES2Loader((GLADloadproc)eglGetProcAddress)) {
-                LOG_CRITICAL("gladLoadGLES2Loader() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "gladLoadGLES2Loader() failed");
                 return;
             }
         }
 
         void emu_window_android::init_surface() {
             if (!render_window) {
-                LOG_CRITICAL("surface is nullptr");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "surface is nullptr");
                 return;
             }
 
@@ -213,7 +213,7 @@ namespace eka2l1 {
 
             if (EGLint egl_num_configs{}; eglChooseConfig(egl_display, egl_attribs.data(), &egl_config, 1,
                                                           &egl_num_configs) != EGL_TRUE) {
-                LOG_CRITICAL("eglChooseConfig() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
                 return;
             }
 
@@ -223,11 +223,11 @@ namespace eka2l1 {
 
             if (eglSurfaceAttrib(egl_display, egl_surface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_DESTROYED) !=
                 EGL_TRUE) {
-                LOG_CRITICAL("eglSurfaceAttrib() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglSurfaceAttrib() failed");
                 return;
             }
             if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE) {
-                LOG_CRITICAL("eglMakeCurrent() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglMakeCurrent() failed");
                 return;
             }
             inited = true;
@@ -256,7 +256,7 @@ namespace eka2l1 {
                 eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             }
             if (!eglDestroySurface(egl_display, egl_surface)) {
-                LOG_CRITICAL("eglDestroySurface() failed");
+                LOG_CRITICAL(DRIVER_GRAPHICS, "eglDestroySurface() failed");
             }
             egl_surface = EGL_NO_SURFACE;
         }
