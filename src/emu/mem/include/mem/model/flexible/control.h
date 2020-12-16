@@ -62,6 +62,8 @@ namespace eka2l1::mem::flexible {
          */
         void *get_host_pointer(const asid id, const vm_address addr) override;
 
+        page_info *get_page_info(const asid id, const vm_address addr) override;
+
         /**
          * \brief Create or renew an address space if possible.
          * 

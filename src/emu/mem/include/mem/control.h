@@ -99,6 +99,8 @@ namespace eka2l1::mem {
          */
         virtual void *get_host_pointer(const asid id, const vm_address addr) = 0;
 
+        virtual page_info *get_page_info(const asid id, const vm_address addr) = 0;
+
         /**
          * @brief   Execute an exclusive write.
          * @returns -1 on invalid address, 0 on write failure, 1 on success.

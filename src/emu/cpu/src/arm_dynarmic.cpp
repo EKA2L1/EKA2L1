@@ -128,7 +128,7 @@ namespace eka2l1::arm {
             std::uint32_t code_result = 0;
             constexpr std::uint32_t UNDEFINED_WORD = 0xE11EFF2F;
 
-            bool status = parent.read_32bit(addr, &code_result);
+            bool status = parent.read_code(addr, &code_result);
             handle_read_status(status, addr);
 
             return status ? code_result : UNDEFINED_WORD;
@@ -236,25 +236,24 @@ namespace eka2l1::arm {
         }
     };
 
-    std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::unique_ptr<dynarmic_core_callback> &callback, void *table,
+    std::unique_ptr<Dynarmic::A32::Jit> make_jit(std::unique_ptr<dynarmic_core_callback> &callback, Dynarmic::TLB<9> &tlb_obj,
         std::shared_ptr<dynarmic_core_cp15> cp15, Dynarmic::ExclusiveMonitor *monitor) {
         Dynarmic::A32::UserConfig config;
         config.callbacks = callback.get();
         config.coprocessors[15] = cp15;
-        config.page_table = reinterpret_cast<decltype(config.page_table)>(table);
+        config.tlb_entries = tlb_obj.entries;
         config.global_monitor = monitor;
 
         return std::make_unique<Dynarmic::A32::Jit>(config);
     }
 
-    dynarmic_core::dynarmic_core(arm::exclusive_monitor *monitor) {
+    dynarmic_core::dynarmic_core(arm::exclusive_monitor *monitor)
+        : tlb_obj(12) {
         std::shared_ptr<dynarmic_core_cp15> cp15 = std::make_shared<dynarmic_core_cp15>();
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 
-        std::fill(page_dyn.begin(), page_dyn.end(), nullptr);
-
         auto monitor_bb = reinterpret_cast<dynarmic_exclusive_monitor*>(monitor);
-        jit = make_jit(cb, &page_dyn, cp15, &monitor_bb->monitor_);
+        jit = make_jit(cb, tlb_obj, cp15, &monitor_bb->monitor_);
     }
 
     dynarmic_core::~dynarmic_core() {
@@ -357,22 +356,38 @@ namespace eka2l1::arm {
         return get_cpsr() & 0x20;
     }
 
-    void dynarmic_core::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
-        const std::uint32_t psize = 0x1000;
-        const std::uint32_t pstart = vaddr / psize;
+    void dynarmic_core::set_tlb_page(address vaddr, std::uint8_t *ptr, prot protection) {
+        std::uint32_t prot_flags = 0;
+        switch (protection) {
+        case prot::read:
+            prot_flags |= Dynarmic::MemoryPermissionRead;
+            break;
 
-        for (std::size_t i = 0; i < size / psize; i++) {
-            page_dyn[pstart + i] = ptr + i * psize;
+        case prot::read_write:
+            prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionWrite);
+            break;
+
+        case prot::read_exec:
+            prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionExecute);
+            break;
+
+        case prot::read_write_exec:
+            prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionWrite | Dynarmic::MemoryPermissionExecute);
+            break;
+
+        default:
+            break;
         }
+
+        tlb_obj.Add(vaddr, ptr, prot_flags);
     }
 
-    void dynarmic_core::unmap_memory(address addr, size_t size) {
-        const std::uint32_t psize = 0x1000;
-        const std::uint32_t pstart = addr / psize;
+    void dynarmic_core::dirty_tlb_page(address addr) {
+        tlb_obj.MakeDirty(addr);
+    }
 
-        for (std::size_t i = 0; i < size / psize; i++) {
-            page_dyn[pstart + i] = nullptr;
-        }
+    void dynarmic_core::flush_tlb() {
+        tlb_obj.Flush();
     }
 
     void dynarmic_core::clear_instruction_cache() {

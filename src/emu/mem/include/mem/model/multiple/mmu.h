@@ -37,6 +37,7 @@ namespace eka2l1::mem {
         ~mmu_multiple() override {}
 
         void *get_host_pointer(const vm_address addr) override;
+        page_info *get_page_info(const vm_address addr) override;
 
         const asid current_addr_space() const override;
         bool set_current_addr_space(const asid id) override;

@@ -54,6 +54,8 @@ namespace eka2l1::mem {
         bool write_32bit_data(const vm_address addr, std::uint32_t *data);
         bool write_64bit_data(const vm_address addr, std::uint64_t *data);
 
+        bool read_code(const vm_address addr, std::uint32_t *data);
+
     public:
         arm::core *cpu_;
         config::state *conf_;
@@ -69,6 +71,7 @@ namespace eka2l1::mem {
          * \brief Get host pointer of a virtual address, in the specified address space.
          */
         virtual void *get_host_pointer(const vm_address addr) = 0;
+        virtual page_info *get_page_info(const vm_address addr) = 0;
 
         /**
          * @brief   Execute an exclusive write.

@@ -76,7 +76,12 @@ namespace eka2l1::mem {
     }
 
     page_info *page_directory::get_page_info(const vm_address addr) {
-        return page_tabs_[addr >> page_table_index_shift_]->get_page_info((addr >> page_index_shift_) & page_index_mask_);
+        page_table *pt = page_tabs_[addr >> page_table_index_shift_];
+        if (!pt) {
+            return nullptr;
+        }
+
+        return pt->get_page_info((addr >> page_index_shift_) & page_index_mask_);
     }
 
     page_table *page_directory::get_page_table(const vm_address addr) {

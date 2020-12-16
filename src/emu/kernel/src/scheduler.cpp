@@ -95,18 +95,14 @@ namespace eka2l1::kernel {
             mem::mem_model_process *mm_process = crr_process ? crr_process->get_mem_model() : nullptr;
 
             if (crr_process != newt->owning_process()) {
-                if (crr_process) {
-                    mm_process->unmap_from_cpu(core_mmu);
-                }
-
                 kern->call_process_switch_callbacks(run_core, crr_process, newt->owning_process());
 
                 crr_process = newt->owning_process();
                 mm_process = crr_process->get_mem_model();
 
                 core_mmu->set_current_addr_space(mm_process->address_space_id());
-                mm_process->remap_to_cpu(core_mmu);
 
+                run_core->flush_tlb();
                 run_core->set_asid(mm_process->address_space_id());
             }
 
