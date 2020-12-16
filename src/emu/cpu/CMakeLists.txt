@@ -1,3 +1,16 @@
+set(SOURCE_12L1R
+        include/cpu/12l1r/arm_12l1r.h
+        include/cpu/12l1r/block_cache.h
+        include/cpu/12l1r/block_gen.h
+        include/cpu/12l1r/common.h
+        include/cpu/12l1r/core_state.h
+        include/cpu/12l1r/reg_cache.h
+        include/cpu/12l1r/reg_loc.h
+        src/12l1r/arm_12l1r.cpp
+        src/12l1r/block_cache.cpp
+        src/12l1r/block_gen.cpp
+        src/12l1r/reg_cache.cpp)
+
 add_library(cpu
         include/cpu/arm_analyser.h
         include/cpu/arm_analyser_capstone.h
@@ -9,7 +22,8 @@ add_library(cpu
         src/arm_analyser.cpp
         src/arm_dynarmic.cpp
         src/arm_factory.cpp
-        src/arm_utils.cpp)
+        src/arm_utils.cpp
+        ${SOURCE_12L1R})
 
 target_include_directories(cpu PUBLIC include)
 target_include_directories(cpu PRIVATE ${capstone_INCLUDE_DIRS})
