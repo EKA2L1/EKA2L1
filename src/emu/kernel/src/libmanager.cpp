@@ -467,7 +467,7 @@ namespace eka2l1::hle {
 
             // Create the code chunk in ROM
             kernel::chunk *code_chunk = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, "",
-                0, static_cast<eka2l1::address>(e32img->header.code_size), e32img->header.code_size, prot::read_write_exec,
+                0, static_cast<eka2l1::address>(e32img->header.code_size), e32img->header.code_size, prot_read_write_exec,
                 kernel::chunk_type::normal, kernel::chunk_access::rom, kernel::chunk_attrib::anonymous);
 
             if (!code_chunk) {
@@ -934,7 +934,7 @@ namespace eka2l1::hle {
     bool lib_manager::build_eka1_thread_bootstrap_code() {    
         static constexpr const char *BOOTSTRAP_CHUNK_NAME = "EKA1ThreadBootstrapCodeChunk";
         bootstrap_chunk_ = kern_->create<kernel::chunk>(kern_->get_memory_system(), nullptr, BOOTSTRAP_CHUNK_NAME,
-            0, 0x1000, 0x1000, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            0, 0x1000, 0x1000, prot_read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
             kernel::chunk_attrib::none);
 
         if (!bootstrap_chunk_) {

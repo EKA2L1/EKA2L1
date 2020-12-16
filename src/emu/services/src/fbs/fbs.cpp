@@ -271,7 +271,7 @@ namespace eka2l1 {
                                 0,
                                 0x10000,
                                 0x200000,
-                                prot::read_write,
+                                prot_read_write,
                                 kernel::chunk_type::normal,
                                 kernel::chunk_access::global,
                                 kernel::chunk_attrib::none)
@@ -285,7 +285,7 @@ namespace eka2l1 {
                                 0,
                                 0,
                                 0x2000000,
-                                prot::read_write,
+                                prot_read_write,
                                 kernel::chunk_type::normal,
                                 kernel::chunk_access::global,
                                 kernel::chunk_attrib::none)

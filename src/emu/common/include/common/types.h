@@ -34,14 +34,14 @@ struct uint128_t {
     uint64_t high;
 };
 
-enum class prot {
-    none = 0,
-    read = 1,
-    write = 2,
-    exec = 3,
-    read_write = 4,
-    read_exec = 5,
-    read_write_exec = 6
+enum prot {
+    prot_none = 0,
+    prot_read = 1 << 0,
+    prot_write = 1 << 1,
+    prot_exec = 1 << 2,
+    prot_read_write = prot_read | prot_write,
+    prot_read_exec = prot_read | prot_exec,
+    prot_read_write_exec = prot_read | prot_write | prot_exec
 };
 
 // This can be changed manually

@@ -34,37 +34,37 @@ int translate_protection(prot cprot) {
     int tprot = 0;
 
     // TODO: Remove horrible ifelse and replace with switchs :(
-    if (cprot == prot::none) {
+    if (cprot == prot_none) {
 #if EKA2L1_PLATFORM(POSIX)
         tprot = PROT_NONE;
 #else
         tprot = PAGE_NOACCESS;
 #endif
-    } else if (cprot == prot::read) {
+    } else if (cprot == prot_read) {
 #if EKA2L1_PLATFORM(POSIX)
         tprot = PROT_READ;
 #else
         tprot = PAGE_READONLY;
 #endif
-    } else if (cprot == prot::exec) {
+    } else if (cprot == prot_exec) {
 #if EKA2L1_PLATFORM(POSIX)
         tprot = PROT_EXEC;
 #else
         tprot = PAGE_EXECUTE;
 #endif
-    } else if (cprot == prot::read_write) {
+    } else if (cprot == prot_read_write) {
 #if EKA2L1_PLATFORM(POSIX)
         tprot = PROT_READ | PROT_WRITE;
 #else
         tprot = PAGE_READWRITE;
 #endif
-    } else if (cprot == prot::read_exec) {
+    } else if (cprot == prot_read_exec) {
 #if EKA2L1_PLATFORM(POSIX)
         tprot = PROT_READ | PROT_EXEC;
 #else
         tprot = PAGE_EXECUTE_READ;
 #endif
-    } else if (cprot == prot::read_write_exec) {
+    } else if (cprot == prot_read_write_exec) {
 #if EKA2L1_PLATFORM(POSIX)
         tprot = PROT_READ | PROT_WRITE | PROT_EXEC;
 #else

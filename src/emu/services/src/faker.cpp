@@ -56,7 +56,7 @@ namespace eka2l1::service {
 
         // Create control block
         control_ = kern->create<kernel::chunk>(kern->get_memory_system(), process_, name + "_HLEControl",
-            0, 0x1000, 0x1000, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local,
+            0, 0x1000, 0x1000, prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::local,
             kernel::chunk_attrib::none);
 
         allocator_ = std::make_unique<common::block_allocator>(reinterpret_cast<std::uint8_t *>(

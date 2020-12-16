@@ -1546,7 +1546,7 @@ namespace eka2l1 {
 
         // Create chunk with maximum size (32-bit)
         kernel::chunk *buffer = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, chunk_name, 0,
-            static_cast<address>(max_chunk_size), max_chunk_size, prot::read_write,
+            static_cast<address>(max_chunk_size), max_chunk_size, prot_read_write,
             kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
             kernel::chunk_attrib::none);
 
@@ -1665,7 +1665,7 @@ namespace eka2l1 {
                                     0,
                                     0x2000,
                                     0x2000,
-                                    prot::read_write,
+                                    prot_read_write,
                                     kernel::chunk_type::normal,
                                     kernel::chunk_access::global,
                                     kernel::chunk_attrib::none)
@@ -1679,7 +1679,7 @@ namespace eka2l1 {
                                     0,
                                     0x2000,
                                     0x2000,
-                                    prot::read_write_exec,
+                                    prot_read_write_exec,
                                     kernel::chunk_type::normal,
                                     kernel::chunk_access::global,
                                     kernel::chunk_attrib::none)

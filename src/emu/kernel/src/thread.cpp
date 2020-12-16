@@ -267,10 +267,10 @@ namespace eka2l1 {
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
-            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
+            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot_read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, 0x00);
 
-            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot_read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none);
 
             request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
@@ -305,7 +305,7 @@ namespace eka2l1 {
             // Create local data chunk
             // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
             local_data_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, 0x1000, 0x1000,
-                prot::read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
+                prot_read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
             if (local_data_chunk) {
                 std::uint8_t *data = reinterpret_cast<std::uint8_t *>(local_data_chunk->host_base());

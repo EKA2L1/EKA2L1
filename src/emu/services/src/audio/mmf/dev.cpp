@@ -50,7 +50,7 @@ namespace eka2l1 {
         kernel_system *kern = serv->get_system()->get_kernel_system();
         buffer_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr,
             fmt::format("MMFBufferDevChunk{}", client_ss_uid), 0, conf_.buffer_size_,
-            conf_.buffer_size_, prot::read_write, kernel::chunk_type::normal,
+            conf_.buffer_size_, prot_read_write, kernel::chunk_type::normal,
             kernel::chunk_access::kernel_mapping, kernel::chunk_attrib::none);
     }
 

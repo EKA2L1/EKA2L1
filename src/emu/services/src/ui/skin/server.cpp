@@ -206,7 +206,7 @@ namespace eka2l1 {
         // Create skin chunk
         skin_chunk_ = kern->create_and_add<kernel::chunk>(kernel::owner_type::kernel,
                               sys->get_memory_system(), nullptr, "AknsSrvSharedMemoryChunk",
-                              0, 160 * 1024, 384 * 1024, prot::read_write, kernel::chunk_type::normal,
+                              0, 160 * 1024, 384 * 1024, prot_read_write, kernel::chunk_type::normal,
                               kernel::chunk_access::global, kernel::chunk_attrib::none)
                           .second;
 
