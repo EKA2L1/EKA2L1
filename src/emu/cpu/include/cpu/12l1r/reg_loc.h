@@ -47,5 +47,4 @@ namespace eka2l1::arm::r12l1 {
     };
 
     static constexpr common::armgen::arm_reg CORE_STATE_REG = common::armgen::arm_reg::R10;
-    static constexpr common::armgen::arm_reg TICK_COUNT_REG = common::armgen::arm_reg::R7;
 }

@@ -24,20 +24,25 @@
 #include <cstdint>
 
 namespace eka2l1::arm::r12l1 {
-    class dashixiong_block: public common::armgen::armx_emitter {
+    struct core_state;
+
+    class dashixiong_block: public common::armgen::armx_codeblock {
     private:
         block_cache cache_;
-        void *dispatch_func_;
+        const void *dispatch_func_;
 
     protected:
         void assemble_control_funcs();
 
-    public:
-        explicit dashixiong_block();
-
         translated_block *start_new_block(const vaddress addr, const asid aid);
         bool finalize_block(translated_block *block, const std::uint32_t guest_size);
 
+    public:
+        explicit dashixiong_block();
+
+        void enter_dispatch(core_state *cstate);
+
+        translated_block *compile_new_block(core_state *state, const vaddress addr);
         translated_block *get_block(const vaddress addr, const asid aid);
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);

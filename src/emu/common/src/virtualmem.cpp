@@ -140,7 +140,7 @@ namespace eka2l1::common {
         DWORD open_type = 0;
 
         switch (perm) {
-        case prot::read: {
+        case prot_read: {
             desired_access = GENERIC_READ;
             share_mode = FILE_SHARE_READ;
             page_type = PAGE_READONLY;
@@ -150,7 +150,7 @@ namespace eka2l1::common {
             break;
         }
 
-        case prot::write: {
+        case prot_write: {
             desired_access = GENERIC_WRITE;
             share_mode = FILE_SHARE_WRITE;
             page_type = PAGE_READWRITE;
@@ -160,7 +160,7 @@ namespace eka2l1::common {
             break;
         }
 
-        case prot::read_write: {
+        case prot_read_write: {
             desired_access = GENERIC_WRITE | GENERIC_READ;
             share_mode = FILE_SHARE_WRITE | FILE_SHARE_READ;
             page_type = PAGE_READWRITE;
@@ -207,17 +207,17 @@ namespace eka2l1::common {
         const int prot_mode = translate_protection(perm);
 
         switch (perm) {
-        case prot::read: {
+        case prot_read: {
             open_mode = O_RDONLY;
             break;
         }
 
-        case prot::write: {
+        case prot_write: {
             open_mode = O_WRONLY | O_CREAT;
             break;
         }
 
-        case prot::read_write: {
+        case prot_read_write: {
             open_mode = O_RDWR | O_CREAT;
             break;
         }
@@ -235,7 +235,7 @@ namespace eka2l1::common {
 
         std::size_t map_size = size;
 
-        if (perm == prot::read || (perm == prot::read_write && size == 0)) {
+        if (perm == prot_read || (perm == prot_read_write && size == 0)) {
             struct stat file_stat;
             stat(file_name.c_str(), &file_stat);
 

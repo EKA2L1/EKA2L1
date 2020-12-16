@@ -594,7 +594,7 @@ namespace eka2l1::common::armgen {
         return armRegStrings[(int)reg];
     }
 
-    void armx_emitter::QuickCallFunction(arm_reg reg, const void *func) {
+    void armx_emitter::quick_call_function(arm_reg reg, const void *func) {
         if (BLInRange(func)) {
             BL(func);
         } else {

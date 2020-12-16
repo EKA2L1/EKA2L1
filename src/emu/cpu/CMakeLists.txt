@@ -6,9 +6,11 @@ set(SOURCE_12L1R
         include/cpu/12l1r/core_state.h
         include/cpu/12l1r/reg_cache.h
         include/cpu/12l1r/reg_loc.h
+        include/cpu/12l1r/tlb.h
         src/12l1r/arm_12l1r.cpp
         src/12l1r/block_cache.cpp
         src/12l1r/block_gen.cpp
+        src/12l1r/core_state.cpp
         src/12l1r/reg_cache.cpp)
 
 add_library(cpu

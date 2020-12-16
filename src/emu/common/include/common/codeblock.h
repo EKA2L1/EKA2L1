@@ -74,7 +74,7 @@ namespace eka2l1::common {
         // uninitialized, it just breaks into the debugger.
         void clear_codespace(int offset) {
             if (is_memory_wx_exclusive()) {
-                change_protection(region, region_size, prot::read_write);
+                change_protection(region, region_size, prot_read_write);
             }
 
             // If not WX Exclusive, no need to call ProtectMemoryPages because we never change the protection from RWX.
@@ -83,7 +83,7 @@ namespace eka2l1::common {
 
             if (is_memory_wx_exclusive()) {
                 // Need to re-protect the part we didn't clear.
-                change_protection(region, offset, prot::read_exec);
+                change_protection(region, offset, prot_read_exec);
             }
         }
 
@@ -97,8 +97,8 @@ namespace eka2l1::common {
 
             // In case the last block made the current page exec/no-write, let's fix that.
             if (is_memory_wx_exclusive()) {
-                writeStart_ = get_code_ptr();
-                change_protection(writeStart_, sizeEstimate, prot::read_write);
+                writeStart_ = get_writeable_code_ptr();
+                change_protection(writeStart_, sizeEstimate, prot_read_write);
             }
         }
 
@@ -106,14 +106,14 @@ namespace eka2l1::common {
             // OK, we're done. Re-protect the memory we touched.
             if (is_memory_wx_exclusive() && writeStart_ != nullptr) {
                 const uint8_t *end = get_code_ptr();
-                change_protection(writeStart_, end - writeStart_, prot::read_exec);
+                change_protection(writeStart_, end - writeStart_, prot_read_exec);
                 writeStart_ = nullptr;
             }
         }
 
         // Call this when shutting down. Don't rely on the destructor, even though it'll do the job.
         void free_codespace() {
-            change_protection(region, region_size, prot::read_write);
+            change_protection(region, region_size, prot_read_write);
             unmap_memory(region, region_size);
 
             region = nullptr;
@@ -137,6 +137,6 @@ namespace eka2l1::common {
         }
 
     private:
-        const uint8_t *writeStart_;
+        std::uint8_t *writeStart_;
     };
 }

@@ -22,17 +22,22 @@
 #include <cpu/arm_interface.h>
 #include <common/armemitter.h>
 
+#include <cpu/12l1r/tlb.h>
 #include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/block_gen.h>
 
 namespace eka2l1::arm {
-    class r12l1_core: public core{
+    class r12l1_core: public core {
     private:
         r12l1::core_state jit_state_;
         r12l1::dashixiong_block big_block_;
+        r12l1::tlb mem_cache_;
+
+        arm::exclusive_monitor *monitor_;
+        std::uint32_t target_ticks_run_;
  
     public:
-        explicit r12l1_core(arm::exclusive_monitor *monitor);
+        explicit r12l1_core(arm::exclusive_monitor *monitor, const std::size_t page_bits);
         ~r12l1_core() override;
 
         void run(const std::uint32_t instruction_count) override;
@@ -61,8 +66,9 @@ namespace eka2l1::arm {
 
         bool is_thumb_mode() override;
 
-        void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) override;
-        void unmap_memory(address addr, size_t size) override;
+        void set_tlb_page(address vaddr, std::uint8_t *ptr, prot protection) override;
+        void dirty_tlb_page(address addr) override;
+        void flush_tlb() override;
 
         void clear_instruction_cache() override;
         void imb_range(address addr, std::size_t size) override;

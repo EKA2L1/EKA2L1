@@ -92,7 +92,7 @@ namespace eka2l1::common {
      *
      * \returns A valid pointer to the mapped region on success.
     */
-    void *map_file(const std::string &file_name, const prot perm = prot::read, const std::size_t size = 0,
+    void *map_file(const std::string &file_name, const prot perm = prot_read, const std::size_t size = 0,
         const bool is_private = false);
 
     /**

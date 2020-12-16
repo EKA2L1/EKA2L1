@@ -945,10 +945,11 @@ namespace eka2l1::common::armgen {
         void VMRS(arm_reg Rt);
         void VMSR(arm_reg Rt);
 
-        void QuickCallFunction(arm_reg scratchreg, const void *func);
+        void quick_call_function(arm_reg scratchreg, const void *func);
+
         template <typename T>
-        void QuickCallFunction(arm_reg scratchreg, T func) {
-            QuickCallFunction(scratchreg, (const void *)func);
+        void quick_call_function(arm_reg scratchreg, T func) {
+            quick_call_function(scratchreg, (const void *)func);
         }
 
         // Wrapper around MOVT/MOVW with fallbacks.

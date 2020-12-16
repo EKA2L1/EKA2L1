@@ -17,26 +17,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <cpu/12l1r/common.h>
-#include <cstdint>
+#include <cpu/12l1r/core_state.h>
+#include <algorithm>
 
 namespace eka2l1::arm::r12l1 {
-    struct tlb_entry;
-
-    struct core_state {
-        std::uint32_t gprs_[16];
-        std::uint32_t cpsr_;
-        std::uint32_t fprs_[32];
-        std::uint32_t fpscr_;
-
-        std::uint64_t ticks_left_;
-        std::uint32_t should_break_;
-        asid current_aid_;
-
-        tlb_entry *entries_;
-
-        explicit core_state();
-    };
+    core_state::core_state()
+        : cpsr_(0)
+        , fpscr_(0)
+        , ticks_left_(0)
+        , should_break_(0)
+        , current_aid_(0)
+        , entries_(nullptr) {
+        std::fill(gprs_, gprs_ + sizeof(gprs_) / sizeof(std::uint32_t), 0);
+        std::fill(fprs_, fprs_ + sizeof(fprs_) / sizeof(std::uint32_t), 0);
+    }
 }

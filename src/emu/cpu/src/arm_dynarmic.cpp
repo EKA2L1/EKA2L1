@@ -359,19 +359,19 @@ namespace eka2l1::arm {
     void dynarmic_core::set_tlb_page(address vaddr, std::uint8_t *ptr, prot protection) {
         std::uint32_t prot_flags = 0;
         switch (protection) {
-        case prot::read:
+        case prot_read:
             prot_flags |= Dynarmic::MemoryPermissionRead;
             break;
 
-        case prot::read_write:
+        case prot_read_write:
             prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionWrite);
             break;
 
-        case prot::read_exec:
+        case prot_read_exec:
             prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionExecute);
             break;
 
-        case prot::read_write_exec:
+        case prot_read_write_exec:
             prot_flags |= (Dynarmic::MemoryPermissionRead | Dynarmic::MemoryPermissionWrite | Dynarmic::MemoryPermissionExecute);
             break;
 
