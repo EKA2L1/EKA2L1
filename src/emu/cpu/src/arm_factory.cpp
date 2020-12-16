@@ -21,6 +21,8 @@
 #include <cpu/arm_dynarmic.h>
 #include <cpu/arm_factory.h>
 
+#include <common/platform.h>
+
 namespace eka2l1::arm {
     core_instance create_core(exclusive_monitor *monitor, arm_emulator_type arm_type) {
         switch (arm_type) {
@@ -29,6 +31,12 @@ namespace eka2l1::arm {
 
         case arm_emulator_type::dynarmic:
             return std::make_unique<dynarmic_core>(monitor);
+
+#if EKA2L1_ARCH(ARM)
+        case arm_emulator_type::r12l1:
+            return std::make_unique<r12l1_core>(nullptr, 12);
+#endif
+
         default:
             break;
         }
