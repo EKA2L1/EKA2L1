@@ -96,20 +96,9 @@ namespace eka2l1 {
             void save_context(thread_context &ctx) override;
             void load_context(const thread_context &ctx) override;
 
-            void set_entry_point(address ep) override;
-            address get_entry_point() override;
-
-            void set_stack_top(address addr) override;
-            address get_stack_top() override;
-
-            void prepare_rescheduling() override;
-
             bool is_thumb_mode() override;
 
-            void page_table_changed() override;
-
             void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) override;
-
             void unmap_memory(address addr, size_t size) override;
 
             void clear_instruction_cache() override;

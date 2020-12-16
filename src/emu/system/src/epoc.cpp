@@ -378,7 +378,7 @@ namespace eka2l1 {
         }
 
         void prepare_reschedule() {
-            cpu->prepare_rescheduling();
+            cpu->stop();
             reschedule_pending = true;
         }
 

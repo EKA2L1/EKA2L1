@@ -72,7 +72,7 @@ namespace eka2l1 {
 		*/
         template <typename T>
         T read_from_stack(arm::core *cpu, const arg_layout &layout, kernel::process *pr) {
-            const address sp = cpu->get_stack_top();
+            const address sp = cpu->get_sp();
             const address stack_arg_offset = sp + static_cast<address>(layout.offset);
 
             return *ptr<T>(stack_arg_offset).get(pr);

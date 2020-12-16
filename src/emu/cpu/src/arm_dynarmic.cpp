@@ -353,32 +353,8 @@ namespace eka2l1::arm {
         cb->get_cp15()->set_wrwr(ctx.wrwr);
     }
 
-    void dynarmic_core::set_entry_point(address ep) {
-    }
-
-    address dynarmic_core::get_entry_point() {
-        return 0;
-    }
-
-    void dynarmic_core::set_stack_top(address addr) {
-        set_sp(addr);
-    }
-
-    address dynarmic_core::get_stack_top() {
-        return get_sp();
-    }
-
-    void dynarmic_core::prepare_rescheduling() {
-        if (jit->IsExecuting()) {
-            jit->HaltExecution();
-        }
-    }
-
     bool dynarmic_core::is_thumb_mode() {
         return get_cpsr() & 0x20;
-    }
-
-    void dynarmic_core::page_table_changed() {
     }
 
     void dynarmic_core::map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) {
