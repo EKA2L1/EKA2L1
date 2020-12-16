@@ -87,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">Настройки приложения для {} сохранены с именем файла: {:X}</string>
     <string name="pref_system_app_setting_save_title">Сохранить настройки</string>
     <string name="pref_system_validate_device_btn_title">Проверить устройство</string>
-    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
+    <string name="pref_system_validate_device_tooltip">Проверьте наличие неисправностей в текущем устройстве и устраните их, чтобы EKA2L1 мог эмулировать устройство.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Отключено, потому что эмулируемая система запущена. Перезапустите эмулятор, чтобы использовать эту опцию.</string>
     <string name="pref_system_no_device_present_str">Нет устройств</string>
     <string name="pref_system_real_time_accuracy_str">Точность в реальном времени</string>
@@ -96,7 +96,7 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Низкий</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Средний</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Высокий</string>
-    <string name="pref_system_rescan_devices_title">Rescan devices</string>
+    <string name="pref_system_rescan_devices_title">Пересканировать устройства</string>
     <string name="pref_system_rescan_devices_description_msg">Проверьте наличие неимпортированных устройств и исправьте текущую информацию</string>
     <string name="pref_control_title">Управление</string>
     <string name="pref_control_key_binding_sect_title">Назначение кнопок</string>
