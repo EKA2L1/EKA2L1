@@ -39,9 +39,16 @@ namespace eka2l1::arm::r12l1 {
 
     bool visit_session::emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
         bool before, bool writeback, bool load) {
+        // A decision is made here to not use multiple STR, for performance.
+        // Normally you would concern that the host backed memory base will be different between page. Here in
+        // the emulator they are wholey reserved as a chunk. So it's not logical for a store/load to access another chunk data.
+        //
+        // So the load/store here may follow the guest to throw an exception, if an access is made to another page that's not belonged
+        // to the same chunk as the current load/store page. If that happens, SIGSEGV is caught and we will determine the guest address/
+        // permission from lastest entry in the TLB.
         std::uint8_t last_reg = 0;
 
-        base = reg_supplier_.map(base, 0);
+        base = reg_supplier_.map(base, (writeback ? ALLOCATE_FLAG_DIRTY : 0));
         base = emit_address_lookup(base);
 
         reg_list host_reg_list = 0;

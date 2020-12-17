@@ -162,11 +162,11 @@ namespace eka2l1::arm {
     }
 
     std::uint8_t r12l1_core::get_asid() const {
-        return jit_state_.current_aid_;
+        return static_cast<std::uint8_t>(jit_state_.current_aid_);
     }
 
     std::uint8_t r12l1_core::get_max_asid_available() const {
-        return 256U;
+        return 256;
     }
 
     std::uint32_t r12l1_core::get_num_instruction_executed() {

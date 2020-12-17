@@ -35,12 +35,18 @@ namespace eka2l1::arm::r12l1 {
         const std::uint8_t *translated_code_;
         std::size_t translated_size_;
 
+        std::uint32_t inst_count_;
+
         vaddress start_address() const {
             return static_cast<vaddress>(hash_);
         }
 
         asid address_space() const {
             return static_cast<asid>((hash_ >> 32) & 0xFFFF);
+        }
+
+        vaddress current_address() const {
+            return static_cast<vaddress>(hash_) + size_;
         }
 
         explicit translated_block(const vaddress start_addr, const asid aid);

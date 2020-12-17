@@ -28,7 +28,8 @@ namespace eka2l1::arm::r12l1 {
         : hash_(0)
         , size_(0)
         , translated_code_(nullptr)
-        , translated_size_(0) {
+        , translated_size_(0)
+        , inst_count_(0) {
         hash_ = make_block_hash(start_addr, aid);
     }
 

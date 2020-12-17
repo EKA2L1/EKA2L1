@@ -1,6 +1,8 @@
 set(SOURCE_12L1R
         include/cpu/12l1r/decoder/decoder_detail.h
         include/cpu/12l1r/decoder/matcher.h
+        include/cpu/12l1r/encoding/arm.h
+        include/cpu/12l1r/encoding/thumb16.h
         include/cpu/12l1r/arm_12l1r.h
         include/cpu/12l1r/arm_visitor.h
         include/cpu/12l1r/block_cache.h

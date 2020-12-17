@@ -13,7 +13,7 @@
 #include <cassert>
 #include <tuple>
 
-namespace eka2l1::arm::r12l1 {
+namespace eka2l1::arm::r12l1::decoder {
     /**
      * Helper functions for the decoders.
      *
@@ -152,8 +152,8 @@ namespace eka2l1::arm::r12l1 {
             constexpr size_t args_count = common::function_info<FnT>::args_count;
             using Iota = std::make_index_sequence<args_count>;
 
-            const auto [mask, expect] = GetMaskAndExpect(bitstring);
-            const auto [arg_masks, arg_shifts] = GetArgInfo<args_count>(bitstring);
+            const auto [mask, expect] = get_mask_and_expect(bitstring);
+            const auto [arg_masks, arg_shifts] = get_arg_info<args_count>(bitstring);
             const auto proxy_fn = visitor_caller<FnT>::Make(Iota(), fn, arg_masks, arg_shifts);
 
             return MatcherT(name, mask, expect, proxy_fn);

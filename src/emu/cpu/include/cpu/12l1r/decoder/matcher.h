@@ -9,7 +9,7 @@
 #include <cassert>
 #include <functional>
 
-namespace eka2l1::arm::r12l1 {
+namespace eka2l1::arm::r12l1::decoder {
     /**
      * Generic instruction handling construct.
      *

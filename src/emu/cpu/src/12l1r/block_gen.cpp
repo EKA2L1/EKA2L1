@@ -21,6 +21,11 @@
 #include <cpu/12l1r/reg_loc.h>
 #include <cpu/12l1r/core_state.h>
 
+#include <cpu/12l1r/encoding/arm.h>
+#include <cpu/12l1r/encoding/thumb16.h>
+#include <cpu/12l1r/visit_session.h>
+#include <cpu/12l1r/arm_visitor.h>
+
 #include <common/log.h>
 #include <common/algorithm.h>
 
@@ -49,7 +54,7 @@ namespace eka2l1::arm::r12l1 {
         MOV(CORE_STATE_REG, common::armgen::R0);
 
         LDR(common::armgen::R1, common::armgen::R0, offsetof(core_state, gprs_[15]));
-        LDRB(common::armgen::R2, common::armgen::R0, offsetof(core_state, current_aid_));
+        LDR(common::armgen::R2, common::armgen::R0, offsetof(core_state, current_aid_));
         MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
         quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_get_block_proxy));
@@ -126,7 +131,90 @@ namespace eka2l1::arm::r12l1 {
         df(cstate);
     }
 
+    void dashixiong_block::emit_cycles_count_add(const std::uint32_t num) {
+        LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
+        SUBI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, num, ALWAYS_SCRATCH2);
+        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
+
+        // Also if we are having times check if we are out of cycles
+        CMP(ALWAYS_SCRATCH1, 0);
+        
+        set_cc(common::CC_LE);
+        
+        {
+            MOVI2R(ALWAYS_SCRATCH1, 1);
+            STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, should_break_));
+        }
+
+        set_cc(common::CC_AL);
+    }
+
+    void dashixiong_block::emit_pc_flush(const address current_pc) {
+        MOVI2R(ALWAYS_SCRATCH1, current_pc);
+        STR(ALWAYS_SCRATCH2, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+    }
+    
+    void dashixiong_block::emit_block_finalize(translated_block *block) {
+        emit_cycles_count_add(block->inst_count_);
+        emit_pc_flush(block->current_address());
+    }
+
     translated_block *dashixiong_block::compile_new_block(core_state *state, const vaddress addr) {
-        return nullptr;
+        translated_block *block = start_new_block(addr, state->current_aid_);
+        if (!block) {
+            return nullptr;
+        }
+
+        const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
+        bool should_quit = false;
+
+        visit_session context(this, block);
+        std::unique_ptr<arm_translate_visitor> arm_visitor = nullptr;
+
+        if (!is_thumb) {
+            arm_visitor = std::make_unique<arm_translate_visitor>(&context);
+        }
+
+        // Emit the check if we should go outside and stop running
+        LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, should_break_));
+        CMP(ALWAYS_SCRATCH1, 0);
+
+        set_cc(common::CC_NEQ);
+
+        {
+            // Branch to dispatch if we should quit...
+            MOV(common::armgen::R0, CORE_STATE_REG);
+            B_CC(common::CC_NEQ, dispatch_func_);
+        }
+
+        set_cc(common::CC_AL);
+
+        do {
+            std::uint32_t inst = 0;
+            if (!code_read_(addr, &inst)) {
+                LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
+                return nullptr;
+            }
+
+            block->size_ += (is_thumb) ? 2 : 4;
+            block->inst_count_++;
+
+            if (is_thumb) {
+                LOG_ERROR(CPU_12L1R, "Missing thumb handler!");
+                //auto launch = decode_thumb16(static_cast<std::uint16_t>(inst));
+            } else {
+                // ARM decoding. NEON -> VFP -> ARM
+                if (auto decoder = decode_arm<arm_translate_visitor>(inst)) {
+                    should_quit = decoder->get().call(*arm_visitor, inst);
+                }
+            }
+        } while (true);
+
+        // Emit cycles count add
+        if (!finalize_block(block, block->size_)) {
+            LOG_WARN(CPU_12L1R, "Unable to finalzie block!");
+        }
+
+        return block;
     }
 }

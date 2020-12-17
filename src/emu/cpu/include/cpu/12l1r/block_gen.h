@@ -21,6 +21,8 @@
 
 #include <common/armemitter.h>
 #include <cpu/12l1r/block_cache.h>
+#include <cpu/arm_interface.h>
+
 #include <cstdint>
 
 namespace eka2l1::arm::r12l1 {
@@ -32,11 +34,16 @@ namespace eka2l1::arm::r12l1 {
         block_cache cache_;
         const void *dispatch_func_;
 
+        memory_operation_32bit_func code_read_;
+
     protected:
         void assemble_control_funcs();
 
         translated_block *start_new_block(const vaddress addr, const asid aid);
         bool finalize_block(translated_block *block, const std::uint32_t guest_size);
+        
+        void emit_cycles_count_add(const std::uint32_t num);
+        void emit_pc_flush(const address current_pc);
 
     public:
         explicit dashixiong_block();
@@ -45,9 +52,9 @@ namespace eka2l1::arm::r12l1 {
 
         translated_block *compile_new_block(core_state *state, const vaddress addr);
         translated_block *get_block(const vaddress addr, const asid aid);
+        void emit_block_finalize(translated_block *block);
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);
         void flush_all();
-        
     };
 }

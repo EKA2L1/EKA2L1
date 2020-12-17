@@ -31,9 +31,9 @@ namespace eka2l1::arm::r12l1 {
         std::uint32_t fprs_[32];
         std::uint32_t fpscr_;
 
-        std::uint64_t ticks_left_;
+        std::uint32_t ticks_left_;
         std::uint32_t should_break_;
-        asid current_aid_;
+        std::uint32_t current_aid_;
 
         tlb_entry *entries_;
 

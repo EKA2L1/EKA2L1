@@ -30,6 +30,8 @@ namespace eka2l1::arm::r12l1 {
         visit_session *session_;
 
     public:
+        using instruction_return_type = bool;
+
         explicit arm_translate_visitor(visit_session *session);
 
         bool arm_LDM(common::cc_flags cond, bool W, reg_index n, reg_list list);
