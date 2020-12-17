@@ -29,6 +29,7 @@ namespace eka2l1::common {
 
         virtual void set_code_ptr(std::uint8_t *ptr) = 0;
         virtual const std::uint8_t *get_code_ptr() const = 0;
+        virtual std::uint8_t *get_writeable_code_ptr() = 0;
 
         std::uint8_t *get_base_ptr() {
             return region;
@@ -126,6 +127,10 @@ namespace eka2l1::common {
 
         const std::uint8_t *get_code_ptr() const override {
             return T::get_code_pointer();
+        }
+
+        std::uint8_t *get_writeable_code_ptr() override {
+            return T::get_writeable_code_ptr();
         }
 
         void reset_codeptr(int offset) {
