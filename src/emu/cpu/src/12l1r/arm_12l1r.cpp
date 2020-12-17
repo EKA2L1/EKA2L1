@@ -166,7 +166,7 @@ namespace eka2l1::arm {
     }
 
     std::uint8_t r12l1_core::get_max_asid_available() const {
-        return 256;
+        return 256U;
     }
 
     std::uint32_t r12l1_core::get_num_instruction_executed() {

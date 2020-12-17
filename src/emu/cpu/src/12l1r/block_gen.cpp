@@ -49,7 +49,7 @@ namespace eka2l1::arm::r12l1 {
         MOV(CORE_STATE_REG, common::armgen::R0);
 
         LDR(common::armgen::R1, common::armgen::R0, offsetof(core_state, gprs_[15]));
-        LDRH(common::armgen::R2, common::armgen::R0, offsetof(core_state, current_aid_));
+        LDRB(common::armgen::R2, common::armgen::R0, offsetof(core_state, current_aid_));
         MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
         quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_get_block_proxy));

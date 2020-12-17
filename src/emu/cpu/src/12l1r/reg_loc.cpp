@@ -17,12 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <cstdint>
+#include <cpu/12l1r/reg_cache.h>
 
 namespace eka2l1::arm::r12l1 {
-    using vaddress = std::uint32_t;
-    using reg_list = std::uint32_t;
-    using asid = std::uint8_t;
+    guest_register_info::guest_register_info()
+        : curr_location_(GUEST_REGISTER_LOC_MEM)
+        , imm_(0)
+        , spill_lock_(false)
+        , use_count_(0) {
+
+    }
+
+    host_register_info::host_register_info()
+        : guest_mapped_reg_(common::armgen::INVALID_REG)
+        , scratch_(false) {
+    }
 }

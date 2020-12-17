@@ -42,5 +42,10 @@ namespace eka2l1::common {
     template <typename T>
     T extract_bits(const T num, const std::uint8_t p, const std::uint8_t n) { 
         return (((1 << n) - 1) & (num >> (p - 1))); 
-    } 
+    }
+
+    template <typename T>
+    bool bit(const T num, const std::uint8_t idx) {
+        return num & (1 << idx);
+    }
 }
