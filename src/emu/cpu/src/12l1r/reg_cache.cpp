@@ -98,12 +98,14 @@ namespace eka2l1::arm::r12l1 {
         case GUEST_REGISTER_LOC_IMM_AND_HOST_REG:
         case GUEST_REGISTER_LOC_HOST_REG:
             // Just safe check... May it ever happen?
-            if (!host_gpr_infos_[info.host_reg_].scratch_) {
+            if (!host_gpr_infos_[info.host_reg_].scratch_ && host_gpr_infos_[info.host_reg_].dirty_) {
                 big_block_->STR(info.host_reg_, CORE_STATE_REG, get_offset_to_reg_in_core_state(
                     mee - common::armgen::R0, REG_SCRATCH_TYPE_GPR));
             }
 
             host_gpr_infos_[info.host_reg_].guest_mapped_reg_ = common::armgen::INVALID_REG;
+            host_gpr_infos_[info.host_reg_].dirty_ = true;
+
             break;
 
         case GUEST_REGISTER_LOC_MEM:
@@ -141,7 +143,7 @@ namespace eka2l1::arm::r12l1 {
             return;
         }
 
-        if ((!host_gpr_infos_[mee].scratch_) && (host_gpr_infos_[mee].guest_mapped_reg_ != common::armgen::INVALID_REG)) {
+        if ((!host_gpr_infos_[mee].scratch_) && (host_gpr_infos_[mee].dirty_) && (host_gpr_infos_[mee].guest_mapped_reg_ != common::armgen::INVALID_REG)) {
             const common::armgen::arm_reg guest_reg = host_gpr_infos_[mee].guest_mapped_reg_;
             if (guest_gpr_infos_[guest_reg].host_reg_ != mee) {
                 LOG_ERROR(CPU_12L1R, "Host and guest register out of sync (reg=R{})", static_cast<int>(mee));
@@ -247,7 +249,7 @@ namespace eka2l1::arm::r12l1 {
         return result_reg;
     }
 
-    common::armgen::arm_reg reg_cache::map(const common::armgen::arm_reg mee) {
+    common::armgen::arm_reg reg_cache::map(const common::armgen::arm_reg mee, const std::uint32_t allocate_flags) {
         // Rules: GPR map to GPR. FPR map to FPR
         const bool is_gpr = (mee >= common::armgen::R0) && (mee <= common::armgen::R15);
         if (!is_gpr) {
@@ -267,7 +269,7 @@ namespace eka2l1::arm::r12l1 {
             }
 
             // Intentional, old imm if it's available will disappear
-            host_rf_arr[host_reg].scratch_ = false;
+            host_rf_arr[host_reg].dirty_ = true;
             guest_rf_arr[mee].curr_location_ = GUEST_REGISTER_LOC_HOST_REG;
 
             // Increase the use count
@@ -301,5 +303,69 @@ namespace eka2l1::arm::r12l1 {
 
     common::armgen::arm_reg reg_cache::scratch(reg_scratch_type type) {
         return allocate_or_spill(type, ALLOCATE_FLAG_SCRATCH);
+    }
+
+    void reg_cache::spill_lock(const common::armgen::arm_reg guest_reg) {
+        if ((guest_reg >= common::armgen::R0) && (guest_reg < common::armgen::R15)) {
+            guest_gpr_infos_[guest_reg].spill_lock_ = true;
+        } else if ((guest_reg >= common::armgen::S0) && (guest_reg <= common::armgen::S23)) {
+            guest_fpr_infos_[guest_reg].spill_lock_ = true;
+        } else {
+            LOG_ERROR(CPU_12L1R, "Invalid register to spill lock!");
+        }
+    }
+
+    void reg_cache::spill_lock_all(reg_scratch_type type) {
+        switch (type) {
+        case REG_SCRATCH_TYPE_GPR:
+            for (auto &gpr_info: guest_gpr_infos_) {
+                gpr_info.spill_lock_ = true;
+            }
+
+            break;
+
+        case REG_SCRATCH_TYPE_FPR:
+            for (auto &fpr_info: guest_fpr_infos_) {
+                fpr_info.spill_lock_ = true;
+            }
+
+            break;
+
+        default:
+            LOG_ERROR(CPU_12L1R, "Invalid register type to spill lock all");
+            break;
+        }
+    }
+
+    void reg_cache::release_spill_lock(const common::armgen::arm_reg guest_reg) {
+        if ((guest_reg >= common::armgen::R0) && (guest_reg < common::armgen::R15)) {
+            guest_gpr_infos_[guest_reg].spill_lock_ = false;
+        } else if ((guest_reg >= common::armgen::S0) && (guest_reg <= common::armgen::S23)) {
+            guest_fpr_infos_[guest_reg].spill_lock_ = false;
+        } else {
+            LOG_ERROR(CPU_12L1R, "Invalid register to release spill lock!");
+        }
+    }
+
+    void reg_cache::release_spill_lock_all(reg_scratch_type type) {
+        switch (type) {
+        case REG_SCRATCH_TYPE_GPR:
+            for (auto &gpr_info: guest_gpr_infos_) {
+                gpr_info.spill_lock_ = false;
+            }
+
+            break;
+
+        case REG_SCRATCH_TYPE_FPR:
+            for (auto &fpr_info: guest_fpr_infos_) {
+                fpr_info.spill_lock_ = false;
+            }
+
+            break;
+
+        default:
+            LOG_ERROR(CPU_12L1R, "Invalid register type to release spill lock");
+            break;
+        }
     }
 }

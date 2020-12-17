@@ -32,6 +32,11 @@ namespace eka2l1::arm::r12l1 {
         REG_SCRATCH_TYPE_FPR = 1
     };
 
+    enum allocate_flags {
+        ALLOCATE_FLAG_SCRATCH = 1 << 0,
+        ALLOCATE_FLAG_DIRTY = 1 << 1
+    };
+    
     class reg_cache {
     private:
         static constexpr std::uint32_t HOST_GPRS_LENGTH = 16;
@@ -49,10 +54,6 @@ namespace eka2l1::arm::r12l1 {
         dashixiong_block *big_block_;
 
     protected:
-        enum allocate_flags {
-            ALLOCATE_FLAG_SCRATCH = 1 << 0
-        };
-
         bool load_gpr_to_host(common::armgen::arm_reg dest_reg, common::armgen::arm_reg source_guest_reg);
         
         void flush_gpr(const common::armgen::arm_reg mee);
@@ -69,7 +70,7 @@ namespace eka2l1::arm::r12l1 {
          * @param       mee The guest register to map to.
          * @returns     INVALID_REG on failure, mapped register on success.
          */
-        common::armgen::arm_reg map(const common::armgen::arm_reg mee);
+        common::armgen::arm_reg map(const common::armgen::arm_reg mee, const std::uint32_t allocate_flags);
 
         /**
          * @brief   Provide a scratch register for temporary purpose.
@@ -89,5 +90,11 @@ namespace eka2l1::arm::r12l1 {
 
         void flush_host_reg(const common::armgen::arm_reg host_reg);
         void flush_host_regs_for_host_call();
+
+        void spill_lock(const common::armgen::arm_reg guest_reg);
+        void spill_lock_all(reg_scratch_type type);
+
+        void release_spill_lock(const common::armgen::arm_reg guest_reg);
+        void release_spill_lock_all(reg_scratch_type type);
     };
 }

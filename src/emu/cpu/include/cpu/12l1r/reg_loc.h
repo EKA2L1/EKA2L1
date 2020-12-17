@@ -46,7 +46,8 @@ namespace eka2l1::arm::r12l1 {
 
     struct host_register_info {
         common::armgen::arm_reg guest_mapped_reg_;      ///< Correspond guest reigster
-        bool scratch_;                                  ///< Value should be not be written next flush if this is true
+        bool scratch_;                                  ///< This host register should not be touched until the scratch is release
+        bool dirty_;                                    ///< No need to flush this register if this is true. May be used for reading purposes.
 
         explicit host_register_info();
     };

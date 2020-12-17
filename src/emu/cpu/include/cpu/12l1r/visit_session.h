@@ -17,10 +17,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/arm_visitor.h>
+#pragma once
 
-namespace eka2l1::arm::r12l1 {    
-    arm_translate_visitor::arm_translate_visitor(visit_session *session)
-        : session_(session) {
-    }
+#include <cpu/12l1r/reg_cache.h>
+#include <cstdint>
+
+namespace eka2l1::arm::r12l1 {
+    class dashixiong_block;
+    struct translated_block;
+
+    class visit_session {
+    public:
+        translated_block *crr_block_;
+        dashixiong_block *big_block_;
+
+        reg_cache reg_supplier_;
+
+        explicit visit_session(dashixiong_block *bro, translated_block *crr);
+        void set_cond(common::cc_flags cc);
+        
+        common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base);
+        bool emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
+            bool before, bool writeback, bool load);
+    };
 }

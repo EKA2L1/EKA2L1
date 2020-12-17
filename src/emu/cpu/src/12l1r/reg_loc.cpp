@@ -30,6 +30,7 @@ namespace eka2l1::arm::r12l1 {
 
     host_register_info::host_register_info()
         : guest_mapped_reg_(common::armgen::INVALID_REG)
-        , scratch_(false) {
+        , scratch_(false)
+        , dirty_(false) {
     }
 }

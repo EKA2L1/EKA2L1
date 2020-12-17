@@ -25,4 +25,5 @@ namespace eka2l1::arm::r12l1 {
     using vaddress = std::uint32_t;
     using reg_list = std::uint32_t;
     using asid = std::uint8_t;
+    using reg_index = std::uint8_t;
 }

@@ -25,6 +25,7 @@
 
 namespace eka2l1::arm::r12l1 {
     struct core_state;
+    class reg_cache;
 
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
@@ -47,5 +48,6 @@ namespace eka2l1::arm::r12l1 {
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);
         void flush_all();
+        
     };
 }
