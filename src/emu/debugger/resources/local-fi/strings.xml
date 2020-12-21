@@ -8,7 +8,7 @@
     <string name="ok">OK</string>
     <string name="yes">Kyllä</string>
     <string name="no">Ei</string>
-    <string name="general">General</string>
+    <string name="general">Yleiset</string>
     <string name="search">Search</string>
     <string name="name">Nimi</string>
     <string name="info">Info</string>
@@ -18,8 +18,8 @@
     <string name="file_menu_name">Tiedosto</string>
     <string name="debugger_menu_name">Debugger</string>
     <string name="view_menu_name">View</string>
-    <string name="help_menu_name">Help</string>
-    <string name="file_menu_logger_item_name">Logger</string>
+    <string name="help_menu_name">Ohje</string>
+    <string name="file_menu_logger_item_name">Lokitiedot</string>
     <string name="file_menu_launch_apps_item_name">Käynnistä sovellukset</string>
     <string name="file_menu_packages_item_name">Paketit</string>
     <string name="file_menu_packages_item_unavail_msg">Asenna laite päästäksesi käsiksi pakettihallintaan!</string>
@@ -28,8 +28,8 @@
     <string name="file_menu_install_device_item_name">Asenna laite</string>
     <string name="file_menu_mount_sd_item_name">Liitä MMC/SD-kortti</string>
     <string name="file_menu_prefs_item_name">Asetukset</string>
-    <string name="debugger_menu_pause_item_name">Pause</string>
-    <string name="debugger_menu_stop_item_name">Stop</string>
+    <string name="debugger_menu_pause_item_name">Tauko</string>
+    <string name="debugger_menu_stop_item_name">Lopeta</string>
     <string name="debugger_menu_restart_item_name">Restart</string>
     <string name="debugger_menu_disassembler_item_name">Disassembler</string>
     <string name="debugger_menu_objects_item_name">Objects</string>
@@ -55,7 +55,7 @@
     <string name="pref_personalize_background_string">Background</string>
     <string name="pref_personalize_transparency_string">Transparency</string>
     <string name="pref_personalize_ui_scale_string">Käyttöliittymän koko</string>
-    <string name="pref_general_title">General</string>
+    <string name="pref_general_title">Yleiset</string>
     <string name="pref_general_data_storage_string">Data storage</string>
     <string name="pref_general_debugging_string">Debugging</string>
     <string name="pref_general_debugging_cpu_read_checkbox_title">CPU read</string>
@@ -124,7 +124,7 @@
     <string name="install_device_raw_dump_choose_msg">Please specify raw Z: drive dump folder:</string>
     <string name="install_device_rom_choose_msg">Please specify the ROM file:</string>
     <string name="install_device_wait_install_msg">Please wait while we install the device!</string>
-    <string name="install_device_progress_raw_dump_msg">Copying raw dump ({}%)</string>
+    <string name="install_device_progress_raw_dump_msg">Kopioidaan raakaa dumppia ({}%)</string>
     <string name="install_device_progress_rpkg_msg">Extract the RPKG</string>
     <string name="install_device_progress_rom_msg">Kopioi ROM</string>
     <string name="install_device_install_failure_msg">Jotain meni vikaan asennuksen aikana! Tarkista loki!</string>
