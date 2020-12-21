@@ -32,7 +32,7 @@ namespace eka2l1::arm::r12l1 {
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
         block_cache cache_;
-        const void *dispatch_func_;
+        void *dispatch_func_;
 
         memory_operation_32bit_func code_read_;
 

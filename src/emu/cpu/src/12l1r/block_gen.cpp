@@ -47,7 +47,7 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::assemble_control_funcs() {
         begin_write();
-        dispatch_func_ = get_code_pointer();
+        //dispatch_func_ = get_code_pointer();
 
         // Load the arguments to call lookup
         // While R0 is already the core state
