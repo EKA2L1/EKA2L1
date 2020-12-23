@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 
 namespace eka2l1::drivers {
