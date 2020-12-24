@@ -113,7 +113,7 @@ namespace eka2l1::common {
     }
 
     bool is_memory_wx_exclusive() {
-#if EKA2L1_PLATFORM(UWP) || EKA2L1_PLATFORM(IOS)
+#if EKA2L1_PLATFORM(UWP) || EKA2L1_PLATFORM(IOS) || EKA2L1_PLATFORM(ANDROID)
         return true;
 #else
         return false;
