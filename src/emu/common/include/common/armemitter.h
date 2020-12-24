@@ -494,13 +494,14 @@ namespace eka2l1::common::armgen {
         friend struct OpArg; // for Write8 etc
         friend class NEONXEmitter;
 
+    protected:
+        cpu_info context_info;
+
     private:
         std::uint8_t *code, *startcode;
         std::uint8_t *last_cache_flush_end;
         std::uint32_t condition;
         std::vector<literal_pool> current_lit_pool;
-
-        cpu_info context_info;
 
         void write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 op2, bool RegAdd);
         void write_reg_store_op(std::uint32_t op, arm_reg dest, bool WriteBack, std::uint16_t RegList);
