@@ -101,11 +101,10 @@ namespace eka2l1::common {
         explicit cpu_info() {
         }
 
-        // Turn the cpu info into a string we can show
-        // std::string summarize();
-
-    private:
         // Detects the various cpu features
         void detect();
+
+        // Turn the cpu info into a string we can show
+        // std::string summarize();
     };
 }

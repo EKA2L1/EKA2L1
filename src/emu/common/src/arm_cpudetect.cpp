@@ -26,8 +26,9 @@
 #include <string.h>
 
 // Only Linux platforms have /proc/cpuinfo
-#if EKA2L1_PLATFORM(LINUX)
+#if EKA2L1_PLATFORM(UNIX)
 #include <fstream>
+#include <sstream>
 
 const char procfile[] = "/proc/cpuinfo";
 // https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-devices-system-cpu
@@ -190,7 +191,7 @@ namespace eka2l1::common {
         vendor = VENDOR_ARM;
 
         // Get the information about the CPU
-#if !EKA2L1_PLATFORM(LINUX)
+#if !EKA2L1_PLATFORM(UNIX)
         bool isVFP3 = false;
         bool isVFP4 = false;
 #if EKA2L1_PLATFORM(IOS)
@@ -229,31 +230,31 @@ namespace eka2l1::common {
         bIDIVt = isVFP4;
         bFP = false;
         bASIMD = false;
-#else // EKA2L1_PLATFORM(LINUX)
-        strncpy(cpu_string, GetCPUString().c_str(), sizeof(cpu_string));
-        strncpy(brand_string, GetCPUBrandString().c_str(), sizeof(brand_string));
+#else // EKA2L1_PLATFORM(UNIX)
+        strncpy(cpu_string, get_cpu_string().c_str(), sizeof(cpu_string));
+        strncpy(brand_string, get_cpu_brand_string().c_str(), sizeof(brand_string));
 
-        bSwp = CheckCPUFeature("swp");
-        bHalf = CheckCPUFeature("half");
-        bThumb = CheckCPUFeature("thumb");
-        bFastMult = CheckCPUFeature("fastmult");
-        bVFP = CheckCPUFeature("vfp");
-        bEDSP = CheckCPUFeature("edsp");
-        bThumbEE = CheckCPUFeature("thumbee");
-        bNEON = CheckCPUFeature("neon");
-        bVFPv3 = CheckCPUFeature("vfpv3");
-        bTLS = CheckCPUFeature("tls");
-        bVFPv4 = CheckCPUFeature("vfpv4");
-        bIDIVa = CheckCPUFeature("idiva");
-        bIDIVt = CheckCPUFeature("idivt");
+        bSwp = check_cpu_feature("swp");
+        bHalf = check_cpu_feature("half");
+        bThumb = check_cpu_feature("thumb");
+        bFastMult = check_cpu_feature("fastmult");
+        bVFP = check_cpu_feature("vfp");
+        bEDSP = check_cpu_feature("edsp");
+        bThumbEE = check_cpu_feature("thumbee");
+        bNEON = check_cpu_feature("neon");
+        bVFPv3 = check_cpu_feature("vfpv3");
+        bTLS = check_cpu_feature("tls");
+        bVFPv4 = check_cpu_feature("vfpv4");
+        bIDIVa = check_cpu_feature("idiva");
+        bIDIVt = check_cpu_feature("idivt");
         // Qualcomm Krait supports IDIVA but it doesn't report it. Check for krait (0x4D = Plus, 0x6F = Pro).
-        unsigned short CPUPart = GetCPUPart();
-        if (GetCPUImplementer() == 0x51 && (CPUPart == 0x4D || CPUPart == 0x6F))
+        unsigned short CPUPart = get_cpu_part();
+        if (get_cpu_implementer() == 0x51 && (CPUPart == 0x4D || CPUPart == 0x6F))
             bIDIVa = bIDIVt = true;
         // These two require ARMv8 or higher
-        bFP = CheckCPUFeature("fp");
-        bASIMD = CheckCPUFeature("asimd");
-        num_cores = GetCoreCount();
+        bFP = check_cpu_feature("fp");
+        bASIMD = check_cpu_feature("asimd");
+        num_cores = get_core_count();
 #endif
 #if EKA2L1_ARCH(ARM64)
         // Whether the above detection failed or not, on ARM64 we do have ASIMD/NEON.
