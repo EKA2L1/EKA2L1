@@ -42,15 +42,21 @@ namespace eka2l1::arm::r12l1 {
 
     dashixiong_block::dashixiong_block()
         : dispatch_func_(nullptr) {
+        context_info.detect();
+
         alloc_codespace(MAX_CODE_SPACE_BYTES);
+        assemble_control_funcs();
     }
 
     void dashixiong_block::assemble_control_funcs() {
         begin_write();
-        //dispatch_func_ = get_code_pointer();
+        dispatch_func_ = get_writeable_code_ptr();
 
         // Load the arguments to call lookup
         // While R0 is already the core state
+        PUSH(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
+                common::armgen::R9, common::armgen::R10, common::armgen::R12, common::armgen::R14);
+
         MOV(CORE_STATE_REG, common::armgen::R0);
 
         LDR(common::armgen::R1, common::armgen::R0, offsetof(core_state, gprs_[15]));
@@ -58,13 +64,14 @@ namespace eka2l1::arm::r12l1 {
         MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
         quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_get_block_proxy));
-        
+
         CMPI2R(common::armgen::R0, 0, common::armgen::R12);
         common::armgen::fixup_branch available = B_CC(common::CC_NEQ);
 
         // Call for recompile
-        MOV(common::armgen::R0, CORE_STATE_REG);
-        LDR(common::armgen::R1, common::armgen::R0, offsetof(core_state, gprs_[15]));
+        MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
+        MOV(common::armgen::R1, CORE_STATE_REG);
+        LDR(common::armgen::R2, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
 
         quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_compile_new_block_proxy));
         CMPI2R(common::armgen::R0, 0, common::armgen::R12);
@@ -84,6 +91,12 @@ namespace eka2l1::arm::r12l1 {
         BL(common::armgen::R0);                                                // Branch to the block
 
         set_jump_target(headout);
+
+        // Branch back to where it went
+        POP(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
+             common::armgen::R9, common::armgen::R10, common::armgen::R12, common::armgen::R15);
+
+        flush_lit_pool();
         end_write();
     }
 
@@ -175,6 +188,8 @@ namespace eka2l1::arm::r12l1 {
             arm_visitor = std::make_unique<arm_translate_visitor>(&context);
         }
 
+        begin_write();
+
         // Emit the check if we should go outside and stop running
         LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, should_break_));
         CMP(ALWAYS_SCRATCH1, 0);
@@ -215,6 +230,7 @@ namespace eka2l1::arm::r12l1 {
             LOG_WARN(CPU_12L1R, "Unable to finalzie block!");
         }
 
+        end_write();
         return block;
     }
 }
