@@ -68,6 +68,13 @@ namespace eka2l1::common {
             region_size = size;
             // The protection will be set to RW if PlatformIsWXExclusive.
             region = (std::uint8_t *)map_memory(region_size);
+
+            if (is_memory_wx_exclusive()) {
+                commit(region, region_size, prot_read_exec);
+            } else {
+                commit(region, region_size, prot_read_write_exec);
+            }
+
             T::set_code_pointer(region);
         }
 
@@ -115,6 +122,7 @@ namespace eka2l1::common {
         // Call this when shutting down. Don't rely on the destructor, even though it'll do the job.
         void free_codespace() {
             change_protection(region, region_size, prot_read_write);
+            decommit(region, region_size);
             unmap_memory(region, region_size);
 
             region = nullptr;
