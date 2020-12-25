@@ -14,6 +14,7 @@ set(SOURCE_12L1R
         include/cpu/12l1r/thumb_visitor.h
         include/cpu/12l1r/tlb.h
         include/cpu/12l1r/visit_session.h
+        src/12l1r/translate/interrupt.cpp
         src/12l1r/translate/load_store.cpp
         src/12l1r/arm_12l1r.cpp
         src/12l1r/arm_visitor.cpp

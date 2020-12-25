@@ -72,8 +72,8 @@
 
 // Exception Generating instructions
 //INST(arm_BKPT,          "BKPT",                "cccc00010010vvvvvvvvvvvv0111vvvv") // v5
-//INST(arm_SVC,           "SVC",                 "cccc1111vvvvvvvvvvvvvvvvvvvvvvvv") // all
-//INST(arm_UDF,           "UDF",                 "111001111111------------1111----") // all
+INST(arm_SVC,           "SVC",                 "cccc1111vvvvvvvvvvvvvvvvvvvvvvvv") // all
+INST(arm_UDF,           "UDF",                 "111001111111------------1111----") // all
 
 // Extension instructions
 //INST(arm_SXTB,          "SXTB",                "cccc011010101111ddddrr000111mmmm") // v6

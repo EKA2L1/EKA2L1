@@ -246,6 +246,11 @@ namespace eka2l1::arm::r12l1 {
         }
 
         flush(result_reg);
+
+        if (flags & ALLOCATE_FLAG_SCRATCH) {
+            host_rf_arr[result_reg].scratch_ = true;
+        }
+
         return result_reg;
     }
 

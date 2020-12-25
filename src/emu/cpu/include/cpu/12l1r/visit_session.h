@@ -24,9 +24,16 @@
 
 namespace eka2l1::arm::r12l1 {
     class dashixiong_block;
+    struct dashixiong_callback;
+
     struct translated_block;
 
     class visit_session {
+	protected:
+		common::cc_flags last_flag_;
+		bool cpsr_modified_;				///< Has the CPSR been modified since last time the flag is updated.
+		common::armgen::fixup_branch end_of_cond_;
+		
     public:
         translated_block *crr_block_;
         dashixiong_block *big_block_;
@@ -34,10 +41,18 @@ namespace eka2l1::arm::r12l1 {
         reg_cache reg_supplier_;
 
         explicit visit_session(dashixiong_block *bro, translated_block *crr);
+		
         void set_cond(common::cc_flags cc);
-        
-        common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base);
+		
+        common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base, const bool for_read);
+
         bool emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
             bool before, bool writeback, bool load);
+
+        bool emit_undefined_instruction_handler();
+        bool emit_system_call_handler(const std::uint32_t n);
+		
+		void emit_cpsr_update_nzcv();
+		void emit_cpsr_restore_nzcv();
     };
 }

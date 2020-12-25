@@ -54,12 +54,12 @@ namespace eka2l1::arm::r12l1 {
 
     static constexpr common::armgen::arm_reg CORE_STATE_REG = common::armgen::arm_reg::R10;
     static constexpr common::armgen::arm_reg TLB_ENTRIES_REG = common::armgen::arm_reg::R9;
+	static constexpr common::armgen::arm_reg CPSR_REG = common::armgen::R8;
     static constexpr common::armgen::arm_reg ALWAYS_SCRATCH1 = common::armgen::arm_reg::R0;
     static constexpr common::armgen::arm_reg ALWAYS_SCRATCH2 = common::armgen::arm_reg::R14;
 
     static common::armgen::arm_reg ALLOCATEABLE_GPRS[] = {
         common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R4,
-        common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
-        common::armgen::R12
+        common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R12
     };
 }

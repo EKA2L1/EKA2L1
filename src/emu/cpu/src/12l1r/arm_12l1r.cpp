@@ -23,9 +23,16 @@
 namespace eka2l1::arm {
     r12l1_core::r12l1_core(arm::exclusive_monitor *monitor, const std::size_t page_bits)
         : mem_cache_(page_bits)
+        , big_block_(nullptr)
         , monitor_(monitor) {
         // Set the state's TLB entries
         jit_state_.entries_ = mem_cache_.entries;
+
+        r12l1::dashixiong_callback callbacks{ read_8bit, read_16bit, read_32bit, read_64bit,
+            write_8bit, write_16bit, write_32bit, write_64bit, read_code, exception_handler,
+            system_call_handler };
+
+        big_block_ = std::make_unique<r12l1::dashixiong_block>(callbacks);
     }
 
     r12l1_core::~r12l1_core() {
@@ -42,7 +49,7 @@ namespace eka2l1::arm {
         jit_state_.ticks_left_ = target_ticks_run_;
         jit_state_.should_break_ = false;
 
-        big_block_.enter_dispatch(&jit_state_);
+        big_block_->enter_dispatch(&jit_state_);
 
         // Set it again
         jit_state_.should_break_ = false;
@@ -150,11 +157,11 @@ namespace eka2l1::arm {
     }
 
     void r12l1_core::clear_instruction_cache() {
-        big_block_.flush_all();
+        big_block_->flush_all();
     }
 
     void r12l1_core::imb_range(address addr, std::size_t size) {
-        big_block_.flush_range(addr, static_cast<vaddress>(addr + size), jit_state_.current_aid_);
+        big_block_->flush_range(addr, static_cast<vaddress>(addr + size), jit_state_.current_aid_);
     }
 
     void r12l1_core::set_asid(std::uint8_t num) {

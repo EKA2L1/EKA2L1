@@ -42,5 +42,8 @@ namespace eka2l1::arm::r12l1 {
         bool arm_STMDA(common::cc_flags cond, bool W, reg_index n, reg_list list);
         bool arm_STMDB(common::cc_flags cond, bool W, reg_index n, reg_list list);
         bool arm_STMIB(common::cc_flags cond, bool W, reg_index n, reg_list list);
+
+        bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
+        bool arm_UDF();
     };
 }

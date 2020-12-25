@@ -29,12 +29,29 @@ namespace eka2l1::arm::r12l1 {
     struct core_state;
     class reg_cache;
 
+    struct dashixiong_callback {
+        memory_operation_8bit_func &read_byte_;
+        memory_operation_16bit_func &read_word_;
+        memory_operation_32bit_func &read_dword_;
+        memory_operation_64bit_func &read_qword_;
+		
+        memory_operation_8bit_func &write_byte_;
+        memory_operation_16bit_func &write_word_;
+        memory_operation_32bit_func &write_dword_;
+        memory_operation_64bit_func &write_qword_;
+		
+        memory_operation_32bit_func &code_read_;
+
+        handle_exception_func &exception_handler_;
+        system_call_handler_func &syscall_handler_;
+    };
+
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
         block_cache cache_;
         void *dispatch_func_;
 
-        memory_operation_32bit_func code_read_;
+        dashixiong_callback callbacks_;
 
     protected:
         void assemble_control_funcs();
@@ -46,7 +63,7 @@ namespace eka2l1::arm::r12l1 {
         void emit_pc_flush(const address current_pc);
 
     public:
-        explicit dashixiong_block();
+        explicit dashixiong_block(dashixiong_callback &callbacks);
 
         void enter_dispatch(core_state *cstate);
 
@@ -56,5 +73,18 @@ namespace eka2l1::arm::r12l1 {
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);
         void flush_all();
+
+        void raise_guest_exception(const exception_type exc, const std::uint32_t usrdata);
+        void raise_system_call(const std::uint32_t num);
+		
+		std::uint8_t read_byte(const vaddress addr);
+		std::uint16_t read_word(const vaddress addr);
+		std::uint32_t read_dword(const vaddress addr);
+		std::uint64_t read_qword(const vaddress addr);
+		
+		void write_byte(const vaddress addr, std::uint8_t dat);
+		void write_word(const vaddress addr, std::uint16_t dat);
+		void write_dword(const vaddress addr, std::uint32_t dat);
+		void write_qword(const vaddress addr, std::uint64_t dat);
     };
 }

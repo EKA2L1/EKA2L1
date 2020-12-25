@@ -26,12 +26,15 @@
 #include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/block_gen.h>
 
+#include <memory>
+
 namespace eka2l1::arm {
     class r12l1_core: public core {
     private:
         r12l1::core_state jit_state_;
-        r12l1::dashixiong_block big_block_;
         r12l1::tlb mem_cache_;
+
+        std::unique_ptr<r12l1::dashixiong_block> big_block_;
 
         arm::exclusive_monitor *monitor_;
         std::uint32_t target_ticks_run_;

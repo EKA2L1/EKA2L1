@@ -40,8 +40,9 @@ namespace eka2l1::arm::r12l1 {
         return self->compile_new_block(state, addr);
     }
 
-    dashixiong_block::dashixiong_block()
-        : dispatch_func_(nullptr) {
+    dashixiong_block::dashixiong_block(dashixiong_callback &callbacks)
+        : dispatch_func_(nullptr)
+        , callbacks_(std::move(callbacks)) {
         context_info.detect();
 
         alloc_codespace(MAX_CODE_SPACE_BYTES);
@@ -137,6 +138,82 @@ namespace eka2l1::arm::r12l1 {
         cache_.flush_all();
     }
 
+    void dashixiong_block::raise_guest_exception(const exception_type exc, const std::uint32_t usrdata) {
+        callbacks_.exception_handler_(exc, usrdata);
+    }
+
+    void dashixiong_block::raise_system_call(const std::uint32_t num) {
+        callbacks_.syscall_handler_(num);
+    }
+
+    std::uint8_t dashixiong_block::read_byte(const vaddress addr) {
+        std::uint8_t value = 0;
+        bool res = callbacks_.read_byte_(addr, &value);
+
+        if (!res) {
+            LOG_ERROR(CPU_12L1R, "Failed to read BYTE at address 0x{:X}", addr);
+        }
+
+        return value;
+    }
+
+    std::uint16_t dashixiong_block::read_word(const vaddress addr) {
+        std::uint16_t value = 0;
+        bool res = callbacks_.read_word_(addr, &value);
+
+        if (!res) {
+            LOG_ERROR(CPU_12L1R, "Failed to read WORD at address 0x{:X}", addr);
+        }
+
+        return value;
+    }
+
+    std::uint32_t dashixiong_block::read_dword(const vaddress addr) {
+        std::uint32_t value = 0;
+        bool res = callbacks_.read_dword_(addr, &value);
+
+        if (!res) {
+            LOG_ERROR(CPU_12L1R, "Failed to read DWORD at address 0x{:X}", addr);
+        }
+
+        return value;
+    }
+
+    std::uint64_t dashixiong_block::read_qword(const vaddress addr) {
+        std::uint64_t value = 0;
+        bool res = callbacks_.read_qword_(addr, &value);
+
+        if (!res) {
+            LOG_ERROR(CPU_12L1R, "Failed to read QWORD at address 0x{:X}", addr);
+        }
+
+        return value;
+    }
+
+    void dashixiong_block::write_byte(const vaddress addr, std::uint8_t dat) {
+        if (!callbacks_.write_byte_(addr, &dat)) {
+            LOG_ERROR(CPU_12L1R, "Failed to write BYTE to address 0x{:X}", addr);
+        }
+    }
+
+    void dashixiong_block::write_word(const vaddress addr, std::uint16_t dat) {
+        if (!callbacks_.write_word_(addr, &dat)) {
+            LOG_ERROR(CPU_12L1R, "Failed to write WORD to address 0x{:X}", addr);
+        }
+    }
+
+    void dashixiong_block::write_dword(const vaddress addr, std::uint32_t dat) {
+        if (!callbacks_.write_dword_(addr, &dat)) {
+            LOG_ERROR(CPU_12L1R, "Failed to write DWORD to address 0x{:X}", addr);
+        }
+    }
+
+    void dashixiong_block::write_qword(const vaddress addr, std::uint64_t dat) {
+        if (!callbacks_.write_qword_(addr, &dat)) {
+            LOG_ERROR(CPU_12L1R, "Failed to write QWORD to address 0x{:X}", addr);
+        }
+    }
+
     void dashixiong_block::enter_dispatch(core_state *cstate) {
         typedef void (*dispatch_func_type)(core_state *state);
         dispatch_func_type df = reinterpret_cast<dispatch_func_type>(dispatch_func_);
@@ -179,7 +256,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
-        bool should_quit = false;
+        bool should_continue = false;
 
         visit_session context(this, block);
         std::unique_ptr<arm_translate_visitor> arm_visitor = nullptr;
@@ -206,7 +283,7 @@ namespace eka2l1::arm::r12l1 {
 
         do {
             std::uint32_t inst = 0;
-            if (!code_read_(addr, &inst)) {
+            if (!callbacks_.code_read_(addr, &inst)) {
                 LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
                 return nullptr;
             }
@@ -220,14 +297,16 @@ namespace eka2l1::arm::r12l1 {
             } else {
                 // ARM decoding. NEON -> VFP -> ARM
                 if (auto decoder = decode_arm<arm_translate_visitor>(inst)) {
-                    should_quit = decoder->get().call(*arm_visitor, inst);
+                    should_continue = decoder->get().call(*arm_visitor, inst);
+                } else {
+                    should_continue = arm_visitor->arm_UDF();
                 }
             }
-        } while (true);
+        } while (should_continue);
 
         // Emit cycles count add
         if (!finalize_block(block, block->size_)) {
-            LOG_WARN(CPU_12L1R, "Unable to finalzie block!");
+            LOG_WARN(CPU_12L1R, "Unable to finalize block!");
         }
 
         end_write();
