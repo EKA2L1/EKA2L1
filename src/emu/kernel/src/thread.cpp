@@ -166,23 +166,23 @@ namespace eka2l1 {
             if (kern->is_eka1()) {
                 // We made _E32Startup ourself, since EKA1 does not have it
                 hle::lib_manager *mngr = kern->get_lib_manager();
-                ctx.pc = mngr->get_thread_entry_routine_address();
+                ctx.set_pc(mngr->get_thread_entry_routine_address());
 
-                if (ctx.pc == 0) {
+                if (ctx.get_pc() == 0) {
                     // Create the EKA1 thread bootstrap
                     mngr->build_eka1_thread_bootstrap_code();
-                    ctx.pc = mngr->get_thread_entry_routine_address();
+                    ctx.set_pc(mngr->get_thread_entry_routine_address());
                 }
             } else {
-                ctx.pc = entry_point;
+                ctx.set_pc(entry_point);
 
                 if (owner && !initial) {
-                    ctx.pc = owning_process()->get_entry_point_address();
+                    ctx.set_pc(owning_process()->get_entry_point_address());
                 }
             }
 
-            ctx.sp = stack_top;
-            ctx.cpsr = ((ctx.pc & 1) << 5);
+            ctx.set_sp(stack_top);
+            ctx.cpsr = ((ctx.get_pc() & 1) << 5);
 
             ctx.cpu_registers[1] = stack_top;
 

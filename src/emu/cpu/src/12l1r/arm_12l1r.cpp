@@ -120,9 +120,6 @@ namespace eka2l1::arm {
             ctx.fpu_registers[i] = jit_state_.fprs_[i];
         }
 
-        ctx.pc = jit_state_.gprs_[15];
-        ctx.lr = jit_state_.gprs_[14];
-        ctx.sp = jit_state_.gprs_[13];
         ctx.cpsr = jit_state_.cpsr_;
         ctx.fpscr = jit_state_.fpscr_;
     }

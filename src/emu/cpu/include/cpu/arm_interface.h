@@ -122,14 +122,35 @@ namespace eka2l1::arm {
          *  Stores register value and some pointer of the CPU.
         */
         struct thread_context {
-            std::array<uint32_t, 31> cpu_registers;
-            std::uint32_t sp;
-            std::uint32_t pc;
-            std::uint32_t lr;
+            std::array<std::uint32_t, 31> cpu_registers;
             std::uint32_t cpsr;
-            std::array<uint64_t, 32> fpu_registers;
+            std::array<std::uint64_t, 32> fpu_registers;
             std::uint32_t fpscr;
             std::uint32_t wrwr;
+
+            void set_pc(const std::uint32_t value) {
+                cpu_registers[15] = value;
+            }
+
+            void set_lr(const std::uint32_t value) {
+                cpu_registers[14] = value;
+            }
+
+            void set_sp(const std::uint32_t value) {
+                cpu_registers[13] = value;
+            }
+
+            std::uint32_t get_pc() const {
+                return cpu_registers[15];
+            }
+
+            std::uint32_t get_lr() const {
+                return cpu_registers[14];
+            }
+
+            std::uint32_t get_sp() const {
+                return cpu_registers[13];
+            }
         };
 
         virtual ~core() {}

@@ -328,14 +328,6 @@ namespace eka2l1::arm {
             ctx.cpu_registers[i] = get_reg(i);
         }
 
-        ctx.pc = get_pc();
-        ctx.sp = get_sp();
-        ctx.lr = get_lr();
-
-        if (!ctx.pc) {
-            LOG_WARN(CPU, "Dynarmic save context with PC = 0");
-        }
-
         ctx.wrwr = cb->get_cp15()->get_wrwr();
     }
 
@@ -343,11 +335,6 @@ namespace eka2l1::arm {
         for (uint8_t i = 0; i < 16; i++) {
             jit->Regs()[i] = ctx.cpu_registers[i];
         }
-
-        set_sp(ctx.sp);
-        set_pc(ctx.pc);
-        set_lr(ctx.lr);
-        set_cpsr(ctx.cpsr);
 
         cb->get_cp15()->set_wrwr(ctx.wrwr);
     }

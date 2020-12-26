@@ -59,8 +59,9 @@ namespace eka2l1::arm::r12l1 {
                 common::armgen::R9, common::armgen::R10, common::armgen::R12, common::armgen::R14);
 
         MOV(CORE_STATE_REG, common::armgen::R0);
-        LDR(common::armgen::R0, CORE_STATE_REG, offsetof(core_state, should_break_));
-        CMPI2R(common::armgen::R0, 0, common::armgen::R12);
+
+        LDR(common::armgen::R1, CORE_STATE_REG, offsetof(core_state, should_break_));
+        CMPI2R(common::armgen::R1, 0, common::armgen::R12);
 
         auto return_back = B_CC(common::CC_NEQ);
 
@@ -124,6 +125,8 @@ namespace eka2l1::arm::r12l1 {
             LOG_ERROR(CPU_12L1R, "This block is invalid (addr = 0x{:X})!", block->start_address());
             return false;
         }
+
+        flush_lit_pool();
 
         block->size_ = guest_size;
         block->translated_size_ = get_code_pointer() - block->translated_code_;
@@ -242,6 +245,10 @@ namespace eka2l1::arm::r12l1 {
         emit_pc_flush(block->current_address());
     }
 
+    static void dashixiong_print_debug(const std::uint32_t val) {
+        LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
+    }
+
     translated_block *dashixiong_block::compile_new_block(core_state *state, const vaddress addr) {
         translated_block *block = start_new_block(addr, state->current_aid_);
         if (!block) {
@@ -280,7 +287,7 @@ namespace eka2l1::arm::r12l1 {
 
         do {
             std::uint32_t inst = 0;
-            if (!callbacks_.code_read_(addr, &inst)) {
+            if (!callbacks_.code_read_(addr + block->size_, &inst)) {
                 LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
                 return nullptr;
             }

@@ -87,6 +87,8 @@ namespace eka2l1::arm::r12l1 {
 
         void flush(const common::armgen::arm_reg guest_mee);
         void flush_all();
+		
+		void done_scratching(reg_scratch_type type);
 
         void flush_host_reg(const common::armgen::arm_reg host_reg);
         void flush_host_regs_for_host_call();
