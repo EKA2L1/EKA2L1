@@ -304,6 +304,8 @@ namespace eka2l1::arm::r12l1 {
         }
         
         reg_supplier_.release_spill_lock_all(REG_SCRATCH_TYPE_GPR);
+        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+
         emit_cpsr_restore_nzcv();
 
         return true;

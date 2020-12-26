@@ -59,6 +59,10 @@ namespace eka2l1::arm::r12l1 {
                 common::armgen::R9, common::armgen::R10, common::armgen::R12, common::armgen::R14);
 
         MOV(CORE_STATE_REG, common::armgen::R0);
+        LDR(common::armgen::R0, CORE_STATE_REG, offsetof(core_state, should_break_));
+        CMPI2R(common::armgen::R0, 0, common::armgen::R12);
+
+        auto return_back = B_CC(common::CC_NEQ);
 
         LDR(common::armgen::R1, common::armgen::R0, offsetof(core_state, gprs_[15]));
         LDR(common::armgen::R2, common::armgen::R0, offsetof(core_state, current_aid_));
@@ -89,9 +93,10 @@ namespace eka2l1::arm::r12l1 {
         set_jump_target(available_again);
 
         LDR(common::armgen::R0, common::armgen::R0, offsetof(translated_block, translated_code_));
-        BL(common::armgen::R0);                                                // Branch to the block
+        B(common::armgen::R0);                                                // Branch to the block
 
         set_jump_target(headout);
+        set_jump_target(return_back);
 
         // Branch back to where it went
         POP(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
@@ -225,18 +230,6 @@ namespace eka2l1::arm::r12l1 {
         LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
         SUBI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, num, ALWAYS_SCRATCH2);
         STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
-
-        // Also if we are having times check if we are out of cycles
-        CMP(ALWAYS_SCRATCH1, 0);
-        
-        set_cc(common::CC_LE);
-        
-        {
-            MOVI2R(ALWAYS_SCRATCH1, 1);
-            STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, should_break_));
-        }
-
-        set_cc(common::CC_AL);
     }
 
     void dashixiong_block::emit_pc_flush(const address current_pc) {
@@ -268,15 +261,19 @@ namespace eka2l1::arm::r12l1 {
         begin_write();
 
         // Emit the check if we should go outside and stop running
-        LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, should_break_));
+        // Check if we are out of cycles, set the should_break if we should stop and
+        // return to dispatch
+        LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
         CMP(ALWAYS_SCRATCH1, 0);
 
-        set_cc(common::CC_NEQ);
+        set_cc(common::CC_LE);
 
         {
-            // Branch to dispatch if we should quit...
-            MOV(common::armgen::R0, CORE_STATE_REG);
-            B_CC(common::CC_NEQ, dispatch_func_);
+            // Set should break and return to dispatch
+            MOVI2R(ALWAYS_SCRATCH1, 1);
+            STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, should_break_));
+
+            B(dispatch_func_);
         }
 
         set_cc(common::CC_AL);

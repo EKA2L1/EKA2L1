@@ -373,4 +373,26 @@ namespace eka2l1::arm::r12l1 {
             break;
         }
     }
+
+    void reg_cache::done_scratching(reg_scratch_type type) {
+        switch (type) {
+            case REG_SCRATCH_TYPE_GPR:
+                for (auto &gpr_info: host_gpr_infos_) {
+                    gpr_info.scratch_ = false;
+                }
+
+                break;
+
+            case REG_SCRATCH_TYPE_FPR:
+                for (auto &fpr_info: host_fpr_infos_) {
+                    fpr_info.scratch_ = false;
+                }
+
+                break;
+
+            default:
+                LOG_ERROR(CPU_12L1R, "Invalid register type to release scratches");
+                break;
+        }
+    }
 }
