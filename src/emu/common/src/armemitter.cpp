@@ -687,6 +687,7 @@ namespace eka2l1::common::armgen {
     fixup_branch armx_emitter::BL() {
         fixup_branch branch;
         branch.type = 1; // Zero for B
+
         branch.ptr = code;
         branch.condition = condition;
         //We'll write NOP here for now.

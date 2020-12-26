@@ -106,6 +106,15 @@ namespace eka2l1::common {
             // In case the last block made the current page exec/no-write, let's fix that.
             if (is_memory_wx_exclusive()) {
                 writeStart_ = get_writeable_code_ptr();
+
+                // Align memory address to host
+                std:uint64_t unalign_val = reinterpret_cast<std::uint64_t>(writeStart_) % get_host_page_size();
+                writeStart_ -= unalign_val;
+
+                if (sizeEstimate == 1) {
+                    sizeEstimate = (unalign_val ? 2 : 1) * get_host_page_size();
+                }
+
                 change_protection(writeStart_, sizeEstimate, prot_read_write);
             }
         }
