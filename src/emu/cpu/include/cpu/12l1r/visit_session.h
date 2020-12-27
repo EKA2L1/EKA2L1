@@ -29,7 +29,7 @@ namespace eka2l1::arm::r12l1 {
     struct translated_block;
 
     inline common::armgen::arm_reg reg_index_to_gpr(const reg_index idx) {
-    	return static_cast<common::armgen::arm_reg>(common::armgen::R0 + idx);
+        return static_cast<common::armgen::arm_reg>(common::armgen::R0 + idx);
     }
 
     class visit_session {
