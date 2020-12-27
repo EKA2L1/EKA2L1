@@ -28,6 +28,10 @@ namespace eka2l1::arm::r12l1 {
 
     struct translated_block;
 
+    inline common::armgen::arm_reg reg_index_to_gpr(const reg_index idx) {
+    	return static_cast<common::armgen::arm_reg>(common::armgen::R0 + idx);
+    }
+
     class visit_session {
 	protected:
 		common::cc_flags last_flag_;
@@ -54,5 +58,7 @@ namespace eka2l1::arm::r12l1 {
 		
 		void emit_cpsr_update_nzcv();
 		void emit_cpsr_restore_nzcv();
+
+		void sync_registers();
     };
 }

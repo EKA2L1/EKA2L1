@@ -22,19 +22,28 @@
 #include <cpu/12l1r/common.h>
 
 #include <cstdint>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 namespace eka2l1::arm::r12l1 {
+    enum translated_block_link_type {
+        TRANSLATED_BLOCK_LINK_AMBIGUOUS = 0,            ///< Which address to link next is not known at compile time.
+        TRANSLATED_BLOCK_LINK_KNOWN = 1                 ///< We know which block to link to at compile time.
+    };
+
     struct translated_block {
         using hash_type = std::uint64_t;
 
         hash_type hash_;
         std::uint32_t size_;
 
-        const std::uint8_t *translated_code_;
-        std::size_t translated_size_;
+        translated_block_link_type link_type_;      ///< Block linking type.
+        vaddress link_to_;                          ///< The guest address that this block links to.
 
+        const std::uint8_t *translated_code_;
+        const std::uint32_t *link_value_;
+
+        std::size_t translated_size_;
         std::uint32_t inst_count_;
 
         vaddress start_address() const {
@@ -54,7 +63,7 @@ namespace eka2l1::arm::r12l1 {
 
     class block_cache {
         using translated_block_inst = std::unique_ptr<translated_block>;
-        std::map<translated_block::hash_type, translated_block_inst> blocks_;
+        std::unordered_map<translated_block::hash_type, translated_block_inst> blocks_;
 
     public:
         explicit block_cache();

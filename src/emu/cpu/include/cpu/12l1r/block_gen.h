@@ -24,6 +24,7 @@
 #include <cpu/arm_interface.h>
 
 #include <cstdint>
+#include <unordered_map>
 
 namespace eka2l1::arm::r12l1 {
     struct core_state;
@@ -48,8 +49,12 @@ namespace eka2l1::arm::r12l1 {
 
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
+		std::unordered_multimap<vaddress, translated_block*> link_to_;
+
         block_cache cache_;
+
         void *dispatch_func_;
+        const void *dispatch_ent_for_block_;
 
         dashixiong_callback callbacks_;
 
@@ -60,7 +65,6 @@ namespace eka2l1::arm::r12l1 {
         bool finalize_block(translated_block *block, const std::uint32_t guest_size);
         
         void emit_cycles_count_add(const std::uint32_t num);
-        void emit_pc_flush(const address current_pc);
 
     public:
         explicit dashixiong_block(dashixiong_callback &callbacks);
@@ -69,7 +73,10 @@ namespace eka2l1::arm::r12l1 {
 
         translated_block *compile_new_block(core_state *state, const vaddress addr);
         translated_block *get_block(const vaddress addr, const asid aid);
+
         void emit_block_finalize(translated_block *block);
+        void emit_pc_flush(const address current_pc);
+        void emit_cpsr_save();
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);
         void flush_all();

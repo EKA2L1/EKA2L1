@@ -28,7 +28,7 @@ namespace eka2l1::arm::r12l1 {
     struct core_state {
         std::uint32_t gprs_[16];
         std::uint32_t cpsr_;
-        std::uint32_t fprs_[32];
+        std::uint32_t fprs_[64];
         std::uint32_t fpscr_;
 
         std::uint32_t ticks_left_;

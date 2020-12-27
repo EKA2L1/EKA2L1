@@ -343,6 +343,37 @@ namespace eka2l1 {
             return str;
         }
 
+        template <typename T>
+        constexpr std::uint8_t bit_size() {
+            if constexpr(std::is_same_v<T, std::uint8_t>) {
+                return 8;
+            }
+
+            if constexpr(std::is_same_v<T, std::uint16_t>) {
+                return 16;
+            }
+
+            if constexpr(std::is_same_v<T, std::uint32_t>) {
+                return 32;
+            }
+
+            if constexpr(std::is_same_v<T, std::uint64_t>) {
+                return 64;
+            }
+
+            return 0;
+        }
+
+        template <typename T>
+        constexpr T rotate_right(T value, std::uint8_t amount) {
+            constexpr std::uint8_t bsize = bit_size<T>();
+            if (amount % bsize == 0) {
+                return value;
+            }
+
+            return static_cast<T>((value >> amount) | (value << (bsize - amount)));
+        }
+
         /**
          * \brief Lowercase the string.
          * 

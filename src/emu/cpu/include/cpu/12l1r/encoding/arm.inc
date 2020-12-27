@@ -42,8 +42,8 @@
 //INST(arm_EOR_imm,       "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_EOR_reg,       "EOR (reg)",           "cccc0000001Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_EOR_rsr,       "EOR (rsr)",           "cccc0000001Snnnnddddssss0rr1mmmm") // all
-//INST(arm_MOV_imm,       "MOV (imm)",           "cccc0011101S0000ddddrrrrvvvvvvvv") // all
-//INST(arm_MOV_reg,       "MOV (reg)",           "cccc0001101S0000ddddvvvvvrr0mmmm") // all
+INST(arm_MOV_imm,       "MOV (imm)",           "cccc0011101S0000ddddrrrrvvvvvvvv") // all
+INST(arm_MOV_reg,       "MOV (reg)",           "cccc0001101S0000ddddvvvvvrr0mmmm") // all
 //INST(arm_MOV_rsr,       "MOV (rsr)",           "cccc0001101S0000ddddssss0rr1mmmm") // all
 //INST(arm_MVN_imm,       "MVN (imm)",           "cccc0011111S0000ddddrrrrvvvvvvvv") // all
 //INST(arm_MVN_reg,       "MVN (reg)",           "cccc0001111S0000ddddvvvvvrr0mmmm") // all

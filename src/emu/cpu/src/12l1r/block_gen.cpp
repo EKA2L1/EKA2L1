@@ -42,6 +42,7 @@ namespace eka2l1::arm::r12l1 {
 
     dashixiong_block::dashixiong_block(dashixiong_callback &callbacks)
         : dispatch_func_(nullptr)
+        , dispatch_ent_for_block_(nullptr)
         , callbacks_(std::move(callbacks)) {
         context_info.detect();
 
@@ -60,13 +61,15 @@ namespace eka2l1::arm::r12l1 {
 
         MOV(CORE_STATE_REG, common::armgen::R0);
 
+        dispatch_ent_for_block_ = get_code_ptr();
+
         LDR(common::armgen::R1, CORE_STATE_REG, offsetof(core_state, should_break_));
         CMPI2R(common::armgen::R1, 0, common::armgen::R12);
 
         auto return_back = B_CC(common::CC_NEQ);
 
-        LDR(common::armgen::R1, common::armgen::R0, offsetof(core_state, gprs_[15]));
-        LDR(common::armgen::R2, common::armgen::R0, offsetof(core_state, current_aid_));
+        LDR(common::armgen::R1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+        LDR(common::armgen::R2, CORE_STATE_REG, offsetof(core_state, current_aid_));
         MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
         quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_get_block_proxy));
@@ -126,6 +129,7 @@ namespace eka2l1::arm::r12l1 {
             return false;
         }
 
+        emit_block_finalize(block);
         flush_lit_pool();
 
         block->size_ = guest_size;
@@ -237,12 +241,51 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_pc_flush(const address current_pc) {
         MOVI2R(ALWAYS_SCRATCH1, current_pc);
-        STR(ALWAYS_SCRATCH2, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+    }
+
+    void dashixiong_block::emit_cpsr_save() {
+        STR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
     }
     
     void dashixiong_block::emit_block_finalize(translated_block *block) {
+        emit_cpsr_save();
         emit_cycles_count_add(block->inst_count_);
         emit_pc_flush(block->current_address());
+
+        // Jump to other block. In this case we find the next address it wants to jump to
+        switch (block->link_type_) {
+            case TRANSLATED_BLOCK_LINK_AMBIGUOUS:
+                // Branch back to dispatch
+                B(dispatch_ent_for_block_);
+                break;
+
+            case TRANSLATED_BLOCK_LINK_KNOWN: {
+                link_to_.emplace(block->link_to_, block);
+
+                LDR(ALWAYS_SCRATCH1, common::armgen::R15, 0);
+                B(ALWAYS_SCRATCH1);
+
+                block->link_value_ = reinterpret_cast<const std::uint32_t*>(get_code_ptr());
+
+                // Can we link the block now?
+                if (auto link_block = get_block(block->link_to_, block->address_space())) {
+                    write32(reinterpret_cast<std::uint32_t>(link_block->translated_code_));
+                } else {
+                    // Write the dispatch func address for now
+                    write32(reinterpret_cast<std::uint32_t>(dispatch_ent_for_block_));
+                }
+
+                break;
+            }
+
+            default: {
+                LOG_ERROR(CPU_12L1R, "Unknown link block type");
+                assert(false);
+
+                break;
+            }
+        }
     }
 
     static void dashixiong_print_debug(const std::uint32_t val) {
@@ -267,6 +310,9 @@ namespace eka2l1::arm::r12l1 {
 
         begin_write();
 
+        // Load CPSR into register
+        LDR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
+
         // Emit the check if we should go outside and stop running
         // Check if we are out of cycles, set the should_break if we should stop and
         // return to dispatch
@@ -284,16 +330,13 @@ namespace eka2l1::arm::r12l1 {
         }
 
         set_cc(common::CC_AL);
+        std::uint32_t inst = 0;
 
         do {
-            std::uint32_t inst = 0;
             if (!callbacks_.code_read_(addr + block->size_, &inst)) {
                 LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
                 return nullptr;
             }
-
-            block->size_ += (is_thumb) ? 2 : 4;
-            block->inst_count_++;
 
             if (is_thumb) {
                 LOG_ERROR(CPU_12L1R, "Missing thumb handler!");
@@ -306,7 +349,12 @@ namespace eka2l1::arm::r12l1 {
                     should_continue = arm_visitor->arm_UDF();
                 }
             }
+
+            block->size_ += (is_thumb) ? 2 : 4;
+            block->inst_count_++;
         } while (should_continue);
+
+        context.reg_supplier_.flush_all();
 
         // Emit cycles count add
         if (!finalize_block(block, block->size_)) {

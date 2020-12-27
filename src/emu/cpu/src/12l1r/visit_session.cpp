@@ -311,7 +311,14 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    void visit_session::sync_registers() {
+        reg_supplier_.flush_all();
+        big_block_->emit_pc_flush(crr_block_->current_address());
+    }
+
     bool visit_session::emit_undefined_instruction_handler() {
+        sync_registers();
+
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, exception_type_undefined_inst);
         big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address());
@@ -321,6 +328,8 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool visit_session::emit_system_call_handler(const std::uint32_t n) {
+        sync_registers();
+
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, n);
 

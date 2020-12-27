@@ -28,4 +28,6 @@ namespace eka2l1::arm::r12l1 {
     using reg_index = std::uint8_t;
 
     static constexpr std::uint32_t CPSR_THUMB_FLAG_MASK = 0x20;
+    std::uint32_t expand_arm_imm(std::uint8_t imm, const int rot);
+
 }
