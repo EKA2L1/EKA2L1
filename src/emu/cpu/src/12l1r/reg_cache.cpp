@@ -214,6 +214,10 @@ namespace eka2l1::arm::r12l1 {
                     host_rf_arr[allocation_order[i]].scratch_ = true;
                 }
 
+                if (flags & ALLOCATE_FLAG_DIRTY) {
+                    host_rf_arr[allocation_order[i]].dirty_ = true;
+                }
+
                 // It's free real estate
                 return allocation_order[i];
             }
@@ -251,6 +255,10 @@ namespace eka2l1::arm::r12l1 {
             host_rf_arr[result_reg].scratch_ = true;
         }
 
+        if (flags & ALLOCATE_FLAG_DIRTY) {
+            host_rf_arr[result_reg].dirty_ = true;
+        }
+
         return result_reg;
     }
 
@@ -282,7 +290,9 @@ namespace eka2l1::arm::r12l1 {
             return host_reg;
         }
 
-        common::armgen::arm_reg new_baby = allocate_or_spill(is_gpr ? REG_SCRATCH_TYPE_GPR : REG_SCRATCH_TYPE_FPR, 0);
+        common::armgen::arm_reg new_baby = allocate_or_spill(is_gpr ? REG_SCRATCH_TYPE_GPR : REG_SCRATCH_TYPE_FPR,
+                allocate_flags);
+
         if (new_baby == common::armgen::INVALID_REG) {
             return new_baby;
         }
