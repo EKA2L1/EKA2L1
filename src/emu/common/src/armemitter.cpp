@@ -865,7 +865,7 @@ namespace eka2l1::common::armgen {
     void armx_emitter::MVN(arm_reg Rd, operand2 Rm) { write_instruction(15, Rd, R0, Rm); }
     void armx_emitter::MVNS(arm_reg Rd, operand2 Rm) { write_instruction(15, Rd, R0, Rm, true); }
     void armx_emitter::MOVW(arm_reg Rd, operand2 Rm) { write_instruction(16, Rd, R0, Rm); }
-    void armx_emitter::MOVT(arm_reg Rd, operand2 Rm, bool TopBits) { write_instruction(17, Rd, R0, TopBits ? Rm.value >> 16 : Rm); }
+    void armx_emitter::MOVT(arm_reg Rd, operand2 Rm, bool TopBits) { write_instruction(17, Rd, R0, TopBits ? Rm.value_ >> 16 : Rm); }
 
     void armx_emitter::write_instruction(std::uint32_t Op, arm_reg Rd, arm_reg Rn, operand2 Rm, bool SetFlags) // This can get renamed later
     {
@@ -1106,7 +1106,7 @@ namespace eka2l1::common::armgen {
         }
         switch (Rm.get_type()) {
         case TYPE_IMM: {
-            std::int32_t Temp = (std::int32_t)Rm.value;
+            std::int32_t Temp = (std::int32_t)Rm.value_;
             Data = abs(Temp);
             // The offset is encoded differently on this one.
             if (SpecialOp)
