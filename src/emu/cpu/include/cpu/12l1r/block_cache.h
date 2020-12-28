@@ -22,13 +22,15 @@
 #include <cpu/12l1r/common.h>
 
 #include <cstdint>
-#include <unordered_map>
+#include <functional>
+#include <map>
 #include <memory>
 
 namespace eka2l1::arm::r12l1 {
     enum translated_block_link_type {
         TRANSLATED_BLOCK_LINK_AMBIGUOUS = 0,            ///< Which address to link next is not known at compile time.
-        TRANSLATED_BLOCK_LINK_KNOWN = 1                 ///< We know which block to link to at compile time.
+        TRANSLATED_BLOCK_LINK_KNOWN = 1,                ///< We know which block to link to at compile time.
+        TRANSLATED_BLOCK_LINKED = 2
     };
 
     struct translated_block {
@@ -41,7 +43,7 @@ namespace eka2l1::arm::r12l1 {
         vaddress link_to_;                          ///< The guest address that this block links to.
 
         const std::uint8_t *translated_code_;
-        const std::uint32_t *link_value_;
+        std::uint32_t *link_value_;
 
         std::size_t translated_size_;
         std::uint32_t inst_count_;
@@ -61,9 +63,14 @@ namespace eka2l1::arm::r12l1 {
         explicit translated_block(const vaddress start_addr, const asid aid);
     };
 
+    using on_block_invalidate_callback_type = std::function<void(translated_block*)>;
+
     class block_cache {
         using translated_block_inst = std::unique_ptr<translated_block>;
-        std::unordered_map<translated_block::hash_type, translated_block_inst> blocks_;
+        using translated_block_key = std::pair<vaddress, asid>;
+
+        std::map<translated_block_key, translated_block_inst> blocks_;
+        on_block_invalidate_callback_type invalidate_callback_;
 
     public:
         explicit block_cache();
@@ -75,5 +82,11 @@ namespace eka2l1::arm::r12l1 {
 
         void flush_range(const vaddress range_start, const vaddress range_end, const asid aid);
         void flush_all();
+
+        void set_on_block_invalidate_callback(on_block_invalidate_callback_type cb) {
+            invalidate_callback_ = cb;
+        }
     };
+
+    translated_block::hash_type make_block_hash(const vaddress start_addr, const asid aid);
 }

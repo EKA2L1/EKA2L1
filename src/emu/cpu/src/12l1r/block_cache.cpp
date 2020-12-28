@@ -20,7 +20,7 @@
 #include <cpu/12l1r/block_cache.h>
 
 namespace eka2l1::arm::r12l1 {
-    static translated_block::hash_type make_block_hash(const vaddress start_addr, const asid aid) {
+    translated_block::hash_type make_block_hash(const vaddress start_addr, const asid aid) {
         return (static_cast<translated_block::hash_type>(aid) << 32) | start_addr;
     }
 
@@ -36,25 +36,26 @@ namespace eka2l1::arm::r12l1 {
         hash_ = make_block_hash(start_addr, aid);
     }
 
-    block_cache::block_cache() {
+    block_cache::block_cache()
+        : invalidate_callback_(nullptr) {
         // Nothing... Hee hee
     }
 
     bool block_cache::add_block(const vaddress start_addr, const asid aid) {
         // First, check if this block exists first...
-        auto bl_res = blocks_.find(make_block_hash(start_addr, aid));
+        auto bl_res = blocks_.find(std::make_pair(start_addr, aid));
         if (bl_res != blocks_.end()) {
             return false;
         }
 
         std::unique_ptr<translated_block> new_block = std::make_unique<translated_block>(start_addr, aid);
-        blocks_.emplace(new_block->hash_, std::move(new_block));
+        blocks_.emplace(std::make_pair(start_addr, aid), std::move(new_block));
 
         return true;
     }
 
     translated_block *block_cache::lookup_block(const vaddress start_addr, const asid aid) {
-        auto bl_res = blocks_.find(make_block_hash(start_addr, aid));
+        auto bl_res = blocks_.find(std::make_pair(start_addr, aid));
         if (bl_res != blocks_.end()) {
             return bl_res->second.get();
         }
@@ -62,21 +63,37 @@ namespace eka2l1::arm::r12l1 {
         return nullptr;
     }
 
-    void block_cache::flush_range(const vaddress range_start, const vaddress range_end, const asid aid) {   
-        auto it = blocks_.cbegin();
+    void block_cache::flush_range(const vaddress range_start, const vaddress range_end, const asid aid) {
+        // Borrow PPSSPP algorithm. Thank you :D
+        bool all_done = false;
 
-        while (it != blocks_.cend()) {
-            auto curr_ite = it++;
-            translated_block *block = curr_ite->second.get();
+        do {
+            auto next = blocks_.lower_bound(std::make_pair(range_start, aid));
+            auto last = blocks_.upper_bound(std::make_pair(range_end, aid));
 
-            if (block->address_space() == aid) {
-                const vaddress orig = block->start_address();
-                if ((orig >= range_start) && (orig + block->size_ <= range_end)) {
-                    // Delete this block
-                    blocks_.erase(curr_ite);
+            bool any_flush = false;
+
+            for (; next != last; ++next) {
+                std::unique_ptr<translated_block> &next_block = next->second;
+
+                if ((next_block->address_space() == aid) && (next_block->start_address() >= range_start)
+                    && (next_block->start_address() <= range_end)) {
+                    if (invalidate_callback_) {
+                        invalidate_callback_(next_block.get());
+                    }
+
+                    blocks_.erase(next);
+
+                    // Our iterator is now invalid.  Break and search again.
+                    // Most of the time there shouldn't be a bunch of matching blocks.
+                    any_flush = true;
+                    break;
                 }
             }
-        }
+
+            if (!any_flush)
+                all_done = true;
+        } while (!all_done);
     }
 
     void block_cache::flush_all() {

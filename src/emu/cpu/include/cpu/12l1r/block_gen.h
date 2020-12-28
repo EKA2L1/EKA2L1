@@ -49,7 +49,7 @@ namespace eka2l1::arm::r12l1 {
 
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
-        std::unordered_multimap<vaddress, translated_block*> link_to_;
+        std::unordered_multimap<translated_block::hash_type, translated_block*> link_to_;
 
         block_cache cache_;
 
@@ -65,6 +65,7 @@ namespace eka2l1::arm::r12l1 {
         bool finalize_block(translated_block *block, const std::uint32_t guest_size);
         
         void emit_cycles_count_add(const std::uint32_t num);
+        void edit_block_links(translated_block *dest, bool unlink = false);
 
     public:
         explicit dashixiong_block(dashixiong_callback &callbacks);
