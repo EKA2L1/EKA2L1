@@ -103,6 +103,12 @@ namespace eka2l1::common {
     bool unmap_file(void *ptr);
 
     /**
+     * @param   Align address to host page size
+     * @return  Aligned address.
+     */
+    void *align_address_to_host_page(void *original);
+
+    /**
      * \brief Returns true if the platform doesn't allow write and executable memory at the same time.
     */
     bool is_memory_wx_exclusive();

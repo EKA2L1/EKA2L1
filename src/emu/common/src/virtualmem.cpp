@@ -255,4 +255,8 @@ namespace eka2l1::common {
 
         return true;
     }
+
+    void *align_address_to_host_page(void *original) {
+        return reinterpret_cast<void*>(reinterpret_cast<std::uint64_t>(original) & ~get_host_page_size());
+    }
 }
