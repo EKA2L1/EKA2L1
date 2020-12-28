@@ -144,10 +144,17 @@ namespace eka2l1::arm::r12l1 {
                     temp_info);
 
             if (unlink) {
+                emit_pc_flush(request_link_block->link_to_);
                 temp_emitter.B(dispatch_ent_for_block_);
+
                 request_link_block->link_type_ = TRANSLATED_BLOCK_LINK_KNOWN;
             } else {
                 temp_emitter.B(request_link_block->translated_code_);
+
+                // Write reserved code
+                temp_emitter.NOP();
+                temp_emitter.NOP();
+
                 request_link_block->link_type_ = TRANSLATED_BLOCK_LINKED;
             }
 
@@ -290,7 +297,6 @@ namespace eka2l1::arm::r12l1 {
     void dashixiong_block::emit_block_finalize(translated_block *block) {
         emit_cpsr_save();
         emit_cycles_count_add(block->inst_count_);
-        emit_pc_flush(block->current_address());
 
         // Jump to other block. In this case we find the next address it wants to jump to
         switch (block->link_type_) {
@@ -306,8 +312,13 @@ namespace eka2l1::arm::r12l1 {
                 // Can we link the block now?
                 if (auto link_block = get_block(block->link_to_, block->address_space())) {
                     B(link_block->translated_code_);
+
+                    // Reserved
+                    write32(0);
+                    write32(0);
                 } else {
-                    // Write the dispatch func address for now
+                    // Jump to dispatch for now :((
+                    emit_pc_flush(block->link_to_);
                     B(dispatch_ent_for_block_);
                 }
 
@@ -344,6 +355,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         begin_write();
+
+        // Let them know the address damn
+        emit_pc_flush(addr);
 
         // Load CPSR into register
         LDR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));

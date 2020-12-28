@@ -197,14 +197,14 @@ namespace eka2l1::arm::r12l1 {
         std::uint8_t last_reg = 0;
 
         emit_cpsr_update_nzcv();
-        std::uint8_t *lookup_route = big_block_->get_writeable_code_ptr();
 
+        common::armgen::arm_reg guest_addr_reg = reg_supplier_.map(base, (writeback ? ALLOCATE_FLAG_DIRTY : 0));
+
+        std::uint8_t *lookup_route = big_block_->get_writeable_code_ptr();
         common::armgen::arm_reg backback = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
 
         // Temporary LR
         big_block_->MOV(backback, 0);
-
-        common::armgen::arm_reg guest_addr_reg = reg_supplier_.map(base, (writeback ? ALLOCATE_FLAG_DIRTY : 0));
         base = emit_address_lookup(guest_addr_reg, load);
 
         // Check if we should jump back
@@ -271,7 +271,7 @@ namespace eka2l1::arm::r12l1 {
                         reg_supplier_.flush_host_regs_for_host_call();
 
                         big_block_->MOV(common::armgen::R1, common::armgen::R0);
-                        big_block_->MOV(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
+                        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
                         if (load) {
                             big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);

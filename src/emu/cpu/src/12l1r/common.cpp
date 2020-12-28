@@ -18,7 +18,7 @@
  */
 
 #include <cpu/12l1r/common.h>
-#include <common/algorithm.h>
+#include <common/bytes.h>
 
 namespace eka2l1::arm::r12l1 {
     std::uint32_t expand_arm_imm(std::uint8_t imm, const int rot) {
