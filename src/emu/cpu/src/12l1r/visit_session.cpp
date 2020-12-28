@@ -199,7 +199,6 @@ namespace eka2l1::arm::r12l1 {
     bool visit_session::emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
         bool before, bool writeback, bool load) {
         std::uint8_t last_reg = 0;
-
         emit_cpsr_update_nzcv();
 
         // This register must persits until this routine end.
@@ -210,12 +209,37 @@ namespace eka2l1::arm::r12l1 {
         // Spill lock this base guest reg
         reg_supplier_.spill_lock(base_guest_reg);
 
+        auto emit_addr_modification = [&](const bool ignore_base) {
+            // Decrement or increment guest base and host base
+            if (add) {
+                if (!ignore_base) {
+                    big_block_->set_cc(common::CC_NEQ);
+                    big_block_->ADDI2R(base, base, 4, ALWAYS_SCRATCH1);
+                    big_block_->set_cc(common::CC_AL);
+                }
+
+                big_block_->ADDI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
+            } else {
+                if (!ignore_base) {
+                    big_block_->set_cc(common::CC_NEQ);
+                    big_block_->SUBI2R(base, base, 4, ALWAYS_SCRATCH1);
+                    big_block_->set_cc(common::CC_AL);
+                }
+
+                big_block_->SUBI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
+            }
+        };
+
         // R1 is reserved for host call, but this backback is scratch LR, and it does not relate
         // to R1 used as arguments in anyway (branch differentiate)
         common::armgen::arm_reg backback = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
 
         // Temporary LR
         big_block_->MOV(backback, 0);
+
+        if (before) {
+            emit_addr_modification(true);
+        }
 
         std::uint8_t *lookup_route = big_block_->get_writeable_code_ptr();
         base = emit_address_lookup(guest_addr_reg, load);
@@ -245,6 +269,10 @@ namespace eka2l1::arm::r12l1 {
                         break;
                     } else {
                         if (!is_first) {
+                            if (before) {
+                                emit_addr_modification(false);
+                            }
+
                             big_block_->CMP(base, 0);
                             auto base_need_lookup = big_block_->B_CC(common::CC_EQ);
 
@@ -299,19 +327,8 @@ namespace eka2l1::arm::r12l1 {
                         big_block_->set_jump_target(add_up_value_br);
                         big_block_->CMP(base, 0);
 
-                        // Decrement or increment guest base and host base
-                        if (add) {
-                            big_block_->set_cc(common::CC_NEQ);
-                            big_block_->ADDI2R(base, base, 4, ALWAYS_SCRATCH1);
-                            big_block_->set_cc(common::CC_AL);
-
-                            big_block_->ADDI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
-                        } else {
-                            big_block_->set_cc(common::CC_NEQ);
-                            big_block_->SUBI2R(base, base, 4, ALWAYS_SCRATCH1);
-                            big_block_->set_cc(common::CC_AL);
-
-                            big_block_->SUBI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
+                        if (!before) {
+                            emit_addr_modification(false);
                         }
                     }
                 }
@@ -322,6 +339,12 @@ namespace eka2l1::arm::r12l1 {
 
         reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
         reg_supplier_.release_spill_lock(base_guest_reg);
+
+        if (!writeback) {
+            // Flush it xD. Its value is trashed now, so we don't want to keep it around and
+            // being misunderstood. Why its trashed? Because we write subtraction/addition to it.
+            reg_supplier_.flush(base_guest_reg);
+        }
 
         emit_cpsr_restore_nzcv();
 
