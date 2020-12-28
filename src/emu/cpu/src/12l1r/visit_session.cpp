@@ -140,6 +140,10 @@ namespace eka2l1::arm::r12l1 {
     static constexpr std::uint32_t CPAGE_SIZE = 1 << CPAGE_BITS;
     static constexpr std::uint32_t CPAGE_MASK = CPAGE_SIZE - 1;
 
+    static void dashixiong_print_22debug(const std::uint32_t val) {
+        LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
+    }
+
     common::armgen::arm_reg visit_session::emit_address_lookup(common::armgen::arm_reg base, const bool for_read) {
         static_assert(sizeof(tlb_entry) == 16);
 
@@ -157,8 +161,8 @@ namespace eka2l1::arm::r12l1 {
 
         // Scratch 1 now holds our TLB entry
         big_block_->LDR(ALWAYS_SCRATCH2, ALWAYS_SCRATCH1, offset_to_load);
-        big_block_->ANDI2R(scratch3, base, ~CPAGE_MASK, ALWAYS_SCRATCH2);     // remove the unaligned
-        big_block_->CMP(scratch3, ALWAYS_SCRATCH2);
+        big_block_->ANDI2R(final_addr, base, ~CPAGE_MASK, scratch3);     // remove the unaligned
+        big_block_->CMP(final_addr, ALWAYS_SCRATCH2);
 
         big_block_->set_cc(common::CC_NEQ);
         big_block_->MOV(final_addr, 0);
@@ -198,13 +202,22 @@ namespace eka2l1::arm::r12l1 {
 
         emit_cpsr_update_nzcv();
 
+        // This register must persits until this routine end.
+        // It holds the guest register address.
         common::armgen::arm_reg guest_addr_reg = reg_supplier_.map(base, (writeback ? ALLOCATE_FLAG_DIRTY : 0));
+        common::armgen::arm_reg base_guest_reg = base;
 
-        std::uint8_t *lookup_route = big_block_->get_writeable_code_ptr();
+        // Spill lock this base guest reg
+        reg_supplier_.spill_lock(base_guest_reg);
+
+        // R1 is reserved for host call, but this backback is scratch LR, and it does not relate
+        // to R1 used as arguments in anyway (branch differentiate)
         common::armgen::arm_reg backback = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
 
         // Temporary LR
         big_block_->MOV(backback, 0);
+
+        std::uint8_t *lookup_route = big_block_->get_writeable_code_ptr();
         base = emit_address_lookup(guest_addr_reg, load);
 
         // Check if we should jump back
@@ -213,8 +226,6 @@ namespace eka2l1::arm::r12l1 {
         big_block_->set_cc(common::CC_NEQ);
         big_block_->B(backback);
         big_block_->set_cc(common::CC_AL);
-
-        reg_supplier_.spill_lock_all(REG_SCRATCH_TYPE_GPR);
 
         bool is_first = true;
 
@@ -234,14 +245,15 @@ namespace eka2l1::arm::r12l1 {
                         break;
                     } else {
                         if (!is_first) {
+                            big_block_->CMP(base, 0);
+                            auto base_need_lookup = big_block_->B_CC(common::CC_EQ);
+
                             // Check if the guest address now crosses a new page
                             big_block_->ANDI2R(ALWAYS_SCRATCH1, guest_addr_reg, CPAGE_MASK, ALWAYS_SCRATCH2);
                             big_block_->CMP(ALWAYS_SCRATCH1, 0);
 
                             auto done_refresh = big_block_->B_CC(common::CC_NEQ);
-
-                            big_block_->CMP(base, 0);
-                            auto done_refresh2 = big_block_->B_CC(common::CC_NEQ);
+                            big_block_->set_jump_target(base_need_lookup);
 
                             // Try to lookup the address again.
                             // Remember the PC. Note in ARM mode the PC is forward by 8 bytes.
@@ -250,13 +262,33 @@ namespace eka2l1::arm::r12l1 {
                             big_block_->B(lookup_route);
 
                             big_block_->set_jump_target(done_refresh);
-                            big_block_->set_jump_target(done_refresh2);
                         } else {
                             is_first = false;
                         }
 
                         big_block_->CMP(base, 0);
-                        auto lookup_no_good = big_block_->B_CC(common::CC_EQ);
+                        auto lookup_good = big_block_->B_CC(common::CC_NEQ);
+
+                        big_block_->MOV(common::armgen::R0, guest_addr_reg);
+
+                        big_block_->PUSH(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+
+                        big_block_->MOV(common::armgen::R1, common::armgen::R0);
+                        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
+
+                        if (load) {
+                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
+                            big_block_->POP(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+
+                            big_block_->MOV(mapped, common::armgen::R0);
+                        } else {
+                            big_block_->MOV(common::armgen::R2, mapped);
+                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
+                            big_block_->POP(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+                        }
+
+                        auto add_up_value_br = big_block_->B();
+                        big_block_->set_jump_target(lookup_good);
 
                         if (load) {
                             big_block_->LDR(mapped, base, 0);
@@ -264,33 +296,21 @@ namespace eka2l1::arm::r12l1 {
                             big_block_->STR(mapped, base, 0);
                         }
 
-                        big_block_->set_jump_target(lookup_no_good);
-                        big_block_->MOV(common::armgen::R0, guest_addr_reg);
-                        big_block_->MOV(ALWAYS_SCRATCH2, mapped);
-
-                        reg_supplier_.flush_host_regs_for_host_call();
-
-                        big_block_->MOV(common::armgen::R1, common::armgen::R0);
-                        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
-
-                        if (load) {
-                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
-
-                            common::armgen::arm_reg new_mapped = reg_supplier_.map(orig, (load) ? 0 : ALLOCATE_FLAG_DIRTY);
-                            big_block_->MOV(new_mapped, common::armgen::R0);
-
-                            mapped = new_mapped;
-                        } else {
-                            big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
-                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
-                        }
+                        big_block_->set_jump_target(add_up_value_br);
+                        big_block_->CMP(base, 0);
 
                         // Decrement or increment guest base and host base
                         if (add) {
+                            big_block_->set_cc(common::CC_NEQ);
                             big_block_->ADDI2R(base, base, 4, ALWAYS_SCRATCH1);
+                            big_block_->set_cc(common::CC_AL);
+
                             big_block_->ADDI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
                         } else {
+                            big_block_->set_cc(common::CC_NEQ);
                             big_block_->SUBI2R(base, base, 4, ALWAYS_SCRATCH1);
+                            big_block_->set_cc(common::CC_AL);
+
                             big_block_->SUBI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
                         }
                     }
@@ -298,13 +318,10 @@ namespace eka2l1::arm::r12l1 {
 
                 last_reg++;
             }
-
-            if (full)
-                reg_supplier_.flush_all();
         }
-        
-        reg_supplier_.release_spill_lock_all(REG_SCRATCH_TYPE_GPR);
+
         reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        reg_supplier_.release_spill_lock(base_guest_reg);
 
         emit_cpsr_restore_nzcv();
 
