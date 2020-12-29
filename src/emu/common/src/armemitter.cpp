@@ -1064,14 +1064,14 @@ namespace eka2l1::common::armgen {
         "LDRSH",
     };
 
-    void armx_emitter::write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 Rm, bool RegAdd) {
+    void armx_emitter::write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 Rm, bool RegAdd, bool PreIndex, bool WriteBack) {
         std::int32_t op = LoadStoreOps[Op][Rm.get_type()]; // Type always decided by last operand
         std::uint32_t Data;
 
         // Qualcomm chipsets get /really/ angry if you don't use index, even if the offset is zero.
         // Some of these encodings require Index at all times anyway. Doesn't really matter.
         // bool Index = op2 != 0 ? true : false;
-        bool Index = true;
+        bool Index = PreIndex;
         bool Add = false;
 
         // Special Encoding (misc addressing mode)
@@ -1136,17 +1136,17 @@ namespace eka2l1::common::armgen {
             // Add SpecialOp things
             Data = (0x9 << 4) | (SignedLoad << 6) | (Half << 5) | Data;
         }
-        write32(condition | (op << 20) | (Index << 24) | (Add << 23) | (Rn << 16) | (Rt << 12) | Data);
+        write32(condition | (op << 20) | (Index << 24) | (Add << 23) | (WriteBack << 21) | (Rn << 16) | (Rt << 12) | Data);
     }
 
-    void armx_emitter::LDR(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(1, dest, base, op2, RegAdd); }
-    void armx_emitter::LDRB(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(3, dest, base, op2, RegAdd); }
-    void armx_emitter::LDRH(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(5, dest, base, op2, RegAdd); }
-    void armx_emitter::LDRSB(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(6, dest, base, op2, RegAdd); }
-    void armx_emitter::LDRSH(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(7, dest, base, op2, RegAdd); }
-    void armx_emitter::STR(arm_reg result, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(0, result, base, op2, RegAdd); }
-    void armx_emitter::STRH(arm_reg result, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(4, result, base, op2, RegAdd); }
-    void armx_emitter::STRB(arm_reg result, arm_reg base, operand2 op2, bool RegAdd) { write_store_op(2, result, base, op2, RegAdd); }
+    void armx_emitter::LDR(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(1, dest, base, op2, RegAdd, PreIndex, WriteBack); }
+    void armx_emitter::LDRB(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(3, dest, base, op2, RegAdd, PreIndex, WriteBack); }
+    void armx_emitter::LDRH(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(5, dest, base, op2, RegAdd, PreIndex, WriteBack); }
+    void armx_emitter::LDRSB(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(6, dest, base, op2, RegAdd, PreIndex, WriteBack); }
+    void armx_emitter::LDRSH(arm_reg dest, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(7, dest, base, op2, RegAdd, PreIndex, WriteBack); }
+    void armx_emitter::STR(arm_reg result, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(0, result, base, op2, RegAdd, PreIndex, WriteBack); }
+    void armx_emitter::STRH(arm_reg result, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(4, result, base, op2, RegAdd, PreIndex, WriteBack); }
+    void armx_emitter::STRB(arm_reg result, arm_reg base, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack) { write_store_op(2, result, base, op2, RegAdd, PreIndex, WriteBack); }
 
 #define VA_TO_REGLIST(RegList, Regnum)       \
     {                                        \

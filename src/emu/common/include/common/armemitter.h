@@ -514,7 +514,7 @@ namespace eka2l1::common::armgen {
         std::uint32_t condition;
         std::vector<literal_pool> current_lit_pool;
 
-        void write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 op2, bool RegAdd);
+        void write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack);
         void write_reg_store_op(std::uint32_t op, arm_reg dest, bool WriteBack, std::uint16_t RegList);
         void write_vreg_store_op(std::uint32_t op, arm_reg dest, bool Double, bool WriteBack, arm_reg firstreg, std::uint8_t numregs);
         void write_shifted_data_op(std::uint32_t op, bool SetFlags, arm_reg dest, arm_reg src, arm_reg op2);
@@ -689,15 +689,15 @@ namespace eka2l1::common::armgen {
         void MRS(arm_reg dest);
 
         // Memory load/store operations
-        void LDR(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRSB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRSH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void LDR(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRSB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRSH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
         void LDRLIT(arm_reg dest, std::uint32_t offset, bool Add = true);
-        void STR(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void STRB(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void STRH(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void STR(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void STRB(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void STRH(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
 
         void STMFD(arm_reg dest, bool WriteBack, const int Regnum, ...);
         void LDMFD(arm_reg dest, bool WriteBack, const int Regnum, ...);
