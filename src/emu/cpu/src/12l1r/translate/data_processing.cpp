@@ -56,18 +56,14 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
         common::armgen::arm_reg source_real = reg_index_to_gpr(m);
 
+        const common::armgen::arm_reg source_mapped = session_->reg_supplier_.map(source_real, 0);
         if (dest_real == common::armgen::R15) {
-            LOG_TRACE(CPU_12L1R, "Undefined behaviour mov to r15, todo!");
-            session_->emit_undefined_instruction_handler();
-
+            session_->link_block_ambiguous(source_mapped);
             return false;
         }
 
         const common::armgen::arm_reg dest_mapped = session_->reg_supplier_.map(dest_real,
                 ALLOCATE_FLAG_DIRTY);
-
-        const common::armgen::arm_reg source_mapped = session_->reg_supplier_.map(source_real,
-                0);
 
         common::armgen::operand2 imm_op(source_mapped, shift, imm5);
 
@@ -75,6 +71,120 @@ namespace eka2l1::arm::r12l1 {
             session_->big_block_->MOVS(dest_mapped, imm_op);
         } else {
             session_->big_block_->MOV(dest_mapped, imm_op);
+        }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_ADD_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
+            int rotate, std::uint8_t imm8) {
+        session_->set_cond(cond);
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+
+        common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
+
+        const common::armgen::arm_reg op1_mapped = session_->reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+                : session_->reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        if (S) {
+            session_->big_block_->ADDS(dest_mapped, op1_mapped, op2);
+        } else {
+            session_->big_block_->ADD(dest_mapped, op1_mapped, op2);
+        }
+
+        if (dest_real == common::armgen::R15) {
+            session_->link_block_ambiguous(dest_mapped);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_ADD_reg(common::cc_flags cond, bool S, reg_index n, reg_index d,
+            std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        session_->set_cond(cond);
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg op1_mapped = session_->reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_base_mapped = session_->reg_supplier_.map(op2_base_real, 0);
+
+        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+                : session_->reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
+
+        if (S) {
+            session_->big_block_->ADDS(dest_mapped, op1_mapped, op2);
+        } else {
+            session_->big_block_->ADD(dest_mapped, op1_mapped, op2);
+        }
+
+        if (dest_real == common::armgen::R15) {
+            session_->link_block_ambiguous(dest_mapped);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_SUB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
+            int rotate, std::uint8_t imm8) {
+        session_->set_cond(cond);
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+
+        common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
+
+        const common::armgen::arm_reg op1_mapped = session_->reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+                : session_->reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        if (S) {
+            session_->big_block_->SUBS(dest_mapped, op1_mapped, op2);
+        } else {
+            session_->big_block_->SUB(dest_mapped, op1_mapped, op2);
+        }
+
+        if (dest_real == common::armgen::R15) {
+            session_->link_block_ambiguous(dest_mapped);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_SUB_reg(common::cc_flags cond, bool S, reg_index n, reg_index d,
+            std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        session_->set_cond(cond);
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg op1_mapped = session_->reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_base_mapped = session_->reg_supplier_.map(op2_base_real, 0);
+
+        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+                : session_->reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
+
+        if (S) {
+            session_->big_block_->SUBS(dest_mapped, op1_mapped, op2);
+        } else {
+            session_->big_block_->SUB(dest_mapped, op1_mapped, op2);
+        }
+
+        if (dest_real == common::armgen::R15) {
+            session_->link_block_ambiguous(dest_mapped);
+            return false;
         }
 
         return true;

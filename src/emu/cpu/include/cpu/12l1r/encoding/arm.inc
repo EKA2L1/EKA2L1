@@ -24,8 +24,8 @@ INST(arm_BL,            "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv
 //INST(arm_ADC_imm,       "ADC (imm)",           "cccc0010101Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_ADC_reg,       "ADC (reg)",           "cccc0000101Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_ADC_rsr,       "ADC (rsr)",           "cccc0000101Snnnnddddssss0rr1mmmm") // all
-//INST(arm_ADD_imm,       "ADD (imm)",           "cccc0010100Snnnnddddrrrrvvvvvvvv") // all
-//INST(arm_ADD_reg,       "ADD (reg)",           "cccc0000100Snnnnddddvvvvvrr0mmmm") // all
+INST(arm_ADD_imm,       "ADD (imm)",           "cccc0010100Snnnnddddrrrrvvvvvvvv") // all
+INST(arm_ADD_reg,       "ADD (reg)",           "cccc0000100Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_ADD_rsr,       "ADD (rsr)",           "cccc0000100Snnnnddddssss0rr1mmmm") // all
 //INST(arm_AND_imm,       "AND (imm)",           "cccc0010000Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_AND_reg,       "AND (reg)",           "cccc0000000Snnnnddddvvvvvrr0mmmm") // all
@@ -60,8 +60,8 @@ INST(arm_MOV_reg,       "MOV (reg)",           "cccc0001101S0000ddddvvvvvrr0mmmm
 //INST(arm_SBC_imm,       "SBC (imm)",           "cccc0010110Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_SBC_reg,       "SBC (reg)",           "cccc0000110Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_SBC_rsr,       "SBC (rsr)",           "cccc0000110Snnnnddddssss0rr1mmmm") // all
-//INST(arm_SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // all
-//INST(arm_SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm") // all
+INST(arm_SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // all
+INST(arm_SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_SUB_rsr,       "SUB (rsr)",           "cccc0000010Snnnnddddssss0rr1mmmm") // all
 //INST(arm_TEQ_imm,       "TEQ (imm)",           "cccc00110011nnnn0000rrrrvvvvvvvv") // all
 //INST(arm_TEQ_reg,       "TEQ (reg)",           "cccc00010011nnnn0000vvvvvrr0mmmm") // all

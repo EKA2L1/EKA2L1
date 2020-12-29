@@ -346,6 +346,8 @@ namespace eka2l1::arm::r12l1 {
 
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
+		
+		block->thumb_ = is_thumb;
 
         visit_session context(this, block);
         std::unique_ptr<arm_translate_visitor> arm_visitor = nullptr;

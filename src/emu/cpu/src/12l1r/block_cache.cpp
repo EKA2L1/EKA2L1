@@ -32,7 +32,8 @@ namespace eka2l1::arm::r12l1 {
         , translated_code_(nullptr)
         , link_value_(nullptr)
         , translated_size_(0)
-        , inst_count_(0) {
+        , inst_count_(0)
+		, thumb_(false) {
         hash_ = make_block_hash(start_addr, aid);
     }
 

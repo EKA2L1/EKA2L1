@@ -47,6 +47,8 @@ namespace eka2l1::arm::r12l1 {
 
         std::size_t translated_size_;
         std::uint32_t inst_count_;
+		
+		bool thumb_;
 
         vaddress start_address() const {
             return static_cast<vaddress>(hash_);

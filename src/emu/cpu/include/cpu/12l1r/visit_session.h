@@ -59,6 +59,7 @@ namespace eka2l1::arm::r12l1 {
 		void emit_cpsr_update_nzcv();
 		void emit_cpsr_restore_nzcv();
 
+		void link_block_ambiguous(common::armgen::arm_reg new_pc_value);
 		void sync_registers();
     };
 }

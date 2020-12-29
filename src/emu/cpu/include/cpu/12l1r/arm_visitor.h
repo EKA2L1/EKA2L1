@@ -34,12 +34,21 @@ namespace eka2l1::arm::r12l1 {
 
         explicit arm_translate_visitor(visit_session *session);
 
+        // Data processing
         bool arm_MOV_imm(common::cc_flags cond, bool S, reg_index d, int rotate, std::uint8_t imm8);
         bool arm_MOV_reg(common::cc_flags cond, bool S, reg_index d, std::uint8_t imm5,
                 common::armgen::shift_type shift, reg_index m);
+        bool arm_ADD_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8);
+        bool arm_ADD_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
+                common::armgen::shift_type shift, reg_index m);
+        bool arm_SUB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8);
+        bool arm_SUB_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
+                         common::armgen::shift_type shift, reg_index m);
 
+        // Branch
         bool arm_BL(common::cc_flags cond, std::uint32_t imm24);
 
+        // Load/store
         bool arm_LDM(common::cc_flags cond, bool W, reg_index n, reg_list list);
         bool arm_LDMDA(common::cc_flags cond, bool W, reg_index n, reg_list list);
         bool arm_LDMDB(common::cc_flags cond, bool W, reg_index n, reg_list list);
