@@ -44,6 +44,8 @@ namespace eka2l1::arm::r12l1 {
         bool arm_SUB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8);
         bool arm_SUB_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
                          common::armgen::shift_type shift, reg_index m);
+        bool arm_CMP_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8);
+        bool arm_CMP_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
 
         // Branch
         bool arm_BL(common::cc_flags cond, std::uint32_t imm24);
@@ -57,6 +59,12 @@ namespace eka2l1::arm::r12l1 {
         bool arm_STMDA(common::cc_flags cond, bool W, reg_index n, reg_list list);
         bool arm_STMDB(common::cc_flags cond, bool W, reg_index n, reg_list list);
         bool arm_STMIB(common::cc_flags cond, bool W, reg_index n, reg_list list);
+
+        bool arm_LDR_lit(common::cc_flags cond, bool U, reg_index t, std::uint16_t imm12);
+        bool arm_LDR_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index d, std::uint16_t imm12);
+        bool arm_LDR_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index d, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
+        bool arm_STR_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint16_t imm12);
+        bool arm_STR_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
 
         bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
         bool arm_UDF();

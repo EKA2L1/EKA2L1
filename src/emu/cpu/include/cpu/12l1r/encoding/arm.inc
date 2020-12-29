@@ -36,8 +36,8 @@ INST(arm_ADD_reg,       "ADD (reg)",           "cccc0000100Snnnnddddvvvvvrr0mmmm
 //INST(arm_CMN_imm,       "CMN (imm)",           "cccc00110111nnnn0000rrrrvvvvvvvv") // all
 //INST(arm_CMN_reg,       "CMN (reg)",           "cccc00010111nnnn0000vvvvvrr0mmmm") // all
 //INST(arm_CMN_rsr,       "CMN (rsr)",           "cccc00010111nnnn0000ssss0rr1mmmm") // all
-//INST(arm_CMP_imm,       "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv") // all
-//INST(arm_CMP_reg,       "CMP (reg)",           "cccc00010101nnnn0000vvvvvrr0mmmm") // all
+INST(arm_CMP_imm,       "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv") // all
+INST(arm_CMP_reg,       "CMP (reg)",           "cccc00010101nnnn0000vvvvvrr0mmmm") // all
 //INST(arm_CMP_rsr,       "CMP (rsr)",           "cccc00010101nnnn0000ssss0rr1mmmm") // all
 //INST(arm_EOR_imm,       "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_EOR_reg,       "EOR (reg)",           "cccc0000001Snnnnddddvvvvvrr0mmmm") // all
@@ -130,9 +130,9 @@ INST(arm_UDF,           "UDF",                 "111001111111------------1111----
 //INST(arm_STRHT,         "STRHT (A2)",          "----0000-010--------00001011----")
 //INST(arm_STRT,          "STRT (A1)",           "----0100-010--------------------")
 //INST(arm_STRT,          "STRT (A2)",           "----0110-010---------------0----")
-//INST(arm_LDR_lit,       "LDR (lit)",           "cccc0101u0011111ttttvvvvvvvvvvvv")
-//INST(arm_LDR_imm,       "LDR (imm)",           "cccc010pu0w1nnnnttttvvvvvvvvvvvv")
-//INST(arm_LDR_reg,       "LDR (reg)",           "cccc011pu0w1nnnnttttvvvvvrr0mmmm")
+INST(arm_LDR_lit,       "LDR (lit)",           "cccc0101u0011111ttttvvvvvvvvvvvv")
+INST(arm_LDR_imm,       "LDR (imm)",           "cccc010pu0w1nnnnttttvvvvvvvvvvvv")
+INST(arm_LDR_reg,       "LDR (reg)",           "cccc011pu0w1nnnnttttvvvvvrr0mmmm")
 //INST(arm_LDRB_lit,      "LDRB (lit)",          "cccc0101u1011111ttttvvvvvvvvvvvv")
 //INST(arm_LDRB_imm,      "LDRB (imm)",          "cccc010pu1w1nnnnttttvvvvvvvvvvvv")
 //INST(arm_LDRB_reg,      "LDRB (reg)",          "cccc011pu1w1nnnnttttvvvvvrr0mmmm")
@@ -148,8 +148,8 @@ INST(arm_UDF,           "UDF",                 "111001111111------------1111----
 //INST(arm_LDRSH_lit,     "LDRSH (lit)",         "cccc0001u1011111ttttvvvv1111vvvv")
 //INST(arm_LDRSH_imm,     "LDRSH (imm)",         "cccc000pu1w1nnnnttttvvvv1111vvvv")
 //INST(arm_LDRSH_reg,     "LDRSH (reg)",         "cccc000pu0w1nnnntttt00001111mmmm")
-//INST(arm_STR_imm,       "STR (imm)",           "cccc010pu0w0nnnnttttvvvvvvvvvvvv")
-//INST(arm_STR_reg,       "STR (reg)",           "cccc011pu0w0nnnnttttvvvvvrr0mmmm")
+INST(arm_STR_imm,       "STR (imm)",           "cccc010pu0w0nnnnttttvvvvvvvvvvvv")
+INST(arm_STR_reg,       "STR (reg)",           "cccc011pu0w0nnnnttttvvvvvrr0mmmm")
 //INST(arm_STRB_imm,      "STRB (imm)",          "cccc010pu1w0nnnnttttvvvvvvvvvvvv")
 //INST(arm_STRB_reg,      "STRB (reg)",          "cccc011pu1w0nnnnttttvvvvvrr0mmmm")
 //INST(arm_STRD_imm,      "STRD (imm)",          "cccc000pu1w0nnnnttttvvvv1111vvvv") // v5E

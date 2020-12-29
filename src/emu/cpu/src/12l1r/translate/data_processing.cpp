@@ -42,6 +42,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             session_->big_block_->MOVS(dest_mapped, imm_op);
+            session_->cpsr_nzcv_changed();
         } else {
             session_->big_block_->MOV(dest_mapped, imm_op);
         }
@@ -69,6 +70,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             session_->big_block_->MOVS(dest_mapped, imm_op);
+            session_->cpsr_nzcv_changed();
         } else {
             session_->big_block_->MOV(dest_mapped, imm_op);
         }
@@ -91,6 +93,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             session_->big_block_->ADDS(dest_mapped, op1_mapped, op2);
+            session_->cpsr_nzcv_changed();
         } else {
             session_->big_block_->ADD(dest_mapped, op1_mapped, op2);
         }
@@ -121,6 +124,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             session_->big_block_->ADDS(dest_mapped, op1_mapped, op2);
+            session_->cpsr_nzcv_changed();
         } else {
             session_->big_block_->ADD(dest_mapped, op1_mapped, op2);
         }
@@ -148,6 +152,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             session_->big_block_->SUBS(dest_mapped, op1_mapped, op2);
+            session_->cpsr_nzcv_changed();
         } else {
             session_->big_block_->SUB(dest_mapped, op1_mapped, op2);
         }
@@ -178,6 +183,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             session_->big_block_->SUBS(dest_mapped, op1_mapped, op2);
+            session_->cpsr_nzcv_changed();
         } else {
             session_->big_block_->SUB(dest_mapped, op1_mapped, op2);
         }
@@ -186,6 +192,38 @@ namespace eka2l1::arm::r12l1 {
             session_->link_block_ambiguous(dest_mapped);
             return false;
         }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_CMP_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8) {
+        session_->set_cond(cond);
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::operand2 rhs(imm8, static_cast<std::uint8_t>(rotate));
+
+        common::armgen::arm_reg lhs_mapped = session_->reg_supplier_.map(lhs_real, 0);
+
+        session_->big_block_->CMP(lhs_mapped, rhs);
+        session_->cpsr_nzcv_changed();
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_CMP_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5,
+        common::armgen::shift_type shift, reg_index m) {
+        session_->set_cond(cond);
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_base_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg lhs_mapped = session_->reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_base_mapped = session_->reg_supplier_.map(rhs_base_real, 0);
+
+        common::armgen::operand2 rhs(rhs_base_mapped, shift, imm5);
+
+        session_->big_block_->CMP(lhs_mapped, rhs);
+        session_->cpsr_nzcv_changed();
 
         return true;
     }

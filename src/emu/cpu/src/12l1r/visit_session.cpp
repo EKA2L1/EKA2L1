@@ -101,8 +101,24 @@ namespace eka2l1::arm::r12l1 {
         self->raise_system_call(num);
     }
 
+    static std::uint8_t dashixiong_read_byte_router(dashixiong_block *self, const vaddress addr) {
+        return self->read_byte(addr);
+    }
+
+    static std::uint16_t dashixiong_read_word_router(dashixiong_block *self, const vaddress addr) {
+        return self->read_word(addr);
+    }
+
     static std::uint32_t dashixiong_read_dword_router(dashixiong_block *self, const vaddress addr) {
         return self->read_dword(addr);
+    }
+
+    static void dashixiong_write_byte_router(dashixiong_block *self, const vaddress addr, const std::uint8_t val) {
+        self->write_byte(addr, val);
+    }
+
+    static void dashixiong_write_word_router(dashixiong_block *self, const vaddress addr, const std::uint16_t val) {
+        self->write_word(addr, val);
     }
 
     static void dashixiong_write_dword_router(dashixiong_block *self, const vaddress addr, const std::uint32_t val) {
@@ -374,6 +390,172 @@ namespace eka2l1::arm::r12l1 {
 
         emit_cpsr_restore_nzcv();
         return block_cont;
+    }
+
+    bool visit_session::emit_memory_access(common::armgen::arm_reg target_mapped, common::armgen::arm_reg base_mapped,
+        common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read) {
+        emit_cpsr_update_nzcv();
+
+        common::armgen::arm_reg host_base_addr = emit_address_lookup(base_mapped, read);
+        if (host_base_addr == common::armgen::INVALID_REG) {
+            LOG_ERROR(CPU_12L1R, "Failed to get host base address register");
+            return false;
+        }
+
+        big_block_->CMP(host_base_addr, 0);
+        auto lookup_good = big_block_->B_CC(common::CC_NEQ);
+
+        // Here we fallback to old friend. hmmmm
+        // Calculate the address
+        big_block_->PUSH(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+
+        if (!read) {
+            big_block_->MOV(common::armgen::R2, target_mapped);
+        }
+
+        if (base_mapped != common::armgen::R1)
+            big_block_->MOV(common::armgen::R1, base_mapped);
+
+        if (pre_index) {
+            if (add)
+                big_block_->ADD(common::armgen::R1, common::armgen::R1, op2);
+            else
+                big_block_->SUB(common::armgen::R1, common::armgen::R1, op2);
+        }
+
+        big_block_->PUSH(1, common::armgen::R1);
+        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
+
+        if (read) {
+            switch (bit_count) {
+                case 8:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_byte_router);
+                    break;
+
+                case 16:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_word_router);
+                    break;
+
+                case 32:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
+                    break;
+
+                default:
+                    assert(false);
+                    break;
+            }
+        } else {
+            switch (bit_count) {
+                case 8:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_byte_router);
+                    break;
+
+                case 16:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_word_router);
+                    break;
+
+                case 32:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
+                    break;
+
+                default:
+                    assert(false);
+                    break;
+            }
+        }
+
+        big_block_->POP(1, common::armgen::R1);
+
+        if (!pre_index) {
+            if (add)
+                big_block_->ADD(common::armgen::R1, common::armgen::R1, op2);
+            else
+                big_block_->SUB(common::armgen::R1, common::armgen::R1, op2);
+        }
+
+        if (writeback) {
+            big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R1);
+        }
+
+        big_block_->POP(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+
+        if (writeback) {
+            big_block_->MOV(base_mapped, ALWAYS_SCRATCH2);
+        }
+
+        if (read) {
+            if (is_signed) {
+                switch (bit_count) {
+                    case 8:
+                        big_block_->SXTB(target_mapped, common::armgen::R0);
+                        break;
+
+                    case 16:
+                        big_block_->SXTH(target_mapped, common::armgen::R0);
+                        break;
+
+                    default:
+                        assert(false);
+                        break;
+                }
+            } else {
+                big_block_->MOV(target_mapped, common::armgen::R0);
+            }
+        }
+
+        auto done_all = big_block_->B();
+        big_block_->set_jump_target(lookup_good);
+
+        if (read) {
+            switch (bit_count) {
+                case 8:
+                    if (is_signed)
+                        big_block_->LDRSB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    else
+                        big_block_->LDRB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+
+                    break;
+
+                case 16:
+                    if (is_signed)
+                        big_block_->LDRSH(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    else
+                        big_block_->LDRH(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+
+                    break;
+
+                case 32:
+                    big_block_->LDRSB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    break;
+
+                default:
+                    assert(false);
+                    break;
+            }
+        } else {
+            switch (bit_count) {
+                case 8:
+                    big_block_->STRB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    break;
+
+                case 16:
+                    big_block_->STRH(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    break;
+
+                case 32:
+                    big_block_->STR(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    break;
+
+                default:
+                    assert(false);
+                    break;
+            }
+        }
+
+        big_block_->set_jump_target(done_all);
+        emit_cpsr_restore_nzcv();
+
+        return true;
     }
 
     void visit_session::sync_registers() {
