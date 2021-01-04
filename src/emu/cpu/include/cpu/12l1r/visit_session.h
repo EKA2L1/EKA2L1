@@ -21,6 +21,7 @@
 
 #include <cpu/12l1r/reg_cache.h>
 #include <cstdint>
+#include <vector>
 
 namespace eka2l1::arm::r12l1 {
     class dashixiong_block;
@@ -34,10 +35,14 @@ namespace eka2l1::arm::r12l1 {
 
     class visit_session {
 	protected:
-		common::cc_flags last_flag_;
+        std::vector<common::armgen::fixup_branch> ret_to_dispatch_branches_;
+        common::armgen::fixup_branch end_of_cond_;
+
+        common::cc_flags last_flag_;
+
 		bool cpsr_modified_;				///< Has the CPSR been modified since last time the flag is updated.
-		common::armgen::fixup_branch end_of_cond_;
-		
+		bool is_cond_block_;
+
     public:
         translated_block *crr_block_;
         dashixiong_block *big_block_;
@@ -45,8 +50,7 @@ namespace eka2l1::arm::r12l1 {
         reg_cache reg_supplier_;
 
         explicit visit_session(dashixiong_block *bro, translated_block *crr);
-		
-        void set_cond(common::cc_flags cc);
+        void set_cond(common::cc_flags cc, const bool cpsr_will_ruin = false);
 		
         common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base, const bool for_read);
 
@@ -62,8 +66,12 @@ namespace eka2l1::arm::r12l1 {
 		void emit_cpsr_update_nzcv();
 		void emit_cpsr_restore_nzcv();
 
-		void link_block_ambiguous(common::armgen::arm_reg new_pc_value);
+		void emit_direct_link(const vaddress addr);
+		void emit_return_to_dispatch();
+
 		void sync_registers();
+
+		void finalize();
 
 		void cpsr_nzcv_changed() {
 			cpsr_modified_ = true;

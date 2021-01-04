@@ -29,6 +29,7 @@
 namespace eka2l1::arm::r12l1 {
     struct core_state;
     class reg_cache;
+	class visit_session;
 
     struct dashixiong_callback {
         memory_operation_8bit_func &read_byte_;
@@ -62,10 +63,7 @@ namespace eka2l1::arm::r12l1 {
         void assemble_control_funcs();
 
         translated_block *start_new_block(const vaddress addr, const asid aid);
-        bool finalize_block(translated_block *block, const std::uint32_t guest_size);
-        
         void emit_cycles_count_add(const std::uint32_t num);
-        void edit_block_links(translated_block *dest, bool unlink = false);
 
     public:
         explicit dashixiong_block(dashixiong_callback &callbacks);
@@ -75,8 +73,12 @@ namespace eka2l1::arm::r12l1 {
         translated_block *compile_new_block(core_state *state, const vaddress addr);
         translated_block *get_block(const vaddress addr, const asid aid);
 
-        void emit_block_finalize(translated_block *block);
+        void emit_block_links(translated_block* block);
+        void emit_return_to_dispatch(translated_block *block);
+		void edit_block_links(translated_block *dest, bool unlink = false);
+
         void emit_pc_flush(const address current_pc);
+        void emit_pc_write_exchange(common::armgen::arm_reg pc_reg);
         void emit_cpsr_save();
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);

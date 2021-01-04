@@ -20,19 +20,17 @@
 #pragma once
 
 #include <cpu/12l1r/common.h>
+#include <cpu/12l1r/visit_session.h>
 #include <common/armemitter.h>
 
 namespace eka2l1::arm::r12l1 {
     class visit_session;
 
-    class arm_translate_visitor {
-    private:
-        visit_session *session_;
-
+    class arm_translate_visitor: public visit_session {
     public:
         using instruction_return_type = bool;
 
-        explicit arm_translate_visitor(visit_session *session);
+        explicit arm_translate_visitor(dashixiong_block *bro, translated_block *crr);
 
         // Data processing
         bool arm_MOV_imm(common::cc_flags cond, bool S, reg_index d, int rotate, std::uint8_t imm8);
@@ -48,6 +46,7 @@ namespace eka2l1::arm::r12l1 {
         bool arm_CMP_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
 
         // Branch
+        bool arm_B(common::cc_flags cond, std::uint32_t imm24);
         bool arm_BL(common::cc_flags cond, std::uint32_t imm24);
 
         // Load/store

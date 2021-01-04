@@ -20,7 +20,7 @@
 #include <cpu/12l1r/arm_visitor.h>
 
 namespace eka2l1::arm::r12l1 {    
-    arm_translate_visitor::arm_translate_visitor(visit_session *session)
-        : session_(session) {
+    arm_translate_visitor::arm_translate_visitor(dashixiong_block *bro, translated_block *crr)
+        : visit_session(bro, crr) {
     }
 }

@@ -24,13 +24,38 @@ namespace eka2l1::arm::r12l1 {
         return (static_cast<translated_block::hash_type>(aid) << 32) | start_addr;
     }
 
+    block_link::block_link()
+        : linked_(false)
+        , to_(0)
+        , value_(nullptr) {
+
+    }
+
+    block_link &translated_block::get_or_add_link(const vaddress addr, const int link_pri) {
+        auto res = std::find_if(links_.begin(), links_.end(), [addr](const block_link &ite) {
+            return ite.to_ == addr;
+        });
+
+        if (res != links_.end()) {
+            return *res;
+        }
+
+        block_link new_link;
+        new_link.to_ = addr;
+
+        if (link_pri < 0) {
+            links_.push_back(new_link);
+            return links_.back();
+        }
+
+        links_.insert(links_.begin() + link_pri, new_link);
+        return *(links_.begin() + link_pri);
+    }
+
     translated_block::translated_block(const vaddress start_addr, const asid aid)
         : hash_(0)
         , size_(0)
-        , link_type_(TRANSLATED_BLOCK_LINK_AMBIGUOUS)
-        , link_to_(0)
         , translated_code_(nullptr)
-        , link_value_(nullptr)
         , translated_size_(0)
         , inst_count_(0)
 		, thumb_(false) {

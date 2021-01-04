@@ -133,54 +133,44 @@ namespace eka2l1::arm::r12l1 {
 
         for (auto ite = link_ites.first; ite != link_ites.second; ite++) {
             translated_block *request_link_block = ite->second;
-            void *aligned_addr = common::align_address_to_host_page(request_link_block->link_value_);
 
-            if (common::is_memory_wx_exclusive()) {
-                common::change_protection(aligned_addr, psize, prot_read_write);
-            }
+            for (auto &link: request_link_block->links_) {
+                if (link.to_ == dest->start_address()) {
+                    void *aligned_addr = common::align_address_to_host_page(link.value_);
 
-            common::cpu_info temp_info = context_info;
-            common::armgen::armx_emitter temp_emitter(reinterpret_cast<std::uint8_t*>(request_link_block->link_value_),
-                    temp_info);
+                    if (common::is_memory_wx_exclusive()) {
+                        common::change_protection(aligned_addr, psize, prot_read_write);
+                    }
 
-            if (unlink) {
-                emit_pc_flush(request_link_block->link_to_);
-                temp_emitter.B(dispatch_ent_for_block_);
+                    common::cpu_info temp_info = context_info;
+                    common::armgen::armx_emitter temp_emitter(reinterpret_cast<std::uint8_t*>(link.value_),
+                                                              temp_info);
 
-                request_link_block->link_type_ = TRANSLATED_BLOCK_LINK_KNOWN;
-            } else {
-                temp_emitter.B(request_link_block->translated_code_);
+                    if (unlink) {
+                        emit_pc_flush(link.to_);
+                        temp_emitter.B(dispatch_ent_for_block_);
 
-                // Write reserved code
-                temp_emitter.NOP();
-                temp_emitter.NOP();
+                        link.linked_ = false;
+                    } else {
+                        temp_emitter.B(request_link_block->translated_code_);
 
-                request_link_block->link_type_ = TRANSLATED_BLOCK_LINKED;
-            }
+                        // Write reserved code
+                        temp_emitter.NOP();
+                        temp_emitter.NOP();
+                        temp_emitter.NOP();
 
-            temp_emitter.flush_icache();
+                        link.linked_ = true;
+                    }
 
-            if (common::is_memory_wx_exclusive()) {
-                common::change_protection(aligned_addr, psize, prot_read_exec);
+                    temp_emitter.flush_lit_pool();
+                    temp_emitter.flush_icache();
+
+                    if (common::is_memory_wx_exclusive()) {
+                        common::change_protection(aligned_addr, psize, prot_read_exec);
+                    }
+                }
             }
         }
-    }
-
-    bool dashixiong_block::finalize_block(translated_block *block, const std::uint32_t guest_size) {
-        if (!block->translated_code_) {
-            LOG_ERROR(CPU_12L1R, "This block is invalid (addr = 0x{:X})!", block->start_address());
-            return false;
-        }
-
-        emit_block_finalize(block);
-        flush_lit_pool();
-
-        edit_block_links(block, false);
-
-        block->size_ = guest_size;
-        block->translated_size_ = get_code_pointer() - block->translated_code_;
-
-        return true;
     }
 
     translated_block *dashixiong_block::get_block(const vaddress addr, const asid aid) {
@@ -293,45 +283,51 @@ namespace eka2l1::arm::r12l1 {
     void dashixiong_block::emit_cpsr_save() {
         STR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
     }
-    
-    void dashixiong_block::emit_block_finalize(translated_block *block) {
+
+    void dashixiong_block::emit_pc_write_exchange(common::armgen::arm_reg pc_reg) {
+        TST(pc_reg, 1);
+
+        set_cc(common::CC_NEQ);
+        ANDI2R(CPSR_REG, CPSR_REG, 0x20, ALWAYS_SCRATCH1);
+        BIC(pc_reg, pc_reg, 1);
+        set_cc(common::CC_AL);
+
+        STR(pc_reg, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+    }
+
+    void dashixiong_block::emit_block_links(translated_block* block) {
+        for (auto &link: block->links_) {
+            for (auto &jump_target: link.needs_) {
+                set_jump_target(jump_target);
+            }
+
+            emit_cpsr_save();
+            emit_cycles_count_add(block->inst_count_);
+
+            link_to_.emplace(make_block_hash(link.to_, block->address_space()), block);
+            link.value_ = reinterpret_cast<std::uint32_t*>(get_writeable_code_ptr());
+
+            // Can we link the block now?
+            if (auto link_block = get_block(link.to_, block->address_space())) {
+                B(link_block->translated_code_);
+
+                // Reserved
+                NOP();
+                NOP();
+                NOP();
+            } else {
+                // Jump to dispatch for now :((
+                emit_pc_flush(link.to_);
+                B(dispatch_ent_for_block_);
+            }
+        }
+    }
+
+    void dashixiong_block::emit_return_to_dispatch(translated_block *block) {
         emit_cpsr_save();
         emit_cycles_count_add(block->inst_count_);
 
-        // Jump to other block. In this case we find the next address it wants to jump to
-        switch (block->link_type_) {
-            case TRANSLATED_BLOCK_LINK_AMBIGUOUS:
-                // Branch back to dispatch
-                B(dispatch_ent_for_block_);
-                break;
-
-            case TRANSLATED_BLOCK_LINK_KNOWN: {
-                link_to_.emplace(make_block_hash(block->link_to_, block->address_space()), block);
-                block->link_value_ = reinterpret_cast<std::uint32_t*>(get_writeable_code_ptr());
-
-                // Can we link the block now?
-                if (auto link_block = get_block(block->link_to_, block->address_space())) {
-                    B(link_block->translated_code_);
-
-                    // Reserved
-                    write32(0);
-                    write32(0);
-                } else {
-                    // Jump to dispatch for now :((
-                    emit_pc_flush(block->link_to_);
-                    B(dispatch_ent_for_block_);
-                }
-
-                break;
-            }
-
-            default: {
-                LOG_ERROR(CPU_12L1R, "Unknown link block type");
-                assert(false);
-
-                break;
-            }
-        }
+        B(dispatch_ent_for_block_);
     }
 
     static void dashixiong_print_debug(const std::uint32_t val) {
@@ -349,11 +345,10 @@ namespace eka2l1::arm::r12l1 {
 		
 		block->thumb_ = is_thumb;
 
-        visit_session context(this, block);
         std::unique_ptr<arm_translate_visitor> arm_visitor = nullptr;
 
         if (!is_thumb) {
-            arm_visitor = std::make_unique<arm_translate_visitor>(&context);
+            arm_visitor = std::make_unique<arm_translate_visitor>(this, block);
         }
 
         begin_write();
@@ -405,11 +400,10 @@ namespace eka2l1::arm::r12l1 {
             block->inst_count_++;
         } while (should_continue);
 
-        context.reg_supplier_.flush_all();
-
-        // Emit cycles count add
-        if (!finalize_block(block, block->size_)) {
-            LOG_WARN(CPU_12L1R, "Unable to finalize block!");
+        if (is_thumb) {
+            LOG_ERROR(CPU_12L1R, "No Thumb handler!");
+        } else {
+            arm_visitor->finalize();
         }
 
         end_write();

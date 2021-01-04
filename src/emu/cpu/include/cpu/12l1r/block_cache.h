@@ -20,17 +20,24 @@
 #pragma once
 
 #include <cpu/12l1r/common.h>
+#include <common/armemitter.h>
 
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace eka2l1::arm::r12l1 {
-    enum translated_block_link_type {
-        TRANSLATED_BLOCK_LINK_AMBIGUOUS = 0,            ///< Which address to link next is not known at compile time.
-        TRANSLATED_BLOCK_LINK_KNOWN = 1,                ///< We know which block to link to at compile time.
-        TRANSLATED_BLOCK_LINKED = 2
+    struct block_link {
+        std::vector<common::armgen::fixup_branch> needs_;
+
+        bool linked_;
+        vaddress to_;
+
+        std::uint32_t *value_;
+
+        explicit block_link();
     };
 
     struct translated_block {
@@ -39,16 +46,14 @@ namespace eka2l1::arm::r12l1 {
         hash_type hash_;
         std::uint32_t size_;
 
-        translated_block_link_type link_type_;      ///< Block linking type.
-        vaddress link_to_;                          ///< The guest address that this block links to.
-
         const std::uint8_t *translated_code_;
-        std::uint32_t *link_value_;
 
         std::size_t translated_size_;
         std::uint32_t inst_count_;
 		
 		bool thumb_;
+
+		std::vector<block_link> links_;
 
         vaddress start_address() const {
             return static_cast<vaddress>(hash_);
@@ -63,6 +68,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         explicit translated_block(const vaddress start_addr, const asid aid);
+        block_link &get_or_add_link(const vaddress addr, const int link_pri = -1);
     };
 
     using on_block_invalidate_callback_type = std::function<void(translated_block*)>;

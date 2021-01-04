@@ -128,21 +128,33 @@ namespace eka2l1::arm::r12l1 {
     visit_session::visit_session(dashixiong_block *bro, translated_block *crr)
         : last_flag_(common::CC_AL)
         , cpsr_modified_(false)
+        , is_cond_block_(false)
         , big_block_(bro)
         , crr_block_(crr)
         , reg_supplier_(bro) {
     }
     
-    void visit_session::set_cond(common::cc_flags cc) {
-        if ((cc == last_flag_) && (!cpsr_modified_)) {
+    void visit_session::set_cond(common::cc_flags cc, const bool cpsr_will_ruin) {
+        if ((cc == last_flag_) && (!cpsr_modified_) && ((!cpsr_will_ruin) || (cpsr_will_ruin && !is_cond_block_))) {
             return;
         }
 
-        if (last_flag_ != common::CC_AL) {
+        if (cc != common::CC_AL) {
+            reg_supplier_.flush_all();
+        }
+
+        if ((last_flag_ != common::CC_AL) && is_cond_block_) {
             big_block_->set_jump_target(end_of_cond_);
         }
 
-        if (cc != common::CC_AL) {
+        if (cpsr_will_ruin) {
+            big_block_->set_cc(common::CC_AL);
+            is_cond_block_ = true;
+        } else {
+            big_block_->set_cc(cc);
+        }
+
+        if ((cc != common::CC_AL) && cpsr_will_ruin) {
             common::cc_flags neg_cc = get_negative_cc_flags(cc);
             end_of_cond_ = big_block_->B_CC(neg_cc);
         }
@@ -327,7 +339,7 @@ namespace eka2l1::arm::r12l1 {
 
                         if (last_reg == 15) {
                             // Store to lastest PC
-                            link_block_ambiguous(common::armgen::R0);
+                            big_block_->emit_pc_write_exchange(ALWAYS_SCRATCH1);
                             block_cont = false;
                         } else {
                             big_block_->MOV(mapped, common::armgen::R0);
@@ -350,7 +362,7 @@ namespace eka2l1::arm::r12l1 {
                     if (load) {
                         if (last_reg == 15) {
                             big_block_->LDR(ALWAYS_SCRATCH1, base, 0);
-                            link_block_ambiguous(ALWAYS_SCRATCH1);
+                            big_block_->emit_pc_write_exchange(ALWAYS_SCRATCH1);
 
                             block_cont = false;
                         } else {
@@ -389,6 +401,10 @@ namespace eka2l1::arm::r12l1 {
         }
 
         emit_cpsr_restore_nzcv();
+
+        if (!block_cont)
+            emit_return_to_dispatch();
+
         return block_cont;
     }
 
@@ -525,7 +541,7 @@ namespace eka2l1::arm::r12l1 {
                     break;
 
                 case 32:
-                    big_block_->LDRSB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    big_block_->LDR(target_mapped, host_base_addr, op2, add, pre_index, writeback);
                     break;
 
                 default:
@@ -571,6 +587,8 @@ namespace eka2l1::arm::r12l1 {
         big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address());
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
+        emit_return_to_dispatch();
+
         return false;
     }
 
@@ -584,9 +602,48 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
-    void visit_session::link_block_ambiguous(common::armgen::arm_reg new_pc_value) {
-        // TODO: Exchange mode
-        big_block_->STR(new_pc_value, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
-        crr_block_->link_type_ = TRANSLATED_BLOCK_LINK_AMBIGUOUS;
+    void visit_session::emit_direct_link(const vaddress addr) {
+        // Flush all registers in this
+        reg_supplier_.flush_all();
+
+        block_link &link = crr_block_->get_or_add_link(addr);
+        link.needs_.push_back(big_block_->B());
+    }
+
+    void visit_session::emit_return_to_dispatch() {
+        // Flush all registers in this
+        reg_supplier_.flush_all();
+
+        // Remember this branch
+        ret_to_dispatch_branches_.push_back(big_block_->B());
+    }
+
+    void visit_session::finalize() {
+        if ((last_flag_ != common::CC_AL) && is_cond_block_) {
+            big_block_->set_jump_target(end_of_cond_);
+        }
+
+        big_block_->set_cc(common::CC_AL);
+
+        if (last_flag_ != common::CC_AL) {
+            // Add branching to next block, making it highest priority
+            crr_block_->get_or_add_link(crr_block_->current_address(), 0);
+        }
+
+        // Emit links
+        big_block_->emit_block_links(crr_block_);
+
+        if (!ret_to_dispatch_branches_.empty()) {
+            for (auto &jump_target: ret_to_dispatch_branches_) {
+                big_block_->set_jump_target(jump_target);
+            }
+
+            big_block_->emit_return_to_dispatch(crr_block_);
+        }
+
+        big_block_->flush_lit_pool();
+        big_block_->edit_block_links(crr_block_, false);
+
+        crr_block_->translated_size_ = big_block_->get_code_pointer() - crr_block_->translated_code_;
     }
 }

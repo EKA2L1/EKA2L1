@@ -25,22 +25,33 @@
 #include <common/bytes.h>
 
 namespace eka2l1::arm::r12l1 {
+    bool arm_translate_visitor::arm_B(common::cc_flags cond, std::uint32_t imm24) {
+        set_cond(cond);
+
+        // Amount of move is in word unit, so shift two to left.
+        const std::int32_t move_amount = static_cast<std::int32_t>(common::sign_extended<26, std::uint32_t>(imm24 << 2));
+        const vaddress addr_to_jump = crr_block_->current_address() + move_amount + 8;
+
+        emit_direct_link(addr_to_jump);
+
+        return false;
+    }
+
     bool arm_translate_visitor::arm_BL(common::cc_flags cond, std::uint32_t imm24) {
-        session_->set_cond(cond);
+        set_cond(cond);
 
         // Amount of move is in word unit, so shift two to left.
         const std::int32_t move_amount = static_cast<std::int32_t>(common::sign_extended<26, std::uint32_t>(imm24 << 2));
 
-        const vaddress addr_to_jump = session_->crr_block_->current_address() + move_amount + 8;
-        const vaddress next_instr_addr = session_->crr_block_->current_address() + 4;
+        const vaddress addr_to_jump = crr_block_->current_address() + move_amount + 8;
+        const vaddress next_instr_addr = crr_block_->current_address() + 4;
 
-        session_->crr_block_->link_type_ = TRANSLATED_BLOCK_LINK_KNOWN;
-        session_->crr_block_->link_to_ = addr_to_jump;
-
-        common::armgen::arm_reg lr_reg_mapped = session_->reg_supplier_.map(common::armgen::R14,
+        common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
                 ALLOCATE_FLAG_DIRTY);
 
-        session_->big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
+        big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
+        emit_direct_link(addr_to_jump);
+
         return false;
     }
 }
