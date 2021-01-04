@@ -66,11 +66,11 @@
     <string name="pref_general_debugging_system_calls_checkbox_title">Chiamate di sistema</string>
     <string name="pref_general_debugging_ait_checkbox_title">Tempistica IPC accurata</string>
     <string name="pref_general_debugging_ait_tooltip_msg">Migliora l\'accuratezza del sistema, ma potrebbe causare rallentamenti.</string>
-    <string name="pref_general_debugging_enable_btrace_checkbox_title">Abilita Traccia B</string>
+    <string name="pref_general_debugging_enable_btrace_checkbox_title">Abilita B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Abilita il tracciamento del kernel usato. Calo di prestazioni se attivo.</string>
     <string name="pref_general_utilities_string">Utilità</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Nascondi il cursore del mouse quando passa su uno schermo emulato</string>
-    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Utile quando colleghi un tasto al tuo mouse e il gioco/app ha un cursore incorporato.\nPer rendere visibile il cursore del mouse, tieni premuto il tasto ALT.</string>
+    <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Utile quando assegni un tasto al tuo mouse e il gioco/app ha un cursore incorporato.\nPer rendere visibile il cursore del mouse, tieni premuto il tasto ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Abilita filtro Nearest Neighbor</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Questo filtro è applicato dopo l\'elaborazione della schermata successiva.</string>
     <string name="pref_general_utilities_integer_scaling_msg">Attiva integer scaling</string>
@@ -111,7 +111,7 @@
     <string name="packages_file_lists_string">Elenco file</string>
     <string name="packages_no_package_select_msg">Nessun pacchetto selezionato.</string>
     <string name="packages_remove_confirmation_msg">Sei sicuro di voler rimuovere il pacchetto ({})?</string>
-    <string name="packages_package_vendor_string">Venditore</string>
+    <string name="packages_package_vendor_string">Produttore</string>
     <string name="packages_package_drive_located_string">Drive</string>
     <string name="installer_text_popup_title">Popup dell\'installazione</string>
     <string name="installer_language_choose_title">Scegli la lingua per questo pacchetto</string>
@@ -138,7 +138,7 @@
     <string name="touchscreen_disabled_msg">Alcune delle combinazioni di tasti sono associate ai pulsanti del mouse. Quindi il touchscreen emulato è stato disabilitato.</string>
     <string name="touchscreen_disabled_note_str">Nota</string>
     <string name="touchscreen_disabled_note_msg">Il touchscreen può essere riabilitato ricombinando i pulsanti del mouse con i tasti della tastiera.</string>
-    <string name="credits_title">EKA2L1 - EMULATORE DI SYMBIAN OS</string>
+    <string name="credits_title">EKA2L1 - EMULATORE SYMBIAN</string>
     <string name="credits_copyright_text">(C) 2018- Team di EKA2L1.</string>
     <string name="credits_thanks_text">Grazie per aver usato l\'emulatore!</string>
     <string name="credits_main_developer_text">Sviluppatori principali:</string>
