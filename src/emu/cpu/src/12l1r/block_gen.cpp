@@ -271,6 +271,10 @@ namespace eka2l1::arm::r12l1 {
         df(cstate);
     }
 
+    static void dashixiong_print_debug(const std::uint32_t val) {
+        LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
+    }
+
     void dashixiong_block::emit_cycles_count_add(const std::uint32_t num) {
         LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
         SUBI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, num, ALWAYS_SCRATCH2);
@@ -288,11 +292,18 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_pc_write_exchange(common::armgen::arm_reg pc_reg) {
         MOV(ALWAYS_SCRATCH1, pc_reg);
+        BIC(CPSR_REG, CPSR_REG, CPSR_BIT_POS);      // Clear T flag
+
         TST(ALWAYS_SCRATCH1, 1);
 
         set_cc(common::CC_NEQ);
-        ORI2R(CPSR_REG, CPSR_REG, 0x20, ALWAYS_SCRATCH1);
-        BIC(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, 1);
+
+        {
+            // Well we switch to thumb mode, so set T flag
+            ORI2R(CPSR_REG, CPSR_REG, 0x20, ALWAYS_SCRATCH1);
+            BIC(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, 1);
+        }
+
         set_cc(common::CC_AL);
 
         STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
@@ -331,10 +342,6 @@ namespace eka2l1::arm::r12l1 {
         emit_cycles_count_add(block->inst_count_);
 
         B(dispatch_ent_for_block_);
-    }
-
-    static void dashixiong_print_debug(const std::uint32_t val) {
-        LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
     }
 
     enum thumb_instruction_size {
@@ -409,6 +416,12 @@ namespace eka2l1::arm::r12l1 {
 
         // Load CPSR into register
         LDR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
+
+        if (arm_visitor) {
+            arm_visitor->emit_cpsr_restore_nzcv();
+        } else {
+            thumb_visitor->emit_cpsr_restore_nzcv();
+        }
 
         // Emit the check if we should go outside and stop running
         // Check if we are out of cycles, set the should_break if we should stop and

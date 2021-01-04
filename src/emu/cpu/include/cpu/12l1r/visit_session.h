@@ -41,6 +41,7 @@ namespace eka2l1::arm::r12l1 {
         common::cc_flags last_flag_;
 
 		bool cpsr_modified_;				///< Has the CPSR been modified since last time the flag is updated.
+		bool cpsr_ever_updated_;			///< Has the CPSR ever been updated during the translation.
 		bool is_cond_block_;
 
     public:
@@ -75,6 +76,7 @@ namespace eka2l1::arm::r12l1 {
 
 		void cpsr_nzcv_changed() {
 			cpsr_modified_ = true;
+			cpsr_ever_updated_ = true;
 		}
     };
 }

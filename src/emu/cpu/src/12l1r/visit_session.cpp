@@ -128,6 +128,7 @@ namespace eka2l1::arm::r12l1 {
     visit_session::visit_session(dashixiong_block *bro, translated_block *crr)
         : last_flag_(common::CC_AL)
         , cpsr_modified_(false)
+        , cpsr_ever_updated_(false)
         , is_cond_block_(false)
         , big_block_(bro)
         , crr_block_(crr)
@@ -216,8 +217,9 @@ namespace eka2l1::arm::r12l1 {
         // Filter out to only NZCV, and clear emulator nzcv bits
         big_block_->ANDI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, NZCV_FLAG_MASK, ALWAYS_SCRATCH2);
         big_block_->ANDI2R(CPSR_REG, CPSR_REG, ~NZCV_FLAG_MASK, ALWAYS_SCRATCH2);
-
         big_block_->ORR(CPSR_REG, CPSR_REG, ALWAYS_SCRATCH1);
+
+        cpsr_ever_updated_ = false;
     }
 
     void visit_session::emit_cpsr_restore_nzcv() {
@@ -576,10 +578,13 @@ namespace eka2l1::arm::r12l1 {
 
     void visit_session::sync_registers() {
         reg_supplier_.flush_all();
+
         big_block_->emit_pc_flush(crr_block_->current_address());
+        big_block_->emit_cpsr_save();
     }
 
     bool visit_session::emit_undefined_instruction_handler() {
+        emit_cpsr_update_nzcv();
         sync_registers();
 
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
@@ -587,24 +592,33 @@ namespace eka2l1::arm::r12l1 {
         big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address());
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
+
+        emit_cpsr_restore_nzcv();
         emit_return_to_dispatch();
 
         return false;
     }
 
     bool visit_session::emit_system_call_handler(const std::uint32_t n) {
+        emit_cpsr_update_nzcv();
         sync_registers();
 
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, n);
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_system_call);
+        emit_cpsr_restore_nzcv();
+
         return true;
     }
 
     void visit_session::emit_direct_link(const vaddress addr) {
         // Flush all registers in this
         reg_supplier_.flush_all();
+
+        if (cpsr_ever_updated_) {
+            emit_cpsr_update_nzcv();
+        }
 
         block_link &link = crr_block_->get_or_add_link(addr);
         link.needs_.push_back(big_block_->B());
@@ -613,6 +627,10 @@ namespace eka2l1::arm::r12l1 {
     void visit_session::emit_return_to_dispatch() {
         // Flush all registers in this
         reg_supplier_.flush_all();
+
+        if (cpsr_ever_updated_) {
+            emit_cpsr_update_nzcv();
+        }
 
         // Remember this branch
         ret_to_dispatch_branches_.push_back(big_block_->B());
