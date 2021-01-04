@@ -31,7 +31,7 @@
     <string name="debugger_menu_pause_item_name">Pausa</string>
     <string name="debugger_menu_stop_item_name">Interrompi</string>
     <string name="debugger_menu_restart_item_name">Riavvia</string>
-    <string name="debugger_menu_disassembler_item_name">Disassemblatore</string>
+    <string name="debugger_menu_disassembler_item_name">Disassembler</string>
     <string name="debugger_menu_objects_item_name">Oggetti</string>
     <string name="debugger_menu_services_item_name">Servizi</string>
     <string name="debugger_menu_objects_submenu_threads_item_name">Processi</string>
