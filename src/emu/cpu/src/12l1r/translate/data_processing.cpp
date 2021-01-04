@@ -19,6 +19,7 @@
 
 #include <cpu/12l1r/common.h>
 #include <cpu/12l1r/arm_visitor.h>
+#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/block_gen.h>
 #include <cpu/12l1r/visit_session.h>
 
@@ -223,6 +224,18 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 rhs(rhs_base_mapped, shift, imm5);
 
         big_block_->CMP(lhs_mapped, rhs);
+        cpsr_nzcv_changed();
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_MOV_imm(reg_index d, std::uint8_t imm8) {
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 imm_op(imm8, 0);
+
+        big_block_->MOVS(dest_mapped, imm_op);
         cpsr_nzcv_changed();
 
         return true;
