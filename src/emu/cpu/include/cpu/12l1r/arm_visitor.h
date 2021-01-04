@@ -48,6 +48,8 @@ namespace eka2l1::arm::r12l1 {
         // Branch
         bool arm_B(common::cc_flags cond, std::uint32_t imm24);
         bool arm_BL(common::cc_flags cond, std::uint32_t imm24);
+        bool arm_BX(common::cc_flags cond, reg_index m);
+        bool arm_BLX_reg(common::cc_flags cond, reg_index m);
 
         // Load/store
         bool arm_LDM(common::cc_flags cond, bool W, reg_index n, reg_list list);

@@ -285,14 +285,15 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::emit_pc_write_exchange(common::armgen::arm_reg pc_reg) {
-        TST(pc_reg, 1);
+        MOV(ALWAYS_SCRATCH1, pc_reg);
+        TST(ALWAYS_SCRATCH1, 1);
 
         set_cc(common::CC_NEQ);
         ANDI2R(CPSR_REG, CPSR_REG, 0x20, ALWAYS_SCRATCH1);
-        BIC(pc_reg, pc_reg, 1);
+        BIC(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, 1);
         set_cc(common::CC_AL);
 
-        STR(pc_reg, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
     }
 
     void dashixiong_block::emit_block_links(translated_block* block) {

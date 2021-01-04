@@ -54,4 +54,35 @@ namespace eka2l1::arm::r12l1 {
 
         return false;
     }
+
+    bool arm_translate_visitor::arm_BX(common::cc_flags cond, reg_index m) {
+        set_cond(cond);
+
+        common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
+
+        big_block_->emit_pc_write_exchange(jump_reg_mapped);
+        emit_return_to_dispatch();
+
+        return false;
+    }
+
+    bool arm_translate_visitor::arm_BLX_reg(common::cc_flags cond, reg_index m) {
+        set_cond(cond);
+
+        common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
+
+        const vaddress next_instr_addr = crr_block_->current_address() + 4;
+
+        common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
+                ALLOCATE_FLAG_DIRTY);
+
+        big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
+        big_block_->emit_pc_write_exchange(jump_reg_mapped);
+
+        emit_return_to_dispatch();
+
+        return false;
+    }
 }
