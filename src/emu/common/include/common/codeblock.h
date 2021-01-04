@@ -6,6 +6,7 @@
 
 #include <cstdint>
 
+#include <common/algorithm.h>
 #include <common/log.h>
 #include <common/virtualmem.h>
 
@@ -119,7 +120,9 @@ namespace eka2l1::common {
             // OK, we're done. Re-protect the memory we touched.
             if (is_memory_wx_exclusive() && writeStart_ != nullptr) {
                 const uint8_t *end = get_code_ptr();
-                change_protection(writeStart_, end - writeStart_, prot_read_exec);
+                change_protection(writeStart_, common::align(end - writeStart_, get_host_page_size()),
+                        prot_read_exec);
+
                 writeStart_ = nullptr;
             }
         }
