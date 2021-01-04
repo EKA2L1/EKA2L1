@@ -169,7 +169,7 @@ namespace eka2l1::arm::r12l1 {
     static constexpr std::uint32_t CPAGE_SIZE = 1 << CPAGE_BITS;
     static constexpr std::uint32_t CPAGE_MASK = CPAGE_SIZE - 1;
 
-    static void dashixiong_print_22debug(const std::uint32_t val) {
+    void dashixiong_print_22debug(const std::uint32_t val) {
         LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
     }
 
@@ -224,6 +224,13 @@ namespace eka2l1::arm::r12l1 {
 
     void visit_session::emit_cpsr_restore_nzcv() {
         big_block_->_MSR(true, false, CPSR_REG);
+    }
+
+    void visit_session::emit_reg_link_exchange(common::armgen::arm_reg reg) {
+        if (cpsr_ever_updated_)
+            emit_cpsr_update_nzcv();
+
+        big_block_->emit_pc_write_exchange(reg);
     }
 
     bool visit_session::emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
@@ -577,10 +584,10 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void visit_session::sync_registers() {
-        reg_supplier_.flush_all();
-
-        big_block_->emit_pc_flush(crr_block_->current_address());
         big_block_->emit_cpsr_save();
+        big_block_->emit_pc_flush(crr_block_->current_address());
+
+        reg_supplier_.flush_all();
     }
 
     bool visit_session::emit_undefined_instruction_handler() {
@@ -627,10 +634,6 @@ namespace eka2l1::arm::r12l1 {
     void visit_session::emit_return_to_dispatch() {
         // Flush all registers in this
         reg_supplier_.flush_all();
-
-        if (cpsr_ever_updated_) {
-            emit_cpsr_update_nzcv();
-        }
 
         // Remember this branch
         ret_to_dispatch_branches_.push_back(big_block_->B());

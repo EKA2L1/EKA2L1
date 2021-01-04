@@ -56,6 +56,10 @@ namespace eka2l1::arm::r12l1 {
         });
     }
 
+    static void dashixiong_print_debug(const std::uint32_t val) {
+        LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
+    }
+
     void dashixiong_block::assemble_control_funcs() {
         begin_write();
         dispatch_func_ = get_writeable_code_ptr();
@@ -68,6 +72,9 @@ namespace eka2l1::arm::r12l1 {
         MOV(CORE_STATE_REG, common::armgen::R0);
 
         dispatch_ent_for_block_ = get_code_ptr();
+
+        MOV(common::armgen::R0, CORE_STATE_REG);
+        quick_call_function(ALWAYS_SCRATCH2, dashixiong_print_debug);
 
         LDR(common::armgen::R1, CORE_STATE_REG, offsetof(core_state, should_break_));
         CMPI2R(common::armgen::R1, 0, common::armgen::R12);
@@ -271,10 +278,6 @@ namespace eka2l1::arm::r12l1 {
         df(cstate);
     }
 
-    static void dashixiong_print_debug(const std::uint32_t val) {
-        LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
-    }
-
     void dashixiong_block::emit_cycles_count_add(const std::uint32_t num) {
         LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
         SUBI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, num, ALWAYS_SCRATCH2);
@@ -292,7 +295,7 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_pc_write_exchange(common::armgen::arm_reg pc_reg) {
         MOV(ALWAYS_SCRATCH1, pc_reg);
-        BIC(CPSR_REG, CPSR_REG, CPSR_BIT_POS);      // Clear T flag
+        BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);      // Clear T flag
 
         TST(ALWAYS_SCRATCH1, 1);
 
@@ -340,6 +343,11 @@ namespace eka2l1::arm::r12l1 {
     void dashixiong_block::emit_return_to_dispatch(translated_block *block) {
         emit_cpsr_save();
         emit_cycles_count_add(block->inst_count_);
+
+        PUSH(4, common::armgen::R0, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+        MOV(common::armgen::R0, CORE_STATE_REG);
+        quick_call_function(ALWAYS_SCRATCH2, dashixiong_print_debug);
+        POP(4, common::armgen::R0, common::armgen::R1, common::armgen::R2, common::armgen::R3);
 
         B(dispatch_ent_for_block_);
     }
@@ -395,10 +403,17 @@ namespace eka2l1::arm::r12l1 {
             return nullptr;
         }
 
+        if (addr == 0x503C281A) {
+            LOG_TRACE(CPU_12L1R, "Stop!");
+        }
+
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 		
 		block->thumb_ = is_thumb;
+
+        LOG_TRACE(CPU_12L1R, "Compiling new block PC=0x{:X}, host=0x{:X}, thumb={}", addr,
+            reinterpret_cast<std::uint32_t>(block->translated_code_), is_thumb);
 
         std::unique_ptr<arm_translate_visitor> arm_visitor = nullptr;
         std::unique_ptr<thumb_translate_visitor> thumb_visitor = nullptr;

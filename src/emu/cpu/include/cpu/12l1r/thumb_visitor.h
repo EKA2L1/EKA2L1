@@ -41,6 +41,8 @@ namespace eka2l1::arm::r12l1 {
         // thumb32
         bool thumb32_BL_imm(std::uint16_t hi, std::uint16_t lo);
         bool thumb32_BLX_imm(std::uint16_t hi, std::uint16_t lo);
+        bool thumb16_BX(reg_index m);
+
         bool thumb32_UDF();
     };
 }

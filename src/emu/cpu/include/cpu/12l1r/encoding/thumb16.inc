@@ -85,7 +85,7 @@ INST(thumb16_POP,            "POP",                      "1011110Pxxxxxxxx"), //
 //INST(thumb16_LDMIA,          "LDMIA",                    "11001nnnxxxxxxxx"),
 
 // Branch instructions
-//INST(thumb16_BX,             "BX",                       "010001110mmmm000"), // v4T
+INST(thumb16_BX,             "BX",                       "010001110mmmm000"), // v4T
 //INST(thumb16_BLX_reg,        "BLX (reg)",                "010001111mmmm000"), // v5T
 //INST(thumb16_CBZ_CBNZ,       "CBZ/CBNZ",                 "1011o0i1iiiiinnn"), // v6T2
 //INST(thumb16_UDF,            "UDF",                      "11011110--------"),

@@ -33,6 +33,8 @@ namespace eka2l1::arm::r12l1 {
         return static_cast<common::armgen::arm_reg>(common::armgen::R0 + idx);
     }
 
+    void dashixiong_print_22debug(const std::uint32_t val);
+
     class visit_session {
 	protected:
         std::vector<common::armgen::fixup_branch> ret_to_dispatch_branches_;
@@ -68,6 +70,7 @@ namespace eka2l1::arm::r12l1 {
 		void emit_cpsr_restore_nzcv();
 
 		void emit_direct_link(const vaddress addr);
+		void emit_reg_link_exchange(common::armgen::arm_reg reg);
 		void emit_return_to_dispatch();
 
 		void sync_registers();

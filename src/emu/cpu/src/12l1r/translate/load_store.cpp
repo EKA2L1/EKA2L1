@@ -48,7 +48,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (dest_real == common::armgen::R15) {
             // Write the result
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             emit_return_to_dispatch();
 
             reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
@@ -79,7 +79,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (dest_real == common::armgen::R15) {
             // Write the result
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
 
             emit_return_to_dispatch();
@@ -111,7 +111,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (dest_real == common::armgen::R15) {
             // Write the result
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
 
             emit_return_to_dispatch();
@@ -141,7 +141,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (dest_real == common::armgen::R15) {
             // Write the result
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
 
             emit_return_to_dispatch();
@@ -174,7 +174,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (dest_real == common::armgen::R15) {
             // Write the result
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
 
             emit_return_to_dispatch();

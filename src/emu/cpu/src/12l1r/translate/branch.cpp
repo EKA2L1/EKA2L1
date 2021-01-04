@@ -63,7 +63,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
-        big_block_->emit_pc_write_exchange(jump_reg_mapped);
+        emit_reg_link_exchange(jump_reg_mapped);
         emit_return_to_dispatch();
 
         return false;
@@ -82,8 +82,18 @@ namespace eka2l1::arm::r12l1 {
                 ALLOCATE_FLAG_DIRTY);
 
         big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
-        big_block_->emit_pc_write_exchange(jump_reg_mapped);
+        emit_reg_link_exchange(jump_reg_mapped);
 
+        emit_return_to_dispatch();
+
+        return false;
+    }
+
+    bool thumb_translate_visitor::thumb16_BX(reg_index m) {
+        common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
+
+        emit_reg_link_exchange(jump_reg_mapped);
         emit_return_to_dispatch();
 
         return false;
@@ -119,7 +129,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (!(to_jump & 1)) {
             // Exchange mode, this time it seems to be ARM, so clear T flag
-            big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_BIT_POS);
+            big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
         }
 
         emit_direct_link(to_jump & (~1));

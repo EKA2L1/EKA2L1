@@ -60,7 +60,7 @@ namespace eka2l1::arm::r12l1 {
 
         const common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
         if (dest_real == common::armgen::R15) {
-            big_block_->emit_pc_write_exchange(source_mapped);
+            emit_reg_link_exchange(source_mapped);
             return false;
         }
 
@@ -100,7 +100,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             return false;
         }
 
@@ -131,7 +131,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             return false;
         }
 
@@ -159,7 +159,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             return false;
         }
 
@@ -190,7 +190,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            big_block_->emit_pc_write_exchange(dest_mapped);
+            emit_reg_link_exchange(dest_mapped);
             return false;
         }
 
@@ -236,6 +236,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 imm_op(imm8, 0);
 
         big_block_->MOVS(dest_mapped, imm_op);
+
         cpsr_nzcv_changed();
 
         return true;
