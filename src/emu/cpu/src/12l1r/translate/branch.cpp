@@ -19,6 +19,7 @@
 
 #include <cpu/12l1r/common.h>
 #include <cpu/12l1r/arm_visitor.h>
+#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/block_gen.h>
 #include <cpu/12l1r/visit_session.h>
 
@@ -44,7 +45,8 @@ namespace eka2l1::arm::r12l1 {
         const std::int32_t move_amount = static_cast<std::int32_t>(common::sign_extended<26, std::uint32_t>(imm24 << 2));
 
         const vaddress addr_to_jump = crr_block_->current_address() + move_amount + 8;
-        const vaddress next_instr_addr = crr_block_->current_address() + 4;
+        const vaddress next_instr_addr = crr_block_->current_address() + 4 +
+                (crr_block_->thumb_ ? 1 : 0);
 
         common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
                 ALLOCATE_FLAG_DIRTY);
@@ -73,7 +75,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
-        const vaddress next_instr_addr = crr_block_->current_address() + 4;
+        const vaddress next_instr_addr = crr_block_->current_address() + 4 +
+                (crr_block_->thumb_ ? 1 : 0);
 
         common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
                 ALLOCATE_FLAG_DIRTY);
@@ -83,6 +86,43 @@ namespace eka2l1::arm::r12l1 {
 
         emit_return_to_dispatch();
 
+        return false;
+    }
+
+    bool thumb_translate_visitor::thumb32_BL_imm(std::uint16_t hi, std::uint16_t lo) {
+        // Hi and lo are both 11 bits.
+        const std::uint32_t offset = common::sign_extended<23, std::uint32_t>(
+            ((lo & 0b11111111111) | ((hi & 0b11111111111) << 11)) << 1) + 4;
+        const vaddress to_remember = (crr_block_->current_address() + 4) | 1;
+
+        common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
+            ALLOCATE_FLAG_DIRTY);
+
+        big_block_->MOVI2R(lr_reg_mapped, to_remember);
+        emit_direct_link(crr_block_->current_address() + offset);
+
+        return false;
+    }
+
+    bool thumb_translate_visitor::thumb32_BLX_imm(std::uint16_t hi, std::uint16_t lo) {
+        // Hi and lo are both 11 bits.
+        const std::uint32_t offset = common::sign_extended<23, std::uint32_t>(
+            ((lo & 0b11111111111) | ((hi & 0b11111111111) << 11)) << 1);
+
+        const vaddress to_jump = crr_block_->current_address() + offset;
+        const vaddress to_remember = (crr_block_->current_address() + 4) | 1;
+
+        common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
+            ALLOCATE_FLAG_DIRTY);
+
+        big_block_->MOVI2R(lr_reg_mapped, to_remember);
+
+        if (!(to_jump & 1)) {
+            // Exchange mode, this time it seems to be ARM, so clear T flag
+            big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_BIT_POS);
+        }
+
+        emit_direct_link(to_jump & (~1));
         return false;
     }
 }

@@ -24,8 +24,6 @@
 #include <common/armemitter.h>
 
 namespace eka2l1::arm::r12l1 {
-    class visit_session;
-
     class arm_translate_visitor: public visit_session {
     public:
         using instruction_return_type = bool;

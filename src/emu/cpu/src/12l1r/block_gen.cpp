@@ -23,8 +23,10 @@
 
 #include <cpu/12l1r/encoding/arm.h>
 #include <cpu/12l1r/encoding/thumb16.h>
+#include <cpu/12l1r/encoding/thumb32.h>
 #include <cpu/12l1r/visit_session.h>
 #include <cpu/12l1r/arm_visitor.h>
+#include <cpu/12l1r/thumb_visitor.h>
 
 #include <common/log.h>
 #include <common/algorithm.h>
@@ -289,7 +291,7 @@ namespace eka2l1::arm::r12l1 {
         TST(ALWAYS_SCRATCH1, 1);
 
         set_cc(common::CC_NEQ);
-        ANDI2R(CPSR_REG, CPSR_REG, 0x20, ALWAYS_SCRATCH1);
+        ORI2R(CPSR_REG, CPSR_REG, 0x20, ALWAYS_SCRATCH1);
         BIC(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, 1);
         set_cc(common::CC_AL);
 
@@ -335,6 +337,51 @@ namespace eka2l1::arm::r12l1 {
         LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
     }
 
+    enum thumb_instruction_size {
+        THUMB_INST_SIZE_THUMB16 = 2,
+        THUMB_INST_SIZE_THUMB32 = 4
+    };
+
+    // Thumb reading code is from Dynarmic, adjusted to this codebase. Thank you!
+    static bool is_thumb16(const std::uint16_t first_part) {
+        return (first_part & 0xF800) <= 0xE800;
+    }
+
+    static std::optional<std::pair<std::uint32_t, thumb_instruction_size>> read_thumb_instruction(const vaddress arm_pc,
+        memory_operation_32bit_func &read_code) {
+        std::uint32_t first_part = 0;
+        if (!read_code(arm_pc & 0xFFFFFFFC, &first_part)) {
+            return std::nullopt;
+        }
+
+        if ((arm_pc & 0x2) != 0) {
+            first_part >>= 16;
+        }
+
+        first_part &= 0xFFFF;
+
+        if (is_thumb16(static_cast<std::uint16_t>(first_part))) {
+            // 16-bit thumb instruction
+            return std::make_pair(first_part, THUMB_INST_SIZE_THUMB16);
+        }
+
+        // 32-bit thumb instruction
+        // These always start with 0b11101, 0b11110 or 0b11111.
+        std::uint32_t second_part = 0;
+        if (!read_code((arm_pc + 2) & 0xFFFFFFFC, &second_part)) {
+            return std::nullopt;
+        }
+
+        if (((arm_pc + 2) & 0x2) != 0) {
+            second_part >>= 16;
+        }
+
+        second_part &= 0xFFFF;
+
+        return std::make_pair(static_cast<std::uint32_t>((first_part << 16) | second_part),
+             THUMB_INST_SIZE_THUMB32);
+    }
+
     translated_block *dashixiong_block::compile_new_block(core_state *state, const vaddress addr) {
         translated_block *block = start_new_block(addr, state->current_aid_);
         if (!block) {
@@ -347,9 +394,12 @@ namespace eka2l1::arm::r12l1 {
 		block->thumb_ = is_thumb;
 
         std::unique_ptr<arm_translate_visitor> arm_visitor = nullptr;
+        std::unique_ptr<thumb_translate_visitor> thumb_visitor = nullptr;
 
         if (!is_thumb) {
             arm_visitor = std::make_unique<arm_translate_visitor>(this, block);
+        } else {
+            thumb_visitor = std::make_unique<thumb_translate_visitor>(this, block);
         }
 
         begin_write();
@@ -377,32 +427,59 @@ namespace eka2l1::arm::r12l1 {
         }
 
         set_cc(common::CC_AL);
+
         std::uint32_t inst = 0;
 
         do {
-            if (!callbacks_.code_read_(addr + block->size_, &inst)) {
-                LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
-                return nullptr;
-            }
+            std::uint32_t inst_size = 0;
 
             if (is_thumb) {
-                LOG_ERROR(CPU_12L1R, "Missing thumb handler!");
-                //auto launch = decode_thumb16(static_cast<std::uint16_t>(inst));
+                auto read_res = read_thumb_instruction(addr + block->size_, callbacks_.code_read_);
+
+                if (!read_res) {
+                    LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
+                    return nullptr;
+                }
+
+                inst = read_res->first;
+
+                if (read_res->second == THUMB_INST_SIZE_THUMB32) {
+                    if (auto decoder = decode_thumb32<thumb_translate_visitor>(inst)) {
+                        should_continue = decoder->get().call(*thumb_visitor, inst);
+                    } else {
+                        should_continue = thumb_visitor->thumb32_UDF();
+                    }
+                } else {
+                    if (auto decoder = decode_thumb16<thumb_translate_visitor>(static_cast<std::uint16_t>(inst))) {
+                        should_continue = decoder->get().call(*thumb_visitor, inst);
+                    } else {
+                        should_continue = thumb_visitor->thumb16_UDF();
+                    }
+                }
+
+                inst_size = read_res->second;
             } else {
+                if (!callbacks_.code_read_(addr + block->size_, &inst)) {
+                    LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
+                    return nullptr;
+                }
+
                 // ARM decoding. NEON -> VFP -> ARM
                 if (auto decoder = decode_arm<arm_translate_visitor>(inst)) {
                     should_continue = decoder->get().call(*arm_visitor, inst);
                 } else {
                     should_continue = arm_visitor->arm_UDF();
                 }
+
+                inst_size = 4;
             }
 
-            block->size_ += (is_thumb) ? 2 : 4;
+            block->size_ += inst_size;
             block->inst_count_++;
         } while (should_continue);
 
         if (is_thumb) {
-            LOG_ERROR(CPU_12L1R, "No Thumb handler!");
+            thumb_visitor->finalize();
         } else {
             arm_visitor->finalize();
         }

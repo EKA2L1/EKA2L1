@@ -26,6 +26,7 @@ set(SOURCE_12L1R
         src/12l1r/core_state.cpp
         src/12l1r/reg_cache.cpp
         src/12l1r/reg_loc.cpp
+        src/12l1r/thumb_visitor.cpp
         src/12l1r/visit_session.cpp)
 
 add_library(cpu

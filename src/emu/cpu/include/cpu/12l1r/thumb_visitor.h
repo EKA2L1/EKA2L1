@@ -19,6 +19,25 @@
 
 #pragma once
 
+#include <cpu/12l1r/common.h>
+#include <cpu/12l1r/visit_session.h>
+#include <common/armemitter.h>
+
 namespace eka2l1::arm::r12l1 {
-    
+    class thumb_translate_visitor: public visit_session {
+    public:
+        using instruction_return_type = bool;
+
+        explicit thumb_translate_visitor(dashixiong_block *bro, translated_block *crr);
+
+        bool thumb16_UDF();
+
+        bool thumb16_PUSH(bool m, reg_list reg_list);
+        bool thumb16_POP(bool p, reg_list reg_list);
+
+        // thumb32
+        bool thumb32_BL_imm(std::uint16_t hi, std::uint16_t lo);
+        bool thumb32_BLX_imm(std::uint16_t hi, std::uint16_t lo);
+        bool thumb32_UDF();
+    };
 }

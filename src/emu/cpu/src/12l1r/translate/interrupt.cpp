@@ -18,6 +18,7 @@
  */
 
 #include <cpu/12l1r/arm_visitor.h>
+#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/visit_session.h>
 
 namespace eka2l1::arm::r12l1 {
@@ -27,6 +28,16 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_UDF() {
+        set_cond(common::CC_AL);
+        return emit_undefined_instruction_handler();
+    }
+
+    bool thumb_translate_visitor::thumb16_UDF() {
+        set_cond(common::CC_AL);
+        return emit_undefined_instruction_handler();
+    }
+
+    bool thumb_translate_visitor::thumb32_UDF() {
         set_cond(common::CC_AL);
         return emit_undefined_instruction_handler();
     }
