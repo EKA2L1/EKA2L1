@@ -137,7 +137,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
 
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                : reg_supplier_.map(dest_real, 0);
 
         common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, W ? ALLOCATE_FLAG_DIRTY : 0);
         common::armgen::operand2 adv(imm12);
@@ -170,7 +170,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg offset_base_real = reg_index_to_gpr(m);
 
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                : reg_supplier_.map(dest_real, 0);
 
         common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, W ? ALLOCATE_FLAG_DIRTY : 0);
         common::armgen::arm_reg offset_base_mapped = reg_supplier_.map(offset_base_real, 0);

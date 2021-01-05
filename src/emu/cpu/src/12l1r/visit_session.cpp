@@ -237,7 +237,7 @@ namespace eka2l1::arm::r12l1 {
                 common::armgen::arm_reg mapped = common::armgen::INVALID_REG;
 
                 if (last_reg != 15)
-                    mapped = reg_supplier_.map(orig, (load) ? 0 : ALLOCATE_FLAG_DIRTY);
+                    mapped = reg_supplier_.map(orig, (load ? ALLOCATE_FLAG_DIRTY : 0));
 
                 if ((last_reg != 15) && (mapped == common::armgen::INVALID_REG)) {
                     LOG_ERROR(CPU_12L1R, "Can't map another register for some reason...");
