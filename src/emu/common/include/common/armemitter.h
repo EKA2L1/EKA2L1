@@ -150,14 +150,6 @@ namespace eka2l1::common::armgen {
         INVALID_REG = 0xFFFFFFFF
     };
 
-    enum shift_type {
-        ST_LSL = 0,
-        ST_ASL = 0,
-        ST_LSR = 1,
-        ST_ASR = 2,
-        ST_ROR = 3,
-        ST_RRX = 4
-    };
     enum integer_size {
         I_I8 = 0,
         I_I16,

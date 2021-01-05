@@ -20,9 +20,27 @@
 #include <cpu/12l1r/common.h>
 #include <common/bytes.h>
 
+#include <cassert>
+
 namespace eka2l1::arm::r12l1 {
     std::uint32_t expand_arm_imm(std::uint8_t imm, const int rot) {
         return common::rotate_right<std::uint32_t>(static_cast<std::uint32_t>(imm), rot * 2);
+    }
+
+    std::uint32_t expand_arm_shift(std::uint32_t imm, common::armgen::shift_type shift, const std::uint8_t imm5) {
+        switch (shift) {
+        case common::armgen::ST_LSL:
+            return imm << imm5;
+
+        case common::armgen::ST_LSR:
+            return imm >> (imm5 ? imm5 : 32);
+
+        default:
+            assert(false);
+            break;
+        }
+
+        return 0;
     }
 }
 

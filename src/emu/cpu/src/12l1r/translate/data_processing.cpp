@@ -71,6 +71,14 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real,
                 ALLOCATE_FLAG_DIRTY);
 
+        if (source_real == common::armgen::R15) {
+            assert(!S);
+            big_block_->MOVI2R(dest_mapped, expand_arm_shift(crr_block_->current_address() + 8,
+                shift, imm5));
+
+            return true;
+        }
+
         common::armgen::operand2 imm_op(source_mapped, shift, imm5);
 
         if (S) {
@@ -94,9 +102,17 @@ namespace eka2l1::arm::r12l1 {
 
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        if (op1_real == common::armgen::R15) {
+            assert(!S);
+            big_block_->MOV(dest_mapped, crr_block_->current_address() + 8 + expand_arm_imm(imm8, rotate));
+
+            return true;
+        }
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
         if (S) {
             big_block_->ADDS(dest_mapped, op1_mapped, op2);
@@ -157,9 +173,17 @@ namespace eka2l1::arm::r12l1 {
 
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        if (op1_real == common::armgen::R15) {
+            assert(!S);
+            big_block_->MOV(dest_mapped, crr_block_->current_address() + 8 - expand_arm_imm(imm8, rotate));
+
+            return true;
+        }
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
         if (S) {
             big_block_->SUBS(dest_mapped, op1_mapped, op2);
