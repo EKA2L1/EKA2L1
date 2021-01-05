@@ -395,10 +395,6 @@ namespace eka2l1::arm::r12l1 {
             return nullptr;
         }
 
-        if (addr == 0x503C281A) {
-            LOG_TRACE(CPU_12L1R, "Stop!");
-        }
-
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 		
@@ -447,7 +443,6 @@ namespace eka2l1::arm::r12l1 {
         }
 
         set_cc(common::CC_AL);
-
         std::uint32_t inst = 0;
 
         do {

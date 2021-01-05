@@ -27,7 +27,9 @@
 
 namespace eka2l1::arm::r12l1 {
     bool arm_translate_visitor::arm_B(common::cc_flags cond, std::uint32_t imm24) {
-        set_cond(cond);
+        if (!condition_passed(cond, true)) {
+            return false;
+        }
 
         // Amount of move is in word unit, so shift two to left.
         const std::int32_t move_amount = static_cast<std::int32_t>(common::sign_extended<26, std::uint32_t>(imm24 << 2));
@@ -39,7 +41,9 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_BL(common::cc_flags cond, std::uint32_t imm24) {
-        set_cond(cond);
+        if (!condition_passed(cond, true)) {
+            return false;
+        }
 
         // Amount of move is in word unit, so shift two to left.
         const std::int32_t move_amount = static_cast<std::int32_t>(common::sign_extended<26, std::uint32_t>(imm24 << 2));
@@ -58,7 +62,9 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_BX(common::cc_flags cond, reg_index m) {
-        set_cond(cond);
+        if (!condition_passed(cond, true)) {
+            return false;
+        }
 
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
@@ -70,7 +76,9 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_BLX_reg(common::cc_flags cond, reg_index m) {
-        set_cond(cond);
+        if (!condition_passed(cond, true)) {
+            return false;
+        }
 
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);

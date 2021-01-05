@@ -52,7 +52,7 @@ namespace eka2l1::arm {
         big_block_->enter_dispatch(&jit_state_);
 
         // Set it again
-        jit_state_.should_break_ = false;
+        jit_state_.should_break_ = true;
     }
     
     void r12l1_core::stop() {

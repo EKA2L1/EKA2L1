@@ -25,6 +25,7 @@ namespace eka2l1::common {
         CC_GT, ///< Signed greater than
         CC_LE, ///< Signed less than or equal
         CC_AL, ///< Always (unconditional) 14
+        CC_NV, ///< Never
         CC_HS = CC_CS, ///< Alias of CC_CS  Unsigned higher or same
         CC_LO = CC_CC, ///< Alias of CC_CC  Unsigned lower
     };

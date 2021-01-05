@@ -37,14 +37,13 @@ namespace eka2l1::arm::r12l1 {
 
     class visit_session {
 	protected:
-        std::vector<common::armgen::fixup_branch> ret_to_dispatch_branches_;
-        common::armgen::fixup_branch end_of_cond_;
+        common::cc_flags flag_;
+        common::armgen::fixup_branch end_target_;
 
-        common::cc_flags last_flag_;
+		bool cpsr_modified_;
+		bool cpsr_ever_updated_;
 
-		bool cpsr_modified_;				///< Has the CPSR been modified since last time the flag is updated.
-		bool cpsr_ever_updated_;			///< Has the CPSR ever been updated during the translation.
-		bool is_cond_block_;
+		std::vector<common::armgen::fixup_branch> ret_to_dispatch_branches_;
 
     public:
         translated_block *crr_block_;
@@ -53,7 +52,7 @@ namespace eka2l1::arm::r12l1 {
         reg_cache reg_supplier_;
 
         explicit visit_session(dashixiong_block *bro, translated_block *crr);
-        void set_cond(common::cc_flags cc, const bool cpsr_will_ruin = false);
+        bool condition_passed(common::cc_flags cc, const bool force_end_last = false);
 		
         common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base, const bool for_read);
 

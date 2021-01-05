@@ -25,73 +25,6 @@
 #include <common/bytes.h>
 
 namespace eka2l1::arm::r12l1 {
-    static common::cc_flags get_negative_cc_flags(common::cc_flags cc) {
-        common::cc_flags neg_cc = cc;
-        switch (neg_cc) {
-            case common::CC_EQ:
-                neg_cc = common::CC_NEQ;
-                break;
-
-            case common::CC_NEQ:
-                neg_cc = common::CC_EQ;
-                break;
-
-            case common::CC_CS:
-                neg_cc = common::CC_CC;
-                break;
-
-            case common::CC_CC:
-                neg_cc = common::CC_CS;
-                break;
-
-            case common::CC_MI:
-                neg_cc = common::CC_PL;
-                break;
-
-            case common::CC_PL:
-                neg_cc = common::CC_MI;
-                break;
-
-            case common::CC_VS:
-                neg_cc = common::CC_VC;
-                break;
-
-            case common::CC_VC:
-                neg_cc = common::CC_VS;
-                break;
-
-            case common::CC_HI:
-                neg_cc = common::CC_LS;
-                break;
-
-            case common::CC_LS:
-                neg_cc = common::CC_HI;
-                break;
-
-            case common::CC_GE:
-                neg_cc = common::CC_LT;
-                break;
-
-            case common::CC_LT:
-                neg_cc = common::CC_GE;
-                break;
-
-            case common::CC_GT:
-                neg_cc = common::CC_LE;
-                break;
-
-            case common::CC_LE:
-                neg_cc = common::CC_GT;
-                break;
-
-            default:
-                assert(false);
-                break;
-        }
-
-        return neg_cc;
-    }
-
     static void dashixiong_raise_exception_router(dashixiong_block *self, const exception_type exc,
                                                   const std::uint32_t data) {
         self->raise_guest_exception(exc, data);
@@ -126,42 +59,40 @@ namespace eka2l1::arm::r12l1 {
     }
 
     visit_session::visit_session(dashixiong_block *bro, translated_block *crr)
-        : last_flag_(common::CC_AL)
+        : flag_(common::CC_NV)
         , cpsr_modified_(false)
         , cpsr_ever_updated_(false)
-        , is_cond_block_(false)
         , big_block_(bro)
         , crr_block_(crr)
         , reg_supplier_(bro) {
     }
-    
-    void visit_session::set_cond(common::cc_flags cc, const bool cpsr_will_ruin) {
-        if ((cc == last_flag_) && (!cpsr_modified_) && ((!cpsr_will_ruin) || (cpsr_will_ruin && !is_cond_block_))) {
-            return;
-        }
 
-        if (cc != common::CC_AL) {
+    bool visit_session::condition_passed(common::cc_flags cc, const bool force_end_last) {
+        if (force_end_last) {
             reg_supplier_.flush_all();
+
+            if (flag_ != common::CC_AL) {
+                big_block_->set_jump_target(end_target_);
+            }
+
+            flag_ = common::CC_NV;
         }
 
-        if ((last_flag_ != common::CC_AL) && is_cond_block_) {
-            big_block_->set_jump_target(end_of_cond_);
+        if (flag_ == common::CC_NV) {
+            flag_ = cc;
+
+            // Emit jump to next block if condition not satisfied.
+            if (flag_ != common::CC_AL)
+                end_target_ = big_block_->B_CC(common::invert_cond(cc));
+
+            return true;
         }
 
-        if (cpsr_will_ruin) {
-            big_block_->set_cc(common::CC_AL);
-            is_cond_block_ = true;
-        } else {
-            big_block_->set_cc(cc);
+        if ((cpsr_modified_ && flag_ != common::CC_AL) || (cc != flag_)) {
+            return false;
         }
 
-        if ((cc != common::CC_AL) && cpsr_will_ruin) {
-            common::cc_flags neg_cc = get_negative_cc_flags(cc);
-            end_of_cond_ = big_block_->B_CC(neg_cc);
-        }
-
-        last_flag_ = cc;
-        cpsr_modified_ = false;
+        return true;
     }
 
     // Should we hardcode this??? Hmmm
@@ -640,13 +571,15 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void visit_session::finalize() {
-        if ((last_flag_ != common::CC_AL) && is_cond_block_) {
-            big_block_->set_jump_target(end_of_cond_);
+        reg_supplier_.flush_all();
+
+        if (flag_ != common::CC_AL) {
+            big_block_->set_jump_target(end_target_);
         }
 
         big_block_->set_cc(common::CC_AL);
 
-        if (last_flag_ != common::CC_AL) {
+        if (flag_ != common::CC_AL) {
             // Add branching to next block, making it highest priority
             crr_block_->get_or_add_link(crr_block_->current_address(), 0);
         }

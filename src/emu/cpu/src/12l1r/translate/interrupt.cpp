@@ -23,22 +23,22 @@
 
 namespace eka2l1::arm::r12l1 {
     bool arm_translate_visitor::arm_SVC(common::cc_flags cond, const std::uint32_t n) {
-        set_cond(cond);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_system_call_handler(n);
     }
 
     bool arm_translate_visitor::arm_UDF() {
-        set_cond(common::CC_AL);
         return emit_undefined_instruction_handler();
     }
 
     bool thumb_translate_visitor::thumb16_UDF() {
-        set_cond(common::CC_AL);
         return emit_undefined_instruction_handler();
     }
 
     bool thumb_translate_visitor::thumb32_UDF() {
-        set_cond(common::CC_AL);
         return emit_undefined_instruction_handler();
     }
 }

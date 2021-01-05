@@ -27,7 +27,9 @@
 
 namespace eka2l1::arm::r12l1 {
     bool arm_translate_visitor::arm_LDR_lit(common::cc_flags cond, bool U, reg_index t, std::uint16_t imm12) {
-        set_cond(cond);
+        if (!condition_passed(cond)) {
+            return false;
+        }
 
         // Aligning down
         const std::uint32_t base = common::align(crr_block_->current_address(), 4, 0) + 8;
@@ -61,7 +63,9 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_LDR_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index d, std::uint16_t imm12) {
-        set_cond(cond);
+        if (!condition_passed(cond)) {
+            return false;
+        }
 
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
@@ -91,7 +95,9 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_LDR_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index d, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
-        set_cond(cond);
+        if (!condition_passed(cond)) {
+            return false;
+        }
 
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
@@ -123,7 +129,9 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_STR_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint16_t imm12) {
-        set_cond(cond);
+        if (!condition_passed(cond)) {
+            return false;
+        }
 
         common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
@@ -153,7 +161,9 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_STR_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
-        set_cond(cond);
+        if (!condition_passed(cond)) {
+            return false;
+        }
 
         common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
@@ -186,42 +196,66 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_LDM(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, true, false, W, true);
     }
 
     bool arm_translate_visitor::arm_LDMDA(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, false, false, W, true);
     }
 
     bool arm_translate_visitor::arm_LDMDB(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, false, true, W, true);
     }
 
     bool arm_translate_visitor::arm_LDMIB(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, true, true, W, true);
     }
 
     bool arm_translate_visitor::arm_STM(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, true, false, W, false);
     }
 
     bool arm_translate_visitor::arm_STMDA(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, false, false, W, false);
     }
     
     bool arm_translate_visitor::arm_STMDB(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, false, true, W, false);
     }
 
     bool arm_translate_visitor::arm_STMIB(common::cc_flags cond, bool W, reg_index n, reg_list list) {
-        set_cond(cond, true);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, true, true, W, false);
     }
 

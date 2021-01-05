@@ -22,5 +22,6 @@
 namespace eka2l1::arm::r12l1 {
     thumb_translate_visitor::thumb_translate_visitor(dashixiong_block *bro, translated_block *crr)
         : visit_session(bro, crr) {
+        flag_ = common::CC_AL;
     }
 }
