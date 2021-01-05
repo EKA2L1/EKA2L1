@@ -45,7 +45,8 @@ namespace eka2l1::arm::r12l1 {
     }
 
     reg_cache::reg_cache(dashixiong_block *bblock)
-        : big_block_(bblock) {
+        : time_(0)
+        , big_block_(bblock) {
     }
 
     bool reg_cache::load_gpr_to_host(common::armgen::arm_reg dest_reg, common::armgen::arm_reg source_guest_reg) {
@@ -118,7 +119,7 @@ namespace eka2l1::arm::r12l1 {
 
         info.curr_location_ = GUEST_REGISTER_LOC_MEM;
         info.host_reg_ = common::armgen::INVALID_REG;
-        info.use_count_ = 0;
+        info.last_use_ = 0;
         info.imm_ = 0;
     }
 
@@ -157,7 +158,7 @@ namespace eka2l1::arm::r12l1 {
             guest_gpr_infos_[guest_reg].curr_location_ = GUEST_REGISTER_LOC_MEM;
             guest_gpr_infos_[guest_reg].host_reg_ = common::armgen::INVALID_REG;
             guest_gpr_infos_[guest_reg].imm_ = 0;
-            guest_gpr_infos_[guest_reg].use_count_ = 0;
+            guest_gpr_infos_[guest_reg].last_use_ = 0;
 
             host_gpr_infos_[mee].guest_mapped_reg_ = common::armgen::INVALID_REG;
         }
@@ -183,6 +184,8 @@ namespace eka2l1::arm::r12l1 {
             LOG_ERROR(CPU_12L1R, "FPR register allocation currently not supported!");
             return common::armgen::INVALID_REG;
         }
+
+        time_++;
 
         const common::armgen::arm_reg *allocation_order = nullptr;
         std::size_t allocation_order_length = 0;
@@ -226,13 +229,13 @@ namespace eka2l1::arm::r12l1 {
         // There seems to be nothing unfortunately
         // Try to discard some host register being used by a guest arm register
         // This already exclude the PC register
-        std::uint32_t least_use_count = 0xFFFFFFFF;
+        std::uint32_t least_use = 0xFFFFFFFF;
         std::uint32_t least_use_index = 0xFFFFFFFF;
 
         for (std::uint32_t i = 0; i < 15; i++) {
-            if ((least_use_count > guest_rf_arr[i].use_count_) && (guest_rf_arr[i].curr_location_
+            if ((least_use > guest_rf_arr[i].last_use_) && (guest_rf_arr[i].curr_location_
                 == GUEST_REGISTER_LOC_HOST_REG) && !guest_rf_arr[i].spill_lock_) {
-                least_use_count = guest_rf_arr[i].use_count_;
+                least_use = guest_rf_arr[i].last_use_;
                 least_use_index = i;
             }
         }
@@ -293,7 +296,7 @@ namespace eka2l1::arm::r12l1 {
             guest_rf_arr[mee].curr_location_ = GUEST_REGISTER_LOC_HOST_REG;
 
             // Increase the use count
-            guest_rf_arr[mee].use_count_++;
+            guest_rf_arr[mee].last_use_ = time_;
             return host_reg;
         }
 
@@ -318,7 +321,7 @@ namespace eka2l1::arm::r12l1 {
 
         guest_rf_arr[mee].curr_location_ = GUEST_REGISTER_LOC_HOST_REG;
         guest_rf_arr[mee].host_reg_ = new_baby;
-        guest_rf_arr[mee].use_count_ = 0;
+        guest_rf_arr[mee].last_use_ = time_;
 
         return new_baby;
     }

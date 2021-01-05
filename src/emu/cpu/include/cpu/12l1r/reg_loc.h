@@ -39,7 +39,7 @@ namespace eka2l1::arm::r12l1 {
         };
 
         bool spill_lock_;
-        std::uint32_t use_count_;
+        std::uint32_t last_use_;
 
         explicit guest_register_info();
     };

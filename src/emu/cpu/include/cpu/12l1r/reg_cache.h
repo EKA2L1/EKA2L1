@@ -51,6 +51,7 @@ namespace eka2l1::arm::r12l1 {
         guest_register_info guest_gpr_infos_[GUEST_GPRS_LENGTH];
         guest_register_info guest_fpr_infos_[GUEST_FPRS_LENGTH];
 
+        std::uint32_t time_;
         dashixiong_block *big_block_;
 
     protected:

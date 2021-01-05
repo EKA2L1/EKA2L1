@@ -24,7 +24,7 @@ namespace eka2l1::arm::r12l1 {
         : curr_location_(GUEST_REGISTER_LOC_MEM)
         , imm_(0)
         , spill_lock_(false)
-        , use_count_(0) {
+        , last_use_(0) {
 
     }
 
