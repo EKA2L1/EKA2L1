@@ -549,13 +549,17 @@ namespace eka2l1::arm::r12l1 {
         emit_cpsr_update_nzcv();
         sync_registers();
 
+        big_block_->emit_pc_flush(crr_block_->current_address() + (crr_block_->thumb_ ? 2 : 4));
+
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, n);
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_system_call);
-        emit_cpsr_restore_nzcv();
 
-        return true;
+        emit_cpsr_restore_nzcv();
+        emit_return_to_dispatch();
+
+        return false;
     }
 
     void visit_session::emit_direct_link(const vaddress addr) {
@@ -587,7 +591,7 @@ namespace eka2l1::arm::r12l1 {
 
         big_block_->set_cc(common::CC_AL);
 
-        if (flag_ != common::CC_AL) {
+        if ((flag_ != common::CC_AL) || (crr_block_->links_.empty() && ret_to_dispatch_branches_.empty())) {
             // Add branching to next block, making it highest priority
             crr_block_->get_or_add_link(crr_block_->current_address(), 0);
         }
