@@ -158,13 +158,7 @@ namespace eka2l1::arm::r12l1 {
 
                         link.linked_ = false;
                     } else {
-                        temp_emitter.B(request_link_block->translated_code_);
-
-                        // Write reserved code
-                        temp_emitter.NOP();
-                        temp_emitter.NOP();
-                        temp_emitter.NOP();
-
+                        temp_emitter.B(dest->translated_code_);
                         link.linked_ = true;
                     }
 
@@ -325,14 +319,20 @@ namespace eka2l1::arm::r12l1 {
             if (auto link_block = get_block(link.to_, block->address_space())) {
                 B(link_block->translated_code_);
 
-                // Reserved
+                // Reserved two words for unlink?
                 NOP();
                 NOP();
-                NOP();
+
+                link.linked_ = true;
             } else {
                 // Jump to dispatch for now :((
                 emit_pc_flush(link.to_);
                 B(dispatch_ent_for_block_);
+
+                // Maybe reserved a word for unlink?
+                NOP();
+
+                link.linked_ = false;
             }
         }
     }

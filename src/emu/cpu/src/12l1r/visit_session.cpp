@@ -68,7 +68,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool visit_session::condition_passed(common::cc_flags cc, const bool force_end_last) {
-        if (force_end_last) {
+        if (force_end_last && (flag_ != common::CC_NV)) {
             reg_supplier_.flush_all();
 
             if (flag_ != common::CC_AL) {
