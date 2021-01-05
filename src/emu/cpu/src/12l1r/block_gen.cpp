@@ -73,9 +73,6 @@ namespace eka2l1::arm::r12l1 {
 
         dispatch_ent_for_block_ = get_code_ptr();
 
-        MOV(common::armgen::R0, CORE_STATE_REG);
-        quick_call_function(ALWAYS_SCRATCH2, dashixiong_print_debug);
-
         LDR(common::armgen::R1, CORE_STATE_REG, offsetof(core_state, should_break_));
         CMPI2R(common::armgen::R1, 0, common::armgen::R12);
 
@@ -344,11 +341,6 @@ namespace eka2l1::arm::r12l1 {
         emit_cpsr_save();
         emit_cycles_count_add(block->inst_count_);
 
-        PUSH(4, common::armgen::R0, common::armgen::R1, common::armgen::R2, common::armgen::R3);
-        MOV(common::armgen::R0, CORE_STATE_REG);
-        quick_call_function(ALWAYS_SCRATCH2, dashixiong_print_debug);
-        POP(4, common::armgen::R0, common::armgen::R1, common::armgen::R2, common::armgen::R3);
-
         B(dispatch_ent_for_block_);
     }
 
@@ -451,7 +443,7 @@ namespace eka2l1::arm::r12l1 {
             MOVI2R(ALWAYS_SCRATCH1, 1);
             STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, should_break_));
 
-            B(dispatch_func_);
+            B(dispatch_ent_for_block_);
         }
 
         set_cc(common::CC_AL);
