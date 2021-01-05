@@ -166,7 +166,7 @@ namespace eka2l1::arm::r12l1 {
 
     bool visit_session::emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
         bool before, bool writeback, bool load) {
-        std::uint8_t last_reg = 0;
+        std::int8_t last_reg = 0;
         emit_cpsr_update_nzcv();
 
         // This register must persits until this routine end.
@@ -222,8 +222,14 @@ namespace eka2l1::arm::r12l1 {
         bool is_first = true;
         bool block_cont = true;
 
+        if (load) {
+            last_reg = 0;
+        } else {
+            last_reg = 15;
+        }
+
         // Map to register as much registers as possible, then flush them all to load/store
-        while (last_reg <= 15) {
+        while (load ? (last_reg <= 15) : (last_reg >= 0)) {
             if (common::bit(guest_list, last_reg)) {
                 const common::armgen::arm_reg orig = static_cast<common::armgen::arm_reg>(
                     common::armgen::R0 + last_reg);
@@ -233,7 +239,7 @@ namespace eka2l1::arm::r12l1 {
                 if (last_reg != 15)
                     mapped = reg_supplier_.map(orig, (load) ? 0 : ALLOCATE_FLAG_DIRTY);
 
-                if (mapped == common::armgen::INVALID_REG) {
+                if ((last_reg != 15) && (mapped == common::armgen::INVALID_REG)) {
                     LOG_ERROR(CPU_12L1R, "Can't map another register for some reason...");
                     assert(false);
                 } else {
@@ -267,7 +273,6 @@ namespace eka2l1::arm::r12l1 {
                     auto lookup_good = big_block_->B_CC(common::CC_NEQ);
 
                     big_block_->MOV(common::armgen::R0, guest_addr_reg);
-
                     big_block_->PUSH(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
 
                     big_block_->MOV(common::armgen::R1, common::armgen::R0);
@@ -279,7 +284,7 @@ namespace eka2l1::arm::r12l1 {
 
                         if (last_reg == 15) {
                             // Store to lastest PC
-                            big_block_->emit_pc_write_exchange(ALWAYS_SCRATCH1);
+                            big_block_->emit_pc_write_exchange(common::armgen::R0);
                             block_cont = false;
                         } else {
                             big_block_->MOV(mapped, common::armgen::R0);
@@ -328,7 +333,10 @@ namespace eka2l1::arm::r12l1 {
                 }
             }
 
-            last_reg++;
+            if (load)
+                last_reg++;
+            else
+                last_reg--;
         }
 
         reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
