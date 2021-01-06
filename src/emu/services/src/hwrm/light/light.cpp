@@ -93,7 +93,7 @@ namespace eka2l1::epoc {
         default:
             LOG_ERROR(SERVICE_HWRM, "Unimplemented operation for light resource: {} ({})", light_op_to_string(ctx.msg->function),
                 ctx.msg->function);
-            break;
+            ctx.complete(epoc::error_none);
         }
     }
 }
