@@ -30,9 +30,9 @@ INST(arm_ADD_reg,       "ADD (reg)",           "cccc0000100Snnnnddddvvvvvrr0mmmm
 //INST(arm_AND_imm,       "AND (imm)",           "cccc0010000Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_AND_reg,       "AND (reg)",           "cccc0000000Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_AND_rsr,       "AND (rsr)",           "cccc0000000Snnnnddddssss0rr1mmmm") // all
-//INST(arm_BIC_imm,       "BIC (imm)",           "cccc0011110Snnnnddddrrrrvvvvvvvv") // all
-//INST(arm_BIC_reg,       "BIC (reg)",           "cccc0001110Snnnnddddvvvvvrr0mmmm") // all
-//INST(arm_BIC_rsr,       "BIC (rsr)",           "cccc0001110Snnnnddddssss0rr1mmmm") // all
+INST(arm_BIC_imm,       "BIC (imm)",           "cccc0011110Snnnnddddrrrrvvvvvvvv") // all
+INST(arm_BIC_reg,       "BIC (reg)",           "cccc0001110Snnnnddddvvvvvrr0mmmm") // all
+INST(arm_BIC_rsr,       "BIC (rsr)",           "cccc0001110Snnnnddddssss0rr1mmmm") // all
 //INST(arm_CMN_imm,       "CMN (imm)",           "cccc00110111nnnn0000rrrrvvvvvvvv") // all
 //INST(arm_CMN_reg,       "CMN (reg)",           "cccc00010111nnnn0000vvvvvrr0mmmm") // all
 //INST(arm_CMN_rsr,       "CMN (rsr)",           "cccc00010111nnnn0000ssss0rr1mmmm") // all
