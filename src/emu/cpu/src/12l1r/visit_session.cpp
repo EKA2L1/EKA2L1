@@ -224,14 +224,16 @@ namespace eka2l1::arm::r12l1 {
         bool is_first = true;
         bool block_cont = true;
 
-        if (load) {
+        // Registers are stored on the stack in numerical order, with the lowest numbered register at the lowest address
+        // This is according to the manual of ARM :P So when it's decrement mode, we iterates from bottom to top.
+        if (add) {
             last_reg = 0;
         } else {
             last_reg = 15;
         }
 
         // Map to register as much registers as possible, then flush them all to load/store
-        while (load ? (last_reg <= 15) : (last_reg >= 0)) {
+        while (add ? (last_reg <= 15) : (last_reg >= 0)) {
             if (common::bit(guest_list, last_reg)) {
                 const common::armgen::arm_reg orig = static_cast<common::armgen::arm_reg>(
                     common::armgen::R0 + last_reg);
@@ -335,7 +337,7 @@ namespace eka2l1::arm::r12l1 {
                 }
             }
 
-            if (load)
+            if (add)
                 last_reg++;
             else
                 last_reg--;
