@@ -34,6 +34,7 @@ namespace eka2l1::arm::r12l1 {
 
         // Data processing
         bool thumb16_MOV_imm(reg_index d, std::uint8_t imm8);
+        bool thumb16_CMP_imm(reg_index n, std::uint8_t imm8);
 
         bool thumb16_PUSH(bool m, reg_list reg_list);
         bool thumb16_POP(bool p, reg_list reg_list);

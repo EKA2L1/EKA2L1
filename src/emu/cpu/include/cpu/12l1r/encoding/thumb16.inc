@@ -7,7 +7,7 @@
 //INST(thumb16_ADD_imm_t1,     "ADD (imm, T1)",            "0001110vvvnnnddd"),
 //INST(thumb16_SUB_imm_t1,     "SUB (imm, T1)",            "0001111vvvnnnddd"),
 INST(thumb16_MOV_imm,        "MOV (imm)",                "00100dddvvvvvvvv"),
-//INST(thumb16_CMP_imm,        "CMP (imm)",                "00101nnnvvvvvvvv"),
+INST(thumb16_CMP_imm,        "CMP (imm)",                "00101nnnvvvvvvvv"),
 //INST(thumb16_ADD_imm_t2,     "ADD (imm, T2)",            "00110dddvvvvvvvv"),
 //INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
 

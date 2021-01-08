@@ -569,9 +569,19 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 imm_op(imm8, 0);
 
         big_block_->MOVS(dest_mapped, imm_op);
-
         cpsr_nzcv_changed();
 
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_CMP_imm(reg_index n, std::uint8_t imm8) {
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::operand2 rhs(imm8, 0);
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        big_block_->CMP(lhs_mapped, rhs);
+
+        cpsr_nzcv_changed();
         return true;
     }
 }
