@@ -37,6 +37,7 @@ namespace eka2l1::arm::r12l1 {
 
         bool thumb16_PUSH(bool m, reg_list reg_list);
         bool thumb16_POP(bool p, reg_list reg_list);
+        bool thumb16_LDR_literal(reg_index t, std::uint8_t imm8);
 
         // thumb32
         bool thumb32_BL_imm(std::uint16_t hi, std::uint16_t lo);

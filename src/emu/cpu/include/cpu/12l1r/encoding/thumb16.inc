@@ -35,7 +35,7 @@ INST(thumb16_MOV_imm,        "MOV (imm)",                "00100dddvvvvvvvv"),
 //INST(thumb16_MOV_reg,        "MOV (reg)",                "01000110Dmmmmddd"), // v4T, Low regs: v6
 
 // Store/Load single data item instructions
-//INST(thumb16_LDR_literal,    "LDR (literal)",            "01001tttvvvvvvvv"),
+INST(thumb16_LDR_literal,    "LDR (literal)",            "01001tttvvvvvvvv"),
 //INST(thumb16_STR_reg,        "STR (reg)",                "0101000mmmnnnttt"),
 //INST(thumb16_STRH_reg,       "STRH (reg)",               "0101001mmmnnnttt"),
 //INST(thumb16_STRB_reg,       "STRB (reg)",               "0101010mmmnnnttt"),
