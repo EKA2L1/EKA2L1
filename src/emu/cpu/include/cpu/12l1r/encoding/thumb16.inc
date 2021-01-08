@@ -4,12 +4,12 @@
 //INST(thumb16_ASR_imm,        "ASR (imm)",                "00010vvvvvmmmddd"),
 //INST(thumb16_ADD_reg_t1,     "ADD (reg, T1)",            "0001100mmmnnnddd"),
 //INST(thumb16_SUB_reg,        "SUB (reg)",                "0001101mmmnnnddd"),
-//INST(thumb16_ADD_imm_t1,     "ADD (imm, T1)",            "0001110vvvnnnddd"),
-//INST(thumb16_SUB_imm_t1,     "SUB (imm, T1)",            "0001111vvvnnnddd"),
+INST(thumb16_ADD_imm_t1,     "ADD (imm, T1)",            "0001110vvvnnnddd"),
+INST(thumb16_SUB_imm_t1,     "SUB (imm, T1)",            "0001111vvvnnnddd"),
 INST(thumb16_MOV_imm,        "MOV (imm)",                "00100dddvvvvvvvv"),
 INST(thumb16_CMP_imm,        "CMP (imm)",                "00101nnnvvvvvvvv"),
-//INST(thumb16_ADD_imm_t2,     "ADD (imm, T2)",            "00110dddvvvvvvvv"),
-//INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
+INST(thumb16_ADD_imm_t2,     "ADD (imm, T2)",            "00110dddvvvvvvvv"),
+INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
 
 // Data-processing instructions
 //INST(thumb16_AND_reg,        "AND (reg)",                "0100000000mmmddd"),
@@ -55,9 +55,9 @@ INST(thumb16_LDR_imm_t1,     "LDR (imm, T1)",            "01101vvvvvnnnttt"),
 
 // Generate relative address instructions
 //INST(thumb16_ADR,            "ADR",                      "10100dddvvvvvvvv"),
-//INST(thumb16_ADD_sp_t1,      "ADD (SP plus imm, T1)",    "10101dddvvvvvvvv"),
-//INST(thumb16_ADD_sp_t2,      "ADD (SP plus imm, T2)",    "101100000vvvvvvv"), // v4T
-//INST(thumb16_SUB_sp,         "SUB (SP minus imm)",       "101100001vvvvvvv"), // v4T
+INST(thumb16_ADD_sp_t1,      "ADD (SP plus imm, T1)",    "10101dddvvvvvvvv"),
+INST(thumb16_ADD_sp_t2,      "ADD (SP plus imm, T2)",    "101100000vvvvvvv"), // v4T
+INST(thumb16_SUB_sp,         "SUB (SP minus imm)",       "101100001vvvvvvv"), // v4T
 
 // Hint instructions
 //INST(thumb16_NOP,            "NOP",                      "1011111100000000"), // v6T2
