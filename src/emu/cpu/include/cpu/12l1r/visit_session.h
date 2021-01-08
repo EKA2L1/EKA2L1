@@ -43,6 +43,8 @@ namespace eka2l1::arm::r12l1 {
 		bool cpsr_modified_;
 		bool cpsr_ever_updated_;
 
+		bool cond_failed_;
+
 		std::vector<common::armgen::fixup_branch> ret_to_dispatch_branches_;
 
     public:

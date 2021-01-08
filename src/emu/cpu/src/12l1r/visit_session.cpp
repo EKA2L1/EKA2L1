@@ -62,6 +62,7 @@ namespace eka2l1::arm::r12l1 {
         : flag_(common::CC_NV)
         , cpsr_modified_(false)
         , cpsr_ever_updated_(false)
+        , cond_failed_(false)
         , big_block_(bro)
         , crr_block_(crr)
         , reg_supplier_(bro) {
@@ -88,7 +89,8 @@ namespace eka2l1::arm::r12l1 {
             return true;
         }
 
-        if ((cpsr_modified_ && flag_ != common::CC_AL) || (cc != flag_)) {
+        if ((cpsr_modified_ && (flag_ != common::CC_AL)) || (cc != flag_)) {
+            cond_failed_ = true;
             return false;
         }
 
@@ -585,15 +587,21 @@ namespace eka2l1::arm::r12l1 {
     void visit_session::finalize() {
         reg_supplier_.flush_all();
 
+        if (cpsr_ever_updated_)
+            emit_cpsr_update_nzcv();
+
         if (flag_ != common::CC_AL) {
             big_block_->set_jump_target(end_target_);
         }
 
         big_block_->set_cc(common::CC_AL);
 
-        if ((flag_ != common::CC_AL) || (crr_block_->links_.empty() && ret_to_dispatch_branches_.empty())) {
+        const bool no_offered_link = (crr_block_->links_.empty() && ret_to_dispatch_branches_.empty());
+
+        if ((flag_ != common::CC_AL) || no_offered_link) {
             // Add branching to next block, making it highest priority
-            crr_block_->get_or_add_link(crr_block_->current_address(), 0);
+            crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ?
+                crr_block_->last_inst_size_ : 0), 0);
         }
 
         // Emit links
