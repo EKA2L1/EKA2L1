@@ -397,7 +397,7 @@ namespace eka2l1::arm::r12l1 {
 
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
-		
+
 		block->thumb_ = is_thumb;
 
         LOG_TRACE(CPU_12L1R, "Compiling new block PC=0x{:X}, host=0x{:X}, thumb={}", addr,
@@ -490,6 +490,7 @@ namespace eka2l1::arm::r12l1 {
             }
 
             block->size_ += inst_size;
+            block->last_inst_size_ = inst_size;
             block->inst_count_++;
         } while (should_continue);
 

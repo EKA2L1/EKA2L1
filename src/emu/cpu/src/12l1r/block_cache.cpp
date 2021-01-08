@@ -55,6 +55,7 @@ namespace eka2l1::arm::r12l1 {
     translated_block::translated_block(const vaddress start_addr, const asid aid)
         : hash_(0)
         , size_(0)
+        , last_inst_size_(0)
         , translated_code_(nullptr)
         , translated_size_(0)
         , inst_count_(0)

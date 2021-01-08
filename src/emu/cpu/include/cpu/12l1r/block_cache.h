@@ -44,7 +44,9 @@ namespace eka2l1::arm::r12l1 {
         using hash_type = std::uint64_t;
 
         hash_type hash_;
+
         std::uint32_t size_;
+        std::uint32_t last_inst_size_;
 
         const std::uint8_t *translated_code_;
 
