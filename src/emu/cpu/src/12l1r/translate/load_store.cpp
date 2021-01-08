@@ -133,26 +133,21 @@ namespace eka2l1::arm::r12l1 {
             return false;
         }
 
-        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
 
-        common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
-                : reg_supplier_.map(dest_real, 0);
+        common::armgen::arm_reg source_mapped = (source_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
+                : reg_supplier_.map(source_real, 0);
+
+        if (source_real == common::armgen::R15) {
+            big_block_->MOVI2R(source_mapped, crr_block_->current_address() + 8);
+        }
 
         common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, W ? ALLOCATE_FLAG_DIRTY : 0);
         common::armgen::operand2 adv(imm12);
 
-        if (!emit_memory_access(dest_mapped, base_mapped, adv, 32, false, U, P, W, false)) {
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 32, false, U, P, W, false)) {
             LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
-            return false;
-        }
-
-        if (dest_real == common::armgen::R15) {
-            // Write the result
-            emit_reg_link_exchange(dest_mapped);
-            reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
-
-            emit_return_to_dispatch();
             return false;
         }
 
@@ -165,29 +160,24 @@ namespace eka2l1::arm::r12l1 {
             return false;
         }
 
-        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
         common::armgen::arm_reg offset_base_real = reg_index_to_gpr(m);
 
-        common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
-                : reg_supplier_.map(dest_real, 0);
+        common::armgen::arm_reg source_mapped = (source_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
+                : reg_supplier_.map(source_real, 0);
+
+        if (source_real == common::armgen::R15) {
+            big_block_->MOVI2R(source_mapped, crr_block_->current_address() + 8);
+        }
 
         common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, W ? ALLOCATE_FLAG_DIRTY : 0);
         common::armgen::arm_reg offset_base_mapped = reg_supplier_.map(offset_base_real, 0);
 
         common::armgen::operand2 adv(offset_base_mapped, shift, imm5);
 
-        if (!emit_memory_access(dest_mapped, base_mapped, adv, 32, false, U, P, W, false)) {
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 32, false, U, P, W, false)) {
             LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
-            return false;
-        }
-
-        if (dest_real == common::armgen::R15) {
-            // Write the result
-            emit_reg_link_exchange(dest_mapped);
-            reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
-
-            emit_return_to_dispatch();
             return false;
         }
 
@@ -313,7 +303,61 @@ namespace eka2l1::arm::r12l1 {
             return false;
         }
 
-        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_LDR_imm_t2(reg_index t, std::uint8_t imm8) {
+        // Can't write to PC, no need precaution! :D
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(common::armgen::R13, 0);
+
+        // Rotation takes 15 steps to shift two bits left.
+        // Each rotation shift two bits to right side.
+        common::armgen::operand2 adv(imm8, 15);
+
+        if (!emit_memory_access(dest_mapped, base_mapped, adv, 32, false, true, true, false, true)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_STR_imm_t1(std::uint8_t imm5, reg_index n, reg_index t) {
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, 0);
+
+        // This imm5 when shifted becomes 7bit, which still fits well in 8-bit region so no worries.
+        common::armgen::operand2 adv(imm5 << 2);
+
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 32, false, true, true, false, false)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_STR_imm_t2(reg_index t, std::uint8_t imm8) {
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+
+        common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(common::armgen::R13, 0);
+
+        // Rotation takes 15 steps to shift two bits left.
+        // Each rotation shift two bits to right side.
+        common::armgen::operand2 adv(imm8, 15);
+
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 32, false, true, true, false, false)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
         return true;
     }
 }
