@@ -91,6 +91,73 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_MVN_imm(common::cc_flags cond, bool S, reg_index d, int rotate, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+
+        if (dest_real == common::armgen::R15) {
+            LOG_TRACE(CPU_12L1R, "Undefined behaviour mvn to r15, todo!");
+            emit_undefined_instruction_handler();
+
+            return false;
+        }
+
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real,
+            ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 imm_op(imm8, static_cast<std::uint8_t>(rotate));
+
+        if (S) {
+            big_block_->MVNS(dest_mapped, imm_op);
+            cpsr_nzcv_changed();
+        } else {
+            big_block_->MVN(dest_mapped, imm_op);
+        }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_MVN_reg(common::cc_flags cond, bool S, reg_index d, std::uint8_t imm5,
+        common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
+        if (dest_real == common::armgen::R15) {
+            emit_reg_link_exchange(source_mapped);
+            return false;
+        }
+
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real,
+            ALLOCATE_FLAG_DIRTY);
+
+        if (source_real == common::armgen::R15) {
+            assert(!S);
+            big_block_->MOVI2R(dest_mapped, ~expand_arm_shift(crr_block_->current_address() + 8,
+                shift, imm5));
+
+            return true;
+        }
+
+        common::armgen::operand2 imm_op(source_mapped, shift, imm5);
+
+        if (S) {
+            big_block_->MVNS(dest_mapped, imm_op);
+            cpsr_nzcv_changed();
+        } else {
+            big_block_->MVN(dest_mapped, imm_op);
+        }
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_ADD_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
         int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
