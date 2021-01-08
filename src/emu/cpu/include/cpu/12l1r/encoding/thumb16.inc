@@ -90,5 +90,5 @@ INST(thumb16_BX,             "BX",                       "010001110mmmm000"), //
 //INST(thumb16_CBZ_CBNZ,       "CBZ/CBNZ",                 "1011o0i1iiiiinnn"), // v6T2
 //INST(thumb16_UDF,            "UDF",                      "11011110--------"),
 //INST(thumb16_SVC,            "SVC",                      "11011111xxxxxxxx"),
-//INST(thumb16_B_t1,           "B (T1)",                   "1101ccccvvvvvvvv"),
+INST(thumb16_B_t1,           "B (T1)",                   "1101ccccvvvvvvvv"),
 //INST(thumb16_B_t2,           "B (T2)",                   "11100vvvvvvvvvvv"),

@@ -41,6 +41,9 @@ namespace eka2l1::arm::r12l1 {
         bool thumb16_LDR_literal(reg_index t, std::uint8_t imm8);
         bool thumb16_LDR_imm_t1(std::uint8_t imm5, reg_index n, reg_index t);
 
+        // Branch
+        bool thumb16_B_t1(common::cc_flags cond, std::uint8_t imm8);
+
         // thumb32
         bool thumb32_BL_imm(std::uint16_t hi, std::uint16_t lo);
         bool thumb32_BLX_imm(std::uint16_t hi, std::uint16_t lo);

@@ -143,4 +143,18 @@ namespace eka2l1::arm::r12l1 {
         emit_direct_link(to_jump & (~1));
         return false;
     }
+
+    bool thumb_translate_visitor::thumb16_B_t1(common::cc_flags cond, std::uint8_t imm8) {
+        if (!condition_passed(cond, true)) {
+            return false;
+        }
+
+        // Amount of move is in word unit, so shift two to left.
+        const std::int32_t move_amount = static_cast<std::int32_t>(common::sign_extended<9, std::uint32_t>(imm8 << 1));
+        const vaddress addr_to_jump = crr_block_->current_address() + move_amount + 4;
+
+        emit_direct_link(addr_to_jump);
+
+        return false;
+    }
 }
