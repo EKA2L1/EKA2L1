@@ -395,6 +395,9 @@ namespace eka2l1::arm::r12l1 {
             return nullptr;
         }
 
+        if (addr == 0x503AC148) {
+            LOG_TRACE(CPU_12L1R, "0x{:X}", state->cpsr_);
+        }
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 
@@ -420,12 +423,6 @@ namespace eka2l1::arm::r12l1 {
         // Load CPSR into register
         LDR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
 
-        if (arm_visitor) {
-            arm_visitor->emit_cpsr_restore_nzcv();
-        } else {
-            thumb_visitor->emit_cpsr_restore_nzcv();
-        }
-
         // Emit the check if we should go outside and stop running
         // Check if we are out of cycles, set the should_break if we should stop and
         // return to dispatch
@@ -443,6 +440,14 @@ namespace eka2l1::arm::r12l1 {
         }
 
         set_cc(common::CC_AL);
+
+        // Restore CPSR here.
+        if (arm_visitor) {
+            arm_visitor->emit_cpsr_restore_nzcv();
+        } else {
+            thumb_visitor->emit_cpsr_restore_nzcv();
+        }
+
         std::uint32_t inst = 0;
 
         do {
