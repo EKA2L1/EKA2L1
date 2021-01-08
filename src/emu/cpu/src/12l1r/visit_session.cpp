@@ -174,10 +174,18 @@ namespace eka2l1::arm::r12l1 {
         // This register must persits until this routine end.
         // It holds the guest register address.
         common::armgen::arm_reg guest_addr_reg = reg_supplier_.map(base, (writeback ? ALLOCATE_FLAG_DIRTY : 0));
+        if (!writeback) {
+            common::armgen::arm_reg scratching = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            big_block_->MOV(scratching, guest_addr_reg);
+
+            guest_addr_reg = scratching;
+        }
+
         common::armgen::arm_reg base_guest_reg = base;
 
         // Spill lock this base guest reg
-        reg_supplier_.spill_lock(base_guest_reg);
+        if (writeback)
+            reg_supplier_.spill_lock(base_guest_reg);
 
         auto emit_addr_modification = [&](const bool ignore_base) {
             // Decrement or increment guest base and host base
@@ -344,13 +352,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
-        reg_supplier_.release_spill_lock(base_guest_reg);
 
-        if (!writeback) {
-            // Flush it xD. Its value is trashed now, so we don't want to keep it around and
-            // being misunderstood. Why its trashed? Because we write subtraction/addition to it.
-            reg_supplier_.flush(base_guest_reg);
-        }
+        if (writeback)
+            reg_supplier_.release_spill_lock(base_guest_reg);
 
         emit_cpsr_restore_nzcv();
 

@@ -395,9 +395,6 @@ namespace eka2l1::arm::r12l1 {
             return nullptr;
         }
 
-        if (addr == 0x503AC148) {
-            LOG_TRACE(CPU_12L1R, "0x{:X}", state->cpsr_);
-        }
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 
