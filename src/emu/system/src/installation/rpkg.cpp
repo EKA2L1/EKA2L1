@@ -89,13 +89,16 @@ namespace eka2l1::loader {
 
         rpkg_header header;
 
+        std::size_t total_read_size = 0;
+
         if (fread(&header.magic, 4, 4, f) != 4) {
             return false;
         }
 
+        total_read_size = 16;
         std::uint8_t is_ver_one = 1;
 
-        if (header.magic[0] != 'R' || header.magic[1] != 'P' || header.magic[2] != 'K') {
+        if ((header.magic[0] == 'R') && (header.magic[1] == 'P') && (header.magic[2] == 'K')) {
             switch (header.magic[3]) {
             case 'G':
                 is_ver_one = 1;
@@ -111,8 +114,6 @@ namespace eka2l1::loader {
             }
         }
 
-        std::size_t total_read_size = 0;
-
         total_read_size += fread(&header.major_rom, 1, 1, f);
         total_read_size += fread(&header.minor_rom, 1, 1, f);
         total_read_size += fread(&header.build_rom, 1, 2, f);
@@ -124,9 +125,11 @@ namespace eka2l1::loader {
         if (!is_ver_one) {
             total_read_size += fread(&header.header_size, 1, 4, f);
             total_read_size += fread(&header.machine_uid, 1, 4, f);
+        } else {
+            header.header_size = 24;
         }
 
-        if (total_read_size != 8 + header.header_size) {
+        if (total_read_size != header.header_size) {
             fclose(f);
             return false;
         }
