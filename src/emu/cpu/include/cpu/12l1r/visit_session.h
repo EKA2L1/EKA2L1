@@ -45,7 +45,7 @@ namespace eka2l1::arm::r12l1 {
 
 		bool cond_failed_;
 
-		std::vector<common::armgen::fixup_branch> ret_to_dispatch_branches_;
+		std::uint32_t last_inst_count_;
 
     public:
         translated_block *crr_block_;
@@ -70,11 +70,11 @@ namespace eka2l1::arm::r12l1 {
 		void emit_cpsr_update_nzcv();
 		void emit_cpsr_restore_nzcv();
 
-		void emit_direct_link(const vaddress addr);
+		void emit_direct_link(const vaddress addr, const bool save_cpsr = true);
+		void emit_return_to_dispatch(const bool save_cpsr = true);
 		void emit_reg_link_exchange(common::armgen::arm_reg reg);
-		void emit_return_to_dispatch();
 
-		void sync_registers();
+		void sync_state();
 
 		void finalize();
 

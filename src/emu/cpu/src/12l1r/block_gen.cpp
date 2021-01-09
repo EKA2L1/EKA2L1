@@ -69,7 +69,9 @@ namespace eka2l1::arm::r12l1 {
         PUSH(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
                 common::armgen::R9, common::armgen::R10, common::armgen::R12, common::armgen::R14);
 
+        // Load core state reg and the ticks left
         MOV(CORE_STATE_REG, common::armgen::R0);
+        LDR(TICKS_REG, CORE_STATE_REG, offsetof(core_state, ticks_left_));
 
         dispatch_ent_for_block_ = get_code_ptr();
 
@@ -111,6 +113,9 @@ namespace eka2l1::arm::r12l1 {
 
         set_jump_target(headout);
         set_jump_target(return_back);
+
+        // Save the ticks
+        emit_cycles_count_save();
 
         // Branch back to where it went
         POP(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
@@ -270,9 +275,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::emit_cycles_count_add(const std::uint32_t num) {
-        LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
-        SUBI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, num, ALWAYS_SCRATCH2);
-        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
+        SUBI2R(TICKS_REG, TICKS_REG, num, ALWAYS_SCRATCH1);
     }
 
     void dashixiong_block::emit_pc_flush(const address current_pc) {
@@ -282,6 +285,10 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_cpsr_save() {
         STR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
+    }
+
+    void dashixiong_block::emit_cycles_count_save() {
+        STR(TICKS_REG, CORE_STATE_REG, offsetof(core_state, ticks_left_));
     }
 
     void dashixiong_block::emit_pc_write_exchange(common::armgen::arm_reg pc_reg) {
@@ -309,9 +316,6 @@ namespace eka2l1::arm::r12l1 {
                 set_jump_target(jump_target);
             }
 
-            emit_cpsr_save();
-            emit_cycles_count_add(block->inst_count_);
-
             link_to_.emplace(make_block_hash(link.to_, block->address_space()), block);
             link.value_ = reinterpret_cast<std::uint32_t*>(get_writeable_code_ptr());
 
@@ -338,9 +342,6 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::emit_return_to_dispatch(translated_block *block) {
-        emit_cpsr_save();
-        emit_cycles_count_add(block->inst_count_);
-
         B(dispatch_ent_for_block_);
     }
 
@@ -395,6 +396,10 @@ namespace eka2l1::arm::r12l1 {
             return nullptr;
         }
 
+        if (addr == 0x5063BC8A) {
+            LOG_TRACE(CPU_12L1R, "AAAAA! {} {} 123123 0x{:X}", state->gprs_[4], state->gprs_[0], state->cpsr_);
+        }
+
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 
@@ -423,8 +428,7 @@ namespace eka2l1::arm::r12l1 {
         // Emit the check if we should go outside and stop running
         // Check if we are out of cycles, set the should_break if we should stop and
         // return to dispatch
-        LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, ticks_left_));
-        CMP(ALWAYS_SCRATCH1, 0);
+        CMP(TICKS_REG, 0);
 
         set_cc(common::CC_LE);
 

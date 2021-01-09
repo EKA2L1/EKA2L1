@@ -63,7 +63,6 @@ namespace eka2l1::arm::r12l1 {
         void assemble_control_funcs();
 
         translated_block *start_new_block(const vaddress addr, const asid aid);
-        void emit_cycles_count_add(const std::uint32_t num);
 
     public:
         explicit dashixiong_block(dashixiong_callback &callbacks);
@@ -79,7 +78,9 @@ namespace eka2l1::arm::r12l1 {
 
         void emit_pc_flush(const address current_pc);
         void emit_pc_write_exchange(common::armgen::arm_reg pc_reg);
+		void emit_cycles_count_add(const std::uint32_t num);
         void emit_cpsr_save();
+        void emit_cycles_count_save();
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);
         void flush_all();

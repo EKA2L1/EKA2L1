@@ -63,6 +63,7 @@ namespace eka2l1::arm::r12l1 {
         , cpsr_modified_(false)
         , cpsr_ever_updated_(false)
         , cond_failed_(false)
+        , last_inst_count_(0)
         , big_block_(bro)
         , crr_block_(crr)
         , reg_supplier_(bro) {
@@ -73,7 +74,10 @@ namespace eka2l1::arm::r12l1 {
             reg_supplier_.flush_all();
 
             if (flag_ != common::CC_AL) {
+                big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
                 big_block_->set_jump_target(end_target_);
+
+                last_inst_count_ = crr_block_->inst_count_;
             }
 
             flag_ = common::CC_NV;
@@ -530,8 +534,9 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
-    void visit_session::sync_registers() {
+    void visit_session::sync_state() {
         big_block_->emit_cpsr_save();
+        big_block_->emit_cycles_count_save();
         big_block_->emit_pc_flush(crr_block_->current_address());
 
         reg_supplier_.flush_all();
@@ -539,7 +544,7 @@ namespace eka2l1::arm::r12l1 {
 
     bool visit_session::emit_undefined_instruction_handler() {
         emit_cpsr_update_nzcv();
-        sync_registers();
+        sync_state();
 
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, exception_type_undefined_inst);
@@ -548,14 +553,14 @@ namespace eka2l1::arm::r12l1 {
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
 
         emit_cpsr_restore_nzcv();
-        emit_return_to_dispatch();
+        emit_return_to_dispatch(false);
 
         return false;
     }
 
     bool visit_session::emit_system_call_handler(const std::uint32_t n) {
         emit_cpsr_update_nzcv();
-        sync_registers();
+        sync_state();
 
         big_block_->emit_pc_flush(crr_block_->current_address() + (crr_block_->thumb_ ? 2 : 4));
 
@@ -565,12 +570,14 @@ namespace eka2l1::arm::r12l1 {
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_system_call);
 
         emit_cpsr_restore_nzcv();
-        emit_return_to_dispatch();
+
+        // Don't save CPSR, we already update it and it may got modified in the interrupt
+        emit_return_to_dispatch(false);
 
         return false;
     }
 
-    void visit_session::emit_direct_link(const vaddress addr) {
+    void visit_session::emit_direct_link(const vaddress addr, const bool cpsr_save) {
         // Flush all registers in this
         reg_supplier_.flush_all();
 
@@ -578,33 +585,45 @@ namespace eka2l1::arm::r12l1 {
             emit_cpsr_update_nzcv();
         }
 
+        if (cpsr_save) {
+            big_block_->emit_cpsr_save();
+        }
+
+        big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
+
         block_link &link = crr_block_->get_or_add_link(addr);
         link.needs_.push_back(big_block_->B());
     }
 
-    void visit_session::emit_return_to_dispatch() {
+    void visit_session::emit_return_to_dispatch(const bool cpsr_save) {
         // Flush all registers in this
         reg_supplier_.flush_all();
 
-        // Remember this branch
-        ret_to_dispatch_branches_.push_back(big_block_->B());
+        if (cpsr_save) {
+            big_block_->emit_cpsr_save();
+        }
+
+        big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
+        big_block_->emit_return_to_dispatch(crr_block_);
     }
 
     void visit_session::finalize() {
+        big_block_->set_cc(common::CC_AL);
         reg_supplier_.flush_all();
 
-        if (cpsr_ever_updated_)
-            emit_cpsr_update_nzcv();
+        const bool no_offered_link = (crr_block_->links_.empty());
 
         if (flag_ != common::CC_AL) {
+            big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
             big_block_->set_jump_target(end_target_);
         }
 
-        big_block_->set_cc(common::CC_AL);
-
-        const bool no_offered_link = (crr_block_->links_.empty() && ret_to_dispatch_branches_.empty());
-
         if ((flag_ != common::CC_AL) || no_offered_link) {
+            if (cpsr_ever_updated_) {
+                emit_cpsr_update_nzcv();
+                big_block_->emit_cpsr_save();
+            }
+
             // Add branching to next block, making it highest priority
             crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ?
                 crr_block_->last_inst_size_ : 0), 0);
@@ -612,14 +631,6 @@ namespace eka2l1::arm::r12l1 {
 
         // Emit links
         big_block_->emit_block_links(crr_block_);
-
-        if (!ret_to_dispatch_branches_.empty()) {
-            for (auto &jump_target: ret_to_dispatch_branches_) {
-                big_block_->set_jump_target(jump_target);
-            }
-
-            big_block_->emit_return_to_dispatch(crr_block_);
-        }
 
         big_block_->flush_lit_pool();
         big_block_->edit_block_links(crr_block_, false);
