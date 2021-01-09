@@ -157,8 +157,13 @@ namespace eka2l1 {
         }
         std::string line;
         while (ifile.getline(line)) {
-            if (line == "" || line[0] == '\0')
+            if ((line == "") || (line[0] == '\0'))
                 break;
+
+            if ((line == "\r") || (line == "\n") || (line == "\r\n")) {
+                continue;
+            }
+            
             const int lang_code = std::stoi(line);
             if (line.find_first_of(",d") != std::string::npos) {
                 default_language = lang_code;
