@@ -335,7 +335,8 @@ namespace eka2l1::arm {
         for (uint8_t i = 0; i < 16; i++) {
             jit->Regs()[i] = ctx.cpu_registers[i];
         }
-
+	
+        set_cpsr(ctx.cpsr);
         cb->get_cp15()->set_wrwr(ctx.wrwr);
     }
 

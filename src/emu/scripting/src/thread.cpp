@@ -56,15 +56,15 @@ namespace eka2l1::scripting {
     }
 
     uint32_t thread::get_pc() {
-        return thread_handle->get_thread_context().pc;
+        return thread_handle->get_thread_context().get_pc();
     }
 
     uint32_t thread::get_lr() {
-        return thread_handle->get_thread_context().lr;
+        return thread_handle->get_thread_context().get_lr();
     }
 
     uint32_t thread::get_sp() {
-        return thread_handle->get_thread_context().sp;
+        return thread_handle->get_thread_context().get_sp();
     }
 
     uint32_t thread::get_cpsr() {
