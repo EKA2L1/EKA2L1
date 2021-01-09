@@ -55,6 +55,8 @@ namespace eka2l1::arm::r12l1 {
             common::armgen::shift_type shift, reg_index m);
         bool arm_CMP_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8);
         bool arm_CMP_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
+        bool arm_TST_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8);
+        bool arm_AND_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8);
 
         // Branch
         bool arm_B(common::cc_flags cond, std::uint32_t imm24);

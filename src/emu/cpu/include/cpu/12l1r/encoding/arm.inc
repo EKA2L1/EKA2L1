@@ -27,7 +27,7 @@ INST(arm_BX,            "BX",                  "cccc000100101111111111110001mmmm
 INST(arm_ADD_imm,       "ADD (imm)",           "cccc0010100Snnnnddddrrrrvvvvvvvv") // all
 INST(arm_ADD_reg,       "ADD (reg)",           "cccc0000100Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_ADD_rsr,       "ADD (rsr)",           "cccc0000100Snnnnddddssss0rr1mmmm") // all
-//INST(arm_AND_imm,       "AND (imm)",           "cccc0010000Snnnnddddrrrrvvvvvvvv") // all
+INST(arm_AND_imm,       "AND (imm)",           "cccc0010000Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_AND_reg,       "AND (reg)",           "cccc0000000Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_AND_rsr,       "AND (rsr)",           "cccc0000000Snnnnddddssss0rr1mmmm") // all
 INST(arm_BIC_imm,       "BIC (imm)",           "cccc0011110Snnnnddddrrrrvvvvvvvv") // all
@@ -66,7 +66,7 @@ INST(arm_SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm
 //INST(arm_TEQ_imm,       "TEQ (imm)",           "cccc00110011nnnn0000rrrrvvvvvvvv") // all
 //INST(arm_TEQ_reg,       "TEQ (reg)",           "cccc00010011nnnn0000vvvvvrr0mmmm") // all
 //INST(arm_TEQ_rsr,       "TEQ (rsr)",           "cccc00010011nnnn0000ssss0rr1mmmm") // all
-//INST(arm_TST_imm,       "TST (imm)",           "cccc00110001nnnn0000rrrrvvvvvvvv") // all
+INST(arm_TST_imm,       "TST (imm)",           "cccc00110001nnnn0000rrrrvvvvvvvv") // all
 //INST(arm_TST_reg,       "TST (reg)",           "cccc00010001nnnn0000vvvvvrr0mmmm") // all
 //INST(arm_TST_rsr,       "TST (rsr)",           "cccc00010001nnnn0000ssss0rr1mmmm") // all
 
