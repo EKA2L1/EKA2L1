@@ -76,14 +76,11 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::point mouse_pos, int 
 
     const std::lock_guard<std::mutex> guard(emu->lockdown);
 
-    auto mouse_evt = make_mouse_event_driver(mouse_pos_x, mouse_pos_y, button, action);
+    const float scale = emu->symsys->get_config()->ui_scale;
+    auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, button, action);
 
     if (emu->should_guest_take_events()) {
         if ((emu->symsys) && emu->winserv) {
-            const float scale = emu->symsys->get_config()->ui_scale;
-            mouse_pos_x /= scale;
-            mouse_pos_y /= scale;
-
             emu->winserv->queue_input_from_driver(mouse_evt);
         }
     }
