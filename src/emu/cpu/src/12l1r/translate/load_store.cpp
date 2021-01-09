@@ -313,9 +313,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
         common::armgen::arm_reg base_mapped = reg_supplier_.map(common::armgen::R13, 0);
 
-        // Rotation takes 15 steps to shift two bits left.
-        // Each rotation shift two bits to right side.
-        common::armgen::operand2 adv(imm8, 15);
+        common::armgen::operand2 adv(imm8 << 2);
 
         if (!emit_memory_access(dest_mapped, base_mapped, adv, 32, false, true, true, false, true)) {
             LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
@@ -349,9 +347,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
         common::armgen::arm_reg base_mapped = reg_supplier_.map(common::armgen::R13, 0);
 
-        // Rotation takes 15 steps to shift two bits left.
-        // Each rotation shift two bits to right side.
-        common::armgen::operand2 adv(imm8, 15);
+        common::armgen::operand2 adv(imm8 << 2);
 
         if (!emit_memory_access(source_mapped, base_mapped, adv, 32, false, true, true, false, false)) {
             LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
