@@ -574,6 +574,30 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool thumb_translate_visitor::thumb16_MOV_reg(bool d_hi, reg_index m, reg_index d_lo) {
+        const reg_index d = d_hi ? (d_lo + 8) : d_lo;
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
+        if (dest_real == common::armgen::R15) {
+            emit_reg_link_exchange(source_mapped);
+            return false;
+        }
+
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real,
+                ALLOCATE_FLAG_DIRTY);
+
+        if (source_real == common::armgen::R15) {
+            big_block_->MOVI2R(dest_mapped, crr_block_->current_address() + 4);
+            return true;
+        }
+
+        big_block_->MOV(dest_mapped, source_mapped);
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_ADD_imm_t1(std::uint8_t imm3, reg_index n, reg_index d) {
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);

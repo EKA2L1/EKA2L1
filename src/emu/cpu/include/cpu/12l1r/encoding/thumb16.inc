@@ -32,7 +32,7 @@ INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
 // Special data instructions
 //INST(thumb16_ADD_reg_t2,     "ADD (reg, T2)",            "01000100Dmmmmddd"), // v4T, Low regs: v6T2
 //INST(thumb16_CMP_reg_t2,     "CMP (reg, T2)",            "01000101Nmmmmnnn"), // v4T
-//INST(thumb16_MOV_reg,        "MOV (reg)",                "01000110Dmmmmddd"), // v4T, Low regs: v6
+INST(thumb16_MOV_reg,        "MOV (reg)",                "01000110Dmmmmddd"), // v4T, Low regs: v6
 
 // Store/Load single data item instructions
 INST(thumb16_LDR_literal,    "LDR (literal)",            "01001tttvvvvvvvv"),
