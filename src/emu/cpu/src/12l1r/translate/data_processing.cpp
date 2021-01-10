@@ -948,4 +948,31 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool thumb_translate_visitor::thumb16_CMN_reg(reg_index m, reg_index n) {
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_mapped = reg_supplier_.map(rhs_real, 0);
+
+        big_block_->CMN(lhs_mapped, rhs_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_ORR_reg(reg_index m, reg_index d_n) {
+        common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
+                                                                              ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+
+        big_block_->ORRS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
 }
