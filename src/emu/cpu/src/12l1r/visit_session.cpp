@@ -543,6 +543,8 @@ namespace eka2l1::arm::r12l1 {
         big_block_->set_jump_target(done_all);
         emit_cpsr_restore_nzcvq();
 
+        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+
         return true;
     }
 

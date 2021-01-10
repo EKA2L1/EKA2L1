@@ -872,6 +872,34 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool thumb_translate_visitor::thumb16_LSL_imm(std::uint8_t imm5, reg_index m, reg_index d) {
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(m);
+        common::armgen::operand2 op2(imm5, 0);
+
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+
+        big_block_->LSLS(dest_mapped, op1_mapped, op2);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_LSR_imm(std::uint8_t imm5, reg_index m, reg_index d) {
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(m);
+        common::armgen::operand2 op2(imm5, 0);
+
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+
+        big_block_->LSRS(dest_mapped, op1_mapped, op2);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_CMP_imm(reg_index n, std::uint8_t imm8) {
         common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
         common::armgen::operand2 rhs(imm8, 0);
@@ -880,6 +908,44 @@ namespace eka2l1::arm::r12l1 {
         big_block_->CMP(lhs_mapped, rhs);
 
         cpsr_nzcvq_changed();
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_CMP_reg_t1(reg_index m, reg_index n) {
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_mapped = reg_supplier_.map(rhs_real, 0);
+
+        big_block_->CMP(lhs_mapped, rhs_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_CMP_reg_t2(bool n_hi, reg_index m, reg_index n_lo) {
+        reg_index n = (n_hi) ? (n_lo + 8) : n_lo;
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_real = reg_index_to_gpr(m);
+
+        if ((n < 8) && (m < 8)) {
+            LOG_WARN(CPU_12L1R, "Unpredictable Thumb CMP");
+            return false;
+        }
+
+        if ((n == 15) || (m == 15)) {
+            LOG_WARN(CPU_12L1R, "Unpredictable Thumb CMP");
+            return false;
+        }
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_mapped = reg_supplier_.map(rhs_real, 0);
+
+        big_block_->CMP(lhs_mapped, rhs_mapped);
+        cpsr_nzcvq_changed();
+
         return true;
     }
 }

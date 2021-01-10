@@ -1,6 +1,6 @@
 // Shift (immediate), add, subtract, move and compare instructions
-//INST(thumb16_LSL_imm,        "LSL (imm)",                "00000vvvvvmmmddd"),
-//INST(thumb16_LSR_imm,        "LSR (imm)",                "00001vvvvvmmmddd"),
+INST(thumb16_LSL_imm,        "LSL (imm)",                "00000vvvvvmmmddd"),
+INST(thumb16_LSR_imm,        "LSR (imm)",                "00001vvvvvmmmddd"),
 //INST(thumb16_ASR_imm,        "ASR (imm)",                "00010vvvvvmmmddd"),
 //INST(thumb16_ADD_reg_t1,     "ADD (reg, T1)",            "0001100mmmnnnddd"),
 //INST(thumb16_SUB_reg,        "SUB (reg)",                "0001101mmmnnnddd"),
@@ -22,7 +22,7 @@ INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
 //INST(thumb16_ROR_reg,        "ROR (reg)",                "0100000111sssddd"),
 //INST(thumb16_TST_reg,        "TST (reg)",                "0100001000mmmnnn"),
 //INST(thumb16_RSB_imm,        "RSB (imm)",                "0100001001nnnddd"),
-//INST(thumb16_CMP_reg_t1,     "CMP (reg, T1)",            "0100001010mmmnnn"),
+INST(thumb16_CMP_reg_t1,     "CMP (reg, T1)",            "0100001010mmmnnn"),
 //INST(thumb16_CMN_reg,        "CMN (reg)",                "0100001011mmmnnn"),
 //INST(thumb16_ORR_reg,        "ORR (reg)",                "0100001100mmmddd"),
 //INST(thumb16_MUL_reg,        "MUL (reg)",                "0100001101nnnddd"),
@@ -31,7 +31,7 @@ INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
 
 // Special data instructions
 //INST(thumb16_ADD_reg_t2,     "ADD (reg, T2)",            "01000100Dmmmmddd"), // v4T, Low regs: v6T2
-//INST(thumb16_CMP_reg_t2,     "CMP (reg, T2)",            "01000101Nmmmmnnn"), // v4T
+INST(thumb16_CMP_reg_t2,     "CMP (reg, T2)",            "01000101Nmmmmnnn"), // v4T
 INST(thumb16_MOV_reg,        "MOV (reg)",                "01000110Dmmmmddd"), // v4T, Low regs: v6
 
 // Store/Load single data item instructions
