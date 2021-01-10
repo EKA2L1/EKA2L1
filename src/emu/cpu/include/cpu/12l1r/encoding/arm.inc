@@ -39,9 +39,9 @@ INST(arm_BIC_rsr,       "BIC (rsr)",           "cccc0001110Snnnnddddssss0rr1mmmm
 INST(arm_CMP_imm,       "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv") // all
 INST(arm_CMP_reg,       "CMP (reg)",           "cccc00010101nnnn0000vvvvvrr0mmmm") // all
 //INST(arm_CMP_rsr,       "CMP (rsr)",           "cccc00010101nnnn0000ssss0rr1mmmm") // all
-//INST(arm_EOR_imm,       "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv") // all
-//INST(arm_EOR_reg,       "EOR (reg)",           "cccc0000001Snnnnddddvvvvvrr0mmmm") // all
-//INST(arm_EOR_rsr,       "EOR (rsr)",           "cccc0000001Snnnnddddssss0rr1mmmm") // all
+INST(arm_EOR_imm,       "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv") // all
+INST(arm_EOR_reg,       "EOR (reg)",           "cccc0000001Snnnnddddvvvvvrr0mmmm") // all
+INST(arm_EOR_rsr,       "EOR (rsr)",           "cccc0000001Snnnnddddssss0rr1mmmm") // all
 INST(arm_MOV_imm,       "MOV (imm)",           "cccc0011101S0000ddddrrrrvvvvvvvv") // all
 INST(arm_MOV_reg,       "MOV (reg)",           "cccc0001101S0000ddddvvvvvrr0mmmm") // all
 //INST(arm_MOV_rsr,       "MOV (rsr)",           "cccc0001101S0000ddddssss0rr1mmmm") // all
