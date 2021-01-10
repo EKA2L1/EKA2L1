@@ -49,7 +49,7 @@ INST(thumb16_LDR_imm_t1,     "LDR (imm, T1)",            "01101vvvvvnnnttt"),
 //INST(thumb16_STRB_imm,       "STRB (imm)",               "01110vvvvvnnnttt"),
 //INST(thumb16_LDRB_imm,       "LDRB (imm)",               "01111vvvvvnnnttt"),
 //INST(thumb16_STRH_imm,       "STRH (imm)",               "10000vvvvvnnnttt"),
-//INST(thumb16_LDRH_imm,       "LDRH (imm)",               "10001vvvvvnnnttt"),
+INST(thumb16_LDRH_imm,       "LDRH (imm)",               "10001vvvvvnnnttt"),
 INST(thumb16_STR_imm_t2,     "STR (imm, T2)",            "10010tttvvvvvvvv"),
 INST(thumb16_LDR_imm_t2,     "LDR (imm, T2)",            "10011tttvvvvvvvv"),
 
