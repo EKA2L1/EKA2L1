@@ -80,6 +80,12 @@ namespace eka2l1::arm::r12l1 {
         bool arm_STR_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint16_t imm12);
         bool arm_STR_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
 
+        // Status register access
+        bool arm_MRS(common::cc_flags cond, reg_index d);
+        bool arm_MSR_imm(common::cc_flags cond, int mask, int rotate, std::uint8_t imm8);
+        bool arm_MSR_reg(common::cc_flags cond, int mask, reg_index n);
+
+        // Interrupts
         bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
         bool arm_UDF();
     };

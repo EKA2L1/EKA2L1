@@ -45,7 +45,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->MOVS(dest_mapped, imm_op);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->MOV(dest_mapped, imm_op);
         }
@@ -83,7 +83,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->MOVS(dest_mapped, imm_op);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->MOV(dest_mapped, imm_op);
         }
@@ -112,7 +112,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->MVNS(dest_mapped, imm_op);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->MVN(dest_mapped, imm_op);
         }
@@ -150,7 +150,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->MVNS(dest_mapped, imm_op);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->MVN(dest_mapped, imm_op);
         }
@@ -180,7 +180,7 @@ namespace eka2l1::arm::r12l1 {
 
             if (S) {
                 big_block_->ADDS(dest_mapped, op1_mapped, op2);
-                cpsr_nzcv_changed();
+                cpsr_nzcvq_changed();
             } else {
                 big_block_->ADD(dest_mapped, op1_mapped, op2);
             }
@@ -218,7 +218,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->ADDS(dest_mapped, op1_mapped, op2);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->ADD(dest_mapped, op1_mapped, op2);
         }
@@ -253,7 +253,7 @@ namespace eka2l1::arm::r12l1 {
 
             if (S) {
                 big_block_->SUBS(dest_mapped, op1_mapped, op2);
-                cpsr_nzcv_changed();
+                cpsr_nzcvq_changed();
             } else {
                 big_block_->SUB(dest_mapped, op1_mapped, op2);
             }
@@ -291,7 +291,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->SUBS(dest_mapped, op1_mapped, op2);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->SUB(dest_mapped, op1_mapped, op2);
         }
@@ -325,7 +325,7 @@ namespace eka2l1::arm::r12l1 {
 
             if (S) {
                 big_block_->BICS(dest_mapped, op1_mapped, op2);
-                cpsr_nzcv_changed();
+                cpsr_nzcvq_changed();
             } else {
                 big_block_->BIC(dest_mapped, op1_mapped, op2);
             }
@@ -363,7 +363,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->BICS(dest_mapped, op1_mapped, op2);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->BIC(dest_mapped, op1_mapped, op2);
         }
@@ -402,7 +402,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->BICS(dest_mapped, op1_mapped, op2);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->BIC(dest_mapped, op1_mapped, op2);
         }
@@ -436,7 +436,7 @@ namespace eka2l1::arm::r12l1 {
 
             if (S) {
                 big_block_->ORRS(dest_mapped, op1_mapped, op2);
-                cpsr_nzcv_changed();
+                cpsr_nzcvq_changed();
             } else {
                 big_block_->ORR(dest_mapped, op1_mapped, op2);
             }
@@ -474,7 +474,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->ORRS(dest_mapped, op1_mapped, op2);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->ORR(dest_mapped, op1_mapped, op2);
         }
@@ -513,7 +513,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (S) {
             big_block_->ORRS(dest_mapped, op1_mapped, op2);
-            cpsr_nzcv_changed();
+            cpsr_nzcvq_changed();
         } else {
             big_block_->ORR(dest_mapped, op1_mapped, op2);
         }
@@ -537,7 +537,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
 
         big_block_->CMP(lhs_mapped, rhs);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -557,7 +557,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 rhs(rhs_base_mapped, shift, imm5);
 
         big_block_->CMP(lhs_mapped, rhs);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -573,7 +573,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
 
         big_block_->TST(lhs_mapped, rhs);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -600,7 +600,7 @@ namespace eka2l1::arm::r12l1 {
 
             if (S) {
                 big_block_->ANDS(dest_mapped, op1_mapped, op2);
-                cpsr_nzcv_changed();
+                cpsr_nzcvq_changed();
             } else {
                 big_block_->AND(dest_mapped, op1_mapped, op2);
             }
@@ -621,7 +621,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 imm_op(imm8, 0);
 
         big_block_->MOVS(dest_mapped, imm_op);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -659,7 +659,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
         big_block_->ADDS(dest_mapped, op1_mapped, op2);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -672,7 +672,7 @@ namespace eka2l1::arm::r12l1 {
             ALLOCATE_FLAG_DIRTY);
 
         big_block_->ADDS(dest_and_op1_mapped, dest_and_op1_mapped, op2);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -704,7 +704,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
         big_block_->SUBS(dest_mapped, op1_mapped, op2);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -717,7 +717,7 @@ namespace eka2l1::arm::r12l1 {
             ALLOCATE_FLAG_DIRTY);
 
         big_block_->SUBS(dest_and_op1_mapped, dest_and_op1_mapped, op2);
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
 
         return true;
     }
@@ -737,7 +737,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
         big_block_->CMP(lhs_mapped, rhs);
 
-        cpsr_nzcv_changed();
+        cpsr_nzcvq_changed();
         return true;
     }
 }

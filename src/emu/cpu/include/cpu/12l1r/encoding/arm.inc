@@ -290,8 +290,8 @@ INST(arm_STMIB,         "STMIB",               "cccc100110w0nnnnxxxxxxxxxxxxxxxx
 // Status Register Access instructions
 //INST(arm_CPS,           "CPS",                 "111100010000---00000000---0-----") // v6
 //INST(arm_SETEND,        "SETEND",              "1111000100000001000000e000000000") // v6
-//INST(arm_MRS,           "MRS",                 "cccc000100001111dddd000000000000") // v3
-//INST(arm_MSR_imm,       "MSR (imm)",           "cccc00110010mmmm1111rrrrvvvvvvvv") // v3
-//INST(arm_MSR_reg,       "MSR (reg)",           "cccc00010010mmmm111100000000nnnn") // v3
+INST(arm_MRS,           "MRS",                 "cccc000100001111dddd000000000000") // v3
+INST(arm_MSR_imm,       "MSR (imm)",           "cccc00110010mmmm1111rrrrvvvvvvvv") // v3
+INST(arm_MSR_reg,       "MSR (reg)",           "cccc00010010mmmm111100000000nnnn") // v3
 //INST(arm_RFE,           "RFE",                 "1111100--0-1----0000101000000000") // v6
 //INST(arm_SRS,           "SRS",                 "1111100--1-0110100000101000-----") // v6

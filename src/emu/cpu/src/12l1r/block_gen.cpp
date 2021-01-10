@@ -444,9 +444,9 @@ namespace eka2l1::arm::r12l1 {
 
         // Restore CPSR here.
         if (arm_visitor) {
-            arm_visitor->emit_cpsr_restore_nzcv();
+            arm_visitor->emit_cpsr_restore_nzcvq();
         } else {
-            thumb_visitor->emit_cpsr_restore_nzcv();
+            thumb_visitor->emit_cpsr_restore_nzcvq();
         }
 
         std::uint32_t inst = 0;

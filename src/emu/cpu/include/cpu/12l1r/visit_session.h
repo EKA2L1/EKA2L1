@@ -40,7 +40,7 @@ namespace eka2l1::arm::r12l1 {
         common::cc_flags flag_;
         common::armgen::fixup_branch end_target_;
 
-		bool cpsr_modified_;
+		bool cond_modified_;
 		bool cpsr_ever_updated_;
 
 		bool cond_failed_;
@@ -66,9 +66,11 @@ namespace eka2l1::arm::r12l1 {
 
         bool emit_undefined_instruction_handler();
         bool emit_system_call_handler(const std::uint32_t n);
-		
-		void emit_cpsr_update_nzcv();
-		void emit_cpsr_restore_nzcv();
+
+		void emit_cpsr_update_nzcvq();
+		void emit_cpsr_restore_nzcvq();
+		void emit_cpsr_update_sel(const bool nzcvq = true);
+		void emit_cpsr_restore_sel(const bool nzcvq = true);
 
 		void emit_direct_link(const vaddress addr, const bool save_cpsr = true);
 		void emit_return_to_dispatch(const bool save_cpsr = true);
@@ -78,8 +80,12 @@ namespace eka2l1::arm::r12l1 {
 
 		void finalize();
 
-		void cpsr_nzcv_changed() {
-			cpsr_modified_ = true;
+		void cpsr_nzcvq_changed() {
+			cond_modified_ = true;
+			cpsr_ever_updated_ = true;
+		}
+
+		void cpsr_ge_changed() {
 			cpsr_ever_updated_ = true;
 		}
     };

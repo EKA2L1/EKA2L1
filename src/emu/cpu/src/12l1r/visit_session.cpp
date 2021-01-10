@@ -60,7 +60,7 @@ namespace eka2l1::arm::r12l1 {
 
     visit_session::visit_session(dashixiong_block *bro, translated_block *crr)
         : flag_(common::CC_NV)
-        , cpsr_modified_(false)
+        , cond_modified_(false)
         , cpsr_ever_updated_(false)
         , cond_failed_(false)
         , last_inst_count_(0)
@@ -93,7 +93,7 @@ namespace eka2l1::arm::r12l1 {
             return true;
         }
 
-        if ((cpsr_modified_ && (flag_ != common::CC_AL)) || (cc != flag_)) {
+        if ((cond_modified_ && (flag_ != common::CC_AL)) || (cc != flag_)) {
             cond_failed_ = true;
             return false;
         }
@@ -146,26 +146,38 @@ namespace eka2l1::arm::r12l1 {
         return final_addr;
     }
 
-    static constexpr std::uint32_t NZCV_FLAG_MASK = 0b1111 << 28;
+    static constexpr std::uint32_t NZCVQ_FLAG_MASK = 0b11111 << 27;
 
-    void visit_session::emit_cpsr_update_nzcv() {
+    void visit_session::emit_cpsr_update_nzcvq() {
+        emit_cpsr_update_sel(true);
+    }
+
+    void visit_session::emit_cpsr_update_sel(const bool nzcvq) {
         big_block_->MRS(ALWAYS_SCRATCH1);
 
-        // Filter out to only NZCV, and clear emulator nzcv bits
-        big_block_->ANDI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, NZCV_FLAG_MASK, ALWAYS_SCRATCH2);
-        big_block_->ANDI2R(CPSR_REG, CPSR_REG, ~NZCV_FLAG_MASK, ALWAYS_SCRATCH2);
+        std::uint32_t mask = 0;
+        if (nzcvq) {
+            mask |= NZCVQ_FLAG_MASK;
+        }
+
+        big_block_->ANDI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, mask, ALWAYS_SCRATCH2);
+        big_block_->ANDI2R(CPSR_REG, CPSR_REG, ~mask, ALWAYS_SCRATCH2);
         big_block_->ORR(CPSR_REG, CPSR_REG, ALWAYS_SCRATCH1);
 
         cpsr_ever_updated_ = false;
     }
 
-    void visit_session::emit_cpsr_restore_nzcv() {
-        big_block_->_MSR(true, false, CPSR_REG);
+    void visit_session::emit_cpsr_restore_nzcvq() {
+        emit_cpsr_restore_sel(true);
+    }
+
+    void visit_session::emit_cpsr_restore_sel(const bool nzcvq) {
+        big_block_->_MSR(nzcvq, false, CPSR_REG);
     }
 
     void visit_session::emit_reg_link_exchange(common::armgen::arm_reg reg) {
         if (cpsr_ever_updated_)
-            emit_cpsr_update_nzcv();
+            emit_cpsr_update_nzcvq();
 
         big_block_->emit_pc_write_exchange(reg);
     }
@@ -173,7 +185,7 @@ namespace eka2l1::arm::r12l1 {
     bool visit_session::emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
         bool before, bool writeback, bool load) {
         std::int8_t last_reg = 0;
-        emit_cpsr_update_nzcv();
+        emit_cpsr_update_nzcvq();
 
         // This register must persits until this routine end.
         // It holds the guest register address.
@@ -360,7 +372,7 @@ namespace eka2l1::arm::r12l1 {
         if (writeback)
             reg_supplier_.release_spill_lock(base_guest_reg);
 
-        emit_cpsr_restore_nzcv();
+        emit_cpsr_restore_nzcvq();
 
         if (!block_cont)
             emit_return_to_dispatch();
@@ -370,7 +382,7 @@ namespace eka2l1::arm::r12l1 {
 
     bool visit_session::emit_memory_access(common::armgen::arm_reg target_mapped, common::armgen::arm_reg base_mapped,
         common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read) {
-        emit_cpsr_update_nzcv();
+        emit_cpsr_update_nzcvq();
 
         common::armgen::arm_reg host_base_addr = emit_address_lookup(base_mapped, read);
         if (host_base_addr == common::armgen::INVALID_REG) {
@@ -529,7 +541,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         big_block_->set_jump_target(done_all);
-        emit_cpsr_restore_nzcv();
+        emit_cpsr_restore_nzcvq();
 
         return true;
     }
@@ -543,7 +555,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool visit_session::emit_undefined_instruction_handler() {
-        emit_cpsr_update_nzcv();
+        emit_cpsr_update_nzcvq();
         sync_state();
 
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
@@ -552,14 +564,14 @@ namespace eka2l1::arm::r12l1 {
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
 
-        emit_cpsr_restore_nzcv();
+        emit_cpsr_restore_nzcvq();
         emit_return_to_dispatch(false);
 
         return false;
     }
 
     bool visit_session::emit_system_call_handler(const std::uint32_t n) {
-        emit_cpsr_update_nzcv();
+        emit_cpsr_update_nzcvq();
         sync_state();
 
         big_block_->emit_pc_flush(crr_block_->current_address() + (crr_block_->thumb_ ? 2 : 4));
@@ -569,7 +581,7 @@ namespace eka2l1::arm::r12l1 {
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_system_call);
 
-        emit_cpsr_restore_nzcv();
+        emit_cpsr_restore_nzcvq();
 
         // Don't save CPSR, we already update it and it may got modified in the interrupt
         emit_return_to_dispatch(false);
@@ -582,7 +594,7 @@ namespace eka2l1::arm::r12l1 {
         reg_supplier_.flush_all();
 
         if (cpsr_ever_updated_) {
-            emit_cpsr_update_nzcv();
+            emit_cpsr_update_nzcvq();
         }
 
         if (cpsr_save) {
@@ -620,7 +632,7 @@ namespace eka2l1::arm::r12l1 {
 
         if ((flag_ != common::CC_AL) || no_offered_link) {
             if (cpsr_ever_updated_) {
-                emit_cpsr_update_nzcv();
+                emit_cpsr_update_nzcvq();
                 big_block_->emit_cpsr_save();
             }
 
