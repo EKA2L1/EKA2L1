@@ -185,6 +185,63 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_STRB_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint16_t imm12) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::arm_reg source_mapped = (source_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
+            : reg_supplier_.map(source_real, 0);
+
+        if (source_real == common::armgen::R15) {
+            big_block_->MOVI2R(source_mapped, crr_block_->current_address() + 8);
+        }
+
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, W ? ALLOCATE_FLAG_DIRTY : 0);
+        common::armgen::operand2 adv(imm12);
+
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 8, false, U, P, W, false)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
+        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_STRB_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg offset_base_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg source_mapped = (source_real == common::armgen::R15) ? reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR)
+            : reg_supplier_.map(source_real, 0);
+
+        if (source_real == common::armgen::R15) {
+            big_block_->MOVI2R(source_mapped, crr_block_->current_address() + 8);
+        }
+
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, W ? ALLOCATE_FLAG_DIRTY : 0);
+        common::armgen::arm_reg offset_base_mapped = reg_supplier_.map(offset_base_real, 0);
+
+        common::armgen::operand2 adv(offset_base_mapped, shift, imm5);
+
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 8, false, U, P, W, false)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
+        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        return true;
+    }
+
     bool arm_translate_visitor::arm_LDM(common::cc_flags cond, bool W, reg_index n, reg_list list) {
         if (!condition_passed(cond)) {
             return false;
