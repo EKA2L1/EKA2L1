@@ -2,7 +2,7 @@
 <resources>
     <string name="error">Virhe</string>
     <string name="no_data">Ei tietoja</string>
-    <string name="search">Search</string>
+    <string name="search">Etsi</string>
     <string name="about">Tietoa</string>
     <string name="settings">Asetukset</string>
     <string name="packages">Paketit</string>
@@ -17,12 +17,12 @@
     <string name="install">Asenna</string>
     <string name="path_to_rpkg">Polku RPKG:hen</string>
     <string name="path_to_rom">Polku ROM:iin</string>
-    <string name="raw_dump">Raw dump</string>
+    <string name="raw_dump">Raaka dumppi</string>
     <string name="path_to_raw_dump">Polku raakaan dumppiin</string>
     <string name="install_method">Asenna menetelmä</string>
     <string name="pref_general_title">Yleiset</string>
     <string name="pref_system_title">Järjestelmä</string>
-    <string name="pref_control_key_binding_sect_title">Key binding</string>
+    <string name="pref_control_key_binding_sect_title">Näppäimen sitominen</string>
     <string name="pref_theme">Teema</string>
     <string name="pref_theme_light">Vaalea</string>
     <string name="pref_theme_dark">Tumma</string>
@@ -38,7 +38,7 @@
     <string name="pref_system_real_time_accuracy_level_name_high">High</string>
     <string name="pref_system_time_delay_option_name">Time delay</string>
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
-    <string name="emulated_screen_rotation_item_name">Rotation</string>
+    <string name="emulated_screen_rotation_item_name">Kierto</string>
     <string name="emulated_screen_refresh_rate_item_name">Virkistystaajuus</string>
     <string name="mapping_dialog_title">Paina näppäintä</string>
     <string name="mapping_dialog_message" formatted="false">Nykyinen kartoitus: %1$s</string>
