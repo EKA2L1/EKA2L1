@@ -123,12 +123,12 @@
     <string name="install_device_rpkg_choose_msg">Please specify the repackage file (RPKG):</string>
     <string name="install_device_raw_dump_choose_msg">Please specify raw Z: drive dump folder:</string>
     <string name="install_device_rom_choose_msg">Please specify the ROM file:</string>
-    <string name="install_device_wait_install_msg">Please wait while we install the device!</string>
+    <string name="install_device_wait_install_msg">Odota hetki, kun asennamme laitteen!</string>
     <string name="install_device_progress_raw_dump_msg">Kopioidaan raakaa dumppia ({}%)</string>
-    <string name="install_device_progress_rpkg_msg">Extract the RPKG</string>
+    <string name="install_device_progress_rpkg_msg">Pura RPKG</string>
     <string name="install_device_progress_rom_msg">Kopioi ROM</string>
     <string name="install_device_install_failure_msg">Jotain meni vikaan asennuksen aikana! Tarkista loki!</string>
-    <string name="install_device_final_msg_1">Thank you for using the wizard. We hope you have a good time using the emulator!</string>
+    <string name="install_device_final_msg_1">Kiitos, että käytit wizardia. Toivomme, että sinulla on hauskaa käyttäessä emulaattoria!</string>
     <string name="install_device_final_msg_2">For any problem, please report to the developers by opening issues!</string>
     <string name="mmc_mount_success_dialog_title">Card mounted successfully!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>
