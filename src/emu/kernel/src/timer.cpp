@@ -56,7 +56,7 @@ namespace eka2l1 {
 
             outstanding = true;
 
-            info.done_nof = { sts, requester };
+            info.done_nof = epoc::notify_info(sts, requester);
             info.own_timer = this;
 
             timing->schedule_event(us_signal, callback_type, reinterpret_cast<std::uint64_t>(&info));
