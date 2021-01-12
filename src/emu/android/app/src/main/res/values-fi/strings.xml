@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="error">Virhe</string>
-    <string name="no_data">No data</string>
+    <string name="no_data">Ei tietoja</string>
     <string name="search">Search</string>
     <string name="about">Tietoa</string>
     <string name="settings">Asetukset</string>
@@ -12,8 +12,8 @@
     <string name="remove">Poista</string>
     <string name="mount_sd">Liitä MMC/SD-kortti</string>
     <string name="no_devices_found">Laitteita ei löytynyt</string>
-    <string name="exit">Exit</string>
-    <string name="save_log">Save log</string>
+    <string name="exit">Sulje</string>
+    <string name="save_log">Tallenna loki</string>
     <string name="install">Asenna</string>
     <string name="path_to_rpkg">Polku RPKG:hen</string>
     <string name="path_to_rom">Polku ROM:iin</string>
@@ -51,6 +51,6 @@
     <string name="hide_buttons">Piilota painikkeet</string>
     <string name="confirmation_required">Vahvistus vaaditaan</string>
     <string name="force_close_confirmation">Sovelluksen sulkeminen voi johtaa tietojen menetykseen tai jopa rikkoa sen kokonaan!\nJatketaanko?</string>
-    <string name="log_saved">Log has been saved</string>
+    <string name="log_saved">Loki on tallennettu</string>
     <string name="version">Versio: </string>
 </resources>
