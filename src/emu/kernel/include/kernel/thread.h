@@ -218,6 +218,8 @@ namespace eka2l1 {
             epoc9_std_epoc_thread_create_info *metadata;
             std::queue<std::uint32_t> last_syscalls;
 
+            void take_on_panic(const std::u16string &category, const std::int32_t code);
+
         public:
             kernel_obj_ptr get_object(std::uint32_t handle);
             kernel_obj *wait_obj;

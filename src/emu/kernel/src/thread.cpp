@@ -33,6 +33,7 @@
 #include <utils/err.h>
 #include <utils/panic.h>
 #include <utils/reqsts.h>
+#include <utils/guest/actsched.h>
 #include <kernel/ipc.h>
 
 namespace eka2l1 {
@@ -413,7 +414,24 @@ namespace eka2l1 {
             return scheduler->stop(this);
         }
 
-        bool thread::kill(const entity_exit_type the_exit_type,  const std::u16string &category, 
+        void thread::take_on_panic(const std::u16string &category, const std::int32_t code) {
+            const std::u16string CBASE_EUSER_CAT = u"E32USER-CBase";
+            if (category == CBASE_EUSER_CAT) {
+                // Active scheduler panic
+                if ((code == 41) || (code == 42) || (code == 43) || (code == 46)) {
+                    // Dump the scheduler
+                    kernel::process *papa_pr = owning_process();
+                    utils::active_scheduler *sched = ldata->scheduler.cast<utils::active_scheduler>().
+                        get(papa_pr);
+
+                    if (sched) {
+                        sched->dump(papa_pr);
+                    }
+                }
+            }
+        }
+
+        bool thread::kill(const entity_exit_type the_exit_type, const std::u16string &category, 
             const std::int32_t reason) {
             if (state == kernel::thread_state::stop) {
                 return false;
@@ -441,6 +459,9 @@ namespace eka2l1 {
                 case kernel::entity_exit_type::panic:
                     LOG_TRACE(KERNEL, "Thread {} panicked with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
                         exit_description ? (std::string("(") + *exit_description + ")") : "");
+
+                    // Decide HLE actions to take on this thread.
+                    take_on_panic(category, reason);
                     break;
 
                 case kernel::entity_exit_type::kill:
