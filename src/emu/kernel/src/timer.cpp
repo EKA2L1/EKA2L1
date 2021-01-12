@@ -49,15 +49,14 @@ namespace eka2l1 {
             timing->unschedule_event(callback_type, reinterpret_cast<std::uint64_t>(&info));
         }
 
-        bool timer::after(kernel::thread *requester, epoc::request_status *request_status, std::uint64_t us_signal) {
+        bool timer::after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts, std::uint64_t us_signal) {
             if (outstanding) {
                 return false;
             }
 
             outstanding = true;
 
-            info.request_status = request_status;
-            info.own_thread = requester;
+            info.done_nof = { sts, requester };
             info.own_timer = this;
 
             timing->schedule_event(us_signal, callback_type, reinterpret_cast<std::uint64_t>(&info));
@@ -81,8 +80,7 @@ namespace eka2l1 {
                 return false;
             }
 
-            info.request_status->set(epoc::error_cancel, kern->is_eka1());
-            info.own_thread->signal_request();
+            info.done_nof.complete(epoc::error_cancel);
 
             // If the timer hasn't finished yet, please unschedule it.
             if (outstanding) {
@@ -108,9 +106,7 @@ namespace eka2l1 {
                 return;
             }
 
-            info->request_status->set(0, kern->is_eka1());
-            info->own_thread->signal_request();
-
+            info->done_nof.complete(epoc::error_none);
             kern->unlock();
         }
     }

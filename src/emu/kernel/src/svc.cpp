@@ -2287,8 +2287,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        epoc::request_status *sts = req_sts.get(kern->crr_process());
-        timer->after(kern->crr_thread(), sts, us_after);
+        timer->after(kern->crr_thread(), req_sts, us_after);
     }
 
     BRIDGE_FUNC(void, timer_after_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t us_after, kernel::handle h) {
@@ -2298,8 +2297,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        epoc::request_status *sts = req_sts.get(kern->crr_process());
-        timer->after(kern->crr_thread(), sts, us_after);
+        timer->after(kern->crr_thread(), req_sts, us_after);
     }
 
     BRIDGE_FUNC(void, timer_at_utc, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint64_t us_at) {
@@ -2310,7 +2308,7 @@ namespace eka2l1::epoc {
         }
 
         const bool accurate_timing = kern->get_config()->accurate_ipc_timing;
-        timer->after(kern->crr_thread(), req_sts.get(kern->crr_process()), us_at - (accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad()));
+        timer->after(kern->crr_thread(), req_sts, us_at - (accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad()));
     }
 
     BRIDGE_FUNC(void, timer_cancel, kernel::handle h) {

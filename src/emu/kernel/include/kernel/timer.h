@@ -36,9 +36,7 @@ namespace eka2l1 {
         class timer;
 
         struct signal_info {
-            kernel::thread *own_thread;
-            epoc::request_status *request_status;
-
+            epoc::notify_info done_nof;
             timer *own_timer;
         };
 
@@ -54,7 +52,8 @@ namespace eka2l1 {
                 kernel::access_type access = access_type::local_access);
             ~timer();
 
-            bool after(kernel::thread *requester, epoc::request_status *request_status, uint64_t us_signal);
+            bool after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts, 
+                std::uint64_t us_signal);
             bool request_finish();
             bool cancel_request();
         };
