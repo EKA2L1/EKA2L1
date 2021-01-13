@@ -30,7 +30,7 @@
     <string name="file_menu_prefs_item_name">Opciones</string>
     <string name="debugger_menu_pause_item_name">Pausar</string>
     <string name="debugger_menu_stop_item_name">Detener</string>
-    <string name="debugger_menu_restart_item_name">Restart</string>
+    <string name="debugger_menu_restart_item_name">Reiniciar</string>
     <string name="debugger_menu_disassembler_item_name">Disassembler</string>
     <string name="debugger_menu_objects_item_name">Objects</string>
     <string name="debugger_menu_services_item_name">Servicios</string>
@@ -87,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">La configuración de la aplicación para {} se ha guardado con el nombre de archivo: {:X}</string>
     <string name="pref_system_app_setting_save_title">Guardar configuración</string>
     <string name="pref_system_validate_device_btn_title">Validar dispositivo</string>
-    <string name="pref_system_validate_device_tooltip">Check for faults in current device and fix them so that EKA2L1 can emulate the device.</string>
+    <string name="pref_system_validate_device_tooltip">Comprobar si hay fallos en el dispositivo actual y arreglarlos para que EKA2L1 pueda emular el dispositivo.</string>
     <string name="pref_system_validate_device_disabled_tooltip">Se encuentra deshabilitado porque ya se ha iniciado la emulación del dispositivo. Reinicie el emulador para utilizar esta opción.</string>
     <string name="pref_system_no_device_present_str">Ningún dispositivo detectado</string>
     <string name="pref_system_real_time_accuracy_str">Precisión en tiempo real</string>
@@ -96,14 +96,14 @@
     <string name="pref_system_real_time_accuracy_level_name_low">Bajo</string>
     <string name="pref_system_real_time_accuracy_level_name_mid">Medio</string>
     <string name="pref_system_real_time_accuracy_level_name_high">Alto</string>
-    <string name="pref_system_rescan_devices_title">Rescan devices</string>
-    <string name="pref_system_rescan_devices_description_msg">Check for any unimported devices and correct existing one\'s infos</string>
+    <string name="pref_system_rescan_devices_title">Reescanear dispositivos</string>
+    <string name="pref_system_rescan_devices_description_msg">Comprobar si hay algún dispositivo no importado y corregir la información existente</string>
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Configuración de controles</string>
     <string name="pref_control_wait_for_key_string">Esperando entrada de tecla</string>
     <string name="pref_hal_battery_level_string">Nivel de batería</string>
     <string name="pref_hal_signal_level_string">Nivel de señal</string>
-    <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
+    <string name="pref_restart_needed_for_dvcchange_msg">Por favor, reinicie el emulador para que los cambios realizados en los datos y dispositivos sean efectivos</string>
     <string name="packages_title">Paquetes</string>
     <string name="packages_package_menu_name">Paquete</string>
     <string name="packages_install_string">Instalar</string>
@@ -119,10 +119,10 @@
     <string name="install_device_wizard_welcome_msg">¡Bienvenido al asistente de instalación de dispositivos! Para empezar, pulse el botón Continuar.</string>
     <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
-    <string name="install_device_choose_method_msg">Elija su método de instalación</string>
-    <string name="install_device_rpkg_choose_msg">Por favor especifique el archivo RPKG:</string>
-    <string name="install_device_raw_dump_choose_msg">Por favor especifique la carpeta raw Z: donde se encuentra el dump del dispositivo:</string>
-    <string name="install_device_rom_choose_msg">Por favor especifique el archivo ROM:</string>
+    <string name="install_device_choose_method_msg">Elija el método de instalación</string>
+    <string name="install_device_rpkg_choose_msg">Especifique el archivo RPKG:</string>
+    <string name="install_device_raw_dump_choose_msg">Especifique la carpeta raw Z: donde se encuentra el dump del dispositivo:</string>
+    <string name="install_device_rom_choose_msg">Especifique el archivo ROM:</string>
     <string name="install_device_wait_install_msg">Por favor, espere mientras se instala el dispositivo.</string>
     <string name="install_device_progress_raw_dump_msg">Copiando raw dump ({}%)</string>
     <string name="install_device_progress_rpkg_msg">Extraer el RPKG</string>
@@ -144,5 +144,5 @@
     <string name="credits_main_developer_text">Desarrolladores principales:</string>
     <string name="credits_contributors_text">Contribuidores:</string>
     <string name="credits_honors_text">Menciones honoríficas:</string>
-    <string name="credits_translators_text">Translators:</string>
+    <string name="credits_translators_text">Traductores:</string>
 </resources>
