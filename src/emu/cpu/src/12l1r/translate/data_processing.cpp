@@ -856,6 +856,50 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool thumb_translate_visitor::thumb16_ADD_reg_t2(bool d_n_hi, reg_index m, reg_index d_n_lo) {
+        reg_index d_n = (d_n_hi) ? (d_n_lo + 8) : d_n_lo;
+
+        common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        if ((d_n == 15) || (m == 15)) {
+            LOG_WARN(CPU_12L1R, "Unpredictable Thumb ADD");
+            return false;
+        }
+
+        common::armgen::arm_reg dest_and_op1_mapped = common::armgen::INVALID_REG;
+        common::armgen::arm_reg op2_mapped = common::armgen::INVALID_REG;
+
+        if (op2_real == common::armgen::R15) {
+            op2_mapped = ALWAYS_SCRATCH1;
+            big_block_->MOVI2R(op2_mapped, crr_block_->current_address() + 4);
+        } else {
+            op2_mapped = reg_supplier_.map(op2_real, 0);
+        }
+
+        if (dest_and_op1_real == common::armgen::R15) {
+            dest_and_op1_mapped = ALWAYS_SCRATCH1;
+            big_block_->MOVI2R(dest_and_op1_mapped, crr_block_->current_address() + 4);
+        } else {
+            dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real, ALLOCATE_FLAG_DIRTY);
+        }
+
+        common::armgen::arm_reg dest_mapped_final = dest_and_op1_mapped;
+
+        if (dest_and_op1_real == common::armgen::R15) {
+            dest_mapped_final = ALWAYS_SCRATCH2;
+        }
+
+        big_block_->ADD(dest_mapped_final, dest_and_op1_mapped, op2_mapped);
+
+        if (dest_and_op1_real == common::armgen::R15) {
+            emit_reg_link_exchange(dest_mapped_final);
+            return false;
+        }
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_ADD_sp_t1(reg_index d, std::uint8_t imm8) {
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
 
