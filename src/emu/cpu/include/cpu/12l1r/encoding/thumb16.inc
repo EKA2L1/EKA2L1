@@ -36,7 +36,7 @@ INST(thumb16_MOV_reg,        "MOV (reg)",                "01000110Dmmmmddd"), //
 
 // Store/Load single data item instructions
 INST(thumb16_LDR_literal,    "LDR (literal)",            "01001tttvvvvvvvv"),
-//INST(thumb16_STR_reg,        "STR (reg)",                "0101000mmmnnnttt"),
+INST(thumb16_STR_reg,        "STR (reg)",                "0101000mmmnnnttt"),
 //INST(thumb16_STRH_reg,       "STRH (reg)",               "0101001mmmnnnttt"),
 //INST(thumb16_STRB_reg,       "STRB (reg)",               "0101010mmmnnnttt"),
 //INST(thumb16_LDRSB_reg,      "LDRSB (reg)",              "0101011mmmnnnttt"),
