@@ -555,6 +555,25 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool thumb_translate_visitor::thumb16_LDRB_imm(std::uint8_t imm5, reg_index n, reg_index t) {
+        // Can't write to PC, no need precaution! :D
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, 0);
+
+        // This imm5 when shifted becomes 7bit, which still fits well in 8-bit region so no worries.
+        common::armgen::operand2 adv(imm5);
+
+        if (!emit_memory_access(dest_mapped, base_mapped, adv, 8, false, true, true, false, true)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_LDRH_imm(std::uint8_t imm5, reg_index n, reg_index t) {
         // Can't write to PC, no need precaution! :D
         common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
