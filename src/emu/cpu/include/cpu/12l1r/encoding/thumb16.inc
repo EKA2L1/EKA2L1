@@ -12,7 +12,7 @@ INST(thumb16_ADD_imm_t2,     "ADD (imm, T2)",            "00110dddvvvvvvvv"),
 INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
 
 // Data-processing instructions
-//INST(thumb16_AND_reg,        "AND (reg)",                "0100000000mmmddd"),
+INST(thumb16_AND_reg,        "AND (reg)",                "0100000000mmmddd"),
 //INST(thumb16_EOR_reg,        "EOR (reg)",                "0100000001mmmddd"),
 //INST(thumb16_LSL_reg,        "LSL (reg)",                "0100000010mmmddd"),
 //INST(thumb16_LSR_reg,        "LSR (reg)",                "0100000011mmmddd"),
