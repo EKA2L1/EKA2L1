@@ -21,7 +21,7 @@ INST(thumb16_AND_reg,        "AND (reg)",                "0100000000mmmddd"),
 //INST(thumb16_SBC_reg,        "SBC (reg)",                "0100000110mmmddd"),
 //INST(thumb16_ROR_reg,        "ROR (reg)",                "0100000111sssddd"),
 //INST(thumb16_TST_reg,        "TST (reg)",                "0100001000mmmnnn"),
-//INST(thumb16_RSB_imm,        "RSB (imm)",                "0100001001nnnddd"),
+INST(thumb16_RSB_imm,        "RSB (imm)",                "0100001001nnnddd"),
 INST(thumb16_CMP_reg_t1,     "CMP (reg, T1)",            "0100001010mmmnnn"),
 INST(thumb16_CMN_reg,        "CMN (reg)",                "0100001011mmmnnn"),
 INST(thumb16_ORR_reg,        "ORR (reg)",                "0100001100mmmddd"),
@@ -54,7 +54,7 @@ INST(thumb16_STR_imm_t2,     "STR (imm, T2)",            "10010tttvvvvvvvv"),
 INST(thumb16_LDR_imm_t2,     "LDR (imm, T2)",            "10011tttvvvvvvvv"),
 
 // Generate relative address instructions
-//INST(thumb16_ADR,            "ADR",                      "10100dddvvvvvvvv"),
+INST(thumb16_ADR,            "ADR",                      "10100dddvvvvvvvv"),
 INST(thumb16_ADD_sp_t1,      "ADD (SP plus imm, T1)",    "10101dddvvvvvvvv"),
 INST(thumb16_ADD_sp_t2,      "ADD (SP plus imm, T2)",    "101100000vvvvvvv"), // v4T
 INST(thumb16_SUB_sp,         "SUB (SP minus imm)",       "101100001vvvvvvv"), // v4T

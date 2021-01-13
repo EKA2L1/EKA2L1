@@ -1158,4 +1158,30 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool thumb_translate_visitor::thumb16_ADR(reg_index d, std::uint8_t imm8) {
+        const std::uint32_t data_addr = common::align(crr_block_->current_address(), 4, 0) +
+            (imm8 << 2) + 4;
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        big_block_->MOVI2R(dest_mapped, data_addr);
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_RSB_imm(reg_index n, reg_index d) {
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::operand2 op2(0);
+
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+
+        big_block_->RSBS(dest_mapped, op1_mapped, op2);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
 }
