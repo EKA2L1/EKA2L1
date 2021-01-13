@@ -777,6 +777,22 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_CMN_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::operand2 rhs(imm8, static_cast<std::uint8_t>(rotate));
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+
+        big_block_->CMN(lhs_mapped, rhs);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_TST_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
             return false;
