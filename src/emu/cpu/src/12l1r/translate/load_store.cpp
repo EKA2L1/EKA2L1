@@ -409,6 +409,42 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_STRH_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm8a, std::uint8_t imm8b) {
+        // Can't write to PC
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        W = should_do_writeback(P, W);
+
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, ALLOCATE_FLAG_DIRTY);
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, W ? ALLOCATE_FLAG_DIRTY : 0);
+        common::armgen::operand2 adv((imm8b & 0b1111) | ((imm8a & 0b1111) << 4));
+
+        reg_supplier_.spill_lock(source_real);
+
+        if (W) {
+            reg_supplier_.spill_lock(base_real);
+        }
+
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 16, false, U, P, W, false)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
+        if (W) {
+            reg_supplier_.release_spill_lock(base_real);
+        }
+
+        reg_supplier_.release_spill_lock(source_real);
+        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_LDM(common::cc_flags cond, bool W, reg_index n, reg_list list) {
         if (!condition_passed(cond)) {
             return false;
