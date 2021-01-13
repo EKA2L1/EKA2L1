@@ -81,8 +81,8 @@ INST(thumb16_POP,            "POP",                      "1011110Pxxxxxxxx"), //
 //INST(thumb16_BKPT,           "BKPT",                     "10111110xxxxxxxx"), // v5
 
 // Store/Load multiple registers
-//INST(thumb16_STMIA,          "STMIA",                    "11000nnnxxxxxxxx"),
-//INST(thumb16_LDMIA,          "LDMIA",                    "11001nnnxxxxxxxx"),
+INST(thumb16_STMIA,          "STMIA",                    "11000nnnxxxxxxxx"),
+INST(thumb16_LDMIA,          "LDMIA",                    "11001nnnxxxxxxxx"),
 
 // Branch instructions
 INST(thumb16_BX,             "BX",                       "010001110mmmm000"), // v4T

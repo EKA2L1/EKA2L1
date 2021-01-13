@@ -306,20 +306,28 @@ namespace eka2l1::arm::r12l1 {
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, true, true, W, false);
     }
 
-    bool thumb_translate_visitor::thumb16_PUSH(bool m, reg_list reg_list) {
+    bool thumb_translate_visitor::thumb16_PUSH(bool m, reg_list list) {
         if (m) {
-            reg_list |= 1 << 14;
+            list |= 1 << 14;
         }
 
-        return emit_memory_access_chain(common::armgen::R13, reg_list, false, true, true, false);
+        return emit_memory_access_chain(common::armgen::R13, list, false, true, true, false);
     }
 
-    bool thumb_translate_visitor::thumb16_POP(bool p, reg_list reg_list) {
+    bool thumb_translate_visitor::thumb16_POP(bool p, reg_list list) {
         if (p) {
-            reg_list |= 1 << 15;
+            list |= 1 << 15;
         }
 
-        return emit_memory_access_chain(common::armgen::R13, reg_list, true, false, true, true);
+        return emit_memory_access_chain(common::armgen::R13, list, true, false, true, true);
+    }
+
+    bool thumb_translate_visitor::thumb16_LDMIA(reg_index n, reg_list list) {
+        return emit_memory_access_chain(reg_index_to_gpr(n), list, true, false, true, true);
+    }
+
+    bool thumb_translate_visitor::thumb16_STMIA(reg_index n, reg_list list) {
+        return emit_memory_access_chain(reg_index_to_gpr(n), list, true, false, true, false);
     }
 
     bool thumb_translate_visitor::thumb16_LDR_literal(reg_index t, std::uint8_t imm8) {
