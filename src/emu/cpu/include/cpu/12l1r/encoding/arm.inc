@@ -52,7 +52,7 @@ INST(arm_ORR_imm,       "ORR (imm)",           "cccc0011100Snnnnddddrrrrvvvvvvvv
 INST(arm_ORR_reg,       "ORR (reg)",           "cccc0001100Snnnnddddvvvvvrr0mmmm") // all
 INST(arm_ORR_rsr,       "ORR (rsr)",           "cccc0001100Snnnnddddssss0rr1mmmm") // all
 INST(arm_RSB_imm,       "RSB (imm)",           "cccc0010011Snnnnddddrrrrvvvvvvvv") // all
-//INST(arm_RSB_reg,       "RSB (reg)",           "cccc0000011Snnnnddddvvvvvrr0mmmm") // all
+INST(arm_RSB_reg,       "RSB (reg)",           "cccc0000011Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_RSB_rsr,       "RSB (rsr)",           "cccc0000011Snnnnddddssss0rr1mmmm") // all
 //INST(arm_RSC_imm,       "RSC (imm)",           "cccc0010111Snnnnddddrrrrvvvvvvvv") // all
 //INST(arm_RSC_reg,       "RSC (reg)",           "cccc0000111Snnnnddddvvvvvrr0mmmm") // all
@@ -133,8 +133,8 @@ INST(arm_UDF,           "UDF",                 "111001111111------------1111----
 INST(arm_LDR_lit,       "LDR (lit)",           "cccc0101u0011111ttttvvvvvvvvvvvv")
 INST(arm_LDR_imm,       "LDR (imm)",           "cccc010pu0w1nnnnttttvvvvvvvvvvvv")
 INST(arm_LDR_reg,       "LDR (reg)",           "cccc011pu0w1nnnnttttvvvvvrr0mmmm")
-//INST(arm_LDRB_lit,      "LDRB (lit)",          "cccc0101u1011111ttttvvvvvvvvvvvv")
-//INST(arm_LDRB_imm,      "LDRB (imm)",          "cccc010pu1w1nnnnttttvvvvvvvvvvvv")
+INST(arm_LDRB_lit,      "LDRB (lit)",          "cccc0101u1011111ttttvvvvvvvvvvvv")
+INST(arm_LDRB_imm,      "LDRB (imm)",          "cccc010pu1w1nnnnttttvvvvvvvvvvvv")
 //INST(arm_LDRB_reg,      "LDRB (reg)",          "cccc011pu1w1nnnnttttvvvvvrr0mmmm")
 //INST(arm_LDRD_lit,      "LDRD (lit)",          "cccc0001u1001111ttttvvvv1101vvvv")
 //INST(arm_LDRD_imm,      "LDRD (imm)",          "cccc000pu1w0nnnnttttvvvv1101vvvv") // v5E
