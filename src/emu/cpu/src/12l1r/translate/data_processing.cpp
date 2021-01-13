@@ -335,6 +335,42 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_RSB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
+            int rotate, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+
+        common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
+
+        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        if (op1_real == common::armgen::R15) {
+            assert(!S);
+            big_block_->MOV(dest_mapped, (-crr_block_->current_address() + 8) + expand_arm_imm(imm8, rotate));
+        } else {
+            const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+
+            if (S) {
+                big_block_->RSBS(dest_mapped, op1_mapped, op2);
+                cpsr_nzcvq_changed();
+            } else {
+                big_block_->RSB(dest_mapped, op1_mapped, op2);
+            }
+        }
+
+        if (dest_real == common::armgen::R15) {
+            emit_reg_link_exchange(dest_mapped);
+            return false;
+        }
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_BIC_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
             return false;
