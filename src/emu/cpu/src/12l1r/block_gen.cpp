@@ -396,10 +396,6 @@ namespace eka2l1::arm::r12l1 {
             return nullptr;
         }
 
-        if (addr == 0x5063BC8A) {
-            LOG_TRACE(CPU_12L1R, "AAAAA! {} {} 123123 0x{:X}", state->gprs_[4], state->gprs_[0], state->cpsr_);
-        }
-
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 
@@ -417,7 +413,8 @@ namespace eka2l1::arm::r12l1 {
             thumb_visitor = std::make_unique<thumb_translate_visitor>(this, block);
         }
 
-        begin_write();
+        // Reserve 4 writeable pages for these JIT codes.
+        begin_write(4);
 
         // Let them know the address damn
         emit_pc_flush(addr);
