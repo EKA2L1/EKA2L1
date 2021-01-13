@@ -819,6 +819,43 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool thumb_translate_visitor::thumb16_ADD_reg_t1(reg_index m, reg_index n, reg_index d) {
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg source1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg source2_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+        common::armgen::arm_reg source1_mapped = common::armgen::INVALID_REG;
+        common::armgen::arm_reg source2_mapped = common::armgen::INVALID_REG;
+
+        if (source1_real == common::armgen::R15) {
+            if (source2_real == common::armgen::R15) {
+                LOG_ERROR(CPU_12L1R, "Invalid add instruction!");
+                return false;
+            }
+
+            source1_mapped = ALWAYS_SCRATCH1;
+            source2_mapped = reg_supplier_.map(source2_real, 0);
+
+            big_block_->MOVI2R(source1_mapped, crr_block_->current_address() + 4);
+        } else {
+            source1_mapped = reg_supplier_.map(source1_real, 0);
+
+            // If source1 is not R15 then source2 maybe R15, no problem here.
+            if (source2_real == common::armgen::R15) {
+                source2_mapped = ALWAYS_SCRATCH1;
+                big_block_->MOVI2R(source2_mapped, crr_block_->current_address() + 4);
+            } else {
+                source2_mapped = reg_supplier_.map(source2_real, 0);
+            }
+        }
+
+        big_block_->ADDS(dest_mapped, source1_mapped, source2_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_ADD_sp_t1(reg_index d, std::uint8_t imm8) {
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
 

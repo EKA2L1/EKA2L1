@@ -2,7 +2,7 @@
 INST(thumb16_LSL_imm,        "LSL (imm)",                "00000vvvvvmmmddd"),
 INST(thumb16_LSR_imm,        "LSR (imm)",                "00001vvvvvmmmddd"),
 //INST(thumb16_ASR_imm,        "ASR (imm)",                "00010vvvvvmmmddd"),
-//INST(thumb16_ADD_reg_t1,     "ADD (reg, T1)",            "0001100mmmnnnddd"),
+INST(thumb16_ADD_reg_t1,     "ADD (reg, T1)",            "0001100mmmnnnddd"),
 INST(thumb16_SUB_reg,        "SUB (reg)",                "0001101mmmnnnddd"),
 INST(thumb16_ADD_imm_t1,     "ADD (imm, T1)",            "0001110vvvnnnddd"),
 INST(thumb16_SUB_imm_t1,     "SUB (imm, T1)",            "0001111vvvnnnddd"),
