@@ -459,4 +459,21 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool thumb_translate_visitor::thumb16_STRB_imm(std::uint8_t imm5, reg_index n, reg_index t) {
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base_real, 0);
+
+        common::armgen::operand2 adv(imm5);
+
+        if (!emit_memory_access(source_mapped, base_mapped, adv, 8, false, true, true, false, false)) {
+            LOG_ERROR(CPU_12L1R, "Some error occured during memory access emit!");
+            return false;
+        }
+
+        return true;
+    }
 }
