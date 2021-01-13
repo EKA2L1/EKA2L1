@@ -205,7 +205,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOV(dest_mapped, crr_block_->current_address() + 8 + expand_arm_imm(imm8, rotate));
+            big_block_->MOVI2R(dest_mapped, crr_block_->current_address() + 8 + expand_arm_imm(imm8, rotate));
         } else {
             const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
@@ -278,7 +278,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOV(dest_mapped, crr_block_->current_address() + 8 - expand_arm_imm(imm8, rotate));
+            big_block_->MOVI2R(dest_mapped, crr_block_->current_address() + 8 - expand_arm_imm(imm8, rotate));
         } else {
             const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
@@ -351,7 +351,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOV(dest_mapped, (-crr_block_->current_address() + 8) + expand_arm_imm(imm8, rotate));
+            big_block_->MOVI2R(dest_mapped, (-crr_block_->current_address() + 8) + expand_arm_imm(imm8, rotate));
         } else {
             const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
@@ -423,7 +423,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOV(dest_mapped, ((crr_block_->current_address() + 8) & ~(expand_arm_imm(imm8, rotate))));
+            big_block_->MOVI2R(dest_mapped, ((crr_block_->current_address() + 8) & ~(expand_arm_imm(imm8, rotate))));
         } else {
             const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
@@ -534,7 +534,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOV(dest_mapped, ((crr_block_->current_address() + 8) | (expand_arm_imm(imm8, rotate))));
+            big_block_->MOVI2R(dest_mapped, ((crr_block_->current_address() + 8) | (expand_arm_imm(imm8, rotate))));
         } else {
             const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
@@ -645,7 +645,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOV(dest_mapped, ((crr_block_->current_address() + 8) ^ (expand_arm_imm(imm8, rotate))));
+            big_block_->MOVI2R(dest_mapped, ((crr_block_->current_address() + 8) ^ (expand_arm_imm(imm8, rotate))));
         } else {
             const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
@@ -809,7 +809,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOV(dest_mapped, ((crr_block_->current_address() + 8) & (expand_arm_imm(imm8, rotate))));
+            big_block_->MOVI2R(dest_mapped, ((crr_block_->current_address() + 8) & (expand_arm_imm(imm8, rotate))));
         } else {
             const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
 
