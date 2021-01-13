@@ -142,6 +142,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->ADD(final_addr, final_addr, ALWAYS_SCRATCH2);
 
         big_block_->set_jump_target(tlb_miss);
+        reg_supplier_.done_scratching_this(scratch3);
 
         return final_addr;
     }
@@ -384,6 +385,25 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read) {
         emit_cpsr_update_nzcvq();
 
+        if (!writeback) {
+            // Post index can also cause a writeback, so we might check that as well
+            writeback = !pre_index;
+
+            if (!writeback) {
+                common::armgen::arm_reg scratch_base = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+                big_block_->MOV(scratch_base, base_mapped);
+
+                base_mapped = scratch_base;
+            }
+        }
+
+        if (pre_index) {
+            if (add)
+                big_block_->ADD(base_mapped, base_mapped, op2);
+            else
+                big_block_->SUB(base_mapped, base_mapped, op2);
+        }
+
         common::armgen::arm_reg host_base_addr = emit_address_lookup(base_mapped, read);
         if (host_base_addr == common::armgen::INVALID_REG) {
             LOG_ERROR(CPU_12L1R, "Failed to get host base address register");
@@ -404,14 +424,6 @@ namespace eka2l1::arm::r12l1 {
         if (base_mapped != common::armgen::R1)
             big_block_->MOV(common::armgen::R1, base_mapped);
 
-        if (pre_index) {
-            if (add)
-                big_block_->ADD(common::armgen::R1, common::armgen::R1, op2);
-            else
-                big_block_->SUB(common::armgen::R1, common::armgen::R1, op2);
-        }
-
-        big_block_->PUSH(1, common::armgen::R1);
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
 
         if (read) {
@@ -452,24 +464,7 @@ namespace eka2l1::arm::r12l1 {
             }
         }
 
-        big_block_->POP(1, common::armgen::R1);
-
-        if (!pre_index) {
-            if (add)
-                big_block_->ADD(common::armgen::R1, common::armgen::R1, op2);
-            else
-                big_block_->SUB(common::armgen::R1, common::armgen::R1, op2);
-        }
-
-        if (writeback) {
-            big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R1);
-        }
-
         big_block_->POP(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
-
-        if (writeback) {
-            big_block_->MOV(base_mapped, ALWAYS_SCRATCH2);
-        }
 
         if (read) {
             if (is_signed) {
@@ -498,22 +493,22 @@ namespace eka2l1::arm::r12l1 {
             switch (bit_count) {
                 case 8:
                     if (is_signed)
-                        big_block_->LDRSB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                        big_block_->LDRSB(target_mapped, host_base_addr, 0, true, true, false);
                     else
-                        big_block_->LDRB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                        big_block_->LDRB(target_mapped, host_base_addr, 0, true, true, false);
 
                     break;
 
                 case 16:
                     if (is_signed)
-                        big_block_->LDRSH(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                        big_block_->LDRSH(target_mapped, host_base_addr, 0, true, true, false);
                     else
-                        big_block_->LDRH(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                        big_block_->LDRH(target_mapped, host_base_addr, 0, true, true, false);
 
                     break;
 
                 case 32:
-                    big_block_->LDR(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    big_block_->LDR(target_mapped, host_base_addr, 0, true, true, false);
                     break;
 
                 default:
@@ -523,15 +518,15 @@ namespace eka2l1::arm::r12l1 {
         } else {
             switch (bit_count) {
                 case 8:
-                    big_block_->STRB(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    big_block_->STRB(target_mapped, host_base_addr, 0, true, true, false);
                     break;
 
                 case 16:
-                    big_block_->STRH(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    big_block_->STRH(target_mapped, host_base_addr, 0, true, true, false);
                     break;
 
                 case 32:
-                    big_block_->STR(target_mapped, host_base_addr, op2, add, pre_index, writeback);
+                    big_block_->STR(target_mapped, host_base_addr, 0, true, true, false);
                     break;
 
                 default:
@@ -541,8 +536,16 @@ namespace eka2l1::arm::r12l1 {
         }
 
         big_block_->set_jump_target(done_all);
-        emit_cpsr_restore_nzcvq();
 
+        if (!pre_index) {
+            // Increase mapped base
+            if (add)
+                big_block_->ADD(base_mapped, base_mapped, op2);
+            else
+                big_block_->SUB(base_mapped, base_mapped, op2);
+        }
+
+        emit_cpsr_restore_nzcvq();
         reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
 
         return true;

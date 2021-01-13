@@ -394,6 +394,16 @@ namespace eka2l1::arm::r12l1 {
         }
     }
 
+    void reg_cache::done_scratching_this(common::armgen::arm_reg mee) {
+        if ((mee >= common::armgen::R0) && (mee < common::armgen::R15)) {
+            host_gpr_infos_[mee].scratch_ = false;
+        } else if ((mee >= common::armgen::S0) && (mee <= common::armgen::S23)) {
+            host_gpr_infos_[mee].scratch_ = false;
+        } else {
+            LOG_ERROR(CPU_12L1R, "Invalid register to release scratch!");
+        }
+    }
+
     void reg_cache::done_scratching(reg_scratch_type type) {
         switch (type) {
             case REG_SCRATCH_TYPE_GPR:
