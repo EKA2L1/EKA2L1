@@ -69,7 +69,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
-        emit_reg_link_exchange(jump_reg_mapped);
+        emit_pc_write_exchange(jump_reg_mapped);
         emit_return_to_dispatch();
 
         return false;
@@ -90,7 +90,7 @@ namespace eka2l1::arm::r12l1 {
                 ALLOCATE_FLAG_DIRTY);
 
         big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
-        emit_reg_link_exchange(jump_reg_mapped);
+        emit_pc_write_exchange(jump_reg_mapped);
 
         emit_return_to_dispatch();
 
@@ -101,7 +101,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
-        emit_reg_link_exchange(jump_reg_mapped);
+        emit_pc_write_exchange(jump_reg_mapped);
         emit_return_to_dispatch();
 
         return false;

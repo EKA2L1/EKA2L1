@@ -176,7 +176,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->_MSR(nzcvq, false, CPSR_REG);
     }
 
-    void visit_session::emit_reg_link_exchange(common::armgen::arm_reg reg) {
+    void visit_session::emit_pc_write_exchange(common::armgen::arm_reg reg) {
         if (cpsr_ever_updated_)
             emit_cpsr_update_nzcvq();
 
@@ -593,7 +593,7 @@ namespace eka2l1::arm::r12l1 {
         if (read && (target == common::armgen::R15)) {
             // Link the block
             // Write the result
-            emit_reg_link_exchange(target_mapped);
+            emit_pc_write_exchange(target_mapped);
             emit_return_to_dispatch();
 
             block_cont = false;

@@ -74,7 +74,7 @@ namespace eka2l1::arm::r12l1 {
 
 		void emit_direct_link(const vaddress addr, const bool save_cpsr = true);
 		void emit_return_to_dispatch(const bool save_cpsr = true);
-		void emit_reg_link_exchange(common::armgen::arm_reg reg);
+		void emit_pc_write_exchange(common::armgen::arm_reg reg);
 
 		void sync_state();
 

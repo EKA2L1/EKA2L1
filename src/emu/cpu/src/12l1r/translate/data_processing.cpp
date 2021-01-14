@@ -64,7 +64,9 @@ namespace eka2l1::arm::r12l1 {
 
         const common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(source_mapped);
+            emit_pc_write_exchange(source_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -162,7 +164,9 @@ namespace eka2l1::arm::r12l1 {
 
         const common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(source_mapped);
+            emit_pc_write_exchange(source_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -218,7 +222,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -255,7 +261,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -291,7 +299,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -328,7 +338,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -364,7 +376,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -401,7 +415,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -436,7 +452,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -473,7 +491,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -512,7 +532,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -547,7 +569,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -584,7 +608,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -623,7 +649,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -658,7 +686,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -695,7 +725,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -734,7 +766,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -838,7 +872,9 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped);
+            emit_pc_write_exchange(dest_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -864,7 +900,9 @@ namespace eka2l1::arm::r12l1 {
 
         const common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
         if (dest_real == common::armgen::R15) {
-            emit_reg_link_exchange(source_mapped);
+            emit_pc_write_exchange(source_mapped);
+            emit_return_to_dispatch();
+
             return false;
         }
 
@@ -982,7 +1020,9 @@ namespace eka2l1::arm::r12l1 {
         big_block_->ADD(dest_mapped_final, dest_and_op1_mapped, op2_mapped);
 
         if (dest_and_op1_real == common::armgen::R15) {
-            emit_reg_link_exchange(dest_mapped_final);
+            emit_pc_write_exchange(dest_mapped_final);
+            emit_return_to_dispatch();
+
             return false;
         }
 
