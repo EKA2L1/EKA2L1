@@ -18,6 +18,7 @@ set(SOURCE_12L1R
         src/12l1r/translate/data_processing.cpp
         src/12l1r/translate/interrupt.cpp
         src/12l1r/translate/load_store.cpp
+        src/12l1r/translate/multiply.cpp
         src/12l1r/translate/status_register_access.cpp
         src/12l1r/arm_12l1r.cpp
         src/12l1r/arm_visitor.cpp

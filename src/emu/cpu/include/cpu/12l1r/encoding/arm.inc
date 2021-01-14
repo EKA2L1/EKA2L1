@@ -208,7 +208,7 @@ INST(arm_STMIB,         "STMIB",               "cccc100110w0nnnnxxxxxxxxxxxxxxxx
 // Multiply (Normal) instructions
 //INST(arm_MLA,           "MLA",                 "cccc0000001Sddddaaaammmm1001nnnn") // v2
 //INST(arm_MLS,           "MLS",                 "cccc00000110ddddaaaammmm1001nnnn") // v6T2
-//INST(arm_MUL,           "MUL",                 "cccc0000000Sdddd0000mmmm1001nnnn") // v2
+INST(arm_MUL,           "MUL",                 "cccc0000000Sdddd0000mmmm1001nnnn") // v2
 
 // Multiply (Long) instructions
 //INST(arm_SMLAL,         "SMLAL",               "cccc0000111Sddddaaaammmm1001nnnn") // v3M

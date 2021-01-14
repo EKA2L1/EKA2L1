@@ -97,6 +97,9 @@ namespace eka2l1::arm::r12l1 {
         bool arm_STRB_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
         bool arm_STRH_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm8a, std::uint8_t imm8b);
 
+        // Multiply
+        bool arm_MUL(common::cc_flags cond, bool S, reg_index d, reg_index m, reg_index n);
+
         // Status register access
         bool arm_MRS(common::cc_flags cond, reg_index d);
         bool arm_MSR_imm(common::cc_flags cond, int mask, int rotate, std::uint8_t imm8);
