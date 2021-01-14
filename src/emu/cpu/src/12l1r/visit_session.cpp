@@ -381,23 +381,50 @@ namespace eka2l1::arm::r12l1 {
         return block_cont;
     }
 
-    bool visit_session::emit_memory_access(common::armgen::arm_reg target_mapped, common::armgen::arm_reg base_mapped,
-        common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read) {
+    bool visit_session::emit_memory_access(common::armgen::arm_reg target, common::armgen::arm_reg base,
+        common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add,
+        bool pre_index, bool writeback, bool read) {
         emit_cpsr_update_nzcvq();
 
         if (!writeback) {
             // Post index can also cause a writeback, so we might check that as well
             writeback = !pre_index;
-
-            if (!writeback) {
-                common::armgen::arm_reg scratch_base = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
-                big_block_->MOV(scratch_base, base_mapped);
-
-                base_mapped = scratch_base;
-            }
         }
 
-        if (pre_index) {
+        common::armgen::arm_reg base_mapped = common::armgen::INVALID_REG;
+
+        bool base_spill_locked = false;
+
+        if (base == common::armgen::R15) {
+            // Calculate address right away
+            vaddress addr_to_base = common::align(crr_block_->current_address(), 4, 0) +
+                    (crr_block_->thumb_ ? 4 : 8) + (add ? 1 : -1) * op2.Imm12();
+
+            base_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            big_block_->MOVI2R(base_mapped, addr_to_base);
+
+            // Empty op2 to 0
+            op2 = 0;
+        } else {
+            // Map it as an normal register, and spill lock it
+            base_mapped = reg_supplier_.map(base, writeback ? ALLOCATE_FLAG_DIRTY : 0);
+            reg_supplier_.spill_lock(base);
+
+            base_spill_locked = true;
+        }
+
+        if ((!writeback) && (base != common::armgen::R15)) {
+            common::armgen::arm_reg scratch_base = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            big_block_->MOV(scratch_base, base_mapped);
+
+            base_mapped = scratch_base;
+
+            // Spill whether you want we are done! :DDD
+            reg_supplier_.release_spill_lock(base);
+            base_spill_locked = false;
+        }
+
+        if (pre_index && (op2.get_data() != 0)) {
             if (add)
                 big_block_->ADD(base_mapped, base_mapped, op2);
             else
@@ -408,6 +435,20 @@ namespace eka2l1::arm::r12l1 {
         if (host_base_addr == common::armgen::INVALID_REG) {
             LOG_ERROR(CPU_12L1R, "Failed to get host base address register");
             return false;
+        }
+
+        // Map the target here, no register can disturb us :D
+        // CPSR should not be ruined
+        common::armgen::arm_reg target_mapped = common::armgen::INVALID_REG;
+        if (target == common::armgen::R15) {
+            target_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            if (!read) {
+                // We are writing the PC, so load the current address into it
+                big_block_->MOVI2R(target_mapped, crr_block_->current_address() + (crr_block_->thumb_ ? 4 : 8));
+            }
+        } else {
+            // Normal mapping, no need to spill lock since no one can touch us here.
+            target_mapped = reg_supplier_.map(target, read ? ALLOCATE_FLAG_DIRTY : 0);
         }
 
         big_block_->CMP(host_base_addr, 0);
@@ -537,7 +578,7 @@ namespace eka2l1::arm::r12l1 {
 
         big_block_->set_jump_target(done_all);
 
-        if (!pre_index) {
+        if (!pre_index && (op2.get_data() != 0)) {
             // Increase mapped base
             if (add)
                 big_block_->ADD(base_mapped, base_mapped, op2);
@@ -546,9 +587,24 @@ namespace eka2l1::arm::r12l1 {
         }
 
         emit_cpsr_restore_nzcvq();
-        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
 
-        return true;
+        bool block_cont = true;
+
+        if (read && (target == common::armgen::R15)) {
+            // Link the block
+            // Write the result
+            emit_reg_link_exchange(target_mapped);
+            emit_return_to_dispatch();
+
+            block_cont = false;
+        }
+
+        if (base_spill_locked) {
+            reg_supplier_.release_spill_lock(base);
+        }
+
+        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        return block_cont;
     }
 
     void visit_session::sync_state() {

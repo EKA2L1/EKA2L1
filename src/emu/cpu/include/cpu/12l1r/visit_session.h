@@ -61,7 +61,7 @@ namespace eka2l1::arm::r12l1 {
         bool emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
             bool before, bool writeback, bool load);
 
-        bool emit_memory_access(common::armgen::arm_reg target_mapped, common::armgen::arm_reg base_mapped,
+        bool emit_memory_access(common::armgen::arm_reg target, common::armgen::arm_reg base,
         	common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read);
 
         bool emit_undefined_instruction_handler();
