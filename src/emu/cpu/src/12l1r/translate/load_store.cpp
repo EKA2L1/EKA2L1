@@ -378,4 +378,28 @@ namespace eka2l1::arm::r12l1 {
         reg_supplier_.release_spill_lock(offset_real);
         return res;
     }
+
+    bool thumb_translate_visitor::thumb16_STRH_reg(reg_index m, reg_index n, reg_index t) {
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg offset_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg offset_mapped = reg_supplier_.map(offset_real, 0);
+        reg_supplier_.spill_lock(offset_real);
+
+        const bool res = emit_memory_access(source_real, base_real, common::armgen::operand2(offset_mapped),
+            16, false, true, true, false, false);
+
+        reg_supplier_.release_spill_lock(offset_real);
+        return res;
+    }
+
+    bool thumb_translate_visitor::thumb16_STRH_imm(std::uint8_t imm5, reg_index n, reg_index t) {
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::operand2 adv(imm5 << 1);
+
+        return emit_memory_access(source_real, base_real, adv, 16, false, true, true, false, false);
+    }
 }
