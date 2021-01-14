@@ -183,6 +183,20 @@ namespace eka2l1::arm::r12l1 {
         big_block_->emit_pc_write_exchange(reg);
     }
 
+    void visit_session::emit_pc_write(common::armgen::arm_reg reg) {
+        if (cpsr_ever_updated_)
+            emit_cpsr_update_nzcvq();
+
+        big_block_->emit_pc_write(reg);
+    }
+
+    void visit_session::emit_alu_jump(common::armgen::arm_reg reg) {
+        // TODO: For armv7 and upper it also exchanges when PC is being written,  so might have
+        //  to add some checks here...
+        emit_pc_write(reg);
+        emit_return_to_dispatch();
+    }
+
     bool visit_session::emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
         bool before, bool writeback, bool load) {
         std::int8_t last_reg = 0;

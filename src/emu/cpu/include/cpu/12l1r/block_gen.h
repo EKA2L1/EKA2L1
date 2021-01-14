@@ -24,7 +24,7 @@
 #include <cpu/arm_interface.h>
 
 #include <cstdint>
-#include <unordered_map>
+#include <map>
 
 namespace eka2l1::arm::r12l1 {
     struct core_state;
@@ -50,7 +50,7 @@ namespace eka2l1::arm::r12l1 {
 
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
-        std::unordered_multimap<translated_block::hash_type, translated_block*> link_to_;
+        std::multimap<translated_block::hash_type, translated_block*> link_to_;
 
         block_cache cache_;
 
@@ -78,6 +78,7 @@ namespace eka2l1::arm::r12l1 {
 
         void emit_pc_flush(const address current_pc);
         void emit_pc_write_exchange(common::armgen::arm_reg pc_reg);
+        void emit_pc_write(common::armgen::arm_reg pc_reg);
 		void emit_cycles_count_add(const std::uint32_t num);
         void emit_cpsr_save();
         void emit_cycles_count_save();

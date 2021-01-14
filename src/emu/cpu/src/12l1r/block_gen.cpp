@@ -32,7 +32,7 @@
 #include <common/algorithm.h>
 
 namespace eka2l1::arm::r12l1 {
-    static constexpr std::size_t MAX_CODE_SPACE_BYTES = common::MB(24);
+    static constexpr std::size_t MAX_CODE_SPACE_BYTES = common::MB(16);
 
     static translated_block *dashixiong_get_block_proxy(dashixiong_block *self, const vaddress addr, const asid aid) {
         return self->get_block(addr, aid);
@@ -307,6 +307,12 @@ namespace eka2l1::arm::r12l1 {
 
         set_cc(common::CC_AL);
 
+        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+    }
+
+    void dashixiong_block::emit_pc_write(common::armgen::arm_reg pc_reg) {
+        // Have to align it smh
+        BIC(ALWAYS_SCRATCH1, pc_reg, 1);
         STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
     }
 
