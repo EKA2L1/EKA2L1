@@ -742,7 +742,9 @@ namespace eka2l1::common::armgen {
 
     bool armx_emitter::BLInRange(const void *fnptr) const {
         ptrdiff_t distance = (intptr_t)fnptr - (intptr_t(code) + 8);
-        if (distance <= -0x2000000 || distance >= 0x2000000)
+
+        // If branch to the thumb code, don't use this!!! :o
+        if ((distance <= -0x2000000) || (distance >= 0x2000000) || (distance & 1))
             return false;
         else
             return true;
