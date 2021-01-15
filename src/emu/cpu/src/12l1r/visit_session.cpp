@@ -664,16 +664,12 @@ namespace eka2l1::arm::r12l1 {
         return false;
     }
 
-    void visit_session::emit_direct_link(const vaddress addr, const bool cpsr_save) {
+    void visit_session::emit_direct_link(const vaddress addr) {
         // Flush all registers in this
         reg_supplier_.flush_all();
 
         if (cpsr_ever_updated_) {
             emit_cpsr_update_nzcvq();
-        }
-
-        if (cpsr_save) {
-            big_block_->emit_cpsr_save();
         }
 
         big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
@@ -709,8 +705,6 @@ namespace eka2l1::arm::r12l1 {
             if (cpsr_ever_updated_) {
                 emit_cpsr_update_nzcvq();
             }
-
-            big_block_->emit_cpsr_save();
 
             // Add branching to next block, making it highest priority
             crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ?

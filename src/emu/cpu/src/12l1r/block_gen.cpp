@@ -117,7 +117,8 @@ namespace eka2l1::arm::r12l1 {
         set_jump_target(headout);
         set_jump_target(return_back);
 
-        // Save the ticks
+        // Save the CPSR and ticks
+        emit_cpsr_save();
         emit_cycles_count_save();
 
         // Restore alignment
@@ -430,9 +431,6 @@ namespace eka2l1::arm::r12l1 {
 
         // Let them know the address damn
         emit_pc_flush(addr);
-
-        // Load CPSR into register
-        LDR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
 
         // Emit the check if we should go outside and stop running
         // Check if we are out of cycles, set the should_break if we should stop and
