@@ -708,8 +708,9 @@ namespace eka2l1::arm::r12l1 {
         if ((flag_ != common::CC_AL) || no_offered_link) {
             if (cpsr_ever_updated_) {
                 emit_cpsr_update_nzcvq();
-                big_block_->emit_cpsr_save();
             }
+
+            big_block_->emit_cpsr_save();
 
             // Add branching to next block, making it highest priority
             crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ?
