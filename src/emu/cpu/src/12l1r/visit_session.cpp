@@ -316,14 +316,14 @@ namespace eka2l1::arm::r12l1 {
                     auto lookup_good = big_block_->B_CC(common::CC_NEQ);
 
                     big_block_->MOV(common::armgen::R0, guest_addr_reg);
-                    big_block_->PUSH(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+                    big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
                     big_block_->MOV(common::armgen::R1, common::armgen::R0);
                     big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
 
                     if (load) {
                         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
-                        big_block_->POP(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+                        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
                         if (last_reg == 15) {
                             // Store to lastest PC
@@ -341,7 +341,7 @@ namespace eka2l1::arm::r12l1 {
                         }
 
                         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
-                        big_block_->POP(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+                        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
                     }
 
                     auto add_up_value_br = big_block_->B();
@@ -470,7 +470,7 @@ namespace eka2l1::arm::r12l1 {
 
         // Here we fallback to old friend. hmmmm
         // Calculate the address
-        big_block_->PUSH(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+        big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
         if (!read) {
             big_block_->MOV(common::armgen::R2, target_mapped);
@@ -519,7 +519,7 @@ namespace eka2l1::arm::r12l1 {
             }
         }
 
-        big_block_->POP(3, common::armgen::R1, common::armgen::R2, common::armgen::R3);
+        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
         if (read) {
             if (is_signed) {

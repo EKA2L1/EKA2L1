@@ -67,7 +67,10 @@ namespace eka2l1::arm::r12l1 {
         // Load the arguments to call lookup
         // While R0 is already the core state
         PUSH(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
-                common::armgen::R9, common::armgen::R10, common::armgen::R12, common::armgen::R14);
+                common::armgen::R9, common::armgen::R10, common::armgen::R11, common::armgen::R14);
+
+        // 8 bytes stack alignment, go die in hell
+        SUB(common::armgen::R_SP, common::armgen::R_SP, 4);
 
         // Load core state reg and the ticks left
         MOV(CORE_STATE_REG, common::armgen::R0);
@@ -117,9 +120,12 @@ namespace eka2l1::arm::r12l1 {
         // Save the ticks
         emit_cycles_count_save();
 
+        // Restore alignment
+        ADD(common::armgen::R_SP, common::armgen::R_SP, 4);
+
         // Branch back to where it went
         POP(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
-             common::armgen::R9, common::armgen::R10, common::armgen::R12, common::armgen::R15);
+             common::armgen::R9, common::armgen::R10, common::armgen::R11, common::armgen::R15);
 
         flush_lit_pool();
         end_write();

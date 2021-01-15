@@ -64,7 +64,7 @@ namespace eka2l1::arm::r12l1::decoder {
          * @param instruction The instruction to decode.
          */
         handler_return_type call(Visitor &v, opcode_type instruction) const {
-            assert(Matches(instruction));
+            assert(matches(instruction));
             return fn(v, instruction);
         }
 
