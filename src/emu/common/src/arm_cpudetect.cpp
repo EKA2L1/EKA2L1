@@ -188,6 +188,11 @@ namespace eka2l1::common {
         CPU64bit = false;
         Mode64bit = false;
 #endif
+
+#if EKA2L1_ARCH(ARMV7)
+        bARMv7 = true;
+#endif
+        
         vendor = VENDOR_ARM;
 
         // Get the information about the CPU
