@@ -90,8 +90,9 @@ namespace eka2l1::arm::r12l1 {
             flag_ = cc;
 
             // Emit jump to next block if condition not satisfied.
-            if (flag_ != common::CC_AL)
+            if (flag_ != common::CC_AL) {
                 end_target_ = big_block_->B_CC(common::invert_cond(cc));
+            }
 
             return true;
         }
@@ -415,13 +416,15 @@ namespace eka2l1::arm::r12l1 {
         if (base == common::armgen::R15) {
             // Calculate address right away
             vaddress addr_to_base = common::align(crr_block_->current_address(), 4, 0) +
-                    (crr_block_->thumb_ ? 4 : 8) + (add ? 1 : -1) * op2.Imm12();
+                    (crr_block_->thumb_ ? 4 : 8);
+
+            if (op2.get_type() == common::armgen::TYPE_IMM) {
+                addr_to_base += (add ? 1 : -1) * op2.Imm12();
+                op2 = 0;
+            }
 
             base_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
             big_block_->MOVI2R(base_mapped, addr_to_base);
-
-            // Empty op2 to 0
-            op2 = 0;
         } else {
             // Map it as an normal register, and spill lock it
             base_mapped = reg_supplier_.map(base, writeback ? ALLOCATE_FLAG_DIRTY : 0);
@@ -441,11 +444,26 @@ namespace eka2l1::arm::r12l1 {
             base_spill_locked = false;
         }
 
-        if (pre_index && (op2.get_data() != 0)) {
-            if (add)
-                big_block_->ADD(base_mapped, base_mapped, op2);
-            else
-                big_block_->SUB(base_mapped, base_mapped, op2);
+        auto emit_base_mod = [&]() {
+            // Have to handle this since unlike load/store, ALU operations use 12bit
+            // for operand2 Imm12Mod, not imm12.
+            if (op2.get_type() == common::armgen::TYPE_IMM) {
+                if (op2.Imm12() != 0) {
+                    if (add)
+                        big_block_->ADDI2R(base_mapped, base_mapped, op2.Imm12(), ALWAYS_SCRATCH1);
+                    else
+                        big_block_->SUBI2R(base_mapped, base_mapped, op2.Imm12(), ALWAYS_SCRATCH1);
+                }
+            } else {
+                if (add)
+                    big_block_->ADD(base_mapped, base_mapped, op2);
+                else
+                    big_block_->SUB(base_mapped, base_mapped, op2);
+            }
+        };
+
+        if (pre_index) {
+            emit_base_mod();
         }
 
         common::armgen::arm_reg host_base_addr = emit_address_lookup(base_mapped, read);
@@ -595,12 +613,8 @@ namespace eka2l1::arm::r12l1 {
 
         big_block_->set_jump_target(done_all);
 
-        if (!pre_index && (op2.get_data() != 0)) {
-            // Increase mapped base
-            if (add)
-                big_block_->ADD(base_mapped, base_mapped, op2);
-            else
-                big_block_->SUB(base_mapped, base_mapped, op2);
+        if (!pre_index) {
+            emit_base_mod();
         }
 
         emit_cpsr_restore_nzcvq();
