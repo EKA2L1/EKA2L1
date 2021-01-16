@@ -918,6 +918,19 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool thumb_translate_visitor::thumb16_MVN_reg(reg_index m, reg_index d) {
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+        common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
+
+        big_block_->MVNS(dest_mapped, source_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_ADD_imm_t1(std::uint8_t imm3, reg_index n, reg_index d) {
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);

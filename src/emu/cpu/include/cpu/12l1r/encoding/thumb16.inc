@@ -27,7 +27,7 @@ INST(thumb16_CMN_reg,        "CMN (reg)",                "0100001011mmmnnn"),
 INST(thumb16_ORR_reg,        "ORR (reg)",                "0100001100mmmddd"),
 INST(thumb16_MUL_reg,        "MUL (reg)",                "0100001101nnnddd"),
 INST(thumb16_BIC_reg,        "BIC (reg)",                "0100001110mmmddd"),
-//INST(thumb16_MVN_reg,        "MVN (reg)",                "0100001111mmmddd"),
+INST(thumb16_MVN_reg,        "MVN (reg)",                "0100001111mmmddd"),
 
 // Special data instructions
 INST(thumb16_ADD_reg_t2,     "ADD (reg, T2)",            "01000100Dmmmmddd"), // v4T, Low regs: v6T2
