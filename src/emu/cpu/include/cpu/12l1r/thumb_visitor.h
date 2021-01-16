@@ -58,6 +58,7 @@ namespace eka2l1::arm::r12l1 {
         bool thumb16_RSB_imm(reg_index n, reg_index d);
         bool thumb16_BIC_reg(reg_index m, reg_index d_n);
         bool thumb16_EOR_reg(reg_index m, reg_index d_n);
+        bool thumb16_ASR_reg(reg_index m, reg_index d_n);
 
         bool thumb16_PUSH(bool m, reg_list list);
         bool thumb16_POP(bool p, reg_list list);
@@ -79,6 +80,9 @@ namespace eka2l1::arm::r12l1 {
         // Branch
         bool thumb16_B_t1(common::cc_flags cond, std::uint8_t imm8);
         bool thumb16_B_t2(std::uint16_t imm11);
+
+        // Multiply
+        bool thumb16_MUL_reg(reg_index n, reg_index d_m);
 
         // thumb32
         bool thumb32_BL_imm(std::uint16_t hi, std::uint16_t lo);
