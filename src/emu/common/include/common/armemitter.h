@@ -655,6 +655,7 @@ namespace eka2l1::common::armgen {
 
         void UMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
+        void SMULLS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
 
         void UMLAL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void UMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);

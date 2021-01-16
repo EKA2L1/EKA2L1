@@ -110,6 +110,7 @@ namespace eka2l1::arm::r12l1 {
         bool arm_MUL(common::cc_flags cond, bool S, reg_index d, reg_index m, reg_index n);
         bool arm_MLA(common::cc_flags cond, bool S, reg_index d, reg_index a, reg_index m, reg_index n);
         bool arm_UMLAL(common::cc_flags cond, bool S, reg_index d_hi, reg_index d_lo, reg_index m, reg_index n);
+        bool arm_SMULL(common::cc_flags cond, bool S, reg_index d_hi, reg_index d_lo, reg_index m, reg_index n);
 
         // Status register access
         bool arm_MRS(common::cc_flags cond, reg_index d);
