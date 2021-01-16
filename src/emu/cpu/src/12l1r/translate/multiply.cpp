@@ -18,6 +18,7 @@
  */
 
 #include <cpu/12l1r/arm_visitor.h>
+#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/block_gen.h>
 #include <cpu/12l1r/visit_session.h>
 
@@ -91,6 +92,20 @@ namespace eka2l1::arm::r12l1 {
         } else {
             big_block_->UMLAL(dest_lo_mapped, dest_hi_mapped, op1_mapped, op2_mapped);
         }
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_MUL_reg(reg_index n, reg_index d_m) {
+        common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_m);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(n);
+
+        const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
+            ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+
+        big_block_->MULS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
+        cpsr_nzcvq_changed();
 
         return true;
     }
