@@ -44,4 +44,29 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool arm_translate_visitor::arm_MLA(common::cc_flags cond, bool S, reg_index d, reg_index a, reg_index m, reg_index n) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg add_real = reg_index_to_gpr(a);
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+        const common::armgen::arm_reg add_mapped = reg_supplier_.map(add_real, 0);
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        if (S) {
+            big_block_->MLAS(dest_mapped, op1_mapped, op2_mapped, add_mapped);
+            cpsr_nzcvq_changed();
+        } else {
+            big_block_->MLA(dest_mapped, op1_mapped, op2_mapped, add_mapped);
+        }
+
+        return true;
+    }
 }

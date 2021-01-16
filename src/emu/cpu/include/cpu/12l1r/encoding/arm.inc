@@ -206,7 +206,7 @@ INST(arm_STMIB,         "STMIB",               "cccc100110w0nnnnxxxxxxxxxxxxxxxx
 //INST(arm_UDIV,          "UDIV",                "cccc01110011dddd1111mmmm0001nnnn") // v7a
 
 // Multiply (Normal) instructions
-//INST(arm_MLA,           "MLA",                 "cccc0000001Sddddaaaammmm1001nnnn") // v2
+INST(arm_MLA,           "MLA",                 "cccc0000001Sddddaaaammmm1001nnnn") // v2
 //INST(arm_MLS,           "MLS",                 "cccc00000110ddddaaaammmm1001nnnn") // v6T2
 INST(arm_MUL,           "MUL",                 "cccc0000000Sdddd0000mmmm1001nnnn") // v2
 
