@@ -674,8 +674,8 @@ namespace eka2l1::arm::r12l1 {
         big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address());
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
+        big_block_->emit_cpsr_load();
 
-        emit_cpsr_restore_nzcvq();
         emit_return_to_dispatch(false);
 
         return false;
@@ -691,8 +691,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->MOVI2R(common::armgen::R1, n);
 
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_system_call);
-
-        emit_cpsr_restore_nzcvq();
+        big_block_->emit_cpsr_load();
 
         // Don't save CPSR, we already update it and it may got modified in the interrupt
         emit_return_to_dispatch(false);

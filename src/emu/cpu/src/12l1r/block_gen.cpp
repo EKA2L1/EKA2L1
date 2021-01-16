@@ -72,9 +72,11 @@ namespace eka2l1::arm::r12l1 {
         // 8 bytes stack alignment, go die in hell
         SUB(common::armgen::R_SP, common::armgen::R_SP, 4);
 
-        // Load core state reg and the ticks left
+        // Load core state reg, ticks left and CPSR
         MOV(CORE_STATE_REG, common::armgen::R0);
         LDR(TICKS_REG, CORE_STATE_REG, offsetof(core_state, ticks_left_));
+
+        emit_cpsr_load();
 
         dispatch_ent_for_block_ = get_code_ptr();
 
@@ -114,12 +116,12 @@ namespace eka2l1::arm::r12l1 {
         LDR(common::armgen::R0, common::armgen::R0, offsetof(translated_block, translated_code_));
         B(common::armgen::R0);                                                // Branch to the block
 
-        set_jump_target(headout);
-        set_jump_target(return_back);
-
         // Save the CPSR and ticks
         emit_cpsr_save();
         emit_cycles_count_save();
+
+        set_jump_target(headout);
+        set_jump_target(return_back);
 
         // Restore alignment
         ADD(common::armgen::R_SP, common::armgen::R_SP, 4);
@@ -292,6 +294,10 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_cpsr_save() {
         STR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
+    }
+
+    void dashixiong_block::emit_cpsr_load() {
+        LDR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
     }
 
     void dashixiong_block::emit_cycles_count_save() {

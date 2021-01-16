@@ -81,6 +81,7 @@ namespace eka2l1::arm::r12l1 {
         void emit_pc_write(common::armgen::arm_reg pc_reg);
 		void emit_cycles_count_add(const std::uint32_t num);
         void emit_cpsr_save();
+        void emit_cpsr_load();
         void emit_cycles_count_save();
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);
