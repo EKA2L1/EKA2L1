@@ -426,8 +426,8 @@ namespace eka2l1::arm::r12l1 {
             thumb_visitor = std::make_unique<thumb_translate_visitor>(this, block);
         }
 
-        // Reserve 4 writeable pages for these JIT codes.
-        begin_write(4);
+        // Reserve 8 writeable pages for these JIT codes.
+        begin_write(8);
 
         // Let them know the address damn
         emit_pc_flush(addr);

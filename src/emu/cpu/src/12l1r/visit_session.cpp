@@ -322,6 +322,10 @@ namespace eka2l1::arm::r12l1 {
                     big_block_->MOV(common::armgen::R0, guest_addr_reg);
                     big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
+                    if (!load && (mapped == common::armgen::R1)) {
+                        big_block_->MOV(ALWAYS_SCRATCH2, mapped);
+                    }
+
                     big_block_->MOV(common::armgen::R1, common::armgen::R0);
                     big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
 
@@ -341,7 +345,11 @@ namespace eka2l1::arm::r12l1 {
                             big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address()
                                 + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
                         } else {
-                            big_block_->MOV(common::armgen::R2, mapped);
+                            if (mapped == common::armgen::R1) {
+                                big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
+                            } else {
+                                big_block_->MOV(common::armgen::R2, mapped);
+                            }
                         }
 
                         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
@@ -492,15 +500,26 @@ namespace eka2l1::arm::r12l1 {
         // Here we fallback to old friend. hmmmm
         // Calculate the address
         big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
 
+        // Preserve R1 in case target mapped is it
         if (!read) {
-            big_block_->MOV(common::armgen::R2, target_mapped);
+            if (target_mapped == common::armgen::R1) {
+                big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R1);
+            }
         }
 
         if (base_mapped != common::armgen::R1)
             big_block_->MOV(common::armgen::R1, base_mapped);
 
-        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
+        if (!read) {
+            if (target_mapped == common::armgen::R1) {
+                // Move back the preserved value
+                big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
+            } else {
+                big_block_->MOV(common::armgen::R2, target_mapped);
+            }
+        }
 
         if (read) {
             switch (bit_count) {
