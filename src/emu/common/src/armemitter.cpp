@@ -932,8 +932,17 @@ namespace eka2l1::common::armgen {
     void armx_emitter::MUL(arm_reg dest, arm_reg src, arm_reg op2) {
         write32(condition | (dest << 16) | (src << 8) | (9 << 4) | op2);
     }
+
     void armx_emitter::MULS(arm_reg dest, arm_reg src, arm_reg op2) {
         write32(condition | (1 << 20) | (dest << 16) | (src << 8) | (9 << 4) | op2);
+    }
+
+    void armx_emitter::MLA(arm_reg dest, arm_reg src1, arm_reg src2, arm_reg add) {
+        write32(condition | (1 << 21) | (dest << 16) | (add << 12) | (src2 << 8) | (9 << 4) | src1);
+    }
+
+    void armx_emitter::MLAS(arm_reg dest, arm_reg src1, arm_reg src2, arm_reg add) {
+        write32(condition | (0b11 << 20) | (dest << 16) | (add << 12) | (src2 << 8) | (9 << 4) | src1);
     }
 
     void armx_emitter::write_4op_multiply(std::uint32_t op, arm_reg destLo, arm_reg destHi, arm_reg rm, arm_reg rn) {

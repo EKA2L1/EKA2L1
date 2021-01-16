@@ -240,30 +240,22 @@ namespace eka2l1::common::armgen {
 
         operand2(arm_reg base, shift_type stype, std::uint8_t shift_imm)    // For IMM shifted register
         {
-            if (shift_imm == 32)
-                shift_imm = 0;
             switch (stype) {
             case ST_LSL:
                 LOG_ERROR_IF(COMMON, shift_imm >= 32, "Invalid operand2: LSL %u", shift_imm);
                 break;
             case ST_LSR:
                 LOG_ERROR_IF(COMMON, shift_imm > 32, "Invalid operand2: LSR %u", shift_imm);
-                if (!shift_imm)
-                    stype = ST_LSL;
                 if (shift_imm == 32)
                     shift_imm = 0;
                 break;
             case ST_ASR:
                 LOG_ERROR_IF(COMMON, shift_imm >= 32, "Invalid operand2: ASR %u", shift_imm);
-                if (!shift_imm)
-                    stype = ST_LSL;
                 if (shift_imm == 32)
                     shift_imm = 0;
                 break;
             case ST_ROR:
                 LOG_ERROR_IF(COMMON, shift_imm >= 32, "Invalid operand2: ROR %u", shift_imm);
-                if (!shift_imm)
-                    stype = ST_LSL;
                 break;
             case ST_RRX:
                 LOG_ERROR_IF(COMMON, !(shift_imm == 0), "Invalid operand2: RRX does not take an immediate shift amount");
@@ -657,6 +649,9 @@ namespace eka2l1::common::armgen {
 
         void MUL(arm_reg dest, arm_reg src, arm_reg op2);
         void MULS(arm_reg dest, arm_reg src, arm_reg op2);
+
+        void MLA(arm_reg dest, arm_reg src, arm_reg src2, arm_reg add);
+        void MLAS(arm_reg dest, arm_reg src, arm_reg src2, arm_reg add);
 
         void UMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
