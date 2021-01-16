@@ -1306,4 +1306,32 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool thumb_translate_visitor::thumb16_LSR_reg(reg_index m, reg_index d_n) {
+        common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
+                                                                              ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+
+        big_block_->LSRS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
+    bool thumb_translate_visitor::thumb16_LSL_reg(reg_index m, reg_index d_n) {
+        common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
+                                                                              ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+
+        big_block_->LSLS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
 }
