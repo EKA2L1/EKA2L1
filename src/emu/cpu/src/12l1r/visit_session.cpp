@@ -73,6 +73,9 @@ namespace eka2l1::arm::r12l1 {
         if (force_end_last && (flag_ != common::CC_NV)) {
             reg_supplier_.flush_all();
 
+            if (cpsr_ever_updated_)
+                emit_cpsr_update_nzcvq();
+
             if (flag_ != common::CC_AL) {
                 big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
                 big_block_->set_jump_target(end_target_);
@@ -694,6 +697,9 @@ namespace eka2l1::arm::r12l1 {
         big_block_->set_cc(common::CC_AL);
         reg_supplier_.flush_all();
 
+        if (cpsr_ever_updated_)
+            emit_cpsr_update_nzcvq();
+
         const bool no_offered_link = (crr_block_->links_.empty());
 
         if (flag_ != common::CC_AL) {
@@ -702,10 +708,6 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if ((flag_ != common::CC_AL) || no_offered_link) {
-            if (cpsr_ever_updated_) {
-                emit_cpsr_update_nzcvq();
-            }
-
             // Add branching to next block, making it highest priority
             crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ?
                 crr_block_->last_inst_size_ : 0), 0);
