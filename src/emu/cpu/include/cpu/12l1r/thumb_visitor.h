@@ -56,6 +56,7 @@ namespace eka2l1::arm::r12l1 {
         bool thumb16_ORR_reg(reg_index m, reg_index d_n);
         bool thumb16_ADR(reg_index d, std::uint8_t imm8);
         bool thumb16_RSB_imm(reg_index n, reg_index d);
+        bool thumb16_BIC_reg(reg_index m, reg_index d_n);
 
         bool thumb16_PUSH(bool m, reg_list list);
         bool thumb16_POP(bool p, reg_list list);
