@@ -830,6 +830,26 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_CMN_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5,
+        common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_base_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_base_mapped = reg_supplier_.map(rhs_base_real, 0);
+
+        common::armgen::operand2 rhs(rhs_base_mapped, shift, imm5);
+
+        big_block_->CMN(lhs_mapped, rhs);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_TST_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
             return false;
@@ -872,6 +892,82 @@ namespace eka2l1::arm::r12l1 {
             } else {
                 big_block_->AND(dest_mapped, op1_mapped, op2);
             }
+        }
+
+        if (dest_real == common::armgen::R15) {
+            emit_alu_jump(dest_mapped);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_AND_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
+        common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
+
+        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
+            LOG_ERROR(CPU_12L1R, "Unsupported non-imm AND op that use PC!");
+        }
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+
+        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
+
+        if (S) {
+            big_block_->ANDS(dest_mapped, op1_mapped, op2);
+            cpsr_nzcvq_changed();
+        } else {
+            big_block_->AND(dest_mapped, op1_mapped, op2);
+        }
+
+        if (dest_real == common::armgen::R15) {
+            emit_alu_jump(dest_mapped);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_AND_rsr(common::cc_flags cond, bool S, reg_index n, reg_index d, reg_index s,
+        common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg op_shift_real = reg_index_to_gpr(s);
+
+        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
+            LOG_ERROR(CPU_12L1R, "Unsupported non-imm AND op that use PC!");
+        }
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+        const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
+
+        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
+
+        if (S) {
+            big_block_->ANDS(dest_mapped, op1_mapped, op2);
+            cpsr_nzcvq_changed();
+        } else {
+            big_block_->AND(dest_mapped, op1_mapped, op2);
         }
 
         if (dest_real == common::armgen::R15) {
