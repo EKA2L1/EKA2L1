@@ -56,7 +56,8 @@ namespace eka2l1::arm::r12l1 {
         explicit visit_session(dashixiong_block *bro, translated_block *crr);
         bool condition_passed(common::cc_flags cc, const bool force_end_last = false);
 		
-        common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base, const bool for_read);
+        common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base, const bool for_read,
+        	std::uint8_t **lookup_route = nullptr);
 
         bool emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
             bool before, bool writeback, bool load);

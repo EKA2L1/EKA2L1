@@ -114,14 +114,19 @@ namespace eka2l1::arm::r12l1 {
         LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
     }
 
-    common::armgen::arm_reg visit_session::emit_address_lookup(common::armgen::arm_reg base, const bool for_read) {
+    common::armgen::arm_reg visit_session::emit_address_lookup(common::armgen::arm_reg base, const bool for_read,
+        std::uint8_t **lookup_route) {
         static_assert(sizeof(tlb_entry) == 16);
 
         std::uint32_t offset_to_load = (for_read) ? offsetof(tlb_entry, read_addr) : offsetof(tlb_entry, write_addr);
         common::armgen::arm_reg final_addr = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
-        common::armgen::arm_reg scratch3 = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+
+        if (lookup_route) {
+            *lookup_route = big_block_->get_writeable_code_ptr();
+        }
 
         big_block_->LSR(ALWAYS_SCRATCH1, base, CPAGE_BITS);
+        big_block_->MOV(final_addr, ALWAYS_SCRATCH1);       // Remember page number of the target.
         big_block_->ANDI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, TLB_ENTRY_MASK, ALWAYS_SCRATCH2);
 
         // Calculate the offset
@@ -130,8 +135,10 @@ namespace eka2l1::arm::r12l1 {
         big_block_->ADD(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, ALWAYS_SCRATCH2);
 
         // Scratch 1 now holds our TLB entry
+        // Check if the entry in TLB and the page we are looking for are identical
+        // This is done by abadoning page offset (12 bits) to compare
         big_block_->LDR(ALWAYS_SCRATCH2, ALWAYS_SCRATCH1, offset_to_load);
-        big_block_->ANDI2R(final_addr, base, ~CPAGE_MASK, scratch3);     // remove the unaligned
+        big_block_->LSR(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, CPAGE_BITS);
         big_block_->CMP(final_addr, ALWAYS_SCRATCH2);
 
         big_block_->set_cc(common::CC_NEQ);
@@ -146,8 +153,6 @@ namespace eka2l1::arm::r12l1 {
         big_block_->ADD(final_addr, final_addr, ALWAYS_SCRATCH2);
 
         big_block_->set_jump_target(tlb_miss);
-        reg_supplier_.done_scratching_this(scratch3);
-
         return final_addr;
     }
 
@@ -254,8 +259,8 @@ namespace eka2l1::arm::r12l1 {
             emit_addr_modification(true);
         }
 
-        std::uint8_t *lookup_route = big_block_->get_writeable_code_ptr();
-        base = emit_address_lookup(guest_addr_reg, load);
+        std::uint8_t *lookup_route = nullptr;
+        base = emit_address_lookup(guest_addr_reg, load, &lookup_route);
 
         // Check if we should jump back
         big_block_->CMP(backback, 0);
