@@ -21,6 +21,17 @@ add_library(debugger
         src/renderer/spritesheet.cpp
         )
 
+# Currently ImGui does not detect newline from the final
+# formatted string but only in the type format string (first
+# argument), so we have to use a variable for the format string.
+# To prevent the build from failing due to this we disable
+# format security errors.
+set_source_files_properties(
+        src/elements/imgui_debugger_install_device.cpp
+        PROPERTIES
+        COMPILE_FLAGS
+        "-Wno-format-security")
+
 target_include_directories(debugger PUBLIC include)
 target_link_libraries(debugger PRIVATE
         cpu

@@ -115,7 +115,7 @@ namespace eka2l1 {
             const std::string attached_msg = common::get_localised_string(localised_strings, "error_dialog_message");
             const std::string ok_str = common::get_localised_string(localised_strings, "ok");
 
-            ImGui::Text(attached_msg.c_str());
+            ImGui::Text("%s", attached_msg.c_str());
 
             if (ImGui::Button(ok_str.c_str())) {
                 const std::lock_guard<std::mutex> guard(errors_mut);

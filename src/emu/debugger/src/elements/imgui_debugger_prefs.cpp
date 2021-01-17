@@ -54,7 +54,7 @@ namespace eka2l1 {
 
         const std::string background_str = common::get_localised_string(localised_strings, "pref_personalize_background_string");
 
-        ImGui::Text(background_str.c_str());
+        ImGui::Text("%s", background_str.c_str());
         ImGui::Separator();
 
         const std::string path_str = common::get_localised_string(localised_strings, "path");
@@ -816,7 +816,7 @@ namespace eka2l1 {
             ImGui::NewLine();
 
             const std::string restart_need_msg = common::get_localised_string(localised_strings, "pref_restart_needed_for_dvcchange_msg");
-            ImGui::TextColored(RED_COLOR, restart_need_msg.c_str());
+            ImGui::TextColored(RED_COLOR, "%s", restart_need_msg.c_str());
         }
         
         ImGui::NewLine();
