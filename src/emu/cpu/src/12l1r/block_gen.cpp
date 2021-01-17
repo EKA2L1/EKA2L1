@@ -116,12 +116,13 @@ namespace eka2l1::arm::r12l1 {
         LDR(common::armgen::R0, common::armgen::R0, offsetof(translated_block, translated_code_));
         B(common::armgen::R0);                                                // Branch to the block
 
-        // Save the CPSR and ticks
-        emit_cpsr_save();
-        emit_cycles_count_save();
-
         set_jump_target(headout);
         set_jump_target(return_back);
+
+        // Save the CPSR and ticks
+        emit_cpsr_save();
+
+        emit_cycles_count_save();
 
         // Restore alignment
         ADD(common::armgen::R_SP, common::armgen::R_SP, 4);
