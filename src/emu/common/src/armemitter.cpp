@@ -953,6 +953,10 @@ namespace eka2l1::common::armgen {
         write_4op_multiply(0x8, destLo, destHi, rn, rm);
     }
 
+    void armx_emitter::UMULLS(arm_reg destLo, arm_reg destHi, arm_reg rm, arm_reg rn) {
+        write_4op_multiply(0x9, destLo, destHi, rn, rm);
+    }
+
     void armx_emitter::SMULL(arm_reg destLo, arm_reg destHi, arm_reg rm, arm_reg rn) {
         write_4op_multiply(0xC, destLo, destHi, rn, rm);
     }
