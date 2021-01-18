@@ -64,7 +64,7 @@ INST(arm_SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv
 INST(arm_SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm") // all
 INST(arm_SUB_rsr,       "SUB (rsr)",           "cccc0000010Snnnnddddssss0rr1mmmm") // all
 //INST(arm_TEQ_imm,       "TEQ (imm)",           "cccc00110011nnnn0000rrrrvvvvvvvv") // all
-//INST(arm_TEQ_reg,       "TEQ (reg)",           "cccc00010011nnnn0000vvvvvrr0mmmm") // all
+INST(arm_TEQ_reg,       "TEQ (reg)",           "cccc00010011nnnn0000vvvvvrr0mmmm") // all
 //INST(arm_TEQ_rsr,       "TEQ (rsr)",           "cccc00010011nnnn0000ssss0rr1mmmm") // all
 INST(arm_TST_imm,       "TST (imm)",           "cccc00110001nnnn0000rrrrvvvvvvvv") // all
 INST(arm_TST_reg,       "TST (reg)",           "cccc00010001nnnn0000vvvvvrr0mmmm") // all

@@ -78,6 +78,7 @@ namespace eka2l1::arm::r12l1 {
         bool arm_CMN_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
         bool arm_TST_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8);
         bool arm_TST_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
+        bool arm_TEQ_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m);
         bool arm_AND_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8);
         bool arm_AND_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
             common::armgen::shift_type shift, reg_index m);
