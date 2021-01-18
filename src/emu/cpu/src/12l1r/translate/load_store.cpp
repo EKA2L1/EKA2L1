@@ -165,6 +165,20 @@ namespace eka2l1::arm::r12l1 {
         return emit_memory_access(dest_real, base_real, adv, 8, true, U, P, W, true);
     }
 
+    bool arm_translate_visitor::arm_LDRSH_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n,
+        reg_index t, std::uint8_t imm8a, std::uint8_t imm8b) {
+        // Can't write to PC
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::operand2 adv((imm8b & 0b1111) | ((imm8a & 0b1111) << 4));
+
+        return emit_memory_access(dest_real, base_real, adv, 16, true, U, P, W, true);
+    }
+
     bool arm_translate_visitor::arm_STR_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint16_t imm12) {
         if (!condition_passed(cond)) {
             return false;
