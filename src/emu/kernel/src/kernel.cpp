@@ -265,6 +265,10 @@ namespace eka2l1 {
             LOG_ERROR(KERNEL, "Undefined instruction encountered in thread {}", crr_thread()->name());
             break;
 
+        case arm::exception_type_unimplemented_behaviour:
+            LOG_ERROR(KERNEL, "Unimplemented instruction behaviour in thread {}", crr_thread()->name());
+            break;
+
         case arm::exception_type_unpredictable:
             if (!cpu_exception_handle_unpredictable(core, exception_data)) {
                 break;

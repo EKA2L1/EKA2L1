@@ -66,6 +66,7 @@ namespace eka2l1::arm::r12l1 {
         	common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read);
 
         bool emit_undefined_instruction_handler();
+        bool emit_unimplemented_behaviour_handler();
         bool emit_system_call_handler(const std::uint32_t n);
 
 		void emit_cpsr_update_nzcvq();

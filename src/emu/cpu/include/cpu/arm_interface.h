@@ -34,7 +34,8 @@ namespace eka2l1::arm {
         exception_type_access_violation_write = 2,
         exception_type_breakpoint = 3,
         exception_type_undefined_inst = 4,
-        exception_type_unpredictable = 5
+        exception_type_unpredictable = 5,
+        exception_type_unimplemented_behaviour = 6
     };
 
     using address = std::uint32_t;

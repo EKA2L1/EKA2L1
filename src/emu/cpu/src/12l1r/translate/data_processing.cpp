@@ -199,14 +199,19 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
         common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
 
-        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
-            LOG_ERROR(CPU_12L1R, "Unsupported non-imm ADC op that use PC!");
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
 
-        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+        common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+        common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
             : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
@@ -272,14 +277,19 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
         common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
 
-        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
-            LOG_ERROR(CPU_12L1R, "Unsupported non-imm ADD op that use PC!");
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
 
-        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+        common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+        common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
@@ -345,14 +355,20 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
         common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
 
-        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
-            LOG_ERROR(CPU_12L1R, "Unsupported non-imm SUB op that use PC!");
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
 
-        const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+        common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+
+        common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
@@ -418,15 +434,20 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
         common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
 
-        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
-            LOG_ERROR(CPU_12L1R, "Unsupported non-imm RSB op that use PC!");
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
 
+        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -490,11 +511,17 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
         common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
 
-        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
-            LOG_ERROR(CPU_12L1R, "Unsupported non-imm BIC op that use PC!");
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
+
         const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
@@ -530,6 +557,7 @@ namespace eka2l1::arm::r12l1 {
 
         if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
             LOG_ERROR(CPU_12L1R, "Unsupported non-imm BIC op that use PC!");
+            return emit_unimplemented_behaviour_handler();
         }
 
         const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
@@ -601,11 +629,17 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
         common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
 
-        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
-            LOG_ERROR(CPU_12L1R, "Unsupported non-imm ORR op that use PC!");
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
+
         const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
@@ -641,6 +675,7 @@ namespace eka2l1::arm::r12l1 {
 
         if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
             LOG_ERROR(CPU_12L1R, "Unsupported non-imm ORR op that use PC!");
+            return emit_unimplemented_behaviour_handler();
         }
 
         const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
@@ -712,11 +747,17 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
         common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
 
-        if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
-            LOG_ERROR(CPU_12L1R, "Unsupported non-imm EOR op that use PC!");
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
-        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
+
         const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
@@ -752,6 +793,7 @@ namespace eka2l1::arm::r12l1 {
 
         if ((op1_real == common::armgen::R15) || (op2_base_real == common::armgen::R15)) {
             LOG_ERROR(CPU_12L1R, "Unsupported non-imm EOR op that use PC!");
+            return emit_unimplemented_behaviour_handler();
         }
 
         const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
