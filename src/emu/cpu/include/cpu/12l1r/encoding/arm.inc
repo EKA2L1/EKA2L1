@@ -38,7 +38,7 @@ INST(arm_CMN_reg,       "CMN (reg)",           "cccc00010111nnnn0000vvvvvrr0mmmm
 //INST(arm_CMN_rsr,       "CMN (rsr)",           "cccc00010111nnnn0000ssss0rr1mmmm") // all
 INST(arm_CMP_imm,       "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv") // all
 INST(arm_CMP_reg,       "CMP (reg)",           "cccc00010101nnnn0000vvvvvrr0mmmm") // all
-//INST(arm_CMP_rsr,       "CMP (rsr)",           "cccc00010101nnnn0000ssss0rr1mmmm") // all
+INST(arm_CMP_rsr,       "CMP (rsr)",           "cccc00010101nnnn0000ssss0rr1mmmm") // all
 INST(arm_EOR_imm,       "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv") // all
 INST(arm_EOR_reg,       "EOR (reg)",           "cccc0000001Snnnnddddvvvvvrr0mmmm") // all
 INST(arm_EOR_rsr,       "EOR (rsr)",           "cccc0000001Snnnnddddssss0rr1mmmm") // all
