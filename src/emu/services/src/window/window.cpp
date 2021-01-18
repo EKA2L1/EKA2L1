@@ -1651,10 +1651,10 @@ namespace eka2l1 {
 
         sync_loop_begin = emitter.B();
 
+        emitter.flush_lit_pool();
+
         emitter.set_code_pointer(loop_begin);
         emitter.set_jump_target(sync_loop_begin);
-
-        emitter.flush_lit_pool();
     }
 
     void window_server::init_ws_mem() {
