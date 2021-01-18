@@ -211,7 +211,7 @@ INST(arm_MLA,           "MLA",                 "cccc0000001Sddddaaaammmm1001nnnn
 INST(arm_MUL,           "MUL",                 "cccc0000000Sdddd0000mmmm1001nnnn") // v2
 
 // Multiply (Long) instructions
-//INST(arm_SMLAL,         "SMLAL",               "cccc0000111Sddddaaaammmm1001nnnn") // v3M
+INST(arm_SMLAL,         "SMLAL",               "cccc0000111Sddddaaaammmm1001nnnn") // v3M
 INST(arm_SMULL,         "SMULL",               "cccc0000110Sddddaaaammmm1001nnnn") // v3M
 //INST(arm_UMAAL,         "UMAAL",               "cccc00000100ddddaaaammmm1001nnnn") // v6
 INST(arm_UMLAL,         "UMLAL",               "cccc0000101Sddddaaaammmm1001nnnn") // v3M

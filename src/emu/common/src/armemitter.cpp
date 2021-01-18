@@ -977,6 +977,10 @@ namespace eka2l1::common::armgen {
         write_4op_multiply(0xE, destLo, destHi, rn, rm);
     }
 
+    void armx_emitter::SMLALS(arm_reg destLo, arm_reg destHi, arm_reg rm, arm_reg rn) {
+        write_4op_multiply(0xF, destLo, destHi, rn, rm);
+    }
+
     void armx_emitter::UBFX(arm_reg dest, arm_reg rn, std::uint8_t lsb, std::uint8_t width) {
         write32(condition | (0x7E0 << 16) | ((width - 1) << 16) | (dest << 12) | (lsb << 7) | (5 << 4) | rn);
     }

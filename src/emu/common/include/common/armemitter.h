@@ -661,6 +661,7 @@ namespace eka2l1::common::armgen {
         void UMLAL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void UMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMLAL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
+        void SMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
 
         void SXTB(arm_reg dest, arm_reg op2);
         void SXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation = 0);

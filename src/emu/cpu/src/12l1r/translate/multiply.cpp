@@ -146,6 +146,31 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_SMLAL(common::cc_flags cond, bool S, reg_index d_hi, reg_index d_lo, reg_index m, reg_index n) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_hi_real = reg_index_to_gpr(d_hi);
+        common::armgen::arm_reg dest_lo_real = reg_index_to_gpr(d_lo);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+        const common::armgen::arm_reg dest_hi_mapped = reg_supplier_.map(dest_hi_real, ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg dest_lo_mapped = reg_supplier_.map(dest_lo_real, ALLOCATE_FLAG_DIRTY);
+
+        if (S) {
+            big_block_->SMLALS(dest_lo_mapped, dest_hi_mapped, op1_mapped, op2_mapped);
+            cpsr_nzcvq_changed();
+        } else {
+            big_block_->SMLAL(dest_lo_mapped, dest_hi_mapped, op1_mapped, op2_mapped);
+        }
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_MUL_reg(reg_index n, reg_index d_m) {
         common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_m);
         common::armgen::arm_reg op2_real = reg_index_to_gpr(n);
