@@ -215,7 +215,7 @@ INST(arm_MUL,           "MUL",                 "cccc0000000Sdddd0000mmmm1001nnnn
 INST(arm_SMULL,         "SMULL",               "cccc0000110Sddddaaaammmm1001nnnn") // v3M
 //INST(arm_UMAAL,         "UMAAL",               "cccc00000100ddddaaaammmm1001nnnn") // v6
 INST(arm_UMLAL,         "UMLAL",               "cccc0000101Sddddaaaammmm1001nnnn") // v3M
-//INST(arm_UMULL,         "UMULL",               "cccc0000100Sddddaaaammmm1001nnnn") // v3M
+INST(arm_UMULL,         "UMULL",               "cccc0000100Sddddaaaammmm1001nnnn") // v3M
 
 // Multiply (Halfword) instructions
 //INST(arm_SMLALxy,       "SMLALXY",             "cccc00010100ddddaaaammmm1xy0nnnn") // v5xP
