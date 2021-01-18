@@ -58,7 +58,7 @@ INST(arm_RSB_reg,       "RSB (reg)",           "cccc0000011Snnnnddddvvvvvrr0mmmm
 //INST(arm_RSC_reg,       "RSC (reg)",           "cccc0000111Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_RSC_rsr,       "RSC (rsr)",           "cccc0000111Snnnnddddssss0rr1mmmm") // all
 //INST(arm_SBC_imm,       "SBC (imm)",           "cccc0010110Snnnnddddrrrrvvvvvvvv") // all
-//INST(arm_SBC_reg,       "SBC (reg)",           "cccc0000110Snnnnddddvvvvvrr0mmmm") // all
+INST(arm_SBC_reg,       "SBC (reg)",           "cccc0000110Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_SBC_rsr,       "SBC (rsr)",           "cccc0000110Snnnnddddssss0rr1mmmm") // all
 INST(arm_SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // all
 INST(arm_SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm") // all

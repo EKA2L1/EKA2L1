@@ -47,6 +47,8 @@ namespace eka2l1::arm::r12l1 {
         bool arm_SUB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8);
         bool arm_SUB_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
             common::armgen::shift_type shift, reg_index m);
+        bool arm_SBC_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
+            common::armgen::shift_type shift, reg_index m);
         bool arm_RSB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d, int rotate, std::uint8_t imm8);
         bool arm_RSB_reg(common::cc_flags cond, bool S, reg_index n, reg_index d, std::uint8_t imm5,
             common::armgen::shift_type shift, reg_index m);

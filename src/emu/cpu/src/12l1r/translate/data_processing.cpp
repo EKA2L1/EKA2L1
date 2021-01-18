@@ -388,6 +388,49 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_SBC_reg(common::cc_flags cond, bool S, reg_index n, reg_index d,
+        std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_base_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg op1_mapped = ALWAYS_SCRATCH2;
+        if (op1_real == common::armgen::R15) {
+            big_block_->MOVI2R(op1_mapped, crr_block_->current_address() + 8);
+        } else {
+            op1_mapped = reg_supplier_.map(op1_real, 0);
+        }
+
+        if (op2_base_real == common::armgen::R15) {
+            return emit_unimplemented_behaviour_handler();
+        }
+
+        common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
+
+        common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
+            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
+
+        if (S) {
+            big_block_->SBCS(dest_mapped, op1_mapped, op2);
+            cpsr_nzcvq_changed();
+        } else {
+            big_block_->SBC(dest_mapped, op1_mapped, op2);
+        }
+
+        if (dest_real == common::armgen::R15) {
+            emit_alu_jump(dest_mapped);
+            return false;
+        }
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_RSB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
             int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
