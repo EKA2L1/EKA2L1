@@ -242,6 +242,25 @@ namespace eka2l1::arm::r12l1 {
         return emit_memory_access(source_real, base_real, adv, 16, false, U, P, W, false);
     }
 
+    bool arm_translate_visitor::arm_STRH_reg(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg offset_base_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg offset_base_mapped = reg_supplier_.map(offset_base_real, 0);
+        reg_supplier_.spill_lock(offset_base_real);
+
+        const bool res = emit_memory_access(source_real, base_real, common::armgen::operand2(offset_base_mapped),
+            16, false, U, P, W, false);
+        reg_supplier_.release_spill_lock(offset_base_real);
+
+        return res;
+    }
+
     bool arm_translate_visitor::arm_LDM(common::cc_flags cond, bool W, reg_index n, reg_list list) {
         if (!condition_passed(cond)) {
             return false;

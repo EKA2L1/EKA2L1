@@ -155,7 +155,7 @@ INST(arm_STRB_reg,      "STRB (reg)",          "cccc011pu1w0nnnnttttvvvvvrr0mmmm
 //INST(arm_STRD_imm,      "STRD (imm)",          "cccc000pu1w0nnnnttttvvvv1111vvvv") // v5E
 //INST(arm_STRD_reg,      "STRD (reg)",          "cccc000pu0w0nnnntttt00001111mmmm") // v5E
 INST(arm_STRH_imm,      "STRH (imm)",          "cccc000pu1w0nnnnttttvvvv1011vvvv")
-//INST(arm_STRH_reg,      "STRH (reg)",          "cccc000pu0w0nnnntttt00001011mmmm")
+INST(arm_STRH_reg,      "STRH (reg)",          "cccc000pu0w0nnnntttt00001011mmmm")
 
 // Load/Store Multiple instructions
 INST(arm_LDM,           "LDM",                 "cccc100010w1nnnnxxxxxxxxxxxxxxxx") // all
