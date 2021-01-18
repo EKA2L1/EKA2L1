@@ -186,17 +186,19 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void visit_session::emit_pc_write_exchange(common::armgen::arm_reg reg) {
+        big_block_->emit_pc_write_exchange(reg);
+
+        // Update here to prevent trashing PC reg
         if (cpsr_ever_updated_)
             emit_cpsr_update_nzcvq();
-
-        big_block_->emit_pc_write_exchange(reg);
     }
 
     void visit_session::emit_pc_write(common::armgen::arm_reg reg) {
+        big_block_->emit_pc_write(reg);
+
+        // Update here to prevent trashing PC reg
         if (cpsr_ever_updated_)
             emit_cpsr_update_nzcvq();
-
-        big_block_->emit_pc_write(reg);
     }
 
     void visit_session::emit_alu_jump(common::armgen::arm_reg reg) {
