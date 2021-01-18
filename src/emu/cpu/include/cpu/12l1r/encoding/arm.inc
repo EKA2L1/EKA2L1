@@ -21,7 +21,7 @@ INST(arm_BX,            "BX",                  "cccc000100101111111111110001mmmm
 //INST(arm_STC,           "STC",                 "cccc110pudw0nnnnDDDDppppvvvvvvvv") // v2  (STC2:  v5)
 
 // Data Processing instructions
-//INST(arm_ADC_imm,       "ADC (imm)",           "cccc0010101Snnnnddddrrrrvvvvvvvv") // all
+INST(arm_ADC_imm,       "ADC (imm)",           "cccc0010101Snnnnddddrrrrvvvvvvvv") // all
 INST(arm_ADC_reg,       "ADC (reg)",           "cccc0000101Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_ADC_rsr,       "ADC (rsr)",           "cccc0000101Snnnnddddssss0rr1mmmm") // all
 INST(arm_ADD_imm,       "ADD (imm)",           "cccc0010100Snnnnddddrrrrvvvvvvvv") // all
