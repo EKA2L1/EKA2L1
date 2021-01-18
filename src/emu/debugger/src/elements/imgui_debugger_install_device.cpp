@@ -81,6 +81,9 @@ namespace eka2l1 {
                 const std::string install_device_welcome_msg = common::get_localised_string(localised_strings,
                     "install_device_wizard_welcome_msg");
 
+                /* Currently ImGui does not detect newline from the final
+                formatted string but only in the type format string (first
+                argument), so we have to do this */
                 ImGui::TextWrapped(install_device_welcome_msg.c_str());
                 device_wizard_state.should_continue = true;
                 break;

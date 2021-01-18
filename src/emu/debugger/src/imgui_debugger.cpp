@@ -398,7 +398,7 @@ namespace eka2l1 {
                         ImGui::PopStyleVar();
 
                         const std::string unavail_tt = common::get_localised_string(localised_strings, "file_menu_packages_item_unavail_msg");
-                        ImGui::SetTooltip(unavail_tt.c_str());
+                        ImGui::SetTooltip("%s", unavail_tt.c_str());
                     } else {
                         ImGui::PopStyleVar();
                     }
