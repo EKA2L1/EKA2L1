@@ -26,11 +26,13 @@ add_library(debugger
 # argument), so we have to use a variable for the format string.
 # To prevent the build from failing due to this we disable
 # format security errors.
-set_source_files_properties(
-        src/elements/imgui_debugger_install_device.cpp
-        PROPERTIES
-        COMPILE_FLAGS
-        "-Wno-format-security")
+if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+        set_source_files_properties(
+                src/elements/imgui_debugger_install_device.cpp
+                PROPERTIES
+                COMPILE_FLAGS
+                "-Wno-format-security")
+endif()
 
 target_include_directories(debugger PUBLIC include)
 target_link_libraries(debugger PRIVATE
