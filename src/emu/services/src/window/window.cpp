@@ -1640,7 +1640,7 @@ namespace eka2l1 {
         std::uint8_t *loop_begin = emitter.get_writeable_code_ptr();
 
         // Load euser to get WaitForRequest
-        codeseg_ptr seg = kern->get_lib_manager()->load(u"EUSER");
+        codeseg_ptr seg = kern->get_lib_manager()->load(u"euser.dll");
         if (seg) {
             address wait_for_request_addr = seg->lookup(nullptr, kern->is_eka1() ? 1210 : 604);
 
@@ -1653,6 +1653,8 @@ namespace eka2l1 {
 
         emitter.set_code_pointer(loop_begin);
         emitter.set_jump_target(sync_loop_begin);
+
+        emitter.flush_lit_pool();
     }
 
     void window_server::init_ws_mem() {
