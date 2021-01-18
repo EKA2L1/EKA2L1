@@ -908,6 +908,25 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_TST_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_base_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_base_mapped = reg_supplier_.map(rhs_base_real, 0);
+
+        common::armgen::operand2 rhs(rhs_base_mapped, shift, imm5);
+
+        big_block_->TST(lhs_mapped, rhs);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_AND_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
         int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
