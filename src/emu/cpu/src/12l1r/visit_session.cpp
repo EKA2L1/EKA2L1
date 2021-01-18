@@ -728,7 +728,8 @@ namespace eka2l1::arm::r12l1 {
             emit_cpsr_update_nzcvq();
         }
 
-        big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
+        // Counting the instruction calling this also
+        big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_ + 1);
 
         block_link &link = crr_block_->get_or_add_link(addr);
         link.needs_.push_back(big_block_->B());
@@ -742,7 +743,8 @@ namespace eka2l1::arm::r12l1 {
             big_block_->emit_cpsr_save();
         }
 
-        big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
+        // Counting the instruction calling this also
+        big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_ + 1);
         big_block_->emit_return_to_dispatch(crr_block_);
     }
 
