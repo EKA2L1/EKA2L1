@@ -1069,6 +1069,43 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_TST_rsr(common::cc_flags cond, reg_index n, reg_index s, common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_base_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg shift_real = reg_index_to_gpr(s);
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_base_mapped = reg_supplier_.map(rhs_base_real, 0);
+        common::armgen::arm_reg shift_mapped = reg_supplier_.map(shift_real, 0);
+
+        common::armgen::operand2 rhs(rhs_base_mapped, shift, shift_mapped);
+
+        big_block_->TST(lhs_mapped, rhs);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_TEQ_imm(common::cc_flags cond, reg_index n, int rotate, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::operand2 rhs(imm8, static_cast<std::uint8_t>(rotate));
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+
+        big_block_->TEQ(lhs_mapped, rhs);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_TEQ_reg(common::cc_flags cond, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
         if (!condition_passed(cond)) {
             return false;
