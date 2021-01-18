@@ -141,7 +141,7 @@ INST(arm_LDRB_reg,      "LDRB (reg)",          "cccc011pu1w1nnnnttttvvvvvrr0mmmm
 //INST(arm_LDRD_reg,      "LDRD (reg)",          "cccc000pu0w0nnnntttt00001101mmmm") // v5E
 //INST(arm_LDRH_lit,      "LDRH (lit)",          "cccc000pu1w11111ttttvvvv1011vvvv")
 INST(arm_LDRH_imm,      "LDRH (imm)",          "cccc000pu1w1nnnnttttvvvv1011vvvv")
-//INST(arm_LDRH_reg,      "LDRH (reg)",          "cccc000pu0w1nnnntttt00001011mmmm")
+INST(arm_LDRH_reg,      "LDRH (reg)",          "cccc000pu0w1nnnntttt00001011mmmm")
 //INST(arm_LDRSB_lit,     "LDRSB (lit)",         "cccc0001u1011111ttttvvvv1101vvvv")
 INST(arm_LDRSB_imm,     "LDRSB (imm)",         "cccc000pu1w1nnnnttttvvvv1101vvvv")
 //INST(arm_LDRSB_reg,     "LDRSB (reg)",         "cccc000pu0w1nnnntttt00001101mmmm")
