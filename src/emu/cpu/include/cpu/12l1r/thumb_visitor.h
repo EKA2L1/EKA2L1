@@ -67,6 +67,7 @@ namespace eka2l1::arm::r12l1 {
         bool thumb16_POP(bool p, reg_list list);
         bool thumb16_LDMIA(reg_index n, reg_list list);
         bool thumb16_STMIA(reg_index n, reg_list list);
+        bool thumb16_LDR_reg(reg_index m, reg_index n, reg_index t);
         bool thumb16_LDR_literal(reg_index t, std::uint8_t imm8);
         bool thumb16_LDR_imm_t1(std::uint8_t imm5, reg_index n, reg_index t);
         bool thumb16_LDR_imm_t2(reg_index t, std::uint8_t imm8);
