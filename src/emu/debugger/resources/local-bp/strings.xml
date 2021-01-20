@@ -65,14 +65,14 @@
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Chamadas do sistema</string>
     <string name="pref_general_debugging_ait_checkbox_title">Tempo preciso para IPC</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Melhore a precisão do sistema, mas pode resultar em lentidão.</string>
+    <string name="pref_general_debugging_ait_tooltip_msg">Melhorar a precisão do sistema pode resultar em lentidão durante o uso.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Habilitar B-Trace</string>
-    <string name="pref_general_debugging_btrace_tooltip_msg">Habilitar o rastreamento do kernel que é usado no driver. Perda de performance é esperada ao habilitar.</string>
+    <string name="pref_general_debugging_btrace_tooltip_msg">Habilitar o rastreamento do kernel que é usado no driver. Pode resultar em perca de performance.</string>
     <string name="pref_general_utilities_string">Utilitários</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Ocultar o cursor do mouse quando estiver dentro do espaço da tela</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Útil quando você vincular uma tecla com o mouse e o jogo/aplicativo tem o cursor embutido.\n Para tornar o cursor do mouse visível, mantenha os botões ALT.</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilita a filtragem por vizinhança</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Esse filtro e aplicado na próxima tela que for emulada.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Esse filtro será aplicado na próxima vez que for emulado.</string>
     <string name="pref_general_utilities_integer_scaling_msg">Ativar escala de números inteiros</string>
     <string name="pref_general_utilities_integer_scaling_tooltip">Este é um método de escalabilidade imperfeito, que pode ajudar a reduzir o desfoque significativamente.</string>
     <string name="pref_system_title">Sistema</string>
