@@ -216,10 +216,10 @@ namespace eka2l1::drivers {
     }
 
     std::uint64_t dsp_output_stream_shared::position() {
-        return samples_copied_ * 1000000 / freq_;
+        return samples_copied_ * 1000000ULL / freq_;
     }
 
     std::uint64_t dsp_output_stream_shared::real_time_position() {
-        return samples_played_ * 1000000 / freq_;
+        return samples_played_ * 1000000ULL / freq_;
     }
 }
