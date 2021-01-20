@@ -40,12 +40,12 @@
     <string name="debugger_menu_services_submenu_window_tree_item_name">Árvore de janela</string>
     <string name="view_menu_fullscreen_item_name">Tela cheia</string>
     <string name="help_menu_about_item_name">Sobre</string>
-    <string name="app_launcher_title">Iniciador de aplicativos</string>
+    <string name="app_launcher_title">Inicializador de aplicativos</string>
     <string name="app_launcher_unavail_msg">App List Server indisponível. Instale um dispositivo para habilitá-lo.</string>
     <string name="app_launcher_switch_to_style_title">Trocar para</string>
     <string name="app_launcher_style_classical_str">Clássico</string>
     <string name="app_launcher_style_modern_str">Moderno</string>
-    <string name="error_dialog_title">Um erro brutal aparece</string>
+    <string name="error_dialog_title">Ocorreu um erro brutal</string>
     <string name="error_dialog_message">Por favor, anexe o registro e reporte ao desenvolvedor!</string>
     <string name="emulated_screen_title">Tela {}</string>
     <string name="emulated_screen_orientation_lock_item_name">Orientação bloqueada</string>
