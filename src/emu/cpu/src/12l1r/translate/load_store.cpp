@@ -392,11 +392,16 @@ namespace eka2l1::arm::r12l1 {
             list |= 1 << 15;
         }
 
-        return emit_memory_access_chain(common::armgen::R13, list, true, false, true, true);
+        // Who that does not do writeback in here may be committing war crimes
+        const bool permit_writeback = ((list & (1 << 13)) == 0);
+        return emit_memory_access_chain(common::armgen::R13, list, true, false, permit_writeback, true);
     }
 
     bool thumb_translate_visitor::thumb16_LDMIA(reg_index n, reg_list list) {
-        return emit_memory_access_chain(reg_index_to_gpr(n), list, true, false, true, true);
+        const int reg_index = static_cast<int>(n) - static_cast<int>(common::armgen::R0);
+        const bool permit_writeback = ((list & (1 << reg_index)) == 0);
+
+        return emit_memory_access_chain(reg_index_to_gpr(n), list, true, false, permit_writeback, true);
     }
 
     bool thumb_translate_visitor::thumb16_STMIA(reg_index n, reg_list list) {
@@ -471,6 +476,22 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 adv(imm5);
 
         return emit_memory_access(dest_real, base_real, adv, 8, false, true, true, false, true);
+    }
+
+    bool thumb_translate_visitor::thumb16_LDRH_reg(reg_index m, reg_index n, reg_index t) {
+        // All of these can't encode nor write R15. So we are ok!
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg offset_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg offset_mapped = reg_supplier_.map(offset_real, 0);
+        reg_supplier_.spill_lock(offset_real);
+
+        const bool res = emit_memory_access(dest_real, base_real, common::armgen::operand2(offset_mapped),
+            16, false, true, true, false, true);
+
+        reg_supplier_.release_spill_lock(offset_real);
+        return res;
     }
 
     bool thumb_translate_visitor::thumb16_LDRH_imm(std::uint8_t imm5, reg_index n, reg_index t) {
