@@ -76,6 +76,7 @@ namespace eka2l1::arm::r12l1 {
         bool thumb16_LDRSB_reg(reg_index m, reg_index n, reg_index t);
         bool thumb16_STR_imm_t1(std::uint8_t imm5, reg_index n, reg_index t);
         bool thumb16_STR_imm_t2(reg_index t, std::uint8_t imm8);
+        bool thumb16_STRB_reg(reg_index m, reg_index n, reg_index t);
         bool thumb16_STRB_imm(std::uint8_t imm5, reg_index n, reg_index t);
         bool thumb16_STR_reg(reg_index m, reg_index n, reg_index t);
         bool thumb16_STRH_reg(reg_index m, reg_index n, reg_index t);
