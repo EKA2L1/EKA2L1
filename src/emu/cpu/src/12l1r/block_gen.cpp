@@ -434,7 +434,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         // Reserve 128 writeable pages for these JIT codes.
-        begin_write(512);
+        begin_write(128);
 
         // Let them know the address damn
         emit_pc_flush(addr);
