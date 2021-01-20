@@ -722,12 +722,16 @@ namespace eka2l1::arm::r12l1 {
         return false;
     }
 
-    void visit_session::emit_direct_link(const vaddress addr) {
+    void visit_session::emit_direct_link(const vaddress addr, const bool cpsr_save) {
         // Flush all registers in this
         reg_supplier_.flush_all();
 
         if (cpsr_ever_updated_) {
             emit_cpsr_update_nzcvq();
+        }
+
+        if (cpsr_save) {
+            big_block_->emit_cpsr_save();
         }
 
         // Counting the instruction calling this also

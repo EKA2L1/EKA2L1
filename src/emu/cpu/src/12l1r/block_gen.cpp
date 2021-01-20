@@ -32,7 +32,7 @@
 #include <common/algorithm.h>
 
 namespace eka2l1::arm::r12l1 {
-    static constexpr std::size_t MAX_CODE_SPACE_BYTES = common::MB(16);
+    static constexpr std::size_t MAX_CODE_SPACE_BYTES = common::MB(32);
 
     static translated_block *dashixiong_get_block_proxy(dashixiong_block *self, const vaddress addr, const asid aid) {
         return self->get_block(addr, aid);
@@ -434,7 +434,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         // Reserve 128 writeable pages for these JIT codes.
-        begin_write(128);
+        begin_write(512);
 
         // Let them know the address damn
         emit_pc_flush(addr);

@@ -67,6 +67,12 @@ namespace eka2l1::arm::r12l1 {
         }
 
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
+
+        if (jump_reg_real == common::armgen::R15) {
+            emit_direct_link(crr_block_->current_address() + 8);
+            return false;
+        }
+
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
         emit_pc_write_exchange(jump_reg_mapped);
@@ -80,9 +86,7 @@ namespace eka2l1::arm::r12l1 {
             return false;
         }
 
-        common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
-        common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
-
+        // Write to LR first
         const vaddress next_instr_addr = crr_block_->current_address() + 4 +
                 (crr_block_->thumb_ ? 1 : 0);
 
@@ -90,8 +94,17 @@ namespace eka2l1::arm::r12l1 {
                 ALLOCATE_FLAG_DIRTY);
 
         big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
-        emit_pc_write_exchange(jump_reg_mapped);
 
+        common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
+
+        if (jump_reg_real == common::armgen::R15) {
+            emit_direct_link(crr_block_->current_address() + 8);
+            return false;
+        }
+
+        common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
+
+        emit_pc_write_exchange(jump_reg_mapped);
         emit_return_to_dispatch();
 
         return false;
@@ -99,6 +112,15 @@ namespace eka2l1::arm::r12l1 {
 
     bool thumb_translate_visitor::thumb16_BX(reg_index m) {
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
+
+        if (jump_reg_real == common::armgen::R15) {
+            // This will effectively switch mode to ARM mode, so clear CPSR too
+            big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
+            emit_direct_link(crr_block_->current_address() + 4, true);
+
+            return false;
+        }
+
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
         emit_pc_write_exchange(jump_reg_mapped);
