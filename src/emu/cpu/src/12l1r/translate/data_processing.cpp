@@ -1473,7 +1473,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_n);
         common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
 
-        if ((d_n == 15) || (m == 15)) {
+        if ((d_n == 15) && (m == 15)) {
             LOG_WARN(CPU_12L1R, "Unpredictable Thumb ADD");
             return false;
         }
