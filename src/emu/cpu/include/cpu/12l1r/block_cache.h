@@ -21,6 +21,7 @@
 
 #include <cpu/12l1r/common.h>
 #include <common/armemitter.h>
+#include <common/algorithm.h>
 
 #include <cstdint>
 #include <functional>
@@ -67,6 +68,10 @@ namespace eka2l1::arm::r12l1 {
 
         vaddress current_address() const {
             return static_cast<vaddress>(hash_) + size_;
+        }
+
+        vaddress current_aligned_address() const {
+            return common::align(current_address(), 4, 0);
         }
 
         explicit translated_block(const vaddress start_addr, const asid aid);

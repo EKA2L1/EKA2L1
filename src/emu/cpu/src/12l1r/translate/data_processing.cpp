@@ -1712,7 +1712,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool thumb_translate_visitor::thumb16_ADR(reg_index d, std::uint8_t imm8) {
-        const std::uint32_t data_addr = common::align(crr_block_->current_address(), 4, 0) +
+        const std::uint32_t data_addr = crr_block_->current_aligned_address() +
             (imm8 << 2) + 4;
 
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);

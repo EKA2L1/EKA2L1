@@ -349,7 +349,7 @@ namespace eka2l1::arm::r12l1 {
                         }
                     } else {
                         if (last_reg == 15) {
-                            big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address()
+                            big_block_->MOVI2R(common::armgen::R2, crr_block_->current_aligned_address()
                                 + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
                         } else {
                             if (mapped == common::armgen::R1) {
@@ -377,7 +377,7 @@ namespace eka2l1::arm::r12l1 {
                         }
                     } else {
                         if (last_reg == 15) {
-                            big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_address()
+                            big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_aligned_address()
                                     + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
 
                             big_block_->STR(ALWAYS_SCRATCH1, base, 0);
@@ -430,7 +430,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (base == common::armgen::R15) {
             // Calculate address right away
-            vaddress addr_to_base = common::align(crr_block_->current_address(), 4, 0) +
+            vaddress addr_to_base = common::align(crr_block_->current_aligned_address(), 4, 0) +
                     (crr_block_->thumb_ ? 4 : 8);
 
             if (op2.get_type() == common::armgen::TYPE_IMM) {
@@ -494,7 +494,7 @@ namespace eka2l1::arm::r12l1 {
             target_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
             if (!read) {
                 // We are writing the PC, so load the current address into it
-                big_block_->MOVI2R(target_mapped, crr_block_->current_address() + (crr_block_->thumb_ ? 4 : 8));
+                big_block_->MOVI2R(target_mapped, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8));
             }
         } else {
             // Normal mapping, no need to spill lock since no one can touch us here.
