@@ -322,11 +322,13 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
 
-        common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
@@ -439,11 +441,12 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
-
-        common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
@@ -521,11 +524,12 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
-
-        common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
             : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
@@ -600,11 +604,13 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
 
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
             : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
@@ -678,11 +684,13 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
 
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
             : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
@@ -755,11 +763,12 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
-
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
             : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
@@ -873,11 +882,12 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
-
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
             : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
@@ -991,11 +1001,12 @@ namespace eka2l1::arm::r12l1 {
             op1_mapped = reg_supplier_.map(op1_real, 0);
         }
 
+        common::armgen::arm_reg op2_base_mapped = ALWAYS_SCRATCH2;
         if (op2_base_real == common::armgen::R15) {
-            return emit_unimplemented_behaviour_handler();
+            big_block_->MOVI2R(op2_base_mapped, crr_block_->current_address() + 8);
+        } else {
+            op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         }
-
-        const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
             : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
