@@ -1817,4 +1817,17 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool thumb_translate_visitor::thumb16_TST_reg(reg_index m, reg_index n) {
+        common::armgen::arm_reg lhs_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg rhs_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg lhs_mapped = reg_supplier_.map(lhs_real, 0);
+        common::armgen::arm_reg rhs_mapped = reg_supplier_.map(rhs_real, 0);
+
+        big_block_->TST(lhs_mapped, rhs_mapped);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
 }
