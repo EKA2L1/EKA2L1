@@ -192,4 +192,26 @@ namespace eka2l1::arm::r12l1 {
 
         return false;
     }
+
+    bool thumb_translate_visitor::thumb16_BLX_reg(reg_index m) {
+        common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
+            ALLOCATE_FLAG_DIRTY);
+
+        const vaddress to_remember = (crr_block_->current_address() + 2) | 1;
+        big_block_->MOVI2R(lr_reg_mapped, to_remember);
+
+        if (jump_reg_real == common::armgen::R15) {
+            // No change of mode, everything stays the same.
+            emit_direct_link(crr_block_->current_address() + 4);
+            return false;
+        }
+
+        common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
+
+        emit_pc_write_exchange(jump_reg_mapped);
+        emit_return_to_dispatch();
+
+        return false;
+    }
 }
