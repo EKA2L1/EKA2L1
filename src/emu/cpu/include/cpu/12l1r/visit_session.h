@@ -65,6 +65,9 @@ namespace eka2l1::arm::r12l1 {
         bool emit_memory_access(common::armgen::arm_reg target, common::armgen::arm_reg base,
         	common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read);
 
+        bool emit_memory_read_exclusive(common::armgen::arm_reg dest, common::armgen::arm_reg base,
+        	const std::uint8_t bit_count,  common::armgen::arm_reg dest_extra = common::armgen::INVALID_REG);
+
         bool emit_undefined_instruction_handler();
         bool emit_unimplemented_behaviour_handler();
         bool emit_system_call_handler(const std::uint32_t n);

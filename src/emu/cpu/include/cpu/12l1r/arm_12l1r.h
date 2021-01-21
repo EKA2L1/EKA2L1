@@ -29,14 +29,20 @@
 #include <memory>
 
 namespace eka2l1::arm {
+    namespace r12l1 {
+        class dashixiong_block;
+    }
+
     class r12l1_core: public core {
     private:
+        friend class r12l1::dashixiong_block;
+
         r12l1::core_state jit_state_;
         r12l1::tlb mem_cache_;
 
         std::unique_ptr<r12l1::dashixiong_block> big_block_;
 
-        arm::exclusive_monitor *monitor_;
+        arm::r12l1::exclusive_monitor *monitor_;
         std::uint32_t target_ticks_run_;
  
     public:

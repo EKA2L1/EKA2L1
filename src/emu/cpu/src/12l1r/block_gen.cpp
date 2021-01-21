@@ -18,8 +18,10 @@
  */
 
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/exclusive_monitor.h>
 #include <cpu/12l1r/reg_loc.h>
 #include <cpu/12l1r/core_state.h>
+#include <cpu/12l1r/arm_12l1r.h>
 
 #include <cpu/12l1r/encoding/arm.h>
 #include <cpu/12l1r/encoding/thumb16.h>
@@ -42,10 +44,10 @@ namespace eka2l1::arm::r12l1 {
         return self->compile_new_block(state, addr);
     }
 
-    dashixiong_block::dashixiong_block(dashixiong_callback &callbacks)
+    dashixiong_block::dashixiong_block(r12l1_core *parent)
         : dispatch_func_(nullptr)
         , dispatch_ent_for_block_(nullptr)
-        , callbacks_(std::move(callbacks)) {
+        , parent_(parent) {
         context_info.detect();
 
         alloc_codespace(MAX_CODE_SPACE_BYTES);
@@ -202,16 +204,16 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::raise_guest_exception(const exception_type exc, const std::uint32_t usrdata) {
-        callbacks_.exception_handler_(exc, usrdata);
+        parent_->exception_handler(exc, usrdata);
     }
 
     void dashixiong_block::raise_system_call(const std::uint32_t num) {
-        callbacks_.syscall_handler_(num);
+        parent_->system_call_handler(num);
     }
 
     std::uint8_t dashixiong_block::read_byte(const vaddress addr) {
         std::uint8_t value = 0;
-        bool res = callbacks_.read_byte_(addr, &value);
+        bool res = parent_->read_8bit(addr, &value);
 
         if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read BYTE at address 0x{:X}", addr);
@@ -222,7 +224,7 @@ namespace eka2l1::arm::r12l1 {
 
     std::uint16_t dashixiong_block::read_word(const vaddress addr) {
         std::uint16_t value = 0;
-        bool res = callbacks_.read_word_(addr, &value);
+        bool res = parent_->read_16bit(addr, &value);
 
         if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read WORD at address 0x{:X}", addr);
@@ -233,7 +235,7 @@ namespace eka2l1::arm::r12l1 {
 
     std::uint32_t dashixiong_block::read_dword(const vaddress addr) {
         std::uint32_t value = 0;
-        bool res = callbacks_.read_dword_(addr, &value);
+        bool res = parent_->read_32bit(addr, &value);
 
         if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read DWORD at address 0x{:X}", addr);
@@ -244,7 +246,7 @@ namespace eka2l1::arm::r12l1 {
 
     std::uint64_t dashixiong_block::read_qword(const vaddress addr) {
         std::uint64_t value = 0;
-        bool res = callbacks_.read_qword_(addr, &value);
+        bool res = parent_->read_64bit(addr, &value);
 
         if (!res) {
             LOG_ERROR(CPU_12L1R, "Failed to read QWORD at address 0x{:X}", addr);
@@ -254,27 +256,67 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::write_byte(const vaddress addr, std::uint8_t dat) {
-        if (!callbacks_.write_byte_(addr, &dat)) {
+        if (!parent_->write_8bit(addr, &dat)) {
             LOG_ERROR(CPU_12L1R, "Failed to write BYTE to address 0x{:X}", addr);
         }
     }
 
     void dashixiong_block::write_word(const vaddress addr, std::uint16_t dat) {
-        if (!callbacks_.write_word_(addr, &dat)) {
+        if (!parent_->write_16bit(addr, &dat)) {
             LOG_ERROR(CPU_12L1R, "Failed to write WORD to address 0x{:X}", addr);
         }
     }
 
     void dashixiong_block::write_dword(const vaddress addr, std::uint32_t dat) {
-        if (!callbacks_.write_dword_(addr, &dat)) {
+        if (!parent_->write_32bit(addr, &dat)) {
             LOG_ERROR(CPU_12L1R, "Failed to write DWORD to address 0x{:X}", addr);
         }
     }
 
     void dashixiong_block::write_qword(const vaddress addr, std::uint64_t dat) {
-        if (!callbacks_.write_qword_(addr, &dat)) {
+        if (!parent_->write_64bit(addr, &dat)) {
             LOG_ERROR(CPU_12L1R, "Failed to write QWORD to address 0x{:X}", addr);
         }
+    }
+
+    std::uint8_t dashixiong_block::read_and_mark_byte(const vaddress addr) {
+        return parent_->monitor_->read_and_mark<std::uint8_t>(parent_->core_number(), addr, [&]() -> std::uint8_t {
+            // TODO: Check status
+            std::uint8_t val = 0;
+            parent_->read_8bit(addr, &val);
+
+            return val;
+        });
+    }
+
+    std::uint16_t dashixiong_block::read_and_mark_word(const vaddress addr) {
+        return parent_->monitor_->read_and_mark<std::uint16_t>(parent_->core_number(), addr, [&]() -> std::uint16_t {
+            // TODO: Check status
+            std::uint16_t val = 0;
+            parent_->read_16bit(addr, &val);
+
+            return val;
+        });
+    }
+
+    std::uint32_t dashixiong_block::read_and_mark_dword(const vaddress addr) {
+        return parent_->monitor_->read_and_mark<std::uint32_t>(parent_->core_number(), addr, [&]() -> std::uint32_t {
+            // TODO: Check status
+            std::uint32_t val = 0;
+            parent_->read_32bit(addr, &val);
+
+            return val;
+        });
+    }
+
+    std::uint64_t dashixiong_block::read_and_mark_qword(const vaddress addr) {
+        return parent_->monitor_->read_and_mark<std::uint64_t>(parent_->core_number(), addr, [&]() -> std::uint64_t {
+            // TODO: Check status
+            std::uint64_t val = 0;
+            parent_->read_64bit(addr, &val);
+
+            return val;
+        });
     }
 
     void dashixiong_block::enter_dispatch(core_state *cstate) {
@@ -469,7 +511,7 @@ namespace eka2l1::arm::r12l1 {
             std::uint32_t inst_size = 0;
 
             if (is_thumb) {
-                auto read_res = read_thumb_instruction(addr + block->size_, callbacks_.code_read_);
+                auto read_res = read_thumb_instruction(addr + block->size_, parent_->read_code);
 
                 if (!read_res) {
                     LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
@@ -494,7 +536,7 @@ namespace eka2l1::arm::r12l1 {
 
                 inst_size = read_res->second;
             } else {
-                if (!callbacks_.code_read_(addr + block->size_, &inst)) {
+                if (!parent_->read_code(addr + block->size_, &inst)) {
                     LOG_ERROR(CPU_12L1R, "Error while reading instruction at address 0x{:X}!, addr");
                     return nullptr;
                 }

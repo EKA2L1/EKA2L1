@@ -26,27 +26,15 @@
 #include <cstdint>
 #include <map>
 
+namespace eka2l1::arm {
+	class r12l1_core;
+}
+
 namespace eka2l1::arm::r12l1 {
     struct core_state;
     class reg_cache;
 	class visit_session;
-
-    struct dashixiong_callback {
-        memory_operation_8bit_func &read_byte_;
-        memory_operation_16bit_func &read_word_;
-        memory_operation_32bit_func &read_dword_;
-        memory_operation_64bit_func &read_qword_;
-		
-        memory_operation_8bit_func &write_byte_;
-        memory_operation_16bit_func &write_word_;
-        memory_operation_32bit_func &write_dword_;
-        memory_operation_64bit_func &write_qword_;
-		
-        memory_operation_32bit_func &code_read_;
-
-        handle_exception_func &exception_handler_;
-        system_call_handler_func &syscall_handler_;
-    };
+	class exclusive_monitor;
 
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
@@ -57,16 +45,14 @@ namespace eka2l1::arm::r12l1 {
         void *dispatch_func_;
         const void *dispatch_ent_for_block_;
 
-        dashixiong_callback callbacks_;
+		r12l1_core *parent_;
 
     protected:
         void assemble_control_funcs();
-
         translated_block *start_new_block(const vaddress addr, const asid aid);
 
     public:
-        explicit dashixiong_block(dashixiong_callback &callbacks);
-
+        explicit dashixiong_block(r12l1_core *parent);
         void enter_dispatch(core_state *cstate);
 
         translated_block *compile_new_block(core_state *state, const vaddress addr);
@@ -99,5 +85,10 @@ namespace eka2l1::arm::r12l1 {
 		void write_word(const vaddress addr, std::uint16_t dat);
 		void write_dword(const vaddress addr, std::uint32_t dat);
 		void write_qword(const vaddress addr, std::uint64_t dat);
+
+		std::uint8_t read_and_mark_byte(const vaddress addr);
+		std::uint16_t read_and_mark_word(const vaddress addr);
+		std::uint32_t read_and_mark_dword(const vaddress addr);
+		std::uint64_t read_and_mark_qword(const vaddress addr);
     };
 }

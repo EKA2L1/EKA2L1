@@ -1,35 +1,35 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
- * 
+ * Copyright (c) 2021 EKA2L1 Team.
+ *
  * This file is part of EKA2L1 project.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/core_state.h>
-#include <algorithm>
+#include <cpu/12l1r/arm_visitor.h>
+#include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/visit_session.h>
 
 namespace eka2l1::arm::r12l1 {
-    core_state::core_state()
-        : cpsr_(0)
-        , fpscr_(0)
-        , ticks_left_(0)
-        , should_break_(0)
-        , current_aid_(0)
-        , exclusive_state_(0)
-        , entries_(nullptr) {
-        std::fill(gprs_, gprs_ + sizeof(gprs_) / sizeof(std::uint32_t), 0);
-        std::fill(fprs_, fprs_ + sizeof(fprs_) / sizeof(std::uint32_t), 0);
+    bool arm_translate_visitor::arm_LDREX(common::cc_flags cond, reg_index n, reg_index t) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(n);
+
+        return emit_memory_read_exclusive(dest_real, base_real, 32);
     }
 }

@@ -139,6 +139,9 @@ namespace eka2l1::arm::r12l1 {
         bool arm_MSR_imm(common::cc_flags cond, int mask, int rotate, std::uint8_t imm8);
         bool arm_MSR_reg(common::cc_flags cond, int mask, reg_index n);
 
+        // Synchronization
+        bool arm_LDREX(common::cc_flags cond, reg_index n, reg_index t);
+
         // Interrupts
         bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
         bool arm_UDF();

@@ -24,15 +24,10 @@ namespace eka2l1::arm {
     r12l1_core::r12l1_core(arm::exclusive_monitor *monitor, const std::size_t page_bits)
         : mem_cache_(page_bits)
         , big_block_(nullptr)
-        , monitor_(monitor) {
+        , monitor_(reinterpret_cast<arm::r12l1::exclusive_monitor*>(monitor)) {
         // Set the state's TLB entries
         jit_state_.entries_ = mem_cache_.entries;
-
-        r12l1::dashixiong_callback callbacks{ read_8bit, read_16bit, read_32bit, read_64bit,
-            write_8bit, write_16bit, write_32bit, write_64bit, read_code, exception_handler,
-            system_call_handler };
-
-        big_block_ = std::make_unique<r12l1::dashixiong_block>(callbacks);
+        big_block_ = std::make_unique<r12l1::dashixiong_block>(this);
     }
 
     r12l1_core::~r12l1_core() {

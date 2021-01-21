@@ -88,6 +88,7 @@ namespace eka2l1::arm::r12l1 {
         // Branch
         bool thumb16_B_t1(common::cc_flags cond, std::uint8_t imm8);
         bool thumb16_B_t2(std::uint16_t imm11);
+        bool thumb16_BLX_reg(reg_index m);
 
         // Multiply
         bool thumb16_MUL_reg(reg_index n, reg_index d_m);

@@ -23,6 +23,7 @@
 
 #if EKA2L1_ARCH(ARM)
 #include <cpu/12l1r/arm_12l1r.h>
+#include <cpu/12l1r/exclusive_monitor.h>
 #else
 #include <cpu/arm_dynarmic.h>
 #endif
@@ -35,7 +36,7 @@ namespace eka2l1::arm {
 
 #if EKA2L1_ARCH(ARM)
         case arm_emulator_type::r12l1:
-            return std::make_unique<r12l1_core>(nullptr, 12);
+            return std::make_unique<r12l1_core>(monitor, 12);
 #else
         case arm_emulator_type::dynarmic:
             return std::make_unique<dynarmic_core>(monitor);
@@ -53,7 +54,10 @@ namespace eka2l1::arm {
         case arm_emulator_type::unicorn:
             return nullptr;
 
-#if !EKA2L1_ARCH(ARM)
+#if EKA2L1_ARCH(ARM)
+        case arm_emulator_type::r12l1:
+            return std::make_unique<r12l1::exclusive_monitor>(core_count);
+#else
         case arm_emulator_type::dynarmic:
             return std::make_unique<dynarmic_exclusive_monitor>(core_count);
 #endif

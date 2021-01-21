@@ -58,6 +58,22 @@ namespace eka2l1::arm::r12l1 {
         self->write_dword(addr, val);
     }
 
+    static std::uint8_t dashixiong_read_and_mark_byte(dashixiong_block *self, const vaddress addr) {
+        return self->read_and_mark_byte(addr);
+    }
+
+    static std::uint16_t dashixiong_read_and_mark_word(dashixiong_block *self, const vaddress addr) {
+        return self->read_and_mark_word(addr);
+    }
+
+    static std::uint32_t dashixiong_read_and_mark_dword(dashixiong_block *self, const vaddress addr) {
+        return self->read_and_mark_dword(addr);
+    }
+
+    static std::uint64_t dashixiong_read_and_mark_qword(dashixiong_block *self, const vaddress addr) {
+        return self->read_and_mark_qword(addr);
+    }
+
     visit_session::visit_session(dashixiong_block *bro, translated_block *crr)
         : flag_(common::CC_NV)
         , cond_modified_(false)
@@ -662,6 +678,58 @@ namespace eka2l1::arm::r12l1 {
 
         reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
         return block_cont;
+    }
+
+    bool visit_session::emit_memory_read_exclusive(common::armgen::arm_reg dest, common::armgen::arm_reg base,
+        const std::uint8_t bit_count, common::armgen::arm_reg dest2) {
+        emit_cpsr_update_nzcvq();
+
+        // Set exclusive state
+        big_block_->MOV(ALWAYS_SCRATCH1, 1);
+        big_block_->STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, exclusive_state_));
+
+        // Map the register
+        common::armgen::arm_reg dest_mapped_1 = reg_supplier_.map(dest, ALLOCATE_FLAG_DIRTY);
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base, 0);
+
+        big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+        big_block_->MOVP2R(common::armgen::R0, big_block_);
+        big_block_->MOV(common::armgen::R1, base_mapped);
+
+        switch (bit_count) {
+        case 8:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_and_mark_byte);
+            break;
+
+        case 16:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_and_mark_word);
+            break;
+
+        case 32:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_and_mark_dword);
+            break;
+
+        case 64:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_and_mark_qword);
+            break;
+        }
+
+        if (bit_count == 64) {
+            // Move the higher part to temp register to remember
+            big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R1);
+        }
+
+        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+        big_block_->MOV(dest_mapped_1, common::armgen::R0);
+
+        if (bit_count == 64) {
+            common::armgen::arm_reg dest_mapped_2 = reg_supplier_.map(dest2, ALLOCATE_FLAG_DIRTY);
+            big_block_->MOV(dest_mapped_2, ALWAYS_SCRATCH2);
+        }
+
+        emit_cpsr_restore_nzcvq();
+        return true;
     }
 
     void visit_session::sync_state() {
