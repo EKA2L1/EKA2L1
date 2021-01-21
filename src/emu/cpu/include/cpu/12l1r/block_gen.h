@@ -90,5 +90,10 @@ namespace eka2l1::arm::r12l1 {
 		std::uint16_t read_and_mark_word(const vaddress addr);
 		std::uint32_t read_and_mark_dword(const vaddress addr);
 		std::uint64_t read_and_mark_qword(const vaddress addr);
+
+		bool write_ex_byte(const vaddress addr, const std::uint8_t val);
+        bool write_ex_word(const vaddress addr, const std::uint16_t val);
+        bool write_ex_dword(const vaddress addr, const std::uint32_t val);
+        bool write_ex_qword(const vaddress addr, const std::uint64_t val);
     };
 }

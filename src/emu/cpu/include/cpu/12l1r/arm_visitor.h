@@ -140,6 +140,7 @@ namespace eka2l1::arm::r12l1 {
         bool arm_MSR_reg(common::cc_flags cond, int mask, reg_index n);
 
         // Synchronization
+        bool arm_STREX(common::cc_flags cond, reg_index n, reg_index d, reg_index t);
         bool arm_LDREX(common::cc_flags cond, reg_index n, reg_index t);
 
         // Interrupts

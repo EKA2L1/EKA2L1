@@ -66,7 +66,10 @@ namespace eka2l1::arm::r12l1 {
         	common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add, bool pre_index, bool writeback, bool read);
 
         bool emit_memory_read_exclusive(common::armgen::arm_reg dest, common::armgen::arm_reg base,
-        	const std::uint8_t bit_count,  common::armgen::arm_reg dest_extra = common::armgen::INVALID_REG);
+        	const std::uint8_t bit_count, common::armgen::arm_reg dest_extra = common::armgen::INVALID_REG);
+
+        bool emit_memory_write_exclusive(common::armgen::arm_reg status, common::armgen::arm_reg source,
+        	common::armgen::arm_reg base, const std::uint8_t bitcount, common::armgen::arm_reg source_extra = common::armgen::INVALID_REG);
 
         bool emit_undefined_instruction_handler();
         bool emit_unimplemented_behaviour_handler();

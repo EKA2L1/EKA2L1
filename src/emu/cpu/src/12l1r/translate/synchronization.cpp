@@ -22,13 +22,25 @@
 #include <cpu/12l1r/visit_session.h>
 
 namespace eka2l1::arm::r12l1 {
+    bool arm_translate_visitor::arm_STREX(common::cc_flags cond, reg_index n, reg_index d, reg_index t) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg status_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+
+        return emit_memory_write_exclusive(status_real, source_real, base_real, 32);
+    }
+
     bool arm_translate_visitor::arm_LDREX(common::cc_flags cond, reg_index n, reg_index t) {
         if (!condition_passed(cond)) {
             return false;
         }
 
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
-        common::armgen::arm_reg dest_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
 
         return emit_memory_read_exclusive(dest_real, base_real, 32);
     }

@@ -74,6 +74,22 @@ namespace eka2l1::arm::r12l1 {
         return self->read_and_mark_qword(addr);
     }
 
+    static bool dashixiong_write_ex_byte(dashixiong_block *self, const vaddress addr, const std::uint8_t val) {
+        return self->write_ex_byte(addr, val);
+    }
+
+    static bool dashixiong_write_ex_word(dashixiong_block *self, const vaddress addr, const std::uint16_t val) {
+        return self->write_ex_word(addr, val);
+    }
+
+    static bool dashixiong_write_ex_dword(dashixiong_block *self, const vaddress addr, const std::uint32_t val) {
+        return self->write_ex_dword(addr, val);
+    }
+
+    static bool dashixiong_write_ex_qword(dashixiong_block *self, const vaddress addr, const std::uint64_t val) {
+        return self->write_ex_qword(addr, val);
+    }
+
     visit_session::visit_session(dashixiong_block *bro, translated_block *crr)
         : flag_(common::CC_NV)
         , cond_modified_(false)
@@ -713,6 +729,10 @@ namespace eka2l1::arm::r12l1 {
         case 64:
             big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_and_mark_qword);
             break;
+
+        default:
+            LOG_ERROR(CPU_12L1R, "Invalid bit count for exclusive read");
+            break;
         }
 
         if (bit_count == 64) {
@@ -727,6 +747,83 @@ namespace eka2l1::arm::r12l1 {
             common::armgen::arm_reg dest_mapped_2 = reg_supplier_.map(dest2, ALLOCATE_FLAG_DIRTY);
             big_block_->MOV(dest_mapped_2, ALWAYS_SCRATCH2);
         }
+
+        emit_cpsr_restore_nzcvq();
+        return true;
+    }
+
+    bool visit_session::emit_memory_write_exclusive(common::armgen::arm_reg status, common::armgen::arm_reg source,
+        common::armgen::arm_reg base, const std::uint8_t bitcount, common::armgen::arm_reg source_extra) {
+        emit_cpsr_update_nzcvq();
+
+        common::armgen::arm_reg status_mapped = reg_supplier_.map(status, ALLOCATE_FLAG_DIRTY);
+        big_block_->MOV(status_mapped, 0);
+
+        // Check the exclusive state
+        big_block_->LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, exclusive_state_));
+        big_block_->CMP(ALWAYS_SCRATCH1, 0);
+
+        auto end = big_block_->B_CC(common::CC_EQ);
+
+        // Status mapped should be 0 now still. Set exclusive state to 0
+        big_block_->STR(status_mapped, CORE_STATE_REG, offsetof(core_state, exclusive_state_));
+
+        common::armgen::arm_reg base_mapped = reg_supplier_.map(base, 0);
+        common::armgen::arm_reg source_mapped = reg_supplier_.map(source, 0);
+        common::armgen::arm_reg source2_mapped = common::armgen::INVALID_REG;
+
+        if (bitcount == 64) {
+            source2_mapped = reg_supplier_.map(source_extra, 0);
+        }
+
+        if (base_mapped != common::armgen::R1)
+            big_block_->MOV(ALWAYS_SCRATCH1, base_mapped);
+
+        if (source_mapped != common::armgen::R2)
+            big_block_->MOV(ALWAYS_SCRATCH2, source_mapped);
+
+        big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+        // No fear someone will ruin source2 tbh
+        if (bitcount == 64)
+            big_block_->MOV(common::armgen::R3, source2_mapped);
+
+        if (base_mapped != common::armgen::R1) {
+            big_block_->MOV(common::armgen::R1, ALWAYS_SCRATCH1);
+        }
+
+        if (source_mapped != common::armgen::R2) {
+            big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
+        }
+
+        big_block_->MOVP2R(common::armgen::R0, big_block_);
+        switch (bitcount) {
+        case 8:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_ex_byte);
+            break;
+
+        case 16:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_ex_word);
+            break;
+
+        case 32:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_ex_dword);
+            break;
+
+        case 64:
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_ex_qword);
+            break;
+
+        default:
+            LOG_ERROR(CPU_12L1R, "Invalid bit count for exclusive write");
+            break;
+        }
+
+        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+        // Set returned status
+        big_block_->MOV(status_mapped, common::armgen::R0);
+        big_block_->set_jump_target(end);
 
         emit_cpsr_restore_nzcvq();
         return true;

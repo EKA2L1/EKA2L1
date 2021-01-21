@@ -319,6 +319,34 @@ namespace eka2l1::arm::r12l1 {
         });
     }
 
+    bool dashixiong_block::write_ex_byte(const vaddress addr, const std::uint8_t val) {
+        return parent_->monitor_->do_exclusive_operation<std::uint8_t>(parent_->core_number(), addr,
+            [&](std::uint8_t expected) -> bool {
+                return parent_->exclusive_write_8bit(addr, val, expected);
+            }) ? 0 : 1;
+    }
+
+    bool dashixiong_block::write_ex_word(const vaddress addr, const std::uint16_t val) {
+        return parent_->monitor_->do_exclusive_operation<std::uint16_t>(parent_->core_number(), addr,
+            [&](std::uint16_t expected) -> bool {
+                return parent_->exclusive_write_16bit(addr, val, expected);
+            }) ? 0 : 1;
+    }
+
+    bool dashixiong_block::write_ex_dword(const vaddress addr, const std::uint32_t val) {
+        return parent_->monitor_->do_exclusive_operation<std::uint32_t>(parent_->core_number(), addr,
+            [&](std::uint32_t expected) -> bool {
+                return parent_->exclusive_write_32bit(addr, val, expected);
+            }) ? 0 : 1;
+    }
+
+    bool dashixiong_block::write_ex_qword(const vaddress addr, const std::uint64_t val) {
+        return parent_->monitor_->do_exclusive_operation<std::uint64_t>(parent_->core_number(), addr,
+            [&](std::uint64_t expected) -> bool {
+                return parent_->exclusive_write_64bit(addr, val, expected);
+            }) ? 0 : 1;
+    }
+
     void dashixiong_block::enter_dispatch(core_state *cstate) {
         typedef void (*dispatch_func_type)(core_state *state);
         dispatch_func_type df = reinterpret_cast<dispatch_func_type>(dispatch_func_);
