@@ -121,13 +121,10 @@ namespace eka2l1::arm::r12l1 {
         const vaddress jump_to = crr_block_->current_address() + static_cast<std::int32_t>(
             common::sign_extended<26, std::uint32_t>(imm24 << 2)) + (H ? 2 : 0) + 8;
 
-        bool should_save_cpsr = false;
-        if (jump_to & 1) {
-            big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
-            should_save_cpsr = true;
-        }
+        // Change instruction set to Thumb
+        big_block_->ORR(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
+        emit_direct_link(jump_to & (~1), true);
 
-        emit_direct_link(jump_to & (~1), should_save_cpsr);
         return false;
     }
 
@@ -177,16 +174,11 @@ namespace eka2l1::arm::r12l1 {
             ALLOCATE_FLAG_DIRTY);
 
         big_block_->MOVI2R(lr_reg_mapped, to_remember);
-        bool need_save_cpsr = false;
 
-        if (!(to_jump & 1)) {
-            // Exchange mode, this time it seems to be ARM, so clear T flag
-            big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
-            need_save_cpsr = true;
-        }
+        // Exchange mode,  so clear T flag
+        big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
+        emit_direct_link(to_jump & (~1), true);
 
-        // Remember to save CPSR
-        emit_direct_link(to_jump & (~1), need_save_cpsr);
         return false;
     }
 
