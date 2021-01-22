@@ -981,6 +981,10 @@ namespace eka2l1::common::armgen {
         write_4op_multiply(0xF, destLo, destHi, rn, rm);
     }
 
+    void armx_emitter::SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool m, bool n) {
+        write32(condition | (0x16 << 20) | (dest << 16) | (rn << 8) | (1 << 7) | (n << 6) | (m << 5) | rm);
+    }
+
     void armx_emitter::UBFX(arm_reg dest, arm_reg rn, std::uint8_t lsb, std::uint8_t width) {
         write32(condition | (0x7E0 << 16) | ((width - 1) << 16) | (dest << 12) | (lsb << 7) | (5 << 4) | rn);
     }

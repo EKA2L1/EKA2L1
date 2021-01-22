@@ -57,7 +57,7 @@ INST(arm_RSB_reg,       "RSB (reg)",           "cccc0000011Snnnnddddvvvvvrr0mmmm
 INST(arm_RSC_imm,       "RSC (imm)",           "cccc0010111Snnnnddddrrrrvvvvvvvv") // all
 INST(arm_RSC_reg,       "RSC (reg)",           "cccc0000111Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_RSC_rsr,       "RSC (rsr)",           "cccc0000111Snnnnddddssss0rr1mmmm") // all
-//INST(arm_SBC_imm,       "SBC (imm)",           "cccc0010110Snnnnddddrrrrvvvvvvvv") // all
+INST(arm_SBC_imm,       "SBC (imm)",           "cccc0010110Snnnnddddrrrrvvvvvvvv") // all
 INST(arm_SBC_reg,       "SBC (reg)",           "cccc0000110Snnnnddddvvvvvrr0mmmm") // all
 //INST(arm_SBC_rsr,       "SBC (rsr)",           "cccc0000110Snnnnddddssss0rr1mmmm") // all
 INST(arm_SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // all
@@ -220,7 +220,7 @@ INST(arm_UMULL,         "UMULL",               "cccc0000100Sddddaaaammmm1001nnnn
 // Multiply (Halfword) instructions
 //INST(arm_SMLALxy,       "SMLALXY",             "cccc00010100ddddaaaammmm1xy0nnnn") // v5xP
 //INST(arm_SMLAxy,        "SMLAXY",              "cccc00010000ddddaaaammmm1xy0nnnn") // v5xP
-//INST(arm_SMULxy,        "SMULXY",              "cccc00010110dddd0000mmmm1xy0nnnn") // v5xP
+INST(arm_SMULxy,        "SMULXY",              "cccc00010110dddd0000mmmm1xy0nnnn") // v5xP
 
 // Multiply (Word by Halfword) instructions
 //INST(arm_SMLAWy,        "SMLAWY",              "cccc00010010ddddaaaammmm1y00nnnn") // v5xP

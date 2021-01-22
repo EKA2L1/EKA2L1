@@ -171,6 +171,24 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_SMULxy(common::cc_flags cond, reg_index d, reg_index m, bool M, bool N, reg_index n) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg op1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg op1_mapped = reg_supplier_.map(op1_real, 0);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+        const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        big_block_->SMULxy(dest_mapped, op1_mapped, op2_mapped, M, N);
+
+        return true;
+    }
+
     bool thumb_translate_visitor::thumb16_MUL_reg(reg_index n, reg_index d_m) {
         common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_m);
         common::armgen::arm_reg op2_real = reg_index_to_gpr(n);
