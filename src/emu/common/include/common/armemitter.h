@@ -663,8 +663,10 @@ namespace eka2l1::common::armgen {
         void SMLAL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
 
-        void SXTB(arm_reg dest, arm_reg op2);
+        void SXTB(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8 = 0);
         void SXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation = 0);
+        void UXTB(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8 = 0);
+        void UXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8 = 0);
         void SXTAH(arm_reg dest, arm_reg src, arm_reg op2, std::uint8_t rotation = 0);
         void BFI(arm_reg rd, arm_reg rn, std::uint8_t lsb, std::uint8_t width);
         void BFC(arm_reg rd, std::uint8_t lsb, std::uint8_t width);

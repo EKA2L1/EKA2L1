@@ -1018,8 +1018,16 @@ namespace eka2l1::common::armgen {
         write32(condition | (0x7C0 << 16) | (msb << 16) | (rd << 12) | (lsb << 7) | (1 << 4) | 15);
     }
 
-    void armx_emitter::SXTB(arm_reg dest, arm_reg op2) {
-        write32(condition | (0x6AF << 16) | (dest << 12) | (7 << 4) | op2);
+    void armx_emitter::UXTB(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8) {
+        write32(condition | (0x6EF << 16) | (dest << 12) | ((rotation_base_8 & 0b11) << 10) | (7 << 4) | op2);
+    }
+
+    void armx_emitter::UXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8) {
+        write32(condition | (0x6FF << 16) | (dest << 12) | ((rotation_base_8 & 0b11) << 10) | (7 << 4) | op2);
+    }
+
+    void armx_emitter::SXTB(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8) {
+        write32(condition | (0x6AF << 16) | (dest << 12) | ((rotation_base_8 & 0b11) << 10) | (7 << 4) | op2);
     }
 
     void armx_emitter::SXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation) {
