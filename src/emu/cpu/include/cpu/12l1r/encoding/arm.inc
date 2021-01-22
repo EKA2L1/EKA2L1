@@ -4,7 +4,7 @@
 //INST(arm_ISB,           "ISB",                 "1111010101111111111100000110oooo") // v7
 
 // Branch instructions
-//INST(arm_BLX_imm,       "BLX (imm)",           "1111101hvvvvvvvvvvvvvvvvvvvvvvvv") // v5
+INST(arm_BLX_imm,       "BLX (imm)",           "1111101hvvvvvvvvvvvvvvvvvvvvvvvv") // v5
 INST(arm_BLX_reg,       "BLX (reg)",           "cccc000100101111111111110011mmmm") // v5
 INST(arm_B,             "B",                   "cccc1010vvvvvvvvvvvvvvvvvvvvvvvv") // all
 INST(arm_BL,            "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv") // all

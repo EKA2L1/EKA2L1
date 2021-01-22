@@ -110,6 +110,27 @@ namespace eka2l1::arm::r12l1 {
         return false;
     }
 
+    bool arm_translate_visitor::arm_BLX_imm(bool H, std::uint32_t imm24) {
+        // Write to LR first
+        const vaddress next_instr_addr = crr_block_->current_address() + 4;
+        common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
+            ALLOCATE_FLAG_DIRTY);
+
+        big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
+
+        const vaddress jump_to = crr_block_->current_address() + static_cast<std::int32_t>(
+            common::sign_extended<26, std::uint32_t>(imm24 << 2)) + (H ? 2 : 0) + 8;
+
+        bool should_save_cpsr = false;
+        if (jump_to & 1) {
+            big_block_->BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
+            should_save_cpsr = true;
+        }
+
+        emit_direct_link(jump_to & (~1), should_save_cpsr);
+        return false;
+    }
+
     bool thumb_translate_visitor::thumb16_BX(reg_index m) {
         common::armgen::arm_reg jump_reg_real = reg_index_to_gpr(m);
 
