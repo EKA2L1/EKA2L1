@@ -73,6 +73,20 @@ namespace eka2l1::arm::r12l1 {
         return res;
     }
 
+    bool arm_translate_visitor::arm_LDRD_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm8a, std::uint8_t imm8b) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg dest_real_2 = reg_index_to_gpr(t + 1);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::operand2 adv(((imm8a & 0b1111) << 4) | (imm8b & 0b1111));
+
+        return emit_memory_access(dest_real, base_real, adv, 64, false, U, P, W, true, dest_real_2);
+    }
+
     bool arm_translate_visitor::arm_LDRB_lit(common::cc_flags cond, bool U, reg_index t, std::uint16_t imm12) {
         if (!condition_passed(cond)) {
             return false;
@@ -249,6 +263,20 @@ namespace eka2l1::arm::r12l1 {
         reg_supplier_.release_spill_lock(offset_base_real);
 
         return res;
+    }
+
+    bool arm_translate_visitor::arm_STRD_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint8_t imm8a, std::uint8_t imm8b) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg source_real_2 = reg_index_to_gpr(t + 1);
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        common::armgen::operand2 adv(((imm8a & 0b1111) << 4) | (imm8b & 0b1111));
+
+        return emit_memory_access(source_real, base_real, adv, 64, false, U, P, W, false, source_real_2);
     }
 
     bool arm_translate_visitor::arm_STRB_imm(common::cc_flags cond, bool P, bool U, bool W, reg_index n, reg_index t, std::uint16_t imm12) {

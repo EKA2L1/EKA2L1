@@ -46,6 +46,10 @@ namespace eka2l1::arm::r12l1 {
         return self->read_dword(addr);
     }
 
+    static std::uint64_t dashixiong_read_qword_router(dashixiong_block *self, const vaddress addr) {
+        return self->read_qword(addr);
+    }
+
     static void dashixiong_write_byte_router(dashixiong_block *self, const vaddress addr, const std::uint8_t val) {
         self->write_byte(addr, val);
     }
@@ -56,6 +60,10 @@ namespace eka2l1::arm::r12l1 {
 
     static void dashixiong_write_dword_router(dashixiong_block *self, const vaddress addr, const std::uint32_t val) {
         self->write_dword(addr, val);
+    }
+
+    static void dashixiong_write_qword_router(dashixiong_block *self, const vaddress addr, const std::uint64_t val) {
+        self->write_qword(addr, val);
     }
 
     static std::uint8_t dashixiong_read_and_mark_byte(dashixiong_block *self, const vaddress addr) {
@@ -448,7 +456,7 @@ namespace eka2l1::arm::r12l1 {
 
     bool visit_session::emit_memory_access(common::armgen::arm_reg target, common::armgen::arm_reg base,
         common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add,
-        bool pre_index, bool writeback, bool read) {
+        bool pre_index, bool writeback, bool read, common::armgen::arm_reg target_2) {
         emit_cpsr_update_nzcvq();
 
         if (!writeback) {
@@ -533,18 +541,39 @@ namespace eka2l1::arm::r12l1 {
             target_mapped = reg_supplier_.map(target, read ? ALLOCATE_FLAG_DIRTY : 0);
         }
 
+        common::armgen::arm_reg target_mapped_2 = common::armgen::INVALID_REG;
+        if (bit_count == 64) {
+            if (target_2 == common::armgen::R15) {
+                LOG_ERROR(CPU_12L1R, "Target 2 for 64-bit memory access is R15, todo!");
+            } else {
+                target_mapped_2 = reg_supplier_.map(target_2, read ? ALLOCATE_FLAG_DIRTY : 0);
+            }
+        }
+
         big_block_->CMP(host_base_addr, 0);
         auto lookup_good = big_block_->B_CC(common::CC_NEQ);
 
         // Here we fallback to old friend. hmmmm
         // Calculate the address
         big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
-        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
 
-        // Preserve R1 in case target mapped is it
+        bool save_target1 = false;
+        bool save_target2 = false;
+
         if (!read) {
+            // With lower order, R1 got overwritten first. And comes with R2 and R3.
+            // So we only need to check if target mapped is R1 in the case, if so
+            // Preserve R1 in case target mapped is it
             if (target_mapped == common::armgen::R1) {
-                big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R1);
+                big_block_->MOV(ALWAYS_SCRATCH2, target_mapped);
+                save_target1 = true;
+            }
+
+            // For 64-bit store, R1 and R2 this time got overwritten before moving our high value
+            // to R3. So we need to check if they are either R1 or R2, if so remember it to temp register
+            if ((bit_count == 64) && ((target_mapped_2 == common::armgen::R1) || (target_mapped_2 == common::armgen::R2))) {
+                big_block_->MOV(ALWAYS_SCRATCH1, target_mapped_2);
+                save_target2 = true;
             }
         }
 
@@ -552,13 +581,24 @@ namespace eka2l1::arm::r12l1 {
             big_block_->MOV(common::armgen::R1, base_mapped);
 
         if (!read) {
-            if (target_mapped == common::armgen::R1) {
+            if (save_target1) {
                 // Move back the preserved value
                 big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
             } else {
                 big_block_->MOV(common::armgen::R2, target_mapped);
             }
+
+            if (bit_count == 64) {
+                if (save_target2) {
+                    // Move back the preserved value
+                    big_block_->MOV(common::armgen::R3, ALWAYS_SCRATCH1);
+                } else {
+                    big_block_->MOV(common::armgen::R3, target_mapped_2);
+                }
+            }
         }
+
+        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
 
         if (read) {
             switch (bit_count) {
@@ -572,6 +612,10 @@ namespace eka2l1::arm::r12l1 {
 
                 case 32:
                     big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
+                    break;
+
+                case 64:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_qword_router);
                     break;
 
                 default:
@@ -592,10 +636,19 @@ namespace eka2l1::arm::r12l1 {
                     big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
                     break;
 
+                case 64:
+                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_qword_router);
+                    break;
+
                 default:
                     assert(false);
                     break;
             }
+        }
+
+        if (read && (bit_count == 64)) {
+            // Remember the high part
+            big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R1);
         }
 
         big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
@@ -617,6 +670,10 @@ namespace eka2l1::arm::r12l1 {
                 }
             } else {
                 big_block_->MOV(target_mapped, common::armgen::R0);
+
+                if (bit_count == 64) {
+                    big_block_->MOV(target_mapped_2, ALWAYS_SCRATCH2);
+                }
             }
         }
 
@@ -645,6 +702,13 @@ namespace eka2l1::arm::r12l1 {
                     big_block_->LDR(target_mapped, host_base_addr, 0, true, true, false);
                     break;
 
+                // ARM requires you to have two consecutive registers on LDRD.
+                // So it's just better to use two LDRs, our register mapping maybe nuts
+                case 64:
+                    big_block_->LDR(target_mapped, host_base_addr, 0, true, true, false);
+                    big_block_->LDR(target_mapped_2, host_base_addr, 4, true, true, false);
+                    break;
+
                 default:
                     assert(false);
                     break;
@@ -661,6 +725,13 @@ namespace eka2l1::arm::r12l1 {
 
                 case 32:
                     big_block_->STR(target_mapped, host_base_addr, 0, true, true, false);
+                    break;
+
+                // ARM requires you to have two consecutive registers on LDRD.
+                // So it's just better to use two LDRs, our register mapping maybe nuts
+                case 64:
+                    big_block_->STR(target_mapped, host_base_addr, 0, true, true, false);
+                    big_block_->STR(target_mapped_2, host_base_addr, 4, true, true, false);
                     break;
 
                 default:
