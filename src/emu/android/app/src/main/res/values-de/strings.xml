@@ -51,6 +51,6 @@
     <string name="hide_buttons">Hide buttons</string>
     <string name="confirmation_required">Confirmation required</string>
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
-    <string name="log_saved">Log has been saved</string>
+    <string name="log_saved">Protokollierung wurde deaktiviert</string>
     <string name="version">Version: </string>
 </resources>
