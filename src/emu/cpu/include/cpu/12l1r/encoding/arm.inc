@@ -173,7 +173,7 @@ INST(arm_STMIB,         "STMIB",               "cccc100110w0nnnnxxxxxxxxxxxxxxxx
 // Miscellaneous instructions
 //INST(arm_BFC,           "BFC",                 "cccc0111110vvvvvddddvvvvv0011111") // v6T2
 //INST(arm_BFI,           "BFI",                 "cccc0111110vvvvvddddvvvvv001nnnn") // v6T2
-//INST(arm_CLZ,           "CLZ",                 "cccc000101101111dddd11110001mmmm") // v5
+INST(arm_CLZ,           "CLZ",                 "cccc000101101111dddd11110001mmmm") // v5
 //INST(arm_MOVT,          "MOVT",                "cccc00110100vvvvddddvvvvvvvvvvvv") // v6T2
 //INST(arm_MOVW,          "MOVW",                "cccc00110000vvvvddddvvvvvvvvvvvv") // v6T2
 //INST(arm_NOP,           "NOP",                 "----0011001000001111000000000000") // v6K

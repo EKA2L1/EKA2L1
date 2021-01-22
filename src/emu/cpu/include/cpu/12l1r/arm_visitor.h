@@ -144,6 +144,9 @@ namespace eka2l1::arm::r12l1 {
         bool arm_STREX(common::cc_flags cond, reg_index n, reg_index d, reg_index t);
         bool arm_LDREX(common::cc_flags cond, reg_index n, reg_index t);
 
+        // Miscs instructions
+        bool arm_CLZ(common::cc_flags cond, reg_index d, reg_index m);
+
         // Interrupts
         bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
         bool arm_UDF();
