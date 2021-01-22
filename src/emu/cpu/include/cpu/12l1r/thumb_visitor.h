@@ -63,6 +63,10 @@ namespace eka2l1::arm::r12l1 {
         bool thumb16_LSR_reg(reg_index m, reg_index d_n);
         bool thumb16_LSL_reg(reg_index m, reg_index d_n);
         bool thumb16_TST_reg(reg_index m, reg_index n);
+        bool thumb16_SXTH(reg_index m, reg_index d);
+        bool thumb16_SXTB(reg_index m, reg_index d);
+        bool thumb16_UXTH(reg_index m, reg_index d);
+        bool thumb16_UXTB(reg_index m, reg_index d);
 
         bool thumb16_PUSH(bool m, reg_list list);
         bool thumb16_POP(bool p, reg_list list);

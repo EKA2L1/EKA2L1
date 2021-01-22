@@ -67,10 +67,10 @@ INST(thumb16_SUB_sp,         "SUB (SP minus imm)",       "101100001vvvvvvv"), //
 //INST(thumb16_YIELD,          "YIELD",                    "1011111100010000"), // v7
 
 // Miscellaneous 16-bit instructions
-//INST(thumb16_SXTH,           "SXTH",                     "1011001000mmmddd"), // v6
-//INST(thumb16_SXTB,           "SXTB",                     "1011001001mmmddd"), // v6
-//INST(thumb16_UXTH,           "UXTH",                     "1011001010mmmddd"), // v6
-//INST(thumb16_UXTB,           "UXTB",                     "1011001011mmmddd"), // v6
+INST(thumb16_SXTH,           "SXTH",                     "1011001000mmmddd"), // v6
+INST(thumb16_SXTB,           "SXTB",                     "1011001001mmmddd"), // v6
+INST(thumb16_UXTH,           "UXTH",                     "1011001010mmmddd"), // v6
+INST(thumb16_UXTB,           "UXTB",                     "1011001011mmmddd"), // v6
 INST(thumb16_PUSH,           "PUSH",                     "1011010Mxxxxxxxx"), // v4T
 INST(thumb16_POP,            "POP",                      "1011110Pxxxxxxxx"), // v4T
 //INST(thumb16_SETEND,         "SETEND",                   "101101100101x000"), // v6
