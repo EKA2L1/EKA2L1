@@ -349,7 +349,7 @@ namespace eka2l1::epoc {
         absorb_des_string(dat, seri, false);
 
         if (seri.get_seri_mode() != common::SERI_MODE_READ) {
-            *data = *reinterpret_cast<T *>(&dat[0]);
+            std::memcpy(data, dat.data(), sizeof(T));
         }
     }
 
