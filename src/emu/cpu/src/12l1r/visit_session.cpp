@@ -264,10 +264,21 @@ namespace eka2l1::arm::r12l1 {
         }
 
         common::armgen::arm_reg base_guest_reg = base;
+        common::armgen::arm_reg base_backup = common::armgen::INVALID_REG;
+
+        const std::uint32_t base_guest_reg_idx = static_cast<std::uint32_t>(base_guest_reg) -
+            static_cast<std::uint32_t>(common::armgen::R0);
 
         // Spill lock this base guest reg
-        if (writeback)
+        if (writeback) {
             reg_supplier_.spill_lock(base_guest_reg);
+
+            if ((guest_list & (1 << base_guest_reg_idx)) && !load) {
+                // We are duplicated xD
+                base_backup = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+                big_block_->MOV(base_backup, guest_addr_reg);
+            }
+        }
 
         auto emit_addr_modification = [&](const bool ignore_base) {
             // Decrement or increment guest base and host base
@@ -330,8 +341,13 @@ namespace eka2l1::arm::r12l1 {
 
                 common::armgen::arm_reg mapped = common::armgen::INVALID_REG;
 
-                if (last_reg != 15)
-                    mapped = reg_supplier_.map(orig, (load ? ALLOCATE_FLAG_DIRTY : 0));
+                if (last_reg != 15) {
+                    if ((base_backup != common::armgen::INVALID_REG) && (base_guest_reg_idx == last_reg)) {
+                        mapped = base_backup;
+                    } else {
+                        mapped = reg_supplier_.map(orig, (load ? ALLOCATE_FLAG_DIRTY : 0));
+                    }
+                }
 
                 if ((last_reg != 15) && (mapped == common::armgen::INVALID_REG)) {
                     LOG_ERROR(CPU_12L1R, "Can't map another register for some reason...");
@@ -499,6 +515,14 @@ namespace eka2l1::arm::r12l1 {
             base_spill_locked = false;
         }
 
+        common::armgen::arm_reg base_backup = common::armgen::INVALID_REG;
+
+        // We want to store original base value
+        if (!pre_index && !read && (base == target)) {
+            base_backup = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            big_block_->MOV(base_backup, base_mapped);
+        }
+
         auto emit_base_mod = [&]() {
             // Have to handle this since unlike load/store, ALU operations use 12bit
             // for operand2 Imm12Mod, not imm12.
@@ -538,7 +562,11 @@ namespace eka2l1::arm::r12l1 {
             }
         } else {
             // Normal mapping, no need to spill lock since no one can touch us here.
-            target_mapped = reg_supplier_.map(target, read ? ALLOCATE_FLAG_DIRTY : 0);
+            if (!read && (base_backup != common::armgen::INVALID_REG)) {
+                target_mapped = base_backup;
+            } else {
+                target_mapped = reg_supplier_.map(target, read ? ALLOCATE_FLAG_DIRTY : 0);
+            }
         }
 
         common::armgen::arm_reg target_mapped_2 = common::armgen::INVALID_REG;
