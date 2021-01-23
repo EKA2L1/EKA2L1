@@ -44,6 +44,11 @@ namespace eka2l1::arm::r12l1 {
         return self->compile_new_block(state, addr);
     }
 
+    static void emit_pc_flush_with_this_emitter(common::armgen::armx_emitter *emitter, const address current_pc) {
+        emitter->MOVI2R(ALWAYS_SCRATCH1, current_pc);
+        emitter->STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+    }
+
     dashixiong_block::dashixiong_block(r12l1_core *parent)
         : dispatch_func_(nullptr)
         , dispatch_ent_for_block_(nullptr)
@@ -55,6 +60,19 @@ namespace eka2l1::arm::r12l1 {
 
         cache_.set_on_block_invalidate_callback([this](translated_block *to_destroy) {
             edit_block_links(to_destroy, true);
+
+            // Remove all related link instance of this
+            for (std::uint32_t i = 0; i < to_destroy->links_.size(); i++) {
+                auto link_ites = link_to_.equal_range(make_block_hash(to_destroy->links_[i].to_,
+                    to_destroy->address_space()));
+
+                for (auto ite = link_ites.first; ite != link_ites.second; ite++) {
+                    if (ite->second == to_destroy) {
+                        link_to_.erase(ite);
+                        break;
+                    }
+                }
+            }
         });
     }
 
@@ -170,7 +188,7 @@ namespace eka2l1::arm::r12l1 {
                                                               temp_info);
 
                     if (unlink) {
-                        emit_pc_flush(link.to_);
+                        emit_pc_flush_with_this_emitter(&temp_emitter, link.to_);
                         temp_emitter.B(dispatch_ent_for_block_);
 
                         link.linked_ = false;
@@ -359,8 +377,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::emit_pc_flush(const address current_pc) {
-        MOVI2R(ALWAYS_SCRATCH1, current_pc);
-        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+        emit_pc_flush_with_this_emitter(this, current_pc);
     }
 
     void dashixiong_block::emit_cpsr_save() {
@@ -503,8 +520,8 @@ namespace eka2l1::arm::r12l1 {
             thumb_visitor = std::make_unique<thumb_translate_visitor>(this, block);
         }
 
-        // Reserve 128 writeable pages for these JIT codes.
-        begin_write(128);
+        // Reserve 512 pages for these JIT codes.
+        begin_write(512);
 
         // Let them know the address damn
         emit_pc_flush(addr);
