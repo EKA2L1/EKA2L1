@@ -24,9 +24,9 @@
     <string name="pref_system_title">System</string>
     <string name="pref_control_key_binding_sect_title">Tastenbelegung</string>
     <string name="pref_theme">Design</string>
-    <string name="pref_theme_light">Light</string>
-    <string name="pref_theme_dark">Dark</string>
-    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_theme_light">Leicht</string>
+    <string name="pref_theme_dark">Dunkel</string>
+    <string name="pref_enable_virtual_keyboard">Verfügbare Bildschirmtastatur</string>
     <string name="pref_enable_actionbar">Enable ActionBar</string>
     <string name="pref_enable_statusbar">Enable statusbar</string>
     <string name="pref_wakelock">Keep screen on</string>
