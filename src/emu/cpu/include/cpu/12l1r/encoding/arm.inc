@@ -101,7 +101,7 @@ INST(arm_UDF,           "UDF",                 "111001111111------------1111----
 
 // Synchronization Primitive instructions
 //INST(arm_CLREX,         "CLREX",               "11110101011111111111000000011111") // v6K
-//INST(arm_SWP,           "SWP",                 "cccc00010000nnnntttt00001001uuuu") // v2S (v6: Deprecated)
+INST(arm_SWP,           "SWP",                 "cccc00010000nnnntttt00001001uuuu") // v2S (v6: Deprecated)
 //INST(arm_SWPB,          "SWPB",                "cccc00010100nnnntttt00001001uuuu") // v2S (v6: Deprecated)
 INST(arm_STREX,         "STREX",               "cccc00011000nnnndddd11111001mmmm") // v6
 INST(arm_LDREX,         "LDREX",               "cccc00011001nnnndddd111110011111") // v6

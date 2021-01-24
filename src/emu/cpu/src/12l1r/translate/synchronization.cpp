@@ -44,4 +44,25 @@ namespace eka2l1::arm::r12l1 {
 
         return emit_memory_read_exclusive(dest_real, base_real, 32);
     }
+
+    bool arm_translate_visitor::arm_SWP(common::cc_flags cond, reg_index n, reg_index t, reg_index t2) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(t2);
+
+        common::armgen::arm_reg scr_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+
+        const bool res = emit_memory_access(scr_mapped, base_real, common::armgen::operand2(), 32, false, true, true, false, true);
+
+        emit_memory_access(source_real, base_real, common::armgen::operand2(), 32, false, true, true, false, false);
+
+        emit_memory_access(dest_real, scr_mapped, common::armgen::operand2(), 32, false, true, true, false, true);
+        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+
+        return res;
+    }
 }

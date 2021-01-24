@@ -149,6 +149,7 @@ namespace eka2l1::arm::r12l1 {
         // Synchronization
         bool arm_STREX(common::cc_flags cond, reg_index n, reg_index d, reg_index t);
         bool arm_LDREX(common::cc_flags cond, reg_index n, reg_index t);
+        bool arm_SWP(common::cc_flags cond, reg_index n, reg_index t, reg_index t2);
 
         // Miscs instructions
         bool arm_CLZ(common::cc_flags cond, reg_index d, reg_index m);
