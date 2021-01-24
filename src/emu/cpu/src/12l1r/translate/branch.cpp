@@ -76,7 +76,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
         emit_pc_write_exchange(jump_reg_mapped);
-        emit_return_to_dispatch();
+        emit_return_to_dispatch(true);
 
         return false;
     }
@@ -105,7 +105,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
         emit_pc_write_exchange(jump_reg_mapped);
-        emit_return_to_dispatch();
+        emit_return_to_dispatch(true);
 
         return false;
     }
@@ -142,7 +142,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
         emit_pc_write_exchange(jump_reg_mapped);
-        emit_return_to_dispatch();
+        emit_return_to_dispatch(true);
 
         return false;
     }
@@ -223,7 +223,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg jump_reg_mapped = reg_supplier_.map(jump_reg_real, 0);
 
         emit_pc_write_exchange(jump_reg_mapped);
-        emit_return_to_dispatch();
+        emit_return_to_dispatch(true);
 
         return false;
     }

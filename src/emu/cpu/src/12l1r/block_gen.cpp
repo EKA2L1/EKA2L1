@@ -62,6 +62,17 @@ namespace eka2l1::arm::r12l1 {
         cache_.set_on_block_invalidate_callback([this](translated_block *to_destroy) {
             edit_block_links(to_destroy, true);
 
+            // Remove this block on fast dispatch table
+            const std::uint32_t fast_dispatch_index = (to_destroy->start_address() >> FAST_DISPATCH_ENTRY_ADDR_SHIFT)
+                & FAST_DISPATCH_ENTRY_MASK;
+            fast_dispatch_entry &entry_may_empty = fast_dispatches_[fast_dispatch_index];
+
+            if ((entry_may_empty.addr_ == to_destroy->start_address()) &&
+                (entry_may_empty.asid_ == to_destroy->address_space())) {
+                // Empty out this entry
+                std::memset(&entry_may_empty, 0, sizeof(fast_dispatch_entry));
+            }
+
             // Remove all related link instance of this
             for (std::uint32_t i = 0; i < to_destroy->links_.size(); i++) {
                 auto link_ites = link_to_.equal_range(make_block_hash(to_destroy->links_[i].to_,
@@ -172,11 +183,18 @@ namespace eka2l1::arm::r12l1 {
         begin_write();
         fast_dispatch_ent_ = get_code_ptr();
 
+        // Check if we should break
+        LDR(common::armgen::R1, CORE_STATE_REG, offsetof(core_state, should_break_));
+        CMPI2R(common::armgen::R1, 0, common::armgen::R12);
+
+        return_back = B_CC(common::CC_NEQ);
+
         // Core state will load the current address space ID
         LDR(common::armgen::R0, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
 
         MOVI2R(ALWAYS_SCRATCH2, FAST_DISPATCH_ENTRY_MASK);
-        AND(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, common::armgen::operand2(common::armgen::R0, common::armgen::ST_LSR, 1));
+        AND(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, common::armgen::operand2(common::armgen::R0,
+            common::armgen::ST_LSR, FAST_DISPATCH_ENTRY_ADDR_SHIFT));
 
         // Indexing the dispatch entry
         static_assert(sizeof(fast_dispatch_entry) == 16);
@@ -184,8 +202,8 @@ namespace eka2l1::arm::r12l1 {
         ADDI2R(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, reinterpret_cast<std::uint32_t>(fast_dispatches_.data()),
             common::armgen::R1);
 
-        LDR(common::armgen::R1, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, hash_));
-        LDR(common::armgen::R2, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, hash_) + 4);
+        LDR(common::armgen::R1, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, addr_));
+        LDR(common::armgen::R2, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, asid_));
         LDR(common::armgen::R5, CORE_STATE_REG, offsetof(core_state, current_aid_));
 
         // Comparing the address and address space
@@ -208,14 +226,16 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::fixup_branch no_code = emit_get_block_code();
 
         // Add to fast dispatch, then execute the block
-        STR(common::armgen::R4, common::armgen::R6, offsetof(fast_dispatch_entry, hash_));
-        STR(common::armgen::R5, common::armgen::R6, offsetof(fast_dispatch_entry, hash_) + 4);
+        STR(common::armgen::R4, common::armgen::R6, offsetof(fast_dispatch_entry, addr_));
+        STR(common::armgen::R5, common::armgen::R6, offsetof(fast_dispatch_entry, asid_));
         LDR(ALWAYS_SCRATCH1, common::armgen::R0, offsetof(translated_block, translated_code_));
         STR(ALWAYS_SCRATCH1, common::armgen::R6, offsetof(fast_dispatch_entry, code_));
 
         B(ALWAYS_SCRATCH1);
 
         set_jump_target(no_code);
+        set_jump_target(return_back);
+
         emit_wrap_up_dispatch();
 
         flush_lit_pool();
@@ -284,6 +304,8 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void dashixiong_block::flush_all() {
+        clear_fast_dispatch();
+
         link_to_.clear();
         cache_.flush_all();
     }
@@ -515,8 +537,11 @@ namespace eka2l1::arm::r12l1 {
         }
     }
 
-    void dashixiong_block::emit_return_to_dispatch(translated_block *block) {
-        B(dispatch_ent_for_block_);
+    void dashixiong_block::emit_return_to_dispatch(translated_block *block, const bool fast_hint) {
+        if (fast_hint)
+            B(fast_dispatch_ent_);
+        else
+            B(dispatch_ent_for_block_);
     }
 
     enum thumb_instruction_size {

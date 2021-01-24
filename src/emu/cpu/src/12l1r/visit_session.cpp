@@ -465,7 +465,7 @@ namespace eka2l1::arm::r12l1 {
         emit_cpsr_restore_nzcvq();
 
         if (!block_cont)
-            emit_return_to_dispatch();
+            emit_return_to_dispatch(true);
 
         return block_cont;
     }
@@ -782,7 +782,7 @@ namespace eka2l1::arm::r12l1 {
             // Link the block
             // Write the result
             emit_pc_write_exchange(target_mapped);
-            emit_return_to_dispatch();
+            emit_return_to_dispatch(true);
 
             block_cont = false;
         }
@@ -947,7 +947,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
         big_block_->emit_cpsr_load();
 
-        emit_return_to_dispatch(false);
+        emit_return_to_dispatch(false, false);
 
         return false;
     }
@@ -963,7 +963,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
         big_block_->emit_cpsr_load();
 
-        emit_return_to_dispatch(false);
+        emit_return_to_dispatch(false, false);
 
         return false;
     }
@@ -981,7 +981,8 @@ namespace eka2l1::arm::r12l1 {
         big_block_->emit_cpsr_load();
 
         // Don't save CPSR, we already update it and it may got modified in the interrupt
-        emit_return_to_dispatch(false);
+        // Usually these are fast dispatch anyway
+        emit_return_to_dispatch(true, false);
 
         return false;
     }
@@ -1005,7 +1006,7 @@ namespace eka2l1::arm::r12l1 {
         link.needs_.push_back(big_block_->B());
     }
 
-    void visit_session::emit_return_to_dispatch(const bool cpsr_save) {
+    void visit_session::emit_return_to_dispatch(const bool fast_hint, const bool cpsr_save) {
         // Flush all registers in this
         reg_supplier_.flush_all();
 
@@ -1015,7 +1016,7 @@ namespace eka2l1::arm::r12l1 {
 
         // Counting the instruction calling this also
         big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_ + 1);
-        big_block_->emit_return_to_dispatch(crr_block_);
+        big_block_->emit_return_to_dispatch(crr_block_, fast_hint);
     }
 
     void visit_session::finalize() {

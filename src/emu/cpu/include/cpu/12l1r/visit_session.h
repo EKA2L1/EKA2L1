@@ -82,7 +82,7 @@ namespace eka2l1::arm::r12l1 {
 		void emit_cpsr_restore_sel(const bool nzcvq = true);
 
 		void emit_direct_link(const vaddress addr, const bool save_cpsr = false);
-		void emit_return_to_dispatch(const bool save_cpsr = true);
+		void emit_return_to_dispatch(const bool fast_hint = false, const bool save_cpsr = true);
 		void emit_pc_write_exchange(common::armgen::arm_reg reg);
 		void emit_pc_write(common::armgen::arm_reg reg);
 		void emit_alu_jump(common::armgen::arm_reg reg);
