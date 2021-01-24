@@ -36,14 +36,29 @@ namespace eka2l1::arm::r12l1 {
 	class visit_session;
 	class exclusive_monitor;
 
+	struct fast_dispatch_entry {
+	    std::uint64_t hash_;
+	    void *code_;
+	    std::uint32_t padding_;
+	};
+
+	// In fast dispatch we favour the lower end of the address. Since it is not the common case
+	// Symbian code jumps to other memory region, so the upper part may not be much count.
+	// Here we take account of bits[4:24] of the block address.
+	static constexpr std::uint32_t FAST_DISPATCH_ENTRY_ADDR_SHIFT = 4;
+	static constexpr std::uint32_t FAST_DISPATCH_ENTRY_MASK = 0xFFFFF;
+	static constexpr std::uint32_t FAST_DISPATCH_ENTRY_COUNT = 0x10000;
+
     class dashixiong_block: public common::armgen::armx_codeblock {
     private:
         std::multimap<translated_block::hash_type, translated_block*> link_to_;
+        std::array<fast_dispatch_entry, FAST_DISPATCH_ENTRY_COUNT> fast_dispatches_;
 
         block_cache cache_;
 
         void *dispatch_func_;
         const void *dispatch_ent_for_block_;
+        const void *fast_dispatch_ent_;
 
 		r12l1_core *parent_;
 
@@ -69,6 +84,8 @@ namespace eka2l1::arm::r12l1 {
         void emit_cpsr_save();
         void emit_cpsr_load();
         void emit_cycles_count_save();
+
+        void clear_fast_dispatch();
 
         void flush_range(const vaddress start, const vaddress end, const asid aid);
         void flush_all();

@@ -54,6 +54,7 @@ namespace eka2l1::arm::r12l1 {
         , dispatch_ent_for_block_(nullptr)
         , parent_(parent) {
         context_info.detect();
+        clear_fast_dispatch();
 
         alloc_codespace(MAX_CODE_SPACE_BYTES);
         assemble_control_funcs();
@@ -78,6 +79,10 @@ namespace eka2l1::arm::r12l1 {
 
     static void dashixiong_print_debug(const std::uint32_t val) {
         LOG_TRACE(CPU_12L1R, "Print debug: 0x{:X}", val);
+    }
+
+    void dashixiong_block::clear_fast_dispatch() {
+        std::memset(fast_dispatches_.data(), 0, sizeof(fast_dispatch_entry) * FAST_DISPATCH_ENTRY_COUNT);
     }
 
     void dashixiong_block::assemble_control_funcs() {
@@ -105,33 +110,41 @@ namespace eka2l1::arm::r12l1 {
 
         auto return_back = B_CC(common::CC_NEQ);
 
-        LDR(common::armgen::R1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
-        LDR(common::armgen::R2, CORE_STATE_REG, offsetof(core_state, current_aid_));
-        MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
+        LDR(common::armgen::R4, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
 
-        quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_get_block_proxy));
+        auto emit_get_block_code = [&]() -> common::armgen::fixup_branch {
+            MOV(common::armgen::R1, common::armgen::R4);
+            LDR(common::armgen::R2, CORE_STATE_REG, offsetof(core_state, current_aid_));
+            MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
-        CMPI2R(common::armgen::R0, 0, common::armgen::R12);
-        common::armgen::fixup_branch available = B_CC(common::CC_NEQ);
+            quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_get_block_proxy));
 
-        // Call for recompile
-        MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
-        MOV(common::armgen::R1, CORE_STATE_REG);
-        LDR(common::armgen::R2, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+            CMPI2R(common::armgen::R0, 0, common::armgen::R12);
+            common::armgen::fixup_branch available = B_CC(common::CC_NEQ);
 
-        quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_compile_new_block_proxy));
-        CMPI2R(common::armgen::R0, 0, common::armgen::R12);
+            // Call for recompile
+            MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
+            MOV(common::armgen::R1, CORE_STATE_REG);
+            MOV(common::armgen::R2, common::armgen::R4);
 
-        common::armgen::fixup_branch available_again = B_CC(common::CC_NEQ);
-        
-        // first set the jit state to break. 2 indicates error happened.
-        // then exit (TODO)
-        MOVI2R(common::armgen::R0, 2);
-        STR(common::armgen::R0, CORE_STATE_REG, offsetof(core_state, should_break_));
-        common::armgen::fixup_branch headout = B();
+            quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_compile_new_block_proxy));
+            CMPI2R(common::armgen::R0, 0, common::armgen::R12);
 
-        set_jump_target(available);
-        set_jump_target(available_again);
+            common::armgen::fixup_branch available_again = B_CC(common::CC_NEQ);
+
+            // first set the jit state to break. 2 indicates error happened.
+            // then exit (TODO)
+            MOVI2R(common::armgen::R0, 2);
+            STR(common::armgen::R0, CORE_STATE_REG, offsetof(core_state, should_break_));
+            common::armgen::fixup_branch headout = B();
+
+            set_jump_target(available);
+            set_jump_target(available_again);
+
+            return headout;
+        };
+
+        common::armgen::fixup_branch headout = emit_get_block_code();
 
         LDR(common::armgen::R0, common::armgen::R0, offsetof(translated_block, translated_code_));
         B(common::armgen::R0);                                                // Branch to the block
@@ -139,17 +152,71 @@ namespace eka2l1::arm::r12l1 {
         set_jump_target(headout);
         set_jump_target(return_back);
 
-        // Save the CPSR and ticks
-        emit_cpsr_save();
+        auto emit_wrap_up_dispatch = [&]() {
+            // Save the CPSR and ticks
+            emit_cpsr_save();
+            emit_cycles_count_save();
 
-        emit_cycles_count_save();
+            // Restore alignment
+            ADD(common::armgen::R_SP, common::armgen::R_SP, 4);
 
-        // Restore alignment
-        ADD(common::armgen::R_SP, common::armgen::R_SP, 4);
+            // Branch back to where it went
+            POP(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
+                common::armgen::R9, common::armgen::R10, common::armgen::R11, common::armgen::R15);
+        };
 
-        // Branch back to where it went
-        POP(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
-             common::armgen::R9, common::armgen::R10, common::armgen::R11, common::armgen::R15);
+        emit_wrap_up_dispatch();
+        flush_lit_pool();
+        end_write();
+
+        begin_write();
+        fast_dispatch_ent_ = get_code_ptr();
+
+        // Core state will load the current address space ID
+        LDR(common::armgen::R0, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
+
+        MOVI2R(ALWAYS_SCRATCH2, FAST_DISPATCH_ENTRY_MASK);
+        AND(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, common::armgen::operand2(common::armgen::R0, common::armgen::ST_LSR, 1));
+
+        // Indexing the dispatch entry
+        static_assert(sizeof(fast_dispatch_entry) == 16);
+        LSL(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, 4);
+        ADDI2R(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, reinterpret_cast<std::uint32_t>(fast_dispatches_.data()),
+            common::armgen::R1);
+
+        LDR(common::armgen::R1, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, hash_));
+        LDR(common::armgen::R2, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, hash_) + 4);
+        LDR(common::armgen::R5, CORE_STATE_REG, offsetof(core_state, current_aid_));
+
+        // Comparing the address and address space
+        CMP(common::armgen::R0, common::armgen::R1);
+        auto fast_dispatch_miss = B_CC(common::CC_NEQ);
+
+        CMP(common::armgen::R2, common::armgen::R5);
+        auto fast_dispatch_miss_again = B_CC(common::CC_NEQ);
+
+        // Branch to the dispatched code...
+        LDR(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, offsetof(fast_dispatch_entry, code_));
+        B(ALWAYS_SCRATCH2);
+
+        set_jump_target(fast_dispatch_miss);
+        set_jump_target(fast_dispatch_miss_again);
+
+        MOV(common::armgen::R4, common::armgen::R0);
+        MOV(common::armgen::R6, ALWAYS_SCRATCH2);           // Store base of entry.
+
+        common::armgen::fixup_branch no_code = emit_get_block_code();
+
+        // Add to fast dispatch, then execute the block
+        STR(common::armgen::R4, common::armgen::R6, offsetof(fast_dispatch_entry, hash_));
+        STR(common::armgen::R5, common::armgen::R6, offsetof(fast_dispatch_entry, hash_) + 4);
+        LDR(ALWAYS_SCRATCH1, common::armgen::R0, offsetof(translated_block, translated_code_));
+        STR(ALWAYS_SCRATCH1, common::armgen::R6, offsetof(fast_dispatch_entry, code_));
+
+        B(ALWAYS_SCRATCH1);
+
+        set_jump_target(no_code);
+        emit_wrap_up_dispatch();
 
         flush_lit_pool();
         end_write();
