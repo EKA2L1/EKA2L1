@@ -243,7 +243,7 @@ namespace eka2l1::epoc {
                 wait_time = 0;
             }
 
-            last_draw_ = crr;
+            last_draw_ = ((crr + time_spend_per_frame_us - 1) / time_spend_per_frame_us) * time_spend_per_frame_us;
 
             sched->schedule(client->get_ws().get_graphics_driver(), scr, crr + wait_time);
             drawer->sleep(static_cast<std::uint32_t>(wait_time));
