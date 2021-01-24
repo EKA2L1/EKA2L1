@@ -189,6 +189,37 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::arm_MVN_rsr(common::cc_flags cond, bool S, reg_index d, reg_index s,
+        common::armgen::shift_type shift, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg source_real = reg_index_to_gpr(m);
+        common::armgen::arm_reg shift_real = reg_index_to_gpr(s);
+
+        if ((dest_real == common::armgen::R15) || (source_real == common::armgen::R15)) {
+            LOG_WARN(CPU_12L1R, "MVN rsr to PC or from PC unimplemented!");
+            return false;
+        }
+
+        common::armgen::arm_reg source_mapped = reg_supplier_.map(source_real, 0);
+        common::armgen::arm_reg shift_mapped = reg_supplier_.map(shift_real, 0);
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        common::armgen::operand2 op2(source_mapped, shift, shift_mapped);
+
+        if (S) {
+            big_block_->MVNS(dest_mapped, op2);
+            cpsr_nzcvq_changed();
+        } else {
+            big_block_->MVN(dest_mapped, op2);
+        }
+
+        return true;
+    }
+
     bool arm_translate_visitor::arm_ADC_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
         int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
