@@ -51,17 +51,27 @@ namespace eka2l1::arm::r12l1 {
         }
 
         common::armgen::arm_reg base_real = reg_index_to_gpr(n);
-        common::armgen::arm_reg dest_real = reg_index_to_gpr(t);
-        common::armgen::arm_reg source_real = reg_index_to_gpr(t2);
+        common::armgen::arm_reg value_store_org = reg_index_to_gpr(t);
+        common::armgen::arm_reg value_new_to_store = reg_index_to_gpr(t2);
 
-        common::armgen::arm_reg scr_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+        bool res = true;
 
-        const bool res = emit_memory_access(scr_mapped, base_real, common::armgen::operand2(), 32, false, true, true, false, true);
+        if (value_store_org != value_new_to_store) {
+            // Don't use tricks, just do normal: read to Rt and write Rt2 to base n
+            emit_memory_access(value_store_org, base_real, common::armgen::operand2(), 32, false, true, true, false, true);
+            res = emit_memory_access(value_new_to_store, base_real, common::armgen::operand2(), 32, false, true, true, false, false);
+        } else {
+            common::armgen::arm_reg original_val = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            common::armgen::arm_reg value_to_write_mapped = reg_supplier_.map(value_new_to_store, 0);
 
-        emit_memory_access(source_real, base_real, common::armgen::operand2(), 32, false, true, true, false, false);
+            big_block_->MOV(original_val, value_to_write_mapped);
 
-        emit_memory_access(dest_real, scr_mapped, common::armgen::operand2(), 32, false, true, true, false, true);
-        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+            // Read original value, and write copied value
+            emit_memory_access(value_store_org, base_real, common::armgen::operand2(), 32, false, true, true, false, true);
+            res = emit_memory_access(original_val, base_real, common::armgen::operand2(), 32, false, true, true, false, false, common::armgen::INVALID_REG, true);
+
+            reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        }
 
         return res;
     }

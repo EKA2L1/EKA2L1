@@ -472,7 +472,7 @@ namespace eka2l1::arm::r12l1 {
 
     bool visit_session::emit_memory_access(common::armgen::arm_reg target, common::armgen::arm_reg base,
         common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add,
-        bool pre_index, bool writeback, bool read, common::armgen::arm_reg target_2) {
+        bool pre_index, bool writeback, bool read, common::armgen::arm_reg target_2, const bool is_target_host_reg) {
         emit_cpsr_update_nzcvq();
 
         if (!writeback) {
@@ -554,18 +554,22 @@ namespace eka2l1::arm::r12l1 {
         // Map the target here, no register can disturb us :D
         // CPSR should not be ruined
         common::armgen::arm_reg target_mapped = common::armgen::INVALID_REG;
-        if (target == common::armgen::R15) {
-            target_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
-            if (!read) {
-                // We are writing the PC, so load the current address into it
-                big_block_->MOVI2R(target_mapped, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8));
-            }
+        if (is_target_host_reg) {
+            target_mapped = target;
         } else {
-            // Normal mapping, no need to spill lock since no one can touch us here.
-            if (!read && (base_backup != common::armgen::INVALID_REG)) {
-                target_mapped = base_backup;
+            if (target == common::armgen::R15) {
+                target_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+                if (!read) {
+                    // We are writing the PC, so load the current address into it
+                    big_block_->MOVI2R(target_mapped, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8));
+                }
             } else {
-                target_mapped = reg_supplier_.map(target, read ? ALLOCATE_FLAG_DIRTY : 0);
+                // Normal mapping, no need to spill lock since no one can touch us here.
+                if (!read && (base_backup != common::armgen::INVALID_REG)) {
+                    target_mapped = base_backup;
+                } else {
+                    target_mapped = reg_supplier_.map(target, read ? ALLOCATE_FLAG_DIRTY : 0);
+                }
             }
         }
 
@@ -791,7 +795,20 @@ namespace eka2l1::arm::r12l1 {
             reg_supplier_.release_spill_lock(base);
         }
 
-        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        reg_supplier_.done_scratching_this(host_base_addr);
+
+        if (base_backup != common::armgen::INVALID_REG) {
+            reg_supplier_.done_scratching_this(base_backup);
+        }
+
+        if ((((!writeback) && (base != common::armgen::R15))) || (base == common::armgen::R15)) {
+            reg_supplier_.done_scratching_this(base_mapped);
+        }
+
+        if (!is_target_host_reg && (target == common::armgen::R15)) {
+            reg_supplier_.done_scratching_this(target_mapped);
+        }
+
         return block_cont;
     }
 
