@@ -19,7 +19,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 namespace eka2l1::common {
     template <typename T>
@@ -42,5 +44,80 @@ namespace eka2l1::common {
     template <typename T>
     T extract_bits(const T num, const std::uint8_t p, const std::uint8_t n) { 
         return (((1 << n) - 1) & (num >> (p - 1))); 
-    } 
+    }
+
+    template <typename T>
+    bool bit(const T num, const std::uint8_t idx) {
+        return num & (1 << idx);
+    }
+
+    template <typename T>
+    constexpr std::uint8_t bit_size() {
+        if constexpr(std::is_same_v<T, std::uint8_t>) {
+            return 8;
+        }
+
+        if constexpr(std::is_same_v<T, std::uint16_t>) {
+            return 16;
+        }
+
+        if constexpr(std::is_same_v<T, std::uint32_t>) {
+            return 32;
+        }
+
+        if constexpr(std::is_same_v<T, std::uint64_t>) {
+            return 64;
+        }
+
+        return 0;
+    }
+
+    template <typename T>
+    constexpr T rotate_right(T value, std::uint8_t amount) {
+        constexpr std::uint8_t bsize = bit_size<T>();
+        if (amount % bsize == 0) {
+            return value;
+        }
+
+        return static_cast<T>((value >> amount) | (value << (bsize - amount)));
+    }
+
+    /**
+     * Sign extended original value with bit_count to full bit width of T
+     *
+     * @tparam bit_count        The number of original bits.
+     * @tparam T                The type to sign-extended to.
+     *
+     * @param value             The value to sign-extended, expected to have bit_count bits.
+     * @return                  Fully sign-extended value.
+     */
+    template <size_t bit_count, typename T>
+    T sign_extended(const T value) {
+        constexpr T mask = static_cast<T>(1 << bit_count) - 1;
+        if (value & static_cast<T>(1 << (bit_count - 1))) {
+            return value | ~mask;
+        }
+
+        return value;
+    }
+
+    /**
+     * Sign extended original value with bit_count to full bit width of T
+     *
+     * @tparam T                The type to sign-extended to.
+     *
+     * @param bit_count         The number of original bits.
+     * @param value             The value to sign-extended, expected to have bit_count bits.
+     *
+     * @return                  Fully sign-extended value.
+     */
+    template <typename T>
+    T sign_extended(size_t bit_count, const T value) {
+        const T mask = static_cast<T>(1 << bit_count) - 1;
+        if (value & static_cast<T>(1 << (bit_count - 1))) {
+            return value | ~mask;
+        }
+
+        return value;
+    }
 }

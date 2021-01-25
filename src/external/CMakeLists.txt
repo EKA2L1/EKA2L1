@@ -51,9 +51,22 @@ option (GLM_TEST_ENABLE "Enable glm tests" OFF)
 add_subdirectory(glm)
 
 # Dynarmic: disable tests
-option(DYNARMIC_TESTS "Enable dynarmic tests" OFF)
+option(DYNARMIC_TESTS "Enable dynarmic tests" ON)
 option(DYNARMIC_NO_BUNDLED_FMT "No bundled fmt for Dynarmic" ON)
-add_subdirectory(dynarmic)
+
+set(CMAKE_REQUIRED_QUIET 1)
+
+if (MSVC)
+    check_symbol_exists("_M_ARM" "" ARCHITECTURE_ARM32)
+else()
+    check_symbol_exists("__arm__" "" ARCHITECTURE_ARM32)
+endif()
+
+unset(CMAKE_REQUIRED_QUIET)
+
+if (NOT ARCHITECTURE_ARM32)
+    add_subdirectory(dynarmic)
+endif()
 
 # GLFW - Disable docs, tests and examples
 option(GLFW_BUILD_DOCS "Build glfw documents" OFF)

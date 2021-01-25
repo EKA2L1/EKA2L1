@@ -1081,7 +1081,7 @@ namespace eka2l1::epoc {
         kernel::chunk_type type = kernel::chunk_type::normal;
         kernel::chunk_access access = kernel::chunk_access::local;
         kernel::chunk_attrib att = decltype(att)::none;
-        prot perm = prot::read_write;
+        prot perm = prot_read_write;
 
         // Fetch chunk type
         if (create_info.att & epoc::chunk_create::disconnected) {
@@ -1098,7 +1098,7 @@ namespace eka2l1::epoc {
         }
 
         if (create_info.att & epoc::chunk_create::code) {
-            perm = prot::read_write_exec;
+            perm = prot_read_write_exec;
         }
 
         if ((access == decltype(access)::global) && ((!name) || (name->get_length() == 0))) {
@@ -2898,7 +2898,7 @@ namespace eka2l1::epoc {
         std::size_t max_size = 0;
 
         memory_system *mem = kern->get_memory_system();
-        prot init_prot = prot::read_write;
+        prot init_prot = prot_read_write;
 
         if (type_of_chunk == kernel::chunk_type::normal) {
             epoc::eka1_normal_chunk_create_description *description = 
@@ -2916,7 +2916,7 @@ namespace eka2l1::epoc {
 
             if (description->is_code_) {
                 // On EKA1 the local code chunk is in code region...
-                init_prot = prot::read_write_exec;
+                init_prot = prot_read_write_exec;
                 access_type = kernel::chunk_access::code;
             }
         } else {

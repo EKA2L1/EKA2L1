@@ -19,16 +19,16 @@
 
 #include <cstdint>
 
-#include <cpu/arm_utils.h>
 #include <common/algorithm.h>
 #include <common/log.h>
+#include <cpu/arm_utils.h>
 
 namespace eka2l1::arm {
     void dump_context(const core::thread_context &uni) {
         LOG_TRACE(CPU, "CPU context: ");
-        LOG_TRACE(CPU, "pc: 0x{:x}", uni.pc);
-        LOG_TRACE(CPU, "lr: 0x{:x}", uni.lr);
-        LOG_TRACE(CPU, "sp: 0x{:x}", uni.sp);
+        LOG_TRACE(CPU, "pc: 0x{:x}", uni.get_pc());
+        LOG_TRACE(CPU, "lr: 0x{:x}", uni.get_lr());
+        LOG_TRACE(CPU, "sp: 0x{:x}", uni.get_sp());
         LOG_TRACE(CPU, "cpsr: 0x{:x}", uni.cpsr);
 
         for (std::size_t i = 0; i < uni.cpu_registers.size(); i++) {

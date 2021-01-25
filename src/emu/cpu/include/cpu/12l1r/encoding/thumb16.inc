@@ -11,7 +11,7 @@ INST(thumb16_CMP_imm,        "CMP (imm)",                "00101nnnvvvvvvvv"),
 INST(thumb16_ADD_imm_t2,     "ADD (imm, T2)",            "00110dddvvvvvvvv"),
 INST(thumb16_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv"),
 
-    // Data-processing instructions
+// Data-processing instructions
 INST(thumb16_AND_reg,        "AND (reg)",                "0100000000mmmddd"),
 INST(thumb16_EOR_reg,        "EOR (reg)",                "0100000001mmmddd"),
 INST(thumb16_LSL_reg,        "LSL (reg)",                "0100000010mmmddd"),
@@ -19,7 +19,7 @@ INST(thumb16_LSR_reg,        "LSR (reg)",                "0100000011mmmddd"),
 INST(thumb16_ASR_reg,        "ASR (reg)",                "0100000100mmmddd"),
 INST(thumb16_ADC_reg,        "ADC (reg)",                "0100000101mmmddd"),
 INST(thumb16_SBC_reg,        "SBC (reg)",                "0100000110mmmddd"),
-INST(thumb16_ROR_reg,        "ROR (reg)",                "0100000111sssddd"),
+//INST(thumb16_ROR_reg,        "ROR (reg)",                "0100000111sssddd"),
 INST(thumb16_TST_reg,        "TST (reg)",                "0100001000mmmnnn"),
 INST(thumb16_RSB_imm,        "RSB (imm)",                "0100001001nnnddd"),
 INST(thumb16_CMP_reg_t1,     "CMP (reg, T1)",            "0100001010mmmnnn"),
@@ -60,11 +60,11 @@ INST(thumb16_ADD_sp_t2,      "ADD (SP plus imm, T2)",    "101100000vvvvvvv"), //
 INST(thumb16_SUB_sp,         "SUB (SP minus imm)",       "101100001vvvvvvv"), // v4T
 
 // Hint instructions
-INST(thumb16_NOP,            "NOP",                      "1011111100000000"), // v6T2
-INST(thumb16_SEV,            "SEV",                      "1011111101000000"), // v7
-INST(thumb16_WFE,            "WFE",                      "1011111100100000"), // v7
-INST(thumb16_WFI,            "WFI",                      "1011111100110000"), // v7
-INST(thumb16_YIELD,          "YIELD",                    "1011111100010000"), // v7
+//INST(thumb16_NOP,            "NOP",                      "1011111100000000"), // v6T2
+//INST(thumb16_SEV,            "SEV",                      "1011111101000000"), // v7
+//INST(thumb16_WFE,            "WFE",                      "1011111100100000"), // v7
+//INST(thumb16_WFI,            "WFI",                      "1011111100110000"), // v7
+//INST(thumb16_YIELD,          "YIELD",                    "1011111100010000"), // v7
 
 // Miscellaneous 16-bit instructions
 INST(thumb16_SXTH,           "SXTH",                     "1011001000mmmddd"), // v6
@@ -73,12 +73,12 @@ INST(thumb16_UXTH,           "UXTH",                     "1011001010mmmddd"), //
 INST(thumb16_UXTB,           "UXTB",                     "1011001011mmmddd"), // v6
 INST(thumb16_PUSH,           "PUSH",                     "1011010Mxxxxxxxx"), // v4T
 INST(thumb16_POP,            "POP",                      "1011110Pxxxxxxxx"), // v4T
-INST(thumb16_SETEND,         "SETEND",                   "101101100101x000"), // v6
-INST(thumb16_CPS,            "CPS",                      "10110110011m0aif"), // v6
-INST(thumb16_REV,            "REV",                      "1011101000mmmddd"), // v6
-INST(thumb16_REV16,          "REV16",                    "1011101001mmmddd"), // v6
-INST(thumb16_REVSH,          "REVSH",                    "1011101011mmmddd"), // v6
-INST(thumb16_BKPT,           "BKPT",                     "10111110xxxxxxxx"), // v5
+//INST(thumb16_SETEND,         "SETEND",                   "101101100101x000"), // v6
+//INST(thumb16_CPS,            "CPS",                      "10110110011m0aif"), // v6
+//INST(thumb16_REV,            "REV",                      "1011101000mmmddd"), // v6
+//INST(thumb16_REV16,          "REV16",                    "1011101001mmmddd"), // v6
+//INST(thumb16_REVSH,          "REVSH",                    "1011101011mmmddd"), // v6
+//INST(thumb16_BKPT,           "BKPT",                     "10111110xxxxxxxx"), // v5
 
 // Store/Load multiple registers
 INST(thumb16_STMIA,          "STMIA",                    "11000nnnxxxxxxxx"),
@@ -87,8 +87,8 @@ INST(thumb16_LDMIA,          "LDMIA",                    "11001nnnxxxxxxxx"),
 // Branch instructions
 INST(thumb16_BX,             "BX",                       "010001110mmmm000"), // v4T
 INST(thumb16_BLX_reg,        "BLX (reg)",                "010001111mmmm000"), // v5T
-INST(thumb16_CBZ_CBNZ,       "CBZ/CBNZ",                 "1011o0i1iiiiinnn"), // v6T2
-INST(thumb16_UDF,            "UDF",                      "11011110--------"),
-INST(thumb16_SVC,            "SVC",                      "11011111xxxxxxxx"),
+//INST(thumb16_CBZ_CBNZ,       "CBZ/CBNZ",                 "1011o0i1iiiiinnn"), // v6T2
+//INST(thumb16_UDF,            "UDF",                      "11011110--------"),
+//INST(thumb16_SVC,            "SVC",                      "11011111xxxxxxxx"),
 INST(thumb16_B_t1,           "B (T1)",                   "1101ccccvvvvvvvv"),
 INST(thumb16_B_t2,           "B (T2)",                   "11100vvvvvvvvvvv"),

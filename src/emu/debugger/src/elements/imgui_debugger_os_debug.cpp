@@ -338,7 +338,7 @@ namespace eka2l1 {
             if (debug_thread) {
                 arm::core::thread_context &ctx = debug_thread->get_thread_context();
 
-                for (std::uint32_t pc = ctx.pc - 12, i = 0; i < 12; i++) {
+                for (std::uint32_t pc = ctx.get_pc() - 12, i = 0; i < 12; i++) {
                     void *codeptr = debug_thread->owning_process()->get_ptr_on_addr_space(pc);
 
                     if (!codeptr) {
@@ -363,7 +363,7 @@ namespace eka2l1 {
                 // In the end, dump the thread context
 
                 ImGui::NewLine();
-                ImGui::Text("PC: 0x%08X         SP: 0x%08X         LR: 0x%08X", ctx.pc, ctx.sp, ctx.lr);
+                ImGui::Text("PC: 0x%08X         SP: 0x%08X         LR: 0x%08X", ctx.get_pc(), ctx.get_sp(), ctx.get_lr());
                 ImGui::Text("r0: 0x%08X         r1: 0x%08X         r2: 0x%08X", ctx.cpu_registers[0], ctx.cpu_registers[1], ctx.cpu_registers[2]);
                 ImGui::Text("r3: 0x%08X         r4: 0x%08X         r5: 0x%08X", ctx.cpu_registers[3], ctx.cpu_registers[4], ctx.cpu_registers[5]);
                 ImGui::Text("r6: 0x%08X         r7: 0x%08X         r8: 0x%08X", ctx.cpu_registers[6], ctx.cpu_registers[7], ctx.cpu_registers[8]);

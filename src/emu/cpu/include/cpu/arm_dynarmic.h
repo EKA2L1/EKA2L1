@@ -34,11 +34,11 @@ namespace eka2l1 {
     namespace arm {
         class dynarmic_core_callback;
 
-        class dynarmic_exclusive_monitor: public exclusive_monitor {
+        class dynarmic_exclusive_monitor : public exclusive_monitor {
         private:
             friend class dynarmic_core;
             Dynarmic::ExclusiveMonitor monitor_;
-    
+
         public:
             explicit dynarmic_exclusive_monitor(const std::size_t processor_count);
 
@@ -56,15 +56,14 @@ namespace eka2l1 {
             bool exclusive_write32(core *cc, address vaddr, std::uint32_t value) override;
             bool exclusive_write64(core *cc, address vaddr, std::uint64_t value) override;
         };
-        
+
         class dynarmic_core : public core {
             friend class dynarmic_core_callback;
 
             std::unique_ptr<Dynarmic::A32::Jit> jit;
             std::unique_ptr<dynarmic_core_callback> cb;
 
-            std::array<std::uint8_t *, Dynarmic::A32::UserConfig::NUM_PAGE_TABLE_ENTRIES>
-                page_dyn;
+            Dynarmic::TLB<9> tlb_obj;
 
             std::uint32_t ticks_executed{ 0 };
             std::uint32_t ticks_target{ 0 };
@@ -96,21 +95,11 @@ namespace eka2l1 {
             void save_context(thread_context &ctx) override;
             void load_context(const thread_context &ctx) override;
 
-            void set_entry_point(address ep) override;
-            address get_entry_point() override;
-
-            void set_stack_top(address addr) override;
-            address get_stack_top() override;
-
-            void prepare_rescheduling() override;
-
             bool is_thumb_mode() override;
 
-            void page_table_changed() override;
-
-            void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) override;
-
-            void unmap_memory(address addr, size_t size) override;
+            void set_tlb_page(address vaddr, std::uint8_t *ptr, prot protection) override;
+            void dirty_tlb_page(address addr) override;
+            void flush_tlb() override;
 
             void clear_instruction_cache() override;
 

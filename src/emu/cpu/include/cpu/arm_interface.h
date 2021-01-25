@@ -20,8 +20,8 @@
 #pragma once
 
 #include <array>
-#include <memory>
 #include <functional>
+#include <memory>
 
 #include <common/types.h>
 
@@ -34,29 +34,30 @@ namespace eka2l1::arm {
         exception_type_access_violation_write = 2,
         exception_type_breakpoint = 3,
         exception_type_undefined_inst = 4,
-        exception_type_unpredictable = 5
+        exception_type_unpredictable = 5,
+        exception_type_unimplemented_behaviour = 6
     };
 
     using address = std::uint32_t;
 
-    using memory_operation_8bit_func = std::function<bool(address, std::uint8_t*)>;
-    using memory_operation_16bit_func = std::function<bool(address, std::uint16_t*)>;
-    using memory_operation_32bit_func = std::function<bool(address, std::uint32_t*)>;
-    using memory_operation_64bit_func = std::function<bool(address, std::uint64_t*)>;
+    using memory_operation_8bit_func = std::function<bool(address, std::uint8_t *)>;
+    using memory_operation_16bit_func = std::function<bool(address, std::uint16_t *)>;
+    using memory_operation_32bit_func = std::function<bool(address, std::uint32_t *)>;
+    using memory_operation_64bit_func = std::function<bool(address, std::uint64_t *)>;
     using memory_operation_ew_8bit_func = std::function<std::int32_t(address, std::uint8_t, std::uint8_t)>;
     using memory_operation_ew_16bit_func = std::function<std::int32_t(address, std::uint16_t, std::uint16_t)>;
     using memory_operation_ew_32bit_func = std::function<std::int32_t(address, std::uint32_t, std::uint32_t)>;
     using memory_operation_ew_64bit_func = std::function<std::int32_t(address, std::uint64_t, std::uint64_t)>;
 
-    using memory_read_with_core_8bit_func = std::function<bool(core*, address, std::uint8_t*)>;
-    using memory_read_with_core_16bit_func = std::function<bool(core*, address, std::uint16_t*)>;
-    using memory_read_with_core_32bit_func = std::function<bool(core*, address, std::uint32_t*)>;
-    using memory_read_with_core_64bit_func = std::function<bool(core*, address, std::uint64_t*)>;
+    using memory_read_with_core_8bit_func = std::function<bool(core *, address, std::uint8_t *)>;
+    using memory_read_with_core_16bit_func = std::function<bool(core *, address, std::uint16_t *)>;
+    using memory_read_with_core_32bit_func = std::function<bool(core *, address, std::uint32_t *)>;
+    using memory_read_with_core_64bit_func = std::function<bool(core *, address, std::uint64_t *)>;
 
-    using memory_write_exclusive_with_core_8bit_func = std::function<std::int32_t(core*, address, std::uint8_t, std::uint8_t)>;
-    using memory_write_exclusive_with_core_16bit_func = std::function<std::int32_t(core*, address, std::uint16_t, std::uint16_t)>;
-    using memory_write_exclusive_with_core_32bit_func = std::function<std::int32_t(core*, address, std::uint32_t, std::uint32_t)>;
-    using memory_write_exclusive_with_core_64bit_func = std::function<std::int32_t(core*, address, std::uint64_t, std::uint64_t)>;
+    using memory_write_exclusive_with_core_8bit_func = std::function<std::int32_t(core *, address, std::uint8_t, std::uint8_t)>;
+    using memory_write_exclusive_with_core_16bit_func = std::function<std::int32_t(core *, address, std::uint16_t, std::uint16_t)>;
+    using memory_write_exclusive_with_core_32bit_func = std::function<std::int32_t(core *, address, std::uint32_t, std::uint32_t)>;
+    using memory_write_exclusive_with_core_64bit_func = std::function<std::int32_t(core *, address, std::uint64_t, std::uint64_t)>;
 
     using system_call_handler_func = std::function<void(const std::uint32_t)>;
     using handle_exception_func = std::function<void(exception_type, const std::uint32_t)>;
@@ -108,6 +109,8 @@ namespace eka2l1::arm {
         memory_operation_64bit_func read_64bit;
         memory_operation_64bit_func write_64bit;
 
+        memory_operation_32bit_func read_code;
+
         memory_operation_ew_8bit_func exclusive_write_8bit;
         memory_operation_ew_16bit_func exclusive_write_16bit;
         memory_operation_ew_32bit_func exclusive_write_32bit;
@@ -120,14 +123,35 @@ namespace eka2l1::arm {
          *  Stores register value and some pointer of the CPU.
         */
         struct thread_context {
-            std::array<uint32_t, 31> cpu_registers;
-            std::uint32_t sp;
-            std::uint32_t pc;
-            std::uint32_t lr;
+            std::array<std::uint32_t, 16> cpu_registers;
             std::uint32_t cpsr;
-            std::array<uint64_t, 32> fpu_registers;
+            std::array<std::uint32_t, 32> fpu_registers;
             std::uint32_t fpscr;
             std::uint32_t wrwr;
+
+            void set_pc(const std::uint32_t value) {
+                cpu_registers[15] = value;
+            }
+
+            void set_lr(const std::uint32_t value) {
+                cpu_registers[14] = value;
+            }
+
+            void set_sp(const std::uint32_t value) {
+                cpu_registers[13] = value;
+            }
+
+            std::uint32_t get_pc() const {
+                return cpu_registers[15];
+            }
+
+            std::uint32_t get_lr() const {
+                return cpu_registers[14];
+            }
+
+            std::uint32_t get_sp() const {
+                return cpu_registers[13];
+            }
         };
 
         virtual ~core() {}
@@ -156,21 +180,16 @@ namespace eka2l1::arm {
         virtual void set_sp(uint32_t val) = 0;
         virtual void set_vfp(size_t idx, uint32_t val) = 0;
         virtual uint32_t get_lr() = 0;
-        virtual void set_entry_point(address ep) = 0;
-        virtual address get_entry_point() = 0;
         virtual uint32_t get_cpsr() = 0;
 
         virtual void save_context(thread_context &ctx) = 0;
         virtual void load_context(const thread_context &ctx) = 0;
-        virtual void set_stack_top(address addr) = 0;
-        virtual address get_stack_top() = 0;
 
-        virtual void prepare_rescheduling() = 0;
         virtual bool is_thumb_mode() = 0;
-        virtual void page_table_changed() = 0;
 
-        virtual void map_backing_mem(address vaddr, size_t size, uint8_t *ptr, prot protection) = 0;
-        virtual void unmap_memory(address addr, size_t size) = 0;
+        virtual void set_tlb_page(const address vaddr, std::uint8_t *ptr, prot protection) = 0;
+        virtual void dirty_tlb_page(const address addr) = 0;
+        virtual void flush_tlb() = 0;
 
         virtual void clear_instruction_cache() = 0;
         virtual void imb_range(address addr, std::size_t size) = 0;

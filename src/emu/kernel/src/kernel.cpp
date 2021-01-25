@@ -265,6 +265,10 @@ namespace eka2l1 {
             LOG_ERROR(KERNEL, "Undefined instruction encountered in thread {}", crr_thread()->name());
             break;
 
+        case arm::exception_type_unimplemented_behaviour:
+            LOG_ERROR(KERNEL, "Unimplemented instruction behaviour in thread {}", crr_thread()->name());
+            break;
+
         case arm::exception_type_unpredictable:
             if (!cpu_exception_handle_unpredictable(core, exception_data)) {
                 break;
@@ -349,7 +353,7 @@ namespace eka2l1 {
             // Make global data
             static constexpr std::uint32_t GLOBAL_DATA_SIZE = 0x1000;
             global_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "Kernel global data", 0, GLOBAL_DATA_SIZE,
-                GLOBAL_DATA_SIZE, prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::rom,
+                GLOBAL_DATA_SIZE, prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::rom,
                 kernel::chunk_attrib::none, 0x00);
 
             if (global_data_chunk_) {
@@ -998,7 +1002,7 @@ namespace eka2l1 {
     }
 
     bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
-        rom_map_ = common::map_file(path, prot::read_write, 0, true);
+        rom_map_ = common::map_file(path, prot_read_write, 0, true);
         const std::size_t rom_size = common::file_size(path);
 
         if (!rom_map_) {
@@ -1009,7 +1013,7 @@ namespace eka2l1 {
 
         // Don't care about the result as long as it's not null.
         kernel::chunk *rom_chunk = create<kernel::chunk>(mem_, nullptr, "ROM", 0, static_cast<address>(rom_size),
-            rom_size, prot::read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            rom_size, prot_read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
             kernel::chunk_attrib::none, 0x00, false, addr, rom_map_);
 
         if (!rom_chunk) {
@@ -1063,7 +1067,7 @@ namespace eka2l1 {
         
         if (!dll_global_data_chunk_) {
             dll_global_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "EKA1_DllGlobalDataChunk",
-                0, GLOBAL_DLL_DATA_CHUNK_SIZE, static_cast<std::size_t>(GLOBAL_DLL_DATA_CHUNK_SIZE), prot::read_write,
+                0, GLOBAL_DLL_DATA_CHUNK_SIZE, static_cast<std::size_t>(GLOBAL_DLL_DATA_CHUNK_SIZE), prot_read_write,
                 kernel::chunk_type::normal, kernel::chunk_access::global, kernel::chunk_attrib::none, 0);
         }
 

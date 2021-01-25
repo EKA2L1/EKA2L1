@@ -25,9 +25,22 @@ namespace eka2l1::common {
         CC_GT, ///< Signed greater than
         CC_LE, ///< Signed less than or equal
         CC_AL, ///< Always (unconditional) 14
+        CC_NV, ///< Never
         CC_HS = CC_CS, ///< Alias of CC_CS  Unsigned higher or same
         CC_LO = CC_CC, ///< Alias of CC_CC  Unsigned lower
     };
+
+    namespace armgen {
+		enum shift_type {
+			ST_LSL = 0,
+			ST_ASL = 0,
+			ST_LSR = 1,
+			ST_ASR = 2,
+			ST_ROR = 3,
+			ST_RRX = 4
+		};
+    }
+
     const std::uint32_t NO_COND = 0xE0000000;
 
     inline cc_flags invert_cond(cc_flags fl) {

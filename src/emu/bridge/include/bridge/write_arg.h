@@ -45,7 +45,7 @@ namespace eka2l1 {
 
         template <typename T>
         void write_to_stack(arm::core *cpu, const arg_layout &layout, kernel::process *pr, const T &data) {
-            const address sp = cpu->get_stack_top();
+            const address sp = cpu->get_sp();
             const address stack_arg_offset = sp - sizeof(T);
 
             memcpy(ptr<void>(stack_arg_offset).get(pr), &data, sizeof(T));

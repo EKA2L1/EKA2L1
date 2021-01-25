@@ -1546,7 +1546,7 @@ namespace eka2l1 {
 
         // Create chunk with maximum size (32-bit)
         kernel::chunk *buffer = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, chunk_name, 0,
-            static_cast<address>(max_chunk_size), max_chunk_size, prot::read_write,
+            static_cast<address>(max_chunk_size), max_chunk_size, prot_read_write,
             kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
             kernel::chunk_attrib::none);
 
@@ -1640,7 +1640,7 @@ namespace eka2l1 {
         std::uint8_t *loop_begin = emitter.get_writeable_code_ptr();
 
         // Load euser to get WaitForRequest
-        codeseg_ptr seg = kern->get_lib_manager()->load(u"EUSER");
+        codeseg_ptr seg = kern->get_lib_manager()->load(u"euser.dll");
         if (seg) {
             address wait_for_request_addr = seg->lookup(nullptr, kern->is_eka1() ? 1210 : 604);
 
@@ -1650,6 +1650,8 @@ namespace eka2l1 {
         }
 
         sync_loop_begin = emitter.B();
+
+        emitter.flush_lit_pool();
 
         emitter.set_code_pointer(loop_begin);
         emitter.set_jump_target(sync_loop_begin);
@@ -1665,7 +1667,7 @@ namespace eka2l1 {
                                     0,
                                     0x2000,
                                     0x2000,
-                                    prot::read_write,
+                                    prot_read_write,
                                     kernel::chunk_type::normal,
                                     kernel::chunk_access::global,
                                     kernel::chunk_attrib::none)
@@ -1679,7 +1681,7 @@ namespace eka2l1 {
                                     0,
                                     0x2000,
                                     0x2000,
-                                    prot::read_write_exec,
+                                    prot_read_write_exec,
                                     kernel::chunk_type::normal,
                                     kernel::chunk_access::global,
                                     kernel::chunk_attrib::none)

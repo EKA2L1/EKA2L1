@@ -69,6 +69,10 @@ namespace eka2l1::drivers {
             return static_cast<std::uint32_t>(samples_played_);
         }
 
+        virtual const std::uint64_t samples_copied() const {
+            return samples_copied_;
+        }
+
         const std::uint64_t bytes_rendered() const {
             return samples_played_ * channels_ * sizeof(std::uint16_t);
         }

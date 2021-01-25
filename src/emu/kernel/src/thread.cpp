@@ -167,23 +167,23 @@ namespace eka2l1 {
             if (kern->is_eka1()) {
                 // We made _E32Startup ourself, since EKA1 does not have it
                 hle::lib_manager *mngr = kern->get_lib_manager();
-                ctx.pc = mngr->get_thread_entry_routine_address();
+                ctx.set_pc(mngr->get_thread_entry_routine_address());
 
-                if (ctx.pc == 0) {
+                if (ctx.get_pc() == 0) {
                     // Create the EKA1 thread bootstrap
                     mngr->build_eka1_thread_bootstrap_code();
-                    ctx.pc = mngr->get_thread_entry_routine_address();
+                    ctx.set_pc(mngr->get_thread_entry_routine_address());
                 }
             } else {
-                ctx.pc = entry_point;
+                ctx.set_pc(entry_point);
 
                 if (owner && !initial) {
-                    ctx.pc = owning_process()->get_entry_point_address();
+                    ctx.set_pc(owning_process()->get_entry_point_address());
                 }
             }
 
-            ctx.sp = stack_top;
-            ctx.cpsr = ((ctx.pc & 1) << 5);
+            ctx.set_sp(stack_top);
+            ctx.cpsr = ((ctx.get_pc() & 1) << 5);
 
             ctx.cpu_registers[1] = stack_top;
 
@@ -268,10 +268,10 @@ namespace eka2l1 {
 
             /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
 
-            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot::read_write,
+            stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot_read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, 0x00);
 
-            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot::read_write,
+            name_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(name.length() * 2 + 4, mem->get_page_size())), common::align(name.length() * 2 + 4, mem->get_page_size()), prot_read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none);
 
             request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
@@ -306,7 +306,7 @@ namespace eka2l1 {
             // Create local data chunk
             // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
             local_data_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, 0x1000, 0x1000,
-                prot::read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
+                prot_read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
             if (local_data_chunk) {
                 std::uint8_t *data = reinterpret_cast<std::uint8_t *>(local_data_chunk->host_base());

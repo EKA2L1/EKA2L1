@@ -150,14 +150,6 @@ namespace eka2l1::common::armgen {
         INVALID_REG = 0xFFFFFFFF
     };
 
-    enum shift_type {
-        ST_LSL = 0,
-        ST_ASL = 0,
-        ST_LSR = 1,
-        ST_ASR = 2,
-        ST_ROR = 3,
-        ST_RRX = 4
-    };
     enum integer_size {
         I_I8 = 0,
         I_I16,
@@ -184,99 +176,102 @@ namespace eka2l1::common::armgen {
         friend class armx_emitter;
 
     protected:
-        std::uint32_t value;
+        std::uint32_t value_;
 
     private:
-        op_type type;
+        op_type type_;
 
         // IMM types
-        std::uint8_t rotation; // Only for std::uint8_t values
+        std::uint8_t rotation_; // Only for std::uint8_t values
 
         // Register types
-        std::uint8_t index_or_shift;
-        shift_type shift;
+        std::uint8_t index_or_shift_;
+        shift_type shift_;
 
     public:
         op_type get_type() const {
-            return type;
+            return type_;
         }
 
         shift_type get_shift_type() const {
-            return shift;
+            return shift_;
         }
 
         std::uint8_t get_shift_value() const {
-            return index_or_shift;
+            return index_or_shift_;
         }
 
-        operand2() {}
+        operand2()
+            : value_(0)
+            , type_(TYPE_IMM)
+            , rotation_(0)
+            , index_or_shift_(0)
+            , shift_(ST_LSL) {
+        }
+
         operand2(std::uint32_t imm, op_type otype = TYPE_IMM) {
-            type = otype;
-            value = imm;
-            rotation = 0;
+            type_ = otype;
+            value_ = imm;
+            rotation_ = 0;
         }
 
-        operand2(arm_reg Reg) {
-            type = TYPE_REG;
-            value = Reg;
-            rotation = 0;
+        operand2(const arm_reg reg) {
+            type_ = TYPE_REG;
+            value_ = reg;
+            rotation_ = 0;
         }
 
-        operand2(std::uint8_t imm, std::uint8_t the_rotation) {
-            type = TYPE_IMM;
-            value = imm;
-            rotation = the_rotation;
+        operand2(const std::uint8_t imm, const std::uint8_t the_rotation) {
+            type_ = TYPE_IMM;
+            value_ = imm;
+            rotation_ = the_rotation;
         }
 
         operand2(arm_reg base, shift_type stype, arm_reg shift_reg) // RSR
         {
-            type = TYPE_RSR;
-            LOG_ERROR_IF(COMMON, !(type != ST_RRX), "Invalid operand2: RRX does not take a register shift amount");
-            index_or_shift = shift_reg;
-            shift = stype;
-            value = base;
+            type_ = TYPE_RSR;
+
+            LOG_ERROR_IF(COMMON, !(type_ != ST_RRX), "Invalid operand2: RRX does not take a register shift amount");
+
+            index_or_shift_ = shift_reg;
+            shift_ = stype;
+            value_ = base;
         }
 
-        operand2(arm_reg base, shift_type stype, std::uint8_t shift) // For IMM shifted register
+        operand2(arm_reg base, shift_type stype, std::uint8_t shift_imm)    // For IMM shifted register
         {
-            if (shift == 32)
-                shift = 0;
             switch (stype) {
             case ST_LSL:
-                LOG_ERROR_IF(COMMON, shift >= 32, "Invalid operand2: LSL %u", shift);
+                LOG_ERROR_IF(COMMON, shift_imm >= 32, "Invalid operand2: LSL %u", shift_imm);
                 break;
             case ST_LSR:
-                LOG_ERROR_IF(COMMON, shift > 32, "Invalid operand2: LSR %u", shift);
-                if (!shift)
-                    stype = ST_LSL;
-                if (shift == 32)
-                    shift = 0;
+                LOG_ERROR_IF(COMMON, shift_imm > 32, "Invalid operand2: LSR %u", shift_imm);
+                if (shift_imm == 32)
+                    shift_imm = 0;
                 break;
             case ST_ASR:
-                LOG_ERROR_IF(COMMON, shift >= 32, "Invalid operand2: ASR %u", shift);
-                if (!shift)
-                    stype = ST_LSL;
-                if (shift == 32)
-                    shift = 0;
+                LOG_ERROR_IF(COMMON, shift_imm >= 32, "Invalid operand2: ASR %u", shift_imm);
+                if (shift_imm == 32)
+                    shift_imm = 0;
                 break;
             case ST_ROR:
-                LOG_ERROR_IF(COMMON, shift >= 32, "Invalid operand2: ROR %u", shift);
-                if (!shift)
-                    stype = ST_LSL;
+                LOG_ERROR_IF(COMMON, shift_imm >= 32, "Invalid operand2: ROR %u", shift_imm);
                 break;
             case ST_RRX:
-                LOG_ERROR_IF(COMMON, !(shift == 0), "Invalid operand2: RRX does not take an immediate shift amount");
+                LOG_ERROR_IF(COMMON, !(shift_imm == 0), "Invalid operand2: RRX does not take an immediate shift amount");
                 stype = ST_ROR;
                 break;
             }
-            index_or_shift = shift;
-            shift = stype;
-            value = base;
-            type = TYPE_IMMSREG;
+
+            index_or_shift_ = shift_imm;
+            shift_ = stype;
+            value_ = base;
+
+            type_ = TYPE_IMMSREG;
         }
 
         std::uint32_t get_data() {
-            switch (type) {
+            switch (type_) {
             case TYPE_IMM:
                 return Imm12Mod(); // This'll need to be changed later
             case TYPE_REG:
@@ -286,56 +281,56 @@ namespace eka2l1::common::armgen {
             case TYPE_RSR:
                 return RSR();
             default:
-                LOG_ERROR_IF(COMMON, !(false), "GetData with Invalid Type");
+                LOG_ERROR(COMMON, "GetData with Invalid Type");
                 return 0;
             }
         }
 
         std::uint32_t get_raw_value() const {
-            return value;
+            return value_;
         }
 
         std::uint8_t get_rotation() const {
-            return rotation;
+            return rotation_;
         }
 
         std::uint32_t IMMSR() // IMM shifted register
         {
-            LOG_ERROR_IF(COMMON, !(type == TYPE_IMMSREG), "IMMSR must be imm shifted register");
-            return ((index_or_shift & 0x1f) << 7 | (shift << 5) | value);
+            LOG_ERROR_IF(COMMON, !(type_ == TYPE_IMMSREG), "IMMSR must be imm shifted register");
+            return ((index_or_shift_ & 0x1f) << 7 | (shift_ << 5) | value_);
         }
 
         std::uint32_t RSR() // Register shifted register
         {
-            LOG_ERROR_IF(COMMON, !(type == TYPE_RSR), "RSR must be RSR Of Course");
-            return (index_or_shift << 8) | (shift << 5) | 0x10 | value;
+            LOG_ERROR_IF(COMMON, !(type_ == TYPE_RSR), "RSR must be RSR Of Course");
+            return (index_or_shift_ << 8) | (shift_ << 5) | 0x10 | value_;
         }
 
         std::uint32_t Rm() const {
-            LOG_ERROR_IF(COMMON, !(type == TYPE_REG), "Rm must be with Reg");
-            return value;
+            LOG_ERROR_IF(COMMON, !(type_ == TYPE_REG), "Rm must be with Reg");
+            return value_;
         }
 
         std::uint32_t Imm5() const {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm5 not IMM value");
-            return ((value & 0x0000001F) << 7);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm5 not IMM value");
+            return ((value_ & 0x0000001F) << 7);
         }
 
         std::uint32_t Imm8() const {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8Rot not IMM value");
-            return value & 0xFF;
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm8Rot not IMM value");
+            return value_ & 0xFF;
         }
 
         std::uint32_t Imm8Rot() const // IMM8 with Rotation
         {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8Rot not IMM value");
-            LOG_ERROR_IF(COMMON, (rotation & 0xE1) == 0, "Invalid operand2: immediate rotation %u", rotation);
-            return (1 << 25) | (rotation << 7) | (value & 0x000000FF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm8Rot not IMM value");
+            LOG_ERROR_IF(COMMON, (rotation_ & 0xE1) == 0, "Invalid operand2: immediate rotation %u", rotation_);
+            return (1 << 25) | (rotation_ << 7) | (value_ & 0x000000FF);
         }
 
         std::uint32_t Imm12() const {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm12 not IMM");
-            return (value & 0x00000FFF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm12 not IMM");
+            return (value_ & 0x00000FFF);
         }
 
         std::uint32_t Imm12Mod() const {
@@ -344,13 +339,13 @@ namespace eka2l1::common::armgen {
             // expand a 8bit IMM to a 32bit value and gives you some rotation as
             // well.
             // Each rotation rotates to the right by 2 bits
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm12Mod not IMM");
-            return ((rotation & 0xF) << 8) | (value & 0xFF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm12Mod not IMM");
+            return ((rotation_ & 0xF) << 8) | (value_ & 0xFF);
         }
 
         std::uint32_t Imm16() const {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm16 not IMM");
-            return ((value & 0xF000) << 4) | (value & 0x0FFF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm16 not IMM");
+            return ((value_ & 0xF000) << 4) | (value_ & 0x0FFF);
         }
 
         std::uint32_t Imm16Low() const {
@@ -359,24 +354,24 @@ namespace eka2l1::common::armgen {
 
         std::uint32_t Imm16High() const // Returns high 16bits
         {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm16 not IMM");
-            return (((value >> 16) & 0xF000) << 4) | ((value >> 16) & 0x0FFF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm16 not IMM");
+            return (((value_ >> 16) & 0xF000) << 4) | ((value_ >> 16) & 0x0FFF);
         }
 
         std::uint32_t Imm24() const {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm16 not IMM");
-            return (value & 0x0FFFFFFF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm16 not IMM");
+            return (value_ & 0x0FFFFFFF);
         }
 
         // NEON and ASIMD specific
         std::uint32_t Imm8ASIMD() const {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8ASIMD not IMM");
-            return ((value & 0x80) << 17) | ((value & 0x70) << 12) | (value & 0xF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm8ASIMD not IMM");
+            return ((value_ & 0x80) << 17) | ((value_ & 0x70) << 12) | (value_ & 0xF);
         }
 
         std::uint32_t Imm8VFP() const {
-            LOG_ERROR_IF(COMMON, !((type == TYPE_IMM)), "Imm8VFP not IMM");
-            return ((value & 0xF0) << 12) | (value & 0xF);
+            LOG_ERROR_IF(COMMON, !((type_ == TYPE_IMM)), "Imm8VFP not IMM");
+            return ((value_ & 0xF0) << 12) | (value_ & 0xF);
         }
     };
 
@@ -494,15 +489,16 @@ namespace eka2l1::common::armgen {
         friend struct OpArg; // for Write8 etc
         friend class NEONXEmitter;
 
+    protected:
+        cpu_info context_info;
+
     private:
         std::uint8_t *code, *startcode;
         std::uint8_t *last_cache_flush_end;
         std::uint32_t condition;
         std::vector<literal_pool> current_lit_pool;
 
-        cpu_info context_info;
-
-        void write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 op2, bool RegAdd);
+        void write_store_op(std::uint32_t Op, arm_reg Rt, arm_reg Rn, operand2 op2, bool RegAdd, bool PreIndex, bool WriteBack);
         void write_reg_store_op(std::uint32_t op, arm_reg dest, bool WriteBack, std::uint16_t RegList);
         void write_vreg_store_op(std::uint32_t op, arm_reg dest, bool Double, bool WriteBack, arm_reg firstreg, std::uint8_t numregs);
         void write_shifted_data_op(std::uint32_t op, bool SetFlags, arm_reg dest, arm_reg src, arm_reg op2);
@@ -654,14 +650,25 @@ namespace eka2l1::common::armgen {
         void MUL(arm_reg dest, arm_reg src, arm_reg op2);
         void MULS(arm_reg dest, arm_reg src, arm_reg op2);
 
+        void MLA(arm_reg dest, arm_reg src, arm_reg src2, arm_reg add);
+        void MLAS(arm_reg dest, arm_reg src, arm_reg src2, arm_reg add);
+
         void UMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
+        void UMULLS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMULL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
+        void SMULLS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
 
         void UMLAL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
+        void UMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
         void SMLAL(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
+        void SMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
 
-        void SXTB(arm_reg dest, arm_reg op2);
+        void SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool m, bool n);
+
+        void SXTB(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8 = 0);
         void SXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation = 0);
+        void UXTB(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8 = 0);
+        void UXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8 = 0);
         void SXTAH(arm_reg dest, arm_reg src, arm_reg op2, std::uint8_t rotation = 0);
         void BFI(arm_reg rd, arm_reg rn, std::uint8_t lsb, std::uint8_t width);
         void BFC(arm_reg rd, std::uint8_t lsb, std::uint8_t width);
@@ -677,15 +684,15 @@ namespace eka2l1::common::armgen {
         void MRS(arm_reg dest);
 
         // Memory load/store operations
-        void LDR(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRSB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void LDRSH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void LDR(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRSB(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void LDRSH(arm_reg dest, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
         void LDRLIT(arm_reg dest, std::uint32_t offset, bool Add = true);
-        void STR(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void STRB(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
-        void STRH(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true);
+        void STR(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void STRB(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
+        void STRH(arm_reg result, arm_reg base, operand2 op2 = 0, bool RegAdd = true, bool PreIndex = true, bool WriteBack = false);
 
         void STMFD(arm_reg dest, bool WriteBack, const int Regnum, ...);
         void LDMFD(arm_reg dest, bool WriteBack, const int Regnum, ...);
@@ -945,10 +952,11 @@ namespace eka2l1::common::armgen {
         void VMRS(arm_reg Rt);
         void VMSR(arm_reg Rt);
 
-        void QuickCallFunction(arm_reg scratchreg, const void *func);
+        void quick_call_function(arm_reg scratchreg, const void *func);
+
         template <typename T>
-        void QuickCallFunction(arm_reg scratchreg, T func) {
-            QuickCallFunction(scratchreg, (const void *)func);
+        void quick_call_function(arm_reg scratchreg, T func) {
+            quick_call_function(scratchreg, (const void *)func);
         }
 
         // Wrapper around MOVT/MOVW with fallbacks.

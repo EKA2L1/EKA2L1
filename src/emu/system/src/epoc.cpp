@@ -378,7 +378,7 @@ namespace eka2l1 {
         }
 
         void prepare_reschedule() {
-            cpu->prepare_rescheduling();
+            cpu->stop();
             reschedule_pending = true;
         }
 
@@ -518,7 +518,11 @@ namespace eka2l1 {
         , conf_(param.conf_)
         , app_settings_(param.settings_)
         , exit(false) {
+#if EKA2L1_ARCH(ARM)
+        cpu_type = arm_emulator_type::r12l1;
+#else
         cpu_type = arm::string_to_arm_emulator_type(conf_->cpu_backend);
+#endif
         dvcmngr_ = std::make_unique<device_manager>(conf_);
 
         disassembler_ = std::make_unique<disasm>();

@@ -99,7 +99,7 @@ namespace eka2l1::kernel {
         std::uint8_t *data_base_ptr = nullptr;
 
         if (code_addr == 0) {
-            code_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, code_size_align, code_size_align, prot::read_write_exec, kernel::chunk_type::normal,
+            code_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, code_size_align, code_size_align, prot_read_write_exec, kernel::chunk_type::normal,
                 kernel::chunk_access::code, kernel::chunk_attrib::none);
 
             the_addr_of_code_run = code_chunk->base(new_foe).ptr_address();
@@ -115,7 +115,7 @@ namespace eka2l1::kernel {
         if (data_size_align != 0) {
             if (!data_addr) {
                 dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                    prot::read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
+                    prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
             } else {
                 kernel::chunk_access acc = kernel::chunk_access::dll_static_data;
 
@@ -125,7 +125,7 @@ namespace eka2l1::kernel {
                 }
 
                 dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                    prot::read_write, kernel::chunk_type::normal, acc, kernel::chunk_attrib::anonymous,
+                    prot_read_write, kernel::chunk_type::normal, acc, kernel::chunk_attrib::anonymous,
                     0x00, false, data_base, nullptr);
             }
 

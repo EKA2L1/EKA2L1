@@ -229,7 +229,7 @@ namespace eka2l1::loader {
             + uncompressed_size;
 
         std::uint8_t *buf = reinterpret_cast<std::uint8_t *>(
-            common::map_file(name, prot::read_write, bitmap_file_size));
+            common::map_file(name, prot_read_write, bitmap_file_size));
 
         if (!buf) {
             return false;

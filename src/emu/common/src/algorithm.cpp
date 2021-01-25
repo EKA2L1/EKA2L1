@@ -233,10 +233,10 @@ namespace eka2l1 {
         #endif
 
     #else
-            return inaccruate_multiply_and_divide_qwords(m1, m2, d1);
+            return inaccurate_multiply_and_divide_qwords(m1, m2, d1);
     #endif
 #else
-            return inaccruate_multiply_and_divide_qwords(m1, m2, d1);
+            return inaccurate_multiply_and_divide_qwords(m1, m2, d1);
 #endif
         }
 

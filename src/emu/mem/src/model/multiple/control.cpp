@@ -125,11 +125,24 @@ namespace eka2l1::mem {
             return nullptr;
         }
 
-        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= ram_code_addr_eka1)) ||
-            addr >= shared_data) {
+        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= dll_static_data_eka1_end)) ||
+            (!mem_map_old_ && (addr >= shared_data))) {
             return global_dir_.get_pointer(addr);
         }
 
         return ((id <= 0) ? global_dir_.get_pointer(addr) : dirs_[id - 1]->get_pointer(addr));
+    }
+
+    page_info *control_multiple::get_page_info(const asid id, const vm_address addr) {
+        if (id > 0 && dirs_.size() < id) {
+            return nullptr;
+        }
+
+        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= dll_static_data_eka1_end)) ||
+            (!mem_map_old_ && (addr >= shared_data))) {
+            return global_dir_.get_page_info(addr);
+        }
+
+        return ((id <= 0) ? global_dir_.get_page_info(addr) : dirs_[id - 1]->get_page_info(addr));
     }
 }

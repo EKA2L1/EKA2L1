@@ -275,7 +275,8 @@ namespace eka2l1::epoc {
             next_vsync_us = 0;
         }
 
-        last_vsync = tnow;
+        // Skip last vsync to next frame
+        last_vsync = ((tnow + microsecs_a_frame - 1) / microsecs_a_frame) * microsecs_a_frame;
     }
 
     const epoc::config::screen_mode *screen::mode_info(const int number) const {
