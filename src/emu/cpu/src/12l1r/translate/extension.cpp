@@ -18,8 +18,8 @@
  */
 
 #include <cpu/12l1r/arm_visitor.h>
-#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/visit_session.h>
 
 namespace eka2l1::arm::r12l1 {

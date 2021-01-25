@@ -20,7 +20,7 @@ namespace eka2l1::arm::r12l1 {
     template <typename visitor>
     using thumb16_matcher = decoder::matcher<visitor, std::uint16_t>;
 
-    template<typename V>
+    template <typename V>
     std::optional<std::reference_wrapper<const thumb16_matcher<V>>> decode_thumb16(const std::uint16_t instruction) {
         static const std::vector<thumb16_matcher<V>> table = {
 #define INST(fn, name, bitstring) decoder::detail<thumb16_matcher<V>>::get_matcher(&V::fn, name, bitstring)
@@ -28,7 +28,7 @@ namespace eka2l1::arm::r12l1 {
 #undef INST
         };
 
-        const auto matches_instruction = [instruction](const auto& matcher){ return matcher.matches(instruction); };
+        const auto matches_instruction = [instruction](const auto &matcher) { return matcher.matches(instruction); };
 
         auto iter = std::find_if(table.begin(), table.end(), matches_instruction);
         return iter != table.end() ? std::optional<std::reference_wrapper<const thumb16_matcher<V>>>(*iter) : std::nullopt;

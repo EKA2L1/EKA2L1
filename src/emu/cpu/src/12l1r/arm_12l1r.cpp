@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/arm_12l1r.h>
 #include <common/log.h>
+#include <cpu/12l1r/arm_12l1r.h>
 
 namespace eka2l1::arm {
     r12l1_core::r12l1_core(arm::exclusive_monitor *monitor, const std::size_t page_bits)
         : mem_cache_(page_bits)
         , big_block_(nullptr)
-        , monitor_(reinterpret_cast<arm::r12l1::exclusive_monitor*>(monitor)) {
+        , monitor_(reinterpret_cast<arm::r12l1::exclusive_monitor *>(monitor)) {
         // Set the state's TLB entries
         jit_state_.entries_ = mem_cache_.entries;
         big_block_ = std::make_unique<r12l1::dashixiong_block>(this);
@@ -49,7 +49,7 @@ namespace eka2l1::arm {
         // Set it again
         jit_state_.should_break_ = true;
     }
-    
+
     void r12l1_core::stop() {
         jit_state_.should_break_ = true;
     }

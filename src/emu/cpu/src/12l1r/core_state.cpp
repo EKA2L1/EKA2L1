@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/core_state.h>
 #include <algorithm>
+#include <cpu/12l1r/core_state.h>
 
 namespace eka2l1::arm::r12l1 {
     core_state::core_state()

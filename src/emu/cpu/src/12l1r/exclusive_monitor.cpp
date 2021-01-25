@@ -20,9 +20,9 @@
 #include <cpu/12l1r/exclusive_monitor.h>
 
 namespace eka2l1::arm::r12l1 {
-    exclusive_monitor::exclusive_monitor(const std::size_t processor_count) :
-        exclusive_addresses_(processor_count, INVALID_EXCLUSIVE_ADDRESS),
-        exclusive_values_(processor_count) {
+    exclusive_monitor::exclusive_monitor(const std::size_t processor_count)
+        : exclusive_addresses_(processor_count, INVALID_EXCLUSIVE_ADDRESS)
+        , exclusive_values_(processor_count) {
         unlock();
     }
 
@@ -31,7 +31,8 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void exclusive_monitor::lock() {
-        while (is_locked_.test_and_set(std::memory_order_acquire)) {}
+        while (is_locked_.test_and_set(std::memory_order_acquire)) {
+        }
     }
 
     void exclusive_monitor::unlock() {
@@ -48,7 +49,7 @@ namespace eka2l1::arm::r12l1 {
             return false;
         }
 
-        for (vaddress& other_address : exclusive_addresses_) {
+        for (vaddress &other_address : exclusive_addresses_) {
             if (other_address == masked_address) {
                 other_address = INVALID_EXCLUSIVE_ADDRESS;
             }

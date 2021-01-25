@@ -28,7 +28,6 @@ namespace eka2l1::arm::r12l1 {
         : linked_(false)
         , to_(0)
         , value_(nullptr) {
-
     }
 
     block_link &translated_block::get_or_add_link(const vaddress addr, const int link_pri) {
@@ -59,7 +58,7 @@ namespace eka2l1::arm::r12l1 {
         , translated_code_(nullptr)
         , translated_size_(0)
         , inst_count_(0)
-		, thumb_(false) {
+        , thumb_(false) {
         hash_ = make_block_hash(start_addr, aid);
     }
 

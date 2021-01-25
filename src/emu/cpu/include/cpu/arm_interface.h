@@ -20,8 +20,8 @@
 #pragma once
 
 #include <array>
-#include <memory>
 #include <functional>
+#include <memory>
 
 #include <common/types.h>
 
@@ -40,24 +40,24 @@ namespace eka2l1::arm {
 
     using address = std::uint32_t;
 
-    using memory_operation_8bit_func = std::function<bool(address, std::uint8_t*)>;
-    using memory_operation_16bit_func = std::function<bool(address, std::uint16_t*)>;
-    using memory_operation_32bit_func = std::function<bool(address, std::uint32_t*)>;
-    using memory_operation_64bit_func = std::function<bool(address, std::uint64_t*)>;
+    using memory_operation_8bit_func = std::function<bool(address, std::uint8_t *)>;
+    using memory_operation_16bit_func = std::function<bool(address, std::uint16_t *)>;
+    using memory_operation_32bit_func = std::function<bool(address, std::uint32_t *)>;
+    using memory_operation_64bit_func = std::function<bool(address, std::uint64_t *)>;
     using memory_operation_ew_8bit_func = std::function<std::int32_t(address, std::uint8_t, std::uint8_t)>;
     using memory_operation_ew_16bit_func = std::function<std::int32_t(address, std::uint16_t, std::uint16_t)>;
     using memory_operation_ew_32bit_func = std::function<std::int32_t(address, std::uint32_t, std::uint32_t)>;
     using memory_operation_ew_64bit_func = std::function<std::int32_t(address, std::uint64_t, std::uint64_t)>;
 
-    using memory_read_with_core_8bit_func = std::function<bool(core*, address, std::uint8_t*)>;
-    using memory_read_with_core_16bit_func = std::function<bool(core*, address, std::uint16_t*)>;
-    using memory_read_with_core_32bit_func = std::function<bool(core*, address, std::uint32_t*)>;
-    using memory_read_with_core_64bit_func = std::function<bool(core*, address, std::uint64_t*)>;
+    using memory_read_with_core_8bit_func = std::function<bool(core *, address, std::uint8_t *)>;
+    using memory_read_with_core_16bit_func = std::function<bool(core *, address, std::uint16_t *)>;
+    using memory_read_with_core_32bit_func = std::function<bool(core *, address, std::uint32_t *)>;
+    using memory_read_with_core_64bit_func = std::function<bool(core *, address, std::uint64_t *)>;
 
-    using memory_write_exclusive_with_core_8bit_func = std::function<std::int32_t(core*, address, std::uint8_t, std::uint8_t)>;
-    using memory_write_exclusive_with_core_16bit_func = std::function<std::int32_t(core*, address, std::uint16_t, std::uint16_t)>;
-    using memory_write_exclusive_with_core_32bit_func = std::function<std::int32_t(core*, address, std::uint32_t, std::uint32_t)>;
-    using memory_write_exclusive_with_core_64bit_func = std::function<std::int32_t(core*, address, std::uint64_t, std::uint64_t)>;
+    using memory_write_exclusive_with_core_8bit_func = std::function<std::int32_t(core *, address, std::uint8_t, std::uint8_t)>;
+    using memory_write_exclusive_with_core_16bit_func = std::function<std::int32_t(core *, address, std::uint16_t, std::uint16_t)>;
+    using memory_write_exclusive_with_core_32bit_func = std::function<std::int32_t(core *, address, std::uint32_t, std::uint32_t)>;
+    using memory_write_exclusive_with_core_64bit_func = std::function<std::int32_t(core *, address, std::uint64_t, std::uint64_t)>;
 
     using system_call_handler_func = std::function<void(const std::uint32_t)>;
     using handle_exception_func = std::function<void(exception_type, const std::uint32_t)>;

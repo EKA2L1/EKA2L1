@@ -232,7 +232,8 @@ namespace eka2l1::arm {
 
         std::uint64_t GetTicksRemaining() override {
             return static_cast<std::uint64_t>(common::max<std::int64_t>(static_cast<std::int64_t>(parent.ticks_target)
-                    - parent.ticks_executed, 0));
+                    - parent.ticks_executed,
+                0));
         }
     };
 
@@ -252,7 +253,7 @@ namespace eka2l1::arm {
         std::shared_ptr<dynarmic_core_cp15> cp15 = std::make_shared<dynarmic_core_cp15>();
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 
-        auto monitor_bb = reinterpret_cast<dynarmic_exclusive_monitor*>(monitor);
+        auto monitor_bb = reinterpret_cast<dynarmic_exclusive_monitor *>(monitor);
         jit = make_jit(cb, tlb_obj, cp15, &monitor_bb->monitor_);
     }
 
@@ -335,7 +336,7 @@ namespace eka2l1::arm {
         for (uint8_t i = 0; i < 16; i++) {
             jit->Regs()[i] = ctx.cpu_registers[i];
         }
-	
+
         set_cpsr(ctx.cpsr);
         cb->get_cp15()->set_wrwr(ctx.wrwr);
     }
@@ -415,7 +416,7 @@ namespace eka2l1::arm {
             return val;
         });
     }
-    
+
     std::uint16_t dynarmic_exclusive_monitor::exclusive_read16(core *cc, address vaddr) {
         return monitor_.ReadAndMark<std::uint16_t>(cc->core_number(), vaddr, [&]() -> std::uint16_t {
             // TODO: Access violation if there is
@@ -445,7 +446,7 @@ namespace eka2l1::arm {
             return val;
         });
     }
-    
+
     void dynarmic_exclusive_monitor::clear_exclusive() {
         monitor_.Clear();
     }
@@ -476,7 +477,7 @@ namespace eka2l1::arm {
             return res > 0;
         });
     }
-    
+
     bool dynarmic_exclusive_monitor::exclusive_write64(core *cc, address vaddr, std::uint64_t value) {
         return monitor_.DoExclusiveOperation<std::uint64_t>(cc->core_number(), vaddr, [&](std::uint64_t expected) -> bool {
             const std::int32_t res = write_64bit(cc, vaddr, value, expected);

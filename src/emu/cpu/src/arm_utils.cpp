@@ -19,9 +19,9 @@
 
 #include <cstdint>
 
-#include <cpu/arm_utils.h>
 #include <common/algorithm.h>
 #include <common/log.h>
+#include <cpu/arm_utils.h>
 
 namespace eka2l1::arm {
     void dump_context(const core::thread_context &uni) {

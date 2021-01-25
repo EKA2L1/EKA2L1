@@ -34,11 +34,11 @@ namespace eka2l1 {
     namespace arm {
         class dynarmic_core_callback;
 
-        class dynarmic_exclusive_monitor: public exclusive_monitor {
+        class dynarmic_exclusive_monitor : public exclusive_monitor {
         private:
             friend class dynarmic_core;
             Dynarmic::ExclusiveMonitor monitor_;
-    
+
         public:
             explicit dynarmic_exclusive_monitor(const std::size_t processor_count);
 
@@ -56,7 +56,7 @@ namespace eka2l1 {
             bool exclusive_write32(core *cc, address vaddr, std::uint32_t value) override;
             bool exclusive_write64(core *cc, address vaddr, std::uint64_t value) override;
         };
-        
+
         class dynarmic_core : public core {
             friend class dynarmic_core_callback;
 

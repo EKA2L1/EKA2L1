@@ -25,23 +25,23 @@ namespace eka2l1::arm::r12l1 {
     template <typename V>
     std::vector<arm_matcher<V>> get_arm_decode_table() {
         std::vector<arm_matcher<V>> table = {
-    #define INST(fn, name, bitstring) decoder::detail<arm_matcher<V>>::get_matcher(&V::fn, name, bitstring),
-    #include <cpu/12l1r/encoding/arm.inc>
-    #undef INST
+#define INST(fn, name, bitstring) decoder::detail<arm_matcher<V>>::get_matcher(&V::fn, name, bitstring),
+#include <cpu/12l1r/encoding/arm.inc>
+#undef INST
         };
 
         // If a matcher has more bits in its mask it is more specific, so it should come first.
-        std::stable_sort(table.begin(), table.end(), [](const auto& matcher1, const auto& matcher2) {
+        std::stable_sort(table.begin(), table.end(), [](const auto &matcher1, const auto &matcher2) {
             return common::count_bit_set(matcher1.get_mask()) > common::count_bit_set(matcher2.get_mask());
         });
 
         return table;
     }
 
-    template<typename V>
+    template <typename V>
     std::optional<std::reference_wrapper<const arm_matcher<V>>> decode_arm(const std::uint32_t instruction) {
         static const auto table = get_arm_decode_table<V>();
-        const auto matches_instruction = [instruction](const auto& matcher) { return matcher.matches(instruction); };
+        const auto matches_instruction = [instruction](const auto &matcher) { return matcher.matches(instruction); };
 
         auto iter = std::find_if(table.begin(), table.end(), matches_instruction);
         return iter != table.end() ? std::optional<std::reference_wrapper<const arm_matcher<V>>>(*iter) : std::nullopt;

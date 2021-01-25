@@ -19,12 +19,12 @@
 
 #pragma once
 
+#include <common/armemitter.h>
 #include <cpu/12l1r/common.h>
 #include <cpu/12l1r/visit_session.h>
-#include <common/armemitter.h>
 
 namespace eka2l1::arm::r12l1 {
-    class arm_translate_visitor: public visit_session {
+    class arm_translate_visitor : public visit_session {
     public:
         using instruction_return_type = bool;
 

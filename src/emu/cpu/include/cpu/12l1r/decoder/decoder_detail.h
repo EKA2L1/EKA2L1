@@ -101,10 +101,10 @@ namespace eka2l1::arm::r12l1::decoder {
         template <typename FnT>
         struct visitor_caller;
 
-    #ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable : 4800) // forcing value to bool 'true' or 'false' (performance warning)
-    #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4800) // forcing value to bool 'true' or 'false' (performance warning)
+#endif
         template <typename Visitor, typename... Args, typename CallRetT>
         struct visitor_caller<CallRetT (Visitor::*)(Args...)> {
             template <size_t... iota>
@@ -138,9 +138,9 @@ namespace eka2l1::arm::r12l1::decoder {
                 };
             }
         };
-    #ifdef _MSC_VER
-    #pragma warning(pop)
-    #endif
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
     public:
         /**

@@ -17,21 +17,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cpu/12l1r/arm_12l1r.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/exclusive_monitor.h>
 #include <cpu/12l1r/reg_loc.h>
-#include <cpu/12l1r/core_state.h>
-#include <cpu/12l1r/arm_12l1r.h>
 
+#include <cpu/12l1r/arm_visitor.h>
 #include <cpu/12l1r/encoding/arm.h>
 #include <cpu/12l1r/encoding/thumb16.h>
 #include <cpu/12l1r/encoding/thumb32.h>
-#include <cpu/12l1r/visit_session.h>
-#include <cpu/12l1r/arm_visitor.h>
 #include <cpu/12l1r/thumb_visitor.h>
+#include <cpu/12l1r/visit_session.h>
 
-#include <common/log.h>
 #include <common/algorithm.h>
+#include <common/log.h>
 
 namespace eka2l1::arm::r12l1 {
     static constexpr std::size_t MAX_CODE_SPACE_BYTES = common::MB(32);
@@ -67,8 +67,7 @@ namespace eka2l1::arm::r12l1 {
                 & FAST_DISPATCH_ENTRY_MASK;
             fast_dispatch_entry &entry_may_empty = fast_dispatches_[fast_dispatch_index];
 
-            if ((entry_may_empty.addr_ == to_destroy->start_address()) &&
-                (entry_may_empty.asid_ == to_destroy->address_space())) {
+            if ((entry_may_empty.addr_ == to_destroy->start_address()) && (entry_may_empty.asid_ == to_destroy->address_space())) {
                 // Empty out this entry
                 std::memset(&entry_may_empty, 0, sizeof(fast_dispatch_entry));
             }
@@ -103,7 +102,7 @@ namespace eka2l1::arm::r12l1 {
         // Load the arguments to call lookup
         // While R0 is already the core state
         PUSH(9, common::armgen::R4, common::armgen::R5, common::armgen::R6, common::armgen::R7, common::armgen::R8,
-                common::armgen::R9, common::armgen::R10, common::armgen::R11, common::armgen::R14);
+            common::armgen::R9, common::armgen::R10, common::armgen::R11, common::armgen::R14);
 
         // 8 bytes stack alignment, go die in hell
         SUB(common::armgen::R_SP, common::armgen::R_SP, 4);
@@ -128,7 +127,7 @@ namespace eka2l1::arm::r12l1 {
             LDR(common::armgen::R2, CORE_STATE_REG, offsetof(core_state, current_aid_));
             MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(this));
 
-            quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_get_block_proxy));
+            quick_call_function(common::armgen::R12, reinterpret_cast<void *>(dashixiong_get_block_proxy));
 
             CMPI2R(common::armgen::R0, 0, common::armgen::R12);
             common::armgen::fixup_branch available = B_CC(common::CC_NEQ);
@@ -138,7 +137,7 @@ namespace eka2l1::arm::r12l1 {
             MOV(common::armgen::R1, CORE_STATE_REG);
             MOV(common::armgen::R2, common::armgen::R4);
 
-            quick_call_function(common::armgen::R12, reinterpret_cast<void*>(dashixiong_compile_new_block_proxy));
+            quick_call_function(common::armgen::R12, reinterpret_cast<void *>(dashixiong_compile_new_block_proxy));
             CMPI2R(common::armgen::R0, 0, common::armgen::R12);
 
             common::armgen::fixup_branch available_again = B_CC(common::CC_NEQ);
@@ -158,7 +157,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::fixup_branch headout = emit_get_block_code();
 
         LDR(common::armgen::R0, common::armgen::R0, offsetof(translated_block, translated_code_));
-        B(common::armgen::R0);                                                // Branch to the block
+        B(common::armgen::R0); // Branch to the block
 
         set_jump_target(headout);
         set_jump_target(return_back);
@@ -193,8 +192,7 @@ namespace eka2l1::arm::r12l1 {
         LDR(common::armgen::R0, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
 
         MOVI2R(ALWAYS_SCRATCH2, FAST_DISPATCH_ENTRY_MASK);
-        AND(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, common::armgen::operand2(common::armgen::R0,
-            common::armgen::ST_LSR, FAST_DISPATCH_ENTRY_ADDR_SHIFT));
+        AND(ALWAYS_SCRATCH2, ALWAYS_SCRATCH2, common::armgen::operand2(common::armgen::R0, common::armgen::ST_LSR, FAST_DISPATCH_ENTRY_ADDR_SHIFT));
 
         // Indexing the dispatch entry
         static_assert(sizeof(fast_dispatch_entry) == 16);
@@ -221,7 +219,7 @@ namespace eka2l1::arm::r12l1 {
         set_jump_target(fast_dispatch_miss_again);
 
         MOV(common::armgen::R4, common::armgen::R0);
-        MOV(common::armgen::R6, ALWAYS_SCRATCH2);           // Store base of entry.
+        MOV(common::armgen::R6, ALWAYS_SCRATCH2); // Store base of entry.
 
         common::armgen::fixup_branch no_code = emit_get_block_code();
 
@@ -262,7 +260,7 @@ namespace eka2l1::arm::r12l1 {
         for (auto ite = link_ites.first; ite != link_ites.second; ite++) {
             translated_block *request_link_block = ite->second;
 
-            for (auto &link: request_link_block->links_) {
+            for (auto &link : request_link_block->links_) {
                 if (link.to_ == dest->start_address()) {
                     void *aligned_addr = common::align_address_to_host_page(link.value_);
 
@@ -271,8 +269,8 @@ namespace eka2l1::arm::r12l1 {
                     }
 
                     common::cpu_info temp_info = context_info;
-                    common::armgen::armx_emitter temp_emitter(reinterpret_cast<std::uint8_t*>(link.value_),
-                                                              temp_info);
+                    common::armgen::armx_emitter temp_emitter(reinterpret_cast<std::uint8_t *>(link.value_),
+                        temp_info);
 
                     if (unlink) {
                         emit_pc_flush_with_this_emitter(&temp_emitter, link.to_);
@@ -428,34 +426,42 @@ namespace eka2l1::arm::r12l1 {
 
     bool dashixiong_block::write_ex_byte(const vaddress addr, const std::uint8_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint8_t>(parent_->core_number(), addr,
-            [&](std::uint8_t expected) -> bool {
-                return parent_->exclusive_write_8bit(addr, val, expected);
-            }) ? 0 : 1;
+                   [&](std::uint8_t expected) -> bool {
+                       return parent_->exclusive_write_8bit(addr, val, expected);
+                   })
+            ? 0
+            : 1;
     }
 
     bool dashixiong_block::write_ex_word(const vaddress addr, const std::uint16_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint16_t>(parent_->core_number(), addr,
-            [&](std::uint16_t expected) -> bool {
-                return parent_->exclusive_write_16bit(addr, val, expected);
-            }) ? 0 : 1;
+                   [&](std::uint16_t expected) -> bool {
+                       return parent_->exclusive_write_16bit(addr, val, expected);
+                   })
+            ? 0
+            : 1;
     }
 
     bool dashixiong_block::write_ex_dword(const vaddress addr, const std::uint32_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint32_t>(parent_->core_number(), addr,
-            [&](std::uint32_t expected) -> bool {
-                return parent_->exclusive_write_32bit(addr, val, expected);
-            }) ? 0 : 1;
+                   [&](std::uint32_t expected) -> bool {
+                       return parent_->exclusive_write_32bit(addr, val, expected);
+                   })
+            ? 0
+            : 1;
     }
 
     bool dashixiong_block::write_ex_qword(const vaddress addr, const std::uint64_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint64_t>(parent_->core_number(), addr,
-            [&](std::uint64_t expected) -> bool {
-                return parent_->exclusive_write_64bit(addr, val, expected);
-            }) ? 0 : 1;
+                   [&](std::uint64_t expected) -> bool {
+                       return parent_->exclusive_write_64bit(addr, val, expected);
+                   })
+            ? 0
+            : 1;
     }
 
     void dashixiong_block::enter_dispatch(core_state *cstate) {
-        typedef void (*dispatch_func_type)(core_state *state);
+        typedef void (*dispatch_func_type)(core_state * state);
         dispatch_func_type df = reinterpret_cast<dispatch_func_type>(dispatch_func_);
 
         df(cstate);
@@ -483,7 +489,7 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_pc_write_exchange(common::armgen::arm_reg pc_reg) {
         MOV(ALWAYS_SCRATCH1, pc_reg);
-        BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);      // Clear T flag
+        BIC(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK); // Clear T flag
 
         TST(ALWAYS_SCRATCH1, 1);
 
@@ -506,14 +512,14 @@ namespace eka2l1::arm::r12l1 {
         STR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, gprs_[15]));
     }
 
-    void dashixiong_block::emit_block_links(translated_block* block) {
-        for (auto &link: block->links_) {
-            for (auto &jump_target: link.needs_) {
+    void dashixiong_block::emit_block_links(translated_block *block) {
+        for (auto &link : block->links_) {
+            for (auto &jump_target : link.needs_) {
                 set_jump_target(jump_target);
             }
 
             link_to_.emplace(make_block_hash(link.to_, block->address_space()), block);
-            link.value_ = reinterpret_cast<std::uint32_t*>(get_writeable_code_ptr());
+            link.value_ = reinterpret_cast<std::uint32_t *>(get_writeable_code_ptr());
 
             // Can we link the block now?
             if (auto link_block = get_block(link.to_, block->address_space())) {
@@ -586,7 +592,7 @@ namespace eka2l1::arm::r12l1 {
         second_part &= 0xFFFF;
 
         return std::make_pair(static_cast<std::uint32_t>((first_part << 16) | second_part),
-             THUMB_INST_SIZE_THUMB32);
+            THUMB_INST_SIZE_THUMB32);
     }
 
     translated_block *dashixiong_block::compile_new_block(core_state *state, const vaddress addr) {
@@ -598,7 +604,7 @@ namespace eka2l1::arm::r12l1 {
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 
-		block->thumb_ = is_thumb;
+        block->thumb_ = is_thumb;
 
         LOG_TRACE(CPU_12L1R, "Compiling new block PC=0x{:X}, host=0x{:X}, thumb={}", addr,
             reinterpret_cast<std::uint32_t>(block->translated_code_), is_thumb);

@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/common.h>
 #include <cpu/12l1r/arm_visitor.h>
-#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/common.h>
+#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/visit_session.h>
 
 namespace eka2l1::arm::r12l1 {
@@ -39,7 +39,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real,
-                ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 imm_op(imm8, static_cast<std::uint8_t>(rotate));
 
@@ -69,12 +69,11 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real,
-                ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
 
         if (source_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOVI2R(dest_mapped, expand_arm_shift(crr_block_->current_address() + 8,
-                shift, imm5));
+            big_block_->MOVI2R(dest_mapped, expand_arm_shift(crr_block_->current_address() + 8, shift, imm5));
 
             return true;
         }
@@ -171,8 +170,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (source_real == common::armgen::R15) {
             assert(!S);
-            big_block_->MOVI2R(dest_mapped, ~expand_arm_shift(crr_block_->current_address() + 8,
-                shift, imm5));
+            big_block_->MOVI2R(dest_mapped, ~expand_arm_shift(crr_block_->current_address() + 8, shift, imm5));
 
             return true;
         }
@@ -232,7 +230,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             LOG_TRACE(CPU_12L1R, "Trying to add carry with an PC operand, weird behaviour that must note");
@@ -281,7 +279,7 @@ namespace eka2l1::arm::r12l1 {
 
         common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -321,7 +319,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
 
@@ -352,7 +350,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -377,7 +375,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_ADD_reg(common::cc_flags cond, bool S, reg_index n, reg_index d,
-            std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
         if (!condition_passed(cond)) {
             return false;
         }
@@ -401,7 +399,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -440,7 +438,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
 
@@ -471,7 +469,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -496,7 +494,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_SUB_reg(common::cc_flags cond, bool S, reg_index n, reg_index d,
-            std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
         if (!condition_passed(cond)) {
             return false;
         }
@@ -520,7 +518,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -559,7 +557,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
 
@@ -590,7 +588,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -639,7 +637,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                 : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -659,7 +657,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_RSB_imm(common::cc_flags cond, bool S, reg_index n, reg_index d,
-            int rotate, std::uint8_t imm8) {
+        int rotate, std::uint8_t imm8) {
         if (!condition_passed(cond)) {
             return false;
         }
@@ -670,7 +668,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -695,7 +693,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::arm_RSB_reg(common::cc_flags cond, bool S, reg_index n, reg_index d,
-                                            std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
+        std::uint8_t imm5, common::armgen::shift_type shift, reg_index m) {
         if (!condition_passed(cond)) {
             return false;
         }
@@ -719,7 +717,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -750,7 +748,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -799,7 +797,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -829,7 +827,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -878,7 +876,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -918,7 +916,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
 
@@ -948,7 +946,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -997,7 +995,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -1037,7 +1035,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
 
@@ -1067,7 +1065,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -1116,7 +1114,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -1156,7 +1154,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-            : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
 
@@ -1371,7 +1369,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 op2(imm8, static_cast<std::uint8_t>(rotate));
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         if (op1_real == common::armgen::R15) {
             assert(!S);
@@ -1414,7 +1412,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op2_base_mapped = reg_supplier_.map(op2_base_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, imm5);
 
@@ -1453,7 +1451,7 @@ namespace eka2l1::arm::r12l1 {
         const common::armgen::arm_reg op_shift_mapped = reg_supplier_.map(op_shift_real, 0);
 
         const common::armgen::arm_reg dest_mapped = (dest_real == common::armgen::R15) ? ALWAYS_SCRATCH1
-                : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+                                                                                       : reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
 
         common::armgen::operand2 op2(op2_base_mapped, shift, op_shift_mapped);
 
@@ -1496,7 +1494,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         const common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real,
-                ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
 
         if (source_real == common::armgen::R15) {
             big_block_->MOVI2R(dest_mapped, crr_block_->current_address() + 4);
@@ -1820,7 +1818,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
 
         const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
-                                                                              ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
         const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
 
         big_block_->ORRS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
@@ -1830,8 +1828,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool thumb_translate_visitor::thumb16_ADR(reg_index d, std::uint8_t imm8) {
-        const std::uint32_t data_addr = crr_block_->current_aligned_address() +
-            (imm8 << 2) + 4;
+        const std::uint32_t data_addr = crr_block_->current_aligned_address() + (imm8 << 2) + 4;
 
         common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
         common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
@@ -1902,7 +1899,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
 
         const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
-                                                                              ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
         const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
 
         big_block_->LSRS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
@@ -1916,7 +1913,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
 
         const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
-                                                                              ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
         const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
 
         big_block_->LSLS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
@@ -1943,7 +1940,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
 
         const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
-                                                                              ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
         const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
 
         big_block_->ADCS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);
@@ -1957,7 +1954,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
 
         const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
-                                                                              ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
         const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
 
         big_block_->SBCS(dest_and_op1_mapped, dest_and_op1_mapped, op2_mapped);

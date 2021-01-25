@@ -17,16 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/core_state.h>
-#include <cpu/12l1r/visit_session.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/tlb.h>
+#include <cpu/12l1r/visit_session.h>
 
 #include <common/bytes.h>
 
 namespace eka2l1::arm::r12l1 {
     static void dashixiong_raise_exception_router(dashixiong_block *self, const exception_type exc,
-                                                  const std::uint32_t data) {
+        const std::uint32_t data) {
         self->raise_guest_exception(exc, data);
     }
 
@@ -166,7 +166,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         big_block_->LSR(ALWAYS_SCRATCH1, base, CPAGE_BITS);
-        big_block_->MOV(final_addr, ALWAYS_SCRATCH1);       // Remember page number of the target.
+        big_block_->MOV(final_addr, ALWAYS_SCRATCH1); // Remember page number of the target.
         big_block_->ANDI2R(ALWAYS_SCRATCH1, ALWAYS_SCRATCH1, TLB_ENTRY_MASK, ALWAYS_SCRATCH2);
 
         // Calculate the offset
@@ -266,8 +266,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg base_guest_reg = base;
         common::armgen::arm_reg base_backup = common::armgen::INVALID_REG;
 
-        const std::uint32_t base_guest_reg_idx = static_cast<std::uint32_t>(base_guest_reg) -
-            static_cast<std::uint32_t>(common::armgen::R0);
+        const std::uint32_t base_guest_reg_idx = static_cast<std::uint32_t>(base_guest_reg) - static_cast<std::uint32_t>(common::armgen::R0);
 
         // Spill lock this base guest reg
         if (writeback) {
@@ -405,8 +404,7 @@ namespace eka2l1::arm::r12l1 {
                         }
                     } else {
                         if (last_reg == 15) {
-                            big_block_->MOVI2R(common::armgen::R2, crr_block_->current_aligned_address()
-                                + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
+                            big_block_->MOVI2R(common::armgen::R2, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
                         } else {
                             if (mapped == common::armgen::R1) {
                                 big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
@@ -433,8 +431,7 @@ namespace eka2l1::arm::r12l1 {
                         }
                     } else {
                         if (last_reg == 15) {
-                            big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_aligned_address()
-                                    + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
+                            big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
 
                             big_block_->STR(ALWAYS_SCRATCH1, base, 0);
                         } else {
@@ -486,8 +483,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (base == common::armgen::R15) {
             // Calculate address right away
-            vaddress addr_to_base = common::align(crr_block_->current_aligned_address(), 4, 0) +
-                    (crr_block_->thumb_ ? 4 : 8);
+            vaddress addr_to_base = common::align(crr_block_->current_aligned_address(), 4, 0) + (crr_block_->thumb_ ? 4 : 8);
 
             if (op2.get_type() == common::armgen::TYPE_IMM) {
                 addr_to_base += (add ? 1 : -1) * op2.Imm12();
@@ -634,47 +630,47 @@ namespace eka2l1::arm::r12l1 {
 
         if (read) {
             switch (bit_count) {
-                case 8:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_byte_router);
-                    break;
+            case 8:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_byte_router);
+                break;
 
-                case 16:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_word_router);
-                    break;
+            case 16:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_word_router);
+                break;
 
-                case 32:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
-                    break;
+            case 32:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
+                break;
 
-                case 64:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_qword_router);
-                    break;
+            case 64:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_qword_router);
+                break;
 
-                default:
-                    assert(false);
-                    break;
+            default:
+                assert(false);
+                break;
             }
         } else {
             switch (bit_count) {
-                case 8:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_byte_router);
-                    break;
+            case 8:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_byte_router);
+                break;
 
-                case 16:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_word_router);
-                    break;
+            case 16:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_word_router);
+                break;
 
-                case 32:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
-                    break;
+            case 32:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
+                break;
 
-                case 64:
-                    big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_qword_router);
-                    break;
+            case 64:
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_qword_router);
+                break;
 
-                default:
-                    assert(false);
-                    break;
+            default:
+                assert(false);
+                break;
             }
         }
 
@@ -688,17 +684,17 @@ namespace eka2l1::arm::r12l1 {
         if (read) {
             if (is_signed) {
                 switch (bit_count) {
-                    case 8:
-                        big_block_->SXTB(target_mapped, common::armgen::R0);
-                        break;
+                case 8:
+                    big_block_->SXTB(target_mapped, common::armgen::R0);
+                    break;
 
-                    case 16:
-                        big_block_->SXTH(target_mapped, common::armgen::R0);
-                        break;
+                case 16:
+                    big_block_->SXTH(target_mapped, common::armgen::R0);
+                    break;
 
-                    default:
-                        assert(false);
-                        break;
+                default:
+                    assert(false);
+                    break;
                 }
             } else {
                 big_block_->MOV(target_mapped, common::armgen::R0);
@@ -714,61 +710,61 @@ namespace eka2l1::arm::r12l1 {
 
         if (read) {
             switch (bit_count) {
-                case 8:
-                    if (is_signed)
-                        big_block_->LDRSB(target_mapped, host_base_addr, 0, true, true, false);
-                    else
-                        big_block_->LDRB(target_mapped, host_base_addr, 0, true, true, false);
+            case 8:
+                if (is_signed)
+                    big_block_->LDRSB(target_mapped, host_base_addr, 0, true, true, false);
+                else
+                    big_block_->LDRB(target_mapped, host_base_addr, 0, true, true, false);
 
-                    break;
+                break;
 
-                case 16:
-                    if (is_signed)
-                        big_block_->LDRSH(target_mapped, host_base_addr, 0, true, true, false);
-                    else
-                        big_block_->LDRH(target_mapped, host_base_addr, 0, true, true, false);
+            case 16:
+                if (is_signed)
+                    big_block_->LDRSH(target_mapped, host_base_addr, 0, true, true, false);
+                else
+                    big_block_->LDRH(target_mapped, host_base_addr, 0, true, true, false);
 
-                    break;
+                break;
 
-                case 32:
-                    big_block_->LDR(target_mapped, host_base_addr, 0, true, true, false);
-                    break;
+            case 32:
+                big_block_->LDR(target_mapped, host_base_addr, 0, true, true, false);
+                break;
 
-                // ARM requires you to have two consecutive registers on LDRD.
-                // So it's just better to use two LDRs, our register mapping maybe nuts
-                case 64:
-                    big_block_->LDR(target_mapped, host_base_addr, 0, true, true, false);
-                    big_block_->LDR(target_mapped_2, host_base_addr, 4, true, true, false);
-                    break;
+            // ARM requires you to have two consecutive registers on LDRD.
+            // So it's just better to use two LDRs, our register mapping maybe nuts
+            case 64:
+                big_block_->LDR(target_mapped, host_base_addr, 0, true, true, false);
+                big_block_->LDR(target_mapped_2, host_base_addr, 4, true, true, false);
+                break;
 
-                default:
-                    assert(false);
-                    break;
+            default:
+                assert(false);
+                break;
             }
         } else {
             switch (bit_count) {
-                case 8:
-                    big_block_->STRB(target_mapped, host_base_addr, 0, true, true, false);
-                    break;
+            case 8:
+                big_block_->STRB(target_mapped, host_base_addr, 0, true, true, false);
+                break;
 
-                case 16:
-                    big_block_->STRH(target_mapped, host_base_addr, 0, true, true, false);
-                    break;
+            case 16:
+                big_block_->STRH(target_mapped, host_base_addr, 0, true, true, false);
+                break;
 
-                case 32:
-                    big_block_->STR(target_mapped, host_base_addr, 0, true, true, false);
-                    break;
+            case 32:
+                big_block_->STR(target_mapped, host_base_addr, 0, true, true, false);
+                break;
 
-                // ARM requires you to have two consecutive registers on LDRD.
-                // So it's just better to use two LDRs, our register mapping maybe nuts
-                case 64:
-                    big_block_->STR(target_mapped, host_base_addr, 0, true, true, false);
-                    big_block_->STR(target_mapped_2, host_base_addr, 4, true, true, false);
-                    break;
+            // ARM requires you to have two consecutive registers on LDRD.
+            // So it's just better to use two LDRs, our register mapping maybe nuts
+            case 64:
+                big_block_->STR(target_mapped, host_base_addr, 0, true, true, false);
+                big_block_->STR(target_mapped_2, host_base_addr, 4, true, true, false);
+                break;
 
-                default:
-                    assert(false);
-                    break;
+            default:
+                assert(false);
+                break;
             }
         }
 
@@ -1052,8 +1048,7 @@ namespace eka2l1::arm::r12l1 {
 
         if ((flag_ != common::CC_AL) || no_offered_link) {
             // Add branching to next block, making it highest priority
-            crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ?
-                crr_block_->last_inst_size_ : 0), 0);
+            crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ? crr_block_->last_inst_size_ : 0), 0);
         }
 
         // Emit links

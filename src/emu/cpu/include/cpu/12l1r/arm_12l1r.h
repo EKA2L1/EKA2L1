@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include <cpu/arm_interface.h>
 #include <common/armemitter.h>
+#include <cpu/arm_interface.h>
 
-#include <cpu/12l1r/tlb.h>
-#include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/core_state.h>
+#include <cpu/12l1r/tlb.h>
 
 #include <memory>
 
@@ -33,7 +33,7 @@ namespace eka2l1::arm {
         class dashixiong_block;
     }
 
-    class r12l1_core: public core {
+    class r12l1_core : public core {
     private:
         friend class r12l1::dashixiong_block;
 
@@ -44,7 +44,7 @@ namespace eka2l1::arm {
 
         arm::r12l1::exclusive_monitor *monitor_;
         std::uint32_t target_ticks_run_;
- 
+
     public:
         explicit r12l1_core(arm::exclusive_monitor *monitor, const std::size_t page_bits);
         ~r12l1_core() override;
@@ -67,7 +67,7 @@ namespace eka2l1::arm {
         void set_sp(uint32_t val) override;
         void set_vfp(size_t idx, uint32_t val) override;
         uint32_t get_lr() override;
-        
+
         uint32_t get_cpsr() override;
 
         void save_context(thread_context &ctx) override;

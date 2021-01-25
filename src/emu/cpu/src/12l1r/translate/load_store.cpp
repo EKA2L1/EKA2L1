@@ -18,10 +18,10 @@
  */
 
 #include <cpu/12l1r/arm_visitor.h>
-#include <cpu/12l1r/thumb_visitor.h>
-#include <cpu/12l1r/visit_session.h>
 #include <cpu/12l1r/block_cache.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/thumb_visitor.h>
+#include <cpu/12l1r/visit_session.h>
 
 #include <common/algorithm.h>
 
@@ -390,7 +390,7 @@ namespace eka2l1::arm::r12l1 {
 
         return emit_memory_access_chain(static_cast<common::armgen::arm_reg>(common::armgen::R0 + n), list, false, false, W, false);
     }
-    
+
     bool arm_translate_visitor::arm_STMDB(common::cc_flags cond, bool W, reg_index n, reg_list list) {
         if (!condition_passed(cond)) {
             return false;
@@ -543,7 +543,7 @@ namespace eka2l1::arm::r12l1 {
         reg_supplier_.spill_lock(offset_real);
 
         const bool res = emit_memory_access(dest_real, base_real, common::armgen::operand2(offset_mapped),
-                16, true, true, true, false, true);
+            16, true, true, true, false, true);
 
         reg_supplier_.release_spill_lock(offset_real);
         return res;
@@ -559,7 +559,7 @@ namespace eka2l1::arm::r12l1 {
         reg_supplier_.spill_lock(offset_real);
 
         const bool res = emit_memory_access(dest_real, base_real, common::armgen::operand2(offset_mapped),
-                8, true, true, true, false, true);
+            8, true, true, true, false, true);
 
         reg_supplier_.release_spill_lock(offset_real);
 
@@ -615,7 +615,7 @@ namespace eka2l1::arm::r12l1 {
         reg_supplier_.spill_lock(offset_real);
 
         const bool res = emit_memory_access(source_real, base_real, common::armgen::operand2(offset_mapped),
-                32, false, true, true, false, false);
+            32, false, true, true, false, false);
 
         reg_supplier_.release_spill_lock(offset_real);
         return res;

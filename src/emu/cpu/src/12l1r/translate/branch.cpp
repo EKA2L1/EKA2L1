@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/common.h>
 #include <cpu/12l1r/arm_visitor.h>
-#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/common.h>
+#include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/visit_session.h>
 
 #include <common/bytes.h>
@@ -49,11 +49,10 @@ namespace eka2l1::arm::r12l1 {
         const std::int32_t move_amount = static_cast<std::int32_t>(common::sign_extended<26, std::uint32_t>(imm24 << 2));
 
         const vaddress addr_to_jump = crr_block_->current_address() + move_amount + 8;
-        const vaddress next_instr_addr = crr_block_->current_address() + 4 +
-                (crr_block_->thumb_ ? 1 : 0);
+        const vaddress next_instr_addr = crr_block_->current_address() + 4 + (crr_block_->thumb_ ? 1 : 0);
 
         common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
-                ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
 
         big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
         emit_direct_link(addr_to_jump);
@@ -87,11 +86,10 @@ namespace eka2l1::arm::r12l1 {
         }
 
         // Write to LR first
-        const vaddress next_instr_addr = crr_block_->current_address() + 4 +
-                (crr_block_->thumb_ ? 1 : 0);
+        const vaddress next_instr_addr = crr_block_->current_address() + 4 + (crr_block_->thumb_ ? 1 : 0);
 
         common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
-                ALLOCATE_FLAG_DIRTY);
+            ALLOCATE_FLAG_DIRTY);
 
         big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
 
@@ -118,8 +116,7 @@ namespace eka2l1::arm::r12l1 {
 
         big_block_->MOVI2R(lr_reg_mapped, next_instr_addr);
 
-        const vaddress jump_to = crr_block_->current_address() + static_cast<std::int32_t>(
-            common::sign_extended<26, std::uint32_t>(imm24 << 2)) + (H ? 2 : 0) + 8;
+        const vaddress jump_to = crr_block_->current_address() + static_cast<std::int32_t>(common::sign_extended<26, std::uint32_t>(imm24 << 2)) + (H ? 2 : 0) + 8;
 
         // Change instruction set to Thumb
         big_block_->ORR(CPSR_REG, CPSR_REG, CPSR_THUMB_FLAG_MASK);
@@ -150,7 +147,8 @@ namespace eka2l1::arm::r12l1 {
     bool thumb_translate_visitor::thumb32_BL_imm(std::uint16_t hi, std::uint16_t lo) {
         // Hi and lo are both 11 bits.
         const std::int32_t offset = static_cast<std::int32_t>(common::sign_extended<23, std::uint32_t>(
-            ((lo & 0b11111111111) | ((hi & 0b11111111111) << 11)) << 1)) + 4;
+                                        ((lo & 0b11111111111) | ((hi & 0b11111111111) << 11)) << 1))
+            + 4;
         const vaddress to_remember = (crr_block_->current_address() + 4) | 1;
 
         common::armgen::arm_reg lr_reg_mapped = reg_supplier_.map(common::armgen::R14,
@@ -165,7 +163,8 @@ namespace eka2l1::arm::r12l1 {
     bool thumb_translate_visitor::thumb32_BLX_imm(std::uint16_t hi, std::uint16_t lo) {
         // Hi and lo are both 11 bits.
         const std::int32_t offset = static_cast<std::int32_t>(common::sign_extended<23, std::uint32_t>(
-            ((lo & 0b11111111111) | ((hi & 0b11111111111) << 11)) << 1)) + 4;
+                                        ((lo & 0b11111111111) | ((hi & 0b11111111111) << 11)) << 1))
+            + 4;
 
         const vaddress to_jump = crr_block_->current_aligned_address() + offset;
         const vaddress to_remember = (crr_block_->current_address() + 4) | 1;

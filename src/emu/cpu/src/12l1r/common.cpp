@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cpu/12l1r/common.h>
 #include <common/bytes.h>
+#include <cpu/12l1r/common.h>
 
 #include <cassert>
 
@@ -43,4 +43,3 @@ namespace eka2l1::arm::r12l1 {
         return 0;
     }
 }
-

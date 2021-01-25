@@ -24,9 +24,9 @@
 
 namespace eka2l1::arm::r12l1 {
     enum guest_register_location {
-        GUEST_REGISTER_LOC_IMM = 1 << 0,                     ///< Guest register is mapped as a constant (used for things like example: PC).
-        GUEST_REGISTER_LOC_HOST_REG = 1 << 1,                ///< Guest register is currently mapped to a host register
-        GUEST_REGISTER_LOC_MEM = 1 << 2,                     ///< Guest register is residing in the core state in memory.
+        GUEST_REGISTER_LOC_IMM = 1 << 0, ///< Guest register is mapped as a constant (used for things like example: PC).
+        GUEST_REGISTER_LOC_HOST_REG = 1 << 1, ///< Guest register is currently mapped to a host register
+        GUEST_REGISTER_LOC_MEM = 1 << 2, ///< Guest register is residing in the core state in memory.
         GUEST_REGISTER_LOC_IMM_AND_HOST_REG = GUEST_REGISTER_LOC_IMM | GUEST_REGISTER_LOC_HOST_REG
     };
 
@@ -45,16 +45,16 @@ namespace eka2l1::arm::r12l1 {
     };
 
     struct host_register_info {
-        common::armgen::arm_reg guest_mapped_reg_;      ///< Correspond guest reigster
-        bool scratch_;                                  ///< This host register should not be touched until the scratch is release
-        bool dirty_;                                    ///< No need to flush this register if this is true. May be used for reading purposes.
+        common::armgen::arm_reg guest_mapped_reg_; ///< Correspond guest reigster
+        bool scratch_; ///< This host register should not be touched until the scratch is release
+        bool dirty_; ///< No need to flush this register if this is true. May be used for reading purposes.
 
         explicit host_register_info();
     };
 
     static constexpr common::armgen::arm_reg CORE_STATE_REG = common::armgen::arm_reg::R10;
     static constexpr common::armgen::arm_reg TLB_ENTRIES_REG = common::armgen::arm_reg::R9;
-	static constexpr common::armgen::arm_reg CPSR_REG = common::armgen::R8;
+    static constexpr common::armgen::arm_reg CPSR_REG = common::armgen::R8;
     static constexpr common::armgen::arm_reg TICKS_REG = common::armgen::R7;
     static constexpr common::armgen::arm_reg ALWAYS_SCRATCH1 = common::armgen::arm_reg::R0;
     static constexpr common::armgen::arm_reg ALWAYS_SCRATCH2 = common::armgen::arm_reg::R14;

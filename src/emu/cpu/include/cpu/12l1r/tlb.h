@@ -83,7 +83,7 @@ namespace eka2l1::arm::r12l1 {
             } else {
                 entry.write_addr = 0;
             }
-            
+
             if (perm & prot_exec) {
                 entry.execute_addr = addr_normed;
             } else {
@@ -98,8 +98,7 @@ namespace eka2l1::arm::r12l1 {
 
             tlb_entry &entry = entries[tlb_index];
 
-            if ((entry.read_addr == addr_normed) || (entry.write_addr == addr_normed) ||
-                (entry.execute_addr == addr_normed)) {
+            if ((entry.read_addr == addr_normed) || (entry.write_addr == addr_normed) || (entry.execute_addr == addr_normed)) {
                 std::memset(&entry, 0, sizeof(tlb_entry));
             }
         }
@@ -114,9 +113,8 @@ namespace eka2l1::arm::r12l1 {
             if (!entry.host_base) {
                 return nullptr;
             }
-            
-            if ((entry.read_addr == addr_normed) || (entry.write_addr == addr_normed) ||
-                (entry.execute_addr == addr_normed)) {
+
+            if ((entry.read_addr == addr_normed) || (entry.write_addr == addr_normed) || (entry.execute_addr == addr_normed)) {
                 const std::size_t addr_mod = addr & page_mask;
                 return entry.host_base + addr_mod;
             }

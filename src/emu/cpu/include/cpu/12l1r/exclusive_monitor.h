@@ -23,13 +23,13 @@
 #include <cpu/12l1r/common.h>
 #include <cpu/arm_interface.h>
 
-#include <atomic>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <vector>
 
 namespace eka2l1::arm::r12l1 {
-    class exclusive_monitor: public arm::exclusive_monitor {
+    class exclusive_monitor : public arm::exclusive_monitor {
     public:
         /**
          * @param processor_count       Maximum number of processors using this global
@@ -45,10 +45,9 @@ namespace eka2l1::arm::r12l1 {
 
         /// Marks a region containing [address, address+size) to be exclusive to
         /// processor processor_id.
-        template<typename T, typename Function>
-        T read_and_mark(const std::size_t processor_id, const vaddress address, Function op)
-        {
-            static_assert(std::is_trivially_copyable_v < T > );
+        template <typename T, typename Function>
+        T read_and_mark(const std::size_t processor_id, const vaddress address, Function op) {
+            static_assert(std::is_trivially_copyable_v<T>);
             const vaddress masked_address = address & RESERVATION_GRANULE_MASK;
 
             lock();
@@ -64,12 +63,10 @@ namespace eka2l1::arm::r12l1 {
         /// specified region. If it does, executes the operation then clears
         /// the exclusive state for processors if their exclusive region(s)
         /// contain [address, address+size).
-        template<typename T, typename Function>
-        bool do_exclusive_operation(const std::size_t processor_id, vaddress address, Function op)
-        {
-            static_assert(std::is_trivially_copyable_v < T > );
-            if (!check_and_clear(processor_id, address))
-            {
+        template <typename T, typename Function>
+        bool do_exclusive_operation(const std::size_t processor_id, vaddress address, Function op) {
+            static_assert(std::is_trivially_copyable_v<T>);
+            if (!check_and_clear(processor_id, address)) {
                 return false;
             }
 

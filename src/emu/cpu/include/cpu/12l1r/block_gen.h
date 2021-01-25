@@ -27,33 +27,33 @@
 #include <map>
 
 namespace eka2l1::arm {
-	class r12l1_core;
+    class r12l1_core;
 }
 
 namespace eka2l1::arm::r12l1 {
     struct core_state;
     class reg_cache;
-	class visit_session;
-	class exclusive_monitor;
+    class visit_session;
+    class exclusive_monitor;
 
-	struct fast_dispatch_entry {
-	    std::uint32_t addr_;
-	    std::uint32_t asid_;
+    struct fast_dispatch_entry {
+        std::uint32_t addr_;
+        std::uint32_t asid_;
 
-	    void *code_;
-	    std::uint32_t padding_;
-	};
+        void *code_;
+        std::uint32_t padding_;
+    };
 
-	// In fast dispatch we favour the lower end of the address. Since it is not the common case
-	// Symbian code jumps to other memory region, so the upper part may not be much count.
-	// Here we take account of bits[4:20] of the block address.
-	static constexpr std::uint32_t FAST_DISPATCH_ENTRY_ADDR_SHIFT = 4;
-	static constexpr std::uint32_t FAST_DISPATCH_ENTRY_MASK = 0xFFFF;
-	static constexpr std::uint32_t FAST_DISPATCH_ENTRY_COUNT = 0x10000;
+    // In fast dispatch we favour the lower end of the address. Since it is not the common case
+    // Symbian code jumps to other memory region, so the upper part may not be much count.
+    // Here we take account of bits[4:20] of the block address.
+    static constexpr std::uint32_t FAST_DISPATCH_ENTRY_ADDR_SHIFT = 4;
+    static constexpr std::uint32_t FAST_DISPATCH_ENTRY_MASK = 0xFFFF;
+    static constexpr std::uint32_t FAST_DISPATCH_ENTRY_COUNT = 0x10000;
 
-    class dashixiong_block: public common::armgen::armx_codeblock {
+    class dashixiong_block : public common::armgen::armx_codeblock {
     private:
-        std::multimap<translated_block::hash_type, translated_block*> link_to_;
+        std::multimap<translated_block::hash_type, translated_block *> link_to_;
         std::array<fast_dispatch_entry, FAST_DISPATCH_ENTRY_COUNT> fast_dispatches_;
 
         block_cache cache_;
@@ -62,7 +62,7 @@ namespace eka2l1::arm::r12l1 {
         const void *dispatch_ent_for_block_;
         const void *fast_dispatch_ent_;
 
-		r12l1_core *parent_;
+        r12l1_core *parent_;
 
     protected:
         void assemble_control_funcs();
@@ -75,14 +75,14 @@ namespace eka2l1::arm::r12l1 {
         translated_block *compile_new_block(core_state *state, const vaddress addr);
         translated_block *get_block(const vaddress addr, const asid aid);
 
-        void emit_block_links(translated_block* block);
+        void emit_block_links(translated_block *block);
         void emit_return_to_dispatch(translated_block *block, const bool fast_hint);
-		void edit_block_links(translated_block *dest, bool unlink = false);
+        void edit_block_links(translated_block *dest, bool unlink = false);
 
         void emit_pc_flush(const address current_pc);
         void emit_pc_write_exchange(common::armgen::arm_reg pc_reg);
         void emit_pc_write(common::armgen::arm_reg pc_reg);
-		void emit_cycles_count_add(const std::uint32_t num);
+        void emit_cycles_count_add(const std::uint32_t num);
         void emit_cpsr_save();
         void emit_cpsr_load();
         void emit_cycles_count_save();
@@ -94,23 +94,23 @@ namespace eka2l1::arm::r12l1 {
 
         void raise_guest_exception(const exception_type exc, const std::uint32_t usrdata);
         void raise_system_call(const std::uint32_t num);
-		
-		std::uint8_t read_byte(const vaddress addr);
-		std::uint16_t read_word(const vaddress addr);
-		std::uint32_t read_dword(const vaddress addr);
-		std::uint64_t read_qword(const vaddress addr);
-		
-		void write_byte(const vaddress addr, std::uint8_t dat);
-		void write_word(const vaddress addr, std::uint16_t dat);
-		void write_dword(const vaddress addr, std::uint32_t dat);
-		void write_qword(const vaddress addr, std::uint64_t dat);
 
-		std::uint8_t read_and_mark_byte(const vaddress addr);
-		std::uint16_t read_and_mark_word(const vaddress addr);
-		std::uint32_t read_and_mark_dword(const vaddress addr);
-		std::uint64_t read_and_mark_qword(const vaddress addr);
+        std::uint8_t read_byte(const vaddress addr);
+        std::uint16_t read_word(const vaddress addr);
+        std::uint32_t read_dword(const vaddress addr);
+        std::uint64_t read_qword(const vaddress addr);
 
-		bool write_ex_byte(const vaddress addr, const std::uint8_t val);
+        void write_byte(const vaddress addr, std::uint8_t dat);
+        void write_word(const vaddress addr, std::uint16_t dat);
+        void write_dword(const vaddress addr, std::uint32_t dat);
+        void write_qword(const vaddress addr, std::uint64_t dat);
+
+        std::uint8_t read_and_mark_byte(const vaddress addr);
+        std::uint16_t read_and_mark_word(const vaddress addr);
+        std::uint32_t read_and_mark_dword(const vaddress addr);
+        std::uint64_t read_and_mark_qword(const vaddress addr);
+
+        bool write_ex_byte(const vaddress addr, const std::uint8_t val);
         bool write_ex_word(const vaddress addr, const std::uint16_t val);
         bool write_ex_dword(const vaddress addr, const std::uint32_t val);
         bool write_ex_qword(const vaddress addr, const std::uint64_t val);

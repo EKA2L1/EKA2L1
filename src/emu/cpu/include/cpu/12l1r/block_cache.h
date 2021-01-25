@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include <cpu/12l1r/common.h>
-#include <common/armemitter.h>
 #include <common/algorithm.h>
+#include <common/armemitter.h>
+#include <cpu/12l1r/common.h>
 
 #include <cstdint>
 #include <functional>
@@ -53,10 +53,10 @@ namespace eka2l1::arm::r12l1 {
 
         std::size_t translated_size_;
         std::uint32_t inst_count_;
-		
-		bool thumb_;
 
-		std::vector<block_link> links_;
+        bool thumb_;
+
+        std::vector<block_link> links_;
 
         vaddress start_address() const {
             return static_cast<vaddress>(hash_);
@@ -78,7 +78,7 @@ namespace eka2l1::arm::r12l1 {
         block_link &get_or_add_link(const vaddress addr, const int link_pri = -1);
     };
 
-    using on_block_invalidate_callback_type = std::function<void(translated_block*)>;
+    using on_block_invalidate_callback_type = std::function<void(translated_block *)>;
 
     class block_cache {
         using translated_block_inst = std::unique_ptr<translated_block>;
@@ -89,7 +89,7 @@ namespace eka2l1::arm::r12l1 {
 
     public:
         explicit block_cache();
-        
+
         bool add_block(const vaddress start_addr, const asid aid);
 
         // The block that is returned by this is consistent in memory

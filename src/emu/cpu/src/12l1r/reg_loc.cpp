@@ -25,7 +25,6 @@ namespace eka2l1::arm::r12l1 {
         , imm_(0)
         , spill_lock_(false)
         , last_use_(0) {
-
     }
 
     host_register_info::host_register_info()

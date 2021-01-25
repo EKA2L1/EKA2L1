@@ -39,6 +39,6 @@ namespace eka2l1 {
          */
         core_instance create_core(exclusive_monitor *monitor, arm_emulator_type arm_type);
 
-        exclusive_monitor_instance create_exclusive_monitor(arm_emulator_type arm_type, const std::size_t core_count); 
+        exclusive_monitor_instance create_exclusive_monitor(arm_emulator_type arm_type, const std::size_t core_count);
     }
 }

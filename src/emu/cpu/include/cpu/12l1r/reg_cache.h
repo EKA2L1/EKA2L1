@@ -36,7 +36,7 @@ namespace eka2l1::arm::r12l1 {
         ALLOCATE_FLAG_SCRATCH = 1 << 0,
         ALLOCATE_FLAG_DIRTY = 1 << 1
     };
-    
+
     class reg_cache {
     private:
         static constexpr std::uint32_t HOST_GPRS_LENGTH = 16;
@@ -56,7 +56,7 @@ namespace eka2l1::arm::r12l1 {
 
     protected:
         bool load_gpr_to_host(common::armgen::arm_reg dest_reg, common::armgen::arm_reg source_guest_reg);
-        
+
         void flush_gpr(const common::armgen::arm_reg mee);
         void flush_host_gpr(const common::armgen::arm_reg mee);
 
@@ -88,10 +88,10 @@ namespace eka2l1::arm::r12l1 {
 
         void flush(const common::armgen::arm_reg guest_mee);
         void flush_all();
-		
-		void done_scratching(reg_scratch_type type);
-		void done_scratching_this(common::armgen::arm_reg mee);
-		void force_scratch(common::armgen::arm_reg mee);
+
+        void done_scratching(reg_scratch_type type);
+        void done_scratching_this(common::armgen::arm_reg mee);
+        void force_scratch(common::armgen::arm_reg mee);
 
         void flush_host_reg(const common::armgen::arm_reg host_reg);
         void flush_host_regs_for_host_call();

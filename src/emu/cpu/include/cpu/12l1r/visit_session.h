@@ -36,16 +36,16 @@ namespace eka2l1::arm::r12l1 {
     void dashixiong_print_22debug(const std::uint32_t val);
 
     class visit_session {
-	protected:
+    protected:
         common::cc_flags flag_;
         common::armgen::fixup_branch end_target_;
 
-		bool cond_modified_;
-		bool cpsr_ever_updated_;
+        bool cond_modified_;
+        bool cpsr_ever_updated_;
 
-		bool cond_failed_;
+        bool cond_failed_;
 
-		std::uint32_t last_inst_count_;
+        std::uint32_t last_inst_count_;
 
     public:
         translated_block *crr_block_;
@@ -55,49 +55,49 @@ namespace eka2l1::arm::r12l1 {
 
         explicit visit_session(dashixiong_block *bro, translated_block *crr);
         bool condition_passed(common::cc_flags cc, const bool force_end_last = false);
-		
+
         common::armgen::arm_reg emit_address_lookup(common::armgen::arm_reg base, const bool for_read,
-        	std::uint8_t **lookup_route = nullptr);
+            std::uint8_t **lookup_route = nullptr);
 
         bool emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
             bool before, bool writeback, bool load);
 
         bool emit_memory_access(common::armgen::arm_reg target, common::armgen::arm_reg base,
-        	common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add,
-        	bool pre_index, bool writeback, bool read, common::armgen::arm_reg target_2 = common::armgen::INVALID_REG,
-        	const bool is_target_host_reg = false);
+            common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add,
+            bool pre_index, bool writeback, bool read, common::armgen::arm_reg target_2 = common::armgen::INVALID_REG,
+            const bool is_target_host_reg = false);
 
         bool emit_memory_read_exclusive(common::armgen::arm_reg dest, common::armgen::arm_reg base,
-        	const std::uint8_t bit_count, common::armgen::arm_reg dest_extra = common::armgen::INVALID_REG);
+            const std::uint8_t bit_count, common::armgen::arm_reg dest_extra = common::armgen::INVALID_REG);
 
         bool emit_memory_write_exclusive(common::armgen::arm_reg status, common::armgen::arm_reg source,
-        	common::armgen::arm_reg base, const std::uint8_t bitcount, common::armgen::arm_reg source_extra = common::armgen::INVALID_REG);
+            common::armgen::arm_reg base, const std::uint8_t bitcount, common::armgen::arm_reg source_extra = common::armgen::INVALID_REG);
 
         bool emit_undefined_instruction_handler();
         bool emit_unimplemented_behaviour_handler();
         bool emit_system_call_handler(const std::uint32_t n);
 
-		void emit_cpsr_update_nzcvq();
-		void emit_cpsr_restore_nzcvq();
-		void emit_cpsr_update_sel(const bool nzcvq = true);
-		void emit_cpsr_restore_sel(const bool nzcvq = true);
+        void emit_cpsr_update_nzcvq();
+        void emit_cpsr_restore_nzcvq();
+        void emit_cpsr_update_sel(const bool nzcvq = true);
+        void emit_cpsr_restore_sel(const bool nzcvq = true);
 
-		void emit_direct_link(const vaddress addr, const bool save_cpsr = false);
-		void emit_return_to_dispatch(const bool fast_hint = false, const bool save_cpsr = true);
-		void emit_pc_write_exchange(common::armgen::arm_reg reg);
-		void emit_pc_write(common::armgen::arm_reg reg);
-		void emit_alu_jump(common::armgen::arm_reg reg);
+        void emit_direct_link(const vaddress addr, const bool save_cpsr = false);
+        void emit_return_to_dispatch(const bool fast_hint = false, const bool save_cpsr = true);
+        void emit_pc_write_exchange(common::armgen::arm_reg reg);
+        void emit_pc_write(common::armgen::arm_reg reg);
+        void emit_alu_jump(common::armgen::arm_reg reg);
 
-		void sync_state();
-		void finalize();
+        void sync_state();
+        void finalize();
 
-		void cpsr_nzcvq_changed() {
-			cond_modified_ = true;
-			cpsr_ever_updated_ = true;
-		}
+        void cpsr_nzcvq_changed() {
+            cond_modified_ = true;
+            cpsr_ever_updated_ = true;
+        }
 
-		void cpsr_ge_changed() {
-			cpsr_ever_updated_ = true;
-		}
+        void cpsr_ge_changed() {
+            cpsr_ever_updated_ = true;
+        }
     };
 }
