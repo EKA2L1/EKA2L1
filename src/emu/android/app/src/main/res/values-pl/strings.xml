@@ -12,8 +12,8 @@
     <string name="remove">Usuń</string>
     <string name="mount_sd">Zamontuj kartę MMC/SD</string>
     <string name="no_devices_found">Nie znaleziono urządzeń</string>
-    <string name="exit">Exit</string>
-    <string name="save_log">Save log</string>
+    <string name="exit">Wyjście</string>
+    <string name="save_log">Zapisz log</string>
     <string name="install">Zainstaluj</string>
     <string name="path_to_rpkg">Ścieżka do RPKG</string>
     <string name="path_to_rom">Ścieżka do ROM</string>
@@ -27,9 +27,9 @@
     <string name="pref_theme_light">Jasny</string>
     <string name="pref_theme_dark">Ciemny</string>
     <string name="pref_enable_virtual_keyboard">Włącz wirtualną klawiaturę</string>
-    <string name="pref_enable_actionbar">Enable ActionBar</string>
+    <string name="pref_enable_actionbar">Włącz Pasek Akcji</string>
     <string name="pref_enable_statusbar">Wyłącz pasek statusu</string>
-    <string name="pref_wakelock">Utrzymuj włączony ekran</string>
+    <string name="pref_wakelock">Pozostaw ekran włączony</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Włącz filtrowanie najbliższego sąsiada</string>
     <string name="pref_system_language_option_name">Język</string>
     <string name="pref_system_real_time_accuracy_str">Dokładność w czasie rzeczywistym</string>
@@ -40,8 +40,8 @@
     <string name="pref_system_setting_inheritance_option_name">Dziedziczenie ustawień</string>
     <string name="emulated_screen_rotation_item_name">Rotacja</string>
     <string name="emulated_screen_refresh_rate_item_name">Częstotliwość odświeżania</string>
-    <string name="mapping_dialog_title">Press a key</string>
-    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
+    <string name="mapping_dialog_title">Naciśnij przycisk</string>
+    <string name="mapping_dialog_message" formatted="false">Bieżące mapowanie: %1$s</string>
     <string name="reset_mapping">Reset</string>
     <string name="layout_edit_finished">Tryb edycji został zakończony</string>
     <string name="layout_edit_finish">Zakończ tryb edycji</string>
@@ -51,6 +51,6 @@
     <string name="hide_buttons">Ukryj przyciski</string>
     <string name="confirmation_required">Wymagane potwierdzenie</string>
     <string name="force_close_confirmation">Wymuszenie zamknięcia aplikacji może spowodować utratę danych lub nawet całkowicie ją zepsuć!\nKontynuować?</string>
-    <string name="log_saved">Log has been saved</string>
+    <string name="log_saved">Log został zapisany</string>
     <string name="version">Wersja: </string>
 </resources>
