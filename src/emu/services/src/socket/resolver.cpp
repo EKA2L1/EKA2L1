@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/socket/resolver.h>
+#include <services/socket/host.h>
 #include <services/socket/server.h>
 
 #include <utils/err.h>

@@ -19,9 +19,25 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace eka2l1::epoc::socket {
+    /// Note! This is following Symbian OS es_sock ordinal
+    enum socket_type {
+        socket_type_undefined = 0,
+        socket_type_stream = 1,     ///< Data sent in order, no boundaries, re-connect when socket sudden end (no goodbye)
+        socket_type_datagram,       ///< Data sent may not be in order, message boundaries preserved, data may modified or lost
+        socket_type_packet,         ///< Stream except message/data has length/boundaries.
+        socket_type_raw             ///< Receive raw packet that is wrapped with protocol header, has not been extracted by any network layer.
+    };
+
+    enum {
+        SOCKET_MESSAGE_SIZE_IS_STREAM = 0,          ///< Stream socket, message can be of any size
+        SOCKET_MESSAGE_SIZE_UNDEFINED = 1,          ///< Undefined, depends on layers
+        SOCKET_MESSAGE_SIZE_NO_LIMIT = -1
+    };
+
     struct socket {
     public:
         /**

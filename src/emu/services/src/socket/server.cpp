@@ -20,7 +20,7 @@
 
 #include <common/cvt.h>
 #include <services/socket/connection.h>
-#include <services/socket/resolver.h>
+#include <services/socket/host.h>
 #include <services/socket/socket.h>
 #include <services/socket/server.h>
 #include <system/epoc.h>
@@ -109,6 +109,10 @@ namespace eka2l1 {
                 pr_find(ctx);
                 return;
 
+            case socket_so_create:
+                so_create(ctx);
+                return;
+
             case socket_hr_open:
                 hr_create(ctx, false);
                 return;
@@ -163,14 +167,15 @@ namespace eka2l1 {
         des.protocol_ = pr->id();
         des.ver_ = pr->ver();
         des.bord_ = pr->get_byte_order();
+        des.sock_type_ = pr->sock_type();
+        des.message_size_ = pr->message_size();
+
         des.name_.assign(nullptr, pr->name());
 
         // TODO: From this
-        des.sock_type_ = 0;
         des.service_info_ = 0;
         des.naming_services_ = 0;
         des.service_sec_ = 0;
-        des.message_size_ = 5192;
     }
 
     void socket_client_session::pr_find(service::ipc_context *ctx) {
@@ -239,6 +244,46 @@ namespace eka2l1 {
             this, resolver_impl, conn ? conn->get_connection() : nullptr);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(hr_inst));
+        subsessions_.get(id)->get()->set_id(id);
+
+        // Write the subsession handle
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
+        ctx->complete(epoc::error_none);
+    }
+
+    void socket_client_session::so_create(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> addr_family = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> sock_type = ctx->get_argument_value<std::uint32_t>(1);
+        std::optional<std::uint32_t> protocol = ctx->get_argument_value<std::uint32_t>(2);
+
+        if (!addr_family || !protocol || !sock_type) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // Find the protocol that satifies our condition first
+        epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(addr_family.value(), protocol.value());
+        if (!target_pr) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        if (sock_type.value() != target_pr->sock_type()) {
+            LOG_WARN(SERVICE_ESOCK, "Incompatible socket type {}, proceed to create socket anyway", sock_type.value());
+        }
+
+        std::unique_ptr<epoc::socket::socket> sock_impl = target_pr->make_socket();
+        if (!sock_impl) {
+            LOG_ERROR(SERVICE_ESOCK, "The protocol {} does not support opening socket!", common::ucs2_to_utf8(target_pr->name()));
+            ctx->complete(epoc::error_not_supported);
+
+            return;
+        }
+        
+        // Create new session
+        socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
+
+        const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
         subsessions_.get(id)->get()->set_id(id);
 
         // Write the subsession handle

@@ -83,7 +83,6 @@ add_library(epocservs
         include/services/sms/sendas/sendas.h
         include/services/socket/common.h
         include/services/socket/connection.h
-        include/services/socket/resolver.h
         include/services/socket/server.h
         include/services/socket/socket.h
         include/services/sysagt/sysagt.h

@@ -22,28 +22,38 @@
 #include <common/log.h>
 
 namespace eka2l1::epoc::bt {
+    std::size_t l2cap_socket::get_link_count(std::uint8_t *buffer, const std::size_t avail_size) {
+        LOG_TRACE(SERVICE_BLUETOOTH, "Link count stubbed with 0");
+        
+        if (avail_size < 4) {
+            return static_cast<std::size_t>(-1);
+        }
+
+        *reinterpret_cast<std::uint32_t*>(buffer) = 0;
+        return 4;
+    }
+    
     std::size_t l2cap_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
         if (option_family == SOL_BT_LINK_MANAGER) {
             if (pr_->is_oldarch()) {
                 switch (option_id) {
-                case l2cap_socket_link_count:
-                    LOG_TRACE(SERVICE_BLUETOOTH, "Link count stubbed with 0");
-                    
-                    if (avail_size < 4) {
-                        return static_cast<std::size_t>(-1);
-                    }
-
-                    *reinterpret_cast<std::uint32_t*>(buffer) = 0;
-                    return 4;
+                case l2cap_socket_oldarch_link_count:
+                    return get_link_count(buffer, avail_size);
 
                 default:
                     LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in link manager option family", option_id);
                     return 0;
                 }
             } else {
-                LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in link manager option family", option_id);
-                return 0;
+                switch (option_id) {
+                case l2cap_socket_link_count:
+                    return get_link_count(buffer, avail_size);
+
+                default:
+                    LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in link manager option family", option_id);
+                    return 0;
+                }
             }
         }
 
@@ -55,5 +65,10 @@ namespace eka2l1::epoc::bt {
         std::uint8_t *buffer, const std::size_t avail_size) {
         LOG_WARN(SERVICE_BLUETOOTH, "Set option is not supported yet with L2CAP socket");
         return false;
+    }
+
+    std::int32_t l2cap_protocol::message_size() const {
+        // TODO: Proper size
+        return epoc::socket::SOCKET_MESSAGE_SIZE_NO_LIMIT;
     }
 }

@@ -35,11 +35,51 @@
 
 namespace eka2l1 {
     namespace epoc::socket {
-        class socket_host_resolver;
+        struct connection;
+        
+        class socket_host_resolver: public socket_subsession {
+            std::unique_ptr<host_resolver> resolver_;
+            connection *conn_;
+
+        protected:
+            void get_host_name(service::ipc_context *ctx);
+            void set_host_name(service::ipc_context *ctx);
+            void close(service::ipc_context *ctx);
+
+        public:
+            explicit socket_host_resolver(socket_client_session *parent, std::unique_ptr<host_resolver> &resolver,
+                connection *conn = nullptr);
+
+            void dispatch(service::ipc_context *ctx) override;
+
+            socket_subsession_type type() const override {
+                return socket_subsession_type_host_resolver;
+            }
+        };
+
+        class socket_socket: public socket_subsession {
+            std::unique_ptr<socket> sock_;
+
+        protected:
+            void get_option(service::ipc_context *ctx);
+            void close(service::ipc_context *ctx);
+
+        public:
+            explicit socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock);
+
+            void dispatch(service::ipc_context *ctx) override;
+
+            socket_subsession_type type() const override {
+                return socket_subsession_type_socket;
+            }
+        };
     }
 
     enum socket_opcode {
         socket_pr_find = 0x02,
+        socket_so_create = 0x06,
+        socket_so_get_opt = 0x18,
+        socket_so_close = 0x1D,
         socket_hr_open = 0x28,
         socket_hr_open_with_connection = 0x3E,
         socket_sr_get_by_number = 0x3F,
@@ -89,6 +129,8 @@ namespace eka2l1 {
     struct socket_client_session : public service::typical_session {
     private:
         friend class epoc::socket::socket_host_resolver;
+        friend class epoc::socket::socket_socket;
+
         common::identity_container<socket_subsession_instance> subsessions_;
 
     public:
@@ -98,6 +140,7 @@ namespace eka2l1 {
         void fetch(service::ipc_context *ctx) override;
 
         void hr_create(service::ipc_context *ctx, const bool with_conn);
+        void so_create(service::ipc_context *ctx);
         void pr_find(service::ipc_context *ctx);
         void sr_get_by_number(eka2l1::service::ipc_context *ctx);
         void cn_get_long_des_setting(eka2l1::service::ipc_context *ctx);

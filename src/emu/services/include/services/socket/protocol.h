@@ -59,6 +59,14 @@ namespace eka2l1::epoc::socket {
         virtual epoc::version ver() const = 0;
         virtual byte_order get_byte_order() const = 0;
 
+        virtual socket_type sock_type() const {
+            return socket_type_undefined;
+        }
+
+        virtual std::int32_t message_size() const {
+            return SOCKET_MESSAGE_SIZE_UNDEFINED;
+        }
+
         virtual std::unique_ptr<host_resolver> make_host_resolver() = 0;
         virtual std::unique_ptr<socket> make_socket() = 0;
     };
