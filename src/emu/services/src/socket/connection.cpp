@@ -19,6 +19,9 @@
 
 #include <services/socket/connection.h>
 #include <services/socket/socket.h>
+#include <services/socket/server.h>
+
+#include <common/log.h>
 
 namespace eka2l1::epoc::socket {
     socket_connection_proxy::socket_connection_proxy(socket_client_session *parent, connection *conn)

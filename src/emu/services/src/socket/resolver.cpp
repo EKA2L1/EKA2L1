@@ -18,34 +18,20 @@
  */
 
 #include <services/socket/resolver.h>
-#include <services/socket/socket.h>
+#include <services/socket/server.h>
 
 #include <utils/err.h>
 
 namespace eka2l1::epoc::socket {
-    socket_host_resolver::socket_host_resolver(socket_client_session *parent, const std::uint32_t addr_fam,
-        const std::uint32_t protocol, connection *conn)
+    socket_host_resolver::socket_host_resolver(socket_client_session *parent, std::unique_ptr<host_resolver> &resolver,
+        connection *conn)
         : socket_subsession(parent)
-        , addr_fam_(addr_fam)
-        , protocol_(protocol)
+        , resolver_(std::move(resolver))
         , conn_(conn) {
-    }
-
-    epoc::socket::host &socket_host_resolver::lookup_host() {
-        socket_server *grand_parent = parent_->server<socket_server>();
-        return grand_parent->host_by_info(addr_fam_, protocol_);
-    }
-
-    std::u16string socket_host_resolver::host_name() {
-        return lookup_host().name_;
-    }
-
-    void socket_host_resolver::set_host_name(const std::u16string &new_name) {
-        lookup_host().name_ = new_name;
     }
     
     void socket_host_resolver::get_host_name(service::ipc_context *ctx) {
-        ctx->write_arg(0, host_name());
+        ctx->write_arg(0, resolver_->host_name());
         ctx->complete(epoc::error_none);
     }
 
@@ -57,7 +43,13 @@ namespace eka2l1::epoc::socket {
             return;
         }
 
-        set_host_name(new_name.value());
+        if (!resolver_->host_name(new_name.value())) {
+            LOG_ERROR(SERVICE_ESOCK, "Failed to set host name!");
+            ctx->complete(epoc::error_general);
+
+            return;
+        }
+
         ctx->complete(epoc::error_none);
     }
 

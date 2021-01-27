@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,29 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <services/bluetooth/btmidman.h>
 
-#include <services/socket/common.h>
-#include <cstdint>
-#include <string>
-
-namespace eka2l1::epoc::socket {
-    struct connection;
-
-    class socket_connection_proxy: public socket_subsession {
-    private:
-        connection *conn_;
-        
-    public:
-        explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
-        
-        connection *get_connection() const {
-            return conn_;
-        }
-
-        void dispatch(service::ipc_context *ctx) override;
-        socket_subsession_type type() const override {
-            return socket_subsession_type_connection;
-        }
-    };
+namespace eka2l1::epoc::bt {
+    midman::midman()
+        : local_name_(u"eka2l1")
+        , native_handle_(nullptr) {
+    }
 }

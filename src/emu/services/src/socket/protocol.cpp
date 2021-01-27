@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,29 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <services/socket/common.h>
-#include <cstdint>
-#include <string>
+#include <services/socket/protocol.h>
 
 namespace eka2l1::epoc::socket {
-    struct connection;
-
-    class socket_connection_proxy: public socket_subsession {
-    private:
-        connection *conn_;
-        
-    public:
-        explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
-        
-        connection *get_connection() const {
-            return conn_;
-        }
-
-        void dispatch(service::ipc_context *ctx) override;
-        socket_subsession_type type() const override {
-            return socket_subsession_type_connection;
-        }
-    };
+    protocol::protocol(const bool oldarch)
+        : flags_(0) {
+        if (oldarch)
+            flags_ |= FLAG_OLDARCH;
+    }
 }

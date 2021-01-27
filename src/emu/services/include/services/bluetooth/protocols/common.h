@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -19,27 +19,18 @@
 
 #pragma once
 
-#include <services/socket/common.h>
-#include <cstdint>
-#include <string>
+namespace eka2l1::epoc::bt {
+    enum {
+        BTADDR_PROTOCOL_FAMILY_ID = 0x0101,
+        BTLINK_MANAGER_PROTOCOL_ID = 0x0099,
+        L2CAP_PROTOCOL_ID = 0x0103,
+        SDP_PROTOCOL_ID = 0x0001,
+        RFCOMM_PROTOCOL_ID = 0x0003,
 
-namespace eka2l1::epoc::socket {
-    struct connection;
-
-    class socket_connection_proxy: public socket_subsession {
-    private:
-        connection *conn_;
-        
-    public:
-        explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
-        
-        connection *get_connection() const {
-            return conn_;
-        }
-
-        void dispatch(service::ipc_context *ctx) override;
-        socket_subsession_type type() const override {
-            return socket_subsession_type_connection;
-        }
+        SOL_BT_BLOG = 0x1000,
+        SOL_BT_HCI = 0x1010,
+        SOL_BT_LINK_MANAGER = 0x1011,
+        SOL_BT_L2CAP = 0x1012,
+        SOL_BT_RFCOMM = 0x1013
     };
 }

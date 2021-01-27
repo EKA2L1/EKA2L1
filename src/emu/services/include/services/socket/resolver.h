@@ -20,18 +20,16 @@
 #pragma once
 
 #include <services/socket/common.h>
+#include <services/socket/host.h>
+
 #include <cstdint>
 #include <string>
 
 namespace eka2l1::epoc::socket {
-    class socket_connection;
-    struct host;
     struct connection;
 
     class socket_host_resolver: public socket_subsession {
-        std::uint32_t addr_fam_;
-        std::uint32_t protocol_;
-
+        std::unique_ptr<host_resolver> resolver_;
         connection *conn_;
 
     protected:
@@ -39,19 +37,14 @@ namespace eka2l1::epoc::socket {
         void set_host_name(service::ipc_context *ctx);
         void close(service::ipc_context *ctx);
 
-        epoc::socket::host &lookup_host();
-
     public:
-        explicit socket_host_resolver(socket_client_session *parent, const std::uint32_t addr_fam,
-            const std::uint32_t protocol, connection *conn = nullptr);
+        explicit socket_host_resolver(socket_client_session *parent, std::unique_ptr<host_resolver> &resolver,
+            connection *conn = nullptr);
 
         void dispatch(service::ipc_context *ctx) override;
 
         socket_subsession_type type() const override {
             return socket_subsession_type_host_resolver;
         }
-
-        std::u16string host_name();
-        void set_host_name(const std::u16string &new_name);
     };
 }
