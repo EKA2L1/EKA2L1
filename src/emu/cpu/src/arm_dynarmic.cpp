@@ -244,6 +244,7 @@ namespace eka2l1::arm {
         config.coprocessors[15] = cp15;
         config.tlb_entries = tlb_obj.entries;
         config.global_monitor = monitor;
+        config.define_unpredictable_behaviour = true;
 
         return std::make_unique<Dynarmic::A32::Jit>(config);
     }
