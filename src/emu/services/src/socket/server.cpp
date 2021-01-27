@@ -19,6 +19,7 @@
  */
 
 #include <common/cvt.h>
+#include <services/socket/agent/genconn.h>
 #include <services/socket/connection.h>
 #include <services/socket/host.h>
 #include <services/socket/socket.h>
@@ -38,6 +39,7 @@ namespace eka2l1 {
 
     socket_server::socket_server(eka2l1::system *sys)
         : service::typical_server(sys, get_socket_server_name_by_epocver((sys->get_symbian_version_use()))) {
+        agents_.push_back(std::make_unique<epoc::socket::generic_connect_agent>(this));
     }
 
     void socket_server::connect(service::ipc_context &context) {
@@ -77,6 +79,29 @@ namespace eka2l1 {
         }
 
         protocols_.emplace(map_key, std::move(pr));
+        return true;
+    }
+
+    epoc::socket::connect_agent *socket_server::get_connect_agent(const std::u16string &name) {
+        auto agt_ite = std::find_if(agents_.begin(), agents_.end(), [name](std::unique_ptr<epoc::socket::connect_agent> &agt) {
+            return agt->agent_name() == name;
+        });
+
+        if (agt_ite != agents_.end()) {
+            return agt_ite->get();
+        }
+
+        return nullptr;
+    }
+
+    bool socket_server::add_agent(std::unique_ptr<epoc::socket::connect_agent> &ag) {
+        for (const auto &agt: agents_) {
+            if (agt->agent_name() == ag->agent_name()) {
+                return false;
+            }
+        }
+
+        agents_.push_back(std::move(ag));
         return true;
     }
 

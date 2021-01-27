@@ -21,6 +21,7 @@
 #pragma once
 
 #include <services/socket/common.h>
+#include <services/socket/connection.h>
 #include <services/socket/protocol.h>
 #include <services/socket/host.h>
 
@@ -35,7 +36,22 @@
 
 namespace eka2l1 {
     namespace epoc::socket {
-        struct connection;
+        class socket_connection_proxy: public socket_subsession {
+        private:
+            connection *conn_;
+            
+        public:
+            explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
+            
+            connection *get_connection() const {
+                return conn_;
+            }
+
+            void dispatch(service::ipc_context *ctx) override;
+            socket_subsession_type type() const override {
+                return socket_subsession_type_connection;
+            }
+        };
         
         class socket_host_resolver: public socket_subsession {
             std::unique_ptr<host_resolver> resolver_;
@@ -113,6 +129,7 @@ namespace eka2l1 {
     
     class socket_server : public service::typical_server {
         std::map<std::uint64_t, std::unique_ptr<epoc::socket::protocol>> protocols_;
+        std::vector<std::unique_ptr<epoc::socket::connect_agent>> agents_;
 
     public:
         explicit socket_server(eka2l1::system *sys);
@@ -120,8 +137,10 @@ namespace eka2l1 {
 
         epoc::socket::protocol *find_protocol(const std::uint32_t addr_family, const std::uint32_t protocol_id);
         epoc::socket::protocol *find_protocol_by_name(const std::u16string &name);
+        epoc::socket::connect_agent *get_connect_agent(const std::u16string &name);
 
         bool add_protocol(std::unique_ptr<epoc::socket::protocol> &pr);
+        bool add_agent(std::unique_ptr<epoc::socket::connect_agent> &ag);
     };
 
     using socket_subsession_instance = std::unique_ptr<epoc::socket::socket_subsession>;

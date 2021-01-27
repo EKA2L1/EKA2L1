@@ -35,7 +35,7 @@ namespace eka2l1::epoc::bt {
         return true;
     }
     
-    bool btlink_host_resolver::get_by_address(epoc::socket::address &addr, epoc::socket::name_entry &result) {
+    bool btlink_host_resolver::get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) {
         LOG_WARN(SERVICE_BLUETOOTH, "Get host by address stubbed to not found");
         return false;
     }

@@ -19,22 +19,41 @@
 
 #pragma once
 
+#include <services/socket/connection.h>
+
 #include <services/framework.h>
 #include <kernel/server.h>
 
 namespace eka2l1 {
     enum nifman_opcode {
         nifman_open = 0x1,
-        nifman_get_active_int_setting = 0x2
+        nifman_get_active_int_setting = 0x6D
     };
+
+    class socket_server;
     
     class nifman_server : public service::typical_server {
+    protected:
+        socket_server *sock_serv_;
+
     public:
         explicit nifman_server(eka2l1::system *sys);
         void connect(service::ipc_context &context) override;
+
+        socket_server *get_socket_server() {
+            return sock_serv_;
+        }
     };
 
     struct nifman_client_session : public service::typical_session {
+    private:
+        epoc::socket::connect_agent *agent_;
+        std::unique_ptr<epoc::socket::connection> conn_;
+
+        void open(service::ipc_context *ctx);
+        void get_active_settings(service::ipc_context *ctx, const epoc::socket::setting_type type);
+
+    public:
         explicit nifman_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;
     };

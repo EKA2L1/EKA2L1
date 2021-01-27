@@ -82,6 +82,7 @@ add_library(epocservs
         include/services/shutdown/shutdown.h
         include/services/sms/sa/sa.h
         include/services/sms/sendas/sendas.h
+        include/services/socket/agent/genconn.h
         include/services/socket/common.h
         include/services/socket/connection.h
         include/services/socket/server.h
@@ -193,6 +194,7 @@ add_library(epocservs
         src/shutdown/shutdown.cpp
         src/sms/sa/sa.cpp
         src/sms/sendas/sendas.cpp
+        src/socket/agent/genconn.cpp
         src/socket/connection.cpp
         src/socket/protocol.cpp
         src/socket/resolver.cpp

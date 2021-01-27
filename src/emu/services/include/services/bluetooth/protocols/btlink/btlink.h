@@ -38,7 +38,7 @@ namespace eka2l1::epoc::bt {
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;
         
-        bool get_by_address(epoc::socket::address &addr, epoc::socket::name_entry &result) override;
+        bool get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) override;
         bool get_by_name(epoc::socket::name_entry &supply_and_result) override;
     };
 

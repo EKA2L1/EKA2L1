@@ -24,6 +24,20 @@
 #include <common/log.h>
 
 namespace eka2l1::epoc::socket {
+    connection::connection(protocol *pr, saddress dest)
+        : pr_(pr)
+        , sock_(nullptr)
+        , dest_(dest) {
+    }
+
+    std::size_t connection::register_progress_advance_callback(progress_advance_callback cb) {
+        return progress_callbacks_.add(cb);
+    }
+
+    bool connection::remove_progress_advance_callback(const std::size_t handle) {
+        return progress_callbacks_.remove(handle);
+    }
+
     socket_connection_proxy::socket_connection_proxy(socket_client_session *parent, connection *conn)
         : socket_subsession(parent)
         , conn_(conn) {

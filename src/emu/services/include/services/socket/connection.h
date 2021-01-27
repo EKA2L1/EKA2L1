@@ -20,26 +20,92 @@
 #pragma once
 
 #include <services/socket/common.h>
+#include <common/container.h>
+
 #include <cstdint>
+#include <functional>
 #include <string>
 
+namespace eka2l1 {
+    class socket_server;
+}
+
 namespace eka2l1::epoc::socket {
-    struct connection;
+    struct protocol;
+    struct socket;
 
-    class socket_connection_proxy: public socket_subsession {
-    private:
-        connection *conn_;
-        
+    struct conn_preferences {
+        std::uint32_t reserved_;
+    };
+
+    struct conn_progress {
+        std::int32_t stage_;
+        std::int32_t error_;
+    };
+
+    using progress_advance_callback = std::function<void(conn_progress*)>;
+
+    enum setting_type {
+        setting_type_bool,
+        setting_type_int,
+        setting_type_des
+    };
+
+    struct connection {
+    protected:
+        common::identity_container<progress_advance_callback> progress_callbacks_;
+
+        protocol *pr_;          ///< Connection protocol.
+        socket *sock_;          ///< Connect requester.
+        saddress dest_;          ///< The target address to connect to.
+
     public:
-        explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
-        
-        connection *get_connection() const {
-            return conn_;
+        explicit connection(protocol *pr, saddress dest);
+
+        std::size_t register_progress_advance_callback(progress_advance_callback cb);
+        bool remove_progress_advance_callback(const std::size_t handle);
+
+        void set_source_socket(socket *sock) {
+            sock_ = sock;
         }
 
-        void dispatch(service::ipc_context *ctx) override;
-        socket_subsession_type type() const override {
-            return socket_subsession_type_connection;
+        /**
+         * @brief Get connection setting.
+         * 
+         * @param setting_name      Lookup string in form of CommsDB <table_name>\<column_name>. Invalid form will fail.
+         * @param type              The type of setting to get.
+         * @param dest_buffer       Destination buffer holding setting data.
+         * @param avail_size        Maximum data destination buffer can hold.
+         * 
+         * @returns (size_t)(-1) on failure, else the written size to the buffer.
+         */
+        virtual std::size_t get_setting(const std::u16string &setting_name, const setting_type type, std::uint8_t *dest_buffer,
+            std::size_t avail_size) = 0;
+    };
+
+    /**
+     * @brief Plug-in that helps choosing a connection. This includes a target protocol and target address.
+     * 
+     * For example, in Symbian, there may be dialog which let you choose to either access GPRS or WLAN, and
+     * choose the internet access point you desired. This is all done by connect agent.
+     */
+    struct connect_agent {
+    protected:
+        socket_server *sock_serv_;
+
+    public:
+        explicit connect_agent(socket_server *serv)
+            : sock_serv_(serv) {
         }
+
+        virtual std::u16string agent_name() const = 0;
+
+        /**
+         * @brief       Initiatiate new connection, which protocols are choosen through agent-based methods.
+         * 
+         * @param       prefs       Options for the agent to consider when establishing new connection.
+         * @returns     New connection instance on success. Instantiate from protocol factory method.
+         */
+        virtual std::unique_ptr<connection> start_connection(conn_preferences &prefs) = 0;
     };
 }
