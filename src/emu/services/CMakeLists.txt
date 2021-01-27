@@ -30,7 +30,8 @@ add_library(epocservs
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
         include/services/comm/comm.h
-        include/services/connmonitor/connmonitor.h
+        include/services/internet/connmonitor.h
+        include/services/internet/nifman.h
         include/services/drm/notifier/events.h
         include/services/drm/notifier/notifier.h
         include/services/drm/helper.h
@@ -139,7 +140,8 @@ add_library(epocservs
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
         src/comm/comm.cpp
-        src/connmonitor/connmonitor.cpp
+        src/internet/connmonitor.cpp
+        src/internet/nifman.cpp
         src/drm/notifier/events.cpp
         src/drm/notifier/exchange.cpp
         src/drm/notifier/notifier.cpp

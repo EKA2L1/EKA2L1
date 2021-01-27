@@ -19,7 +19,7 @@
  */
 
 #include <system/epoc.h>
-#include <services/connmonitor/connmonitor.h>
+#include <services/internet/connmonitor.h>
 
 #include <utils/err.h>
 

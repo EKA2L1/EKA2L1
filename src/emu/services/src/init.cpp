@@ -31,7 +31,8 @@
 #include <services/cdl/cdl.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/comm/comm.h>
-#include <services/connmonitor/connmonitor.h>
+#include <services/internet/connmonitor.h>
+#include <services/internet/nifman.h>
 #include <services/drm/notifier/notifier.h>
 #include <services/drm/helper.h>
 #include <services/drm/rights.h>
@@ -201,6 +202,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, msv_server);
             CREATE_SERVER(sys, sensor_server);
             CREATE_SERVER(sys, connmonitor_server);
+            CREATE_SERVER(sys, nifman_server);
             CREATE_SERVER(sys, drm_notifier_server);
             CREATE_SERVER(sys, sendas_server);
 
