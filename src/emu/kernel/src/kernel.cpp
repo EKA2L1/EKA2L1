@@ -198,10 +198,6 @@ namespace eka2l1 {
             return val ? *val : 0;
         };
 
-        if (!analyser_) {
-            analyser_ = arm::make_analyser(arm::arm_disassembler_backend::capstone, read_crr_func);
-        }
-
         std::uint32_t inst_value = read_crr_func(occurred & ~1);
         if (occurred & 1) {
             // Take only the thumb part
@@ -211,8 +207,16 @@ namespace eka2l1 {
         // Find entry in cache
         auto result_find = cache_inters_.find(inst_value);
         if (result_find != cache_inters_.end()) {
-            result_find->second(core);
+            if (result_find->second(core)) {
+                // Increase PC
+                core->set_pc(occurred + ((occurred & 1) ? 2 : 4));
+            }
+
             return true;
+        }
+
+        if (!analyser_) {
+            analyser_ = arm::make_analyser(arm::arm_disassembler_backend::capstone, read_crr_func);
         }
 
         auto inst = analyser_->next_instruction(occurred);
@@ -229,7 +233,7 @@ namespace eka2l1 {
             const std::uint32_t source_reg = static_cast<int>(inst->ops[1].reg) - static_cast<int>(arm::reg::R0);
             const std::uint32_t dest_reg = static_cast<int>(inst->ops[0].reg) - static_cast<int>(arm::reg::R0);
         
-            auto func_generated = [=](arm::core *core) {
+            auto func_generated = [=](arm::core *core) -> bool {
                 auto source_val = core->get_reg(source_reg);
 
                 if (dest_reg == 15) {
@@ -238,6 +242,7 @@ namespace eka2l1 {
                 }
 
                 core->set_reg(dest_reg, source_val);
+                return (dest_reg == 15) ? false : true;
             };
 
             func_generated(core);
@@ -245,6 +250,55 @@ namespace eka2l1 {
             cache_inters_.emplace(inst_value, func_generated);
             break;
         }
+
+        // Glimmerati: POP { R4 - LR }
+        case arm::instruction::POP: {
+            std::uint16_t reg_list = 0;
+            
+            for (std::size_t i = 0; i < inst->ops.size(); i++) {
+                reg_list |= 1 << (static_cast<std::uint32_t>(inst->ops[i].reg) - static_cast<std::uint32_t>(
+                    arm::reg::R0));
+            }
+
+            auto func_generated = [reg_list](arm::core *core) -> bool {
+                // Skip, don't read SP for this instruction
+                address base_read = core->get_reg(13);
+                bool sp_got_written = false;
+
+                int count = 0;
+                int index = 0;
+
+                while (index <= 15) {
+                    if (reg_list & (1 << index)) {
+                        std::uint32_t val = 0;
+
+                        if (!core->read_32bit(base_read + count * 4, &val)) {
+                            LOG_WARN(KERNEL, "Failed to read DWORD for POP at address 0x{:X}", base_read + count * 4);
+                        } else {
+                            if (index == 13) {
+                                sp_got_written = true;
+                            }
+
+                            core->set_reg(index, val);
+                        }
+
+                        count++;
+                    }
+
+                    index++;
+                }
+
+                core->set_reg(13, base_read + count * 4);
+                return true;
+            };
+
+            func_generated(core);
+            
+            // Increase PC
+            core->set_pc(occurred + ((occurred & 1) ? 2 : 4));
+            cache_inters_.emplace(inst_value, func_generated);
+            break;
+        } 
 
         default:
             return false;
