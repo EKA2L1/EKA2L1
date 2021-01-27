@@ -339,16 +339,22 @@ namespace eka2l1::arm::r12l1 {
                     common::armgen::R0 + last_reg);
 
                 common::armgen::arm_reg mapped = common::armgen::INVALID_REG;
+                bool skip_me = false;
 
                 if (last_reg != 15) {
-                    if ((base_backup != common::armgen::INVALID_REG) && (base_guest_reg_idx == last_reg)) {
+                    if ((base_guest_reg_idx == last_reg) && (base_backup != common::armgen::INVALID_REG)) {
                         mapped = base_backup;
+                    } else if ((base_guest_reg_idx == last_reg) && (load && writeback)) {
+                        LOG_WARN(CPU_12L1R, "Trying to execute unpredictable behaviour loading "
+                            "to base register with writeback enabled, reg=r{}", last_reg);
+
+                        skip_me = true;
                     } else {
                         mapped = reg_supplier_.map(orig, (load ? ALLOCATE_FLAG_DIRTY : 0));
                     }
                 }
 
-                if ((last_reg != 15) && (mapped == common::armgen::INVALID_REG)) {
+                if ((last_reg != 15) && (mapped == common::armgen::INVALID_REG) && !skip_me) {
                     LOG_ERROR(CPU_12L1R, "Can't map another register for some reason...");
                     assert(false);
                 } else {
@@ -357,90 +363,94 @@ namespace eka2l1::arm::r12l1 {
                             emit_addr_modification(false);
                         }
 
-                        big_block_->CMP(base, 0);
-                        auto base_need_lookup = big_block_->B_CC(common::CC_EQ);
+                        // This register may be skipping load/store. No need to referesh the base
+                        if (!skip_me) {
+                            big_block_->CMP(base, 0);
+                            auto base_need_lookup = big_block_->B_CC(common::CC_EQ);
 
-                        // Check if the guest address now crosses a new page
-                        big_block_->ANDI2R(ALWAYS_SCRATCH1, guest_addr_reg, CPAGE_MASK, ALWAYS_SCRATCH2);
-                        big_block_->CMP(ALWAYS_SCRATCH1, 0);
+                            // Check if the guest address now crosses a new page
+                            big_block_->ANDI2R(ALWAYS_SCRATCH1, guest_addr_reg, CPAGE_MASK, ALWAYS_SCRATCH2);
+                            big_block_->CMP(ALWAYS_SCRATCH1, 0);
 
-                        auto done_refresh = big_block_->B_CC(common::CC_NEQ);
-                        big_block_->set_jump_target(base_need_lookup);
+                            auto done_refresh = big_block_->B_CC(common::CC_NEQ);
+                            big_block_->set_jump_target(base_need_lookup);
 
-                        // Try to lookup the address again.
-                        // Remember the PC. Note in ARM mode the PC is forward by 8 bytes.
-                        // By doing this we just gonna jump to after the branch
-                        big_block_->MOV(backback, common::armgen::R15);
-                        big_block_->B(lookup_route);
+                            // Try to lookup the address again.
+                            // Remember the PC. Note in ARM mode the PC is forward by 8 bytes.
+                            // By doing this we just gonna jump to after the branch
+                            big_block_->MOV(backback, common::armgen::R15);
+                            big_block_->B(lookup_route);
 
-                        big_block_->set_jump_target(done_refresh);
+                            big_block_->set_jump_target(done_refresh);
+                        }
                     } else {
                         is_first = false;
                     }
 
-                    big_block_->CMP(base, 0);
-                    auto lookup_good = big_block_->B_CC(common::CC_NEQ);
+                    if (!skip_me) {
+                        big_block_->CMP(base, 0);
+                        auto lookup_good = big_block_->B_CC(common::CC_NEQ);
 
-                    big_block_->MOV(common::armgen::R0, guest_addr_reg);
-                    big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+                        big_block_->MOV(common::armgen::R0, guest_addr_reg);
+                        big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
-                    if (!load && (mapped == common::armgen::R1)) {
-                        big_block_->MOV(ALWAYS_SCRATCH2, mapped);
-                    }
-
-                    big_block_->MOV(common::armgen::R1, common::armgen::R0);
-                    big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
-
-                    if (load) {
-                        big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
-                        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
-
-                        if (last_reg == 15) {
-                            // Store to lastest PC
-                            big_block_->emit_pc_write_exchange(common::armgen::R0);
-                            block_cont = false;
-                        } else {
-                            big_block_->MOV(mapped, common::armgen::R0);
+                        if (!load && (mapped == common::armgen::R1)) {
+                            big_block_->MOV(ALWAYS_SCRATCH2, mapped);
                         }
-                    } else {
-                        if (last_reg == 15) {
-                            big_block_->MOVI2R(common::armgen::R2, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
-                        } else {
-                            if (mapped == common::armgen::R1) {
-                                big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
+
+                        big_block_->MOV(common::armgen::R1, common::armgen::R0);
+                        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
+
+                        if (load) {
+                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
+                            big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+                            if (last_reg == 15) {
+                                // Store to lastest PC
+                                big_block_->emit_pc_write_exchange(common::armgen::R0);
+                                block_cont = false;
                             } else {
-                                big_block_->MOV(common::armgen::R2, mapped);
+                                big_block_->MOV(mapped, common::armgen::R0);
+                            }
+                        } else {
+                            if (last_reg == 15) {
+                                big_block_->MOVI2R(common::armgen::R2, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
+                            } else {
+                                if (mapped == common::armgen::R1) {
+                                    big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
+                                } else {
+                                    big_block_->MOV(common::armgen::R2, mapped);
+                                }
+                            }
+
+                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
+                            big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+                        }
+
+                        auto add_up_value_br = big_block_->B();
+                        big_block_->set_jump_target(lookup_good);
+
+                        if (load) {
+                            if (last_reg == 15) {
+                                big_block_->LDR(ALWAYS_SCRATCH1, base, 0);
+                                big_block_->emit_pc_write_exchange(ALWAYS_SCRATCH1);
+
+                                block_cont = false;
+                            } else {
+                                big_block_->LDR(mapped, base, 0);
+                            }
+                        } else {
+                            if (last_reg == 15) {
+                                big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
+
+                                big_block_->STR(ALWAYS_SCRATCH1, base, 0);
+                            } else {
+                                big_block_->STR(mapped, base, 0);
                             }
                         }
 
-                        big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
-                        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+                        big_block_->set_jump_target(add_up_value_br);
                     }
-
-                    auto add_up_value_br = big_block_->B();
-                    big_block_->set_jump_target(lookup_good);
-
-                    if (load) {
-                        if (last_reg == 15) {
-                            big_block_->LDR(ALWAYS_SCRATCH1, base, 0);
-                            big_block_->emit_pc_write_exchange(ALWAYS_SCRATCH1);
-
-                            block_cont = false;
-                        } else {
-                            big_block_->LDR(mapped, base, 0);
-                        }
-                    } else {
-                        if (last_reg == 15) {
-                            big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
-
-                            big_block_->STR(ALWAYS_SCRATCH1, base, 0);
-                        } else {
-                            big_block_->STR(mapped, base, 0);
-                        }
-                    }
-
-                    big_block_->set_jump_target(add_up_value_br);
-                    big_block_->CMP(base, 0);
 
                     if (!before) {
                         emit_addr_modification(false);
