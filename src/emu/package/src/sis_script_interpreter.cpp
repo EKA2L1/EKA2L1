@@ -22,6 +22,7 @@
 #include <common/buffer.h>
 #include <common/cvt.h>
 #include <common/flate.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/types.h>
@@ -126,6 +127,13 @@ namespace eka2l1 {
         void ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
             std::string rp = eka2l1::file_directory(path);
             eka2l1::create_directories(rp);
+
+            // Delete the file, starts over
+            if (common::is_system_case_insensitive() && eka2l1::exists(path)) {
+                if (!common::remove(path)) {
+                    LOG_WARN(PACKAGE, "Unable to remove {} to extract new file", path);
+                }
+            }
 
             FILE *file = fopen(path.c_str(), "wb");
 
