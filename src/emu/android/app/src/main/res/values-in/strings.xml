@@ -5,13 +5,13 @@
     <string name="search">Cari</string>
     <string name="about">Tentang</string>
     <string name="settings">Pengaturan</string>
-    <string name="packages">Paket</string>
+    <string name="packages">Paket aplikasi</string>
     <string name="devices">Firmware perangkat</string>
     <string name="processing">Memproses...</string>
     <string name="completed">Selesai!</string>
     <string name="remove">Hapus</string>
     <string name="mount_sd">Pasang MMC/SD Card</string>
-    <string name="no_devices_found">Tidak ada perangkat device yang ditemukan</string>
+    <string name="no_devices_found">Tidak ada firmware perangkat yang ditemukan</string>
     <string name="exit">Keluar</string>
     <string name="save_log">Simpan log</string>
     <string name="install">Instal</string>
@@ -40,17 +40,17 @@
     <string name="pref_system_setting_inheritance_option_name">Mengatur waris</string>
     <string name="emulated_screen_rotation_item_name">Rotasi</string>
     <string name="emulated_screen_refresh_rate_item_name">Refresh rate</string>
-    <string name="mapping_dialog_title">Tekan sebuah tombol</string>
+    <string name="mapping_dialog_title">Tekan tombol</string>
     <string name="mapping_dialog_message" formatted="false">Pemetaan saat ini: %1$s</string>
-    <string name="reset_mapping">Reset</string>
-    <string name="layout_edit_finished">Mode edit selesai</string>
-    <string name="layout_edit_finish">Selesaikan mode edit</string>
-    <string name="layout_edit_mode">Mode edit tata letak tombol</string>
-    <string name="layout_scale_mode">Mode ubah ukuran tata letak tombol</string>
-    <string name="layout_switch">Ganti tata letak tombol</string>
-    <string name="hide_buttons">Sembunyikan tombol</string>
-    <string name="confirmation_required">Konfirmasi diperlukan</string>
-    <string name="force_close_confirmation">Menutup paksa aplikasi dapat mengakibatkan hilangnya data atau bahkan korup sama sekali!\nLanjutkan?</string>
+    <string name="reset_mapping">Atur ulang</string>
+    <string name="layout_edit_finished">Mode ubah telah selesai</string>
+    <string name="layout_edit_finish">Akhiri mode pengubahan</string>
+    <string name="layout_edit_mode">Ubah letak tombol</string>
+    <string name="layout_scale_mode">Ubah ukuran tombol</string>
+    <string name="layout_switch">Tukar letak tombol</string>
+    <string name="hide_buttons">Tombol yang tersembunyi</string>
+    <string name="confirmation_required">Memerlukan konfirmasi</string>
+    <string name="force_close_confirmation">Menutup paksa aplikasi akan mengakibatkan hilangnya data atau bahkan menghancurkan sepenuhnya! \nLanjutkan?</string>
     <string name="log_saved">Log telah disimpan</string>
     <string name="version">Versi: </string>
 </resources>
