@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <memory>
 
 namespace eka2l1 {
     class socket_server;
