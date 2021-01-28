@@ -460,18 +460,28 @@ namespace eka2l1 {
                     case ss_op::EOpInstall:
                     case ss_op::EOpNull: {
                         if (!skip_next_file) {
-                            raw_path = common::lowercase_string(raw_path);
-                            extract_file(raw_path, file->idx, crr_blck_idx);
+                            bool lowered = false;
 
-                            if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
-                                LOG_INFO(PACKAGE, "Detected an SmartInstaller SIS, path at: {}", raw_path);
-                                mngr->install_package(common::utf8_to_ucs2(raw_path), drive_c, progress);
+                            if (common::is_platform_case_sensitive()) {
+                                raw_path = common::lowercase_string(raw_path);
+                                lowered = true;
                             }
+
+                            extract_file(raw_path, file->idx, crr_blck_idx);
 
                             LOG_INFO(PACKAGE, "EOpInstall: {}", raw_path);
 
                             // Add to bucket
                             mngr->add_to_file_bucket(current_controllers.top()->info.uid.uid, install_path);
+
+                            if (!lowered) {
+                                raw_path = common::lowercase_string(raw_path);
+                            }
+
+                            if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
+                                LOG_INFO(PACKAGE, "Detected an SmartInstaller SIS, path at: {}", raw_path);
+                                mngr->install_package(common::utf8_to_ucs2(raw_path), drive_c, progress);
+                            }
                         } else {
                             skip_next_file = false;
                         }
