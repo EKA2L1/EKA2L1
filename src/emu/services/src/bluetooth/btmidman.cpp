@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -17,29 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include <services/bluetooth/btmidman.h>
 
-#include <services/framework.h>
-#include <kernel/server.h>
-
-namespace eka2l1 {
-    std::string get_btman_server_name_by_epocver(const epocver ver);
-
-    class btman_server : public service::typical_server {
-    private:
-        epoc::bt::midman mid_;
-
-    public:
-        explicit btman_server(eka2l1::system *sys);
-        void connect(service::ipc_context &context) override;
-
-        bool is_oldarch();
-    };
-
-    struct btman_client_session : public service::typical_session {
-        explicit btman_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
-        void fetch(service::ipc_context *ctx) override;
-    };
+namespace eka2l1::epoc::bt {
+    midman::midman()
+        : local_name_(u"eka2l1")
+        , native_handle_(nullptr) {
+    }
 }

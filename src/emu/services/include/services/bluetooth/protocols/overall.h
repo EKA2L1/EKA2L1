@@ -19,34 +19,12 @@
 
 #pragma once
 
-#include <services/socket/common.h>
-#include <utils/des.h>
+#include <services/bluetooth/btmidman.h>
 
-#include <cstdint>
-#include <string>
-#include <vector>
+namespace eka2l1 {
+    class socket_server;
+}
 
-namespace eka2l1::epoc::socket {
-    struct protocol;
-
-    struct name_entry {
-        enum {
-            FLAG_ALIAS_NAME = 1 << 0,
-            FLAG_PARTIAL_NAME = 1 << 1
-        };
-
-        std::u16string name_;
-        saddress addr_;
-
-        std::uint32_t flags_;
-    };
-
-    class host_resolver {
-    public:
-        virtual std::u16string host_name() const = 0;
-        virtual bool host_name(const std::u16string &new_name) = 0;
-
-        virtual bool get_by_address(saddress &addr, name_entry &result) = 0;
-        virtual bool get_by_name(name_entry &supply_and_result) = 0;
-    };
+namespace eka2l1::epoc::bt {
+    void add_bluetooth_stack_protocols(socket_server *sock, epoc::bt::midman *mm, const bool oldarch);
 }

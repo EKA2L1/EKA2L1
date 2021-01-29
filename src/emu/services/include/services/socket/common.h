@@ -30,9 +30,14 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc::socket {
+    struct saddress {
+        std::uint8_t dat_[32];
+    };
+
     enum socket_subsession_type {
         socket_subsession_type_host_resolver,
-        socket_subsession_type_connection
+        socket_subsession_type_connection,
+        socket_subsession_type_socket
     };
 
     class socket_subsession {

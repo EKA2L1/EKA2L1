@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -19,34 +19,19 @@
 
 #pragma once
 
-#include <services/socket/common.h>
-#include <utils/des.h>
-
-#include <cstdint>
-#include <string>
-#include <vector>
+#include <services/socket/connection.h>
 
 namespace eka2l1::epoc::socket {
-    struct protocol;
-
-    struct name_entry {
-        enum {
-            FLAG_ALIAS_NAME = 1 << 0,
-            FLAG_PARTIAL_NAME = 1 << 1
-        };
-
-        std::u16string name_;
-        saddress addr_;
-
-        std::uint32_t flags_;
-    };
-
-    class host_resolver {
+    class generic_connect_agent: public connect_agent {
     public:
-        virtual std::u16string host_name() const = 0;
-        virtual bool host_name(const std::u16string &new_name) = 0;
+        explicit generic_connect_agent(socket_server *ss)
+            : connect_agent(ss) {
+        }
 
-        virtual bool get_by_address(saddress &addr, name_entry &result) = 0;
-        virtual bool get_by_name(name_entry &supply_and_result) = 0;
+        std::u16string agent_name() const override {
+            return u"GenConn";
+        }
+
+        std::unique_ptr<connection> start_connection(conn_preferences &prefs) override;
     };
 }

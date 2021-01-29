@@ -83,6 +83,9 @@ namespace eka2l1::epoc {
 
         void flush_queue_to_driver();
 
+        void submit_queue_commands(kernel::thread *rq);
+        void on_command_batch_done(service::ipc_context &ctx) override;
+
         enum class set_color_type {
             brush,
             pen

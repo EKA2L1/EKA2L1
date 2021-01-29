@@ -305,7 +305,7 @@ namespace eka2l1 {
 
         std::unique_ptr<arm::arm_analyser> analyser_;
 
-        using cache_interpreter_func = std::function<void(arm::core *)>;
+        using cache_interpreter_func = std::function<bool(arm::core *)>;
         std::map<std::uint32_t, cache_interpreter_func> cache_inters_;
 
         kernel::chunk* dll_global_data_chunk_;

@@ -143,6 +143,7 @@ namespace eka2l1::epoc {
             } else {
                 if (auto obj = get_object(cmd.obj_handle)) {
                     obj->execute_command(ctx, cmd);
+                    obj->on_command_batch_done(ctx);
                 }
             }
         }

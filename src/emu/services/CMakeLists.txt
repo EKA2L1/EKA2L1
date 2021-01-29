@@ -17,7 +17,11 @@ add_library(epocservs
         include/services/audio/mmf/audio.h
         include/services/audio/mmf/dev.h
         include/services/backup/backup.h
+        include/services/bluetooth/protocols/btlink/btlink.h
+        include/services/bluetooth/protocols/common.h
+        include/services/bluetooth/protocols/overall.h
         include/services/bluetooth/btman.h
+        include/services/bluetooth/btmidman.h
         include/services/cdl/cdl.h
         include/services/cdl/common.h
         include/services/cdl/ops.h
@@ -26,7 +30,8 @@ add_library(epocservs
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
         include/services/comm/comm.h
-        include/services/connmonitor/connmonitor.h
+        include/services/internet/connmonitor.h
+        include/services/internet/nifman.h
         include/services/drm/notifier/events.h
         include/services/drm/notifier/notifier.h
         include/services/drm/helper.h
@@ -77,9 +82,10 @@ add_library(epocservs
         include/services/shutdown/shutdown.h
         include/services/sms/sa/sa.h
         include/services/sms/sendas/sendas.h
+        include/services/socket/agent/genconn.h
         include/services/socket/common.h
         include/services/socket/connection.h
-        include/services/socket/resolver.h
+        include/services/socket/server.h
         include/services/socket/socket.h
         include/services/sysagt/sysagt.h
         include/services/ui/cap/coestorage.h
@@ -122,7 +128,11 @@ add_library(epocservs
         src/audio/mmf/audio.cpp
         src/audio/mmf/dev.cpp
         src/backup/backup.cpp
+        src/bluetooth/protocols/btlink/resolver.cpp
+        src/bluetooth/protocols/l2cap/socket.cpp
+        src/bluetooth/protocols/overall.cpp
         src/bluetooth/btman.cpp
+        src/bluetooth/btmidman.cpp
         src/cdl/cdl.cpp
         src/cdl/common.cpp
         src/cdl/observer.cpp
@@ -131,7 +141,8 @@ add_library(epocservs
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
         src/comm/comm.cpp
-        src/connmonitor/connmonitor.cpp
+        src/internet/connmonitor.cpp
+        src/internet/nifman.cpp
         src/drm/notifier/events.cpp
         src/drm/notifier/exchange.cpp
         src/drm/notifier/notifier.cpp
@@ -183,9 +194,12 @@ add_library(epocservs
         src/shutdown/shutdown.cpp
         src/sms/sa/sa.cpp
         src/sms/sendas/sendas.cpp
+        src/socket/agent/genconn.cpp
         src/socket/connection.cpp
+        src/socket/protocol.cpp
         src/socket/resolver.cpp
         src/socket/socket.cpp
+        src/socket/server.cpp
         src/sysagt/sysagt.cpp
         src/ui/cap/coestorage.cpp
         src/ui/cap/eiksrv.cpp

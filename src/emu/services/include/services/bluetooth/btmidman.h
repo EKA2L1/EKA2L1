@@ -19,34 +19,27 @@
 
 #pragma once
 
-#include <services/socket/common.h>
-#include <utils/des.h>
-
-#include <cstdint>
 #include <string>
-#include <vector>
 
-namespace eka2l1::epoc::socket {
-    struct protocol;
+namespace eka2l1::epoc::bt {
+    /**
+     * @brief Middle layer for use of communicating between host OS and
+     *        guest OS's bluetooth stack.
+     */
+    class midman {
+    private:
+        std::u16string local_name_;
+        void *native_handle_;
 
-    struct name_entry {
-        enum {
-            FLAG_ALIAS_NAME = 1 << 0,
-            FLAG_PARTIAL_NAME = 1 << 1
-        };
-
-        std::u16string name_;
-        saddress addr_;
-
-        std::uint32_t flags_;
-    };
-
-    class host_resolver {
     public:
-        virtual std::u16string host_name() const = 0;
-        virtual bool host_name(const std::u16string &new_name) = 0;
+        explicit midman();
 
-        virtual bool get_by_address(saddress &addr, name_entry &result) = 0;
-        virtual bool get_by_name(name_entry &supply_and_result) = 0;
+        std::u16string device_name() const {
+            return local_name_;
+        }
+
+        void device_name(const std::u16string &name) {
+            local_name_ = name;
+        }
     };
 }
