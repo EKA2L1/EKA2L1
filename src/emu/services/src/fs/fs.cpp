@@ -529,13 +529,16 @@ namespace eka2l1 {
         }
 
         dir.value() = eka2l1::absolute_path(dir.value(), ss_path, true);
+        io_system *io = ctx->sys->get_io_system();
 
         bool res = false;
 
-        if (*ctx->get_argument_value<std::int32_t>(1)) {
-            res = ctx->sys->get_io_system()->create_directories(eka2l1::file_directory(*dir));
-        } else {
-            res = ctx->sys->get_io_system()->create_directory(eka2l1::file_directory(*dir));
+        if (!io->exist(dir.value())) {
+            if (*ctx->get_argument_value<std::int32_t>(1)) {
+                res = io->create_directories(eka2l1::file_directory(*dir));
+            } else {
+                res = io->create_directory(eka2l1::file_directory(*dir));
+            }
         }
 
         if (!res) {
