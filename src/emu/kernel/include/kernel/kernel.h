@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <kernel/legacy/mutex.h>
+#include <kernel/legacy/sema.h>
 #include <kernel/common.h>
 #include <kernel/btrace.h>
 #include <kernel/change_notifier.h>
@@ -93,6 +95,8 @@ namespace eka2l1 {
     using library_ptr = kernel::library *;
     using codeseg_ptr = kernel::codeseg *;
     using property_ref_ptr = service::property_reference *;
+    using mutex_legacy_ptr = kernel::legacy::mutex*;
+    using sema_legacy_ptr = kernel::legacy::semaphore*;
 
     using kernel_obj_unq_ptr = std::unique_ptr<kernel::kernel_obj>;
     using prop_ident_pair = std::pair<int, int>;
@@ -109,9 +113,9 @@ namespace eka2l1 {
             return kernel::object_type::chunk;
         } else if constexpr (std::is_same_v<T, kernel::library>) {
             return kernel::object_type::library;
-        } else if constexpr (std::is_same_v<T, kernel::mutex>) {
+        } else if constexpr ((std::is_same_v<T, kernel::mutex>) || (std::is_same_v<T, kernel::legacy::mutex>)) {
             return kernel::object_type::mutex;
-        } else if constexpr (std::is_same_v<T, kernel::semaphore>) {
+        } else if constexpr ((std::is_same_v<T, kernel::semaphore>) || (std::is_same_v<T, kernel::legacy::semaphore>)) {
             return kernel::object_type::sema;
         } else if constexpr (std::is_same_v<T, kernel::timer>) {
             return kernel::object_type::timer;

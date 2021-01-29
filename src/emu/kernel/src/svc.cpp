@@ -1253,6 +1253,17 @@ namespace eka2l1::epoc {
         return sema;
     }
 
+    BRIDGE_FUNC(std::int32_t, semaphore_wait_eka1, kernel::handle h) {
+        sema_legacy_ptr sema = kern->get<kernel::legacy::semaphore>(h);
+
+        if (!sema) {
+            return epoc::error_bad_handle;
+        }
+
+        sema->wait();
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, semaphore_wait, kernel::handle h, std::int32_t timeout) {
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
@@ -1268,6 +1279,16 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(std::int32_t, semaphore_count_eka1, kernel::handle h) {
+        sema_legacy_ptr sema = kern->get<kernel::legacy::semaphore>(h);
+
+        if (!sema) {
+            return epoc::error_bad_handle;
+        }
+
+        return sema->count();
+    }
+
     BRIDGE_FUNC(std::int32_t, semaphore_count, kernel::handle h) {
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
@@ -1276,6 +1297,16 @@ namespace eka2l1::epoc {
         }
 
         return sema->count();
+    }
+
+    BRIDGE_FUNC(void, semaphore_signal_eka1, kernel::handle h) {
+        sema_legacy_ptr sema = kern->get<kernel::legacy::semaphore>(h);
+
+        if (!sema) {
+            return;
+        }
+
+        sema->signal(1);
     }
 
     BRIDGE_FUNC(void, semaphore_signal, kernel::handle h) {
@@ -1299,7 +1330,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, semaphore_signal_n_eka1, std::int32_t sig_count, kernel::handle h) {
-        sema_ptr sema = kern->get<kernel::semaphore>(h);
+        sema_legacy_ptr sema = kern->get<kernel::legacy::semaphore>(h);
 
         if (!sema) {
             return;
@@ -1324,6 +1355,17 @@ namespace eka2l1::epoc {
         }
 
         return mut;
+    }
+
+    BRIDGE_FUNC(std::int32_t, mutex_wait_eka1, kernel::handle h) {
+        mutex_legacy_ptr mut = kern->get<kernel::legacy::mutex>(h);
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return epoc::error_bad_handle;
+        }
+
+        mut->wait();
+        return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, mutex_wait, kernel::handle h) {
@@ -1359,6 +1401,16 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    BRIDGE_FUNC(void, mutex_signal_eka1, kernel::handle h) {
+        mutex_legacy_ptr mut = kern->get<kernel::legacy::mutex>(h);
+
+        if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
+            return;
+        }
+
+        mut->signal();
+    }
+
     BRIDGE_FUNC(void, mutex_signal, kernel::handle h) {
         mutex_ptr mut = kern->get<kernel::mutex>(h);
 
@@ -1370,6 +1422,11 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, mutex_is_held, kernel::handle h) {
+        if (kern->is_eka1()) {
+            LOG_ERROR(KERNEL, "EKA2 mutex behaviour is invalidly being invoked on EKA1!");
+            return epoc::error_not_supported;
+        }
+
         mutex_ptr mut = kern->get<kernel::mutex>(h);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
@@ -1381,8 +1438,8 @@ namespace eka2l1::epoc {
         return result;
     }
 
-    BRIDGE_FUNC(std::int32_t, mutex_count, kernel::handle h) {
-        mutex_ptr mut = kern->get<kernel::mutex>(h);
+    BRIDGE_FUNC(std::int32_t, mutex_count_eka1, kernel::handle h) {
+        mutex_legacy_ptr mut = kern->get<kernel::legacy::mutex>(h);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
             return epoc::error_not_found;
@@ -2962,8 +3019,8 @@ namespace eka2l1::epoc {
             name_of_mut = common::ucs2_to_utf8(name_of_mut_des->to_std_string(target_process));
         }
         
-        const kernel::handle h = kern->create_and_add<kernel::mutex>(get_handle_owner_from_eka1_attribute(attribute),
-            kern->get_ntimer(), name_of_mut, false, access_of_mut).first;
+        const kernel::handle h = kern->create_and_add<kernel::legacy::mutex>(get_handle_owner_from_eka1_attribute(attribute),
+            name_of_mut, access_of_mut).first;
             
         if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
@@ -2987,7 +3044,7 @@ namespace eka2l1::epoc {
             name_of_sema = common::ucs2_to_utf8(name_of_sema_des->to_std_string(target_process));
         }
 
-        const kernel::handle h = kern->create_and_add<kernel::semaphore>(get_handle_owner_from_eka1_attribute(attribute),
+        const kernel::handle h = kern->create_and_add<kernel::legacy::semaphore>(get_handle_owner_from_eka1_attribute(attribute),
             name_of_sema, create_info->arg3_, access_of_sema).first;
             
         if (h == kernel::INVALID_HANDLE) {
@@ -3008,7 +3065,7 @@ namespace eka2l1::epoc {
             name_of_sema = common::ucs2_to_utf8(name_of_sema_des->to_std_string(target_process));
         }
 
-        kernel_obj_ptr obj_ptr = kern->get_by_name_and_type<kernel::semaphore>(name_of_sema, kernel::object_type::sema);
+        kernel_obj_ptr obj_ptr = kern->get_by_name_and_type<kernel::legacy::semaphore>(name_of_sema, kernel::object_type::sema);
 
         if (!obj_ptr) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_not_found);
@@ -3191,7 +3248,7 @@ namespace eka2l1::epoc {
             break;
 
         case epoc::eka1_executor::execute_open_mutex_global:
-            obj_ptr = kern->get_by_name_and_type<kernel::mutex>(obj_name, kernel::object_type::mutex);
+            obj_ptr = kern->get_by_name_and_type<kernel::legacy::mutex>(obj_name, kernel::object_type::mutex);
             break;
 
         default:
@@ -4605,12 +4662,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
-        BRIDGE_REGISTER(0x18, mutex_count),
-        BRIDGE_REGISTER(0x19, mutex_wait),
-        BRIDGE_REGISTER(0x1A, mutex_signal),
+        BRIDGE_REGISTER(0x18, mutex_count_eka1),
+        BRIDGE_REGISTER(0x19, mutex_wait_eka1),
+        BRIDGE_REGISTER(0x1A, mutex_signal_eka1),
         BRIDGE_REGISTER(0x1B, process_id),
-        BRIDGE_REGISTER(0x29, semaphore_count),
-        BRIDGE_REGISTER(0x2A, semaphore_wait),
+        BRIDGE_REGISTER(0x29, semaphore_count_eka1),
+        BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x3C, thread_request_count),
         BRIDGE_REGISTER(0x3D, thread_exit_type),
@@ -4680,7 +4737,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0000E, logical_channel_do_control_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
-        BRIDGE_REGISTER(0xC0002B, semaphore_signal),
+        BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC0002F, server_cancel),
         BRIDGE_REGISTER(0xC00030, set_session_ptr),

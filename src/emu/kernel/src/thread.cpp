@@ -504,7 +504,8 @@ namespace eka2l1 {
                 scheduler->queue_thread_ready(this);
             }
 
-            if (wait_obj) {
+            // EKA1 syncs object relies on FIFO order to decide what thread to release first, so priority is irrelevant.
+            if (wait_obj && !kern->is_eka1()) {
                 switch (wait_obj->get_object_type()) {
                 case object_type::mutex: {
                     reinterpret_cast<mutex *>(wait_obj)->priority_change(this);
@@ -570,19 +571,36 @@ namespace eka2l1 {
 
             // Call wait object to handle suspend event
             if (wait_obj) {
-                switch (wait_obj->get_object_type()) {
-                case object_type::mutex: {
-                    res = reinterpret_cast<mutex *>(wait_obj)->suspend_thread(this);
-                    break;
-                }
+                if (kern->is_eka1()) {
+                    switch (wait_obj->get_object_type()) {
+                    case object_type::mutex: {
+                        res = reinterpret_cast<legacy::mutex *>(wait_obj)->suspend_waiting_thread(this);
+                        break;
+                    }
 
-                case object_type::sema: {
-                    res = reinterpret_cast<semaphore *>(wait_obj)->suspend_waiting_thread(this);
-                    break;
-                }
+                    case object_type::sema: {
+                        res = reinterpret_cast<legacy::semaphore *>(wait_obj)->suspend_waiting_thread(this);
+                        break;
+                    }
 
-                default:
-                    break;
+                    default:
+                        break;
+                    }
+                } else {
+                    switch (wait_obj->get_object_type()) {
+                    case object_type::mutex: {
+                        res = reinterpret_cast<mutex *>(wait_obj)->suspend_thread(this);
+                        break;
+                    }
+
+                    case object_type::sema: {
+                        res = reinterpret_cast<semaphore *>(wait_obj)->suspend_waiting_thread(this);
+                        break;
+                    }
+
+                    default:
+                        break;
+                    }
                 }
             }
 
@@ -605,19 +623,36 @@ namespace eka2l1 {
 
             // Call wait object to handle suspend event
             if (wait_obj) {
-                switch (wait_obj->get_object_type()) {
-                case object_type::mutex: {
-                    res = reinterpret_cast<mutex *>(wait_obj)->unsuspend_thread(this);
-                    break;
-                }
+                if (kern->is_eka1()) {
+                    switch (wait_obj->get_object_type()) {
+                    case object_type::mutex: {
+                        res = reinterpret_cast<legacy::mutex *>(wait_obj)->unsuspend_waiting_thread(this);
+                        break;
+                    }
 
-                case object_type::sema: {
-                    res = reinterpret_cast<semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
-                    break;
-                }
+                    case object_type::sema: {
+                        res = reinterpret_cast<legacy::semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
+                        break;
+                    }
 
-                default:
-                    break;
+                    default:
+                        break;
+                    }
+                } else {
+                    switch (wait_obj->get_object_type()) {
+                    case object_type::mutex: {
+                        res = reinterpret_cast<mutex *>(wait_obj)->unsuspend_thread(this);
+                        break;
+                    }
+
+                    case object_type::sema: {
+                        res = reinterpret_cast<semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
+                        break;
+                    }
+
+                    default:
+                        break;
+                    }
                 }
             }
 

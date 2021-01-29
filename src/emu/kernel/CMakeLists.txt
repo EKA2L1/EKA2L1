@@ -5,6 +5,9 @@ add_library(epoctiming
 
 # The kernel
 add_library(epockern
+        include/kernel/legacy/mutex.h
+        include/kernel/legacy/sema.h
+        include/kernel/legacy/sync_object.h
         include/kernel/smp/avail.h
         include/kernel/smp/balancer.h
         include/kernel/smp/core.h
@@ -33,6 +36,9 @@ add_library(epockern
         include/kernel/kernel.h
         include/kernel/reg.h
         include/kernel/svc.h
+        src/legacy/sync_object.cpp
+        src/legacy/mutex.cpp
+        src/legacy/sema.cpp
         src/smp/avail.cpp
         src/btrace.cpp
         src/change_notifier.cpp

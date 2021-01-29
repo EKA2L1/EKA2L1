@@ -50,6 +50,10 @@ namespace eka2l1 {
     using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
 
     namespace kernel {
+        namespace legacy {
+            class sync_object_base;
+        }
+
         class mutex;
         class semaphore;
         class process;
@@ -139,6 +143,7 @@ namespace eka2l1 {
             friend class semaphore;
             friend class process;
             friend class service::faker;
+            friend class legacy::sync_object_base;
 
             thread_state state;
             std::mutex mut;
@@ -205,6 +210,7 @@ namespace eka2l1 {
             eka2l1::ptr<epoc::request_status> timeout_sts;
 
             common::double_link<kernel::thread> scheduler_link;
+            common::double_linked_queue_element wait_link;
             common::double_linked_queue_element pending_link;
             common::double_linked_queue_element suspend_link;
             common::double_linked_queue_element process_thread_link;
