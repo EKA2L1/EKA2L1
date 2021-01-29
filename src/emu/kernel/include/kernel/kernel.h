@@ -37,6 +37,7 @@
 #include <kernel/scheduler.h>
 #include <kernel/sema.h>
 #include <kernel/timer.h>
+#include <kernel/undertaker.h>
 
 #include <kernel/property.h>
 #include <kernel/server.h>
@@ -97,6 +98,7 @@ namespace eka2l1 {
     using property_ref_ptr = service::property_reference *;
     using mutex_legacy_ptr = kernel::legacy::mutex*;
     using sema_legacy_ptr = kernel::legacy::semaphore*;
+    using undertaker_ptr = kernel::undertaker*;
 
     using kernel_obj_unq_ptr = std::unique_ptr<kernel::kernel_obj>;
     using prop_ident_pair = std::pair<int, int>;
@@ -137,6 +139,8 @@ namespace eka2l1 {
             return kernel::object_type::logical_device;
         } else if constexpr (std::is_same_v<T, ldd::channel>) {
             return kernel::object_type::logical_channel;
+        } else if constexpr (std::is_same_v<T, kernel::undertaker>) {
+            return kernel::object_type::undertaker;
         } else {
             throw std::runtime_error("Unknown kernel object type. Make sure to add new type here");
             return kernel::object_type::unk;
@@ -268,6 +272,7 @@ namespace eka2l1 {
         std::vector<kernel_obj_unq_ptr> message_queues_;
         std::vector<kernel_obj_unq_ptr> logical_devices_;
         std::vector<kernel_obj_unq_ptr> logical_channels_;
+        std::vector<kernel_obj_unq_ptr> undertakers_;
 
         std::unique_ptr<kernel::btrace> btrace_inst_;
         std::unique_ptr<hle::lib_manager> lib_mngr_;
@@ -416,6 +421,8 @@ namespace eka2l1 {
         property_ptr get_prop(int category, int key); // Get property by category and key
         property_ptr delete_prop(int category, int key);
 
+        void complete_undertakers(kernel::thread *literally_dies);
+
         kernel::thread *crr_thread();
         kernel::process *crr_process();
 
@@ -560,6 +567,7 @@ namespace eka2l1 {
                 OBJECT_SEARCH(msg_queue, message_queues_)
                 OBJECT_SEARCH(logical_device, logical_devices_)
                 OBJECT_SEARCH(logical_channel, logical_channels_)
+                OBJECT_SEARCH(undertaker, undertakers_)
 
 #undef OBJECT_SEARCH
 
@@ -614,6 +622,7 @@ namespace eka2l1 {
                 OBJECT_SEARCH(msg_queue, message_queues_)
                 OBJECT_SEARCH(logical_device, logical_devices_)
                 OBJECT_SEARCH(logical_channel, logical_channels_)
+                OBJECT_SEARCH(undertaker, undertakers_)
 
 #undef OBJECT_SEARCH
 
@@ -651,6 +660,7 @@ namespace eka2l1 {
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::msg_queue, message_queues_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::logical_device, logical_devices_, )
                 ADD_OBJECT_TO_CONTAINER(kernel::object_type::logical_channel, logical_channels_, )
+                ADD_OBJECT_TO_CONTAINER(kernel::object_type::undertaker, undertakers_, )
 
             default:
                 break;

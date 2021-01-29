@@ -113,6 +113,7 @@ namespace eka2l1 {
         OBJECT_CONTAINER_CLEANUP(mutexes_);
         OBJECT_CONTAINER_CLEANUP(semas_);
         OBJECT_CONTAINER_CLEANUP(change_notifiers_);
+        OBJECT_CONTAINER_CLEANUP(undertakers_);
         OBJECT_CONTAINER_CLEANUP(props_);
         OBJECT_CONTAINER_CLEANUP(prop_refs_);
         OBJECT_CONTAINER_CLEANUP(chunks_);
@@ -615,6 +616,7 @@ namespace eka2l1 {
             OBJECT_SEARCH(msg_queue, message_queues_)
             OBJECT_SEARCH(logical_device, logical_devices_)
             OBJECT_SEARCH(logical_channel, logical_channels_)
+            OBJECT_SEARCH(undertaker, undertakers_)
 
 #undef OBJECT_SEARCH
 
@@ -777,6 +779,13 @@ namespace eka2l1 {
         }
 
         return true;
+    }
+
+    void kernel_system::complete_undertakers(kernel::thread *literally_dies) {
+        for (auto &kobj: undertakers_) {
+            kernel::undertaker *utaker = reinterpret_cast<kernel::undertaker*>(kobj.get());
+            utaker->complete(literally_dies);
+        }
     }
 
     void kernel_system::free_msg(ipc_msg_ptr msg) {
@@ -1006,6 +1015,7 @@ namespace eka2l1 {
             OBJECT_SEARCH(msg_queue, message_queues_)
             OBJECT_SEARCH(logical_device, logical_devices_)
             OBJECT_SEARCH(logical_channel, logical_channels_)
+            OBJECT_SEARCH(undertaker, undertakers_)
 
 #undef OBJECT_SEARCH
 

@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project 
- * (see bentokun.github.com/EKA2L1).
+ * This file is part of EKA2L1 project
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +27,8 @@
 #include <common/cvt.h>
 #include <common/random.h>
 
+#include <utils/err.h>
+
 namespace eka2l1 {
     namespace kernel {
         change_notifier::change_notifier(kernel_system *kern)
@@ -49,17 +50,16 @@ namespace eka2l1 {
         }
 
         bool change_notifier::logon_cancel() {
-            if (!req_info_.sts) {
+            if (req_info_.sts) {
                 return false;
             }
 
-            req_info_.complete(-3);
-
+            req_info_.complete(epoc::error_cancel);
             return true;
         }
 
         void change_notifier::notify_change_requester() {
-            req_info_.complete(0);
+            req_info_.complete(epoc::error_none);
         }
 
         void change_notifier::do_state(common::chunkyseri &seri) {

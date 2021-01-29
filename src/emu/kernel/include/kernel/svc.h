@@ -131,6 +131,9 @@ namespace eka2l1::epoc {
             execute_dll_global_allocate = 0x37,
             execute_open_debug = 0x3F,
             execute_close_debug = 0x40,
+            execute_undertaker_create = 0x44,
+            execute_undertaker_logon = 0x45,
+            execute_undertaker_logon_cancel = 0x46,
             execute_create_chunk_double_ended = 0x4C,
             execute_create_chunk_double_ended_global = 0x4D,
             execute_free_up_system = 0x52,           ///< Free system memory (Unconfirmed).

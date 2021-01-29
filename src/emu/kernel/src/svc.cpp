@@ -3791,6 +3791,43 @@ namespace eka2l1::epoc {
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
+    
+    std::int32_t undertaker_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg1 = global/local, arg0 = handle
+        kernel::access_type access_of_mut = (create_info->arg1_ == epoc::eka1_executor::NO_NAME_AVAIL_ADDR) ?
+            kernel::access_type::local_access : kernel::access_type::global_access;
+            
+        kernel::process *target_process = target_thread->owning_process();
+        
+        const kernel::handle h = kern->create_and_add<kernel::undertaker>(get_handle_owner_from_eka1_attribute(attribute)).first;
+            
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
+
+    std::int32_t undertaker_logon_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::undertaker *utake = kern->get<kernel::undertaker>(create_info->arg0_);
+        if (!utake) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        eka2l1::ptr<epoc::request_status> req_sts(create_info->arg1_);
+        eka2l1::ptr<kernel::handle> thr_die_handle(create_info->arg2_);
+
+        if (!utake->logon(kern->crr_thread(), req_sts, thr_die_handle)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_in_use);
+            return epoc::error_in_use;
+        }
+
+        return epoc::error_none;
+    }
 
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
@@ -3912,6 +3949,12 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_create_logical_channel:
             return create_logical_channel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_undertaker_create:
+            return undertaker_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_undertaker_logon:
+            return undertaker_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         default:
             LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);

@@ -36,6 +36,7 @@ add_library(epockern
         include/kernel/kernel.h
         include/kernel/reg.h
         include/kernel/svc.h
+        include/kernel/undertaker.h
         src/legacy/sync_object.cpp
         src/legacy/mutex.cpp
         src/legacy/sema.cpp
@@ -63,6 +64,7 @@ add_library(epockern
         src/server.cpp
         src/session.cpp
         src/svc.cpp
+        src/undertaker.cpp
         )
 
 target_include_directories(epoctiming PUBLIC include)
