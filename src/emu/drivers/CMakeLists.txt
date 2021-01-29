@@ -18,6 +18,8 @@ add_library(drivers
         include/drivers/audio/backend/wmf/player_wmf.h
         include/drivers/audio/backend/dsp_shared.h
         include/drivers/audio/backend/player_shared.h
+        include/drivers/hwrm/backend/vibration_null.h
+        include/drivers/hwrm/vibration.h
         include/drivers/graphics/buffer.h
         include/drivers/graphics/emu_window.h
         include/drivers/graphics/fb.h
@@ -45,6 +47,8 @@ add_library(drivers
         src/audio/backend/wmf/player_wmf.cpp
         src/audio/backend/dsp_shared.cpp
         src/audio/backend/player_shared.cpp
+        src/hwrm/backend/vibration_null.cpp
+        src/hwrm/vibration.cpp
         src/graphics/buffer.cpp
         src/graphics/fb.cpp
         src/graphics/graphics.cpp
@@ -71,6 +75,10 @@ if (NOT ANDROID)
         src/graphics/backend/emu_window_glfw.cpp
         src/input/backend/emu_controller_glfw.cpp
         src/input/emu_controller.cpp)
+else()
+    target_sources(drivers PRIVATE
+        include/drivers/hwrm/backend/vibration_jdk.h
+        src/hwrm/backend/vibration_jdk.cpp)
 endif()
 
 target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm)

@@ -18,6 +18,7 @@
  */
 
 #include <services/hwrm/resource.h>
+#include <drivers/hwrm/vibration.h>>
 
 namespace eka2l1 {
     class kernel_system;
@@ -30,8 +31,8 @@ namespace eka2l1::epoc {
      * The class manages Symbian's vibration high-levely by mapping vibration to the host.
      */
     struct vibration_resource : public resource_interface {
+        std::unique_ptr<drivers::hwrm::vibrator> viber_;
         kernel_system *kern_;
-        std::uint32_t intensity_;
 
         void vibrate_with_default_intensity(service::ipc_context &ctx);
         void vibrate_cleanup(service::ipc_context &ctx);

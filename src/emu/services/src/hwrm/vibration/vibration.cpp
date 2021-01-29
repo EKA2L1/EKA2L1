@@ -24,8 +24,8 @@
 
 namespace eka2l1::epoc {
     vibration_resource::vibration_resource(kernel_system *kern)
-        : kern_(kern)
-        , intensity_(100) {
+        : kern_(kern) {
+        viber_ = drivers::hwrm::make_suitable_vibrator();
     }
 
     void vibration_resource::vibrate_with_default_intensity(service::ipc_context &ctx) {
@@ -36,6 +36,10 @@ namespace eka2l1::epoc {
         }
 
         LOG_INFO(SERVICE_HWRM, "Vibrating the phone for {} milliseconds //-(o_o)-\\", duration_in_millis.value());
+
+        if (viber_)
+            viber_->vibrate(duration_in_millis.value());
+
         ctx.complete(epoc::error_none);
     }
 
