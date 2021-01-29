@@ -487,9 +487,13 @@ namespace eka2l1 {
             common::roundabout &thread_list = crr_process->get_thread_list();
 
             common::double_linked_queue_element *ite = thread_list.first();
-            common::double_linked_queue_element *last = thread_list.last();
+            common::double_linked_queue_element *last = thread_list.end();
 
             do {
+                if (!ite) {
+                    break;
+                }
+
                 kernel::thread *target_thread = E_LOFF(ite, kernel::thread, process_thread_link);
                 buffer += fmt::format(R"*(<thread id="{:x}" name="{}"></thread>)*",
                     target_thread->unique_id(), target_thread->name());
