@@ -101,6 +101,7 @@ namespace eka2l1::epoc {
             execute_compress_heap = 0x04,
             execute_add_logical_device = 0x05,
             execute_free_logical_device = 0x06,
+            execute_add_physical_device = 0x08,
             execute_create_logical_channel = 0x0A,
             execute_open_find_handle = 0x0E,
             execute_duplicate_handle = 0x0F,

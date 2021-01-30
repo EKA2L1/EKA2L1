@@ -3826,6 +3826,15 @@ namespace eka2l1::epoc {
             return epoc::error_in_use;
         }
 
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t physical_device_add_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        LOG_TRACE(KERNEL, "Physical device add stubbed");
+        
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
 
@@ -3955,6 +3964,9 @@ namespace eka2l1::epoc {
 
         case epoc::eka1_executor::execute_undertaker_logon:
             return undertaker_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+        case epoc::eka1_executor::execute_add_physical_device:
+            return physical_device_add_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
         default:
             LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
