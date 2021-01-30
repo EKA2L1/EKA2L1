@@ -2727,15 +2727,27 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
+        if (thr->get_exception_handler()) {
+            if (thr == kern->crr_thread()) {
+                // It has an exception handler, don't care..
+                return epoc::error_general;
+            } else {
+                thr->call_exception_handler(type);
+                return epoc::error_none;
+            }
+        }
+
         if (thr == kern->crr_thread()) {
-            return epoc::error_general;
+            LOG_ERROR(KERNEL, "Raising exception on same thread with no handler!");
+            thr->kill(kernel::entity_exit_type::panic, kernel::KERN_EXEC_CAT, kernel::kern_exec_exception_no_handler);
+        } else {
+            thr->kill(kernel::entity_exit_type::kill, u"EXCEPTION", epoc::error_died);
         }
 
         return epoc::error_not_supported;
     }
 
     BRIDGE_FUNC(std::int32_t, is_exception_handled, kernel::handle h, std::int32_t type, bool aSwExcInProgress) {
-        LOG_ERROR(KERNEL, "Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2747,6 +2759,10 @@ namespace eka2l1::epoc {
         }
 
         return 1;
+    }
+    
+    BRIDGE_FUNC(std::int32_t, is_exception_handled_eka1, std::int32_t type, kernel::handle h) {
+        return is_exception_handled(kern, h, type, true);
     }
 
     BRIDGE_FUNC(std::int32_t, safe_inc_32, eka2l1::ptr<std::int32_t> val_ptr) {
@@ -4326,6 +4342,10 @@ namespace eka2l1::epoc {
         return logical_channel_do_control(kern, h, func, arg1, arg2);
     }
 
+    BRIDGE_FUNC(void, restore_thread_exception_state) {
+        kern->crr_thread()->restore_before_exception_state();
+    }
+
     const eka2l1::hle::func_map svc_register_funcs_v10 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),
@@ -4778,6 +4798,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80007E, dll_global_data_read),
         BRIDGE_REGISTER(0x80007F, dll_global_data_write),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
+        BRIDGE_REGISTER(0x80009E, exception_handler),
+        BRIDGE_REGISTER(0x8000A2, is_exception_handled_eka1),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0x8000A9, library_type_eka1),
         BRIDGE_REGISTER(0x8000AA, process_type_eka1),
@@ -4814,6 +4836,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
         BRIDGE_REGISTER(0xC10000, hle_dispatch),
         BRIDGE_REGISTER(0xC10001, debug_print),
-        BRIDGE_REGISTER(0xC10002, debug_print16)
+        BRIDGE_REGISTER(0xC10002, debug_print16),
+        BRIDGE_REGISTER(0xC20000, restore_thread_exception_state)
     };
 }

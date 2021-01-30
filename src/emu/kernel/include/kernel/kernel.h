@@ -324,9 +324,13 @@ namespace eka2l1 {
         std::uint64_t inactivity_starts_;
         kernel::process *nanokern_pr_;
 
+        kernel::chunk *custom_code_chunk;
+        address exception_handler_guard_;
+
     protected:
         void setup_new_process(process_ptr pr);
         void setup_nanokern_controller();
+        void setup_custom_code();
 
         bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
         void cpu_exception_thread_handle(arm::core *core);
@@ -712,6 +716,8 @@ namespace eka2l1 {
 
         address get_global_dll_space(const address handle, std::uint8_t **data_ptr = nullptr, std::uint32_t *size_of_data = nullptr);
         bool allocate_global_dll_space(const address handle, const std::uint32_t size, address &data_ptr_guest, std::uint8_t **data_ptr_host = nullptr);
+
+        address get_exception_handler_guard();
 
         /**
          * @brief Get the inactivity time in seconds.

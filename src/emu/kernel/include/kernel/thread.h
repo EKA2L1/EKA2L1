@@ -146,6 +146,8 @@ namespace eka2l1 {
             friend class legacy::sync_object_base;
 
             thread_state state;
+            thread_state backup_state;
+
             std::mutex mut;
             std::condition_variable todo;
 
@@ -374,6 +376,9 @@ namespace eka2l1 {
             arm::core::thread_context &get_thread_context() {
                 return ctx;
             }
+            
+            void call_exception_handler(const std::int32_t exec_type);
+            void restore_before_exception_state();
 
             void owning_process(kernel::process *pr);
 

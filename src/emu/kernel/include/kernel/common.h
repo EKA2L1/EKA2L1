@@ -118,5 +118,10 @@ namespace eka2l1::kernel {
         std::uint32_t num_processes_using_;
     };
 
+    enum kern_exec_exception {
+        kern_exec_exception_no_handler = 3
+    };
+
     static constexpr std::uint32_t INVALID_HANDLE = 0xFFFFFFFF;
+    static const char16_t *KERN_EXEC_CAT = u"KERN-EXEC";
 }

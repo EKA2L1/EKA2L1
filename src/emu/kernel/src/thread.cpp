@@ -776,6 +776,52 @@ namespace eka2l1 {
             return trap_popped;
         }
 
+        void thread::call_exception_handler(const std::int32_t exec_type) {
+            address crr_sp = ctx.get_sp();
+
+            // Once in century, hope something slow like this is ok...
+            auto push_to_stack = [&](std::uint16_t reg_list) -> bool {
+                for (std::int16_t i = 15; i >= 0; i--) {
+                    if (reg_list & (1 << i)) {
+                        crr_sp -= 4;
+
+                        std::uint32_t *val_ptr = reinterpret_cast<std::uint32_t*>(owning_process()->
+                            get_ptr_on_addr_space(crr_sp));
+
+                        if (!val_ptr) {
+                            LOG_ERROR(KERNEL, "Stack of thread {} overflowed", name());
+                            return false;
+                        }
+
+                        *val_ptr = ctx.cpu_registers[i];
+                    }
+                }
+
+                ctx.set_sp(crr_sp);
+                return true;
+            };
+
+            std::uint16_t list_to_push = 0b1101000000001111;
+            if (!push_to_stack(list_to_push)) {
+                return;
+            }
+
+            backup_state = state;
+
+            if (backup_state == thread_state::wait_fast_sema)
+                signal_request();
+
+            ctx.cpu_registers[0] = exec_type;
+            ctx.cpu_registers[1] = exception_handler;
+            ctx.set_pc(kern->get_exception_handler_guard());
+        }
+
+        void thread::restore_before_exception_state() {
+            if (backup_state == thread_state::wait_fast_sema) {
+                wait_for_any_request();
+            }
+        }    
+
         static constexpr std::uint32_t MAX_SYSCALL_STACK = 4;
 
         std::uint32_t thread::last_syscall() const {

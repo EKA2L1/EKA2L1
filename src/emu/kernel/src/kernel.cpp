@@ -27,6 +27,7 @@
 #include <cpu/arm_interface.h>
 #include <cpu/arm_utils.h>
 
+#include <common/armemitter.h>
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
 #include <common/configure.h>
@@ -83,7 +84,8 @@ namespace eka2l1 {
         , dll_global_data_chunk_(nullptr)
         , dll_global_data_last_offset_(0)
         , inactivity_starts_(0)
-        , nanokern_pr_(nullptr) {
+        , nanokern_pr_(nullptr)
+        , custom_code_chunk(nullptr) {
         reset();
     }
 
@@ -152,6 +154,7 @@ namespace eka2l1 {
         locale_ = std::make_unique<std::locale>("");
 
         dll_global_data_chunk_ = nullptr;
+        custom_code_chunk = nullptr;
 
         // Clear CPU caches. No reason to keep it.
         cpu_->clear_instruction_cache();
@@ -371,6 +374,32 @@ namespace eka2l1 {
     void kernel_system::start_bootload() {
         // Disable these
         //setup_nanokern_controller();
+    }
+
+    void kernel_system::setup_custom_code() {
+        static constexpr std::uint32_t CUSTOM_CODE_SIZE = 0x1000;
+        custom_code_chunk = create<kernel::chunk>(mem_, nullptr, "Custom advance code", 0, CUSTOM_CODE_SIZE,
+            CUSTOM_CODE_SIZE, prot_read_write_exec, kernel::chunk_type::normal, kernel::chunk_access::rom,
+            kernel::chunk_attrib::none, 0x00);
+
+        if (custom_code_chunk) {
+            common::cpu_info info;
+            info.bARMv7 = false;
+
+            common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(custom_code_chunk->host_base()), info);
+            exception_handler_guard_ = static_cast<std::uint32_t>(emitter.get_code_pointer() - reinterpret_cast<std::uint8_t*>(custom_code_chunk->host_base()));
+
+            // R0 = reason, R1 = handler.
+            // We already push some variables onto the stack beforehand in the system call, so we just
+            // need to pop now
+            emitter.SUB(common::armgen::R_SP, common::armgen::R_SP, 4);
+            emitter.BL(common::armgen::R1);
+            emitter.SVC(0xC20000);
+            emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, 4);
+            emitter.POP(7, common::armgen::R0, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12, common::armgen::R14, common::armgen::R15);
+
+            emitter.flush_lit_pool();
+        }
     }
 
     void kernel_system::install_memory(memory_system *new_mem) {
@@ -1153,6 +1182,14 @@ namespace eka2l1 {
         
         dll_global_data_last_offset_ += size;
         return true;
+    }
+
+    address kernel_system::get_exception_handler_guard() {
+        if (!custom_code_chunk) {
+            setup_custom_code();
+        }
+
+        return custom_code_chunk->base(nullptr).ptr_address() + exception_handler_guard_;
     }
 
     struct kernel_info {
