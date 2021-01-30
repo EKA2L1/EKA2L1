@@ -134,8 +134,8 @@ namespace eka2l1 {
         }
 
         void emu_window_glfw3::init(std::string title, vec2 size, const std::uint32_t flags) {
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #if EKA2L1_PLATFORM(MACOS)
@@ -153,17 +153,26 @@ namespace eka2l1 {
             emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
 
             if (!emu_win) {
-                // Try to create OpenGL 3.1    
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+                // Try to create OpenGL 3.1
+                const std::int32_t minor_to_try[] = { 2, 1 };
+                const int mode_to_try[] = { GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_ANY_PROFILE };
+
+                for (std::size_t i = 0; i < sizeof(minor_to_try) / sizeof(std::int32_t); i++) {
+                    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+                    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor_to_try[i]);
+                    glfwWindowHint(GLFW_OPENGL_PROFILE, mode_to_try[i]);
+
+    #if EKA2L1_PLATFORM(MACOS)
+                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    #endif
+
+                    emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
+
+                    if (emu_win) {
+                        break;
+                    }
+                }
                 
-#if EKA2L1_PLATFORM(MACOS)
-                glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-#endif
-
-                emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
-
                 if (!emu_win) {
                     LOG_ERROR(DRIVER_GRAPHICS, "Can't create window! Check if your PC support at least OpenGL 3.1!");
                     return;
