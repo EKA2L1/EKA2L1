@@ -264,6 +264,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def_static("getReg", &scripting::cpu::get_register, R"pbdoc(
             Get a register of the CPU.
         )pbdoc")
+        .def_static("setReg", &scripting::cpu::set_register, R"pbdoc(
+            Set a register of the CPU.
+        )pbdoc")
         .def_static("getCpsr", &scripting::cpu::get_pc, R"pbdoc(
             Get CPU's cpsr.
         )pbdoc")

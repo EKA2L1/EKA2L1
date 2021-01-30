@@ -29,6 +29,10 @@ namespace eka2l1::scripting {
         return get_current_instance()->get_cpu()->get_reg(index);
     }
 
+    void cpu::set_register(const int index, const std::uint32_t value) {
+        get_current_instance()->get_cpu()->set_reg(index, value);
+    }
+
     uint32_t cpu::get_cpsr() {
         return get_current_instance()->get_cpu()->get_cpsr();
     }
