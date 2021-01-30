@@ -18,6 +18,7 @@
  */
 
 #include <ldd/collection.h>
+#include <ldd/ecomm/ecomm.h>
 #include <ldd/mmcif/mmcif.h>
 
 #include <system/epoc.h>
@@ -36,9 +37,11 @@ namespace eka2l1::ldd {
         { lddname, factory_create_##type }
 
     FACTORY_DECLARE(mmcif_factory)
+    FACTORY_DECLARE(ecomm_factory)
 
     static std::unordered_map<std::string, factory_instantiate_func> insts_map = {
-        FACTORY_REGISTER("gd1drv", mmcif_factory)
+        FACTORY_REGISTER("gd1drv", mmcif_factory),
+        FACTORY_REGISTER("ecomm", ecomm_factory)
     };
 
     factory_instantiate_func get_factory_func(const char *name) {
