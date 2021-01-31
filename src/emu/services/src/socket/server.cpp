@@ -121,6 +121,10 @@ namespace eka2l1 {
                 pr_find(ctx);
                 return;
 
+            case socket_old_so_create:
+                so_create(ctx);
+                return;
+
             case socket_old_hr_open:
                 hr_create(ctx, false);
                 return;
