@@ -4245,6 +4245,38 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(pos);
     }
 
+    template <typename T, typename F>
+    std::int32_t desc_find(kernel_system *kern, F cvt_func, epoc::desc<T> *des, const T* str, const std::int32_t length, const bool is_fold) {
+        if (length < 0) {
+            return epoc::error_argument;
+        }
+
+        if (length == 0) {
+            return epoc::error_not_found;
+        }
+
+        kernel::process *crr_pr = kern->crr_process();
+
+        std::basic_string<T> source_str = des->to_std_string(crr_pr);
+        std::basic_string<T> to_find_str(str, length);
+
+        // Regex power. Find this for me...
+        to_find_str = std::string(1, static_cast<T>('(')) + to_find_str;
+        to_find_str += std::string(1, static_cast<T>(')'));
+
+        const std::size_t pos = common::match_wildcard_in_string(cvt_func(source_str), cvt_func(to_find_str), is_fold);
+
+        if (pos == std::basic_string<T>::npos) {
+            return epoc::error_not_found;
+        }
+
+        return static_cast<std::int32_t>(pos);
+    }
+
+    BRIDGE_FUNC(std::int32_t, desc8_find, epoc::desc8 *dd, const char *str, const std::int32_t length, const bool is_fold) {
+        return desc_find(kern, common::utf8_to_wstr, dd, str, length, is_fold);
+    }
+
     BRIDGE_FUNC(std::uint32_t, user_language) {
         return static_cast<std::uint32_t>(kern->get_current_language());
     }
@@ -4787,6 +4819,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800045, thread_write_ipc_to_des16),
         BRIDGE_REGISTER(0x800054, des8_match),
         BRIDGE_REGISTER(0x800055, des16_match),
+        BRIDGE_REGISTER(0x800056, desc8_find),
         BRIDGE_REGISTER(0x800058, des8_locate_fold),
         BRIDGE_REGISTER(0x800059, des16_locate_fold),
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
