@@ -24,6 +24,7 @@
 #include <services/window/window.h>
 
 #include <common/time.h>
+#include <common/rgb.h>
 #include <drivers/itc.h>
 
 #include <kernel/kernel.h>
@@ -56,6 +57,19 @@ namespace eka2l1::epoc {
             if (winuser->size.x == 0 || winuser->size.y == 0) {
                 // No one can see this. Leave it for now.
                 return false;
+            }
+
+            if (winuser->clear_color_enable) {
+                auto color_extracted = common::rgb_to_vec(winuser->clear_color);
+
+                if (winuser->display_mode() <= epoc::display_mode::color16mu) {
+                    color_extracted[0] = 255;
+                }
+
+                builder_->set_brush_color_detail({ color_extracted[1], color_extracted[2], color_extracted[3], color_extracted[0] });
+                builder_->draw_rectangle(eka2l1::rect(winuser->pos, winuser->size));
+            } else {
+                builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
             }
 
             // Draw it onto current binding buffer
@@ -98,6 +112,11 @@ namespace eka2l1::epoc {
         if (need_bind) {
             cmd_builder->bind_bitmap(screen_texture);
         }
+        
+        cmd_builder->set_blend_mode(true);
+        cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+            drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
+            drivers::blend_factor::one, drivers::blend_factor::one);
 
         // Walk through the window tree in recursive order, and do draw
         // We dont care about visible regions. Nowadays, detect visible region to reduce pixel plotting is

@@ -168,7 +168,7 @@ namespace eka2l1::epoc {
         builder->set_blend_mode(true);
         builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
-            drivers::blend_factor::zero, drivers::blend_factor::one);
+            drivers::blend_factor::one, drivers::blend_factor::one);
 
         // Start to render these texts.
         for (auto &chr : text) {

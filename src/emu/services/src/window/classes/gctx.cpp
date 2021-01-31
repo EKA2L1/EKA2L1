@@ -64,7 +64,6 @@ namespace eka2l1::epoc {
 
             attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size, 32);
             attached_window->resize_needed = false;
-            attached_window->need_clear = true;
 
             kern->lock();
         }
@@ -93,17 +92,6 @@ namespace eka2l1::epoc {
         clipping_region.make_empty();
 
         do_submit_clipping();
-        
-        if (attached_window->need_clear || ((attached_window->flags & window_user::flags_in_redraw) && attached_window->clear_color_enable)) {
-            auto color_extracted = common::rgb_to_vec(attached_window->clear_color);
-
-            if (attached_window->display_mode() <= epoc::display_mode::color16mu) {
-                color_extracted[0] = 255;
-            }
-
-            cmd_builder->clear({ color_extracted[1], color_extracted[2], color_extracted[3], color_extracted[0] }, drivers::draw_buffer_bit_color_buffer);
-            attached_window->need_clear = false;
-        }
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
@@ -324,6 +312,7 @@ namespace eka2l1::epoc {
             viewport.size = attached_window->size;
 
             cmd_builder->set_viewport(viewport);
+
             do_submit_clipping();
         }
     }

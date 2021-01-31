@@ -55,7 +55,6 @@ namespace eka2l1::epoc {
 
         bool resize_needed;
         bool clear_color_enable;
-        bool need_clear;
 
         common::roundabout attached_contexts;
 
