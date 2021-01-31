@@ -120,13 +120,24 @@ namespace eka2l1::mem {
         }
     }
 
+    inline bool should_addr_from_global(const vm_address addr, const bool mem_map_old) {
+        bool should_from_global = false;
+
+        if (mem_map_old) {
+            should_from_global = ((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || (addr >= dll_static_data_eka1_end);
+        } else {
+            should_from_global = ((addr >= shared_data) && (addr < ram_code_addr)) || (addr >= rom);
+        }
+
+        return should_from_global;
+    }
+
     void *control_multiple::get_host_pointer(const asid id, const vm_address addr) {
         if (id > 0 && dirs_.size() < id) {
             return nullptr;
         }
 
-        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= dll_static_data_eka1_end)) ||
-            (!mem_map_old_ && (addr >= shared_data))) {
+        if (should_addr_from_global(addr, mem_map_old_)) {
             return global_dir_.get_pointer(addr);
         }
 
@@ -138,8 +149,7 @@ namespace eka2l1::mem {
             return nullptr;
         }
 
-        if ((mem_map_old_ && (((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || addr >= dll_static_data_eka1_end)) ||
-            (!mem_map_old_ && (addr >= shared_data))) {
+        if (should_addr_from_global(addr, mem_map_old_)) {
             return global_dir_.get_page_info(addr);
         }
 

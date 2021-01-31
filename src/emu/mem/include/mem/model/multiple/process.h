@@ -33,6 +33,7 @@ namespace eka2l1::mem {
         asid addr_space_id_;
         linear_section user_local_sec_;
         linear_section user_dll_static_data_sec_;
+        linear_section user_code_sec_;
 
         std::vector<std::unique_ptr<multiple_mem_model_chunk>> chunks_;
         std::vector<multiple_mem_model_chunk *> attached_;

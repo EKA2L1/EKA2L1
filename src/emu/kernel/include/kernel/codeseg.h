@@ -128,6 +128,8 @@ namespace eka2l1::kernel {
         std::vector<attached_info> attaches;
         std::vector<address> premade_eps;
 
+        chunk_ptr code_chunk_shared;
+
         std::vector<std::uint64_t> relocation_list;
         codeseg_state state;
 
@@ -173,6 +175,8 @@ namespace eka2l1::kernel {
         */
         address lookup(kernel::process *pr, const std::uint32_t ord);
         address lookup_no_relocate(const std::uint32_t ord);
+
+        bool eligible_for_codeseg_reuse();
 
         void set_full_path(const std::u16string &seg_full_path) {
             full_path = seg_full_path;

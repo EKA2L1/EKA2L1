@@ -816,6 +816,7 @@ namespace eka2l1::hle {
             if (entry) {
                 symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE | additional_mode_);
                 if (!f) {
+                    LOG_ERROR(KERNEL, "Can't open {}", common::ucs2_to_utf8(lib_path));
                     return nullptr;
                 }
 
@@ -838,6 +839,7 @@ namespace eka2l1::hle {
                 }
             }
 
+            LOG_TRACE(KERNEL, "No drive entry!!!!! What");
             return nullptr;
         };
 
