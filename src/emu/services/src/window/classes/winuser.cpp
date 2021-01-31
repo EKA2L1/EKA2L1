@@ -73,6 +73,7 @@ namespace eka2l1::epoc {
         , size(0, 0)
         , resize_needed(false)
         , clear_color_enable(true)
+        , need_clear(true)
         , clear_color(0xFFFFFFFF)
         , filter(pointer_filter_type::pointer_enter | pointer_filter_type::pointer_drag | pointer_filter_type::pointer_move)
         , cursor_pos(-1, -1)
@@ -282,6 +283,7 @@ namespace eka2l1::epoc {
 
             if (driver_win_id == 0) {
                 driver_win_id = drivers::create_bitmap(drv, size, 32);
+                need_clear = true;
             } else {
                 cmd_builder->bind_bitmap(driver_win_id);
                 cmd_builder->resize_bitmap(driver_win_id, size);

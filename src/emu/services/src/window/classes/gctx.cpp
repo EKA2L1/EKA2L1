@@ -55,8 +55,6 @@ namespace eka2l1::epoc {
             cmd_builder = drv->new_command_builder(cmd_list.get());
         }
 
-        bool need_clear = false;
-
         // Add first command list, binding our window bitmap
         if (attached_window->driver_win_id == 0) {
             kernel_system *kern = context.sys->get_kernel_system();
@@ -66,8 +64,7 @@ namespace eka2l1::epoc {
 
             attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size, 32);
             attached_window->resize_needed = false;
-
-            need_clear = true;
+            attached_window->need_clear = true;
 
             kern->lock();
         }
@@ -97,8 +94,15 @@ namespace eka2l1::epoc {
 
         do_submit_clipping();
         
-        if (need_clear || ((attached_window->flags & window_user::flags_in_redraw) && attached_window->clear_color_enable)) {
-            cmd_builder->clear(common::rgb_to_vec(attached_window->clear_color), drivers::draw_buffer_bit_color_buffer);
+        if (attached_window->need_clear || ((attached_window->flags & window_user::flags_in_redraw) && attached_window->clear_color_enable)) {
+            auto color_extracted = common::rgb_to_vec(attached_window->clear_color);
+
+            if (attached_window->display_mode() <= epoc::display_mode::color16mu) {
+                color_extracted[0] = 255;
+            }
+
+            cmd_builder->clear({ color_extracted[1], color_extracted[2], color_extracted[3], color_extracted[0] }, drivers::draw_buffer_bit_color_buffer);
+            attached_window->need_clear = false;
         }
     }
 
