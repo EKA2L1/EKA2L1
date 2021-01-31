@@ -55,6 +55,8 @@ namespace eka2l1::epoc {
             cmd_builder = drv->new_command_builder(cmd_list.get());
         }
 
+        bool need_clear = false;
+
         // Add first command list, binding our window bitmap
         if (attached_window->driver_win_id == 0) {
             kernel_system *kern = context.sys->get_kernel_system();
@@ -64,6 +66,8 @@ namespace eka2l1::epoc {
 
             attached_window->driver_win_id = drivers::create_bitmap(drv, attached_window->size, 32);
             attached_window->resize_needed = false;
+
+            need_clear = true;
 
             kern->lock();
         }
@@ -92,6 +96,10 @@ namespace eka2l1::epoc {
         clipping_region.make_empty();
 
         do_submit_clipping();
+        
+        if (need_clear || ((attached_window->flags & window_user::flags_in_redraw) && attached_window->clear_color_enable)) {
+            cmd_builder->clear(common::rgb_to_vec(attached_window->clear_color), drivers::draw_buffer_bit_color_buffer);
+        }
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
@@ -102,13 +110,19 @@ namespace eka2l1::epoc {
 
     void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
         eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
-        const int baseline_offset, const int margin) {
+        const int baseline_offset, const int margin, const bool fill_surrounding) {
+        eka2l1::rect area(top_left, bottom_right - top_left);
+        if (fill_surrounding) {
+            // The effective box colour depends on the drawing mode. As the document says
+            if (do_command_set_brush_color()) {
+                cmd_builder->draw_rectangle(area);
+            }
+        }
+
         // TODO: Pen outline >_<
-        eka2l1::vecx<int, 4> color;
+        eka2l1::vecx<std::uint8_t, 4> color;
         color = common::rgb_to_vec(pen_color);
         cmd_builder->set_brush_color({ color[1], color[2], color[3] });
-
-        eka2l1::rect area(top_left, bottom_right - top_left);
 
         // Add the baseline offset. Where text will sit on.
         area.top.y += baseline_offset;
@@ -132,7 +146,7 @@ namespace eka2l1::epoc {
     }
 
     bool graphic_context::do_command_set_brush_color() {
-        eka2l1::vecx<int, 4> color = common::rgb_to_vec(brush_color);
+        eka2l1::vecx<std::uint8_t, 4> color = common::rgb_to_vec(brush_color);
 
         // Don't bother even sending any draw command
         switch (fill_mode) {
@@ -162,7 +176,7 @@ namespace eka2l1::epoc {
     }
 
     bool graphic_context::do_command_set_pen_color() {
-        eka2l1::vecx<int, 4> color = common::rgb_to_vec(pen_color);
+        eka2l1::vecx<std::uint8_t, 4> color = common::rgb_to_vec(pen_color);
 
         // Don't bother even sending any draw command
         switch (line_mode) {
@@ -650,7 +664,7 @@ namespace eka2l1::epoc {
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_text)), info->length);
 
         do_command_draw_text(context, info->pos, info->pos, text,
-            epoc::text_alignment::left, 0, 0);
+            epoc::text_alignment::left, 0, 0, false);
     }
 
     void graphic_context::draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd) {
@@ -658,7 +672,7 @@ namespace eka2l1::epoc {
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised1)), info->length);
 
         do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
-            epoc::text_alignment::left, info->baseline_offset, 0);
+            epoc::text_alignment::left, info->baseline_offset, 0, true);
     }
 
     void graphic_context::draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd) {
@@ -666,7 +680,7 @@ namespace eka2l1::epoc {
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised2)), info->length);
 
         do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
-            info->horiz, info->baseline_offset, info->left_mgr);
+            info->horiz, info->baseline_offset, info->left_mgr, true);
     }
     
     void graphic_context::set_clipping_rect(service::ipc_context &context, ws_cmd &cmd) {

@@ -54,6 +54,7 @@ namespace eka2l1::epoc {
         eka2l1::vec2 size{ 0, 0 };
 
         bool resize_needed;
+        bool clear_color_enable;
 
         common::roundabout attached_contexts;
 

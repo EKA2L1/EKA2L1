@@ -97,7 +97,7 @@ namespace eka2l1::epoc {
 
         void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
             eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
-            const int baseline_offset, const int margin);
+            const int baseline_offset, const int margin, const bool fill_surrounding);
 
         void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
             const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);

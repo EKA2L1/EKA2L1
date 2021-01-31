@@ -72,6 +72,7 @@ namespace eka2l1::epoc {
         , pos(0, 0)
         , size(0, 0)
         , resize_needed(false)
+        , clear_color_enable(true)
         , clear_color(0xFFFFFFFF)
         , filter(pointer_filter_type::pointer_enter | pointer_filter_type::pointer_drag | pointer_filter_type::pointer_move)
         , cursor_pos(-1, -1)
@@ -554,14 +555,16 @@ namespace eka2l1::epoc {
 
         case EWsWinOpSetBackgroundColor: {
             if (cmd.header.cmd_len == 0) {
-                clear_color = -1;
+                clear_color_enable = false;
                 ctx.complete(epoc::error_none);
 
                 break;
             }
 
             clear_color = *reinterpret_cast<int *>(cmd.data_ptr);
+            clear_color_enable = true;
             ctx.complete(epoc::error_none);
+
             break;
         }
 
