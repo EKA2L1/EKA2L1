@@ -330,6 +330,10 @@ namespace eka2l1 {
                 get_phone_info_by_index(ctx);
                 break;
 
+            case epoc::etel_old_get_tsy_name:
+                get_tsy_name(ctx);
+                break;
+
             case epoc::etel_old_line_enumerate_call:
                 line_enumerate_call(ctx);
                 break;
