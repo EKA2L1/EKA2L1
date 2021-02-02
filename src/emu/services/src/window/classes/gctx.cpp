@@ -74,14 +74,14 @@ namespace eka2l1::epoc {
         viewport.top = { 0, 0 };
         viewport.size = attached_window->size;
 
-        cmd_builder->bind_bitmap(attached_window->driver_win_id);
-        cmd_builder->set_depth(false);
-
         if (attached_window->resize_needed) {
             // Try to resize our bitmap. My NVIDIA did forgive me if texture has same spec
             // as before, but not Intel...
             cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size);
         }
+
+        cmd_builder->bind_bitmap(attached_window->driver_win_id);
+        cmd_builder->set_depth(false);
 
         cmd_builder->set_viewport(viewport);
         cmd_builder->clear({ 0, 0, 0, 0 }, drivers::draw_buffer_bit_stencil_buffer);

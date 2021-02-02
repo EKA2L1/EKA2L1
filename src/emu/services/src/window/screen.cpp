@@ -59,6 +59,8 @@ namespace eka2l1::epoc {
                 return false;
             }
 
+            eka2l1::vec2 abs_pos = winuser->absolute_position();
+
             if (winuser->clear_color_enable) {
                 auto color_extracted = common::rgb_to_vec(winuser->clear_color);
 
@@ -67,13 +69,13 @@ namespace eka2l1::epoc {
                 }
 
                 builder_->set_brush_color_detail({ color_extracted[1], color_extracted[2], color_extracted[3], color_extracted[0] });
-                builder_->draw_rectangle(eka2l1::rect(winuser->pos, winuser->size));
+                builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size));
             } else {
                 builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
             }
 
             // Draw it onto current binding buffer
-            builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(winuser->pos, { 0, 0 }),
+            builder_->draw_bitmap(winuser->driver_win_id, 0, eka2l1::rect(abs_pos, { 0, 0 }),
                 eka2l1::rect({ 0, 0 }, winuser->size), eka2l1::vec2(0, 0), 0.0f, 0);
 
             total_redrawed_++;

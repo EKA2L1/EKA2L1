@@ -163,6 +163,11 @@ namespace eka2l1::epoc {
                 }
             }
         }
+
+        if (last_obj) {
+            last_obj->on_command_batch_done(ctx);
+            last_obj = nullptr;
+        }
     }
 
     std::uint32_t window_server_client::queue_redraw(epoc::window_user *user, const eka2l1::rect &redraw_rect) {
