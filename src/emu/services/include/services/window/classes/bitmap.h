@@ -32,7 +32,7 @@ namespace eka2l1 {
             explicit wsbitmap(window_server_client_ptr client, fbsbitmap *bmp);
             ~wsbitmap() override;
 
-            void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+            bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
         };
     }
 }

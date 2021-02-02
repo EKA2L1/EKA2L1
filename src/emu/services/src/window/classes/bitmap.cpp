@@ -34,13 +34,19 @@ namespace eka2l1::epoc {
         bitmap_->deref();
     }
 
-    void wsbitmap::execute_command(service::ipc_context &context, ws_cmd &cmd) {
+    bool wsbitmap::execute_command(service::ipc_context &context, ws_cmd &cmd) {
+        bool quit = false;
+
         if (cmd.header.op == 0) {
             // Destroy
             context.complete(epoc::error_none);
             client->delete_object(cmd.obj_handle);
+            
+            quit = true;
         } else {
             LOG_ERROR(SERVICE_WINDOW, "Unimplemented wsbitmap opcode {}", cmd.header.op);
         }
+
+        return quit;
     }
 }

@@ -66,7 +66,7 @@ namespace eka2l1::epoc {
         void receive_focus(service::ipc_context &context, ws_cmd &cmd);
         void add_priority_key(service::ipc_context &context, ws_cmd &cmd);
         void set_name(service::ipc_context &context, ws_cmd &cmd);
-        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         eka2l1::vec2 get_origin() override;
 

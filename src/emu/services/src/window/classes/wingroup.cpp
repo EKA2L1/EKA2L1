@@ -184,12 +184,13 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+    bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
+        bool need_free = false;
         //LOG_TRACE(SERVICE_WINDOW, "Window group op: {}", cmd.header.op);
 
         if (result) {
-            return;
+            return false;
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
@@ -286,5 +287,7 @@ namespace eka2l1::epoc {
             break;
         }
         }
+
+        return need_free;
     }
 }

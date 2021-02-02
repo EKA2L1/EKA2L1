@@ -162,6 +162,8 @@ namespace eka2l1::epoc {
         epoc::screen_device *primary_device;
 
         eka2l1::kernel::thread *client_thread;
+        epoc::window_client_obj *last_obj;
+
         epoc::version cli_version;
 
         epoc::redraw_fifo redraws;

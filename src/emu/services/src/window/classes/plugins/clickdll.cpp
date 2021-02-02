@@ -27,8 +27,9 @@
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
-    void click_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+    bool click_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         TWsClickOpcodes op = static_cast<decltype(op)>(cmd.header.op);
+        bool quit = false;
 
         switch (op) {
         case EWsClickOpIsLoaded: {
@@ -61,5 +62,7 @@ namespace eka2l1::epoc {
             break;
         }
         }
+
+        return quit;
     }
 }

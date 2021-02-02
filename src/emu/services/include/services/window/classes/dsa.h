@@ -61,6 +61,6 @@ namespace eka2l1::epoc {
         void get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
-        void execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) override;
+        bool execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) override;
     };
 }

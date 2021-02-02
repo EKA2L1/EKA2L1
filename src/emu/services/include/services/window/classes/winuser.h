@@ -142,7 +142,6 @@ namespace eka2l1::epoc {
         void end_redraw(service::ipc_context &context, ws_cmd &cmd);
         void set_non_fading(service::ipc_context &context, ws_cmd &cmd);
         void set_size(service::ipc_context &context, ws_cmd &cmd);
-        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
         void set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd);
         bool clear_redraw_store();
         void store_draw_commands(service::ipc_context &context, ws_cmd &cmd);
@@ -152,6 +151,8 @@ namespace eka2l1::epoc {
         void activate(service::ipc_context &context, ws_cmd &cmd);
         void get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd);
         void get_invalid_region(service::ipc_context &context, ws_cmd &cmd);
+
+        bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         epoc::window_group *get_group();
     };

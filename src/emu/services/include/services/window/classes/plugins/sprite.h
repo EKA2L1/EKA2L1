@@ -31,7 +31,7 @@ namespace eka2l1::epoc {
         window *attached_window;
         eka2l1::vec2 position;
 
-        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
         explicit sprite(window_server_client_ptr client, screen *scr, window *attached_window = nullptr,
             eka2l1::vec2 pos = eka2l1::vec2(0, 0));
     };

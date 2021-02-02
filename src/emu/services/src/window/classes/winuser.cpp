@@ -392,6 +392,8 @@ namespace eka2l1::epoc {
 
     void window_user::free(service::ipc_context &context, ws_cmd &cmd) {
         // Try to redraw the screen
+        on_command_batch_done(context);
+
         set_visible(false);
         remove_from_sibling_list();
 
@@ -474,12 +476,13 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
     
-    void window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+    bool window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
+        bool quit = false;
         //LOG_TRACE(SERVICE_WINDOW, "Window user op: {}", (int)cmd.header.op);
 
         if (result) {
-            return;
+            return false;
         }
 
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
@@ -628,6 +631,7 @@ namespace eka2l1::epoc {
 
         case EWsWinOpFree:
             free(ctx, cmd);
+            quit = true;
             break;
 
         case EWsWinOpWindowGroupId:
@@ -685,5 +689,7 @@ namespace eka2l1::epoc {
             break;
         }
         }
+
+        return quit;
     }
 }

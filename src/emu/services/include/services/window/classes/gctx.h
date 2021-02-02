@@ -133,7 +133,7 @@ namespace eka2l1::epoc {
         void free(service::ipc_context &context, ws_cmd &cmd);
         void set_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
 
-        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 
         explicit graphic_context(window_server_client_ptr client, epoc::window *attach_win = nullptr);
     };

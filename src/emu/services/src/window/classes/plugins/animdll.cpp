@@ -28,8 +28,9 @@ namespace eka2l1::epoc {
         , user_count(0) {
     }
 
-    void anim_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+    bool anim_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_anim_dll_opcode op = static_cast<decltype(op)>(cmd.header.op);
+        bool quit = false;
 
         switch (op) {
         case ws_anim_dll_op_create_instance: {
@@ -51,5 +52,7 @@ namespace eka2l1::epoc {
             break;
         }
         }
+
+        return quit;
     }
 }

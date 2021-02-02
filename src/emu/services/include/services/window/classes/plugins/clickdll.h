@@ -33,6 +33,6 @@ namespace eka2l1::epoc {
 
         bool loaded;
 
-        void execute_command(service::ipc_context &context, ws_cmd &cmd) override;
+        bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
     };
 }

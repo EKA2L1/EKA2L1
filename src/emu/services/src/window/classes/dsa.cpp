@@ -198,8 +198,9 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
-    void dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+    bool dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
+        bool quit = false;
 
         if (client->client_version().build <= WS_V6_BUILD_VER) {
             switch (op) {
@@ -255,5 +256,6 @@ namespace eka2l1::epoc {
             }
         }
 
+        return quit;
     }
 }

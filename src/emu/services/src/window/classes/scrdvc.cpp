@@ -175,8 +175,9 @@ namespace eka2l1::epoc {
         ctx.complete(mode_list);
     }
 
-    void screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+    bool screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
+        bool quit = false;
 
         switch (op) {
         case ws_sd_op_pixel_size: {
@@ -276,6 +277,8 @@ namespace eka2l1::epoc {
         case ws_sd_op_free: {
             ctx.complete(epoc::error_none);
             client->delete_object(cmd.obj_handle);
+
+            quit = true;
             break;
         }
 
@@ -292,5 +295,7 @@ namespace eka2l1::epoc {
             break;
         }
         }
+
+        return quit;
     }
 }

@@ -131,6 +131,7 @@ namespace eka2l1::epoc {
     window_server_client::window_server_client(service::session *guest_session, kernel::thread *own_thread, epoc::version ver)
         : guest_session(guest_session)
         , client_thread(own_thread)
+        , last_obj(nullptr)
         , cli_version(ver)
         , primary_device(nullptr)
         , uid_counter(0) {
@@ -139,11 +140,26 @@ namespace eka2l1::epoc {
     void window_server_client::execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds) {
         for (auto &cmd : cmds) {
             if (cmd.obj_handle == guest_session->unique_id()) {
+                if (last_obj) {
+                    last_obj->on_command_batch_done(ctx);
+                    last_obj = nullptr;
+                }
+
                 execute_command(ctx, cmd);
             } else {
                 if (auto obj = get_object(cmd.obj_handle)) {
-                    obj->execute_command(ctx, cmd);
-                    obj->on_command_batch_done(ctx);
+                    if (last_obj != obj) {
+                        if (last_obj != nullptr) {
+                            last_obj->on_command_batch_done(ctx);
+                        }
+
+                        last_obj = obj;
+                    }
+
+                    if (obj->execute_command(ctx, cmd)) {
+                        // The command batch is silently flushed...
+                        last_obj = nullptr;
+                    }
                 }
             }
         }

@@ -687,11 +687,13 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::free(service::ipc_context &context, ws_cmd &cmd) {
+        on_command_batch_done(context);
+
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);
     }
 
-    void graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+    bool graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         //LOG_TRACE(SERVICE_WINDOW, "Graphics context opcode {}", cmd.header.op);
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -700,99 +702,101 @@ namespace eka2l1::epoc {
         using ws_graphics_context_op_handler = std::function<void(graphic_context *,
             service::ipc_context & ctx, ws_cmd & cmd)>;
 
-        using ws_graphics_context_table_op = std::map<ws_graphics_context_opcode, std::pair<ws_graphics_context_op_handler, bool>>;
+        using ws_graphics_context_table_op = std::map<ws_graphics_context_opcode, std::tuple<ws_graphics_context_op_handler, bool, bool>>;
 
         static const ws_graphics_context_table_op v139u_opcode_handlers = {
-            { ws_gc_u139_active, { &graphic_context::active , false } },
-            { ws_gc_u139_set_clipping_rect, { &graphic_context::set_clipping_rect , false } },
-            { ws_gc_u139_set_brush_color, { &graphic_context::set_brush_color , false } },
-            { ws_gc_u139_set_brush_style, { &graphic_context::set_brush_style , false } },
-            { ws_gc_u139_set_pen_color, { &graphic_context::set_pen_color , false } },
-            { ws_gc_u139_set_pen_style, { &graphic_context::set_pen_style , false } },
-            { ws_gc_u139_set_pen_size, { &graphic_context::set_pen_size , false } },
-            { ws_gc_u139_deactive, { &graphic_context::deactive , false } },
-            { ws_gc_u139_reset, { &graphic_context::reset , false } },
-            { ws_gc_u139_use_font, { &graphic_context::use_font , false } },
-            { ws_gc_u139_discard_font, { &graphic_context::discard_font , false } },
-            { ws_gc_u139_draw_line, { &graphic_context::draw_line , true } },
-            { ws_gc_u139_draw_rect, { &graphic_context::draw_rect , true } },
-            { ws_gc_u139_clear, { &graphic_context::clear , true } },
-            { ws_gc_u139_clear_rect, { &graphic_context::clear_rect , true } },
-            { ws_gc_u139_draw_bitmap, { &graphic_context::draw_bitmap , true } },
-            { ws_gc_u139_draw_text, { &graphic_context::draw_text , true } },
-            { ws_gc_u139_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true } },
-            { ws_gc_u139_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true } },
-            { ws_gc_u139_gdi_blt2, { &graphic_context::gdi_blt2 , true } },
-            { ws_gc_u139_gdi_blt3, { &graphic_context::gdi_blt3 , true } },
-            { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true } },
-            { ws_gc_u139_free, { &graphic_context::free , true } }
+            { ws_gc_u139_active, { &graphic_context::active , false, false } },
+            { ws_gc_u139_set_clipping_rect, { &graphic_context::set_clipping_rect , false, false } },
+            { ws_gc_u139_set_brush_color, { &graphic_context::set_brush_color , false, false } },
+            { ws_gc_u139_set_brush_style, { &graphic_context::set_brush_style , false, false } },
+            { ws_gc_u139_set_pen_color, { &graphic_context::set_pen_color , false, false } },
+            { ws_gc_u139_set_pen_style, { &graphic_context::set_pen_style , false, false } },
+            { ws_gc_u139_set_pen_size, { &graphic_context::set_pen_size , false, false } },
+            { ws_gc_u139_deactive, { &graphic_context::deactive , false, false } },
+            { ws_gc_u139_reset, { &graphic_context::reset , false, false } },
+            { ws_gc_u139_use_font, { &graphic_context::use_font , false, false } },
+            { ws_gc_u139_discard_font, { &graphic_context::discard_font , false, false } },
+            { ws_gc_u139_draw_line, { &graphic_context::draw_line , true, false } },
+            { ws_gc_u139_draw_rect, { &graphic_context::draw_rect , true, false } },
+            { ws_gc_u139_clear, { &graphic_context::clear , true, false } },
+            { ws_gc_u139_clear_rect, { &graphic_context::clear_rect , true, false } },
+            { ws_gc_u139_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
+            { ws_gc_u139_draw_text, { &graphic_context::draw_text , true, false } },
+            { ws_gc_u139_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
+            { ws_gc_u139_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
+            { ws_gc_u139_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
+            { ws_gc_u139_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
+            { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
+            { ws_gc_u139_free, { &graphic_context::free , true, true } }
         };
 
         static const ws_graphics_context_table_op v171u_opcode_handlers = {
-            { ws_gc_u171_active, { &graphic_context::active , false } },
-            { ws_gc_u171_set_clipping_rect, { &graphic_context::set_clipping_rect , false } },
-            { ws_gc_u171_set_brush_color, { &graphic_context::set_brush_color , false } },
-            { ws_gc_u171_set_brush_style, { &graphic_context::set_brush_style , false } },
-            { ws_gc_u171_set_pen_color, { &graphic_context::set_pen_color , false } },
-            { ws_gc_u171_set_pen_style, { &graphic_context::set_pen_style , false } },
-            { ws_gc_u171_set_pen_size, { &graphic_context::set_pen_size , false } },
-            { ws_gc_u171_deactive, { &graphic_context::deactive , false } },
-            { ws_gc_u171_reset, { &graphic_context::reset , false } },
-            { ws_gc_u171_use_font, { &graphic_context::use_font , false } },
-            { ws_gc_u171_discard_font, { &graphic_context::discard_font , false } },
-            { ws_gc_u171_draw_line, { &graphic_context::draw_line , true } },
-            { ws_gc_u171_draw_rect, { &graphic_context::draw_rect , true } },
-            { ws_gc_u171_clear, { &graphic_context::clear , true } },
-            { ws_gc_u171_clear_rect, { &graphic_context::clear_rect , true } },
-            { ws_gc_u171_draw_bitmap, { &graphic_context::draw_bitmap , true } },
-            { ws_gc_u171_draw_text, { &graphic_context::draw_text , true } },
-            { ws_gc_u171_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true } },
-            { ws_gc_u171_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true } },
-            { ws_gc_u171_gdi_blt2, { &graphic_context::gdi_blt2 , true } },
-            { ws_gc_u171_gdi_blt3, { &graphic_context::gdi_blt3 , true } },
-            { ws_gc_u171_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true } },
-            { ws_gc_u171_free, { &graphic_context::free , true } }
+            { ws_gc_u171_active, { &graphic_context::active , false, false } },
+            { ws_gc_u171_set_clipping_rect, { &graphic_context::set_clipping_rect , false, false } },
+            { ws_gc_u171_set_brush_color, { &graphic_context::set_brush_color , false, false } },
+            { ws_gc_u171_set_brush_style, { &graphic_context::set_brush_style , false, false } },
+            { ws_gc_u171_set_pen_color, { &graphic_context::set_pen_color , false, false } },
+            { ws_gc_u171_set_pen_style, { &graphic_context::set_pen_style , false, false } },
+            { ws_gc_u171_set_pen_size, { &graphic_context::set_pen_size , false, false } },
+            { ws_gc_u171_deactive, { &graphic_context::deactive , false, false } },
+            { ws_gc_u171_reset, { &graphic_context::reset , false, false } },
+            { ws_gc_u171_use_font, { &graphic_context::use_font , false, false } },
+            { ws_gc_u171_discard_font, { &graphic_context::discard_font , false, false } },
+            { ws_gc_u171_draw_line, { &graphic_context::draw_line , true, false } },
+            { ws_gc_u171_draw_rect, { &graphic_context::draw_rect , true, false } },
+            { ws_gc_u171_clear, { &graphic_context::clear , true, false } },
+            { ws_gc_u171_clear_rect, { &graphic_context::clear_rect , true, false } },
+            { ws_gc_u171_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
+            { ws_gc_u171_draw_text, { &graphic_context::draw_text , true, false } },
+            { ws_gc_u171_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
+            { ws_gc_u171_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
+            { ws_gc_u171_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
+            { ws_gc_u171_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
+            { ws_gc_u171_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
+            { ws_gc_u171_free, { &graphic_context::free , true, true } }
         };
 
         static const ws_graphics_context_table_op curr_opcode_handlers = {
-            { ws_gc_curr_active, { &graphic_context::active , false } },
-            { ws_gc_curr_set_clipping_rect, { &graphic_context::set_clipping_rect , false } },
-            { ws_gc_curr_set_brush_color, { &graphic_context::set_brush_color , false } },
-            { ws_gc_curr_set_brush_style, { &graphic_context::set_brush_style , false } },
-            { ws_gc_curr_set_pen_color, { &graphic_context::set_pen_color , false } },
-            { ws_gc_curr_set_pen_style, { &graphic_context::set_pen_style , false } },
-            { ws_gc_curr_set_pen_size, { &graphic_context::set_pen_size , false } },
-            { ws_gc_curr_deactive, { &graphic_context::deactive , false } },
-            { ws_gc_curr_reset, { &graphic_context::reset , false } },
-            { ws_gc_curr_use_font, { &graphic_context::use_font, false } },
-            { ws_gc_curr_discard_font, { &graphic_context::discard_font , false } },
-            { ws_gc_curr_draw_line, { &graphic_context::draw_line , true } },
-            { ws_gc_curr_draw_rect, { &graphic_context::draw_rect , true } },
-            { ws_gc_curr_clear, { &graphic_context::clear , true } },
-            { ws_gc_curr_clear_rect, { &graphic_context::clear_rect , true } },
-            { ws_gc_curr_draw_bitmap, { &graphic_context::draw_bitmap , true } },
-            { ws_gc_curr_draw_text, { &graphic_context::draw_text , true } },
-            { ws_gc_curr_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true } },
-            { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true } },
-            { ws_gc_curr_gdi_blt2, { &graphic_context::gdi_blt2 , true } },
-            { ws_gc_curr_gdi_blt3, { &graphic_context::gdi_blt3 , true } },
-            { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true } },
-            { ws_gc_curr_free, { &graphic_context::free , true } }
+            { ws_gc_curr_active, { &graphic_context::active , false, false } },
+            { ws_gc_curr_set_clipping_rect, { &graphic_context::set_clipping_rect , false, false } },
+            { ws_gc_curr_set_brush_color, { &graphic_context::set_brush_color , false, false } },
+            { ws_gc_curr_set_brush_style, { &graphic_context::set_brush_style , false, false } },
+            { ws_gc_curr_set_pen_color, { &graphic_context::set_pen_color , false, false } },
+            { ws_gc_curr_set_pen_style, { &graphic_context::set_pen_style , false, false } },
+            { ws_gc_curr_set_pen_size, { &graphic_context::set_pen_size , false, false } },
+            { ws_gc_curr_deactive, { &graphic_context::deactive , false, false } },
+            { ws_gc_curr_reset, { &graphic_context::reset , false, false } },
+            { ws_gc_curr_use_font, { &graphic_context::use_font, false, false } },
+            { ws_gc_curr_discard_font, { &graphic_context::discard_font , false, false } },
+            { ws_gc_curr_draw_line, { &graphic_context::draw_line , true, false } },
+            { ws_gc_curr_draw_rect, { &graphic_context::draw_rect , true, false } },
+            { ws_gc_curr_clear, { &graphic_context::clear , true, false } },
+            { ws_gc_curr_clear_rect, { &graphic_context::clear_rect , true, false } },
+            { ws_gc_curr_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
+            { ws_gc_curr_draw_text, { &graphic_context::draw_text , true, false } },
+            { ws_gc_curr_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
+            { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
+            { ws_gc_curr_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
+            { ws_gc_curr_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
+            { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
+            { ws_gc_curr_free, { &graphic_context::free , true, true } }
         };
 
         epoc::version cli_ver = client->client_version();
         ws_graphics_context_op_handler handler = nullptr;
 
         bool need_to_set_flushed = false;
+        bool need_quit = false;
 
 #define FIND_OPCODE(op, table)                                               \
     auto result = table.find(op);                                            \
-    if (result == table.end() || !result->second.first) {                    \
+    if (result == table.end() || !std::get<0>(result->second)) {             \
         LOG_WARN(SERVICE_WINDOW, "Unimplemented graphics context opcode {}", cmd.header.op); \
-        return;                                                              \
+        return false;                                                        \
     }                                                                        \
-    handler = result->second.first;                                          \
-    need_to_set_flushed = result->second.second;
+    handler = std::get<0>(result->second);                                   \
+    need_to_set_flushed = std::get<1>(result->second);                       \
+    need_quit = std::get<2>(result->second);
 
         if (cli_ver.major == 1 && cli_ver.minor == 0) {
             if (cli_ver.build <= 139) {
@@ -811,6 +815,7 @@ namespace eka2l1::epoc {
         }
 
         handler(this, ctx, cmd);
+        return need_quit;
     }
 
     graphic_context::graphic_context(window_server_client_ptr client, epoc::window *attach_win)
