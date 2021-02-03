@@ -152,28 +152,25 @@ namespace eka2l1 {
     static const std::u16string EXAMPLE_VALID_REVISION = u"1.0.0";
 
     void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
-        epoc::etel_phone_id_v0 oldver;
-        epoc::etel_phone_id_v1 newver;
-
-        epoc::etel_phone_id_base &base_to_fill = (oldarch_) ? static_cast<epoc::etel_phone_id_base&>(oldver)
-            : static_cast<epoc::etel_phone_id_base&>(newver);
+        epoc::etel_phone_id_v0 phoneid;
 
         device_manager *dmngr = ctx->sys->get_device_manager();
         device *dcrr = dmngr->get_current();
 
-        base_to_fill.manu_.assign(nullptr, common::utf8_to_ucs2(dcrr->manufacturer));
-        base_to_fill.model_id_.assign(nullptr, common::utf8_to_ucs2(dcrr->model));
+        // TODO: What lmao
+        phoneid.manu_.assign(nullptr, common::utf8_to_ucs2(dcrr->manufacturer));
+        phoneid.model_id_.assign(nullptr, common::utf8_to_ucs2(dcrr->model));
+
+        phoneid.revision_id_.assign(nullptr, EXAMPLE_VALID_REVISION);
+        phoneid.serial_num_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
 
         if (oldarch_) {
-            // TODO: What lmao
-            oldver.revision_id_.assign(nullptr, EXAMPLE_VALID_REVISION);
-            oldver.serial_num_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
-
-            ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v0>(0, oldver);
+            ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v0>(0, phoneid);
         } else {
-            newver.serial_num_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+            epoc::etel_phone_id_v1 phoneid_new;
+            phoneid_new.detail_ = phoneid;
 
-            ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v1>(0, newver);
+            ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v1>(0, phoneid_new);
         }
 
         ctx->complete(epoc::error_none);

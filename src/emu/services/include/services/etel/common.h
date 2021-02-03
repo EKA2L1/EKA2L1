@@ -339,18 +339,15 @@ namespace eka2l1::epoc {
         MAX_SERIAL_NUMBER_LENGTH = 50
     };
 
-    struct etel_phone_id_base {
+    struct etel_phone_id_v0 {
         epoc::buf_static<char16_t, MAX_MANUFACTURER_ID_LENGTH> manu_;
         epoc::buf_static<char16_t, MAX_MODEL_ID_LENGTH> model_id_;
-    };
-
-    struct etel_phone_id_v0: public etel_phone_id_base {
         epoc::buf_static<char16_t, MAX_REVISION_ID_LENGTH> revision_id_;
         epoc::buf_static<char16_t, MAX_SERIAL_NUMBER_LENGTH> serial_num_;
     };
 
-    struct etel_phone_id_v1: public etel_phone_id_base {
-        epoc::buf_static<char16_t, MAX_SERIAL_NUMBER_LENGTH> serial_num_;
+    struct etel_phone_id_v1 : public etel_multimode_type {
+        etel_phone_id_v0 detail_;
     };
 
     static constexpr std::uint32_t ETEL_PHONE_CHARGER_STATUS_UID = 0x100052C9;
