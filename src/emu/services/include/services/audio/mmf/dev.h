@@ -55,16 +55,19 @@ namespace eka2l1 {
         epoc::mmf_state desired_state_;
 
         kernel::chunk *buffer_chunk_;
+        kernel::handle last_buffer_handle_;
 
         epoc::notify_info finish_info_;
         epoc::notify_info buffer_fill_info_;
-        epoc::mmf_dev_hw_buf *buffer_fill_buf_;
+        epoc::mmf_dev_hw_buf_v2 *buffer_fill_buf_;
 
         epoc::mmf_capabilities get_caps();
         void get_supported_input_data_types();
 
         std::unique_ptr<drivers::dsp_stream> stream_;
         std::mutex dev_access_lock_;
+
+        bool finished_;
 
     protected:
         void do_get_buffer_to_be_filled();

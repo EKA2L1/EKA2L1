@@ -62,6 +62,8 @@ namespace eka2l1::epoc {
         mmf_encoding encoding_;
         std::uint32_t channels_;
         std::int32_t buffer_size_;
+
+        std::uint32_t average_bytes_per_sample() const;
     };
 
     struct mmf_dev_sound_proxy_settings {
@@ -128,10 +130,22 @@ namespace eka2l1::epoc {
         mmf_dev_chunk_op_open = 1
     };
 
-    struct mmf_dev_hw_buf {
-        std::uint32_t buffer_type_;
-        std::int32_t request_size_;
-        std::int32_t last_buffer_;
-        mmf_dev_chunk_op chunk_op_;
+    struct mmf_dev_hw_buf_v1 {
+        std::int32_t request_size_;             ///< The size of audio server needs.
+        std::int32_t last_buffer_;              ///< Mark to the server this is the last buffer gonna be sent.
+        std::int32_t buffer_size_;              ///< Total size the audio chunk offered.
+
+        mmf_dev_chunk_op chunk_op_;             ///< Request that the client side should reopen the chunk handle.
+                                                ///< May occur due to chunk recreating
+    };
+
+    struct mmf_dev_hw_buf_v2 {
+        std::uint32_t buffer_type_;             ///< UID of the buffer.
+        std::int32_t request_size_;             ///< The size of audio server needs.
+        std::int32_t last_buffer_;              ///< Mark to the server this is the last buffer gonna be sent.
+        std::int32_t buffer_size_;              ///< Total size the audio chunk offered.
+
+        mmf_dev_chunk_op chunk_op_;             ///< Request that the client side should reopen the chunk handle.
+                                                ///< May occur due to chunk recreating
     };
 }

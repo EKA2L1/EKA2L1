@@ -75,6 +75,36 @@ namespace eka2l1 {
         return 8000;
     }
 
+    inline std::uint32_t duration_to_samples(const std::uint32_t duration_ms, const epoc::mmf_sample_rate rate) {
+        static constexpr std::uint64_t MS_PER_SEC = 1000;
+        return static_cast<std::uint32_t>(static_cast<std::uint64_t>(duration_ms * freq_enum_to_number(rate) / MS_PER_SEC));
+    }
+
+    inline std::uint32_t duration_to_bytes(const std::uint32_t duration_ms, const epoc::mmf_capabilities &caps) {
+        return duration_to_samples(duration_ms, caps.rate_) * caps.average_bytes_per_sample();
+    }
+
+    std::uint32_t epoc::mmf_capabilities::average_bytes_per_sample() const {
+        std::uint8_t bb = 0;
+
+        switch (encoding_) {
+        case epoc::mmf_encoding_8bit_pcm:
+        case epoc::mmf_encoding_8bit_alaw:
+        case epoc::mmf_encoding_8bit_mulaw:
+            bb = 1;
+            break;
+
+        case epoc::mmf_encoding_16bit_pcm:
+            bb = 2;
+            break;
+
+        default:
+            return 0;
+        }
+
+        return bb * channels_;
+    }
+
     mmf_dev_server::mmf_dev_server(eka2l1::system *sys)
         : service::typical_server(sys, MMF_DEV_SERVER_NAME) {
     }
@@ -88,16 +118,14 @@ namespace eka2l1 {
         : service::typical_session(serv, client_ss_uid, client_version)
         , last_buffer_(0)
         , buffer_chunk_(nullptr)
+        , last_buffer_handle_(0)
         , stream_state_(epoc::mmf_state_idle)
         , desired_state_(epoc::mmf_state_idle)
-        , stream_(nullptr) {
+        , stream_(nullptr)
+        , finished_(false) {
         conf_ = get_caps();
 
         kernel_system *kern = serv->get_system()->get_kernel_system();
-        buffer_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr,
-            fmt::format("MMFBufferDevChunk{}", client_ss_uid), 0, conf_.buffer_size_,
-            conf_.buffer_size_, prot_read_write, kernel::chunk_type::normal,
-            kernel::chunk_access::kernel_mapping, kernel::chunk_attrib::none);
     }
 
     void mmf_dev_server_session::init_stream_through_state() {
@@ -124,9 +152,14 @@ namespace eka2l1 {
             // Lock the access to this variable
             const std::lock_guard<std::mutex> guard(dev_access_lock_);
             
-            finish_info_.complete(epoc::error_none);
+            if (finish_info_.empty()) {
+                finished_ = false;
+            } else {
+                finish_info_.complete(epoc::error_none);
+                finished_ = true;
+            }
+
             stream_state_ = epoc::mmf_state_ready;
-            
             do_get_buffer_to_be_filled();
 
             kern->unlock();
@@ -228,7 +261,7 @@ namespace eka2l1 {
         caps.channels_ = 2;
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
         caps.rate_ = epoc::mmf_sample_rate_44100hz;
-        caps.buffer_size_ = epoc::TO_BE_FILLED_DURATION * freq_enum_to_number(caps.rate_) / 1000;
+        caps.buffer_size_ = duration_to_bytes(epoc::TO_BE_FILLED_DURATION, caps);
 
         return caps;
     }
@@ -366,19 +399,56 @@ namespace eka2l1 {
         if (buffer_fill_info_.empty()) {
             return;
         }
+        
+        kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+        epocver ver_use = kern->get_epoc_version();
 
-        std::uint32_t buf_handle = server<mmf_dev_server>()->get_system()->get_kernel_system()->
-            open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
+        kernel::handle return_value = 0;
 
-        if (buf_handle == kernel::INVALID_HANDLE) {
+        if (!buffer_chunk_ || (buffer_chunk_->max_size() < conf_.buffer_size_)) {
+            // Recreate a new chunk that satisify the configuration
+            // overwrite the buffer, the client side will close and destroy it laterz
+            buffer_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr,
+                fmt::format("MMFBufferDevChunk{}", client_ss_uid_), 0, conf_.buffer_size_,
+                conf_.buffer_size_, prot_read_write, kernel::chunk_type::normal,
+                kernel::chunk_access::kernel_mapping, kernel::chunk_attrib::none);
+
+            last_buffer_handle_ = kern->open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
+            return_value = last_buffer_handle_;
+            
+            if (ver_use <= epocver::epoc94) {
+                (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_))->chunk_op_ = epoc::mmf_dev_chunk_op_open;
+            } else {
+                buffer_fill_buf_->chunk_op_ = epoc::mmf_dev_chunk_op_open;
+            }
+        } else {
+            if (ver_use <= epocver::epoc94) {
+                (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_))->chunk_op_ = epoc::mmf_dev_chunk_op_none;
+            } else {
+                buffer_fill_buf_->chunk_op_ = epoc::mmf_dev_chunk_op_none;
+            }
+        }
+
+        if (last_buffer_handle_ == kernel::INVALID_HANDLE) {
             buffer_fill_info_.complete(epoc::error_general);
             return;
         }
 
-        buffer_fill_buf_->chunk_op_ = epoc::mmf_dev_chunk_op_open;
-        buffer_fill_buf_->request_size_ = epoc::TO_BE_FILLED_DURATION * freq_enum_to_number(conf_.rate_) / 1000;
+        const std::uint32_t max_request_size_align = common::align(conf_.buffer_size_, conf_.average_bytes_per_sample(), 0);
 
-        buffer_fill_info_.complete(buf_handle);
+        if (ver_use <= epocver::epoc94) {
+            auto buf_old = (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_));
+
+            buf_old->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
+            buf_old->request_size_ = common::min<std::uint32_t>(max_request_size_align, duration_to_bytes(
+                epoc::TO_BE_FILLED_DURATION, conf_));
+        } else {
+            buffer_fill_buf_->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
+            buffer_fill_buf_->request_size_ = common::min<std::uint32_t>(max_request_size_align, duration_to_bytes(
+                epoc::TO_BE_FILLED_DURATION, conf_));
+        }
+
+        buffer_fill_info_.complete(return_value);
     }
 
     void mmf_dev_server_session::get_buffer_to_be_filled(service::ipc_context *ctx) {
@@ -391,7 +461,7 @@ namespace eka2l1 {
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
         buffer_fill_info_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
-        buffer_fill_buf_ = reinterpret_cast<epoc::mmf_dev_hw_buf *>(ctx->get_descriptor_argument_ptr(2));
+        buffer_fill_buf_ = reinterpret_cast<epoc::mmf_dev_hw_buf_v2*>(ctx->get_descriptor_argument_ptr(2));
 
         if (!buffer_fill_buf_) {
             buffer_fill_info_.complete(epoc::error_argument);
@@ -406,6 +476,13 @@ namespace eka2l1 {
 
     void mmf_dev_server_session::play_error(service::ipc_context *ctx) {
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
+
+        if (finished_) {
+            finish_info_.complete(epoc::error_none);
+            finished_ = false;
+            return;
+        }
+
         finish_info_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
@@ -415,11 +492,37 @@ namespace eka2l1 {
             return;
         }
 
-        last_buffer_ = buffer_fill_buf_->last_buffer_;
+        const std::lock_guard<std::mutex> guard(dev_access_lock_);
+        finished_ = false;
+
+        kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+        epocver ver_use = kern->get_epoc_version();
+
+        std::uint32_t supplied_size = 0;
+        if (ver_use <= epocver::epoc94) {
+            std::optional<epoc::mmf_dev_hw_buf_v1> buf_old = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_hw_buf_v1>(1);
+            if (!buf_old.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            supplied_size = buf_old->buffer_size_;
+            last_buffer_ = buf_old->last_buffer_;
+        } else {
+            std::optional<epoc::mmf_dev_hw_buf_v2> buf_new = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_hw_buf_v2>(1);
+            if (!buf_new.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            supplied_size = buf_new->buffer_size_;
+            last_buffer_ = buf_new->last_buffer_;
+        }
+
         stream_state_ = epoc::mmf_state_playing;
 
         drivers::dsp_output_stream *out_stream = reinterpret_cast<drivers::dsp_output_stream*>(stream_.get());
-        out_stream->write(reinterpret_cast<std::uint8_t*>(buffer_chunk_->host_base()), buffer_fill_buf_->request_size_);
+        out_stream->write(reinterpret_cast<std::uint8_t*>(buffer_chunk_->host_base()), supplied_size);
 
         ctx->complete(epoc::error_none);
     }
