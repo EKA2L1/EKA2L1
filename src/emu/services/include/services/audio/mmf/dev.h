@@ -22,7 +22,10 @@
 #include <services/audio/mmf/common.h>
 #include <services/framework.h>
 
+#include <drivers/audio/dsp.h>
+
 #include <vector>
+#include <mutex>
 
 namespace eka2l1 {
     namespace kernel {
@@ -41,14 +44,16 @@ namespace eka2l1 {
 
     class mmf_dev_server_session : public service::typical_session {
         epoc::mmf_priority_settings pri_;
-        std::uint32_t volume_;
-        std::uint32_t samples_played_;
+
+        std::uint32_t last_buffer_;
         std::vector<std::uint32_t> four_ccs_;
 
         epoc::mmf_capabilities conf_;
         std::uint32_t input_cc_;
 
         epoc::mmf_state stream_state_;
+        epoc::mmf_state desired_state_;
+
         kernel::chunk *buffer_chunk_;
 
         epoc::notify_info finish_info_;
@@ -58,14 +63,19 @@ namespace eka2l1 {
         epoc::mmf_capabilities get_caps();
         void get_supported_input_data_types();
 
+        std::unique_ptr<drivers::dsp_stream> stream_;
+        std::mutex dev_access_lock_;
+
     protected:
         void do_get_buffer_to_be_filled();
+        void init_stream_through_state();
 
     public:
         explicit mmf_dev_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
 
+        void init0(service::ipc_context *ctx);
         void init3(service::ipc_context *ctx);
         void set_volume(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
@@ -86,6 +96,7 @@ namespace eka2l1 {
 
         // Play sync, when finish complete the status
         void play_error(service::ipc_context *ctx);
+        void play_data(service::ipc_context *ctx);
     };
 
     class mmf_dev_server : public service::typical_server {

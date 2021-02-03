@@ -231,6 +231,17 @@ namespace eka2l1 {
             CREATE_SERVER(sys, system_agent_server);
             CREATE_SERVER(sys, unipertar_server);
 
+            // MMF server family
+            {
+                std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
+                std::unique_ptr<service::server> aud_serv = std::make_unique<mmf_audio_server>(sys,
+                    reinterpret_cast<mmf_dev_server*>(dev_serv.get()));
+
+                kernel_system *kern = sys->get_kernel_system();
+                kern->add_custom_server(dev_serv);
+                kern->add_custom_server(aud_serv);
+            }
+
             epoc::initialize_system_properties(sys, cfg);
         }
     }

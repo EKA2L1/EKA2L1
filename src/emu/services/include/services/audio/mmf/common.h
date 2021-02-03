@@ -55,6 +55,8 @@ namespace eka2l1::epoc {
         mmf_sample_rate_64000hz = 1 << 11
     };
 
+    static constexpr std::uint32_t TO_BE_FILLED_DURATION = 10;
+
     struct mmf_capabilities {
         mmf_sample_rate rate_;
         mmf_encoding encoding_;
@@ -91,28 +93,28 @@ namespace eka2l1::epoc {
     };
 
     enum mmf_dev_server_opcode {
+        mmf_dev_init0 = 0,
         mmf_dev_init3 = 3,
-        mmf_dev_init4 = 4,
-        mmf_dev_capabilities = 5,
-        mmf_dev_config = 6,
-        mmf_dev_set_config = 7,
-        mmf_dev_max_volume = 8,
-        mmf_dev_volume = 9,
-        mmf_dev_set_volume = 10,
+        mmf_dev_capabilities = 4,
+        mmf_dev_config = 5,
+        mmf_dev_set_config = 6,
+        mmf_dev_max_volume = 7,
+        mmf_dev_volume = 8,
+        mmf_dev_set_volume = 9,
         // Two of this are guessed from RE and from error I get stubbing
         mmf_dev_buffer_to_be_filled = 19,
         mmf_dev_cancel_buffer_to_be_filled = 20,
         mmf_dev_play_complete_notify = 21,
         mmf_dev_cancel_play_complete_notify = 22,
-        // End guess
         mmf_dev_play_init = 25,
         mmf_dev_play_data = 27,
+        /*
         mmf_dev_stop = 29,
         mmf_dev_play_dtmf_string_length = 34,
         mmf_dev_get_supported_input_data_types = 39,
         mmf_dev_copy_fourcc_array = 41,
-        mmf_dev_samples_played = 43,
-        mmf_dev_set_priority_settings = 45,
+        mmf_dev_samples_played = 43,*/
+        mmf_dev_set_priority_settings = 44
     };
 
     struct mmf_msg_destination {

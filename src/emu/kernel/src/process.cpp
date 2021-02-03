@@ -81,14 +81,13 @@ namespace eka2l1::kernel {
         }
 
         codeseg = std::move(arg_codeseg);
+        uids = codeseg->get_uids();
 
         // Attach this codeseg to our process
         codeseg->attach(this);
     
         // Get security info
         sec_info = codeseg->get_sec_info();
-
-        uids = codeseg->get_uids();
         priority = pri;
 
         if (kern->get_epoc_version() >= epocver::eka2) {
