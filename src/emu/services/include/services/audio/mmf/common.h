@@ -55,7 +55,7 @@ namespace eka2l1::epoc {
         mmf_sample_rate_64000hz = 1 << 11
     };
 
-    static constexpr std::uint32_t TO_BE_FILLED_DURATION = 10;
+    static constexpr std::uint32_t TARGET_REQUEST_SAMPLES = 512;
 
     struct mmf_capabilities {
         mmf_sample_rate rate_;

@@ -80,6 +80,10 @@ namespace eka2l1 {
         return static_cast<std::uint32_t>(static_cast<std::uint64_t>(duration_ms * freq_enum_to_number(rate) / MS_PER_SEC));
     }
 
+    inline std::uint32_t samples_to_bytes(const std::uint32_t sample_count, const epoc::mmf_capabilities &caps) {
+        return caps.average_bytes_per_sample() * sample_count;
+    }
+
     inline std::uint32_t duration_to_bytes(const std::uint32_t duration_ms, const epoc::mmf_capabilities &caps) {
         return duration_to_samples(duration_ms, caps.rate_) * caps.average_bytes_per_sample();
     }
@@ -261,7 +265,7 @@ namespace eka2l1 {
         caps.channels_ = 2;
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
         caps.rate_ = epoc::mmf_sample_rate_44100hz;
-        caps.buffer_size_ = duration_to_bytes(epoc::TO_BE_FILLED_DURATION, caps);
+        caps.buffer_size_ = samples_to_bytes(epoc::TARGET_REQUEST_SAMPLES, caps);
 
         return caps;
     }
@@ -440,12 +444,12 @@ namespace eka2l1 {
             auto buf_old = (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_));
 
             buf_old->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
-            buf_old->request_size_ = common::min<std::uint32_t>(max_request_size_align, duration_to_bytes(
-                epoc::TO_BE_FILLED_DURATION, conf_));
+            buf_old->request_size_ = common::min<std::uint32_t>(max_request_size_align, samples_to_bytes(
+                epoc::TARGET_REQUEST_SAMPLES, conf_));
         } else {
             buffer_fill_buf_->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
-            buffer_fill_buf_->request_size_ = common::min<std::uint32_t>(max_request_size_align, duration_to_bytes(
-                epoc::TO_BE_FILLED_DURATION, conf_));
+            buffer_fill_buf_->request_size_ = common::min<std::uint32_t>(max_request_size_align, samples_to_bytes(
+                epoc::TARGET_REQUEST_SAMPLES, conf_));
         }
 
         buffer_fill_info_.complete(return_value);
