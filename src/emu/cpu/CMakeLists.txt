@@ -18,6 +18,7 @@ set(SOURCE_12L1R
         src/12l1r/translate/branch.cpp
         src/12l1r/translate/data_processing.cpp
         src/12l1r/translate/extension.cpp
+        src/12l1r/translate/hint.cpp
         src/12l1r/translate/interrupt.cpp
         src/12l1r/translate/load_store.cpp
         src/12l1r/translate/miscs.cpp

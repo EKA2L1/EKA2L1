@@ -90,8 +90,8 @@ INST(arm_UDF,           "UDF",                 "111001111111------------1111----
 //INST(arm_UXTAH,         "UXTAH",               "cccc01101111nnnnddddrr000111mmmm") // v6
 
 // Hint instructions
-//INST(arm_PLD_imm,       "PLD (imm)",           "11110101uz01nnnn1111iiiiiiiiiiii") // v5E for PLD; v7 for PLDW
-//INST(arm_PLD_reg,       "PLD (reg)",           "11110111uz01nnnn1111iiiiitt0mmmm") // v5E for PLD; v7 for PLDW
+INST(arm_PLD_imm,       "PLD (imm)",           "11110101uz01nnnn1111iiiiiiiiiiii") // v5E for PLD; v7 for PLDW
+INST(arm_PLD_reg,       "PLD (reg)",           "11110111uz01nnnn1111iiiiitt0mmmm") // v5E for PLD; v7 for PLDW
 //INST(arm_SEV,           "SEV",                 "----0011001000001111000000000100") // v6K
 //INST(arm_WFE,           "WFE",                 "----0011001000001111000000000010") // v6K
 //INST(arm_WFI,           "WFI",                 "----0011001000001111000000000011") // v6K

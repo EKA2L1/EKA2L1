@@ -156,6 +156,11 @@ namespace eka2l1::arm::r12l1 {
         // Miscs instructions
         bool arm_CLZ(common::cc_flags cond, reg_index d, reg_index m);
 
+        // Hint
+        bool arm_PLD_imm(bool add, bool R, reg_index n, std::uint16_t imm12);
+        bool arm_PLD_reg(bool add, bool R, reg_index n, std::uint8_t imm5, common::armgen::shift_type shift,
+            reg_index m);
+
         // Interrupts
         bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
         bool arm_UDF();
