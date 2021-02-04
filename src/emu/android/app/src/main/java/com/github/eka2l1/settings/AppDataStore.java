@@ -49,12 +49,14 @@ public class AppDataStore extends PreferenceDataStore {
         StringRepresenter representer = new StringRepresenter();
         yaml = new Yaml(representer, options);
         configFile = file;
-        try {
-            FileInputStream fis = new FileInputStream(configFile);
-            configMap = yaml.load(fis);
-            fis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (configFile.exists()) {
+            try {
+                FileInputStream fis = new FileInputStream(configFile);
+                configMap = yaml.load(fis);
+                fis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
