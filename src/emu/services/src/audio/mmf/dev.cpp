@@ -366,10 +366,19 @@ namespace eka2l1 {
 
     void mmf_dev_server_session::stop(service::ipc_context *ctx) {
         stream_state_ = epoc::mmf_state_dead;
+        stream_->stop();
+
+        // Done waiting for all notifications to be completed/ignored, it's time to do deref buffer chunk
+        deref_audio_buffer_chunk();
         ctx->complete(epoc::error_none);
     }
 
     void mmf_dev_server_session::play_init(service::ipc_context *ctx) {
+        if ((stream_state_ != epoc::mmf_state_dead) && (stream_state_ != epoc::mmf_state_idle)) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
         stream_state_ = epoc::mmf_state_ready;
 
         // Launch the first buffer ready to be filled
@@ -399,6 +408,27 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void mmf_dev_server_session::cancel_buffer_to_be_filled(service::ipc_context *ctx) {
+        const std::lock_guard<std::mutex> guard(dev_access_lock_);
+
+        buffer_fill_info_.complete(epoc::error_cancel);
+        ctx->complete(epoc::error_none);
+    }
+
+    void mmf_dev_server_session::deref_audio_buffer_chunk() {
+        kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+
+        if (buffer_chunk_) {
+            buffer_chunk_->decrease_access_count();
+            if (buffer_chunk_->get_access_count() == 0) {
+                kern->destroy(buffer_chunk_);
+            }
+
+            // Don't care about it, not our problem anymore
+            buffer_chunk_ = nullptr;
+        }
+    }
+
     void mmf_dev_server_session::do_get_buffer_to_be_filled() {
         if (buffer_fill_info_.empty()) {
             return;
@@ -410,12 +440,16 @@ namespace eka2l1 {
         kernel::handle return_value = 0;
 
         if (!buffer_chunk_ || (buffer_chunk_->max_size() < conf_.buffer_size_)) {
+            deref_audio_buffer_chunk();
+
             // Recreate a new chunk that satisify the configuration
             // overwrite the buffer, the client side will close and destroy it laterz
             buffer_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr,
                 fmt::format("MMFBufferDevChunk{}", client_ss_uid_), 0, conf_.buffer_size_,
                 conf_.buffer_size_, prot_read_write, kernel::chunk_type::normal,
                 kernel::chunk_access::kernel_mapping, kernel::chunk_attrib::none);
+
+            buffer_chunk_->increase_access_count();
 
             last_buffer_handle_ = kern->open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
             return_value = last_buffer_handle_;
@@ -482,8 +516,9 @@ namespace eka2l1 {
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
         if (finished_) {
-            finish_info_.complete(epoc::error_none);
+            ctx->complete(epoc::error_none);
             finished_ = false;
+
             return;
         }
 
@@ -584,15 +619,19 @@ namespace eka2l1 {
                 set_priority_settings(ctx);
                 break;
 
-            /*
-            case epoc::mmf_dev_cancel_play_complete_notify:
-                cancel_play_error(ctx);
-                break;
-
             case epoc::mmf_dev_stop:
                 stop(ctx);
                 break;
 
+            case epoc::mmf_dev_cancel_play_complete_notify:
+                cancel_play_error(ctx);
+                break;
+
+            case epoc::mmf_dev_cancel_buffer_to_be_filled:
+                cancel_buffer_to_be_filled(ctx);
+                break;
+
+            /*
             case epoc::mmf_dev_get_supported_input_data_types:
                 get_supported_input_data_types(ctx);
                 break;

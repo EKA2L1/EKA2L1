@@ -110,8 +110,8 @@ namespace eka2l1::epoc {
         mmf_dev_cancel_play_complete_notify = 22,
         mmf_dev_play_init = 25,
         mmf_dev_play_data = 27,
-        /*
         mmf_dev_stop = 29,
+        /*
         mmf_dev_play_dtmf_string_length = 34,
         mmf_dev_get_supported_input_data_types = 39,
         mmf_dev_copy_fourcc_array = 41,

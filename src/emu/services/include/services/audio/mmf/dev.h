@@ -72,6 +72,7 @@ namespace eka2l1 {
     protected:
         void do_get_buffer_to_be_filled();
         void init_stream_through_state();
+        void deref_audio_buffer_chunk();
 
     public:
         explicit mmf_dev_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version);
@@ -96,6 +97,7 @@ namespace eka2l1 {
         void request_resource_notification(service::ipc_context *ctx);
         void get_buffer_to_be_filled(service::ipc_context *ctx);
         void cancel_play_error(service::ipc_context *ctx);
+        void cancel_buffer_to_be_filled(service::ipc_context *ctx);
 
         // Play sync, when finish complete the status
         void play_error(service::ipc_context *ctx);
