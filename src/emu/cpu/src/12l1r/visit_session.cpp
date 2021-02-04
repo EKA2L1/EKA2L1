@@ -1050,13 +1050,14 @@ namespace eka2l1::arm::r12l1 {
             emit_cpsr_update_nzcvq();
 
         const bool no_offered_link = (crr_block_->links_.empty());
+        const bool hard_req = (flag_ != common::CC_AL) && (flag_ != common::CC_NV);
 
-        if (flag_ != common::CC_AL) {
+        if (hard_req) {
             big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
             big_block_->set_jump_target(end_target_);
         }
 
-        if ((flag_ != common::CC_AL) || no_offered_link) {
+        if (hard_req || no_offered_link) {
             // Add branching to next block, making it highest priority
             crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ? crr_block_->last_inst_size_ : 0), 0);
         }
