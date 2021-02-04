@@ -25,6 +25,7 @@
 #include <common/types.h>
 
 #include <services/applist/applist.h>
+#include <services/window/window.h>
 #include <utils/apacmd.h>
 
 namespace eka2l1::android {
@@ -33,6 +34,7 @@ namespace eka2l1::android {
         config::state *conf;
         eka2l1::kernel_system *kern;
         applist_server *alserv;
+        window_server *winserv;
 
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
@@ -54,5 +56,6 @@ namespace eka2l1::android {
         void set_language(std::uint32_t language_id);
         void set_rtos_level(std::uint32_t level);
         void update_app_setting(std::uint32_t uid);
+        void draw(drivers::graphics_command_list_builder *builder, std::uint32_t width, std::uint32_t height);
     };
 }

@@ -40,7 +40,9 @@ namespace eka2l1::android {
     {
         if (kern) {
             alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
-                    kern->get_epoc_version())));
+                kern->get_epoc_version())));
+            winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(get_winserv_name_by_epocver(
+                kern->get_epoc_version())));
         }
     }
 
@@ -187,5 +189,96 @@ namespace eka2l1::android {
 
     void launcher::update_app_setting(std::uint32_t uid) {
         kern->get_app_settings()->update_setting(uid);
+    }
+
+    static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
+        switch (rotation) {
+        case 90:
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
+            break;
+
+        case 180:
+            origin_normal_rect.top.x += origin_normal_rect.size.x;
+            break;
+
+        case 270:
+            origin_normal_rect.top.y += origin_normal_rect.size.y;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    void launcher::draw(drivers::graphics_command_list_builder *builder, std::uint32_t window_width,
+            std::uint32_t window_height) {
+        epoc::screen *scr = winserv->get_screens();
+        if (scr) {
+            eka2l1::rect viewport;
+            eka2l1::rect src;
+            eka2l1::rect dest;
+
+            drivers::filter_option filter = conf->nearest_neighbor_filtering ? drivers::filter_option::nearest :
+                drivers::filter_option::linear;
+
+            eka2l1::vec2 swapchain_size(window_width, window_height);
+            viewport.size = swapchain_size;
+            builder->set_swapchain_size(swapchain_size);
+
+            builder->backup_state();
+
+            builder->clear({ 0xFF, 0xD0, 0xD0, 0xD0 }, drivers::draw_buffer_bit_color_buffer);
+            builder->set_cull_mode(false);
+            builder->set_depth(false);
+            //builder->set_clipping(true);
+            builder->set_viewport(viewport);
+
+            for (std::uint32_t i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
+                scr->screen_mutex.lock();
+                auto &crr_mode = scr->current_mode();
+
+                eka2l1::vec2 size = crr_mode.size;
+                src.size = size;
+
+                float mult = (float)(window_width) / size.x;
+                float width = size.x * mult;
+                float height = size.y * mult;
+                std::uint32_t x = 0;
+                std::uint32_t y = 0;
+                if (height > swapchain_size.y) {
+                    height = swapchain_size.y;
+                    mult = height / size.y;
+                    width = size.x * mult;
+                    x = (swapchain_size.x - width) / 2;
+                }
+                scr->scale_x = mult;
+                scr->scale_y = mult;
+                scr->absolute_pos.x = static_cast<int>(x);
+                scr->absolute_pos.y = static_cast<int>(y);
+
+                dest.top = eka2l1::vec2(x, y);
+                dest.size = eka2l1::vec2(width, height);
+
+                builder->set_texture_filter(scr->screen_texture, filter, filter);
+                builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), 0.0f,
+                    drivers::bitmap_draw_flag_no_flip);
+                if (scr->dsa_texture) {
+                    builder->set_texture_filter(scr->dsa_texture, filter, filter);
+                    advance_dsa_pos_around_origin(dest, crr_mode.rotation);
+
+                    // Rotate back to original size
+                    if (crr_mode.rotation % 180 != 0) {
+                        std::swap(dest.size.x, dest.size.y);
+                        std::swap(src.size.x, src.size.y);
+                    }
+
+                    builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0),
+                        static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
+                }
+
+                scr->screen_mutex.unlock();
+            }
+            builder->load_backup_state();
+        }
     }
 }

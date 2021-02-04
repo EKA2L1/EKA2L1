@@ -19,7 +19,6 @@
 
 #include <android/thread.h>
 #include <common/thread.h>
-#include <drivers/graphics/common.h>
 #include <drivers/graphics/graphics.h>
 
 std::unique_ptr<std::thread> os_thread_obj;
@@ -122,25 +121,6 @@ namespace eka2l1::android {
         return 0;
     }
 
-    static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
-        switch (rotation) {
-        case 90:
-            origin_normal_rect.top.x += origin_normal_rect.size.x;
-            break;
-
-        case 180:
-            origin_normal_rect.top.x += origin_normal_rect.size.x;
-            break;
-
-        case 270:
-            origin_normal_rect.top.y += origin_normal_rect.size.y;
-            break;
-
-        default:
-            break;
-        }
-    }
-
     void ui_thread(emulator &state) {
         int result = ui_thread_initialization(state);
 
@@ -152,76 +132,9 @@ namespace eka2l1::android {
         std::unique_ptr<drivers::graphics_command_list> cmd_list = state.graphics_driver->new_command_list();
         std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(
                 cmd_list.get());
-        eka2l1::rect viewport;
-        eka2l1::rect src;
-        eka2l1::rect dest;
-
-        epoc::screen *screen = state.winserv->get_screens();
-        drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? drivers::filter_option::nearest :
-                drivers::filter_option::linear;
 
         while (!state.should_ui_quit) {
-            epoc::screen *scr = state.winserv->get_screens();
-            if (scr) {
-                eka2l1::vec2 swapchain_size(state.window->window_width, state.window->window_height);
-                viewport.size = swapchain_size;
-                cmd_builder->set_swapchain_size(swapchain_size);
-
-                cmd_builder->backup_state();
-
-                cmd_builder->clear({ 0xFF, 0xD0, 0xD0, 0xD0 }, drivers::draw_buffer_bit_color_buffer);
-                cmd_builder->set_cull_mode(false);
-                cmd_builder->set_depth(false);
-                //cmd_builder->set_clipping(true);
-                cmd_builder->set_viewport(viewport);
-
-                for (std::uint32_t i = 0; scr && scr->screen_texture; i++, scr = scr->next) {
-                    scr->screen_mutex.lock();
-                    auto &crr_mode = scr->current_mode();
-
-                    eka2l1::vec2 size = crr_mode.size;
-                    src.size = size;
-
-                    float mult = (float)(state.window->window_width) / size.x;
-                    float width = size.x * mult;
-                    float height = size.y * mult;
-                    std::uint32_t x = 0;
-                    std::uint32_t y = 0;
-                    if (height > swapchain_size.y) {
-                        height = swapchain_size.y;
-                        mult = height / size.y;
-                        width = size.x * mult;
-                        x = (swapchain_size.x - width) / 2;
-                    }
-                    scr->scale_x = mult;
-                    scr->scale_y = mult;
-                    scr->absolute_pos.x = static_cast<int>(x);
-                    scr->absolute_pos.y = static_cast<int>(y);
-
-                    dest.top =  eka2l1::vec2(x, y);
-                    dest.size = eka2l1::vec2(width, height);
-
-                    cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
-                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0,0), 0.0f,
-                                             drivers::bitmap_draw_flag_no_flip);
-                    if (scr->dsa_texture) {
-                        cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
-                        advance_dsa_pos_around_origin(dest, crr_mode.rotation);
-
-                        // Rotate back to original size
-                        if (crr_mode.rotation % 180 != 0) {
-                            std::swap(dest.size.x, dest.size.y);
-                            std::swap(src.size.x, src.size.y);
-                        }
-
-                        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src,eka2l1::vec2(0, 0),
-                                static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
-                    }
-
-                    scr->screen_mutex.unlock();
-                }
-                cmd_builder->load_backup_state();
-            }
+            state.launcher->draw(cmd_builder.get(), state.window->window_width, state.window->window_height);
 
             int wait_status = -100;
 
