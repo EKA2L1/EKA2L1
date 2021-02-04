@@ -78,6 +78,7 @@ namespace eka2l1 {
 
         protected:
             void get_option(service::ipc_context *ctx);
+            void set_option(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
 
         public:
@@ -107,6 +108,9 @@ namespace eka2l1 {
         socket_old_pr_info = 0x01,
         socket_old_pr_find = 0x02,
         socket_old_so_create = 0x06,
+        socket_old_so_set_opt = 0x13,
+        socket_old_so_get_opt = 0x14,
+        socket_old_so_close = 0x19,
         socket_old_hr_open = 0x24,
         socket_old_hr_get_host_name = 0x28,
         socket_old_hr_set_host_name = 0x29,

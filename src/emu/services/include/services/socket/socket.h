@@ -51,7 +51,7 @@ namespace eka2l1::epoc::socket {
          * @returns size_t(-1) if there is an error or not enough sufficient size to hold, else returns the total size written.
          */
         virtual std::size_t get_option(const std::uint32_t option_id, const std::uint32_t option_family,
-            std::uint8_t *buffer, const std::size_t avail_size) = 0;
+            std::uint8_t *buffer, const std::size_t avail_size);
 
         /**
          * @brief Set an option available from current socket.
@@ -64,6 +64,6 @@ namespace eka2l1::epoc::socket {
          * @returns false on failure.
          */
         virtual bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
-            std::uint8_t *buffer, const std::size_t avail_size) = 0;
+            std::uint8_t *buffer, const std::size_t avail_size);
     };
 }

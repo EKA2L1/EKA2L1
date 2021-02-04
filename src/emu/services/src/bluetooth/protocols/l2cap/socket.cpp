@@ -57,14 +57,29 @@ namespace eka2l1::epoc::bt {
             }
         }
 
-        LOG_ERROR(SERVICE_BLUETOOTH, "Unhandled bluetooth option family {} (id {})", option_family, option_id);
-        return 0;
+        return socket::get_option(option_id, option_family, buffer, avail_size);
     }
 
     bool l2cap_socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
-        LOG_WARN(SERVICE_BLUETOOTH, "Set option is not supported yet with L2CAP socket");
-        return false;
+        if (option_family == epoc::socket::SOCKET_OPTION_FAMILY_BASE) {
+            if (pr_->is_oldarch()) {
+                switch (option_id) {
+                case epoc::socket::SOCKET_OPTION_ID_BLOCKING_IO:
+                    LOG_INFO(SERVICE_BLUETOOTH, "Unblocking/Blocking IO stubbed");
+                    return true;
+
+                default:
+                    LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in socket base family", option_id);
+                    return false;
+                }
+            } else {
+                LOG_WARN(SERVICE_BLUETOOTH, "Unhandled option {} in socket base family", option_id);
+                return false;
+            }
+        }
+
+        return socket::set_option(option_id, option_family, buffer, avail_size);
     }
 
     std::int32_t l2cap_protocol::message_size() const {

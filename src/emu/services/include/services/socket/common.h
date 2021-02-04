@@ -34,6 +34,9 @@ namespace eka2l1::epoc::socket {
         std::uint8_t dat_[32];
     };
 
+    static constexpr std::uint32_t SOCKET_OPTION_FAMILY_BASE = 1;
+    static constexpr std::uint32_t SOCKET_OPTION_ID_BLOCKING_IO = 5;
+
     enum socket_subsession_type {
         socket_subsession_type_host_resolver,
         socket_subsession_type_connection,
