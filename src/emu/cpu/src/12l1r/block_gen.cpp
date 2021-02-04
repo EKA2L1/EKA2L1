@@ -265,7 +265,7 @@ namespace eka2l1::arm::r12l1 {
                     void *aligned_addr = common::align_address_to_host_page(link.value_);
 
                     if (common::is_memory_wx_exclusive()) {
-                        common::change_protection(aligned_addr, psize, prot_read_write);
+                        common::change_protection(aligned_addr, psize * 2, prot_read_write);
                     }
 
                     common::cpu_info temp_info = context_info;
@@ -286,7 +286,7 @@ namespace eka2l1::arm::r12l1 {
                     temp_emitter.flush_icache();
 
                     if (common::is_memory_wx_exclusive()) {
-                        common::change_protection(aligned_addr, psize, prot_read_exec);
+                        common::change_protection(aligned_addr, psize * 2, prot_read_exec);
                     }
                 }
             }
@@ -525,7 +525,8 @@ namespace eka2l1::arm::r12l1 {
             if (auto link_block = get_block(link.to_, block->address_space())) {
                 B(link_block->translated_code_);
 
-                // Reserved two words for unlink?
+                // Reserved three words for unlink?
+                NOP();
                 NOP();
                 NOP();
 
@@ -534,9 +535,6 @@ namespace eka2l1::arm::r12l1 {
                 // Jump to dispatch for now :((
                 emit_pc_flush(link.to_);
                 B(dispatch_ent_for_block_);
-
-                // Maybe reserved a word for unlink?
-                NOP();
 
                 link.linked_ = false;
             }
