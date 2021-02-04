@@ -1962,4 +1962,20 @@ namespace eka2l1::arm::r12l1 {
 
         return true;
     }
+
+    bool thumb_translate_visitor::thumb16_ROR_reg(reg_index m, reg_index d_n) {
+        common::armgen::arm_reg dest_and_op1_real = reg_index_to_gpr(d_n);
+        common::armgen::arm_reg op2_real = reg_index_to_gpr(m);
+
+        const common::armgen::arm_reg dest_and_op1_mapped = reg_supplier_.map(dest_and_op1_real,
+            ALLOCATE_FLAG_DIRTY);
+        const common::armgen::arm_reg op2_mapped = reg_supplier_.map(op2_real, 0);
+
+        common::armgen::operand2 op2(dest_and_op1_mapped, common::armgen::ST_ROR, op2_mapped);
+
+        big_block_->MOVS(dest_and_op1_mapped, op2);
+        cpsr_nzcvq_changed();
+
+        return true;
+    }
 }
