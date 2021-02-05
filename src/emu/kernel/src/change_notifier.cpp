@@ -50,7 +50,7 @@ namespace eka2l1 {
         }
 
         bool change_notifier::logon_cancel() {
-            if (req_info_.sts) {
+            if (req_info_.empty()) {
                 return false;
             }
 
