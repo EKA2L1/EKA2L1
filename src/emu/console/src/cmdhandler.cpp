@@ -129,7 +129,11 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         eka2l1::apa_app_registry *registry = svr->get_registration(uid);
 
         if (registry) {
-            emu->symsys->load(registry->mandatory_info.app_path.to_std_string(nullptr), common::utf8_to_ucs2(cmdlinestr));
+            // Load the app
+            epoc::apa::command_line cmdline;
+            cmdline.launch_cmd_ = epoc::apa::command_create;
+
+            svr->launch_app(*registry, cmdline, nullptr);
             return true;
         }
 
