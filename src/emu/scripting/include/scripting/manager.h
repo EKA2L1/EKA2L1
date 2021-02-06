@@ -110,6 +110,7 @@ namespace eka2l1::manager {
         std::size_t breakpoint_hit_callback_handle;
         std::size_t process_switch_callback_handle;
         std::size_t codeseg_loaded_callback_handle;
+        std::size_t uid_change_callback_handle;
 
         system *sys;
         std::mutex smutex;
@@ -129,6 +130,7 @@ namespace eka2l1::manager {
 
         void handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target);
         void handle_process_switch(arm::core *core_switch, kernel::process *old_friend, kernel::process *new_friend);
+        void handle_uid_process_change(kernel::process *aff, const std::uint32_t old_one);
 
         void call_panics(const std::string &panic_cage, int err_code);
         void call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0,

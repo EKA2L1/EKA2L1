@@ -211,11 +211,15 @@ namespace eka2l1::kernel {
     }
 
     void process::set_uid_type(const process_uid_type &type) {
+        process_uid_type old_type = uids;
+
         uids = std::move(type);
         generation_ = refresh_generation();
         
         reload_compat_setting();
 
+        kern->run_uid_of_process_change_callback(this, old_type);
+        
         for (auto &uid_change_callback: uid_change_callbacks) {
             uid_change_callback.second(uid_change_callback.first, uids);
         }

@@ -240,6 +240,14 @@ namespace eka2l1 {
      */
     using ldd_factory_request_callback = std::function<ldd::factory_instantiate_func(const char*)>;
 
+    /**
+     * @brief Callback when a process's UID changes.
+     * 
+     * @param process       Pointer to the process that changes their UID.
+     * @param old_uid       The previous UID types.
+     */
+    using uid_of_process_change_callback = std::function<void(kernel::process*, kernel::process_uid_type)>;
+
     struct kernel_global_data {
         kernel::char_set char_set_;
 
@@ -311,6 +319,7 @@ namespace eka2l1 {
         common::identity_container<codeseg_loaded_callback> codeseg_loaded_callback_funcs_;
         common::identity_container<imb_range_callback> imb_range_callback_funcs_;
         common::identity_container<ldd_factory_request_callback> ldd_factory_req_callback_funcs_;
+        common::identity_container<uid_of_process_change_callback> uid_of_process_callback_funcs_;
 
         std::unique_ptr<arm::arm_analyser> analyser_;
 
@@ -358,6 +367,7 @@ namespace eka2l1 {
         void call_process_switch_callbacks(arm::core *run_core, kernel::process *old, kernel::process *new_one);
         void run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target);
         void run_imb_range_callback(kernel::process *caller, address range_addr, const std::size_t range_size);
+        void run_uid_of_process_change_callback(kernel::process *aff, kernel::process_uid_type type);
 
         std::size_t register_ipc_send_callback(ipc_send_callback callback);
         std::size_t register_ipc_complete_callback(ipc_complete_callback callback);
@@ -367,6 +377,7 @@ namespace eka2l1 {
         std::size_t register_codeseg_loaded_callback(codeseg_loaded_callback callback);
         std::size_t register_imb_range_callback(imb_range_callback callback);
         std::size_t register_ldd_factory_request_callback(ldd_factory_request_callback callback);
+        std::size_t register_uid_process_change_callback(uid_of_process_change_callback callback);
         
         bool unregister_codeseg_loaded_callback(const std::size_t handle);
         bool unregister_ipc_send_callback(const std::size_t handle);
@@ -376,6 +387,7 @@ namespace eka2l1 {
         bool unregister_process_switch_callback(const std::size_t handle);
         bool unregister_imb_range_callback(const std::size_t handle);
         bool unregister_ldd_factory_request_callback(const std::size_t handle);
+        bool unregister_uid_of_process_change_callback(const std::size_t handle);
 
         ldd::factory_instantiate_func suitable_ldd_instantiate_func(const char *name);
 

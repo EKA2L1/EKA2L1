@@ -89,6 +89,10 @@ namespace eka2l1::manager {
             kern->unregister_codeseg_loaded_callback(codeseg_loaded_callback_handle);
         }
 
+        if (uid_change_callback_handle) {
+            kern->unregister_uid_of_process_change_callback(uid_change_callback_handle);
+        }
+
         modules.clear();
         interpreter.release();
     }
@@ -157,6 +161,10 @@ namespace eka2l1::manager {
 
             codeseg_loaded_callback_handle = kern->register_codeseg_loaded_callback([this](const std::string& name, kernel::process *attacher, codeseg_ptr target) {
                 handle_codeseg_loaded(name, attacher, target);
+            });
+
+            uid_change_callback_handle = kern->register_uid_process_change_callback([this](kernel::process *aff, kernel::process_uid_type type) {
+                handle_uid_process_change(aff, std::get<2>(type));
             });
         }
 
@@ -441,5 +449,31 @@ namespace eka2l1::manager {
     void scripts::handle_codeseg_loaded(const std::string &name, kernel::process *attacher, codeseg_ptr target) {
         patch_library_hook(name, target->get_export_table_raw());
         patch_unrelocated_hook(attacher ? (attacher->get_uid()) : 0, name, target->is_rom() ? 0 : (target->get_code_run_addr(attacher) - target->get_code_base()));
+
+        kernel_system *kern = sys->get_kernel_system();
+
+        if (kern->crr_process() == attacher)
+            write_breakpoint_blocks(attacher);
+    }
+
+    void scripts::handle_uid_process_change(kernel::process *aff, const std::uint32_t old_one) {
+        kernel_system *kern = sys->get_kernel_system();
+        
+        for (auto &[addr, info] : breakpoints) {
+            for (auto &list_hook: info.list_) {
+                if (list_hook.attached_process_ == old_one) {
+                    list_hook.attached_process_ = aff->get_uid();
+
+                    if (kern->crr_process() == aff) {
+                        write_back_breakpoint(aff, info.list_[0].addr_);
+                    }
+                }
+
+                if (info.source_insts_.find(old_one) != info.source_insts_.end()) {
+                    info.source_insts_[aff->get_uid()] = info.source_insts_[old_one];
+                    info.source_insts_.erase(old_one);
+                }
+            }
+        }
     }
 }

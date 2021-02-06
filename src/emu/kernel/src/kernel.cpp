@@ -512,6 +512,12 @@ namespace eka2l1 {
         }
     }
 
+    void kernel_system::run_uid_of_process_change_callback(kernel::process *aff, kernel::process_uid_type type) {
+        for (auto &uid_callback_func: uid_of_process_callback_funcs_) {
+            uid_callback_func(aff, type);
+        }
+    }
+
     std::size_t kernel_system::register_process_switch_callback(process_switch_callback callback) {
         return process_switch_callback_funcs_.add(callback);
     }
@@ -542,6 +548,10 @@ namespace eka2l1 {
 
     std::size_t kernel_system::register_ldd_factory_request_callback(ldd_factory_request_callback callback) {
         return ldd_factory_req_callback_funcs_.add(callback);
+    }
+
+    std::size_t kernel_system::register_uid_process_change_callback(uid_of_process_change_callback callback) {
+        return uid_of_process_callback_funcs_.add(callback);
     }
     
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
@@ -574,6 +584,10 @@ namespace eka2l1 {
 
     bool kernel_system::unregister_ldd_factory_request_callback(const std::size_t handle) {
         return ldd_factory_req_callback_funcs_.remove(handle);
+    }
+
+    bool kernel_system::unregister_uid_of_process_change_callback(const std::size_t handle) {
+        return uid_of_process_callback_funcs_.remove(handle);
     }
 
     ldd::factory_instantiate_func kernel_system::suitable_ldd_instantiate_func(const char *name) {
