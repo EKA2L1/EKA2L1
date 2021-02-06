@@ -3456,6 +3456,8 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    static const char *NAMESPACE_FULL_MARKER = "::";
+
     std::int32_t process_open_by_id_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         kernel::process *pr = kern->get_by_id<kernel::process>(create_info->arg1_);
@@ -3485,6 +3487,15 @@ namespace eka2l1::epoc {
 
         if (name_of_thread_des) {
             name_of_thread = common::ucs2_to_utf8(name_of_thread_des->to_std_string(target_process));
+        }
+
+        // Seems like an architecture difference
+        if (name_of_thread.find(NAMESPACE_FULL_MARKER) == std::string::npos) {
+            // Append the target thread's process full name
+            std::string process_full = "";
+            target_process->full_name(process_full);
+
+            name_of_thread = process_full + NAMESPACE_FULL_MARKER + name_of_thread;
         }
 
         kernel_obj_ptr obj_ptr = kern->get_by_name_and_type<kernel::thread>(name_of_thread, kernel::object_type::thread);
