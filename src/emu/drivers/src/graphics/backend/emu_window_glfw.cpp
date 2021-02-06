@@ -146,8 +146,11 @@ namespace eka2l1 {
 
             if (flags & emu_window_flag_maximum_size) {
                 const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+
                 size.x = mode->width;
                 size.y = mode->height;
+
+                glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
             }
 
             emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
