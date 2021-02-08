@@ -120,6 +120,27 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
+    EKA2L1_EXPORT std::int32_t symemu_queries_all_processes(eka2l1::scripting::process ***pr) {
+        if (!pr) {
+            return -1;
+        }
+        
+        eka2l1::system *sys = eka2l1::scripting::get_current_instance();
+        std::vector<eka2l1::kernel_obj_unq_ptr> &processes = sys->get_kernel_system()->get_process_list();
+
+        if (processes.empty()) {
+            return 0;
+        }
+
+        *pr = new eka2l1::scripting::process*[processes.size()];
+
+        for (std::size_t i = 0; i < processes.size(); i++) {
+            (*pr)[i] = new eka2l1::scripting::process(reinterpret_cast<std::uint64_t>(processes[i].get()));
+        }
+
+        return static_cast<std::int32_t>(processes.size());
+    }
+
     EKA2L1_EXPORT eka2l1::scripting::process *symemu_get_current_process() {
         eka2l1::kernel::process *pr = eka2l1::scripting::get_current_instance()->get_kernel_system()->crr_process();
         if (!pr) {

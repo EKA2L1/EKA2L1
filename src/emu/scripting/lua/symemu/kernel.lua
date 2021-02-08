@@ -10,6 +10,7 @@ ffi.cdef([[
     typedef struct thread thread;
     typedef struct server server;
     typedef struct session session;
+    typedef struct ipc_msg ipc_msg;
 
     codeseg *symemu_load_codeseg(const char *path);
     uint32_t symemu_codeseg_lookup(codeseg *seg, process *pr, const uint32_t ord);
@@ -20,7 +21,8 @@ ffi.cdef([[
     uint32_t symemu_codeseg_data_size(codeseg *seg);
     uint32_t symemu_codeseg_bss_size(codeseg *seg);
     uint32_t symemu_codeseg_export_count(codeseg *seg);
-    
+
+    int32_t symemu_queries_all_processes(process ***pr);
     process *symemu_get_current_process();
     uint8_t symemu_process_read_byte(process *pr, uint32_t addr);
     uint16_t symemu_process_read_word(process *pr, uint32_t addr);
@@ -47,6 +49,13 @@ ffi.cdef([[
 
     session *symemu_session_from_handle(uint32_t handle);
     server *symemu_session_server(session *ss);
+    
+    ipc_msg *symemu_ipc_message_from_handle(int guest_handle);
+    int symemu_ipc_message_function(ipc_msg *msg);
+    uint32_t symemu_ipc_message_arg(ipc_msg *msg, const int idx);
+    uint32_t symemu_ipc_message_flags(ipc_msg *msg);
+    thread *symemu_ipc_message_sender(ipc_msg *msg);
+    session *symemu_ipc_message_session_wrapper(ipc_msg *msg);
 ]])
 
 -- Code segment object implementation
@@ -121,6 +130,26 @@ function kernel.getCurrentProcess()
     ffi.gc(primpl, ffi.C.free);
 
     return process:new{ impl = primpl }
+end
+
+function kernel.getAllProcesses()
+    local arr = ffi.new('process**[1]', nil)
+    local count = ffi.C.symemu_queries_all_processes(arr)
+
+    if count <= 0 then
+        ffi.C.free(ffi.gc(arr, nil))
+        return {}
+    end
+
+    local retarr = {}
+
+    for i=1, count do
+        retarr[i] = process:new{ impl = arr[0][i - 1] }
+        ffi.gc(retarr[i].impl, ffi.C.free)
+    end
+    
+    ffi.C.free(ffi.gc(arr[0], nil))
+    return retarr
 end
 -- End process object implementation
 
@@ -261,5 +290,42 @@ function kernel.sessionFromHandle(handle)
     return session:new{ impl = ssimpl }
 end
 -- End session object implementation
+
+-- Begin IPC message implementation
+local ipcMessage = {}
+
+function ipcMessage:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
+end
+
+function ipcMessage:func()
+    return ffi.C.symemu_ipc_message_function(self.impl)
+end
+
+function ipcMessage:flags()
+    return ffi.C.symemu_ipc_message_flags(self.impl)
+end
+
+function ipcMessage:arg(idx)
+    return ffi.C.symemu_ipc_message_arg(self.impl, idx)
+end
+
+function ipcMessage:sender()
+    local thrimpl = ffi.C.symemu_ipc_message_sender(self.impl)
+    ffi.gc(thrimpl, ffi.C.free)
+
+    return thread:new{ impl = thrimpl }
+end
+
+function ipcMessage:session()
+    local ssimpl = ffi.C.symemu_ipc_message_session_wrapper(self.impl)
+    ffi.gc(ssimpl, ffi.C.free)
+
+    return session:new{ impl = ssimpl }
+end
+-- End IPC message implementation
 
 return kernel
