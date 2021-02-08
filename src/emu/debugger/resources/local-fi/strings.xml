@@ -42,12 +42,12 @@
     <string name="help_menu_about_item_name">Tietoa</string>
     <string name="app_launcher_title">Sovelluksen käynnistin</string>
     <string name="app_launcher_unavail_msg">Sovelluslistan palvelin ei ole käytettävissä. Asenna laite ottaaksesi se käyttöön.</string>
-    <string name="app_launcher_switch_to_style_title">Switch to</string>
+    <string name="app_launcher_switch_to_style_title">Vaihda</string>
     <string name="app_launcher_style_classical_str">Klassinen</string>
     <string name="app_launcher_style_modern_str">Moderni</string>
     <string name="error_dialog_title">Luonnollinen virhe ilmestyy</string>
     <string name="error_dialog_message">Liitä loki ja raportoi tästä kehittäjälle!</string>
-    <string name="emulated_screen_title">Screen {}</string>
+    <string name="emulated_screen_title">Näyttö {}</string>
     <string name="emulated_screen_orientation_lock_item_name">Orientation lock</string>
     <string name="emulated_screen_rotation_item_name">Kierto</string>
     <string name="emulated_screen_refresh_rate_item_name">Virkistystaajuus</string>
@@ -120,9 +120,9 @@
     <string name="install_device_wizard_raw_dump_type_name">Raaka dumppi</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Valitse asennusmenetelmä</string>
-    <string name="install_device_rpkg_choose_msg">Please specify the repackage file (RPKG):</string>
-    <string name="install_device_raw_dump_choose_msg">Please specify raw Z: drive dump folder:</string>
-    <string name="install_device_rom_choose_msg">Please specify the ROM file:</string>
+    <string name="install_device_rpkg_choose_msg">Määritä uudelleenpakkaustiedosto (RPKG):</string>
+    <string name="install_device_raw_dump_choose_msg">Määritä raaka Z: aseman dumppaus kansio:</string>
+    <string name="install_device_rom_choose_msg">Määritä ROM tiedosto:</string>
     <string name="install_device_wait_install_msg">Odota hetki, kun asennamme laitteen!</string>
     <string name="install_device_progress_raw_dump_msg">Kopioidaan raakaa dumppia ({}%)</string>
     <string name="install_device_progress_rpkg_msg">Pura RPKG</string>
