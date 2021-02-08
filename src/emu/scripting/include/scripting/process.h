@@ -35,6 +35,7 @@ namespace eka2l1::scripting {
     class thread;
 
     class process {
+    
         eka2l1::kernel::process *process_handle;
 
     public:

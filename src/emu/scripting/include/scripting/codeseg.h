@@ -32,6 +32,7 @@ namespace eka2l1::scripting {
     using process_inst = std::shared_ptr<process>;
 
     class codeseg {
+    public:
         kernel::codeseg *real_seg_;
 
     public:
@@ -50,5 +51,5 @@ namespace eka2l1::scripting {
         std::uint32_t get_export_count();
     };
 
-    std::unique_ptr<scripting::codeseg> load_codeseg(process_inst pr, const std::string &virt_path);
+    std::unique_ptr<scripting::codeseg> load_codeseg(const std::string &virt_path);
 }
