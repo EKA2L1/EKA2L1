@@ -35,6 +35,10 @@ namespace eka2l1::scripting {
     public:
         explicit session_wrapper(std::uint64_t handle);
         std::unique_ptr<scripting::server_wrapper> server();
+
+        service::session *get_session_handle() {
+            return ss_;
+        }
     };
 
     std::unique_ptr<session_wrapper> session_from_handle(const std::uint32_t handle);

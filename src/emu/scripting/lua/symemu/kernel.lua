@@ -8,6 +8,8 @@ ffi.cdef([[
     typedef struct codeseg codeseg;
     typedef struct process process;
     typedef struct thread thread;
+    typedef struct server server;
+    typedef struct session session;
 
     codeseg *symemu_load_codeseg(const char *path);
     uint32_t symemu_codeseg_lookup(codeseg *seg, process *pr, const uint32_t ord);
@@ -31,6 +33,11 @@ ffi.cdef([[
     int symemu_thread_current_state(thread *thr);
     int symemu_thread_priority(thread *thr);
     const char *symemu_thread_name(thread *thr);
+
+    const char *symemu_server_name(server *svr);
+
+    session *symemu_session_from_handle(uint32_t handle);
+    server *symemu_session_server(session *ss);
 ]])
 
 -- Code segment object implementation
@@ -68,6 +75,7 @@ function kernel.loadCodeseg(path)
         return nil
 	end
 
+    ffi.gc(res, ffi.C.free)
     return codeseg:new{ impl = res }
 end
 
@@ -131,9 +139,55 @@ end
 
 function kernel.getCurrentThread()
     local thrimpl = ffi.C.symemu_get_current_thread()
+    ffi.gc(thrimpl, ffi.C.free)
+
     return thread:new{ impl = thrimpl }
 end
     
 -- End thread object implementation
+
+-- Begin server object implementation
+local server = {}
+
+function server:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
+end
+
+function server:name()
+    local namec = ffi.C.symemu_server_name(self.impl)
+    ffi.gc(namec, ffi.C.free)
+
+    return ffi.string(namec)
+end
+-- End server object implementation
+
+-- Begin session object implementation
+function session:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
+end
+
+function session:server()
+    local svimpl = ffi.C.symemu_session_server(self.impl)
+    ffi.gc(svimpl, ffi.C.free)
+
+    return server:new{ impl = svimpl }
+end
+
+function kernel.sessionFromHandle(handle)
+    local ssimpl = ffi.C.symemu_session_from_handle(handle)
+    if ssimpl == nil then
+        return nil
+    end
+
+    ffi.gc(ssimpl, ffi.C.free)
+    return session:new{ impl = ssimpl }
+end
+-- End session object implementation
 
 return kernel

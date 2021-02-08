@@ -29,3 +29,15 @@ namespace eka2l1::scripting {
         return srv_->name();
     }
 }
+
+extern "C" {
+    EKA2L1_EXPORT const char *symemu_server_name(eka2l1::scripting::server_wrapper *sv) {
+        std::string data = sv->get_name();
+        char *ret_val = new char[data.length() + 1];
+
+        std::memcpy(ret_val, data.data(), data.length());
+        ret_val[data.length() + 1] = '\0';
+
+        return ret_val;
+    }
+}
