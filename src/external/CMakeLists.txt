@@ -1,4 +1,6 @@
-﻿add_library(miniz miniz/miniz.h miniz/miniz.c)
+﻿include(ExternalProject)
+
+add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
 # Force Boost directory for Dynarmic - we never use one
@@ -37,6 +39,50 @@ set (fmt_DIR fmt)
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 	option (PYBIND11_TEST "Enable pybind11 tests" OFF)
 	add_subdirectory(pybind11)
+
+    set(LUA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/luaorg)
+
+    if (MSVC)
+        ExternalProject_Add(luaorg
+            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT"
+            SOURCE_SUBDIR src
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT ${LUA_BINARY_DIR}
+            BINARY_DIR "${LUA_BINARY_DIR}/src"
+            BUILD_COMMAND "${LUA_BINARY_DIR}/src/msvcbuild.bat"
+            INSTALL_COMMAND ""
+        )
+
+        set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/lua51.dll" PARENT_SCOPE)
+
+        add_library(liblua INTERFACE)
+        target_link_libraries(liblua INTERFACE
+            "${LUA_BINARY_DIR}/src/lua51.lib")
+
+        target_include_directories(liblua INTERFACE
+            "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT/src/")
+
+        add_dependencies(liblua luaorg)
+    else()
+        ExternalProject_Add(luaorg
+            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT"
+            SOURCE_SUBDIR src
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT ${LUA_BINARY_DIR}
+            BINARY_DIR "${LUA_BINARY_DIR}/src"
+            BUILD_COMMAND "make ${LUA_BINARY_DIR}"
+            INSTALL_COMMAND ""
+        )
+
+        set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/liblua51.so" PARENT_SCOPE)
+
+        add_library(liblua INTERFACE)
+        target_link_libraries(liblua INTERFACE
+            "${LUA_BINARY_DIR}/src/liblua51.a")
+
+        target_include_directories(liblua INTERFACE
+            "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT/src/")
+
+        add_dependencies(liblua luaorg)
+    endif()
 endif()
 
 # SPDLOG - Build examples off
