@@ -385,6 +385,8 @@ namespace eka2l1 {
             std::uint32_t last_syscall() const;
             void add_last_syscall(const std::uint32_t syscall);
 
+            kernel::thread *next_in_process();
+
             thread_state current_state() const {
                 return state;
             }

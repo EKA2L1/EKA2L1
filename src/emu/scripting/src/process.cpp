@@ -92,19 +92,8 @@ namespace eka2l1::scripting {
         return process_handle->name();
     }
 
-    std::vector<std::unique_ptr<eka2l1::scripting::thread>> process::get_thread_list() {
-        system *sys = get_current_instance();
-        std::vector<kernel_obj_unq_ptr> &threads = sys->get_kernel_system()->get_thread_list();
-
-        std::vector<std::unique_ptr<scripting::thread>> script_threads;
-
-        for (const auto &thr : threads) {
-            if (reinterpret_cast<kernel::thread *>(thr.get())->owning_process() == process_handle) {
-                script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(thr.get())));
-            }
-        }
-
-        return script_threads;
+    std::unique_ptr<scripting::thread> process::first_thread() {
+        return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(process_handle->get_primary_thread()));
     }
 
     std::vector<std::unique_ptr<scripting::process>> get_process_list() {
@@ -127,5 +116,36 @@ namespace eka2l1::scripting {
 
         return std::make_unique<scripting::process>(reinterpret_cast<std::uint64_t>(
             get_current_instance()->get_kernel_system()->crr_process()));
+    }
+}
+
+extern "C" {
+    EKA2L1_EXPORT eka2l1::scripting::process *symemu_get_current_process() {
+        eka2l1::kernel::process *pr = eka2l1::scripting::get_current_instance()->get_kernel_system()->crr_process();
+        if (!pr) {
+            return nullptr;
+        }
+
+        return new eka2l1::scripting::process(reinterpret_cast<std::uint64_t>(pr));
+    }
+
+    EKA2L1_EXPORT std::uint8_t symemu_process_read_byte(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_byte(addr);
+    }
+
+    EKA2L1_EXPORT std::uint16_t symemu_process_read_word(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_word(addr);
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_process_read_dword(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_dword(addr);
+    }
+
+    EKA2L1_EXPORT std::uint64_t symemu_process_read_qword(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_qword(addr);
+    }
+
+    EKA2L1_EXPORT eka2l1::scripting::thread *symemu_process_first_thread(eka2l1::scripting::process *pr) {
+        return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(pr->get_process_handle()->get_primary_thread()));
     }
 }

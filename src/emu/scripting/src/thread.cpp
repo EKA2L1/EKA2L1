@@ -83,6 +83,15 @@ namespace eka2l1::scripting {
         return static_cast<int>(thread_handle->get_priority());
     }
 
+    std::unique_ptr<scripting::thread> thread::next_in_process() {
+        kernel::thread *thr = thread_handle->next_in_process();
+        if (!thr) {
+            return nullptr;
+        }
+
+        return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(thr));
+    }
+
     std::unique_ptr<scripting::process> thread::get_owning_process() {
         kernel::process *pr = thread_handle->owning_process();
         return std::make_unique<scripting::process>(reinterpret_cast<uint64_t>(pr));
@@ -108,6 +117,24 @@ extern "C" {
         }
 
         return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(thr));
+    }
+
+    EKA2L1_EXPORT eka2l1::scripting::thread *symemu_next_thread_in_process(eka2l1::scripting::thread *thr) {
+        eka2l1::kernel::thread *nnt = thr->get_thread_handle()->next_in_process();
+        if (!nnt) {
+            return nullptr;
+        }
+
+        return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(nnt));
+    }
+
+    EKA2L1_EXPORT eka2l1::scripting::process *symemu_thread_own_process(eka2l1::scripting::thread *thr) {
+        eka2l1::kernel::process *pr = thr->get_thread_handle()->owning_process();
+        if (!pr) {
+            return nullptr;
+        }
+
+        return new eka2l1::scripting::process(reinterpret_cast<std::uint64_t>(pr));
     }
 
     EKA2L1_EXPORT std::uint32_t symemu_thread_stack_base(eka2l1::scripting::thread *thr) {

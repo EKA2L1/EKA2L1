@@ -20,6 +20,7 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+#include <scripting/thread.h>
 
 #include <memory>
 #include <string>
@@ -35,11 +36,11 @@ namespace eka2l1::scripting {
     class thread;
 
     class process {
-    
+    private:
         eka2l1::kernel::process *process_handle;
 
     public:
-        process(uint64_t handle);
+        explicit process(uint64_t handle);
 
         pybind11::bytes read_process_memory(const std::uint32_t addr, const size_t size);
         void write_process_memory(const std::uint32_t addr, const std::string &buffer);
@@ -53,7 +54,7 @@ namespace eka2l1::scripting {
         std::string get_executable_path();
         std::string get_name();
 
-        std::vector<std::unique_ptr<eka2l1::scripting::thread>> get_thread_list();
+        std::unique_ptr<scripting::thread> first_thread();
 
         eka2l1::kernel::process *get_process_handle() {
             return process_handle;

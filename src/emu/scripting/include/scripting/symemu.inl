@@ -125,13 +125,10 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def("getName", &scripting::process::get_name, R"pbdoc(
             Get the process's name
         )pbdoc")
-        .def("getThreadList", &scripting::process::get_thread_list, R"pbdoc(
-            Get all the thread that the process owns.
+        .def("firstThread", &scripting::process::first_thread, R"pbdoc(
+            Get the first thread of this process.
 
-            Returns
-            -------
-            List[symemu.Thread]
-                A list of threads that this process owns.
+            To access other thread, use nextInProcess method from obtained thread.
         )pbdoc");
 
     py::class_<scripting::thread>(m, "Thread")
@@ -178,6 +175,12 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         )pbdoc")
         .def("getHeapBase", &scripting::thread::get_heap_base, R"pbdoc(
             Get the base address of the heap memory chunk.
+        )pbdoc")
+        .def("nextInProcess", &scripting::thread::next_in_process, R"pbdoc(
+            Get the thread next to this current thread in the owner process thread list.
+        )pbdoc")
+        .def("ownProcess", &scripting::thread::get_owning_process, R"pbdoc(
+            Get the process that is parent to this thread.
         )pbdoc");
 
     py::class_<scripting::codeseg>(m, "Codeseg")

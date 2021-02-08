@@ -104,6 +104,7 @@ namespace eka2l1::kernel {
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
+        friend class thread;
 
         enum {
             FLAG_NONE = 0,

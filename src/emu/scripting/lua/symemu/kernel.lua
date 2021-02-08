@@ -21,7 +21,16 @@ ffi.cdef([[
     uint32_t symemu_codeseg_bss_size(codeseg *seg);
     uint32_t symemu_codeseg_export_count(codeseg *seg);
     
+    process *symemu_get_current_process();
+    uint8_t symemu_process_read_byte(process *pr, uint32_t addr);
+    uint16_t symemu_process_read_word(process *pr, uint32_t addr);
+    uint32_t symemu_process_read_dword(process *pr, uint32_t addr);
+    uint64_t symemu_process_read_qword(process *pr, uint32_t addr);
+    thread *symemu_process_first_thread(process *pr);
+
     thread *symemu_get_current_thread();
+    thread *symemu_next_thread_in_process(thread *thr);
+    process *symemu_thread_own_process(thread *thr);
     uint32_t symemu_thread_stack_base(thread *thr);
     uint32_t symemu_thread_get_heap_base(thread *thr);
     uint32_t symemu_thread_get_register(thread *thr, uint8_t index);
@@ -81,6 +90,40 @@ end
 
 -- End code segment object implementation
 
+-- Begin process object implementation
+local process = {}
+
+function process:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
+end
+
+function process:readByte(addr)
+    return ffi.C.symemu_process_read_byte(self.impl, addr)
+end
+
+function process:readWord(addr)
+    return ffi.C.symemu_process_read_word(self.impl, addr)
+end
+
+function process:readDword(addr)
+    return ffi.C.symemu_process_read_dword(self.impl, addr)
+end
+
+function process:readQword(addr)
+    return ffi.C.symemu_process_read_qword(self.impl, addr)
+end
+
+function kernel.getCurrentProcess()
+    local primpl = ffi.C.symemu_get_current_process()
+    ffi.gc(primpl, ffi.C.free);
+
+    return process:new{ impl = primpl }
+end
+-- End process object implementation
+
 -- Begin thread object implementation
 local thread = {}
 
@@ -137,6 +180,33 @@ function thread:priority()
     return ffi.C.symemu_thread_priority(self.impl)
 end
 
+function thread:nextInProcess()
+    local thrimpl = ffi.C.symemu_next_thread_in_process(self.impl)
+    if thrimpl == nil then
+        return nil
+    end
+
+    ffi.gc(thrimpl, ffi.C.free)
+    return thread:new{ impl = thrimpl }
+end
+
+function thread:ownProcess()
+    local primpl = ffi.C.symemu_thread_own_process(self.impl)
+    if primpl == nil then
+        return nil
+    end
+
+    ffi.gc(primpl, ffi.C.free)
+    return process:new{ impl = primpl }
+end
+
+function process:firstThread()
+    local thrimpl = ffi.C.symemu_process_first_thread(self.impl)
+    ffi.gc(thrimpl, ffi.C.free)
+
+    return thread:new{ impl = thrimpl }
+end
+
 function kernel.getCurrentThread()
     local thrimpl = ffi.C.symemu_get_current_thread()
     ffi.gc(thrimpl, ffi.C.free)
@@ -165,6 +235,8 @@ end
 -- End server object implementation
 
 -- Begin session object implementation
+local session = {}
+
 function session:new(o)
     o = o or {}
     setmetatable(o, self)
