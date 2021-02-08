@@ -48,8 +48,6 @@ namespace eka2l1::scripting {
         uint32_t get_cpsr();
 
         int get_exit_reason();
-        int get_leave_depth();
-
         int get_state();
         int get_priority();
 

@@ -161,9 +161,6 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def("getLr", &scripting::thread::get_lr, R"pbdoc(
             Get PC of thread context.
         )pbdoc")
-        .def("getLeaveDepth", &scripting::thread::get_leave_depth, R"pbdoc(
-            Get the leave depth of thread.
-        )pbdoc")
         .def("getExitReason", &scripting::thread::get_exit_reason, R"pbdoc(
             Get the exit reason of thread
         )pbdoc")
