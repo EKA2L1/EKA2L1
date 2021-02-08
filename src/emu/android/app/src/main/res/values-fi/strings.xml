@@ -33,10 +33,10 @@
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_system_language_option_name">Kieli</string>
     <string name="pref_system_real_time_accuracy_str">Reaaliaikainen tarkkuus</string>
-    <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
-    <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
-    <string name="pref_system_real_time_accuracy_level_name_high">High</string>
-    <string name="pref_system_time_delay_option_name">Time delay</string>
+    <string name="pref_system_real_time_accuracy_level_name_low">Alhainen</string>
+    <string name="pref_system_real_time_accuracy_level_name_mid">Keski</string>
+    <string name="pref_system_real_time_accuracy_level_name_high">Korkea</string>
+    <string name="pref_system_time_delay_option_name">Aika viive</string>
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="emulated_screen_rotation_item_name">Kierto</string>
     <string name="emulated_screen_refresh_rate_item_name">Virkistystaajuus</string>
