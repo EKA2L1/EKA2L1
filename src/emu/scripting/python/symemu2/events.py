@@ -21,23 +21,6 @@ import symemu
 from enum import IntEnum
 from symemu2.ipc.context import Context
 
-
-# The function registed with this decorator will be invoked when
-# a panic happens to a thread. A panic code going to be passed
-# This still stands for N-Gage 2.0 apps, where panic code are sandbox-catched
-def emulatorPanicInvoke(panicName):
-    def invokeDecorator(funcToInvoke):
-        def funcWrapper(errorCode):
-            return funcToInvoke
-
-        # Register invoke here and return a empty FuncWrapper function
-        symemu.registerPanicInvokement(panicName, funcToInvoke)
-
-        return funcWrapper
-
-    return invokeDecorator
-
-
 def emulatorEpocFunctionInvoke(libname, ord, process_uid):
     def invokeDecorator(funcToInvoke):
         def funcWrapper():
@@ -60,18 +43,6 @@ def emulatorBreakpointInvoke(imageName, addr, processUid):
         return funcWrapper
 
     return invokeDecorator
-
-
-# The function registed with this decorator will be invoked when
-# a reschedule happens
-def emulatorRescheduleInvoke(func):
-    def funcWrapper():
-        return func
-
-    symemu.registerRescheduleInvokement(func)
-
-    return funcWrapper
-
 
 class IpcInvokementType(IntEnum):
     SEND = 0

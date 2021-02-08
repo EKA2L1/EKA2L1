@@ -4,5 +4,5 @@
 #include <string>
 
 namespace eka2l1::scripting {
-    void emulog(const std::string &format, pybind11::args vargs);
+    void emulog(const std::string &format);
 }

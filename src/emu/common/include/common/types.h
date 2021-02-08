@@ -24,6 +24,12 @@
 
 #define FOUND_STR(x) x != std::string::npos
 
+#if defined(_MSC_VER)
+#define EKA2L1_EXPORT __declspec(dllexport)
+#else
+#define EKA2L1_EXPORT __attribute__((dllexport))
+#endif
+
 typedef std::u16string utf16_str;
 typedef uint32_t address;
 

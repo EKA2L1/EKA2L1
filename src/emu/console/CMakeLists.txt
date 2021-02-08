@@ -44,6 +44,7 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:console>/scripts/disabled"
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:console>/resources"
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:console>/compat"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LUA_DLL_PATH}" "$<TARGET_FILE_DIR:console>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/panic.json" "$<TARGET_FILE_DIR:console>"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/domaincli.py" "$<TARGET_FILE_DIR:console>/scripts/disabled/"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/utils/leavehook.py" "$<TARGET_FILE_DIR:console>/scripts/disabled/"

@@ -277,12 +277,8 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get CPU's sp.
         )pbdoc");
 
-    m.def("emulog", &scripting::emulog, R"pbdoc(
+    m.def("log", &scripting::emulog, R"pbdoc(
         Log to the emulator's logging system
-    )pbdoc");
-
-    m.def("registerPanicInvokement", &scripting::register_panic_invokement, R"pbdoc(
-        Register a function to be called when a panic happen
     )pbdoc");
 
     m.def("registerLibraryInvokement", &scripting::register_lib_invokement, R"pbdoc(
@@ -324,10 +320,6 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
 
         func
                      The function to invoke on breakpoint hit.
-    )pbdoc");
-
-    m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement, R"pbdoc(
-        Register a function to be called right before a reschedule is started
     )pbdoc");
 
     m.def("registerIpcInvokement", &scripting::register_ipc_invokement, R"pbdoc(

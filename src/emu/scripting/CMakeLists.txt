@@ -44,7 +44,7 @@ target_link_libraries(symemu PRIVATE common
         epocservs)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-    target_link_libraries(symemu PUBLIC pybind11 pybind11::embed)
+    target_link_libraries(symemu PUBLIC pybind11 pybind11::embed liblua)
 
     if (NOT MSVC)
         target_link_libraries(symemu PRIVATE stdc++fs)
@@ -64,10 +64,10 @@ endif ()
 
 # Move the syemu to script folder
 set_target_properties(symemu PROPERTIES OUTPUT_NAME symemu
-        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
-        LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin"
-        LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
-        LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin")
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<0:>"
+        LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/$<0:>"
+        LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/$<0:>"
+        LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin/$<0:>")
 
 set_target_properties(symemu_common PROPERTIES OUTPUT_NAME common
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/scripts/symemu2"
@@ -76,4 +76,6 @@ set_target_properties(symemu_common PROPERTIES OUTPUT_NAME common
         LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin/scripts/symemu2")
 
 add_assets(symemu ${CMAKE_CURRENT_SOURCE_DIR}/python/example scripts/example)
+add_assets(symemu ${CMAKE_CURRENT_SOURCE_DIR}/lua/symemu scripts/symemu)
+
 add_assets(symemu_common ${CMAKE_CURRENT_SOURCE_DIR}/python/symemu2 .)

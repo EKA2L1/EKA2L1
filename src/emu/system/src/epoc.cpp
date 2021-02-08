@@ -472,8 +472,10 @@ namespace eka2l1 {
         common::dir_entry scripts_entry;
 
         while (scripts_dir.next_entry(scripts_entry) == 0) {
-            if ((scripts_entry.type == common::FILE_REGULAR) && path_extension(scripts_entry.name) == ".py") {
-                auto module_name = replace_extension(filename(scripts_entry.name), "");
+            const std::string ext = path_extension(scripts_entry.name);
+
+            if ((scripts_entry.type == common::FILE_REGULAR) &&  ((ext== ".py") || (ext == ".lua"))) {
+                auto module_name = filename(scripts_entry.name);
                 scripting_->import_module(".//scripts//" + module_name);
             }
         }
@@ -640,12 +642,7 @@ namespace eka2l1 {
         }
 
         if (!kern_->should_terminate()) {
-#ifdef ENABLE_SCRIPTING
-            scripter->call_reschedules();
-#endif
-
             kern_->reschedule();
-
             reschedule_pending = false;
         } else {
             exit = true;

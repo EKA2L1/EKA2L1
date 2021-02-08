@@ -34,7 +34,7 @@ def retrieveGetSendHook(ctx):
 
     # Extract the bitmap ID and mask ID. These all takes 4 bytes each
     (bitmapId, maskId) = struct.unpack('<ll', params[offsetStart: offsetStart + 8])
-    symemu.emulog('From file {}, bitmap ID {}, mask ID {}', filename, bitmapId, maskId)
+    symemu.log('From file {}, bitmap ID {}, mask ID {}', filename, bitmapId, maskId)
 
 
 # Hook that invokes when a message with opcode 0, from "!AknIconServer" yeilds complete.
@@ -45,4 +45,4 @@ def retrieveGetCompleteHook(ctx):
     # First 4-byte contains source bitmap handle, while the next contains mask bitmap handle.
     (bitmapHandle, maskHandle) = struct.unpack('<LL', returnParams[:8])
 
-    symemu.emulog('Rendered icon to bitmap handle {}, mask handle {}', bitmapHandle, maskHandle)
+    symemu.log('Rendered icon to bitmap handle {}, mask handle {}', bitmapHandle, maskHandle)
