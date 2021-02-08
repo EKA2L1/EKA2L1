@@ -80,6 +80,7 @@ add_library(epocservs
         include/services/remcon/target.h
         include/services/sensor/sensor.h
         include/services/shutdown/shutdown.h
+        include/services/sisregistry/sisregistry.h
         include/services/sms/sa/sa.h
         include/services/sms/sendas/sendas.h
         include/services/socket/agent/genconn.h
@@ -108,6 +109,7 @@ add_library(epocservs
         include/services/ui/view/queue.h
         include/services/ui/view/view.h
         include/services/ui/eikappui.h
+        include/services/uiss/uiss.h
         include/services/unipertar/unipertar.h
         include/services/window/bitmap_cache.h
         include/services/window/keys.h
@@ -192,6 +194,7 @@ add_library(epocservs
         src/remcon/target.cpp
         src/sensor/sensor.cpp
         src/shutdown/shutdown.cpp
+        src/sisregistry/sisregistry.cpp
         src/sms/sa/sa.cpp
         src/sms/sendas/sendas.cpp
         src/socket/agent/genconn.cpp
@@ -220,6 +223,7 @@ add_library(epocservs
         src/ui/view/queue.cpp
         src/ui/view/view.cpp
         src/ui/eikappui.cpp
+        src/uiss/uiss.cpp
         src/unipertar/unipertar.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/plugins/clickdll.cpp

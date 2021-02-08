@@ -49,6 +49,7 @@
 #include <services/remcon/remcon.h>
 #include <services/sensor/sensor.h>
 #include <services/shutdown/shutdown.h>
+#include <services/sisregistry/sisregistry.h>
 #include <services/sms/sa/sa.h>
 #include <services/sms/sendas/sendas.h>
 #include <services/socket/server.h>
@@ -56,6 +57,7 @@
 #include <services/ui/cap/oom_app.h>
 #include <services/ui/eikappui.h>
 #include <services/ui/view/view.h>
+#include <services/uiss/uiss.h>
 #include <services/unipertar/unipertar.h>
 #include <services/window/window.h>
 
@@ -205,6 +207,8 @@ namespace eka2l1 {
             CREATE_SERVER(sys, nifman_server);
             CREATE_SERVER(sys, drm_notifier_server);
             CREATE_SERVER(sys, sendas_server);
+            CREATE_SERVER(sys, sisregistry_server);
+            CREATE_SERVER(sys, uiss_server);
 
             if (cfg->enable_srv_socket) {
                 CREATE_SERVER(sys, socket_server);
