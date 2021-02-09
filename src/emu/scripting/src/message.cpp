@@ -48,6 +48,10 @@ namespace eka2l1::scripting {
         return static_cast<std::uint32_t>(msg_->args.flag);
     }
 
+    std::uint32_t ipc_message_wrapper::request_status_address() const {
+        return msg_->request_sts.ptr_address();
+    }
+
     std::unique_ptr<scripting::thread> ipc_message_wrapper::sender() {
         return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(msg_->own_thr));
     }
@@ -88,6 +92,10 @@ extern "C" {
 
     EKA2L1_EXPORT std::uint32_t symemu_ipc_message_flags(eka2l1::scripting::ipc_message_wrapper *msg) {
         return msg->flags();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_ipc_message_request_status_address(eka2l1::scripting::ipc_message_wrapper *msg) {
+        return msg->request_status_address();
     }
 
     EKA2L1_EXPORT eka2l1::scripting::thread *symemu_ipc_message_sender(eka2l1::scripting::ipc_message_wrapper *msg) {

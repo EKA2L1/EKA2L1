@@ -246,6 +246,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         )pbdoc")
         .def("flags", &scripting::ipc_message_wrapper::flags, R"pbdoc(
             Get IPC message flags, containing information about argument types.
+        )pbdoc")
+        .def("requestStatusAddress", &scripting::ipc_message_wrapper::request_status_address, R"pbdoc(
+            Get the address of the request status related to this message.
         )pbdoc");
 
     py::class_<scripting::session_wrapper>(m, "Session")

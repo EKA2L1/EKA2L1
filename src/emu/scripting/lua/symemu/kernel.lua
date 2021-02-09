@@ -24,6 +24,8 @@ ffi.cdef([[
 
     int32_t symemu_queries_all_processes(process ***pr);
     process *symemu_get_current_process();
+    const char *symemu_process_read_memory(process *pr, uint32_t addr, uint32_t size);
+    int symemu_process_write_memory(process *pr, uint32_t addr, const char *buf, uint32_t size);
     uint8_t symemu_process_read_byte(process *pr, uint32_t addr);
     uint16_t symemu_process_read_word(process *pr, uint32_t addr);
     uint32_t symemu_process_read_dword(process *pr, uint32_t addr);
@@ -56,6 +58,7 @@ ffi.cdef([[
     uint32_t symemu_ipc_message_flags(ipc_msg *msg);
     thread *symemu_ipc_message_sender(ipc_msg *msg);
     session *symemu_ipc_message_session_wrapper(ipc_msg *msg);
+    uint32_t symemu_ipc_message_request_status_address(ipc_msg *msg);
 ]])
 
 -- Code segment object implementation
@@ -123,6 +126,23 @@ end
 
 function process:readQword(addr)
     return ffi.C.symemu_process_read_qword(self.impl, addr)
+end
+
+function process:readMemory(addr, size)
+    local res = ffi.C.symemu_process_read_memory(self.impl, addr, size)
+    ffi.gc(res, ffi.C.free)
+
+    return res
+end
+
+function process:writeMemory(addr, buffer)
+    local cbuf = ffi.new('char[?]', #buffer)
+    ffi.copy(cbuf, buffer)
+
+    local res = ffi.C.symemu_process_write_memory(addr, cbuf, #buffer)
+    if res == 0 then
+        error('Fail to write memory, address is invalid!')
+    end
 end
 
 function kernel.getCurrentProcess()
@@ -242,6 +262,11 @@ function kernel.getCurrentThread()
 
     return thread:new{ impl = thrimpl }
 end
+
+function kernel.makeThreadFromHandle(handle)
+    ffi.gc(handle, ffi.C.free)
+    return thread:new{ impl = handle }
+end
     
 -- End thread object implementation
 
@@ -325,6 +350,15 @@ function ipcMessage:session()
     ffi.gc(ssimpl, ffi.C.free)
 
     return session:new{ impl = ssimpl }
+end
+
+function ipcMessage:requestStatusAddress()
+    return ffi.C.symemu_ipc_message_request_status_address(self.impl)
+end
+
+function kernel.makeMessageFromHandle(msg)
+    ffi.gc(msg, ffi.C.free)
+    return ipcMessage:new{ impl = msg }
 end
 -- End IPC message implementation
 

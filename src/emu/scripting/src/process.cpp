@@ -165,6 +165,28 @@ extern "C" {
     EKA2L1_EXPORT std::uint64_t symemu_process_read_qword(eka2l1::scripting::process *pr, const std::uint32_t addr) {
         return pr->read_qword(addr);
     }
+    
+    EKA2L1_EXPORT const char *symemu_process_read_memory(eka2l1::scripting::process *pr, const std::uint32_t addr, const std::uint32_t size) {
+        void *source = pr->get_process_handle()->get_ptr_on_addr_space(addr);
+        if (!source) {
+            return nullptr;
+        }
+
+        char *result = new char[size];
+        std::memcpy(result, source, size);
+
+        return result;
+    }
+
+    EKA2L1_EXPORT bool symemu_process_write_memory(eka2l1::scripting::process *pr, const std::uint32_t addr, const char *source, const std::uint32_t size) {
+        void *dest = pr->get_process_handle()->get_ptr_on_addr_space(addr);
+        if (!dest) {
+            return false;
+        }
+
+        std::memcpy(dest, source, size);
+        return true;
+    }
 
     EKA2L1_EXPORT eka2l1::scripting::thread *symemu_process_first_thread(eka2l1::scripting::process *pr) {
         return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(pr->get_process_handle()->get_primary_thread()));

@@ -56,8 +56,8 @@ def emulatorIpcInvoke(serverName, opcode, invokeType=IpcInvokementType.SEND):
         def funcWrapper(context):
             return funcToInvoke
 
-        def assembleSend(arg0, arg1, arg2, arg3, flags, process):
-            funcToInvoke(Context(arg0, arg1, arg2, arg3, flags, process))
+        def assembleSend(arg0, arg1, arg2, arg3, flags, reqstsaddr, process):
+            funcToInvoke(Context(opcode, arg0, arg1, arg2, arg3, flags, reqstsaddr, process))
 
         def assembleComplete(msg):
             funcToInvoke(Context.makeFromMessage(msg))

@@ -476,9 +476,9 @@ namespace eka2l1 {
     }
 
     void kernel_system::call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,
-        kernel::thread *callee) {
+        address reqsts_addr, kernel::thread *callee) {
         for (auto &ipc_send_callback_func: ipc_send_callbacks_) {
-            ipc_send_callback_func(server_name, ord, args, callee);
+            ipc_send_callback_func(server_name, ord, args, reqsts_addr, callee);
         }
     }
 

@@ -48,13 +48,22 @@ namespace eka2l1 {
     namespace arm {
         class core;
     }
+
+    namespace scripting {
+        class thread;
+        class ipc_message_wrapper;
+    }
 }
 
 namespace eka2l1::manager {
-    using func_list = std::vector<pybind11::function>;
-
+    typedef void (__stdcall *ipc_sent_lua_func)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+        std::uint32_t, std::uint32_t, eka2l1::scripting::thread*);
+    typedef void (__stdcall *ipc_completed_lua_func)(eka2l1::scripting::ipc_message_wrapper*);
     typedef void (__stdcall *breakpoint_hit_lua_func)();
+
     using breakpoint_hit_func = std::variant<pybind11::function, breakpoint_hit_lua_func>;
+    using ipc_operation_func = std::variant<pybind11::function, void*>;
+    using ipc_operation_func_list = std::vector<ipc_operation_func>;
 
     struct breakpoint_info {
         std::string lib_name_;
@@ -94,11 +103,8 @@ namespace eka2l1::manager {
     private:
         // ================= PYTHON SECTION ========================
         std::unordered_map<std::string, script_module> modules;
-
         std::unordered_map<std::uint32_t, breakpoint_info_list_record> breakpoints; ///< Breakpoints complete patching
-        breakpoint_info_list breakpoint_wait_patch; ///< Breakpoints that still require patching
-
-        std::unordered_map<std::string, std::map<std::uint64_t, func_list>> ipc_functions;
+        std::unordered_map<std::string, std::map<std::uint64_t, ipc_operation_func_list>> ipc_functions;
 
         struct breakpoint_hit_info {
             bool hit_;
@@ -106,6 +112,7 @@ namespace eka2l1::manager {
         };
 
         std::map<std::uint64_t, breakpoint_hit_info> last_breakpoint_script_hits;
+        breakpoint_info_list breakpoint_wait_patch; ///< Breakpoints that still require patching
 
         std::unique_ptr<pybind11::scoped_interpreter> interpreter;
 
@@ -138,7 +145,7 @@ namespace eka2l1::manager {
 
         void call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0,
             const std::uint32_t arg1, const std::uint32_t arg2, const std::uint32_t arg3,
-            const std::uint32_t flags, kernel::thread *callee);
+            const std::uint32_t flags, const std::uint32_t reqstsaddr, kernel::thread *callee);
         void call_ipc_complete(const std::string &server_name, const int opcode,
             ipc_msg *msg);
 
@@ -152,7 +159,7 @@ namespace eka2l1::manager {
          */
         void register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func);
         void register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func);
-        void register_ipc(const std::string &server_name, const int opcode, const int invoke_when, pybind11::function &func);
+        void register_ipc(const std::string &server_name, const int opcode, const int invoke_when, ipc_operation_func func);
 
         bool call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid);
 

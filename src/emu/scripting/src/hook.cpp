@@ -47,4 +47,12 @@ extern "C" {
     EKA2L1_EXPORT void symemu_cpu_register_bkpt_hook(const char *image_name, const std::uint32_t addr, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
         eka2l1::scripting::get_current_instance()->get_scripts()->register_breakpoint(image_name, addr, process_uid, func);
     }
+
+    EKA2L1_EXPORT void symemu_register_ipc_sent_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_sent_lua_func func) {
+        eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 0, reinterpret_cast<void*>(func));
+    }
+    
+    EKA2L1_EXPORT void symemu_register_ipc_completed_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_completed_lua_func func) {
+        eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 2, reinterpret_cast<void*>(func));
+    }
 }

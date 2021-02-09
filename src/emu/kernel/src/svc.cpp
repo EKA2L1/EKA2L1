@@ -998,7 +998,7 @@ namespace eka2l1::epoc {
         }
 
         const std::string server_name = ss->get_server()->name();
-        kern->call_ipc_send_callbacks(server_name, ord, arg, kern->crr_thread());
+        kern->call_ipc_send_callbacks(server_name, ord, arg, status.ptr_address(), kern->crr_thread());
 
         const int result = sync ? ss->send_receive_sync(ord, arg, status) : ss->send_receive(ord, arg, status);
 

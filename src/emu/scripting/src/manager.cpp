@@ -154,8 +154,8 @@ namespace eka2l1::manager {
         if (!ipc_send_callback_handle) {
             kernel_system *kern = sys->get_kernel_system();
             
-            ipc_send_callback_handle = kern->register_ipc_send_callback([this](const std::string& svr_name, const int ord, const ipc_arg& args, kernel::thread* callee) {
-                call_ipc_send(svr_name, ord, args.args[0], args.args[1], args.args[2], args.args[3], args.flag, callee);
+            ipc_send_callback_handle = kern->register_ipc_send_callback([this](const std::string& svr_name, const int ord, const ipc_arg& args, address reqstsaddr, kernel::thread* callee) {
+                call_ipc_send(svr_name, ord, args.args[0], args.args[1], args.args[2], args.args[3], args.flag, reqstsaddr, callee);
             });
 
             ipc_complete_callback_handle = kern->register_ipc_complete_callback([this](ipc_msg *msg, const std::int32_t complete_code) {
@@ -208,7 +208,7 @@ namespace eka2l1::manager {
         return fine;
     }
 
-    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, pybind11::function &func) {
+    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, ipc_operation_func func) {
         ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
     }
 
@@ -322,7 +322,7 @@ namespace eka2l1::manager {
     }
 
     void scripts::call_ipc_send(const std::string &server_name, const int opcode, const std::uint32_t arg0, const std::uint32_t arg1,
-        const std::uint32_t arg2, const std::uint32_t arg3, const std::uint32_t flags,
+        const std::uint32_t arg2, const std::uint32_t arg3, const std::uint32_t flags, const std::uint32_t reqsts_addr,
         kernel::thread *callee) {
         std::lock_guard<std::mutex> guard(smutex);
 
@@ -330,11 +330,19 @@ namespace eka2l1::manager {
         eka2l1::scripting::set_current_instance(sys);
 
         for (const auto &ipc_func : ipc_functions[server_name][opcode]) {
-            try {
-                ipc_func(arg0, arg1, arg2, arg3, flags, std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(callee)));
-            } catch (py::error_already_set &exec) {
-                LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
-            }
+            std::visit(overloaded {
+                [&](const pybind11::function &func) {
+                    try {
+                        func(arg0, arg1, arg2, arg3, flags, reqsts_addr, std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(callee)));
+                    } catch (py::error_already_set &exec) {
+                        LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
+                    }
+                },
+                [&](const void *lua_func) {
+                    ipc_sent_lua_func sent_func = reinterpret_cast<ipc_sent_lua_func>(lua_func);
+                    sent_func(arg0, arg1, arg2, arg3, flags, reqsts_addr, new scripting::thread(reinterpret_cast<std::uint64_t>(callee)));
+                }
+            }, ipc_func);
         }
 
         scripting::set_current_instance(crr_instance);
@@ -348,12 +356,20 @@ namespace eka2l1::manager {
         eka2l1::scripting::set_current_instance(sys);
 
         for (const auto &ipc_func : ipc_functions[server_name][(2ULL << 32) | opcode]) {
-            try {
-                ipc_func(std::make_unique<scripting::ipc_message_wrapper>(
-                    reinterpret_cast<std::uint64_t>(msg)));
-            } catch (py::error_already_set &exec) {
-                LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
-            }
+            std::visit(overloaded {
+                [&](const pybind11::function &func) {     
+                    try {
+                        func(std::make_unique<scripting::ipc_message_wrapper>(
+                            reinterpret_cast<std::uint64_t>(msg)));
+                    } catch (py::error_already_set &exec) {
+                        LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
+                    }
+                },
+                [&](const void *lua_func) {
+                    ipc_completed_lua_func comp_func = reinterpret_cast<ipc_completed_lua_func>(lua_func);
+                    comp_func(new scripting::ipc_message_wrapper(reinterpret_cast<std::uint64_t>(msg)));
+                }
+            }, ipc_func);
         }
 
         scripting::set_current_instance(crr_instance);

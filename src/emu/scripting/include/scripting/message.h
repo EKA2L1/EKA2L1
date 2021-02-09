@@ -39,6 +39,7 @@ namespace eka2l1::scripting {
 
         std::uint32_t arg(const int idx);
         std::uint32_t flags() const;
+        std::uint32_t request_status_address() const;
 
         std::unique_ptr<scripting::session_wrapper> session();
 
