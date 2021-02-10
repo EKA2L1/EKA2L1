@@ -251,6 +251,11 @@ namespace eka2l1 {
 
         io_system *io = ctx->sys->get_io_system();
 
+        if (!io->exist(target)) {
+            ctx->complete(epoc::error_path_not_found);
+            return;
+        }
+
         if (io->exist(dest)) {
             ctx->complete(epoc::error_already_exists);
             return;
