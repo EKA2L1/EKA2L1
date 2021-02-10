@@ -394,6 +394,7 @@ namespace eka2l1 {
             // need to pop now
             emitter.SUB(common::armgen::R_SP, common::armgen::R_SP, 4);
             emitter.BL(common::armgen::R1);
+            emitter.MOV(common::armgen::R_LR, common::armgen::R_PC);
             emitter.SVC(0xC20000);
             emitter.ADD(common::armgen::R_SP, common::armgen::R_SP, 4);
             emitter.POP(7, common::armgen::R0, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12, common::armgen::R14, common::armgen::R15);
