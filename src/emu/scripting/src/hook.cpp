@@ -40,6 +40,10 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
+    EKA2L1_EXPORT void symemu_free_string(char *pt) {
+        delete pt;
+    }
+
     EKA2L1_EXPORT void symemu_cpu_register_lib_hook(const char *lib_name, const std::uint32_t ord, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
         eka2l1::scripting::get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
     }

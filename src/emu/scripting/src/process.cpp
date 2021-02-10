@@ -120,6 +120,10 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
+    EKA2L1_EXPORT void symemu_free_process(eka2l1::scripting::process *pr) {
+        delete pr;
+    }
+
     EKA2L1_EXPORT std::int32_t symemu_queries_all_processes(eka2l1::scripting::process ***pr) {
         if (!pr) {
             return -1;

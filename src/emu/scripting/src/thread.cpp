@@ -108,6 +108,10 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
+    EKA2L1_EXPORT void symemu_free_thread(eka2l1::scripting::thread *thr) {
+        delete thr;
+    }
+
     EKA2L1_EXPORT eka2l1::scripting::thread *symemu_get_current_thread() {
         eka2l1::kernel::thread *thr = eka2l1::scripting::get_current_instance()->
             get_kernel_system()->crr_thread();
@@ -182,7 +186,7 @@ extern "C" {
         char *ret_val = new char[data.length() + 1];
 
         std::memcpy(ret_val, data.data(), data.length());
-        ret_val[data.length() + 1] = '\0';
+        ret_val[data.length()] = '\0';
 
         return ret_val;
     }

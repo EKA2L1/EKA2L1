@@ -3,14 +3,21 @@ kernel = {
 
 local ffi = require('ffi')
 ffi.cdef([[
-    void free(void *ptr);
-
     typedef struct codeseg codeseg;
     typedef struct process process;
     typedef struct thread thread;
     typedef struct server server;
     typedef struct session session;
     typedef struct ipc_msg ipc_msg;
+
+    void symemu_free_codeseg(codeseg* seg);
+    void symemu_free_process(process *pr);
+    void symemu_free_thread(thread *thr);
+    void symemu_free_server(server *svr);
+    void symemu_free_session(session *ss);
+    void symemu_free_ipc_msg(ipc_msg *msg);
+	
+    void symemu_free_string(const char* str);
 
     codeseg *symemu_load_codeseg(const char *path);
     uint32_t symemu_codeseg_lookup(codeseg *seg, process *pr, const uint32_t ord);
@@ -96,7 +103,7 @@ function kernel.loadCodeseg(path)
         return nil
 	end
 
-    ffi.gc(res, ffi.C.free)
+    ffi.gc(res, ffi.C.symemu_free_codeseg)
     return codeseg:new{ impl = res }
 end
 
@@ -130,7 +137,7 @@ end
 
 function process:readMemory(addr, size)
     local res = ffi.C.symemu_process_read_memory(self.impl, addr, size)
-    ffi.gc(res, ffi.C.free)
+    ffi.gc(res, ffi.C.symemu_free_string)
 
     return res
 end
@@ -147,7 +154,7 @@ end
 
 function kernel.getCurrentProcess()
     local primpl = ffi.C.symemu_get_current_process()
-    ffi.gc(primpl, ffi.C.free);
+    ffi.gc(primpl, ffi.C.symemu_free_process);
 
     return process:new{ impl = primpl }
 end
@@ -165,7 +172,7 @@ function kernel.getAllProcesses()
 
     for i=1, count do
         retarr[i] = process:new{ impl = arr[0][i - 1] }
-        ffi.gc(retarr[i].impl, ffi.C.free)
+        ffi.gc(retarr[i].impl, ffi.C.symemu_free_process)
     end
     
     ffi.C.free(ffi.gc(arr[0], nil))
@@ -185,8 +192,11 @@ end
 
 function thread:name()
     local cname = ffi.C.symemu_thread_name(self.impl)
-    ffi.gc(cname, ffi.C.free)
-    return ffi.string(cname)
+    local namer = ffi.string(cname)
+
+    ffi.C.symemu_free_string(ffi.gc(cname, nil))
+
+    return namer
 end
 
 function thread:stackBase()
@@ -235,7 +245,7 @@ function thread:nextInProcess()
         return nil
     end
 
-    ffi.gc(thrimpl, ffi.C.free)
+    ffi.gc(thrimpl, ffi.C.symemu_free_thread)
     return thread:new{ impl = thrimpl }
 end
 
@@ -245,26 +255,26 @@ function thread:ownProcess()
         return nil
     end
 
-    ffi.gc(primpl, ffi.C.free)
+    ffi.gc(primpl, ffi.C.symemu_free_process)
     return process:new{ impl = primpl }
 end
 
 function process:firstThread()
     local thrimpl = ffi.C.symemu_process_first_thread(self.impl)
-    ffi.gc(thrimpl, ffi.C.free)
+    ffi.gc(thrimpl, ffi.C.symemu_free_thread)
 
     return thread:new{ impl = thrimpl }
 end
 
 function kernel.getCurrentThread()
     local thrimpl = ffi.C.symemu_get_current_thread()
-    ffi.gc(thrimpl, ffi.C.free)
+    ffi.gc(thrimpl, ffi.C.symemu_free_thread)
 
     return thread:new{ impl = thrimpl }
 end
 
 function kernel.makeThreadFromHandle(handle)
-    ffi.gc(handle, ffi.C.free)
+    ffi.gc(handle, ffi.C.symemu_free_thread)
     return thread:new{ impl = handle }
 end
     
@@ -282,9 +292,11 @@ end
 
 function server:name()
     local namec = ffi.C.symemu_server_name(self.impl)
-    ffi.gc(namec, ffi.C.free)
+    local namer = ffi.string(namec)
 
-    return ffi.string(namec)
+    ffi.C.symemu_free_string(ffi.gc(namec, nil))
+
+    return namer
 end
 -- End server object implementation
 
@@ -300,7 +312,7 @@ end
 
 function session:server()
     local svimpl = ffi.C.symemu_session_server(self.impl)
-    ffi.gc(svimpl, ffi.C.free)
+    ffi.gc(svimpl, ffi.C.symemu_free_server)
 
     return server:new{ impl = svimpl }
 end
@@ -311,7 +323,7 @@ function kernel.sessionFromHandle(handle)
         return nil
     end
 
-    ffi.gc(ssimpl, ffi.C.free)
+    ffi.gc(ssimpl, ffi.C.symemu_free_session)
     return session:new{ impl = ssimpl }
 end
 -- End session object implementation
@@ -340,14 +352,14 @@ end
 
 function ipcMessage:sender()
     local thrimpl = ffi.C.symemu_ipc_message_sender(self.impl)
-    ffi.gc(thrimpl, ffi.C.free)
+    ffi.gc(thrimpl, ffi.C.symemu_free_thread)
 
     return thread:new{ impl = thrimpl }
 end
 
 function ipcMessage:session()
     local ssimpl = ffi.C.symemu_ipc_message_session_wrapper(self.impl)
-    ffi.gc(ssimpl, ffi.C.free)
+    ffi.gc(ssimpl, ffi.C.symemu_free_session)
 
     return session:new{ impl = ssimpl }
 end
@@ -357,7 +369,7 @@ function ipcMessage:requestStatusAddress()
 end
 
 function kernel.makeMessageFromHandle(msg)
-    ffi.gc(msg, ffi.C.free)
+    ffi.gc(msg, ffi.C.symemu_free_ipc_msg)
     return ipcMessage:new{ impl = msg }
 end
 -- End IPC message implementation

@@ -1,5 +1,6 @@
 local ipcCtx = require('symemu.ipc.context')
 local kern = require('symemu.kernel')
+local common = require('symemu.common')
 
 events = {}
 

@@ -82,6 +82,10 @@ namespace eka2l1::scripting {
 }
 
 extern "C" { 
+    EKA2L1_EXPORT void symemu_free_codeseg(eka2l1::scripting::codeseg* seg) {
+        delete seg;
+    }
+
     EKA2L1_EXPORT eka2l1::scripting::codeseg *symemu_load_codeseg(const char *path) {
         eka2l1::system *sys = eka2l1::scripting::get_current_instance();
         eka2l1::hle::lib_manager *libmngr = sys->get_lib_manager();

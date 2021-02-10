@@ -72,6 +72,10 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
+	EKA2L1_EXPORT void symemu_free_ipc_msg(eka2l1::scripting::ipc_message_wrapper *msg) {
+        delete msg;
+    }
+
     EKA2L1_EXPORT eka2l1::scripting::ipc_message_wrapper *symemu_ipc_message_from_handle(const int guest_handle) {
         eka2l1::ipc_msg_ptr msg = eka2l1::scripting::get_current_instance()->get_kernel_system()->get_msg(guest_handle);
 
