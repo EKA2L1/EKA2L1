@@ -252,7 +252,13 @@ namespace eka2l1 {
         io_system *io = ctx->sys->get_io_system();
 
         if (!io->exist(target)) {
-            ctx->complete(epoc::error_path_not_found);
+            if (eka2l1::is_separator(target.back())) {
+                // Want to rename a directory. It's path not found in this case
+                ctx->complete(epoc::error_path_not_found);
+            } else {
+                ctx->complete(epoc::error_not_found);
+            }
+
             return;
         }
 
