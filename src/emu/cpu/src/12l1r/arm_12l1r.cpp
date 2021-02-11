@@ -55,7 +55,8 @@ namespace eka2l1::arm {
     }
 
     void r12l1_core::step() {
-        LOG_INFO(CPU_12L1R, "Step is not supported!");
+        // TODO: This step is emulated! So it is not accurate.
+        run(1);
     }
 
     std::uint32_t r12l1_core::get_reg(size_t idx) {

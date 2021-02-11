@@ -991,6 +991,22 @@ namespace eka2l1::arm::r12l1 {
         return false;
     }
 
+    bool visit_session::emit_breakpoint_handler() {
+        emit_cpsr_update_nzcvq();
+        sync_state();
+
+        big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
+        big_block_->MOVI2R(common::armgen::R1, exception_type_breakpoint);
+        big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address());
+
+        big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
+        big_block_->emit_cpsr_load();
+
+        emit_return_to_dispatch(false, false);
+
+        return false;
+    }
+
     bool visit_session::emit_system_call_handler(const std::uint32_t n) {
         emit_cpsr_update_nzcvq();
         sync_state();
