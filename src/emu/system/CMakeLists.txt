@@ -30,5 +30,5 @@ target_link_libraries(epoc PRIVATE
         gdbstub)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-        target_link_libraries(epoc PRIVATE symemu)
+        target_link_libraries(epoc PUBLIC symemu)
 endif()
