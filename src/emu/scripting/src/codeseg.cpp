@@ -27,7 +27,6 @@
 #include <kernel/libmanager.h>
 
 #include <common/cvt.h>
-#include <pybind11/embed.h>
 
 namespace eka2l1::scripting {
     codeseg::codeseg(std::uint64_t handle)

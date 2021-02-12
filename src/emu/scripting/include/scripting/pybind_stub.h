@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  *
  * This file is part of EKA2L1 project.
  *
@@ -19,8 +19,16 @@
 
 #pragma once
 
-#include <string>
+namespace pybind11 {
+    struct function {
+    };
 
-namespace eka2l1::scripting {
-    void emulog(const std::string &format);
+    struct interpreter {
+    };
+
+    struct scoped_interpreter {
+    };
+
+    struct module {
+    };
 }

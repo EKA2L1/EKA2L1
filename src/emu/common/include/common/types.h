@@ -24,10 +24,14 @@
 
 #define FOUND_STR(x) x != std::string::npos
 
+#if defined(_WIN32) || defined(__CYGWIN__)
 #if defined(_MSC_VER)
 #define EKA2L1_EXPORT __declspec(dllexport)
 #else
-#define EKA2L1_EXPORT __attribute__((dllexport))
+#define EKA2L1_EXPORT __attribute__ ((dllexport))
+#endif
+#else
+#define EKA2L1_EXPORT __attribute__((visibility("default")))
 #endif
 
 typedef std::u16string utf16_str;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  *
  * This file is part of EKA2L1 project.
  *
@@ -19,8 +19,10 @@
 
 #pragma once
 
-#include <string>
+#include <common/platform.h>
 
-namespace eka2l1::scripting {
-    void emulog(const std::string &format);
-}
+#if EKA2L1_PLATFORM(ANDROID)
+#define ENABLE_PYTHON_SCRIPTING 0
+#else
+#define ENABLE_PYTHON_SCRIPTING 1
+#endif

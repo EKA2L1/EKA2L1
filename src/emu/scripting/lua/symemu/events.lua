@@ -8,6 +8,9 @@ EVENT_IPC_SEND = 0
 EVENT_IPC_COMPLETE = 2
 
 local ffi = require("ffi")
+
+pcall(ffi.load, 'native-lib', true)
+
 ffi.cdef([[
     void free(void *ptr);
 

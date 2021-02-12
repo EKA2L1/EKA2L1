@@ -24,7 +24,9 @@
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 
+#if ENABLE_PYTHON_SCRIPTING
 #include <pybind11/pybind11.h>
+#endif
 
 namespace eka2l1::scripting {
     ipc_message_wrapper::ipc_message_wrapper(std::uint64_t handle)
@@ -37,7 +39,9 @@ namespace eka2l1::scripting {
 
     std::uint32_t ipc_message_wrapper::arg(const int idx) {
         if (idx < 0 || idx >= 4) {
+#if ENABLE_PYTHON_SCRIPTING
             throw pybind11::index_error("Arg index must be between 0 and 3!");
+#endif
             return 0;
         }
 

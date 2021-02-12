@@ -591,6 +591,8 @@ namespace eka2l1 {
         bool should_step = false;
         bool script_hits_the_feels = false;
 
+        kernel::thread *to_run = kern_->crr_thread();
+
 #ifdef ENABLE_SCRIPTING
         manager::scripts *scripter = get_scripts();
 #endif
@@ -607,9 +609,10 @@ namespace eka2l1 {
             }
         } else {
 #ifdef ENABLE_SCRIPTING
-            if (scripter->last_breakpoint_hit(kern_->crr_thread())) {
-                should_step = true;
+            if (scripter->last_breakpoint_hit(to_run)) {
+                // About to run this thread, so reset the hit
                 script_hits_the_feels = true;
+                should_step = true;
             }
 #endif
 
@@ -618,27 +621,21 @@ namespace eka2l1 {
             }
         }
 
-        if (kern_->crr_thread() == nullptr) {
+        if (to_run == nullptr) {
             prepare_reschedule();
         } else {
-            kernel::thread *thr = kern_->crr_thread();
-
             if (!should_step) {
-                cpu->run(thr->get_remaining_screenticks());
-                thr->add_ticks(cpu->get_num_instruction_executed());
+                cpu->run(to_run->get_remaining_screenticks());
             } else {
                 cpu->step();
 
 #ifdef ENABLE_SCRIPTING
-                if (script_hits_the_feels) {
-                    should_step = true;
-                    script_hits_the_feels = true;
-                    scripter->reset_breakpoint_hit(cpu.get(), kern_->crr_thread());
-                }
+                if (script_hits_the_feels)
+                    scripter->reset_breakpoint_hit(cpu.get(), to_run);
 #endif
-
-                thr->add_ticks(1);
             }
+
+            to_run->add_ticks(cpu->get_num_instruction_executed());
         }
 
         if (!kern_->should_terminate()) {

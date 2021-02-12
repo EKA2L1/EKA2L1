@@ -30,10 +30,21 @@ target_link_libraries(native-lib PRIVATE
         yaml-cpp)
 
 target_include_directories(native-lib PRIVATE include)
-
 add_dependencies(native-lib scdv mediaclientaudio mediaclientaudiostream)
 
 set(ASSETS_DIR "${PROJECT_SOURCE_DIR}/src/emu/android/app/src/main/assets")
+
+if (ENABLE_SCRIPTING)
+    message("Enable scripting on Android build")
+
+    target_link_libraries(native-lib PRIVATE -Wl,--whole-archive $<TARGET_FILE:symemu> -Wl,--no-whole-archive)
+
+    add_custom_command(
+            TARGET native-lib
+            PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${ASSETS_DIR}/scripts"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/bin/scripts/" "${ASSETS_DIR}/scripts")
+endif()
 
 add_custom_command(
         TARGET native-lib

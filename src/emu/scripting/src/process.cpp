@@ -29,13 +29,17 @@
 #include <kernel/process.h>
 
 namespace scripting = eka2l1::scripting;
+
+#if ENABLE_PYTHON_SCRIPTING
 namespace py = pybind11;
+#endif
 
 namespace eka2l1::scripting {
     process::process(std::uint64_t handle)
         : process_handle(reinterpret_cast<eka2l1::kernel::process *>(handle)) {
     }
 
+#if ENABLE_PYTHON_SCRIPTING
     py::bytes process::read_process_memory(const std::uint32_t addr, const size_t size) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
 
@@ -50,6 +54,7 @@ namespace eka2l1::scripting {
 
         return buffer;
     }
+#endif
 
     void process::write_process_memory(const std::uint32_t addr, const std::string &buffer) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);

@@ -18,8 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pybind11/embed.h>
-
 #include <scripting/instance.h>
 #include <scripting/process.h>
 #include <scripting/thread.h>
@@ -27,6 +25,10 @@
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/thread.h>
+
+#if ENABLE_PYTHON_SCRIPTING
+#include <pybind11/pybind11.h>
+#endif
 
 namespace scripting = eka2l1::scripting;
 
@@ -49,7 +51,11 @@ namespace eka2l1::scripting {
 
     uint32_t thread::get_register(uint8_t index) {
         if (thread_handle->get_thread_context().cpu_registers.size() <= index) {
+#if ENABLE_PYTHON_SCRIPTING
             throw pybind11::index_error("CPU Register Index is out of range");
+#else
+            return 0xFFFFFFFF;
+#endif
         }
 
         return thread_handle->get_thread_context().cpu_registers[index];

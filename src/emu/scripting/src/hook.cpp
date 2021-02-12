@@ -21,11 +21,10 @@
 #include <scripting/instance.h>
 
 #include <system/epoc.h>
-
-
 #include <scripting/manager.h>
 
 namespace eka2l1::scripting {
+#if ENABLE_PYTHON_SCRIPTING
     void register_lib_invokement(const std::string &lib_name, const std::uint32_t ord, const std::uint32_t process_uid, pybind11::function func) {
         get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
     }
@@ -37,6 +36,7 @@ namespace eka2l1::scripting {
     void register_ipc_invokement(const std::string &server_name, const int opcode, const int when, pybind11::function func) {
         get_current_instance()->get_scripts()->register_ipc(server_name, opcode, when, func);
     }
+#endif
 }
 
 extern "C" {

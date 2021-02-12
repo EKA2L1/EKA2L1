@@ -5,7 +5,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 option(EKA2L1_BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(EKA2L1_BUILD_TESTS "Build EKA2L1's tests" ON)
-option(EKA2L1_ENABLE_SCRIPTING_ABILITY "Enable to script with Python" OFF)
+option(EKA2L1_ENABLE_SCRIPTING_ABILITY "Enable to script with Python" ON)
 option(EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpected exception" OFF)
 option(EKA2L1_BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
 

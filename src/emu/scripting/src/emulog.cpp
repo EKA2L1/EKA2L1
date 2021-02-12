@@ -23,8 +23,6 @@
 
 #include <scripting/emulog.h>
 
-namespace py = pybind11;
-
 namespace eka2l1::scripting {
     void emulog(const std::string &format) {
         LOG_INFO(SCRIPTING, "{}", format);

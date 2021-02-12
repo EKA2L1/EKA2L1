@@ -19,7 +19,12 @@
 
 #pragma once
 
+#include <scripting/platform.h>
+
+#if ENABLE_PYTHON_SCRIPTING
 #include <pybind11/pybind11.h>
+#endif
+
 #include <scripting/thread.h>
 
 #include <memory>
@@ -42,7 +47,9 @@ namespace eka2l1::scripting {
     public:
         explicit process(uint64_t handle);
 
+#if ENABLE_PYTHON_SCRIPTING
         pybind11::bytes read_process_memory(const std::uint32_t addr, const size_t size);
+#endif
         void write_process_memory(const std::uint32_t addr, const std::string &buffer);
 
         // Quick quick quick

@@ -1,6 +1,9 @@
 common = {}
 
 local ffi = require("ffi")
+
+pcall(ffi.load, 'native-lib', true)
+
 ffi.cdef([[
     void symemu_log(const char *line);
 ]])

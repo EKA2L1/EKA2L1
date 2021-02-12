@@ -21,10 +21,15 @@
 
 #include <common/types.h>
 
+#include <scripting/lua_helper.h>
+#include <scripting/platform.h>
+
+#if !ENABLE_PYTHON_SCRIPTING
+#include <scripting/pybind_stub.h>
+#else
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
-
-#include <scripting/lua_helper.h>
+#endif
 
 #include <map>
 #include <mutex>
@@ -32,6 +37,7 @@
 #include <unordered_map>
 #include <memory>
 #include <variant>
+#include <vector>
 
 namespace eka2l1 {
     class system;

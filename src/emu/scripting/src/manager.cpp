@@ -22,31 +22,26 @@
 #include <common/path.h>
 #include <common/platform.h>
 
-#ifndef _MSC_VER
-#include <experimental/filesystem>
-#else
-#include <filesystem>
-#endif
+#include <common/path.h>
 
 #include <scripting/manager.h>
+#include <scripting/instance.h>
+#include <scripting/message.h>
 
+#if ENABLE_PYTHON_SCRIPTING
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 
-#include <scripting/instance.h>
-#include <scripting/message.h>
 #include <scripting/symemu.inl>
+#endif
+
 #include <scripting/thread.h>
 
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 
+#if ENABLE_PYTHON_SCRIPTING
 namespace py = pybind11;
-
-#ifndef _MSC_VER
-namespace fs = std::experimental::filesystem;
-#else
-namespace fs = std::filesystem;
 #endif
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
@@ -107,13 +102,19 @@ namespace eka2l1::manager {
         }
 
         if (modules.find(name) == modules.end()) {
-            const auto &crr_path = fs::current_path();
-            const auto &pr_path = fs::absolute(fs::path(path).parent_path());
+            std::string crr_path;
+            if (!eka2l1::get_current_directory(crr_path)) {
+                LOG_ERROR(SCRIPTING, "Unable to get current directory!");
+                return false;
+            }
 
+            const std::string &pr_path = eka2l1::absolute_path(eka2l1::file_directory(path), crr_path);
             std::lock_guard<std::mutex> guard(smutex);
 
-            std::error_code sec;
-            fs::current_path(pr_path, sec);
+            if (!eka2l1::set_current_directory(pr_path)) {
+                LOG_ERROR(SCRIPTING, "Fail to set current directory to script folder!");
+                return false;
+            }
 
             if (eka2l1::path_extension(path) == ".lua") {
                 lua_State *new_state = luaL_newstate();
@@ -125,26 +126,32 @@ namespace eka2l1::manager {
                     LOG_WARN(SCRIPTING, "Fail to load script {}, error {}", name, lua_tostring(new_state, -1));
                     lua_close(new_state);
                 }
-            } else {
+            }
+#if ENABLE_PYTHON_SCRIPTING
+            else {
                 try {
                     modules.emplace(name.c_str(), py::module::import(name.data()));
                 } catch (py::error_already_set &exec) {
                     const char *description = exec.what();
 
                     LOG_WARN(SCRIPTING, "Script compile error: {}", description);
-                    fs::current_path(crr_path);
+                    if (!eka2l1::set_current_directory(crr_path)) {
+                        LOG_ERROR(SCRIPTING, "Fail to set current directory back to original!");
+                    }
 
                     return false;
                 }
             }
+#endif
 
             if (!call_module_entry(name.c_str())) {
                 // If the module entry failed, we still success, but not execute any futher method            
-                fs::current_path(crr_path);
-                return true;
+                return eka2l1::set_current_directory(crr_path);
             }
             
-            fs::current_path(crr_path);
+            if (!eka2l1::set_current_directory(crr_path)) {
+                return false;
+            }
         }
 
         return true;
@@ -188,12 +195,14 @@ namespace eka2l1::manager {
 
         std::visit(overloaded {
             [&](pybind11::module &modobj) {
+#if ENABLE_PYTHON_SCRIPTING
                 try {
                     modobj.attr("scriptEntry")(); 
                 } catch (py::error_already_set &exec) {
                     LOG_ERROR(SCRIPTING, "Error executing script entry of {}: {}", module, exec.what());
                     fine = false;
                 }
+#endif
             },
             [&](scripting::luacpp_state &state) {
                 if (lua_pcall(state.state_, 0, 1, 0) == LUA_OK) {
@@ -329,16 +338,18 @@ namespace eka2l1::manager {
         eka2l1::system *crr_instance = scripting::get_current_instance();
         eka2l1::scripting::set_current_instance(sys);
 
-        for (const auto &ipc_func : ipc_functions[server_name][opcode]) {
+        for (auto &ipc_func : ipc_functions[server_name][opcode]) {
             std::visit(overloaded {
                 [&](const pybind11::function &func) {
+#if ENABLE_PYTHON_SCRIPTING
                     try {
                         func(arg0, arg1, arg2, arg3, flags, reqsts_addr, std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(callee)));
                     } catch (py::error_already_set &exec) {
                         LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
                     }
+#endif
                 },
-                [&](const void *lua_func) {
+                [&](void *lua_func) {
                     ipc_sent_lua_func sent_func = reinterpret_cast<ipc_sent_lua_func>(lua_func);
                     sent_func(arg0, arg1, arg2, arg3, flags, reqsts_addr, new scripting::thread(reinterpret_cast<std::uint64_t>(callee)));
                 }
@@ -355,17 +366,19 @@ namespace eka2l1::manager {
         eka2l1::system *crr_instance = scripting::get_current_instance();
         eka2l1::scripting::set_current_instance(sys);
 
-        for (const auto &ipc_func : ipc_functions[server_name][(2ULL << 32) | opcode]) {
+        for (auto &ipc_func : ipc_functions[server_name][(2ULL << 32) | opcode]) {
             std::visit(overloaded {
-                [&](const pybind11::function &func) {     
+                [&](const pybind11::function &func) {
+#if ENABLE_PYTHON_SCRIPTING   
                     try {
                         func(std::make_unique<scripting::ipc_message_wrapper>(
                             reinterpret_cast<std::uint64_t>(msg)));
                     } catch (py::error_already_set &exec) {
                         LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
                     }
+#endif
                 },
-                [&](const void *lua_func) {
+                [&](void *lua_func) {
                     ipc_completed_lua_func comp_func = reinterpret_cast<ipc_completed_lua_func>(lua_func);
                     comp_func(new scripting::ipc_message_wrapper(reinterpret_cast<std::uint64_t>(msg)));
                 }
@@ -389,11 +402,13 @@ namespace eka2l1::manager {
 
             std::visit(overloaded {
                 [](pybind11::function &func) {
+#if ENABLE_PYTHON_SCRIPTING
                     try {
                         func(); 
                     } catch (py::error_already_set &exec) {    
                         LOG_WARN(SCRIPTING, "Script interpreted error: {}", exec.what());
                     }
+#endif
                 },
                 [](breakpoint_hit_lua_func func) {
                     func();

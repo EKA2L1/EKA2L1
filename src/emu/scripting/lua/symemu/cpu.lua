@@ -1,6 +1,9 @@
 cpu = {}
 
 local ffi = require("ffi")
+
+pcall(ffi.load, 'native-lib', true)
+
 ffi.cdef([[
     uint32_t symemu_cpu_get_reg(const int idx);
     uint32_t symemu_cpu_get_cpsr();

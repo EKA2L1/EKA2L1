@@ -1,6 +1,9 @@
 mem = {}
 
 local ffi = require('ffi')
+
+pcall(ffi.load, 'native-lib', true)
+
 ffi.cdef([[
     uint8_t symemu_mem_read_byte(const uint32_t addr);
     uint16_t symemu_mem_read_word(const uint32_t addr);
