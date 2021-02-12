@@ -19,10 +19,4 @@
 
 #pragma once
 
-#include <common/platform.h>
-
-#if EKA2L1_PLATFORM(ANDROID)
-#define ENABLE_PYTHON_SCRIPTING 0
-#else
-#define ENABLE_PYTHON_SCRIPTING 1
-#endif
+#include <common/configure.h>
