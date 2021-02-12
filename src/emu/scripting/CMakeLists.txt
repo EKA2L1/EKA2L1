@@ -71,7 +71,7 @@ if (NOT ANDROID)
     target_link_libraries(symemu_common PRIVATE common epocio epocservs pybind11)
 
     if (UNIX OR APPLE)
-        target_link_libraries(symemu_common PRIVATE epocutils)
+        target_link_libraries(symemu_common PRIVATE epocutils ${CMAKE_DL_LIBS})
     endif ()
 
     set_target_properties(symemu_common PROPERTIES OUTPUT_NAME common
