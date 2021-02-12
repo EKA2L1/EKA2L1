@@ -38,6 +38,8 @@ ffi.cdef([[
     uint32_t symemu_process_read_dword(process *pr, uint32_t addr);
     uint64_t symemu_process_read_qword(process *pr, uint32_t addr);
     thread *symemu_process_first_thread(process *pr);
+    const char *symemu_process_executable_path(process *pr);
+    const char *symemu_process_name(process *pr);
 
     thread *symemu_get_current_thread();
     thread *symemu_next_thread_in_process(thread *thr);
@@ -133,6 +135,22 @@ end
 
 function process:readQword(addr)
     return ffi.C.symemu_process_read_qword(self.impl, addr)
+end
+
+function process:name()
+    local res = ffi.C.symemu_process_name(self.impl)
+    local ret = ffi.string(res)
+
+    ffi.C.symemu_free_string(ffi.gc(res, nil))
+    return ret
+end
+
+function process:executablePath()
+    local res = ffi.C.symemu_process_executable_path(self.impl)
+    local ret = ffi.string(res)
+
+    ffi.C.symemu_free_string(ffi.gc(res, nil))
+    return ret
 end
 
 function process:readMemory(addr, size)

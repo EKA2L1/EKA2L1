@@ -197,6 +197,26 @@ extern "C" {
         return true;
     }
 
+    EKA2L1_EXPORT const char *symemu_process_name(eka2l1::scripting::process *pr) {
+        std::string data = pr->get_name();
+        char *ret_val = new char[data.length() + 1];
+
+        std::memcpy(ret_val, data.data(), data.length());
+        ret_val[data.length()] = '\0';
+
+        return ret_val;
+    }
+
+    EKA2L1_EXPORT const char *symemu_process_executable_path(eka2l1::scripting::process *pr) {
+        std::string data = pr->get_executable_path();
+        char *ret_val = new char[data.length() + 1];
+
+        std::memcpy(ret_val, data.data(), data.length());
+        ret_val[data.length()] = '\0';
+
+        return ret_val;
+    }
+
     EKA2L1_EXPORT eka2l1::scripting::thread *symemu_process_first_thread(eka2l1::scripting::process *pr) {
         return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(pr->get_process_handle()->get_primary_thread()));
     }
