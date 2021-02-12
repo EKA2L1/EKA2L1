@@ -57,7 +57,7 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     set(LUA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/luaorg)
 
     add_library(liblua INTERFACE)
-    target_include_directories(liblua INTERFACE  "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT/src/")
+    target_include_directories(liblua INTERFACE  "${CMAKE_CURRENT_SOURCE_DIR}/luajit/src/")
 
     if (ANDROID)
         if (ARCHITECTURE_ARM32)
@@ -78,9 +78,9 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
 		endif()
     elseif (MSVC)
         ExternalProject_Add(luaorg
-                SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT"
+                SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit"
                 SOURCE_SUBDIR src
-                CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT ${LUA_BINARY_DIR}
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${LUA_BINARY_DIR}
                 BINARY_DIR "${LUA_BINARY_DIR}/src"
                 BUILD_COMMAND "${LUA_BINARY_DIR}/src/msvcbuild.bat"
                 INSTALL_COMMAND ""
@@ -94,12 +94,11 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         add_dependencies(liblua luaorg)
     else()
         ExternalProject_Add(luaorg
-            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT"
+            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit"
             SOURCE_SUBDIR src
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT ${LUA_BINARY_DIR}
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${LUA_BINARY_DIR}
             BINARY_DIR "${LUA_BINARY_DIR}/src"
-            BUILD_COMMAND "make ${LUA_BINARY_DIR}"
-            BUILD_ALWAYS TRUE
+            BUILD_COMMAND cd ${LUA_BINARY_DIR} && ${CMAKE_MAKE_PROGRAM}
             INSTALL_COMMAND ""
         )
 
