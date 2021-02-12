@@ -58,7 +58,7 @@ set_target_properties(symemu PROPERTIES OUTPUT_NAME symemu
 add_assets(symemu ${CMAKE_CURRENT_SOURCE_DIR}/python/example scripts/example)
 add_assets(symemu ${CMAKE_CURRENT_SOURCE_DIR}/lua/symemu scripts/symemu)
 
-if (NOT ANDROID)
+if (ENABLE_PYTHON_SCRIPTING)
     pybind11_add_module(symemu_common
             include/scripting/common/compression.h
             include/scripting/common/loader.h
