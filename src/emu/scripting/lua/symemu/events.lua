@@ -31,14 +31,24 @@ function events.registerLibraryInvoke(libName, ord, processUid, func)
     local libNameInC = ffi.new("char[?]", #libName)
     ffi.copy(libNameInC, libName)
 
-    ffi.C.symemu_cpu_register_lib_hook(libNameInC, ord, processUid, func)
+    ffi.C.symemu_cpu_register_lib_hook(libNameInC, ord, processUid, function ()
+        local ran, errorMsg = pcall(func)
+        if not ran then
+            common.log('Error running breakpoint script, ' .. errorMsg)
+        end
+    end)
 end
 
 function events.registerBreakpointInvoke(libName, addr, processUid, func)
     local libNameInC = ffi.new("char[?]", #libName)
     ffi.copy(libNameInC, libName)
 
-    ffi.C.symemu_cpu_register_bkpt_hook(libNameInC, addr, processUid, func)
+    ffi.C.symemu_cpu_register_bkpt_hook(libNameInC, addr, processUid, function ()
+        local ran, errorMsg = pcall(func)
+        if not ran then
+            common.log('Error running breakpoint script, ' .. errorMsg)
+        end
+    end)
 end
 
 function events.registerIpcInvoke(serverName, opcode, when, func)
@@ -47,11 +57,29 @@ function events.registerIpcInvoke(serverName, opcode, when, func)
 
     if when == EVENT_IPC_SEND then
         ffi.C.symemu_register_ipc_sent_hook(serverNameInC, opcode, function (arg0, arg1, arg2, arg3, flags, reqsts, sender)
-            func(ipcCtx.makeFromValues(opcode, arg0, arg1, arg2, arg3, flags, reqsts, kern.makeThreadFromHandle(sender)))
+            local ran, retval = pcall(ipcCtx.makeFromValues, opcode, arg0, arg1, arg2, arg3, flags, reqsts, kern.makeThreadFromHandle(sender))
+            if not ran then
+                common.log('Fail to create IPC context, ' .. retval)
+                return
+            end
+
+            ran, retval = pcall(func, retval)
+            if not ran then
+                common.log('IPC sent callback encountered error, '.. retval)
+            end
         end)
     else
         ffi.C.symemu_register_ipc_completed_hook(serverNameInC, opcode, function (msg)
-            func(ipcCtx.makeFromMessage(kern.makeMessageFromHandle(msg)))
+            local ran, retval = pcall(ipcCtx.makeFromMessage, kern.makeMessageFromHandle(msg))
+            if not ran then
+                common.log('Fail to create IPC context, ' .. retval)
+                return
+            end
+            
+            ran, retval = pcall(func, retval)
+            if not ran then
+                common.log('IPC sent callback encountered error, '.. retval)
+            end
         end)
     end
 end
