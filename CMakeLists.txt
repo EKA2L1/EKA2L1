@@ -5,7 +5,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 option(EKA2L1_BUILD_TOOLS "Build EKA2L1's tool" ON)
 option(EKA2L1_BUILD_TESTS "Build EKA2L1's tests" ON)
-option(EKA2L1_ENABLE_SCRIPTING_ABILITY "Enable to script with Python" ON)
+option(EKA2L1_ENABLE_SCRIPTING_ABILITY "Enable to script with Python or Lua" ON)
 option(EKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER "Enable EKA2L1 to dump unexpected exception" OFF)
 option(EKA2L1_BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
 
@@ -34,6 +34,11 @@ endif()
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     message("Enable scripting with Python with build")
     set (ENABLE_SCRIPTING 1)
+
+    if (UNIX AND (NOT ANDROID) AND (NOT APPLE))
+        # Pybind11 requires this on
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    endif()
 else (EKA2L1_ENABLE_SCRIPTING_ABILITY)
     set (ENABLE_SCRIPTING 0)
 endif(EKA2L1_ENABLE_SCRIPTING_ABILITY)
