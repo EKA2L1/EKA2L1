@@ -34,6 +34,10 @@
 #define EKA2L1_EXPORT __attribute__((visibility("default")))
 #endif
 
+#ifndef WIN32
+#define __stdcall
+#endif
+
 typedef std::u16string utf16_str;
 typedef uint32_t address;
 
