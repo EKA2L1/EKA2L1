@@ -49,3 +49,29 @@ namespace eka2l1::scripting {
         return get_current_instance()->get_cpu()->get_lr();
     }
 }
+
+extern "C" {
+    EKA2L1_EXPORT std::uint32_t symemu_cpu_get_reg(const int idx) {
+        return eka2l1::scripting::cpu::get_register(idx);
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_cpu_get_cpsr() {
+        return eka2l1::scripting::cpu::get_cpsr();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_cpu_get_pc() {
+        return eka2l1::scripting::cpu::get_pc();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_cpu_get_sp() {
+        return eka2l1::scripting::cpu::get_sp();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_cpu_get_lr() {
+        return eka2l1::scripting::cpu::get_lr();
+    }
+
+    EKA2L1_EXPORT void symemu_cpu_set_reg(const int idx, std::uint32_t value) {
+        eka2l1::scripting::cpu::set_register(idx, value);
+    }
+}

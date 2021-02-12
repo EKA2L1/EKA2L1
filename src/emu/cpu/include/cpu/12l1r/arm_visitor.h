@@ -165,6 +165,7 @@ namespace eka2l1::arm::r12l1 {
 
         // Interrupts
         bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
+        bool arm_BKPT();
         bool arm_UDF();
     };
 }

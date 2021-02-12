@@ -38,6 +38,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       cache-version: v1
+      MACOSX_DEPLOYMENT_TARGET: 10.9
 
     strategy:
       fail-fast: false

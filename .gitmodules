@@ -59,3 +59,6 @@
 	path = src/external/dynarmic-android
 	url = https://github.com/citra-emu/dynarmic-android
 	branch = master
+[submodule "src/external/luajit"]
+	path = src/external/luajit
+	url = https://github.com/luajit/luajit

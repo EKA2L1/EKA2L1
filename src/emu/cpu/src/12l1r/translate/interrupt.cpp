@@ -30,6 +30,14 @@ namespace eka2l1::arm::r12l1 {
         return emit_system_call_handler(n);
     }
 
+    bool arm_translate_visitor::arm_BKPT() {
+        return emit_breakpoint_handler();
+    }
+
+    bool thumb_translate_visitor::thumb16_BKPT() {
+        return emit_breakpoint_handler();
+    }
+
     bool arm_translate_visitor::arm_UDF() {
         return emit_undefined_instruction_handler();
     }

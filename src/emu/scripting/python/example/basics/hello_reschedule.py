@@ -26,4 +26,4 @@ def getProcess():
     processList = symemu.getProcessesList()
 
     for process in processList:
-        symemu.emulog('Name: {}, Path: {}', process.getName(), process.getExecutablePath())
+        symemu.log('Name: {}, Path: {}', process.getName(), process.getExecutablePath())

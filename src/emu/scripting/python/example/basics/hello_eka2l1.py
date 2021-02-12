@@ -19,4 +19,4 @@ import symemu
 
 
 def scriptEntry():
-    symemu.emulog('Hello EKA2L1!')
+    symemu.log('Hello EKA2L1!')

@@ -176,9 +176,10 @@ namespace eka2l1 {
      * @param server_name       Name of the server this message is sent to.
      * @param ord               The opcode number of this message.
      * @param args              Arguments for this message.
+     * @param reqstsaddr        Address of the request status.
      * @param callee            Thread that sent this message.
      */
-    using ipc_send_callback = std::function<void(const std::string&, const int, const ipc_arg&, kernel::thread*)>;
+    using ipc_send_callback = std::function<void(const std::string&, const int, const ipc_arg&, address, kernel::thread*)>;
 
     /**
      * @brief Callback invoked by the kernel when an IPC message completes.
@@ -360,7 +361,7 @@ namespace eka2l1 {
         void cpu_exception_handler(arm::core *core, arm::exception_type exception_type, const std::uint32_t exception_data);
 
         void call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,
-            kernel::thread *callee);
+            address reqsts_addr, kernel::thread *callee);
 
         void call_ipc_complete_callbacks(ipc_msg *msg, const int complete_code);
         void call_thread_kill_callbacks(kernel::thread *target, const std::string &category, const std::int32_t reason);

@@ -1,4 +1,6 @@
-﻿add_library(miniz miniz/miniz.h miniz/miniz.c)
+﻿include(ExternalProject)
+
+add_library(miniz miniz/miniz.h miniz/miniz.c)
 target_include_directories(miniz PUBLIC miniz)
 
 # Force Boost directory for Dynarmic - we never use one
@@ -33,10 +35,79 @@ add_subdirectory(fmt)
 add_library(fmt::fmt ALIAS fmt)
 set (fmt_DIR fmt)
 
+set(CMAKE_REQUIRED_QUIET 1)
+
+if (MSVC)
+    check_symbol_exists("_M_ARM" "" ARCHITECTURE_ARM32)
+    check_symbol_exists("_M_ARM64" "" ARCHITECTURE_AARCH64)
+else()
+    check_symbol_exists("__arm__" "" ARCHITECTURE_ARM32)
+    check_symbol_exists("__aarch64__" "" ARCHITECTURE_AARCH64)
+endif()
+
+unset(CMAKE_REQUIRED_QUIET)
+
 # Pybind11
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-	option (PYBIND11_TEST "Enable pybind11 tests" OFF)
-	add_subdirectory(pybind11)
+    if (NOT ANDROID)
+        option (PYBIND11_TEST "Enable pybind11 tests" OFF)
+        add_subdirectory(pybind11)
+    endif()
+    
+    set(LUA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/luaorg)
+
+    add_library(liblua INTERFACE)
+    target_include_directories(liblua INTERFACE  "${CMAKE_CURRENT_SOURCE_DIR}/luajit/src/")
+
+    if (ANDROID)
+        if (ARCHITECTURE_ARM32)
+            target_link_libraries(liblua INTERFACE
+                "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/armv7a/libluajit.a")
+
+            set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/armv7a/libluajit.so")
+        elseif (ARCHITECTURE_AARCH64)
+            target_link_libraries(liblua INTERFACE
+                    "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/aarch64/libluajit.a")
+
+            set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/aarch64/libluajit.so")
+        else()
+            target_link_libraries(liblua INTERFACE
+                    "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/x86_64/libluajit.a")
+
+            set(LUA_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/luajit-android/x86_64/libluajit.so")
+		endif()
+    elseif (MSVC)
+        ExternalProject_Add(luaorg
+                SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit"
+                SOURCE_SUBDIR src
+                CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${LUA_BINARY_DIR}
+                BINARY_DIR "${LUA_BINARY_DIR}/src"
+                BUILD_COMMAND "${LUA_BINARY_DIR}/src/msvcbuild.bat"
+                INSTALL_COMMAND ""
+                )
+
+        set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/lua51.dll" PARENT_SCOPE)
+
+        target_link_libraries(liblua INTERFACE
+                "${LUA_BINARY_DIR}/src/lua51.lib")
+
+        add_dependencies(liblua luaorg)
+    else()
+        ExternalProject_Add(luaorg
+            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/luajit"
+            SOURCE_SUBDIR src
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/luajit ${LUA_BINARY_DIR}
+            BINARY_DIR "${LUA_BINARY_DIR}/src"
+            BUILD_COMMAND cd ${LUA_BINARY_DIR} && ${CMAKE_MAKE_PROGRAM}
+            INSTALL_COMMAND ""
+        )
+
+        set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/libluajit.so" PARENT_SCOPE)
+
+        target_link_libraries(liblua INTERFACE "${LUA_BINARY_DIR}/src/libluajit.a")
+
+        add_dependencies(liblua luaorg)
+    endif()
 endif()
 
 # SPDLOG - Build examples off
@@ -53,16 +124,6 @@ add_subdirectory(glm)
 # Dynarmic: disable tests
 option(DYNARMIC_TESTS "Enable dynarmic tests" ON)
 option(DYNARMIC_NO_BUNDLED_FMT "No bundled fmt for Dynarmic" ON)
-
-set(CMAKE_REQUIRED_QUIET 1)
-
-if (MSVC)
-    check_symbol_exists("_M_ARM" "" ARCHITECTURE_ARM32)
-else()
-    check_symbol_exists("__arm__" "" ARCHITECTURE_ARM32)
-endif()
-
-unset(CMAKE_REQUIRED_QUIET)
 
 if (NOT ARCHITECTURE_ARM32)
     add_subdirectory(dynarmic)

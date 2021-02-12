@@ -17,7 +17,7 @@
 
 from enum import Enum
 
-from symemu2 import descriptor
+from symemu2 import descriptor, reqsts
 
 
 class ArgumentType(Enum):
@@ -49,16 +49,24 @@ class Arguments(object):
 
 
 class Context(object):
-    def __init__(self, arg0, arg1, arg2, arg3, flags, sender):
+    def __init__(self, opcode, arg0, arg1, arg2, arg3, flags, reqstsaddr, sender):
         self.args = Arguments(arg0, arg1, arg2, arg3, flags)
+        self.opcode = opcode
         self.sender = sender
+        self.requestStatus = reqsts.RequestStatus(sender.getOwningProcess(), reqstsaddr)
 
     @classmethod
     def makeFromMessage(cls, msg):
-        return Context(msg.arg(0), msg.arg(1), msg.arg(2), msg.arg(3), msg.flags(), msg.sender())
+        return Context(msg.function(), msg.arg(0), msg.arg(1), msg.arg(2), msg.arg(3), msg.flags(), msg.requestStatusAddress(), msg.sender())
+
+    def getFunction(self):
+        return self.opcode
 
     def getArguments(self):
         return self.args
+
+    def getRequestStatus(self):
+        return self.requestStatus
 
     # Get integer value in specified argument slot.
     #

@@ -24,4 +24,4 @@ def domainClientPanic(panicCode):
     errcode = -(panicCode & 0xFFFF)
     line = (panicCode >> 16) & 0xFFFF
 
-    symemu.emulog('DomainClient exited with exit code: {} at line {}', errcode, line)
+    symemu.log('DomainClient exited with exit code: {} at line {}', errcode, line)

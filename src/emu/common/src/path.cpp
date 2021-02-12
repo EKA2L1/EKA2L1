@@ -465,20 +465,19 @@ namespace eka2l1 {
     }
 
     bool get_current_directory(std::string &path) {
-        path.resize(512);
+        char buffer[512];
 
 #if EKA2L1_PLATFORM(WIN32)
-        if (GetCurrentDirectoryA(static_cast<DWORD>(path.size()), &path[0]) == 0) {
+        if (GetCurrentDirectoryA(sizeof(buffer), buffer) == 0) {
             return false;
         }
-
-        return true;
 #else
-        if (getcwd(&path[0], path.size()) == nullptr) {
+        if (getcwd(buffer, sizeof(buffer)) == nullptr) {
             return false;
         }
-
-        return true;
 #endif
+
+        path = std::string(buffer);
+        return true;
     }
 }

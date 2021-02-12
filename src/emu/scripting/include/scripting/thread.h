@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <string>
 #include <memory>
 
 namespace eka2l1 {
@@ -36,10 +37,9 @@ namespace eka2l1::scripting {
         friend class eka2l1::kernel::thread;
 
     public:
-        thread(uint64_t handle);
+        explicit thread(uint64_t handle);
 
         std::string get_name();
-
         uint32_t get_register(uint8_t index);
 
         uint32_t get_pc();
@@ -48,15 +48,18 @@ namespace eka2l1::scripting {
         uint32_t get_cpsr();
 
         int get_exit_reason();
-        int get_leave_depth();
-
         int get_state();
         int get_priority();
 
         std::uint32_t get_stack_base();
         std::uint32_t get_heap_base();
 
+        std::unique_ptr<scripting::thread> next_in_process();
         std::unique_ptr<scripting::process> get_owning_process();
+
+        kernel::thread *get_thread_handle() {
+            return thread_handle;
+        }
     };
 
     std::unique_ptr<eka2l1::scripting::thread> get_current_thread();

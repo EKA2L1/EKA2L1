@@ -23,8 +23,8 @@ def scriptEntry():
     seg = symemu.loadCodeseg('euser.dll')
 
     # Print code runtime information
-    symemu.emulog('Runtime code address: 0x{:X}, size: 0x{:X}'.format(seg.codeRunAddress(), seg.codeSize()))
-    symemu.emulog('Runtime data address: 0x{:X}, size: 0x{:X}'.format(seg.dataRunAddress(), seg.dataSize()))
-    symemu.emulog('Runtime bss address: 0x{:X}, size: 0x{:X}'.format(seg.bssRunAddress(), seg.bssSize()))
-    symemu.emulog('Total exports: {}'.format(seg.exportCount()))
-    symemu.emulog('Export 649 loaded address: 0x{:X}'.format(seg.lookup(649)))
+    symemu.log('Runtime code address: 0x{:X}, size: 0x{:X}'.format(seg.codeRunAddress(), seg.codeSize()))
+    symemu.log('Runtime data address: 0x{:X}, size: 0x{:X}'.format(seg.dataRunAddress(), seg.dataSize()))
+    symemu.log('Runtime bss address: 0x{:X}, size: 0x{:X}'.format(seg.bssRunAddress(), seg.bssSize()))
+    symemu.log('Total exports: {}'.format(seg.exportCount()))
+    symemu.log('Export 649 loaded address: 0x{:X}'.format(seg.lookup(649)))

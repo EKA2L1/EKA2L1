@@ -29,13 +29,17 @@
 #include <kernel/process.h>
 
 namespace scripting = eka2l1::scripting;
+
+#if ENABLE_PYTHON_SCRIPTING
 namespace py = pybind11;
+#endif
 
 namespace eka2l1::scripting {
     process::process(std::uint64_t handle)
         : process_handle(reinterpret_cast<eka2l1::kernel::process *>(handle)) {
     }
 
+#if ENABLE_PYTHON_SCRIPTING
     py::bytes process::read_process_memory(const std::uint32_t addr, const size_t size) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
 
@@ -50,6 +54,7 @@ namespace eka2l1::scripting {
 
         return buffer;
     }
+#endif
 
     void process::write_process_memory(const std::uint32_t addr, const std::string &buffer) {
         void *ptr = process_handle->get_ptr_on_addr_space(addr);
@@ -92,19 +97,8 @@ namespace eka2l1::scripting {
         return process_handle->name();
     }
 
-    std::vector<std::unique_ptr<eka2l1::scripting::thread>> process::get_thread_list() {
-        system *sys = get_current_instance();
-        std::vector<kernel_obj_unq_ptr> &threads = sys->get_kernel_system()->get_thread_list();
-
-        std::vector<std::unique_ptr<scripting::thread>> script_threads;
-
-        for (const auto &thr : threads) {
-            if (reinterpret_cast<kernel::thread *>(thr.get())->owning_process() == process_handle) {
-                script_threads.push_back(std::make_unique<scripting::thread>((uint64_t)(thr.get())));
-            }
-        }
-
-        return script_threads;
+    std::unique_ptr<scripting::thread> process::first_thread() {
+        return std::make_unique<scripting::thread>(reinterpret_cast<std::uint64_t>(process_handle->get_primary_thread()));
     }
 
     std::vector<std::unique_ptr<scripting::process>> get_process_list() {
@@ -127,5 +121,103 @@ namespace eka2l1::scripting {
 
         return std::make_unique<scripting::process>(reinterpret_cast<std::uint64_t>(
             get_current_instance()->get_kernel_system()->crr_process()));
+    }
+}
+
+extern "C" {
+    EKA2L1_EXPORT void symemu_free_process(eka2l1::scripting::process *pr) {
+        delete pr;
+    }
+
+    EKA2L1_EXPORT std::int32_t symemu_queries_all_processes(eka2l1::scripting::process ***pr) {
+        if (!pr) {
+            return -1;
+        }
+        
+        eka2l1::system *sys = eka2l1::scripting::get_current_instance();
+        std::vector<eka2l1::kernel_obj_unq_ptr> &processes = sys->get_kernel_system()->get_process_list();
+
+        if (processes.empty()) {
+            return 0;
+        }
+
+        *pr = new eka2l1::scripting::process*[processes.size()];
+
+        for (std::size_t i = 0; i < processes.size(); i++) {
+            (*pr)[i] = new eka2l1::scripting::process(reinterpret_cast<std::uint64_t>(processes[i].get()));
+        }
+
+        return static_cast<std::int32_t>(processes.size());
+    }
+
+    EKA2L1_EXPORT eka2l1::scripting::process *symemu_get_current_process() {
+        eka2l1::kernel::process *pr = eka2l1::scripting::get_current_instance()->get_kernel_system()->crr_process();
+        if (!pr) {
+            return nullptr;
+        }
+
+        return new eka2l1::scripting::process(reinterpret_cast<std::uint64_t>(pr));
+    }
+
+    EKA2L1_EXPORT std::uint8_t symemu_process_read_byte(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_byte(addr);
+    }
+
+    EKA2L1_EXPORT std::uint16_t symemu_process_read_word(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_word(addr);
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_process_read_dword(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_dword(addr);
+    }
+
+    EKA2L1_EXPORT std::uint64_t symemu_process_read_qword(eka2l1::scripting::process *pr, const std::uint32_t addr) {
+        return pr->read_qword(addr);
+    }
+    
+    EKA2L1_EXPORT const char *symemu_process_read_memory(eka2l1::scripting::process *pr, const std::uint32_t addr, const std::uint32_t size) {
+        void *source = pr->get_process_handle()->get_ptr_on_addr_space(addr);
+        if (!source) {
+            return nullptr;
+        }
+
+        char *result = new char[size];
+        std::memcpy(result, source, size);
+
+        return result;
+    }
+
+    EKA2L1_EXPORT bool symemu_process_write_memory(eka2l1::scripting::process *pr, const std::uint32_t addr, const char *source, const std::uint32_t size) {
+        void *dest = pr->get_process_handle()->get_ptr_on_addr_space(addr);
+        if (!dest) {
+            return false;
+        }
+
+        std::memcpy(dest, source, size);
+        return true;
+    }
+
+    EKA2L1_EXPORT const char *symemu_process_name(eka2l1::scripting::process *pr) {
+        std::string data = pr->get_name();
+        char *ret_val = new char[data.length() + 1];
+
+        std::memcpy(ret_val, data.data(), data.length());
+        ret_val[data.length()] = '\0';
+
+        return ret_val;
+    }
+
+    EKA2L1_EXPORT const char *symemu_process_executable_path(eka2l1::scripting::process *pr) {
+        std::string data = pr->get_executable_path();
+        char *ret_val = new char[data.length() + 1];
+
+        std::memcpy(ret_val, data.data(), data.length());
+        ret_val[data.length()] = '\0';
+
+        return ret_val;
+    }
+
+    EKA2L1_EXPORT eka2l1::scripting::thread *symemu_process_first_thread(eka2l1::scripting::process *pr) {
+        return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(pr->get_process_handle()->get_primary_thread()));
     }
 }

@@ -27,7 +27,6 @@
 #include <kernel/libmanager.h>
 
 #include <common/cvt.h>
-#include <pybind11/embed.h>
 
 namespace eka2l1::scripting {
     codeseg::codeseg(std::uint64_t handle)
@@ -66,7 +65,7 @@ namespace eka2l1::scripting {
         return real_seg_->export_count();
     }
 
-    std::unique_ptr<scripting::codeseg> load_codeseg(process_inst pr, const std::string &virt_path) {
+    std::unique_ptr<scripting::codeseg> load_codeseg(const std::string &virt_path) {
         eka2l1::system *sys = get_current_instance();
         hle::lib_manager *libmngr = sys->get_lib_manager();
 
@@ -77,6 +76,58 @@ namespace eka2l1::scripting {
             return nullptr;
         }
 
-        return std::make_unique<scripting::codeseg>(reinterpret_cast<std::uint64_t>(&(*seg)));
+        return std::make_unique<scripting::codeseg>(reinterpret_cast<std::uint64_t>(seg));
+    }
+}
+
+extern "C" { 
+    EKA2L1_EXPORT void symemu_free_codeseg(eka2l1::scripting::codeseg* seg) {
+        delete seg;
+    }
+
+    EKA2L1_EXPORT eka2l1::scripting::codeseg *symemu_load_codeseg(const char *path) {
+        eka2l1::system *sys = eka2l1::scripting::get_current_instance();
+        eka2l1::hle::lib_manager *libmngr = sys->get_lib_manager();
+
+        eka2l1::kernel::codeseg_ptr seg = libmngr->load(eka2l1::common::utf8_to_ucs2(path));
+
+        if (!seg) {
+            return nullptr;
+        }
+
+        return new eka2l1::scripting::codeseg(reinterpret_cast<std::uint64_t>(seg));
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_lookup(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr,
+        const std::uint32_t ord) {
+        return seg->real_seg_->lookup(pr ? pr->get_process_handle() : nullptr, ord); 
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_code_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
+        return seg->real_seg_->get_code_run_addr(pr ? pr->get_process_handle() : nullptr);
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_data_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
+        return seg->real_seg_->get_data_run_addr(pr ? pr->get_process_handle() : nullptr);
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_bss_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
+        return seg->real_seg_->get_data_run_addr(pr ? pr->get_process_handle() : nullptr) + seg->real_seg_->get_data_size();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_code_size(eka2l1::scripting::codeseg *seg) {
+        return seg->code_size();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_data_size(eka2l1::scripting::codeseg *seg) {
+        return seg->data_size();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_bss_size(eka2l1::scripting::codeseg *seg) {
+        return seg->bss_size();
+    }
+
+    EKA2L1_EXPORT std::uint32_t symemu_codeseg_export_count(eka2l1::scripting::codeseg *seg) {
+        return seg->get_export_count();
     }
 }

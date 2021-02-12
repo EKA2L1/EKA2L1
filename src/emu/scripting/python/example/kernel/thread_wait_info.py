@@ -23,4 +23,4 @@ import symemu2.svc
 def waitForRequestWhoHook():
     # Get current thread
     crrThread = symemu.getCurrentThread()
-    symemu.emulog('Thread {} will wait for any request!'.format(crrThread.getName()))
+    symemu.log('Thread {} will wait for any request!'.format(crrThread.getName()))

@@ -21,19 +21,10 @@
 #include <scripting/instance.h>
 
 #include <system/epoc.h>
-
-
 #include <scripting/manager.h>
 
 namespace eka2l1::scripting {
-    void register_panic_invokement(const std::string &category, pybind11::function ifunc) {
-        get_current_instance()->get_scripts()->register_panic(category, ifunc);
-    }
-
-    void register_reschedule_invokement(pybind11::function ifunc) {
-        get_current_instance()->get_scripts()->register_reschedule(ifunc);
-    }
-
+#if ENABLE_PYTHON_SCRIPTING
     void register_lib_invokement(const std::string &lib_name, const std::uint32_t ord, const std::uint32_t process_uid, pybind11::function func) {
         get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
     }
@@ -44,5 +35,28 @@ namespace eka2l1::scripting {
 
     void register_ipc_invokement(const std::string &server_name, const int opcode, const int when, pybind11::function func) {
         get_current_instance()->get_scripts()->register_ipc(server_name, opcode, when, func);
+    }
+#endif
+}
+
+extern "C" {
+    EKA2L1_EXPORT void symemu_free_string(char *pt) {
+        delete pt;
+    }
+
+    EKA2L1_EXPORT void symemu_cpu_register_lib_hook(const char *lib_name, const std::uint32_t ord, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
+        eka2l1::scripting::get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
+    }
+
+    EKA2L1_EXPORT void symemu_cpu_register_bkpt_hook(const char *image_name, const std::uint32_t addr, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
+        eka2l1::scripting::get_current_instance()->get_scripts()->register_breakpoint(image_name, addr, process_uid, func);
+    }
+
+    EKA2L1_EXPORT void symemu_register_ipc_sent_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_sent_lua_func func) {
+        eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 0, reinterpret_cast<void*>(func));
+    }
+    
+    EKA2L1_EXPORT void symemu_register_ipc_completed_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_completed_lua_func func) {
+        eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 2, reinterpret_cast<void*>(func));
     }
 }

@@ -54,5 +54,17 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/config/compat/" "$<TARGET_FILE_DIR:console>/compat/")
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
-        target_link_libraries(console PRIVATE symemu)
+        add_custom_command(
+                TARGET console
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LUA_DLL_PATH}" "$<TARGET_FILE_DIR:console>"
+        )
+        
+        set_target_properties(console PROPERTIES ENABLE_EXPORTS 1)
+
+        if (UNIX AND (NOT APPLE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
+            target_link_libraries(console PRIVATE -Wl,--whole-archive $<TARGET_FILE:symemu> -Wl,--no-whole-archive)
+        else()
+            target_link_libraries(console PRIVATE symemu)
+        endif()
 endif()

@@ -29,7 +29,10 @@
 
 #if ENABLE_SCRIPTING
 #include <scripting/manager.h>
+
+#if ENABLE_PYTHON_SCRIPTING
 #include <pybind11/embed.h>
+#endif
 #endif
 
 #include <kernel/kernel.h>
@@ -254,7 +257,7 @@ bool fullscreen_option_handler(eka2l1::common::arg_parser *parser, void *userdat
     return true;
 }
 
-#if ENABLE_SCRIPTING
+#if ENABLE_PYTHON_SCRIPTING
 bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     try {
         pybind11::exec(

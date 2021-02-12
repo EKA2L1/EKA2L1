@@ -26,4 +26,4 @@ def ipcCopyHook():
     msg = symemu.messageFromHandle(msgHandle)
 
     if msg != None:
-        symemu.emulog('Message opcode: {}, sender: {}'.format(msg.function(), msg.sender().getName()))
+        symemu.log('Message opcode: {}, sender: {}'.format(msg.function(), msg.sender().getName()))

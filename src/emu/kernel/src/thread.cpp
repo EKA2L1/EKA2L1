@@ -835,6 +835,18 @@ namespace eka2l1 {
                 last_syscalls.pop();
             }
         }
+
+        kernel::thread *thread::next_in_process() {
+            if (process_thread_link.next == owning_process()->thread_list.end()) {
+                return nullptr;
+            }
+
+            if (process_thread_link.next == nullptr) {
+                return nullptr;
+            }
+
+            return E_LOFF(process_thread_link.next, kernel::thread, process_thread_link);
+        }
     }
 
     namespace epoc {

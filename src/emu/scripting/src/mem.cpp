@@ -54,3 +54,21 @@ namespace eka2l1::scripting {
         return result;
     }
 }
+
+extern "C" {
+    std::uint8_t symemu_mem_read_byte(const std::uint32_t addr) {
+        return eka2l1::scripting::read_byte(addr);
+    }
+    
+    std::uint16_t symemu_mem_read_word(const std::uint32_t addr) {
+        return eka2l1::scripting::read_word(addr);
+    }
+
+    std::uint32_t symemu_mem_read_dword(const std::uint32_t addr) {
+        return eka2l1::scripting::read_dword(addr);
+    }
+    
+    std::uint64_t symemu_mem_read_qword(const std::uint32_t addr) {
+        return eka2l1::scripting::read_qword(addr);
+    }
+}

@@ -102,8 +102,11 @@ namespace eka2l1::arm::r12l1 {
             for (; next != last; ++next) {
                 std::unique_ptr<translated_block> &next_block = next->second;
 
-                if ((next_block->address_space() == aid) && (next_block->start_address() >= range_start)
-                    && (next_block->start_address() <= range_end)) {
+                if (next_block->address_space() == aid) {
+                    if ((range_start >= next_block->current_address()) || (range_end <= next_block->start_address())) {
+                        continue;
+                    }
+
                     if (invalidate_callback_) {
                         invalidate_callback_(next_block.get());
                     }

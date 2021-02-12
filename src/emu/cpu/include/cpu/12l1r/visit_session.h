@@ -75,6 +75,7 @@ namespace eka2l1::arm::r12l1 {
 
         bool emit_undefined_instruction_handler();
         bool emit_unimplemented_behaviour_handler();
+        bool emit_breakpoint_handler();
         bool emit_system_call_handler(const std::uint32_t n);
 
         void emit_cpsr_update_nzcvq();

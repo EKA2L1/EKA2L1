@@ -125,13 +125,10 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def("getName", &scripting::process::get_name, R"pbdoc(
             Get the process's name
         )pbdoc")
-        .def("getThreadList", &scripting::process::get_thread_list, R"pbdoc(
-            Get all the thread that the process owns.
+        .def("firstThread", &scripting::process::first_thread, R"pbdoc(
+            Get the first thread of this process.
 
-            Returns
-            -------
-            List[symemu.Thread]
-                A list of threads that this process owns.
+            To access other thread, use nextInProcess method from obtained thread.
         )pbdoc");
 
     py::class_<scripting::thread>(m, "Thread")
@@ -161,9 +158,6 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         .def("getLr", &scripting::thread::get_lr, R"pbdoc(
             Get PC of thread context.
         )pbdoc")
-        .def("getLeaveDepth", &scripting::thread::get_leave_depth, R"pbdoc(
-            Get the leave depth of thread.
-        )pbdoc")
         .def("getExitReason", &scripting::thread::get_exit_reason, R"pbdoc(
             Get the exit reason of thread
         )pbdoc")
@@ -181,6 +175,12 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         )pbdoc")
         .def("getHeapBase", &scripting::thread::get_heap_base, R"pbdoc(
             Get the base address of the heap memory chunk.
+        )pbdoc")
+        .def("nextInProcess", &scripting::thread::next_in_process, R"pbdoc(
+            Get the thread next to this current thread in the owner process thread list.
+        )pbdoc")
+        .def("ownProcess", &scripting::thread::get_owning_process, R"pbdoc(
+            Get the process that is parent to this thread.
         )pbdoc");
 
     py::class_<scripting::codeseg>(m, "Codeseg")
@@ -246,6 +246,9 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
         )pbdoc")
         .def("flags", &scripting::ipc_message_wrapper::flags, R"pbdoc(
             Get IPC message flags, containing information about argument types.
+        )pbdoc")
+        .def("requestStatusAddress", &scripting::ipc_message_wrapper::request_status_address, R"pbdoc(
+            Get the address of the request status related to this message.
         )pbdoc");
 
     py::class_<scripting::session_wrapper>(m, "Session")
@@ -277,12 +280,8 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
             Get CPU's sp.
         )pbdoc");
 
-    m.def("emulog", &scripting::emulog, R"pbdoc(
+    m.def("log", &scripting::emulog, R"pbdoc(
         Log to the emulator's logging system
-    )pbdoc");
-
-    m.def("registerPanicInvokement", &scripting::register_panic_invokement, R"pbdoc(
-        Register a function to be called when a panic happen
     )pbdoc");
 
     m.def("registerLibraryInvokement", &scripting::register_lib_invokement, R"pbdoc(
@@ -324,10 +323,6 @@ PYBIND11_EMBEDDED_MODULE(symemu, m) {
 
         func
                      The function to invoke on breakpoint hit.
-    )pbdoc");
-
-    m.def("registerRescheduleInvokement", &scripting::register_reschedule_invokement, R"pbdoc(
-        Register a function to be called right before a reschedule is started
     )pbdoc");
 
     m.def("registerIpcInvokement", &scripting::register_ipc_invokement, R"pbdoc(

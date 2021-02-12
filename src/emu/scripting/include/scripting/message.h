@@ -39,8 +39,13 @@ namespace eka2l1::scripting {
 
         std::uint32_t arg(const int idx);
         std::uint32_t flags() const;
+        std::uint32_t request_status_address() const;
 
         std::unique_ptr<scripting::session_wrapper> session();
+
+        eka2l1::ipc_msg *get_message_handler() {
+            return msg_;
+        }
     };
 
     std::unique_ptr<ipc_message_wrapper> message_from_handle(const int guest_handle);
