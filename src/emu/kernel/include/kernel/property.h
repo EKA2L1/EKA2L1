@@ -56,7 +56,6 @@ namespace eka2l1 {
             typedef void (*data_change_callback_handler)(void *userdata, service::property *prop);
 
         protected:
-
             int ndata;
             std::vector<uint8_t> bindata;
 

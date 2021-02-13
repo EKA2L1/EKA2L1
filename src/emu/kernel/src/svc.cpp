@@ -818,6 +818,32 @@ namespace eka2l1::epoc {
         return kern->open_handle(msg_thr, owner);
     }
 
+    BRIDGE_FUNC(std::int32_t, message_open_handle, kernel::handle h, kernel::object_type obj_type,
+        const std::int32_t index, kernel::owner_type owner) {
+        eka2l1::ipc_msg_ptr msg = kern->get_msg(h);
+
+        if (!msg) {
+            return epoc::error_bad_handle;
+        }
+
+        if ((index < 0) || (index > 3)) {
+            return epoc::error_argument;
+        }
+
+        auto obj = kern->get_kernel_obj_raw(static_cast<kernel::handle>(msg->args.args[index]), msg->own_thr);
+        if (!obj) {
+            return epoc::error_bad_handle;
+        }
+
+        if (obj->get_object_type() != obj_type) {
+            LOG_ERROR(KERNEL, "Mismatch object type expected!");
+            return epoc::error_bad_handle;
+        }
+
+        // Get the expected handle
+        return static_cast<std::int32_t>(kern->open_handle(obj, owner));
+    }
+
     static void query_security_info(kernel::process *process, epoc::security_info *info) {
         assert(process);
 
@@ -1577,7 +1603,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, handle_name, kernel::handle h, eka2l1::ptr<des8> name_des) {
-        kernel_obj_ptr obj = kern->get_kernel_obj_raw(h);
+        kernel_obj_ptr obj = kern->get_kernel_obj_raw(h, kern->crr_thread());
         process_ptr crr_pr = kern->crr_process();
 
         if (!obj) {
@@ -1589,7 +1615,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, handle_full_name, kernel::handle h, eka2l1::ptr<des8> full_name_des) {
-        kernel_obj_ptr obj = kern->get_kernel_obj_raw(h);
+        kernel_obj_ptr obj = kern->get_kernel_obj_raw(h, kern->crr_thread());
         process_ptr pr = kern->crr_process();
 
         if (!obj) {
@@ -2056,7 +2082,7 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(std::int32_t, property_find_get_int, std::int32_t cage, std::int32_t key, eka2l1::ptr<std::int32_t> value) {
         property_ptr prop = kern->get_prop(cage, key);
 
-        if (!prop) {
+        if (!prop || !prop->is_defined()) {
             LOG_WARN(KERNEL, "Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
             return epoc::error_not_found;
         }
@@ -2072,7 +2098,7 @@ namespace eka2l1::epoc {
 
         property_ptr prop = kern->get_prop(cage, key);
 
-        if (!prop) {
+        if (!prop || !prop->is_defined()) {
             LOG_WARN(KERNEL, "Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
             return epoc::error_not_found;
         }
@@ -2888,7 +2914,7 @@ namespace eka2l1::epoc {
 
     // NOTE(pent0): This call may be slow when the OS kernel is crowded.
     BRIDGE_FUNC(void, handle_info_eka1, kernel::handle_info *info, const kernel::handle h) {        
-        kernel_obj_ptr the_object = kern->get_kernel_obj_raw(h);
+        kernel_obj_ptr the_object = kern->get_kernel_obj_raw(h, kern->crr_thread());
 
         if (!the_object) {
             LOG_WARN(KERNEL, "Trying to get handle info of an invalid handle: 0x{:X}, ignored", h);
@@ -2904,7 +2930,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, handle_name_eka1, des16 *name_des, kernel::handle h) {
-        kernel_obj_ptr obj = kern->get_kernel_obj_raw(h);
+        kernel_obj_ptr obj = kern->get_kernel_obj_raw(h, kern->crr_thread());
         process_ptr crr_pr = kern->crr_process();
 
         if (!obj) {
@@ -4745,6 +4771,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xA8, message_client),
         BRIDGE_REGISTER(0xAA, message_construct),
         BRIDGE_REGISTER(0xAB, message_kill),
+        BRIDGE_REGISTER(0xAc, message_open_handle),
         BRIDGE_REGISTER(0xAD, process_security_info),
         BRIDGE_REGISTER(0xAE, thread_security_info),
         BRIDGE_REGISTER(0xAF, message_security_info),

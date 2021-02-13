@@ -767,7 +767,7 @@ namespace eka2l1 {
         return crr_process()->process_handles.close(handle);
     }
 
-    kernel_obj_ptr kernel_system::get_kernel_obj_raw(uint32_t handle) {
+    kernel_obj_ptr kernel_system::get_kernel_obj_raw(uint32_t handle, kernel::thread *target) {
         if ((handle & ~0x8000) == 0xFFFF0000) {
             return reinterpret_cast<kernel::kernel_obj *>(get_by_id<kernel::process>(
                 crr_process()->unique_id()));
@@ -779,14 +779,14 @@ namespace eka2l1 {
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
         if (info.handle_array_local) {
-            return crr_thread()->thread_handles.get_object(handle);
+            return target->thread_handles.get_object(handle);
         }
 
         if (info.handle_array_kernel) {
             return kernel_handles_.get_object(handle);
         }
 
-        return crr_process()->process_handles.get_object(handle);
+        return target->owning_process()->process_handles.get_object(handle);
     }
 
     bool kernel_system::get_info(kernel_obj_ptr the_object, kernel::handle_info &info) {
@@ -885,7 +885,7 @@ namespace eka2l1 {
     }
 
     kernel::handle kernel_system::mirror(kernel::thread *own_thread, kernel::handle handle, kernel::owner_type owner) {
-        kernel_obj_ptr target_obj = get_kernel_obj_raw(handle);
+        kernel_obj_ptr target_obj = get_kernel_obj_raw(handle, crr_thread());
         kernel::handle_inspect_info info = kernel::inspect_handle(handle);
 
         kernel::handle h = kernel::INVALID_HANDLE;
