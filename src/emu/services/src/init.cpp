@@ -146,6 +146,7 @@ namespace eka2l1::epoc {
         // The prop belongs to HAL server, but the key usuage is unknown. (TODO)
         DEFINE_INT_PROP_D(sys, epoc::SYS_CATEGORY, epoc::UNK_KEY1, 65535);
         DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::PHONE_POWER_KEY, system_agent_state_on);
+        DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::SOFTWARE_INSTALL_KEY, 0);
 
         // From Domain Server request
         DEFINE_INT_PROP(sys, 0x1020e406, 0x250, 0);
@@ -179,8 +180,8 @@ namespace eka2l1 {
             if (cfg->enable_srv_backup)
                 CREATE_SERVER(sys, backup_server);
 
-            if (cfg->enable_srv_install)
-                CREATE_SERVER(sys, install_server);
+            //if (cfg->enable_srv_install)
+            //    CREATE_SERVER(sys, install_server);
 
             if (cfg->enable_srv_rights)
                 CREATE_SERVER(sys, rights_server);
