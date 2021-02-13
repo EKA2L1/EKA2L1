@@ -429,7 +429,7 @@ namespace eka2l1 {
         int close(kernel::handle handle);
         bool get_info(kernel_obj_ptr obj, kernel::handle_info &info);
 
-        kernel_obj_ptr get_kernel_obj_raw(kernel::handle handle);
+        kernel_obj_ptr get_kernel_obj_raw(kernel::handle handle, kernel::thread *target);
 
         bool notify_prop(prop_ident_pair ident);
         bool subscribe_prop(prop_ident_pair ident, int *request_sts);
@@ -540,7 +540,7 @@ namespace eka2l1 {
         */
         template <typename T>
         T *get(const kernel::handle handle) {
-            T *result = reinterpret_cast<T *>(get_kernel_obj_raw(handle));
+            T *result = reinterpret_cast<T *>(get_kernel_obj_raw(handle, crr_thread()));
 
             if (!result) {
                 return nullptr;
