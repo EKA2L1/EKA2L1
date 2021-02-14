@@ -514,6 +514,9 @@ namespace eka2l1 {
             ctx->sys->get_io_system()->delete_entry(path);
         }
 
+        // Reset its status, so seek back, this is just in case it got used again
+        vfs_file->seek(0, file_seek_mode::beg);
+
         auto &node_attrib = server<fs_server>()->attribs[vfs_file->file_name()];
         node_attrib.decrement_use(ctx->msg->own_thr->owning_process()->unique_id());
 
