@@ -120,6 +120,7 @@ namespace eka2l1::kernel {
         std::string process_name;
 
         codeseg_ptr codeseg;
+        chunk_ptr dll_static_chunk;
 
         kernel_system *kern;
         memory_system *mem;
@@ -354,6 +355,13 @@ namespace eka2l1::kernel {
 
         common::roundabout &get_thread_list() {
             return thread_list;
+        }
+
+        chunk_ptr get_dll_static_chunk(const address target_addr, const std::uint32_t size,
+            std::uint32_t *offset = nullptr);
+
+        chunk_ptr get_dll_static_chunk_raw() {
+            return dll_static_chunk;
         }
     };
 }

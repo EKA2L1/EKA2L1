@@ -157,28 +157,28 @@ namespace eka2l1::kernel {
         }
 
         if (data_size_align != 0) {
+            std::uint32_t addition_off = 0;
+
             if (!data_addr) {
                 dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
                     prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
             } else {
-                kernel::chunk_access acc = kernel::chunk_access::dll_static_data;
-
                 // TODO: Remove this specific stuff
                 if ((data_base >= mem::local_data) && (data_base <= (kern->is_eka1() ? mem::dll_static_data : mem::shared_data_eka1))) {
-                    acc = kernel::chunk_access::local;
+                    dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
+                        prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous,
+                        0x00, false, data_base, nullptr);
+                } else {
+                    dt_chunk = new_foe->get_dll_static_chunk(data_base, data_size_align, &addition_off);
                 }
-
-                dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                    prot_read_write, kernel::chunk_type::normal, acc, kernel::chunk_attrib::anonymous,
-                    0x00, false, data_base, nullptr);
             }
 
             if (!dt_chunk) {
                 return false;
             }
 
-            data_base_ptr = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
-            the_addr_of_data_run = dt_chunk->base(new_foe).ptr_address();
+            data_base_ptr = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base()) + addition_off;
+            the_addr_of_data_run = dt_chunk->base(new_foe).ptr_address() + addition_off;
 
             // Confirmed that if data is in ROM, only BSS is reserved
             std::copy(constant_data.get(), constant_data.get() + data_size, data_base_ptr); // .data
@@ -289,7 +289,16 @@ namespace eka2l1::kernel {
 
         // Free the chunk data
         if (attach_info->data_chunk) {
-            kern->destroy(attach_info->data_chunk);
+            if (attach_info->data_chunk == attach_info->attached_process->get_dll_static_chunk_raw()) {
+                // Only need to decommit
+                const std::uint32_t off = data_base - attach_info->data_chunk->base(de_foe).ptr_address();
+                const std::uint32_t size_decomp = common::align(data_size + bss_size, kern->get_memory_system()->get_page_size());
+
+                // TODO: This may overlaps with unaligned reason, hope they are not stupid when making roms.
+                attach_info->data_chunk->decommit(off, size_decomp);
+            } else {
+                kern->destroy(attach_info->data_chunk);
+            }
         }
 
         if (!code_chunk_shared && attach_info->code_chunk) {

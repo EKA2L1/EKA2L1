@@ -143,6 +143,8 @@ namespace eka2l1::kernel {
     process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
         const std::u16string &cmd_args)
         : kernel_obj(kern, process_name, nullptr, access_type::local_access)
+        , mm_impl_(nullptr)
+        , dll_static_chunk(nullptr)
         , process_name(process_name)
         , kern(kern)
         , mem(mem)
@@ -170,6 +172,10 @@ namespace eka2l1::kernel {
     }
 
     void process::destroy() {
+        if (dll_static_chunk) {
+            kern->destroy(dll_static_chunk);
+        }
+
         detatch_from_parent();
     }
 
@@ -223,6 +229,34 @@ namespace eka2l1::kernel {
         for (auto &uid_change_callback: uid_change_callbacks) {
             uid_change_callback.second(uid_change_callback.first, uids);
         }
+    }
+
+    chunk_ptr process::get_dll_static_chunk(const address target_addr, const std::uint32_t size, std::uint32_t *offset) {
+        if (!dll_static_chunk) {
+            const std::uint32_t SIZE_STATIC_CHUNK = kern->is_eka1() ? (mem::dll_static_data_eka1_end - mem::dll_static_data_eka1)
+                : (mem::shared_data - mem::dll_static_data);
+
+            dll_static_chunk = kern->create<kernel::chunk>(mem, this, "", 0, 0, SIZE_STATIC_CHUNK,
+                prot_read_write, kernel::chunk_type::disconnected, kernel::chunk_access::dll_static_data, kernel::chunk_attrib::anonymous,
+                0x00);
+        }
+
+        if (target_addr < dll_static_chunk->base(this).ptr_address()) {
+            LOG_ERROR(KERNEL, "Target address is invalid for DLL static");
+            return nullptr;
+        }
+
+        const std::uint32_t target_off = target_addr - dll_static_chunk->base(this).ptr_address();
+
+        if (!dll_static_chunk->commit(target_off, size)) {
+            LOG_WARN(KERNEL, "Fail to commit DLL static data!");
+        }
+
+        if (offset) {
+            *offset = target_off;
+        }
+
+        return dll_static_chunk;
     }
 
     std::size_t process::register_uid_type_change_callback(void *userdata, process_uid_type_change_callback callback) {
