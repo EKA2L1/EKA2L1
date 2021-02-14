@@ -67,6 +67,79 @@ namespace eka2l1 {
         prop->add_data_change_callback(userdata, language_property_change_handler);
     }
 
+    void imgui_debugger::key_binder::reset() {
+        target_key = {
+            epoc::std_key_up_arrow,
+            epoc::std_key_down_arrow,
+            epoc::std_key_left_arrow,
+            epoc::std_key_right_arrow,
+            epoc::std_key_enter,
+            epoc::std_key_device_0,
+            epoc::std_key_device_1,
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            epoc::std_key_hash,
+            '*',
+            epoc::std_key_backspace
+        };
+
+        target_key_name = {
+            "Up",
+            "Down",
+            "Left",
+            "Right",
+            "Middle",
+            "Left softkey",
+            "Right softkey",
+            "Numpad 0",
+            "Numpad 1",
+            "Numpad 2",
+            "Numpad 3",
+            "Numpad 4",
+            "Numpad 5",
+            "Numpad 6",
+            "Numpad 7",
+            "Numpad 8",
+            "Numpad 9",
+            "Hash",
+            "Star",
+            "Backspace"
+        };
+
+        key_bind_name = {
+            { epoc::std_key_up_arrow, "Up arrow" },
+            { epoc::std_key_down_arrow, "Down arrow" },
+            { epoc::std_key_left_arrow, "Left arrow" },
+            { epoc::std_key_right_arrow, "Right arrow" },
+            { epoc::std_key_enter, "Enter" },
+            { epoc::std_key_device_0, "F1" },
+            { epoc::std_key_device_1, "F2" },
+            { '0', "Numpad 0" },
+            { '1', "Numpad 1" },
+            { '2', "Numpad 2" },
+            { '3', "Numpad 3" },
+            { '4', "Numpad 4" },
+            { '5', "Numpad 5" },
+            { '6', "Numpad 6" },
+            { '7', "Numpad 7" },
+            { '8', "Numpad 8" },
+            { '9', "Numpad 9" },
+            { epoc::std_key_hash, "Slash" },
+            { '*', "Star" },
+            { epoc::std_key_backspace, "Backspace" }
+        };
+
+        need_key = std::vector<bool>(BIND_NUM, false);
+    }
+
     imgui_debugger::imgui_debugger(eka2l1::system *sys, imgui_logger *logger)
         : sys(sys)
         , conf(sys->get_config())
@@ -230,92 +303,33 @@ namespace eka2l1 {
             on_system_reset(sys);
         });
 
-        key_binder_state.target_key = {
-            KEY_UP,
-            KEY_DOWN,
-            KEY_LEFT,
-            KEY_RIGHT,
-            KEY_ENTER,
-            KEY_F1,
-            KEY_F2,
-            KEY_NUM0,
-            KEY_NUM1,
-            KEY_NUM2,
-            KEY_NUM3,
-            KEY_NUM4,
-            KEY_NUM5,
-            KEY_NUM6,
-            KEY_NUM7,
-            KEY_NUM8,
-            KEY_NUM9,
-            KEY_SLASH,
-            KEY_STAR,
-            KEY_BACKSPACE
-        };
-        key_binder_state.target_key_name = {
-            "KEY_UP",
-            "KEY_DOWN",
-            "KEY_LEFT",
-            "KEY_RIGHT",
-            "KEY_ENTER",
-            "KEY_F1",
-            "KEY_F2",
-            "KEY_NUM0",
-            "KEY_NUM1",
-            "KEY_NUM2",
-            "KEY_NUM3",
-            "KEY_NUM4",
-            "KEY_NUM5",
-            "KEY_NUM6",
-            "KEY_NUM7",
-            "KEY_NUM8",
-            "KEY_NUM9",
-            "KEY_SLASH",
-            "KEY_STAR",
-            "KEY_BACKSPACE"
-        };
-        key_binder_state.key_bind_name = {
-            { KEY_UP, "KEY_UP" },
-            { KEY_DOWN, "KEY_DOWN" },
-            { KEY_LEFT, "KEY_LEFT" },
-            { KEY_RIGHT, "KEY_RIGHT" },
-            { KEY_ENTER, "KEY_ENTER" },
-            { KEY_F1, "KEY_F1" },
-            { KEY_F2, "KEY_F2" },
-            { KEY_NUM0, "KEY_NUM0" },
-            { KEY_NUM1, "KEY_NUM1" },
-            { KEY_NUM2, "KEY_NUM2" },
-            { KEY_NUM3, "KEY_NUM3" },
-            { KEY_NUM4, "KEY_NUM4" },
-            { KEY_NUM5, "KEY_NUM5" },
-            { KEY_NUM6, "KEY_NUM6" },
-            { KEY_NUM7, "KEY_NUM7" },
-            { KEY_NUM8, "KEY_NUM8" },
-            { KEY_NUM9, "KEY_NUM9" },
-            { KEY_SLASH, "KEY_SLASH" },
-            { KEY_STAR, "KEY_STAR" },
-            { KEY_BACKSPACE, "KEY_BACKSPACE" }
-        };
+        key_binder_state.reset();
 
-        key_binder_state.need_key = std::vector<bool>(key_binder_state.BIND_NUM, false);
+        for (auto &kb : conf->keybinds) {
+            bool is_mouse = (kb.source.type == config::KEYBIND_TYPE_MOUSE);
 
-        if (winserv) {
-            for (auto &kb : conf->keybinds) {
-                bool is_mouse = (kb.source.type == config::KEYBIND_TYPE_MOUSE);
+            if (is_mouse) {
+                should_warn_touch_disabled = !conf->stop_warn_touch_disabled;
+            }
 
+            if ((kb.source.type == config::KEYBIND_TYPE_KEY) || is_mouse) {
+                const std::uint32_t bind_keycode = (is_mouse ? epoc::KEYBIND_TYPE_MOUSE_CODE_BASE : 0) + kb.source.data.keycode;
+                std::string key_str = "";
+                
                 if (is_mouse) {
-                    should_warn_touch_disabled = !conf->stop_warn_touch_disabled;
+                    key_str = std::to_string(kb.source.data.keycode);
+                } else {
+                    const char *name_translated = number_to_key_name(kb.source.data.keycode);
+                    if (!name_translated) {
+                        key_str = std::to_string(kb.source.data.keycode);
+                    } else {
+                        key_str = name_translated;
+                    }
                 }
 
-                if ((kb.source.type == config::KEYBIND_TYPE_KEY) || is_mouse) {
-                    const std::uint32_t bind_keycode = (is_mouse ? epoc::KEYBIND_TYPE_MOUSE_CODE_BASE : 0) + kb.source.data.keycode;
-
-                    winserv->input_mapping.key_input_map[bind_keycode] = kb.target;
-                    key_binder_state.key_bind_name[kb.target] = (is_mouse ? "M" : "") + std::to_string(kb.source.data.keycode);
-                } else if (kb.source.type == config::KEYBIND_TYPE_CONTROLLER) {
-                    winserv->input_mapping.button_input_map[std::make_pair(kb.source.data.button.controller_id, kb.source.data.button.button_id)] = kb.target;
-                    key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.button.controller_id) + ":" + std::to_string(kb.source.data.button.button_id);
-                }
+                key_binder_state.key_bind_name[kb.target] = (is_mouse ? "M" : "") + key_str;
+            } else if (kb.source.type == config::KEYBIND_TYPE_CONTROLLER) {
+                key_binder_state.key_bind_name[kb.target] = std::to_string(kb.source.data.button.controller_id) + ":" + std::to_string(kb.source.data.button.button_id);
             }
         }
     }

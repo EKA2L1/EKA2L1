@@ -141,7 +141,7 @@ namespace eka2l1::epoc {
         int ui_rotation = focus->scr->ui_rotation;
 
         for (auto &evt : evts_) {
-            evt.key_evt_.scancode = epoc::map_inputcode_to_scancode(evt.key_evt_.scancode,
+            evt.key_evt_.scancode = epoc::post_processing_scancode(static_cast<epoc::std_scan_code>(evt.key_evt_.scancode),
                 ui_rotation);
 
             bool dont_send_extra_key_event = (evt.type != epoc::event_code::key_down);

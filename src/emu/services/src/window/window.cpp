@@ -44,7 +44,9 @@
 #include <common/log.h>
 #include <common/rgb.h>
 #include <common/time.h>
+
 #include <config/app_settings.h>
+#include <config/config.h>
 
 #include <utils/event.h>
 #include <utils/err.h>
@@ -1311,6 +1313,9 @@ namespace eka2l1 {
             "Ws::CommandBuffer");
         REGISTER_IPC(window_server, send_to_command_buffer, EWservMessSyncMsgBuf,
             "Ws::MessSyncBuf");
+
+        // For addition mappings before actual game launches
+        init_key_mappings();
     }
 
     window_server::~window_server() {
@@ -1711,6 +1716,66 @@ namespace eka2l1 {
 
             ws_global_mem_allocator = std::make_unique<epoc::chunk_allocator>(ws_global_mem_chunk);
             emit_ws_thread_code();
+        }
+    }
+
+    void window_server::reset_key_mappings() {
+        input_mapping.key_input_map = {
+            { KEY_F1, epoc::std_key_device_0 },
+            { KEY_F2, epoc::std_key_device_1 },
+            { KEY_ENTER, epoc::std_key_device_3 },
+            { KEY_SLASH, epoc::std_key_hash },
+            { KEY_BACKSPACE, epoc::std_key_backspace },
+            { KEY_STAR, '*' },
+            { KEY_NUM0, '0' },
+            { KEY_NUM1, '1' },
+            { KEY_NUM2, '2' },
+            { KEY_NUM3, '3' },
+            { KEY_NUM4, '4' },
+            { KEY_NUM5, '5' },
+            { KEY_NUM6, '6' },
+            { KEY_NUM7, '7' },
+            { KEY_NUM8, '8' },
+            { KEY_NUM9, '9' },
+            { KEY_RIGHT, epoc::std_key_right_arrow },
+            { KEY_LEFT, epoc::std_key_left_arrow },
+            { KEY_DOWN, epoc::std_key_down_arrow },
+            { KEY_UP, epoc::std_key_up_arrow }
+        };
+    }
+
+    void window_server::delete_key_mapping(const std::uint32_t target) {
+        for (auto ite = input_mapping.key_input_map.begin(); ite != input_mapping.key_input_map.end(); ite++) {
+            if (ite->second == target) {
+                input_mapping.key_input_map.erase(ite);
+                return;
+            }
+        }
+
+        for (auto ite = input_mapping.button_input_map.begin(); ite != input_mapping.button_input_map.end(); ite++) {
+            if (ite->second == target) {
+                input_mapping.button_input_map.erase(ite);
+                return;
+            }
+        }
+    }
+
+    void window_server::init_key_mappings() {
+        reset_key_mappings();
+
+        config::state *conf = kern->get_config();
+
+        for (auto &kb : conf->keybinds) {
+            delete_key_mapping(kb.target);
+
+            bool is_mouse = (kb.source.type == config::KEYBIND_TYPE_MOUSE);
+
+            if ((kb.source.type == config::KEYBIND_TYPE_KEY) || is_mouse) {
+                const std::uint32_t bind_keycode = (is_mouse ? epoc::KEYBIND_TYPE_MOUSE_CODE_BASE : 0) + kb.source.data.keycode;
+                input_mapping.key_input_map[bind_keycode] = static_cast<epoc::std_scan_code>(kb.target);
+            } else if (kb.source.type == config::KEYBIND_TYPE_CONTROLLER) {
+                input_mapping.button_input_map[std::make_pair(kb.source.data.button.controller_id, kb.source.data.button.button_id)] = static_cast<epoc::std_scan_code>(kb.target);
+            }
         }
     }
 

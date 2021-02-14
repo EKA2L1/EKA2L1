@@ -35,6 +35,8 @@ enum {
     #undef KEY_CODE
 };
 
+const char *number_to_key_name(const int keycode);
+
 namespace eka2l1 {
     /**
      * \brief Contains implementation for driver.

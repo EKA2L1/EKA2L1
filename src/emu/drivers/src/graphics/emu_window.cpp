@@ -20,6 +20,18 @@
 #include <drivers/graphics/backend/emu_window_glfw.h>
 #include <drivers/graphics/emu_window.h>
 
+const char *number_to_key_name(const int keycode) {
+    switch (keycode) {
+    #define KEY_CODE(name, real_name, code) case code: return real_name;
+    #include <drivers/graphics/keycode.inc>
+    #undef KEY_CODE
+    default:
+        break;
+    }
+
+    return nullptr;
+}
+
 namespace eka2l1 {
     namespace drivers {
         std::unique_ptr<emu_window> new_emu_window(const window_api win_type) {

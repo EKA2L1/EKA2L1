@@ -112,6 +112,8 @@ namespace eka2l1 {
             std::array<std::uint32_t, BIND_NUM> target_key;
             std::array<std::string, BIND_NUM> target_key_name;
             std::map<std::uint32_t, std::string> key_bind_name;
+
+            void reset();
         } key_binder_state;
 
         struct device_wizard {
