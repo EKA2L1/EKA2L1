@@ -31,10 +31,17 @@ namespace eka2l1 {
         sisregistry_open_registry_uid = 0x0,
         sisregistry_close_registry_entry = 0x3,
         sisregistry_version = 0x5,
-        sisregistry_package_augmentations = 0x30
+        sisregistry_in_rom = 0xA,
+        sisregistry_trust_timestamp = 0x16,
+        sisregistry_package_augmentations = 0x30,
+        sisregistry_package = 0x34,
+        sisregistry_non_removable = 0x36,
+        sisregistry_update_entry = 0x45,
+        sisregistry_embedded_packages = 0x104,
+        sisregistry_signed_by_sucert = 0x107
     };
 
-    struct sisregistry_package {
+    struct sisregistry_package_ {
         epoc::uid uid;
         std::u16string package_name;
         std::u16string vendor_name;
@@ -54,7 +61,12 @@ namespace eka2l1 {
         explicit sisregistry_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
+        void is_in_rom(eka2l1::service::ipc_context *ctx);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
         void populate_augmentations(common::chunkyseri &seri);
+        void is_non_removable(eka2l1::service::ipc_context *ctx);
+        void get_package(eka2l1::service::ipc_context *ctx);
+        void get_trust_timestamp(eka2l1::service::ipc_context *ctx);
+        void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
     };
 }

@@ -25,6 +25,7 @@
 #include <utils/err.h>
 
 #include <common/chunkyseri.h>
+#include <common/time.h>
 
 namespace eka2l1 {
 
@@ -44,8 +45,38 @@ namespace eka2l1 {
 
     void sisregistry_client_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
+        case sisregistry_in_rom: {
+            is_in_rom(ctx);
+            break;
+        }
+
+        case sisregistry_trust_timestamp: {
+            get_trust_timestamp(ctx);
+            break;
+        }
+        
         case sisregistry_package_augmentations: {
             request_package_augmentations(ctx);
+            break;
+        }
+
+        case sisregistry_package: {
+            get_package(ctx);
+            break;
+        }
+        
+        case sisregistry_non_removable: {
+            is_non_removable(ctx);
+            break;
+        }
+
+        case sisregistry_embedded_packages: {
+            request_package_augmentations(ctx);
+            break;
+        }
+
+        case sisregistry_signed_by_sucert: {
+            is_signed_by_sucert(ctx);
             break;
         }
 
@@ -56,6 +87,20 @@ namespace eka2l1 {
         }
     }
 
+    void sisregistry_client_session::is_in_rom(eka2l1::service::ipc_context *ctx) {
+        uint32_t in_rom = false;
+
+        ctx->write_data_to_descriptor_argument(0, in_rom);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::get_trust_timestamp(eka2l1::service::ipc_context *ctx) {
+        std::uint64_t timestamp = common::get_current_time_in_microseconds_since_1ad();
+
+        ctx->write_data_to_descriptor_argument(0, timestamp);
+        ctx->complete(epoc::error_none);
+    }
+
     void sisregistry_client_session::request_package_augmentations(eka2l1::service::ipc_context *ctx) {
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
         populate_augmentations(seri);
@@ -63,16 +108,17 @@ namespace eka2l1 {
         std::vector<char> buf(seri.size());
         seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
             common::SERI_MODE_WRITE);
+        populate_augmentations(seri);
 
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::populate_augmentations(common::chunkyseri& seri) {
+    void sisregistry_client_session::populate_augmentations(common::chunkyseri &seri) {
         std::uint32_t property_count = 1;
         seri.absorb(property_count);
         for (size_t i = 0; i < property_count; i++) {
-            sisregistry_package package;
+            sisregistry_package_ package;
             seri.absorb(package.uid);
             epoc::absorb_des(&package.package_name, seri);
             epoc::absorb_des(&package.vendor_name, seri);
@@ -80,4 +126,27 @@ namespace eka2l1 {
         }
     }
 
+    void sisregistry_client_session::get_package(eka2l1::service::ipc_context *ctx) {
+        std::uint32_t session_id = *(ctx->get_argument_value<std::uint32_t>(3));
+
+        sisregistry_package_ package;
+        package.uid = session_id;
+
+        ctx->write_data_to_descriptor_argument(0, package);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::is_non_removable(eka2l1::service::ipc_context *ctx) {
+        uint32_t removable = true;
+
+        ctx->write_data_to_descriptor_argument(0, removable);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::is_signed_by_sucert(eka2l1::service::ipc_context *ctx) {
+        uint32_t signed_by_sucert = false;
+
+        ctx->write_data_to_descriptor_argument(0, signed_by_sucert);
+        ctx->complete(epoc::error_none);
+    }
 }
