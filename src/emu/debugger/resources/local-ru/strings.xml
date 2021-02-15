@@ -15,7 +15,6 @@
     <string name="warning">Внимание</string>
     <string name="cancel">Отмена</string>
     <string name="continue">Продолжить</string>
-    <string name="reset">Сброс</string>
     <string name="file_menu_name">Файл</string>
     <string name="debugger_menu_name">Отладчик</string>
     <string name="view_menu_name">Просмотр</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Управление</string>
     <string name="pref_control_key_binding_sect_title">Назначение кнопок</string>
     <string name="pref_control_wait_for_key_string">ожидание клавиши</string>
+    <string name="pref_control_reset_bindings">Сброс</string>
     <string name="pref_hal_battery_level_string">Уровень батареи</string>
     <string name="pref_hal_signal_level_string">Уровень сигнала</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Пожалуйста, перезапустите эмулятор, чтобы изменения в хранилище данных вступили в силу</string>
