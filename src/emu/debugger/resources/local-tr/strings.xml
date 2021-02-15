@@ -15,6 +15,7 @@
     <string name="warning">Uyarı</string>
     <string name="cancel">İptal et</string>
     <string name="continue">Devam et</string>
+    <string name="reset">Reset</string>
     <string name="file_menu_name">Dosya</string>
     <string name="debugger_menu_name">Hata ayıklayıcı</string>
     <string name="view_menu_name">Görünüm</string>
