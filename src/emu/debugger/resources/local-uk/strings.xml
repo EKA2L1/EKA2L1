@@ -15,6 +15,7 @@
     <string name="warning">Увага</string>
     <string name="cancel">Скасувати</string>
     <string name="continue">Продовжити</string>
+    <string name="reset">Скинути</string>
     <string name="file_menu_name">Файл</string>
     <string name="debugger_menu_name">Налагоджувач</string>
     <string name="view_menu_name">Вигляд</string>
