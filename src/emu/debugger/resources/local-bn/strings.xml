@@ -15,6 +15,7 @@
     <string name="warning">সতর্কতা</string>
     <string name="cancel">বাতিল করুন</string>
     <string name="continue">চালিয়ে যান</string>
+    <string name="reset">পুনঃস্থাপন</string>
     <string name="file_menu_name">ফাইল</string>
     <string name="debugger_menu_name">ডিবাগার</string>
     <string name="view_menu_name">দৃশ্য</string>
