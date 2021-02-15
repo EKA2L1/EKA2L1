@@ -15,7 +15,6 @@
     <string name="warning">Aviso</string>
     <string name="cancel">Cancelar</string>
     <string name="continue">Continuar</string>
-    <string name="reset">Restaurar</string>
     <string name="file_menu_name">Arquivo</string>
     <string name="debugger_menu_name">Depurador</string>
     <string name="view_menu_name">Exibir</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Controle</string>
     <string name="pref_control_key_binding_sect_title">Combinações de tecla</string>
     <string name="pref_control_wait_for_key_string">Esperando por tecla</string>
+    <string name="pref_control_reset_bindings">Restaurar</string>
     <string name="pref_hal_battery_level_string">Nível da bateria</string>
     <string name="pref_hal_signal_level_string">Nível de sinal</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Por favor, reinicie o emulador para que as alterações feitas no armazenamento de dados e dispositivos sejam efetivos</string>
