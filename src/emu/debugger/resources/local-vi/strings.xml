@@ -15,7 +15,6 @@
     <string name="warning">Cảnh báo</string>
     <string name="cancel">Huỷ</string>
     <string name="continue">Tiếp tục</string>
-    <string name="reset">Cài đặt lại</string>
     <string name="file_menu_name">Tệp tin</string>
     <string name="debugger_menu_name">Trình gỡ lỗi</string>
     <string name="view_menu_name">Hiển thị</string>
@@ -103,6 +102,7 @@ Kiểm tra xem có thiết bị nào chưa được thêm hay không và sửa t
     <string name="pref_control_title">Điều khiển</string>
     <string name="pref_control_key_binding_sect_title">Liên kết phím</string>
     <string name="pref_control_wait_for_key_string">chờ phím</string>
+    <string name="pref_control_reset_bindings">Cài đặt lại</string>
     <string name="pref_hal_battery_level_string">Mức pin</string>
     <string name="pref_hal_signal_level_string">Mức sóng</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Khởi động lại giả lập để các thay đổi có hiệu lực</string>
