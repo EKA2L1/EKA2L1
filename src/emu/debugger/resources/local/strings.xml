@@ -15,6 +15,7 @@
     <string name="warning">Warning</string>
     <string name="cancel">Cancel</string>
     <string name="continue">Continue</string>
+    <string name="reset">Reset</string>
 
     <string name="file_menu_name">File</string>
     <string name="debugger_menu_name">Debugger</string>

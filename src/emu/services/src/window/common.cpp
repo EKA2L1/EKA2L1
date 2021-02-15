@@ -192,31 +192,45 @@ namespace eka2l1::epoc {
         return key_null;
     }
 
-    std_scan_code map_inputcode_to_scancode(int input_code, int ui_rotation) {
-        auto scanmap = &scanmap_0;
-        switch (ui_rotation) {
-        case 90:
-            scanmap = &scanmap_90;
+    std_scan_code post_processing_scancode(std_scan_code resulted, const int rotation) {
+        const std_scan_code ROUND_ARROW_MAP[] = {
+            std_key_right_arrow,
+            std_key_up_arrow,
+            std_key_left_arrow,
+            std_key_down_arrow
+        };
+
+        // Get the index of the key
+        int index = -1;
+        switch (resulted) {
+        case std_key_right_arrow:
+            index = 0;
             break;
-        case 180:
-            scanmap = &scanmap_180;
+
+        case std_key_up_arrow:
+            index = 1;
             break;
-        case 270:
-            scanmap = &scanmap_270;
+
+        case std_key_left_arrow:
+            index = 2;
+            break;
+
+        case std_key_down_arrow:
+            index = 3;
+            break;
+
+        default:
             break;
         }
 
-        auto it = scanmap->find(input_code);
-        if (it == scanmap->end()) {
-            scanmap = &scanmap_all;
-            it = scanmap->find(input_code);
-            if (it == scanmap->end())
-                return std_key_null;
+        if (index == -1) {
+            return resulted;
         }
-        return static_cast<std_scan_code>(it->second);
+
+        return ROUND_ARROW_MAP[(index + (rotation / 90)) % 4];
     }
 
-    std::optional<std::uint32_t> map_button_to_inputcode(std::map<std::pair<int, int>, std::uint32_t> &map, int controller_id, int button) {
+    std::optional<std::uint32_t> map_button_to_inputcode(button_map &map, int controller_id, int button) {
         auto key = std::make_pair(controller_id, button);
         auto it = map.find(key);
 
@@ -227,7 +241,7 @@ namespace eka2l1::epoc {
         return it->second;
     }
 
-    std::optional<std::uint32_t> map_key_to_inputcode(std::map<std::uint32_t, std::uint32_t> &map, std::uint32_t keycode) {
+    std::optional<std::uint32_t> map_key_to_inputcode(key_map &map, std::uint32_t keycode) {
         auto it = map.find(keycode);
 
         if (it == map.end()) {

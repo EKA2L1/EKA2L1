@@ -29,55 +29,13 @@
 #include <memory>
 #include <string>
 
-#define KEY_TAB 258
-#define KEY_BACKSPACE 259
-#define KEY_LEFT_SHIFT 340
-#define KEY_LEFT_CONTROL 341
-#define KEY_LEFT_ALT 342
-#define KEY_LEFT_SUPER 343
-#define KEY_RIGHT_SHIFT 344
-#define KEY_RIGHT_CONTROL 345
-#define KEY_RIGHT_ALT 346
-#define KEY_RIGHT_SUPER 347
+enum {
+    #define KEY_CODE(name, key_name, code) name = code,
+    #include <drivers/graphics/keycode.inc>
+    #undef KEY_CODE
+};
 
-#define KEY_RIGHT 262
-#define KEY_LEFT 263
-#define KEY_DOWN 264
-#define KEY_UP 265
-
-#define KEY_ENTER 257
-#define KEY_ESCAPE 256
-
-#define KEY_NUM0 320
-#define KEY_NUM1 321
-#define KEY_NUM2 322
-#define KEY_NUM3 323
-#define KEY_NUM4 324
-#define KEY_NUM5 325
-#define KEY_NUM6 326
-#define KEY_NUM7 327
-#define KEY_NUM8 328
-#define KEY_NUM9 329
-#define KEY_SLASH 331
-#define KEY_STAR 332
-
-#define KEY_F1 290
-#define KEY_F2 291
-#define KEY_F11 300
-
-#define KEY_A 65
-#define KEY_H 73
-#define KEY_I 74
-#define KEY_K 75
-#define KEY_L 76
-#define KEY_M 77
-#define KEY_N 78
-#define KEY_O 79
-#define KEY_P 80
-#define KEY_Q 81
-#define KEY_R 82
-#define KEY_W 87
-#define KEY_X 88
+const char *number_to_key_name(const int keycode);
 
 namespace eka2l1 {
     /**

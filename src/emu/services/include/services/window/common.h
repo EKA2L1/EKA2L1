@@ -649,53 +649,6 @@ namespace eka2l1::epoc {
         key_application_27
     };
 
-    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_all = {
-        { KEY_F1, std_key_device_0 },
-        { KEY_F2, std_key_device_1 },
-        { KEY_ENTER, std_key_device_3 },
-        { KEY_SLASH, std_key_hash },
-        { KEY_BACKSPACE, std_key_backspace },
-        { KEY_STAR, '*' },
-        { KEY_NUM0, '0' },
-        { KEY_NUM1, '1' },
-        { KEY_NUM2, '2' },
-        { KEY_NUM3, '3' },
-        { KEY_NUM4, '4' },
-        { KEY_NUM5, '5' },
-        { KEY_NUM6, '6' },
-        { KEY_NUM7, '7' },
-        { KEY_NUM8, '8' },
-        { KEY_NUM9, '9' }
-    };
-
-    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_0 = {
-        { KEY_RIGHT, std_key_right_arrow },
-        { KEY_LEFT, std_key_left_arrow },
-        { KEY_DOWN, std_key_down_arrow },
-        { KEY_UP, std_key_up_arrow }
-    };
-
-    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_90 = {
-        { KEY_RIGHT, std_key_up_arrow },
-        { KEY_LEFT, std_key_down_arrow },
-        { KEY_DOWN, std_key_right_arrow },
-        { KEY_UP, std_key_left_arrow }
-    };
-
-    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_180 = {
-        { KEY_RIGHT, std_key_left_arrow },
-        { KEY_LEFT, std_key_right_arrow },
-        { KEY_DOWN, std_key_up_arrow },
-        { KEY_UP, std_key_down_arrow }
-    };
-
-    static const std::unordered_map<std::uint32_t, std::uint32_t> scanmap_270 = {
-        { KEY_RIGHT, std_key_down_arrow },
-        { KEY_LEFT, std_key_up_arrow },
-        { KEY_DOWN, std_key_left_arrow },
-        { KEY_UP, std_key_right_arrow }
-    };
-
     static constexpr std::uint8_t WS_MAJOR_VER = 1;
     static constexpr std::uint8_t WS_MINOR_VER = 0;
     static constexpr std::uint16_t WS_V6_BUILD_VER = 139;
@@ -704,7 +657,7 @@ namespace eka2l1::epoc {
     static constexpr std::uint64_t WS_DEFAULT_KEYBOARD_REPEAT_NEXT_DELAY = 100000;
 
     key_code map_scancode_to_keycode(std_scan_code scan_code);
-    std_scan_code map_inputcode_to_scancode(int input_code, int ui_rotation);
+    std_scan_code post_processing_scancode(std_scan_code input_code, int ui_rotation);
 
     static constexpr std::uint32_t KEYBIND_TYPE_MOUSE_CODE_BASE = 0x500000;
     

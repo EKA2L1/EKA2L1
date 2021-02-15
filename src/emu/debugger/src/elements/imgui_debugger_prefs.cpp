@@ -660,21 +660,31 @@ namespace eka2l1 {
                     config::keybind new_kb;
                     new_kb.target = key_binder_state.target_key[i];
 
+                    // Don't want conflicts ;)
+                    winserv->delete_key_mapping(new_kb.target);
+
                     // NOTE: key_binder_state belongs to UI. setting a key_bind_name means setting the display name of binded key
                     // in keybind window.
                     switch (key_evt.type_) {
-                    case drivers::input_event_type::key:
-                        winserv->input_mapping.key_input_map[key_evt.key_.code_] = key_binder_state.target_key[i];
-                        key_binder_state.key_bind_name[new_kb.target] = std::to_string(key_evt.key_.code_);
+                    case drivers::input_event_type::key: {
+                        winserv->input_mapping.key_input_map[key_evt.key_.code_] = static_cast<epoc::std_scan_code>(
+                            key_binder_state.target_key[i]);
+   
+                        const char *key_name = number_to_key_name(key_evt.key_.code_);
+                        key_binder_state.key_bind_name[new_kb.target] = key_name ? key_name : 
+                            std::to_string(key_evt.key_.code_);
 
                         new_kb.source.type = config::KEYBIND_TYPE_KEY;
                         new_kb.source.data.keycode = key_evt.key_.code_;
                         map_set = true;
 
                         break;
+                    }
 
                     case drivers::input_event_type::button:
-                        winserv->input_mapping.button_input_map[std::make_pair(key_evt.button_.controller_, key_evt.button_.button_)] = key_binder_state.target_key[i];
+                        winserv->input_mapping.button_input_map[std::make_pair(key_evt.button_.controller_, key_evt.button_.button_)] =
+                            static_cast<epoc::std_scan_code>(key_binder_state.target_key[i]);
+
                         key_binder_state.key_bind_name[new_kb.target] = std::to_string(key_evt.button_.controller_) + ":" + std::to_string(key_evt.button_.button_);
                         
                         new_kb.source.type = config::KEYBIND_TYPE_CONTROLLER;
@@ -688,7 +698,7 @@ namespace eka2l1 {
                         // Use the same map for mouse
                         const std::uint32_t MOUSE_KEYCODE = epoc::KEYBIND_TYPE_MOUSE_CODE_BASE + key_evt.mouse_.button_;
 
-                        winserv->input_mapping.key_input_map[MOUSE_KEYCODE] = key_binder_state.target_key[i];
+                        winserv->input_mapping.key_input_map[MOUSE_KEYCODE] = static_cast<epoc::std_scan_code>(key_binder_state.target_key[i]);
                         key_binder_state.key_bind_name[new_kb.target] = "M" + std::to_string(key_evt.mouse_.button_);
 
                         new_kb.source.type = config::KEYBIND_TYPE_MOUSE;
@@ -731,6 +741,32 @@ namespace eka2l1 {
                 }
             }
         }
+
+        const float RESET_MAPPING_BTN_SIZE_X = 100;
+        const float RESET_MAPPING_BTN_SIZE_Y = 50;
+
+        ImGui::NewLine();
+        ImGui::NewLine();
+
+        ImGui::SameLine((ImGui::GetWindowWidth() - RESET_MAPPING_BTN_SIZE_X) / 2);
+
+        const std::string reset_local_str = common::get_localised_string(localised_strings, "reset");
+        if (ImGui::Button(reset_local_str.c_str(), ImVec2(RESET_MAPPING_BTN_SIZE_X, RESET_MAPPING_BTN_SIZE_Y))) {
+            request_key = false;
+
+            conf->keybinds.clear();
+            if (winserv) {
+                winserv->reset_key_mappings();
+            }
+
+            key_binder_state.reset();
+
+            // I think people want to save when they reset
+            conf->serialize();
+        }
+
+        ImGui::NewLine();
+        ImGui::NewLine();
     }
     
     void imgui_debugger::show_pref_hal() {
