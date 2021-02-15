@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Error</string>
+    <string name="no_data">No data</string>
+    <string name="search">Search</string>
+    <string name="about">About</string>
+    <string name="settings">Settings</string>
+    <string name="packages">Packages</string>
+    <string name="devices">Devices</string>
+    <string name="processing">Processing...</string>
+    <string name="completed">Completed!</string>
+    <string name="remove">Remove</string>
+    <string name="mount_sd">Mount MMC/SD card</string>
+    <string name="no_devices_found">No devices found</string>
+    <string name="exit">Exit</string>
+    <string name="save_log">Save log</string>
+    <string name="install">Install</string>
+    <string name="path_to_rpkg">Path to RPKG</string>
+    <string name="path_to_rom">Path to ROM</string>
+    <string name="raw_dump">Raw dump</string>
+    <string name="path_to_raw_dump">Path to raw dump</string>
+    <string name="install_method">Install method</string>
+    <string name="pref_general_title">General</string>
+    <string name="pref_system_title">System</string>
+    <string name="pref_control_key_binding_sect_title">Key binding</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
+    <string name="pref_enable_actionbar">Enable ActionBar</string>
+    <string name="pref_enable_statusbar">Enable statusbar</string>
+    <string name="pref_wakelock">Keep screen on</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
+    <string name="pref_system_language_option_name">Language</string>
+    <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
+    <string name="pref_system_real_time_accuracy_level_name_low">Low</string>
+    <string name="pref_system_real_time_accuracy_level_name_mid">Mid</string>
+    <string name="pref_system_real_time_accuracy_level_name_high">High</string>
+    <string name="pref_system_time_delay_option_name">Time delay</string>
+    <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
+    <string name="emulated_screen_rotation_item_name">Rotation</string>
+    <string name="emulated_screen_refresh_rate_item_name">Refresh rate</string>
+    <string name="mapping_dialog_title">Press a key</string>
+    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
+    <string name="reset_mapping">Reset</string>
+    <string name="layout_edit_finished">Edit mode finished</string>
+    <string name="layout_edit_finish">Finish edit mode</string>
+    <string name="layout_edit_mode">Keylayout edit mode</string>
+    <string name="layout_scale_mode">Keylayout resize mode</string>
+    <string name="layout_switch">Switch keylayout</string>
+    <string name="hide_buttons">Hide buttons</string>
+    <string name="confirmation_required">Confirmation required</string>
+    <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
+    <string name="log_saved">Log has been saved</string>
+    <string name="version">Version: </string>
+</resources>
