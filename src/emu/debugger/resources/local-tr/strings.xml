@@ -15,7 +15,6 @@
     <string name="warning">Uyarı</string>
     <string name="cancel">İptal et</string>
     <string name="continue">Devam et</string>
-    <string name="reset">Reset</string>
     <string name="file_menu_name">Dosya</string>
     <string name="debugger_menu_name">Hata ayıklayıcı</string>
     <string name="view_menu_name">Görünüm</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Kontrol</string>
     <string name="pref_control_key_binding_sect_title">Tuş atama</string>
     <string name="pref_control_wait_for_key_string">tuş bekleniyor</string>
+    <string name="pref_control_reset_bindings">Reset</string>
     <string name="pref_hal_battery_level_string">Batarya seviyesi</string>
     <string name="pref_hal_signal_level_string">Sinyal seviyesi</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
