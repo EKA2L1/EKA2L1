@@ -15,6 +15,7 @@
     <string name="warning">Avviso</string>
     <string name="cancel">Annulla</string>
     <string name="continue">Continua</string>
+    <string name="reset">Ripristina</string>
     <string name="file_menu_name">File</string>
     <string name="debugger_menu_name">Debugger</string>
     <string name="view_menu_name">Visualizza</string>
