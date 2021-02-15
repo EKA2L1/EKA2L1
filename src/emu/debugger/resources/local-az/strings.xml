@@ -15,6 +15,7 @@
     <string name="warning">Xəbərdarlıq</string>
     <string name="cancel">İmtina</string>
     <string name="continue">Davam</string>
+    <string name="reset">Reset</string>
     <string name="file_menu_name">Fayl</string>
     <string name="debugger_menu_name">Sazlayıcı</string>
     <string name="view_menu_name">Görünüş</string>
