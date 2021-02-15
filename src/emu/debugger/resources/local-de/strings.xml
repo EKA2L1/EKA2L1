@@ -15,7 +15,6 @@
     <string name="warning">Warnung</string>
     <string name="cancel">Abbrechen</string>
     <string name="continue">Weiter</string>
-    <string name="reset">Reset</string>
     <string name="file_menu_name">Datei</string>
     <string name="debugger_menu_name">Debugger</string>
     <string name="view_menu_name">Ansicht</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Steuerung</string>
     <string name="pref_control_key_binding_sect_title">Tastenbelegung</string>
     <string name="pref_control_wait_for_key_string">warte auf Tastendruck</string>
+    <string name="pref_control_reset_bindings">Reset</string>
     <string name="pref_hal_battery_level_string">Akkustand</string>
     <string name="pref_hal_signal_level_string">Signal-Stärke</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
