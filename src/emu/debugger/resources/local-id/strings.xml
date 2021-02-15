@@ -15,7 +15,6 @@
     <string name="warning">Peringatan</string>
     <string name="cancel">Batal</string>
     <string name="continue">Lanjutkan</string>
-    <string name="reset">Atur ulang</string>
     <string name="file_menu_name">Berkas</string>
     <string name="debugger_menu_name">Debugger</string>
     <string name="view_menu_name">Tampilan</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Kontrol</string>
     <string name="pref_control_key_binding_sect_title">Pemetaan tombol</string>
     <string name="pref_control_wait_for_key_string">waiting for key</string>
+    <string name="pref_control_reset_bindings">Atur ulang</string>
     <string name="pref_hal_battery_level_string">Level baterai</string>
     <string name="pref_hal_signal_level_string">Level sinyal</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Harap mulai ulang emulator agar perubahan yang dilakukan pada penyimpanan data dan perangkat menjadi efektif</string>
