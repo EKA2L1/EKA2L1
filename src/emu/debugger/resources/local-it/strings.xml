@@ -15,7 +15,6 @@
     <string name="warning">Avviso</string>
     <string name="cancel">Annulla</string>
     <string name="continue">Continua</string>
-    <string name="reset">Ripristina</string>
     <string name="file_menu_name">File</string>
     <string name="debugger_menu_name">Debugger</string>
     <string name="view_menu_name">Visualizza</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Controllo</string>
     <string name="pref_control_key_binding_sect_title">Associa tasti</string>
     <string name="pref_control_wait_for_key_string">in attesa del tasto</string>
+    <string name="pref_control_reset_bindings">Ripristina</string>
     <string name="pref_hal_battery_level_string">Livello della batteria</string>
     <string name="pref_hal_signal_level_string">Livello del segnale</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Riavvia l\'emulatore per rendere effettive le modifiche apportate all\'archiviazione dei dati</string>
