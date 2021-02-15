@@ -15,8 +15,9 @@
     <string name="warning">Aviso</string>
     <string name="cancel">Cancelar</string>
     <string name="continue">Continuar</string>
+    <string name="reset">Restaurar</string>
     <string name="file_menu_name">Arquivo</string>
-    <string name="debugger_menu_name">Debugger</string>
+    <string name="debugger_menu_name">Depurador</string>
     <string name="view_menu_name">Exibir</string>
     <string name="help_menu_name">Ajuda</string>
     <string name="file_menu_logger_item_name">Log</string>
