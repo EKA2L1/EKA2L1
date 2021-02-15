@@ -15,7 +15,6 @@
     <string name="warning">Avertisment</string>
     <string name="cancel">Anulează</string>
     <string name="continue">Continuare</string>
-    <string name="reset">Reset</string>
     <string name="file_menu_name">Fișier</string>
     <string name="debugger_menu_name">Depanator</string>
     <string name="view_menu_name">Vizualizare</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>
     <string name="pref_control_wait_for_key_string">waiting for key</string>
+    <string name="pref_control_reset_bindings">Reset</string>
     <string name="pref_hal_battery_level_string">Battery level</string>
     <string name="pref_hal_signal_level_string">Signal level</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
