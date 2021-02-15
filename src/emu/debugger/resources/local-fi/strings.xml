@@ -15,7 +15,6 @@
     <string name="warning">Varoitus</string>
     <string name="cancel">Peruuta</string>
     <string name="continue">Jatka</string>
-    <string name="reset">Tyhjennä</string>
     <string name="file_menu_name">Tiedosto</string>
     <string name="debugger_menu_name">Vianetsintä</string>
     <string name="view_menu_name">Näkymä</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Ohjaus</string>
     <string name="pref_control_key_binding_sect_title">Näppäimen sitominen</string>
     <string name="pref_control_wait_for_key_string">odotetaan näppäintä</string>
+    <string name="pref_control_reset_bindings">Tyhjennä</string>
     <string name="pref_hal_battery_level_string">Akun varaus</string>
     <string name="pref_hal_signal_level_string">Signaalin taso</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Käynnistä emulaattori uudelleen, jotta tallennustilaan tehdyt muutokset tulisivat voimaan</string>
