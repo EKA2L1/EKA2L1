@@ -750,7 +750,7 @@ namespace eka2l1 {
 
         ImGui::SameLine((ImGui::GetWindowWidth() - RESET_MAPPING_BTN_SIZE_X) / 2);
 
-        const std::string reset_local_str = common::get_localised_string(localised_strings, "reset");
+        const std::string reset_local_str = common::get_localised_string(localised_strings, "pref_control_reset_bindings");
         if (ImGui::Button(reset_local_str.c_str(), ImVec2(RESET_MAPPING_BTN_SIZE_X, RESET_MAPPING_BTN_SIZE_Y))) {
             request_key = false;
 
