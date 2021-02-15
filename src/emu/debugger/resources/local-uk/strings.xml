@@ -15,7 +15,6 @@
     <string name="warning">Увага</string>
     <string name="cancel">Скасувати</string>
     <string name="continue">Продовжити</string>
-    <string name="reset">Скинути</string>
     <string name="file_menu_name">Файл</string>
     <string name="debugger_menu_name">Налагоджувач</string>
     <string name="view_menu_name">Вигляд</string>
@@ -102,6 +101,7 @@
     <string name="pref_control_title">Керування</string>
     <string name="pref_control_key_binding_sect_title">Призначення клавіш</string>
     <string name="pref_control_wait_for_key_string">Очікування клавіші</string>
+    <string name="pref_control_reset_bindings">Скинути</string>
     <string name="pref_hal_battery_level_string">Рівень заряду батареї</string>
     <string name="pref_hal_signal_level_string">Рівень сигналу</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Будь ласка, перезапустіть емулятор, щоб зміни, внесені до сховища даних, набули чинності</string>
