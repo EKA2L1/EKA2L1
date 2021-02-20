@@ -64,7 +64,9 @@ enum class epocver {
     epocu6,
     epoc6, ///< Epoc 6.0
     epoc80,
+    epoc81a,
     eka2, ///< Mark for EKA2
+    epoc81b,
     epoc93, ///< Epoc 9.3
     epoc94, ///< Epoc 9.4
     epoc95,

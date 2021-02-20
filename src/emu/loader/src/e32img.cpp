@@ -200,7 +200,8 @@ namespace eka2l1::loader {
             img.epoc_ver = epocver::epoc6;
 
             stream->read(&temp, 4);
-            stream->read(&temp, 4);
+            stream->read(&img.header.compression_type, 4);
+
             stream->read(&img.header.petran_major, 1);
             stream->read(&img.header.petran_minor, 1);
             stream->read(&img.header.petran_build, 2);
@@ -233,7 +234,10 @@ namespace eka2l1::loader {
             stream->read(&priority_val, 4);
 
             img.header.priority = static_cast<std::uint16_t>(priority_val);
-            img.header.compression_type = 0;
+
+            if (!(img.header.flags & 0xF000000)) {    
+                img.header.compression_type = 0;
+            }
         } else {
             img.epoc_ver = epocver::epoc94;
 

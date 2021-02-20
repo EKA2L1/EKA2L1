@@ -7,7 +7,7 @@
 ============================================================================
 */
 
-TARGET		  mediaclientaudiostream_v80.dll
+TARGET		  mediaclientaudiostream_v81a.dll
 TARGETTYPE	  dll
 UID			 0x10003B19 0xee000001
 
@@ -22,7 +22,7 @@ SOURCE        impl.cpp
 
 nostrictdef
 
-DEFFILE         ..\..\eabi\mediaclientaudiostream_v80.def
+DEFFILE         ..\..\eabi\mediaclientaudiostream_v81a.def
 
 LIBRARY		    euser.lib efsrv.lib
 STATICLIBRARY   priv.lib

@@ -7,7 +7,7 @@
 ============================================================================
 */
 
-TARGET        scdv_v80.dll
+TARGET        scdv_v81a.dll
 
 TARGETTYPE	  dll
 UID			  0x10003B19 0xee000002
@@ -30,7 +30,7 @@ SOURCE        instantiate.cpp
 SOURCE        cdsb.cpp
 SOURCE        dispatch.s
 
-DEFFILE       ..\..\eabi\scdv_v80.def
+DEFFILE       ..\..\eabi\scdv_v81a.def
 
 nostrictdef
 

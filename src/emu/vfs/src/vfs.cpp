@@ -597,7 +597,7 @@ namespace eka2l1 {
                 map_path += common::utf8_to_ucs2(common::lowercase_string(firmcode));
             }
 
-            if (static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+            if (static_cast<int>(ver) >= static_cast<int>(epocver::eka2)) {
                 if (common::compare_ignore_case(u"\\system\\libs", vert_path_copy.substr(2, 12)) == 0) {
                     vert_path_copy.replace(2, 12, u"\\sys\\bin");
                 } else if (common::compare_ignore_case(u"\\system\\programs", vert_path_copy.substr(2, 16)) == 0) {
@@ -1015,7 +1015,7 @@ namespace eka2l1 {
 
             std::u16string new_path = path;
 
-            if (static_cast<int>(ver) > static_cast<int>(epocver::epoc6)) {
+            if (static_cast<int>(ver) >= static_cast<int>(epocver::eka2)) {
                 if (common::compare_ignore_case(u"\\system\\libs", new_path.substr(2, 12)) == 0) {
                     new_path.replace(2, 12, u"\\sys\\bin");
                 } else if (common::compare_ignore_case(u"\\system\\programs", new_path.substr(2, 16)) == 0) {

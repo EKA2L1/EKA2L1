@@ -12,6 +12,11 @@
 6 43      ; CDirectScreenBitmap::NewL(int aScreenNumber)
 7 7       ; CDirectScreenBitmap::NewL
 
+[epoc81a]
+4 2       ; NewScreenDeviceL__14CFbsDrawDeviceG11TScreenInfo12TDisplayMode
+2 10      ; DisplayMode16M__14CFbsDrawDevice
+7 9       ; NewL__19CDirectScreenBitmap
+
 [epoc80]
 4 2       ; NewScreenDeviceL__14CFbsDrawDeviceG11TScreenInfo12TDisplayMode
 2 10      ; DisplayMode16M__14CFbsDrawDevice

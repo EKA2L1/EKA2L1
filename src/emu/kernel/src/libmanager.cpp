@@ -322,6 +322,12 @@ namespace eka2l1::hle {
         case epocver::epoc6:
             return "v6";
 
+        case epocver::epoc81b:
+            return "v81b";
+
+        case epocver::epoc81a:
+            return "v81a";
+
         case epocver::epoc80:
             return "v80";
 

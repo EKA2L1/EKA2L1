@@ -7,7 +7,7 @@
 ============================================================================
 */
 
-TARGET		  mediaclientaudio_v80.dll
+TARGET		  mediaclientaudio_v81a.dll
 TARGETTYPE	  dll
 UID			 0x10003B19 0xee000003
 
@@ -28,7 +28,7 @@ nostrictdef
 LIBRARY		    euser.lib efsrv.lib
 STATICLIBRARY   priv.lib
 
-DEFFILE ..\..\eabi\mediaclientaudio_v80.def
+DEFFILE ..\..\eabi\mediaclientaudio_v81a.def
 
 
 MACRO           __SERIES80__

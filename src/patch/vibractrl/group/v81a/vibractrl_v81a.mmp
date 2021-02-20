@@ -1,4 +1,4 @@
-TARGET		    vibractrl_v80.dll
+TARGET		    vibractrl_v81a.dll
 TARGETTYPE	    dll
 UID			    0x10003B19 0xee000004
 
@@ -14,7 +14,7 @@ nostrictdef
 LIBRARY		     euser.lib commonengine.lib cone.lib
 STATICLIBRARY    priv.lib
 
-DEFFILE          ..\..\eabi\vibractrl_v80.def
+DEFFILE          ..\..\eabi\vibractrl_v81a.def
 
 DEBUGGABLE_UDEBONLY
 
