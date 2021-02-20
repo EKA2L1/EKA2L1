@@ -44,6 +44,8 @@
 #include <common/random.h>
 #include <common/time.h>
 #include <common/types.h>
+#include <utils/locale.h>
+#include <utils/system.h>
 
 #include <chrono>
 #include <ctime>
@@ -4318,6 +4320,22 @@ namespace eka2l1::epoc {
         return static_cast<std::uint32_t>(kern->get_current_language());
     }
 
+    BRIDGE_FUNC(void, locale_refresh, epoc::locale *loc) {
+        property_ptr prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_DATA_KEY);
+        if (!prop) {
+            LOG_ERROR(KERNEL, "Locale property not available (not found)!");
+            return;
+        }
+
+        std::optional<epoc::locale> loc_pkg = prop->get_pkg<epoc::locale>();
+        if (!loc_pkg) {
+            LOG_ERROR(KERNEL, "Locale property not available (data get failed)!");
+            return;
+        }
+
+        std::memcpy(loc, &(loc_pkg.value()), sizeof(epoc::locale));
+    }
+
     BRIDGE_FUNC(std::int32_t, dll_global_data_allocated, const address handle) {
         return (kern->get_global_dll_space(handle, nullptr) != 0);
     }
@@ -4863,6 +4881,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x800068, locale_refresh),
         BRIDGE_REGISTER(0x80006E, time_now),
         BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
         BRIDGE_REGISTER(0x80007D, dll_global_data_allocated),

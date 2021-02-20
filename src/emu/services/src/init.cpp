@@ -117,12 +117,14 @@ namespace eka2l1::epoc {
         locale.country_code_ = static_cast<int>(GetProfileInt("intl", "iCountry", 0));
 #endif
 
+        // TODO: These are stubbed!
         locale.clock_format_ = epoc::clock_digital;
         locale.start_of_week_ = epoc::monday;
         locale.date_format_ = epoc::date_format_america;
         locale.time_format_ = epoc::time_format_twenty_four_hours;
         locale.universal_time_offset_ = -14400;
         locale.device_time_state_ = epoc::device_user_time;
+        locale.decimal_separator_ = '.';
 
         return locale;
     }

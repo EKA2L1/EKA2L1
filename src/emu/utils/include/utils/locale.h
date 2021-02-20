@@ -765,7 +765,7 @@ namespace eka2l1::epoc {
         std::uint16_t region_code_;
         digit_type digit_type_;
         device_time_state device_time_state_;
-        std::int32_t spare_[0x1E];
+        std::int32_t spare_[0x12];
     };
 
     struct locale_language {
