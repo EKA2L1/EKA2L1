@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Move ci tag
-        uses: s3krit/walking-tag-action@d04f7a5
+        uses: s3krit/walking-tag-action@master
         with:
           TAG_NAME: continous
           TAG_MESSAGE: |
@@ -94,7 +94,7 @@ jobs:
           path: build/bin
 
       - name: Zip Artifacts
-        uses: papeloto/action-zip@5f1c4aa
+        uses: papeloto/action-zip@v1
         with:
           files: build/bin
           dest: ${{ matrix.os }}.zip
