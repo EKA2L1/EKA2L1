@@ -101,6 +101,7 @@
     <string name="pref_control_title">নিয়ন্ত্রণ</string>
     <string name="pref_control_key_binding_sect_title">কি বাইন্ডিং</string>
     <string name="pref_control_wait_for_key_string">কি এর জন্য অপেক্ষা হচ্ছে</string>
+    <string name="pref_control_reset_bindings">পুনঃস্থাপন</string>
     <string name="pref_hal_battery_level_string">ব্যাটারি লেভেল</string>
     <string name="pref_hal_signal_level_string">সিগন্যাল লেভেল</string>
     <string name="pref_restart_needed_for_dvcchange_msg">ডেটা স্টোরেজের পরিবর্তনগুলো কার্যকর হওয়ার জন্য অনুগ্রহ করে ইমুলেটরটি পুনরায় চালু করুন</string>

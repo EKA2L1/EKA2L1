@@ -101,6 +101,7 @@
     <string name="pref_control_title">İdarəetmə</string>
     <string name="pref_control_key_binding_sect_title">Düymə əvəzləmə</string>
     <string name="pref_control_wait_for_key_string">düymə gözlənilir</string>
+    <string name="pref_control_reset_bindings">Reset</string>
     <string name="pref_hal_battery_level_string">Batareya səviyyəsi</string>
     <string name="pref_hal_signal_level_string">Siqnal səviyyəsi</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>

@@ -118,14 +118,14 @@
     <string name="installer_language_choose_title">Choose the language for this package</string>
     <string name="install_device_wizard_title">Install device wizard</string>
     <string name="install_device_wizard_welcome_msg">Welcome to install device wizard! To get started, please press the \"Continue\" button.</string>
-    <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
+    <string name="install_device_wizard_raw_dump_type_name">Неапрацаванае ёмішча памяці</string>
     <string name="install_device_wizard_rpkg_type_name">RPKG</string>
     <string name="install_device_choose_method_msg">Choose installation method</string>
     <string name="install_device_rpkg_choose_msg">Please specify the repackage file (RPKG):</string>
-    <string name="install_device_raw_dump_choose_msg">Please specify raw Z: drive dump folder:</string>
+    <string name="install_device_raw_dump_choose_msg">Калі ласка, укажыце папку неапрацаванага ёмішча памяці дыска Z:</string>
     <string name="install_device_rom_choose_msg">Please specify the ROM file:</string>
     <string name="install_device_wait_install_msg">Please wait while we install the device!</string>
-    <string name="install_device_progress_raw_dump_msg">Copying raw dump ({}%)</string>
+    <string name="install_device_progress_raw_dump_msg">Капіраванне неапрацаванага ёмішча памяці ({}%)</string>
     <string name="install_device_progress_rpkg_msg">Extract the RPKG</string>
     <string name="install_device_progress_rom_msg">Copy the ROM</string>
     <string name="install_device_install_failure_msg">Something wrong happens during the install! Please check the log!</string>

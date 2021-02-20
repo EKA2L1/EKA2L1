@@ -101,6 +101,7 @@
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Configuración de controles</string>
     <string name="pref_control_wait_for_key_string">Esperando entrada de tecla</string>
+    <string name="pref_control_reset_bindings">Reset</string>
     <string name="pref_hal_battery_level_string">Nivel de batería</string>
     <string name="pref_hal_signal_level_string">Nivel de señal</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Por favor, reinicie el emulador para que los cambios realizados en los datos y dispositivos sean efectivos</string>

@@ -101,6 +101,7 @@
     <string name="pref_control_title">控制</string>
     <string name="pref_control_key_binding_sect_title">按键绑定</string>
     <string name="pref_control_wait_for_key_string">等待按键</string>
+    <string name="pref_control_reset_bindings">重置</string>
     <string name="pref_hal_battery_level_string">电池电量</string>
     <string name="pref_hal_signal_level_string">信号强度</string>
     <string name="pref_restart_needed_for_dvcchange_msg">请重启模拟器以使对数据存储所作的更改生效</string>
