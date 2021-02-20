@@ -17,7 +17,7 @@
     <string name="install">Install</string>
     <string name="path_to_rpkg">Шлях да RPKG</string>
     <string name="path_to_rom">Шлях да ROM</string>
-    <string name="raw_dump">Неапрацаванае змесціва памяці</string>
+    <string name="raw_dump">Неапрацаванае ёмішча памяці</string>
     <string name="path_to_raw_dump">Шлях да неапрацаванага ёмішча памяці</string>
     <string name="install_method">Спосаб устаноўкі</string>
     <string name="pref_general_title">General</string>
