@@ -21,7 +21,7 @@
 #define SETTING(name, variable, default_var)
 #endif
 
-SETTING(fps, fps, 30)
+SETTING(fps, fps, 60)
 SETTING(time-delay, time_delay, 0)
 SETTING(should-child-inherit-setting, child_inherit_setting, true)
 

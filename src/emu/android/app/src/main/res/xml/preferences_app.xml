@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <com.github.eka2l1.settings.IntEditTextPreference
-        android:defaultValue="30"
+        android:defaultValue="60"
         android:key="fps"
         android:title="@string/emulated_screen_refresh_rate_item_name" />
     <com.github.eka2l1.settings.IntEditTextPreference
