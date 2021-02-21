@@ -80,7 +80,7 @@ inline epocver operator++(epocver &ver, int) {
 }
 
 inline bool is_epocver_eka1(epocver ver) {
-    return (ver <= epocver::epoc6);
+    return (ver < epocver::eka2);
 }
 
 const char *epocver_to_string(const epocver ver);
