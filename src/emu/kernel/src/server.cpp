@@ -133,7 +133,8 @@ namespace eka2l1 {
         }
 
         void server::finish_request_lle(ipc_msg_ptr &msg, bool notify_owner) {
-            if (kern->is_eka1()) {
+            // On some platforms where IPCv1 is still relevant, odd pointer is used to indicates new IPCv2
+            if (kern->is_ipc_old() || (kern->is_eka1() && !(request_data.ptr_address() & 1))) {
                 message1 *dat_hle = request_data.cast<message1>().get(request_own_thread->owning_process());
 
                 dat_hle->ipc_msg_handle = msg->id;
@@ -145,6 +146,7 @@ namespace eka2l1 {
                 std::copy(msg->args.args, msg->args.args + 4, dat_hle->args);
                 msg->thread_handle_low = dat_hle->client_thread_handle;
             } else {
+                request_data = eka2l1::ptr<message2>(request_data.ptr_address() & ~1);
                 message2 *dat_hle = request_data.get(request_own_thread->owning_process());
 
                 dat_hle->ipc_msg_handle = msg->id;

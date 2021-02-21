@@ -26,6 +26,12 @@ namespace eka2l1::epoc {
     void register_epocv10(eka2l1::hle::lib_manager &mngr);
 
     /**
+     * @brief Register Symbian 8.1a supervisor calls.
+     * @param mngr Reference to library manager.
+     **/
+    void register_epocv81a(eka2l1::hle::lib_manager &mngr);
+
+    /**
      * @brief Register Symbian 6.0 supervisor calls.
      * @param mngr Reference to library manager.
      **/

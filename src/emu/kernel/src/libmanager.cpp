@@ -1104,6 +1104,10 @@ namespace eka2l1::hle {
             epoc::register_epocv6(*this);
             break;
 
+        case epocver::epoc81a:
+            epoc::register_epocv81a(*this);
+            break;
+
         case epocver::epoc94:
             epoc::register_epocv94(*this);
             break;
