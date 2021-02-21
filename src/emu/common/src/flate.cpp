@@ -244,7 +244,7 @@ namespace eka2l1 {
                     }
                 }
 
-                return remain == 0 || total_len <= 1;
+                return (remain == 0) || (total_len <= 1);
             }
 
             void encoding(const int *huffman, uint32_t num_codes, int *encode_tab) {
