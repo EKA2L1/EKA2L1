@@ -81,11 +81,11 @@ namespace eka2l1::loader::gdr {
     };
 
     struct character_metric {
-        std::uint8_t ascent_in_pixels_;
-        std::uint8_t height_in_pixels_;
-        std::uint8_t left_adj_in_pixels_;
-        std::uint8_t move_in_pixels_;
-        std::uint8_t right_adjust_in_pixels_;
+        std::int8_t ascent_in_pixels_;
+        std::int8_t height_in_pixels_;
+        std::int8_t left_adj_in_pixels_;
+        std::int8_t move_in_pixels_;
+        std::int8_t right_adjust_in_pixels_;
     };
 
     using bitmap = std::vector<std::uint32_t>;
