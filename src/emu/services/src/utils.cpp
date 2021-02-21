@@ -26,7 +26,7 @@ namespace eka2l1::service {
     std::optional<epoc::version> get_server_version(kernel_system *kern, ipc_context *ctx) {
         epoc::version ver;
 
-        if (kern->is_eka1()) {
+        if (kern->is_ipc_old()) {
             std::optional<std::uint32_t> ver_package = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
             if (!ver_package) {
                 return std::nullopt;
