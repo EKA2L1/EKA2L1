@@ -10,11 +10,11 @@
     <string name="processing">Prelucrare...</string>
     <string name="completed">Finalizat!</string>
     <string name="remove">Remove</string>
-    <string name="mount_sd">Mount MMC/SD card</string>
+    <string name="mount_sd">Montare card MMC/SD</string>
     <string name="no_devices_found">Dispozitivul nu a fost găsit</string>
     <string name="exit">Ieșire</string>
     <string name="save_log">Salvează jurnal</string>
-    <string name="install">Install</string>
+    <string name="install">Instalează</string>
     <string name="path_to_rpkg">Calea către RPKG</string>
     <string name="path_to_rom">Calea către ROM</string>
     <string name="raw_dump">Raw dump</string>
@@ -40,7 +40,7 @@
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="emulated_screen_rotation_item_name">Rotation</string>
     <string name="emulated_screen_refresh_rate_item_name">Refresh rate</string>
-    <string name="mapping_dialog_title">Press a key</string>
+    <string name="mapping_dialog_title">Apăsați o tastă</string>
     <string name="mapping_dialog_message" formatted="false">Maparea curentă: %1$s</string>
     <string name="reset_mapping">Reset</string>
     <string name="layout_edit_finished">Mod editare terminat</string>
