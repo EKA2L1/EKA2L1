@@ -275,7 +275,12 @@ namespace eka2l1::loader {
         compress_type ctype = static_cast<compress_type>(img.header.compression_type);
 
         if (img.header.compression_type > 0) {
-            int header_format = (static_cast<int>(img.header.flags) >> 24) & 0xF;
+            int header_format = 0;
+
+            if (img.epoc_ver >= epocver::eka2) {
+                header_format = (static_cast<int>(img.header.flags) >> 24) & 0xF;
+            }
+
             stream->read(&img.uncompressed_size, 4);
 
             if (header_format == 2) {
@@ -305,12 +310,19 @@ namespace eka2l1::loader {
 
             img.data.resize(img.uncompressed_size + img.header.code_offset);
 
+            std::uint32_t start_compress = img.header.code_offset;
+
+            if (img.epoc_ver <= epocver::eka2) {
+                // The code offset includes size
+                start_compress += 4;
+            }
+
             stream->seek(0, common::seek_where::beg);
             stream->read(img.data.data(), img.header.code_offset);
 
-            std::vector<char> temp_buf(file_size - img.header.code_offset);
+            std::vector<char> temp_buf(file_size - start_compress);
 
-            stream->seek(img.header.code_offset, common::seek_where::beg);
+            stream->seek(start_compress, common::seek_where::beg);
             size_t bytes_read = stream->read(temp_buf.data(), static_cast<uint32_t>(temp_buf.size()));
 
             if (bytes_read != temp_buf.size()) {
