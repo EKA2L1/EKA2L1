@@ -809,6 +809,10 @@ namespace eka2l1::epoc {
         return do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, *info_host, start_offset);
     }
 
+    BRIDGE_FUNC(std::int32_t, message_ipc_copy_eka1, kernel::handle h, std::int32_t param, eka2l1::ptr<ipc_copy_info> info) {
+        return message_ipc_copy(kern, h, param, info, 0);
+    }
+
     BRIDGE_FUNC(std::int32_t, message_client, kernel::handle h, kernel::owner_type owner) {
         eka2l1::ipc_msg_ptr msg = kern->get_msg(h);
 
@@ -2967,6 +2971,7 @@ namespace eka2l1::epoc {
             kernel::chunk_attrib::anonymous : kernel::chunk_attrib::none;
 
         // EKA1 only support two types of chunk: double ended and normal
+        // TODO: This thing!!!!!!!!!!!
         kernel::chunk_type type_of_chunk = ((attribute & 0xFE) == epoc::eka1_executor::execute_v6_create_chunk_double_ended) ? kernel::chunk_type::double_ended :
             kernel::chunk_type::normal;
 
@@ -4183,12 +4188,12 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, session_send_sync_eka1, kernel::handle session_handle, const std::int32_t ord,
         std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
-        return session_send_general(kern, session_handle, ord, args, status, true, true);
+        return session_send_general(kern, session_handle, ord, args, status, kern->is_ipc_old(), true);
     }
 
     BRIDGE_FUNC(std::int32_t, session_send_eka1, kernel::handle session_handle, const std::int32_t ord,
         std::uint32_t *args, eka2l1::ptr<epoc::request_status> status) {
-        return session_send_general(kern, session_handle, ord, args, status, true, false);
+        return session_send_general(kern, session_handle, ord, args, status, kern->is_ipc_old(), false);
     }
 
     std::int32_t thread_ipc_to_des_eka1(kernel_system *kern, address client_ptr_addr, epoc::des8 *des_ptr, std::int32_t offset, kernel::handle client_thread_h,
@@ -4975,6 +4980,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
+        BRIDGE_REGISTER(0x8000E6, message_ipc_copy_eka1),
         BRIDGE_REGISTER(0xC0001D, process_resume),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
         BRIDGE_REGISTER(0xC0002E, server_receive),
