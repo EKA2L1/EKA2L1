@@ -183,4 +183,6 @@
     <string name="lang_name_az" translatable="false">Azərbaycan dili</string>
     <string name="lang_name_bn" translatable="false">বাংলা</string>
     <string name="lang_name_id" translatable="false">Bahasa Indonesia</string>
+    <string name="lang_name_ms" translatable="false">Bahasa melayu</string>
+    <string name="lang_name_be" translatable="false">Беларуская мова</string>
 </resources>
