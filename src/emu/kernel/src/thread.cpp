@@ -480,6 +480,8 @@ namespace eka2l1 {
                 }
             }
 
+            finish_logons();
+
             kern->complete_undertakers(this);
             kern->call_thread_kill_callbacks(this, exit_category_u8, reason);
             kern->prepare_reschedule();
