@@ -301,6 +301,7 @@ namespace eka2l1 {
         void synchronize_driver(service::ipc_context *ctx);
         void private_path(service::ipc_context *ctx);
         void set_default_system_path(service::ipc_context *ctx);
+        void get_default_system_path(service::ipc_context *ctx);
 
         enum {
             FLAG_INITED = 0

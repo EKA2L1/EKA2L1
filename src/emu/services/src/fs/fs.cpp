@@ -190,6 +190,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(volume, epoc::fs_msg_volume, "Fs::Volume");
             HANDLE_CLIENT_IPC(query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
             HANDLE_CLIENT_IPC(server<fs_server>()->set_default_system_path, epoc::fs_msg_set_default_path, "Fs::SetDefaultPath");
+            HANDLE_CLIENT_IPC(server<fs_server>()->get_default_system_path, epoc::fs_msg_default_path, "Fs::DefaultPath");
 
         case epoc::fs_msg_base_close:
             if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
@@ -312,6 +313,11 @@ namespace eka2l1 {
         }
 
         default_sys_path = std::move(new_path.value());
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server::get_default_system_path(service::ipc_context *ctx) {
+        ctx->write_arg(0, default_sys_path);
         ctx->complete(epoc::error_none);
     }
     
