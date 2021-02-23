@@ -101,7 +101,7 @@
     <string name="pref_control_title">Control</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>
     <string name="pref_control_wait_for_key_string">waiting for key</string>
-    <string name="pref_control_reset_bindings">Reset</string>
+    <string name="pref_control_reset_bindings">Скінуць</string>
     <string name="pref_hal_battery_level_string">Battery level</string>
     <string name="pref_hal_signal_level_string">Signal level</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Please restart the emulator for the changes made to data storage to be effective</string>
