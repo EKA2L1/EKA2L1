@@ -46,7 +46,7 @@
     <string name="app_launcher_style_classical_str">Класичний</string>
     <string name="app_launcher_style_modern_str">Сучасний</string>
     <string name="error_dialog_title">З\'являється дика помилка</string>
-    <string name="error_dialog_message">Будь ласка, прикріпіть журнал і повідомте розробника!</string>
+    <string name="error_dialog_message">Будь ласка, прикріпіть лог і повідомте розробника про це!</string>
     <string name="emulated_screen_title">Екран {}</string>
     <string name="emulated_screen_orientation_lock_item_name">Блокування орієнтації екрана</string>
     <string name="emulated_screen_rotation_item_name">Поворот екрана</string>
