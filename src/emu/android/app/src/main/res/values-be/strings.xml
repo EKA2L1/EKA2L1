@@ -50,7 +50,7 @@
     <string name="layout_switch">Пераключыць раскладку клавіятуры</string>
     <string name="hide_buttons">Схаваць кнопкі</string>
     <string name="confirmation_required">Патрабуецца пацверджанне</string>
-    <string name="force_close_confirmation">Прымусовае закрыццё дадатка можа прывесці да страты дадзеных або нават да поўнага вываду яго з ладу!\nПрацягнуць?</string>
+    <string name="force_close_confirmation">Прымусовае закрыццё дастасавання можа прывесці да страты дадзеных або нават да поўнага вываду яго з ладу!\nПрацягнуць?</string>
     <string name="log_saved">Лог захаваны</string>
     <string name="version">Версія: </string>
 </resources>
