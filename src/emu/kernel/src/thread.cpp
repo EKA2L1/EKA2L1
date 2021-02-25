@@ -251,7 +251,8 @@ namespace eka2l1 {
             , exception_mask(0)
             , trap_stack(0)
             , sleep_level(0)
-            , metadata(nullptr) {
+            , metadata(nullptr)
+            , backup_state(thread_state::stop) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = calculate_thread_priority(owning_process(), pri);
@@ -803,25 +804,29 @@ namespace eka2l1 {
                 return true;
             };
 
-            std::uint16_t list_to_push = 0b1101000000001111;
-            if (!push_to_stack(list_to_push)) {
-                return;
+            if (backup_state == thread_state::stop) {
+                std::uint16_t list_to_push = 0b1101000000001111;
+                if (!push_to_stack(list_to_push)) {
+                    return;
+                }
+
+                backup_state = state;
+
+                if (backup_state == thread_state::wait_fast_sema)
+                    signal_request();                
+
+                ctx.cpu_registers[0] = exec_type;
+                ctx.cpu_registers[1] = exception_handler;
+                ctx.set_pc(kern->get_exception_handler_guard());
             }
-
-            backup_state = state;
-
-            if (backup_state == thread_state::wait_fast_sema)
-                signal_request();
-
-            ctx.cpu_registers[0] = exec_type;
-            ctx.cpu_registers[1] = exception_handler;
-            ctx.set_pc(kern->get_exception_handler_guard());
         }
 
         void thread::restore_before_exception_state() {
             if (backup_state == thread_state::wait_fast_sema) {
                 wait_for_any_request();
             }
+
+            backup_state = thread_state::stop;
         }    
 
         static constexpr std::uint32_t MAX_SYSCALL_STACK = 4;
