@@ -160,7 +160,7 @@ namespace eka2l1::epoc {
         eka2l1::ptr<void> old_handler = local_data->trap_handler;
         local_data->trap_handler = new_handler;
 
-        return local_data->trap_handler;
+        return old_handler;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, active_scheduler) {
