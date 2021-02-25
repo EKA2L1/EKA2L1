@@ -813,7 +813,7 @@ namespace eka2l1 {
                 backup_state = state;
 
                 if (backup_state == thread_state::wait_fast_sema)
-                    signal_request();                
+                    signal_request();
 
                 ctx.cpu_registers[0] = exec_type;
                 ctx.cpu_registers[1] = exception_handler;

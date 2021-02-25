@@ -3385,8 +3385,10 @@ namespace eka2l1::epoc {
         const std::u16string exit_category_u16 = category->to_std_string(target_thread->owning_process());
 
         if (!thr->kill(kernel::entity_exit_type::panic, exit_category_u16, reason)) {
-            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
-            return epoc::error_general;
+            std::string thr_fullname;
+            thr->full_name(thr_fullname);
+
+            LOG_WARN(KERNEL, "Unable to panic thread {}", thr_fullname);
         }
 
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
@@ -3429,8 +3431,10 @@ namespace eka2l1::epoc {
         const std::int32_t reason = static_cast<std::int32_t>(create_info->arg1_);
 
         if (!thr->kill(kernel::entity_exit_type::kill, common::utf8_to_ucs2("None"), reason)) {
-            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
-            return epoc::error_general;
+            std::string thr_fullname;
+            thr->full_name(thr_fullname);
+
+            LOG_WARN(KERNEL, "Unable to kill thread {}", thr_fullname);
         }
 
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
