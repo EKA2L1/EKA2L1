@@ -240,6 +240,7 @@ namespace eka2l1 {
         std::vector<std::string> contributors_strings;
         std::vector<std::string> honors_strings;
         std::vector<std::string> translators_strings;
+        std::vector<std::string> icon_strings;
 
         std::size_t sys_reset_callback_h;
         std::atomic<bool> in_reset;

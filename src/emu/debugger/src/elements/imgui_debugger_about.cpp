@@ -79,6 +79,15 @@ namespace eka2l1 {
                 
                 ImGui::Separator();
 
+                const std::string icon_str = common::get_localised_string(localised_strings, "credits_icon_text");
+                ImGui::Text("%s", icon_str.c_str());
+
+                for (auto &icon_designer: icon_strings) {
+                    ImGui::Text("- %s", icon_designer.c_str());
+                }
+                
+                ImGui::Separator();
+
                 const std::string honor_str = common::get_localised_string(localised_strings, "credits_honors_text");
                 ImGui::Text("%s", honor_str.c_str());
 

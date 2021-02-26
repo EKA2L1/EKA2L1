@@ -281,6 +281,14 @@ namespace eka2l1 {
         }
 
         try {
+            for (const auto node: the_node["Icon"]) {
+                icon_strings.push_back(node.as<std::string>());
+            }
+        } catch (std::exception &e) {
+            LOG_ERROR(FRONTEND_UI, "Unable to load icon credits. Error description: {}", e.what());
+        }
+
+        try {
             for (const auto node: the_node["Honors"]) {
                 honors_strings.push_back(node.as<std::string>());
             }
