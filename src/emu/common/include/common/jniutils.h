@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021 EKA2L1 Team.
  *
- * This file is part of EKA2L1 project.
+ * This file is part of EKA2L1 project
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,10 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/hwrm/backend/vibration_jdk.h>
+#pragma once
+
 #include <jni.h>
 
-namespace eka2l1::drivers::hwrm {
-    void vibrator_jdk::vibrate(const std::uint32_t millisecs, const std::int16_t intensity) {
-    }
+namespace eka2l1::common::jni {
+    extern JavaVM *virtual_machine;
+
+    JNIEnv *environment();
+    jobject activity();
 }

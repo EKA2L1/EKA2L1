@@ -26,9 +26,16 @@
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
 
+#include <common/jniutils.h>
+
 ANativeWindow* s_surf;
 std::unique_ptr<eka2l1::android::emulator> state;
 bool inited;
+
+extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+    eka2l1::common::jni::virtual_machine = vm;
+    return JNI_VERSION_1_6;
+}
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_setDirectory(

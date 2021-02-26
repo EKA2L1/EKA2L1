@@ -98,6 +98,13 @@ add_library(common
         ${CUSTOM_COMMON_SOURCE}
         )
 
+if (ANDROID)
+    target_sources(common PRIVATE
+        include/common/jniutils.h
+        src/jniutils.cpp
+        )
+endif()
+
 target_include_directories(common PUBLIC include)
 target_link_libraries(common PUBLIC fmt miniz spdlog)
 target_link_libraries(common PRIVATE pugixml)
