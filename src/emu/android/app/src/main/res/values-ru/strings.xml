@@ -52,5 +52,6 @@
     <string name="confirmation_required">Требуется подтверждение</string>
     <string name="force_close_confirmation">Принудительное закрытие приложения может привести к потере данных или даже полной его неработоспособности!\nПродолжить?</string>
     <string name="log_saved">Лог успешно сохранён</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Версия: </string>
 </resources>
