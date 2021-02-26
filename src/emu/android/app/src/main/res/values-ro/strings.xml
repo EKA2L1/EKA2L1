@@ -52,5 +52,6 @@
     <string name="confirmation_required">Confirmarea este necesară</string>
     <string name="force_close_confirmation">Închiderea forțată a aplicației poate duce la pierderea datelor sau chiar o rupere completă!\nContinuați?</string>
     <string name="log_saved">Jurnalul a fost salvat</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Versiune: </string>
 </resources>
