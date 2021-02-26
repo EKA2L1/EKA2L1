@@ -28,7 +28,7 @@
 namespace eka2l1 {
     void imgui_debugger::show_about() {
         if (!phony_icon) {
-            static constexpr const char *PHONY_PATH = "resources\\phony.png";
+            static constexpr const char *PHONY_PATH = "resources\\duck_tank.png";
             phony_icon = renderer::load_texture_from_file_standalone(sys->get_graphics_driver(),
                 PHONY_PATH, false, &phony_size.x, &phony_size.y);
         }
