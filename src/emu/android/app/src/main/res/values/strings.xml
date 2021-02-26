@@ -83,6 +83,6 @@
 
     <string name="about_github" translatable="false">&lt;BR>GitHub: &lt;a href="https://github.com/EKA2L1/EKA2L1">github.com/EKA2L1/EKA2L1&lt;/a></string>
     <string name="about_crowdin" translatable="false">&lt;BR>Crowdin(translation): &lt;a href="https://crowdin.com/project/EKA2L1">crowdin.com/project/EKA2L1&lt;/a></string>
-    <string name="about_copyright" translatable="false">&lt;BR>&lt;BR>Copyright 2018-2020 EKA2L1 Team</string>
+    <string name="about_copyright" translatable="false">&lt;BR>&lt;BR>Copyright 2018-2021 EKA2L1 Team</string>
     <string name="version">Version: </string>
 </resources>
