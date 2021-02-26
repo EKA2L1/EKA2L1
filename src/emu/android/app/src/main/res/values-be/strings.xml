@@ -52,6 +52,6 @@
     <string name="confirmation_required">Патрабуецца пацверджанне</string>
     <string name="force_close_confirmation">Прымусовае закрыццё дастасавання можа прывесці да страты дадзеных або нават да поўнага вываду яго з ладу!\nПрацягнуць?</string>
     <string name="log_saved">Лог захаваны</string>
-    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
+    <string name="about_icon_by">&lt;BR&gt;Абразок ад: </string>
     <string name="version">Версія: </string>
 </resources>
