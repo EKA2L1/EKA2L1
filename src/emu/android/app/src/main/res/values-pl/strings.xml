@@ -52,5 +52,6 @@
     <string name="confirmation_required">Wymagane potwierdzenie</string>
     <string name="force_close_confirmation">Wymuszenie zamknięcia aplikacji może spowodować utratę danych lub nawet całkowicie ją zepsuć!\nKontynuować?</string>
     <string name="log_saved">Log został zapisany</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Wersja: </string>
 </resources>
