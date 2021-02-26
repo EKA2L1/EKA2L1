@@ -31,7 +31,7 @@
 
 namespace eka2l1::config {
     app_setting::app_setting()
-        : fps(30)
+        : fps(60)
         , time_delay(0)
         , child_inherit_setting(false) {
     }
