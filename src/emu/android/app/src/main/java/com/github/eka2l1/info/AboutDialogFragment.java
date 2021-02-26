@@ -53,7 +53,7 @@ public class AboutDialogFragment extends DialogFragment {
         tv.setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.app_name)
-                .setIcon(R.mipmap.ic_launcher)
+                .setIcon(R.mipmap.ic_ducky)
                 .setView(tv);
         return builder.create();
     }
