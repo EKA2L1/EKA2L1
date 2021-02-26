@@ -144,6 +144,7 @@
     <string name="credits_thanks_text">感谢您使用此模拟器！</string>
     <string name="credits_main_developer_text">主要开发人员：</string>
     <string name="credits_contributors_text">贡献者：</string>
+    <string name="credits_icon_text">Icon:</string>
     <string name="credits_honors_text">荣誉：</string>
     <string name="credits_translators_text">翻译人员：</string>
 </resources>
