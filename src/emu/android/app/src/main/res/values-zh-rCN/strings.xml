@@ -52,5 +52,6 @@
     <string name="confirmation_required">需要确认</string>
     <string name="force_close_confirmation">强制关闭应用程序可能会导致数据丢失甚至损坏！\n继续?</string>
     <string name="log_saved">日志已保存</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">版本： </string>
 </resources>
