@@ -52,5 +52,6 @@
     <string name="confirmation_required">Необхідне підтвердження</string>
     <string name="force_close_confirmation">Примусове закриття застосунку може призвести до втрати даних або навіть до повного виведення його з ладу!\nПродовжити?</string>
     <string name="log_saved">Лог збережено</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Версія: </string>
 </resources>
