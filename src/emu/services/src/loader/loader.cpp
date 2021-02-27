@@ -190,13 +190,13 @@ namespace eka2l1 {
         }
 
         for (auto &search_path: search_list) {
-            mngr->search_paths.push_back(search_path.std_str());
+            mngr->search_paths.insert(mngr->search_paths.begin(), search_path.std_str());
         }
 
         codeseg_ptr cs = mngr->load(*lib_path);
 
         if (!search_list.empty()) {
-            mngr->search_paths.erase(mngr->search_paths.end() - search_list.size(), mngr->search_paths.end());
+            mngr->search_paths.erase(mngr->search_paths.begin(), mngr->search_paths.begin() + search_list.size());
         }
 
         if (!cs) {

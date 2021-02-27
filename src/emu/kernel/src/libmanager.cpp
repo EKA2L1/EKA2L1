@@ -903,15 +903,15 @@ namespace eka2l1::hle {
         }
 
         // Add the codeseg that trying to be loaded path to search path, for dependencies search.
-        search_paths.push_back(eka2l1::file_directory(lib_path, true));
+        search_paths.insert(search_paths.begin(), eka2l1::file_directory(lib_path, true));
 
         if (auto cs = load_depend_on_drive(drv, lib_path)) {
             cs->set_full_path(lib_path);
-            search_paths.pop_back();
+            search_paths.erase(search_paths.begin());
             return cs;
         }
 
-        search_paths.pop_back();
+        search_paths.erase(search_paths.begin());
         return nullptr;
     }
 
