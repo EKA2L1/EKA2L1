@@ -31,7 +31,7 @@
     <string name="debugger_menu_pause_item_name">Призупинити</string>
     <string name="debugger_menu_stop_item_name">Зупинити</string>
     <string name="debugger_menu_restart_item_name">Перезапустити</string>
-    <string name="debugger_menu_disassembler_item_name">Дизасемблер</string>
+    <string name="debugger_menu_disassembler_item_name">Розбірник</string>
     <string name="debugger_menu_objects_item_name">Об\'єкти</string>
     <string name="debugger_menu_services_item_name">Служби</string>
     <string name="debugger_menu_objects_submenu_threads_item_name">Потоки </string>
@@ -46,7 +46,7 @@
     <string name="app_launcher_style_classical_str">Класичний</string>
     <string name="app_launcher_style_modern_str">Сучасний</string>
     <string name="error_dialog_title">З\'являється дика помилка</string>
-    <string name="error_dialog_message">Будь ласка, прикріпіть журнал і повідомте розробника!</string>
+    <string name="error_dialog_message">Будь ласка, прикріпіть лог і повідомте розробника про це!</string>
     <string name="emulated_screen_title">Екран {}</string>
     <string name="emulated_screen_orientation_lock_item_name">Блокування орієнтації екрана</string>
     <string name="emulated_screen_rotation_item_name">Поворот екрана</string>
@@ -144,6 +144,7 @@
     <string name="credits_thanks_text">Дякуємо Вам за використання емулятора!</string>
     <string name="credits_main_developer_text">Головні розробники:</string>
     <string name="credits_contributors_text">Помічники:</string>
+    <string name="credits_icon_text">Іконка:</string>
     <string name="credits_honors_text">Пошана:</string>
     <string name="credits_translators_text">Перекладачі:</string>
 </resources>

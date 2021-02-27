@@ -144,6 +144,7 @@
     <string name="credits_thanks_text">Спасибо, что используете эмулятор!</string>
     <string name="credits_main_developer_text">Главные разработчики:</string>
     <string name="credits_contributors_text">Участники:</string>
+    <string name="credits_icon_text">Иконка:</string>
     <string name="credits_honors_text">Благодарность:</string>
     <string name="credits_translators_text">Переводчики:</string>
 </resources>

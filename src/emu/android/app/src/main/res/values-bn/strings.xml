@@ -52,5 +52,6 @@
     <string name="confirmation_required">অনুমোদন প্রয়োজন</string>
     <string name="force_close_confirmation">সরাসরি বন্ধ করার ফলে ডাটা ক্ষতিগ্রস্ত অথবা সম্পূর্ণভাবে ভেঙ্গে যেতে পারে\nএগিয়ে যাবেন?</string>
     <string name="log_saved">লগ সংরক্ষণ করা হয়েছে</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">সংস্করণ: </string>
 </resources>

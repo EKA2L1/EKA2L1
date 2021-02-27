@@ -52,5 +52,6 @@
     <string name="confirmation_required">Confirmação necessária</string>
     <string name="force_close_confirmation">O fechamento forçado do aplicativo pode resultar em perda de dados ou até mesmo interrompê-lo completamente!\nContinuar?</string>
     <string name="log_saved">Log foi salvo</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Versão: </string>
 </resources>
