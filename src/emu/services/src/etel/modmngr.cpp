@@ -24,18 +24,52 @@
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
+#include <common/path.h>
+
+#include <vfs/vfs.h>
 
 namespace eka2l1::epoc::etel {
     module_manager::module_manager() {
     }
 
-    bool module_manager::load_tsy(io_system *io, const std::string &module_name) {
-        const std::string module_lowercased = common::lowercase_string(module_name);
+    std::string module_manager::get_full_tsy_path(io_system *io, const std::string &module_name) {
+        std::string fulled_module_path = module_name;
 
-        if (std::find(loaded_.begin(), loaded_.end(), common::lowercase_string(module_lowercased))
-            != loaded_.end()) {
-            // The module already loaded. Return
-            return false;
+        if (eka2l1::path_extension(fulled_module_path).empty()) {
+            fulled_module_path += ".tsy";
+        }
+
+        if (!eka2l1::has_root_name(fulled_module_path, true)) {
+            for (drive_number drv = drive_z; drv >= drive_a; drv--) {
+                if (io->get_drive_entry(drv)) {
+                    std::string absoluted = eka2l1::absolute_path(fulled_module_path, fmt::format(
+                        "{}:\\system\\libs\\", static_cast<char>(drive_to_char16(drv))));
+
+                    if (io->exist(common::utf8_to_ucs2(absoluted))) {
+                        fulled_module_path = absoluted;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return fulled_module_path;
+    }
+
+    bool module_manager::load_tsy(io_system *io, const kernel::uid borrowed_session, const std::string &module_name) {
+        const std::string module_lowercased = common::lowercase_string(get_full_tsy_path(io, module_name));
+        auto find_result = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
+            return info.name_ == module_lowercased;
+        });
+    
+        if (find_result != loaded_.end()) {
+            // The module already loaded.
+            if (!std::binary_search(find_result->used_sessions_.begin(), find_result->used_sessions_.end(), borrowed_session)) {
+                find_result->used_sessions_.push_back(borrowed_session);
+                std::sort(find_result->used_sessions_.begin(), find_result->used_sessions_.end());
+            }
+
+            return true;
         }
 
         LOG_TRACE(SERVICE_ETEL, "Loading TSY temporary stubbed with module name {}", module_name);
@@ -43,7 +77,7 @@ namespace eka2l1::epoc::etel {
         // TODO: We need to give it a proper info
         // Give a line first, add it to phone later
         etel_module_entry line_entry;
-        line_entry.tsy_name_ = module_name;
+        line_entry.tsy_name_ = module_lowercased;
 
         epoc::etel_line_info line_info;
         line_info.hook_sts_ = epoc::etel_line_hook_sts_off;
@@ -55,7 +89,7 @@ namespace eka2l1::epoc::etel {
             epoc::etel_line_caps_voice);
 
         etel_module_entry phone_entry;
-        phone_entry.tsy_name_ = module_name;
+        phone_entry.tsy_name_ = module_lowercased;
 
         epoc::etel_phone_info phone_info;
         phone_info.exts_ = 0;
@@ -73,30 +107,65 @@ namespace eka2l1::epoc::etel {
         entries_.push_back(std::move(phone_entry));
         entries_.push_back(std::move(line_entry));
 
-        loaded_.push_back(module_lowercased);
+        tsy_module_info info;
+        info.name_ = module_lowercased;
+        info.used_sessions_.push_back(borrowed_session);
+
+        // Find a free slot actually
+        find_result = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
+            return info.used_sessions_.empty();
+        });
+
+        if (find_result != loaded_.end()) {
+            *find_result = info;
+        } else {
+            loaded_.push_back(info);
+        }
 
         return true;
     }
 
-    bool module_manager::close_tsy(io_system *io, const std::string &module_name) {
-        const std::string module_lowercased = common::lowercase_string(module_name);
+    bool module_manager::close_tsy(io_system *io, const kernel::uid borrowed, const std::string &module_name) {
+        const std::string module_lowercased = common::lowercase_string(get_full_tsy_path(io, module_name));
 
-        auto name_res = std::find(loaded_.begin(), loaded_.end(), module_lowercased);
+        auto name_res = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
+            return info.name_ == module_lowercased;
+        });
+
         if (name_res == loaded_.end()) {
             return false;
         }
-        loaded_.erase(name_res);
-        
-        auto entry_res = std::remove_if(entries_.begin(), entries_.end(),
-            [=](const auto &entry) {
-                if (common::lowercase_string(entry.tsy_name_) == module_lowercased) {
-                    return true;
-                }
-                return false;
-            });
-        entries_.erase(entry_res, entries_.end());
+
+        auto borrow_res = std::lower_bound(name_res->used_sessions_.begin(), name_res->used_sessions_.end(), borrowed);
+
+        if ((borrow_res == name_res->used_sessions_.end()) || (*borrow_res != borrowed)) {
+            return false;
+        }
+
+        // The order should stay the same when we remove one integer
+        name_res->used_sessions_.erase(borrow_res);
+
+        if (name_res->used_sessions_.empty()) {
+            auto entry_res = std::remove_if(entries_.begin(), entries_.end(),
+                [=](const auto &entry) {
+                    if (common::lowercase_string(entry.tsy_name_) == module_lowercased) {
+                        return true;
+                    }
+                    return false;
+                });
+
+            entries_.erase(entry_res, entries_.end());
+        }
 
         return true;
+    }
+
+    void module_manager::unload_from_sessions(io_system *io, const kernel::uid borrowed_session) {
+        for (std::size_t i = 0; i < loaded_.size(); i++) {
+            if (std::binary_search(loaded_[i].used_sessions_.begin(), loaded_[i].used_sessions_.end(), borrowed_session)) {
+                close_tsy(io, borrowed_session, loaded_[i].name_);
+            }
+        }
     }
 
     std::optional<std::uint32_t> module_manager::get_entry_real_index(const std::uint32_t respective_index, const etel_entry_type type) {

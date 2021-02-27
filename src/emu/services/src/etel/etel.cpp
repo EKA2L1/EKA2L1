@@ -41,7 +41,8 @@ namespace eka2l1 {
         , call_status_prop_(nullptr)
         , network_bars_prop_(nullptr)
         , battery_bars_prop_(nullptr)
-        , charger_status_prop_(nullptr) {
+        , charger_status_prop_(nullptr)
+        , init2ed_(false) {
         init(sys->get_kernel_system());
     }
 
@@ -87,7 +88,17 @@ namespace eka2l1 {
         charger_status_prop_->set_int(epoc::etel_charger_status_connected);
     }
 
+    void etel_server::init2(io_system *io) {
+        // Load neccessary modules! This is usually handle by another party...
+        mngr_.load_tsy(io, 0, "phonetsy");
+        init2ed_ = true;
+    }
+
     void etel_server::connect(service::ipc_context &ctx) {
+        if (!init2ed_) {
+            init2(ctx.sys->get_io_system());
+        }
+
         create_session<etel_session>(&ctx);
         ctx.complete(epoc::error_none);
     }
@@ -100,6 +111,13 @@ namespace eka2l1 {
         : service::typical_session(serv, client_ss_uid, client_ver) {
     }
 
+    etel_session::~etel_session() {
+        etel_server *serv = server<etel_server>();
+        io_system *io = serv->get_system()->get_io_system();
+
+        serv->mngr_.unload_from_sessions(io, client_ss_uid_);
+    }
+
     void etel_session::close_phone_module(service::ipc_context *ctx) {
         std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(0);
 
@@ -108,7 +126,9 @@ namespace eka2l1 {
             return;
         }
 
-        if (!mngr_.close_tsy(ctx->sys->get_io_system(), common::ucs2_to_utf8(name.value()))) {
+        epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
+
+        if (!mngr.close_tsy(ctx->sys->get_io_system(), client_ss_uid_, common::ucs2_to_utf8(name.value()))) {
             ctx->complete(epoc::error_not_found);
             return;
         }
@@ -124,7 +144,9 @@ namespace eka2l1 {
             return;
         }
 
-        if (!mngr_.load_tsy(ctx->sys->get_io_system(), common::ucs2_to_utf8(name.value()))) {
+        epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
+
+        if (!mngr.load_tsy(ctx->sys->get_io_system(), client_ss_uid_, common::ucs2_to_utf8(name.value()))) {
             ctx->complete(epoc::error_already_exists);
             return;
         }
@@ -133,7 +155,8 @@ namespace eka2l1 {
     }
 
     void etel_session::enumerate_phones(service::ipc_context *ctx) {
-        std::uint32_t total_phone = static_cast<std::uint32_t>(mngr_.total_entries(epoc::etel_entry_phone));
+        epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
+        std::uint32_t total_phone = static_cast<std::uint32_t>(mngr.total_entries(epoc::etel_entry_phone));
 
         ctx->write_data_to_descriptor_argument(0, total_phone);
         ctx->complete(epoc::error_none);
@@ -142,7 +165,9 @@ namespace eka2l1 {
     void etel_session::get_phone_info_by_index(service::ipc_context *ctx) {
         epoc::etel_phone_info info;
         const std::int32_t index = *ctx->get_argument_value<std::int32_t>(1);
-        std::optional<std::uint32_t> real_index = mngr_.get_entry_real_index(index, epoc::etel_entry_phone);
+        
+        epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
+        std::optional<std::uint32_t> real_index = mngr.get_entry_real_index(index, epoc::etel_entry_phone);
 
         if (!real_index.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -150,7 +175,7 @@ namespace eka2l1 {
         }
 
         epoc::etel_module_entry *entry = nullptr;
-        mngr_.get_entry(real_index.value(), &entry);
+        mngr.get_entry(real_index.value(), &entry);
 
         etel_phone &phone = static_cast<etel_phone &>(*entry->entity_);
 
@@ -160,7 +185,9 @@ namespace eka2l1 {
 
     void etel_session::get_tsy_name(service::ipc_context *ctx) {
         const std::int32_t index = *ctx->get_argument_value<std::int32_t>(0);
-        std::optional<std::uint32_t> real_index = mngr_.get_entry_real_index(index,
+
+        epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
+        std::optional<std::uint32_t> real_index = mngr.get_entry_real_index(index,
             epoc::etel_entry_phone);
 
         if (!real_index.has_value()) {
@@ -169,7 +196,7 @@ namespace eka2l1 {
         }
 
         epoc::etel_module_entry *entry = nullptr;
-        mngr_.get_entry(real_index.value(), &entry);
+        mngr.get_entry(real_index.value(), &entry);
 
         ctx->write_arg(1, common::utf8_to_ucs2(entry->tsy_name_));
         ctx->complete(epoc::error_none);
@@ -198,7 +225,9 @@ namespace eka2l1 {
         LOG_TRACE(SERVICE_ETEL, "Opening {} from session", common::ucs2_to_utf8(name_of_object.value()));
 
         epoc::etel_module_entry *entry = nullptr;
-        if (!mngr_.get_entry_by_name(common::ucs2_to_utf8(name_of_object.value()), &entry)) {
+
+        epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
+        if (!mngr.get_entry_by_name(common::ucs2_to_utf8(name_of_object.value()), &entry)) {
             ctx->complete(epoc::error_not_found);
             return;
         }
@@ -293,7 +322,8 @@ namespace eka2l1 {
     }
 
     void etel_session::line_enumerate_call(service::ipc_context *ctx) {
-        std::uint32_t total_call = static_cast<std::uint32_t>(mngr_.total_entries(epoc::etel_entry_call));
+        epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
+        std::uint32_t total_call = static_cast<std::uint32_t>(mngr.total_entries(epoc::etel_entry_call));
 
         ctx->write_data_to_descriptor_argument(0, total_call);
         ctx->complete(epoc::error_none);

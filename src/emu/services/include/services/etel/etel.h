@@ -40,13 +40,14 @@ namespace eka2l1 {
     std::string get_etel_server_name_by_epocver(const epocver ver);
 
     struct etel_session : public service::typical_session {
-        epoc::etel::module_manager mngr_;
         std::vector<etel_subsession_instance> subsessions_;
 
     protected:
         void add_new_subsession(service::ipc_context *ctx, etel_subsession_instance &instance);
 
     public:
+        ~etel_session() override;
+
         void close_phone_module(service::ipc_context *ctx);
         void load_phone_module(service::ipc_context *ctx);
         void enumerate_phones(service::ipc_context *ctx);
@@ -65,12 +66,19 @@ namespace eka2l1 {
 
     class etel_server : public service::typical_server {
     protected:
+        friend struct etel_session;
+
+        epoc::etel::module_manager mngr_;
+
         service::property *call_status_prop_;
         service::property *network_bars_prop_;
         service::property *battery_bars_prop_;
         service::property *charger_status_prop_;
 
+        bool init2ed_;
+
         void init(kernel_system *kern);
+        void init2(io_system *io);
 
     public:
         explicit etel_server(eka2l1::system *sys);
