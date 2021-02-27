@@ -99,7 +99,7 @@ namespace eka2l1 {
         , flags(0) {
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
-        default_sys_path = u"C:\\";
+        default_sys_path = u"Z:\\";
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());
         system_drive_prop->define(service::property_type::int_data, 0);
         system_drive_prop->set_int(drive_c);
