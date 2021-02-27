@@ -47,6 +47,14 @@ namespace eka2l1 {
                 get_status(ctx);
                 break;
 
+            case epoc::etel_old_line_notify_incoming_call:
+                notify_incoming_call(ctx);
+                break;
+
+            case epoc::etel_old_line_notify_incoming_call_cancel:
+                cancel_notify_incoming_call(ctx);
+                break;
+
             case epoc::etel_old_line_notify_status_change:
                 notify_status_change(ctx);
                 break;
