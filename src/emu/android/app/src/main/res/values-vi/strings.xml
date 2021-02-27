@@ -52,5 +52,6 @@
     <string name="confirmation_required">Yêu cầu xác nhận</string>
     <string name="force_close_confirmation">Bắt buộc đóng ứng dụng có thể dẫn đến mất dữ liệu hoặc thậm chí hư hỏng!\nBạn vẫn muốn thoát?</string>
     <string name="log_saved">Log đã được lưu</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Phiên bản: </string>
 </resources>

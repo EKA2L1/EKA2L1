@@ -52,5 +52,6 @@
     <string name="confirmation_required">Confirmation required</string>
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
     <string name="log_saved">Log has been saved</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Version: </string>
 </resources>

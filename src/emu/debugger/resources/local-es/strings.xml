@@ -144,6 +144,7 @@
     <string name="credits_thanks_text">¡Gracias por usar el emulador!</string>
     <string name="credits_main_developer_text">Desarrolladores principales:</string>
     <string name="credits_contributors_text">Contribuidores:</string>
+    <string name="credits_icon_text">Icon:</string>
     <string name="credits_honors_text">Menciones honoríficas:</string>
     <string name="credits_translators_text">Traductores:</string>
 </resources>

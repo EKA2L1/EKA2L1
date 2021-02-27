@@ -52,5 +52,6 @@
     <string name="confirmation_required">Vahvistus vaaditaan</string>
     <string name="force_close_confirmation">Sovelluksen sulkeminen voi johtaa tietojen menetykseen tai jopa rikkoa sen kokonaan!\nJatketaanko?</string>
     <string name="log_saved">Loki on tallennettu</string>
+    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Versio: </string>
 </resources>

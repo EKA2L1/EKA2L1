@@ -144,6 +144,7 @@
     <string name="credits_thanks_text">Emülatörü Kullandığınız İçin Teşekkürler!</string>
     <string name="credits_main_developer_text">Ana Geliştiriciler:</string>
     <string name="credits_contributors_text">Contributors:</string>
+    <string name="credits_icon_text">Icon:</string>
     <string name="credits_honors_text">Honors:</string>
     <string name="credits_translators_text">Translators:</string>
 </resources>
