@@ -21,3 +21,4 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.github.eka2l1.settings.KeyMapper** { *; }
+-keep class com.github.eka2l1.emu.EmulatorActivity { *; }
