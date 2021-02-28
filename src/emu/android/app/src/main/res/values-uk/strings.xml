@@ -30,7 +30,7 @@
     <string name="pref_enable_actionbar">Увімкнути панель дій</string>
     <string name="pref_enable_statusbar">Увімкнути рядок стану</string>
     <string name="pref_wakelock">Не вимикати екран</string>
-    <string name="pref_enable_vibration">Enable vibration</string>
+    <string name="pref_enable_vibration">Увімкнути вібрацію</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Увімкнути фільтрацію шляхом найближчого сусіда</string>
     <string name="pref_system_language_option_name">Мова</string>
     <string name="pref_system_real_time_accuracy_str">Точність у реальному часі</string>
