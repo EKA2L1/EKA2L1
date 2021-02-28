@@ -27,6 +27,7 @@ import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Process;
+import android.os.Vibrator;
 import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -67,6 +68,9 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     public static final String APP_UID_KEY = "appUid";
     public static final String APP_NAME_KEY = "appName";
 
+    private static Vibrator vibrator;
+    private static Context context;
+    private static boolean vibrationEnabled;
     private Toolbar toolbar;
     private OverlayView overlayView;
     private long uid;
@@ -90,6 +94,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         SurfaceView surfaceView = findViewById(R.id.surface_view);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        context = this;
 
         surfaceView.setWillNotDraw(true);
         surfaceView.getHolder().addCallback(this);
@@ -101,6 +106,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         }
         actionBarEnabled = dataStore.getBoolean("enable-actionbar", true);
         statusBarEnabled = dataStore.getBoolean("enable-statusbar", false);
+        vibrationEnabled = dataStore.getBoolean("enable-vibration", true);
 
         if (keyboardEnabled) {
             keyboard = new VirtualKeyboard(this);
@@ -332,6 +338,24 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         if (keyboard != null) {
             keyboard.resize(screen, screen);
         }
+    }
+
+    public static boolean vibrate(int duration) {
+        if (!vibrationEnabled) {
+            return false;
+        }
+        if (vibrator == null) {
+            vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+        if (vibrator == null || !vibrator.hasVibrator()) {
+            return false;
+        }
+        vibrator.vibrate(duration);
+        return true;
+    }
+
+    public static ClassLoader getAppClassLoader() {
+        return context.getClassLoader();
     }
 
     private int convertAndroidKeyCode(int keyCode) {

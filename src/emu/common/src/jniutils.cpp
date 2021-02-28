@@ -23,6 +23,24 @@
 namespace eka2l1::common::jni {
     JavaVM *virtual_machine = nullptr;
 
+    jobject c_classloader;
+    jmethodID c_findclass_method;
+
+    void init_classloader() {
+        JNIEnv *env = environment();
+        jclass clazz = env->FindClass("com/github/eka2l1/emu/EmulatorActivity");
+        jclass classloader_class = env->FindClass("java/lang/ClassLoader");
+        jmethodID get_classloader_method = env->GetStaticMethodID(clazz, "getAppClassLoader", "()Ljava/lang/ClassLoader;");
+        c_classloader = env->NewGlobalRef(env->CallStaticObjectMethod(clazz, get_classloader_method));
+        c_findclass_method = env->GetMethodID(classloader_class, "findClass",
+                                            "(Ljava/lang/String;)Ljava/lang/Class;");
+    }
+
+    jclass find_class(const char* name) {
+        JNIEnv *env = environment();
+        return static_cast<jclass>(env->CallObjectMethod(c_classloader, c_findclass_method, env->NewStringUTF(name)));
+    }
+
     JNIEnv *environment() {
         JNIEnv *env = nullptr;
 
@@ -38,8 +56,6 @@ namespace eka2l1::common::jni {
                 LOG_ERROR(COMMON, "Unable to attach environment to current thread");
                 return nullptr;
             }
-        } else {
-            LOG_ERROR(COMMON, "Environment retrieving encounter error {}", env_status);
         }
 
         return env;

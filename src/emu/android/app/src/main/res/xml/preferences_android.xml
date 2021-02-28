@@ -22,4 +22,8 @@
         android:defaultValue="false"
         android:key="enable-wakelock"
         android:title="@string/pref_wakelock" />
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="enable-vibration"
+        android:title="@string/pref_enable_vibration" />
 </PreferenceScreen>
