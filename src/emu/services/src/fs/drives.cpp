@@ -154,9 +154,10 @@ namespace eka2l1 {
     }
 
     void fs_server_client::drive_list(service::ipc_context *ctx) {
+        kernel_system *kern = ctx->sys->get_kernel_system();
         std::optional<std::int32_t> flags = ctx->get_argument_value<std::int32_t>(1);
 
-        if (!flags) {
+        if (!kern->is_eka1() && !flags) {
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -165,11 +166,13 @@ namespace eka2l1 {
         std::vector<io_attrib> include_attribs;
 
         // Fetch flags
-        if (*flags & epoc::fs::drive_att_hidden) {
-            if (*flags & epoc::fs::drive_att_exclude) {
-                exclude_attribs.push_back(io_attrib_hidden);
-            } else {
-                include_attribs.push_back(io_attrib_hidden);
+        if (!kern->is_eka1()) {
+            if (*flags & epoc::fs::drive_att_hidden) {
+                if (*flags & epoc::fs::drive_att_exclude) {
+                    exclude_attribs.push_back(io_attrib_hidden);
+                } else {
+                    include_attribs.push_back(io_attrib_hidden);
+                }
             }
         }
 
