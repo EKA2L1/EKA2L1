@@ -30,6 +30,7 @@
     <string name="pref_enable_actionbar">Włącz Pasek Akcji</string>
     <string name="pref_enable_statusbar">Wyłącz pasek statusu</string>
     <string name="pref_wakelock">Pozostaw ekran włączony</string>
+    <string name="pref_enable_vibration">Enable vibration</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Włącz filtrowanie najbliższego sąsiada</string>
     <string name="pref_system_language_option_name">Język</string>
     <string name="pref_system_real_time_accuracy_str">Dokładność w czasie rzeczywistym</string>
