@@ -17,10 +17,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/platform.h>
 #include <drivers/hwrm/backend/vibration_null.h>
+#ifdef EKA2L1_PLATFORM_ANDROID
+#include <drivers/hwrm/backend/vibration_jdk.h>
+#endif
 
 namespace eka2l1::drivers::hwrm {
     std::unique_ptr<vibrator> make_suitable_vibrator() {
+#ifdef EKA2L1_PLATFORM_ANDROID
+        return std::make_unique<vibrator_jdk>();
+#endif
         return std::make_unique<vibrator_null>();
     }
 }

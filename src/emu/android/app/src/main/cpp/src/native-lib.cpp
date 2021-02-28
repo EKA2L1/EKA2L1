@@ -75,6 +75,7 @@ Java_com_github_eka2l1_emu_Emulator_getApps(
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_launchApp(JNIEnv *env, jclass clazz, jint uid) {
+    eka2l1::common::jni::init_classloader();
     state->launcher->launch_app(uid);
 }
 

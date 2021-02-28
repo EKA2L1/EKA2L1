@@ -17,10 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/jniutils.h>
 #include <drivers/hwrm/backend/vibration_jdk.h>
 #include <jni.h>
 
 namespace eka2l1::drivers::hwrm {
     void vibrator_jdk::vibrate(const std::uint32_t millisecs, const std::int16_t intensity) {
+        JNIEnv *env = common::jni::environment();
+        jclass clazz = common::jni::find_class("com/github/eka2l1/emu/EmulatorActivity");
+        jmethodID vibrate_method = env->GetStaticMethodID(clazz, "vibrate", "(I)Z");
+        jboolean result = env->CallStaticBooleanMethod(clazz, vibrate_method, (jint) millisecs);
     }
 }
