@@ -30,6 +30,7 @@
     <string name="pref_enable_actionbar">Habilitar ActionBar</string>
     <string name="pref_enable_statusbar">Mostrar la barra de estado</string>
     <string name="pref_wakelock">Mantener pantalla por encima</string>
+    <string name="pref_enable_vibration">Enable vibration</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilitar filtro nearest neighbor</string>
     <string name="pref_system_language_option_name">Idioma</string>
     <string name="pref_system_real_time_accuracy_str">Precisión en tiempo real</string>
