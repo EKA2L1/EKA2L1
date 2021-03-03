@@ -121,11 +121,14 @@ namespace eka2l1::android {
             // Load patch libraries
             kernel_system *kern = symsys->get_kernel_system();
             hle::lib_manager *libmngr = kern->get_lib_manager();
+            dispatch::dispatcher *disp = symsys->get_dispatcher();
 
             // Start the bootload
             kern->start_bootload();
 
             libmngr->load_patch_libraries(".//patch//");
+            dispatch::libraries::register_functions(kern, disp);
+
             stage_two_inited = true;
         }
 

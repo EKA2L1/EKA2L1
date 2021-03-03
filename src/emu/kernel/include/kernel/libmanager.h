@@ -70,6 +70,22 @@ namespace eka2l1 {
     }
 
     namespace hle {
+        static std::uint16_t THUMB_TRAMPOLINE_ASM[] = {
+            0xB540, // 0: push { r6, lr }
+            0x4E01, // 2: ldr r6, [pc, #4]
+            0x47B0, // 4: blx r6
+            0xBD40, // 6: pop { r6, pc }
+            0x0000, // 8: nop
+            // constant here, offset 10: makes that total of 14 bytes
+            // Hope some function are big enough!!!
+        };
+
+        static std::uint32_t ARM_TRAMPOLINE_ASM[] = {
+            0xE51FF004, // 0: ldr pc, [pc, #-4]
+            // constant here
+            // 8 bytes in total
+        };
+
         using export_table = std::vector<std::uint32_t>;
         using symbols = std::vector<std::string>;
         using patch_route_info = std::pair<std::uint32_t, std::uint32_t>;

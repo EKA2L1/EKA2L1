@@ -19,6 +19,7 @@
 
 #include <dispatch/dispatcher.h>
 #include <dispatch/register.h>
+#include <dispatch/libraries/register.h>
 #include <dispatch/screen.h>
 #include <kernel/kernel.h>
 #include <services/window/window.h>
@@ -26,11 +27,24 @@
 #include <utils/err.h>
 
 #include <common/log.h>
+#include <common/armemitter.h>
 #include <system/epoc.h>
 
+#include <mem/mem.h>
+
 namespace eka2l1::dispatch {
+    static std::uint32_t MAX_TRAMPOLINE_CHUNK_SIZE = 0x4000;
+
     dispatcher::dispatcher(kernel_system *kern, ntimer *timing)
-        : winserv_(nullptr) {
+        : winserv_(nullptr)
+        , trampoline_chunk_(nullptr)
+        , libmngr_(nullptr)
+        , mem_(nullptr)
+        , trampoline_allocated_(0) {
+        trampoline_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherTrampolines", 0,
+            MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write_exec, kernel::chunk_type::normal,
+            kernel::chunk_access::rom, kernel::chunk_attrib::none);
+
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(
             eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
 
@@ -38,6 +52,8 @@ namespace eka2l1::dispatch {
 
         // Set global variables
         timing_ = timing;
+        libmngr_ = kern->get_lib_manager();
+        mem_ = kern->get_memory_system();
     }
 
     dispatcher::~dispatcher() {
@@ -73,6 +89,58 @@ namespace eka2l1::dispatch {
 
     dsp_epoc_audren_sema *dispatcher::get_audren_sema() {
         return audren_sema_.get();
+    }
+
+    bool dispatcher::patch_libraries(const std::u16string &path, patch_info *patches,
+        const std::size_t patch_count) {
+        codeseg_ptr seg = libmngr_->load(path);
+
+        if (!seg) {
+            return false;
+        }
+
+        for (std::size_t i = 0; i < patch_count; i++) {
+            const address orgaddr = seg->lookup_no_relocate(patches[i].ordinal_number_);
+            if (!orgaddr) {
+                continue;
+            }
+            
+            const address entryentry = trampoline_chunk_->base(nullptr).ptr_address() + trampoline_allocated_;
+
+            if (seg->is_rom()) {
+                void *ptr = mem_->get_real_pointer(orgaddr & ~1);
+
+                if (orgaddr & 1) {
+                    std::memcpy(ptr, hle::THUMB_TRAMPOLINE_ASM, sizeof(hle::THUMB_TRAMPOLINE_ASM));
+
+                    std::uint32_t offset_do_write = sizeof(hle::THUMB_TRAMPOLINE_ASM);
+
+                    if (((orgaddr & ~1) & 3) == 0) {
+                        offset_do_write -= 2;
+                    }
+
+                    ptr = reinterpret_cast<std::uint8_t*>(ptr) + offset_do_write;
+                } else {
+                    std::memcpy(ptr, hle::ARM_TRAMPOLINE_ASM, sizeof(hle::ARM_TRAMPOLINE_ASM));
+                    ptr = reinterpret_cast<std::uint8_t*>(ptr) + sizeof(hle::ARM_TRAMPOLINE_ASM);
+                }
+
+                *reinterpret_cast<std::uint32_t*>(ptr) = entryentry;
+            }
+
+            std::uint32_t *start_base = reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(
+                trampoline_chunk_->host_base()) + trampoline_allocated_);
+  
+            start_base[0] = 0xEFC10001;
+            start_base[1] = patches[i].dispatch_number_;
+
+            // TODO!!! Export table is fixed as a whole, not as an individual, this is bad for HLEing only some functions!
+            seg->set_export(patches[i].ordinal_number_, entryentry);
+
+            trampoline_allocated_ += 8;
+        }
+
+        return true;
     }
 }
 

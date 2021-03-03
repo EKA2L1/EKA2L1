@@ -35,11 +35,21 @@
 namespace eka2l1 {
     class window_server;
     class kernel_system;
+    class memory_system;
     class system;
     class ntimer;
+
+    namespace kernel {
+        class chunk;
+    }
+
+    namespace hle {
+        class lib_manager;
+    }
 }
 
 namespace eka2l1::dispatch {
+    struct patch_info;
     struct dsp_epoc_audren_sema;
 
     struct dsp_epoc_stream {
@@ -93,6 +103,14 @@ namespace eka2l1::dispatch {
     struct dispatcher {
     private:
         std::unique_ptr<dsp_epoc_audren_sema> audren_sema_;
+
+        kernel::chunk *trampoline_chunk_;
+
+        hle::lib_manager *libmngr_;
+        memory_system *mem_;
+
+        std::uint32_t trampoline_allocated_;
+
         void shutdown();
 
     public:
@@ -105,6 +123,9 @@ namespace eka2l1::dispatch {
 
         explicit dispatcher(kernel_system *kern, ntimer *timing);
         ~dispatcher();
+
+        bool patch_libraries(const std::u16string &path, patch_info *patches,
+            const std::size_t patch_count);
 
         dsp_epoc_audren_sema *get_audren_sema();
 

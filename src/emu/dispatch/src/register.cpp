@@ -21,6 +21,8 @@
 #include <dispatch/register.h>
 #include <dispatch/screen.h>
 
+#include <dispatch/libraries/sysutils/functions.h>
+
 namespace eka2l1::dispatch {
     const eka2l1::dispatch::func_map dispatch_funcs = {
         BRIDGE_REGISTER_DISPATCHER(1, update_screen),
@@ -57,6 +59,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER(0x4F, eaudio_dsp_stream_bytes_rendered),
         BRIDGE_REGISTER_DISPATCHER(0x50, eaudio_dsp_stream_position),
         BRIDGE_REGISTER_DISPATCHER(0x52, eaudio_dsp_stream_notify_buffer_ready_cancel),
-        BRIDGE_REGISTER_DISPATCHER(0x53, eaudio_dsp_stream_reset_stat)
+        BRIDGE_REGISTER_DISPATCHER(0x53, eaudio_dsp_stream_reset_stat),
+        BRIDGE_REGISTER_DISPATCHER(0x1000, sysutils::sysstartup_get_state)
     };
 }

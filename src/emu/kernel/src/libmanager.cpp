@@ -246,22 +246,6 @@ namespace eka2l1::hle {
         return cs;
     }
 
-    static std::uint16_t THUMB_TRAMPOLINE_ASM[] = {
-        0xB540, // 0: push { r6, lr }
-        0x4E01, // 2: ldr r6, [pc, #4]
-        0x47B0, // 4: blx r6
-        0xBD40, // 6: pop { r6, pc }
-        0x0000, // 8: nop
-        // constant here, offset 10: makes that total of 14 bytes
-        // Hope some function are big enough!!!
-    };
-
-    static std::uint32_t ARM_TRAMPOLINE_ASM[] = {
-        0xE51FF004, // 0: ldr pc, [pc, #-4]
-        // constant here
-        // 8 bytes in total
-    };
-
     static void patch_rom_export(memory_system *mem, codeseg_ptr source_seg,
         codeseg_ptr dest_seg, const std::uint32_t source_export,
         const std::uint32_t dest_export) {
