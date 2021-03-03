@@ -26,3 +26,5 @@ end
 function mem.readQword(addr)
     return ffi.C.symemu_mem_read_qword(addr)
 end
+
+return mem
