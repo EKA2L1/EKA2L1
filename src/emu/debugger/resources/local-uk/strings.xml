@@ -128,8 +128,8 @@
     <string name="install_device_progress_raw_dump_msg">Копіювання необробленого вмістища пам\'яті ({}%)</string>
     <string name="install_device_progress_rpkg_msg">Розпакувати RPKG</string>
     <string name="install_device_progress_rom_msg">Скопіювати ROM</string>
-    <string name="install_device_install_failure_msg">Щось не так сталося під час установлення! Будь ласка, перевірте лог!</string>
-    <string name="install_device_final_msg_1">Дякуємо за використання майстра встановлення. Сподіваємося, вам сподобається емулятор!</string>
+    <string name="install_device_install_failure_msg">Під час установлення сталося щось не так! Будь ласка, перевірте лог!</string>
+    <string name="install_device_final_msg_1">Дякуємо за використання майстра встановлення. Сподіваємося, ви добре проведете час, користуючись емулятором!</string>
     <string name="install_device_final_msg_2">У разі виникнення будь-яких проблем, будь ласка, повідомте розробникам, створивши запит на GitHub!</string>
     <string name="mmc_mount_success_dialog_title">Картку успішно під\'єднано!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD картку під\'єднано! Усі застосунки на MMC/SD картці перезавантажено.</string>
