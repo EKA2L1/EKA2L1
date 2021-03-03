@@ -30,6 +30,7 @@
     <string name="pref_enable_actionbar">Bật thanh Hành động</string>
     <string name="pref_enable_statusbar">Bật thanh trạng thái</string>
     <string name="pref_wakelock">Giữ màn hình bật</string>
+    <string name="pref_enable_vibration">Bật rung</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Bật màng lọc hàng xóm gần nhất</string>
     <string name="pref_system_language_option_name">Ngôn ngữ</string>
     <string name="pref_system_real_time_accuracy_str">Độ chính xác về thời gian thực</string>
@@ -52,6 +53,6 @@
     <string name="confirmation_required">Yêu cầu xác nhận</string>
     <string name="force_close_confirmation">Bắt buộc đóng ứng dụng có thể dẫn đến mất dữ liệu hoặc thậm chí hư hỏng!\nBạn vẫn muốn thoát?</string>
     <string name="log_saved">Log đã được lưu</string>
-    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
+    <string name="about_icon_by">&lt;BR&gt;Icon bởi: </string>
     <string name="version">Phiên bản: </string>
 </resources>
