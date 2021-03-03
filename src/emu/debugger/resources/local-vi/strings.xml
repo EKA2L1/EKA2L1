@@ -145,7 +145,7 @@ Kiểm tra xem có thiết bị nào chưa được thêm hay không và sửa t
     <string name="credits_thanks_text">Cảm ơn bạn đã sử dụng giả lập!</string>
     <string name="credits_main_developer_text">Lập trình chính:</string>
     <string name="credits_contributors_text">Người cộng tác:</string>
-    <string name="credits_icon_text">Icon:</string>
+    <string name="credits_icon_text">Biểu tượng:</string>
     <string name="credits_honors_text">Nhà đóng góp:</string>
     <string name="credits_translators_text">Người dịch:</string>
 </resources>
