@@ -30,6 +30,7 @@
     <string name="pref_enable_actionbar">Activaţi ActionBar</string>
     <string name="pref_enable_statusbar">Activaţi bara de stare</string>
     <string name="pref_wakelock">Păstraţi ecranul pornit</string>
+    <string name="pref_enable_vibration">Enable vibration</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
     <string name="pref_system_language_option_name">Language</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>

@@ -30,6 +30,7 @@
     <string name="pref_enable_actionbar">Ota käyttöön toimintopalkki</string>
     <string name="pref_enable_statusbar">Ota tilapalkki käyttöön</string>
     <string name="pref_wakelock">Pidä näyttö päällä</string>
+    <string name="pref_enable_vibration">Enable vibration</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_system_language_option_name">Kieli</string>
     <string name="pref_system_real_time_accuracy_str">Reaaliaikainen tarkkuus</string>
