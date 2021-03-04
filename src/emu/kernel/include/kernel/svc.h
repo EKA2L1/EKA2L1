@@ -198,7 +198,9 @@ namespace eka2l1::epoc {
             execute_v81a_create_chunk_double_ended = 0x54,
             execute_v81a_create_chunk_double_ended_global = 0x55,
             execute_v81a_share_session = 0x5A,
-            execute_v81a_property_define = 0x65
+            execute_v81a_property_define = 0x65,
+            execute_v81a_property_delete = 0x66,
+            execute_v81a_property_attach = 0x67
         };
 
         std::uint32_t arg0_;

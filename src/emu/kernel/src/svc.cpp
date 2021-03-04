@@ -3992,6 +3992,62 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t property_define_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        LOG_TRACE(KERNEL, "Define to property with category: 0x{:x}, key: 0x{:x}, type: {}", create_info->arg0_, create_info->arg1_,
+            static_cast<service::property_type>(create_info->arg2_) == service::property_type::int_data ? "int" : "bin");
+
+        property_ptr prop = kern->get_prop(create_info->arg0_, create_info->arg1_);
+        if (!prop) {
+            prop = kern->create<service::property>();
+
+            if (!prop) {
+                finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+                return epoc::error_general;
+            }
+
+            prop->first = create_info->arg0_;
+            prop->second = create_info->arg1_;
+        }
+
+        prop->define(static_cast<service::property_type>(create_info->arg2_), create_info->arg3_);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t property_attach_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        property_ptr prop = kern->get_prop(create_info->arg1_, create_info->arg2_);
+
+        LOG_TRACE(KERNEL, "Attach to property with category: 0x{:x}, key: 0x{:x}", create_info->arg1_, create_info->arg2_);
+
+        if (!prop) {
+            LOG_WARN(KERNEL, "Property (0x{:x}, 0x{:x}) has not been defined before, undefined behavior may rise", create_info->arg1_,
+                create_info->arg2_);
+
+            prop = kern->create<service::property>();
+
+            if (!prop) {
+                finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+                return epoc::error_general;
+            }
+
+            prop->first = create_info->arg1_;
+            prop->second = create_info->arg2_;
+        }
+
+        auto property_ref_handle_and_obj = kern->create_and_add<service::property_reference>(
+            static_cast<kernel::owner_type>(create_info->arg3_), prop);
+
+        if (property_ref_handle_and_obj.first == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, static_cast<kernel::handle>(property_ref_handle_and_obj.first));
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -4260,6 +4316,12 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v81a_msg2_kill_sender:
                 return message2_kill_sender_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_property_define:
+                return property_define_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_property_attach:
+                return property_attach_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
             default:
                 LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -5091,6 +5153,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80001C, process_find_next),
         BRIDGE_REGISTER(0x80001E, process_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
+        BRIDGE_REGISTER(0x800033, thread_find_next),
+        BRIDGE_REGISTER(0x80005A, handle_name_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
         BRIDGE_REGISTER(0x800060, user_language),
         BRIDGE_REGISTER(0x800068, locale_refresh),
@@ -5106,9 +5170,11 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC00030, set_session_ptr),
         BRIDGE_REGISTER(0xC00031, session_send_eka1),
+        BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
+        BRIDGE_REGISTER(0xC0004E, request_signal),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
