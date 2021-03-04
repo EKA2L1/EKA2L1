@@ -24,6 +24,7 @@
 #include <common/version.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
+#include <dispatch/libraries/register.h>
 
 #include <system/devices.h>
 
