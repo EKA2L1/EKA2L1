@@ -186,6 +186,7 @@ namespace eka2l1::epoc {
             execute_v81a_rendezvous_request_cancel_thread = 0x36,
             execute_v81a_rendezvous_request_complete_thread = 0x37,
             execute_v81a_get_heap_thread = 0x38,
+            execute_v81a_msg2_kill_sender = 0x3A,
             execute_v81a_set_tls = 0x3C,
             execute_v81a_free_tls = 0x3D,
             execute_v81a_dll_global_allocate = 0x3F,
@@ -196,7 +197,8 @@ namespace eka2l1::epoc {
             execute_v81a_undertaker_logon_cancel = 0x4E,
             execute_v81a_create_chunk_double_ended = 0x54,
             execute_v81a_create_chunk_double_ended_global = 0x55,
-            execute_v81a_share_session = 0x5A
+            execute_v81a_share_session = 0x5A,
+            execute_v81a_property_define = 0x65
         };
 
         std::uint32_t arg0_;

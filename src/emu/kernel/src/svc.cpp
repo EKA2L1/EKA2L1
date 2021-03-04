@@ -808,9 +808,47 @@ namespace eka2l1::epoc {
 
         return do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, *info_host, start_offset);
     }
+    
+    BRIDGE_FUNC(std::int32_t, message_ipc_copy_eka1, kernel::handle h, std::int32_t param, eka2l1::ptr<ipc_copy_info> info,
+        std::int32_t start_offset) {
+        if (!info || param < 0 || param > 3) {
+            return epoc::error_argument;
+        }
 
-    BRIDGE_FUNC(std::int32_t, message_ipc_copy_eka1, kernel::handle h, std::int32_t param, eka2l1::ptr<ipc_copy_info> info) {
-        return message_ipc_copy(kern, h, param, info, 0);
+        process_ptr crr_process = kern->crr_process();
+
+        ipc_copy_info *info_host = info.get(crr_process);
+        ipc_msg_ptr msg = kern->get_msg(h);
+
+        if (!msg) {
+            return epoc::error_bad_handle;
+        }
+
+        ipc_arg_type arg_type = msg->args.get_arg_type(param);
+        if (!(static_cast<std::uint32_t>(arg_type) & static_cast<std::uint32_t>(ipc_arg_type::flag_des))) {
+            return epoc::error_argument;
+        }
+
+        eka2l1::ptr<std::uint8_t> param_ptr(msg->args.args[param]);
+        std::uint8_t *param_ptr_host = param_ptr.get(msg->own_thr->owning_process());
+
+        if (!param_ptr_host || !info_host) {
+            return epoc::error_argument;
+        }
+
+        eka2l1::ptr<epoc::desc8> des_des_ptr = info_host->target_ptr.cast<epoc::desc8>();
+        epoc::desc8 *des_des = des_des_ptr.get(crr_process);
+
+        if (!des_des) {
+            return epoc::error_argument;
+        }
+        
+        ipc_copy_info info_copy = *info_host;
+        info_copy.target_host_ptr = reinterpret_cast<std::uint8_t*>(des_des->get_pointer(crr_process));
+        info_copy.target_length = (info_copy.flags & IPC_DIR_WRITE) ? des_des->get_length() : des_des->get_max_length(crr_process);
+        info_copy.flags |= IPC_HLE_EKA1;
+
+        return do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, info_copy, start_offset);
     }
 
     BRIDGE_FUNC(std::int32_t, message_client, kernel::handle h, kernel::owner_type owner) {
@@ -3498,6 +3536,29 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t process_rendezvous_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *pr = kern->get<kernel::process>(create_info->arg0_);
+        if (!pr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        pr->logon(create_info->arg1_, true);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t process_rendezvous_complete_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::process *pr = kern->crr_process();
+        pr->rendezvous(static_cast<int>(create_info->arg0_));
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     static const char *NAMESPACE_FULL_MARKER = "::";
 
     std::int32_t process_open_by_id_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
@@ -3907,6 +3968,30 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t message2_kill_sender_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        ipc_msg_ptr msg = kern->get_msg(create_info->arg0_);
+
+        if (msg) {
+            std::u16string category = u"None";
+            
+            kernel::process *target_process = target_thread->owning_process();
+            epoc::desc16 *cate_ptr = eka2l1::ptr<epoc::desc16>(create_info->arg3_).get(target_process);
+
+            if (cate_ptr) {
+                category = cate_ptr->to_std_string(target_process);
+            }
+
+            msg->own_thr->kill(static_cast<kernel::entity_exit_type>(create_info->arg1_), category, static_cast<std::int32_t>(
+                create_info->arg2_));
+        } else {
+            LOG_ERROR(KERNEL, "Fail to kill sender thread");
+        }
+        
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -4119,6 +4204,12 @@ namespace eka2l1::epoc {
             case epoc::eka1_executor::execute_v81a_logon_cancel_process:
                 return process_logon_cancel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+            case epoc::eka1_executor::execute_v81a_rendezvous_request_process:
+                return process_rendezvous_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_rendezvous_complete_process:
+                return process_rendezvous_complete_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
             case epoc::eka1_executor::execute_v81a_panic_thread:
                 return thread_panic_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
@@ -4166,6 +4257,9 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v81a_add_physical_device:
                 return physical_device_add_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_msg2_kill_sender:
+                return message2_kill_sender_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
             default:
                 LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -4975,6 +5069,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x20, process_exit_type),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
@@ -4997,6 +5092,11 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80001E, process_filename_eka1),
         BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
         BRIDGE_REGISTER(0x80005C, handle_info_eka1),
+        BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x800068, locale_refresh),
+        BRIDGE_REGISTER(0x80007D, dll_global_data_allocated),
+        BRIDGE_REGISTER(0x80007E, dll_global_data_read),
+        BRIDGE_REGISTER(0x80007F, dll_global_data_write),
         BRIDGE_REGISTER(0x800083, user_svr_hal_get),
         BRIDGE_REGISTER(0x8000A8, heap_created),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
@@ -5005,6 +5105,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC00030, set_session_ptr),
+        BRIDGE_REGISTER(0xC00031, session_send_eka1),
+        BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
+        BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
