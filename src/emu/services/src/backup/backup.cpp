@@ -24,7 +24,7 @@
 
 namespace eka2l1 {
     static const char *get_backup_server_name_through_epocver(const epocver ver) {
-        if (ver <= epocver::eka2) {
+        if (ver < epocver::epoc81a) {
             return "BackupServer";
         }
 
