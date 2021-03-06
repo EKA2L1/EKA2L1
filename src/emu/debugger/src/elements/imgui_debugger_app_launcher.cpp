@@ -340,7 +340,7 @@ namespace eka2l1 {
                 }
 
                 // Allow new design on old architecture app list
-                if (alserv->is_oldarch()) {
+                if (alserv->legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
                     const std::string switch_title = common::get_localised_string(localised_strings, 
                         "app_launcher_switch_to_style_title");
 

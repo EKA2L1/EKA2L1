@@ -44,7 +44,7 @@
 
 namespace eka2l1 {
     const std::string get_app_list_server_name_by_epocver(const epocver ver) {
-        if (ver < epocver::eka2) {
+        if (ver < epocver::epoc81a) {
             return "AppListServer";
         }
 
@@ -299,9 +299,9 @@ namespace eka2l1 {
 
         for (auto &change : changes) {
             const std::string ext = eka2l1::path_extension(change.filename_);
-            if (is_oldarch() && (common::compare_ignore_case(ext.c_str(), OLDARCH_REG_FILE_EXT) != 0)) {
+            if ((legacy_level() < APA_LEGACY_LEVEL_MORDEN) && (common::compare_ignore_case(ext.c_str(), OLDARCH_REG_FILE_EXT) != 0)) {
                 continue;
-            } else if (!is_oldarch()) {
+            } else if (legacy_level() == APA_LEGACY_LEVEL_MORDEN) {
                 if (common::match_wildcard_in_string(ext, std::string(NEWARCH_REG_FILE_EXT), true) > 0) {
                     continue;
                 }
@@ -313,7 +313,7 @@ namespace eka2l1 {
             case common::directory_change_action_created:
             case common::directory_change_action_moved_to:
                 if (!change.filename_.empty()) {
-                    if (is_oldarch()) {
+                    if (legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
                         load_registry_oldarch(io, rsc_path, land_drive);
                     } else {
                         load_registry(io, rsc_path, land_drive);
@@ -335,7 +335,7 @@ namespace eka2l1 {
                 // Delete the registry and then load it again
                 delete_registry(rsc_path);
 
-                if (is_oldarch())
+                if (legacy_level() < APA_LEGACY_LEVEL_MORDEN)
                     load_registry_oldarch(io, rsc_path, land_drive);
                 else
                     load_registry(io, rsc_path, land_drive);
@@ -445,8 +445,14 @@ namespace eka2l1 {
         LOG_INFO(SERVICE_APPLIST, "Done loading!");
     }
 
-    bool applist_server::is_oldarch() {
-        return kern->is_eka1();
+    int applist_server::legacy_level() {
+        if (kern->get_epoc_version() < epocver::epoc81a) {
+            return APA_LEGACY_LEVEL_OLD;
+        } else if (kern->get_epoc_version() < epocver::eka2) {
+            return APA_LEGACY_LEVEL_TRANSITION;
+        }
+
+        return APA_LEGACY_LEVEL_MORDEN;
     }
 
     void applist_server::connect(service::ipc_context &ctx) {
@@ -578,7 +584,7 @@ namespace eka2l1 {
         std::optional<std::int32_t> icon_size_width = std::nullopt;
         std::optional<std::int32_t> icon_size_height = std::nullopt;
         
-        if (is_oldarch()) {
+        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
             icon_size_width = ctx.get_argument_data_from_descriptor<std::int32_t>(2);
             icon_size_height = ctx.get_argument_data_from_descriptor<std::int32_t>(3);
         } else {
@@ -620,7 +626,7 @@ namespace eka2l1 {
             }
         }
 
-        ctx.write_data_to_descriptor_argument<app_icon_handles>(is_oldarch() ? 1 : 3, handle_result);
+        ctx.write_data_to_descriptor_argument<app_icon_handles>((legacy_level() == APA_LEGACY_LEVEL_OLD) ? 1 : 3, handle_result);
         ctx.complete(epoc::error_none);
     }
 
@@ -710,7 +716,7 @@ namespace eka2l1 {
     }
 
     void applist_session::fetch(service::ipc_context *ctx) {
-        if (server<applist_server>()->is_oldarch()) {
+        if (server<applist_server>()->legacy_level() == APA_LEGACY_LEVEL_OLD) {
             switch (ctx->msg->function) {
             case applist_request_oldarch_app_info:
                 server<applist_server>()->get_app_info(*ctx);
@@ -786,13 +792,13 @@ namespace eka2l1 {
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
     bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id, kernel::process *requester) {
-        process_ptr pr = kern->spawn_new_process(exe_path, is_oldarch() ? cmd : u"");
+        process_ptr pr = kern->spawn_new_process(exe_path, (legacy_level() < APA_LEGACY_LEVEL_MORDEN) ? cmd : u"");
 
         if (!pr) {
             return false;
         }
 
-        if (!is_oldarch()) {
+        if (legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
         }
 
         if (thread_id)
@@ -810,7 +816,7 @@ namespace eka2l1 {
         std::u16string executable_to_run;
         registry.get_launch_parameter(executable_to_run, parameter);
 
-        std::u16string apacmddat = parameter.to_string(is_oldarch());
+        std::u16string apacmddat = parameter.to_string(legacy_level() < APA_LEGACY_LEVEL_MORDEN);
         return launch_app(executable_to_run, apacmddat, thread_id);
     }
 

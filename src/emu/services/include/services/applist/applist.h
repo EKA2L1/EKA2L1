@@ -66,6 +66,12 @@ namespace eka2l1 {
         address bmp_rom_addr_;
     };
 
+    enum apa_legacy_level {
+        APA_LEGACY_LEVEL_OLD = -2,
+        APA_LEGACY_LEVEL_TRANSITION = -1,
+        APA_LEGACY_LEVEL_MORDEN = 0
+    };
+
     using apa_app_masked_icon_bitmap = std::pair<epoc::bitwise_bitmap*, epoc::bitwise_bitmap*>;
 
     struct apa_app_registry {
@@ -278,10 +284,9 @@ namespace eka2l1 {
         ~applist_server() override;
 
         /**
-         * @brief       Check if applist server instantiated needs to be worked on old architecture.
-         * @returns     True if old architecture mode is active.
+         * @brief       Get the legacy level of the server.
          */
-        bool is_oldarch();
+        int legacy_level();
 
         bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id);
         std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::int8_t index);
