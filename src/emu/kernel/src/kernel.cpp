@@ -371,9 +371,23 @@ namespace eka2l1 {
         }
     }
 
+    void kernel_system::setup_stub_io_mapping() {
+        // Just safety measures :D
+        static constexpr std::size_t IO_MAPPING_SIZE = common::MB(1);
+        static constexpr address IO_MAPPING_ADDR = 0x59800000;
+
+        if (kern_ver_ == epocver::epoc81a) {
+            // Some roms just hardcoded IO mapping, what the fuck
+            create<kernel::chunk>(mem_, nullptr, "StubIOMapping", 0, static_cast<address>(IO_MAPPING_SIZE),
+                IO_MAPPING_SIZE, prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::kernel_mapping,
+                kernel::chunk_attrib::none, 0, false, IO_MAPPING_ADDR, nullptr);
+        }
+    }
+
     void kernel_system::start_bootload() {
         // Disable these
-        //setup_nanokern_controller();
+        // setup_nanokern_controller();
+        setup_stub_io_mapping();
     }
 
     void kernel_system::setup_custom_code() {

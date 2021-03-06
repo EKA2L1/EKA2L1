@@ -339,8 +339,10 @@ namespace eka2l1 {
 
     protected:
         void setup_new_process(process_ptr pr);
+
         void setup_nanokern_controller();
         void setup_custom_code();
+        void setup_stub_io_mapping();
 
         bool cpu_exception_handle_unpredictable(arm::core *core, const address occurred);
         void cpu_exception_thread_handle(arm::core *core);
