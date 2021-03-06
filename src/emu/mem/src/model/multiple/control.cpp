@@ -26,8 +26,8 @@ namespace eka2l1::mem {
         , global_dir_(page_size_bits_, 0)
         , user_global_sec_(mem_map_old ? shared_data_eka1 : shared_data, mem_map_old ? shared_data_end_eka1 : ram_drive, page_size())
         , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : dll_static_data, page_size())
-        , user_rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? rom_eka1_end : global_data, page_size())
-        , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size()) {
+        , user_rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? kern_mapping_eka1 : global_data, page_size())
+        , kernel_mapping_sec_(mem_map_old ? kern_mapping_eka1 : kernel_mapping, mem_map_old ? kern_mapping_eka1_end : kernel_mapping_end, page_size()) {
     }
 
     control_multiple::~control_multiple() {
@@ -124,7 +124,7 @@ namespace eka2l1::mem {
         bool should_from_global = false;
 
         if (mem_map_old) {
-            should_from_global = ((addr >= shared_data_eka1) && (addr <= rom_eka1_end)) || (addr >= dll_static_data_eka1_end);
+            should_from_global = ((addr >= shared_data_eka1) && (addr <= kern_mapping_eka1_end)) || (addr >= dll_static_data_eka1_end);
         } else {
             should_from_global = ((addr >= shared_data) && (addr < ram_code_addr)) || (addr >= rom);
         }
