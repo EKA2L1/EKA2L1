@@ -585,8 +585,11 @@ namespace eka2l1 {
         std::optional<std::int32_t> icon_size_height = std::nullopt;
         
         if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
-            icon_size_width = ctx.get_argument_data_from_descriptor<std::int32_t>(2);
-            icon_size_height = ctx.get_argument_data_from_descriptor<std::int32_t>(3);
+            std::optional<eka2l1::vec2> size_vec = ctx.get_argument_data_from_descriptor<eka2l1::vec2>(1);
+            if (size_vec.has_value()) {
+                icon_size_width = size_vec->x;
+                icon_size_height = size_vec->y;
+            }
         } else {
             icon_size_width = ctx.get_argument_value<std::int32_t>(1);
             icon_size_height = ctx.get_argument_value<std::int32_t>(2);
@@ -626,7 +629,13 @@ namespace eka2l1 {
             }
         }
 
-        ctx.write_data_to_descriptor_argument<app_icon_handles>((legacy_level() == APA_LEGACY_LEVEL_OLD) ? 1 : 3, handle_result);
+        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
+            ctx.write_data_to_descriptor_argument<std::uint32_t>(2, handle_result.bmp_handle);
+            ctx.write_data_to_descriptor_argument<std::uint32_t>(3, handle_result.mask_bmp_handle);
+        } else {
+            ctx.write_data_to_descriptor_argument<app_icon_handles>(3, handle_result);
+        }
+
         ctx.complete(epoc::error_none);
     }
 
