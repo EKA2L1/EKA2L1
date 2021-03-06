@@ -29,7 +29,7 @@
 
 namespace eka2l1 {
     std::string get_notifier_server_name_by_epocver(const epocver ver) {
-        if (ver <= epocver::eka2) {
+        if (ver < epocver::epoc81a) {
             return "Notifier";
         }
 
