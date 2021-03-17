@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <common/buffer.h>
+
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -31,7 +33,6 @@
 
 namespace eka2l1 {
     namespace common {
-        class ro_stream;
         class chunkyseri;
     }
 }
