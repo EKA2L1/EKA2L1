@@ -166,4 +166,25 @@ namespace eka2l1::loader {
     };
 
     void absorb_resource_string(common::chunkyseri &seri, std::u16string &str);
+
+    template <typename T>
+    bool read_resource_string(common::ro_stream &stream, std::basic_string<T> &str) {
+        std::uint8_t length = 0;
+        if (stream.read(&length, 1) != 1)
+            return false;
+
+        if (length == 0) {
+            return true;
+        }
+
+        if (sizeof(T) > 1) {
+            if (stream.tell() & (sizeof(T) - 1)) {
+                std::uint8_t padding = 0;
+                stream.read(&padding, 1);
+            }
+        }
+
+        str.resize(length);
+        return (stream.read(str.data(), length * sizeof(T)) == length * sizeof(T));
+    }
 }
