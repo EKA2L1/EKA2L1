@@ -179,31 +179,183 @@ namespace eka2l1 {
 
         return true;
     }
-    
-    bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
-        const language lang) {
-        // Read the first 3 UIDS
-        epoc::uid_type uids;
-        if (stream->read(&uids, sizeof(epoc::uid_type)) != sizeof(epoc::uid_type)) {
-            return false;
-        }
 
+    static std::int8_t get_aif_version_from_uids(epoc::uid_type &uids) {
         static constexpr std::uint32_t DIRECT_STORE_UID = 0x10000037;
         static constexpr std::uint32_t AIF_UID_1 = 0x1000006A;
-        static constexpr std::uint32_t AIF_UID_2 = 0x10003A38;
+        static constexpr std::uint32_t AIF_V2_UID = 0x101FB032;
 
-        if ((uids[0] != DIRECT_STORE_UID) || ((uids[1] != AIF_UID_1) && (uids[1] != AIF_UID_2))) {
+        if ((uids[0] == DIRECT_STORE_UID) && (uids[1] != AIF_UID_1)) {
+            return 1;
+        } else if (uids[0] == AIF_V2_UID) {
+            return 2;
+        }
+
+        return -1;
+    }
+
+    bool read_resourced_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number drv,
+        const language lang) {
+        // NOTE: Little endian data xD
+        std::uint32_t rsc_size = 0;
+        if (stream->read(&rsc_size, sizeof(rsc_size)) != sizeof(rsc_size)) {
             return false;
         }
 
-        // Read the checksum. TODO: crc32
-        std::uint32_t uid_checksum = 0;
-        if (stream->read(&uid_checksum, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+        std::vector<std::uint8_t> data;
+        data.resize(rsc_size);
+
+        if (stream->read(data.data(), rsc_size) != rsc_size) {
             return false;
         }
 
-        reg.mandatory_info.uid = uids[2];
+        common::ro_buf_stream aif_rawbuf_stream(data.data(), rsc_size);
+        loader::rsc_file aif_file(reinterpret_cast<common::ro_stream*>(&aif_rawbuf_stream));
 
+        std::vector<std::uint8_t> real_parsing_data = aif_file.read(1);
+        common::ro_buf_stream aif_info_stream(real_parsing_data.data(), real_parsing_data.size());
+
+        if (aif_info_stream.read(&reg.mandatory_info.uid, 4) != 4) {
+            return false;
+        }
+
+        if (aif_info_stream.read(&reg.icon_count, 2) != 2) {
+            return false;
+        }
+
+        std::uint16_t caption_count = 0;
+        if (aif_info_stream.read(&caption_count, 2) != 2) {
+            return false;
+        }
+
+        std::u16string best_caption;
+
+        auto read_caption_list_and_find_best = [&]() {
+            best_caption.clear();
+
+            for (std::uint16_t i = 0; i < caption_count; i++) {
+                language langcode = language::en;
+                if (aif_info_stream.read(&langcode, 2) != 2) {
+                    return false;
+                }
+
+                std::u16string temp_cap;
+                if (!loader::read_resource_string(aif_info_stream, temp_cap)) {
+                    return false;
+                }
+
+                if ((best_caption.empty()) || (langcode == lang)) {
+                    best_caption = temp_cap;
+                }
+            }
+
+            return true;
+        };
+
+        if (!read_caption_list_and_find_best()) {
+            return false;
+        }
+
+        reg.mandatory_info.long_caption.assign(nullptr, best_caption);
+        reg.mandatory_info.short_caption.assign(nullptr, best_caption);
+
+        std::int8_t temp = 0;
+        if (aif_info_stream.read(&temp, 1) != 1) {
+            return false;
+        }
+
+        reg.caps.is_hidden = static_cast<bool>(temp);
+
+        if (aif_info_stream.read(&temp, 1) != 1) {
+            return false;
+        }
+
+        reg.caps.ability = static_cast<apa_capability::embeddability>(temp);
+
+        if (aif_info_stream.read(&temp, 1) != 1) {
+            return false;
+        }
+
+        reg.caps.support_being_asked_to_create_new_file = static_cast<bool>(temp);
+
+        if (aif_info_stream.read(&temp, 1) != 1) {
+            return false;
+        }
+
+        reg.caps.launch_in_background = static_cast<bool>(temp);
+
+        std::u16string group_name;
+        if (!loader::read_resource_string(aif_info_stream, group_name)) {
+            return false;
+        }
+
+        reg.caps.group_name.assign(nullptr, group_name);
+
+        std::uint16_t datatype_count = 0;
+        if (aif_info_stream.read(&datatype_count, 2) != 2) {
+            return false;
+        }
+
+        reg.data_types.resize(datatype_count);
+        for (std::uint16_t i = 0; i < datatype_count; i++) {
+            std::int16_t pri = 0;
+            if (aif_info_stream.read(&pri, 2) != 2) {
+                return false;
+            }
+
+            reg.data_types[i].priority_ = static_cast<std::int32_t>(pri);
+
+            if (!loader::read_resource_string(aif_info_stream, reg.data_types[i].type_)) {
+                return false;
+            }
+        }
+
+        std::uint16_t view_count = 0;
+        if (aif_info_stream.read(&view_count, 2) != 2) {
+            return false;
+        }
+
+        reg.view_datas.resize(view_count);
+        for (std::uint16_t i = 0; i < view_count; i++) {
+            if (aif_info_stream.read(&reg.view_datas[i].uid_, 4) != 4) {
+                return false;
+            }
+
+            if (aif_info_stream.read(&reg.view_datas[i].screen_mode_, 4) != 4) {
+                return false;
+            }
+
+            std::uint16_t view_icon_count = 0;
+
+            if (aif_info_stream.read(&view_icon_count, 2) != 2) {
+                return false;
+            }
+
+            reg.view_datas[i].icon_count_ = static_cast<std::uint32_t>(view_icon_count);
+            if (!read_caption_list_and_find_best()) {
+                return false;
+            }
+
+            reg.view_datas[i].caption_ = best_caption;
+        }
+
+        std::uint16_t fown_count = 0;
+        if (aif_info_stream.read(&fown_count, 2) != 2) {
+            return false;
+        }
+
+        reg.ownership_list.resize(fown_count);
+        for (std::uint16_t i = 0; i < fown_count; i++) {
+            if (!loader::read_resource_string(aif_info_stream, reg.ownership_list[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool read_leagacy_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number drv,
+        const language lang) {
         std::uint32_t header_pos = 0;
         
         if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
@@ -265,6 +417,7 @@ namespace eka2l1 {
         
         reg.mandatory_info.short_caption.assign(nullptr, cap.value());
         reg.mandatory_info.long_caption.assign(nullptr, cap.value());
+        reg.icon_count = 0;
 
         if (!count.internalize(*stream)) {
             return false;
@@ -387,123 +540,219 @@ namespace eka2l1 {
 
         return true;
     }
+    
+    bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
+        const language lang) {
+        // Read the first 3 UIDS
+        epoc::uid_type uids;
+        if (stream->read(&uids, sizeof(epoc::uid_type)) != sizeof(epoc::uid_type)) {
+            return false;
+        }
+
+        std::int8_t aif_version = get_aif_version_from_uids(uids);
+        if (aif_version < 0) {
+            return false;
+        }
+
+        // Read the checksum. TODO: crc32
+        std::uint32_t uid_checksum = 0;
+        if (stream->read(&uid_checksum, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+            return false;
+        }
+
+        reg.mandatory_info.uid = uids[2];
+
+        switch (aif_version) {
+        case 1:
+            return read_leagacy_info_aif(stream, reg, land_drive, lang);
+
+        case 2:
+            return read_resourced_info_aif(stream, reg, land_drive, lang);
+
+        default:
+            break;
+        }
+
+        return false;
+    }
 
     bool read_icon_data_aif(common::ro_stream *stream, fbs_server *serv, std::vector<apa_app_icon> &icon_list, const address rom_addr) {
         // Seek to header pos, over the UIDs
-        stream->seek(4 * sizeof(std::uint32_t), common::seek_where::beg);
-        std::uint32_t header_pos = 0;
-        
-        if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+        epoc::uid_type uids;
+        if (stream->read(&uids, sizeof(epoc::uid_type)) != sizeof(epoc::uid_type)) {
             return false;
         }
 
-        stream->seek(header_pos, common::seek_where::beg);
-
-        utils::cardinality count;
-
-        if (!count.internalize(*stream)) {
+        std::int8_t aif_version = get_aif_version_from_uids(uids);
+        if (aif_version < 0) {
             return false;
         }
 
-        // Skip these bytes to get to icon part
-        stream->seek(count.value() * (sizeof(std::uint32_t) + sizeof(std::uint16_t)), common::seek_where::cur);
-
-        // Read the data part
-        if (!count.internalize(*stream)) {
+        std::uint32_t crc = 0;
+        if (stream->read(&crc, 4) != 4) {
             return false;
         }
 
-        icon_list.resize(count.value() * 2);
+        if (aif_version < 2) {
+            stream->seek(4 * sizeof(std::uint32_t), common::seek_where::beg);
+            std::uint32_t header_pos = 0;
+            
+            if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                return false;
+            }
 
-        for (std::size_t i = 0; i < count.value(); i++) {
-            std::uint32_t data_offset = 0;
-            if (stream->read(&data_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+            stream->seek(header_pos, common::seek_where::beg);
+
+            utils::cardinality count;
+
+            if (!count.internalize(*stream)) {
+                return false;
+            }
+
+            // Skip these bytes to get to icon part
+            stream->seek(count.value() * (sizeof(std::uint32_t) + sizeof(std::uint16_t)), common::seek_where::cur);
+
+            // Read the data part
+            if (!count.internalize(*stream)) {
                 return false;
             }
             
-            std::uint16_t num = 0;
-            if (stream->read(&num, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
-                return false;
-            }
+            icon_list.resize(count.value() * 2);
 
-            icon_list[i * 2].number_ = num;
-            icon_list[i * 2 + 1].number_ = num;
-
-            const std::size_t lastpos = stream->tell();
-            stream->seek(data_offset, common::seek_where::beg);
-
-            std::uint32_t assume_uid = 0;
-            if (stream->read(&assume_uid, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
-                return false;
-            }
-
-            stream->seek(sizeof(std::uint32_t) * -1, common::seek_where::cur);
-
-            static constexpr std::uint32_t ROM_BITMAP_UID = 0x10000040;
-
-            if (assume_uid == ROM_BITMAP_UID) {
-                icon_list[i * 2].bmp_ = nullptr;
-                icon_list[i * 2].bmp_rom_addr_ = rom_addr + data_offset;
-
-                static constexpr std::size_t size_offset = offsetof(epoc::bitwise_bitmap, header_) +
-                    offsetof(loader::sbm_header, bitmap_size);
-
-                stream->seek(size_offset, common::seek_where::cur);
-                std::uint32_t size_of_source = 0;
-
-                if (stream->read(&size_of_source, 4) != 4ULL) {
+            for (std::size_t i = 0; i < count.value(); i++) {
+                std::uint32_t data_offset = 0;
+                if (stream->read(&data_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                    return false;
+                }
+                
+                std::uint16_t num = 0;
+                if (stream->read(&num, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
                     return false;
                 }
 
-                // Add other bitwise bitmap members
-                // EKA1 bitmap only stops at data offset.
-                size_of_source += offsetof(epoc::bitwise_bitmap, data_offset_) + sizeof(epoc::bitwise_bitmap::data_offset_)
-                    - sizeof(loader::sbm_header);
+                icon_list[i * 2].number_ = num;
+                icon_list[i * 2 + 1].number_ = num;
 
-                // Size of the bitmap is aligned by 4.
-                size_of_source = common::align(size_of_source, 4);
+                const std::size_t lastpos = stream->tell();
+                stream->seek(data_offset, common::seek_where::beg);
 
-                icon_list[i * 2 + 1].bmp_ = nullptr;
-                icon_list[i * 2 + 1].bmp_rom_addr_ = icon_list[i * 2].bmp_rom_addr_ + size_of_source;
-            } else {
-                auto read_and_create_bitmap = [&](const std::size_t index) { 
-                    loader::sbm_header bmp_header;
-                    if (!bmp_header.internalize(*stream)) {
+                std::uint32_t assume_uid = 0;
+                if (stream->read(&assume_uid, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
+                    return false;
+                }
+
+                stream->seek(sizeof(std::uint32_t) * -1, common::seek_where::cur);
+
+                static constexpr std::uint32_t ROM_BITMAP_UID = 0x10000040;
+
+                if (assume_uid == ROM_BITMAP_UID) {
+                    icon_list[i * 2].bmp_ = nullptr;
+                    icon_list[i * 2].bmp_rom_addr_ = rom_addr + data_offset;
+
+                    static constexpr std::size_t size_offset = offsetof(epoc::bitwise_bitmap, header_) +
+                        offsetof(loader::sbm_header, bitmap_size);
+
+                    stream->seek(size_offset, common::seek_where::cur);
+                    std::uint32_t size_of_source = 0;
+
+                    if (stream->read(&size_of_source, 4) != 4ULL) {
                         return false;
                     }
 
-                    icon_list[index].bmp_rom_addr_ = 0;
+                    // Add other bitwise bitmap members
+                    // EKA1 bitmap only stops at data offset.
+                    size_of_source += offsetof(epoc::bitwise_bitmap, data_offset_) + sizeof(epoc::bitwise_bitmap::data_offset_)
+                        - sizeof(loader::sbm_header);
 
-                    fbs_bitmap_data_info info;
-                    info.size_ = bmp_header.size_pixels;
-                    info.dpm_ = epoc::get_display_mode_from_bpp(bmp_header.bit_per_pixels);
-                    info.comp_ = static_cast<epoc::bitmap_file_compression>(bmp_header.compression);
+                    // Size of the bitmap is aligned by 4.
+                    size_of_source = common::align(size_of_source, 4);
 
-                    std::vector<std::uint8_t> data_to_read;
-                    data_to_read.resize(bmp_header.bitmap_size - bmp_header.header_len);
+                    icon_list[i * 2 + 1].bmp_ = nullptr;
+                    icon_list[i * 2 + 1].bmp_rom_addr_ = icon_list[i * 2].bmp_rom_addr_ + size_of_source;
+                } else {
+                    auto read_and_create_bitmap = [&](const std::size_t index) { 
+                        loader::sbm_header bmp_header;
+                        if (!bmp_header.internalize(*stream)) {
+                            return false;
+                        }
 
-                    if (stream->read(&data_to_read[0], data_to_read.size()) != data_to_read.size()) {
+                        icon_list[index].bmp_rom_addr_ = 0;
+
+                        fbs_bitmap_data_info info;
+                        info.size_ = bmp_header.size_pixels;
+                        info.dpm_ = epoc::get_display_mode_from_bpp(bmp_header.bit_per_pixels);
+                        info.comp_ = static_cast<epoc::bitmap_file_compression>(bmp_header.compression);
+
+                        std::vector<std::uint8_t> data_to_read;
+                        data_to_read.resize(bmp_header.bitmap_size - bmp_header.header_len);
+
+                        if (stream->read(&data_to_read[0], data_to_read.size()) != data_to_read.size()) {
+                            return false;
+                        }
+
+                        info.data_size_ = data_to_read.size();
+                        info.data_ = data_to_read.data();
+
+                        // Auto support dirty. TODO not hardcode
+                        icon_list[index].bmp_ = serv->create_bitmap(info, true, false, false);
+                        return true;
+                    };
+
+                    if (!read_and_create_bitmap(i * 2)) {
                         return false;
                     }
 
-                    info.data_size_ = data_to_read.size();
-                    info.data_ = data_to_read.data();
-
-                    // Auto support dirty. TODO not hardcode
-                    icon_list[index].bmp_ = serv->create_bitmap(info, true, false, false);
-                    return true;
-                };
-
-                if (!read_and_create_bitmap(i * 2)) {
-                    return false;
+                    if (!read_and_create_bitmap(i * 2 + 1)) {
+                        return false;
+                    }
                 }
 
-                if (!read_and_create_bitmap(i * 2 + 1)) {
-                    return false;
-                }
+                stream->seek(lastpos, common::seek_where::beg);
+            }
+        } else {
+            std::uint32_t data_size = 0;
+            if (stream->read(&data_size, 4) != 4) {
+                return false;
             }
 
-            stream->seek(lastpos, common::seek_where::beg);
+            // Seek to icon part
+            stream->seek(data_size, common::seek_where::cur);
+            const std::size_t cur_pos = stream->tell();
+
+            if (cur_pos % 4 != 0) {
+                stream->seek(4 - (cur_pos % 4), common::seek_where::cur);
+            }
+
+            std::vector<std::uint8_t> mbm_data;
+            mbm_data.resize(stream->size() - stream->tell());
+
+            if (stream->read(mbm_data.data(), mbm_data.size()) != mbm_data.size()) {
+                return false;
+            }
+
+            common::ro_buf_stream mbm_data_stream(mbm_data.data(), mbm_data.size());
+
+            loader::mbm_file icon_list_file(reinterpret_cast<common::ro_stream*>(&mbm_data_stream));
+            icon_list_file.do_read_headers();
+
+            // Create FBS bitmap instances
+            icon_list.resize(icon_list_file.trailer.count);
+
+            for (std::uint32_t i = 0; i < icon_list_file.trailer.count; i++) {
+                fbs_bitmap_data_info info;
+                info.comp_ = static_cast<epoc::bitmap_file_compression>(icon_list_file.sbm_headers[i].compression);
+                info.data_ = icon_list_file.sbm_headers[i].header_len + icon_list_file.trailer.sbm_offsets[i]
+                    + mbm_data.data();
+                info.data_size_ = icon_list_file.sbm_headers[i].bitmap_size - icon_list_file.sbm_headers[i].header_len;
+                info.dpm_ = epoc::get_display_mode_from_bpp(icon_list_file.sbm_headers[i].bit_per_pixels);
+
+                info.size_.x = icon_list_file.sbm_headers[i].size_pixels.x;
+                info.size_.y = icon_list_file.sbm_headers[i].size_pixels.y;
+
+                icon_list[i].bmp_ = serv->create_bitmap(info, true, false, false);
+                icon_list[i].bmp_rom_addr_ = 0;
+                icon_list[i].number_ = i / 2;
+            }
         }
 
         return true;
@@ -535,22 +784,22 @@ namespace eka2l1 {
         loader::rsc_file caption_file_rsc_reader(stream);
         std::vector<std::uint8_t> data = caption_file_rsc_reader.read(1);
 
-        // First string is short caption, second string is long caption
+        // First string is long caption, second string is short caption
         std::u16string short_cap;
         std::u16string long_cap;
 
         common::ro_buf_stream caption_read_stream(data.data(), data.size());
-        if (!read_a_caption(caption_read_stream, short_cap)) {
-            return false;
-        }
-
-        reg.mandatory_info.short_caption.assign(nullptr, short_cap);
-
         if (!read_a_caption(caption_read_stream, long_cap)) {
             return false;
         }
 
         reg.mandatory_info.long_caption.assign(nullptr, long_cap);
+
+        if (!read_a_caption(caption_read_stream, short_cap)) {
+            return false;
+        }
+
+        reg.mandatory_info.short_caption.assign(nullptr, short_cap);
         return true;
     }
 }
