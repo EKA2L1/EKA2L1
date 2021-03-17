@@ -269,6 +269,7 @@ namespace eka2l1 {
         void get_app_icon(service::ipc_context &ctx);
 
         void get_native_executable_name_if_non_native(service::ipc_context &ctx);
+        void app_info_provided_by_reg_file(service::ipc_context &ctx);
                 
         void launch_app(service::ipc_context &ctx);
         void is_program(service::ipc_context &ctx);

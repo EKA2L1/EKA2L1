@@ -720,6 +720,25 @@ namespace eka2l1 {
         ctx.complete(0);
     }
 
+    void applist_server::app_info_provided_by_reg_file(service::ipc_context &ctx) {
+        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
+        if (!app_uid.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        apa_app_registry *reg = get_registration(app_uid.value());
+        if (!reg) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        const bool reg_file_available = !reg->rsc_path.empty();
+
+        ctx.write_data_to_descriptor_argument(1, reg_file_available);
+        ctx.complete(epoc::error_none);
+    }
+
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver) {
     }
@@ -775,6 +794,10 @@ namespace eka2l1 {
 
             case applist_request_get_executable_name_if_non_native:
                 server<applist_server>()->get_native_executable_name_if_non_native(*ctx);
+                break;
+
+            case applist_request_app_info_provide_by_reg_file:
+                server<applist_server>()->app_info_provided_by_reg_file(*ctx);
                 break;
 
             default:
