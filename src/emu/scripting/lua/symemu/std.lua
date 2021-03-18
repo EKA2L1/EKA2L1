@@ -2,6 +2,14 @@ std = {}
 
 local kernel = require('symemu.kernel')
 local bitops = require('bit')
+local ffi = require('ffi')
+
+pcall(ffi.load, 'native-lib', true)
+
+ffi.cdef([[
+    const char *symemu_std_utf16_to_utf8(const char *wstring, const int length);
+    void symemu_free_string(const char* str);
+]])
 
 DESCRIPTOR_TYPE_BUF_CONST = 0
 DESCRIPTOR_TYPE_PTR_CONST = 1
@@ -44,10 +52,10 @@ function descriptor:new(pr, addr)
         [DESCRIPTOR_TYPE_PTR_CONST] = getPtrPtrConstAddress
     }
 
-    local desword = process:readDword(addr)
+    local desword = pr:readDword(addr)
 
     self.length = bitops.band(desword, 0xFFFFFFF);
-    self.type = bitops.band(bitops.rhsift(desword, 28), 0xF)
+    self.type = bitops.band(bitops.rshift(desword, 28), 0xF)
 
     if self.type >= DESCRIPTOR_TYPE_MAX then
         error('Descriptor type is invalid!')
@@ -79,6 +87,10 @@ function descriptor8:rawData()
     return self.pr:readMemory(self.dataAddr, self.length)
 end
 
+function descriptor8:__tostring()
+    return ffi.string(self:rawData())
+end
+
 function std.makeDescriptor8(pr, addr)
     return descriptor8:new(pr, addr)
 end
@@ -98,6 +110,13 @@ setmetatable(descriptor16, { __index = descriptor })
 
 function descriptor16:rawData()
     return self.pr:readMemory(self.dataAddr, self.length * 2)
+end
+
+function descriptor16:__tostring()
+    local result = ffi.C.symemu_std_utf16_to_utf8(self:rawData(), self.length)
+    ffi.gc(result, ffi.C.symemu_free_string)
+
+    return ffi.string(result)
 end
 
 function std.makeDescriptor16(pr, addr)

@@ -23,6 +23,8 @@
 #include <system/epoc.h>
 #include <scripting/manager.h>
 
+#include <common/cvt.h>
+
 namespace eka2l1::scripting {
 #if ENABLE_PYTHON_SCRIPTING
     void register_lib_invokement(const std::string &lib_name, const std::uint32_t ord, const std::uint32_t process_uid, pybind11::function func) {
@@ -42,6 +44,16 @@ namespace eka2l1::scripting {
 extern "C" {
     EKA2L1_EXPORT void symemu_free_string(char *pt) {
         delete pt;
+    }
+
+    EKA2L1_EXPORT const char *symemu_std_utf16_to_utf8(const char *wstring, const int length) {
+        std::u16string data(reinterpret_cast<const char16_t*>(wstring), length);
+        std::string result = eka2l1::common::ucs2_to_utf8(data);
+
+        char *result_raw = new char[result.length()];
+        std::memcpy(result_raw, result.data(), length);
+
+        return result_raw;
     }
 
     EKA2L1_EXPORT void symemu_cpu_register_lib_hook(const char *lib_name, const std::uint32_t ord, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
