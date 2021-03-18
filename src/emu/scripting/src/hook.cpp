@@ -24,6 +24,7 @@
 #include <scripting/manager.h>
 
 #include <common/cvt.h>
+#include <cstring>
 
 namespace eka2l1::scripting {
 #if ENABLE_PYTHON_SCRIPTING
