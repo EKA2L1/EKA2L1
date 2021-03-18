@@ -203,7 +203,7 @@ namespace eka2l1::epoc {
                 previous->next = current->next;
 
                 // Free current link
-                if (serv->legacy_level() == 2) {
+                if (serv->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
                     // EKA1 has a weird thing...
                     current_cache->destroy<epoc::open_font_session_cache_entry_v1>(cli);
                 } else {
@@ -534,7 +534,7 @@ namespace eka2l1 {
     template <typename T>
     void fbs_server::destroy_bitmap_font(T *bmpfont) {
         // On EKA1, free the glyph cache offset
-        if (legacy_level() == 2) {
+        if (legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
             epoc::open_font_v1 *ofo = reinterpret_cast<epoc::open_font_v1*>(guest_general_data_to_host_ptr(bmpfont->openfont.template cast<std::uint8_t>()));
 
             if (ofo->glyph_cache_offset)
@@ -906,7 +906,8 @@ namespace eka2l1 {
         std::uint8_t *font_ptr = serv->get_shared_chunk_base() + guest_font_offset;
 
         switch (serv->legacy_level()) {
-        case 2:
+        case FBS_LEGACY_LEVEL_KERNEL_TRANSITION:
+        case FBS_LEGACY_LEVEL_S60V1:
             serv->destroy_bitmap_font<epoc::bitmapfont_v1>(reinterpret_cast<epoc::bitmapfont_v1*>(font_ptr));
             break;
 

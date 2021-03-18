@@ -63,7 +63,7 @@ namespace eka2l1::epoc {
         struct settings {
             // The first 8 bits are reserved for initial display mode
             // The next 8 bits are reserved for current display mode
-            // 16 bits left are for flags
+            // 16 bits left are for flags, on transition mode this is width for some reason lmao
             std::uint32_t flags_{ 0 };
 
             display_mode initial_display_mode() const;
@@ -80,6 +80,10 @@ namespace eka2l1::epoc {
 
             bool violate_bitmap() const;
             void violate_bitmap(const bool is_it);
+
+            // LEGACY!
+            void set_width(const std::uint16_t bpp);
+            std::uint16_t get_width() const;
         } settings_;
 
         eka2l1::ptr<void> allocator_;

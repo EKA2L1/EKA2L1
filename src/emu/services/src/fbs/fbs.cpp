@@ -251,14 +251,18 @@ namespace eka2l1 {
 
     int fbs_server::legacy_level() const {
         if (kern->get_epoc_version() <= epocver::epoc6) {
-            return 2;
+            return FBS_LEGACY_LEVEL_S60V1;
+        }
+
+        if (kern->get_epoc_version() <= epocver::epoc81b) {
+            return FBS_LEGACY_LEVEL_KERNEL_TRANSITION;
         }
 
         if (large_bitmap_access_mutex->get_access_count() > 0) {
-            return 1;
+            return FBS_LEGACY_LEVEL_EARLY_EKA2;
         }
 
-        return 0;
+        return FBS_LEGACY_LEVEL_MORDEN;
     }
 
     void fbs_server::initialize_server() {
@@ -448,8 +452,12 @@ namespace eka2l1 {
         , glyph_info_for_legacy_return_addr_(0) {
         fbs_server *fbss = reinterpret_cast<fbs_server*>(serv);
 
-        if (fbss->legacy_level() == 2) {
-            support_current_display_mode = false;
+        if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+            if (fbss->legacy_level() == FBS_LEGACY_LEVEL_KERNEL_TRANSITION)
+                support_current_display_mode = true;
+            else
+                support_current_display_mode = false;
+
             support_dirty_bitmap = false;
 
             glyph_info_for_legacy_return_ = fbss->allocate_general_data<epoc::open_font_glyph_v1_use_for_fbs>();

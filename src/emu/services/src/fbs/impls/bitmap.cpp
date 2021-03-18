@@ -170,6 +170,15 @@ namespace eka2l1 {
                 flags_ &= ~(settings_flag::large_bitmap);
         }
 
+        void bitwise_bitmap::settings::set_width(const std::uint16_t w) {
+            flags_ &= 0x0000FFFF;
+            flags_ |= (static_cast<std::uint32_t>(w) << 16);
+        }
+
+        std::uint16_t bitwise_bitmap::settings::get_width() const {
+            return static_cast<std::uint16_t>(flags_ >> 16);
+        }
+
         static void do_white_fill(std::uint8_t *dest, const std::size_t size, epoc::display_mode mode) {
             std::fill(dest, dest + size, 0xFF);
         }
@@ -209,15 +218,19 @@ namespace eka2l1 {
         }
 
         void bitwise_bitmap::post_construct(fbs_server *serv) {
-            if (serv->legacy_level() >= 2) {
+            if (serv->legacy_level() >= FBS_LEGACY_LEVEL_S60V1) {
                 if ((header_.compression == epoc::bitmap_file_byte_rle_compression) ||
                     (header_.compression == epoc::bitmap_file_twelve_bit_rle_compression))
                 header_.compression += epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE;
             }
 
             // Set large bitmap flag so that the data pointer base is in large chunk
-            if (serv->legacy_level() == 1) {
+            if (serv->legacy_level() == FBS_LEGACY_LEVEL_EARLY_EKA2) {
                 settings_.set_large(offset_from_me_ ? false : true);
+            }
+
+            if (serv->legacy_level() == FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+                settings_.set_width(static_cast<std::uint16_t>(header_.size_pixels.x));
             }
         }
 
@@ -692,9 +705,20 @@ namespace eka2l1 {
 
     bool fbs_server::is_large_bitmap(const std::uint32_t compressed_size) {
         static constexpr std::uint32_t RANGE_START_LARGE = 1 << 12;
+        static constexpr std::uint32_t RANGE_START_LARGE_TRANS = 1 << 16;
 
-        if (legacy_level() == 2)
-            return (((compressed_size + 3) / 4) << 2) >= RANGE_START_LARGE;
+        const std::uint32_t size_aligned = (((compressed_size + 3) / 4) << 2);
+
+        switch (legacy_level()) {
+        case FBS_LEGACY_LEVEL_S60V1:
+            return size_aligned >= RANGE_START_LARGE;
+
+        case FBS_LEGACY_LEVEL_KERNEL_TRANSITION:
+            return size_aligned >= RANGE_START_LARGE_TRANS;
+
+        default:
+            break;
+        }
 
         return true;
     }
@@ -792,8 +816,8 @@ namespace eka2l1 {
             return;
         }
 
-        if (fbss->legacy_level() >= 2) {
-            LOG_ERROR(SERVICE_FBS, "Resize bitmap not supported currently for legacy level 2!");
+        if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+            LOG_ERROR(SERVICE_FBS, "Resize bitmap not supported currently for legacy level transition or older!");
             ctx->complete(epoc::error_not_supported);
 
             return;

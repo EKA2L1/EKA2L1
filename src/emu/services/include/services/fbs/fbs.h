@@ -145,6 +145,13 @@ namespace eka2l1 {
         fbs_get_glyph_cache_metrics
     };
 
+    enum fbs_legacy_level {
+        FBS_LEGACY_LEVEL_MORDEN = 0,
+        FBS_LEGACY_LEVEL_EARLY_EKA2 = 1,
+        FBS_LEGACY_LEVEL_KERNEL_TRANSITION = 2,
+        FBS_LEGACY_LEVEL_S60V1 = 3
+    };
+
     enum class fbsobj_kind {
         font,
         bitmap
@@ -203,6 +210,7 @@ namespace eka2l1 {
         void get_clean_bitmap(service::ipc_context *ctx);
         void rasterize_glyph(service::ipc_context *ctx);
         void background_compress_bitmap(service::ipc_context *ctx);
+        void compress_bitmap(service::ipc_context *ctx);
         void num_typefaces(service::ipc_context *ctx);
         void typeface_support(service::ipc_context *ctx);
         void get_twips_height(service::ipc_context *ctx);
@@ -355,7 +363,7 @@ namespace eka2l1 {
         /**
          * @brief       Check if a bitmap is considered to be large bitmap.
          * 
-         * For legacy level 2 server, the size of compressed must be larger or equal to 2^12 to be consider large.
+         * For legacy level 2 or lower server, the size of compressed must be larger or equal to 2^12 to be consider large.
          * For newer legacy level, this is always true.
          * 
          * @returns     True if it's large.
@@ -394,9 +402,10 @@ namespace eka2l1 {
         /**
          * @brief   Get the legacy level of FBS we are working on.
          * 
-         * - Level 0: Morden FBS.
-         * - Level 1: Large bitmap flag is available.
-         * - Level 2: Bitwise bitmap flag is replaced with the display mode of the bitmap (persistent across use).
+         * - Level 0 (FBS_LEGACY_LEVEL_MORDEN): Morden FBS, no large bitmap. 
+         * - Level 1 (FBS_LEGACY_LEVEL_EARLY_EKA2): Large bitmap flag is available.
+         * - Level 2 (FBS_LEGACY_LEVEL_KERNEL_TRANSITION): Large bitmap flag is not available, but current display mode flag is available
+         * - Level 3 (FBS_LEGACY_LEVEL_S60V1): Bitwise bitmap flag is replaced with the display mode of the bitmap (persistent across use).
          *            Dirty bitmap is non-existent concept.
          * 
          * @returns Legacy level of FBS.
