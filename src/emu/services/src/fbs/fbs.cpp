@@ -250,7 +250,7 @@ namespace eka2l1 {
     }
 
     int fbs_server::legacy_level() const {
-        if (kern->is_eka1()) {
+        if (kern->get_epoc_version() <= epocver::epoc6) {
             return 2;
         }
 
