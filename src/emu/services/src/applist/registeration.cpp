@@ -259,12 +259,14 @@ namespace eka2l1 {
         reg.mandatory_info.long_caption.assign(nullptr, best_caption);
         reg.mandatory_info.short_caption.assign(nullptr, best_caption);
 
+        reg.caps.flags |= apa_capability::built_as_dll;
+
         std::int8_t temp = 0;
         if (aif_info_stream.read(&temp, 1) != 1) {
             return false;
         }
 
-        reg.caps.is_hidden = static_cast<bool>(temp);
+        reg.caps.is_hidden = static_cast<std::int32_t>(temp);
 
         if (aif_info_stream.read(&temp, 1) != 1) {
             return false;
@@ -276,13 +278,13 @@ namespace eka2l1 {
             return false;
         }
 
-        reg.caps.support_being_asked_to_create_new_file = static_cast<bool>(temp);
+        reg.caps.support_being_asked_to_create_new_file = static_cast<std::int32_t>(temp);
 
         if (aif_info_stream.read(&temp, 1) != 1) {
             return false;
         }
 
-        reg.caps.launch_in_background = static_cast<bool>(temp);
+        reg.caps.launch_in_background = static_cast<std::int32_t>(temp);
 
         std::u16string group_name;
         if (!loader::read_resource_string(aif_info_stream, group_name)) {

@@ -554,7 +554,7 @@ namespace eka2l1 {
             return;
         }
 
-        ctx.write_data_to_descriptor_argument<apa_capability>(0, reg->caps);
+        ctx.write_data_to_descriptor_argument<apa_capability>(0, reg->caps, nullptr, true);
         ctx.complete(epoc::error_none);
     }
 

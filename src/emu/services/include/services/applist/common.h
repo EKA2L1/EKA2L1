@@ -55,7 +55,7 @@ namespace eka2l1 {
          *
          * This was used during EKA1.
         */
-        enum class embeddability : std::uint8_t {
+        enum class embeddability {
             not_embeddable,
             embeddable,
             embeddable_only,
@@ -76,11 +76,11 @@ namespace eka2l1 {
 
         // If the app supports create new file if being asked (for example, document application
         // creates new .doc file), this will be checked.
-        bool support_being_asked_to_create_new_file;
+        std::int32_t support_being_asked_to_create_new_file;
 
         // If the application is not visible, this will be marked.
-        bool is_hidden;
-        bool launch_in_background;
+        std::int32_t is_hidden;
+        std::int32_t launch_in_background;
 
         // If you have use Symbian 9.x before, you can put apps and games into folders
         // The name of the folder is the group name.
@@ -92,4 +92,6 @@ namespace eka2l1 {
         explicit apa_capability() {}
         bool internalize(common::ro_stream &stream);
     };
+
+    static_assert(sizeof(apa_capability) == 64);
 }
