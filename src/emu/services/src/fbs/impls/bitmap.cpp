@@ -293,6 +293,10 @@ namespace eka2l1 {
 
             return ss->get_large_chunk_base() + data_offset_;
         }
+        
+        std::uint32_t bitwise_bitmap::data_size() const {
+            return header_.bitmap_size - header_.header_len;
+        }
     }
     
     struct load_bitmap_arg {
@@ -306,6 +310,8 @@ namespace eka2l1 {
         std::int32_t server_handle;
         std::int32_t address_offset;
     };
+
+    static_assert(sizeof(bmp_handles) == 12);
 
     struct bmp_specs {
         eka2l1::vec2 size;
@@ -327,6 +333,15 @@ namespace eka2l1 {
     fbsbitmap::~fbsbitmap() {
         if (serv_)
             serv_->free_bitmap(this);
+    }
+
+    fbsbitmap *fbsbitmap::final_clean() {
+        fbsbitmap *start = this;
+        while (start->clean_bitmap) {
+            start = start->clean_bitmap;
+        }
+
+        return start;
     }
 
     void *fbs_server::load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, std::size_t &size_decomp, int *err_code) {
@@ -425,6 +440,8 @@ namespace eka2l1 {
             ctx->complete(epoc::error_bad_handle);
             return;
         }
+
+        bmp = get_clean_bitmap(bmp);
 
         const std::uint32_t handle_ret = obj_table_.add(bmp);
         const std::uint32_t server_handle = bmp->id;
@@ -800,10 +817,7 @@ namespace eka2l1 {
     }
 
     fbsbitmap *fbscli::get_clean_bitmap(fbsbitmap *bmp) {
-        while (bmp->clean_bitmap != nullptr) {
-            bmp = bmp->clean_bitmap;
-        }
-        return bmp;
+        return bmp->final_clean();
     }
 
     void fbscli::resize_bitmap(service::ipc_context *ctx) {
@@ -885,13 +899,18 @@ namespace eka2l1 {
         }
 
         bmp = get_clean_bitmap(bmp);
-
         bmp_handles handle_info;
 
         // Get the clean bitmap handle!
         handle_info.handle = obj_table_.add(bmp);
         handle_info.server_handle = bmp->id;
         handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(bmp->bitmap_);
+
+        // We previously do a ref to prevent duplicate instances from destroying this clean bitmap...
+        if (bmp->ref_extra_ed) {
+            bmp->deref();
+            bmp->ref_extra_ed = false;
+        }
 
         // Close the old handle. To prevent this object from being destroyed.
         // In case no clean bitmap at all!
@@ -1054,6 +1073,7 @@ namespace eka2l1 {
             return;
         }
 
+        bmp = get_clean_bitmap(bmp);
         compress_queue *compressor = server<fbs_server>()->compressor.get();
 
         if (!compressor) {
