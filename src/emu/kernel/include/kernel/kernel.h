@@ -765,4 +765,17 @@ namespace eka2l1 {
          */
         void start_bootload();
     };
+
+    struct kernel_lock {
+        kernel_system *kern_;
+
+        explicit kernel_lock(kernel_system *kern)
+            : kern_(kern) {
+            kern_->lock();
+        }
+
+        ~kernel_lock() {
+            kern_->unlock();
+        }
+    };
 }
