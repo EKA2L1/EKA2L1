@@ -2032,6 +2032,7 @@ namespace eka2l1 {
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
         fbsbitmap *bmp = get_fbs_server()->get<fbsbitmap>(h);
         if (bmp) {
+            bmp = bmp->final_clean();
             return bmp->bitmap_;
         }
 
