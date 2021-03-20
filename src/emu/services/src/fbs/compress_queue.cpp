@@ -132,9 +132,6 @@ namespace eka2l1 {
         kernel_system *kern = serv_->get_kernel_object_owner();
         fbsbitmap *clean_bitmap = bmp;
 
-        // Locking the kernel, we are doing quite some jobs
-        kernel_lock guard(kern);
-
         epoc::bitmap_file_compression target_compression = get_suitable_compression_method(bmp);
 
         if (target_compression == epoc::bitmap_file_no_compression) {
@@ -235,6 +232,8 @@ namespace eka2l1 {
 
     void compress_queue::run() {
         while (auto bmp = queue_.pop()) {
+            // Locking the kernel, we are doing quite some jobs
+            kernel_lock guard(kern);
             actual_compress(bmp.value());
         }
     }
