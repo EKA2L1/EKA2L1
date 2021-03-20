@@ -251,6 +251,11 @@ namespace eka2l1 {
         fbsbitmap *bmp = fbss->get<fbsbitmap>(bmp_handle);
         fbsbitmap *msk = msk_handle ? fbss->get<fbsbitmap>(msk_handle) : nullptr;
 
+        bmp = bmp->final_clean();
+        if (msk) {
+            msk = msk->final_clean();
+        }
+
         chunk_maintainer_->store_scalable_gfx(item_id, layout_info, bmp, msk);
     }
 }
