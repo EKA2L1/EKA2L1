@@ -69,7 +69,6 @@ namespace eka2l1 {
 
     static std::size_t estimate_compress_size(fbsbitmap *bmp, std::uint8_t *data_base) {
         std::size_t est_size = 0;
-        data_base += bmp->bitmap_->data_offset_;
 
         common::ro_buf_stream source(data_base, bmp->bitmap_->header_.bitmap_size - sizeof(loader::sbm_header));
 
@@ -99,7 +98,6 @@ namespace eka2l1 {
 
     static bool compress_data(fbsbitmap *bmp, std::uint8_t *base, std::uint8_t *dest_ptr, const std::size_t dest_size) {
         std::size_t est_size = 0;
-        base += bmp->bitmap_->data_offset_;
 
         common::ro_buf_stream source(base, bmp->bitmap_->header_.bitmap_size - sizeof(loader::sbm_header));
         common::wo_buf_stream dest(dest_ptr, dest_size);
@@ -131,7 +129,12 @@ namespace eka2l1 {
     }
 
     void compress_queue::actual_compress(fbsbitmap *bmp) {
+        kernel_system *kern = serv_->get_kernel_object_owner();
         fbsbitmap *clean_bitmap = bmp;
+
+        // Locking the kernel, we are doing quite some jobs
+        kernel_lock guard(kern);
+
         epoc::bitmap_file_compression target_compression = get_suitable_compression_method(bmp);
 
         if (target_compression == epoc::bitmap_file_no_compression) {
@@ -147,11 +150,8 @@ namespace eka2l1 {
             clean_bitmap = serv_->create_bitmap(info, false, true);
         }
 
-        clean_bitmap->bitmap_->header_.compression = target_compression;
-        clean_bitmap->bitmap_->compressed_in_ram_ = true;
-
         // Estimate compressed size
-        std::uint8_t *data_base = serv_->get_large_chunk_base();
+        std::uint8_t *data_base = bmp->bitmap_->data_pointer(serv_);
         const std::size_t estimated_size = estimate_compress_size(bmp, data_base);
         const std::size_t org_size = bmp->bitmap_->header_.bitmap_size - sizeof(loader::sbm_header);
 
@@ -165,14 +165,25 @@ namespace eka2l1 {
             return;
         }
 
-        std::uint8_t *new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_large_data(estimated_size));
+        std::uint8_t *new_data = nullptr;
+        const bool is_large = serv_->is_large_bitmap(static_cast<std::uint32_t>(estimated_size));
+
+        if (is_large) {
+            new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_large_data(estimated_size));
+        } else {    
+            new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_general_data_impl(estimated_size));
+        }
+
         const bool compress_result = compress_data(bmp, data_base, new_data, estimated_size);
 
         if (!compress_result) {
             LOG_ERROR(SERVICE_FBS, "Unable to compress bitmap {}", bmp->id);
 
             // Cleanup
-            serv_->free_large_data(new_data);
+            if (is_large)
+                serv_->free_large_data(new_data);
+            else
+                serv_->free_general_data_impl(new_data);
 
             if (bmp->support_dirty_bitmap) {
                 serv_->free_bitmap(clean_bitmap);
@@ -181,8 +192,33 @@ namespace eka2l1 {
             return;
         }
 
-        clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - data_base);
+        // Touch up the final clean
+        clean_bitmap->bitmap_->header_.compression = target_compression;
+        clean_bitmap->bitmap_->compressed_in_ram_ = true;
+
+        if (is_large) {
+            clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - serv_->get_large_chunk_base());
+        } else {
+            clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - reinterpret_cast<std::uint8_t*>(clean_bitmap->bitmap_));
+        }
+
+        if (serv_->legacy_level() == FBS_LEGACY_LEVEL_EARLY_EKA2) {
+            clean_bitmap->bitmap_->settings_.set_large(is_large);
+        }
+
         clean_bitmap->bitmap_->header_.bitmap_size = static_cast<std::uint32_t>(estimated_size + sizeof(loader::sbm_header));
+
+        // Mark old bitmap as dirty
+        if (bmp->support_dirty_bitmap) {
+            clean_bitmap->ref();
+            clean_bitmap->ref_extra_ed = true;
+
+            bmp->clean_bitmap = clean_bitmap;
+            bmp->bitmap_->settings_.dirty_bitmap(true);
+        }
+        
+        // Notify bitmap compression done. Now the thread can run.
+        bmp->compress_done_nof.complete(epoc::error_none);
 
         // Notify dirty bitmaps
         {
@@ -193,13 +229,6 @@ namespace eka2l1 {
 
             notifies_.clear();
         }
-
-        // Notify bitmap compression done. Now the thread can run.
-        bmp->compress_done_nof.complete(epoc::error_none);
-        bmp->clean_bitmap = clean_bitmap;
-
-        // Mark old bitmap as dirty
-        bmp->bitmap_->settings_.dirty_bitmap(true);
 
         LOG_TRACE(SERVICE_FBS, "Bitmap ID {} compressed with ratio {}%, clean bitmap ID {}", bmp->id, static_cast<int>(static_cast<double>(estimated_size) / static_cast<double>(org_size) * 100.0), clean_bitmap->id);
     }
