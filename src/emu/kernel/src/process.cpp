@@ -115,15 +115,21 @@ namespace eka2l1::kernel {
         // TODO: Load all references DLL in the export list.
     }
 
-    static constexpr mem::vm_address get_rom_bss_addr(const mem::mem_model_type type, const bool mem_map_old) {
+    static constexpr mem::vm_address get_rom_bss_addr(const mem::mem_model_type type, const bool mem_map_old, std::size_t &target_size) {
         switch (type) {
         case mem::mem_model_type::moving:
         case mem::mem_model_type::multiple:
-            return (mem_map_old ? (mem::rom_bss_eka1 + mem::ROM_BSS_START_OFFSET_EKA1) :
-                (mem::dll_static_data + mem::ROM_BSS_START_OFFSET));
+            if (mem_map_old) {
+                target_size = mem::dll_static_data_eka1_end - mem::rom_bss_eka1;
+                return mem::rom_bss_eka1;
+            } else {
+                target_size = mem::shared_data - mem::dll_static_data;
+                return mem::dll_static_data;
+            }
 
         case mem::mem_model_type::flexible:
-            return mem::dll_static_data_flexible + mem::ROM_BSS_START_OFFSET;
+            target_size = mem::rom - mem::dll_static_data_flexible;
+            return mem::dll_static_data_flexible;
 
         default:
             break;
@@ -167,6 +173,13 @@ namespace eka2l1::kernel {
         // Create mem model implementation
         mm_impl_ = mem::make_new_mem_model_process(mem->get_control(), mem->get_model_type());
         generation_ = refresh_generation();
+
+        std::size_t total_size = 0;
+        const address base = get_rom_bss_addr(mem->get_model_type(), kern->is_eka1(), total_size);
+        
+        rom_bss_chunk_ = kern->create<kernel::chunk>(mem, this, fmt::format("RomBssChunkProcess{}", uid),
+            0, 0, total_size, prot_read_write, kernel::chunk_type::disconnected, kernel::chunk_access::dll_static_data,
+            kernel::chunk_attrib::none, 0x00, false, base);
     }
 
     void process::destroy() {

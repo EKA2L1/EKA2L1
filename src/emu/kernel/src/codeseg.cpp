@@ -157,6 +157,8 @@ namespace eka2l1::kernel {
         }
 
         if (data_size_align != 0) {
+            std::uint32_t add_offset = 0;
+
             if (!data_addr) {
                 dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
                     prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::local, kernel::chunk_attrib::anonymous);
@@ -166,19 +168,26 @@ namespace eka2l1::kernel {
                 // TODO: Remove this specific stuff
                 if ((data_base >= mem::local_data) && (data_base <= (kern->is_eka1() ? mem::dll_static_data : mem::shared_data_eka1))) {
                     acc = kernel::chunk_access::local;
-                }
 
-                dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
-                    prot_read_write, kernel::chunk_type::normal, acc, kernel::chunk_attrib::anonymous,
-                    0x00, false, data_base, nullptr);
+                    dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
+                        prot_read_write, kernel::chunk_type::normal, acc, kernel::chunk_attrib::anonymous,
+                        0x00, false, data_base, nullptr);
+                } else {
+                    dt_chunk = new_foe->get_rom_bss_chunk();
+                    add_offset = data_base - dt_chunk->base(new_foe).ptr_address();
+
+                    if (!dt_chunk->commit(add_offset, data_size_align)) {
+                        LOG_WARN(KERNEL, "Unable to alloc BSS data from process {} for codeseg {}", new_foe->name(), name());
+                    }
+                }
             }
 
             if (!dt_chunk) {
                 return false;
             }
 
-            data_base_ptr = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base());
-            the_addr_of_data_run = dt_chunk->base(new_foe).ptr_address();
+            data_base_ptr = reinterpret_cast<std::uint8_t *>(dt_chunk->host_base()) + add_offset;
+            the_addr_of_data_run = dt_chunk->base(new_foe).ptr_address() + add_offset;
 
             // Confirmed that if data is in ROM, only BSS is reserved
             std::copy(constant_data.get(), constant_data.get() + data_size, data_base_ptr); // .data
@@ -288,8 +297,15 @@ namespace eka2l1::kernel {
         }
 
         // Free the chunk data
-        if (attach_info->data_chunk) {
+        if (attach_info->data_chunk->position_access() != kernel::chunk_access::dll_static_data) {
             kern->destroy(attach_info->data_chunk);
+        } else {
+            memory_system *mem = kern->get_memory_system();
+
+            const std::uint32_t offset = data_base - attach_info->data_chunk->base(de_foe).ptr_address();    
+            const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
+
+            attach_info->data_chunk->decommit(offset, data_size_align);
         }
 
         if (!code_chunk_shared && attach_info->code_chunk) {

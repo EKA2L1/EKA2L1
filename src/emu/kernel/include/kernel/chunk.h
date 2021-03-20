@@ -86,6 +86,7 @@ namespace eka2l1 {
             bool is_heap;
 
             chunk_type type;
+            chunk_access pos_access;
 
         public:
             explicit chunk(kernel_system *kern, memory_system *mem)
@@ -159,6 +160,10 @@ namespace eka2l1 {
 
             const std::uint32_t bottom_offset() const;
             const std::uint32_t top_offset() const;
+
+            const chunk_access position_access() const {
+                return pos_access;
+            }
 
             void *host_base();
         };

@@ -40,7 +40,8 @@ namespace eka2l1 {
             : kernel_obj(kern, name, own_process, access_type::local_access)
             , mem(mem)
             , is_heap(is_heap)
-            , type(type) {
+            , type(type)
+            , pos_access(chnk_access) {
             obj_type = object_type::chunk;
             mem::mem_model_chunk_creation_info create_info{};
 

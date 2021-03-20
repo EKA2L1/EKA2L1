@@ -147,6 +147,7 @@ namespace eka2l1::kernel {
 
         std::vector<kernel::process*> child_processes_;
         kernel::process *parent_process_;
+        kernel::chunk *rom_bss_chunk_;
 
         std::uint32_t time_delay_;
         bool setting_inheritence_;
@@ -267,6 +268,10 @@ namespace eka2l1::kernel {
 
         std::uint32_t get_flags() const {
             return flags;
+        }
+
+        chunk_ptr get_rom_bss_chunk() const {
+            return rom_bss_chunk_;
         }
 
         std::uint32_t get_entry_point_address();

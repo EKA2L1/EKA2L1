@@ -91,10 +91,6 @@ namespace eka2l1::mem {
     constexpr std::uint32_t PAGE_PER_TABLE_SHIFT_12B = 8;
     constexpr std::uint32_t PAGE_PER_TABLE_SHIFT_20B = 8;
 
-    constexpr const std::uint32_t ROM_BSS_START_OFFSET = 0x6000000;
-    constexpr const std::uint32_t ROM_BSS_START_OFFSET_EKA1 = 0;
-    constexpr const std::size_t MAX_ROM_BSS_SECT_SIZE = 0x2000000;
-
     /**
      * \brief Structure contains info about a page (guest's memory chunk).
      * 
