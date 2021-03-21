@@ -920,12 +920,8 @@ namespace eka2l1 {
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(handle);
 
         if (!bmp) {
-            bmp = fbss->get<fbsbitmap>(handle);
-
-            if (!bmp) {
-                ctx->complete(epoc::error_bad_handle);
-                return;
-            }
+            ctx->complete(epoc::error_unknown);
+            return;
         }
 
         bmp = get_clean_bitmap(bmp);
@@ -966,12 +962,15 @@ namespace eka2l1 {
         }
 
         bmp->bitmap_->copy_to(dest_data, new_size, fbss);
-        
+
         if (fbss->legacy_level() <= FBS_LEGACY_LEVEL_EARLY_EKA2) {
             bmp->clean_bitmap = new_bmp;
             bmp->bitmap_->settings_.dirty_bitmap(true);
     
             // notify dirty bitmap on ref count >= 2
+            new_bmp->ref();
+            new_bmp->ref_extra_ed = true;
+
             obj_table_.remove(handle);
             bmp_handles handle_info;
 
