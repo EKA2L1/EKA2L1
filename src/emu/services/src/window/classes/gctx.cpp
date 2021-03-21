@@ -414,12 +414,16 @@ namespace eka2l1::epoc {
             flags |= drivers::bitmap_draw_flag_invert_mask;
         }
 
+        if (!alpha_blending) {
+            flags |= drivers::bitmap_draw_flag_flat_blending;
+        }
+
         cmd_builder->set_blend_mode(true);
         
         // For non alpha blending we always want to take color buffer's alpha.
         cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
-            (alpha_blending ? drivers::blend_factor::one : drivers::blend_factor::zero),
+            (alpha_blending ? drivers::blend_factor::frag_out_alpha : drivers::blend_factor::one),
             (alpha_blending ? drivers::blend_factor::one_minus_frag_out_alpha : drivers::blend_factor::one));
 
         bool swizzle_alteration = false;
