@@ -199,6 +199,8 @@ namespace eka2l1 {
             }
         }
 
+        clean_bitmap->reserved_height_each_side_ = 0;
+
         // Touch up the final clean
         clean_bitmap->bitmap_->header_.compression = target_compression;
         clean_bitmap->bitmap_->compressed_in_ram_ = true;
