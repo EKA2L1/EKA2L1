@@ -99,9 +99,10 @@ namespace eka2l1::epoc {
             const bool support_current_display_mode_flag, const bool white_fill = false);
         
         void post_construct(fbs_server *serv);
-        int copy_data(const bitwise_bitmap &source, uint8_t *base);
+        int copy_to(std::uint8_t *dest, const eka2l1::vec2 &dest_size, fbs_server *serv);
 
         bitmap_file_compression compression_type() const;
+
         std::uint8_t *data_pointer(fbs_server *serv);
         std::uint32_t data_size() const;
     };

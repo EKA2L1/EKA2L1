@@ -41,11 +41,11 @@ namespace eka2l1 {
         std::vector<epoc::notify_info> notifies_;
         std::mutex notify_mutex_;
 
-    protected:
-        void actual_compress(fbsbitmap *bmp);
-
     public:
         explicit compress_queue(fbs_server *serv);
+
+        // Exposed this, but should be standalone...
+        void actual_compress(fbsbitmap *bmp);
 
         void notify(epoc::notify_info &nof);
 

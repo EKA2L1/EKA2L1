@@ -224,6 +224,10 @@ namespace eka2l1 {
             break;
         }
 
+        case fbs_bitmap_compress:
+            compress_bitmap(ctx);
+            break;
+
         case fbs_set_pixel_size_in_twips:
             set_pixel_size_in_twips(ctx);
             break;

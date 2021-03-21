@@ -265,6 +265,10 @@ namespace eka2l1 {
         ~fbsbitmap() override;
 
         fbsbitmap *final_clean();
+
+        std::uint8_t *original_pointer(fbs_server *serv) {
+            return bitmap_->data_pointer(serv) - bitmap_->byte_width_ * reserved_height_each_side_;
+        }
     };
 
     struct fbsbitmap_cache_info {
@@ -372,7 +376,7 @@ namespace eka2l1 {
          * 
          * @returns     True if it's large.
          */
-        bool is_large_bitmap(const std::uint32_t compressed_size);
+        bool is_large_bitmap(const std::uint32_t compressed_size) const;
 
         /**
          * \brief  Create a new empty bitmap.
@@ -420,15 +424,15 @@ namespace eka2l1 {
 
         fbsfont *look_for_font_with_address(const eka2l1::address addr);
 
-        std::uint8_t *get_shared_chunk_base() {
+        std::uint8_t *get_shared_chunk_base() const {
             return base_shared_chunk;
         }
 
-        std::uint8_t *get_large_chunk_base() {
+        std::uint8_t *get_large_chunk_base() const {
             return base_large_chunk;
         }
 
-        std::uint8_t *get_large_chunk_pointer(const std::uint64_t start_offset) {
+        std::uint8_t *get_large_chunk_pointer(const std::uint64_t start_offset) const {
             return base_large_chunk + start_offset;
         }
 

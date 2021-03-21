@@ -26,6 +26,7 @@
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/log.h>
+#include <common/runlen.h>
 
 #include <services/fbs/fbs.h>
 #include <services/fbs/palette.h>
@@ -234,39 +235,128 @@ namespace eka2l1 {
             }
         }
 
-        int bitwise_bitmap::copy_data(const bitwise_bitmap &source, uint8_t *base) {
-            const auto disp_mode = source.settings_.current_display_mode();
-            assert(disp_mode == settings_.current_display_mode());
-            if (source.header_.size_pixels.width() > 0) {
-                header_.size_twips.x = source.header_.size_twips.width() * header_.size_pixels.width() / source.header_.size_pixels.width();
+        struct bitmap_copy_writer: public common::wo_stream {
+            std::uint8_t *dest_;
+
+            std::uint32_t source_byte_width_;
+            std::uint32_t dest_byte_width_;
+            int max_line_;
+
+            eka2l1::vec2 pos_;
+
+            explicit bitmap_copy_writer(std::uint8_t *dest, const std::uint32_t source_bw, const std::uint32_t dest_bw,
+                const int max_line)
+                : dest_(dest)
+                , source_byte_width_(source_bw)
+                , dest_byte_width_(dest_bw)
+                , max_line_(max_line) {
             }
-            if (source.header_.size_pixels.height() > 0) {
-                header_.size_twips.y = source.header_.size_twips.height() * header_.size_pixels.height() / source.header_.size_pixels.height();
+            
+            void seek(const std::int64_t amount, common::seek_where wh) override {
+                assert(false);
             }
 
-            uint8_t *dest_base = base + data_offset_;
-            uint8_t *src_base = base + source.data_offset_;
-            const int min_pixel_height = std::min(header_.size_pixels.height(), source.header_.size_pixels.height());
+            bool valid() override {
+                return (max_line_ < pos_.y);
+            }
+
+            std::uint64_t tell() const override {
+                return dest_byte_width_ * pos_.y + pos_.x;
+            }
+            
+            std::uint64_t left() override {
+                return max_line_ * dest_byte_width_ - tell();
+            }
+
+            std::uint64_t size() override {
+                return max_line_ * dest_byte_width_;
+            }
+
+            std::uint64_t write(const void *buf, const std::uint64_t write_size) override {
+                std::uint64_t consumed = 0;
+
+                const std::uint8_t *buf8 = reinterpret_cast<const std::uint8_t*>(buf);
+                const std::uint32_t width_write = common::min<std::uint32_t>(source_byte_width_, dest_byte_width_);
+
+                while (consumed < write_size) {
+                    if (pos_.y >= max_line_) {
+                        break;
+                    }
+
+                    const std::int64_t write_this_line = common::min<std::int64_t>(static_cast<std::int64_t>(write_size - consumed),
+                        width_write - pos_.x);
+                    
+                    std::memcpy(dest_ + pos_.y * dest_byte_width_ + pos_.x, buf8 + consumed, write_this_line);
+                    pos_.x += static_cast<int>(write_this_line);
+
+                    if (pos_.x == width_write) {
+                        pos_.x = 0;
+                        pos_.y++;
+                    }
+
+                    consumed += write_this_line;
+                }
+
+                return consumed;
+            }
+        };
+
+        int bitwise_bitmap::copy_to(std::uint8_t *dest, const eka2l1::vec2 &dest_size, fbs_server *serv) {
+            const int min_pixel_height = common::min(header_.size_pixels.height(), dest_size.y);
+            const int dest_byte_width = get_byte_width(dest_size.x, header_.bit_per_pixels);
+
+            std::uint8_t *src_base = data_pointer(serv);
+            std::uint8_t *dest_base = dest; 
+            std::uint8_t *src = src_base;
 
             // copy with compressed data not supported yet
-            assert(source.compressed_in_ram_ == false);
+            const int min_byte_width = std::min(byte_width_, dest_byte_width);
 
-            uint8_t *dest = dest_base;
-            uint8_t *src = src_base;
-            const int min_byte_width = std::min(byte_width_, source.byte_width_);
-            for (int row = 0; row < min_pixel_height; row++) {
-                std::memcpy(dest, src, min_byte_width);
-                dest += byte_width_;
-                src += source.byte_width_;
+            if (compressed_in_ram_) {
+                bitmap_copy_writer writer(dest, byte_width_, dest_byte_width, min_pixel_height);
+                common::ro_buf_stream source_stream(src, data_size());
+
+                switch (compression_type()) {
+                case bitmap_file_byte_rle_compression:
+                    decompress_rle<8>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    break;
+
+                case bitmap_file_twelve_bit_rle_compression:
+                    decompress_rle<12>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    break;
+
+                case bitmap_file_sixteen_bit_rle_compression:
+                    decompress_rle<16>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    break;
+
+                case bitmap_file_twenty_four_bit_rle_compression:
+                    decompress_rle<24>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    break;
+
+                case bitmap_file_thirty_two_a_bit_rle_compression:
+                case bitmap_file_thirty_two_u_bit_rle_compression:
+                    decompress_rle<32>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    break;
+
+                default:
+                    LOG_ERROR(SERVICE_FBS, "Unknown compression type {} to get original data for resize", static_cast<int>(compression_type()));
+                    break;
+                }
+            } else {
+                for (int row = 0; row < min_pixel_height; row++) {
+                    std::memcpy(dest, src, min_byte_width);
+                    dest += dest_byte_width;
+                    src += byte_width_;
+                }
             }
 
-            if (header_.size_pixels.width() > source.header_.size_pixels.width()) {
-                const int extra_bits = (source.header_.size_pixels.width() * source.header_.bit_per_pixels) & 31;
+            if (dest_byte_width > byte_width_) {
+                const int extra_bits = (header_.size_pixels.width() * header_.bit_per_pixels) & 31;
                 if (extra_bits > 0) {
                     uint32_t mask = 0xFFFFFFFF;
                     mask <<= extra_bits;
-                    const int dest_word_width = byte_width_ >> 2;
-                    const int src_word_width = source.byte_width_ >> 2;
+                    const int dest_word_width = dest_byte_width >> 2;
+                    const int src_word_width = byte_width_ >> 2;
                     uint32_t *mask_addr = reinterpret_cast<uint32_t *>(dest_base) + src_word_width - 1;
                     for (int row = 0; row < min_pixel_height; row++) {
                         *mask_addr |= mask;
@@ -274,6 +364,7 @@ namespace eka2l1 {
                     }
                 }
             }
+
             return epoc::error_none;
         }
             
@@ -612,20 +703,22 @@ namespace eka2l1 {
         return get_byte_width(size.x, epoc::get_bpp_from_display_mode(bpp)) * size.y;
     }
 
+    static std::uint32_t calculate_reserved_each_side(const std::uint32_t height) {
+        // Reserve some space in left and right. Observed shows some apps outwrite their
+        // available data region, a little bit, hopefully.
+        static constexpr std::uint32_t MAXIMUM_RESERVED_HEIGHT = 50;
+        static constexpr std::uint32_t PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE = 15;
+
+        return common::min<std::uint32_t>(MAXIMUM_RESERVED_HEIGHT, height * PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE / 100);
+    }
+
     fbsbitmap *fbs_server::create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data, const bool support_current_display_mode_flag, const bool support_dirty) {
         if (!shared_chunk || !large_chunk) {
             initialize_server();
         }
 
         epoc::bitwise_bitmap *bws_bmp = allocate_general_data<epoc::bitwise_bitmap>();
-
-        // Reserve some space in left and right. Observed shows some apps outwrite their
-        // available data region, a little bit, hopefully.
-        static constexpr std::uint32_t MAXIMUM_RESERVED_HEIGHT = 50;
-        static constexpr std::uint32_t PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE = 15;
-
-        std::uint32_t final_reserve_each_side = common::min<std::uint32_t>(MAXIMUM_RESERVED_HEIGHT,
-            info.size_.y * PERCENTAGE_RESERVE_HEIGHT_EACH_SIDE / 100);
+        std::uint32_t final_reserve_each_side = calculate_reserved_each_side(info.size_.y);
 
         // Data size fixed
         if (info.data_size_) {
@@ -720,7 +813,7 @@ namespace eka2l1 {
         return true;
     }
 
-    bool fbs_server::is_large_bitmap(const std::uint32_t compressed_size) {
+    bool fbs_server::is_large_bitmap(const std::uint32_t compressed_size) const {
         static constexpr std::uint32_t RANGE_START_LARGE = 1 << 12;
         static constexpr std::uint32_t RANGE_START_LARGE_TRANS = 1 << 16;
 
@@ -823,50 +916,91 @@ namespace eka2l1 {
     void fbscli::resize_bitmap(service::ipc_context *ctx) {
         const auto fbss = server<fbs_server>();
         const epoc::handle handle = *(ctx->get_argument_value<std::uint32_t>(0));
-        fbsbitmap *bmp = fbss->get<fbsbitmap>(handle);
+
+        fbsbitmap *bmp = obj_table_.get<fbsbitmap>(handle);
 
         if (!bmp) {
-            ctx->complete(epoc::error_bad_handle);
-            return;
-        }
+            bmp = fbss->get<fbsbitmap>(handle);
 
-        if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
-            LOG_ERROR(SERVICE_FBS, "Resize bitmap not supported currently for legacy level transition or older!");
-            ctx->complete(epoc::error_not_supported);
-
-            return;
+            if (!bmp) {
+                ctx->complete(epoc::error_bad_handle);
+                return;
+            }
         }
 
         bmp = get_clean_bitmap(bmp);
 
         const vec2 new_size = { *(ctx->get_argument_value<int>(1)), *(ctx->get_argument_value<int>(2)) };
-        const bool compressed_in_ram = bmp->bitmap_->compressed_in_ram_;
 
-        // not working with compressed bitmaps right now
-        assert(compressed_in_ram == false);
+        fbsbitmap *new_bmp = nullptr;
+        std::uint8_t *dest_data = nullptr;
+        std::uint8_t *base = nullptr;
 
-        const epoc::display_mode disp_mode = bmp->bitmap_->settings_.current_display_mode();
+        const std::uint32_t reserved_each_size = calculate_reserved_each_side(new_size.y);
 
-        fbs_bitmap_data_info info;
-        info.size_ = new_size;
-        info.dpm_ = disp_mode;
+        if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+            new_bmp = bmp;
 
-        const auto new_bmp = fbss->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
+            const int dest_byte_width = get_byte_width(new_size.x, bmp->bitmap_->header_.bit_per_pixels);
+            const int size_total = dest_byte_width * new_size.y;
+            const int size_added_reserve = size_total + reserved_each_size * dest_byte_width * 2;
 
-        new_bmp->bitmap_->copy_data(*(bmp->bitmap_), fbss->base_large_chunk);
-        bmp->clean_bitmap = new_bmp;
+            if (fbss->is_large_bitmap(size_total)) {
+                dest_data = reinterpret_cast<std::uint8_t*>(fbss->allocate_large_data(size_added_reserve));
+                base = fbss->get_large_chunk_base();
+            } else {
+                dest_data = reinterpret_cast<std::uint8_t*>(fbss->allocate_general_data_impl(size_added_reserve));
+                base = reinterpret_cast<std::uint8_t*>(new_bmp);
+            }
 
-        // notify dirty bitmap on ref count >= 2
+            dest_data += new_bmp->reserved_height_each_side_ * dest_byte_width;
+        } else {
+            const epoc::display_mode disp_mode = bmp->bitmap_->settings_.current_display_mode();
 
-        obj_table_.remove(handle);
-        bmp_handles handle_info;
+            fbs_bitmap_data_info info;
+            info.size_ = new_size;
+            info.dpm_ = disp_mode;
 
-        // Add this object to the object table!
-        handle_info.handle = obj_table_.add(new_bmp);
-        handle_info.server_handle = new_bmp->id;
-        handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
+            new_bmp = fbss->create_bitmap(info, true, support_current_display_mode, support_dirty_bitmap);
+            dest_data = new_bmp->bitmap_->data_pointer(fbss);
+        }
 
-        ctx->write_data_to_descriptor_argument(3, handle_info);
+        bmp->bitmap_->copy_to(dest_data, new_size, fbss);
+        
+        if (fbss->legacy_level() <= FBS_LEGACY_LEVEL_EARLY_EKA2) {
+            bmp->clean_bitmap = new_bmp;
+            bmp->bitmap_->settings_.dirty_bitmap(true);
+    
+            // notify dirty bitmap on ref count >= 2
+            obj_table_.remove(handle);
+            bmp_handles handle_info;
+
+            // Add this object to the object table!
+            handle_info.handle = obj_table_.add(new_bmp);
+            handle_info.server_handle = new_bmp->id;
+            handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
+
+            ctx->write_data_to_descriptor_argument(3, handle_info);
+        } else {
+            loader::sbm_header old_header = new_bmp->bitmap_->header_;
+            old_header.size_pixels.x = new_size.x;
+            old_header.size_pixels.y = new_size.y;
+            old_header.size_twips = old_header.size_pixels * twips_mul;
+
+            // Free old data
+            std::uint8_t *data = new_bmp->original_pointer(fbss);
+            if (new_bmp->bitmap_->offset_from_me_) {
+                fbss->free_general_data_impl(data);
+            } else {
+                fbss->free_large_data(data);
+            }
+
+            new_bmp->reserved_height_each_side_ = reserved_each_size;
+            new_bmp->bitmap_->construct(old_header, new_bmp->bitmap_->settings_.initial_display_mode(),
+                dest_data, base, support_current_display_mode, false);
+            new_bmp->bitmap_->post_construct(fbss);
+        }
+
         ctx->complete(epoc::error_none);
     }
 
@@ -1090,5 +1224,31 @@ namespace eka2l1 {
 
         // Done async. Please kernel dont freak out.
         compressor->compress(bmp);
+    }
+
+    void fbscli::compress_bitmap(service::ipc_context *ctx) {
+        const epoc::handle bmp_handle = *ctx->get_argument_value<epoc::handle>(0);
+        fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
+
+        if (!bmp) {
+            ctx->complete(epoc::error_bad_handle);
+            return;
+        }
+
+        bmp = get_clean_bitmap(bmp);
+        compress_queue *compressor = server<fbs_server>()->compressor.get();
+
+        if (!compressor) {
+            ctx->complete(epoc::error_none);
+            return;
+        }
+
+        epoc::notify_info notify_for_me;
+        notify_for_me.requester = ctx->msg->own_thr;
+        notify_for_me.sts = ctx->msg->request_sts;
+
+        // Queue notification
+        bmp->compress_done_nof = notify_for_me;
+        compressor->actual_compress(bmp);
     }
 }

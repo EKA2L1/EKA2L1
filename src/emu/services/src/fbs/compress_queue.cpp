@@ -129,12 +129,12 @@ namespace eka2l1 {
     }
 
     void compress_queue::actual_compress(fbsbitmap *bmp) {
-        kernel_system *kern = serv_->get_kernel_object_owner();
         fbsbitmap *clean_bitmap = bmp;
 
         epoc::bitmap_file_compression target_compression = get_suitable_compression_method(bmp);
 
         if (target_compression == epoc::bitmap_file_no_compression) {
+            bmp->compress_done_nof.complete(epoc::error_none);
             return;
         }
 
@@ -189,6 +189,16 @@ namespace eka2l1 {
             return;
         }
 
+        if (serv_->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+            std::uint8_t *org_pointer = clean_bitmap->original_pointer(serv_);
+
+            if (clean_bitmap->bitmap_->offset_from_me_) {
+                serv_->free_general_data_impl(org_pointer);
+            } else {
+                serv_->free_large_data(org_pointer);
+            }
+        }
+
         // Touch up the final clean
         clean_bitmap->bitmap_->header_.compression = target_compression;
         clean_bitmap->bitmap_->compressed_in_ram_ = true;
@@ -231,6 +241,8 @@ namespace eka2l1 {
     }
 
     void compress_queue::run() {
+        kernel_system *kern = serv_->get_kernel_object_owner();
+
         while (auto bmp = queue_.pop()) {
             // Locking the kernel, we are doing quite some jobs
             kernel_lock guard(kern);
