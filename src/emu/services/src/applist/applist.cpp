@@ -800,6 +800,10 @@ namespace eka2l1 {
                 server<applist_server>()->app_info_provided_by_reg_file(*ctx);
                 break;
 
+            case applist_request_app_icon_by_uid_and_size:
+                server<applist_server>()->get_app_icon(*ctx);
+                break;
+
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
                 break;
