@@ -721,7 +721,7 @@ namespace eka2l1 {
         std::uint32_t final_reserve_each_side = calculate_reserved_each_side(info.size_.y);
 
         // Data size fixed
-        if (info.data_size_) {
+        if (info.data_size_ || !alloc_data) {
             final_reserve_each_side = 0;
         }
 
@@ -792,16 +792,18 @@ namespace eka2l1 {
             return false;
         }
 
-        const std::size_t reserved_bytes = bmp->reserved_height_each_side_ * bmp->bitmap_->byte_width_;
+        if (bmp->bitmap_->data_offset_) {
+            const std::size_t reserved_bytes = bmp->reserved_height_each_side_ * bmp->bitmap_->byte_width_;
 
-        // First, free the bitmap pixels.
-        if (bmp->bitmap_->offset_from_me_) {
-            if (!shared_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
-                return false;
-            }
-        } else {
-            if (!large_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
-                return false;
+            // First, free the bitmap pixels.
+            if (bmp->bitmap_->offset_from_me_) {
+                if (!shared_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
+                    return false;
+                }
+            } else {
+                if (!large_chunk_allocator->free(bmp->bitmap_->data_pointer(this) - reserved_bytes)) {
+                    return false;
+                }
             }
         }
 
@@ -966,8 +968,7 @@ namespace eka2l1 {
         if (fbss->legacy_level() <= FBS_LEGACY_LEVEL_EARLY_EKA2) {
             bmp->clean_bitmap = new_bmp;
             bmp->bitmap_->settings_.dirty_bitmap(true);
-    
-            // notify dirty bitmap on ref count >= 2
+
             new_bmp->ref();
             new_bmp->ref_extra_ed = true;
 
@@ -980,6 +981,10 @@ namespace eka2l1 {
             handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
 
             ctx->write_data_to_descriptor_argument(3, handle_info);
+
+            // Notify dirty
+            if (fbss->compressor)
+                fbss->compressor->finish_notify(epoc::error_none);
         } else {
             loader::sbm_header old_header = new_bmp->bitmap_->header_;
             old_header.size_pixels.x = new_size.x;

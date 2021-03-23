@@ -207,8 +207,10 @@ namespace eka2l1 {
 
         if (is_large) {
             clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - serv_->get_large_chunk_base());
+            clean_bitmap->bitmap_->offset_from_me_ = false;
         } else {
             clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - reinterpret_cast<std::uint8_t*>(clean_bitmap->bitmap_));
+            clean_bitmap->bitmap_->offset_from_me_ = true;
         }
 
         if (serv_->legacy_level() == FBS_LEGACY_LEVEL_EARLY_EKA2) {
@@ -228,16 +230,7 @@ namespace eka2l1 {
         
         // Notify bitmap compression done. Now the thread can run.
         bmp->compress_done_nof.complete(epoc::error_none);
-
-        // Notify dirty bitmaps
-        {
-            const std::lock_guard<std::mutex> guard(notify_mutex_);
-            for (auto notify : notifies_) {
-                notify.complete(0);
-            }
-
-            notifies_.clear();
-        }
+        finish_notify(epoc::error_none);
 
         LOG_TRACE(SERVICE_FBS, "Bitmap ID {} compressed with ratio {}%, clean bitmap ID {}", bmp->id, static_cast<int>(static_cast<double>(estimated_size) / static_cast<double>(org_size) * 100.0), clean_bitmap->id);
     }
@@ -272,5 +265,15 @@ namespace eka2l1 {
         notifies_.erase(find_res);
         nof.complete(epoc::error_cancel);
         return true;
+    }
+
+    void compress_queue::finish_notify(const int code) {
+        // Notify dirty bitmaps
+        const std::lock_guard<std::mutex> guard(notify_mutex_);
+        for (auto notify : notifies_) {
+            notify.complete(0);
+        }
+
+        notifies_.clear();
     }
 }

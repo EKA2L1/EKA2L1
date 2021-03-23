@@ -49,6 +49,8 @@ namespace eka2l1 {
 
         void notify(epoc::notify_info &nof);
 
+        void finish_notify(const int code);
+
         /**
          * \brief Cancel a notify request.
          * 
