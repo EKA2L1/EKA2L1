@@ -144,7 +144,7 @@
     <string name="credits_thanks_text">ইমুলেটরটি ব্যবহার করার জন্য ধন্যবাদ!</string>
     <string name="credits_main_developer_text">মূল ডেভেলপারসমুহ:</string>
     <string name="credits_contributors_text">অবদানকারী:</string>
-    <string name="credits_icon_text">Icon:</string>
+    <string name="credits_icon_text">আইকন:</string>
     <string name="credits_honors_text">সম্মাননা:</string>
     <string name="credits_translators_text">অনুবাদক:</string>
 </resources>
