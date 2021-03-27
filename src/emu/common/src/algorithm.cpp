@@ -240,11 +240,44 @@ namespace eka2l1 {
 #endif
         }
 
+#if EKA2L1_PLATFORM(WIN32)
+        bool cpu_support_checked = false;
+        bool cpu_support_popcnt = false;
+
+        void check_cpu_features() {
+            if (cpu_support_checked) {
+                return;
+            }
+
+            int info[4];
+            __cpuid(info, 1);
+
+            if (static_cast<std::uint32_t>(info[2]) & (1 << 23)) {
+                cpu_support_popcnt = true;
+            } else {
+                cpu_support_popcnt = false;
+            }
+
+            cpu_support_checked = true;
+        }
+#endif
+
         int count_bit_set(const std::uint32_t v) {
 #if defined(__GNUC__) || defined(__clang__)
             return __builtin_popcount(v);
 #else
-            return static_cast<int>(__popcnt(v));
+            check_cpu_features();
+
+            if (cpu_support_popcnt) {
+                return static_cast<int>(__popcnt(v));
+            } else {
+                // From GCC
+                std::uint32_t i = v;
+
+                i = i - ((i >> 1) & 0x55555555);
+                i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+                return (((i + (i >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
+            }
 #endif
         }
     }
