@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 
 namespace eka2l1::arm::r12l1 {
     struct tlb_entry {

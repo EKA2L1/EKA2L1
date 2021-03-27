@@ -26,6 +26,7 @@
 #include <array>
 #include <atomic>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 namespace eka2l1::arm::r12l1 {
