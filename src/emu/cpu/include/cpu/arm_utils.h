@@ -26,11 +26,13 @@ namespace eka2l1::arm {
     // Add JIT backend name here
     static constexpr const char *dynarmic_jit_backend_name = "dynarmic"; ///< Dynarmic recompiler backend name
     static constexpr const char *unicorn_jit_backend_name = "unicorn"; ///< Unicorn recompiler backend name
-    static constexpr const char *earm_jit_backend_name = "earm"; ///< EKA2L1's ARM recompiler backend name
+    static constexpr const char *r12l1_jit_backend_name = "r12l1"; ///< EKA2L1's ARM recompiler backend name
+    static constexpr const char *dyncom_jit_backend_name = "dyncom"; ///< Citra's ARM interpreter, repurposed for EKA2L1
 
     static constexpr const char *dynarmic_jit_backend_formal_name = "Dynarmic"; ///< Dynarmic recompiler backend name
     static constexpr const char *unicorn_jit_backend_formal_name = "Unicorn"; ///< Unicorn recompiler backend name
-    static constexpr const char *earm_jit_backend_formal_name = "EARM"; ///< EKA2L1's ARM recompiler backend name
+    static constexpr const char *r12l1_jit_backend_formal_name = "r12l1"; ///< EKA2L1's ARM recompiler backend name
+    static constexpr const char *dyncom_jit_backend_formal_name = "Dyncom"; ///< Citra's ARM interpreter, repurposed for EKA2L1
 
     /**
      * \brief Dump the given thread context to log.

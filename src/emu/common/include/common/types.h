@@ -144,7 +144,8 @@ enum class drive_media {
 enum class arm_emulator_type {
     unicorn = 0,
     dynarmic = 1,
-    r12l1 = 2
+    r12l1 = 2,
+    dyncom = 3
 };
 
 typedef std::uint32_t vaddress;

@@ -1,3 +1,10 @@
+set(SOURCE_12L1R_PUBLIC
+        include/cpu/12l1r/common.h
+        include/cpu/12l1r/exclusive_monitor.h
+        include/cpu/12l1r/tlb.h
+        src/12l1r/common.cpp
+        src/12l1r/exclusive_monitor.cpp)
+
 set(SOURCE_12L1R
         include/cpu/12l1r/decoder/decoder_detail.h
         include/cpu/12l1r/decoder/matcher.h
@@ -7,13 +14,10 @@ set(SOURCE_12L1R
         include/cpu/12l1r/arm_visitor.h
         include/cpu/12l1r/block_cache.h
         include/cpu/12l1r/block_gen.h
-        include/cpu/12l1r/common.h
         include/cpu/12l1r/core_state.h
-        include/cpu/12l1r/exclusive_monitor.h
         include/cpu/12l1r/reg_cache.h
         include/cpu/12l1r/reg_loc.h
         include/cpu/12l1r/thumb_visitor.h
-        include/cpu/12l1r/tlb.h
         include/cpu/12l1r/visit_session.h
         src/12l1r/translate/branch.cpp
         src/12l1r/translate/data_processing.cpp
@@ -29,13 +33,36 @@ set(SOURCE_12L1R
         src/12l1r/arm_visitor.cpp
         src/12l1r/block_cache.cpp
         src/12l1r/block_gen.cpp
-        src/12l1r/common.cpp
         src/12l1r/core_state.cpp
-        src/12l1r/exclusive_monitor.cpp
         src/12l1r/reg_cache.cpp
         src/12l1r/reg_loc.cpp
         src/12l1r/thumb_visitor.cpp
         src/12l1r/visit_session.cpp)
+
+set(SOURCE_DYNCOM
+        include/cpu/dyncom/vfp/asm_vfp.h
+        include/cpu/dyncom/vfp/vfp_helper.h
+        include/cpu/dyncom/vfp/vfp.h
+        include/cpu/dyncom/vfp/vfpinstr.h
+        include/cpu/dyncom/arm_dyncom.h
+        include/cpu/dyncom/arm_dyncom_dec.h
+        include/cpu/dyncom/arm_dyncom_interpreter.h
+        include/cpu/dyncom/arm_dyncom_run.h
+        include/cpu/dyncom/arm_dyncom_thumb.h
+        include/cpu/dyncom/arm_dyncom_trans.h
+        include/cpu/dyncom/arm_regformat.h
+        include/cpu/dyncom/armstate.h
+        include/cpu/dyncom/armsupp.h
+        src/dyncom/vfp/vfp.cpp
+        src/dyncom/vfp/vfpdouble.cpp
+        src/dyncom/vfp/vfpsingle.cpp
+        src/dyncom/arm_dyncom.cpp
+        src/dyncom/arm_dyncom_dec.cpp
+        src/dyncom/arm_dyncom_interpreter.cpp
+        src/dyncom/arm_dyncom_thumb.cpp
+        src/dyncom/arm_dyncom_trans.cpp
+        src/dyncom/armstate.cpp
+        src/dyncom/armsupp.cpp)
 
 add_library(cpu
         include/cpu/arm_analyser.h
@@ -46,7 +73,9 @@ add_library(cpu
         src/arm_analyser_capstone.cpp
         src/arm_analyser.cpp
         src/arm_factory.cpp
-        src/arm_utils.cpp)
+        src/arm_utils.cpp
+        ${SOURCE_12L1R_PUBLIC}
+        ${SOURCE_DYNCOM})
 
 if (ARCHITECTURE_ARM32)
     target_sources(cpu PRIVATE

@@ -433,10 +433,15 @@ namespace eka2l1 {
             // EKA1 does not use BX LR to jump back, they let kernel do it
             if (is_eka1()) {
                 const std::uint32_t jump_back = cpu_->get_lr();
+                std::uint32_t cpsr = cpu_->get_cpsr() & ~0x20;
+
+                if (jump_back & 0b1) {
+                    cpsr |= 0x20;
+                }
 
                 // Set pc and ARM/thumb flag
                 cpu_->set_pc(jump_back & ~0b1);
-                cpu_->set_cpsr(cpu_->get_cpsr() | ((jump_back & 0b1) ? 0x20 : 0));
+                cpu_->set_cpsr(cpsr);
             }
 
             crr_thread()->add_last_syscall(ordinal);

@@ -18,15 +18,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <cpu/arm_factory.h>
-
 #include <common/platform.h>
+
+#include <cpu/dyncom/arm_dyncom.h>
 
 #if EKA2L1_ARCH(ARM)
 #include <cpu/12l1r/arm_12l1r.h>
-#include <cpu/12l1r/exclusive_monitor.h>
 #else
 #include <cpu/arm_dynarmic.h>
 #endif
+
+#include <cpu/12l1r/exclusive_monitor.h>
 
 namespace eka2l1::arm {
     core_instance create_core(exclusive_monitor *monitor, arm_emulator_type arm_type) {
@@ -42,6 +44,9 @@ namespace eka2l1::arm {
             return std::make_unique<dynarmic_core>(monitor);
 #endif
 
+        case arm_emulator_type::dyncom:
+            return std::make_unique<dyncom_core>(monitor, 12);
+
         default:
             break;
         }
@@ -53,6 +58,9 @@ namespace eka2l1::arm {
         switch (arm_type) {
         case arm_emulator_type::unicorn:
             return nullptr;
+
+        case arm_emulator_type::dyncom:
+            return std::make_unique<r12l1::exclusive_monitor>(core_count);
 
 #if EKA2L1_ARCH(ARM)
         case arm_emulator_type::r12l1:

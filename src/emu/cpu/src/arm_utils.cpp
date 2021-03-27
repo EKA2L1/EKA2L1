@@ -44,6 +44,12 @@ namespace eka2l1::arm {
         case arm_emulator_type::unicorn:
             return unicorn_jit_backend_formal_name;
 
+        case arm_emulator_type::dyncom:
+            return dyncom_jit_backend_formal_name;
+
+        case arm_emulator_type::r12l1:
+            return r12l1_jit_backend_formal_name;
+
         default:
             break;
         }
@@ -59,6 +65,14 @@ namespace eka2l1::arm {
 
         if (backend_lowered == dynarmic_jit_backend_name)
             return arm_emulator_type::dynarmic;
+
+        if (backend_lowered == dyncom_jit_backend_name) {
+            return arm_emulator_type::dyncom;
+        }
+
+        if (backend_lowered == r12l1_jit_backend_name) {
+            return arm_emulator_type::r12l1;
+        }
 
         return arm_emulator_type::dynarmic;
     }
