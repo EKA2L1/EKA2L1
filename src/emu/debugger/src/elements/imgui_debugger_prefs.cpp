@@ -310,9 +310,15 @@ namespace eka2l1 {
         ImGui::PushItemWidth(col2 - 10);
 
         if (ImGui::BeginCombo("##CPUCombo", arm::arm_emulator_type_to_string(sys->get_cpu_executor_type()))) {
-            if (ImGui::Selectable("Dynarmic")) {
-                conf->cpu_backend = "Dynarmic";
+            if (ImGui::Selectable("Dynarmic (CPU recompiler)")) {
+                conf->cpu_backend = arm::dynarmic_jit_backend_name;
                 sys->set_cpu_executor_type(arm_emulator_type::dynarmic);
+                conf->serialize();
+            }
+
+            if (ImGui::Selectable("Dyncom (CPU interpreter)")) {
+                conf->cpu_backend = arm::dyncom_jit_backend_name;
+                sys->set_cpu_executor_type(arm_emulator_type::dyncom);
                 conf->serialize();
             }
 
