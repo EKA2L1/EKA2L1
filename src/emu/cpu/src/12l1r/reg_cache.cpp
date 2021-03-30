@@ -49,6 +49,40 @@ namespace eka2l1::arm::r12l1 {
         , big_block_(bblock) {
     }
 
+    void reg_cache::copy_state(common::armgen::arm_reg state_reg) {
+        // Save the CPSR
+        big_block_->STR(CPSR_REG, state_reg, offsetof(core_state, cpsr_));
+
+        // Save GPRs
+        for (common::armgen::arm_reg reg = common::armgen::R0; reg < common::armgen::R15; reg = static_cast<common::armgen::arm_reg>(reg + 1)) {
+            guest_register_info &info = guest_gpr_infos_[reg];
+            const std::uint32_t offset_gpr_mem = get_offset_to_reg_in_core_state(reg - common::armgen::R0, REG_SCRATCH_TYPE_GPR);
+
+            switch (info.curr_location_) {
+            case GUEST_REGISTER_LOC_HOST_REG:
+                big_block_->STR(info.host_reg_, state_reg, offset_gpr_mem);
+                break;
+
+            case GUEST_REGISTER_LOC_MEM: {
+                big_block_->LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offset_gpr_mem);
+                big_block_->STR(ALWAYS_SCRATCH1, state_reg, offset_gpr_mem);
+                break;
+            }
+
+            case GUEST_REGISTER_LOC_IMM:
+                big_block_->MOVI2R(ALWAYS_SCRATCH1, info.imm_);
+                big_block_->STR(ALWAYS_SCRATCH1, state_reg, offset_gpr_mem);
+                break;
+
+            default:
+                LOG_ERROR(CPU_12L1R, "No method to copy register R{} to another state", reg - common::armgen::R0);
+                break;
+            }
+        }
+
+        // TODO: Store FPCSR and ExtRegs too!
+    }
+
     bool reg_cache::load_gpr_to_host(common::armgen::arm_reg dest_reg, common::armgen::arm_reg source_guest_reg) {
         if ((dest_reg < common::armgen::R0) || (dest_reg >= common::armgen::R15)) {
             LOG_ERROR(CPU_12L1R, "Invalid register to load from!");
@@ -64,7 +98,6 @@ namespace eka2l1::arm::r12l1 {
 
         case GUEST_REGISTER_LOC_MEM: {
             big_block_->LDR(dest_reg, CORE_STATE_REG, get_offset_to_reg_in_core_state(source_guest_reg - common::armgen::R0, REG_SCRATCH_TYPE_GPR));
-
             break;
         }
 
@@ -101,9 +134,11 @@ namespace eka2l1::arm::r12l1 {
                 big_block_->STR(info.host_reg_, CORE_STATE_REG, get_offset_to_reg_in_core_state(mee - common::armgen::R0, REG_SCRATCH_TYPE_GPR));
             }
 
-            host_gpr_infos_[info.host_reg_].guest_mapped_reg_ = common::armgen::INVALID_REG;
-            host_gpr_infos_[info.host_reg_].dirty_ = true;
+            if (!info.spill_lock_) {
+                host_gpr_infos_[info.host_reg_].guest_mapped_reg_ = common::armgen::INVALID_REG;
+            }
 
+            host_gpr_infos_[info.host_reg_].dirty_ = false;
             break;
 
         case GUEST_REGISTER_LOC_MEM:
@@ -286,12 +321,15 @@ namespace eka2l1::arm::r12l1 {
                 LOG_ERROR(CPU_12L1R, "Host and guest register out of sync!");
             }
 
-            // Intentional, old imm if it's available will disappear
-            host_rf_arr[host_reg].dirty_ = true;
+            // TODO: Handle IMM and Reg
+            if (allocate_flags & ALLOCATE_FLAG_DIRTY) {
+                host_rf_arr[host_reg].dirty_ = true;
+            }
+
             guest_rf_arr[mee].curr_location_ = GUEST_REGISTER_LOC_HOST_REG;
 
             // Increase the use count
-            guest_rf_arr[mee].last_use_ = time_;
+            guest_rf_arr[mee].last_use_ = time_++;
             return host_reg;
         }
 

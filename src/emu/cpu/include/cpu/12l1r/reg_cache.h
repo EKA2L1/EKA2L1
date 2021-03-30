@@ -101,5 +101,7 @@ namespace eka2l1::arm::r12l1 {
 
         void release_spill_lock(const common::armgen::arm_reg guest_reg);
         void release_spill_lock_all(reg_scratch_type type);
+
+        void copy_state(common::armgen::arm_reg state_reg);
     };
 }
