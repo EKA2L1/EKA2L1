@@ -20,8 +20,10 @@
 #pragma once
 
 #include <common/armemitter.h>
+
 #include <cpu/12l1r/block_cache.h>
 #include <cpu/arm_interface.h>
+#include <cpu/dyncom/arm_dyncom.h>
 
 #include <cstdint>
 #include <map>
@@ -62,13 +64,23 @@ namespace eka2l1::arm::r12l1 {
         const void *dispatch_ent_for_block_;
         const void *fast_dispatch_ent_;
 
+        std::uint32_t flags_;
+
         r12l1_core *parent_;
+
+        std::unique_ptr<dyncom_core> interpreter_;
 
     protected:
         void assemble_control_funcs();
         translated_block *start_new_block(const vaddress addr, const asid aid);
 
     public:
+        enum {
+            FLAG_GENERATE_FUZZ = 1 << 0,
+            FLAG_ENABLE_FUZZ = 1 << 1,
+            FLAG_FUZZ_LAST_SYSCALL = 1 << 2
+        };
+
         explicit dashixiong_block(r12l1_core *parent);
         void enter_dispatch(core_state *cstate);
 
@@ -114,5 +126,14 @@ namespace eka2l1::arm::r12l1 {
         bool write_ex_word(const vaddress addr, const std::uint16_t val);
         bool write_ex_dword(const vaddress addr, const std::uint32_t val);
         bool write_ex_qword(const vaddress addr, const std::uint64_t val);
+
+        void fuzz_start();
+        bool fuzz_execute();
+        void fuzz_compare(core_state *state);
+        void fuzz_end();
+
+        std::uint32_t config_flags() const {
+            return flags_;
+        }
     };
 }

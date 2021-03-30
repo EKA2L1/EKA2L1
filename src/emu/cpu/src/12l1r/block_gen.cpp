@@ -52,6 +52,7 @@ namespace eka2l1::arm::r12l1 {
     dashixiong_block::dashixiong_block(r12l1_core *parent)
         : dispatch_func_(nullptr)
         , dispatch_ent_for_block_(nullptr)
+        , flags_(0)
         , parent_(parent) {
         context_info.detect();
         clear_fast_dispatch();
@@ -85,6 +86,9 @@ namespace eka2l1::arm::r12l1 {
                 }
             }
         });
+
+        // To debug JIT with interpreter: uncomment this line!
+        // flags_ = FLAG_GENERATE_FUZZ;
     }
 
     static void dashixiong_print_debug(const std::uint32_t val) {
@@ -599,6 +603,8 @@ namespace eka2l1::arm::r12l1 {
             return nullptr;
         }
 
+        // When you want to start the fuzz, call fuzz_start(), and end it with fuzz_end()
+
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
 
@@ -607,19 +613,21 @@ namespace eka2l1::arm::r12l1 {
         LOG_TRACE(CPU_12L1R, "Compiling new block PC=0x{:X}, host=0x{:X}, thumb={}", addr,
             reinterpret_cast<std::uint32_t>(block->translated_code_), is_thumb);
 
-        std::unique_ptr<arm_translate_visitor> arm_visitor = nullptr;
-        std::unique_ptr<thumb_translate_visitor> thumb_visitor = nullptr;
+        std::unique_ptr<visit_session> visitor = nullptr;
 
         if (!is_thumb) {
-            arm_visitor = std::make_unique<arm_translate_visitor>(this, block);
+            visitor = std::make_unique<arm_translate_visitor>(this, block);
         } else {
-            thumb_visitor = std::make_unique<thumb_translate_visitor>(this, block);
+            visitor = std::make_unique<thumb_translate_visitor>(this, block);
         }
 
-        // Reserve 512 pages for these JIT codes.
-        begin_write(512);
+        // Reserve 512 pages for these JIT codes. When fuzz is enabled this is probably larger
+        if (flags_ & FLAG_GENERATE_FUZZ) {
+            begin_write(1024);
+        } else {
+            begin_write(512);
+        }
 
-        // Let them know the address damn
         emit_pc_flush(addr);
 
         // Emit the check if we should go outside and stop running
@@ -640,11 +648,7 @@ namespace eka2l1::arm::r12l1 {
         set_cc(common::CC_AL);
 
         // Restore CPSR here.
-        if (arm_visitor) {
-            arm_visitor->emit_cpsr_restore_nzcvq();
-        } else {
-            thumb_visitor->emit_cpsr_restore_nzcvq();
-        }
+        visitor->emit_cpsr_restore_nzcvq();
 
         std::uint32_t inst = 0;
 
@@ -660,21 +664,6 @@ namespace eka2l1::arm::r12l1 {
                 }
 
                 inst = read_res->first;
-
-                if (read_res->second == THUMB_INST_SIZE_THUMB32) {
-                    if (auto decoder = decode_thumb32<thumb_translate_visitor>(inst)) {
-                        should_continue = decoder->get().call(*thumb_visitor, inst);
-                    } else {
-                        should_continue = thumb_visitor->thumb32_UDF();
-                    }
-                } else {
-                    if (auto decoder = decode_thumb16<thumb_translate_visitor>(static_cast<std::uint16_t>(inst))) {
-                        should_continue = decoder->get().call(*thumb_visitor, inst);
-                    } else {
-                        should_continue = thumb_visitor->thumb16_UDF();
-                    }
-                }
-
                 inst_size = read_res->second;
             } else {
                 if (!parent_->read_code(addr + block->size_, &inst)) {
@@ -682,30 +671,139 @@ namespace eka2l1::arm::r12l1 {
                     return nullptr;
                 }
 
+                inst_size = 4;
+            }
+
+            visitor->emit_fuzzing_execs(is_thumb ? (inst_size / 2) : 1);
+
+            if (is_thumb) {
+                if (inst_size == THUMB_INST_SIZE_THUMB32) {
+                    if (auto decoder = decode_thumb32<thumb_translate_visitor>(inst)) {
+                        should_continue = decoder->get().call(static_cast<thumb_translate_visitor&>(*visitor), inst);
+                    } else {
+                        should_continue = static_cast<thumb_translate_visitor&>(*visitor).thumb32_UDF();
+                    }
+                } else {
+                    if (auto decoder = decode_thumb16<thumb_translate_visitor>(static_cast<std::uint16_t>(inst))) {
+                        should_continue = decoder->get().call(static_cast<thumb_translate_visitor&>(*visitor), inst);
+                    } else {
+                        should_continue = static_cast<thumb_translate_visitor&>(*visitor).thumb16_UDF();
+                    }
+                }
+            } else {
                 // ARM decoding. NEON -> VFP -> ARM
                 if (auto decoder = decode_arm<arm_translate_visitor>(inst)) {
-                    should_continue = decoder->get().call(*arm_visitor, inst);
+                    should_continue = decoder->get().call(static_cast<arm_translate_visitor&>(*visitor), inst);
                 } else {
-                    should_continue = arm_visitor->arm_UDF();
+                    should_continue = static_cast<arm_translate_visitor&>(*visitor).arm_UDF();
                 }
 
                 inst_size = 4;
             }
 
-            block->size_ += inst_size;
-            block->last_inst_size_ = inst_size;
-            block->inst_count_++;
+            visitor->cycle_next(inst_size);
         } while (should_continue);
 
-        if (is_thumb) {
-            thumb_visitor->finalize();
-        } else {
-            arm_visitor->finalize();
-        }
+        visitor->finalize();
 
         end_write();
         flush_icache();
 
         return block;
+    }
+
+    void dashixiong_block::fuzz_start() {
+        if (!(flags_ & FLAG_ENABLE_FUZZ)) {
+            if (!interpreter_) {
+                interpreter_ = std::make_unique<dyncom_core>(parent_->monitor_, parent_->mem_cache_.page_bits);
+                dyncom_core *interpreter_ptr = interpreter_.get();
+
+                // Copy lengthy callbacks
+                interpreter_->read_8bit = parent_->read_8bit;
+                interpreter_->read_16bit = parent_->read_16bit;
+                interpreter_->read_32bit = parent_->read_32bit;
+                interpreter_->read_64bit = parent_->read_64bit;
+                interpreter_->read_code = parent_->read_code;
+                interpreter_->write_8bit = parent_->write_8bit;
+                interpreter_->write_16bit = parent_->write_16bit;
+                interpreter_->write_32bit = parent_->write_32bit;
+                interpreter_->write_64bit = parent_->write_64bit;
+                interpreter_->exclusive_write_8bit = parent_->exclusive_write_8bit;
+                interpreter_->exclusive_write_16bit = parent_->exclusive_write_16bit;
+                interpreter_->exclusive_write_32bit = parent_->exclusive_write_32bit;
+                interpreter_->exclusive_write_64bit = parent_->exclusive_write_64bit;
+                interpreter_->system_call_handler = [this](const std::uint32_t num) {
+                    flags_ |= FLAG_FUZZ_LAST_SYSCALL;
+                };
+                interpreter_->exception_handler = [interpreter_ptr](const arm::exception_type type, const std::uint32_t data) {
+                    if ((type == arm::exception_type_access_violation_write) || (type == arm::exception_type_access_violation_read)) {
+                        LOG_TRACE(CPU_12L1R, "Failure happens at 0x{:X}, back at 0x{:X}", interpreter_ptr->get_pc(), interpreter_ptr->get_lr());
+                    }
+                };
+            }
+
+            core::thread_context ctx;
+
+            parent_->save_context(ctx);
+            interpreter_->load_context(ctx);
+
+            flags_ |= FLAG_ENABLE_FUZZ;
+        }
+    }
+
+    std::uint32_t last_pc = 0;
+
+    bool dashixiong_block::fuzz_execute() {
+        if (flags_ & FLAG_ENABLE_FUZZ) {
+            interpreter_->step();
+            return true;
+        }
+
+        return false;
+    }
+
+    void dashixiong_block::fuzz_compare(core_state *state) {
+        if (!(flags_ & FLAG_ENABLE_FUZZ)) {
+            return;
+        }
+
+        if (flags_ & FLAG_FUZZ_LAST_SYSCALL) {
+            // Restore to core state
+            core::thread_context ctx;
+
+            parent_->save_context(ctx);
+            interpreter_->load_context(ctx);
+
+            flags_ &= ~FLAG_FUZZ_LAST_SYSCALL;
+
+            // Usually SVC ends a block, which make us, when we encounter this flag, one step behind
+            // the current instruction!
+            interpreter_->step();
+
+            return;
+        }
+
+        // Compare CPSR NZCV
+        static constexpr std::uint32_t NZCV_T_MASK = 0b11110000000000000000000000100000;
+        if ((state->cpsr_ & NZCV_T_MASK) != (interpreter_->get_cpsr() & NZCV_T_MASK)) {
+            LOG_ERROR(CPU_12L1R, "At PC: 0x{:X}, CPSR NZCV_T value mismatch (JIT: {} vs Int: {})", state->gprs_[15], state->cpsr_, interpreter_->get_cpsr());
+        }
+
+        if (state->gprs_[15] != interpreter_->get_pc()) {
+            LOG_ERROR(CPU_12L1R, "PC of JIT (0x{:X}) vs Interpreter (0x{:X}) mismatch!", state->gprs_[15], interpreter_->get_pc());
+        }
+
+        static constexpr std::uint8_t MAX_CMP_GPRS = 14;
+        for (std::uint8_t i = 0; i < MAX_CMP_GPRS; i++) {
+            if (state->gprs_[i] != interpreter_->get_reg(i)) {
+                LOG_ERROR(CPU_12L1R, "At PC: 0x{:X}, R{} mismatch! (JIT: {} vs Interpreter {})", state->gprs_[15], i, state->gprs_[i], interpreter_->get_reg(i));
+            }
+        }
+
+        // TODO: Compare ExtReg too!
+    }
+
+    void dashixiong_block::fuzz_end() {
+        flags_ &= ~FLAG_ENABLE_FUZZ;
     }
 }
