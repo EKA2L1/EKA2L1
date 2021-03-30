@@ -35,6 +35,7 @@ namespace eka2l1::arm::r12l1 {
         std::uint32_t should_break_;
         std::uint32_t current_aid_;
         std::uint32_t exclusive_state_;
+        std::uint32_t padding_;
 
         tlb_entry *entries_;
 
