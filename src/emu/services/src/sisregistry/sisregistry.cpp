@@ -44,6 +44,13 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_session::fetch(service::ipc_context *ctx) {
+        if (ctx->sys->get_symbian_version_use() < epocver::epoc95) {
+            if ((ctx->msg->function >= sisregistry_get_matching_supported_languages) &&
+                (ctx->msg->function <= sisregistry_separator_minimum_read_user_data)) {
+                ctx->msg->function++;
+            }
+        }
+
         switch (ctx->msg->function) {
         case sisregistry_in_rom: {
             is_in_rom(ctx);
@@ -54,19 +61,44 @@ namespace eka2l1 {
             get_trust_timestamp(ctx);
             break;
         }
+
+        case sisregistry_trust_status_op: {
+            get_trust_status(ctx);
+            break;
+        }
+
+        case sisregistry_installed_packages: {
+            request_package_augmentations(ctx);
+            break;
+        }
+
+        case sisregistry_files: {
+            request_files(ctx);
+            break;
+        }
+
+        case sisregistry_file_descriptions: {
+            request_file_descriptions(ctx);
+            break;
+        }
         
         case sisregistry_package_augmentations: {
             request_package_augmentations(ctx);
             break;
         }
 
-        case sisregistry_package: {
+        case sisregistry_package_op: {
             get_package(ctx);
             break;
         }
         
         case sisregistry_non_removable: {
             is_non_removable(ctx);
+            break;
+        }
+
+        case sisregistry_dependent_packages: {
+            request_package_augmentations(ctx);
             break;
         }
 
@@ -101,6 +133,59 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void sisregistry_client_session::get_trust_status(eka2l1::service::ipc_context *ctx) {
+        sisregistry_trust_status status;
+        status.revocation_status = sisregistry_revocation_status::sisregistry_revocation_ocsp_good;
+        status.validation_status = sisregistry_validation_status::sisregistry_validation_validated;
+
+        ctx->write_data_to_descriptor_argument(0, status);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::request_files(eka2l1::service::ipc_context *ctx) {
+        std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
+        LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_files 0x{:X}", package_mode.value());
+
+        if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_count) {
+            std::uint32_t file_count = 0;
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(1, file_count);
+            ctx->complete(epoc::error_none);
+        } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
+            request_file_descriptions(ctx);
+        }
+    }
+
+    void sisregistry_client_session::request_file_descriptions(eka2l1::service::ipc_context *ctx) {
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_file_descriptions(seri);
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
+            common::SERI_MODE_WRITE);
+        populate_file_descriptions(seri);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::populate_file_descriptions(common::chunkyseri &seri) {
+        std::uint32_t file_count = 0;
+        seri.absorb(file_count);
+        for (size_t i = 0; i < file_count; i++) {
+            sisregistry_file_description desc;
+
+            epoc::absorb_des_string(desc.target, seri, true);
+            epoc::absorb_des_string(desc.mime_type, seri, true);
+            seri.absorb(desc.hash);
+            seri.absorb(desc.operation);
+            seri.absorb(desc.operation_options);
+            seri.absorb(desc.uncompressed_length);
+            seri.absorb(desc.index);
+            seri.absorb(desc.sid);
+            epoc::absorb_des_string(desc.capabilities_data, seri, true);
+        }
+    }
+
     void sisregistry_client_session::request_package_augmentations(eka2l1::service::ipc_context *ctx) {
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
         populate_augmentations(seri);
@@ -118,10 +203,12 @@ namespace eka2l1 {
         std::uint32_t property_count = 1;
         seri.absorb(property_count);
         for (size_t i = 0; i < property_count; i++) {
-            sisregistry_package_ package;
+            sisregistry_package package;
+            package.index = 0;
+
             seri.absorb(package.uid);
-            epoc::absorb_des(&package.package_name, seri);
-            epoc::absorb_des(&package.vendor_name, seri);
+            epoc::absorb_des_string(package.package_name, seri, true);
+            epoc::absorb_des_string(package.vendor_name, seri, true);
             seri.absorb(package.index);
         }
     }
@@ -129,8 +216,9 @@ namespace eka2l1 {
     void sisregistry_client_session::get_package(eka2l1::service::ipc_context *ctx) {
         std::uint32_t session_id = *(ctx->get_argument_value<std::uint32_t>(3));
 
-        sisregistry_package_ package;
+        sisregistry_package package;
         package.uid = session_id;
+        package.index = 0;
 
         ctx->write_data_to_descriptor_argument(0, package);
         ctx->complete(epoc::error_none);

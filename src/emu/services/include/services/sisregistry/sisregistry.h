@@ -32,20 +32,77 @@ namespace eka2l1 {
         sisregistry_close_registry_entry = 0x3,
         sisregistry_version = 0x5,
         sisregistry_in_rom = 0xA,
+        sisregistry_get_matching_supported_languages = 0x10,
         sisregistry_trust_timestamp = 0x16,
+        sisregistry_trust_status_op = 0x17,
+        sisregistry_separator_minimum_read_user_data = 0x20,
+        sisregistry_installed_packages = 0x22,
+        sisregistry_files = 0x2E,
+        sisregistry_file_descriptions = 0x2F,
         sisregistry_package_augmentations = 0x30,
-        sisregistry_package = 0x34,
+        sisregistry_package_op = 0x34,
         sisregistry_non_removable = 0x36,
-        sisregistry_update_entry = 0x45,
+        sisregistry_regenerate_cache = 0x45,
+        sisregistry_dependent_packages = 0x103,
         sisregistry_embedded_packages = 0x104,
         sisregistry_signed_by_sucert = 0x107
     };
 
-    struct sisregistry_package_ {
+    enum sisregistry_validation_status {
+        sisregistry_validation_unknown = 0,
+        sisregistry_validation_expired = 10,
+        sisregistry_validation_invalid = 20,
+        sisregistry_validation_unsigned = 30,
+        sisregistry_validation_validated = 40,
+        sisregistry_validation_validated_to_anchor = 50,
+        sisregistry_validation_package_in_rom = 60 
+    };
+
+    enum sisregistry_revocation_status {
+        sisregistry_revocation_unknown2 = 0,
+        sisregistry_revocation_ocsp_not_performed = 10,
+        sisregistry_revocation_ocsp_revoked = 20,
+        sisregistry_revocation_ocsp_unknown = 30,
+        sisregistry_revocation_ocsp_transient = 40,
+        sisregistry_revocation_ocsp_good = 50, 
+    };
+
+    enum sisregistry_stub_extraction_mode {
+        sisregistry_stub_extraction_mode_get_count,
+        sisregistry_stub_extraction_mode_get_files
+    };
+
+    struct sisregistry_package {
         epoc::uid uid;
         std::u16string package_name;
         std::u16string vendor_name;
         std::int32_t index; 
+    };
+
+    struct sisregistry_trust_status {
+        sisregistry_validation_status validation_status;
+        sisregistry_revocation_status revocation_status;
+        std::uint64_t result_date;
+        std::uint64_t last_check_date;
+        std::uint32_t quarantined;
+        std::uint64_t quarantined_date;  
+    };
+
+    struct sisregistry_file_description {
+        std::u16string target;
+        std::u16string mime_type;
+        std::uint32_t hash;
+        std::uint32_t operation;
+        std::uint32_t operation_options;
+        std::uint64_t uncompressed_length;
+        std::uint32_t index;
+        epoc::uid sid;
+        std::string capabilities_data;
+    };
+
+    struct sisregistry_hash_container {
+        std::uint32_t algorithm;
+        std::string data;
     };
 
     class sisregistry_server : public service::typical_server {
@@ -62,11 +119,15 @@ namespace eka2l1 {
 
         void fetch(service::ipc_context *ctx) override;
         void is_in_rom(eka2l1::service::ipc_context *ctx);
+        void request_files(eka2l1::service::ipc_context *ctx);
+        void request_file_descriptions(eka2l1::service::ipc_context *ctx);
+        void populate_file_descriptions(common::chunkyseri &seri);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
         void populate_augmentations(common::chunkyseri &seri);
         void is_non_removable(eka2l1::service::ipc_context *ctx);
         void get_package(eka2l1::service::ipc_context *ctx);
         void get_trust_timestamp(eka2l1::service::ipc_context *ctx);
+        void get_trust_status(eka2l1::service::ipc_context *ctx);
         void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
     };
 }
