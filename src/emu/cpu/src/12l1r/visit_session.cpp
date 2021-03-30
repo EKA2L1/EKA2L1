@@ -1026,6 +1026,109 @@ namespace eka2l1::arm::r12l1 {
         return false;
     }
 
+    static bool dashixiong_execute_fuzz(dashixiong_block *self) {
+        return self->fuzz_execute();
+    }
+
+    static void dashixiong_compare_fuzz(dashixiong_block *self, core_state *state) {
+        self->fuzz_compare(state);
+    }
+
+    void visit_session::emit_fuzzing_execs(const std::int32_t num) {
+        if (big_block_->config_flags() & dashixiong_block::FLAG_GENERATE_FUZZ) {
+            if (cpsr_ever_updated_) {
+                emit_cpsr_update_nzcvq();
+            }
+
+            // Since the condition changed, not flushing registers in this case will result all
+            // our work gone to waste! If we let it be done in B_CC down below in case the condition
+            // not true anymore, the reg cache will never be flushed :((
+            if (cond_modified_) {
+                reg_supplier_.flush_all();
+                big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
+
+                last_inst_count_ = crr_block_->inst_count_;
+            }
+
+            if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
+                big_block_->set_jump_target(end_target_);
+            }
+
+            big_block_->set_cc(common::CC_AL);
+
+            fuzz_jump_ptr = big_block_->get_writeable_code_ptr();
+            big_block_->B(fuzz_jump_ptr + 4);
+
+            big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+            for (std::int32_t i = 0; i < num; i++) {
+                big_block_->MOVP2R(common::armgen::R0, big_block_);
+                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_execute_fuzz);
+            }
+
+            big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+            fuzz_end = big_block_->get_writeable_code_ptr();
+            emit_cpsr_restore_nzcvq();
+
+            // Normally, when condition is modified, we won't make new branch... What's the point
+            if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
+                end_target_ = big_block_->B_CC(common::invert_cond(flag_));
+            }
+        }
+    }
+
+    void visit_session::emit_fuzzing_check() {
+        if (big_block_->config_flags() & dashixiong_block::FLAG_GENERATE_FUZZ) {
+            // The disadvantage of the fuzzing is the comparision can only be made when the condition is hit
+            if (cpsr_ever_updated_) {
+                emit_cpsr_update_nzcvq();
+            }
+
+            big_block_->SUBI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
+            big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R_SP);
+
+            // Generate code that copy the current state
+            // This does not change the CPSR
+            reg_supplier_.copy_state(ALWAYS_SCRATCH2);
+
+            // Flush current PC to this fuzzing state
+            big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_address());
+            big_block_->STR(ALWAYS_SCRATCH1, ALWAYS_SCRATCH2, offsetof(core_state, gprs_[15]));
+
+            big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+            big_block_->MOVP2R(common::armgen::R0, big_block_);
+            big_block_->MOV(common::armgen::R1, ALWAYS_SCRATCH2);
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_compare_fuzz);
+
+            big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+            big_block_->ADDI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
+
+            emit_cpsr_restore_nzcvq();
+        }
+    }
+
+    void visit_session::cycle_next(const std::uint32_t inst_size) {
+        if (!cond_failed_) {
+            crr_block_->size_ += inst_size;
+            crr_block_->last_inst_size_ = inst_size;
+            crr_block_->inst_count_++;
+        }
+
+        if (big_block_->config_flags() & dashixiong_block::FLAG_GENERATE_FUZZ) {
+            if (cond_failed_) {
+                std::uint8_t *last = big_block_->get_writeable_code_ptr();
+                big_block_->set_code_pointer(fuzz_jump_ptr);
+                big_block_->B(fuzz_end);
+                big_block_->set_code_pointer(last);
+            } else {
+                // Make a state comparision here
+                emit_fuzzing_check();
+            }
+        }
+    }
+
     void visit_session::emit_direct_link(const vaddress addr, const bool cpsr_save) {
         // Flush all registers in this
         reg_supplier_.flush_all();
@@ -1075,7 +1178,7 @@ namespace eka2l1::arm::r12l1 {
 
         if (hard_req || no_offered_link) {
             // Add branching to next block, making it highest priority
-            crr_block_->get_or_add_link(crr_block_->current_address() - (cond_failed_ ? crr_block_->last_inst_size_ : 0), 0);
+            crr_block_->get_or_add_link(crr_block_->current_address(), 0);
         }
 
         // Emit links

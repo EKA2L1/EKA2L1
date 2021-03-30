@@ -40,12 +40,15 @@ namespace eka2l1::arm::r12l1 {
         common::cc_flags flag_;
         common::armgen::fixup_branch end_target_;
 
-        bool cond_modified_;
         bool cpsr_ever_updated_;
 
+        bool cond_modified_;
         bool cond_failed_;
 
         std::uint32_t last_inst_count_;
+
+        std::uint8_t *fuzz_jump_ptr = nullptr;
+        std::uint8_t *fuzz_end = nullptr;
 
     public:
         translated_block *crr_block_;
@@ -89,6 +92,9 @@ namespace eka2l1::arm::r12l1 {
         void emit_pc_write(common::armgen::arm_reg reg);
         void emit_alu_jump(common::armgen::arm_reg reg);
 
+        void emit_fuzzing_execs(const std::int32_t num);
+        void emit_fuzzing_check();
+        void cycle_next(const std::uint32_t inst_size);
         void sync_state();
         void finalize();
 
