@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="path">Путь</string>
-    <string name="change">Изменить</string>
+    <string name="path">Путь к процессу</string>
+    <string name="change">Выбрать другой</string>
     <string name="replace">Заменить</string>
     <string name="load">Загрузить</string>
     <string name="save">Сохранить</string>

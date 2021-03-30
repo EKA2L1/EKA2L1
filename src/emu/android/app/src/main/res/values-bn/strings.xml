@@ -30,7 +30,7 @@
     <string name="pref_enable_actionbar">অ্যাকশন বার সক্রিয় করুন</string>
     <string name="pref_enable_statusbar">স্ট্যাটাসবার সচল করুন</string>
     <string name="pref_wakelock">স্ক্রিন চালু রাখুন</string>
-    <string name="pref_enable_vibration">Enable vibration</string>
+    <string name="pref_enable_vibration">কম্পন চালু করুন</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">নিয়ারেস্ট নেইবর ফিল্টারিং সচল করুন</string>
     <string name="pref_system_language_option_name">ভাষা</string>
     <string name="pref_system_real_time_accuracy_str">রিয়াল-টাইম যথার্থতা</string>
@@ -53,6 +53,6 @@
     <string name="confirmation_required">অনুমোদন প্রয়োজন</string>
     <string name="force_close_confirmation">সরাসরি বন্ধ করার ফলে ডাটা ক্ষতিগ্রস্ত অথবা সম্পূর্ণভাবে ভেঙ্গে যেতে পারে\nএগিয়ে যাবেন?</string>
     <string name="log_saved">লগ সংরক্ষণ করা হয়েছে</string>
-    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
+    <string name="about_icon_by">&lt;BR&gt;আইকন তৈরি করেছেন: </string>
     <string name="version">সংস্করণ: </string>
 </resources>

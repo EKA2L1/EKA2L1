@@ -30,7 +30,7 @@
     <string name="pref_enable_actionbar">Habilitar ActionBar</string>
     <string name="pref_enable_statusbar">Mostrar la barra de estado</string>
     <string name="pref_wakelock">Mantener pantalla por encima</string>
-    <string name="pref_enable_vibration">Enable vibration</string>
+    <string name="pref_enable_vibration">Habilitar vibración</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Habilitar filtro nearest neighbor</string>
     <string name="pref_system_language_option_name">Idioma</string>
     <string name="pref_system_real_time_accuracy_str">Precisión en tiempo real</string>
@@ -53,6 +53,6 @@
     <string name="confirmation_required">Se requiere confirmación</string>
     <string name="force_close_confirmation">¡Forzar el cierre de la aplicación puede resultar en pérdida de datos o incluso dañarlos permanentemente!\n¿Desea proceder?</string>
     <string name="log_saved">El log ha sido guardado</string>
-    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
+    <string name="about_icon_by">&lt;BR&gt;Icono por: </string>
     <string name="version">Versión: </string>
 </resources>
