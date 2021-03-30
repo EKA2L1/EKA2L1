@@ -131,6 +131,11 @@ namespace eka2l1::arm {
 
         jit_state_.cpsr_ = ctx.cpsr;
         jit_state_.fpscr_ = ctx.fpscr;
+
+        if (big_block_->config_flags() & r12l1::dashixiong_block::FLAG_ENABLE_FUZZ) {
+            big_block_->fuzz_end();
+            big_block_->fuzz_start();
+        }
     }
 
     bool r12l1_core::is_thumb_mode() {
