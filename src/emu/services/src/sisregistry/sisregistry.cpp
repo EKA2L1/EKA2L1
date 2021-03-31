@@ -52,6 +52,17 @@ namespace eka2l1 {
         }
 
         switch (ctx->msg->function) {
+        case sisregistry_open_registry_uid: {
+            auto uuu = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+            LOG_TRACE(SERVICE_SISREGISTRY, "Open new subsession for UID 0x{:X}", uuu.value());
+
+            if (uuu.value() == 0x20003b78)
+                ctx->complete(epoc::error_none);
+            else
+                ctx->complete(epoc::error_not_found);
+            break;
+        }
+    
         case sisregistry_in_rom: {
             is_in_rom(ctx);
             break;
@@ -69,6 +80,11 @@ namespace eka2l1 {
 
         case sisregistry_installed_packages: {
             request_package_augmentations(ctx);
+            break;
+        }
+
+        case sisregistry_installed_uid: {
+            is_installed_uid(ctx);
             break;
         }
 
@@ -109,6 +125,20 @@ namespace eka2l1 {
 
         case sisregistry_signed_by_sucert: {
             is_signed_by_sucert(ctx);
+            break;
+        }
+
+        case sisregistry_add_entry: {
+            std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
+            std::uint32_t size = ctx->get_argument_data_size(0);
+            common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
+            sisregistry_package package;
+            seri.absorb(package.uid);
+            epoc::absorb_des_string(package.package_name, seri, true);
+            epoc::absorb_des_string(package.vendor_name, seri, true);
+            seri.absorb(package.index);
+
+            ctx->complete(epoc::error_none);
             break;
         }
 
@@ -235,6 +265,20 @@ namespace eka2l1 {
         uint32_t signed_by_sucert = false;
 
         ctx->write_data_to_descriptor_argument(0, signed_by_sucert);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::is_installed_uid(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> package_uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        if (!package_uid) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        LOG_TRACE(SERVICE_SISREGISTRY, "IsInstalledUid for 0x{:X} stubbed with false", package_uid.value());
+        std::int32_t result = 0;
+
+        ctx->write_data_to_descriptor_argument<std::int32_t>(1, result);
         ctx->complete(epoc::error_none);
     }
 }

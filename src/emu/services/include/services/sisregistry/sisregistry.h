@@ -31,17 +31,26 @@ namespace eka2l1 {
         sisregistry_open_registry_uid = 0x0,
         sisregistry_close_registry_entry = 0x3,
         sisregistry_version = 0x5,
+        sisregistry_localized_vendor_name = 0x8,
+        sisregistry_package_name = 0x9,
         sisregistry_in_rom = 0xA,
         sisregistry_get_matching_supported_languages = 0x10,
         sisregistry_trust_timestamp = 0x16,
         sisregistry_trust_status_op = 0x17,
+        sisregistry_stub_file_entries = 0x1D,
         sisregistry_separator_minimum_read_user_data = 0x20,
         sisregistry_installed_packages = 0x22,
+        sisregistry_installed_uid = 0x24,
+        sisregisty_uid = 0x29,
         sisregistry_files = 0x2E,
         sisregistry_file_descriptions = 0x2F,
         sisregistry_package_augmentations = 0x30,
         sisregistry_package_op = 0x34,
         sisregistry_non_removable = 0x36,
+        sisregistry_add_entry = 0x41,
+        sisregistry_update_entry = 0x42,
+        sisregistry_delete_entry = 0x43,
+        sisregistry_install_type = 0x44,    
         sisregistry_regenerate_cache = 0x45,
         sisregistry_dependent_packages = 0x103,
         sisregistry_embedded_packages = 0x104,
@@ -129,5 +138,6 @@ namespace eka2l1 {
         void get_trust_timestamp(eka2l1::service::ipc_context *ctx);
         void get_trust_status(eka2l1::service::ipc_context *ctx);
         void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
+        void is_installed_uid(eka2l1::service::ipc_context *ctx);
     };
 }
