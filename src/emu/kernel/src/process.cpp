@@ -68,6 +68,8 @@ namespace eka2l1::kernel {
                 true,
                 0, 0, pri);
 
+        // If this thread dies, processes booms
+        primary_thread->set_process_permanent(true);
         ++thread_count;
 
         dll_lock = kern->create<kernel::mutex>(kern->get_ntimer(), "dllLockMutexProcess" + common::to_string(std::get<2>(uids)),
@@ -281,6 +283,29 @@ namespace eka2l1::kernel {
         } while (elem != end);
     }
 
+    void process::kill(const entity_exit_type ext, const std::int32_t reason) {
+        if (exit_type != entity_exit_type::pending) {
+            return;
+        }
+
+        exit_type = ext;
+        exit_reason = reason;
+
+        common::double_linked_queue_element *elem = thread_list.first();
+        common::double_linked_queue_element *end = thread_list.end();
+
+        do {
+            if (!elem) {
+                break;
+            }
+
+            E_LOFF(elem, kernel::thread, process_thread_link)->kill(ext, u"Domino", reason);
+            elem = elem->next;
+        } while (elem != end);
+
+        finish_logons();
+    }
+
     void *process::get_ptr_on_addr_space(address addr) {
         return mem->get_control()->get_host_pointer(mm_impl_->address_space_id(), addr);
     }
@@ -290,6 +315,8 @@ namespace eka2l1::kernel {
     void process::logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
         if (!thread_count) {
             (logon_request.get(kern->crr_process()))->set(exit_reason, kern->is_eka1());
+            kern->crr_thread()->signal_request();
+
             return;
         }
 

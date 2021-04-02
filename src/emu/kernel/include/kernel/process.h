@@ -201,6 +201,7 @@ namespace eka2l1::kernel {
 
         void destroy() override;
         bool run();
+        void kill(const entity_exit_type ext, const std::int32_t reason);
 
         std::string name() const override;
         void rename(const std::string &new_name) override;
