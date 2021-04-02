@@ -2059,7 +2059,6 @@ namespace eka2l1::epoc {
 
         uint32_t org_flags = thr->get_flags();
         uint32_t new_flags = ((org_flags & ~clear_mask) | set_mask);
-        new_flags = (new_flags ^ org_flags);
 
         thr->set_flags(org_flags ^ new_flags);
     }
