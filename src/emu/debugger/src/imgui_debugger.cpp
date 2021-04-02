@@ -570,6 +570,11 @@ namespace eka2l1 {
                 io.KeyShift = false;
             }
 
+            if (io.KeysDown[KEY_P]) {
+                should_pause = !should_pause;
+                io.KeysDown[KEY_P] = false;
+            }
+
             if (io.KeysDown[KEY_R]) {
                 should_show_app_launch = !should_show_app_launch;
                 io.KeysDown[KEY_R] = false;
