@@ -897,6 +897,11 @@ namespace eka2l1::epoc {
             fetch_message(ctx, cmd);
             break;
 
+        case ws_cl_op_purge_pointer_events:
+            LOG_TRACE(SERVICE_WINDOW, "Purge pointer events stubbed");
+            ctx.complete(epoc::error_none);
+            break;
+
         case ws_cl_op_compute_mode: {
             LOG_TRACE(SERVICE_WINDOW, "Setting compute mode not supported, instead stubbed");
             ctx.complete(epoc::error_none);
