@@ -348,11 +348,6 @@ namespace eka2l1::kernel {
 
         thr->state = thread_state::stop;
 
-        if (!thr->owning_process()->decrease_thread_count()) {
-            thr->owning_process()->exit_reason = thr->get_exit_reason();
-            thr->owning_process()->finish_logons();
-        }
-
         if (crr_thread == thr) {
             kern->prepare_reschedule();
         }

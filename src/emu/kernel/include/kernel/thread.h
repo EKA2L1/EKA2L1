@@ -135,6 +135,13 @@ namespace eka2l1 {
 
         class thread : public kernel_obj {
         private:
+            enum internal_flag {
+                FLAG_PROCESS_CRITICAL = 1 << 0,
+                FLAG_PROCESS_PERMANENT = 1 << 1,
+                FLAG_SYSTEM_CRITICAL = 1 << 2,
+                FLAG_SYSTEM_PERMANENT = 1 << 3
+            };
+
             friend class eka2l1::kernel_system;
             friend class eka2l1::gdbstub;
 
@@ -359,6 +366,21 @@ namespace eka2l1 {
 
             void set_flags(const std::uint32_t new_flags) {
                 flags = new_flags;
+            }
+
+            void set_process_permanent(const bool opt) {
+                flags &= ~ FLAG_PROCESS_PERMANENT;
+                if (opt) {
+                    flags |= FLAG_PROCESS_PERMANENT;
+                }
+            }
+
+            const bool is_process_permanent() const {
+                return flags & FLAG_PROCESS_PERMANENT;
+            }
+
+            const bool is_process_critical() const {
+                return flags & FLAG_PROCESS_CRITICAL;
             }
 
             thread_local_data *get_local_data() {

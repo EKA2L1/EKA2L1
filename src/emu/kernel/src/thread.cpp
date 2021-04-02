@@ -22,6 +22,7 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/random.h>
+#include <config/config.h>
 
 #include <kernel/common.h>
 #include <kernel/kernel.h>
@@ -251,7 +252,8 @@ namespace eka2l1 {
             , exception_mask(0)
             , trap_stack(0)
             , sleep_level(0)
-            , metadata(nullptr) {
+            , metadata(nullptr)
+            , flags(0) {
             if (owner) {
                 owner->increase_thread_count();
                 real_priority = calculate_thread_priority(owning_process(), pri);
@@ -443,10 +445,6 @@ namespace eka2l1 {
             exit_type = the_exit_type;
             exit_category = category;
 
-            if (owning_process()->decrease_thread_count() == 0) {
-                owning_process()->set_exit_type(exit_type);
-            }
-            
             do_cleanup();
 
             std::optional<std::string> exit_description;
@@ -476,14 +474,20 @@ namespace eka2l1 {
                     break;
 
                 default:
-                    return false;
+                    break;
                 }
             }
 
             kern->complete_undertakers(this);
             kern->call_thread_kill_callbacks(this, exit_category_u8, reason);
-            kern->prepare_reschedule();
 
+            kernel::process *mama = owning_process();
+
+            if (mama->decrease_thread_count() == 0 || is_process_permanent() || ((exit_type == kernel::entity_exit_type::panic) && is_process_critical())) {
+                mama->kill(exit_type, exit_reason);
+            }
+
+            kern->prepare_reschedule();
             return true;
         }
         
@@ -678,6 +682,8 @@ namespace eka2l1 {
         void thread::logon(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
             if (state == thread_state::stop) {
                 (logon_request.get(kern->crr_process()))->set(exit_reason, kern->is_eka1());
+                kern->crr_thread()->signal_request();
+
                 return;
             }
 
