@@ -30,7 +30,7 @@
     <string name="pref_enable_actionbar">Hidupkan ActionBar</string>
     <string name="pref_enable_statusbar">Hidupkan bilah status</string>
     <string name="pref_wakelock">Biarkan layar tetap menyala</string>
-    <string name="pref_enable_vibration">Enable vibration</string>
+    <string name="pref_enable_vibration">Hidupkan getar</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktifkan pemilteran terdekat</string>
     <string name="pref_system_language_option_name">Bahasa</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
@@ -53,6 +53,6 @@
     <string name="confirmation_required">Memerlukan konfirmasi</string>
     <string name="force_close_confirmation">Menutup paksa aplikasi akan mengakibatkan hilangnya data atau bahkan menghancurkan sepenuhnya! \nLanjutkan?</string>
     <string name="log_saved">Log telah disimpan</string>
-    <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
+    <string name="about_icon_by">&lt;BR&gt;Ikon oleh: </string>
     <string name="version">Versi: </string>
 </resources>
