@@ -144,7 +144,7 @@
     <string name="credits_thanks_text">Terima kasih telah menggunakan emulator!</string>
     <string name="credits_main_developer_text">Pengembang utama:</string>
     <string name="credits_contributors_text">Kontributor:</string>
-    <string name="credits_icon_text">Icon:</string>
+    <string name="credits_icon_text">Ikon:</string>
     <string name="credits_honors_text">Penghargaan:</string>
     <string name="credits_translators_text">Penerjemah:</string>
 </resources>
