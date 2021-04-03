@@ -123,11 +123,11 @@ namespace eka2l1::android {
         return conf->device;
     }
 
-    bool launcher::install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg) {
+    device_installation_error launcher::install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg) {
         std::string firmware_code;
         std::atomic<int> progress_tracker;
         device_manager *dvc_mngr = sys->get_device_manager();
-        bool result;
+        device_installation_error result;
 
         std::string root_z_path = add_path(conf->storage, "drives/z/");
         if (install_rpkg) {
@@ -136,8 +136,8 @@ namespace eka2l1::android {
             result = eka2l1::loader::install_raw_dump(dvc_mngr, rpkg_path + eka2l1::get_separator(), root_z_path, firmware_code, progress_tracker);
         }
 
-        if (!result) {
-            return false;
+        if (result != device_installation_none) {
+            return result;
         }
 
         dvc_mngr->save_devices();
@@ -145,7 +145,7 @@ namespace eka2l1::android {
 
         eka2l1::create_directories(rom_directory);
         common::copy_file(rom_path, add_path(rom_directory, "SYM.ROM"), true);
-        return true;
+        return device_installation_none;
     }
 
     std::vector<std::string> launcher::get_packages() {

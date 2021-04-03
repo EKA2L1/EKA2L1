@@ -79,12 +79,12 @@ namespace eka2l1::loader {
         return true;
     }
 
-    bool install_rpkg(device_manager *dvcmngr, const std::string &path,
-        const std::string &devices_rom_path, std::string &firmware_code_ret, std::atomic<int> &res) {
+    device_installation_error install_rpkg(device_manager *dvcmngr, const std::string &path, const std::string &devices_rom_path,
+        std::string &firmware_code_ret, std::atomic<int> &res) {
         FILE *f = fopen(path.data(), "rb");
 
         if (!f) {
-            return false;
+            return device_installation_not_exist;
         }
 
         rpkg_header header;
@@ -92,7 +92,7 @@ namespace eka2l1::loader {
         std::size_t total_read_size = 0;
 
         if (fread(&header.magic, 4, 4, f) != 4) {
-            return false;
+            return device_installation_insufficent;
         }
 
         total_read_size = 16;
@@ -110,7 +110,7 @@ namespace eka2l1::loader {
 
             default:
                 fclose(f);
-                return false;
+                return device_installation_rpkg_corrupt;
             }
         }
 
@@ -131,7 +131,7 @@ namespace eka2l1::loader {
 
         if (total_read_size != header.header_size) {
             fclose(f);
-            return false;
+            return device_installation_rpkg_corrupt;
         }
 
         while (!feof(f)) {
@@ -180,7 +180,7 @@ namespace eka2l1::loader {
             LOG_ERROR(SYSTEM, "Revert all changes");
             eka2l1::common::remove(add_path(devices_rom_path, "\\temp\\"));
 
-            return false;
+            return device_installation_determine_product_failure;
         }
 
         auto firmcode_low = common::lowercase_string(firmcode);
@@ -188,14 +188,26 @@ namespace eka2l1::loader {
 
         // Rename temp folder to its product code
         eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode_low + "\\"));
+        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid);
 
-        if (!dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid)) {
+        if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
             eka2l1::common::remove(add_path(devices_rom_path, firmcode_low + "\\"));
 
-            return false;
+            switch (err_adddvc) {
+            case add_device_existed:
+                return device_installation_already_exist;
+
+            case add_device_no_language_present:
+                return device_installation_no_languages_present;
+
+            default:
+                break;
+            }
+
+            return device_installation_general_failure;
         }
 
-        return true;
+        return device_installation_none;
     }
 }

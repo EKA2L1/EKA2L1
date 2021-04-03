@@ -38,6 +38,16 @@ public class Emulator {
     public static final String EMULATOR_DIR = Environment.getExternalStorageDirectory() + "/EKA2L1/";
     public static final String COMPAT_DIR = EMULATOR_DIR + "compat/";
 
+    public static final int INSTALL_DEVICE_ERROR_NONE = 0;
+    public static final int INSTALL_DEVICE_ERROR_NOT_EXIST = 1;
+    public static final int INSTALL_DEVICE_ERROR_INSUFFICENT = 2;
+    public static final int INSTALL_DEVICE_ERROR_RPKG_CORRUPT = 3;
+    public static final int INSTALL_DEVICE_ERROR_DETERMINE_PRODUCT_FAIL = 4;
+    public static final int INSTALL_DEVICE_ERROR_ALREADY_EXIST = 5;
+    public static final int INSTALL_DEVICE_ERROR_NO_LANGUAGE_FILE_PRESENT = 6;
+    public static final int INSTALL_DEVICE_ERROR_GENERAL_FAILURE = 7;
+    public static final int INSTALL_DEVICE_RAW_DUMP_FAIL_TO_COPY = 8;
+
     private static boolean init;
     private static boolean load;
 
@@ -113,10 +123,12 @@ public class Emulator {
 
     public static Completable subscribeInstallDevice(String rpkgPath, String romPath, boolean installRPKG) {
         return Completable.create(emitter -> {
-            if (installDevice(rpkgPath, romPath, installRPKG)) {
+            int installResult = installDevice(rpkgPath, romPath, installRPKG);
+
+            if (installResult == 0) {
                 emitter.onComplete();
             } else {
-                emitter.onError(new IOException("Installation failed"));
+                emitter.onError(new IOException(Integer.toString(installResult)));
             }
         });
     }
@@ -162,7 +174,7 @@ public class Emulator {
 
     public static native int getCurrentDevice();
 
-    public static native boolean installDevice(String rpkgPath, String romPath, boolean installRPKG);
+    public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG);
 
     public static native String[] getPackages();
 

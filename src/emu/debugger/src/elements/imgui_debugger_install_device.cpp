@@ -54,7 +54,7 @@ namespace eka2l1 {
     void imgui_debugger::show_install_device() {
         if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
             device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
-            device_wizard_state.failure = false;
+            device_wizard_state.failure = device_installation_none;
 
             device_wizard_state.current_rpkg_path.clear();
             device_wizard_state.current_rom_path.clear();
@@ -201,8 +201,47 @@ namespace eka2l1 {
                 const std::string rom_copy_msg = common::get_localised_string(localised_strings, "install_device_progress_rom_msg");
                 ImGui::Checkbox(rom_copy_msg.c_str(), &copy_rom_state);
 
-                if (device_wizard_state.failure) {
-                    const std::string wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_install_failure_msg");
+                if (device_wizard_state.failure != device_installation_none) {
+                    std::string wrong_happening_msg;
+
+                    switch (device_wizard_state.failure.load()) {
+                    case device_installation_already_exist:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_already_exist_msg");
+                        break;
+
+                    case device_installation_determine_product_failure:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_product_determine_fail_msg");
+                        break;
+
+                    case device_installation_raw_dump_fail_to_copy:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_raw_dump_fail_to_copy_msg");
+                        break;
+
+                    case device_installation_rom_fail_to_copy:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rom_fail_to_copy_msg");
+                        break;
+
+                    case device_installation_insufficent:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rpkg_insufficent_size_msg");
+                        break;
+
+                    case device_installation_no_languages_present:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_no_language_file_present_msg");
+                        break;
+
+                    case device_installation_not_exist:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rpkg_file_not_found_msg");
+                        break;
+
+                    case device_installation_rpkg_corrupt:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_install_rpkg_corrupt_msg");
+                        break;
+
+                    default:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_install_failure_msg");
+                        break;
+                    }
+
                     ImGui::TextWrapped("%s", wrong_happening_msg.c_str());
                     device_wizard_state.should_continue = true;
                 }
@@ -273,7 +312,7 @@ namespace eka2l1 {
                             wizard->extract_rpkg_done = false;
                             wizard->copy_rom_done = false;
 
-                            bool result = false;
+                            device_installation_error result = device_installation_none;
                             std::string root_z_path = add_path(conf->storage, "drives/z/");
 
                             switch (wizard->device_install_type) {
@@ -286,12 +325,12 @@ namespace eka2l1 {
                                 break;
 
                             default:
-                                wizard->failure = true;
+                                wizard->failure = device_installation_general_failure;
                                 return;
                             }
 
-                            if (!result) {
-                                wizard->failure = true;
+                            if (result != device_installation_none) {
+                                wizard->failure = result;
                                 return;
                             }
 
@@ -302,9 +341,8 @@ namespace eka2l1 {
                             const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
 
                             eka2l1::create_directories(rom_directory);
-                            result = common::copy_file(wizard->current_rom_path, add_path(rom_directory, "SYM.ROM"), true);
 
-                            if (!result) {
+                            if (!common::copy_file(wizard->current_rom_path, add_path(rom_directory, "SYM.ROM"), true)) {
                                 LOG_ERROR(FRONTEND_UI, "Unable to copy ROM to target ROM directory!");
                                 wizard->copy_rom_done = false;
                                 return;

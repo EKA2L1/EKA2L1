@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <system/installation/common.h>
 #include <common/types.h>
 
 #include <atomic>
@@ -30,6 +31,6 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::loader {
-    bool install_raw_dump(device_manager *dvc, const std::string &path_to_dump, const std::string &devices_z_path, std::string &firmware_code,
+    device_installation_error install_raw_dump(device_manager *dvc, const std::string &path_to_dump, const std::string &devices_z_path, std::string &firmware_code,
         std::atomic<int> &res);
 }

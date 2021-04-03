@@ -138,12 +138,12 @@ namespace eka2l1 {
         return current;
     }
 
-    bool device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid) {
+    add_device_error device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid) {
         const std::lock_guard<std::mutex> guard(lock);
 
         if (get(firmcode)) {
             LOG_ERROR(SYSTEM, "Device already installed ({})!", firmcode);
-            return false;
+            return add_device_existed;
         }
 
         std::vector<int> languages;
@@ -153,7 +153,7 @@ namespace eka2l1 {
         common::dynamic_ifile ifile(lang_path);
         if (ifile.fail()) {
             LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {})", lang_path);
-            return false;
+            return add_device_no_language_present;
         }
         std::string line;
         while (ifile.getline(line)) {
@@ -179,7 +179,7 @@ namespace eka2l1 {
         dvc.machine_uid = machine_uid;
 
         devices.push_back(dvc);
-        return true;
+        return add_device_none;
     }
 
     bool device_manager::delete_device(const std::string &firmcode) {

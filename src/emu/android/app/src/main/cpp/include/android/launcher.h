@@ -24,6 +24,7 @@
 #include <common/cvt.h>
 #include <common/types.h>
 
+#include <system/installation/common.h>
 #include <services/applist/applist.h>
 #include <services/window/window.h>
 #include <utils/apacmd.h>
@@ -48,7 +49,7 @@ namespace eka2l1::android {
         std::vector<std::string> get_devices();
         void set_current_device(std::uint32_t id);
         std::uint32_t get_current_device();
-        bool install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg);
+        device_installation_error install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg);
         std::vector<std::string> get_packages();
         void uninstall_package(std::uint32_t uid);
         void mount_sd_card(std::string &path);

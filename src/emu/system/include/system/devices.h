@@ -40,6 +40,12 @@ namespace eka2l1 {
         int default_language_code;
     };
 
+    enum add_device_error {
+        add_device_none = 0,
+        add_device_existed,
+        add_device_no_language_present
+    };
+
     /*! \brief A manager for all installed devices on this emulator
     */
     class device_manager {
@@ -72,7 +78,7 @@ namespace eka2l1 {
         bool set_current(const std::string &firmcode);
         bool set_current(const std::uint8_t idx);
 
-        bool add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid);
+        add_device_error add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid);
 
         bool delete_device(const std::string &firmcode);
 

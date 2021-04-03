@@ -153,7 +153,7 @@ Java_com_github_eka2l1_emu_Emulator_getCurrentDevice(JNIEnv *env, jclass clazz) 
 }
 
 extern "C"
-JNIEXPORT jboolean JNICALL
+JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_installDevice(JNIEnv *env, jclass clazz, jstring rpkg_path,
                                                 jstring rom_path, jboolean install_rpkg) {
     const char *cstr = env->GetStringUTFChars(rpkg_path, nullptr);

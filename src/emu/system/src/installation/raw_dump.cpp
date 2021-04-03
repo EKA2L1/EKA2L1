@@ -27,7 +27,7 @@
 #include <common/path.h>
 
 namespace eka2l1::loader {
-    bool install_raw_dump(device_manager *dvcmngr, const std::string &path_to_dump, const std::string &devices_z_path, std::string &firmware_code,
+    device_installation_error install_raw_dump(device_manager *dvcmngr, const std::string &path_to_dump, const std::string &devices_z_path, std::string &firmware_code,
         std::atomic<int> &res) {
         const std::string temp_path = add_path(devices_z_path, "temp\\");
         // Rename all file to lowercase
@@ -37,21 +37,35 @@ namespace eka2l1::loader {
         std::string platform_name, manufacturer, model;
 
         if (!determine_rpkg_product_info(temp_path, manufacturer, platform_name, model)) {
-            return false;
+            return device_installation_determine_product_failure;
         }
 
         platform_name = common::lowercase_string(platform_name);
 
         if (!common::move_file(temp_path, add_path(devices_z_path, platform_name + eka2l1::get_separator()))) {
-            return false;
+            return device_installation_raw_dump_fail_to_copy;
         }
+        
+        const add_device_error err_adddvc = dvcmngr->add_new_device(platform_name, model, manufacturer, ver, 0);
 
-        if (!dvcmngr->add_new_device(platform_name, model, manufacturer, ver, 0)) {
+        if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be installed!", platform_name);
-            return false;
+            
+            switch (err_adddvc) {
+            case add_device_existed:
+                return device_installation_already_exist;
+
+            case add_device_no_language_present:
+                return device_installation_no_languages_present;
+
+            default:
+                break;
+            }
+
+            return device_installation_general_failure;
         }
 
         firmware_code = platform_name;
-        return true;
+        return device_installation_none;
     }
 }

@@ -231,7 +231,44 @@ public class DeviceListFragment extends Fragment {
                     @Override
                     public void onError(Throwable e) {
                         dialog.cancel();
-                        Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
+
+                        int code = Integer.parseInt(e.getMessage());
+                        CharSequence errorToDisplay = getText(R.string.error);
+
+                        switch (code) {
+                            case Emulator.INSTALL_DEVICE_ERROR_ALREADY_EXIST:
+                                errorToDisplay = getText(R.string.install_already_exist);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_DETERMINE_PRODUCT_FAIL:
+                                errorToDisplay = getText(R.string.install_product_determine_fail);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_INSUFFICENT:
+                                errorToDisplay = getText(R.string.install_rpkg_insufficent_size);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_NO_LANGUAGE_FILE_PRESENT:
+                                errorToDisplay = getText(R.string.install_no_language_file_present);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_NOT_EXIST:
+                                errorToDisplay = getText(R.string.install_rpkg_file_not_found);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_RPKG_CORRUPT:
+                                errorToDisplay = getText(R.string.install_rpkg_corrupt);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_RAW_DUMP_FAIL_TO_COPY:
+                                errorToDisplay = getText(R.string.install_raw_dump_fail_to_copy);
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        Toast.makeText(getContext(), errorToDisplay, Toast.LENGTH_LONG).show();
                     }
                 });
     }

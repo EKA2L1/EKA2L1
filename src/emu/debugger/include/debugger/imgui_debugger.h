@@ -138,7 +138,7 @@ namespace eka2l1 {
 
             std::atomic<bool> extract_rpkg_done;
             std::atomic<bool> copy_rom_done;
-            std::atomic<bool> failure;
+            std::atomic<int> failure;
             std::atomic<int> progress_tracker;
 
             std::unique_ptr<std::thread> install_thread;

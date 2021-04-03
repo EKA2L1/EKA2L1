@@ -1,5 +1,6 @@
 #pragma once
 
+#include <system/installation/common.h>
 #include <common/types.h>
 
 #include <atomic>
@@ -31,7 +32,6 @@ namespace eka2l1 {
             std::uint64_t data_size;
         };
 
-        bool install_rpkg(device_manager *dvc, const std::string &path,
-            const std::string &devices_rom_path, std::string &firmware_code, std::atomic<int> &res);
+        device_installation_error install_rpkg(device_manager *dvc, const std::string &path, const std::string &devices_rom_path, std::string &firmware_code, std::atomic<int> &res);
     }
 }
