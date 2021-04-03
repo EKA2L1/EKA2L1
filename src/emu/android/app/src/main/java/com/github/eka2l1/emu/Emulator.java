@@ -20,12 +20,14 @@
 package com.github.eka2l1.emu;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Environment;
 import android.view.Surface;
 
 import com.github.eka2l1.BuildConfig;
 import com.github.eka2l1.applist.AppItem;
 import com.github.eka2l1.util.FileUtils;
+import com.github.eka2l1.util.BitmapUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,7 +106,22 @@ public class Emulator {
             String[] apps = getApps();
             ArrayList<AppItem> items = new ArrayList<>();
             for (int i = 0; i < apps.length; i += 2) {
-                AppItem item = new AppItem(Long.parseLong(apps[i]), apps[i + 1]);
+                long appUid = Long.parseLong(apps[i]);
+                Bitmap[] iconAndMask = getAppIcon(appUid);
+
+                Bitmap finalIcon = null;
+                if (iconAndMask != null) {
+                    if ((iconAndMask.length == 1) || (iconAndMask[1] == null)) {
+                        finalIcon = iconAndMask[0];
+                    } else {
+                        finalIcon = BitmapUtils.SourceWithMergedSymbianMask(iconAndMask[0], iconAndMask[1]);
+
+                        iconAndMask[0].recycle();
+                        iconAndMask[1].recycle();
+                    }
+                }
+
+                AppItem item = new AppItem(appUid, apps[i + 1], finalIcon);
                 items.add(item);
             }
             emitter.onSuccess(items);
@@ -115,7 +132,7 @@ public class Emulator {
         String[] packages = getPackages();
         ArrayList<AppItem> items = new ArrayList<>();
         for (int i = 0; i < packages.length; i += 2) {
-            AppItem item = new AppItem(Long.parseLong(packages[i]), packages[i + 1]);
+            AppItem item = new AppItem(Long.parseLong(packages[i]), packages[i + 1], null);
             items.add(item);
         }
         return items;
@@ -189,4 +206,6 @@ public class Emulator {
     public static native void setRtosLevel(int level);
 
     public static native void updateAppSetting(int uid);
+
+    public static native Bitmap[] getAppIcon(long uid);
 }

@@ -67,6 +67,7 @@ namespace eka2l1 {
         struct open_font_info;
 
         bool does_client_use_pointer_instead_of_offset(fbscli *cli);
+        std::string get_fbs_server_name_by_epocver(const epocver ver);
     }
 
     enum fbs_opcode {

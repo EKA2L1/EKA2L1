@@ -47,7 +47,7 @@ namespace eka2l1 {
             const epocver current_sys_ver = cli->server<fbs_server>()->get_system()->get_symbian_version_use();
             return (cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT) && (current_sys_ver < epocver::epoc95);
         }
-            
+
         std::string get_fbs_server_name_by_epocver(const epocver ver) {
             if (ver < epocver::epoc81a) {
                 return "Fontbitmapserver";

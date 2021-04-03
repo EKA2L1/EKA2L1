@@ -20,11 +20,14 @@
 #include <jni.h>
 #include <string>
 
+#include <android/bitmap.h>
 #include <android/state.h>
 #include <android/thread.h>
+#include <common/buffer.h>
 #include <common/path.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
+#include <services/fbs/bitmap.h>
 
 #include <common/jniutils.h>
 
@@ -218,4 +221,82 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_updateAppSetting(JNIEnv *env, jclass clazz, jint uid) {
     state->launcher->update_app_setting(uid);
+}
+
+static jobject make_new_bitmap(JNIEnv *env, std::uint32_t width, std::uint32_t height) {
+    jclass bitmapCls = env->FindClass("android/graphics/Bitmap");
+    jmethodID createBitmapFunction = env->GetStaticMethodID(bitmapCls,
+        "createBitmap","(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+    jstring configName = env->NewStringUTF("ARGB_8888");
+    jclass bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
+    jmethodID valueOfBitmapConfigFunction = env->GetStaticMethodID(
+        bitmapConfigClass, "valueOf","(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
+
+    jobject bitmapConfig = env->CallStaticObjectMethod(bitmapConfigClass, valueOfBitmapConfigFunction,
+        configName);
+
+    jobject newBitmap = env->CallStaticObjectMethod(bitmapCls, createBitmapFunction, width,
+        height, bitmapConfig);
+
+    return newBitmap;
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_github_eka2l1_emu_Emulator_getAppIcon(JNIEnv *env, jclass clazz, jlong uid) {
+    std::optional<eka2l1::apa_app_masked_icon_bitmap > icon_pair = state->launcher->get_app_icon(uid);
+    if (!icon_pair) {
+        return nullptr;
+    }
+    jobjectArray jicons = env->NewObjectArray(icon_pair->second ? 2 : 1,
+        env->FindClass("android/graphics/Bitmap"),
+        nullptr);
+
+    jobject source_bitmap = make_new_bitmap(env, icon_pair->first->header_.size_pixels.x,
+        icon_pair->first->header_.size_pixels.y);
+
+    void *data_to_write = nullptr;
+    int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
+    if (result < 0) {
+        env->DeleteLocalRef(source_bitmap);
+        env->DeleteLocalRef(jicons);
+        return nullptr;
+    }
+
+    eka2l1::common::wo_buf_stream dest_stream(reinterpret_cast<std::uint8_t*>(data_to_write), icon_pair->first->header_.size_pixels.x
+        * icon_pair->first->header_.size_pixels.y * 4);
+
+    if (!eka2l1::epoc::convert_to_argb8888(state->launcher->get_fbs_serv(), icon_pair->first, dest_stream)) {
+        env->DeleteLocalRef(source_bitmap);
+        env->DeleteLocalRef(jicons);
+
+        return nullptr;
+    }
+
+    AndroidBitmap_unlockPixels(env, source_bitmap);
+    env->SetObjectArrayElement(jicons, 0, source_bitmap);
+
+    if (icon_pair->second) {
+        jobject mask_bitmap = make_new_bitmap(env, icon_pair->second->header_.size_pixels.x,
+            icon_pair->second->header_.size_pixels.y);
+
+        result = AndroidBitmap_lockPixels(env, mask_bitmap, &data_to_write);
+        if (result < 0) {
+            env->DeleteLocalRef(mask_bitmap);
+            return jicons;
+        }
+
+        dest_stream = eka2l1::common::wo_buf_stream(reinterpret_cast<std::uint8_t*>(data_to_write),
+            icon_pair->second->header_.size_pixels.x * icon_pair->second->header_.size_pixels.y * 4);
+
+        if (!eka2l1::epoc::convert_to_argb8888(state->launcher->get_fbs_serv(), icon_pair->second, dest_stream)) {
+            env->DeleteLocalRef(mask_bitmap);
+            return jicons;
+        }
+
+        AndroidBitmap_unlockPixels(env, mask_bitmap);
+        env->SetObjectArrayElement(jicons, 1, mask_bitmap);
+    }
+
+    return jicons;
 }

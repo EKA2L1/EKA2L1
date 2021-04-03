@@ -29,6 +29,10 @@
 #include <services/window/window.h>
 #include <utils/apacmd.h>
 
+namespace eka2l1 {
+    class fbs_server;
+}
+
 namespace eka2l1::android {
     class launcher {
         eka2l1::system *sys;
@@ -36,6 +40,7 @@ namespace eka2l1::android {
         eka2l1::kernel_system *kern;
         applist_server *alserv;
         window_server *winserv;
+        fbs_server *fbsserv;
 
         void set_language_to_property(const language new_one);
         void set_language_current(const language lang);
@@ -44,6 +49,7 @@ namespace eka2l1::android {
         explicit launcher(eka2l1::system *sys);
 
         std::vector<std::string> get_apps();
+        std::optional<apa_app_masked_icon_bitmap> get_app_icon(std::uint32_t uid);
         void launch_app(std::uint32_t uid);
         bool install_app(std::string &path);
         std::vector<std::string> get_devices();
@@ -58,5 +64,9 @@ namespace eka2l1::android {
         void set_rtos_level(std::uint32_t level);
         void update_app_setting(std::uint32_t uid);
         void draw(drivers::graphics_command_list_builder *builder, std::uint32_t width, std::uint32_t height);
+
+        fbs_server *get_fbs_serv() {
+            return fbsserv;
+        }
     };
 }

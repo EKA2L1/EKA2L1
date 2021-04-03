@@ -20,6 +20,8 @@
 package com.github.eka2l1.applist;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -83,6 +85,12 @@ public class AppsListAdapter extends BaseAdapter implements Filterable {
 
         holder.name.setText(item.getTitle());
         holder.uid.setText(String.format("UID: 0x%08X", item.getUid()));
+
+        if (item.getIcon() != null) {
+            holder.icon.setImageBitmap(item.getIcon());
+        } else {
+            holder.icon.setImageResource(R.mipmap.ic_ducky_foreground);
+        }
 
         return view;
     }

@@ -23,6 +23,7 @@
 #include <system/devices.h>
 #include <package/manager.h>
 
+#include <services/fbs/fbs.h>
 #include <system/installation/raw_dump.h>
 #include <system/installation/rpkg.h>
 #include <common/path.h>
@@ -43,6 +44,8 @@ namespace eka2l1::android {
                 kern->get_epoc_version())));
             winserv = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(get_winserv_name_by_epocver(
                 kern->get_epoc_version())));
+            fbsserv = reinterpret_cast<eka2l1::fbs_server *>(kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
+                kern->get_epoc_version())));
         }
     }
 
@@ -56,6 +59,14 @@ namespace eka2l1::android {
             info.push_back(name);
         }
         return info;
+    }
+
+    std::optional<apa_app_masked_icon_bitmap> launcher::get_app_icon(std::uint32_t uid) {
+        apa_app_registry *reg = alserv->get_registration(uid);
+        if (!reg) {
+            return std::nullopt;
+        }
+        return alserv->get_icon(*reg, 0);
     }
 
     void launcher::launch_app(std::uint32_t uid) {

@@ -19,13 +19,17 @@
 
 package com.github.eka2l1.applist;
 
+import android.graphics.Bitmap;
+
 public class AppItem {
     private long uid;
     private String title;
+    private Bitmap icon;
 
-    public AppItem(long uid, String title) {
+    public AppItem(long uid, String title, Bitmap icon) {
         this.uid = uid;
         this.title = title;
+        this.icon = icon;
     }
 
     public long getUid() {
@@ -44,4 +48,5 @@ public class AppItem {
         this.title = title;
     }
 
+    public Bitmap getIcon() { return icon; }
 }

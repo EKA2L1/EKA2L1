@@ -23,6 +23,7 @@ target_link_libraries(native-lib PRIVATE
         drivers
         EGL
         glad
+        jnigraphics
         epoc
         epockern
         epocpkg

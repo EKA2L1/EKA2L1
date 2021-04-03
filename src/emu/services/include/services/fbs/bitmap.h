@@ -26,6 +26,11 @@
 
 namespace eka2l1 {
     class fbs_server;
+
+    namespace common {
+        struct ro_stream;
+        struct wo_stream;
+    }
 }
 
 namespace eka2l1::epoc {
@@ -108,4 +113,6 @@ namespace eka2l1::epoc {
     };
 
     bool save_bwbmp_to_file(const std::string &destination, bitwise_bitmap *bitmap, const char *base);
+
+    bool convert_to_argb8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest);
 }
