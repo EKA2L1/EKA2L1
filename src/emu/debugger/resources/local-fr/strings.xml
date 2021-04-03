@@ -128,6 +128,14 @@
     <string name="install_device_progress_raw_dump_msg">Copie du dossier d\'atterrissage ({} %)</string>
     <string name="install_device_progress_rpkg_msg">Extraction du RPKG</string>
     <string name="install_device_progress_rom_msg">Copie de la ROM</string>
+    <string name="install_device_install_rpkg_corrupt_msg">The RPKG file provided is corrupt!</string>
+    <string name="install_device_rpkg_file_not_found_msg">RPKG file specified can\'t be opened!</string>
+    <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>
+    <string name="install_device_rom_fail_to_copy_msg">Fail to copy ROM to target destination!</string>
+    <string name="install_device_rpkg_insufficent_size_msg">RPKG file is too small, the dumping process might be unfinished!</string>
+    <string name="install_device_already_exist_msg">Device to install already exists!</string>
+    <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
+    <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>
     <string name="install_device_install_failure_msg">Une erreur est survenue lors de l\'installation ! Veuillez vérifier le journal d\'erreur !</string>
     <string name="install_device_final_msg_1">Merci d\'avoir utilisé l\'assistant. Nous espérons que vous passerez un bon moment avec l\'émulateur !</string>
     <string name="install_device_final_msg_2">Pour tout problème, merci de le rapporter aux développeurs en afin de découvrir les causes de celui-ci !</string>
