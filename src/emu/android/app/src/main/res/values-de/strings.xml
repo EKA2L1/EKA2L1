@@ -20,6 +20,14 @@
     <string name="raw_dump">Roh-Dump</string>
     <string name="path_to_raw_dump">Path to raw dump</string>
     <string name="install_method">Installationsmethode</string>
+    <string name="install_rpkg_corrupt">The RPKG file provided is corrupt!</string>
+    <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
+    <string name="install_raw_dump_fail_to_copy">Fail to copy raw dump files to target destination!</string>
+    <string name="install_rom_fail_to_copy">Fail to copy ROM to target destination!</string>
+    <string name="install_rpkg_insufficent_size">RPKG file is too small, the dump might be unfinished!</string>
+    <string name="install_already_exist">Device to install already exists!</string>
+    <string name="install_no_language_file_present">Device is missing language information files!</string>
+    <string name="install_product_determine_fail">Fail to determine product information!</string>
     <string name="pref_general_title">Allgemein</string>
     <string name="pref_system_title">System</string>
     <string name="pref_control_key_binding_sect_title">Tastenbelegung</string>
