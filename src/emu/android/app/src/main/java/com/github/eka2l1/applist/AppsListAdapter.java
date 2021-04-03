@@ -26,10 +26,13 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.github.eka2l1.R;
 
 
 public class AppsListAdapter extends BaseAdapter implements Filterable {
@@ -67,9 +70,11 @@ public class AppsListAdapter extends BaseAdapter implements Filterable {
     public View getView(int position, View view, ViewGroup viewGroup) {
         ViewHolder holder;
         if (view == null) {
-            view = layoutInflater.inflate(android.R.layout.simple_list_item_1, viewGroup, false);
+            view = layoutInflater.inflate(R.layout.listitem_detail_icon, viewGroup, false);
             holder = new ViewHolder();
-            holder.name = view.findViewById(android.R.id.text1);
+            holder.name = view.findViewById(R.id.appName);
+            holder.uid = view.findViewById(R.id.appUid);
+            holder.icon = view.findViewById(R.id.iconView);
             view.setTag(holder);
         } else {
             holder = (ViewHolder) view.getTag();
@@ -77,6 +82,7 @@ public class AppsListAdapter extends BaseAdapter implements Filterable {
         AppItem item = filteredList.get(position);
 
         holder.name.setText(item.getTitle());
+        holder.uid.setText(String.format("UID: 0x%08X", item.getUid()));
 
         return view;
     }
@@ -93,7 +99,9 @@ public class AppsListAdapter extends BaseAdapter implements Filterable {
     }
 
     private static class ViewHolder {
+        ImageView icon;
         TextView name;
+        TextView uid;
     }
 
     private class AppFilter extends Filter {
