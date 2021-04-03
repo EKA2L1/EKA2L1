@@ -41,7 +41,7 @@ namespace eka2l1::epoc {
         dsa_must_abort_queue_ = kern->create<kernel::msg_queue>("DsaAbortQueue", 4, 10);
         dsa_complete_queue_ = kern->create<kernel::msg_queue>("DsaCompleteQueue", 4, 10);
 
-        if (client->client_version().build <= WS_V6_BUILD_VER) {
+        if (client->client_version().build <= WS_V81_BUILD_VER) {
             epoc::chunk_allocator *allocator = client->get_ws().allocator();
 
             sync_status_ = allocator->to_address(allocator->allocate_struct<epoc::request_status>(
@@ -226,6 +226,10 @@ namespace eka2l1::epoc {
             }
         } else {
             switch (op) {
+            case ws_dsa_get_sync_thread:
+                get_sync_info(ctx, cmd);
+                break;
+
             case ws_dsa_get_send_queue:
             case ws_dsa_get_rec_queue: {
                 kernel_system *kern = client->get_ws().get_kernel_system();

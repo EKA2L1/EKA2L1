@@ -229,7 +229,8 @@ namespace eka2l1 {
         ws_dsa_get_region = 3,
         ws_dsa_cancel = 4,
         ws_dsa_get_send_queue = 5,
-        ws_dsa_get_rec_queue = 6
+        ws_dsa_get_rec_queue = 6,
+        ws_dsa_get_sync_thread = 7
     };
 
     enum ws_dsa_op_old {
