@@ -40,7 +40,7 @@ namespace eka2l1 {
     static const std::u16string DEFAULT_MSG_DATA_DIR = u"C:\\private\\1000484b\\Mail2\\";
 
     std::string get_msv_server_name_by_epocver(const epocver ver) {
-        if (ver <= epocver::eka2) {
+        if (ver < epocver::epoc81a) {
             return "MsvServer";
         }
 
