@@ -235,30 +235,10 @@ namespace eka2l1::kernel {
                 // Relocate the image
                 for (const std::uint64_t relocate_info: relocation_list) {
                     const loader::relocation_type rel_type = static_cast<loader::relocation_type>((relocate_info >> 32) & 0xFFFF);
-                    const loader::relocate_section sect_type = static_cast<loader::relocate_section>((relocate_info >> 48) & 0xFFFF);
                     const std::uint32_t offset_to_relocate = static_cast<std::uint32_t>(relocate_info);
+
+                    loader::relocate_section sect_type = static_cast<loader::relocate_section>((relocate_info >> 48) & 0xFFFF);
                     address the_delta = 0;
-
-                    switch (rel_type) {
-                    case loader::relocation_type::data:
-                        the_delta = data_delta;
-                        break;
-                    
-                    case loader::relocation_type::text:
-                        the_delta = code_delta;
-                        break;
-
-                    case loader::relocation_type::inferred:
-                        the_delta = (offset_to_relocate < text_size) ? code_delta : data_delta;
-                        break;
-
-                    case loader::relocation_type::reserved:
-                        continue;
-
-                    default:
-                        LOG_ERROR(KERNEL, "Unknown code relocation type {}", static_cast<std::uint32_t>(rel_type));
-                        break;
-                    }
 
                     std::uint8_t *base_ptr = nullptr;
 
@@ -276,6 +256,39 @@ namespace eka2l1::kernel {
                     }
 
                     std::uint32_t *to_relocate_ptr = reinterpret_cast<std::uint32_t*>(&base_ptr[offset_to_relocate]);
+
+                    switch (rel_type) {
+                    case loader::relocation_type::data:
+                        the_delta = data_delta;
+                        break;
+                    
+                    case loader::relocation_type::text:
+                        the_delta = code_delta;
+                        break;
+
+                    case loader::relocation_type::inferred: {
+                        // This one is harder
+                        std::uint32_t val = *to_relocate_ptr;
+
+                        if ((code_base <= val) && (val <= code_base + code_size)) {
+                            the_delta = code_delta;
+                        } else if ((data_base <= val) && (val <= data_base + data_size)) {
+                            the_delta = data_delta;
+                        } else {
+                            LOG_ERROR(KERNEL, "Unable to infer the relocation type of offset 0x{:X}", val);
+                        }
+
+                        break;
+                    }
+
+                    case loader::relocation_type::reserved:
+                        continue;
+
+                    default:
+                        LOG_ERROR(KERNEL, "Unknown code relocation type {}", static_cast<std::uint32_t>(rel_type));
+                        break;
+                    }
+
                     *to_relocate_ptr = *to_relocate_ptr + the_delta;
                 }
             }
