@@ -651,9 +651,8 @@ namespace eka2l1::epoc {
 
     static constexpr std::uint8_t WS_MAJOR_VER = 1;
     static constexpr std::uint8_t WS_MINOR_VER = 0;
-    static constexpr std::uint16_t WS_V6_BUILD_VER = 139;
-    static constexpr std::uint16_t WS_V81_BUILD_VER = 151;
-    static constexpr std::uint16_t WS_V93_BUILD_VER = 171;
+    static constexpr std::uint16_t WS_OLDARCH_VER = 139;
+    static constexpr std::uint16_t WS_NEWARCH_VER = 151;
     static constexpr std::uint64_t WS_DEFAULT_KEYBOARD_REPEAT_INIT_DELAY = 300000;
     static constexpr std::uint64_t WS_DEFAULT_KEYBOARD_REPEAT_NEXT_DELAY = 100000;
 

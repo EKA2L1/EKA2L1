@@ -861,7 +861,7 @@ namespace eka2l1::epoc {
 
         // Patching out user opcode.
         if (cli_ver.major == 1 && cli_ver.minor == 0) {
-            if (cli_ver.build <= WS_V6_BUILD_VER) {
+            if (cli_ver.build <= WS_OLDARCH_VER) {
                 // Skip start and end custom text cursor, they does not exist
                 if (cmd.header.op >= ws_cl_op_start_custom_text_cursor) {
                     cmd.header.op += 2;
