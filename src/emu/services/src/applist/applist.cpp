@@ -563,8 +563,13 @@ namespace eka2l1 {
         apa_app_registry *reg = get_registration(app_uid);
 
         // Either the registeration doesn't exist, or the icon file doesn't exist
-        if (!reg || reg->icon_file_path.empty()) {
+        if (!reg) {
             ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        if (reg->icon_file_path.empty()) {
+            ctx.complete(epoc::error_not_supported);
             return;
         }
 
@@ -744,7 +749,8 @@ namespace eka2l1 {
     }
 
     void applist_session::fetch(service::ipc_context *ctx) {
-        if (server<applist_server>()->legacy_level() == APA_LEGACY_LEVEL_OLD) {
+        const int llevel = server<applist_server>()->legacy_level();
+        if (llevel == APA_LEGACY_LEVEL_OLD) {
             switch (ctx->msg->function) {
             case applist_request_oldarch_app_info:
                 server<applist_server>()->get_app_info(*ctx);
@@ -764,6 +770,32 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode {}", ctx->msg->function);
+                break;
+            }
+        } else if (llevel == APA_LEGACY_LEVEL_TRANSITION) {
+            switch (ctx->msg->function) {
+            case applist_request_trans_app_info:
+                server<applist_server>()->get_app_info(*ctx);
+                break;
+
+            case applist_request_trans_app_capability:
+                server<applist_server>()->get_capability(*ctx);
+                break;
+
+            case applist_request_trans_app_icon_filename:
+                server<applist_server>()->get_app_icon_file_name(*ctx);
+                break;
+
+            case applist_request_trans_app_info_provide_by_reg_file:
+                server<applist_server>()->app_info_provided_by_reg_file(*ctx);
+                break;
+
+            case applist_request_trans_app_icon_by_uid_and_size:
+                server<applist_server>()->get_app_icon(*ctx);
+                break;
+
+            default:
+                LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
                 break;
             }
         } else {

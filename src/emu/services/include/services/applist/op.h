@@ -62,6 +62,48 @@ namespace eka2l1 {
         applist_request_oldarch_get_file_ownership_infos
     };
 
+    enum applist_request_transition {
+        applist_request_trans_first = applist_range_unrestricted, // = 0
+        applist_request_trans_init_full_list,
+        applist_request_trans_init_embed_list,
+        applist_request_trans_get_next_app,
+        applist_request_trans_embed_count,
+        applist_request_trans_app_count,
+        applist_request_trans_app_info,
+        applist_request_trans_app_capability,
+        applist_request_trans_start_app_without_returning_thread_id,
+        applist_request_trans_start_app_returning_thread_id,
+        applist_request_trans_recognize_data, // = 10
+        applist_request_trans_recognize_specific_data,
+        applist_request_trans_app_for_data_type,
+        applist_request_trans_start_document,
+        applist_request_trans_start_document_by_data_type,
+        applist_request_trans_start_document_by_uid,
+        applist_request_trans_create_document_by_uid,
+        applist_request_trans_app_icon_by_uid,
+        applist_request_trans_app_for_document,
+        applist_request_trans_is_program,
+        applist_request_trans_app_get_confidence, // = 20
+        applist_request_trans_get_buf_size,
+        applist_request_trans_set_buf_size,
+        applist_request_trans_get_data_types_phase1,
+        applist_request_trans_get_data_types_phase2,
+        applist_request_trans_set_notify,
+        applist_request_trans_cancel_notify,
+        applist_request_trans_dclose_server,
+        applist_request_trans_app_icon_by_uid_and_size,
+        applist_request_trans_get_app_icon_sizes,
+        applist_request_trans_get_app_views, // = 30
+        applist_request_trans_view_icon_by_uid_and_size,
+        applist_request_trans_get_ownership_infos,
+        applist_request_trans_number_of_own_defined_icons,
+        applist_request_trans_get_filtered_apps,
+        applsit_request_trans_get_apps_with_attribs,
+        applist_request_trans_app_icon_filename,
+        applist_request_trans_view_icon_filename,
+        applist_request_trans_app_info_provide_by_reg_file = 99, // = 99
+    };
+
     enum applist_request_newarch {
         applist_request_first = applist_range_unrestricted, // = 0
         applist_request_init_full_list,
