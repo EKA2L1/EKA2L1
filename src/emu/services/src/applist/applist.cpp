@@ -794,6 +794,10 @@ namespace eka2l1 {
                 server<applist_server>()->get_app_icon(*ctx);
                 break;
 
+            case applist_request_trans_start_app_without_returning_thread_id:
+                server<applist_server>()->launch_app(*ctx);
+                break;
+
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
                 break;
