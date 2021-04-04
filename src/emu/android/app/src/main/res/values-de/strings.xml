@@ -20,6 +20,8 @@
     <string name="raw_dump">Roh-Dump</string>
     <string name="path_to_raw_dump">Path to raw dump</string>
     <string name="install_method">Installationsmethode</string>
+    <string name="no_device_dialog_title">No device installed!</string>
+    <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
     <string name="install_rpkg_corrupt">The RPKG file provided is corrupt!</string>
     <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
     <string name="install_raw_dump_fail_to_copy">Fail to copy raw dump files to target destination!</string>
