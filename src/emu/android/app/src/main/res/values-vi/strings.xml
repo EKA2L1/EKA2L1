@@ -20,6 +20,8 @@
     <string name="raw_dump">Thư mục raw</string>
     <string name="path_to_raw_dump">Đường dẫn đến raw dump</string>
     <string name="install_method">Phương thức cài đặt</string>
+    <string name="no_device_dialog_title">Chưa thiết bị nào được cài đặt!</string>
+    <string name="no_device_installed">Hãy cài đặt một thiết bị. Các tệp tin và ROM của một thiết bị Symbian cần thiết cho quá trình cài đặt.\n\n<b>Lưu ý:</b> Mỗi ứng dụng sẽ cần một thiết bị Symbian thích hợp để khởi chạy.</string>
     <string name="install_rpkg_corrupt">File RPKG mà bạn cung cấp đã bị lỗi!</string>
     <string name="install_rpkg_file_not_found">File RPKG hiện tại không mở được!</string>
     <string name="install_raw_dump_fail_to_copy">Copy file raw dump tới đích đến lỗi!</string>
