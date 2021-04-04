@@ -136,6 +136,8 @@ namespace eka2l1::kernel {
                 notify.complete(0);
             }
 
+            avail_notifies_.clear();
+
             if (avail_callback_.first) {
                 avail_callback_.first(avail_callback_.second);
             }
@@ -157,6 +159,8 @@ namespace eka2l1::kernel {
             for (auto &notify : full_notifies_) {
                 notify.complete(0);
             }
+
+            full_notifies_.clear();
         }
 
         return true;
