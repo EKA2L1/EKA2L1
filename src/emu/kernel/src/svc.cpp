@@ -882,6 +882,28 @@ namespace eka2l1::epoc {
         query_security_info(msg->own_thr->owning_process(), sec_info);
     }
 
+    BRIDGE_FUNC(std::int32_t, session_security_info, std::int32_t h, epoc::security_info *info) {
+        service::session *ss = kern->get<service::session>(h);
+        
+        if (!info || !ss) {
+            return epoc::error_bad_handle;
+        }
+
+        kernel::thread *owner = ss->get_server()->get_owner_thread();
+        if (owner) {
+            // It gets policy from the server running the process
+            query_security_info(owner->owning_process(), info);
+        } else {
+            // Sometimes it's HLEd, so fill all
+            info->reset();
+
+            info->caps_u[0] = 0xFFFFFFFF;
+            info->caps_u[2] = 0xFFFFFFFF;
+        }
+
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, server_create, eka2l1::ptr<desc8> server_name_des, std::int32_t mode) {
         kernel::process *crr_pr = kern->crr_process();
 
@@ -898,7 +920,8 @@ namespace eka2l1::epoc {
             }
         }
 
-        auto handle = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(), server_name).first;
+        auto handle = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(),
+            kern->crr_thread(), server_name).first;
 
         if (handle != kernel::INVALID_HANDLE) {
             LOG_TRACE(KERNEL, "Server {} created", server_name);
@@ -2517,7 +2540,7 @@ namespace eka2l1::epoc {
         }
 
         auto queue_ptr = kern->create_and_add<kernel::msg_queue>
-            (static_cast<kernel::owner_type>(owner), name_str, size, length).first;
+            (static_cast<kernel::owner_type>(owner), name_str, length, size).first;
         if (queue_ptr == kernel::INVALID_HANDLE) {
             return epoc::error_no_memory;
         }
@@ -2551,6 +2574,9 @@ namespace eka2l1::epoc {
         }
 
         if (length != queue->max_message_length()) {
+            LOG_ERROR(KERNEL, "Size of destination buffer vs size of queue mismatch ({} vs {})", length,
+                queue->max_message_length());
+
             return epoc::error_argument;
         }
 
@@ -3634,7 +3660,7 @@ namespace eka2l1::epoc {
 
         const std::string server_name_in_str = common::ucs2_to_utf8(name->to_std_string(target_process));
         const kernel::handle h = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(),
-            server_name_in_str).first;
+            kern->crr_thread(), server_name_in_str).first;
 
         if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
@@ -4799,6 +4825,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDC, thread_request_signal),
         BRIDGE_REGISTER(0xDE, leave_start),
         BRIDGE_REGISTER(0xDF, leave_end),
+        BRIDGE_REGISTER(0xE4, session_security_info),
         BRIDGE_REGISTER(0xE7, btrace_out)
     };
     
