@@ -216,9 +216,9 @@ namespace eka2l1 {
                 }
 
                 if (reopen)
-                    return "w+";
-                else
                     return "r+";
+                else
+                    return "w+";
             } else if (mode & APPEND_MODE) {
                 if (mode & BIN_MODE) {
                     return "ab+";
@@ -252,9 +252,9 @@ namespace eka2l1 {
                 }
 
                 if (reopen)
-                    return u"w+";
-                else
                     return u"r+";
+                else
+                    return u"w+";
             } else if (mode & APPEND_MODE) {
                 if (mode & BIN_MODE) {
                     return u"ab+";
