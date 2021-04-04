@@ -48,7 +48,7 @@ namespace eka2l1 {
     }
 
     sa_server::sa_server(eka2l1::system *sys)
-        : service::server(sys->get_kernel_system(), sys, "SAServer", true) {
+        : service::server(sys->get_kernel_system(), sys, nullptr, "SAServer", true) {
         REGISTER_IPC(sa_server, unk_op1, 1001, "SaServer::UnkOp1");
     }
 }

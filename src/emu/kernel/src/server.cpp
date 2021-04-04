@@ -43,10 +43,11 @@ namespace eka2l1 {
         }
 
         // Create a server with name
-        server::server(kernel_system *kern, system *sys, const std::string name, bool hle, bool unhandle_callback_enable)
+        server::server(kernel_system *kern, system *sys, kernel::thread *owner, const std::string name, bool hle, bool unhandle_callback_enable)
             : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
             , sys(sys)
             , hle(hle)
+            , owner_thread(owner)
             , unhandle_callback_enable(unhandle_callback_enable) {
             process_msg = kern->create_msg(kernel::owner_type::process);
             process_msg->lock_free();

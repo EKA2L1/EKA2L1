@@ -118,6 +118,7 @@ namespace eka2l1 {
             eka2l1::ptr<epoc::request_status> request_status = 0;
             eka2l1::ptr<message2> request_data;
 
+            kernel::thread *owner_thread;
             kernel::thread *request_own_thread;
             ipc_msg_ptr request_msg;
 
@@ -142,7 +143,7 @@ namespace eka2l1 {
         public:
             std::uint32_t frequent_process_event;
 
-            explicit server(kernel_system *kern, system *sys, const std::string name, bool hle = false,
+            explicit server(kernel_system *kern, system *sys, kernel::thread *owner, const std::string name, bool hle = false,
                 bool unhandle_callback_enable = false);
             ~server() override;
 
@@ -180,6 +181,10 @@ namespace eka2l1 {
 
             bool is_hle() const {
                 return hle;
+            }
+
+            kernel::thread *get_owner_thread() {
+                return owner_thread;
             }
         };
     }
