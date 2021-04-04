@@ -20,6 +20,8 @@
     <string name="raw_dump">Raw dump</string>
     <string name="path_to_raw_dump">Percorso raw dump</string>
     <string name="install_method">Metodo d\'installazione</string>
+    <string name="no_device_dialog_title">No device installed!</string>
+    <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
     <string name="install_rpkg_corrupt">Il file RPKG selezionato è corrotto!</string>
     <string name="install_rpkg_file_not_found">Non è possibile aprire il file RPKG!</string>
     <string name="install_raw_dump_fail_to_copy">Impossibile copiare il raw dump nel percorso selezionato!</string>
