@@ -21,7 +21,9 @@ package com.github.eka2l1.applist;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -117,6 +119,15 @@ public class AppsListFragment extends ListFragment {
         });
     }
 
+    private void switchToDeviceList() {
+        DeviceListFragment deviceListFragment = new DeviceListFragment();
+        deviceListFragment.setTargetFragment(this, 0);
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.container, deviceListFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
     @SuppressLint("CheckResult")
     private void prepareApps() {
         ProgressDialog dialog = new ProgressDialog(getActivity());
@@ -139,6 +150,23 @@ public class AppsListFragment extends ListFragment {
                     public void onError(Throwable e) {
                         Toast.makeText(getContext(), R.string.no_devices_found, Toast.LENGTH_SHORT).show();
                         dialog.cancel();
+
+                        AlertDialog installDeviceAskDialog = new AlertDialog.Builder(getActivity())
+                                .setTitle(R.string.no_device_dialog_title)
+                                .setMessage(R.string.no_device_installed)
+                                .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        dialog.cancel();
+                                        switchToDeviceList();
+                                    }
+                                }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        dialog.cancel();
+                                    }
+                                }).create();
+                        installDeviceAskDialog.show();
                     }
                 });
     }
@@ -263,12 +291,7 @@ public class AppsListFragment extends ListFragment {
                         .commit();
                 break;
             case R.id.action_devices:
-                DeviceListFragment deviceListFragment = new DeviceListFragment();
-                deviceListFragment.setTargetFragment(this, 0);
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.container, deviceListFragment)
-                        .addToBackStack(null)
-                        .commit();
+                switchToDeviceList();
                 break;
             case R.id.action_mount_sd:
                 Intent i = new Intent(getActivity(), FilteredFilePickerActivity.class);
