@@ -53,7 +53,7 @@ namespace eka2l1::service {
     }
 
     typical_server::typical_server(system *sys, const std::string name)
-        : server(sys->get_kernel_system(), sys, name, true, false) {
+        : server(sys->get_kernel_system(), sys, nullptr, name, true, false) {
     }
 
     typical_server::~typical_server() {

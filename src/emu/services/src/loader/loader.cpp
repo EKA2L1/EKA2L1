@@ -301,7 +301,7 @@ namespace eka2l1 {
     }
 
     loader_server::loader_server(system *sys)
-        : service::server(sys->get_kernel_system(), sys, get_loader_server_name_through_epocver(sys->get_symbian_version_use()), true) {
+        : service::server(sys->get_kernel_system(), sys, nullptr, get_loader_server_name_through_epocver(sys->get_symbian_version_use()), true) {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
         REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
         REGISTER_IPC(loader_server, get_info, EGetInfo, "Loader::GetInfo");
