@@ -24,7 +24,7 @@
     <string name="install_rpkg_file_not_found">File RPKG hiện tại không mở được!</string>
     <string name="install_raw_dump_fail_to_copy">Copy file raw dump tới đích đến lỗi!</string>
     <string name="install_rom_fail_to_copy">Copy file ROM tới đích đến lỗi!</string>
-    <string name="install_rpkg_insufficent_size">File RPKG quá nhỏ, việc dump có thể không hoàn thành!</string>
+    <string name="install_rpkg_insufficent_size">File RPKG quá nhỏ, file dump có thể chưa hoàn thành!</string>
     <string name="install_already_exist">Mẫu máy cài đặt đã tồn tại!</string>
     <string name="install_no_language_file_present">Mẫu máy thiếu file thông tin ngôn ngữ!</string>
     <string name="install_product_determine_fail">Không xác định được thông tin mẫu máy!</string>
