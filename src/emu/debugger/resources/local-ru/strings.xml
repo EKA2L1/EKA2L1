@@ -132,10 +132,10 @@
     <string name="install_device_rpkg_file_not_found_msg">Указанный RPKG файл не может быть открыт!</string>
     <string name="install_device_raw_dump_fail_to_copy_msg">Не удалось скопировать сырой дамп файлов!</string>
     <string name="install_device_rom_fail_to_copy_msg">Не удалось скопировать ROM!</string>
-    <string name="install_device_rpkg_insufficent_size_msg">RPKG file is too small, the dumping process might be unfinished!</string>
+    <string name="install_device_rpkg_insufficent_size_msg">RPKG файл слишком мал, дамп может быть не завершён!</string>
     <string name="install_device_already_exist_msg">Устройство для установки уже существует!</string>
-    <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
-    <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>
+    <string name="install_device_no_language_file_present_msg">На устройстве, которое вы пытаетесь установить, отсутствуют файлы информации о языке!</string>
+    <string name="install_device_product_determine_fail_msg">Не удалось определить информацию о продукте (производитель, код прошивки, версия ОС и т.д.)</string>
     <string name="install_device_install_failure_msg">Что-то случилось во время установки! Пожалуйста, проверьте лог!</string>
     <string name="install_device_final_msg_1">Спасибо за использование мастера установки. Мы надеемся, что эмулятор вам понравится!</string>
     <string name="install_device_final_msg_2">По любым проблемам, пожалуйста, сообщите разработчикам, открыв тикет на Github!</string>
