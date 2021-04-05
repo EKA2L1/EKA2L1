@@ -132,10 +132,10 @@
     <string name="install_device_rpkg_file_not_found_msg">RPKG file specified can\'t be opened!</string>
     <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>
     <string name="install_device_rom_fail_to_copy_msg">Fail to copy ROM to target destination!</string>
-    <string name="install_device_rpkg_insufficent_size_msg">RPKG file is too small, the dumping process might be unfinished!</string>
+    <string name="install_device_rpkg_insufficent_size_msg">Plik RPKG jest za mały, proces zrzucania mógł nie zostać ukończony!</string>
     <string name="install_device_already_exist_msg">Device to install already exists!</string>
-    <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
-    <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>
+    <string name="install_device_no_language_file_present_msg">Urządzenie które chcesz zainstalować nie ma plików informacyjnych o języku!</string>
+    <string name="install_device_product_determine_fail_msg">Nie określono informacji produktu (producent, kod firmware\'u, wersja systemu operacyjnego itp...).</string>
     <string name="install_device_install_failure_msg">Coś poszło nie tak w czasie instalacji! Sprawdź log!</string>
     <string name="install_device_final_msg_1">Dziękujemy za używanie kreatora. Mamy nadzieję, że będziesz się dobrze bawić używając emulatora!</string>
     <string name="install_device_final_msg_2">W razie problemu, zgłoś to twórcom zgłaszając problem!</string>
@@ -152,7 +152,7 @@
     <string name="credits_thanks_text">Dziękujemy za używanie emulatora!</string>
     <string name="credits_main_developer_text">Główni twórcy:</string>
     <string name="credits_contributors_text">Kontrybutorzy:</string>
-    <string name="credits_icon_text">Icon:</string>
+    <string name="credits_icon_text">Ikona:</string>
     <string name="credits_honors_text">Uznania:</string>
     <string name="credits_translators_text">Tłumacze:</string>
 </resources>
