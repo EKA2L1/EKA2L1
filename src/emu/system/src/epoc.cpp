@@ -256,10 +256,12 @@ namespace eka2l1 {
             bool result = dvcmngr_->set_current(idx);
 
             if (!result) {
+                end_access();
                 return false;
             }
 
             if (!reset(false)) {
+                end_access();
                 return false;
             }
 
@@ -275,6 +277,7 @@ namespace eka2l1 {
 
                 std::optional<eka2l1::drive> drventry = io_->get_drive_entry(romdrv);
                 if (!drventry.has_value()) {
+                    end_access();
                     return false;
                 }
 
