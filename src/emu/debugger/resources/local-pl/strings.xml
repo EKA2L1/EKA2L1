@@ -128,12 +128,12 @@
     <string name="install_device_progress_raw_dump_msg">Kopiowanie surowego zrzutu ({}%)</string>
     <string name="install_device_progress_rpkg_msg">Wypakuj RPKG</string>
     <string name="install_device_progress_rom_msg">Skopiuj ROM</string>
-    <string name="install_device_install_rpkg_corrupt_msg">The RPKG file provided is corrupt!</string>
-    <string name="install_device_rpkg_file_not_found_msg">RPKG file specified can\'t be opened!</string>
-    <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>
-    <string name="install_device_rom_fail_to_copy_msg">Fail to copy ROM to target destination!</string>
+    <string name="install_device_install_rpkg_corrupt_msg">Podany plik RPKG jest uszkodzony!</string>
+    <string name="install_device_rpkg_file_not_found_msg">Podany plik RPKG nie może być otworzony!</string>
+    <string name="install_device_raw_dump_fail_to_copy_msg">Nie udało się skopiować plików surowego zrzutu do miejsca docelowego!</string>
+    <string name="install_device_rom_fail_to_copy_msg">Nie udało się skopiować ROM-u do miejsca docelowego!</string>
     <string name="install_device_rpkg_insufficent_size_msg">Plik RPKG jest za mały, proces zrzucania mógł nie zostać ukończony!</string>
-    <string name="install_device_already_exist_msg">Device to install already exists!</string>
+    <string name="install_device_already_exist_msg">Urządzenie do zainstalowania już istnieje!</string>
     <string name="install_device_no_language_file_present_msg">Urządzenie które chcesz zainstalować nie ma plików informacyjnych o języku!</string>
     <string name="install_device_product_determine_fail_msg">Nie określono informacji produktu (producent, kod firmware\'u, wersja systemu operacyjnego itp...).</string>
     <string name="install_device_install_failure_msg">Coś poszło nie tak w czasie instalacji! Sprawdź log!</string>
