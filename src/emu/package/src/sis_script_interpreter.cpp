@@ -517,7 +517,7 @@ namespace eka2l1 {
                         sis_else_if *else_branch = (sis_else_if *)(wrap_else_branch.get());
 
                         if (condition_passed(&else_branch->expr)) {
-                            interpret(if_stmt->install_block, progress, crr_blck_idx);
+                            interpret(else_branch->install_block, progress, crr_blck_idx);
                         }
                     }
                 }
