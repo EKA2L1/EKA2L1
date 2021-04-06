@@ -34,6 +34,7 @@ namespace eka2l1 {
         sisregistry_localized_vendor_name = 0x8,
         sisregistry_package_name = 0x9,
         sisregistry_in_rom = 0xA,
+        sisregistry_selected_drive = 0xD,
         sisregistry_get_matching_supported_languages = 0x10,
         sisregistry_trust_timestamp = 0x16,
         sisregistry_trust_status_op = 0x17,
@@ -45,6 +46,7 @@ namespace eka2l1 {
         sisregistry_files = 0x2E,
         sisregistry_file_descriptions = 0x2F,
         sisregistry_package_augmentations = 0x30,
+        sisregistry_preinstalled = 0x32,
         sisregistry_package_op = 0x34,
         sisregistry_non_removable = 0x36,
         sisregistry_add_entry = 0x41,
@@ -115,8 +117,9 @@ namespace eka2l1 {
     };
 
     class sisregistry_server : public service::typical_server {
-
     public:
+        bool added = false;
+
         explicit sisregistry_server(eka2l1::system *sys);
 
         void connect(service::ipc_context &context) override;
@@ -127,13 +130,18 @@ namespace eka2l1 {
         explicit sisregistry_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
+        void open_registry_uid(eka2l1::service::ipc_context *ctx);
+        void get_version(eka2l1::service::ipc_context *ctx);
         void is_in_rom(eka2l1::service::ipc_context *ctx);
+        void get_selected_drive(eka2l1::service::ipc_context *ctx);
         void request_files(eka2l1::service::ipc_context *ctx);
         void request_file_descriptions(eka2l1::service::ipc_context *ctx);
         void populate_file_descriptions(common::chunkyseri &seri);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
         void populate_augmentations(common::chunkyseri &seri);
         void is_non_removable(eka2l1::service::ipc_context *ctx);
+        void add_entry(eka2l1::service::ipc_context *ctx);
+        void is_preinstalled(eka2l1::service::ipc_context *ctx);
         void get_package(eka2l1::service::ipc_context *ctx);
         void get_trust_timestamp(eka2l1::service::ipc_context *ctx);
         void get_trust_status(eka2l1::service::ipc_context *ctx);

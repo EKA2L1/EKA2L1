@@ -53,18 +53,22 @@ namespace eka2l1 {
 
         switch (ctx->msg->function) {
         case sisregistry_open_registry_uid: {
-            auto uuu = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-            LOG_TRACE(SERVICE_SISREGISTRY, "Open new subsession for UID 0x{:X}", uuu.value());
+            open_registry_uid(ctx);
+            break;
+        }
 
-            if (uuu.value() == 0x20003b78)
-                ctx->complete(epoc::error_none);
-            else
-                ctx->complete(epoc::error_not_found);
+        case sisregistry_version: {
+            get_version(ctx);
             break;
         }
     
         case sisregistry_in_rom: {
             is_in_rom(ctx);
+            break;
+        }
+
+        case sisregistry_selected_drive: {
+            get_selected_drive(ctx);
             break;
         }
 
@@ -103,6 +107,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_preinstalled: {
+            is_preinstalled(ctx);
+            break;
+        }
+
         case sisregistry_package_op: {
             get_package(ctx);
             break;
@@ -110,6 +119,11 @@ namespace eka2l1 {
         
         case sisregistry_non_removable: {
             is_non_removable(ctx);
+            break;
+        }
+
+        case sisregistry_add_entry: {
+            add_entry(ctx);
             break;
         }
 
@@ -128,20 +142,6 @@ namespace eka2l1 {
             break;
         }
 
-        case sisregistry_add_entry: {
-            std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
-            std::uint32_t size = ctx->get_argument_data_size(0);
-            common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
-            sisregistry_package package;
-            seri.absorb(package.uid);
-            epoc::absorb_des_string(package.package_name, seri, true);
-            epoc::absorb_des_string(package.vendor_name, seri, true);
-            seri.absorb(package.index);
-
-            ctx->complete(epoc::error_none);
-            break;
-        }
-
         default:
             LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry server 0x{:X}", ctx->msg->function);
             ctx->complete(epoc::error_none);
@@ -149,10 +149,37 @@ namespace eka2l1 {
         }
     }
 
+    void sisregistry_client_session::open_registry_uid(eka2l1::service::ipc_context *ctx) {
+        auto uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        LOG_TRACE(SERVICE_SISREGISTRY, "Open new subsession for UID 0x{:X}", uid.value());
+
+        if (uid.value() == 0x20003b78 || (uid.value() == 0x2000AFDE && server<sisregistry_server>()->added))
+            ctx->complete(epoc::error_none);
+        else
+            ctx->complete(epoc::error_not_found);
+    }
+
+    void sisregistry_client_session::get_version(eka2l1::service::ipc_context *ctx) {
+        epoc::version version;
+        version.major = 1;
+        version.minor = 40;
+        version.build = 1557;
+
+        ctx->write_data_to_descriptor_argument(0, version);
+        ctx->complete(epoc::error_none);
+    }
+
     void sisregistry_client_session::is_in_rom(eka2l1::service::ipc_context *ctx) {
         uint32_t in_rom = false;
 
         ctx->write_data_to_descriptor_argument(0, in_rom);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::get_selected_drive(eka2l1::service::ipc_context *ctx) {
+        drive_number num = drive_e;
+
+        ctx->write_data_to_descriptor_argument(0, num);
         ctx->complete(epoc::error_none);
     }
 
@@ -216,6 +243,20 @@ namespace eka2l1 {
         }
     }
 
+    void sisregistry_client_session::add_entry(eka2l1::service::ipc_context *ctx) {
+        std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
+        std::uint32_t size = ctx->get_argument_data_size(0);
+        common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
+        sisregistry_package package;
+        seri.absorb(package.uid);
+        epoc::absorb_des_string(package.package_name, seri, true);
+        epoc::absorb_des_string(package.vendor_name, seri, true);
+        seri.absorb(package.index);
+        server<sisregistry_server>()->added = true;
+
+        ctx->complete(epoc::error_none);
+    }
+
     void sisregistry_client_session::request_package_augmentations(eka2l1::service::ipc_context *ctx) {
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
         populate_augmentations(seri);
@@ -243,12 +284,21 @@ namespace eka2l1 {
         }
     }
 
+    void sisregistry_client_session::is_preinstalled(eka2l1::service::ipc_context *ctx) {
+        std::int32_t result = 0;
+
+        ctx->write_data_to_descriptor_argument<std::int32_t>(0, result);
+        ctx->complete(epoc::error_none);
+    }
+
     void sisregistry_client_session::get_package(eka2l1::service::ipc_context *ctx) {
         std::uint32_t session_id = *(ctx->get_argument_value<std::uint32_t>(3));
 
         sisregistry_package package;
-        package.uid = session_id;
-        package.index = 0;
+        package.uid = 0x2000AFDE;
+        package.index = 0x01000000;
+        package.package_name = u"The Sims 2 Pets";
+        package.vendor_name = u"Electronic Arts Inc.";
 
         ctx->write_data_to_descriptor_argument(0, package);
         ctx->complete(epoc::error_none);
