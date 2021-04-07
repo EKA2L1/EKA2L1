@@ -28,6 +28,12 @@
 #include <common/time.h>
 
 namespace eka2l1 {
+    void sisregistry_package::do_state(common::chunkyseri &seri) {
+        seri.absorb(uid);
+        epoc::absorb_des_string(package_name, seri, true);
+        epoc::absorb_des_string(vendor_name, seri, true);
+        seri.absorb(index);
+    }
 
     sisregistry_server::sisregistry_server(eka2l1::system *sys)
         : service::typical_server(sys, "!SisRegistryServer") {
@@ -300,7 +306,16 @@ namespace eka2l1 {
         package.package_name = u"The Sims 2 Pets";
         package.vendor_name = u"Electronic Arts Inc.";
 
-        ctx->write_data_to_descriptor_argument(0, package);
+        std::vector<std::uint8_t> buf;
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        package.do_state(seri);
+
+        buf.resize(seri.size());
+
+        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+        package.do_state(seri);
+
+        ctx->write_data_to_descriptor_argument(0, buf.data(), buf.size());
         ctx->complete(epoc::error_none);
     }
 

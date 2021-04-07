@@ -27,6 +27,10 @@
 #include <services/framework.h>
 
 namespace eka2l1 {
+    namespace common {
+        class chunkyseri;
+    }
+
     enum sisregistry_opcode {
         sisregistry_open_registry_uid = 0x0,
         sisregistry_close_registry_entry = 0x3,
@@ -87,7 +91,9 @@ namespace eka2l1 {
         epoc::uid uid;
         std::u16string package_name;
         std::u16string vendor_name;
-        std::int32_t index; 
+        std::int32_t index;
+
+        void do_state(common::chunkyseri &seri);
     };
 
     struct sisregistry_trust_status {
