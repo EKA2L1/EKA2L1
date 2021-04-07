@@ -128,6 +128,14 @@
     <string name="install_device_progress_raw_dump_msg">অমিশ্রিত ডাম্প কপি করা হচ্ছে ({}%)</string>
     <string name="install_device_progress_rpkg_msg">RPKG এক্সট্রাক্ট করুন</string>
     <string name="install_device_progress_rom_msg">রম কপি করুন</string>
+    <string name="install_device_install_rpkg_corrupt_msg">সরবরাহকৃত RPKG ফাইলটি বিকল!</string>
+    <string name="install_device_rpkg_file_not_found_msg">নির্দিষ্ট RPKG ফাইলটি খোলা যাচ্ছে না!</string>
+    <string name="install_device_raw_dump_fail_to_copy_msg">অপরিপক্ব ডাম্প ফাইলটি নির্ধারিত জায়গায় কপি করতে ব্যর্থ!</string>
+    <string name="install_device_rom_fail_to_copy_msg">রমটি নির্ধারিত জায়গায় কপি করতে ব্যর্থ!</string>
+    <string name="install_device_rpkg_insufficent_size_msg">RPKG ফাইলটি খুব ছোট, ডাম্প করার প্রক্রিয়াটি অসম্পন্ন হতে পারে!</string>
+    <string name="install_device_already_exist_msg">ইনস্টল করতে ডিভাইসটি ইতোমধ্যে বিদ্যমান!</string>
+    <string name="install_device_no_language_file_present_msg">যে ডিভাইসটি ইনস্টল করতে যাচ্ছেন তার মধ্যে ভাষা তথ্য ফাইল পাওয়া যাচ্ছে না!</string>
+    <string name="install_device_product_determine_fail_msg">পণ্যের তথ্য নির্ধারণে ব্যর্থ (বিক্রেতা, ফির্মওয়্যার কোড, ওএস ভার্সন, ইত্যাদি...)</string>
     <string name="install_device_install_failure_msg">ইনস্টলের সময় কিছু ভুল হয়েছে! অনুগ্রহ করে লগ ফাইলটি দেখুন!</string>
     <string name="install_device_final_msg_1">উইজার্ডটি ব্যবহার করার জন্য আপনাকে ধন্যবাদ। আশা করি আপনি ইমুলেটর ব্যবহার করার ভালো সময় পেয়েছেন!</string>
     <string name="install_device_final_msg_2">কোন সমস্যা থাকলে, অনুগ্রহ করে ইস্যু খুলে ডেভেলপারের কাছে জানান!</string>

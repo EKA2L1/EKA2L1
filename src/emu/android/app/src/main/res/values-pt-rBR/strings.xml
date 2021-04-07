@@ -20,6 +20,16 @@
     <string name="raw_dump">Dump Raw</string>
     <string name="path_to_raw_dump">Caminho para o dump bruto</string>
     <string name="install_method">Método de instalação</string>
+    <string name="no_device_dialog_title">Nenhum dispositivo instalado!</string>
+    <string name="no_device_installed">Por favor instale um dispositivo. Arquivos e ROM de um dispositivo Symbian são necessários para a instalação.\n\n<b>Nota:</b> Cada aplicativo precisará de um dispositivo Symbian adequado para ser executado.</string>
+    <string name="install_rpkg_corrupt">O arquivo RPKG fornecido está corrompido!</string>
+    <string name="install_rpkg_file_not_found">Arquivo RPKG especificado não pode ser aberto!</string>
+    <string name="install_raw_dump_fail_to_copy">Falha ao copiar arquivos dump brutos para o destino destino!</string>
+    <string name="install_rom_fail_to_copy">Falha ao copiar a ROM para destino desejado!</string>
+    <string name="install_rpkg_insufficent_size">O arquivo RPKG é muito pequeno, o dump pode não ser concluído!</string>
+    <string name="install_already_exist">Dispositivo para instalar já existe!</string>
+    <string name="install_no_language_file_present">O dispositivo não tem arquivos de informações de idioma!</string>
+    <string name="install_product_determine_fail">Falha ao determinar informações do produto!</string>
     <string name="pref_general_title">Geral</string>
     <string name="pref_system_title">Sistema</string>
     <string name="pref_control_key_binding_sect_title">Combinações de tecla</string>

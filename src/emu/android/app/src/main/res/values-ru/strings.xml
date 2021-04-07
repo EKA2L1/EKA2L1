@@ -20,6 +20,16 @@
     <string name="raw_dump">Сырой дамп</string>
     <string name="path_to_raw_dump">Путь к сырому дампу</string>
     <string name="install_method">Способ установки</string>
+    <string name="no_device_dialog_title">Нет установленных устройств!</string>
+    <string name="no_device_installed">Пожалуйста, установите устройство. Для установки необходимы файлы и ROM устройства Symbian.\n\n<b>Примечание:</b> Каждому приложению для запуска потребуется подходящее устройство Symbian.</string>
+    <string name="install_rpkg_corrupt">Указанный файл RPKG поврежден!</string>
+    <string name="install_rpkg_file_not_found">Указанный RPKG файл не может быть открыт!</string>
+    <string name="install_raw_dump_fail_to_copy">Не удалось скопировать сырой дамп файлов!</string>
+    <string name="install_rom_fail_to_copy">Не удалось скопировать ROM!</string>
+    <string name="install_rpkg_insufficent_size">RPKG файл слишком мал, дамп может быть не завершён!</string>
+    <string name="install_already_exist">Устройство для установки уже существует!</string>
+    <string name="install_no_language_file_present">В устройстве отсутствуют языковые информационные файлы!</string>
+    <string name="install_product_determine_fail">Не удалось определить информацию о продукте!</string>
     <string name="pref_general_title">Общее</string>
     <string name="pref_system_title">Система</string>
     <string name="pref_control_key_binding_sect_title">Назначение кнопок</string>

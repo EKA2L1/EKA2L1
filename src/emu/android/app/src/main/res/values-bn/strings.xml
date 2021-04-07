@@ -20,6 +20,16 @@
     <string name="raw_dump">অমিশ্রিত ডাম্প</string>
     <string name="path_to_raw_dump">অমিশ্রিত ডাম্প খোঁজার স্থান</string>
     <string name="install_method">ইনস্টল পদ্ধতি</string>
+    <string name="no_device_dialog_title">কোনো ডিভাইস ইনস্টল করা হয়নি!</string>
+    <string name="no_device_installed">অনুগ্রহ করে একটি ডিভাইস ইনস্টল করুন। ইনস্টলেশনের জন্য একটি সিম্বিয়ান ডিভাইসের ফাইল ও রম লাগবে।\n\n<b>নোট:</b> প্রতিটি অ্যাপ চালাতে উপযুক্ত সিম্বিয়ান ডিভাইস লাগবে।.</string>
+    <string name="install_rpkg_corrupt">সরবরাহকৃত RPKG ফাইলটি বিকল!</string>
+    <string name="install_rpkg_file_not_found">নির্দিষ্ট RPKG ফাইলটি খোলা যাচ্ছে না!</string>
+    <string name="install_raw_dump_fail_to_copy">অপরিপক্ব ডাম্প ফাইলটি নির্ধারিত জায়গায় কপি করতে ব্যর্থ!</string>
+    <string name="install_rom_fail_to_copy">রমটি নির্ধারিত জায়গায় কপি করতে ব্যর্থ!</string>
+    <string name="install_rpkg_insufficent_size">RPKG ফাইলটি খুব ছোট, ডাম্পটি অসম্পন্ন হতে পারে!</string>
+    <string name="install_already_exist">ইনস্টল করতে ডিভাইসটি ইতোমধ্যে বিদ্যমান!</string>
+    <string name="install_no_language_file_present">ডিভাইসটির মধ্যে ভাষা তথ্য ফাইল পাওয়া যাচ্ছে না!</string>
+    <string name="install_product_determine_fail">পণ্যের তথ্য নির্ধারণে ব্যর্থ!</string>
     <string name="pref_general_title">সাধারণ</string>
     <string name="pref_system_title">সিস্টেম</string>
     <string name="pref_control_key_binding_sect_title">কি বাইন্ডিং</string>
