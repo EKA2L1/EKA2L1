@@ -198,6 +198,13 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void dsa::free(eka2l1::service::ipc_context &context, eka2l1::ws_cmd &cmd) {
+        on_command_batch_done(context);
+
+        context.complete(epoc::error_none);
+        client->delete_object(cmd.obj_handle);
+    }
+
     bool dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
@@ -247,6 +254,10 @@ namespace eka2l1::epoc {
 
             case ws_dsa_cancel:
                 cancel(ctx, cmd);
+                break;
+
+            case ws_dsa_free:
+                free(ctx, cmd);
                 break;
 
             default: {
