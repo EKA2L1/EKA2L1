@@ -40,6 +40,7 @@ public class AboutDialogFragment extends DialogFragment {
                 .append(BuildConfig.VERSION_NAME)
                 .append('-')
                 .append(BuildConfig.GIT_HASH)
+                .append(getText(R.string.about_website))
                 .append(getText(R.string.about_github))
                 .append(getText(R.string.about_crowdin))
                 .append(getText(R.string.about_copyright))
