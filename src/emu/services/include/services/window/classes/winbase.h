@@ -119,6 +119,8 @@ namespace eka2l1::epoc {
         void inquire_offset(service::ipc_context &ctx, ws_cmd &cmd);
 
         void set_fade(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void window_group_id(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         /*! \brief Generic event queueing

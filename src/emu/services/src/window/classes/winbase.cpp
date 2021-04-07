@@ -274,6 +274,19 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void window::window_group_id(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        if (type == window_kind::group) {
+            ctx.complete(id);
+        } else {
+            epoc::window *pp = parent;
+            while (pp->type != window_kind::group) {
+                pp = pp->parent;
+            }
+
+            ctx.complete(pp->id);
+        }
+    }
+
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
 
@@ -364,6 +377,10 @@ namespace eka2l1::epoc {
             set_fade(ctx, cmd);
             return true;
         }
+ 
+        case EWsWinOpWindowGroupId:
+            window_group_id(ctx, cmd);
+            return true;    
 
         default: {
             break;
