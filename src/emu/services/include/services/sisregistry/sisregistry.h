@@ -42,11 +42,12 @@ namespace eka2l1 {
         sisregistry_get_matching_supported_languages = 0x10,
         sisregistry_trust_timestamp = 0x16,
         sisregistry_trust_status_op = 0x17,
-        sisregistry_stub_file_entries = 0x1D,
+        sisregistry_package_exists_in_rom = 0x1D,
+        sisregistry_stub_file_entries = 0x1E,
         sisregistry_separator_minimum_read_user_data = 0x20,
         sisregistry_installed_packages = 0x22,
         sisregistry_installed_uid = 0x24,
-        sisregisty_uid = 0x29,
+        sisregistry_uid = 0x29,
         sisregistry_files = 0x2E,
         sisregistry_file_descriptions = 0x2F,
         sisregistry_package_augmentations = 0x30,
@@ -141,6 +142,9 @@ namespace eka2l1 {
         void is_in_rom(eka2l1::service::ipc_context *ctx);
         void get_selected_drive(eka2l1::service::ipc_context *ctx);
         void request_files(eka2l1::service::ipc_context *ctx);
+        void request_uid(eka2l1::service::ipc_context *ctx);
+        void request_stub_file_entries(eka2l1::service::ipc_context *ctx);
+        void populate_files(common::chunkyseri &seri);
         void request_file_descriptions(eka2l1::service::ipc_context *ctx);
         void populate_file_descriptions(common::chunkyseri &seri);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);

@@ -88,6 +88,16 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_package_exists_in_rom: {
+            is_in_rom(ctx);
+            break;
+        }
+
+        case sisregistry_stub_file_entries: {
+            request_stub_file_entries(ctx);
+            break;
+        }
+
         case sisregistry_installed_packages: {
             request_package_augmentations(ctx);
             break;
@@ -95,6 +105,11 @@ namespace eka2l1 {
 
         case sisregistry_installed_uid: {
             is_installed_uid(ctx);
+            break;
+        }
+
+        case sisregistry_uid: {
+            request_uid(ctx);
             break;
         }
 
@@ -205,6 +220,36 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void sisregistry_client_session::request_stub_file_entries(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(1);
+        LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_stub_file_entries 0x{:X}", package_mode.value());
+
+        if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_count) {
+            std::uint32_t file_count = 0;
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(2, file_count);
+            ctx->complete(epoc::error_none);
+        } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
+            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+            populate_files(seri);
+
+            std::vector<char> buf(seri.size());
+            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
+                common::SERI_MODE_WRITE);
+            populate_files(seri);
+
+            ctx->write_data_to_descriptor_argument(3, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+            ctx->complete(epoc::error_none);
+        }
+    }
+
+    void sisregistry_client_session::request_uid(eka2l1::service::ipc_context *ctx) {
+        epoc::uid uid = 0x2000AFDE;
+
+        ctx->write_data_to_descriptor_argument(0, uid);
+        ctx->complete(epoc::error_none);
+    }
+
     void sisregistry_client_session::request_files(eka2l1::service::ipc_context *ctx) {
         std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
         LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_files 0x{:X}", package_mode.value());
@@ -214,7 +259,25 @@ namespace eka2l1 {
             ctx->write_data_to_descriptor_argument<std::uint32_t>(1, file_count);
             ctx->complete(epoc::error_none);
         } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
-            request_file_descriptions(ctx);
+            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+            populate_files(seri);
+
+            std::vector<char> buf(seri.size());
+            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
+                common::SERI_MODE_WRITE);
+            populate_files(seri);
+
+            ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+            ctx->complete(epoc::error_none);
+        }
+    }
+
+    void sisregistry_client_session::populate_files(common::chunkyseri &seri) {
+        std::uint32_t file_count = 0;
+        seri.absorb(file_count);
+        for (size_t i = 0; i < file_count; i++) {
+            std::u16string filename;
+            epoc::absorb_des_string(filename, seri, true);
         }
     }
 
@@ -298,8 +361,6 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_session::get_package(eka2l1::service::ipc_context *ctx) {
-        std::uint32_t session_id = *(ctx->get_argument_value<std::uint32_t>(3));
-
         sisregistry_package package;
         package.uid = 0x2000AFDE;
         package.index = 0x01000000;
