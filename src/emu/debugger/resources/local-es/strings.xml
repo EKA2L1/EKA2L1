@@ -132,10 +132,10 @@
     <string name="install_device_rpkg_file_not_found_msg">¡El fichero RPKG indicado no se pudo abrir!</string>
     <string name="install_device_raw_dump_fail_to_copy_msg">¡Fallo copiado los ficheros de imagen en crudo a la ubicación de destino!</string>
     <string name="install_device_rom_fail_to_copy_msg">¡Fallo copiando la ROM a la ubicación de destino!</string>
-    <string name="install_device_rpkg_insufficent_size_msg">RPKG file is too small, the dumping process might be unfinished!</string>
+    <string name="install_device_rpkg_insufficent_size_msg">¡El fichero RPKG es demasiado pequeño, el proceso de volcado podría estar inacabado!</string>
     <string name="install_device_already_exist_msg">¡El dispositivo a instalar ya existe!</string>
-    <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
-    <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>
+    <string name="install_device_no_language_file_present_msg">¡El dispositivo que está intentando instalar carece de archivos de información de idioma!</string>
+    <string name="install_device_product_determine_fail_msg">Error al determinar la información del producto (proveedor, código de firmware, versión del sistema operativo, etc...)</string>
     <string name="install_device_install_failure_msg">¡Algo fue mal durante la instalación! ¡Por favor revise el registro (log)!</string>
     <string name="install_device_final_msg_1">Gracias por utilizar el asistente. ¡Esperamos que tenga un buen tiempo usando el emulador!</string>
     <string name="install_device_final_msg_2">En caso de cualquier problema, por favor reporte a los desarrolladores en opening issues!</string>
