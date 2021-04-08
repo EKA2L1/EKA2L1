@@ -1082,6 +1082,10 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
+        if (ss->is_server_terminated()) {
+            return epoc::error_server_terminated;
+        }
+
         if (!status) {
             LOG_TRACE(KERNEL, "Sending a blind sync message");
         }
