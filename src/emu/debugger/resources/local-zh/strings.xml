@@ -128,12 +128,12 @@
     <string name="install_device_progress_raw_dump_msg">正在复制原始转储({}%)</string>
     <string name="install_device_progress_rpkg_msg">解压RPKG</string>
     <string name="install_device_progress_rom_msg">复制ROM</string>
-    <string name="install_device_install_rpkg_corrupt_msg">The RPKG file provided is corrupt!</string>
-    <string name="install_device_rpkg_file_not_found_msg">RPKG file specified can\'t be opened!</string>
-    <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>
-    <string name="install_device_rom_fail_to_copy_msg">Fail to copy ROM to target destination!</string>
+    <string name="install_device_install_rpkg_corrupt_msg">提供的RPKG文件已损坏！</string>
+    <string name="install_device_rpkg_file_not_found_msg">无法打开指定的RPKG文件！</string>
+    <string name="install_device_raw_dump_fail_to_copy_msg">复制原始转储文件到目标路径失败！</string>
+    <string name="install_device_rom_fail_to_copy_msg">复制ROM到目标路径失败！</string>
     <string name="install_device_rpkg_insufficent_size_msg">RPKG文件太小，导入过程可能没有完成！</string>
-    <string name="install_device_already_exist_msg">Device to install already exists!</string>
+    <string name="install_device_already_exist_msg">安装设备已经存在！</string>
     <string name="install_device_no_language_file_present_msg">您正在尝试安装的设备缺少语言信息文件！</string>
     <string name="install_device_product_determine_fail_msg">无法确定产品信息（供应商、固件代码、操作系统版本等等）</string>
     <string name="install_device_install_failure_msg">安装过程中出现错误！请检查日志！</string>
