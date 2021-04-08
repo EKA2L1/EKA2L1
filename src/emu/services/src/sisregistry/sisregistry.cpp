@@ -198,9 +198,9 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_session::get_selected_drive(eka2l1::service::ipc_context *ctx) {
-        drive_number num = drive_e;
+        std::int32_t result = 'E';
 
-        ctx->write_data_to_descriptor_argument(0, num);
+        ctx->write_data_to_descriptor_argument(0, result);
         ctx->complete(epoc::error_none);
     }
 
