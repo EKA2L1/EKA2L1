@@ -48,6 +48,8 @@ namespace eka2l1 {
          *  Server can be in different process and different thread.
         */
         class session : public kernel::kernel_obj {
+            friend class server;
+
             server_ptr svr;
 
             std::vector<std::pair<bool, ipc_msg_ptr>> msgs_pool;
@@ -84,6 +86,10 @@ namespace eka2l1 {
 
             const kernel::handle get_associated_handle() const {
                 return associated_handle;
+            }
+
+            bool is_server_terminated() const {
+                return svr == nullptr;
             }
 
             void set_slot_free(ipc_msg_ptr &msg);

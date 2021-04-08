@@ -136,16 +136,18 @@ namespace eka2l1 {
             }
 
             // Try to send a disconnect message. Headless session and use sync message.
-            headless_ = !svr->is_hle();
-            eka2l1::ipc_arg arg;
+            if (svr) {
+                headless_ = !svr->is_hle();
+                eka2l1::ipc_arg arg;
 
-            arg.flag = 0;
-            std::fill(arg.args, arg.args + 4, 0);
+                arg.flag = 0;
+                std::fill(arg.args, arg.args + 4, 0);
 
-            send_receive_sync(standard_ipc_message_disconnect, arg, 0);
-            
-            if (svr->is_hle()) {
-                svr->process_accepted_msg();
+                send_receive_sync(standard_ipc_message_disconnect, arg, 0);
+                
+                if (svr->is_hle()) {
+                    svr->process_accepted_msg();
+                }
             }
         }
     }

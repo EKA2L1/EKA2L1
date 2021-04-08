@@ -129,6 +129,10 @@ namespace eka2l1 {
         }
 
         void server::destroy() {
+            for (std::size_t i = 0; i < sessions.size(); i++) {
+                sessions[i]->svr = nullptr;
+            }
+
             process_msg->unlock_free();
             kern->free_msg(process_msg);
         }
