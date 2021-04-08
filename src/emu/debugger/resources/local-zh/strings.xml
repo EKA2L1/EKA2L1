@@ -132,10 +132,10 @@
     <string name="install_device_rpkg_file_not_found_msg">RPKG file specified can\'t be opened!</string>
     <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>
     <string name="install_device_rom_fail_to_copy_msg">Fail to copy ROM to target destination!</string>
-    <string name="install_device_rpkg_insufficent_size_msg">RPKG file is too small, the dumping process might be unfinished!</string>
+    <string name="install_device_rpkg_insufficent_size_msg">RPKG文件太小，导入过程可能没有完成！</string>
     <string name="install_device_already_exist_msg">Device to install already exists!</string>
-    <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
-    <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>
+    <string name="install_device_no_language_file_present_msg">您正在尝试安装的设备缺少语言信息文件！</string>
+    <string name="install_device_product_determine_fail_msg">无法确定产品信息（供应商、固件代码、操作系统版本等等）</string>
     <string name="install_device_install_failure_msg">安装过程中出现错误！请检查日志！</string>
     <string name="install_device_final_msg_1">感谢您使用此向导，希望您在这模拟器中能找到快乐！</string>
     <string name="install_device_final_msg_2">如有任何使用中的问题，请通过opening issues向开发者提交。</string>
