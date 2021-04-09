@@ -28,8 +28,7 @@ namespace eka2l1 {
     class fbs_server;
 
     namespace common {
-        struct ro_stream;
-        struct wo_stream;
+        class wo_stream;
     }
 }
 
