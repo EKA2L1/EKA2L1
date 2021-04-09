@@ -19,6 +19,7 @@
  */
 
 #include <common/cvt.h>
+#include <services/internet/protocols/overall.h>
 #include <services/socket/agent/genconn.h>
 #include <services/socket/connection.h>
 #include <services/socket/host.h>
@@ -40,6 +41,7 @@ namespace eka2l1 {
     socket_server::socket_server(eka2l1::system *sys)
         : service::typical_server(sys, get_socket_server_name_by_epocver((sys->get_symbian_version_use()))) {
         agents_.push_back(std::make_unique<epoc::socket::generic_connect_agent>(this));
+        epoc::internet::add_internet_stack_protocols(this, kern->is_eka1());
     }
 
     void socket_server::connect(service::ipc_context &context) {
@@ -242,7 +244,9 @@ namespace eka2l1 {
         // Find the protocol that satifies our condition first
         epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(addr_family.value(), protocol.value());
         if (!target_pr) {
+            LOG_ERROR(SERVICE_ESOCK, "Unable to find host resolver with address={}, protocol={}", addr_family.value(), protocol.value());
             ctx->complete(epoc::error_not_found);
+
             return;
         }
 
@@ -293,7 +297,9 @@ namespace eka2l1 {
         // Find the protocol that satifies our condition first
         epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(addr_family.value(), protocol.value());
         if (!target_pr) {
+            LOG_ERROR(SERVICE_ESOCK, "Unable to find host resolver with address={}, protocol={}", addr_family.value(), protocol.value());
             ctx->complete(epoc::error_not_found);
+
             return;
         }
 

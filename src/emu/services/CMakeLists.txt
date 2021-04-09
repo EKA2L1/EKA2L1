@@ -30,6 +30,9 @@ add_library(epocservs
         include/services/centralrepo/common.h
         include/services/centralrepo/repo.h
         include/services/comm/comm.h
+        include/services/internet/protocols/udp/udp.h
+        include/services/internet/protocols/common.h
+        include/services/internet/protocols/overall.h
         include/services/internet/connmonitor.h
         include/services/internet/nifman.h
         include/services/drm/notifier/events.h
@@ -141,6 +144,8 @@ add_library(epocservs
         src/centralrepo/cre.cpp
         src/centralrepo/repo.cpp
         src/comm/comm.cpp
+        src/internet/protocols/udp/resolver.cpp
+        src/internet/protocols/overall.cpp
         src/internet/connmonitor.cpp
         src/internet/nifman.cpp
         src/drm/notifier/events.cpp
