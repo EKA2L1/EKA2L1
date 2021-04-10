@@ -176,7 +176,7 @@ const epocver string_to_epocver(const char *str) {
         return epocver::epoc95;
     }
     
-    if (str_std == "epoc10") {
+    if (str_std == "epoc100") {
         return epocver::epoc10;
     }
 
