@@ -226,7 +226,7 @@ namespace eka2l1 {
             io_->set_epoc_ver(ever);
 
             // Use flexible model on 9.5 and onwards.
-            mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, (kern_->get_epoc_version() >= epocver::epoc95) ?
+            mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, (ever >= epocver::epoc95) ?
                 mem::mem_model_type::flexible : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
 
             io_->install_memory(mem_.get());
