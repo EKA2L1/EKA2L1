@@ -166,7 +166,7 @@ namespace eka2l1::kernel {
                 kernel::chunk_access acc = kernel::chunk_access::dll_static_data;
 
                 // TODO: Remove this specific stuff
-                if ((data_base >= mem::local_data) && (data_base <= (kern->is_eka1() ? mem::dll_static_data : mem::shared_data_eka1))) {
+                if ((data_base >= mem::local_data) && (data_base <= (kern->is_eka1() ? mem::shared_data_eka1 : mem::dll_static_data))) {
                     acc = kernel::chunk_access::local;
 
                     dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
