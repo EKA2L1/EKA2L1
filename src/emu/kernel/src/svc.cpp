@@ -755,11 +755,11 @@ namespace eka2l1::epoc {
         std::uint8_t *info_host_ptr = (copy_info.flags & IPC_HLE_EKA1) ? copy_info.target_host_ptr :
             copy_info.target_ptr.get(crr_process);
 
-        if (!info_host_ptr) {
+        size_of_work = common::min<std::uint32_t>(size_of_work, copy_info.target_length);
+
+        if ((size_of_work > 0) && !info_host_ptr) {
             return epoc::error_argument;
         }
-
-        size_of_work = common::min<std::uint32_t>(size_of_work, copy_info.target_length);
 
         if (!read && the_des) {
             the_des->set_length(callee_process, size_of_work + start_offset);
@@ -773,7 +773,9 @@ namespace eka2l1::epoc {
             start_offset *= sizeof(std::uint16_t);
         }
 
-        std::memcpy(read ? info_host_ptr : (client_ptr + start_offset), read ? (client_ptr + start_offset) : info_host_ptr, raw_size_of_work);
+        if (size_of_work > 0) {
+            std::memcpy(read ? info_host_ptr : (client_ptr + start_offset), read ? (client_ptr + start_offset) : info_host_ptr, raw_size_of_work);
+        }
         return (read ? static_cast<std::int32_t>(size_of_work) : epoc::error_none);
     }
 
