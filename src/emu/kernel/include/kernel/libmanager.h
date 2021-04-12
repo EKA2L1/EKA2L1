@@ -50,6 +50,10 @@ namespace eka2l1 {
 
     typedef uint32_t address;
 
+    namespace common {
+        class ro_stream;
+    }
+
     namespace kernel {
         class chunk;
         class process;
@@ -172,5 +176,6 @@ namespace eka2l1 {
         struct lib_info;
 
         bool get_image_info(hle::lib_manager *mngr, const std::u16string &name, epoc::lib_info &linfo);
+        bool get_image_info_from_stream(common::ro_stream *stream, memory_system *mem, const epocver ver, epoc::lib_info &linfo);
     }
 }

@@ -1191,4 +1191,37 @@ namespace eka2l1::epoc {
 
         return true;
     }
+
+    bool get_image_info_from_stream(common::ro_stream *stream, memory_system *mem, const epocver ver, epoc::lib_info &linfo) {
+        std::optional<loader::e32img> eimg = loader::parse_e32img(stream, false);
+        if (!eimg.has_value()) {
+            std::optional<loader::romimg> rimg = loader::parse_romimg(stream, mem, ver);
+            if (!rimg) {
+                return false;
+            }
+
+            linfo.uid1 = rimg->header.uid1;
+            linfo.uid2 = rimg->header.uid2;
+            linfo.uid3 = rimg->header.uid3;
+            linfo.secure_id = rimg->header.sec_info.secure_id;
+            linfo.caps[0] = rimg->header.sec_info.cap1;
+            linfo.caps[1] = rimg->header.sec_info.cap2;
+            linfo.vendor_id = rimg->header.sec_info.vendor_id;
+            linfo.major = rimg->header.major;
+            linfo.minor = rimg->header.minor;
+
+            return true;
+        }
+
+        memcpy(&linfo.uid1, &eimg->header.uid1, 12);
+
+        linfo.secure_id = eimg->header_extended.info.secure_id;
+        linfo.caps[0] = eimg->header_extended.info.cap1;
+        linfo.caps[1] = eimg->header_extended.info.cap2;
+        linfo.vendor_id = eimg->header_extended.info.vendor_id;
+        linfo.major = eimg->header.major;
+        linfo.minor = eimg->header.minor;
+
+        return true;
+    }
 }
