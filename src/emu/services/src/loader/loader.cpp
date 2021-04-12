@@ -271,6 +271,46 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void loader_server::get_info_from_header(service::ipc_context &context) {
+        std::uint8_t *header_data = context.get_descriptor_argument_ptr(0);
+        const std::size_t header_size = context.get_argument_data_size(0);
+
+        if (!header_data || !header_size) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::lib_info linfo;
+
+        common::ro_buf_stream header_stream(header_data, header_size);
+        if (!epoc::get_image_info_from_stream(reinterpret_cast<common::ro_stream*>(&header_stream), context.sys->get_memory_system(),
+            context.sys->get_symbian_version_use(), linfo)) {
+            context.complete(epoc::error_not_supported);
+            return;
+        }
+
+        const std::size_t avail_size_write = context.get_argument_max_data_size(1);
+
+        if (avail_size_write < sizeof(epoc::lib_info)) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+        
+        if (avail_size_write >= sizeof(epoc::lib_info2)) {
+            epoc::lib_info2 linfo2;
+            memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
+
+            linfo2.debug_attrib = 1;
+            linfo2.hfp = 0;
+
+            context.write_data_to_descriptor_argument(1, reinterpret_cast<uint8_t *>(&linfo2), sizeof(epoc::lib_info2));
+        } else {
+            context.write_data_to_descriptor_argument(1, reinterpret_cast<uint8_t *>(&linfo), sizeof(epoc::lib_info));
+        }
+
+        context.complete(epoc::error_none);
+    }
+
     void loader_server::delete_loader(service::ipc_context &ctx) {
         std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
 
@@ -305,6 +345,7 @@ namespace eka2l1 {
         REGISTER_IPC(loader_server, load_process, ELoadProcess, "Loader::LoadProcess");
         REGISTER_IPC(loader_server, load_library, ELoadLibrary, "Loader::LoadLibrary");
         REGISTER_IPC(loader_server, get_info, EGetInfo, "Loader::GetInfo");
+        REGISTER_IPC(loader_server, get_info_from_header, EGetInfoFromHeader, "Loader::GetInfoFromHeader");
         REGISTER_IPC(loader_server, delete_loader, ELdrDelete, "Loader::Delete");
         REGISTER_IPC(loader_server, check_library_hash, ECheckLibraryHash, "Loader::CheckLibraryHash");
     }
