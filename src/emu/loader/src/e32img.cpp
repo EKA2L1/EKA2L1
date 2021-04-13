@@ -26,8 +26,11 @@
 #include <common/buffer.h>
 #include <common/bytepair.h>
 #include <common/bytes.h>
+#include <common/crypt.h>
 #include <common/flate.h>
 #include <common/log.h>
+
+#include <utils/err.h>
 
 #include <cstdio>
 #include <miniz.h>
@@ -171,6 +174,143 @@ namespace eka2l1::loader {
         return result;
     }
 
+    std::int32_t parse_e32img_header(common::ro_stream *stream, e32img_header &header, e32img_header_extended &extended,
+        std::uint32_t &uncompressed_size, epocver &ver) {
+        if (!stream) {
+            return epoc::error_argument;
+        }
+        
+        stream->seek(0, common::seek_where::beg);
+
+        stream->read(&header.uid1, 4);
+        stream->read(&header.uid2, 4);
+        stream->read(&header.uid3, 4);
+        stream->read(&header.check, 4);
+        stream->read(&header.sig, 4);
+
+        if (header.sig != E32IMG_SIGNATURE) {
+            return epoc::error_corrupt;
+        }
+        
+        std::uint32_t uid_type[3] = { static_cast<std::uint32_t>(header.uid1), header.uid2, header.uid3 };
+        if (crypt::calculate_checked_uid_checksum(uid_type) != header.check) {
+            return epoc::error_corrupt;
+        }
+
+        std::uint32_t temp = 0;
+        stream->read(&temp, 4);
+
+        if ((temp == 0x2000) || (temp == 0x1000)) {
+            // Quick hack to determinate if this is an EKA1
+            header.cpu = static_cast<loader::e32_cpu>(temp);
+            ver = epocver::epoc6;
+
+            stream->read(&temp, 4);
+            stream->read(&header.compression_type, 4);
+
+            stream->read(&header.petran_major, 1);
+            stream->read(&header.petran_minor, 1);
+            stream->read(&header.petran_build, 2);
+
+            // NOTE (pent0): These 8 bytes are time.
+            stream->read(&temp, 4);
+            stream->read(&temp, 4);
+
+            stream->read(&header.flags, 4);
+            stream->read(&header.code_size, 4);
+            stream->read(&header.data_size, 4);
+            stream->read(&header.heap_size_min, 4);
+            stream->read(&header.heap_size_max, 4);
+            stream->read(&header.stack_size, 4);
+            stream->read(&header.bss_size, 4);
+            stream->read(&header.entry_point, 4);
+            stream->read(&header.code_base, 4);
+            stream->read(&header.data_base, 4);
+            stream->read(&header.dll_ref_table_count, 4);
+            stream->read(&header.export_dir_offset, 4);
+            stream->read(&header.export_dir_count, 4);
+            stream->read(&header.text_size, 4);
+            stream->read(&header.code_offset, 4);
+            stream->read(&header.data_offset, 4);
+            stream->read(&header.import_offset, 4);
+            stream->read(&header.code_reloc_offset, 4);
+            stream->read(&header.data_reloc_offset, 4);
+
+            std::uint32_t priority_val = 0;
+            stream->read(&priority_val, 4);
+
+            header.priority = static_cast<std::uint16_t>(priority_val);
+
+            if (!(header.flags & 0xF000000)) {    
+                header.compression_type = 0;
+            }
+        } else {
+            ver = epocver::epoc94;
+
+            stream->seek(0, common::seek_where::beg);
+            stream->read(&header, sizeof(e32img_header));
+        }
+
+        if (common::get_system_endian_type() == common::big_endian) {
+            header.uid1 = static_cast<e32_img_type>(common::byte_swap(static_cast<std::uint32_t>(header.uid1)));
+            header.uid2 = common::byte_swap(header.uid2);
+            header.uid3 = common::byte_swap(header.uid3);
+            header.check = common::byte_swap(header.check);
+            header.sig = common::byte_swap(header.sig);
+            header.petran_build = common::byte_swap(header.petran_build);
+            header.flags = common::byte_swap(header.flags);
+            header.code_size = common::byte_swap(header.code_size);
+            header.data_size = common::byte_swap(header.data_size);
+            header.heap_size_min = common::byte_swap(header.heap_size_min);
+            header.stack_size = common::byte_swap(header.stack_size);
+            header.bss_size = common::byte_swap(header.bss_size);
+            header.entry_point = common::byte_swap(header.entry_point);
+            header.code_base = common::byte_swap(header.code_base);
+            header.data_base = common::byte_swap(header.data_base);
+            header.dll_ref_table_count = common::byte_swap(header.dll_ref_table_count);
+            header.export_dir_offset = common::byte_swap(header.export_dir_offset);
+            header.export_dir_count = common::byte_swap(header.export_dir_count);
+            header.text_size = common::byte_swap(header.text_size);
+            header.code_offset = common::byte_swap(header.code_offset);
+            header.data_offset = common::byte_swap(header.data_offset);
+            header.code_reloc_offset = common::byte_swap(header.code_reloc_offset);
+            header.data_reloc_offset = common::byte_swap(header.data_reloc_offset);
+            header.priority = common::byte_swap(header.priority);
+        }
+
+        compress_type ctype = static_cast<compress_type>(header.compression_type);
+        int header_format = (static_cast<int>(header.flags) >> 24) & 0xF;
+
+        if (header_format > 0) {
+            stream->read(&uncompressed_size, 4);
+
+            if (header_format == 2) {
+                stream->read(&extended.info, sizeof(e32img_vsec_info));
+                stream->read(&extended.exception_des, 4);
+                stream->read(&extended.spare2, 4);
+                stream->read(&extended.export_desc_size, 2);
+                stream->read(&extended.export_desc_type, 1);
+                stream->read(&extended.export_desc, 1);
+
+                if (common::get_system_endian_type() == common::big_endian) {
+                    extended.exception_des = common::byte_swap(extended.exception_des);
+                    extended.spare2 = common::byte_swap(extended.spare2);
+                    extended.export_desc_size = common::byte_swap(extended.export_desc_size);
+                    extended.info.cap1 = common::byte_swap(extended.info.cap1);
+                    extended.info.cap2 = common::byte_swap(extended.info.cap2);
+                    extended.info.secure_id = common::byte_swap(extended.info.secure_id);
+                    extended.info.vendor_id = common::byte_swap(extended.info.vendor_id);
+                }
+            }
+
+            if (common::get_system_endian_type() == common::big_endian) {
+                uncompressed_size = common::byte_swap(uncompressed_size);
+            }
+        }
+
+        return epoc::error_none;
+    }
+
     std::optional<e32img> parse_e32img(common::ro_stream *stream, bool read_reloc) {
         if (!stream) {
             return std::nullopt;
@@ -179,135 +319,18 @@ namespace eka2l1::loader {
         e32img img;
         const std::size_t file_size = stream->size();
 
-        stream->seek(0, common::seek_where::beg);
-
-        stream->read(&img.header.uid1, 4);
-        stream->read(&img.header.uid2, 4);
-        stream->read(&img.header.uid3, 4);
-        stream->read(&img.header.check, 4);
-        stream->read(&img.header.sig, 4);
-
-        if (img.header.sig != E32IMG_SIGNATURE) {
+        if (parse_e32img_header(stream, img.header, img.header_extended, img.uncompressed_size, img.epoc_ver) != epoc::error_none) {
             return std::nullopt;
         }
-
-        std::uint32_t temp = 0;
-        stream->read(&temp, 4);
-
-        if ((temp == 0x2000) || (temp == 0x1000)) {
-            // Quick hack to determinate if this is an EKA1
-            img.header.cpu = static_cast<loader::e32_cpu>(temp);
-            img.epoc_ver = epocver::epoc6;
-
-            stream->read(&temp, 4);
-            stream->read(&img.header.compression_type, 4);
-
-            stream->read(&img.header.petran_major, 1);
-            stream->read(&img.header.petran_minor, 1);
-            stream->read(&img.header.petran_build, 2);
-
-            // NOTE (pent0): These 8 bytes are time.
-            stream->read(&temp, 4);
-            stream->read(&temp, 4);
-
-            stream->read(&img.header.flags, 4);
-            stream->read(&img.header.code_size, 4);
-            stream->read(&img.header.data_size, 4);
-            stream->read(&img.header.heap_size_min, 4);
-            stream->read(&img.header.heap_size_max, 4);
-            stream->read(&img.header.stack_size, 4);
-            stream->read(&img.header.bss_size, 4);
-            stream->read(&img.header.entry_point, 4);
-            stream->read(&img.header.code_base, 4);
-            stream->read(&img.header.data_base, 4);
-            stream->read(&img.header.dll_ref_table_count, 4);
-            stream->read(&img.header.export_dir_offset, 4);
-            stream->read(&img.header.export_dir_count, 4);
-            stream->read(&img.header.text_size, 4);
-            stream->read(&img.header.code_offset, 4);
-            stream->read(&img.header.data_offset, 4);
-            stream->read(&img.header.import_offset, 4);
-            stream->read(&img.header.code_reloc_offset, 4);
-            stream->read(&img.header.data_reloc_offset, 4);
-
-            std::uint32_t priority_val = 0;
-            stream->read(&priority_val, 4);
-
-            img.header.priority = static_cast<std::uint16_t>(priority_val);
-
-            if (!(img.header.flags & 0xF000000)) {    
-                img.header.compression_type = 0;
-            }
-        } else {
-            img.epoc_ver = epocver::epoc94;
-
-            stream->seek(0, common::seek_where::beg);
-            stream->read(&img.header, sizeof(e32img_header));
-        }
-
-        if (common::get_system_endian_type() == common::big_endian) {
-            img.header.uid1 = static_cast<e32_img_type>(common::byte_swap(static_cast<std::uint32_t>(img.header.uid1)));
-            img.header.uid2 = common::byte_swap(img.header.uid2);
-            img.header.uid3 = common::byte_swap(img.header.uid3);
-            img.header.check = common::byte_swap(img.header.check);
-            img.header.sig = common::byte_swap(img.header.sig);
-            img.header.petran_build = common::byte_swap(img.header.petran_build);
-            img.header.flags = common::byte_swap(img.header.flags);
-            img.header.code_size = common::byte_swap(img.header.code_size);
-            img.header.data_size = common::byte_swap(img.header.data_size);
-            img.header.heap_size_min = common::byte_swap(img.header.heap_size_min);
-            img.header.stack_size = common::byte_swap(img.header.stack_size);
-            img.header.bss_size = common::byte_swap(img.header.bss_size);
-            img.header.entry_point = common::byte_swap(img.header.entry_point);
-            img.header.code_base = common::byte_swap(img.header.code_base);
-            img.header.data_base = common::byte_swap(img.header.data_base);
-            img.header.dll_ref_table_count = common::byte_swap(img.header.dll_ref_table_count);
-            img.header.export_dir_offset = common::byte_swap(img.header.export_dir_offset);
-            img.header.export_dir_count = common::byte_swap(img.header.export_dir_count);
-            img.header.text_size = common::byte_swap(img.header.text_size);
-            img.header.code_offset = common::byte_swap(img.header.code_offset);
-            img.header.data_offset = common::byte_swap(img.header.data_offset);
-            img.header.code_reloc_offset = common::byte_swap(img.header.code_reloc_offset);
-            img.header.data_reloc_offset = common::byte_swap(img.header.data_reloc_offset);
-            img.header.priority = common::byte_swap(img.header.priority);
+        
+        int header_format = (static_cast<int>(img.header.flags) >> 24) & 0xF;
+        if (header_format > 0) {
+            img.has_extended_header = true;
         }
 
         compress_type ctype = static_cast<compress_type>(img.header.compression_type);
 
         if (img.header.compression_type > 0) {
-            int header_format = 0;
-
-            if (img.epoc_ver >= epocver::eka2) {
-                header_format = (static_cast<int>(img.header.flags) >> 24) & 0xF;
-            }
-
-            stream->read(&img.uncompressed_size, 4);
-
-            if (header_format == 2) {
-                img.has_extended_header = true;
-
-                stream->read(&img.header_extended.info, sizeof(e32img_vsec_info));
-                stream->read(&img.header_extended.exception_des, 4);
-                stream->read(&img.header_extended.spare2, 4);
-                stream->read(&img.header_extended.export_desc_size, 2);
-                stream->read(&img.header_extended.export_desc_type, 1);
-                stream->read(&img.header_extended.export_desc, 1);
-
-                if (common::get_system_endian_type() == common::big_endian) {
-                    img.header_extended.exception_des = common::byte_swap(img.header_extended.exception_des);
-                    img.header_extended.spare2 = common::byte_swap(img.header_extended.spare2);
-                    img.header_extended.export_desc_size = common::byte_swap(img.header_extended.export_desc_size);
-                    img.header_extended.info.cap1 = common::byte_swap(img.header_extended.info.cap1);
-                    img.header_extended.info.cap2 = common::byte_swap(img.header_extended.info.cap2);
-                    img.header_extended.info.secure_id = common::byte_swap(img.header_extended.info.secure_id);
-                    img.header_extended.info.vendor_id = common::byte_swap(img.header_extended.info.vendor_id);
-                }
-            }
-
-            if (common::get_system_endian_type() == common::big_endian) {
-                img.uncompressed_size = common::byte_swap(img.uncompressed_size);
-            }
-
             img.data.resize(img.uncompressed_size + img.header.code_offset);
 
             std::uint32_t start_compress = img.header.code_offset;
