@@ -38,6 +38,7 @@
 #include <mem/page.h>
 #include <vfs/vfs.h>
 #include <utils/dll.h>
+#include <utils/err.h>
 
 #include <kernel/kernel.h>
 #include <kernel/codeseg.h>
@@ -1186,36 +1187,26 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    bool get_image_info_from_stream(common::ro_stream *stream, memory_system *mem, const epocver ver, epoc::lib_info &linfo) {
-        std::optional<loader::e32img> eimg = loader::parse_e32img(stream, false);
-        if (!eimg.has_value()) {
-            std::optional<loader::romimg> rimg = loader::parse_romimg(stream, mem, ver);
-            if (!rimg) {
-                return false;
-            }
+    std::int32_t get_image_info_from_stream(common::ro_stream *stream, epoc::lib_info &linfo) {
+        loader::e32img_header header;
+        loader::e32img_header_extended header_extended;
+        [[maybe_unused]] epocver ver_use = epocver::epoc94;
+        [[maybe_unused]] std::uint32_t uncomp_size = 0;
 
-            linfo.uid1 = rimg->header.uid1;
-            linfo.uid2 = rimg->header.uid2;
-            linfo.uid3 = rimg->header.uid3;
-            linfo.secure_id = rimg->header.sec_info.secure_id;
-            linfo.caps[0] = rimg->header.sec_info.cap1;
-            linfo.caps[1] = rimg->header.sec_info.cap2;
-            linfo.vendor_id = rimg->header.sec_info.vendor_id;
-            linfo.major = rimg->header.major;
-            linfo.minor = rimg->header.minor;
-
-            return true;
+        const std::int32_t error = loader::parse_e32img_header(stream, header, header_extended, uncomp_size, ver_use);
+        if (error != epoc::error_none) {
+            return error;
         }
 
-        memcpy(&linfo.uid1, &eimg->header.uid1, 12);
+        memcpy(&linfo.uid1, &header.uid1, 12);
 
-        linfo.secure_id = eimg->header_extended.info.secure_id;
-        linfo.caps[0] = eimg->header_extended.info.cap1;
-        linfo.caps[1] = eimg->header_extended.info.cap2;
-        linfo.vendor_id = eimg->header_extended.info.vendor_id;
-        linfo.major = eimg->header.major;
-        linfo.minor = eimg->header.minor;
+        linfo.secure_id = header_extended.info.secure_id;
+        linfo.caps[0] = header_extended.info.cap1;
+        linfo.caps[1] = header_extended.info.cap2;
+        linfo.vendor_id = header_extended.info.vendor_id;
+        linfo.major = header.major;
+        linfo.minor = header.minor;
 
-        return true;
+        return epoc::error_none;
     }
 }
