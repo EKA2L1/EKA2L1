@@ -195,6 +195,20 @@ namespace eka2l1 {
         };
 
         /**
+         * @brief Parse E32Img headers separately from the whole image.
+         * 
+         * @param stream                    The stream to parse from
+         * @param header                    The original basic header that will be filled.
+         * @param extended                  The extended header part that is filled optionally.
+         * @param uncompressed_size         On success, this will contains the total size of uncompressed data.
+         * @param ver                       On success, this will contains the Symbian version which this image was supposed to work on.
+         * 
+         * @returns     Error code 0 on success, else see error code descriptions.
+         */
+        std::int32_t parse_e32img_header(common::ro_stream *stream, e32img_header &header, e32img_header_extended &extended,
+            std::uint32_t &uncompressed_size, epocver &ver);
+
+        /**
          * @brief Parse an E32 Image from stream.
          * 
          * @param stream     The stream to parse from.
