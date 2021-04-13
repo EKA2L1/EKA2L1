@@ -66,4 +66,12 @@ namespace eka2l1::crypt {
      */
     std::size_t base64_decode(const std::uint8_t *source, const std::size_t source_size, char *dest,
         const std::size_t dest_max_size);
+
+    /**
+     * @brief   Calculate checksum of 3 numbers UID.
+     * 
+     * @param   uids      Pointer to the UID buffer.
+     * @return  Checksum of the UID buffer.
+     */
+    std::uint32_t calculate_checked_uid_checksum(const std::uint32_t *uids);
 }

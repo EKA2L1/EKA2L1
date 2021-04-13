@@ -27,34 +27,12 @@
 #include <common/crypt.h>
 
 namespace eka2l1::loader {
-    static std::uint32_t calculate_checksum(const void *uids) {
-        const std::uint8_t *cur = reinterpret_cast<decltype(cur)>(uids);
-        const std::uint8_t *end = cur + 12;
-
-        std::uint8_t buf[6];
-        std::uint8_t *p = &buf[0];
-
-        while (cur < end) {
-            *p++ = (*cur);
-            cur += 2;
-        }
-
-        std::uint16_t crc = 0;
-        crypt::crc16(crc, &buf[0], 6);
-
-        return crc;
-    }
-
-    static std::uint32_t calculate_checked_uid_checksum(const std::uint32_t *uids) {
-        return (calculate_checksum(reinterpret_cast<const std::uint8_t *>(uids) + 1) << 16) | calculate_checksum(uids);
-    }
-
     spi_header::spi_header(const std::uint32_t type) {
         uids[0] = SPI_UID;
         uids[1] = type;
         uids[2] = 0;
 
-        crc = calculate_checked_uid_checksum(uids);
+        crc = crypt::calculate_checked_uid_checksum(uids);
     }
 
     bool spi_header::do_state(common::chunkyseri &seri) {
@@ -69,7 +47,7 @@ namespace eka2l1::loader {
 
         seri.absorb(crc);
 
-        if (calculate_checked_uid_checksum(uids) != crc) {
+        if (crypt::calculate_checked_uid_checksum(uids) != crc) {
             return false;
         }
 
