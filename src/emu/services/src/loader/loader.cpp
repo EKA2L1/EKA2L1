@@ -281,11 +281,12 @@ namespace eka2l1 {
         }
 
         epoc::lib_info linfo;
-
         common::ro_buf_stream header_stream(header_data, header_size);
-        if (!epoc::get_image_info_from_stream(reinterpret_cast<common::ro_stream*>(&header_stream), context.sys->get_memory_system(),
-            context.sys->get_symbian_version_use(), linfo)) {
-            context.complete(epoc::error_not_supported);
+
+        const std::int32_t err = epoc::get_image_info_from_stream(reinterpret_cast<common::ro_stream*>(&header_stream), linfo);
+
+        if (err != epoc::error_none) {
+            context.complete(err);
             return;
         }
 
