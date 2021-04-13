@@ -42,6 +42,7 @@ namespace eka2l1 {
         sisregistry_get_matching_supported_languages = 0x10,
         sisregistry_trust_timestamp = 0x16,
         sisregistry_trust_status_op = 0x17,
+        sisregistry_sid_to_filename = 0x19,
         sisregistry_package_exists_in_rom = 0x1D,
         sisregistry_stub_file_entries = 0x1E,
         sisregistry_separator_minimum_read_user_data = 0x20,
@@ -49,6 +50,7 @@ namespace eka2l1 {
         sisregistry_sid_to_package = 0x23,
         sisregistry_installed_uid = 0x24,
         sisregistry_uid = 0x29,
+        sisregistry_get_entry = 0x2A,
         sisregistry_sids = 0x2D,
         sisregistry_files = 0x2E,
         sisregistry_file_descriptions = 0x2F,
@@ -108,21 +110,23 @@ namespace eka2l1 {
         std::uint64_t quarantined_date;  
     };
 
+    struct sisregistry_hash_container {
+        std::uint32_t algorithm;
+        std::string data;
+    };
+
     struct sisregistry_file_description {
         std::u16string target;
         std::u16string mime_type;
-        std::uint32_t hash;
+        sisregistry_hash_container hash;
         std::uint32_t operation;
         std::uint32_t operation_options;
         std::uint64_t uncompressed_length;
         std::uint32_t index;
         epoc::uid sid;
         std::string capabilities_data;
-    };
 
-    struct sisregistry_hash_container {
-        std::uint32_t algorithm;
-        std::string data;
+        void do_state(common::chunkyseri &seri);
     };
 
     class sisregistry_server : public service::typical_server {
@@ -145,6 +149,7 @@ namespace eka2l1 {
         void get_selected_drive(eka2l1::service::ipc_context *ctx);
         void request_files(eka2l1::service::ipc_context *ctx);
         void request_uid(eka2l1::service::ipc_context *ctx);
+        void get_entry(eka2l1::service::ipc_context *ctx);
         void request_stub_file_entries(eka2l1::service::ipc_context *ctx);
         void populate_files(common::chunkyseri &seri);
         void request_file_descriptions(eka2l1::service::ipc_context *ctx);
@@ -157,6 +162,7 @@ namespace eka2l1 {
         void get_package(eka2l1::service::ipc_context *ctx);
         void get_trust_timestamp(eka2l1::service::ipc_context *ctx);
         void get_trust_status(eka2l1::service::ipc_context *ctx);
+        void request_sid_to_filename(eka2l1::service::ipc_context *ctx);
         void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
         void is_installed_uid(eka2l1::service::ipc_context *ctx);
         void sid_to_package(eka2l1::service::ipc_context *ctx);

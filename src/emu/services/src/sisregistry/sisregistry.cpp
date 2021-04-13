@@ -35,6 +35,21 @@ namespace eka2l1 {
         seri.absorb(index);
     }
 
+    void sisregistry_file_description::do_state(common::chunkyseri &seri) {
+        epoc::absorb_des_string(target, seri, true);
+        epoc::absorb_des_string(mime_type, seri, true);
+
+        seri.absorb(hash.algorithm);
+        epoc::absorb_des_string(hash.data, seri, true);
+
+        seri.absorb(operation);
+        seri.absorb(operation_options);
+        seri.absorb(uncompressed_length);
+        seri.absorb(index);
+        seri.absorb(sid);
+        epoc::absorb_des_string(capabilities_data, seri, true);
+    }
+
     sisregistry_server::sisregistry_server(eka2l1::system *sys)
         : service::typical_server(sys, "!SisRegistryServer") {
     }
@@ -88,6 +103,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_sid_to_filename: {
+            request_sid_to_filename(ctx);
+            break;
+        }
+
         case sisregistry_package_exists_in_rom: {
             is_in_rom(ctx);
             break;
@@ -110,6 +130,16 @@ namespace eka2l1 {
 
         case sisregistry_uid: {
             request_uid(ctx);
+            break;
+        }
+
+         case sisregistry_get_entry: {
+            get_entry(ctx);
+            break;
+        }
+
+        case sisregistry_sids: {
+            request_sids(ctx);
             break;
         }
 
@@ -225,6 +255,24 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void sisregistry_client_session::request_sid_to_filename(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+
+        sisregistry_file_description desc;
+        desc.target = u"E:\\sys\\bin\\Sims2Pets_NGage.exe";
+
+        std::vector<std::uint8_t> buf;
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        desc.do_state(seri);
+
+        buf.resize(seri.size());
+        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+        desc.do_state(seri);
+
+        ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
+        ctx->complete(epoc::error_none);
+    }
+
     void sisregistry_client_session::request_stub_file_entries(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(1);
@@ -252,6 +300,28 @@ namespace eka2l1 {
         epoc::uid uid = 0x2000AFDE;
 
         ctx->write_data_to_descriptor_argument(0, uid);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::get_entry(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+
+        sisregistry_package package;
+        package.uid = 0x2000AFDE;
+        package.index = 0x01000000;
+        package.package_name = u"The Sims 2 Pets";
+        package.vendor_name = u"Electronic Arts Inc.";
+
+        std::vector<std::uint8_t> buf;
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        package.do_state(seri);
+
+        buf.resize(seri.size());
+
+        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+        package.do_state(seri);
+
+        ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
         ctx->complete(epoc::error_none);
     }
 
@@ -304,16 +374,7 @@ namespace eka2l1 {
         seri.absorb(file_count);
         for (size_t i = 0; i < file_count; i++) {
             sisregistry_file_description desc;
-
-            epoc::absorb_des_string(desc.target, seri, true);
-            epoc::absorb_des_string(desc.mime_type, seri, true);
-            seri.absorb(desc.hash);
-            seri.absorb(desc.operation);
-            seri.absorb(desc.operation_options);
-            seri.absorb(desc.uncompressed_length);
-            seri.absorb(desc.index);
-            seri.absorb(desc.sid);
-            epoc::absorb_des_string(desc.capabilities_data, seri, true);
+            desc.do_state(seri);
         }
     }
 
@@ -322,10 +383,8 @@ namespace eka2l1 {
         std::uint32_t size = ctx->get_argument_data_size(0);
         common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
         sisregistry_package package;
-        seri.absorb(package.uid);
-        epoc::absorb_des_string(package.package_name, seri, true);
-        epoc::absorb_des_string(package.vendor_name, seri, true);
-        seri.absorb(package.index);
+        package.do_state(seri);
+
         server<sisregistry_server>()->added = true;
 
         ctx->complete(epoc::error_none);
@@ -350,11 +409,7 @@ namespace eka2l1 {
         for (size_t i = 0; i < property_count; i++) {
             sisregistry_package package;
             package.index = 0;
-
-            seri.absorb(package.uid);
-            epoc::absorb_des_string(package.package_name, seri, true);
-            epoc::absorb_des_string(package.vendor_name, seri, true);
-            seri.absorb(package.index);
+            package.do_state(seri);
         }
     }
 
