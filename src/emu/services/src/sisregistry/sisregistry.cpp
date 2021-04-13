@@ -163,6 +163,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_sid_to_package: {
+            sid_to_package(ctx);
+            break;
+        }
+
         default:
             LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry server 0x{:X}", ctx->msg->function);
             ctx->complete(epoc::error_none);
@@ -405,6 +410,60 @@ namespace eka2l1 {
         std::int32_t result = 0;
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(1, result);
+        ctx->complete(epoc::error_none);
+    }
+    
+    void sisregistry_client_session::sid_to_package(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> package_sid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        if (!package_sid.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (package_sid.value() == 0x2000AFDE) {
+            sisregistry_package package;
+            package.uid = 0x2000AFDE;
+            package.index = 0x01000000;
+            package.package_name = u"The Sims 2 Pets";
+            package.vendor_name = u"Electronic Arts Inc.";
+
+            std::vector<std::uint8_t> buf;
+            common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+            package.do_state(seri);
+
+            buf.resize(seri.size());
+
+            seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+            package.do_state(seri);
+
+            ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
+            ctx->complete(epoc::error_none);
+
+            return;
+        }
+
+        LOG_TRACE(SERVICE_SISREGISTRY, "SidToPackage for 0x{:X} stubbed with not found", package_sid.value());
+        ctx->complete(epoc::error_not_found);
+    }
+
+    void sisregistry_client_session::populate_sids(common::chunkyseri &seri) {
+        std::uint32_t count = 1;
+        seri.absorb(count);
+
+        std::uint32_t single_uid = 0x2000AFDE;
+        seri.absorb(single_uid);
+    }
+
+    void sisregistry_client_session::request_sids(eka2l1::service::ipc_context *ctx) {
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_sids(seri);
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
+            common::SERI_MODE_WRITE);
+        populate_sids(seri);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
         ctx->complete(epoc::error_none);
     }
 }

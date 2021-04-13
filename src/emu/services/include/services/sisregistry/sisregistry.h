@@ -46,8 +46,10 @@ namespace eka2l1 {
         sisregistry_stub_file_entries = 0x1E,
         sisregistry_separator_minimum_read_user_data = 0x20,
         sisregistry_installed_packages = 0x22,
+        sisregistry_sid_to_package = 0x23,
         sisregistry_installed_uid = 0x24,
         sisregistry_uid = 0x29,
+        sisregistry_sids = 0x2D,
         sisregistry_files = 0x2E,
         sisregistry_file_descriptions = 0x2F,
         sisregistry_package_augmentations = 0x30,
@@ -157,5 +159,8 @@ namespace eka2l1 {
         void get_trust_status(eka2l1::service::ipc_context *ctx);
         void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
         void is_installed_uid(eka2l1::service::ipc_context *ctx);
+        void sid_to_package(eka2l1::service::ipc_context *ctx);
+        void populate_sids(common::chunkyseri &seri);
+        void request_sids(eka2l1::service::ipc_context *ctx);
     };
 }
