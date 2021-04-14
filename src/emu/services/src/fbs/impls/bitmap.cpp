@@ -500,19 +500,39 @@ namespace eka2l1 {
         load_bitmap_impl(ctx, source_file);
     }
 
+    struct fast_bitmap_load_info_kerntrans {
+        epoc::filename name_;
+        std::int32_t id_;
+        std::int32_t share_if_loaded_;
+        std::uint32_t file_offset_;
+    };
+
     void fbscli::load_bitmap_fast(service::ipc_context *ctx) {
         fbs_server *serv = server<fbs_server>();
         int name_slot = 2;
 
-        if (serv->kern->is_eka1()) {
+        std::optional<std::u16string> name = std::nullopt;
+
+        if (serv->legacy_level() >= FBS_LEGACY_LEVEL_S60V1) {
             name_slot = 1;
+        } else if (serv->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+            std::optional<fast_bitmap_load_info_kerntrans> load_info = ctx->get_argument_data_from_descriptor<fast_bitmap_load_info_kerntrans>(1);
+            if (!load_info.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            name = load_info->name_.to_std_string(nullptr);
+            name_slot = -1;
         }
 
-        std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(name_slot);
+        if (name_slot != -1) {
+            name = ctx->get_argument_value<std::u16string>(name_slot);
 
-        if (!name.has_value()) {
-            ctx->complete(epoc::error_not_found);
-            return;
+            if (!name.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
         }
 
         symfile source_file = ctx->sys->get_io_system()->open_file(name.value(), READ_MODE | BIN_MODE);
@@ -566,10 +586,21 @@ namespace eka2l1 {
         std::optional<load_bitmap_arg> load_options = std::nullopt;
         fbs_server *serv = server<fbs_server>();
 
-        if (serv->kern->is_eka1()) {
+        if (serv->legacy_level() >= FBS_LEGACY_LEVEL_S60V1) {
             load_options = std::make_optional<load_bitmap_arg>();
             load_options->bitmap_id = ctx->get_argument_value<std::uint32_t>(2).value();
             load_options->share = ctx->get_argument_value<std::uint32_t>(3).value();
+        } else if (serv->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
+            std::optional<fast_bitmap_load_info_kerntrans> load_info = ctx->get_argument_data_from_descriptor<fast_bitmap_load_info_kerntrans>(1);
+            if (!load_info.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            load_options = std::make_optional<load_bitmap_arg>();
+            load_options->bitmap_id = load_info->id_;
+            load_options->share = load_info->share_if_loaded_;
+            load_options->file_offset = load_info->file_offset_;
         } else {
             load_options = ctx->get_argument_data_from_descriptor<load_bitmap_arg>(1);
         }
