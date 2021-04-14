@@ -21,7 +21,7 @@
     <string name="path_to_raw_dump">Jalur ke raw dump</string>
     <string name="install_method">Metode instalasi</string>
     <string name="no_device_dialog_title">Tidak ada perangkat yang terinstal!</string>
-    <string name="no_device_installed">Mohon instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
+    <string name="no_device_installed">Harap instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
     <string name="install_rpkg_corrupt">File RPKG yang disediakan telah rusak!</string>
     <string name="install_rpkg_file_not_found">File RPKG tidak bisa dibuka!</string>
     <string name="install_raw_dump_fail_to_copy">Gagal menyalin file raw dump ke tempat tujuan!</string>
