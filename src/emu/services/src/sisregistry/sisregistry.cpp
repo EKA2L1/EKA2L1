@@ -38,18 +38,18 @@ namespace eka2l1 {
     void sisregistry_file_description::do_state(common::chunkyseri &seri) {
         epoc::absorb_des_string(target, seri, true);
         epoc::absorb_des_string(mime_type, seri, true);
+        seri.absorb(operation);
+        seri.absorb(operation_options);
 
         hash.do_state(seri);
 
-        seri.absorb(operation);
-        seri.absorb(operation_options);
         seri.absorb(uncompressed_length);
         seri.absorb(index);
         seri.absorb(sid);
-        epoc::absorb_des_string(capabilities_data, seri, true);
     }
 
     void sisregistry_hash_container::do_state(common::chunkyseri &seri) {
+        algorithm = 1;
         seri.absorb(algorithm);
         epoc::absorb_des_string(data, seri, true);
     }
@@ -66,6 +66,11 @@ namespace eka2l1 {
     void sisregistry_dependency::do_state(common::chunkyseri &seri) {
         seri.absorb(uid);
         seri.absorb(from_version.u32);
+        seri.absorb(from_version.u32);
+        seri.absorb(from_version.u32);
+
+        seri.absorb(to_version.u32);
+        seri.absorb(to_version.u32);
         seri.absorb(to_version.u32);
     }
 
@@ -76,6 +81,8 @@ namespace eka2l1 {
 
     void sisregistry_controller_info::do_state(common::chunkyseri &seri) {
         seri.absorb(version.u32);
+        seri.absorb(version.u32);
+        seri.absorb(version.u32);
         seri.absorb(offset);
         hash.do_state(seri);
     }
@@ -83,17 +90,15 @@ namespace eka2l1 {
     void sisregistry_token::do_state(common::chunkyseri &seri) {
         sisregistry_package::do_state(seri);
         std::uint32_t count = 0;
-        seri.absorb(count);
-        for (uint32_t i = 0; i < count; i++) {
-            sisregistry_file_description desc;
-            desc.do_state(seri);
-        }
 
         seri.absorb(drives);
         seri.absorb(completely_present);
-        seri.absorb(present_removable_drives);
-        seri.absorb(current_drives);
-        
+
+        seri.absorb(count);
+        for (uint32_t i = 0; i < count; i++) {
+            epoc::uid uid;
+            seri.absorb(uid);
+        }
         seri.absorb(count);
         for (uint32_t i = 0; i < count; i++) {
             sisregistry_controller_info info;
@@ -101,6 +106,9 @@ namespace eka2l1 {
         }
 
         seri.absorb(version.u32);
+        seri.absorb(version.u32);
+        seri.absorb(version.u32);
+
         seri.absorb(language);
         seri.absorb(selected_drive);
         seri.absorb(unused1);
@@ -110,9 +118,21 @@ namespace eka2l1 {
     void sisregistry_object::do_state(common::chunkyseri &seri) {
         sisregistry_token::do_state(seri);
         std::uint32_t count = 0;
+        
+        file_major_version = 5;
+        file_minor_version = 3;
+        seri.absorb(file_major_version);
+        seri.absorb(file_minor_version);
 
         epoc::absorb_des_string(vendor_localized_name, seri, true);
         seri.absorb(install_type);
+
+        seri.absorb(in_rom);
+        seri.absorb(deletable_preinstalled);
+        seri.absorb(signed_);
+        seri.absorb(trust);
+        seri.absorb(remove_with_last_dependent);
+        seri.absorb(trust_timestamp);
 
         seri.absorb(count);
         for (size_t i = 0; i < count; i++) {
@@ -129,47 +149,22 @@ namespace eka2l1 {
             sisregistry_property property;
             property.do_state(seri);
         }
-
-        seri.absorb(owned_file_descriptions);
-
         seri.absorb(count);
         for (size_t i = 0; i < count; i++) {
             sisregistry_file_description desc;
             desc.do_state(seri);
         }
 
-        seri.absorb(in_rom);
-        seri.absorb(signed_);
-        seri.absorb(signed_by_sucert);
-        seri.absorb(deletable_preinstalled);
-        seri.absorb(file_major_version);
-        seri.absorb(file_minor_version);
-        seri.absorb(trust);
-        seri.absorb(remove_with_last_dependent);
-        seri.absorb(trust_timestamp);
         trust_status.do_state(seri);
+        
         seri.absorb(count);
         for (size_t i = 0; i < count; i++) {
             std::int32_t install_chain_index = 0;
             seri.absorb(install_chain_index);
         }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            std::int32_t supported_language_id = 0;
-            seri.absorb(supported_language_id);
-        }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            std::u16string localized_package_name;
-            epoc::absorb_des_string(localized_package_name, seri, true);
-        }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            std::u16string localized_vendor_name;
-            epoc::absorb_des_string(localized_vendor_name, seri, true);
-        }
 
         seri.absorb(is_removable);
+        seri.absorb(signed_by_sucert);
     }
 
     sisregistry_server::sisregistry_server(eka2l1::system *sys)
