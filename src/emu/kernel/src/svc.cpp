@@ -5217,6 +5217,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000AF, process_set_type_eka1),
         BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
         BRIDGE_REGISTER(0x8000C0, process_command_line_length),
+        BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
         BRIDGE_REGISTER(0x8000CC, imb_range),
         BRIDGE_REGISTER(0x8000DA, property_subscribe),
         BRIDGE_REGISTER(0x8000DC, property_find_get_int),
