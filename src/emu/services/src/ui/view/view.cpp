@@ -27,7 +27,7 @@
 
 namespace eka2l1 {
     std::string get_view_server_name_by_epocver(const epocver ver) {
-        if (ver <= epocver::eka2) {
+        if (ver <= epocver::epoc80) {
             return "ViewServer";
         }
 
@@ -163,7 +163,7 @@ namespace eka2l1 {
         std::uint8_t *custom_message_buf = nullptr;
         std::size_t custom_message_size = 0;
 
-        if (kern->is_eka1()) {
+        if (kern->get_epoc_version() < epocver::epoc81a) {
             struct active_view_fundamental_info {
                 ui::view::view_id app_id_;
                 epoc::uid custom_message_uid_;
@@ -243,13 +243,31 @@ namespace eka2l1 {
             ctx->msg->function += 1;
         }
 
+        if (!kern->is_eka1() && (kern->get_epoc_version() <= epocver::epoc95)) {
+            // These are swapped orders
+            if (ctx->msg->function == view_opcode_deactivate_active_view_if_owner_match) {
+                ctx->msg->function = view_opcode_set_background_color;
+            } else if ((ctx->msg->function >= view_opcode_set_protected) && (ctx->msg->function <= view_opcode_set_cross_check_uid)) {
+                // There is no set protected here, so raise it up
+                ctx->msg->function += 1;
+            }
+        }
+
+        if (kern->is_eka1() && (kern->get_epoc_version() >= epocver::epoc81a)) {
+            // Unknown opcode 2, and start app does not exist, so push it down
+            if (ctx->msg->function <= view_opcode_start_app) {
+                ctx->msg->function -= 1;
+            }
+        }
+
         switch (ctx->msg->function) {
         case view_opcode_async_msg_for_client_to_panic: {
             async_message_for_client_to_panic_with(ctx);
             break;
         }
 
-        case view_opcode_priority: {
+        case view_opcode_priority:
+        case view_opcode_priority_mirror: {
             get_priority(ctx);
             break;
         }

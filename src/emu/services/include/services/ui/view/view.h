@@ -34,7 +34,7 @@ namespace eka2l1 {
 
     enum view_opcode {
         view_opcode_first = 0,
-        view_opcode_create = 1,
+        view_opcode_create = 1, 
         view_opcode_add_view = 2,
         view_opcode_remove_view = 3,
         view_opcode_request_view_event = 4,
@@ -56,7 +56,8 @@ namespace eka2l1 {
         view_opcode_deactivate_active_view_if_owner_match = 20,
         view_opcode_priority = 21,
         view_opcode_set_background_color = 22,
-        view_opcode_current_active_view_id = 23
+        view_opcode_current_active_view_id = 23,
+        view_opcode_priority_mirror = 105
     };
 
     using custom_message = std::vector<std::uint8_t>;
