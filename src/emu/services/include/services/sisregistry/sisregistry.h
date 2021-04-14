@@ -61,7 +61,7 @@ namespace eka2l1 {
         sisregistry_add_entry = 0x41,
         sisregistry_update_entry = 0x42,
         sisregistry_delete_entry = 0x43,
-        sisregistry_install_type = 0x44,    
+        sisregistry_install_type_op = 0x44,    
         sisregistry_regenerate_cache = 0x45,
         sisregistry_dependent_packages = 0x103,
         sisregistry_embedded_packages = 0x104,
@@ -92,6 +92,23 @@ namespace eka2l1 {
         sisregistry_stub_extraction_mode_get_files
     };
 
+    enum sisregistry_install_type { 
+        sisregistry_install_type_use_file_handle,
+        sisregistry_install_type_use_file_name,
+        sisregistry_install_type_use_caf,
+        sisregistry_install_type_use_open_file_name
+    };
+
+    enum sisregistry_package_trust {
+        sisregistry_package_trust_unsigned_or_self_signed = 0,
+        sisregistry_package_trust_validation_failed = 50,
+        sisregistry_package_trust_certificate_chain_no_trust_anchor = 100,
+        sisregistry_package_trust_certificate_chain_validated_to_trust_anchor = 200,
+        sisregistry_package_trust_chain_validated_to_trust_anchor_ocsp_transient_error = 300, 
+        sisregistry_package_trust_chain_validated_to_trust_anchor_and_ocsp_valid = 400,
+        sisregistry_package_trust_built_into_rom = 500
+    };
+
     struct sisregistry_package {
         epoc::uid uid;
         std::u16string package_name;
@@ -107,12 +124,16 @@ namespace eka2l1 {
         std::uint64_t result_date;
         std::uint64_t last_check_date;
         std::uint32_t quarantined;
-        std::uint64_t quarantined_date;  
+        std::uint64_t quarantined_date;
+
+        void do_state(common::chunkyseri &seri);
     };
 
     struct sisregistry_hash_container {
         std::uint32_t algorithm;
         std::string data;
+
+        void do_state(common::chunkyseri &seri);
     };
 
     struct sisregistry_file_description {
@@ -125,6 +146,72 @@ namespace eka2l1 {
         std::uint32_t index;
         epoc::uid sid;
         std::string capabilities_data;
+
+        void do_state(common::chunkyseri &seri);
+    };
+
+    struct sisregistry_dependency {
+        epoc::uid uid;
+        epoc::version from_version;
+        epoc::version to_version;
+
+        void do_state(common::chunkyseri &seri);
+    };
+
+    struct sisregistry_property {
+        std::int32_t key;
+        std::int32_t value;
+
+         void do_state(common::chunkyseri &seri);
+    };
+
+    struct sisregistry_controller_info {
+        epoc::version version;
+        std::int32_t offset;
+        sisregistry_hash_container hash;
+
+        void do_state(common::chunkyseri &seri);
+    };
+
+    struct sisregistry_token : sisregistry_package {
+        std::vector<epoc::uid> sids;
+        std::uint32_t drives;
+        std::uint32_t completely_present;
+        std::uint32_t present_removable_drives;
+        std::uint32_t current_drives;
+        std::vector<sisregistry_controller_info> controller_info;
+        epoc::version version;
+        std::uint32_t language;
+        std::uint32_t selected_drive;
+        std::int32_t unused1;
+        std::int32_t unused2;
+        
+        void do_state(common::chunkyseri &seri);
+    };
+
+    struct sisregistry_object : sisregistry_token {
+        std::string vendor_localized_name;
+        sisregistry_install_type install_type;
+        std::vector<sisregistry_dependency> dependencies;
+        std::vector<sisregistry_package> embedded_packages;
+        std::vector<sisregistry_property> properties;
+        std::int32_t owned_file_descriptions;
+        std::vector<sisregistry_file_description> file_descriptions;
+        std::uint32_t in_rom;
+        std::uint32_t signed_;
+        std::uint32_t signed_by_sucert;
+        std::uint32_t deletable_preinstalled;
+        std::uint16_t file_major_version;
+        std::uint16_t file_minor_version;
+        sisregistry_package_trust trust;
+        std::int32_t remove_with_last_dependent;
+        std::uint64_t trust_timestamp;
+        sisregistry_trust_status trust_status;
+        std::vector<std::int32_t> install_chain_indices;
+        std::vector<std::int32_t> supported_language_ids;
+        std::vector<std::u16string> localized_package_names;
+        std::vector<std::u16string> localized_vendor_names;
+        std::uint32_t is_removable;
 
         void do_state(common::chunkyseri &seri);
     };
