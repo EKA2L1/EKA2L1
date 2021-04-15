@@ -91,7 +91,7 @@ namespace eka2l1 {
             msg.dest_msg->session_ptr_lle = msg.real_msg->session_ptr_lle;
             msg.dest_msg->msg_session = msg.real_msg->msg_session;
 
-            if (msg.real_msg->msg_session) {
+            if ((msg.real_msg->msg_session) && (msg.real_msg->function != standard_ipc_message_disconnect)) {
                 msg.real_msg->msg_session->set_slot_free(msg.real_msg);
             } else {
                 kern->free_msg(msg.real_msg);
