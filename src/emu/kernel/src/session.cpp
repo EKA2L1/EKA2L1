@@ -24,6 +24,7 @@
 #include <kernel/kernel.h>
 
 #include <common/log.h>
+#include <utils/err.h>
 
 namespace eka2l1 {
     namespace service {
@@ -47,6 +48,27 @@ namespace eka2l1 {
 
         // Disconnect
         session::~session() {
+        }
+
+        void session::set_share_mode(const share_mode shmode) {
+            switch (shmode) {
+            case SHARE_MODE_UNSHAREABLE:
+                owner = kern->crr_thread();
+                break;
+
+            case SHARE_MODE_SHAREABLE:
+                owner = kern->crr_process();
+                break;
+
+            case SHARE_MODE_GLOBAL_SHAREABLE:
+                owner = nullptr;
+                break;
+
+            default:
+                break;
+            }
+
+            shmode_ = shmode;
         }
 
         ipc_msg_ptr session::get_free_msg() {
@@ -79,8 +101,30 @@ namespace eka2l1 {
             }
         }
 
+        bool session::eligible_to_send(kernel::thread *thr) {
+            if (!owner) {
+                return true;
+            }
+
+            if (owner->get_object_type() == kernel::object_type::thread) {
+                if (owner != thr) {
+                    return false;
+                }
+            } else {
+                if (owner != thr->owning_process()) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         // This behaves a little different then other
         int session::send_receive_sync(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts) {
+            if (!eligible_to_send(kern->crr_thread())) {
+                return epoc::error_permission_denied;
+            }
+
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -98,6 +142,10 @@ namespace eka2l1 {
         }
 
         int session::send_receive(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts) {
+            if (!eligible_to_send(kern->crr_thread())) {
+                return epoc::error_permission_denied;
+            }
+
             ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
@@ -115,6 +163,10 @@ namespace eka2l1 {
         }
 
         int session::send(ipc_msg_ptr &msg) {
+            if (!eligible_to_send(kern->crr_thread())) {
+                return epoc::error_permission_denied;
+            }
+
             server_msg smsg;
 
             smsg.real_msg = msg;

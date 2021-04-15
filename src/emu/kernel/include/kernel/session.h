@@ -41,6 +41,12 @@ namespace eka2l1 {
     using server_ptr = service::server *;
 
     namespace service {
+        enum share_mode {
+            SHARE_MODE_UNSHAREABLE = 0,
+            SHARE_MODE_SHAREABLE = 1,
+            SHARE_MODE_GLOBAL_SHAREABLE = 2
+        };
+
         /*! \brief An IPC session 
 		 *
          *  A session is a bridge between server and client.
@@ -58,10 +64,13 @@ namespace eka2l1 {
             kernel::handle associated_handle;
 
             bool headless_;
+            share_mode shmode_;
 
         protected:
             int send(ipc_msg_ptr &msg);
             ipc_msg_ptr get_free_msg();
+
+            bool eligible_to_send(kernel::thread *thr);
 
         public:
             explicit session(kernel_system *kern, server_ptr svr, int async_slot_count);
@@ -83,6 +92,12 @@ namespace eka2l1 {
             void set_associated_handle(const kernel::handle h) {
                 associated_handle = h;
             }
+
+            const share_mode get_share_mode() const {
+                return shmode_;
+            }
+
+            void set_share_mode(const share_mode shmode);
 
             const kernel::handle get_associated_handle() const {
                 return associated_handle;
