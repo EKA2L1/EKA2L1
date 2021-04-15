@@ -105,10 +105,13 @@ namespace eka2l1 {
             info.do_state(seri);
         }
 
-        seri.absorb(version.u32);
-        seri.absorb(version.u32);
-        seri.absorb(version.u32);
+        std::uint32_t major = version.major;
+        std::uint32_t minor = version.minor;
+        std::uint32_t build = version.build;
 
+        seri.absorb(major);
+        seri.absorb(minor);
+        seri.absorb(build);
         seri.absorb(language);
         seri.absorb(selected_drive);
         seri.absorb(unused1);
