@@ -33,14 +33,14 @@
     <string name="pref_general_title">Général</string>
     <string name="pref_system_title">Système</string>
     <string name="pref_control_key_binding_sect_title">Touches</string>
-    <string name="pref_theme">Theme</string>
-    <string name="pref_theme_light">Light</string>
-    <string name="pref_theme_dark">Dark</string>
-    <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
-    <string name="pref_enable_actionbar">Enable ActionBar</string>
-    <string name="pref_enable_statusbar">Enable statusbar</string>
-    <string name="pref_wakelock">Keep screen on</string>
-    <string name="pref_enable_vibration">Enable vibration</string>
+    <string name="pref_theme">Thème</string>
+    <string name="pref_theme_light">Clair</string>
+    <string name="pref_theme_dark">Sombre</string>
+    <string name="pref_enable_virtual_keyboard">Activer le clavier virtuel</string>
+    <string name="pref_enable_actionbar">Activer la Barre d\'Actions</string>
+    <string name="pref_enable_statusbar">Activer la barre d’état</string>
+    <string name="pref_wakelock">Garder l\'écran allumé</string>
+    <string name="pref_enable_vibration">Activer les vibrations</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
     <string name="pref_system_language_option_name">Langue</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
@@ -51,18 +51,18 @@
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
     <string name="emulated_screen_rotation_item_name">Rotation</string>
     <string name="emulated_screen_refresh_rate_item_name">Taux de rafraîchissement</string>
-    <string name="mapping_dialog_title">Press a key</string>
-    <string name="mapping_dialog_message" formatted="false">Current mapping: %1$s</string>
-    <string name="reset_mapping">Reset</string>
-    <string name="layout_edit_finished">Edit mode finished</string>
-    <string name="layout_edit_finish">Finish edit mode</string>
-    <string name="layout_edit_mode">Keylayout edit mode</string>
-    <string name="layout_scale_mode">Keylayout resize mode</string>
+    <string name="mapping_dialog_title">Appuyez sur une touche</string>
+    <string name="mapping_dialog_message" formatted="false">Mappage actuel : %1$s</string>
+    <string name="reset_mapping">Réinitialiser</string>
+    <string name="layout_edit_finished">Mode édition terminé</string>
+    <string name="layout_edit_finish">Terminer le mode édition</string>
+    <string name="layout_edit_mode">Mode d\'édition de la disposition des touches</string>
+    <string name="layout_scale_mode">Mode de redimensionnement de la disposition des touches</string>
     <string name="layout_switch">Switch keylayout</string>
     <string name="hide_buttons">Hide buttons</string>
     <string name="confirmation_required">Confirmation required</string>
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
     <string name="log_saved">Log has been saved</string>
     <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
-    <string name="version">Version: </string>
+    <string name="version">Version : </string>
 </resources>
