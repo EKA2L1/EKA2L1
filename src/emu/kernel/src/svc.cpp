@@ -999,9 +999,17 @@ namespace eka2l1::epoc {
         server->cancel_async_lle();
     }
 
+    static kernel::owner_type get_session_owner_type_from_share(const service::share_mode shmode) {
+        if (shmode == service::SHARE_MODE_UNSHAREABLE) {
+            return kernel::owner_type::thread;
+        }
+
+        return kernel::owner_type::process;
+    }
+
     static std::int32_t do_create_session_from_server(kernel_system *kern, server_ptr server, std::int32_t msg_slot_count, eka2l1::ptr<void> sec, std::int32_t mode) {
         auto session_and_handle = kern->create_and_add<service::session>(
-            kernel::owner_type::process, server, msg_slot_count);
+            get_session_owner_type_from_share(static_cast<service::share_mode>(mode)), server, msg_slot_count);
 
         if (session_and_handle.first == kernel::INVALID_HANDLE) {
             return epoc::error_general;
@@ -1010,8 +1018,12 @@ namespace eka2l1::epoc {
         LOG_TRACE(KERNEL, "New session connected to {} with handle {}", server->name(), session_and_handle.first);
         session_and_handle.second->set_associated_handle(session_and_handle.first);
 
+        service::session *ss = session_and_handle.second;
+        ss->set_share_mode(static_cast<service::share_mode>(mode));
+
         return session_and_handle.first;
     }
+    
 
     BRIDGE_FUNC(std::int32_t, session_create, eka2l1::ptr<desc8> server_name_des, std::int32_t msg_slot, eka2l1::ptr<void> sec, std::int32_t mode) {
         process_ptr pr = kern->crr_process();
@@ -1046,11 +1058,20 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        if (share == 2) {
-            // Explicit attach: other process uses IPC can open this handle, so do threads! :D
-            ss->set_access_type(kernel::access_type::global_access);
-        } else {
-            ss->set_access_type(kernel::access_type::local_access);
+        const service::share_mode prev_share = ss->get_share_mode();
+        ss->set_share_mode(static_cast<service::share_mode>(share));
+
+        if ((prev_share >= service::share_mode::SHARE_MODE_SHAREABLE) && (share == service::share_mode::SHARE_MODE_UNSHAREABLE)
+            || (prev_share == service::share_mode::SHARE_MODE_UNSHAREABLE) || (share >= service::SHARE_MODE_SHAREABLE)) {
+            // Create new handle
+            const std::uint32_t res = kern->mirror(ss, get_session_owner_type_from_share(static_cast<service::share_mode>(share)));
+            if (res == kernel::INVALID_HANDLE) {
+                LOG_ERROR(KERNEL, "Handle slots exhausted");
+                return epoc::error_general;
+            }
+
+            kern->close(*handle);
+            *handle = res;
         }
 
         return epoc::error_none;
@@ -3287,16 +3308,15 @@ namespace eka2l1::epoc {
     std::int32_t session_share_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         // arg1 = session handle, arg2 = TAttachMode
-        session_ptr ss = kern->get<service::session>(create_info->arg1_);
-        if (!ss) {
-            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
-            return epoc::error_bad_handle;
+        std::uint32_t handle = create_info->arg1_;
+        const std::int32_t res = session_share(kern, &handle, create_info->arg2_);
+
+        if (res == epoc::error_none) {
+            return do_handle_write(kern, create_info, finish_signal, target_thread, handle);
         }
-
-        ss->set_access_type(kernel::access_type::global_access);
-
-        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
-        return epoc::error_none;
+        
+        finish_status_request_eka1(target_thread, finish_signal, res);
+        return res;
     }
 
     std::int32_t thread_logon_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
