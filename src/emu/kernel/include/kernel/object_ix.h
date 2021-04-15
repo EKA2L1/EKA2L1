@@ -19,6 +19,8 @@ namespace eka2l1 {
             crr_thread = 0xFFFF8001
         };
 
+        static constexpr std::uint32_t MAX_HANDLE_COUNT = 0x8000;
+
         struct handle_inspect_info {
             bool handle_array_local;
             bool handle_array_kernel;
@@ -51,7 +53,7 @@ namespace eka2l1 {
 
             size_t next_instance;
 
-            std::array<object_ix_record, 0x100> objects;
+            std::array<object_ix_record, MAX_HANDLE_COUNT> objects;
             std::vector<std::uint32_t> handles;
 
             handle_array_owner owner;
