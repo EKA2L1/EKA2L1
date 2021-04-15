@@ -44,6 +44,11 @@ namespace eka2l1 {
                     msg = std::make_pair(true, kern->create_msg(kernel::owner_type::process));
                 }
             }
+
+            disconnect_msg_ = kern->create_msg(kernel::owner_type::process);
+            disconnect_msg_->function = standard_ipc_message_disconnect;
+            disconnect_msg_->own_thr = kern->crr_thread();
+            disconnect_msg_->request_sts = 0;
         }
 
         // Disconnect
@@ -177,6 +182,11 @@ namespace eka2l1 {
             return svr->deliver(smsg);
         }
 
+        void session::send_destruct() {
+            headless_ = !svr->is_hle();
+            send(disconnect_msg_);
+        }
+
         void session::destroy() {
             // Free the message pool
             for (const auto &msg : msgs_pool) {
@@ -189,14 +199,8 @@ namespace eka2l1 {
 
             // Try to send a disconnect message. Headless session and use sync message.
             if (svr) {
-                headless_ = !svr->is_hle();
-                eka2l1::ipc_arg arg;
+                send_destruct();
 
-                arg.flag = 0;
-                std::fill(arg.args, arg.args + 4, 0);
-
-                send_receive_sync(standard_ipc_message_disconnect, arg, 0);
-                
                 if (svr->is_hle()) {
                     svr->process_accepted_msg();
                 }
