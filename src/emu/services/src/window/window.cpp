@@ -1120,7 +1120,8 @@ namespace eka2l1 {
 
     void window_server::parse_wsini() {
         static const std::map<std::string, epoc::display_mode> FORCE_DISPLAY_MODE_MAP = {
-            { "rh-29", epoc::display_mode::color4k }
+            { "rh-29", epoc::display_mode::color4k },
+            { "nem-4", epoc::display_mode::color4k }
         };
         
         common::ini_node_ptr window_mode_node = ws_config.find("WINDOWMODE");
