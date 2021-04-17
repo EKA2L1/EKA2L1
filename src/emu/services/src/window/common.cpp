@@ -121,7 +121,7 @@ namespace eka2l1::epoc {
             break;
         }
 
-        return epoc::display_mode::color16m;
+        return epoc::display_mode::color_last;
     }
 
     epoc::display_mode string_to_display_mode(const std::string &disp_str) {

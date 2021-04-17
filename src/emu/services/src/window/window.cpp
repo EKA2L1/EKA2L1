@@ -57,6 +57,8 @@
 #include <kernel/timing.h>
 #include <vfs/vfs.h>
 
+#include <loader/rom.h>
+
 #include <optional>
 #include <string>
 
@@ -1119,11 +1121,6 @@ namespace eka2l1 {
     }
 
     void window_server::parse_wsini() {
-        static const std::map<std::string, epoc::display_mode> FORCE_DISPLAY_MODE_MAP = {
-            { "rh-29", epoc::display_mode::color4k },
-            { "nem-4", epoc::display_mode::color4k }
-        };
-        
         common::ini_node_ptr window_mode_node = ws_config.find("WINDOWMODE");
         epoc::display_mode scr_mode_global = epoc::display_mode::color16ma;
 
@@ -1140,12 +1137,12 @@ namespace eka2l1 {
 
             bool use_in_ini = true;
 
-            if (current_dvc) {
-                const std::string firmware_code = common::lowercase_string(current_dvc->firmware_code);
-                const auto force_result = FORCE_DISPLAY_MODE_MAP.find(firmware_code);
+            if (kern->get_epoc_version() <= epocver::epoc6) {
+                loader::rom *rom_info = kern->get_rom_info();
+                const epoc::display_mode conv_res = epoc::get_display_mode_from_bpp(rom_info->header.eka1_diff1.bits_per_pixel);
 
-                if (force_result != FORCE_DISPLAY_MODE_MAP.end()) {
-                    scr_mode_global = force_result->second;
+                if (scr_mode_global != epoc::display_mode::color_last) {
+                    scr_mode_global = conv_res;
                     use_in_ini = false;
                 }
             }
