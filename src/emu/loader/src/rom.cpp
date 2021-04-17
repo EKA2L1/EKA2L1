@@ -53,12 +53,7 @@ namespace eka2l1::loader {
 
         // From this section, all read are weird
         // TODO: Check the spec again
-        readed_size += stream->read(&header.hardware, 4);
-        readed_size += stream->read(&header.lang, 8);
-
-        readed_size += stream->read(&header.kern_config_flags, 4);
-        readed_size += stream->read(&header.rom_exception_search_tab, 4);
-        readed_size += stream->read(&header.rom_header_size, 4);
+        readed_size += stream->read(&header.eka2_diff1, sizeof(header.eka2_diff1));
 
         readed_size += stream->read(&header.rom_section_header, 4);
         readed_size += stream->read(&header.total_sv_data_size, 4);

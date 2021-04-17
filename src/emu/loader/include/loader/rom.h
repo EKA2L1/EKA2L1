@@ -60,6 +60,7 @@ namespace eka2l1 {
             attrib paging_attrib;
         };
 
+        #pragma pack(push, 1)
         struct rom_header {
             uint8_t jump[124];
             address restart_vector;
@@ -75,11 +76,27 @@ namespace eka2l1 {
             address primary_file;
             address secondary_file;
             uint32_t checksum;
-            uint32_t hardware;
-            int64_t lang;
-            uint32_t kern_config_flags;
-            address rom_exception_search_tab;
-            uint32_t rom_header_size;
+
+            union {
+                struct {                    
+                    std::uint32_t hardware;
+                    std::int64_t lang;
+                    std::uint32_t kern_config_flags;
+                    address rom_exception_search_tab;
+                    std::uint32_t rom_header_size;
+                } eka2_diff1;
+
+                struct {
+                    std::int64_t lang;
+                    std::uint32_t hardware;
+                    std::int32_t size_x;
+                    std::int32_t size_y;
+                    std::uint32_t bits_per_pixel; 
+                } eka1_diff1;
+            };
+
+            static_assert(sizeof(eka2_diff1) == 24);
+            static_assert(sizeof(eka1_diff1) == 24);
 
             address rom_section_header;
             int32_t total_sv_data_size;
@@ -120,6 +137,7 @@ namespace eka2l1 {
             uint32_t hcr_file_addr;
             uint32_t spare[36];
         };
+        #pragma pack(pop)
 
         struct rom_section_header {
             uint8_t major;
