@@ -71,8 +71,8 @@
     <string name="pref_general_utilities_string">Peralatan</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_checkbox_title">Sembunyikan kursor mouse saat berada di dalam layar yang diemulasi</string>
     <string name="pref_general_utilities_hide_cursor_in_screen_space_tooltip_msg">Berguna saat Anda menekan tombol dengan mouse dan game / aplikasi memiliki kursor bawaan.\nUntuk membuat kursor mouse terlihat, tahan tombol ALT.</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Aktifkan pemilteran terdekat</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Filter ini diterapkan setelah gambar layar ter emulasi berikutnya.</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Hidupkan pemfilteran terdekat</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_tooltip">Filter ini diterapkan setelah gambar layar ter-emulasi berikutnya.</string>
     <string name="pref_general_utilities_integer_scaling_msg">Aktifkan skala integer</string>
     <string name="pref_general_utilities_integer_scaling_tooltip">Ini adalah metode skala pixel sempurna, yang dapat membantu mengurangi buram secara signifikan.</string>
     <string name="pref_system_title">Sistem</string>
