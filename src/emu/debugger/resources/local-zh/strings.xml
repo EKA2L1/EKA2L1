@@ -62,9 +62,9 @@
     <string name="pref_general_debugging_cpu_write_checkbox_title">CPU写入</string>
     <string name="pref_general_debugging_cpu_step_checkbox_title">CPU步进</string>
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">此选项将不会在模拟器关闭后保存，当GDBStub启用时则无效。</string>
-    <string name="pref_general_debugging_ipc_checkbox_title">进程间通信</string>
+    <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">系统调用</string>
-    <string name="pref_general_debugging_ait_checkbox_title">精准的进程间通信时间</string>
+    <string name="pref_general_debugging_ait_checkbox_title">准确的 IPC 时间</string>
     <string name="pref_general_debugging_ait_tooltip_msg">提高系统的准确性，但可能会导致运行缓慢。</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">启用B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">启用驱动的内核追踪功能，启用后大概率会拖慢运行速度。</string>
@@ -76,7 +76,7 @@
     <string name="pref_general_utilities_integer_scaling_msg">启用整比缩放</string>
     <string name="pref_general_utilities_integer_scaling_tooltip">这是一种绝佳的像素缩放方式，可以大幅降低模糊程度。</string>
     <string name="pref_system_title">系统</string>
-    <string name="pref_system_cpu_option_name">处理器</string>
+    <string name="pref_system_cpu_option_name">CPU</string>
     <string name="pref_system_device_option_name">设备</string>
     <string name="pref_system_device_not_found_msg">找不到配置文件内指定的设备，默认设备将会重置为第一个设备。</string>
     <string name="pref_system_language_option_name">语言</string>
@@ -87,7 +87,7 @@
     <string name="pref_system_app_setting_save_done_msg">{}的应用设置已保存到{:X}</string>
     <string name="pref_system_app_setting_save_title">保存设置</string>
     <string name="pref_system_validate_device_btn_title">校验设备</string>
-    <string name="pref_system_validate_device_tooltip">检查与修复当前设备内的错误，以便EKA2L1对设备进行模拟。</string>
+    <string name="pref_system_validate_device_tooltip">检查并修复当前设备内的错误，以便EKA2L1对设备进行模拟。</string>
     <string name="pref_system_validate_device_disabled_tooltip">以因模拟的系统已经启动而禁用，重启模拟器以使用本选项。</string>
     <string name="pref_system_no_device_present_str">当前没有设备</string>
     <string name="pref_system_real_time_accuracy_str">实时精度</string>
