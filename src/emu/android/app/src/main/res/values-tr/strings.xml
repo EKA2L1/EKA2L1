@@ -20,7 +20,7 @@
     <string name="raw_dump">Raw dump</string>
     <string name="path_to_raw_dump">Raw dump yolu</string>
     <string name="install_method">Kurulum yöntemi</string>
-    <string name="no_device_dialog_title">Hiçbir hizmet yüklenmedi!</string>
+    <string name="no_device_dialog_title">Hiçbir cihaz kurulu değil!</string>
     <string name="no_device_installed">Lütfen bir cihaz kurun. Kurulum için bir Symbian cihazının dosyaları ve \n\n ROM\'una ihtiyaç vardır. <b>Not:</b> Her uygulamanın çalışması için uygun Symbian cihazına ihtiyacı olacaktır.</string>
     <string name="install_rpkg_corrupt">Yüklenen RPKG dosyası bozuk!</string>
     <string name="install_rpkg_file_not_found">Belirtilen RPKG dosyası açılamıyor!</string>
@@ -35,13 +35,13 @@
     <string name="pref_control_key_binding_sect_title">Tuş atama</string>
     <string name="pref_theme">Tema</string>
     <string name="pref_theme_light">Açık</string>
-    <string name="pref_theme_dark">Karanlık</string>
+    <string name="pref_theme_dark">Koyu</string>
     <string name="pref_enable_virtual_keyboard">Sanal klavyeyi göster</string>
     <string name="pref_enable_actionbar">Hareket çubuğunu etkinleştir</string>
     <string name="pref_enable_statusbar">Bildirim çubuğunu etkinleştir</string>
     <string name="pref_wakelock">Ekranı açık tut</string>
     <string name="pref_enable_vibration">Titreşimi etkinleştir</string>
-    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">\"Nearest neighbor\" filterlemesini aktif et</string>
+    <string name="pref_general_utilities_nearest_neighbor_filtering_msg">En yakın komşu süzgecini etkinleştir</string>
     <string name="pref_system_language_option_name">Dil</string>
     <string name="pref_system_real_time_accuracy_str">Gerçek zamanlı doğruluk</string>
     <string name="pref_system_real_time_accuracy_level_name_low">Düşük</string>
