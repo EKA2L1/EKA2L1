@@ -20,7 +20,7 @@
     <string name="raw_dump">Raw dump</string>
     <string name="path_to_raw_dump">Calea către groapa brută</string>
     <string name="install_method">Metoda de instalare</string>
-    <string name="no_device_dialog_title">No device installed!</string>
+    <string name="no_device_dialog_title">Niciun dispozitiv instalat!</string>
     <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
     <string name="install_rpkg_corrupt">The RPKG file provided is corrupt!</string>
     <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
@@ -40,7 +40,7 @@
     <string name="pref_enable_actionbar">Activaţi ActionBar</string>
     <string name="pref_enable_statusbar">Activaţi bara de stare</string>
     <string name="pref_wakelock">Păstraţi ecranul pornit</string>
-    <string name="pref_enable_vibration">Enable vibration</string>
+    <string name="pref_enable_vibration">Activare vibrații</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Enable nearest neighbor filtering</string>
     <string name="pref_system_language_option_name">Language</string>
     <string name="pref_system_real_time_accuracy_str">Real-time accuracy</string>
