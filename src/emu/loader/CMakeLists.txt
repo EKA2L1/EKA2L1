@@ -1,6 +1,7 @@
 # Loader for EPOC image, etc...
 add_library(epocloader
         include/loader/e32img.h
+        include/loader/fpsx.h
         include/loader/gdr.h
         include/loader/mbm.h
         include/loader/mif.h
@@ -13,6 +14,7 @@ add_library(epocloader
         include/loader/sis.h
         include/loader/spi.h
         src/e32img.cpp
+        src/fpsx.cpp
         src/gdr.cpp
         src/mbm.cpp
         src/mif.cpp
