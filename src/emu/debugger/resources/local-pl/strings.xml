@@ -133,7 +133,7 @@
     <string name="install_device_raw_dump_fail_to_copy_msg">Nie udało się skopiować plików surowego zrzutu do miejsca docelowego!</string>
     <string name="install_device_rom_fail_to_copy_msg">Nie udało się skopiować ROM-u do miejsca docelowego!</string>
     <string name="install_device_rpkg_insufficent_size_msg">Plik RPKG jest za mały, proces zrzucania mógł nie zostać ukończony!</string>
-    <string name="install_device_already_exist_msg">Urządzenie do zainstalowania już istnieje!</string>
+    <string name="install_device_already_exist_msg">Instalowane urządzenie już istnieje!</string>
     <string name="install_device_no_language_file_present_msg">Urządzenie które chcesz zainstalować nie ma plików informacyjnych o języku!</string>
     <string name="install_device_product_determine_fail_msg">Nie określono informacji produktu (producent, kod firmware\'u, wersja systemu operacyjnego itp...).</string>
     <string name="install_device_install_failure_msg">Coś poszło nie tak w czasie instalacji! Sprawdź log!</string>
