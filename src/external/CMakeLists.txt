@@ -238,6 +238,9 @@ option(CAPSTONE_X86_SUPPORT "x86 support" OFF)
 
 add_subdirectory(capstone EXCLUDE_FROM_ALL)
 
+# libfat
+add_subdirectory(libfat)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)
