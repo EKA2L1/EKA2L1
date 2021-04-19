@@ -454,20 +454,18 @@ namespace eka2l1::loader::firmware {
     bool block_tree::add(block &blck) {
         if (!current_block_) {
             block_tree_entry entry;
-            entry.myself_ = std::move(blck);
+            current_block_ = entry.add(blck);
 
             roots_.push_back(std::move(entry));
-            current_block_ = &(roots_.back().myself_);
 
             return true;
         }
 
         if ((current_block_->ctype_ == CONTENT_TYPE_CODE) && (blck.ctype_ == CONTENT_TYPE_DATA_CERT)) {
             block_tree_entry entry;
-            entry.myself_ = std::move(blck);
+            current_block_ = entry.add(blck);
 
             roots_.push_back(std::move(entry));
-            current_block_ = &(roots_.back().myself_);
 
             return true;
         }
@@ -480,10 +478,9 @@ namespace eka2l1::loader::firmware {
         }
 
         block_tree_entry entry;
-        entry.myself_ = std::move(blck);
+        current_block_ = entry.add(blck);
 
         roots_.push_back(std::move(entry));
-        current_block_ = &(roots_.back().myself_);
 
         return true;
     }
@@ -555,6 +552,64 @@ namespace eka2l1::loader::firmware {
         return blck;
     }
 
+    static void guess_fpsx_type_from_blocks(common::ro_stream &stream, fpsx_header &header) {
+        if (header.btree_.roots_.empty()) {
+            header.type_ = FPSX_TYPE_INVALID;
+            return;
+        }
+
+        // Don't merge! Sometimes core cert is just behind ROFS cert lol
+        for (std::size_t i = 0; i < header.btree_.roots_.size(); i++) {
+            block_tree_entry &entry = header.btree_.roots_[i];
+            for (std::size_t j = 0; j < entry.cert_blocks_.size(); j++) {
+                if (entry.cert_blocks_[j].btype_ == BLOCK_TYPE_CORE_CERT) {
+                    header.type_ = FPSX_TYPE_CORE;
+                    return;
+                }
+            }
+        }
+
+        for (std::size_t i = 0; i < header.btree_.roots_.size(); i++) {
+            block_tree_entry &entry = header.btree_.roots_[i];
+
+            if ((entry.cert_blocks_.size() > 0) && (entry.cert_blocks_[0].btype_ == BLOCK_TYPE_ROFS_HASH)) {
+                block_header_rofs_hash &rofs_header = static_cast<decltype(rofs_header)>(*entry.cert_blocks_[0].header_);
+                std::string description = rofs_header.description_;
+
+                if (description.find("ROFS") != std::string::npos) {
+                    header.type_ = FPSX_TYPE_ROFS;
+                    return;
+                } else if (description.find("ROFX") != std::string::npos) {
+                    header.type_ = FPSX_TYPE_ROFX;
+                    return;
+                }
+            }
+        }
+
+        if ((header.btree_.roots_.size() == 1) && (header.btree_.roots_[0].cert_blocks_.empty())) {
+            header.type_ = FPSX_TYPE_UDA;
+        } else {
+            header.type_ = FPSX_TYPE_INVALID;
+        }
+    }
+
+    block_tree_entry *fpsx_header::find_block_with_description(const std::string &str) {
+        for (std::size_t i = 0; i < btree_.roots_.size(); i++) {
+            block_tree_entry &entry = btree_.roots_[i];
+
+            if ((entry.cert_blocks_.size() > 0) && (entry.cert_blocks_[0].btype_ == BLOCK_TYPE_ROFS_HASH)) {
+                block_header_rofs_hash &rofs_header = static_cast<decltype(rofs_header)>(*entry.cert_blocks_[0].header_);
+                std::string description = rofs_header.description_;
+
+                if (description.find(str) != std::string::npos) {
+                    return &entry;
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
     std::optional<fpsx_header> read_fpsx_header(common::ro_stream &stream) {
         const common::endian_type etype = common::get_system_endian_type();
 
@@ -609,6 +664,7 @@ namespace eka2l1::loader::firmware {
             }
         }
 
+        guess_fpsx_type_from_blocks(stream, header);
         return header;
     }
 }

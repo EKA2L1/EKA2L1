@@ -31,10 +31,11 @@ namespace eka2l1::common {
 
 namespace eka2l1::loader::firmware {
     enum fpsx_type {
-        FPSX_TYPE_UDA = 0,
-        FPSX_TYPE_ROFS = 1,
-        FPSX_TYPE_ROFX = 2,
-        FPSX_TYPE_CORE = 3
+        FPSX_TYPE_INVALID = 0,
+        FPSX_TYPE_UDA = 1,
+        FPSX_TYPE_ROFS = 2,
+        FPSX_TYPE_ROFX = 3,
+        FPSX_TYPE_CORE = 4
     };
 
     enum content_type : std::uint8_t {
@@ -250,8 +251,6 @@ namespace eka2l1::loader::firmware {
     };
 
     struct block_tree_entry {
-        block myself_;
-
         std::vector<block> code_blocks_;
         std::vector<block> cert_blocks_;
         std::vector<block> unk56_blocks_;
@@ -278,6 +277,8 @@ namespace eka2l1::loader::firmware {
 
         std::vector<tlv_entry_instance> tlv_entries_;
         block_tree btree_;
+
+        block_tree_entry *find_block_with_description(const std::string &str);
     };
 
     std::optional<fpsx_header> read_fpsx_header(common::ro_stream &stream);
