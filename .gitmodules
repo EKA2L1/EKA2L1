@@ -62,3 +62,6 @@
 [submodule "src/external/luajit"]
 	path = src/external/luajit
 	url = https://github.com/luajit/luajit
+[submodule "src/external/libfat"]
+	path = src/external/libfat
+	url = https://github.com/Vita3K/libfat16/
