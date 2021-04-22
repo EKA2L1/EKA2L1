@@ -289,7 +289,7 @@ namespace eka2l1 {
 
         public:
             explicit wo_std_file_stream(const std::string &path, const bool binary)
-                : fo_(path, binary ? std::ios_base::binary : 0) {
+                : fo_(path, binary ? std::ios_base::binary : std::ios_base::out) {
             }
 
             std::uint64_t write(const void *buf, const std::uint64_t size) override {
