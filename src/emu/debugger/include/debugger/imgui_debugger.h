@@ -87,9 +87,13 @@ namespace eka2l1 {
         int installer_lang_choose_result{ -1 };
         int installer_current_lang_idx{ -1 };
 
+        const std::vector<std::string> *device_install_variant_list;
+        int device_install_variant_index;
+
         bool should_package_manager_display_installer_text;
         bool should_package_manager_display_one_button_only;
         bool should_package_manager_display_language_choose;
+        bool should_device_install_wizard_display_variant_select;
 
         bool should_show_app_launch;
         bool should_app_launch_use_new_style;
@@ -193,6 +197,7 @@ namespace eka2l1 {
 
         void show_installer_text_popup();
         void show_installer_choose_lang_popup();
+        void show_device_installer_choose_variant_popup();
         void show_errors();
         void show_screens();
 

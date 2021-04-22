@@ -156,6 +156,7 @@
     <string name="install_device_install_failure_msg">Something wrong happens during the install! Please check the log!</string>
     <string name="install_device_final_msg_1">Thank you for using the wizard. We hope you have a good time using the emulator!</string>
     <string name="install_device_final_msg_2">For any problem, please report to the developers by opening issues!</string>
+    <string name="install_device_choose_variant_popup_title">Choose firmware variant</string>
 
     <string name="mmc_mount_success_dialog_title">Card mounted successfully!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD card mounted! All apps on MMC/SD card have been reloaded.</string>

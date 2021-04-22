@@ -317,7 +317,7 @@ namespace eka2l1 {
         }
 
         const int variant_index = choose_callback(all_variant_strings);
-        if (variant_index >= all_variant_strings.size()) {
+        if ((variant_index >= all_variant_strings.size()) || (variant_index < 0)) {
             LOG_ERROR(SYSTEM, "Invalid variant index!");
             return device_installation_general_failure;
         }

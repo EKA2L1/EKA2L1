@@ -51,6 +51,48 @@ namespace eka2l1 {
         return (!enable) ? false : button_result;
     }
 
+    void imgui_debugger::show_device_installer_choose_variant_popup() {
+        const std::string installer_popup_title = common::get_localised_string(localised_strings, "install_device_choose_variant_popup_title");
+        ImGui::OpenPopup(installer_popup_title.c_str());
+
+        ImGuiIO &io = ImGui::GetIO();
+        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x / 4, io.DisplaySize.y / 3));
+
+        if (ImGui::BeginPopupModal(installer_popup_title.c_str())) {
+            for (std::size_t i = 0; i < device_install_variant_list->size(); i++) {
+                const std::string &name_var = device_install_variant_list->at(i);
+                if (ImGui::Selectable(name_var.c_str(), (device_install_variant_index == static_cast<int>(i)))) {
+                    device_install_variant_index = static_cast<int>(i);
+                }
+            }
+
+            ImGui::NewLine();
+
+            const float button_size = 30.0f;
+            float total_width_button_occupied = button_size * 2 + 4.0f;
+
+            ImGui::SameLine((ImGui::GetWindowWidth() - total_width_button_occupied) / 2);
+
+            const std::string ok_str = common::get_localised_string(localised_strings, "ok");
+            const std::string cancel_str = common::get_localised_string(localised_strings, "cancel");
+
+            if (ImGui::Button(ok_str.c_str())) {
+                installer_cond.notify_one();
+                should_device_install_wizard_display_variant_select = false;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button(cancel_str.c_str())) {
+                device_install_variant_index = -1;
+                installer_cond.notify_one();
+                should_device_install_wizard_display_variant_select = false;
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
     void imgui_debugger::show_install_device() {
         if (device_wizard_state.stage == device_wizard::FINAL_FOR_REAL) {
             device_wizard_state.stage = device_wizard::WELCOME_MESSAGE;
@@ -348,7 +390,7 @@ namespace eka2l1 {
                     if (device_wizard_state.stage == device_wizard::INSTALL) {
                         device_manager *manager = sys->get_device_manager();
 
-                        device_wizard_state.install_thread = std::make_unique<std::thread>([](
+                        device_wizard_state.install_thread = std::make_unique<std::thread>([this](
                                                                                                device_manager *mngr, device_wizard *wizard, config::state *conf) {
                             std::string firmware_code;
                             
@@ -376,8 +418,18 @@ namespace eka2l1 {
 
                             case device_wizard::INSTALLATION_TYPE_FIRMWARE:
                                 result = eka2l1::install_firmware(mngr, wizard->current_rom_or_vpl_path, root_c_path, root_e_path, root_z_path,
-                                    rom_resident_path, [](const std::vector<std::string> &variants) {
-                                        return 0;
+                                    rom_resident_path, [&](const std::vector<std::string> &variants) {
+                                        this->device_install_variant_list = &variants;
+                                        this->device_install_variant_index = 0;
+    
+                                        this->should_device_install_wizard_display_variant_select = true;
+
+                                        std::unique_lock<std::mutex> ul(installer_mut);
+                                        this->installer_cond.wait(ul);
+
+                                        // Normally debug thread won't touch this
+                                        this->should_device_install_wizard_display_variant_select = false;
+                                        return this->device_install_variant_index;
                                     }, wizard->progress_tracker[0]);
                                 break;
 
