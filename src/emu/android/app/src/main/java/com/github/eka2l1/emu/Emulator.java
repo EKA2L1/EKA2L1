@@ -193,6 +193,8 @@ public class Emulator {
 
     public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG);
 
+    public static native boolean doesRomNeedRPKG(String romPath);
+
     public static native String[] getPackages();
 
     public static native void uninstallPackage(int uid);

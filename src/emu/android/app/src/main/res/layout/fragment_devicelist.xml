@@ -11,6 +11,17 @@
         android:layout_marginTop="8dp" />
 
     <TextView
+        android:id="@+id/tv_additional_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="10dp"
+        android:text="@string/install_device_note_may_need_rpkg"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/tv_install_method"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -26,49 +37,28 @@
         android:layout_marginTop="10dp" />
 
     <LinearLayout
-        android:id="@+id/ll_rpkg"
+        android:id="@+id/ll_firmware"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <Button
-            android:id="@+id/bt_rpkg"
+            android:id="@+id/bt_firmware"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/rpkg" />
+            android:text="@string/firmware" />
 
         <TextView
-            android:id="@+id/tv_rpkg"
+            android:id="@+id/tv_firmware"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="19dp"
-            android:text="@string/path_to_rpkg" />
+            android:text="@string/path_to_firmware" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/ll_raw_dump"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:id="@+id/bt_raw_dump"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/raw_dump" />
-
-        <TextView
-            android:id="@+id/tv_raw_dump"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="19dp"
-            android:text="@string/path_to_raw_dump" />
-    </LinearLayout>
-
-    <LinearLayout
+        android:id="@+id/ll_rom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -86,6 +76,29 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="19dp"
             android:text="@string/path_to_rom" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_rpkg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/bt_rpkg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/rpkg" />
+
+        <TextView
+            android:id="@+id/tv_rpkg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="19dp"
+            android:text="@string/path_to_rpkg" />
+
     </LinearLayout>
 
     <Button

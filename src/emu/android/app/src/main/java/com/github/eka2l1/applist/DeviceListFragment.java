@@ -61,17 +61,21 @@ import io.reactivex.observers.DisposableCompletableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class DeviceListFragment extends Fragment {
-    private static final int RAW_DUMP_CODE = 0;
+    private static final int VPL_CODE = 0;
     private static final int RPKG_CODE = 1;
     private static final int ROM_CODE = 2;
 
-    private enum INSTALL_MODE {RPKG, RAW_DUMP}
+    private enum INSTALL_MODE {DEVICE_DUMP, FIRMWARE}
 
     private INSTALL_MODE mode;
+    private LinearLayout llRpkg;
     private TextView tvRawDump;
     private TextView tvRPKG;
     private TextView tvROM;
-    private boolean rawDumpSet, rpkgSet, romSet;
+    private TextView tvVPL;
+    private TextView tvRPKGNote;
+
+    private boolean firmwareSet, rpkgSet, romSet, needRpkg;
     private ArrayAdapter<String> deviceAdapter;
 
     @Override
@@ -87,11 +91,14 @@ public class DeviceListFragment extends Fragment {
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.devices);
 
-        LinearLayout llRawDump = getActivity().findViewById(R.id.ll_raw_dump);
-        LinearLayout llRpkg = getActivity().findViewById(R.id.ll_rpkg);
-        tvRawDump = getActivity().findViewById(R.id.tv_raw_dump);
+        LinearLayout llFirmware = getActivity().findViewById(R.id.ll_firmware);
+        LinearLayout llRom = getActivity().findViewById(R.id.ll_rom);
+        llRpkg = getActivity().findViewById(R.id.ll_rpkg);
+
+        tvVPL = getActivity().findViewById(R.id.tv_firmware);
         tvRPKG = getActivity().findViewById(R.id.tv_rpkg);
         tvROM = getActivity().findViewById(R.id.tv_rom);
+        tvRPKGNote = getActivity().findViewById(R.id.tv_additional_note);
 
         ArrayList<String> devices = new ArrayList<>(Arrays.asList(Emulator.getDevices()));
         deviceAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, devices);
@@ -114,13 +121,17 @@ public class DeviceListFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
-                    mode = INSTALL_MODE.RPKG;
-                    llRpkg.setVisibility(View.VISIBLE);
-                    llRawDump.setVisibility(View.GONE);
+                    mode = INSTALL_MODE.DEVICE_DUMP;
+                    tvRPKGNote.setVisibility(View.VISIBLE);
+                    llRom.setVisibility(View.VISIBLE);
+                    llFirmware.setVisibility(View.GONE);
+                    llFirmware.setVisibility(View.GONE);
                 } else {
-                    mode = INSTALL_MODE.RAW_DUMP;
-                    llRawDump.setVisibility(View.VISIBLE);
+                    mode = INSTALL_MODE.FIRMWARE;
+                    tvRPKGNote.setVisibility(View.GONE);
+                    llFirmware.setVisibility(View.VISIBLE);
                     llRpkg.setVisibility(View.GONE);
+                    llRom.setVisibility(View.GONE);
                 }
             }
 
@@ -151,15 +162,16 @@ public class DeviceListFragment extends Fragment {
             i.putExtra(FilteredFilePickerActivity.EXTRA_EXTENSIONS, new String[]{".ROM", ".rom"});
             startActivityForResult(i, ROM_CODE);
         });
-        Button btRawDump = getActivity().findViewById(R.id.bt_raw_dump);
-        btRawDump.setOnClickListener(v -> {
+        Button btFirmware = getActivity().findViewById(R.id.bt_firmware);
+        btFirmware.setOnClickListener(v -> {
             Intent i = new Intent(getActivity(), FilteredFilePickerActivity.class);
             i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-            i.putExtra(FilePickerActivity.EXTRA_SINGLE_CLICK, false);
+            i.putExtra(FilePickerActivity.EXTRA_SINGLE_CLICK, true);
             i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-            i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
+            i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
             i.putExtra(FilePickerActivity.EXTRA_START_PATH, FilteredFilePickerFragment.getLastPath());
-            startActivityForResult(i, RAW_DUMP_CODE);
+            i.putExtra(FilteredFilePickerActivity.EXTRA_EXTENSIONS, new String[]{".VPL", ".vpl"});
+            startActivityForResult(i, VPL_CODE);
         });
         Button btInstall = getActivity().findViewById(R.id.bt_device_install);
         btInstall.setOnClickListener(v -> installDevice());
@@ -167,20 +179,28 @@ public class DeviceListFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if ((requestCode >= RAW_DUMP_CODE && requestCode <= ROM_CODE) && resultCode == Activity.RESULT_OK) {
+        if ((requestCode >= VPL_CODE && requestCode <= ROM_CODE) && resultCode == Activity.RESULT_OK) {
             List<Uri> files = Utils.getSelectedFilesFromResult(data);
             for (Uri uri : files) {
                 File file = Utils.getFileForUri(uri);
                 String path = file.getAbsolutePath();
-                if (requestCode == RAW_DUMP_CODE) {
-                    tvRawDump.setText(path);
-                    rawDumpSet = true;
+                if (requestCode == VPL_CODE) {
+                    tvVPL.setText(path);
+                    firmwareSet = true;
                 } else if (requestCode == RPKG_CODE) {
                     tvRPKG.setText(path);
                     rpkgSet = true;
                 } else {
                     tvROM.setText(path);
                     romSet = true;
+
+                    if (Emulator.doesRomNeedRPKG(path)) {
+                        needRpkg = true;
+                        llRpkg.setVisibility(View.VISIBLE);
+                    } else {
+                        needRpkg = false;
+                        llRpkg.setVisibility(View.GONE);
+                    }
                 }
             }
         }
@@ -194,10 +214,10 @@ public class DeviceListFragment extends Fragment {
 
     @SuppressLint("CheckResult")
     private void installDevice() {
-        if (mode == INSTALL_MODE.RPKG && (!rpkgSet || !romSet)) {
+        if (mode == INSTALL_MODE.DEVICE_DUMP && ((needRpkg && !rpkgSet) || !romSet)) {
             Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
             return;
-        } else if (mode == INSTALL_MODE.RAW_DUMP && (!rawDumpSet || !romSet)) {
+        } else if (mode == INSTALL_MODE.FIRMWARE && !firmwareSet) {
             Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -208,14 +228,13 @@ public class DeviceListFragment extends Fragment {
         dialog.setMessage(getText(R.string.processing));
         dialog.show();
         Completable completable;
-        if (mode == INSTALL_MODE.RPKG) {
+        if (mode == INSTALL_MODE.DEVICE_DUMP) {
             String rpkg = tvRPKG.getText().toString();
             String rom = tvROM.getText().toString();
             completable = Emulator.subscribeInstallDevice(rpkg, rom, true);
         } else {
-            String rawDump = tvRawDump.getText().toString();
-            String rom = tvROM.getText().toString();
-            completable = Emulator.subscribeInstallDevice(rawDump, rom, false);
+            String vplPath = tvVPL.getText().toString();
+            completable = Emulator.subscribeInstallDevice("", vplPath, false);
         }
         completable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

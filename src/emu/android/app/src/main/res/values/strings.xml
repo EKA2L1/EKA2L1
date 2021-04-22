@@ -16,16 +16,18 @@
     <string name="save_log">Save log</string>
 
     <string name="install">Install</string>
+    <string name="device_dump">Device dump</string>
     <string name="rpkg" translatable="false">RPKG</string>
     <string name="rom" translatable="false">ROM</string>
     <string name="path_to_rpkg">Path to RPKG</string>
     <string name="path_to_rom">Path to ROM</string>
-    <string name="raw_dump">Raw dump</string>
-    <string name="path_to_raw_dump">Path to raw dump</string>
+    <string name="firmware">Firmware</string>
+    <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">Install method</string>
 
     <string name="no_device_dialog_title">No device installed!</string>
     <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
+    <string name="install_device_note_may_need_rpkg">For S60v3 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
 
     <string name="install_rpkg_corrupt">The RPKG file provided is corrupt!</string>
     <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
