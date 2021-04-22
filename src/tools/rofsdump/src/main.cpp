@@ -36,7 +36,9 @@ int main(int argc, char **argv) {
     const char *target_rofs = argv[1];
 
     eka2l1::common::ro_std_file_stream stream(target_rofs, true);
-    bool result = eka2l1::loader::dump_rofs_system(stream, "");
+    std::atomic<int> progress;
+
+    bool result = eka2l1::loader::dump_rofs_system(stream, "", progress);
 
     return 0;
 }
