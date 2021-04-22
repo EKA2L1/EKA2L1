@@ -22,6 +22,8 @@
 #include <system/installation/rpkg.h>
 #include <system/software.h>
 
+#include <loader/rom.h>
+
 #include <vfs/vfs.h>
 
 #include <common/algorithm.h>
@@ -37,6 +39,22 @@
 #include <vector>
 
 namespace eka2l1::loader {
+    bool should_install_requires_additional_rpkg(const std::string &path) {
+        static constexpr address EKA2_ROM_BASE = 0x80000000;
+        common::ro_std_file_stream rom_file_stream(path, true);
+
+        if (!rom_file_stream.valid()) {
+            return false;
+        }
+
+        auto rom_parse = load_rom(reinterpret_cast<common::ro_stream*>(&rom_file_stream));
+        if (!rom_parse.has_value()) {
+            return false;
+        }
+
+        return (rom_parse->header.rom_base == EKA2_ROM_BASE);
+    }
+
     static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent) {
         std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
         std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
@@ -79,8 +97,61 @@ namespace eka2l1::loader {
         return true;
     }
 
+    device_installation_error install_rom(device_manager *dvcmngr, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, std::atomic<int> &res, const int max_progress) {
+        const std::string temp_z_path = eka2l1::add_path(drives_z_resident_path, "temp\\");
+        common::ro_std_file_stream rom_file_stream(path, true); 
+        const bool err = loader::dump_rom_files(reinterpret_cast<common::ro_stream*>(&rom_file_stream),
+            temp_z_path, res, max_progress);
+        if (!err) {
+            return device_installation_rom_file_corrupt;
+        }
+
+        epocver ver = determine_rpkg_symbian_version(temp_z_path);
+
+        std::string manufacturer;
+        std::string firmcode;
+        std::string model;
+
+        if (!determine_rpkg_product_info(temp_z_path, manufacturer, firmcode, model)) {
+            LOG_ERROR(SYSTEM, "Revert all changes");
+            eka2l1::common::remove(temp_z_path);
+
+            return device_installation_determine_product_failure;
+        }
+
+        auto firmcode_low = common::lowercase_string(firmcode);
+
+        // Rename temp folder to its product code
+        eka2l1::common::move_file(temp_z_path, add_path(drives_z_resident_path, firmcode_low + "\\"));
+        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0);
+
+        if (err_adddvc != add_device_none) {
+            LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
+            eka2l1::common::remove(add_path(drives_z_resident_path, firmcode_low + "\\"));
+
+            switch (err_adddvc) {
+            case add_device_existed:
+                return device_installation_already_exist;
+
+            case add_device_no_language_present:
+                return device_installation_no_languages_present;
+
+            default:
+                break;
+            }
+
+            return device_installation_general_failure;
+        }
+
+        const std::string rom_path = add_path(rom_resident_path, firmcode_low + "\\");
+        eka2l1::create_directories(rom_path);
+
+        eka2l1::common::copy_file(path, eka2l1::add_path(rom_path, "SYM.ROM"), true);        
+        return device_installation_none;
+    }
+
     device_installation_error install_rpkg(device_manager *dvcmngr, const std::string &path, const std::string &devices_rom_path,
-        std::string &firmware_code_ret, std::atomic<int> &res) {
+        std::string &firmware_code_ret, std::atomic<int> &res, const int max_progress) {
         FILE *f = fopen(path.data(), "rb");
 
         if (!f) {
@@ -134,6 +205,8 @@ namespace eka2l1::loader {
             return device_installation_rpkg_corrupt;
         }
 
+        float accumulated = 0.f;
+
         while (!feof(f)) {
             total_read_size = 0;
 
@@ -164,7 +237,8 @@ namespace eka2l1::loader {
                 break;
             }
 
-            res += (int)(100 / header.count);
+            accumulated += static_cast<float>(max_progress) / header.count;
+            res = static_cast<int>(accumulated);
         }
 
         fclose(f);
@@ -208,6 +282,7 @@ namespace eka2l1::loader {
             return device_installation_general_failure;
         }
 
+        res = 100;
         return device_installation_none;
     }
 }

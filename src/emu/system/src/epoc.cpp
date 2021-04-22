@@ -673,6 +673,8 @@ namespace eka2l1 {
             return false;
         }
 
+        rom_fstream.seek(0, common::seek_where::beg);
+
         romf_ = std::move(*romf_res);
 
         if (!rom_fs_id_.has_value()) {
