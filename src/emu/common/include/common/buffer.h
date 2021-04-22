@@ -230,6 +230,12 @@ namespace eka2l1 {
                 fi_ = fopen(path.c_str(), binary ? "rb" : "r");
             }
 
+            ~ro_std_file_stream() {
+                if (fi_) {
+                    fclose(fi_);
+                }
+            }
+
             bool valid() override {
                 return fi_;
             }
@@ -282,8 +288,8 @@ namespace eka2l1 {
             mutable std::ofstream fo_;
 
         public:
-            explicit wo_std_file_stream(const std::string &path)
-                : fo_(path) {
+            explicit wo_std_file_stream(const std::string &path, const bool binary)
+                : fo_(path, binary ? std::ios_base::binary : 0) {
             }
 
             std::uint64_t write(const void *buf, const std::uint64_t size) override {
