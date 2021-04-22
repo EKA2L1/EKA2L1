@@ -150,6 +150,10 @@
     <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>
     <string name="install_device_rom_fail_to_copy_msg">Fail to copy ROM to target destination!</string>
     <string name="install_device_rpkg_insufficent_size_msg">RPKG file is too small, the dumping process might be unfinished!</string>
+    <string name="install_device_vpl_invalid_msg">The firmware description file (VPL) file is invalid!</string>
+    <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
+    <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
+    <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Device to install already exists!</string>
     <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
     <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>

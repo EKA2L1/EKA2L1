@@ -279,8 +279,20 @@ public class DeviceListFragment extends Fragment {
                                 errorToDisplay = getText(R.string.install_rpkg_corrupt);
                                 break;
 
-                            case Emulator.INSTALL_DEVICE_RAW_DUMP_FAIL_TO_COPY:
-                                errorToDisplay = getText(R.string.install_raw_dump_fail_to_copy);
+                            case Emulator.INSTALL_DEVICE_ERROR_VPL_FILE_INVALID:
+                                errorToDisplay = getText(R.string.install_device_vpl_invalid_msg);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_ROM_CORRUPTED:
+                                errorToDisplay = getText(R.string.install_device_rom_corrupt_msg);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_ROFS_CORRUPTED:
+                                errorToDisplay = getText(R.string.install_device_rofs_corrupt_msg);
+                                break;
+
+                            case Emulator.INSTALL_DEVICE_ERROR_FPSX_CORRUPTED:
+                                errorToDisplay = getText(R.string.install_device_fpsx_corrupt_msg);
                                 break;
 
                             default:

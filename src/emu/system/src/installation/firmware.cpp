@@ -404,7 +404,7 @@ namespace eka2l1 {
 
             if (!fpsx_head) {
                 LOG_ERROR(SYSTEM, "FPSX file is corrupted!");
-                return device_installation_error_fpsx_corrupt;
+                return device_installation_fpsx_corrupt;
             }
 
             const auto result = dump_data_from_fpsx(fpsx_head.value(), fpsx_file_stream, drives_c_path, drives_e_path, drives_z_temp_path,

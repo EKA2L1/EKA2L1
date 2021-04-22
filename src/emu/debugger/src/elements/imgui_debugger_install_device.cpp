@@ -323,6 +323,22 @@ namespace eka2l1 {
                         wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_install_rpkg_corrupt_msg");
                         break;
 
+                    case device_installation_rofs_corrupt:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rofs_corrupt_msg");
+                        break;
+
+                    case device_installation_rom_file_corrupt:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rom_corrupt_msg");
+                        break;
+
+                    case device_installation_fpsx_corrupt:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_fpsx_corrupt_msg");
+                        break;
+
+                    case device_installation_vpl_file_invalid:
+                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_vpl_invalid_msg");
+                        break;
+
                     default:
                         wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_install_failure_msg");
                         break;
