@@ -326,10 +326,6 @@ namespace eka2l1::loader {
             fname = common::lowercase_ucs2_string(fname);
         }
 
-        if (fname == u"Hal.dll") {
-            LOG_TRACE(LOADER, "Just some interesting test");
-        }
-
         fname = eka2l1::add_path(common::utf8_to_ucs2(path_base), fname);
 
         std::ofstream file_out_stream(common::ucs2_to_utf8(fname), std::ios_base::binary);
