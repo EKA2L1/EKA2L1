@@ -265,13 +265,13 @@ namespace eka2l1::loader {
             left -= take;
         }
 
-        static constexpr std::uint32_t PAGE_SIZE = 0x1000;
+        static constexpr std::uint32_t EKA_ROM_PAGE_SIZE = 0x1000;
 
         const std::uint32_t total_page_to_seek = (rom_parse->header.uncompress_size - rom_parse->header.pageable_rom_start
-            + PAGE_SIZE - 1) / PAGE_SIZE;
-        const std::uint32_t page_start = rom_parse->header.pageable_rom_start / PAGE_SIZE;
+            + EKA_ROM_PAGE_SIZE - 1) / EKA_ROM_PAGE_SIZE;
+        const std::uint32_t page_start = rom_parse->header.pageable_rom_start / EKA_ROM_PAGE_SIZE;
 
-        buffer.resize(PAGE_SIZE);
+        buffer.resize(EKA_ROM_PAGE_SIZE);
         std::vector<std::uint8_t> source_buffer;
 
         for (std::size_t i = 0; i < total_page_to_seek; i++) {
