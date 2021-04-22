@@ -21,13 +21,17 @@
 #pragma once
 
 #include <common/types.h>
+
+#include <atomic>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace eka2l1 {
     namespace common {
         class ro_stream;
+        class wo_stream;
     }
 
     namespace loader {
@@ -44,6 +48,7 @@ namespace eka2l1 {
             uint32_t caps[2];
         };
 
+        #pragma pack(push, 1)
         struct rom_page_info {
             enum attrib : uint8_t {
                 pageable = 1 << 0
@@ -60,7 +65,6 @@ namespace eka2l1 {
             attrib paging_attrib;
         };
 
-        #pragma pack(push, 1)
         struct rom_header {
             uint8_t jump[124];
             address restart_vector;
@@ -131,12 +135,17 @@ namespace eka2l1 {
 
             int rom_page_idx;
 
-            uint32_t compressed_unpaged_start;
-            uint32_t unpaged_compressed_size;
+            demand_paging_config demand_page_config;
+
+            std::uint32_t compressed_unpaged_start;
+            std::uint32_t unpaged_compressed_size;
+            std::uint32_t unpaged_uncompressed_size;
 
             uint32_t hcr_file_addr;
             uint32_t spare[36];
         };
+
+        static_assert(sizeof(rom_header) == 512);
         #pragma pack(pop)
 
         struct rom_section_header {
@@ -202,6 +211,26 @@ namespace eka2l1 {
             root_dir_list root;
         };
 
+        enum rom_defrag_error {
+            ROM_DEFRAG_ERROR_INVALID_ROM = -1,
+            ROM_DEFRAG_ERROR_UNSUPPORTED = -2,
+            ROM_DEFRAG_ERROR_READ_WRITE_FAIL = -3
+        };
+
         std::optional<rom> load_rom(common::ro_stream *stream);
+
+        /**
+         * @brief Defragment any pages of ROM that's compressed or just unzip the ROM overall
+         * 
+         * For EKA1 ROM, when detected, nothing will happen. That's the whole exception.
+         * 
+         * @param stream        The ROM binary stream.
+         * @param dest_stream   Destination stream that will contains defrag'ed data.
+         * 
+         * @returns 0 on nothing happens, > 0 on success, < 0 on error.
+         */
+        int defrag_rom(common::ro_stream *stream, common::wo_stream *dest_stream);
+        bool dump_rom_files(common::ro_stream *stream, const std::string &dest_base, std::atomic<int> &progress,
+            const int max_progress = 100);
     }
 }
