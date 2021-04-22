@@ -119,36 +119,35 @@ namespace eka2l1 {
         struct device_wizard {
             enum device_wizard_stage {
                 WELCOME_MESSAGE = 0,
-                SPECIFY_FILES = 1,
+                SPECIFY_FILE = 1,
+                SPECIFY_FILE_EXTRA = 2,
                 INSTALL = 2,
                 ENDING = 3,
                 FINAL_FOR_REAL = 4
             } stage;
 
             enum installation_type {
-                INSTALLATION_TYPE_RPKG = 0,
-                INSTALLATION_TYPE_RAW_DUMP = 1
+                INSTALLATION_TYPE_DEVICE_DUMP = 0,
+                INSTALLATION_TYPE_FIRMWARE = 1
             } device_install_type;
 
-            std::string current_rom_path;
+            std::string current_rom_or_vpl_path;
             std::string current_rpkg_path;
 
+            bool both_exist[2];
             bool should_continue;
-            bool should_continue_temps[2];
+            bool need_extra_rpkg;
 
-            std::atomic<bool> extract_rpkg_done;
-            std::atomic<bool> copy_rom_done;
+            std::atomic<bool> stage_done[2];
+            std::atomic<int> progress_tracker[2];
             std::atomic<int> failure;
-            std::atomic<int> progress_tracker;
 
             std::unique_ptr<std::thread> install_thread;
 
             explicit device_wizard()
                 : stage(WELCOME_MESSAGE)
-                , extract_rpkg_done(false)
-                , copy_rom_done(false)
                 , failure(false)
-                , device_install_type(INSTALLATION_TYPE_RPKG) {
+                , device_install_type(INSTALLATION_TYPE_DEVICE_DUMP) {
             }
         } device_wizard_state;
 

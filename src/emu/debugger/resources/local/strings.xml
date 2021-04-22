@@ -134,16 +134,17 @@
 
     <string name="install_device_wizard_title">Install device wizard</string>
     <string name="install_device_wizard_welcome_msg">Welcome to install device wizard! To get started, please press the "Continue" button.</string>
-    <string name="install_device_wizard_raw_dump_type_name">Raw dump</string>
-    <string name="install_device_wizard_rpkg_type_name">RPKG</string>
+    <string name="install_device_wizard_device_dump_type_name">Device dump</string>
+    <string name="install_device_wizard_firmware_type_name">Firmware</string>
     <string name="install_device_choose_method_msg">Choose installation method</string>
     <string name="install_device_rpkg_choose_msg">Please specify the repackage file (RPKG):</string>
-    <string name="install_device_raw_dump_choose_msg">Please specify raw Z: drive dump folder:</string>
+    <string name="install_device_firmware_vpl_choose_msg">Please specify the firmware description file (VPL):</string>
     <string name="install_device_rom_choose_msg">Please specify the ROM file:</string>
+    <string name="install_device_note_may_need_rpkg">For S60v3 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string> 
     <string name="install_device_wait_install_msg">Please wait while we install the device!</string>
-    <string name="install_device_progress_raw_dump_msg">Copying raw dump ({}%)</string>
-    <string name="install_device_progress_rpkg_msg">Extract the RPKG</string>
-    <string name="install_device_progress_rom_msg">Copy the ROM</string>
+    <string name="install_device_progress_rpkg_msg">Extract the RPKG ({}%)</string>
+    <string name="install_device_progress_rom_msg">Installing the ROM ({}%)</string>
+    <string name="install_device_progress_fpsx_msg">Installing FPSX files ({}%)</string>
     <string name="install_device_install_rpkg_corrupt_msg">The RPKG file provided is corrupt!</string>
     <string name="install_device_rpkg_file_not_found_msg">RPKG file specified can't be opened!</string>
     <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>

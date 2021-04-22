@@ -197,10 +197,7 @@ namespace eka2l1 {
         }
 
         should_app_launch_use_new_style = conf->ui_new_style;
-
         localised_strings = common::get_localised_string_table("resources", "strings.xml", static_cast<language>(conf->emulator_language));
-        std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
-            false);
 
         // Check if no device is installed
         device_manager *dvc_mngr = sys->get_device_manager();
