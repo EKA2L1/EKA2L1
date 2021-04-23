@@ -299,10 +299,6 @@ namespace eka2l1 {
                         wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_product_determine_fail_msg");
                         break;
 
-                    case device_installation_raw_dump_fail_to_copy:
-                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_raw_dump_fail_to_copy_msg");
-                        break;
-
                     case device_installation_rom_fail_to_copy:
                         wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rom_fail_to_copy_msg");
                         break;
