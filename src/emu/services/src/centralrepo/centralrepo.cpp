@@ -353,64 +353,65 @@ namespace eka2l1 {
             std::u16string repo_dir{ drive_to_char16(drv) };
 
             // Don't add separate firmware code on rom drive (it already did itself)
-            std::u16string repo_folder = repo_dir + ((drv == rom_drv) ? private_dir_persists : private_dir_persists_separate_firm);
-            std::u16string repo_folder_txt = repo_dir + private_dir_persists;
+            std::vector<std::u16string> repo_folder_to_searches;
+            if (drv != rom_drv) {
+                repo_folder_to_searches.push_back(repo_dir + private_dir_persists_separate_firm);
+            }
 
-            if (is_first_repo && !io->exist(repo_folder)) {
-                // Create one if it doesn't exist, for the future
-                io->create_directories(repo_folder);
-            } else {
-                // We can continue already
-                std::u16string repo_path = repo_folder + repocre;
+            repo_folder_to_searches.push_back(repo_dir + private_dir_persists);
 
-                if (io->exist(repo_path)) {
-                    // Load and check for success
-                    symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
+            for (const std::u16string &repo_folder: repo_folder_to_searches) {    
+                if (is_first_repo && !io->exist(repo_folder)) {
+                    // Create one if it doesn't exist, for the future
+                    io->create_directories(repo_folder);
+                } else {
+                    // We can continue already
+                    std::u16string repo_path = repo_folder + repocre;
 
-                    if (!repofile) {
-                        LOG_ERROR(SERVICE_CENREP, "Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
+                    if (io->exist(repo_path)) {
+                        // Load and check for success
+                        symfile repofile = io->open_file(repo_path, READ_MODE | BIN_MODE);
+
+                        if (!repofile) {
+                            LOG_ERROR(SERVICE_CENREP, "Found repo but open failed: {}", common::ucs2_to_utf8(repo_path));
+                            continue;
+                        }
+
+                        std::vector<std::uint8_t> buf;
+                        buf.resize(repofile->size());
+
+                        repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
+                        repofile->close();
+
+                        common::chunkyseri seri(&buf[0], buf.size(), common::SERI_MODE_READ);
+
+                        if (int err = do_state_for_cre(seri, *repo)) {
+                            LOG_ERROR(SERVICE_CENREP, "Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
+                            continue;
+                        }
+
+                        repo->reside_place = avail_drives[0];
+                        repo->access_count = 1;
+
                         avail_drives.pop_back();
-
-                        return -1;
+                        return 0;
                     }
 
-                    std::vector<std::uint8_t> buf;
-                    buf.resize(repofile->size());
+                    // Try to load the INI
+                    auto path = io->get_raw_path(repo_folder + repoini);
 
-                    repofile->read_file(&buf[0], 1, static_cast<std::uint32_t>(buf.size()));
-                    repofile->close();
-
-                    common::chunkyseri seri(&buf[0], buf.size(), common::SERI_MODE_READ);
-
-                    if (int err = do_state_for_cre(seri, *repo)) {
-                        LOG_ERROR(SERVICE_CENREP, "Loading CRE file failed with code: 0x{:X}, repo 0x{:X}", err, key);
-                        avail_drives.pop_back();
-
-                        return -1;
+                    if (!path) {
+                        continue;
                     }
 
-                    repo->reside_place = avail_drives[0];
-                    repo->access_count = 1;
+                    repo->uid = key;
+                    if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), *repo)) {
+                        repo->reside_place = avail_drives[0];
+                        repo->access_count = 1;
+                        avail_drives.pop_back();
 
-                    avail_drives.pop_back();
-                    return 0;
-                }
-
-                // Try to load the INI
-                auto path = io->get_raw_path(repo_folder_txt + repoini);
-
-                if (!path) {
-                    avail_drives.pop_back();
-                    return -1;
-                }
-
-                repo->uid = key;
-                if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), *repo)) {
-                    repo->reside_place = avail_drives[0];
-                    repo->access_count = 1;
-                    avail_drives.pop_back();
-
-                    return 0;
+                        return 0;
+                    }
                 }
             }
         }
