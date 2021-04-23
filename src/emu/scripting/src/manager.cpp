@@ -230,7 +230,7 @@ namespace eka2l1::manager {
 
         auto &source_insts = breakpoints[aligned].source_insts_;
 
-        if (ite == breakpoints[aligned].list_.end() || source_insts.find(pr->get_uid()) != source_insts.end()) {
+        if (ite == breakpoints[aligned].list_.end() || source_insts.find(pr->get_uid()) != source_insts.end() || !data) {
             return;
         }
 
