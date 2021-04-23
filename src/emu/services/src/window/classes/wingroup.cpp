@@ -183,6 +183,15 @@ namespace eka2l1::epoc {
         name = std::move(*name_re);
         context.complete(epoc::error_none);
     }
+    
+    void window_group::free(service::ipc_context &context, ws_cmd &cmd) {
+        // Try to redraw the screen
+        on_command_batch_done(context);
+        remove_from_sibling_list();
+
+        context.complete(epoc::error_none);
+        client->delete_object(cmd.obj_handle);
+    }
 
     bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
@@ -196,6 +205,12 @@ namespace eka2l1::epoc {
         TWsWindowOpcodes op = static_cast<decltype(op)>(cmd.header.op);
 
         switch (op) {
+        case EWsWinOpFree:
+            free(ctx, cmd);
+            need_free = true;
+
+            break;
+
         case EWsWinOpEnableScreenChangeEvents: {
             epoc::event_screen_change_user evt;
             evt.user = this;
