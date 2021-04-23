@@ -122,9 +122,9 @@
     <string name="install_device_wizard_firmware_type_name">Firmware</string>
     <string name="install_device_choose_method_msg">Elija el método de instalación</string>
     <string name="install_device_rpkg_choose_msg">Especifique el archivo RPKG:</string>
-    <string name="install_device_firmware_vpl_choose_msg">Please specify the firmware description file (VPL):</string>
+    <string name="install_device_firmware_vpl_choose_msg">Por favor especifique el fichero de descripción de firmware (VPL):</string>
     <string name="install_device_rom_choose_msg">Especifique el archivo ROM:</string>
-    <string name="install_device_note_may_need_rpkg">For S60v3 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="install_device_note_may_need_rpkg">Para dispositivos S60v3 o superior, puede que también sea necesario proveer un fichero adicional llamado RPKG. El selector de ruta aparecerá en caso de que el instalador lo determine necesario.</string>
     <string name="install_device_wait_install_msg">Por favor, espere mientras se instala el dispositivo.</string>
     <string name="install_device_progress_rpkg_msg">Extract the RPKG ({}%)</string>
     <string name="install_device_progress_rom_msg">Installing the ROM ({}%)</string>
