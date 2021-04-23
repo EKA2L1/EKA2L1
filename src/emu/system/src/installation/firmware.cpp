@@ -101,6 +101,11 @@ namespace eka2l1 {
     static device_installation_error dump_data_from_fpsx(loader::firmware::fpsx_header &header, common::ro_stream &stream, const std::string &drives_c_path,
         const std::string &drives_e_path, const std::string &drives_z_path, const std::string &rom_resident_path,
         std::atomic<int> &progress, const int max_progress) {
+        if (header.type_ == loader::firmware::FPSX_TYPE_INVALID) {
+            progress += max_progress;
+            return device_installation_none;
+        }
+
         std::vector<char> buf;
 
         if (header.type_ == loader::firmware::FPSX_TYPE_CORE) {
