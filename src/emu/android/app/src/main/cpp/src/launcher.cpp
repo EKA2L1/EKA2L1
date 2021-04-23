@@ -24,7 +24,7 @@
 #include <package/manager.h>
 
 #include <services/fbs/fbs.h>
-#include <system/installation/raw_dump.h>
+#include <system/installation/firmware.h>
 #include <system/installation/rpkg.h>
 #include <common/path.h>
 #include <common/fileutils.h>
@@ -134,17 +134,33 @@ namespace eka2l1::android {
         return conf->device;
     }
 
+    bool launcher::does_rom_need_rpkg(const std::string &rom_path) {
+        return loader::should_install_requires_additional_rpkg(rom_path);
+    }
+
     device_installation_error launcher::install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg) {
         std::string firmware_code;
         std::atomic<int> progress_tracker;
         device_manager *dvc_mngr = sys->get_device_manager();
         device_installation_error result;
 
+        std::string root_c_path = add_path(conf->storage, "drives/c/");
+        std::string root_e_path = add_path(conf->storage, "drives/e/");
         std::string root_z_path = add_path(conf->storage, "drives/z/");
+        std::string rom_resident_path = add_path(conf->storage, "roms/");
+
+        bool need_add_rpkg = false;
+
         if (install_rpkg) {
-            result = eka2l1::loader::install_rpkg(dvc_mngr, rpkg_path, root_z_path, firmware_code, progress_tracker);
+            if (eka2l1::loader::should_install_requires_additional_rpkg(rom_path)) {
+                result = eka2l1::loader::install_rpkg(dvc_mngr, rpkg_path, root_z_path, firmware_code, progress_tracker);
+                need_add_rpkg = true;
+            } else {
+                result = eka2l1::loader::install_rom(dvc_mngr, rom_path, rom_resident_path, root_z_path, progress_tracker);
+            }
         } else {
-            result = eka2l1::loader::install_raw_dump(dvc_mngr, rpkg_path + eka2l1::get_separator(), root_z_path, firmware_code, progress_tracker);
+            result = eka2l1::install_firmware(dvc_mngr, rom_path, root_c_path, root_e_path, root_z_path, rom_resident_path,
+                [](const std::vector<std::string> &variants) -> int { return 0; }, progress_tracker);
         }
 
         if (result != device_installation_none) {
@@ -152,10 +168,14 @@ namespace eka2l1::android {
         }
 
         dvc_mngr->save_devices();
-        const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
 
-        eka2l1::create_directories(rom_directory);
-        common::copy_file(rom_path, add_path(rom_directory, "SYM.ROM"), true);
+        if (need_add_rpkg) {
+            const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
+
+            eka2l1::create_directories(rom_directory);
+            common::copy_file(rom_path, add_path(rom_directory, "SYM.ROM"), true);
+        }
+
         return device_installation_none;
     }
 

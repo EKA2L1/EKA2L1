@@ -5,6 +5,7 @@ add_library(epocloader
         include/loader/gdr.h
         include/loader/mbm.h
         include/loader/mif.h
+        include/loader/rofs.h
         include/loader/rom.h
         include/loader/romimage.h
         include/loader/rsc.h
@@ -18,6 +19,7 @@ add_library(epocloader
         src/gdr.cpp
         src/mbm.cpp
         src/mif.cpp
+        src/rofs.cpp
         src/rom.cpp
         src/romimage.cpp
         src/rsc.cpp

@@ -170,6 +170,17 @@ Java_com_github_eka2l1_emu_Emulator_installDevice(JNIEnv *env, jclass clazz, jst
 }
 
 extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_Emulator_doesRomNeedRPKG(JNIEnv* env, jclass clazz, jstring rom_path)
+{
+    const char *cstr = env->GetStringUTFChars(rom_path, nullptr);
+    const bool result = state->launcher->does_rom_need_rpkg(cstr);
+
+    env->ReleaseStringUTFChars(rom_path, cstr);
+    return result;
+}
+
+extern "C"
 JNIEXPORT jobjectArray JNICALL
 Java_com_github_eka2l1_emu_Emulator_getPackages(
         JNIEnv *env,

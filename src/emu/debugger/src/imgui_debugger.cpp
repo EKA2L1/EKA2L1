@@ -160,7 +160,11 @@ namespace eka2l1 {
         , should_package_manager_display_installer_text(false)
         , should_package_manager_display_one_button_only(false)
         , should_package_manager_display_language_choose(false)
+        , should_device_install_wizard_display_variant_select(false)
         , should_install_package(false)
+        , installer_langs(nullptr)
+        , device_install_variant_list(nullptr)
+        , device_install_variant_index(0)
         , should_show_app_launch(false)
         , should_app_launch_use_new_style(true)
         , should_still_focus_on_keyboard(true)
@@ -197,10 +201,7 @@ namespace eka2l1 {
         }
 
         should_app_launch_use_new_style = conf->ui_new_style;
-
         localised_strings = common::get_localised_string_table("resources", "strings.xml", static_cast<language>(conf->emulator_language));
-        std::fill(device_wizard_state.should_continue_temps, device_wizard_state.should_continue_temps + 2,
-            false);
 
         // Check if no device is installed
         device_manager *dvc_mngr = sys->get_device_manager();
@@ -667,8 +668,12 @@ namespace eka2l1 {
             show_app_launch();
         }
 
-        if (should_show_install_device_wizard) {
-            show_install_device();
+        if (should_device_install_wizard_display_variant_select) {
+            show_device_installer_choose_variant_popup();
+        } else {
+            if (should_show_install_device_wizard) {
+                show_install_device();
+            }
         }
 
         if (should_show_sd_card_mount) {

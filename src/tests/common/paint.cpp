@@ -27,7 +27,7 @@
 using namespace eka2l1;
 
 TEST_CASE("simple_line", "painter") {
-    common::wo_std_file_stream std_fstream_paint("testpaint.bmp");
+    common::wo_std_file_stream std_fstream_paint("testpaint.bmp", true);
     common::buffer_24bmp_pixel_plotter plotter;
     common::painter artist(&plotter);
 

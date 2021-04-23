@@ -3,6 +3,7 @@ if (NOT APPLE)
 endif()
 
 add_subdirectory(fpsxdump)
+add_subdirectory(rofsdump)
 add_subdirectory(mbm2bmp)
 add_subdirectory(skninfo)
 add_subdirectory(gdrdump)

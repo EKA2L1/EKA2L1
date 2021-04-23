@@ -48,7 +48,11 @@ public class Emulator {
     public static final int INSTALL_DEVICE_ERROR_ALREADY_EXIST = 5;
     public static final int INSTALL_DEVICE_ERROR_NO_LANGUAGE_FILE_PRESENT = 6;
     public static final int INSTALL_DEVICE_ERROR_GENERAL_FAILURE = 7;
-    public static final int INSTALL_DEVICE_RAW_DUMP_FAIL_TO_COPY = 8;
+    public static final int INSTALL_DEVICE_ERROR_ROM_FAIL_TO_COPY = 8;
+    public static final int INSTALL_DEVICE_ERROR_VPL_FILE_INVALID = 9;
+    public static final int INSTALL_DEVICE_ERROR_ROFS_CORRUPTED = 10;
+    public static final int INSTALL_DEVICE_ERROR_ROM_CORRUPTED = 11;
+    public static final int INSTALL_DEVICE_ERROR_FPSX_CORRUPTED = 12;
 
     private static boolean init;
     private static boolean load;
@@ -192,6 +196,8 @@ public class Emulator {
     public static native int getCurrentDevice();
 
     public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG);
+
+    public static native boolean doesRomNeedRPKG(String romPath);
 
     public static native String[] getPackages();
 

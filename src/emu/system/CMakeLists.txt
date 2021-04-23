@@ -1,11 +1,11 @@
 add_library(epoc
-        include/system/installation/raw_dump.h
+        include/system/installation/firmware.h
         include/system/installation/rpkg.h
         include/system/devices.h
         include/system/epoc.h
         include/system/hal.h
         include/system/software.h
-        src/installation/raw_dump.cpp
+        src/installation/firmware.cpp
         src/installation/rpkg.cpp
         src/devices.cpp
         src/epoc.cpp
@@ -27,7 +27,9 @@ target_link_libraries(epoc PRIVATE
         epocloader
         epocpkg
         epocservs
-        gdbstub)
+        FAT
+        gdbstub
+        pugixml)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         target_link_libraries(epoc PUBLIC symemu)

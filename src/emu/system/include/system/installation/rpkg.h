@@ -32,6 +32,9 @@ namespace eka2l1 {
             std::uint64_t data_size;
         };
 
-        device_installation_error install_rpkg(device_manager *dvc, const std::string &path, const std::string &devices_rom_path, std::string &firmware_code, std::atomic<int> &res);
+        bool should_install_requires_additional_rpkg(const std::string &path);
+
+        device_installation_error install_rom(device_manager *dvc, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, std::atomic<int> &res, const int max_progress = 100);
+        device_installation_error install_rpkg(device_manager *dvc, const std::string &path, const std::string &devices_rom_path, std::string &firmware_code, std::atomic<int> &res, const int max_progress = 100);
     }
 }

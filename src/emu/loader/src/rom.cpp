@@ -20,7 +20,10 @@
 
 #include <common/algorithm.h>
 #include <common/buffer.h>
+#include <common/bytepair.h>
 #include <common/log.h>
+#include <common/path.h>
+#include <common/cvt.h>
 
 #include <loader/rom.h>
 
@@ -73,9 +76,9 @@ namespace eka2l1::loader {
         readed_size += stream->read(&header.compress_type, 4);
         readed_size += stream->read(&header.compress_size, 4);
         readed_size += stream->read(&header.uncompress_size, 4);
-        readed_size += stream->read(&header.disabled_caps, 2);
-        readed_size += stream->read(&header.trace_mask, 8);
-        readed_size += stream->read(&header.initial_btrace_filter, 4);
+        readed_size += stream->read(&header.disabled_caps, sizeof(header.disabled_caps));
+        readed_size += stream->read(&header.trace_mask, sizeof(header.trace_mask));
+        readed_size += stream->read(&header.initial_btrace_filter, sizeof(header.initial_btrace_filter));
 
         readed_size += stream->read(&header.initial_btrace_buf, 4);
         readed_size += stream->read(&header.initial_btrace_mode, 4);
@@ -218,5 +221,183 @@ namespace eka2l1::loader {
         romf.root = read_root_dir_list(romf, stream);
 
         return romf;
+    }
+
+    int defrag_rom(common::ro_stream *stream, common::wo_stream *dest_stream) {
+        std::optional<rom> rom_parse = load_rom(stream);
+        if (!rom_parse.has_value()) {
+            return ROM_DEFRAG_ERROR_INVALID_ROM;
+        }
+
+        static constexpr std::uint32_t EKA1_ROM_BASE = 0x50000000;
+        if (rom_parse->header.rom_base == EKA1_ROM_BASE) {
+            return 0;
+        }
+
+        if (rom_parse->header.compress_type != 0) {
+            LOG_ERROR(LOADER, "ROM is wholely compressed with type 0x{:X}, currently unsupported", rom_parse->header.compress_type);
+            return ROM_DEFRAG_ERROR_UNSUPPORTED;
+        }
+
+        if (!rom_parse->header.rom_page_idx) {
+            return 0;
+        }
+
+        stream->seek(0, common::seek_where::beg);
+
+        // The unpaged part of the ROM should be copied identically
+        static constexpr std::int64_t CHUNK_SIZE = 0x10000;
+        std::vector<std::uint8_t> buffer;
+        std::int64_t left = rom_parse->header.pageable_rom_start;
+        
+        while (left > 0) {
+            const std::int64_t take = common::min(left, CHUNK_SIZE);
+            buffer.resize(take);
+
+            if (stream->read(buffer.data(), take) != take) {
+                return ROM_DEFRAG_ERROR_READ_WRITE_FAIL;
+            }
+
+            if (dest_stream->write(buffer.data(), take) != take) {
+                return ROM_DEFRAG_ERROR_READ_WRITE_FAIL;
+            }
+
+            left -= take;
+        }
+
+        static constexpr std::uint32_t EKA_ROM_PAGE_SIZE = 0x1000;
+
+        const std::uint32_t total_page_to_seek = (rom_parse->header.uncompress_size - rom_parse->header.pageable_rom_start
+            + EKA_ROM_PAGE_SIZE - 1) / EKA_ROM_PAGE_SIZE;
+        const std::uint32_t page_start = rom_parse->header.pageable_rom_start / EKA_ROM_PAGE_SIZE;
+
+        buffer.resize(EKA_ROM_PAGE_SIZE);
+        std::vector<std::uint8_t> source_buffer;
+
+        for (std::size_t i = 0; i < total_page_to_seek; i++) {
+            stream->seek(rom_parse->header.rom_page_idx + (page_start + i) * sizeof(rom_page_info),
+                common::seek_where::beg);
+
+            rom_page_info info;
+            if (stream->read(&info, sizeof(info)) != sizeof(info)) {
+                return 0;
+            }
+
+            if (!(info.paging_attrib & rom_page_info::attrib::pageable)) {
+                LOG_ERROR(LOADER, "Page {} is not pageable!", page_start + i);
+                return ROM_DEFRAG_ERROR_UNSUPPORTED;
+            }
+
+            if (info.data_size == 0) {
+                std::fill(buffer.begin(), buffer.end(), 0xFF);
+            } else {
+                stream->seek(info.data_start, common::seek_where::beg);
+                source_buffer.resize(info.data_size);
+
+                if (stream->read(source_buffer.data(), info.data_size) != info.data_size) {
+                    return ROM_DEFRAG_ERROR_READ_WRITE_FAIL;
+                }
+
+                if (info.compression_type == rom_page_info::compression::none) {
+                    std::copy(source_buffer.begin(), source_buffer.end(), buffer.begin());
+                } else {
+                    const int result = common::bytepair_decompress(buffer.data(), static_cast<std::uint32_t>(buffer.size()),
+                        source_buffer.data(), static_cast<std::uint32_t>(source_buffer.size()));
+
+                    if (result < 0) {
+                        LOG_ERROR(LOADER, "Decompression failed for page {}!", page_start + i);
+                        return ROM_DEFRAG_ERROR_READ_WRITE_FAIL;
+                    }
+                }
+            }
+
+            if (dest_stream->write(buffer.data(), buffer.size()) != buffer.size()) {
+                return ROM_DEFRAG_ERROR_READ_WRITE_FAIL;
+            }
+        }
+
+        return 1;
+    }
+
+    static bool dump_rom_file(common::ro_stream *stream, rom_entry &entry, const std::string &path_base, const std::uint32_t rom_base,
+        std::atomic<int> &progress, const int base_progress, const int max_progress) {
+        std::u16string fname = entry.name;
+        if (common::is_platform_case_sensitive()) {
+            fname = common::lowercase_ucs2_string(fname);
+        }
+
+        fname = eka2l1::add_path(common::utf8_to_ucs2(path_base), fname);
+
+        std::ofstream file_out_stream(common::ucs2_to_utf8(fname), std::ios_base::binary);
+        stream->seek(entry.address_lin - rom_base, common::seek_where::beg);
+
+        static constexpr std::int64_t MAX_CHUNK_SIZE = 0x10000;
+        std::int64_t size_left = static_cast<std::int64_t>(entry.size);
+
+        std::vector<char> buf;
+
+        while (size_left > 0) {
+            const std::int64_t size_take = common::min(MAX_CHUNK_SIZE, size_left);
+            buf.resize(size_take);
+
+            stream->read(buf.data(), buf.size());
+            file_out_stream.write(buf.data(), buf.size());
+
+            progress = common::max(progress.load(), base_progress + static_cast<int>(stream->tell() * max_progress / stream->size()));
+
+            size_left -= size_take;
+        }
+
+        return true;
+    }
+
+    static bool dump_rom_directory(common::ro_stream *stream, rom_dir &dir, std::string base, std::uint32_t rom_base,
+        std::atomic<int> &progress, const int base_progress, const int max_progress) {
+        eka2l1::create_directories(base);
+
+        for (auto &entry: dir.entries) {
+            if (!(entry.attrib & 0x10) && (entry.size != 0)) {
+                if (!dump_rom_file(stream, entry, base, rom_base, progress, base_progress, max_progress)) {
+                    return false;
+                }
+            }
+        }
+
+        for (auto &subdir: dir.subdirs) {
+            std::string new_base;
+
+            if (common::is_platform_case_sensitive()) {
+                new_base = eka2l1::add_path(base, common::lowercase_string(common::ucs2_to_utf8(
+                    subdir.name)));
+            } else {
+                new_base = eka2l1::add_path(base, common::ucs2_to_utf8(subdir.name));
+            }
+
+            if (!dump_rom_directory(stream, subdir, new_base, rom_base, progress, base_progress, max_progress)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool dump_rom_files(common::ro_stream *stream, const std::string &dest_base, std::atomic<int> &progress,
+        const int max_progress) {
+        std::optional<rom> rom_parse_result = load_rom(stream);
+        if (!rom_parse_result.has_value()) {
+            return false;
+        }
+
+        int base_progress = progress.load();
+
+        for (root_dir &rdir: rom_parse_result->root.root_dirs) {
+            if (!dump_rom_directory(stream, rdir.dir, dest_base, rom_parse_result->header.rom_base, progress, base_progress, max_progress)) {
+                return false;
+            }
+        }
+
+        // Make it full!
+        progress = base_progress + max_progress;
+        return true;
     }
 }
