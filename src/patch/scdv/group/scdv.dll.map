@@ -15,6 +15,7 @@
 [epoc81a]
 4 2       ; NewScreenDeviceL__14CFbsDrawDeviceG11TScreenInfo12TDisplayMode
 2 10      ; DisplayMode16M__14CFbsDrawDevice
+6 12      ; NewScreenDeviceL__14CFbsDrawDevicei12TDisplayMode
 7 9       ; NewL__19CDirectScreenBitmap
 
 [epoc80]
