@@ -850,7 +850,16 @@ namespace eka2l1::epoc {
         info_copy.target_length = (info_copy.flags & IPC_DIR_WRITE) ? des_des->get_length() : des_des->get_max_length(crr_process);
         info_copy.flags |= IPC_HLE_EKA1;
 
-        return do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, info_copy, start_offset);
+        const std::int32_t result = do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, info_copy, start_offset);
+        if (result < 0) {
+            return result;
+        }
+
+        if (!(info_copy.flags & IPC_DIR_WRITE)) {
+            des_des->set_length(crr_process, result);
+        }
+
+        return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, message_client, kernel::handle h, kernel::owner_type owner) {
