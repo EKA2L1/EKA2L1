@@ -226,14 +226,14 @@ namespace eka2l1 {
 
         thread::thread(kernel_system *kern, memory_system *mem, ntimer *timing, kernel::process *owner,
             kernel::access_type access,
-            const std::string &name, const address epa, const size_t stack_size,
+            const std::string &name, const address epa, const size_t stack_size_,
             const size_t min_heap_size, const size_t max_heap_size,
             bool initial,
             ptr<void> usrdata,
             ptr<void> allocator,
             thread_priority pri)
             : kernel_obj(kern, name, reinterpret_cast<kernel_obj *>(owner), access)
-            , stack_size(static_cast<int>(stack_size))
+            , stack_size(static_cast<int>(stack_size_))
             , min_heap_size(static_cast<int>(min_heap_size))
             , max_heap_size(static_cast<int>(max_heap_size))
             , usrdata(usrdata)
@@ -268,7 +268,8 @@ namespace eka2l1 {
             obj_type = object_type::thread;
             state = thread_state::create; // Suspended.
 
-            /* Here, since reschedule is needed for switching thread and process, primary thread handle are owned by kernel. */
+            // Stack size is rounded to page unit in actual kernel
+            stack_size = static_cast<int>(common::align(static_cast<std::size_t>(stack_size), mem->get_page_size()));
 
             stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot_read_write,
                 chunk_type::normal, chunk_access::local, chunk_attrib::none, 0x00);
@@ -280,8 +281,6 @@ namespace eka2l1 {
 
             sync_msg = kern->create_msg(owner_type::kernel);
             sync_msg->lock_free();
-
-            /* Create TDesC string. Combine of string length and name data (USC2) */
 
             std::u16string name_16(name.begin(), name.end());
             memcpy(name_chunk->host_base(), name_16.data(), name.length() * 2);
