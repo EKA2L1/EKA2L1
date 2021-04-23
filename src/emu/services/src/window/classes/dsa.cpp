@@ -142,7 +142,7 @@ namespace eka2l1::epoc {
 
         if ((max_rects == 0) || (state_ != state_prepare)) {
             // What? Nothing?
-            if (sync_thread_) {
+            if ((sync_thread_) && (client->client_version().build <= WS_OLDARCH_VER)) {
                 // Old DSA want 0
                 ctx.complete(0);
             } else {
