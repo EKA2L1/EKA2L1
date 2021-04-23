@@ -122,7 +122,7 @@
     <string name="install_device_wizard_firmware_type_name">Firmware</string>
     <string name="install_device_choose_method_msg">Pilih metode instalasi</string>
     <string name="install_device_rpkg_choose_msg">Harap tentukan file pengemasan ulang (RPKG):</string>
-    <string name="install_device_firmware_vpl_choose_msg">Mohon tetapkan file deskripsi firmware (VPL):</string>
+    <string name="install_device_firmware_vpl_choose_msg">Harap tentukan file deskripsi firmware (VPL):</string>
     <string name="install_device_rom_choose_msg">Harap tentukan file ROM:</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v3 atau lebih tinggi, diperlukan file tambahan yang bernama RPKG. Jika perangkat tersebut terdeteksi maka muncul permintaan untuk memasukkan file tersebut.</string>
     <string name="install_device_wait_install_msg">Harap tunggu sementara kami menginstal perangkat device!</string>
