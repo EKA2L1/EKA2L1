@@ -58,30 +58,33 @@ namespace eka2l1::epoc {
     std::optional<std::u16string> coe_data_storage::default_fep() {
         eka2l1::central_repo *rep = fep_repo();
         eka2l1::central_repo_entry *ccre = get_ccr_entry(rep, fep_framework_repo_key_default_fepid,
-            eka2l1::central_repo_entry_type::string16);
+            eka2l1::central_repo_entry_type::string);
         
         if (!ccre) {
             return std::nullopt;
         }
 
-        return ccre->data.str16d;
+        return std::u16string(reinterpret_cast<char16_t*>(ccre->data.strd.data()), ccre->data.strd.size() / 2);
     }
 
     void coe_data_storage::default_fep(const std::u16string &the_fep) {
         eka2l1::central_repo *rep = fep_repo();
         eka2l1::central_repo_entry *ccre = get_ccr_entry(rep, fep_framework_repo_key_default_fepid,
-            eka2l1::central_repo_entry_type::string16);
+            eka2l1::central_repo_entry_type::string);
 
         if (!ccre) {
             eka2l1::central_repo_entry_variant var;
-            var.etype = central_repo_entry_type::string16;
-            var.str16d = the_fep;
+            var.etype = central_repo_entry_type::string;
+            var.strd.resize(the_fep.length() * 2);
+
+            std::memcpy(var.strd.data(), the_fep.data(), var.strd.size());
 
             if (!rep->add_new_entry(fep_framework_repo_key_default_fepid, var)) {
                 LOG_WARN(SERVICE_UI, "Unable to add default fepid entry to cenrep");
             }
         } else {
-            ccre->data.str16d = the_fep;
+            ccre->data.strd.resize(the_fep.length() * 2);
+            std::memcpy(ccre->data.strd.data(), the_fep.data(), ccre->data.strd.size());
         }
     }
 

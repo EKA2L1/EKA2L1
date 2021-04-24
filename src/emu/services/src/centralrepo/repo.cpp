@@ -329,16 +329,12 @@ namespace eka2l1 {
         }
 
         case cen_rep_set_string: {
-            if ((entry->data.etype != central_repo_entry_type::string8) || (entry->data.etype != central_repo_entry_type::string16)) {
+            if (entry->data.etype != central_repo_entry_type::string) {
                 ctx->complete(epoc::error_argument);
                 break;
             }
 
             entry->data.strd = *ctx->get_argument_value<std::string>(1);
-            if (entry->data.etype == central_repo_entry_type::string16) {
-                entry->data.str16d = common::utf8_to_ucs2(entry->data.strd);
-            }
-
             break;
         }
 
@@ -400,12 +396,9 @@ namespace eka2l1 {
         }
 
         case cen_rep_get_string: {
-            if (entry->data.etype == central_repo_entry_type::string8) {
+            if (entry->data.etype == central_repo_entry_type::string) {
                 ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
                     static_cast<std::uint32_t>(entry->data.strd.length()));
-            } else if (entry->data.etype == central_repo_entry_type::string16) {
-                ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.str16d[0]),
-                    static_cast<std::uint32_t>(entry->data.str16d.length() * 2));
             } else {
                 ctx->complete(epoc::error_argument);
                 return;
@@ -519,13 +512,9 @@ namespace eka2l1 {
                     cache_arg = ss.value();
                 }
 
-                if (entry.data.etype == central_repo_entry_type::string8) {
+                if (entry.data.etype == central_repo_entry_type::string) {
                     // It must be string type
                     is_ok = (entry.data.strd == cache_arg);
-                } else if (entry.data.etype == central_repo_entry_type::string16) {
-                    if ((cache_arg.size() / 2) == (entry.data.str16d.size())) {
-                        is_ok = std::memcmp(cache_arg.data(), entry.data.str16d.data(), cache_arg.size());   
-                    }
                 } else {
                     break;
                 }

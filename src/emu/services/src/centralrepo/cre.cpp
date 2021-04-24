@@ -159,13 +159,8 @@ namespace eka2l1 {
                     break;
                 }
 
-                case central_repo_entry_type::string8: {
+                case central_repo_entry_type::string: {
                     entry_type = 2;
-                    break;
-                }
-
-                case central_repo_entry_type::string16: {
-                    entry_type = 3;
                     break;
                 }
 
@@ -176,31 +171,28 @@ namespace eka2l1 {
 
             seri.absorb(entry_type);
 
-            switch (entry_type) {
-            case 0: {
-                entry.data.etype = central_repo_entry_type::integer;
-                break;
-            }
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                switch (entry_type) {
+                case 0: {
+                    entry.data.etype = central_repo_entry_type::integer;
+                    break;
+                }
 
-            case 1: {
-                entry.data.etype = central_repo_entry_type::real;
-                break;
-            }
+                case 1: {
+                    entry.data.etype = central_repo_entry_type::real;
+                    break;
+                }
 
-            case 2: {
-                entry.data.etype = central_repo_entry_type::string8;
-                break;
-            }
+                case 2: {
+                    entry.data.etype = central_repo_entry_type::string;
+                    break;
+                }
 
-            case 3: {
-                entry.data.etype = central_repo_entry_type::string16;
-                break;
-            }
-
-            default: {
-                entry.data.etype = central_repo_entry_type::none;
-                break;
-            }
+                default: {
+                    entry.data.etype = central_repo_entry_type::none;
+                    break;
+                }
+                }
             }
 
             switch (entry.data.etype) {
@@ -222,14 +214,8 @@ namespace eka2l1 {
                 break;
             }
 
-            case central_repo_entry_type::string8: {
+            case central_repo_entry_type::string: {
                 epoc::absorb_des_string(entry.data.strd, seri, false);
-                break;
-            }
-
-            case central_repo_entry_type::string16: {
-                // TODO: Use compression
-                epoc::absorb_des_string(entry.data.str16d, seri, false);
                 break;
             }
 
