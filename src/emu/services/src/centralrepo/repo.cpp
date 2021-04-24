@@ -527,8 +527,7 @@ namespace eka2l1 {
                         is_ok = std::memcmp(cache_arg.data(), entry.data.str16d.data(), cache_arg.size());   
                     }
                 } else {
-                    ctx->complete(epoc::error_argument);
-                    return;
+                    break;
                 }
 
                 if (is_ok) {
