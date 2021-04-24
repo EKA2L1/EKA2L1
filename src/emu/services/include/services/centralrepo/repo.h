@@ -45,7 +45,6 @@ namespace eka2l1 {
         std::uint64_t intd;
         double reald;
         std::string strd;
-        std::u16string str16d;
     };
 
     struct central_repo_entry {

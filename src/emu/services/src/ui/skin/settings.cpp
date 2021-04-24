@@ -68,12 +68,13 @@ namespace eka2l1::epoc {
     static bool read_pid(central_repo_entry *entry_, pid &pid_, const int base = 16, const bool uid_only = false) {
         pid_.second = 0;
 
-        if (entry_->data.etype != central_repo_entry_type::string16) {
+        if (entry_->data.etype != central_repo_entry_type::string) {
             LOG_ERROR(SERVICE_UI, "Data of entry PID is not buffer. Reading PID failed!");
             return false;
         }
 
-        const std::string uid_in_str = common::ucs2_to_utf8(entry_->data.str16d);
+        const std::string uid_in_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t*>(entry_->data.strd.data()),
+            entry_->data.strd.size() / 2));
 
         if (uid_in_str.length() <= 8 || uid_only) {
             // Only UID

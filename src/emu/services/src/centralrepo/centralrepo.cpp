@@ -47,12 +47,12 @@ namespace eka2l1 {
         }
 
         if (tok == "string8") {
-            t = central_repo_entry_type::string8;
+            t = central_repo_entry_type::string;
             return true;
         }
 
         if (tok == "string") {
-            t = central_repo_entry_type::string16;
+            t = central_repo_entry_type::string;
             return true;
         }
 
@@ -62,7 +62,7 @@ namespace eka2l1 {
         }
 
         if (tok == "binary") {
-            t = central_repo_entry_type::string8;
+            t = central_repo_entry_type::string;
             return true;
         }
 
@@ -175,14 +175,13 @@ namespace eka2l1 {
                 break;
             }
 
-            case central_repo_entry_type::string8:
-            case central_repo_entry_type::string16: {
+            case central_repo_entry_type::string: {
                 entry.data.strd = p->get<common::ini_value>(1)->get_value();
-                if (entry.data.etype == central_repo_entry_type::string16) {
-                    entry.data.str16d = common::utf8_to_ucs2(entry.data.strd);
-                    entry.data.strd.clear();
+                if (common::compare_ignore_case(entry_type.data(), "string") == 0) {
+                    std::u16string str16 = common::utf8_to_ucs2(entry.data.strd);
+                    entry.data.strd.resize(str16.length() * 2);
+                    std::memcpy(entry.data.strd.data(), str16.data(), entry.data.strd.length());
                 }
-
                 break;
             }
 
@@ -334,6 +333,8 @@ namespace eka2l1 {
         if (is_first_repo) {
             rescan_drives(io);
         }
+
+        LOG_TRACE(SERVICE_CENREP, "Try to open repo 0x{:X}", key);
 
         std::u16string keystr = common::utf8_to_ucs2(common::to_string(key, std::hex));
 
