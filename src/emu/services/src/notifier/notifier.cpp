@@ -121,6 +121,7 @@ namespace eka2l1 {
             break;
 
         case notifier_start:
+        case notifier_update:
             start_notifier(ctx);
             break;
 
