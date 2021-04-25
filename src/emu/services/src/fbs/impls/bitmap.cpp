@@ -200,8 +200,15 @@ namespace eka2l1 {
             }
 
             if (data) {
-                data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) -
-                    reinterpret_cast<const std::uint8_t *>(base));
+                if (data < base) {
+                    data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(base) -
+                        reinterpret_cast<const std::uint8_t *>(data));
+
+                    data_offset_ *= -1;
+                } else {
+                    data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) -
+                        reinterpret_cast<const std::uint8_t *>(base));
+                }
             } else {
                 data_offset_ = 0;
             }
@@ -966,6 +973,7 @@ namespace eka2l1 {
         std::uint8_t *base = nullptr;
 
         const std::uint32_t reserved_each_size = calculate_reserved_each_side(new_size.y);
+        bool offset_from_me_now = false;
 
         if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
             new_bmp = bmp;
@@ -979,7 +987,9 @@ namespace eka2l1 {
                 base = fbss->get_large_chunk_base();
             } else {
                 dest_data = reinterpret_cast<std::uint8_t*>(fbss->allocate_general_data_impl(size_added_reserve));
-                base = reinterpret_cast<std::uint8_t*>(new_bmp);
+                base = reinterpret_cast<std::uint8_t*>(new_bmp->bitmap_);
+
+                offset_from_me_now = true;
             }
 
             dest_data += new_bmp->reserved_height_each_side_ * dest_byte_width;
@@ -1036,6 +1046,7 @@ namespace eka2l1 {
             new_bmp->bitmap_->post_construct(fbss);
         }
 
+        new_bmp->bitmap_->offset_from_me_ = offset_from_me_now;
         ctx->complete(epoc::error_none);
     }
 
