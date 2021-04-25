@@ -884,6 +884,14 @@ namespace eka2l1::epoc {
         query_security_info(msg->own_thr->owning_process(), sec_info);
     }
 
+    BRIDGE_FUNC(void, creator_security_info, eka2l1::ptr<epoc::security_info> info) {
+        epoc::security_info *sec_info = info.get(kern->crr_process());
+
+        // Supposed to initialize in process_loaded
+        epoc::security_info creator_info;
+        *sec_info = creator_info;
+    }
+
     BRIDGE_FUNC(std::int32_t, session_security_info, std::int32_t h, epoc::security_info *info) {
         service::session *ss = kern->get<service::session>(h);
         
@@ -4827,6 +4835,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xAD, process_security_info),
         BRIDGE_REGISTER(0xAE, thread_security_info),
         BRIDGE_REGISTER(0xAF, message_security_info),
+        BRIDGE_REGISTER(0xB0, creator_security_info),
         BRIDGE_REGISTER(0xB3, message_queue_create),
         BRIDGE_REGISTER(0xB4, message_queue_send),
         BRIDGE_REGISTER(0xB5, message_queue_receive),
