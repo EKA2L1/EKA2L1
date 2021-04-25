@@ -1071,7 +1071,7 @@ namespace eka2l1::epoc {
         ss->set_share_mode(static_cast<service::share_mode>(share));
 
         if ((prev_share >= service::share_mode::SHARE_MODE_SHAREABLE) && (share == service::share_mode::SHARE_MODE_UNSHAREABLE)
-            || (prev_share == service::share_mode::SHARE_MODE_UNSHAREABLE) || (share >= service::SHARE_MODE_SHAREABLE)) {
+            || ((prev_share == service::share_mode::SHARE_MODE_UNSHAREABLE) && (share >= service::SHARE_MODE_SHAREABLE))) {
             // Create new handle
             const std::uint32_t res = kern->mirror(ss, get_session_owner_type_from_share(static_cast<service::share_mode>(share)));
             if (res == kernel::INVALID_HANDLE) {
