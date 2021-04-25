@@ -113,7 +113,7 @@ namespace eka2l1 {
     }
 
     bool socket_client_session::is_oldarch() {
-        return server<socket_server>()->get_kernel_object_owner()->is_eka1();
+        return server<socket_server>()->get_kernel_object_owner()->get_epoc_version() < epocver::epoc81a;
     }
 
     void socket_client_session::fetch(service::ipc_context *ctx) {

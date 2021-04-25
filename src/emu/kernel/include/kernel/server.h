@@ -151,6 +151,8 @@ namespace eka2l1 {
                 sessions.push_back(svse);
             }
 
+            void detach(session *svse);
+
             virtual void destroy() override;
 
             /*! Receive the message */

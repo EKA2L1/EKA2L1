@@ -53,6 +53,9 @@ namespace eka2l1 {
 
         // Disconnect
         session::~session() {
+            if (svr) {
+                svr->detach(this);
+            }
         }
 
         void session::set_share_mode(const share_mode shmode) {

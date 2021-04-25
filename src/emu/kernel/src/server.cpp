@@ -128,6 +128,13 @@ namespace eka2l1 {
             ipc_funcs.emplace(ordinal, func);
         }
 
+        void server::detach(session *svse) {
+            auto ite = std::find(sessions.begin(), sessions.end(), svse);
+            if (ite != sessions.end()) {
+                sessions.erase(ite);
+            }
+        }
+
         void server::destroy() {
             for (std::size_t i = 0; i < sessions.size(); i++) {
                 sessions[i]->svr = nullptr;
