@@ -478,4 +478,23 @@ namespace eka2l1::common {
 
         return do_copy_stuffs(false);
     }
+
+    bool delete_folder(const std::string& target_folder) {
+        common::dir_iterator iterator(target_folder);
+        iterator.detail = true;
+
+        common::dir_entry entry;
+
+        while (iterator.next_entry(entry) == 0) {
+            std::string name = iterator.dir_name + entry.name;
+
+            if (entry.type == common::file_type::FILE_DIRECTORY) {
+                name += eka2l1::get_separator();
+
+                delete_folder(name);
+            }
+            common::remove(name);
+        }
+        return common::remove(target_folder);
+    }
 }
