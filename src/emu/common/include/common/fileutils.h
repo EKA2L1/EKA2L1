@@ -85,6 +85,8 @@ namespace eka2l1::common {
      */
     bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, std::atomic<int> *progress);
 
+    bool delete_folder(const std::string &target_folder);
+
     bool is_system_case_insensitive();
 
     struct dir_entry {

@@ -97,6 +97,7 @@ namespace eka2l1::config {
         std::string rtos_level;
 
         bool ui_new_style { true };
+        bool cenrep_reset { false };
 
         std::vector<keybind> keybinds;
 

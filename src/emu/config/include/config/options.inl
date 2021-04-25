@@ -61,6 +61,7 @@ OPTION(integer-scaling, integer_scaling, true)
 OPTION(cpu-load-save, cpu_load_save, true)
 OPTION(rtos-level, rtos_level, "mid")
 OPTION(ui-new-style, ui_new_style, true)
+OPTION(cenrep-reset, cenrep_reset, false)
 
 #ifdef OPTION
 #undef OPTION
