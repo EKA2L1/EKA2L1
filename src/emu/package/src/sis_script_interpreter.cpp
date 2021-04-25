@@ -518,6 +518,7 @@ namespace eka2l1 {
 
                         if (condition_passed(&else_branch->expr)) {
                             interpret(else_branch->install_block, progress, crr_blck_idx);
+                            break;
                         }
                     }
                 }
