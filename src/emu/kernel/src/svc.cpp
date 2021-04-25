@@ -4108,6 +4108,83 @@ namespace eka2l1::epoc {
         return do_handle_write(kern, create_info, finish_signal, target_thread, static_cast<kernel::handle>(property_ref_handle_and_obj.first));
     }
 
+    std::int32_t msgqueue_send_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::msg_queue *queue = kern->get<kernel::msg_queue>(create_info->arg0_);
+        if (!queue) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_none;
+        }
+
+        kernel::process *crr_process = kern->crr_process();
+        const void *data = eka2l1::ptr<void*>(create_info->arg1_).get(crr_process);
+        const std::int32_t length = create_info->arg2_;
+
+        if (!data) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_none;
+        }
+
+        if ((length <= 0) || (static_cast<std::size_t>(length) > queue->max_message_length())) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_none;
+        }
+
+        if (!queue->send(data, length)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_overflow);
+            return epoc::error_none;
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t msgqueue_receive_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::msg_queue *queue = kern->get<kernel::msg_queue>(create_info->arg0_);
+
+        if (!queue) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_none;
+        }
+
+        kernel::process *crr_process = kern->crr_process();
+
+        void *data = eka2l1::ptr<void*>(create_info->arg1_).get(crr_process);
+        const std::int32_t length = create_info->arg2_;
+
+        if (length != queue->max_message_length()) {
+            LOG_ERROR(KERNEL, "Size of destination buffer vs size of queue mismatch ({} vs {})", length,
+                queue->max_message_length());
+
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_argument);
+            return epoc::error_none;
+        }
+
+        if (!queue->receive(data, length)) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_underflow);
+            return epoc::error_none;
+        }
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
+    std::int32_t msgqueue_cancel_data_available_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::msg_queue *queue = kern->get<kernel::msg_queue>(create_info->arg0_);
+        if (!queue) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_none;
+        }
+
+        kernel::thread *crr_thread = kern->crr_thread();
+        queue->cancel_data_available(crr_thread);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
         kernel::thread *crr_thread = kern->crr_thread();
@@ -4382,6 +4459,15 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v81a_property_attach:
                 return property_attach_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_msgqueue_send:
+                return msgqueue_send_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_msgqueue_receive:
+                return msgqueue_receive_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_msgqueue_cancel_data_available:
+                return msgqueue_cancel_data_available_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
             default:
                 LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -5196,10 +5282,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x19, mutex_wait_eka1),
         BRIDGE_REGISTER(0x1A, mutex_signal_eka1),
+        BRIDGE_REGISTER(0x1B, process_id),
         BRIDGE_REGISTER(0x20, process_exit_type),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
+        BRIDGE_REGISTER(0x52, uchar_uppercase),
         BRIDGE_REGISTER(0x6C, heap),
         BRIDGE_REGISTER(0x70, tick_count),
         BRIDGE_REGISTER(0x72, push_trap_frame),
@@ -5250,10 +5338,12 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000CC, imb_range),
         BRIDGE_REGISTER(0x8000DA, property_subscribe),
         BRIDGE_REGISTER(0x8000DC, property_find_get_int),
+        BRIDGE_REGISTER(0x8000DF, property_get_int),
         BRIDGE_REGISTER(0x8000E4, message_get_des_length),
         BRIDGE_REGISTER(0x8000E6, message_ipc_copy_eka1),
         BRIDGE_REGISTER(0x8000EB, message_queue_notify_data_available),
         BRIDGE_REGISTER(0xC0001D, process_resume),
+        BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
         BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
         BRIDGE_REGISTER(0xC0002E, server_receive),
         BRIDGE_REGISTER(0xC0002F, server_cancel),

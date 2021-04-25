@@ -200,7 +200,10 @@ namespace eka2l1::epoc {
             execute_v81a_share_session = 0x5C,
             execute_v81a_property_define = 0x65,
             execute_v81a_property_delete = 0x66,
-            execute_v81a_property_attach = 0x67
+            execute_v81a_property_attach = 0x67,
+            execute_v81a_msgqueue_send = 0x6E,
+            execute_v81a_msgqueue_receive = 0x6F,
+            execute_v81a_msgqueue_cancel_data_available = 0x71
         };
 
         std::uint32_t arg0_;
