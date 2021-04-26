@@ -151,7 +151,7 @@ namespace eka2l1::desktop {
             dispatch::libraries::register_functions(kern, disp);
 
             // Uncomment after cenrep changes
-            /*if (!conf.cenrep_reset) {
+            if (!conf.cenrep_reset) {
                 io_system *io = symsys->get_io_system();
 
                 auto private_dir_c_persists = io->get_raw_path(u"C:\\Private\\10202be9\\persists\\");
@@ -164,7 +164,7 @@ namespace eka2l1::desktop {
 
                 conf.cenrep_reset = true;
                 conf.serialize();
-            }*/
+            }
             stage_two_inited = true;
         }
 
