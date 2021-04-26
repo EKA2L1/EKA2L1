@@ -1147,8 +1147,14 @@ namespace eka2l1 {
                 }
             }
             
-            if (use_in_ini)
+            if (use_in_ini) {
                 scr_mode_global = epoc::string_to_display_mode(modes[0]);
+
+                // It seems to be so!!! Since games still use metainfo hacks at the beginning of screen buffer
+                if (kern->is_eka1() && (epoc::get_bpp_from_display_mode(scr_mode_global) > 16)) {
+                    scr_mode_global = epoc::display_mode::color64k;
+                }
+            }
         }
 
         common::ini_node *screen_node = nullptr;
