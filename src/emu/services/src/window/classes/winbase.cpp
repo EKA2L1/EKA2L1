@@ -323,12 +323,12 @@ namespace eka2l1::epoc {
 
         case EWsWinOpOrdinalPosition: {
             ctx.complete(ordinal_position(false));
-            break;
+            return true;
         }
 
         case EWsWinOpFullOrdinalPosition: {
             ctx.complete(ordinal_position(true));
-            break;
+            return true;
         }
 
         case EWsWinOpSetOrdinalPosition: {
