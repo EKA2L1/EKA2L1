@@ -206,8 +206,8 @@ namespace eka2l1 {
             }
 
             case central_repo_entry_type::real: {
-                float dat = static_cast<float>(entry.data.reald);
-                seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&dat), sizeof(float));
+                double dat = static_cast<double>(entry.data.reald);
+                seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&dat), sizeof(double));
 
                 entry.data.reald = dat;
 

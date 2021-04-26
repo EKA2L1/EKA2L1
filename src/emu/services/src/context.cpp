@@ -88,6 +88,11 @@ namespace eka2l1 {
         }
 
         template <>
+        std::optional<double> ipc_context::get_argument_value(const int idx) {
+            return get_integral_arg_from_msg<double>(msg, idx);
+        }
+
+        template <>
         std::optional<std::u16string> ipc_context::get_argument_value(const int idx) {
             if (idx >= 4) {
                 return std::nullopt;
