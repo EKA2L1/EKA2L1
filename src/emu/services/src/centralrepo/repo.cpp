@@ -324,7 +324,13 @@ namespace eka2l1 {
                 break;
             }
 
-            entry->data.reald = *ctx->get_argument_value<float>(1);
+            std::optional<double> data = ctx->get_argument_data_from_descriptor<double>(1);
+            if (!data.has_value()) {
+                ctx->complete(epoc::error_argument);
+                break;
+            }
+
+            entry->data.reald = data.value();
             break;
         }
 
@@ -389,8 +395,8 @@ namespace eka2l1 {
                 return;
             }
 
-            const float result_fl = static_cast<float>(entry->data.reald);
-            ctx->write_data_to_descriptor_argument<float>(1, result_fl);
+            const double result_fl = static_cast<double>(entry->data.reald);
+            ctx->write_data_to_descriptor_argument<double>(1, result_fl);
 
             break;
         }
