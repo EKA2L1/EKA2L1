@@ -49,8 +49,5 @@
 
 SCRDVC_IMPL(CFbsTwelveBitScreenDrawDevice, CFbsTwelveBitDrawDevice)
 SCRDVC_IMPL(CFbsSixteenBitScreenDrawDevice, CFbsSixteenBitDrawDevice)
-
-#ifdef EKA2
 SCRDVC_IMPL(CFbsTwentyfourBitAlphaScreenDrawDevice, CFbsTwentyfourBitAlphaDrawDevice)
 SCRDVC_IMPL(CFbsTwentyfourBitUnsignedByteScreenDrawDevice, CFbsTwentyfourBitUnsignedByteDrawDevice)
-#endif

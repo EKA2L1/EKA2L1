@@ -34,7 +34,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
     CFbsDrawDevice *newDevice = NULL;
 
     switch (aDispMode) {
-    case EColor16M:
+    case EColor16MAlter:
         newDevice = new (ELeave) CFbsTwentyfourBitDrawDevice;
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
@@ -43,7 +43,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
 
         break;
 
-    case EColor4K:
+    case EColor4KAlter:
         newDevice = new (ELeave) CFbsTwelveBitDrawDevice;
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwelveBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
@@ -52,7 +52,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
 
         break;
 
-    case EColor64K:
+    case EColor64KAlter:
         newDevice = new (ELeave) CFbsSixteenBitDrawDevice;
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsSixteenBitDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
@@ -61,8 +61,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
 
         break;
 
-#ifdef EKA2
-    case EColor16MA:
+    case EColor16MAAlter:
         newDevice = new (ELeave) CFbsTwentyfourBitAlphaDrawDevice;
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
@@ -71,7 +70,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
 
         break;
 
-    case EColor16MU:
+    case EColor16MUAlter:
         newDevice = new (ELeave) CFbsTwentyfourBitUnsignedByteDrawDevice;
         CleanupStack::PushL(newDevice);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitUnsignedByteDrawDevice *>(newDevice)->Construct(aSize, aDataStride));
@@ -79,7 +78,6 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(const TSize &aSize, TDisplayMod
         LogOut(KScdvCat, _L("INFO:: A new 32 bit bitmap device has been instantiated!"));
 
         break;
-#endif
 
     default:
         LogOut(KScdvCat, _L("ERR:: Unsupported or unimplemented format for bitmap device %d"), aDispMode);
@@ -101,8 +99,8 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
     // Adjust the address. Some mode has start of screen buffer storing external data.
     // 12bpp and 16bpp stores 16 word palette entries.
     switch (aMode) {
-    case EColor4K:
-    case EColor64K:
+    case EColor4KAlter:
+    case EColor64KAlter:
         aAddress = reinterpret_cast<TUint8*>(aAddress) + wordModePaletteEntriesCount * sizeof(TUint16);
         break;
 
@@ -111,7 +109,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
     }
 
     switch (aMode) {
-    case EColor4K:
+    case EColor4KAlter:
         device = new (ELeave) CFbsTwelveBitScreenDrawDevice;
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsTwelveBitScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
@@ -120,7 +118,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
 
         break;
 
-    case EColor64K:
+    case EColor64KAlter:
         device = new (ELeave) CFbsSixteenBitScreenDrawDevice;
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsSixteenBitScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
@@ -129,8 +127,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
 
         break;
 
-#ifdef EKA2
-    case EColor16MU:
+    case EColor16MUAlter:
         device = new (ELeave) CFbsTwentyfourBitUnsignedByteScreenDrawDevice;
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitUnsignedByteScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
@@ -139,7 +136,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
 
         break;
 
-    case EColor16MA:
+    case EColor16MAAlter:
         device = new (ELeave) CFbsTwentyfourBitAlphaScreenDrawDevice;
         CleanupStack::PushL(device);
         User::LeaveIfError(reinterpret_cast<CFbsTwentyfourBitAlphaScreenDrawDevice *>(device)->Construct(aScreenNo, aSize, -1));
@@ -147,7 +144,6 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
         LogOut(KScdvCat, _L("INFO:: A new 24 bit alpha screen device has been instantiated!"));
 
         break;
-#endif
 
     default:
         LogOut(KScdvCat, _L("ERROR:: Unsupported display mode for screen device %d"), (TInt)aMode);

@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
- 
-#ifdef EKA2
 
 #include <Log.h>
 #include "scdv/panic.h"
@@ -42,7 +40,12 @@ TRgb CFbsThirtyTwoBitsDrawDevice::ReadPixel(TInt aX, TInt aY) const {
 
     // Try to access that pixel
     TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
+
+#ifdef EKA2
     return TRgb(pixelStart[0], pixelStart[1], pixelStart[2], pixelStart[3]);
+#else
+    return TRgb(pixelStart[2] | (pixelStart[1] << 8) | (pixelStart[2] << 16) | (pixelStart[3] << 24));
+#endif
 }
 
 void CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const {
@@ -130,8 +133,10 @@ static void WriteRgb32ToAddressUNIMPL(TUint8 *aAddress, TUint8 aRed, TUint8 aGre
 
 CFbsThirtyTwoBitsDrawDevice::PWriteRgbToAddressFunc CFbsThirtyTwoBitsDrawDevice::GetRgbWriteFunc(CGraphicsContext::TDrawMode aDrawMode) {
     switch (aDrawMode) {
+#ifdef EKA2
     case CGraphicsContext::EDrawModeWriteAlpha:
         return WriteRgb32ToAddressAlpha;
+#endif
 
     case CGraphicsContext::EDrawModeAND:
         return WriteRgb32ToAddressAND;
@@ -149,7 +154,7 @@ CFbsThirtyTwoBitsDrawDevice::PWriteRgbToAddressFunc CFbsThirtyTwoBitsDrawDevice:
         return WriteRgb32ToAddressANDNOT;
 
     case CGraphicsContext::EDrawModePEN:
-        return (DisplayMode() == EColor16MA) ? WriteRgb32ToAddressBlend : WriteRgb32ToAddressAlpha;
+        return (DisplayMode() == EColor16MAAlter) ? WriteRgb32ToAddressBlend : WriteRgb32ToAddressAlpha;
 
     default:
         LogOut(KScdvCat, _L("Unimplemented graphics drawing mode: %d"), (TInt)aDrawMode);
@@ -163,7 +168,13 @@ void CFbsThirtyTwoBitsDrawDevice::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraph
     TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
     PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
 
-    writeFunc(pixelStart, (TUint8)aColor.Red(), (TUint8)aColor.Green(), (TUint8)aColor.Blue(), (TUint8)aColor.Alpha());
+    writeFunc(pixelStart, (TUint8)aColor.Red(), (TUint8)aColor.Green(), (TUint8)aColor.Blue(),
+#ifdef EKA2
+        (TUint8)aColor.Alpha()
+#else
+        (TUint8)(aColor.Value() >> 24)
+#endif
+    );
 }
 
 void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
@@ -177,7 +188,12 @@ void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer
     const TUint8 red = (TUint8)aColor.Red();
     const TUint8 green = (TUint8)aColor.Green();
     const TUint8 blue = (TUint8)aColor.Blue();
+
+#ifdef EKA2
     const TUint8 alpha = (TUint8)aColor.Alpha();
+#else
+    const TUint8 alpha = (TUint8)(aColor.Value() >> 24);
+#endif
 
     for (TInt y = aY; y < aY + aHeight; y++) {
         pixelAddress = GetPixelStartAddress(aX, y);
@@ -206,7 +222,11 @@ void CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, 
     const TUint8 red = (TUint8)aColor.Red();
     const TUint8 green = (TUint8)aColor.Green();
     const TUint8 blue = (TUint8)aColor.Blue();
+#ifdef EKA2
     const TUint8 alpha = (TUint8)aColor.Alpha();
+#else
+    const TUint8 alpha = (TUint8)(aColor.Value() >> 24);
+#endif
 
     for (TInt y = aY; y < aY + aHeight; y++) {
         pixelAddress = GetPixelStartAddress(aX, y);
@@ -277,7 +297,7 @@ TInt CFbsTwentyfourBitAlphaDrawDevice::Construct(TSize aSize, TInt aDataStride) 
         return result;
     }
 
-    iDisplayMode = EColor16MA;
+    iDisplayMode = (TDisplayMode)EColor16MAAlter;
     return KErrNone;
 }
 
@@ -287,7 +307,7 @@ TInt CFbsTwentyfourBitUnsignedByteDrawDevice::Construct(TSize aSize, TInt aDataS
         return result;
     }
 
-    iDisplayMode = EColor16MU;
+    iDisplayMode = (TDisplayMode)EColor16MUAlter;
     return KErrNone;
 }
 
@@ -324,5 +344,3 @@ TInt CFbsThirtyTwoBitsDrawDevice::GetInterface(TInt aInterfaceId, TAny *&aInterf
     //LogOut(KScdvCat, _L("ERR:: Interface not supported %d"), aInterfaceId);
     return KErrNotSupported;
 }
-
-#endif

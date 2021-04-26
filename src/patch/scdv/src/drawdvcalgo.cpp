@@ -22,48 +22,6 @@
 #include "drawdvcalgo.h"
 #include "scdv/panic.h"
 
-/**
- * \brief Get number of bits per pixel of each display mode.
- */
-static TInt GetBppFromDisplayMode(TDisplayMode aMode) {
-    switch (aMode) {
-    case EGray2:
-        return 1;
-
-    case EGray4:
-        return 2;
-
-    case EGray16:
-    case EColor16:
-        return 4;
-
-    case EGray256:
-    case EColor256:
-        return 8;
-
-    case EColor4K:
-        return 12;
-
-    case EColor64K:
-        return 16;
-
-    case EColor16M:
-        return 24;
-
-#ifdef EKA2
-    case EColor16MA:
-    case EColor16MAP:
-    case EColor16MU:
-        return 32;
-#endif
-
-    default:
-        break;
-    }
-
-    return 32;
-}
-
 CFbsDrawDeviceAlgorithm::CFbsDrawDeviceAlgorithm()
     : iScanLineWords(0)
     , iLongWidth(0)

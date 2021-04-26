@@ -22,6 +22,7 @@ SOURCE        scdv.cpp
 SOURCE        drawdvcb.cpp
 SOURCE        drawdvcbuf.cpp
 SOURCE        drawdvcalgo.cpp
+SOURCE        drawdvc32.cpp
 SOURCE        drawdvc24.cpp
 SOURCE        drawdvc16.cpp
 SOURCE        drawdvc12.cpp

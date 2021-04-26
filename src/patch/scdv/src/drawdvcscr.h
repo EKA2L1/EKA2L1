@@ -43,7 +43,6 @@ class CFbsSixteenBitScreenDrawDevice : public CFbsSixteenBitDrawDevice {
     SCRDVC_DECL();
 };
 
-#ifdef EKA2
 class CFbsTwentyfourBitAlphaScreenDrawDevice : public CFbsTwentyfourBitAlphaDrawDevice {
     SCRDVC_DECL();
 };
@@ -51,6 +50,5 @@ class CFbsTwentyfourBitAlphaScreenDrawDevice : public CFbsTwentyfourBitAlphaDraw
 class CFbsTwentyfourBitUnsignedByteScreenDrawDevice : public CFbsTwentyfourBitUnsignedByteDrawDevice {
     SCRDVC_DECL();
 };
-#endif
 
 #endif

@@ -24,6 +24,24 @@
 #include <gdi.h>
 #include <w32std.h>
 
+enum TDisplayModeAlter {
+    ENoneAlter,
+    EGray2Alter,
+    EGray4Alter,
+    EGray16Alter,
+    EGray256Alter,
+    EColor16Alter,
+    EColor256Alter,
+    EColor64KAlter,
+    EColor16MAlter,
+    ERgbAlter,
+    EColor4KAlter,
+    EColor16MUAlter,
+    EColor16MAAlter,
+    EColor16MAPAlter,
+    EColorLastAlter
+};
+
 struct TScreenInfo {
     TBool iWindowHandleValid;
     TAny *iWindowHandle;

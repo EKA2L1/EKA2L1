@@ -25,6 +25,7 @@ SOURCE        drawdvcalgo.cpp
 SOURCE        drawdvc12.cpp
 SOURCE        drawdvc16.cpp
 SOURCE        drawdvc24.cpp
+SOURCE        drawdvc32.cpp
 SOURCE        drawdvcscr.cpp
 SOURCE        instantiate.cpp
 SOURCE        cdsb.cpp
