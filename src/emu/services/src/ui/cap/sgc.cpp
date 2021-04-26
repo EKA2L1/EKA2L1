@@ -174,7 +174,7 @@ namespace eka2l1::epoc::cap {
             const std::uint8_t landspace_bit = state->orientation_landscape();
 
             // Iterate through all window modes
-            for (int mode = 1; mode <= group->scr->total_screen_mode(); mode++) {
+            for (int mode = 0; mode < group->scr->total_screen_mode(); mode++) {
                 auto screen_mode = group->scr->mode_info(mode);
 
                 if (((screen_mode->size.x > screen_mode->size.y) && landspace_bit)

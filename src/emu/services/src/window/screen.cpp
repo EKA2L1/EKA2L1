@@ -96,7 +96,7 @@ namespace eka2l1::epoc {
         , disp_mode(display_mode::color16ma)
         , last_vsync(0)
         , scr_config(scr_conf)
-        , crr_mode(1)
+        , crr_mode(0)
         , next(nullptr)
         , screen_buffer_chunk(nullptr)
         , focus(nullptr) {
@@ -105,7 +105,7 @@ namespace eka2l1::epoc {
 
         for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
             if (scr_config.modes[i].rotation == 0) {
-                physical_mode = static_cast<std::uint8_t>(i + 1);
+                physical_mode = static_cast<std::uint8_t>(i);
             }
         }
     }
@@ -301,10 +301,8 @@ namespace eka2l1::epoc {
     }
 
     const epoc::config::screen_mode *screen::mode_info(const int number) const {
-        for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
-            if (scr_config.modes[i].mode_number == number) {
-                return &scr_config.modes[i];
-            }
+        if (number < scr_config.modes.size()) {
+            return &scr_config.modes[number];
         }
 
         return nullptr;
