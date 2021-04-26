@@ -63,7 +63,7 @@ namespace eka2l1::epoc {
 
             if (mode.size == info->pixel_size && number_to_orientation(mode.rotation) == info->orientation) {
                 // Eureka... Bắt được mày rồi....
-                scr->set_screen_mode(client->get_ws().get_graphics_driver(), mode.mode_number);
+                scr->set_screen_mode(client->get_ws().get_graphics_driver(), i);
                 ctx.complete(epoc::error_none);
                 return;
             }
@@ -165,7 +165,7 @@ namespace eka2l1::epoc {
         std::int32_t mode_list = 0;
 
         for (int i = 0; i < scr->total_screen_mode(); i++) {
-            const epoc::config::screen_mode *mode = scr->mode_info(i + 1);
+            const epoc::config::screen_mode *mode = scr->mode_info(i);
 
             if (mode) {
                 mode_list |= (1 << static_cast<std::int32_t>(get_orientation_from_rotation(mode->rotation)));
