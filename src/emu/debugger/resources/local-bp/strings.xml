@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Dispositivo para instalar já existe!</string>
-    <string name="install_device_no_language_file_present_msg">O dispositivo que você está tentando instalar está sem informações de idioma!</string>
     <string name="install_device_product_determine_fail_msg">Falha ao determinar informações do produto (fornecedor, código de firmware, versão do OS, etc...)</string>
     <string name="install_device_install_failure_msg">Algo de errado acontece durante a instalação! Por favor, verifique o log!</string>
     <string name="install_device_final_msg_1">Obrigado por usar o assistente. Esperamos que você aproveite o emulador!</string>
