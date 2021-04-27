@@ -23,6 +23,7 @@
 #include <utils/err.h>
 
 #include <common/cvt.h>
+#include <config/config.h>
 
 #include <system/epoc.h>
 #include <system/devices.h>
@@ -156,13 +157,14 @@ namespace eka2l1 {
 
         device_manager *dmngr = ctx->sys->get_device_manager();
         device *dcrr = dmngr->get_current();
+        config::state *conf_state = ctx->sys->get_config();
 
         // TODO: What lmao
         phoneid.manu_.assign(nullptr, common::utf8_to_ucs2(dcrr->manufacturer));
         phoneid.model_id_.assign(nullptr, common::utf8_to_ucs2(dcrr->model));
 
         phoneid.revision_id_.assign(nullptr, EXAMPLE_VALID_REVISION);
-        phoneid.serial_num_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+        phoneid.serial_num_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
 
         if (oldarch_) {
             ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v0>(0, phoneid);
@@ -177,10 +179,10 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_subscriber_id(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_ETEL, "Get subscriber id hardcoded, random generated beforehand");
+        config::state *conf_state = ctx->sys->get_config();
 
         subscriber_id_info_v1 id_info;
-        id_info.the_id_.assign(nullptr, EXAMPLE_VALID_IMI_CODE);
+        id_info.the_id_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
 
         ctx->write_data_to_descriptor_argument<subscriber_id_info_v1>(0, id_info);
         ctx->complete(epoc::error_none);

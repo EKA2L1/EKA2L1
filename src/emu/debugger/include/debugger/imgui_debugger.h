@@ -249,6 +249,8 @@ namespace eka2l1 {
         std::size_t sys_reset_callback_h;
         std::atomic<bool> in_reset;
 
+        std::string imei_input_holder;
+
     protected:
         void do_install_package();
         void on_system_reset(system *sys);

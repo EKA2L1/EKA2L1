@@ -21,8 +21,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
 namespace eka2l1::crypt {
+    enum imei_valid_error {
+        IMEI_ERROR_NONE = 0,                    ///< No error occured.
+        IMEI_ERROR_NO_RIGHT_LENGTH = -1,        ///< Length of sequence is not 15.
+        IMEI_ERROR_INVALID_SUM = -2,            ///< Total sum doubled module 10 is not 0.
+        IMEI_ERROR_INVALID_CHARACTER = -3       ///< At least one non-numeric character is in the sequence.
+    };
+
     /** 
      * \brief A simple CRC16 checksum.
      */
@@ -74,4 +82,11 @@ namespace eka2l1::crypt {
      * @return  Checksum of the UID buffer.
      */
     std::uint32_t calculate_checked_uid_checksum(const std::uint32_t *uids);
+
+    /**
+     * @brief Check if given IMEI string is correct
+     * 
+     * @returns IMEI_ERROR_NONE on right.
+     */
+    imei_valid_error is_imei_valid(const std::string &supposed_imei);
 }

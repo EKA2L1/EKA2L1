@@ -21,6 +21,10 @@
 #define OPTION(name, variable, default_var)
 #endif
 
+#ifndef DEFAULT_IMI
+#define DEFAULT_IMI "540806859904945"
+#endif
+
 OPTION(ui-scale, ui_scale, 1.0f)
 OPTION(bkg-alpha, bkg_transparency, 129)
 OPTION(bkg-path, bkg_path, "")
@@ -62,6 +66,7 @@ OPTION(cpu-load-save, cpu_load_save, true)
 OPTION(rtos-level, rtos_level, "mid")
 OPTION(ui-new-style, ui_new_style, true)
 OPTION(cenrep-reset, cenrep_reset, false)
+OPTION(imei, imei, DEFAULT_IMI)
 
 #ifdef OPTION
 #undef OPTION

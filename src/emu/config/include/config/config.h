@@ -100,6 +100,7 @@ namespace eka2l1::config {
         bool cenrep_reset { false };
 
         std::vector<keybind> keybinds;
+        std::string imei;
 
         void serialize();
         void deserialize();

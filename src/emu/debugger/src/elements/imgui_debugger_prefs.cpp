@@ -30,6 +30,7 @@
 
 #include <common/cvt.h>
 #include <common/language.h>
+#include <common/crypt.h>
 
 #include <cpu/arm_utils.h>
 #include <system/epoc.h>
@@ -47,6 +48,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 namespace eka2l1 {
     void imgui_debugger::show_pref_personalisation() {
@@ -825,6 +827,38 @@ namespace eka2l1 {
             }
 
             ImGui::EndCombo();
+        }
+
+        ImGui::Text("IMEI");
+        ImGui::SameLine(col6 + 10);
+        ImGui::InputText("##IMEI", &imei_input_holder);
+
+        ImGui::SameLine(col6 * 3 + 10);
+
+        const crypt::imei_valid_error valid_error = crypt::is_imei_valid(imei_input_holder);
+
+        if (valid_error == crypt::IMEI_ERROR_NONE) {
+            conf->imei = imei_input_holder;
+        } else {
+            std::string error_text;
+            switch (valid_error) {
+            case crypt::IMEI_ERROR_INVALID_CHARACTER:
+                error_text = common::get_localised_string(localised_strings, "imei_has_invalid_char");
+                break;
+
+            case crypt::IMEI_ERROR_INVALID_SUM:
+                error_text = common::get_localised_string(localised_strings, "imei_has_invalid_sum");
+                break;
+
+            case crypt::IMEI_ERROR_NO_RIGHT_LENGTH:
+                error_text = common::get_localised_string(localised_strings, "imei_length_not_right");
+                break;
+
+            default:
+                break;
+            }
+
+            ImGui::TextColored(RED_COLOR, "%s", error_text.c_str());
         }
 
         ImGui::PopItemWidth();

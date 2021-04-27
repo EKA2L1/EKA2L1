@@ -205,4 +205,40 @@ namespace eka2l1::crypt {
     std::uint32_t calculate_checked_uid_checksum(const std::uint32_t *uids) {
         return (calculate_checksum(reinterpret_cast<const std::uint8_t *>(uids) + 1) << 16) | calculate_checksum(uids);
     }
+    
+    imei_valid_error is_imei_valid(const std::string &supposed_imei) {
+        if (supposed_imei.length() != 15) {
+            return IMEI_ERROR_NO_RIGHT_LENGTH;
+        }
+
+        int sum = 0;
+
+        for (std::size_t i = supposed_imei.length() - 1; i >= 1; i--) {
+            if ((supposed_imei[i - 1] >= '0') && (supposed_imei[i - 1] <= '9')) {
+                if (i % 2 == 0) {
+                    int doubled = (supposed_imei[i - 1] - '0') * 2;
+                    while (doubled != 0) {
+                        sum += doubled % 10;
+                        doubled /= 10;
+                    }
+                } else {
+                    sum += (supposed_imei[i - 1] - '0');
+                }
+            } else {
+                return IMEI_ERROR_INVALID_CHARACTER;
+            }
+        }
+
+        if ((supposed_imei.back() >= '0') && (supposed_imei.back() <= '9')) {
+            int rounded_sum = ((sum + 9) / 10) * 10;
+
+            if ((rounded_sum - sum) != (supposed_imei.back() - '0')) {
+                return IMEI_ERROR_INVALID_SUM;
+            }
+        } else {
+            return IMEI_ERROR_INVALID_CHARACTER;
+        }
+
+        return IMEI_ERROR_NONE;
+    }
 }
