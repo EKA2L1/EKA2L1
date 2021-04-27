@@ -124,7 +124,7 @@
     <string name="install_device_rpkg_choose_msg">Scegli il file RPKG:</string>
     <string name="install_device_firmware_vpl_choose_msg">Specifica il file di descrizione del firmware (VPL):</string>
     <string name="install_device_rom_choose_msg">Sei pregato di specificare il file della ROM:</string>
-    <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG sarà necessario, ne verrà richiesto il percorso in fase di installazione.</string>
     <string name="install_device_wait_install_msg">Sei pregato di attendere mentre installo il dispositivo!</string>
     <string name="install_device_progress_rpkg_msg">Estrazione file RPKG ({}%)</string>
     <string name="install_device_progress_rom_msg">Installazione ROM ({}%)</string>
@@ -160,4 +160,7 @@
     <string name="credits_icon_text">Icona:</string>
     <string name="credits_honors_text">Onori:</string>
     <string name="credits_translators_text">Traduttori:</string>
+    <string name="imei_length_not_right">Il codice IMEI deve avere 15 cifre!</string>
+    <string name="imei_has_invalid_char">Il codice IMEI immesso ha dei caratteri non numerici!</string>
+    <string name="imei_has_invalid_sum">Il codice IMEI non ha il checksum valido!</string>
 </resources>
