@@ -30,7 +30,6 @@
     <string name="install_rom_fail_to_copy">রমটি নির্ধারিত জায়গায় কপি করতে ব্যর্থ!</string>
     <string name="install_rpkg_insufficent_size">RPKG ফাইলটি খুব ছোট, ডাম্পটি অসম্পন্ন হতে পারে!</string>
     <string name="install_already_exist">ইনস্টল করতে ডিভাইসটি ইতোমধ্যে বিদ্যমান!</string>
-    <string name="install_no_language_file_present">ডিভাইসটির মধ্যে ভাষা তথ্য ফাইল পাওয়া যাচ্ছে না!</string>
     <string name="install_product_determine_fail">পণ্যের তথ্য নির্ধারণে ব্যর্থ!</string>
     <string name="install_device_vpl_invalid_msg">The firmware description file (VPL) file is invalid!</string>
     <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
