@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM文件已损坏！</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX文件已损坏！</string>
     <string name="install_device_already_exist_msg">安装设备已经存在！</string>
-    <string name="install_device_no_language_file_present_msg">您正在尝试安装的设备缺少语言信息文件！</string>
     <string name="install_device_product_determine_fail_msg">无法确定产品信息（供应商、固件代码、操作系统版本等等）</string>
     <string name="install_device_install_failure_msg">安装过程中出现错误！请检查日志！</string>
     <string name="install_device_final_msg_1">感谢您使用此向导，希望您在这模拟器中能找到快乐！</string>
