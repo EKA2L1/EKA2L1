@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">File ROM rusak!</string>
     <string name="install_device_fpsx_corrupt_msg">File FPSX rusak!</string>
     <string name="install_device_already_exist_msg">Perangkat yang terinstal sudah ada!</string>
-    <string name="install_device_no_language_file_present_msg">Perangkat yang ingin diinstal kehilangan file informasi bahasa!</string>
     <string name="install_device_product_determine_fail_msg">Gagal menetapkan informasi produk (vendor, kode firmware, versi OS, dan lain...)</string>
     <string name="install_device_install_failure_msg">Terjadi kesalahan selama penginstalan! Silahkan periksa log!</string>
     <string name="install_device_final_msg_1">Terima kasih telah menggunakan wizard. Kami harap Anda bersenang-senang menggunakan emulator!</string>
