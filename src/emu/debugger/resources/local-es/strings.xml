@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">¡El archivo de ROM está corrupto!</string>
     <string name="install_device_fpsx_corrupt_msg">¡El archivo FPSX está corrupto!</string>
     <string name="install_device_already_exist_msg">¡El dispositivo a instalar ya existe!</string>
-    <string name="install_device_no_language_file_present_msg">¡El dispositivo que está intentando instalar carece de archivos de información de idioma!</string>
     <string name="install_device_product_determine_fail_msg">Error al determinar la información del producto (proveedor, código de firmware, versión del sistema operativo, etc...)</string>
     <string name="install_device_install_failure_msg">¡Algo fue mal durante la instalación! ¡Por favor revise el registro (log)!</string>
     <string name="install_device_final_msg_1">Gracias por utilizar el asistente. ¡Esperamos que tenga un buen tiempo usando el emulador!</string>
