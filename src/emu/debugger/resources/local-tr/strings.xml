@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Yüklenecek cihaz zaten var!</string>
-    <string name="install_device_no_language_file_present_msg">Yüklemeye çalıştığınız aygıtta dil dosyaları bilgisi eksik!</string>
     <string name="install_device_product_determine_fail_msg">Ürün bilgileri belirlenemedi (satıcı, yazılım kodu, işletim sistemi sürümü vb...)</string>
     <string name="install_device_install_failure_msg">Yükleme zamanı hata oluştu! Log-u inceleyin!</string>
     <string name="install_device_final_msg_1">Kurulumcuyu kullandığınız için teşekkürler! Emulatörle iyi zaman geçirmenizi diliyoruz!</string>
