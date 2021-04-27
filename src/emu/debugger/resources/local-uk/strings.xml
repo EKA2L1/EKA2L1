@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Пристрій, що встановлюється вже існує!</string>
-    <string name="install_device_no_language_file_present_msg">Пристрій, що ви намагаєтеся встановити, не має мовних файлів!</string>
     <string name="install_device_product_determine_fail_msg">Не вдалось визначити інформацію товару (постачальник, код прошивки, версія ОС, тощо)</string>
     <string name="install_device_install_failure_msg">Під час установлення сталося щось не так! Будь ласка, перевірте лог!</string>
     <string name="install_device_final_msg_1">Дякуємо за використання майстра встановлення. Сподіваємося, ви добре проведете час, користуючись емулятором!</string>
