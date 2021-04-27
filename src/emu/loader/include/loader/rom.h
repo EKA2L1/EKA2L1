@@ -35,6 +35,8 @@ namespace eka2l1 {
     }
 
     namespace loader {
+        static constexpr std::uint32_t EKA1_ROM_BASE = 0x50000000;
+
         struct demand_paging_config {
             uint16_t min_pages;
             uint16_t max_pages;
@@ -68,8 +70,21 @@ namespace eka2l1 {
         struct rom_header {
             uint8_t jump[124];
             address restart_vector;
-            int64_t time;
-            uint32_t time_high;
+
+            union {
+                struct {
+                    std::int64_t time;    
+                    std::uint32_t time_high;
+                } eka2_diff0;
+
+                struct {
+                    std::uint8_t major;
+                    std::uint8_t minor;
+                    std::uint16_t build;
+                    std::int64_t time;  
+                } eka1_diff0;
+            };
+
             // 8c = 16 * 8 + 12 = 128 + 12 = 140
             address rom_base;
             uint32_t rom_size;
@@ -209,6 +224,9 @@ namespace eka2l1 {
             rom_section_header section_header;
 
             root_dir_list root;
+
+            loader::rom_dir *burn_tree_find_dir(const std::string &vir_path);
+            std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path);
         };
 
         enum rom_defrag_error {

@@ -152,7 +152,11 @@ namespace eka2l1 {
         }
 
         std::uint64_t last_modify_since_1ad() override {
-            return parent->header.time;
+            if (parent->header.rom_base == loader::EKA1_ROM_BASE) {
+                return parent->header.eka1_diff0.time;
+            }
+
+            return parent->header.eka2_diff0.time;
         }
 
         std::string get_error_descriptor() override {
@@ -898,59 +902,6 @@ namespace eka2l1 {
         loader::rom *rom_cache;
         memory_system *mem;
 
-        loader::rom_dir *burn_tree_find_dir(const std::string &vir_path) {
-            auto ite = path_iterator(vir_path);
-            loader::rom_dir *last_dir_found = &(rom_cache->root.root_dirs[0].dir);
-
-            // Skip through the drive
-            ite++;
-
-            std::vector<std::string> components;
-
-            for (; ite; ite++) {
-                components.push_back(*ite);
-            }
-
-            if (components.size() == 0) {
-                return nullptr;
-            }
-
-            for (std::size_t i = 0; i < components.size(); i++) {
-                loader::rom_dir temp;
-                temp.name = common::utf8_to_ucs2(components[i]);
-
-                auto res1 = std::lower_bound(last_dir_found->subdirs.begin(), last_dir_found->subdirs.end(), temp,
-                    [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
-
-                if (res1 != last_dir_found->subdirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
-                    last_dir_found = &(last_dir_found->subdirs[std::distance(last_dir_found->subdirs.begin(), res1)]);
-                } else {
-                    return nullptr;
-                }
-            }
-
-            return last_dir_found;
-        }
-
-        std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path) {
-            loader::rom_dir *last_dir_found = burn_tree_find_dir(eka2l1::file_directory(vir_path, true));
-
-            if (!last_dir_found) {
-                return std::nullopt;
-            }
-
-            loader::rom_entry temp_entry;
-            temp_entry.name = common::utf8_to_ucs2(eka2l1::filename(vir_path, true));
-
-            auto res2 = std::lower_bound(last_dir_found->entries.begin(), last_dir_found->entries.end(), temp_entry,
-                [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
-
-            if (res2 != last_dir_found->entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
-                return *res2;
-            }
-
-            return std::nullopt;
-        }
 
     public:
         explicit rom_file_system(loader::rom *cache, memory_system *mem, epocver ver, const std::string &product_code)
@@ -995,7 +946,7 @@ namespace eka2l1 {
                 return abstract_file_system_err_code::no;
             }
 
-            if (burn_tree_find_entry(common::ucs2_to_utf8(path))) {
+            if (rom_cache->burn_tree_find_entry(common::ucs2_to_utf8(path))) {
                 return abstract_file_system_err_code::ok;
             }
 
@@ -1023,7 +974,7 @@ namespace eka2l1 {
                 }
             }
 
-            auto entry = burn_tree_find_entry(common::ucs2_to_utf8(new_path));
+            auto entry = rom_cache->burn_tree_find_entry(common::ucs2_to_utf8(new_path));
             auto ff = physical_file_system::open_file(new_path, mode);
 
             // Dont change order!
@@ -1040,7 +991,7 @@ namespace eka2l1 {
                 return std::nullopt;
             }
 
-            auto entry = burn_tree_find_entry(common::ucs2_to_utf8(path));
+            auto entry = rom_cache->burn_tree_find_entry(common::ucs2_to_utf8(path));
 
             if (!entry) {
                 return physical_file_system::get_entry_info(path);
@@ -1062,7 +1013,7 @@ namespace eka2l1 {
             loader::rom_dir *the_base_dir = &(rom_cache->root.root_dirs[0].dir);
 
             if (!the_base_path.empty()) {
-                the_base_dir = burn_tree_find_dir(common::ucs2_to_utf8(clue));
+                the_base_dir = rom_cache->burn_tree_find_dir(common::ucs2_to_utf8(clue));
             }
 
             if (!the_base_dir) {

@@ -32,6 +32,60 @@ namespace eka2l1::loader {
         dir = 0x0010
     };
 
+    loader::rom_dir *rom::burn_tree_find_dir(const std::string &vir_path) {
+        auto ite = path_iterator(vir_path);
+        loader::rom_dir *last_dir_found = &(root.root_dirs[0].dir);
+
+        // Skip through the drive
+        ite++;
+
+        std::vector<std::string> components;
+
+        for (; ite; ite++) {
+            components.push_back(*ite);
+        }
+
+        if (components.size() == 0) {
+            return nullptr;
+        }
+
+        for (std::size_t i = 0; i < components.size(); i++) {
+            loader::rom_dir temp;
+            temp.name = common::utf8_to_ucs2(components[i]);
+
+            auto res1 = std::lower_bound(last_dir_found->subdirs.begin(), last_dir_found->subdirs.end(), temp,
+                [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+
+            if (res1 != last_dir_found->subdirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
+                last_dir_found = &(last_dir_found->subdirs[std::distance(last_dir_found->subdirs.begin(), res1)]);
+            } else {
+                return nullptr;
+            }
+        }
+
+        return last_dir_found;
+    }
+
+    std::optional<loader::rom_entry> rom::burn_tree_find_entry(const std::string &vir_path) {
+        loader::rom_dir *last_dir_found = burn_tree_find_dir(eka2l1::file_directory(vir_path, true));
+
+        if (!last_dir_found) {
+            return std::nullopt;
+        }
+
+        loader::rom_entry temp_entry;
+        temp_entry.name = common::utf8_to_ucs2(eka2l1::filename(vir_path, true));
+
+        auto res2 = std::lower_bound(last_dir_found->entries.begin(), last_dir_found->entries.end(), temp_entry,
+            [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+
+        if (res2 != last_dir_found->entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
+            return *res2;
+        }
+
+        return std::nullopt;
+    }
+
     uint32_t rom_to_offset(address romstart, address off) {
         return off - romstart;
     }
@@ -43,8 +97,7 @@ namespace eka2l1::loader {
 
         readed_size += stream->read(header.jump, sizeof(header.jump));
         readed_size += stream->read(&header.restart_vector, 4);
-        readed_size += stream->read(&header.time, 8);
-        readed_size += stream->read(&header.time_high, 4);
+        readed_size += stream->read(&header.eka2_diff0, sizeof(header.eka2_diff0));
         readed_size += stream->read(&header.rom_base, 4);
         readed_size += stream->read(&header.rom_size, 4);
         readed_size += stream->read(&header.rom_root_dir_list, 4);
@@ -69,29 +122,39 @@ namespace eka2l1::loader {
         readed_size += stream->read(&header.total_user_data_size, 4);
 
         readed_size += stream->read(&header.debug_port, 4);
-        readed_size += stream->read(&header.major, 1);
-        readed_size += stream->read(&header.minor, 1);
-        readed_size += stream->read(&header.build, 2);
+
+        if (header.rom_base != EKA1_ROM_BASE) {
+            readed_size += stream->read(&header.major, 1);
+            readed_size += stream->read(&header.minor, 1);
+            readed_size += stream->read(&header.build, 2);
+        }
 
         readed_size += stream->read(&header.compress_type, 4);
         readed_size += stream->read(&header.compress_size, 4);
         readed_size += stream->read(&header.uncompress_size, 4);
-        readed_size += stream->read(&header.disabled_caps, sizeof(header.disabled_caps));
-        readed_size += stream->read(&header.trace_mask, sizeof(header.trace_mask));
-        readed_size += stream->read(&header.initial_btrace_filter, sizeof(header.initial_btrace_filter));
 
-        readed_size += stream->read(&header.initial_btrace_buf, 4);
-        readed_size += stream->read(&header.initial_btrace_mode, 4);
+        if (header.rom_base != EKA1_ROM_BASE) {
+            readed_size += stream->read(&header.disabled_caps, sizeof(header.disabled_caps));
+            readed_size += stream->read(&header.trace_mask, sizeof(header.trace_mask));
+            readed_size += stream->read(&header.initial_btrace_filter, sizeof(header.initial_btrace_filter));
 
-        readed_size += stream->read(&header.pageable_rom_start, 4);
-        readed_size += stream->read(&header.pageable_rom_size, 4);
+            readed_size += stream->read(&header.initial_btrace_buf, 4);
+            readed_size += stream->read(&header.initial_btrace_mode, 4);
 
-        readed_size += stream->read(&header.rom_page_idx, 4);
-        readed_size += stream->read(&header.compressed_unpaged_start, 4);
+            readed_size += stream->read(&header.pageable_rom_start, 4);
+            readed_size += stream->read(&header.pageable_rom_size, 4);
 
-        readed_size += stream->read(&header.unpaged_compressed_size, 4);
-        readed_size += stream->read(&header.hcr_file_addr, 4);
-        readed_size += stream->read(header.spare, 4 * 36);
+            readed_size += stream->read(&header.rom_page_idx, 4);
+            readed_size += stream->read(&header.compressed_unpaged_start, 4);
+
+            readed_size += stream->read(&header.unpaged_compressed_size, 4);
+            readed_size += stream->read(&header.hcr_file_addr, 4);
+            readed_size += stream->read(header.spare, 4 * 36);
+        } else {
+            header.rom_page_idx = 0;
+            header.pageable_rom_size = 0;
+            header.pageable_rom_start = 0;
+        }
 
         // TODO: Gonna do something with readed size
         // I suppose i can void all these stream->read, but I don't like to do so
