@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Device to install already exists!</string>
-    <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
     <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>
     <string name="install_device_install_failure_msg">Падчас ўсталёўкі здарылася нешта не так! Калі ласка, праверце лог!</string>
     <string name="install_device_final_msg_1">Дзякуем за выкарыстанне майстра ўсталёўкі. Спадзяемся, вы добра праведзяце час, карыстаючыся эмулятарам!</string>
