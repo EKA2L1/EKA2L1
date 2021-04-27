@@ -160,4 +160,7 @@
     <string name="credits_icon_text">Ícones:</string>
     <string name="credits_honors_text">Honras:</string>
     <string name="credits_translators_text">Tradutores:</string>
+    <string name="imei_length_not_right">IMEI sequence length must be 15!</string>
+    <string name="imei_has_invalid_char">IMEI sequence contains non-numeric character!</string>
+    <string name="imei_has_invalid_sum">IMEI sequence has invalid sum!</string>
 </resources>
