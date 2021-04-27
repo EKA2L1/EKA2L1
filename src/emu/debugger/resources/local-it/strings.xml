@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">La ROM è corrotta!</string>
     <string name="install_device_fpsx_corrupt_msg">Il file FPSX è corrotto!</string>
     <string name="install_device_already_exist_msg">Il dispositivo da installare è già presente!</string>
-    <string name="install_device_no_language_file_present_msg">Nel dispositivo che stai cercando di installare mancano i file di informazioni sulla lingua!</string>
     <string name="install_device_product_determine_fail_msg">Impossibile determinare le informazioni sul prodotto (produttore, codice firmware, versione OS, ecc...)</string>
     <string name="install_device_install_failure_msg">Qualcosa è andato storto durante l\'installazione! Per favore controlla il log!</string>
     <string name="install_device_final_msg_1">Grazie per aver usato la procedura guidata. Speriamo che tu ti diverta con l\'emulatore!</string>
