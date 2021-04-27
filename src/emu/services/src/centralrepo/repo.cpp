@@ -403,6 +403,18 @@ namespace eka2l1 {
 
         case cen_rep_get_string: {
             if (entry->data.etype == central_repo_entry_type::string) {
+                std::optional<std::uint32_t> wanted_length = ctx->get_argument_data_from_descriptor<std::uint32_t>(2);
+                if (wanted_length.has_value()) {
+                    wanted_length.value() = static_cast<std::uint32_t>(entry->data.strd.length());
+                    ctx->write_data_to_descriptor_argument<std::uint32_t>(2, wanted_length.value());
+                }
+
+                const std::size_t buffer_length = ctx->get_argument_max_data_size(1);
+                if (buffer_length < entry->data.strd.length()) {
+                    ctx->complete(epoc::error_overflow);
+                    return;
+                }
+
                 ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
                     static_cast<std::uint32_t>(entry->data.strd.length()));
             } else {
