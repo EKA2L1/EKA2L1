@@ -30,7 +30,6 @@
     <string name="install_rom_fail_to_copy">فشل في نسخ ROM إلى الوجهة المستهدفة!</string>
     <string name="install_rpkg_insufficent_size">ملف RPKG صغير جداً، قد لا يتم تنفيذ dump منها!</string>
     <string name="install_already_exist">الجهاز المراد تثبيته موجود بالفعل!</string>
-    <string name="install_no_language_file_present">الجهاز مفقود في ملفات معلومات اللغة!</string>
     <string name="install_product_determine_fail">فشل في تحديد معلومات المنتج!</string>
     <string name="install_device_vpl_invalid_msg">The firmware description file (VPL) file is invalid!</string>
     <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
