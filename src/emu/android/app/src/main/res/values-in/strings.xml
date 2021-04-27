@@ -30,7 +30,6 @@
     <string name="install_rom_fail_to_copy">Gagal menyalin ROM ke tempat tujuan!</string>
     <string name="install_rpkg_insufficent_size">Ukuran file RPKG terlaku kecil, kemungkinan proses dump tidak akan selesai!</string>
     <string name="install_already_exist">Perangkat yang terinstal sudah ada!</string>
-    <string name="install_no_language_file_present">Perangkat kehilangan file informasi bahasa!</string>
     <string name="install_product_determine_fail">Gagal menentukan informasi produk!</string>
     <string name="install_device_vpl_invalid_msg">File deskripsi firmware (VPL) tidak valid!</string>
     <string name="install_device_rofs_corrupt_msg">File ROFS rusak!</string>
