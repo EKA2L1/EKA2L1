@@ -22,6 +22,7 @@
 #include <common/cvt.h>
 #include <common/ini.h>
 #include <common/log.h>
+#include <common/pystr.h>
 
 #include <system/epoc.h>
 #include <system/devices.h>
@@ -181,7 +182,21 @@ namespace eka2l1 {
                     std::u16string str16 = common::utf8_to_ucs2(entry.data.strd);
                     entry.data.strd.resize(str16.length() * 2);
                     std::memcpy(entry.data.strd.data(), str16.data(), entry.data.strd.length());
-                }
+                } else if (common::compare_ignore_case(entry_type.data(), "binary") == 0) {
+                    // Two characters each, represent a byte in hex
+                    common::pystr hex_string = entry.data.strd;
+                    entry.data.strd.clear();
+
+                    if ((hex_string.length() & 1) != 0) {
+                        hex_string = common::pystr("0") + hex_string;
+                    }
+
+                    for (std::size_t i = 0; i < hex_string.length(); i += 2) {
+                        // Grab two characters
+                        std::uint8_t val = hex_string.substr(i, 2).as_int<std::uint8_t>(0, 16);
+                        entry.data.strd.push_back(static_cast<char>(val));
+                    }
+                } 
                 break;
             }
 
