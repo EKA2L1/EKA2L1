@@ -124,7 +124,7 @@
     <string name="install_device_rpkg_choose_msg">Repackage faylını seçin (RPKG):</string>
     <string name="install_device_firmware_vpl_choose_msg">Please specify the firmware description file (VPL):</string>
     <string name="install_device_rom_choose_msg">Zəhmət olmasa ROM faylı seçin:</string>
-    <string name="install_device_note_may_need_rpkg">For S60v3 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
     <string name="install_device_wait_install_msg">Zəhmət olmasa cihaz quraşdırılana kimi gözləyin!</string>
     <string name="install_device_progress_rpkg_msg">Extract the RPKG ({}%)</string>
     <string name="install_device_progress_rom_msg">Installing the ROM ({}%)</string>
