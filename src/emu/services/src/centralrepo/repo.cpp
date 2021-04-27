@@ -410,13 +410,14 @@ namespace eka2l1 {
                 }
 
                 const std::size_t buffer_length = ctx->get_argument_max_data_size(1);
+
+                ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
+                    static_cast<std::uint32_t>(common::min(entry->data.strd.length(), buffer_length)));
+
                 if (buffer_length < entry->data.strd.length()) {
                     ctx->complete(epoc::error_overflow);
                     return;
                 }
-
-                ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(&entry->data.strd[0]),
-                    static_cast<std::uint32_t>(entry->data.strd.length()));
             } else {
                 ctx->complete(epoc::error_argument);
                 return;
