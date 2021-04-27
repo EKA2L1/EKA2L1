@@ -267,10 +267,6 @@ public class DeviceListFragment extends Fragment {
                                 errorToDisplay = getText(R.string.install_rpkg_insufficent_size);
                                 break;
 
-                            case Emulator.INSTALL_DEVICE_ERROR_NO_LANGUAGE_FILE_PRESENT:
-                                errorToDisplay = getText(R.string.install_no_language_file_present);
-                                break;
-
                             case Emulator.INSTALL_DEVICE_ERROR_NOT_EXIST:
                                 errorToDisplay = getText(R.string.install_rpkg_file_not_found);
                                 break;

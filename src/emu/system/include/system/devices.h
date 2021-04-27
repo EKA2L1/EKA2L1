@@ -42,8 +42,7 @@ namespace eka2l1 {
 
     enum add_device_error {
         add_device_none = 0,
-        add_device_existed,
-        add_device_no_language_present
+        add_device_existed
     };
 
     /*! \brief A manager for all installed devices on this emulator

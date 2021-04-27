@@ -143,9 +143,6 @@ namespace eka2l1::loader {
             case add_device_existed:
                 return device_installation_already_exist;
 
-            case add_device_no_language_present:
-                return device_installation_no_languages_present;
-
             default:
                 break;
             }
@@ -281,9 +278,6 @@ namespace eka2l1::loader {
             switch (err_adddvc) {
             case add_device_existed:
                 return device_installation_already_exist;
-
-            case add_device_no_language_present:
-                return device_installation_no_languages_present;
 
             default:
                 break;

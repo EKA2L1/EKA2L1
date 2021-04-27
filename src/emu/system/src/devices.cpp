@@ -21,6 +21,7 @@
 #include <system/devices.h>
 #include <yaml-cpp/yaml.h>
 
+#include <common/types.h>
 #include <common/algorithm.h>
 #include <common/dynamicfile.h>
 #include <common/path.h>
@@ -152,23 +153,27 @@ namespace eka2l1 {
             "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
         common::dynamic_ifile ifile(lang_path);
         if (ifile.fail()) {
-            LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {})", lang_path);
-            return add_device_no_language_present;
-        }
-        std::string line;
-        while (ifile.getline(line)) {
-            if ((line == "") || (line[0] == '\0'))
-                break;
+            LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {}).", lang_path);
+        } else {
+            std::string line;
+            while (ifile.getline(line)) {
+                if ((line == "") || (line[0] == '\0'))
+                    break;
 
-            if ((line == "\r") || (line == "\n") || (line == "\r\n")) {
-                continue;
+                if ((line == "\r") || (line == "\n") || (line == "\r\n")) {
+                    continue;
+                }
+                
+                const int lang_code = std::stoi(line);
+                if (line.find_first_of(",d") != std::string::npos) {
+                    default_language = lang_code;
+                }
+                languages.push_back(lang_code);
             }
-            
-            const int lang_code = std::stoi(line);
-            if (line.find_first_of(",d") != std::string::npos) {
-                default_language = lang_code;
-            }
-            languages.push_back(lang_code);
+        }
+        if (languages.empty()) {
+            LOG_WARN(SYSTEM, "No language is specified, adding English to prevent empty");
+            languages.push_back(static_cast<int>(language::en));
         }
         if (default_language == -1)
             default_language = languages[0];

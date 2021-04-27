@@ -307,10 +307,6 @@ namespace eka2l1 {
                         wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rpkg_insufficent_size_msg");
                         break;
 
-                    case device_installation_no_languages_present:
-                        wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_no_language_file_present_msg");
-                        break;
-
                     case device_installation_not_exist:
                         wrong_happening_msg = common::get_localised_string(localised_strings, "install_device_rpkg_file_not_found_msg");
                         break;

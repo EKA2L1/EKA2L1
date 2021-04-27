@@ -454,9 +454,6 @@ namespace eka2l1 {
             case add_device_existed:
                 return device_installation_already_exist;
 
-            case add_device_no_language_present:
-                return device_installation_no_languages_present;
-
             default:
                 break;
             }
