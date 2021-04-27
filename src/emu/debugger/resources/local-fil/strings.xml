@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Ang aparato na ito ay naka-install na!</string>
-    <string name="install_device_no_language_file_present_msg">The device you are trying to install is missing language information files!</string>
     <string name="install_device_product_determine_fail_msg">Fail to determine product information (vendor, firmware code, OS version, etc...)</string>
     <string name="install_device_install_failure_msg">Something wrong happens during the install! Please check the log!</string>
     <string name="install_device_final_msg_1">Thank you for using the wizard. We hope you have a good time using the emulator!</string>
