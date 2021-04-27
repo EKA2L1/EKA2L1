@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Устройство для установки уже существует!</string>
-    <string name="install_device_no_language_file_present_msg">На устройстве, которое вы пытаетесь установить, отсутствуют файлы информации о языке!</string>
     <string name="install_device_product_determine_fail_msg">Не удалось определить информацию о продукте (производитель, код прошивки, версия ОС и т.д.)</string>
     <string name="install_device_install_failure_msg">Что-то случилось во время установки! Пожалуйста, проверьте лог!</string>
     <string name="install_device_final_msg_1">Спасибо за использование мастера установки. Мы надеемся, что эмулятор вам понравится!</string>
