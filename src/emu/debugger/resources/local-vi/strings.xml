@@ -125,7 +125,7 @@ Kiểm tra xem có thiết bị nào chưa được thêm hay không và sửa t
     <string name="install_device_rpkg_choose_msg">Hãy trỏ tới file RPKG:</string>
     <string name="install_device_firmware_vpl_choose_msg">Hãy chọn file mô tả firmware (VPL):</string>
     <string name="install_device_rom_choose_msg">Hãy trỏ tới file ROM:</string>
-    <string name="install_device_note_may_need_rpkg">Với các thiết bị S60v3 hoặc cao hơn, bạn có thể cần đến một file nữa tên là RPKG. Nút chọn đường dẫn sẽ xuất hiện nếu trình cài đặt phát hiện ra nó cần thiết.</string>
+    <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
     <string name="install_device_wait_install_msg">Làm ơn hãy chờ trong khi chúng tôi cài đặt thiết bị của bạn!</string>
     <string name="install_device_progress_rpkg_msg">Giải nén RPKG ({}%)</string>
     <string name="install_device_progress_rom_msg">Cài đặt ROM ({}%)</string>
