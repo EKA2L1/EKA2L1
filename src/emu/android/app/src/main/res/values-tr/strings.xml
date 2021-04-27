@@ -30,7 +30,6 @@
     <string name="install_rom_fail_to_copy">ROM\'u hedefe kopyalama işlemi başarısız oldu!</string>
     <string name="install_rpkg_insufficent_size">RPKG dosyası çok küçük, yükleme tamamlanmamış olabilir!</string>
     <string name="install_already_exist">Yüklenecek cihaz zaten var!</string>
-    <string name="install_no_language_file_present">Cihazda dil bilgisi dosyaları eksik!</string>
     <string name="install_product_determine_fail">Ürün bilgileri belirlenemedi!</string>
     <string name="install_device_vpl_invalid_msg">The firmware description file (VPL) file is invalid!</string>
     <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
