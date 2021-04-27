@@ -52,7 +52,17 @@ namespace eka2l1::loader {
             return false;
         }
 
-        return (rom_parse->header.rom_base == EKA2_ROM_BASE);
+        if (rom_parse->header.rom_base != loader::EKA1_ROM_BASE) {
+            return true;
+        }
+
+        // Device information usually resides in ROFS. If it's in ROM likely there's no ROFS
+        std::optional<rom_entry> rentry = rom_parse->burn_tree_find_entry("z:\\system\\versions\\sw.txt");
+        if (rentry.has_value()) {
+            return false;
+        }
+
+        return true;
     }
 
     static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent) {
