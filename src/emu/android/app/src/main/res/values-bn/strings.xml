@@ -23,7 +23,7 @@
     <string name="install_method">ইনস্টল পদ্ধতি</string>
     <string name="no_device_dialog_title">কোনো ডিভাইস ইনস্টল করা হয়নি!</string>
     <string name="no_device_installed">অনুগ্রহ করে একটি ডিভাইস ইনস্টল করুন। ইনস্টলেশনের জন্য একটি সিম্বিয়ান ডিভাইসের ফাইল ও রম লাগবে।\n\n<b>নোট:</b> প্রতিটি অ্যাপ চালাতে উপযুক্ত সিম্বিয়ান ডিভাইস লাগবে।.</string>
-    <string name="install_device_note_may_need_rpkg">For S60v3 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
     <string name="install_rpkg_corrupt">সরবরাহকৃত RPKG ফাইলটি বিকল!</string>
     <string name="install_rpkg_file_not_found">নির্দিষ্ট RPKG ফাইলটি খোলা যাচ্ছে না!</string>
     <string name="install_raw_dump_fail_to_copy">অপরিপক্ব ডাম্প ফাইলটি নির্ধারিত জায়গায় কপি করতে ব্যর্থ!</string>
