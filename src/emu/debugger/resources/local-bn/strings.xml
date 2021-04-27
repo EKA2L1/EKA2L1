@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">ইনস্টল করতে ডিভাইসটি ইতোমধ্যে বিদ্যমান!</string>
-    <string name="install_device_no_language_file_present_msg">যে ডিভাইসটি ইনস্টল করতে যাচ্ছেন তার মধ্যে ভাষা তথ্য ফাইল পাওয়া যাচ্ছে না!</string>
     <string name="install_device_product_determine_fail_msg">পণ্যের তথ্য নির্ধারণে ব্যর্থ (বিক্রেতা, ফির্মওয়্যার কোড, ওএস ভার্সন, ইত্যাদি...)</string>
     <string name="install_device_install_failure_msg">ইনস্টলের সময় কিছু ভুল হয়েছে! অনুগ্রহ করে লগ ফাইলটি দেখুন!</string>
     <string name="install_device_final_msg_1">উইজার্ডটি ব্যবহার করার জন্য আপনাকে ধন্যবাদ। আশা করি আপনি ইমুলেটর ব্যবহার করার ভালো সময় পেয়েছেন!</string>
