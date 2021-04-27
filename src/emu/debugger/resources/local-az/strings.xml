@@ -139,7 +139,6 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="install_device_already_exist_msg">Quraşdırılacaq cihaz artıq mövcuddur!</string>
-    <string name="install_device_no_language_file_present_msg">Yükləməyə çalışdığınız cihazın dil məlumat faylları mövcud deyil!</string>
     <string name="install_device_product_determine_fail_msg">Məhsul haqqında məlumat müəyyən edilə bilmədi (istehsalçı, ƏS versiyası və s.)</string>
     <string name="install_device_install_failure_msg">Quraşdırma zamanı xəta baş verdi! Zəhmət olmasa log-a baxış keçirin!</string>
     <string name="install_device_final_msg_1">İstifadə etdiyiniz üçün təşəkkürlər! Ümid edirik ki, emulyator ilə xoş zaman keçirəcəksiniz!</string>
