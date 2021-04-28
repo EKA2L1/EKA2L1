@@ -88,23 +88,33 @@ namespace eka2l1 {
         charger_status_prop_->set_int(epoc::etel_charger_status_connected);
     }
 
-    void etel_server::init2(io_system *io) {
+    void etel_server::init2(kernel_system *kern, io_system *io) {
         // Load neccessary modules! This is usually handle by another party...
-        mngr_.load_tsy(io, 0, "phonetsy");
+        static constexpr const char *REGULAR_TSY_NAME = "phonetsy";
+
+        mngr_.load_tsy(kern, io, 0, REGULAR_TSY_NAME);
         init2ed_ = true;
     }
 
     void etel_server::connect(service::ipc_context &ctx) {
         if (!init2ed_) {
-            init2(ctx.sys->get_io_system());
+            init2(ctx.sys->get_kernel_system(), ctx.sys->get_io_system());
         }
 
         create_session<etel_session>(&ctx);
         ctx.complete(epoc::error_none);
     }
 
-    bool etel_server::is_oldarch() {
-        return kern->is_eka1();    
+    etel_legacy_level etel_server::legacy_level() {
+        if (kern->get_epoc_version() <= epocver::epoc6) {
+            return ETEL_LEGACY_LEVEL_LEGACY;
+        }
+
+        if (kern->get_epoc_version() <= epocver::epoc81a) {
+            return ETEL_LEGACY_LEVEL_TRANSITION;
+        }
+
+        return ETEL_LEGACY_LEVEL_MORDEN;
     }
 
     etel_session::etel_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_ver)
@@ -146,7 +156,7 @@ namespace eka2l1 {
 
         epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
 
-        if (!mngr.load_tsy(ctx->sys->get_io_system(), client_ss_uid_, common::ucs2_to_utf8(name.value()))) {
+        if (!mngr.load_tsy(ctx->sys->get_kernel_system(), ctx->sys->get_io_system(), client_ss_uid_, common::ucs2_to_utf8(name.value()))) {
             ctx->complete(epoc::error_already_exists);
             return;
         }
@@ -238,7 +248,7 @@ namespace eka2l1 {
         switch (entry->entity_->type()) {
         case epoc::etel_entry_phone:
             subsession = std::make_unique<etel_phone_subsession>(this, reinterpret_cast<etel_phone *>(entry->entity_.get()),
-                server<etel_server>()->is_oldarch());
+                server<etel_server>()->legacy_level());
 
             break;
 
@@ -289,7 +299,7 @@ namespace eka2l1 {
 
             if (line_ite != phone->lines_.end()) {
                 // Create the subsession
-                new_sub = std::make_unique<etel_line_subsession>(this, *line_ite, server<etel_server>()->is_oldarch());
+                new_sub = std::make_unique<etel_line_subsession>(this, *line_ite, server<etel_server>()->legacy_level());
             } else {
                 LOG_ERROR(SERVICE_ETEL, "Unable to open subsession with object name {}", common::ucs2_to_utf8(name_of_object.value()));
             }
@@ -330,7 +340,7 @@ namespace eka2l1 {
     }
 
     void etel_session::fetch(service::ipc_context *ctx) {
-        if (server<etel_server>()->is_oldarch()) {
+        if (server<etel_server>()->legacy_level() <= ETEL_LEGACY_LEVEL_TRANSITION) {
             switch (ctx->msg->function) {
             case epoc::etel_old_open_from_session:
                 open_from_session(ctx);

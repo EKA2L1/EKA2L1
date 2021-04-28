@@ -34,14 +34,13 @@ namespace eka2l1 {
     etel_line::~etel_line() {
     }
 
-    etel_line_subsession::etel_line_subsession(etel_session *session, etel_line *line, bool oldarch)
-        : etel_subsession(session)
-        , line_(line)
-        , oldarch_(oldarch) {
+    etel_line_subsession::etel_line_subsession(etel_session *session, etel_line *line, const etel_legacy_level lvl)
+        : etel_subsession(session, lvl)
+        , line_(line) {
     }
 
     void etel_line_subsession::dispatch(service::ipc_context *ctx) {
-        if (oldarch_) {
+        if (legacy_level_ == ETEL_LEGACY_LEVEL_LEGACY) {
             switch (ctx->msg->function) {
             case epoc::etel_old_line_get_status:
                 get_status(ctx);
@@ -63,6 +62,12 @@ namespace eka2l1 {
                 cancel_notify_status_change(ctx);
                 break;
 
+            default:
+                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel line opcode {}", ctx->msg->function);
+                break;
+            }
+        } else if (legacy_level_ == ETEL_LEGACY_LEVEL_TRANSITION) {
+            switch (ctx->msg->function) {
             default:
                 LOG_ERROR(SERVICE_ETEL, "Unimplemented etel line opcode {}", ctx->msg->function);
                 break;

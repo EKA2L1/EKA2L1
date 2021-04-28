@@ -29,10 +29,9 @@
 #include <system/devices.h>
 
 namespace eka2l1 {
-    etel_phone_subsession::etel_phone_subsession(etel_session *session, etel_phone *phone, bool oldarch)
-        : etel_subsession(session)
-        , phone_(phone)
-        , oldarch_(oldarch) {
+    etel_phone_subsession::etel_phone_subsession(etel_session *session, etel_phone *phone, const etel_legacy_level lvl)
+        : etel_subsession(session, lvl)
+        , phone_(phone) {
     }
 
     void etel_phone_subsession::get_status(service::ipc_context *ctx) {
@@ -166,7 +165,7 @@ namespace eka2l1 {
         phoneid.revision_id_.assign(nullptr, EXAMPLE_VALID_REVISION);
         phoneid.serial_num_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
 
-        if (oldarch_) {
+        if (legacy_level_ <= ETEL_LEGACY_LEVEL_TRANSITION) {
             ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v0>(0, phoneid);
         } else {
             epoc::etel_phone_id_v1 phoneid_new;
@@ -237,7 +236,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::dispatch(service::ipc_context *ctx) {
-        if (oldarch_) {
+        if (legacy_level_ == ETEL_LEGACY_LEVEL_LEGACY) {
             switch (ctx->msg->function) {
             case epoc::etel_old_phone_get_status:
                 get_status(ctx);
@@ -252,6 +251,16 @@ namespace eka2l1 {
                 break;
 
             case epoc::etel_old_gsm_phone_get_phone_id:
+                get_phone_id(ctx);
+                break;
+
+            default:
+                LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
+                break;
+            }
+        } else if (legacy_level_ == ETEL_LEGACY_LEVEL_TRANSITION) {
+            switch (ctx->msg->function) {
+            case epoc::etel_mobile_phone_transition_get_phone_id:
                 get_phone_id(ctx);
                 break;
 

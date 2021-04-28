@@ -27,6 +27,7 @@
 
 namespace eka2l1 {
     class io_system;
+    class kernel_system;
 
     namespace kernel {
         using uid = std::uint64_t;
@@ -49,7 +50,7 @@ namespace eka2l1::epoc::etel {
     public:
         explicit module_manager();
 
-        bool load_tsy(io_system *io, const kernel::uid borrowed_session, const std::string &module_name);
+        bool load_tsy(kernel_system *kern, io_system *io, const kernel::uid borrowed_session, const std::string &module_name);
         bool close_tsy(io_system *io, const kernel::uid borrowed_session, const std::string &module_name);
 
         void unload_from_sessions(io_system *io, const kernel::uid borrowed_session);

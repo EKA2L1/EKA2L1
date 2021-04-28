@@ -26,6 +26,7 @@
 #include <common/log.h>
 #include <common/path.h>
 
+#include <kernel/kernel.h>
 #include <vfs/vfs.h>
 
 namespace eka2l1::epoc::etel {
@@ -56,7 +57,7 @@ namespace eka2l1::epoc::etel {
         return fulled_module_path;
     }
 
-    bool module_manager::load_tsy(io_system *io, const kernel::uid borrowed_session, const std::string &module_name) {
+    bool module_manager::load_tsy(kernel_system *kern, io_system *io, const kernel::uid borrowed_session, const std::string &module_name) {
         const std::string module_lowercased = common::lowercase_string(get_full_tsy_path(io, module_name));
         auto find_result = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
             return info.name_ == module_lowercased;
@@ -85,8 +86,7 @@ namespace eka2l1::epoc::etel {
         line_info.last_call_added_.set_length(nullptr, 0);
         line_info.last_call_answering_.set_length(nullptr, 0);
 
-        line_entry.entity_ = std::make_unique<etel_line>(line_info, module_name + "::Line1",
-            epoc::etel_line_caps_voice);
+        line_entry.entity_ = std::make_unique<etel_line>(line_info, "Voice1", epoc::etel_line_caps_voice);
 
         etel_module_entry phone_entry;
         phone_entry.tsy_name_ = module_lowercased;
@@ -95,7 +95,13 @@ namespace eka2l1::epoc::etel {
         phone_info.exts_ = 0;
         phone_info.network_ = epoc::etel_network_type_mobile_digital;
 
-        const std::u16string phone_name_meme = common::utf8_to_ucs2(module_name) + u"::Phone";
+        static constexpr const char16_t *LEGACY_TSY_PHONE_NAME = u"Calypso";
+        static constexpr const char16_t *MORDENIZE_TSY_PHONE_NAME = u"DefaultPhone";
+
+        std::u16string phone_name_meme = MORDENIZE_TSY_PHONE_NAME;
+        if (kern->get_epoc_version() <= epocver::epoc6) {
+            phone_name_meme = LEGACY_TSY_PHONE_NAME;
+        }
 
         phone_info.phone_name_.assign(nullptr, phone_name_meme);
 

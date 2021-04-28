@@ -43,13 +43,15 @@ namespace eka2l1 {
     protected:
         friend struct etel_session;
 
+        etel_legacy_level legacy_level_;
+
         std::string name_;
         std::uint32_t id_;
 
         etel_session *session_;
 
     public:
-        explicit etel_subsession(etel_session *session);
+        explicit etel_subsession(etel_session *session, const etel_legacy_level lvl);
 
         virtual void dispatch(service::ipc_context *ctx) = 0;
         virtual etel_subsession_type type() const = 0;
@@ -57,7 +59,6 @@ namespace eka2l1 {
     };
 
     struct etel_phone_subsession : public etel_subsession {
-        bool oldarch_;
         etel_phone *phone_;
         epoc::notify_info network_registration_status_change_nof_;
         epoc::notify_info signal_strength_change_nof_;
@@ -85,7 +86,7 @@ namespace eka2l1 {
         void get_current_network_cancel(eka2l1::service::ipc_context *ctx);
 
     public:
-        explicit etel_phone_subsession(etel_session *session, etel_phone *phone, bool oldarch);
+        explicit etel_phone_subsession(etel_session *session, etel_phone *phone, const etel_legacy_level lvl);
 
         void dispatch(service::ipc_context *ctx) override;
 
@@ -108,7 +109,7 @@ namespace eka2l1 {
         void cancel_notify_incoming_call(service::ipc_context *ctx);
 
     public:
-        explicit etel_line_subsession(etel_session *session, etel_line *line, bool oldarch);
+        explicit etel_line_subsession(etel_session *session, etel_line *line, const etel_legacy_level lvl);
 
         void dispatch(service::ipc_context *ctx) override;
 

@@ -78,12 +78,12 @@ namespace eka2l1 {
         bool init2ed_;
 
         void init(kernel_system *kern);
-        void init2(io_system *io);
+        void init2(kernel_system *kern, io_system *io);
 
     public:
         explicit etel_server(eka2l1::system *sys);
         void connect(service::ipc_context &ctx) override;
 
-        bool is_oldarch();
+        etel_legacy_level legacy_level();
     };
 }
