@@ -23,7 +23,7 @@
     <string name="install_method">Método de instalación</string>
     <string name="no_device_dialog_title">¡Ningún dispositivo instalado!</string>
     <string name="no_device_installed">Por favor, instale un dispositivo. Se requieren ficheros y la ROM de un dispositivo Symbian.\n\n<b>Nota:</b> Cada aplicación requiere de un dispositivo Symbian concreto para funcionar.</string>
-    <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="install_device_note_may_need_rpkg">Para dispositivos S60v2 o superior puede que sea necesario proveer un fichero adicional llamado RPKG. Si el instalador lo determina necesario, aparecerá el selector de ruta para seleccionarlo.</string>
     <string name="install_rpkg_corrupt">¡El fichero RPKG está corrupto!</string>
     <string name="install_rpkg_file_not_found">¡El fichero RPKG indicado no se pudo abrir!</string>
     <string name="install_raw_dump_fail_to_copy">¡Fallo copiado los ficheros de imagen en crudo a la ubicación de destino!</string>
