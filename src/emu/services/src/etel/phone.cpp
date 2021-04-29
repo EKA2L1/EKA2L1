@@ -165,7 +165,7 @@ namespace eka2l1 {
         phoneid.revision_id_.assign(nullptr, EXAMPLE_VALID_REVISION);
         phoneid.serial_num_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
 
-        if (legacy_level_ <= ETEL_LEGACY_LEVEL_TRANSITION) {
+        if (legacy_level_ == ETEL_LEGACY_LEVEL_LEGACY) {
             ctx->write_data_to_descriptor_argument<epoc::etel_phone_id_v0>(0, phoneid);
         } else {
             epoc::etel_phone_id_v1 phoneid_new;
