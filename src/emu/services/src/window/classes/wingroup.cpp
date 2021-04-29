@@ -85,7 +85,7 @@ namespace eka2l1::epoc {
 
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
         : window(client, scr, parent, window_kind::group)
-        , last_refresh_rate(30)
+        , last_refresh_rate(60)
         , uid_owner_change_callback_handle(0)
         , uid_owner_change_process(nullptr) {
         // Create window group as child
