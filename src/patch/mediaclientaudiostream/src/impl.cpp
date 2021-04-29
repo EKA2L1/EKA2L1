@@ -294,7 +294,7 @@ TInt CMMFMdaAudioOutputStream::SetAudioPropertiesWithMdaEnum(const TInt aFreq, c
         return KErrNone;
     }
 
-    return SetAudioPropertiesRaw(aFreq, aChannels);
+    return SetAudioPropertiesRaw(realFreq, numChannels);
 }
 
 TInt CMMFMdaAudioOutputStream::SetAudioPropertiesRaw(const TInt aFreq, const TInt aChannels) {
