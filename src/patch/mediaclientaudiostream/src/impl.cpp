@@ -285,7 +285,7 @@ TInt CMMFMdaAudioOutputStream::GetVolume() const {
     return result;
 }
 
-TInt CMMFMdaAudioOutputStream::SetAudioProperties(const TInt aFreq, const TInt aChannels) {
+TInt CMMFMdaAudioOutputStream::SetAudioPropertiesWithMdaEnum(const TInt aFreq, const TInt aChannels) {
     const TInt realFreq = ConvertFreqEnumToNumber(aFreq);
     const TInt numChannels = ConvertChannelEnumToNum(aChannels);
 
@@ -294,7 +294,11 @@ TInt CMMFMdaAudioOutputStream::SetAudioProperties(const TInt aFreq, const TInt a
         return KErrNone;
     }
 
-    return EAudioDspStreamSetProperties(0, iDispatchInstance, realFreq, numChannels);
+    return SetAudioPropertiesRaw(aFreq, aChannels);
+}
+
+TInt CMMFMdaAudioOutputStream::SetAudioPropertiesRaw(const TInt aFreq, const TInt aChannels) {
+    return EAudioDspStreamSetProperties(0, iDispatchInstance, aFreq, aChannels);
 }
 
 TInt CMMFMdaAudioOutputStream::SetBalance(const TInt aBalance) {

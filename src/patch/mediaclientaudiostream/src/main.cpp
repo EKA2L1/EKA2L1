@@ -56,7 +56,7 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
     TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
 
     // Try to set audio properties
-    const TInt result = iProperties->SetAudioProperties(settings->iSampleRate, settings->iChannels);
+    const TInt result = iProperties->SetAudioPropertiesRaw(settings->iSampleRate, settings->iChannels);
 
     if (result != KErrNone) {
         LogOut(KMcaCat, _L("ERR:: Unable to set audio properties on stream opening!"));
@@ -71,7 +71,7 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
 }
 
 void CMdaAudioOutputStream::SetAudioPropertiesL(TInt aSampleRate, TInt aChannels) {
-    const TInt result = iProperties->SetAudioProperties(aSampleRate, aChannels);
+    const TInt result = iProperties->SetAudioPropertiesWithMdaEnum(aSampleRate, aChannels);
 
     if (result != KErrNone) {
         LogOut(KMcaCat, _L("ERR:: Set audio properties failed!"));

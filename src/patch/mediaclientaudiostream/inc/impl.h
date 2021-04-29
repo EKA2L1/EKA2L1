@@ -111,7 +111,8 @@ public:
     TInt SetVolume(const TInt aNewVolume);
     TInt GetVolume() const;
 
-    TInt SetAudioProperties(const TInt aFreq, const TInt aChannels);
+    TInt SetAudioPropertiesRaw(const TInt aFreq, const TInt aChannels);
+    TInt SetAudioPropertiesWithMdaEnum(const TInt aFreq, const TInt aChannels);
 
     TInt SetBalance(const TInt aBalance);
     TInt GetBalance();
