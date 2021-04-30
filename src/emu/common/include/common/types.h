@@ -129,7 +129,8 @@ enum io_attrib {
     io_attrib_hidden = 1 << 2,
     io_attrib_write_protected = 1 << 3,
     io_attrib_internal = 1 << 4,
-    io_attrib_removeable = 1 << 5
+    io_attrib_removeable = 1 << 5,
+    io_attrib_allow_uid = 1 << 6
 };
 
 enum class drive_media {
