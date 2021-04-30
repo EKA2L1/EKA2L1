@@ -134,24 +134,29 @@ namespace eka2l1 {
     char16_t get_separator_16(bool symbian_use = false);
 
     /*! \brief Iterate through components of a path */
-    struct path_iterator {
-        std::string path;
-        std::string comp;
+    template <typename T>
+    struct basic_path_iterator {
+        std::basic_string<T> path;
         uint32_t crr_pos;
+        uint32_t last_pos;
 
     public:
-        path_iterator()
-            : crr_pos(0) {
+        basic_path_iterator()
+            : crr_pos(0)
+            , last_pos(0) {
             (*this)++;
         }
 
-        path_iterator(std::string p)
+        basic_path_iterator(const std::basic_string<T> &p)
             : path(p)
-            , crr_pos(0) {
+            , crr_pos(0)
+            , last_pos(0) {
             (*this)++;
         }
 
-        path_iterator operator++(int dummy) {
+        basic_path_iterator<T> operator++(int dummy) {
+            last_pos = crr_pos;
+
             if (crr_pos > path.length()) {
                 throw std::runtime_error("Iterator is invalid");
                 return *this;
@@ -159,19 +164,15 @@ namespace eka2l1 {
 
             if (crr_pos == 0 && (is_separator(path[crr_pos]))) {
                 crr_pos++;
-                comp = "";
                 return *this;
             }
 
-            if (crr_pos < path.length()) {
-                comp = "";
-            } else {
+            if (crr_pos >= path.length()) {
                 crr_pos++;
                 return *this;
             }
 
             while (crr_pos < path.length() && !is_separator(path[crr_pos])) {
-                comp += path[crr_pos];
                 crr_pos += 1;
             }
 
@@ -182,14 +183,17 @@ namespace eka2l1 {
             return *this;
         }
 
-        std::string operator*() const {
-            return comp;
+        std::basic_string<T> operator*() const {
+            return path.substr(last_pos, crr_pos - last_pos - 1);
         }
 
         operator bool() const {
             return crr_pos <= path.length();
         }
     };
+
+    using path_iterator = basic_path_iterator<char>;
+    using path_iterator_16 = basic_path_iterator<char16_t>;
 
     /*! \brief Check if the path is absoluted or not 
 	    \param current_dir The current directory.
