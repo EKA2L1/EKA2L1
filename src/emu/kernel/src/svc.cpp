@@ -215,6 +215,21 @@ namespace eka2l1::epoc {
         des->assign(cr_process, full_path);
     }
 
+    static void get_memory_info_from_codeseg(codeseg_ptr seg, kernel::process *pr, kernel::memory_info *info) {
+        info->rt_code_addr = seg->get_code_run_addr(pr);
+        info->rt_code_size = (seg->is_rom() ? 0 : seg->get_text_size());
+
+        info->rt_const_data_addr = info->rt_code_addr + seg->get_text_size();
+        info->rt_const_data_size = (seg->is_rom() ? 0 : (seg->get_code_size() - seg->get_text_size()));
+
+        // These one definitely got load into RAM, LOL
+        info->rt_initialized_data_addr = seg->get_data_run_addr(pr);
+        info->rt_initialized_data_size = seg->get_data_size();
+
+        info->rt_bss_addr = info->rt_initialized_data_addr + info->rt_initialized_data_size;
+        info->rt_bss_size = seg->get_bss_size();
+    }
+
     BRIDGE_FUNC(std::int32_t, process_get_memory_info, kernel::handle h, eka2l1::ptr<kernel::memory_info> info) {
         kernel::memory_info *info_host = info.get(kern->crr_process());
         process_ptr pr_real = kern->get<kernel::process>(h);
@@ -223,7 +238,7 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        pr_real->get_memory_info(*info_host);
+        get_memory_info_from_codeseg(pr_real->get_codeseg(), pr_real, info_host);
         return epoc::error_none;
     }
 
@@ -1836,6 +1851,21 @@ namespace eka2l1::epoc {
             return epoc::error_general;
         }
 
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, library_get_memory_info, kernel::handle h, kernel::memory_info *info) {
+        library_ptr lib = kern->get<kernel::library>(h);
+
+        if (!lib) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!info) {
+            return epoc::error_argument;
+        }
+
+        get_memory_info_from_codeseg(lib->get_codeseg(), kern->crr_process(), info);
         return epoc::error_none;
     }
 
@@ -5211,6 +5241,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x59, exception_handler),
         BRIDGE_REGISTER(0x5A, set_exception_handler),
         BRIDGE_REGISTER(0x5D, is_exception_handled),
+        BRIDGE_REGISTER(0x5F, library_get_memory_info),
         BRIDGE_REGISTER(0x63, process_type),
         BRIDGE_REGISTER(0x65, chunk_top),
         BRIDGE_REGISTER(0x67, thread_create),

@@ -457,14 +457,6 @@ namespace eka2l1::kernel {
     void process::set_time_delay(const std::uint32_t delay) {
         time_delay_ = delay;
     }
-    
-    void process::get_memory_info(memory_info &info) {
-        info.rt_code_addr = codeseg->get_code_run_addr(this);
-        info.rt_const_data_addr = codeseg->get_data_run_addr(this);
-        info.rt_bss_addr = info.rt_const_data_addr;
-        info.rt_bss_size = codeseg->get_bss_size();
-        // TODO: More
-    }
 
     void pass_arg::do_state(common::chunkyseri &seri) {
         auto s = seri.section("PassArg", 1);

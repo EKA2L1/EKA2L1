@@ -233,8 +233,6 @@ namespace eka2l1::kernel {
 
         void *get_ptr_on_addr_space(address addr);
 
-        void get_memory_info(memory_info &info);
-
         std::u16string get_cmd_args() const {
             return cmd_args;
         }
