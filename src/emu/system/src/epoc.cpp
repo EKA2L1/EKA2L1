@@ -289,7 +289,8 @@ namespace eka2l1 {
                 common::dir_entry firm_entry;
 
                 while (ite.next_entry(firm_entry) == 0) {
-                    if (firm_entry.type == common::file_type::FILE_DIRECTORY) {
+                    if ((firm_entry.type == common::file_type::FILE_DIRECTORY) && (firm_entry.name != ".")
+                        && (firm_entry.name != "..")) {
                         const std::string full_entry_path = eka2l1::add_path(drventry->real_path,
                             firm_entry.name);
 

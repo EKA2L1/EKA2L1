@@ -35,10 +35,11 @@
 namespace eka2l1 {
     void fs_server_client::open_dir(service::ipc_context *ctx) {
         auto dir = ctx->get_argument_value<std::u16string>(0);
+        std::optional<epoc::uid_type> utype = ctx->get_argument_data_from_descriptor<epoc::uid_type>(2);
 
         LOG_TRACE(SERVICE_EFSRV, "Opening directory: {}", common::ucs2_to_utf8(*dir));
 
-        if (!dir) {
+        if (!dir || !utype.has_value()) {
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -66,8 +67,13 @@ namespace eka2l1 {
             }
         }
 
+        if (attrib_raw & epoc::fs::entry_att_allow_uid) {
+            attrib |= io_attrib_allow_uid;
+            attrib &= ~io_attrib_include_dir;
+        }
+
         fs_node *node = server<fs_server>()->make_new<fs_node>();
-        node->vfs_node = ctx->sys->get_io_system()->open_dir(*dir, attrib);
+        node->vfs_node = ctx->sys->get_io_system()->open_dir(*dir, utype.value(), attrib);
 
         if (!node->vfs_node) {
             ctx->complete(epoc::error_path_not_found);
@@ -76,16 +82,9 @@ namespace eka2l1 {
         }
 
         size_t dir_handle = obj_table_.add(node);
-
-        struct uid_type {
-            int uid[3];
-        };
-
-        uid_type type = *ctx->get_argument_data_from_descriptor<uid_type>(2);
-
-        LOG_TRACE(SERVICE_EFSRV, "UID requested: 0x{}, 0x{}, 0x{}", type.uid[0], type.uid[1], type.uid[2]);
-
         int dir_handle_i = static_cast<int>(dir_handle);
+
+        LOG_TRACE(SERVICE_EFSRV, "UID requested: 0x{:X}, 0x{:X}, 0x{:X}", utype->uid1, utype->uid2, utype->uid3);
 
         ctx->write_data_to_descriptor_argument<int>(3, dir_handle_i);
         ctx->complete(epoc::error_none);

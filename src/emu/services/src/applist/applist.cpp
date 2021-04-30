@@ -375,11 +375,11 @@ namespace eka2l1 {
 
     void applist_server::rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number drv) {
         const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
-        auto reg_dir = io->open_dir(base_dir, io_attrib_include_dir);
+        auto reg_dir = io->open_dir(base_dir, {}, io_attrib_include_dir);
 
         if (reg_dir) {
             while (auto ent = reg_dir->get_next_entry()) {
-                if (ent->type == io_component_type::dir) {
+                if ((ent->type == io_component_type::dir) && (ent->name != ".") && (ent->name != "..")) {
                     const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
                         ent->full_path, ent->name + OLDARCH_REG_FILE_EXT, true));
 
@@ -401,7 +401,7 @@ namespace eka2l1 {
 
     void applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv) {
         const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\";
-        auto reg_dir = io->open_dir(base_dir + NEWARCH_REG_FILE_SEARCH_WILDCARD16, io_attrib_include_file);
+        auto reg_dir = io->open_dir(base_dir + NEWARCH_REG_FILE_SEARCH_WILDCARD16, {}, io_attrib_include_file);
 
         if (reg_dir) {
             while (auto ent = reg_dir->get_next_entry()) {

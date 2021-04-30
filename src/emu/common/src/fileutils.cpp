@@ -154,8 +154,7 @@ namespace eka2l1::common {
 
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
 
-        while (d && ((strncmp(d->d_name, ".", 1) == 0) || (strncmp(d->d_name, "..", 2) == 0) ||
-            (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0)) && is_valid()) {
+        while (d && (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0) && is_valid()) {
             cycles_to_next_entry();
             d = reinterpret_cast<decltype(d)>(find_data);
         };
@@ -174,14 +173,6 @@ namespace eka2l1::common {
         if (handle == INVALID_HANDLE_VALUE) {
             handle = nullptr;
             delete find_data;
-        } else {
-            LPWIN32_FIND_DATA fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
-
-            while (fdata_win32 && (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0)
-                && is_valid()) {
-                cycles_to_next_entry();
-                fdata_win32 = reinterpret_cast<decltype(fdata_win32)>(find_data);
-            }
         }
 #endif
     }
@@ -244,10 +235,8 @@ namespace eka2l1::common {
             entry.type = get_file_type_from_attrib_platform_specific(fdata_win32->dwFileAttributes);
         }
 
-        do {
-            cycles_to_next_entry();
-            fdata_win32 = reinterpret_cast<LPWIN32_FIND_DATA>(find_data);
-        } while (fdata_win32 && (strncmp(fdata_win32->cFileName, ".", 1) == 0 || strncmp(fdata_win32->cFileName, "..", 2) == 0));
+        cycles_to_next_entry();
+        fdata_win32 = reinterpret_cast<LPWIN32_FIND_DATA>(find_data);
 #elif EKA2L1_PLATFORM(POSIX)
         struct dirent *d = reinterpret_cast<decltype(d)>(find_data);
         entry.name = d->d_name;
@@ -260,7 +249,7 @@ namespace eka2l1::common {
         do {
             cycles_to_next_entry();
             d = reinterpret_cast<struct dirent *>(find_data);
-        } while (d && ((strncmp(d->d_name, ".", 1) == 0) || (strncmp(d->d_name, "..", 2) == 0) || (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0)));
+        } while (d && (fnmatch(match_pattern.c_str(), d->d_name, 0) != 0));
 #endif
 
         return 0;
@@ -424,6 +413,9 @@ namespace eka2l1::common {
                 folder_stacks.pop();
 
                 while (iterator.next_entry(entry) == 0) {
+                    if ((entry.name == ".") || (entry.name == ".."))
+                        continue;
+
                     std::string name_to_use = entry.name;
                     
                     if (!is_measuring) {
@@ -489,9 +481,11 @@ namespace eka2l1::common {
             std::string name = iterator.dir_name + entry.name;
 
             if (entry.type == common::file_type::FILE_DIRECTORY) {
-                name += eka2l1::get_separator();
+                if ((entry.name != ".") && (entry.name != "..")) {
+                    name += eka2l1::get_separator();
 
-                delete_folder(name);
+                    delete_folder(name);
+                }
             }
             common::remove(name);
         }

@@ -132,6 +132,10 @@ namespace eka2l1::loader {
         bool found = false;
 
         while (directory.next_entry(entry) >= 0) {
+            if (entry.type == common::FILE_DIRECTORY) {
+                continue;
+            }
+
             const common::pystr sis_filename = eka2l1::filename(entry.name);
             auto version_strings = sis_filename.split('.');
 

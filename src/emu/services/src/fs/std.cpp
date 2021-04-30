@@ -37,8 +37,6 @@ namespace eka2l1::epoc::fs {
         if (info.has_raw_attribute) {
             attrib = info.raw_attribute;
         } else {
-            bool dir = (info.type == io_component_type::dir);
-
             if (static_cast<int>(info.attribute) & static_cast<int>(io_attrib_write_protected)) {
                 attrib |= epoc::fs::entry_att_read_only;
             }
@@ -48,11 +46,21 @@ namespace eka2l1::epoc::fs {
             }
 
             // TODO (pent0): Mark the file as XIP if is ROM image (probably ROM already did it, but just be cautious).
-
-            if (dir) {
+            switch (info.type) {
+            case io_component_type::dir:
                 attrib |= epoc::fs::entry_att_dir;
-            } else {
+                break;
+
+            case io_component_type::drive:
+                attrib |= epoc::fs::entry_att_volume;
+                break;
+
+            case io_component_type::file:
                 attrib |= epoc::fs::entry_att_archive;
+                break;
+
+            default:
+                break;
             }
         }
 
