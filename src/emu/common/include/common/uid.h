@@ -22,6 +22,14 @@ namespace eka2l1::epoc {
         /*! This contains unique ID for process. */
         uid uid3;
 
+        bool operator == (const uid_type &rhs) const {
+            return (uid1 == rhs.uid1) && (uid2 == rhs.uid2) && (uid3 == rhs.uid3);
+        }
+
+        bool operator != (const uid_type &rhs) const {
+            return (uid1 != rhs.uid1) || (uid2 != rhs.uid2) || (uid3 != rhs.uid3);
+        }
+
         uid operator[](const std::size_t idx) {
             switch (idx) {
             case 0: {
