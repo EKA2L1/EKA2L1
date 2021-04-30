@@ -23,6 +23,7 @@
 #include <common/container.h>
 #include <common/types.h>
 #include <common/watcher.h>
+#include <common/uid.h>
 
 #include <array>
 #include <atomic>
@@ -261,7 +262,8 @@ namespace eka2l1 {
         virtual bool unmount(const drive_number drv) = 0;
 
         virtual std::unique_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
-        virtual std::unique_ptr<directory> open_directory(const std::u16string &path, const std::uint32_t attrib) = 0;
+        virtual std::unique_ptr<directory> open_directory(const std::u16string &path,
+            epoc::uid_type type, const std::uint32_t attrib) = 0;
 
         // Try to find an entry with specified address, with clue as base finding path. This is not recursive.
         virtual std::optional<std::u16string> find_entry_with_address(const std::u16string &clue, const address addr) {
@@ -407,7 +409,7 @@ namespace eka2l1 {
         /*! \brief Open the directory in guest.
         */
         std::unique_ptr<directory> open_dir(std::u16string vir_path,
-            const std::uint32_t attrib = io_attrib_none);
+            epoc::uid_type type = {}, const std::uint32_t attrib = io_attrib_none);
 
         /*! \brief Get a drive info.
         */
