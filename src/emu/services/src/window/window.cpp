@@ -370,13 +370,21 @@ namespace eka2l1::epoc {
 
         // Try to get the fbsbitmap
         fbsbitmap *bmp = serv->get<fbsbitmap>(bmp_handle);
+        epoc::bitwise_bitmap *bw_bmp = nullptr;
 
-        if (!bmp) {
+        if (bmp) {
+            bw_bmp = bmp->bitmap_;
+        } else {
+            memory_system *mem = get_ws().get_kernel_system()->get_memory_system();
+            bw_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(bmp_handle).get(mem);
+        }
+
+        if (!bw_bmp) {
             ctx.complete(epoc::error_bad_handle);
             return;
         }
 
-        window_client_obj_ptr wsbmpobj = std::make_unique<epoc::wsbitmap>(this, bmp);
+        window_client_obj_ptr wsbmpobj = std::make_unique<epoc::wsbitmap>(this, bw_bmp, bmp);
         ctx.complete(add_object(wsbmpobj));
     }
 

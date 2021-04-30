@@ -24,14 +24,19 @@
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
-    wsbitmap::wsbitmap(window_server_client_ptr client, fbsbitmap *bmp)
+    wsbitmap::wsbitmap(window_server_client_ptr client, epoc::bitwise_bitmap *bmp, fbsbitmap *parent)
         : window_client_obj(client, nullptr)
-        , bitmap_(bmp) {
-        bmp->ref();
+        , bitmap_(bmp)
+        , parent_(parent) {
+        if (parent_) {
+            parent_->ref();
+        }
     }
 
     wsbitmap::~wsbitmap() {
-        bitmap_->deref();
+        if (parent_) {
+            parent_->deref();
+        }
     }
 
     bool wsbitmap::execute_command(service::ipc_context &context, ws_cmd &cmd) {
