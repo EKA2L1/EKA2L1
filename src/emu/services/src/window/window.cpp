@@ -1561,8 +1561,10 @@ namespace eka2l1 {
                     root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
                     touch_shipper.clear();
                 } else {
-                    key_shipper.add_new_event(guest_event);
-                    key_shipper.start_shipping();
+                    if (input_event.key_.state_ != drivers::key_state::repeat) {
+                        key_shipper.add_new_event(guest_event);
+                        key_shipper.start_shipping();
+                    }
                 }
 
                 shipped = true;
