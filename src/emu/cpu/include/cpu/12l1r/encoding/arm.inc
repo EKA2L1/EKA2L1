@@ -84,7 +84,7 @@ INST(arm_UDF,           "UDF",                 "111001111111------------1111----
 //INST(arm_SXTAH,         "SXTAH",               "cccc01101011nnnnddddrr000111mmmm") // v6
 //INST(arm_UXTB,          "UXTB",                "cccc011011101111ddddrr000111mmmm") // v6
 //INST(arm_UXTB16,        "UXTB16",              "cccc011011001111ddddrr000111mmmm") // v6
-//INST(arm_UXTH,          "UXTH",                "cccc011011111111ddddrr000111mmmm") // v6
+INST(arm_UXTH,          "UXTH",                "cccc011011111111ddddrr000111mmmm") // v6
 //INST(arm_UXTAB,         "UXTAB",               "cccc01101110nnnnddddrr000111mmmm") // v6
 //INST(arm_UXTAB16,       "UXTAB16",             "cccc01101100nnnnddddrr000111mmmm") // v6
 //INST(arm_UXTAH,         "UXTAH",               "cccc01101111nnnnddddrr000111mmmm") // v6
