@@ -27,11 +27,6 @@
 namespace eka2l1::arm::r12l1 {
     class dashixiong_block;
 
-    enum reg_scratch_type {
-        REG_SCRATCH_TYPE_GPR = 0,
-        REG_SCRATCH_TYPE_FPR = 1
-    };
-
     enum allocate_flags {
         ALLOCATE_FLAG_SCRATCH = 1 << 0,
         ALLOCATE_FLAG_DIRTY = 1 << 1
@@ -40,16 +35,10 @@ namespace eka2l1::arm::r12l1 {
     class reg_cache {
     private:
         static constexpr std::uint32_t HOST_GPRS_LENGTH = 16;
-        static constexpr std::uint32_t HOST_FPRS_LENGTH = 32;
-
         static constexpr std::uint32_t GUEST_GPRS_LENGTH = 16;
-        static constexpr std::uint32_t GUEST_FPRS_LENGTH = 32;
 
         host_register_info host_gpr_infos_[HOST_GPRS_LENGTH];
-        host_register_info host_fpr_infos_[HOST_FPRS_LENGTH];
-
         guest_register_info guest_gpr_infos_[GUEST_GPRS_LENGTH];
-        guest_register_info guest_fpr_infos_[GUEST_FPRS_LENGTH];
 
         std::uint32_t time_;
         dashixiong_block *big_block_;
@@ -60,7 +49,7 @@ namespace eka2l1::arm::r12l1 {
         void flush_gpr(const common::armgen::arm_reg mee);
         void flush_host_gpr(const common::armgen::arm_reg mee);
 
-        common::armgen::arm_reg allocate_or_spill(reg_scratch_type type, const std::uint32_t flags);
+        common::armgen::arm_reg allocate_or_spill(const std::uint32_t flags);
 
     public:
         explicit reg_cache(dashixiong_block *bblock);
@@ -78,18 +67,17 @@ namespace eka2l1::arm::r12l1 {
          * 
          * The recompiler has always two scratch registers available. However, if they are not sufficient enough
          * for the use, this function can contact the inside of the cache to provide you some other registers.
-         * 
-         * @param   type        Type of scratch register (from GPR or from FPR)
+         *
          * @returns INVALID_REG on failure, a scratch register on success.
          */
-        common::armgen::arm_reg scratch(reg_scratch_type type);
+        common::armgen::arm_reg scratch();
 
         void set_imm(const common::armgen::arm_reg mee, const std::uint32_t imm);
 
         void flush(const common::armgen::arm_reg guest_mee);
         void flush_all();
 
-        void done_scratching(reg_scratch_type type);
+        void done_scratching();
         void done_scratching_this(common::armgen::arm_reg mee);
         void force_scratch(common::armgen::arm_reg mee);
 
@@ -97,10 +85,10 @@ namespace eka2l1::arm::r12l1 {
         void flush_host_regs_for_host_call();
 
         void spill_lock(const common::armgen::arm_reg guest_reg);
-        void spill_lock_all(reg_scratch_type type);
+        void spill_lock_all();
 
         void release_spill_lock(const common::armgen::arm_reg guest_reg);
-        void release_spill_lock_all(reg_scratch_type type);
+        void release_spill_lock_all();
 
         void copy_state(common::armgen::arm_reg state_reg);
     };

@@ -10,11 +10,13 @@ set(SOURCE_12L1R
         include/cpu/12l1r/decoder/matcher.h
         include/cpu/12l1r/encoding/arm.h
         include/cpu/12l1r/encoding/thumb16.h
+        include/cpu/12l1r/encoding/thumb32.h
         include/cpu/12l1r/arm_12l1r.h
         include/cpu/12l1r/arm_visitor.h
         include/cpu/12l1r/block_cache.h
         include/cpu/12l1r/block_gen.h
         include/cpu/12l1r/core_state.h
+        include/cpu/12l1r/float_marker.h
         include/cpu/12l1r/reg_cache.h
         include/cpu/12l1r/reg_loc.h
         include/cpu/12l1r/thumb_visitor.h
@@ -29,11 +31,13 @@ set(SOURCE_12L1R
         src/12l1r/translate/multiply.cpp
         src/12l1r/translate/status_register_access.cpp
         src/12l1r/translate/synchronization.cpp
+        src/12l1r/translate/vfp.cpp
         src/12l1r/arm_12l1r.cpp
         src/12l1r/arm_visitor.cpp
         src/12l1r/block_cache.cpp
         src/12l1r/block_gen.cpp
         src/12l1r/core_state.cpp
+        src/12l1r/float_marker.cpp
         src/12l1r/reg_cache.cpp
         src/12l1r/reg_loc.cpp
         src/12l1r/thumb_visitor.cpp

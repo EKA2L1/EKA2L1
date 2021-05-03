@@ -19,6 +19,7 @@
 
 #include <cpu/12l1r/block_gen.h>
 #include <cpu/12l1r/core_state.h>
+#include <cpu/12l1r/common.h>
 #include <cpu/12l1r/tlb.h>
 #include <cpu/12l1r/visit_session.h>
 
@@ -106,7 +107,8 @@ namespace eka2l1::arm::r12l1 {
         , last_inst_count_(0)
         , big_block_(bro)
         , crr_block_(crr)
-        , reg_supplier_(bro) {
+        , reg_supplier_(bro)
+        , float_marker_(bro) {
     }
 
     bool visit_session::condition_passed(common::cc_flags cc, const bool force_end_last) {
@@ -159,7 +161,7 @@ namespace eka2l1::arm::r12l1 {
         static_assert(sizeof(tlb_entry) == 16);
 
         std::uint32_t offset_to_load = (for_read) ? offsetof(tlb_entry, read_addr) : offsetof(tlb_entry, write_addr);
-        common::armgen::arm_reg final_addr = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+        common::armgen::arm_reg final_addr = reg_supplier_.scratch();
 
         if (lookup_route) {
             *lookup_route = big_block_->get_writeable_code_ptr();
@@ -197,6 +199,13 @@ namespace eka2l1::arm::r12l1 {
     }
 
     static constexpr std::uint32_t NZCVQ_FLAG_MASK = 0b11111 << 27;
+
+    void visit_session::emit_fpscr_save() {
+        if (fpscr_ever_updated_) {
+            big_block_->emit_fpscr_save();
+            fpscr_ever_updated_ = false;
+        }
+    }
 
     void visit_session::emit_cpsr_update_nzcvq() {
         emit_cpsr_update_sel(true);
@@ -257,7 +266,7 @@ namespace eka2l1::arm::r12l1 {
         // It holds the guest register address.
         common::armgen::arm_reg guest_addr_reg = reg_supplier_.map(base, (writeback ? ALLOCATE_FLAG_DIRTY : 0));
         if (!writeback) {
-            common::armgen::arm_reg scratching = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            common::armgen::arm_reg scratching = reg_supplier_.scratch();
             big_block_->MOV(scratching, guest_addr_reg);
 
             guest_addr_reg = scratching;
@@ -274,7 +283,7 @@ namespace eka2l1::arm::r12l1 {
 
             if ((guest_list & (1 << base_guest_reg_idx)) && !load) {
                 // We are duplicated xD
-                base_backup = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+                base_backup = reg_supplier_.scratch();
                 big_block_->MOV(base_backup, guest_addr_reg);
             }
         }
@@ -302,7 +311,7 @@ namespace eka2l1::arm::r12l1 {
 
         // R1 is reserved for host call, but this backback is scratch LR, and it does not relate
         // to R1 used as arguments in anyway (branch differentiate)
-        common::armgen::arm_reg backback = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+        common::armgen::arm_reg backback = reg_supplier_.scratch();
 
         // Temporary LR
         big_block_->MOV(backback, 0);
@@ -464,7 +473,7 @@ namespace eka2l1::arm::r12l1 {
                 last_reg--;
         }
 
-        reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+        reg_supplier_.done_scratching();
 
         if (writeback)
             reg_supplier_.release_spill_lock(base_guest_reg);
@@ -500,7 +509,7 @@ namespace eka2l1::arm::r12l1 {
                 op2 = 0;
             }
 
-            base_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            base_mapped = reg_supplier_.scratch();
             big_block_->MOVI2R(base_mapped, addr_to_base);
         } else {
             // Map it as an normal register, and spill lock it
@@ -511,7 +520,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         if ((!writeback) && (base != common::armgen::R15)) {
-            common::armgen::arm_reg scratch_base = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            common::armgen::arm_reg scratch_base = reg_supplier_.scratch();
             big_block_->MOV(scratch_base, base_mapped);
 
             base_mapped = scratch_base;
@@ -525,7 +534,7 @@ namespace eka2l1::arm::r12l1 {
 
         // We want to store original base value
         if (!pre_index && !read && (base == target)) {
-            base_backup = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            base_backup = reg_supplier_.scratch();
             big_block_->MOV(base_backup, base_mapped);
         }
 
@@ -564,7 +573,7 @@ namespace eka2l1::arm::r12l1 {
             target_mapped = target;
         } else {
             if (target == common::armgen::R15) {
-                target_mapped = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+                target_mapped = reg_supplier_.scratch();
                 if (!read) {
                     // We are writing the PC, so load the current address into it
                     big_block_->MOVI2R(target_mapped, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8));
@@ -584,7 +593,11 @@ namespace eka2l1::arm::r12l1 {
             if (target_2 == common::armgen::R15) {
                 LOG_ERROR(CPU_12L1R, "Target 2 for 64-bit memory access is R15, todo!");
             } else {
-                target_mapped_2 = reg_supplier_.map(target_2, read ? ALLOCATE_FLAG_DIRTY : 0);
+                if (is_target_host_reg) {
+                    target_mapped_2 = target_2;
+                } else {
+                    target_mapped_2 = reg_supplier_.map(target_2, read ? ALLOCATE_FLAG_DIRTY : 0);
+                }
             }
         }
 
@@ -953,15 +966,20 @@ namespace eka2l1::arm::r12l1 {
 
     void visit_session::sync_state() {
         big_block_->emit_cpsr_save();
+        emit_fpscr_save();
+
         big_block_->emit_cycles_count_save();
         big_block_->emit_pc_flush(crr_block_->current_address());
 
         reg_supplier_.flush_all();
+        float_marker_.sync_state();
     }
 
     bool visit_session::emit_undefined_instruction_handler() {
         emit_cpsr_update_nzcvq();
         sync_state();
+
+        big_block_->emit_fpscr_load(true);
 
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, exception_type_undefined_inst);
@@ -970,6 +988,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
         big_block_->emit_cpsr_load();
 
+        big_block_->emit_fpscr_load(false);
         emit_return_to_dispatch(false, false);
 
         return false;
@@ -979,6 +998,8 @@ namespace eka2l1::arm::r12l1 {
         emit_cpsr_update_nzcvq();
         sync_state();
 
+        big_block_->emit_fpscr_load(true);
+
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, exception_type_unimplemented_behaviour);
         big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address());
@@ -986,6 +1007,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
         big_block_->emit_cpsr_load();
 
+        big_block_->emit_fpscr_load(false);
         emit_return_to_dispatch(false, false);
 
         return false;
@@ -995,6 +1017,8 @@ namespace eka2l1::arm::r12l1 {
         emit_cpsr_update_nzcvq();
         sync_state();
 
+        big_block_->emit_fpscr_load(true);
+
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
         big_block_->MOVI2R(common::armgen::R1, exception_type_breakpoint);
         big_block_->MOVI2R(common::armgen::R2, crr_block_->current_address());
@@ -1002,6 +1026,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_raise_exception_router);
         big_block_->emit_cpsr_load();
 
+        big_block_->emit_fpscr_load(false);
         emit_return_to_dispatch(false, false);
 
         return false;
@@ -1011,6 +1036,9 @@ namespace eka2l1::arm::r12l1 {
         emit_cpsr_update_nzcvq();
         sync_state();
 
+        // We might probably touch float in client calls, so restore the original states for
+        // things like exception or rounding mode! :)
+        big_block_->emit_fpscr_load(true);
         big_block_->emit_pc_flush(crr_block_->current_address() + (crr_block_->thumb_ ? 2 : 4));
 
         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
@@ -1021,11 +1049,13 @@ namespace eka2l1::arm::r12l1 {
 
         // Don't save CPSR, we already update it and it may got modified in the interrupt
         // Usually these are fast dispatch anyway
+        big_block_->emit_fpscr_load(false);
         emit_return_to_dispatch(true, false);
 
         return false;
     }
 
+#if R12L1_ENABLE_FUZZ
     static bool dashixiong_execute_fuzz(dashixiong_block *self) {
         return self->fuzz_execute();
     }
@@ -1035,79 +1065,86 @@ namespace eka2l1::arm::r12l1 {
     }
 
     void visit_session::emit_fuzzing_execs(const std::int32_t num) {
-        if (big_block_->config_flags() & dashixiong_block::FLAG_GENERATE_FUZZ) {
-            if (cpsr_ever_updated_) {
-                emit_cpsr_update_nzcvq();
-            }
+        if (cpsr_ever_updated_) {
+            emit_cpsr_update_nzcvq();
+        }
 
-            // Since the condition changed, not flushing registers in this case will result all
-            // our work gone to waste! If we let it be done in B_CC down below in case the condition
-            // not true anymore, the reg cache will never be flushed :((
-            if (cond_modified_) {
-                reg_supplier_.flush_all();
-                big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
+        // Since the condition changed, not flushing registers in this case will result all
+        // our work gone to waste! If we let it be done in B_CC down below in case the condition
+        // not true anymore, the reg cache will never be flushed :((
+        if (cond_modified_) {
+            reg_supplier_.flush_all();
+            big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_);
 
-                last_inst_count_ = crr_block_->inst_count_;
-            }
+            last_inst_count_ = crr_block_->inst_count_;
+        }
 
-            if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
-                big_block_->set_jump_target(end_target_);
-            }
+        if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
+            big_block_->set_jump_target(end_target_);
+        }
 
-            big_block_->set_cc(common::CC_AL);
+        big_block_->set_cc(common::CC_AL);
 
-            fuzz_jump_ptr = big_block_->get_writeable_code_ptr();
-            big_block_->B(fuzz_jump_ptr + 4);
+        fuzz_jump_ptr = big_block_->get_writeable_code_ptr();
+        big_block_->B(fuzz_jump_ptr + 4);
 
-            big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+        big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
-            for (std::int32_t i = 0; i < num; i++) {
-                big_block_->MOVP2R(common::armgen::R0, big_block_);
-                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_execute_fuzz);
-            }
+        for (std::int32_t i = 0; i < num; i++) {
+            big_block_->MOVP2R(common::armgen::R0, big_block_);
+            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_execute_fuzz);
+        }
 
-            big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
-            fuzz_end = big_block_->get_writeable_code_ptr();
-            emit_cpsr_restore_nzcvq();
+        fuzz_end = big_block_->get_writeable_code_ptr();
+        emit_cpsr_restore_nzcvq();
 
-            // Normally, when condition is modified, we won't make new branch... What's the point
-            if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
-                end_target_ = big_block_->B_CC(common::invert_cond(flag_));
-            }
+        // Normally, when condition is modified, we won't make new branch... What's the point
+        if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
+            end_target_ = big_block_->B_CC(common::invert_cond(flag_));
         }
     }
 
     void visit_session::emit_fuzzing_check() {
-        if (big_block_->config_flags() & dashixiong_block::FLAG_GENERATE_FUZZ) {
-            // The disadvantage of the fuzzing is the comparision can only be made when the condition is hit
-            if (cpsr_ever_updated_) {
-                emit_cpsr_update_nzcvq();
-            }
-
-            big_block_->SUBI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
-            big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R_SP);
-
-            // Generate code that copy the current state
-            // This does not change the CPSR
-            reg_supplier_.copy_state(ALWAYS_SCRATCH2);
-
-            // Flush current PC to this fuzzing state
-            big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_address());
-            big_block_->STR(ALWAYS_SCRATCH1, ALWAYS_SCRATCH2, offsetof(core_state, gprs_[15]));
-
-            big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
-
-            big_block_->MOVP2R(common::armgen::R0, big_block_);
-            big_block_->MOV(common::armgen::R1, ALWAYS_SCRATCH2);
-            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_compare_fuzz);
-
-            big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
-            big_block_->ADDI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
-
-            emit_cpsr_restore_nzcvq();
+        // The disadvantage of the fuzzing is the comparision can only be made when the condition is hit
+        if (cpsr_ever_updated_) {
+            emit_cpsr_update_nzcvq();
         }
+
+        big_block_->SUBI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
+        big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R_SP);
+
+        // Save current FPSCR
+        if (fpscr_ever_updated_) {
+            big_block_->VMRS(ALWAYS_SCRATCH1);
+        } else {
+            big_block_->LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, offsetof(core_state, fpscr_));
+        }
+
+        big_block_->STR(ALWAYS_SCRATCH1, ALWAYS_SCRATCH2, offsetof(core_state, fpscr_));
+
+        // Generate code that copy the current state
+        // This does not change the CPSR
+        reg_supplier_.copy_state(ALWAYS_SCRATCH2);
+        float_marker_.sync_state(ALWAYS_SCRATCH2, false);
+
+        // Flush current PC to this fuzzing state
+        big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_address());
+        big_block_->STR(ALWAYS_SCRATCH1, ALWAYS_SCRATCH2, offsetof(core_state, gprs_[15]));
+
+        big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+
+        big_block_->MOVP2R(common::armgen::R0, big_block_);
+        big_block_->MOV(common::armgen::R1, ALWAYS_SCRATCH2);
+        big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_compare_fuzz);
+
+        big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+        big_block_->ADDI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
+
+        emit_cpsr_restore_nzcvq();
     }
+#endif
 
     void visit_session::cycle_next(const std::uint32_t inst_size) {
         if (!cond_failed_) {
@@ -1116,22 +1153,23 @@ namespace eka2l1::arm::r12l1 {
             crr_block_->inst_count_++;
         }
 
-        if (big_block_->config_flags() & dashixiong_block::FLAG_GENERATE_FUZZ) {
-            if (cond_failed_) {
-                std::uint8_t *last = big_block_->get_writeable_code_ptr();
-                big_block_->set_code_pointer(fuzz_jump_ptr);
-                big_block_->B(fuzz_end);
-                big_block_->set_code_pointer(last);
-            } else {
-                // Make a state comparision here
-                emit_fuzzing_check();
-            }
+#if R12L1_ENABLE_FUZZ
+        if (cond_failed_) {
+            std::uint8_t *last = big_block_->get_writeable_code_ptr();
+            big_block_->set_code_pointer(fuzz_jump_ptr);
+            big_block_->B(fuzz_end);
+            big_block_->set_code_pointer(last);
+        } else {
+            // Make a state comparision here
+            emit_fuzzing_check();
         }
+#endif
     }
 
     void visit_session::emit_direct_link(const vaddress addr, const bool cpsr_save) {
         // Flush all registers in this
         reg_supplier_.flush_all();
+        float_marker_.sync_state();
 
         if (cpsr_ever_updated_) {
             emit_cpsr_update_nzcvq();
@@ -1140,6 +1178,8 @@ namespace eka2l1::arm::r12l1 {
         if (cpsr_save) {
             big_block_->emit_cpsr_save();
         }
+
+        emit_fpscr_save();
 
         // Counting the instruction calling this also
         big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_ + 1);
@@ -1151,10 +1191,13 @@ namespace eka2l1::arm::r12l1 {
     void visit_session::emit_return_to_dispatch(const bool fast_hint, const bool cpsr_save) {
         // Flush all registers in this
         reg_supplier_.flush_all();
+        float_marker_.sync_state();
 
         if (cpsr_save) {
             big_block_->emit_cpsr_save();
         }
+
+        emit_fpscr_save();
 
         // Counting the instruction calling this also
         big_block_->emit_cycles_count_add(crr_block_->inst_count_ - last_inst_count_ + 1);
@@ -1163,7 +1206,9 @@ namespace eka2l1::arm::r12l1 {
 
     void visit_session::finalize() {
         big_block_->set_cc(common::CC_AL);
+
         reg_supplier_.flush_all();
+        float_marker_.sync_state();
 
         if (cpsr_ever_updated_)
             emit_cpsr_update_nzcvq();

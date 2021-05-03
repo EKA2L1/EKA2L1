@@ -125,7 +125,7 @@ namespace eka2l1::arm {
         struct thread_context {
             std::array<std::uint32_t, 16> cpu_registers;
             std::uint32_t cpsr;
-            std::array<std::uint32_t, 32> fpu_registers;
+            std::array<std::uint32_t, 64> fpu_registers;
             std::uint32_t fpscr;
             std::uint32_t wrwr;
 
@@ -181,6 +181,7 @@ namespace eka2l1::arm {
         virtual void set_vfp(size_t idx, uint32_t val) = 0;
         virtual uint32_t get_lr() = 0;
         virtual uint32_t get_cpsr() = 0;
+        virtual std::uint32_t get_fpscr() = 0;
 
         virtual void save_context(thread_context &ctx) = 0;
         virtual void load_context(const thread_context &ctx) = 0;

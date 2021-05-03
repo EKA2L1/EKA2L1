@@ -21,7 +21,11 @@
 
 namespace eka2l1::arm::r12l1 {
     exclusive_monitor::exclusive_monitor(const std::size_t processor_count)
-        : exclusive_addresses_(processor_count, INVALID_EXCLUSIVE_ADDRESS)
+        :
+#if R12L1_ENABLE_FUZZ
+        exclusive_operation_results_(processor_count, false),
+#endif
+        exclusive_addresses_(processor_count, INVALID_EXCLUSIVE_ADDRESS)
         , exclusive_values_(processor_count) {
         unlock();
     }

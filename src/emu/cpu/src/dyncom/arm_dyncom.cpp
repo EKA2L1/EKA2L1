@@ -93,6 +93,10 @@ namespace eka2l1::arm {
         return state_->Cpsr;
     }
 
+    uint32_t dyncom_core::get_fpscr() {
+        return state_->VFP[1];
+    }
+
     uint32_t dyncom_core::get_lr() {
         return state_->Reg[14];
     }
@@ -111,6 +115,12 @@ namespace eka2l1::arm {
         for (uint8_t i = 0; i < 16; i++) {
             ctx.cpu_registers[i] = get_reg(i);
         }
+
+        for (std::uint8_t i = 0; i < 64; i++) {
+            ctx.fpu_registers[i] = state_->ExtReg[i];
+        }
+
+        ctx.fpscr = state_->VFP[1];
     }
 
     void dyncom_core::load_context(const thread_context &ctx) {
@@ -120,7 +130,12 @@ namespace eka2l1::arm {
             state_->Reg[i] = ctx.cpu_registers[i];
         }
 
+        for (std::uint8_t i = 0; i < 64; i++) {
+            state_->ExtReg[i] = ctx.fpu_registers[i];
+        }
+
         set_cpsr(ctx.cpsr);
+        state_->VFP[1] = ctx.fpscr;
     }
 
     void dyncom_core::set_tlb_page(address vaddr, std::uint8_t *ptr, prot protection) {

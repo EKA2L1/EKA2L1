@@ -61,7 +61,7 @@ namespace eka2l1::arm::r12l1 {
             emit_memory_access(value_store_org, base_real, common::armgen::operand2(), 32, false, true, true, false, true);
             res = emit_memory_access(value_new_to_store, base_real, common::armgen::operand2(), 32, false, true, true, false, false);
         } else {
-            common::armgen::arm_reg original_val = reg_supplier_.scratch(REG_SCRATCH_TYPE_GPR);
+            common::armgen::arm_reg original_val = reg_supplier_.scratch();
             common::armgen::arm_reg value_to_write_mapped = reg_supplier_.map(value_new_to_store, 0);
 
             big_block_->MOV(original_val, value_to_write_mapped);
@@ -70,7 +70,7 @@ namespace eka2l1::arm::r12l1 {
             emit_memory_access(value_store_org, base_real, common::armgen::operand2(), 32, false, true, true, false, true);
             res = emit_memory_access(original_val, base_real, common::armgen::operand2(), 32, false, true, true, false, false, common::armgen::INVALID_REG, true);
 
-            reg_supplier_.done_scratching(REG_SCRATCH_TYPE_GPR);
+            reg_supplier_.done_scratching();
         }
 
         return res;

@@ -22,6 +22,7 @@
 #include <common/armemitter.h>
 
 #include <cpu/12l1r/block_cache.h>
+#include <cpu/12l1r/exclusive_monitor.h>
 #include <cpu/arm_interface.h>
 #include <cpu/dyncom/arm_dyncom.h>
 
@@ -68,7 +69,10 @@ namespace eka2l1::arm::r12l1 {
 
         r12l1_core *parent_;
 
+#if R12L1_ENABLE_FUZZ
         std::unique_ptr<dyncom_core> interpreter_;
+        std::unique_ptr<exclusive_monitor> interpreter_monitor_;
+#endif
 
     protected:
         void assemble_control_funcs();
@@ -76,7 +80,6 @@ namespace eka2l1::arm::r12l1 {
 
     public:
         enum {
-            FLAG_GENERATE_FUZZ = 1 << 0,
             FLAG_ENABLE_FUZZ = 1 << 1,
             FLAG_FUZZ_LAST_SYSCALL = 1 << 2
         };
@@ -97,6 +100,8 @@ namespace eka2l1::arm::r12l1 {
         void emit_cycles_count_add(const std::uint32_t num);
         void emit_cpsr_save();
         void emit_cpsr_load();
+        void emit_fpscr_save(const bool save_host = false);
+        void emit_fpscr_load(const bool load_host = false);
         void emit_cycles_count_save();
 
         void clear_fast_dispatch();
@@ -127,10 +132,12 @@ namespace eka2l1::arm::r12l1 {
         bool write_ex_dword(const vaddress addr, const std::uint32_t val);
         bool write_ex_qword(const vaddress addr, const std::uint64_t val);
 
+#if R12L1_ENABLE_FUZZ
         void fuzz_start();
         bool fuzz_execute();
         void fuzz_compare(core_state *state);
         void fuzz_end();
+#endif
 
         std::uint32_t config_flags() const {
             return flags_;

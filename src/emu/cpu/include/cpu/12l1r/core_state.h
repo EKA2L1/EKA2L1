@@ -35,10 +35,12 @@ namespace eka2l1::arm::r12l1 {
         std::uint32_t should_break_;
         std::uint32_t current_aid_;
         std::uint32_t exclusive_state_;
-        std::uint32_t padding_;
+        std::uint32_t fpscr_host_;
 
         tlb_entry *entries_;
 
         explicit core_state();
     };
+
+    static_assert(sizeof(core_state) % 8 == 0);
 }

@@ -73,7 +73,11 @@ namespace eka2l1::arm::r12l1 {
 
             T saved_value;
             std::memcpy(&saved_value, exclusive_values_[processor_id].data(), sizeof(T));
-            const bool result = op(saved_value);
+            const auto result = op(saved_value);
+
+#if R12L1_ENABLE_FUZZ
+            exclusive_operation_results_[processor_id] = result;
+#endif
 
             unlock();
             return result;
@@ -91,6 +95,10 @@ namespace eka2l1::arm::r12l1 {
         bool exclusive_write16(core *cc, address vaddr, std::uint16_t value) override;
         bool exclusive_write32(core *cc, address vaddr, std::uint32_t value) override;
         bool exclusive_write64(core *cc, address vaddr, std::uint64_t value) override;
+
+#if R12L1_ENABLE_FUZZ
+        std::vector<bool> exclusive_operation_results_;
+#endif
 
     private:
         bool check_and_clear(const std::size_t processor_id, vaddress address);

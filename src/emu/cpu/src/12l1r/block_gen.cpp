@@ -19,6 +19,7 @@
 
 #include <cpu/12l1r/arm_12l1r.h>
 #include <cpu/12l1r/block_gen.h>
+#include <cpu/12l1r/common.h>
 #include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/exclusive_monitor.h>
 #include <cpu/12l1r/reg_loc.h>
@@ -27,6 +28,7 @@
 #include <cpu/12l1r/encoding/arm.h>
 #include <cpu/12l1r/encoding/thumb16.h>
 #include <cpu/12l1r/encoding/thumb32.h>
+#include <cpu/12l1r/encoding/vfp.h>
 #include <cpu/12l1r/thumb_visitor.h>
 #include <cpu/12l1r/visit_session.h>
 
@@ -86,9 +88,6 @@ namespace eka2l1::arm::r12l1 {
                 }
             }
         });
-
-        // To debug JIT with interpreter: uncomment this line!
-        // flags_ = FLAG_GENERATE_FUZZ;
     }
 
     static void dashixiong_print_debug(const std::uint32_t val) {
@@ -116,6 +115,8 @@ namespace eka2l1::arm::r12l1 {
         LDR(TICKS_REG, CORE_STATE_REG, offsetof(core_state, ticks_left_));
 
         emit_cpsr_load();
+        emit_fpscr_save(true);
+        emit_fpscr_load(false);
 
         dispatch_ent_for_block_ = get_code_ptr();
 
@@ -169,6 +170,8 @@ namespace eka2l1::arm::r12l1 {
         auto emit_wrap_up_dispatch = [&]() {
             // Save the CPSR and ticks
             emit_cpsr_save();
+            emit_fpscr_save(false);
+            emit_fpscr_load(true);
             emit_cycles_count_save();
 
             // Restore alignment
@@ -431,7 +434,7 @@ namespace eka2l1::arm::r12l1 {
     bool dashixiong_block::write_ex_byte(const vaddress addr, const std::uint8_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint8_t>(parent_->core_number(), addr,
                    [&](std::uint8_t expected) -> bool {
-                       return parent_->exclusive_write_8bit(addr, val, expected);
+                       return (parent_->exclusive_write_8bit(addr, val, expected) > 0);
                    })
             ? 0
             : 1;
@@ -440,7 +443,7 @@ namespace eka2l1::arm::r12l1 {
     bool dashixiong_block::write_ex_word(const vaddress addr, const std::uint16_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint16_t>(parent_->core_number(), addr,
                    [&](std::uint16_t expected) -> bool {
-                       return parent_->exclusive_write_16bit(addr, val, expected);
+                       return (parent_->exclusive_write_16bit(addr, val, expected) > 0);
                    })
             ? 0
             : 1;
@@ -449,7 +452,7 @@ namespace eka2l1::arm::r12l1 {
     bool dashixiong_block::write_ex_dword(const vaddress addr, const std::uint32_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint32_t>(parent_->core_number(), addr,
                    [&](std::uint32_t expected) -> bool {
-                       return parent_->exclusive_write_32bit(addr, val, expected);
+                       return (parent_->exclusive_write_32bit(addr, val, expected) > 0);
                    })
             ? 0
             : 1;
@@ -458,7 +461,7 @@ namespace eka2l1::arm::r12l1 {
     bool dashixiong_block::write_ex_qword(const vaddress addr, const std::uint64_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint64_t>(parent_->core_number(), addr,
                    [&](std::uint64_t expected) -> bool {
-                       return parent_->exclusive_write_64bit(addr, val, expected);
+                       return (parent_->exclusive_write_64bit(addr, val, expected) > 0);
                    })
             ? 0
             : 1;
@@ -485,6 +488,16 @@ namespace eka2l1::arm::r12l1 {
 
     void dashixiong_block::emit_cpsr_load() {
         LDR(CPSR_REG, CORE_STATE_REG, offsetof(core_state, cpsr_));
+    }
+
+    void dashixiong_block::emit_fpscr_save(const bool save_host) {
+        VMRS(ALWAYS_SCRATCH1);
+        STR(ALWAYS_SCRATCH1, CORE_STATE_REG, save_host ? offsetof(core_state, fpscr_host_) : offsetof(core_state, fpscr_));
+    }
+
+    void dashixiong_block::emit_fpscr_load(const bool load_host) {
+        LDR(ALWAYS_SCRATCH1, CORE_STATE_REG, load_host ? offsetof(core_state, fpscr_host_) : offsetof(core_state, fpscr_));
+        VMSR(ALWAYS_SCRATCH1);
     }
 
     void dashixiong_block::emit_cycles_count_save() {
@@ -604,6 +617,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         // When you want to start the fuzz, call fuzz_start(), and end it with fuzz_end()
+        //fuzz_start();
 
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
@@ -622,11 +636,11 @@ namespace eka2l1::arm::r12l1 {
         }
 
         // Reserve 512 pages for these JIT codes. When fuzz is enabled this is probably larger
-        if (flags_ & FLAG_GENERATE_FUZZ) {
-            begin_write(1024);
-        } else {
-            begin_write(512);
-        }
+#if R12L1_ENABLE_FUZZ
+        begin_write(1024);
+#else
+        begin_write(512);
+#endif
 
         emit_pc_flush(addr);
 
@@ -674,7 +688,9 @@ namespace eka2l1::arm::r12l1 {
                 inst_size = 4;
             }
 
+#if R12L1_ENABLE_FUZZ
             visitor->emit_fuzzing_execs(is_thumb ? (inst_size / 2) : 1);
+#endif
 
             if (is_thumb) {
                 if (inst_size == THUMB_INST_SIZE_THUMB32) {
@@ -692,7 +708,9 @@ namespace eka2l1::arm::r12l1 {
                 }
             } else {
                 // ARM decoding. NEON -> VFP -> ARM
-                if (auto decoder = decode_arm<arm_translate_visitor>(inst)) {
+                if (auto decoder = decode_vfp<arm_translate_visitor>(inst)) {
+                    should_continue = decoder->get().call(static_cast<arm_translate_visitor&>(*visitor), inst);
+                } else if (auto decoder = decode_arm<arm_translate_visitor>(inst)) {
                     should_continue = decoder->get().call(static_cast<arm_translate_visitor&>(*visitor), inst);
                 } else {
                     should_continue = static_cast<arm_translate_visitor&>(*visitor).arm_UDF();
@@ -712,10 +730,41 @@ namespace eka2l1::arm::r12l1 {
         return block;
     }
 
+#if R12L1_ENABLE_FUZZ
     void dashixiong_block::fuzz_start() {
         if (!(flags_ & FLAG_ENABLE_FUZZ)) {
             if (!interpreter_) {
-                interpreter_ = std::make_unique<dyncom_core>(parent_->monitor_, parent_->mem_cache_.page_bits);
+                interpreter_monitor_ = std::make_unique<exclusive_monitor>(parent_->monitor_->get_processor_count());
+                interpreter_monitor_->read_8bit = [this](core *cc, address addr, std::uint8_t *dat) {
+                    return parent_->monitor_->read_8bit(parent_, addr, dat);
+                };
+
+                interpreter_monitor_->read_16bit = [this](core *cc, address addr, std::uint16_t *dat) {
+                    return parent_->monitor_->read_16bit(parent_, addr, dat);
+                };
+
+                interpreter_monitor_->read_32bit = [this](core *cc, address addr, std::uint32_t *dat) {
+                    return parent_->monitor_->read_32bit(parent_, addr, dat);
+                };
+
+                interpreter_monitor_->read_64bit = [this](core *cc, address addr, std::uint64_t *dat) {
+                    return parent_->monitor_->read_64bit(parent_, addr, dat);
+                };
+
+                interpreter_monitor_->write_8bit = [&](core * cc, address, std::uint8_t, std::uint8_t) -> std::int32_t {
+                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                };
+                interpreter_monitor_->write_16bit = [&](core * cc, address, std::uint16_t, std::uint16_t) -> std::int32_t {
+                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                };
+                interpreter_monitor_->write_32bit = [&](core * cc, address, std::uint32_t, std::uint32_t) -> std::int32_t {
+                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                };
+                interpreter_monitor_->write_64bit = [&](core * cc, address, std::uint64_t, std::uint64_t) -> std::int32_t {
+                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                };
+
+                interpreter_ = std::make_unique<dyncom_core>(interpreter_monitor_.get(), parent_->mem_cache_.page_bits);
                 dyncom_core *interpreter_ptr = interpreter_.get();
 
                 // Copy lengthy callbacks
@@ -789,6 +838,12 @@ namespace eka2l1::arm::r12l1 {
             LOG_ERROR(CPU_12L1R, "At PC: 0x{:X}, CPSR NZCV_T value mismatch (JIT: {} vs Int: {})", state->gprs_[15], state->cpsr_, interpreter_->get_cpsr());
         }
 
+        // Compare FPSCR NZCV
+        static constexpr std::uint32_t FPSCR_NZCV_MASK = 0b11110000000000000000000000000000;
+        if ((state->fpscr_ & FPSCR_NZCV_MASK) != (interpreter_->get_fpscr() & FPSCR_NZCV_MASK)) {
+            LOG_ERROR(CPU_12L1R, "At PC: 0x{:X}, FPSCR NZCV value mismatch (JIT: {} vs Int: {})", state->gprs_[15], state->fpscr_, interpreter_->get_fpscr());
+        }
+
         if (state->gprs_[15] != interpreter_->get_pc()) {
             LOG_ERROR(CPU_12L1R, "PC of JIT (0x{:X}) vs Interpreter (0x{:X}) mismatch!", state->gprs_[15], interpreter_->get_pc());
         }
@@ -800,10 +855,16 @@ namespace eka2l1::arm::r12l1 {
             }
         }
 
-        // TODO: Compare ExtReg too!
+        static constexpr std::uint8_t MAX_CMP_FPRS = 64;
+        for (std::uint8_t i = 0; i < MAX_CMP_FPRS; i++) {
+            if (state->fprs_[i] != interpreter_->get_vfp(i)) {
+                LOG_ERROR(CPU_12L1R, "At PC: 0x{:X}, S{} mismatch! (JIT: {} vs Interpreter {})", state->gprs_[15], i, state->fprs_[i], interpreter_->get_vfp(i));
+            }
+        }
     }
 
     void dashixiong_block::fuzz_end() {
         flags_ &= ~FLAG_ENABLE_FUZZ;
     }
+#endif
 }

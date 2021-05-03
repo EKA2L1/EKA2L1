@@ -107,12 +107,16 @@ namespace eka2l1::arm {
         return jit_state_.cpsr_;
     }
 
+    std::uint32_t r12l1_core::get_fpscr() {
+        return jit_state_.fpscr_;
+    }
+
     void r12l1_core::save_context(thread_context &ctx) {
         for (std::size_t i = 0; i < 16; i++) {
             ctx.cpu_registers[i] = jit_state_.gprs_[i];
         }
 
-        for (std::size_t i = 0; i < 32; i++) {
+        for (std::size_t i = 0; i < 64; i++) {
             ctx.fpu_registers[i] = jit_state_.fprs_[i];
         }
 
@@ -125,17 +129,19 @@ namespace eka2l1::arm {
             jit_state_.gprs_[i] = ctx.cpu_registers[i];
         }
 
-        for (std::size_t i = 0; i < 32; i++) {
+        for (std::size_t i = 0; i < 64; i++) {
             jit_state_.fprs_[i] = ctx.fpu_registers[i];
         }
 
         jit_state_.cpsr_ = ctx.cpsr;
         jit_state_.fpscr_ = ctx.fpscr;
 
+#if R12L1_ENABLE_FUZZ
         if (big_block_->config_flags() & r12l1::dashixiong_block::FLAG_ENABLE_FUZZ) {
             big_block_->fuzz_end();
             big_block_->fuzz_start();
         }
+#endif
     }
 
     bool r12l1_core::is_thumb_mode() {

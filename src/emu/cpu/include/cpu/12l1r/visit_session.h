@@ -19,7 +19,9 @@
 
 #pragma once
 
+#include <cpu/12l1r/float_marker.h>
 #include <cpu/12l1r/reg_cache.h>
+
 #include <cstdint>
 #include <vector>
 
@@ -41,20 +43,24 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::fixup_branch end_target_;
 
         bool cpsr_ever_updated_;
+        bool fpscr_ever_updated_;
 
         bool cond_modified_;
         bool cond_failed_;
 
         std::uint32_t last_inst_count_;
 
+#if R12L1_ENABLE_FUZZ
         std::uint8_t *fuzz_jump_ptr = nullptr;
         std::uint8_t *fuzz_end = nullptr;
+#endif
 
     public:
         translated_block *crr_block_;
         dashixiong_block *big_block_;
 
         reg_cache reg_supplier_;
+		float_marker float_marker_;
 
         explicit visit_session(dashixiong_block *bro, translated_block *crr);
         bool condition_passed(common::cc_flags cc, const bool force_end_last = false);
@@ -85,6 +91,7 @@ namespace eka2l1::arm::r12l1 {
         void emit_cpsr_restore_nzcvq();
         void emit_cpsr_update_sel(const bool nzcvq = true);
         void emit_cpsr_restore_sel(const bool nzcvq = true);
+        void emit_fpscr_save();
 
         void emit_direct_link(const vaddress addr, const bool save_cpsr = false);
         void emit_return_to_dispatch(const bool fast_hint = false, const bool save_cpsr = true);
@@ -92,8 +99,10 @@ namespace eka2l1::arm::r12l1 {
         void emit_pc_write(common::armgen::arm_reg reg);
         void emit_alu_jump(common::armgen::arm_reg reg);
 
+#if R12L1_ENABLE_FUZZ
         void emit_fuzzing_execs(const std::int32_t num);
         void emit_fuzzing_check();
+#endif
         void cycle_next(const std::uint32_t inst_size);
         void sync_state();
         void finalize();
@@ -105,6 +114,10 @@ namespace eka2l1::arm::r12l1 {
 
         void cpsr_ge_changed() {
             cpsr_ever_updated_ = true;
+        }
+
+        void fpscr_changed() {
+            fpscr_ever_updated_ = true;
         }
     };
 }

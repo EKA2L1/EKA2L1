@@ -25,23 +25,9 @@
 
 namespace eka2l1::arm::r12l1 {
     // A lot of these code algorithm are heavily revised from PPSSPP. Thank you! <3 T_T
-    static std::uint32_t get_offset_to_reg_in_core_state(const std::uint32_t index, reg_scratch_type type) {
+    static std::uint32_t get_offset_to_reg_in_core_state(const std::uint32_t index) {
         const std::size_t gpr_offset = offsetof(core_state, gprs_[0]);
-        const std::size_t fpr_offset = offsetof(core_state, fprs_[0]);
-
-        switch (type) {
-        case REG_SCRATCH_TYPE_GPR:
-            return gpr_offset + index * sizeof(std::uint32_t);
-
-        case REG_SCRATCH_TYPE_FPR:
-            return fpr_offset + index * sizeof(std::uint32_t);
-
-        default:
-            break;
-        }
-
-        LOG_ERROR(CPU_12L1R, "Invalid register type!");
-        return 0;
+        return gpr_offset + index * sizeof(std::uint32_t);
     }
 
     reg_cache::reg_cache(dashixiong_block *bblock)
@@ -56,7 +42,7 @@ namespace eka2l1::arm::r12l1 {
         // Save GPRs
         for (common::armgen::arm_reg reg = common::armgen::R0; reg < common::armgen::R15; reg = static_cast<common::armgen::arm_reg>(reg + 1)) {
             guest_register_info &info = guest_gpr_infos_[reg];
-            const std::uint32_t offset_gpr_mem = get_offset_to_reg_in_core_state(reg - common::armgen::R0, REG_SCRATCH_TYPE_GPR);
+            const std::uint32_t offset_gpr_mem = get_offset_to_reg_in_core_state(reg - common::armgen::R0);
 
             switch (info.curr_location_) {
             case GUEST_REGISTER_LOC_HOST_REG:
@@ -97,7 +83,7 @@ namespace eka2l1::arm::r12l1 {
             break;
 
         case GUEST_REGISTER_LOC_MEM: {
-            big_block_->LDR(dest_reg, CORE_STATE_REG, get_offset_to_reg_in_core_state(source_guest_reg - common::armgen::R0, REG_SCRATCH_TYPE_GPR));
+            big_block_->LDR(dest_reg, CORE_STATE_REG, get_offset_to_reg_in_core_state(source_guest_reg - common::armgen::R0));
             break;
         }
 
@@ -123,7 +109,7 @@ namespace eka2l1::arm::r12l1 {
         case GUEST_REGISTER_LOC_IMM:
             // Store it? Hmmmm
             big_block_->MOVI2R(ALWAYS_SCRATCH1, info.imm_);
-            big_block_->STR(ALWAYS_SCRATCH1, CORE_STATE_REG, get_offset_to_reg_in_core_state(mee - common::armgen::R0, REG_SCRATCH_TYPE_GPR));
+            big_block_->STR(ALWAYS_SCRATCH1, CORE_STATE_REG, get_offset_to_reg_in_core_state(mee - common::armgen::R0));
 
             break;
 
@@ -131,7 +117,7 @@ namespace eka2l1::arm::r12l1 {
         case GUEST_REGISTER_LOC_HOST_REG:
             // Just safe check... May it ever happen?
             if (!host_gpr_infos_[info.host_reg_].scratch_ && host_gpr_infos_[info.host_reg_].dirty_) {
-                big_block_->STR(info.host_reg_, CORE_STATE_REG, get_offset_to_reg_in_core_state(mee - common::armgen::R0, REG_SCRATCH_TYPE_GPR));
+                big_block_->STR(info.host_reg_, CORE_STATE_REG, get_offset_to_reg_in_core_state(mee - common::armgen::R0));
             }
 
             if (!info.spill_lock_) {
@@ -184,7 +170,7 @@ namespace eka2l1::arm::r12l1 {
             }
 
             // Store it
-            big_block_->STR(mee, CORE_STATE_REG, get_offset_to_reg_in_core_state(guest_reg - common::armgen::R0, REG_SCRATCH_TYPE_GPR));
+            big_block_->STR(mee, CORE_STATE_REG, get_offset_to_reg_in_core_state(guest_reg - common::armgen::R0));
 
             guest_gpr_infos_[guest_reg].curr_location_ = GUEST_REGISTER_LOC_MEM;
             guest_gpr_infos_[guest_reg].host_reg_ = common::armgen::INVALID_REG;
@@ -210,34 +196,14 @@ namespace eka2l1::arm::r12l1 {
         flush_host_reg(common::armgen::R12);
     }
 
-    common::armgen::arm_reg reg_cache::allocate_or_spill(reg_scratch_type type, const std::uint32_t flags) {
-        if (type == REG_SCRATCH_TYPE_FPR) {
-            LOG_ERROR(CPU_12L1R, "FPR register allocation currently not supported!");
-            return common::armgen::INVALID_REG;
-        }
-
+    common::armgen::arm_reg reg_cache::allocate_or_spill(const std::uint32_t flags) {
         time_++;
 
-        const common::armgen::arm_reg *allocation_order = nullptr;
-        std::size_t allocation_order_length = 0;
+        const common::armgen::arm_reg *allocation_order = ALLOCATEABLE_GPRS;
+        std::size_t allocation_order_length = sizeof(ALLOCATEABLE_GPRS) / sizeof(common::armgen::arm_reg);
 
-        guest_register_info *guest_rf_arr = nullptr;
-        host_register_info *host_rf_arr = nullptr;
-
-        switch (type) {
-        case REG_SCRATCH_TYPE_GPR:
-            allocation_order = ALLOCATEABLE_GPRS;
-            allocation_order_length = sizeof(ALLOCATEABLE_GPRS) / sizeof(common::armgen::arm_reg);
-
-            guest_rf_arr = guest_gpr_infos_;
-            host_rf_arr = host_gpr_infos_;
-
-            break;
-
-        default:
-            LOG_ERROR(CPU_12L1R, "Invalid or unsupported register type!");
-            return common::armgen::INVALID_REG;
-        }
+        guest_register_info *guest_rf_arr = guest_gpr_infos_;
+        host_register_info *host_rf_arr = host_gpr_infos_;
 
         // Check if these host registers currently have yet a guest register occupied
         // And it must not be scratch... Because the register may currently got occupied
@@ -279,16 +245,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg host_result_reg = guest_rf_arr[least_use_index].host_reg_;
 
         // Flush the register down
-        switch (type) {
-        case REG_SCRATCH_TYPE_GPR:
-            result_reg = static_cast<common::armgen::arm_reg>(common::armgen::R0 + least_use_index);
-            break;
-
-        default:
-            LOG_ERROR(CPU_12L1R, "Invalid or unsupported register type!");
-            return common::armgen::INVALID_REG;
-        }
-
+        result_reg = static_cast<common::armgen::arm_reg>(common::armgen::R0 + least_use_index);
         flush(result_reg);
 
         if (flags & ALLOCATE_FLAG_SCRATCH) {
@@ -303,15 +260,8 @@ namespace eka2l1::arm::r12l1 {
     }
 
     common::armgen::arm_reg reg_cache::map(const common::armgen::arm_reg mee, const std::uint32_t allocate_flags) {
-        // Rules: GPR map to GPR. FPR map to FPR
-        const bool is_gpr = (mee >= common::armgen::R0) && (mee <= common::armgen::R15);
-        if (!is_gpr) {
-            LOG_ERROR(CPU_12L1R, "Non GPR register cache is currently not supported!");
-            return common::armgen::INVALID_REG;
-        }
-
-        guest_register_info *guest_rf_arr = is_gpr ? guest_gpr_infos_ : guest_fpr_infos_;
-        host_register_info *host_rf_arr = is_gpr ? host_gpr_infos_ : host_fpr_infos_;
+        guest_register_info *guest_rf_arr = guest_gpr_infos_;
+        host_register_info *host_rf_arr = host_gpr_infos_;
 
         if (guest_rf_arr[mee].curr_location_ & GUEST_REGISTER_LOC_HOST_REG) {
             // Wait.. we also want to check if it's synced
@@ -333,20 +283,15 @@ namespace eka2l1::arm::r12l1 {
             return host_reg;
         }
 
-        common::armgen::arm_reg new_baby = allocate_or_spill(is_gpr ? REG_SCRATCH_TYPE_GPR : REG_SCRATCH_TYPE_FPR,
-            allocate_flags);
+        common::armgen::arm_reg new_baby = allocate_or_spill(allocate_flags);
 
         if (new_baby == common::armgen::INVALID_REG) {
             return new_baby;
         }
 
         // Load the register data to it
-        if (is_gpr) {
-            if (!load_gpr_to_host(new_baby, mee)) {
-                LOG_WARN(CPU_12L1R, "Loading register value to mapped failed!");
-            }
-        } else {
-            // TODO :D
+        if (!load_gpr_to_host(new_baby, mee)) {
+            LOG_WARN(CPU_12L1R, "Loading register value to mapped failed!");
         }
 
         // Update the info about the register
@@ -359,71 +304,35 @@ namespace eka2l1::arm::r12l1 {
         return new_baby;
     }
 
-    common::armgen::arm_reg reg_cache::scratch(reg_scratch_type type) {
-        return allocate_or_spill(type, ALLOCATE_FLAG_SCRATCH);
+    common::armgen::arm_reg reg_cache::scratch() {
+        return allocate_or_spill(ALLOCATE_FLAG_SCRATCH);
     }
 
     void reg_cache::spill_lock(const common::armgen::arm_reg guest_reg) {
         if ((guest_reg >= common::armgen::R0) && (guest_reg < common::armgen::R15)) {
             guest_gpr_infos_[guest_reg].spill_lock_ = true;
-        } else if ((guest_reg >= common::armgen::S0) && (guest_reg <= common::armgen::S23)) {
-            guest_fpr_infos_[guest_reg].spill_lock_ = true;
         } else {
             LOG_ERROR(CPU_12L1R, "Invalid register to spill lock!");
         }
     }
 
-    void reg_cache::spill_lock_all(reg_scratch_type type) {
-        switch (type) {
-        case REG_SCRATCH_TYPE_GPR:
-            for (auto &gpr_info : guest_gpr_infos_) {
-                gpr_info.spill_lock_ = true;
-            }
-
-            break;
-
-        case REG_SCRATCH_TYPE_FPR:
-            for (auto &fpr_info : guest_fpr_infos_) {
-                fpr_info.spill_lock_ = true;
-            }
-
-            break;
-
-        default:
-            LOG_ERROR(CPU_12L1R, "Invalid register type to spill lock all");
-            break;
+    void reg_cache::spill_lock_all() {
+        for (auto &gpr_info : guest_gpr_infos_) {
+            gpr_info.spill_lock_ = true;
         }
     }
 
     void reg_cache::release_spill_lock(const common::armgen::arm_reg guest_reg) {
         if ((guest_reg >= common::armgen::R0) && (guest_reg < common::armgen::R15)) {
             guest_gpr_infos_[guest_reg].spill_lock_ = false;
-        } else if ((guest_reg >= common::armgen::S0) && (guest_reg <= common::armgen::S23)) {
-            guest_fpr_infos_[guest_reg].spill_lock_ = false;
         } else {
             LOG_ERROR(CPU_12L1R, "Invalid register to release spill lock!");
         }
     }
 
-    void reg_cache::release_spill_lock_all(reg_scratch_type type) {
-        switch (type) {
-        case REG_SCRATCH_TYPE_GPR:
-            for (auto &gpr_info : guest_gpr_infos_) {
-                gpr_info.spill_lock_ = false;
-            }
-
-            break;
-
-        case REG_SCRATCH_TYPE_FPR:
-            for (auto &fpr_info : guest_fpr_infos_) {
-                fpr_info.spill_lock_ = false;
-            }
-
-            break;
-
-        default:
-            LOG_ERROR(CPU_12L1R, "Invalid register type to release spill lock");
-            break;
+    void reg_cache::release_spill_lock_all() {
+        for (auto &gpr_info : guest_gpr_infos_) {
+            gpr_info.spill_lock_ = false;
         }
     }
 
@@ -437,25 +346,9 @@ namespace eka2l1::arm::r12l1 {
         }
     }
 
-    void reg_cache::done_scratching(reg_scratch_type type) {
-        switch (type) {
-        case REG_SCRATCH_TYPE_GPR:
-            for (auto &gpr_info : host_gpr_infos_) {
-                gpr_info.scratch_ = false;
-            }
-
-            break;
-
-        case REG_SCRATCH_TYPE_FPR:
-            for (auto &fpr_info : host_fpr_infos_) {
-                fpr_info.scratch_ = false;
-            }
-
-            break;
-
-        default:
-            LOG_ERROR(CPU_12L1R, "Invalid register type to release scratches");
-            break;
+    void reg_cache::done_scratching() {
+        for (auto &gpr_info : host_gpr_infos_) {
+            gpr_info.scratch_ = false;
         }
     }
 

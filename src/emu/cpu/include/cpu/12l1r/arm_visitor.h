@@ -157,6 +157,7 @@ namespace eka2l1::arm::r12l1 {
 
         // Miscs instructions
         bool arm_CLZ(common::cc_flags cond, reg_index d, reg_index m);
+        bool arm_UXTH(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
 
         // Hint
         bool arm_PLD_imm(bool add, bool R, reg_index n, std::uint16_t imm12);
@@ -167,5 +168,23 @@ namespace eka2l1::arm::r12l1 {
         bool arm_SVC(common::cc_flags cond, const std::uint32_t n);
         bool arm_BKPT();
         bool arm_UDF();
+
+        // VFP
+        bool vfp_VMOV_u32_f32(common::cc_flags cond, const std::size_t Vn, reg_index t, bool N);
+        bool vfp_VMOV_f32_u32(common::cc_flags cond, const std::size_t Vn, reg_index t, bool N);
+        bool vfp_VCMP(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool E, bool M, std::size_t Vm);
+        bool vfp_VCVT_to_u32(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool round_towards_zero, bool M, std::size_t Vm);
+        bool vfp_VCVT_to_s32(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool round_towards_zero, bool M, std::size_t Vm);
+        bool vfp_VCVT_from_int(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool is_signed, bool M, std::size_t Vm);
+        bool vfp_VCVT_f_to_f(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool M, std::size_t Vm);
+        bool vfp_VMOV_f64_2u32(common::cc_flags cond, reg_index t2, reg_index t, bool M, std::size_t Vm);
+        bool vfp_VMOV_2u32_f64(common::cc_flags cond, reg_index t2, reg_index t, bool M, std::size_t Vm);
+        bool vfp_VADD(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm);
+        bool vfp_VSUB(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm);
+        bool vfp_VMUL(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm);
+        bool vfp_VDIV(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm);
+        bool vfp_VSQRT(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool M, std::size_t Vm);
+        bool vfp_VLDR(common::cc_flags cond, bool U, bool D, reg_index n, std::size_t Vd, bool sz, std::uint8_t imm8);
+        bool vfp_VMRS(common::cc_flags cond, reg_index t);
     };
 }
