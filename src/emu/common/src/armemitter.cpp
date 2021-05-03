@@ -1775,11 +1775,11 @@ namespace eka2l1::common::armgen {
             // F32<->F64
             else {
                 if (single_to_double) {
-                    write32(condition | (0x1D << 23) | ((Dest & 0x10) << 18) | (0x3 << 20) | (0x7 << 16)
-                        | ((Dest & 0xF) << 12) | (0x2F << 6) | ((Source & 0x1) << 5) | (Source >> 1));
-                } else {
                     write32(condition | (0x1D << 23) | ((Dest & 0x1) << 22) | (0x3 << 20) | (0x7 << 16)
                         | ((Dest & 0x1E) << 11) | (0x2B << 6) | ((Source & 0x10) << 1) | (Source & 0xF));
+                } else {
+                    write32(condition | (0x1D << 23) | ((Dest & 0x10) << 18) | (0x3 << 20) | (0x7 << 16)
+                        | ((Dest & 0xF) << 12) | (0x2F << 6) | ((Source & 0x1) << 5) | (Source >> 1));
                 }
             }
         } else if (single_reg) {
