@@ -25,6 +25,7 @@
 
 namespace eka2l1::arm {
     class dyncom_core;
+    class core;
     class exclusive_monitor;
 }
 
@@ -170,6 +171,7 @@ public:
     void WriteCP15Register(std::uint32_t value, std::uint32_t crn, std::uint32_t opcode_1, std::uint32_t crm, std::uint32_t opcode_2);
 
     eka2l1::arm::exclusive_monitor *exmonitor();
+    eka2l1::arm::core *parent();
 
     // Whether or not the given CPU is in big endian mode (E bit is set)
     bool InBigEndianMode() const {

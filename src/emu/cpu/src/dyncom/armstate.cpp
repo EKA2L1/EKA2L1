@@ -337,6 +337,10 @@ eka2l1::arm::exclusive_monitor *ARMul_State::exmonitor() {
     return core->exmonitor();
 }
 
+eka2l1::arm::core *ARMul_State::parent() {
+    return reinterpret_cast<eka2l1::arm::core*>(core);
+}
+
 // Reads from the CP15 registers. Used with implementation of the MRC instruction.
 // Note that since the 3DS does not have the hypervisor extensions, these registers
 // are not implemented.
