@@ -1658,8 +1658,22 @@ ADC_INST : {
 ADD_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         add_inst* const inst_cream = (add_inst*)inst_base->component;
+        std::uint32_t rn_val = 0;
 
-        std::uint32_t rn_val = CHECK_READ_REG15_WA(cpu, inst_cream->Rn);
+        // The ADR thumb instruction got disguised, under ADD. However unlike the other,
+        // it uses aligned PC. So have to check
+        if (cpu->TFlag) {
+            std::uint32_t inst = cpu->ReadCode(cpu->Reg[15] & 0xFFFFFFFC);
+            inst = GetThumbInstruction(inst, cpu->Reg[15]);
+
+            if (((inst & 0xF800) >> 11) == 20) {
+                rn_val = CHECK_READ_REG15_WA(cpu, inst_cream->Rn);
+            } else {
+                rn_val = CHECK_READ_REG15(cpu, inst_cream->Rn);
+            }
+        } else {
+            rn_val = CHECK_READ_REG15_WA(cpu, inst_cream->Rn);
+        }
 
         bool carry;
         bool overflow;
@@ -2208,7 +2222,7 @@ LDREX_INST : {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
 
-        RD = cpu->exmonitor()->exclusive_read32(reinterpret_cast<eka2l1::arm::core*>(cpu), read_addr);;
+        RD = cpu->exmonitor()->exclusive_read32(cpu->parent(), read_addr);;
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(generic_arm_inst));
@@ -2220,7 +2234,7 @@ LDREXB_INST : {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
 
-        RD = cpu->exmonitor()->exclusive_read8(reinterpret_cast<eka2l1::arm::core*>(cpu), read_addr);
+        RD = cpu->exmonitor()->exclusive_read8(cpu->parent(), read_addr);
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -2233,7 +2247,7 @@ LDREXH_INST : {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
 
-        RD = cpu->exmonitor()->exclusive_read16(reinterpret_cast<eka2l1::arm::core*>(cpu), read_addr);
+        RD = cpu->exmonitor()->exclusive_read16(cpu->parent(), read_addr);
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(generic_arm_inst));
@@ -2245,7 +2259,7 @@ LDREXD_INST : {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int read_addr = RN;
 
-        const std::uint64_t valval = cpu->exmonitor()->exclusive_read64(reinterpret_cast<eka2l1::arm::core*>(cpu), read_addr);
+        const std::uint64_t valval = cpu->exmonitor()->exclusive_read64(cpu->parent(), read_addr);
 
         RD = static_cast<std::uint32_t>(valval);
         RD2 = static_cast<std::uint32_t>(valval >> 32);
@@ -3682,7 +3696,7 @@ STREX_INST : {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-        RD = cpu->exmonitor()->exclusive_write32(reinterpret_cast<eka2l1::arm::core*>(cpu), write_addr, RM);
+        RD = (cpu->exmonitor()->exclusive_write32(cpu->parent(), write_addr, RM) ? 0 : 1);
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(generic_arm_inst));
@@ -3694,7 +3708,7 @@ STREXB_INST : {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-        RD = cpu->exmonitor()->exclusive_write8(reinterpret_cast<eka2l1::arm::core*>(cpu), write_addr, RM);
+        RD = (cpu->exmonitor()->exclusive_write8(cpu->parent(), write_addr, RM) ? 0 : 1);
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(generic_arm_inst));
@@ -3715,7 +3729,7 @@ STREXD_INST : {
         else
             value = (((std::uint64_t)rt2 << 32) | rt);
 
-        RD = cpu->exmonitor()->exclusive_write64(reinterpret_cast<eka2l1::arm::core*>(cpu), write_addr, RM);
+        RD = (cpu->exmonitor()->exclusive_write64(cpu->parent(), write_addr, RM) ? 0 : 1);
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(generic_arm_inst));
@@ -3727,7 +3741,7 @@ STREXH_INST : {
         generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-        RD = cpu->exmonitor()->exclusive_write16(reinterpret_cast<eka2l1::arm::core*>(cpu), write_addr, RM);
+        RD = (cpu->exmonitor()->exclusive_write16(cpu->parent(), write_addr, RM) ? 0 : 1);
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(generic_arm_inst));
@@ -3772,7 +3786,7 @@ SUB_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         sub_inst* const inst_cream = (sub_inst*)inst_base->component;
 
-        std::uint32_t rn_val = CHECK_READ_REG15_WA(cpu, inst_cream->Rn);
+        std::uint32_t rn_val = CHECK_READ_REG15(cpu, inst_cream->Rn);
 
         bool carry;
         bool overflow;
