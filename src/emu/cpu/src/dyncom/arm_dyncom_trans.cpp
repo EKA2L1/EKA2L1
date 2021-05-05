@@ -9,7 +9,7 @@
 
 static void* AllocBuffer(ARMul_State *state, std::size_t size) {
     std::size_t start = state->trans_cache_buf_top;
-    state->trans_cache_buf_top += size;
+    state->trans_cache_buf_top += ((size + 7) >> 3) << 3;
     assert(trans_cache_buf_top <= TRANS_CACHE_SIZE && "Translation cache is full!");
     return static_cast<void*>(&state->trans_cache_buf[start]);
 }
