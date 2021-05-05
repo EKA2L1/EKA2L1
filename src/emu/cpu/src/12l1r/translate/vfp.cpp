@@ -162,8 +162,13 @@ namespace eka2l1::arm::r12l1 {
         float_marker_.use(source, true);
         float_marker_.use(dest, false);
 
+        int flags = (is_signed ? IS_SIGNED : 0);
+        if (sz) {
+            flags |= TO_INT;
+        }
+
         // To int flags, no sign
-        big_block_->VCVT(dest, source, TO_FLOAT | (is_signed ? IS_SIGNED : 0));
+        big_block_->VCVT(dest, source, flags);
         return true;
     }
 
