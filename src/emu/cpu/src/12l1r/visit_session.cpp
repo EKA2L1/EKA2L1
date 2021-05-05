@@ -103,6 +103,7 @@ namespace eka2l1::arm::r12l1 {
         : flag_(common::CC_NV)
         , cond_modified_(false)
         , cpsr_ever_updated_(false)
+        , fpscr_ever_updated_(false)
         , cond_failed_(false)
         , last_inst_count_(0)
         , big_block_(bro)
@@ -1069,6 +1070,8 @@ namespace eka2l1::arm::r12l1 {
             emit_cpsr_update_nzcvq();
         }
 
+        emit_fpscr_save();
+
         // Since the condition changed, not flushing registers in this case will result all
         // our work gone to waste! If we let it be done in B_CC down below in case the condition
         // not true anymore, the reg cache will never be flushed :((
@@ -1078,6 +1081,9 @@ namespace eka2l1::arm::r12l1 {
 
             last_inst_count_ = crr_block_->inst_count_;
         }
+
+        // Sync anyway
+        float_marker_.sync_state();
 
         if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
             big_block_->set_jump_target(end_target_);
@@ -1098,7 +1104,9 @@ namespace eka2l1::arm::r12l1 {
         big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
         fuzz_end = big_block_->get_writeable_code_ptr();
+
         emit_cpsr_restore_nzcvq();
+        big_block_->emit_fpscr_load();
 
         // Normally, when condition is modified, we won't make new branch... What's the point
         if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
@@ -1111,6 +1119,8 @@ namespace eka2l1::arm::r12l1 {
         if (cpsr_ever_updated_) {
             emit_cpsr_update_nzcvq();
         }
+
+        emit_fpscr_save();
 
         big_block_->SUBI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
         big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R_SP);
@@ -1143,6 +1153,7 @@ namespace eka2l1::arm::r12l1 {
         big_block_->ADDI2R(common::armgen::R_SP, common::armgen::R_SP, sizeof(core_state), ALWAYS_SCRATCH1);
 
         emit_cpsr_restore_nzcvq();
+        big_block_->emit_fpscr_load();
     }
 #endif
 

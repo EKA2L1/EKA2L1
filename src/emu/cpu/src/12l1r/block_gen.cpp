@@ -313,6 +313,9 @@ namespace eka2l1::arm::r12l1 {
 
         link_to_.clear();
         cache_.flush_all();
+
+        clear_codespace(0);
+        assemble_control_funcs();
     }
 
     void dashixiong_block::raise_guest_exception(const exception_type exc, const std::uint32_t usrdata) {
@@ -431,40 +434,53 @@ namespace eka2l1::arm::r12l1 {
         });
     }
 
+    // Note: 0 means success! Need to convert
     bool dashixiong_block::write_ex_byte(const vaddress addr, const std::uint8_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint8_t>(parent_->core_number(), addr,
                    [&](std::uint8_t expected) -> bool {
+#if R12L1_ENABLE_FUZZ
+                       if (flags_ & FLAG_ENABLE_FUZZ) {
+                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                       }
+#endif
                        return (parent_->exclusive_write_8bit(addr, val, expected) > 0);
-                   })
-            ? 0
-            : 1;
+                   }) ? 0 : 1;
     }
 
     bool dashixiong_block::write_ex_word(const vaddress addr, const std::uint16_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint16_t>(parent_->core_number(), addr,
                    [&](std::uint16_t expected) -> bool {
+#if R12L1_ENABLE_FUZZ
+                       if (flags_ & FLAG_ENABLE_FUZZ) {
+                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                       }
+#endif
                        return (parent_->exclusive_write_16bit(addr, val, expected) > 0);
-                   })
-            ? 0
-            : 1;
+                   }) ? 0 : 1;
     }
 
     bool dashixiong_block::write_ex_dword(const vaddress addr, const std::uint32_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint32_t>(parent_->core_number(), addr,
                    [&](std::uint32_t expected) -> bool {
+#if R12L1_ENABLE_FUZZ
+                       if (flags_ & FLAG_ENABLE_FUZZ) {
+                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                       }
+#endif
                        return (parent_->exclusive_write_32bit(addr, val, expected) > 0);
-                   })
-            ? 0
-            : 1;
+                   }) ? 0 : 1;
     }
 
     bool dashixiong_block::write_ex_qword(const vaddress addr, const std::uint64_t val) {
         return parent_->monitor_->do_exclusive_operation<std::uint64_t>(parent_->core_number(), addr,
                    [&](std::uint64_t expected) -> bool {
+#if R12L1_ENABLE_FUZZ
+                       if (flags_ & FLAG_ENABLE_FUZZ) {
+                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                       }
+#endif
                        return (parent_->exclusive_write_64bit(addr, val, expected) > 0);
-                   })
-            ? 0
-            : 1;
+                   }) ? 0 : 1;
     }
 
     void dashixiong_block::enter_dispatch(core_state *cstate) {
@@ -611,13 +627,21 @@ namespace eka2l1::arm::r12l1 {
     }
 
     translated_block *dashixiong_block::compile_new_block(core_state *state, const vaddress addr) {
+#if R12L1_ENABLE_FUZZ
+        if (get_space_left() <= THRESHOLD_LEFT_TO_RESET_CACHE_FUZZ) {
+#else
+        if (get_space_left() <= THRESHOLD_LEFT_TO_RESET_CACHE) {
+#endif
+            flush_all();
+        }
+
         translated_block *block = start_new_block(addr, state->current_aid_);
         if (!block) {
             return nullptr;
         }
 
         // When you want to start the fuzz, call fuzz_start(), and end it with fuzz_end()
-        //fuzz_start();
+        // fuzz_start();
 
         const bool is_thumb = (state->cpsr_ & CPSR_THUMB_FLAG_MASK);
         bool should_continue = false;
@@ -751,17 +775,17 @@ namespace eka2l1::arm::r12l1 {
                     return parent_->monitor_->read_64bit(parent_, addr, dat);
                 };
 
-                interpreter_monitor_->write_8bit = [&](core * cc, address, std::uint8_t, std::uint8_t) -> std::int32_t {
-                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                interpreter_monitor_->write_8bit = [&](core * cc, address addr, std::uint8_t v1, std::uint8_t v2) -> std::int32_t {
+                    return parent_->monitor_->write_8bit(parent_, addr, v1, v2);
                 };
-                interpreter_monitor_->write_16bit = [&](core * cc, address, std::uint16_t, std::uint16_t) -> std::int32_t {
-                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                interpreter_monitor_->write_16bit = [&](core * cc, address addr, std::uint16_t v1, std::uint16_t v2) -> std::int32_t {
+                    return parent_->monitor_->write_16bit(parent_, addr, v1, v2);
                 };
-                interpreter_monitor_->write_32bit = [&](core * cc, address, std::uint32_t, std::uint32_t) -> std::int32_t {
-                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                interpreter_monitor_->write_32bit = [&](core * cc, address addr, std::uint32_t v1, std::uint32_t v2) -> std::int32_t {
+                    return parent_->monitor_->write_32bit(parent_, addr, v1, v2);
                 };
-                interpreter_monitor_->write_64bit = [&](core * cc, address, std::uint64_t, std::uint64_t) -> std::int32_t {
-                    return static_cast<std::int32_t>(parent_->monitor_->exclusive_operation_results_[cc->core_number()]);
+                interpreter_monitor_->write_64bit = [&](core * cc, address addr, std::uint64_t v1, std::uint64_t v2) -> std::int32_t {
+                    return parent_->monitor_->write_64bit(parent_, addr, v1, v2);
                 };
 
                 interpreter_ = std::make_unique<dyncom_core>(interpreter_monitor_.get(), parent_->mem_cache_.page_bits);
@@ -804,6 +828,10 @@ namespace eka2l1::arm::r12l1 {
 
     bool dashixiong_block::fuzz_execute() {
         if (flags_ & FLAG_ENABLE_FUZZ) {
+            if (fuzz_svc_handle()) {
+                return true;
+            }
+
             interpreter_->step();
             return true;
         }
@@ -811,11 +839,7 @@ namespace eka2l1::arm::r12l1 {
         return false;
     }
 
-    void dashixiong_block::fuzz_compare(core_state *state) {
-        if (!(flags_ & FLAG_ENABLE_FUZZ)) {
-            return;
-        }
-
+    bool dashixiong_block::fuzz_svc_handle() {
         if (flags_ & FLAG_FUZZ_LAST_SYSCALL) {
             // Restore to core state
             core::thread_context ctx;
@@ -829,6 +853,18 @@ namespace eka2l1::arm::r12l1 {
             // the current instruction!
             interpreter_->step();
 
+            return true;
+        }
+
+        return false;
+    }
+
+    void dashixiong_block::fuzz_compare(core_state *state) {
+        if (!(flags_ & FLAG_ENABLE_FUZZ)) {
+            return;
+        }
+
+        if (fuzz_svc_handle()) {
             return;
         }
 

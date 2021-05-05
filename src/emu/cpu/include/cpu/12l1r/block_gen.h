@@ -136,6 +136,7 @@ namespace eka2l1::arm::r12l1 {
         void fuzz_start();
         bool fuzz_execute();
         void fuzz_compare(core_state *state);
+        bool fuzz_svc_handle();
         void fuzz_end();
 #endif
 

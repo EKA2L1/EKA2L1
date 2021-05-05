@@ -68,6 +68,10 @@ namespace eka2l1::arm::r12l1 {
         bool do_exclusive_operation(const std::size_t processor_id, vaddress address, Function op) {
             static_assert(std::is_trivially_copyable_v<T>);
             if (!check_and_clear(processor_id, address)) {
+#if R12L1_ENABLE_FUZZ
+                exclusive_operation_results_[processor_id] = false;
+#endif
+
                 return false;
             }
 
