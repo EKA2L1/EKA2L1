@@ -19,6 +19,7 @@
 
 #include <mda/common/audio.h>
 #include <mda/common/resource.h>
+#include <AudCommon.h>
 #include <Log.h>
 
 #include "dispatch.h"
@@ -56,7 +57,18 @@ void CMdaAudioOutputStream::Open(TMdaPackage *aPackage) {
     TMdaAudioDataSettings *settings = reinterpret_cast<TMdaAudioDataSettings *>(aPackage);
 
     // Try to set audio properties
-    const TInt result = iProperties->SetAudioPropertiesRaw(settings->iSampleRate, settings->iChannels);
+    TInt realFreq = ConvertFreqEnumToNumber(settings->iSampleRate);
+    TInt numChannels = ConvertChannelEnumToNum(settings->iChannels);
+
+    if (realFreq == -1) {
+        realFreq = settings->iSampleRate;
+    }
+
+    if (numChannels == -1) {
+        numChannels = settings->iChannels;
+    }
+
+    const TInt result = iProperties->SetAudioPropertiesRaw(realFreq, numChannels);
 
     if (result != KErrNone) {
         LogOut(KMcaCat, _L("ERR:: Unable to set audio properties on stream opening!"));
