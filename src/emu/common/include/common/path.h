@@ -140,24 +140,28 @@ namespace eka2l1 {
         uint32_t crr_pos;
         uint32_t last_pos;
 
+        bool filename;
+
     public:
         basic_path_iterator()
             : crr_pos(0)
-            , last_pos(0) {
+            , last_pos(0)
+            , filename(false) {
             (*this)++;
         }
 
         basic_path_iterator(const std::basic_string<T> &p)
             : path(p)
             , crr_pos(0)
-            , last_pos(0) {
+            , last_pos(0)
+            , filename(false) {
             (*this)++;
         }
 
         basic_path_iterator<T> operator++(int dummy) {
             last_pos = crr_pos;
 
-            if (crr_pos > path.length()) {
+            if (crr_pos > ((filename ? 1 : 0) + path.length())) {
                 throw std::runtime_error("Iterator is invalid");
                 return *this;
             }
@@ -176,6 +180,13 @@ namespace eka2l1 {
                 crr_pos += 1;
             }
 
+            if (crr_pos >= path.length() && !is_separator(path.back())) {
+                filename = true;
+                crr_pos += 1;
+
+                return *this;
+            }
+
             while (crr_pos < path.length() && is_separator(path[crr_pos])) {
                 crr_pos += 1;
             }
@@ -188,7 +199,7 @@ namespace eka2l1 {
         }
 
         operator bool() const {
-            return crr_pos <= path.length();
+            return crr_pos <= ((filename ? 1 : 0) + path.length());
         }
     };
 
