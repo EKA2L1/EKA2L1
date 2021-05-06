@@ -259,7 +259,7 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool visit_session::emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
-        bool before, bool writeback, bool load) {
+        bool before, bool writeback, bool load, int reg_type) {
         std::int8_t last_reg = 0;
         emit_cpsr_update_nzcvq();
 
@@ -289,24 +289,29 @@ namespace eka2l1::arm::r12l1 {
             }
         }
 
+        int size_per_occupation = 4;
+        if (reg_type == ACCESS_CHAIN_REG_TYPE_D) {
+            size_per_occupation = 8;
+        }
+
         auto emit_addr_modification = [&](const bool ignore_base) {
             // Decrement or increment guest base and host base
             if (add) {
                 if (!ignore_base) {
                     big_block_->set_cc(common::CC_NEQ);
-                    big_block_->ADDI2R(base, base, 4, ALWAYS_SCRATCH1);
+                    big_block_->ADDI2R(base, base, size_per_occupation, ALWAYS_SCRATCH1);
                     big_block_->set_cc(common::CC_AL);
                 }
 
-                big_block_->ADDI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
+                big_block_->ADDI2R(guest_addr_reg, guest_addr_reg, size_per_occupation, ALWAYS_SCRATCH1);
             } else {
                 if (!ignore_base) {
                     big_block_->set_cc(common::CC_NEQ);
-                    big_block_->SUBI2R(base, base, 4, ALWAYS_SCRATCH1);
+                    big_block_->SUBI2R(base, base, size_per_occupation, ALWAYS_SCRATCH1);
                     big_block_->set_cc(common::CC_AL);
                 }
 
-                big_block_->SUBI2R(guest_addr_reg, guest_addr_reg, 4, ALWAYS_SCRATCH1);
+                big_block_->SUBI2R(guest_addr_reg, guest_addr_reg, size_per_occupation, ALWAYS_SCRATCH1);
             }
         };
 
@@ -342,29 +347,54 @@ namespace eka2l1::arm::r12l1 {
             last_reg = 15;
         }
 
+        int reg_enum_base_add = 0;
+        int reg_num_iterate = 0;
+
+        switch (reg_type) {
+        case ACCESS_CHAIN_REG_TYPE_GPR:
+            reg_enum_base_add = common::armgen::R0;
+            reg_num_iterate = 15;
+            break;
+
+        case ACCESS_CHAIN_REG_TYPE_S:
+            reg_enum_base_add = common::armgen::S0;
+            reg_num_iterate = 31;
+            break;
+
+        case ACCESS_CHAIN_REG_TYPE_D:
+            reg_enum_base_add = common::armgen::D0;
+            reg_num_iterate = 31;
+            break;
+
+        default:
+            LOG_ERROR(CPU_12L1R, "Invalid register type for chain access {}", reg_type);
+            break;
+        }
+
         // Map to register as much registers as possible, then flush them all to load/store
-        while (add ? (last_reg <= 15) : (last_reg >= 0)) {
+        while (add ? (last_reg <= reg_num_iterate) : (last_reg >= 0)) {
             if (common::bit(guest_list, last_reg)) {
-                const common::armgen::arm_reg orig = static_cast<common::armgen::arm_reg>(
-                    common::armgen::R0 + last_reg);
+                common::armgen::arm_reg orig = static_cast<common::armgen::arm_reg>(reg_enum_base_add + last_reg);
 
                 common::armgen::arm_reg mapped = common::armgen::INVALID_REG;
                 bool skip_me = false;
 
-                if (last_reg != 15) {
-                    if ((base_guest_reg_idx == last_reg) && (base_backup != common::armgen::INVALID_REG)) {
-                        mapped = base_backup;
-                    } else if ((base_guest_reg_idx == last_reg) && (load && writeback)) {
-                        LOG_WARN(CPU_12L1R, "Trying to execute unpredictable behaviour loading "
-                            "to base register with writeback enabled, reg=r{}", last_reg);
+                if (reg_type == ACCESS_CHAIN_REG_TYPE_GPR) {
+                    if (last_reg != 15) {
+                        if ((base_guest_reg_idx == last_reg) && (base_backup != common::armgen::INVALID_REG)) {
+                            mapped = base_backup;
+                        } else if ((base_guest_reg_idx == last_reg) && (load && writeback)) {
+                            LOG_WARN(CPU_12L1R, "Trying to execute unpredictable behaviour loading "
+                                                "to base register with writeback enabled, reg=r{}", last_reg);
 
-                        skip_me = true;
-                    } else {
-                        mapped = reg_supplier_.map(orig, (load ? ALLOCATE_FLAG_DIRTY : 0));
+                            skip_me = true;
+                        } else {
+                            mapped = reg_supplier_.map(orig, (load ? ALLOCATE_FLAG_DIRTY : 0));
+                        }
                     }
                 }
 
-                if ((last_reg != 15) && (mapped == common::armgen::INVALID_REG) && !skip_me) {
+                if ((reg_type == ACCESS_CHAIN_REG_TYPE_GPR) && (last_reg != 15) && (mapped == common::armgen::INVALID_REG) && !skip_me) {
                     LOG_ERROR(CPU_12L1R, "Can't map another register for some reason...");
                     assert(false);
                 } else {
@@ -412,28 +442,55 @@ namespace eka2l1::arm::r12l1 {
                         big_block_->MOVI2R(common::armgen::R0, reinterpret_cast<std::uint32_t>(big_block_));
 
                         if (load) {
-                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
+                            if (reg_type != ACCESS_CHAIN_REG_TYPE_D) {
+                                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_dword_router);
+                            } else {
+                                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_read_qword_router);
+                                big_block_->MOV(ALWAYS_SCRATCH2, common::armgen::R1);
+                            }
+
                             big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
-                            if (last_reg == 15) {
-                                // Store to lastest PC
-                                big_block_->emit_pc_write_exchange(common::armgen::R0);
-                                block_cont = false;
+                            if (reg_type == ACCESS_CHAIN_REG_TYPE_GPR) {
+                                if (last_reg == 15) {
+                                    // Store to lastest PC
+                                    big_block_->emit_pc_write_exchange(common::armgen::R0);
+                                    block_cont = false;
+                                } else {
+                                    big_block_->MOV(mapped, common::armgen::R0);
+                                }
                             } else {
-                                big_block_->MOV(mapped, common::armgen::R0);
+                                if (reg_type == ACCESS_CHAIN_REG_TYPE_S) {
+                                    big_block_->VMOV(orig, common::armgen::R0);
+                                } else {
+                                    big_block_->VMOV(orig, common::armgen::R0, ALWAYS_SCRATCH2);
+                                }
                             }
                         } else {
-                            if (last_reg == 15) {
-                                big_block_->MOVI2R(common::armgen::R2, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
-                            } else {
-                                if (mapped == common::armgen::R1) {
-                                    big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
+                            if (reg_type == ACCESS_CHAIN_REG_TYPE_GPR) {
+                                if (last_reg == 15) {
+                                    big_block_->MOVI2R(common::armgen::R2, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
                                 } else {
-                                    big_block_->MOV(common::armgen::R2, mapped);
+                                    if (mapped == common::armgen::R1) {
+                                        big_block_->MOV(common::armgen::R2, ALWAYS_SCRATCH2);
+                                    } else {
+                                        big_block_->MOV(common::armgen::R2, mapped);
+                                    }
+                                }
+                            } else {
+                                if (reg_type == ACCESS_CHAIN_REG_TYPE_S) {
+                                    big_block_->VMOV(common::armgen::R2, orig);
+                                } else {
+                                    big_block_->VMOV(common::armgen::R2, common::armgen::R3, orig);
                                 }
                             }
 
-                            big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
+                            if (reg_type != ACCESS_CHAIN_REG_TYPE_D) {
+                                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_dword_router);
+                            } else {
+                                big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_write_qword_router);
+                            }
+
                             big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
                         }
 
@@ -441,21 +498,29 @@ namespace eka2l1::arm::r12l1 {
                         big_block_->set_jump_target(lookup_good);
 
                         if (load) {
-                            if (last_reg == 15) {
-                                big_block_->LDR(ALWAYS_SCRATCH1, base, 0);
-                                big_block_->emit_pc_write_exchange(ALWAYS_SCRATCH1);
+                            if (reg_type == ACCESS_CHAIN_REG_TYPE_GPR) {
+                                if (last_reg == 15) {
+                                    big_block_->LDR(ALWAYS_SCRATCH1, base, 0);
+                                    big_block_->emit_pc_write_exchange(ALWAYS_SCRATCH1);
 
-                                block_cont = false;
+                                    block_cont = false;
+                                } else {
+                                    big_block_->LDR(mapped, base, 0);
+                                }
                             } else {
-                                big_block_->LDR(mapped, base, 0);
+                                big_block_->VLDR(orig, base, 0);
                             }
                         } else {
-                            if (last_reg == 15) {
-                                big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
+                            if (reg_type == ACCESS_CHAIN_REG_TYPE_GPR) {
+                                if (last_reg == 15) {
+                                    big_block_->MOVI2R(ALWAYS_SCRATCH1, crr_block_->current_aligned_address() + (crr_block_->thumb_ ? 4 : 8), ALWAYS_SCRATCH2);
 
-                                big_block_->STR(ALWAYS_SCRATCH1, base, 0);
+                                    big_block_->STR(ALWAYS_SCRATCH1, base, 0);
+                                } else {
+                                    big_block_->STR(mapped, base, 0);
+                                }
                             } else {
-                                big_block_->STR(mapped, base, 0);
+                                big_block_->VSTR(orig, base, 0);
                             }
                         }
 

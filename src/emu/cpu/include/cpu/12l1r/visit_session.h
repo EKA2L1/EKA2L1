@@ -31,6 +31,12 @@ namespace eka2l1::arm::r12l1 {
 
     struct translated_block;
 
+    enum access_chain_reg_type {
+        ACCESS_CHAIN_REG_TYPE_GPR = 0,
+        ACCESS_CHAIN_REG_TYPE_S = 1,
+        ACCESS_CHAIN_REG_TYPE_D = 2
+    };
+
     inline common::armgen::arm_reg reg_index_to_gpr(const reg_index idx) {
         return static_cast<common::armgen::arm_reg>(common::armgen::R0 + idx);
     }
@@ -69,7 +75,7 @@ namespace eka2l1::arm::r12l1 {
             std::uint8_t **lookup_route = nullptr);
 
         bool emit_memory_access_chain(common::armgen::arm_reg base, reg_list guest_list, bool add,
-            bool before, bool writeback, bool load);
+            bool before, bool writeback, bool load, int reg_type = ACCESS_CHAIN_REG_TYPE_GPR);
 
         bool emit_memory_access(common::armgen::arm_reg target, common::armgen::arm_reg base,
             common::armgen::operand2 op2, const std::uint8_t bit_count, bool is_signed, bool add,
