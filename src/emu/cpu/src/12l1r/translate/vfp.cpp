@@ -22,6 +22,21 @@
 #include <cpu/12l1r/visit_session.h>
 
 namespace eka2l1::arm::r12l1 {
+    bool arm_translate_visitor::vfp_VMOV_reg(common::cc_flags cond, bool D, std::size_t Vd, bool sz, bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VMOV(dest, source);
+        return true;
+    }
+
     bool arm_translate_visitor::vfp_VMOV_u32_f32(common::cc_flags cond, const std::size_t Vn, reg_index t, bool N) {
         if (!condition_passed(cond)) {
             return false;
@@ -241,6 +256,93 @@ namespace eka2l1::arm::r12l1 {
         return true;
     }
 
+    bool arm_translate_visitor::vfp_VMLA(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N,
+        bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
+        common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source1, true);
+        float_marker_.use(source2, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VMLA(dest, source1, source2);
+        return true;
+    }
+
+    bool arm_translate_visitor::vfp_VMLS(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N,
+        bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
+        common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source1, true);
+        float_marker_.use(source2, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VMLS(dest, source1, source2);
+        return true;
+    }
+
+    bool arm_translate_visitor::vfp_VNMUL(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
+        common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source1, true);
+        float_marker_.use(source2, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VNMUL(dest, source1, source2);
+        return true;
+    }
+
+    bool arm_translate_visitor::vfp_VNMLA(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
+        common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source1, true);
+        float_marker_.use(source2, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VNMLA(dest, source1, source2);
+        return true;
+    }
+
+    bool arm_translate_visitor::vfp_VNMLS(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N, bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
+        common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source1, true);
+        float_marker_.use(source2, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VNMLS(dest, source1, source2);
+        return true;
+    }
+
     bool arm_translate_visitor::vfp_VDIV(common::cc_flags cond, bool D, std::size_t Vn, std::size_t Vd, bool sz, bool N,
         bool M, std::size_t Vm) {
         if (!condition_passed(cond)) {
@@ -256,6 +358,38 @@ namespace eka2l1::arm::r12l1 {
         float_marker_.use(dest, false);
 
         big_block_->VDIV(dest, source1, source2);
+        return true;
+    }
+
+    bool arm_translate_visitor::vfp_VNEG(common::cc_flags cond, bool D, std::size_t Vd, bool sz,
+        bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VNEG(dest, source);
+        return true;
+    }
+
+    bool arm_translate_visitor::vfp_VABS(common::cc_flags cond, bool D, std::size_t Vd, bool sz,
+        bool M, std::size_t Vm) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
+        common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
+
+        float_marker_.use(source, true);
+        float_marker_.use(dest, false);
+
+        big_block_->VABS(dest, source);
         return true;
     }
 
@@ -306,6 +440,79 @@ namespace eka2l1::arm::r12l1 {
         }
 
         return result;
+    }
+
+    bool arm_translate_visitor::vfp_VSTR(common::cc_flags cond, bool U, bool D, reg_index n, std::size_t Vd, bool sz, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg value_scr = reg_supplier_.scratch();
+        common::armgen::arm_reg value_scr2 = common::armgen::INVALID_REG;
+        if (sz) {
+            value_scr2 = reg_supplier_.scratch();
+        }
+
+        common::armgen::arm_reg base = reg_index_to_gpr(n);
+        common::armgen::arm_reg source = decode_fp_reg(sz, Vd, D);
+        common::armgen::operand2 adv(imm8 << 2);
+
+        // Load source values into these temp registers
+        float_marker_.use(source, true);
+
+        if (sz) {
+            big_block_->VMOV(value_scr, value_scr2, source);
+        } else {
+            big_block_->VMOV(value_scr, source);
+        }
+
+        const bool result = emit_memory_access(value_scr, base, adv, sz ? 64 : 32, false, U, true, false, false,
+            value_scr2, true);
+
+        reg_supplier_.done_scratching_this(value_scr);
+        if (value_scr2 != common::armgen::INVALID_REG) {
+            reg_supplier_.done_scratching_this(value_scr2);
+        }
+
+        return result;
+    }
+
+    bool arm_translate_visitor::vfp_VPUSH(common::cc_flags cond, bool D, std::size_t Vd, bool sz, std::uint8_t imm8) {
+        common::armgen::arm_reg start_push = decode_fp_reg(sz, Vd, D);
+        int base_start = start_push - (sz ? common::armgen::D0 : common::armgen::R0);
+
+        if (sz) {
+            imm8 >>= 1;
+        }
+
+        reg_list list_to_push = 0;
+
+        for (std::uint8_t i = 0; i < imm8; i++) {
+            list_to_push |= (1 << (base_start + i));
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), true);
+        }
+
+        return emit_memory_access_chain(common::armgen::R13, list_to_push, false, true, true, false, (sz ?
+            ACCESS_CHAIN_REG_TYPE_D : ACCESS_CHAIN_REG_TYPE_S));
+    }
+
+    bool arm_translate_visitor::vfp_VPOP(common::cc_flags cond, bool D, std::size_t Vd, bool sz, std::uint8_t imm8) {
+        common::armgen::arm_reg start_push = decode_fp_reg(sz, Vd, D);
+        int base_start = start_push - (sz ? common::armgen::D0 : common::armgen::R0);
+
+        if (sz) {
+            imm8 >>= 1;
+        }
+
+        reg_list list_to_push = 0;
+
+        for (std::uint8_t i = 0; i < imm8; i++) {
+            list_to_push |= (1 << (base_start + i));
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), false);
+        }
+
+        return emit_memory_access_chain(common::armgen::R13, list_to_push, true, false, true, true, (sz ?
+            ACCESS_CHAIN_REG_TYPE_D : ACCESS_CHAIN_REG_TYPE_S));
     }
 
     bool arm_translate_visitor::vfp_VMRS(common::cc_flags cond, reg_index t) {

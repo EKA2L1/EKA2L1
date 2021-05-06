@@ -1,10 +1,10 @@
 // Floating-point three-register data processing instructions
-//INST(vfp_VMLA,             "VMLA",                    "cccc11100D00nnnndddd101zN0M0mmmm") // VFPv2
-//INST(vfp_VMLS,             "VMLS",                    "cccc11100D00nnnndddd101zN1M0mmmm") // VFPv2
-//INST(vfp_VNMLS,            "VNMLS",                   "cccc11100D01nnnndddd101zN0M0mmmm") // VFPv2
-//INST(vfp_VNMLA,            "VNMLA",                   "cccc11100D01nnnndddd101zN1M0mmmm") // VFPv2
+INST(vfp_VMLA,             "VMLA",                    "cccc11100D00nnnndddd101zN0M0mmmm") // VFPv2
+INST(vfp_VMLS,             "VMLS",                    "cccc11100D00nnnndddd101zN1M0mmmm") // VFPv2
+INST(vfp_VNMLS,            "VNMLS",                   "cccc11100D01nnnndddd101zN0M0mmmm") // VFPv2
+INST(vfp_VNMLA,            "VNMLA",                   "cccc11100D01nnnndddd101zN1M0mmmm") // VFPv2
 INST(vfp_VMUL,             "VMUL",                    "cccc11100D10nnnndddd101zN0M0mmmm") // VFPv2
-//INST(vfp_VNMUL,            "VNMUL",                   "cccc11100D10nnnndddd101zN1M0mmmm") // VFPv2
+INST(vfp_VNMUL,            "VNMUL",                   "cccc11100D10nnnndddd101zN1M0mmmm") // VFPv2
 INST(vfp_VADD,             "VADD",                    "cccc11100D11nnnndddd101zN0M0mmmm") // VFPv2
 INST(vfp_VSUB,             "VSUB",                    "cccc11100D11nnnndddd101zN1M0mmmm") // VFPv2
 INST(vfp_VDIV,             "VDIV",                    "cccc11101D00nnnndddd101zN0M0mmmm") // VFPv2
@@ -18,9 +18,9 @@ INST(vfp_VDIV,             "VDIV",                    "cccc11101D00nnnndddd101zN
 
 // Other floating-point data-processing instructions
 //INST(vfp_VMOV_imm,         "VMOV (immediate)",        "cccc11101D11vvvvdddd101z0000vvvv") // VFPv3
-//INST(vfp_VMOV_reg,         "VMOV (reg)",              "cccc11101D110000dddd101z01M0mmmm") // VFPv2
-//INST(vfp_VABS,             "VABS",                    "cccc11101D110000dddd101z11M0mmmm") // VFPv2
-//INST(vfp_VNEG,             "VNEG",                    "cccc11101D110001dddd101z01M0mmmm") // VFPv2
+INST(vfp_VMOV_reg,         "VMOV (reg)",              "cccc11101D110000dddd101z01M0mmmm") // VFPv2
+INST(vfp_VABS,             "VABS",                    "cccc11101D110000dddd101z11M0mmmm") // VFPv2
+INST(vfp_VNEG,             "VNEG",                    "cccc11101D110001dddd101z01M0mmmm") // VFPv2
 INST(vfp_VSQRT,            "VSQRT",                   "cccc11101D110001dddd101z11M0mmmm") // VFPv2
 //INST(vfp_VCVTB,            "VCVTB",                   "cccc11101D11001odddd101z01M0mmmm") // VFPv3HP
 //INST(vfp_VCVTT,            "VCVTT",                   "cccc11101D11001odddd101z11M0mmmm") // VFPv3HP
@@ -60,10 +60,10 @@ INST(vfp_VMOV_f64_2u32,    "VMOV (f64 to 2xcore)",    "cccc11000101uuuutttt10110
 INST(vfp_VMRS,             "VMRS",                    "cccc111011110001tttt101000010000") // VFPv2
 
 // Extension register load-store instructions
-//INST(vfp_VPUSH,            "VPUSH",                   "cccc11010D101101dddd101zvvvvvvvv") // VFPv2
-//INST(vfp_VPOP,             "VPOP",                    "cccc11001D111101dddd101zvvvvvvvv") // VFPv2
+INST(vfp_VPUSH,            "VPUSH",                   "cccc11010D101101dddd101zvvvvvvvv") // VFPv2
+INST(vfp_VPOP,             "VPOP",                    "cccc11001D111101dddd101zvvvvvvvv") // VFPv2
 INST(vfp_VLDR,             "VLDR",                    "cccc1101UD01nnnndddd101zvvvvvvvv") // VFPv2
-//INST(vfp_VSTR,             "VSTR",                    "cccc1101UD00nnnndddd101zvvvvvvvv") // VFPv2
+INST(vfp_VSTR,             "VSTR",                    "cccc1101UD00nnnndddd101zvvvvvvvv") // VFPv2
 //INST(arm_UDF,              "Undefined VSTM/VLDM",     "----11000-0---------101---------") // VFPv2
 //INST(vfp_VSTM_a1,          "VSTM (A1)",               "cccc110puDw0nnnndddd1011vvvvvvvv") // VFPv2
 //INST(vfp_VSTM_a2,          "VSTM (A2)",               "cccc110puDw0nnnndddd1010vvvvvvvv") // VFPv2
