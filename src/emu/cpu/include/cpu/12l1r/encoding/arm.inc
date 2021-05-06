@@ -178,7 +178,7 @@ INST(arm_CLZ,           "CLZ",                 "cccc000101101111dddd11110001mmmm
 //INST(arm_MOVW,          "MOVW",                "cccc00110000vvvvddddvvvvvvvvvvvv") // v6T2
 //INST(arm_NOP,           "NOP",                 "----0011001000001111000000000000") // v6K
 //INST(arm_SBFX,          "SBFX",                "cccc0111101wwwwwddddvvvvv101nnnn") // v6T2
-//INST(arm_SEL,           "SEL",                 "cccc01101000nnnndddd11111011mmmm") // v6
+INST(arm_SEL,           "SEL",                 "cccc01101000nnnndddd11111011mmmm") // v6
 //INST(arm_UBFX,          "UBFX",                "cccc0111111wwwwwddddvvvvv101nnnn") // v6T2
 
 // Unsigned Sum of Absolute Differences instructions
