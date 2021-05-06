@@ -1008,6 +1008,10 @@ namespace eka2l1::common::armgen {
         write32((0xF5 << 24) | (U << 23) | (R << 22) | (1 << 20) | ((int)rn << 16) | (0xF << 12) | offset);
     }
 
+    void armx_emitter::SEL(arm_reg rd, arm_reg rn, arm_reg rm) {
+        write32(condition | (0x68 << 20) | (rn << 16) | (rd << 12) | (0xFB << 4) | (rm));
+    }
+
     void armx_emitter::BFI(arm_reg rd, arm_reg rn, std::uint8_t lsb, std::uint8_t width) {
         std::uint32_t msb = (lsb + width - 1);
         if (msb > 31)

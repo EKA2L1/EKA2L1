@@ -676,6 +676,7 @@ namespace eka2l1::common::armgen {
         void SBFX(arm_reg dest, arm_reg op2, std::uint8_t lsb, std::uint8_t width);
         void CLZ(arm_reg rd, arm_reg rm);
         void PLD(arm_reg rd, int offset, bool forWrite = false);
+        void SEL(arm_reg rd, arm_reg rn, arm_reg rm);
 
         // Using just MSR here messes with our defines on the PPC side of stuff (when this code was in dolphin...)
         // Just need to put an underscore here, bit annoying.
