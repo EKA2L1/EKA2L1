@@ -254,7 +254,9 @@ namespace eka2l1::kernel {
         }
 
         thr->state = thread_state::ready;
+
         queue_thread_ready(thr);
+        kern->prepare_reschedule();
 
         return true;
     }
