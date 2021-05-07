@@ -30,8 +30,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VMOV(dest, source);
         return true;
@@ -45,7 +45,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(false, Vn, N);
         common::armgen::arm_reg source = reg_index_to_gpr(t);
 
-        float_marker_.use(dest, false);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
         source = reg_supplier_.map(source, 0);
 
         big_block_->VMOV(dest, source);
@@ -62,7 +62,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = reg_index_to_gpr(t);
         common::armgen::arm_reg source = decode_fp_reg(false, Vn, N);
 
-        float_marker_.use(source, true);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
         dest = reg_supplier_.map(dest, ALLOCATE_FLAG_DIRTY);
 
         big_block_->VMOV(dest, source);
@@ -81,7 +81,7 @@ namespace eka2l1::arm::r12l1 {
         first = reg_supplier_.map(first, ALLOCATE_FLAG_DIRTY);
         second = reg_supplier_.map(second, ALLOCATE_FLAG_DIRTY);
 
-        float_marker_.use(source, true);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
 
         big_block_->VMOV(first, second, source);
         return true;
@@ -104,7 +104,7 @@ namespace eka2l1::arm::r12l1 {
         first = reg_supplier_.map(first, 0);
         second = reg_supplier_.map(second, 0);
 
-        float_marker_.use(dest, false);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VMOV(dest, first, second);
         return true;
@@ -118,8 +118,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg lhs = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg rhs = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(lhs, true);
-        float_marker_.use(rhs, true);
+        float_marker_.use(lhs, FLOAT_MARKER_USE_READ);
+        float_marker_.use(rhs, FLOAT_MARKER_USE_READ);
 
         if (E) {
             big_block_->VCMPE(lhs, rhs);
@@ -140,8 +140,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(false, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         // To int flags, no sign
         big_block_->VCVT(dest, source, TO_INT | (round_towards_zero ? ROUND_TO_ZERO : 0));
@@ -157,8 +157,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(false, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         // To int flags, no sign
         big_block_->VCVT(dest, source, TO_INT | IS_SIGNED | (round_towards_zero ? ROUND_TO_ZERO : 0));
@@ -174,8 +174,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(false, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         int flags = (is_signed ? IS_SIGNED : 0);
         if (sz) {
@@ -195,8 +195,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(!sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VCVT(dest, source, 0);
         return true;
@@ -212,9 +212,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VADD(dest, source1, source2);
         return true;
@@ -230,9 +230,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VSUB(dest, source1, source2);
         return true;
@@ -248,9 +248,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VMUL(dest, source1, source2);
         return true;
@@ -266,9 +266,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
 
         big_block_->VMLA(dest, source1, source2);
         return true;
@@ -284,9 +284,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
 
         big_block_->VMLS(dest, source1, source2);
         return true;
@@ -301,9 +301,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VNMUL(dest, source1, source2);
         return true;
@@ -318,9 +318,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
 
         big_block_->VNMLA(dest, source1, source2);
         return true;
@@ -335,9 +335,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_READ | FLOAT_MARKER_USE_WRITE);
 
         big_block_->VNMLS(dest, source1, source2);
         return true;
@@ -353,9 +353,9 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg source1 = decode_fp_reg(sz, Vn, N);
         common::armgen::arm_reg source2 = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source1, true);
-        float_marker_.use(source2, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source1, FLOAT_MARKER_USE_READ);
+        float_marker_.use(source2, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VDIV(dest, source1, source2);
         return true;
@@ -370,8 +370,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VNEG(dest, source);
         return true;
@@ -386,8 +386,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VABS(dest, source);
         return true;
@@ -402,8 +402,8 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::arm_reg dest = decode_fp_reg(sz, Vd, D);
         common::armgen::arm_reg source = decode_fp_reg(sz, Vm, M);
 
-        float_marker_.use(source, true);
-        float_marker_.use(dest, false);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         big_block_->VSQRT(dest, source);
         return true;
@@ -426,7 +426,7 @@ namespace eka2l1::arm::r12l1 {
         const bool result = emit_memory_access(value_scr, base, adv, sz ? 64 : 32, false, U, true, false, true,
             value_scr2, true);
 
-        float_marker_.use(dest, false);
+        float_marker_.use(dest, FLOAT_MARKER_USE_WRITE);
 
         if (sz) {
             big_block_->VMOV(dest, value_scr, value_scr2);
@@ -458,7 +458,7 @@ namespace eka2l1::arm::r12l1 {
         common::armgen::operand2 adv(imm8 << 2);
 
         // Load source values into these temp registers
-        float_marker_.use(source, true);
+        float_marker_.use(source, FLOAT_MARKER_USE_READ);
 
         if (sz) {
             big_block_->VMOV(value_scr, value_scr2, source);
@@ -489,7 +489,7 @@ namespace eka2l1::arm::r12l1 {
 
         for (std::uint8_t i = 0; i < imm8; i++) {
             list_to_push |= (1 << (base_start + i));
-            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), true);
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), FLOAT_MARKER_USE_READ);
         }
 
         return emit_memory_access_chain(common::armgen::R13, list_to_push, false, true, true, false, (sz ?
@@ -508,7 +508,7 @@ namespace eka2l1::arm::r12l1 {
 
         for (std::uint8_t i = 0; i < imm8; i++) {
             list_to_push |= (1 << (base_start + i));
-            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), false);
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), FLOAT_MARKER_USE_WRITE);
         }
 
         return emit_memory_access_chain(common::armgen::R13, list_to_push, true, false, true, true, (sz ?

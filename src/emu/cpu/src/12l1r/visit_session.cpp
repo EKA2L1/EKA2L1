@@ -1147,9 +1147,6 @@ namespace eka2l1::arm::r12l1 {
             last_inst_count_ = crr_block_->inst_count_;
         }
 
-        // Sync anyway
-        float_marker_.sync_state();
-
         if ((flag_ != common::CC_AL) && (flag_ != common::CC_NV)) {
             big_block_->set_jump_target(end_target_);
         }
@@ -1160,12 +1157,14 @@ namespace eka2l1::arm::r12l1 {
         big_block_->B(fuzz_jump_ptr + 4);
 
         big_block_->PUSH(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
+        big_block_->VPUSH(common::armgen::D0, 16);
 
         for (std::int32_t i = 0; i < num; i++) {
             big_block_->MOVP2R(common::armgen::R0, big_block_);
             big_block_->quick_call_function(ALWAYS_SCRATCH2, dashixiong_execute_fuzz);
         }
 
+        big_block_->VPOP(common::armgen::D0, 16);
         big_block_->POP(4, common::armgen::R1, common::armgen::R2, common::armgen::R3, common::armgen::R12);
 
         fuzz_end = big_block_->get_writeable_code_ptr();
@@ -1223,6 +1222,9 @@ namespace eka2l1::arm::r12l1 {
 #endif
 
     void visit_session::cycle_next(const std::uint32_t inst_size) {
+        // Sync anyway
+        float_marker_.sync_state();
+
         if (!cond_failed_) {
             crr_block_->size_ += inst_size;
             crr_block_->last_inst_size_ = inst_size;
