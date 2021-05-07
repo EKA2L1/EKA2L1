@@ -1012,6 +1012,22 @@ namespace eka2l1::common::armgen {
         write32(condition | (0x68 << 20) | (rn << 16) | (rd << 12) | (0xFB << 4) | (rm));
     }
 
+    void armx_emitter::PKHBT(arm_reg rd, arm_reg rn, arm_reg rm, const int left_shift) {
+        if (left_shift > 31) {
+            LOG_ERROR(COMMON, "Left shift is too big!");
+        }
+
+        write32(condition | (0x68 << 20) | (rn << 16) | (rd << 12) | ((left_shift & 0b11111) << 7) | (0x1 << 4) | (rm));
+    }
+
+    void armx_emitter::PKHTB(arm_reg rd, arm_reg rn, arm_reg rm, const int right_shift_with_32_equals_0) {
+        if (right_shift_with_32_equals_0 > 31) {
+            LOG_ERROR(COMMON, "Right shift is too big!");
+        }
+
+        write32(condition | (0x68 << 20) | (rn << 16) | (rd << 12) | ((right_shift_with_32_equals_0 & 0b11111) << 7) | (0x5 << 4) | (rm));
+    }
+
     void armx_emitter::BFI(arm_reg rd, arm_reg rn, std::uint8_t lsb, std::uint8_t width) {
         std::uint32_t msb = (lsb + width - 1);
         if (msb > 31)

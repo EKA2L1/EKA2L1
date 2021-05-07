@@ -678,6 +678,10 @@ namespace eka2l1::common::armgen {
         void PLD(arm_reg rd, int offset, bool forWrite = false);
         void SEL(arm_reg rd, arm_reg rn, arm_reg rm);
 
+        // Packing instructions
+        void PKHBT(arm_reg rd, arm_reg rn, arm_reg rm, const int left_shift);
+        void PKHTB(arm_reg rd, arm_reg rn, arm_reg rm, const int right_shift_with_32_equals_0);
+
         // Using just MSR here messes with our defines on the PPC side of stuff (when this code was in dolphin...)
         // Just need to put an underscore here, bit annoying.
         void _MSR(bool nzcvq, bool g, operand2 op2);
