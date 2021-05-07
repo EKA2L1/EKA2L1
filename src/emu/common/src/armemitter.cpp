@@ -1776,8 +1776,19 @@ namespace eka2l1::common::armgen {
         bool single_reg = (Dest < D0) && (Source < D0);
         bool single_double = !single_reg && (Source < D0 || Dest < D0);
         bool single_to_double = Source < D0;
-        int op = ((flags & TO_INT) ? (flags & ROUND_TO_ZERO) : (flags & IS_SIGNED)) ? 1 : 0;
-        int op2 = ((flags & TO_INT) ? (flags & IS_SIGNED) : 0) ? 1 : 0;
+        int op = 0;
+
+        if ((flags & TO_INT) && (!single_double || (single_double && !single_to_double))) {
+            op = (flags & ROUND_TO_ZERO) ? 1 : 0;
+        } else {
+            op = (flags & IS_SIGNED) ? 1 : 0;
+        }
+
+        int op2 = 0;
+        if (flags & TO_INT) {
+            op2 = (flags & IS_SIGNED) ? 1 : 0;
+        }
+
         Dest = subbase(Dest);
         Source = subbase(Source);
 
