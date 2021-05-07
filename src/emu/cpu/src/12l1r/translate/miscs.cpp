@@ -67,4 +67,36 @@ namespace eka2l1::arm::r12l1 {
         big_block_->SEL(dest_mapped, source1_mapped, source2_mapped);
         return true;
     }
+
+    bool arm_translate_visitor::arm_PKHBT(common::cc_flags cond, reg_index n, reg_index d, std::uint8_t imm5, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg source1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg source2_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg source1_mapped = reg_supplier_.map(source1_real, 0);
+        common::armgen::arm_reg source2_mapped = reg_supplier_.map(source2_real, 0);
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        big_block_->PKHBT(dest_mapped, source1_mapped, source2_mapped, imm5);
+        return true;
+    }
+
+    bool arm_translate_visitor::arm_PKHTB(common::cc_flags cond, reg_index n, reg_index d, std::uint8_t imm5, reg_index m) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+        common::armgen::arm_reg dest_real = reg_index_to_gpr(d);
+        common::armgen::arm_reg source1_real = reg_index_to_gpr(n);
+        common::armgen::arm_reg source2_real = reg_index_to_gpr(m);
+
+        common::armgen::arm_reg source1_mapped = reg_supplier_.map(source1_real, 0);
+        common::armgen::arm_reg source2_mapped = reg_supplier_.map(source2_real, 0);
+        common::armgen::arm_reg dest_mapped = reg_supplier_.map(dest_real, ALLOCATE_FLAG_DIRTY);
+
+        big_block_->PKHTB(dest_mapped, source1_mapped, source2_mapped, imm5);
+        return true;
+    }
 }

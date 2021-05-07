@@ -186,8 +186,8 @@ INST(arm_SEL,           "SEL",                 "cccc01101000nnnndddd11111011mmmm
 //INST(arm_USADA8,        "USADA8",              "cccc01111000ddddaaaammmm0001nnnn") // v6
 
 // Packing instructions
-//INST(arm_PKHBT,         "PKHBT",               "cccc01101000nnnnddddvvvvv001mmmm") // v6K
-//INST(arm_PKHTB,         "PKHTB",               "cccc01101000nnnnddddvvvvv101mmmm") // v6K
+INST(arm_PKHBT,         "PKHBT",               "cccc01101000nnnnddddvvvvv001mmmm") // v6K
+INST(arm_PKHTB,         "PKHTB",               "cccc01101000nnnnddddvvvvv101mmmm") // v6K
 
 // Reversal instructions
 //INST(arm_RBIT,          "RBIT",                "cccc011011111111dddd11110011mmmm") // v6T2

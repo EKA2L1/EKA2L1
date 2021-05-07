@@ -159,6 +159,8 @@ namespace eka2l1::arm::r12l1 {
         bool arm_CLZ(common::cc_flags cond, reg_index d, reg_index m);
         bool arm_UXTH(common::cc_flags cond, reg_index d, std::uint8_t rotate_base_8, reg_index m);
         bool arm_SEL(common::cc_flags cond, reg_index n, reg_index d, reg_index m);
+        bool arm_PKHBT(common::cc_flags cond, reg_index n, reg_index d, std::uint8_t imm5, reg_index m);
+        bool arm_PKHTB(common::cc_flags cond, reg_index n, reg_index d, std::uint8_t imm5, reg_index m);
 
         // Hint
         bool arm_PLD_imm(bool add, bool R, reg_index n, std::uint16_t imm12);
