@@ -483,10 +483,8 @@ namespace eka2l1 {
                     return std::optional<entry_info>{};
                 }
 
-                if (is_root) {
-                    if ((entry.name == ".") || (entry.name == "..")) {
-                        continue;
-                    }
+                if ((entry.name == ".") || (entry.name == "..")) {
+                    continue;
                 }
 
                 name = entry.name;
