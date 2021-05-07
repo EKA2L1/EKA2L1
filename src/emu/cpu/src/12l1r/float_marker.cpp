@@ -26,7 +26,7 @@ namespace eka2l1::arm::r12l1 {
         : big_block_(bblock) {
     }
 
-    void float_marker::use(const common::armgen::arm_reg reg, const bool read) {
+    void float_marker::use(const common::armgen::arm_reg reg, const std::uint32_t use_flags) {
         int reg_index = 0;
         int consecutive = 1;
 
@@ -62,25 +62,25 @@ namespace eka2l1::arm::r12l1 {
 
             // Scratch here means loaded
             if (load_single) {
-                if (read && !single_infos_[reg_index + i].scratch_ && !single_infos_[reg_index + i].dirty_) {
+                if ((use_flags & FLOAT_MARKER_USE_READ) && !single_infos_[reg_index + i].scratch_ && !single_infos_[reg_index + i].dirty_) {
                     base_load = static_cast<common::armgen::arm_reg>(common::armgen::S0 + reg_index + i);
                     offset_from_state = offsetof(core_state, fprs_[0]) + sizeof(std::uint32_t) * (reg_index + i);
 
                     single_infos_[reg_index + i].scratch_ = true;
                 }
 
-                if (!read && !single_infos_[reg_index + i].dirty_) {
+                if ((use_flags & FLOAT_MARKER_USE_WRITE) && !single_infos_[reg_index + i].dirty_) {
                     single_infos_[reg_index + i].dirty_ = true;
                 }
             } else {
-                if (read && !double_simd_infos_[reg_index + i].scratch_ && !double_simd_infos_[reg_index + i].dirty_) {
+                if ((use_flags & FLOAT_MARKER_USE_READ) && !double_simd_infos_[reg_index + i].scratch_ && !double_simd_infos_[reg_index + i].dirty_) {
                     base_load = static_cast<common::armgen::arm_reg>(common::armgen::D16 + reg_index + i);
                     offset_from_state = offsetof(core_state, fprs_[32]) + sizeof(std::uint64_t) * (reg_index + i);
 
                     double_simd_infos_[reg_index + i].scratch_ = true;
                 }
 
-                if (!read && !double_simd_infos_[reg_index + i].dirty_) {
+                if ((use_flags & FLOAT_MARKER_USE_WRITE) && !double_simd_infos_[reg_index + i].dirty_) {
                     double_simd_infos_[reg_index + i].dirty_ = true;
                 }
             }

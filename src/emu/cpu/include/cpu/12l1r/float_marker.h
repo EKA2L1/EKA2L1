@@ -27,6 +27,11 @@
 namespace eka2l1::arm::r12l1 {
     class dashixiong_block;
 
+    enum float_marker_use_flags {
+        FLOAT_MARKER_USE_READ = 1 << 0,
+        FLOAT_MARKER_USE_WRITE = 1 << 1
+    };
+
     class float_marker {
     private:
         static constexpr std::uint32_t VFP_REG_COUNT = 32;
@@ -40,7 +45,7 @@ namespace eka2l1::arm::r12l1 {
     public:
         explicit float_marker(dashixiong_block *bblock);
 
-        void use(const common::armgen::arm_reg reg, const bool read);
+        void use(const common::armgen::arm_reg reg, const std::uint32_t use_flags);
         void sync_state(common::armgen::arm_reg state = CORE_STATE_REG, const bool flush = true);
     };
 
