@@ -199,6 +199,10 @@ namespace eka2l1::arm::r12l1 {
         bool vfp_VSTR(common::cc_flags cond, bool U, bool D, reg_index n, std::size_t Vd, bool sz, std::uint8_t imm8);
         bool vfp_VPUSH(common::cc_flags cond, bool D, std::size_t Vd, bool sz, std::uint8_t imm8);
         bool vfp_VPOP(common::cc_flags cond, bool D, std::size_t Vd, bool sz, std::uint8_t imm8);
+        bool vfp_VSTM_a1(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8);
+        bool vfp_VSTM_a2(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8);
+        bool vfp_VLDM_a1(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8);
+        bool vfp_VLDM_a2(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8);
         bool vfp_VMRS(common::cc_flags cond, reg_index t);
     };
 }

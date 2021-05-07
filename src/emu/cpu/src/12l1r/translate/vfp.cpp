@@ -478,8 +478,12 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::vfp_VPUSH(common::cc_flags cond, bool D, std::size_t Vd, bool sz, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
         common::armgen::arm_reg start_push = decode_fp_reg(sz, Vd, D);
-        int base_start = start_push - (sz ? common::armgen::D0 : common::armgen::R0);
+        int base_start = start_push - (sz ? common::armgen::D0 : common::armgen::S0);
 
         if (sz) {
             imm8 >>= 1;
@@ -497,8 +501,12 @@ namespace eka2l1::arm::r12l1 {
     }
 
     bool arm_translate_visitor::vfp_VPOP(common::cc_flags cond, bool D, std::size_t Vd, bool sz, std::uint8_t imm8) {
-        common::armgen::arm_reg start_push = decode_fp_reg(sz, Vd, D);
-        int base_start = start_push - (sz ? common::armgen::D0 : common::armgen::R0);
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg start_pop = decode_fp_reg(sz, Vd, D);
+        int base_start = start_pop - (sz ? common::armgen::D0 : common::armgen::S0);
 
         if (sz) {
             imm8 >>= 1;
@@ -508,11 +516,166 @@ namespace eka2l1::arm::r12l1 {
 
         for (std::uint8_t i = 0; i < imm8; i++) {
             list_to_push |= (1 << (base_start + i));
-            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), FLOAT_MARKER_USE_WRITE);
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_pop + i), FLOAT_MARKER_USE_WRITE);
         }
 
         return emit_memory_access_chain(common::armgen::R13, list_to_push, true, false, true, true, (sz ?
             ACCESS_CHAIN_REG_TYPE_D : ACCESS_CHAIN_REG_TYPE_S));
+    }
+
+    bool arm_translate_visitor::vfp_VSTM_a1(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        if (!p && !u && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding STM!");
+        }
+
+        if (p && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding STM!");
+        }
+
+        if (((p == u) && w) || ((base_real == common::armgen::R15) && w)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        common::armgen::arm_reg start_push = decode_fp_reg(true, Vd, D);
+        int base_start = start_push - common::armgen::D0;
+
+        imm8 >>= 1;
+        if ((imm8 == 0) || (imm8 > 16) || ((base_start + imm8) > 32)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        reg_list list_to_push = 0;
+
+        for (std::uint8_t i = 0; i < imm8; i++) {
+            list_to_push |= (1 << (base_start + i));
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), FLOAT_MARKER_USE_READ);
+        }
+
+        return emit_memory_access_chain(base_real, list_to_push, u, p, w, false, ACCESS_CHAIN_REG_TYPE_D);
+    }
+
+    bool arm_translate_visitor::vfp_VSTM_a2(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        if (!p && !u && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding STM!");
+        }
+
+        if (p && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding STM!");
+        }
+
+        if (((p == u) && w) || ((base_real == common::armgen::R15) && w)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        common::armgen::arm_reg start_push = decode_fp_reg(false, Vd, D);
+        int base_start = start_push - common::armgen::S0;
+
+        if ((imm8 == 0) || ((base_start + imm8) > 32)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        reg_list list_to_push = 0;
+
+        for (std::uint8_t i = 0; i < imm8; i++) {
+            list_to_push |= (1 << (base_start + i));
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), FLOAT_MARKER_USE_READ);
+        }
+
+        return emit_memory_access_chain(base_real, list_to_push, u, p, w, false, ACCESS_CHAIN_REG_TYPE_S);
+    }
+
+    bool arm_translate_visitor::vfp_VLDM_a1(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        if (!p && !u && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding LDM!");
+        }
+
+        if (p && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding LDM!");
+        }
+
+        if (((p == u) && w) || ((base_real == common::armgen::R15) && w)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        common::armgen::arm_reg start_pop = decode_fp_reg(true, Vd, D);
+        int base_start = start_pop - common::armgen::D0;
+
+        imm8 >>= 1;
+
+        if ((imm8 == 0) || (imm8 > 16) || ((base_start + imm8) > 32)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        reg_list list_to_push = 0;
+
+        for (std::uint8_t i = 0; i < imm8; i++) {
+            list_to_push |= (1 << (base_start + i));
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_pop + i), FLOAT_MARKER_USE_WRITE);
+        }
+
+        return emit_memory_access_chain(base_real, list_to_push, u, p, w, true, ACCESS_CHAIN_REG_TYPE_D);
+    }
+
+    bool arm_translate_visitor::vfp_VLDM_a2(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8) {
+        if (!condition_passed(cond)) {
+            return false;
+        }
+
+        common::armgen::arm_reg base_real = reg_index_to_gpr(n);
+
+        if (!p && !u && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding LDM!");
+        }
+
+        if (p && !w) {
+            LOG_ERROR(CPU_12L1R, "Error decoding LDM!");
+        }
+
+        if (((p == u) && w) || ((base_real == common::armgen::R15) && w)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        common::armgen::arm_reg start_pop = decode_fp_reg(false, Vd, D);
+        int base_start = start_pop - common::armgen::S0;
+
+        if ((imm8 == 0) || ((base_start + imm8) > 32)) {
+            emit_undefined_instruction_handler();
+            return false;
+        }
+
+        reg_list list_to_push = 0;
+
+        for (std::uint8_t i = 0; i < imm8; i++) {
+            list_to_push |= (1 << (base_start + i));
+            float_marker_.use(static_cast<common::armgen::arm_reg>(start_pop + i), FLOAT_MARKER_USE_WRITE);
+        }
+
+        return emit_memory_access_chain(base_real, list_to_push, u, p, w, true, ACCESS_CHAIN_REG_TYPE_S);
     }
 
     bool arm_translate_visitor::vfp_VMRS(common::cc_flags cond, reg_index t) {
