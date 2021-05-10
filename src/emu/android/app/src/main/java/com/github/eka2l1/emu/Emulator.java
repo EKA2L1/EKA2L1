@@ -192,6 +192,8 @@ public class Emulator {
 
     public static native void setCurrentDevice(int id);
 
+    public static native void setDeviceName(int id, String newName);
+
     public static native int getCurrentDevice();
 
     public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG);

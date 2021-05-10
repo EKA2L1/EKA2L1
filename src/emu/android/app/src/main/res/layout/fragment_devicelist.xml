@@ -6,16 +6,33 @@
     android:fitsSystemWindows="true"
     android:layoutDirection="ltr">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <Spinner
-            android:id="@+id/sp_device_list"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp" />
+            android:gravity="center_vertical"
+            android:paddingTop="8dp">
+
+            <Spinner
+                android:id="@+id/sp_device_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/bt_rename_device"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:text="@string/rename" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tv_additional_note"

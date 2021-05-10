@@ -150,6 +150,14 @@ Java_com_github_eka2l1_emu_Emulator_setCurrentDevice(JNIEnv *env, jclass clazz, 
 }
 
 extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_eka2l1_emu_Emulator_setDeviceName(JNIEnv *env, jclass clazz, jint id, jstring new_name) {
+    const char *cstr = env->GetStringUTFChars(new_name, nullptr);
+    state->launcher->set_device_name(id, cstr);
+    env->ReleaseStringUTFChars(new_name, cstr);
+}
+
+extern "C"
 JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_getCurrentDevice(JNIEnv *env, jclass clazz) {
     return state->launcher->get_current_device();

@@ -130,6 +130,16 @@ namespace eka2l1::android {
         dvc_mngr->set_current(id);
     }
 
+    void launcher::set_device_name(std::uint32_t id, const char *name) {
+        device_manager *dvc_mngr = sys->get_device_manager();
+        auto &dvcs = dvc_mngr->get_devices();
+
+        if (id < dvcs.size()) {
+            dvcs[id].model = name;
+            dvc_mngr->save_devices();
+        }
+    }
+
     std::uint32_t launcher::get_current_device() {
         return conf->device;
     }

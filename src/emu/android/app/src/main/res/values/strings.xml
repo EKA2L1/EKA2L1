@@ -13,6 +13,7 @@
     <string name="mount_sd">Mount MMC/SD card</string>
     <string name="no_devices_found">No devices found</string>
     <string name="exit">Exit</string>
+    <string name="rename">Rename</string>
     <string name="save_log">Save log</string>
 
     <string name="install">Install</string>
@@ -24,6 +25,7 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">Install method</string>
+    <string name="enter_new_name">Enter new name</string>
 
     <string name="no_device_dialog_title">No device installed!</string>
     <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
