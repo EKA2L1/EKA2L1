@@ -332,26 +332,10 @@ namespace eka2l1 {
                 const std::string search_txt = common::get_localised_string(localised_strings, "search");
                 const std::string change_device_txt = common::get_localised_string(localised_strings, "app_launcher_change_device");
 
-                ImGui::Text("%s ", search_txt.c_str());
-                ImGui::SameLine();
+                std::string final_switch_str;
+                float switch_str_len_button_size = 0.0f;
+                float search_text_length = ImGui::CalcTextSize(search_txt.c_str()).x + 10.0f;
 
-                app_search_box.Draw("##AppSearchBox");
-
-                if (should_still_focus_on_keyboard) {
-                    ImGui::SetKeyboardFocusHere(-1);
-                    should_still_focus_on_keyboard = false;
-                }
-
-                const float change_device_text_width = ImGui::CalcTextSize(change_device_txt.c_str()).x;
-                static constexpr float CHANGE_DEVICE_PADDING = 10.0f;
-
-                ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - change_device_text_width - CHANGE_DEVICE_PADDING);
-                if (ImGui::Button(change_device_txt.c_str())) {
-                    should_show_preferences = true;
-                    cur_pref_tab = PREF_TAB_SYSTEM_INDEX;
-                }
-
-                // Allow new design on old architecture app list
                 if (alserv->legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
                     const std::string switch_title = common::get_localised_string(localised_strings, 
                         "app_launcher_switch_to_style_title");
@@ -360,12 +344,33 @@ namespace eka2l1 {
                         should_app_launch_use_new_style ?   "app_launcher_style_classical_str" :
                                                             "app_launcher_style_modern_str");
 
-                    const std::string final_switch_str = switch_title + " " + switch_style_name;
+                    final_switch_str = switch_title + " " + switch_style_name;
+                    switch_str_len_button_size = ImGui::CalcTextSize(final_switch_str.c_str()).x + 10.0f;
+                }
+                
+                ImGui::Text("%s ", search_txt.c_str());
+                ImGui::SameLine();
 
-                    const float switch_str_len = ImGui::CalcTextSize(final_switch_str.c_str()).x;
-                    const float switch_str_len_button_size = static_cast<float>(switch_str_len) + 10.0f;
+                const float change_device_text_width = ImGui::CalcTextSize(change_device_txt.c_str()).x + 10.0f;
+                const auto region_width = ImGui::GetWindowContentRegionWidth();
 
-                    ImGui::SameLine(ImGui::GetWindowContentRegionWidth() - switch_str_len_button_size);
+                app_search_box.Draw("##AppSearchBox", region_width - switch_str_len_button_size - change_device_text_width - search_text_length - 25.0f);
+
+                if (should_still_focus_on_keyboard) {
+                    ImGui::SetKeyboardFocusHere(-1);
+                    should_still_focus_on_keyboard = false;
+                }
+
+                ImGui::SameLine(region_width - change_device_text_width - 2.0f - switch_str_len_button_size);
+
+                if (ImGui::Button(change_device_txt.c_str(), ImVec2(change_device_text_width, 0))) {
+                    should_show_preferences = true;
+                    cur_pref_tab = PREF_TAB_SYSTEM_INDEX;
+                }
+
+                // Allow new design on old architecture app list
+                if (alserv->legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
+                    ImGui::SameLine(region_width - switch_str_len_button_size);
                     if (ImGui::Button(final_switch_str.c_str(), ImVec2(switch_str_len_button_size, 0))) {
                         should_app_launch_use_new_style = !should_app_launch_use_new_style;
 
