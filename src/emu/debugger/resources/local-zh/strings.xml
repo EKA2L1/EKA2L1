@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">切换到</string>
     <string name="app_launcher_style_classical_str">经典</string>
     <string name="app_launcher_style_modern_str">现代</string>
+    <string name="app_launcher_change_device">Change device</string>
     <string name="error_dialog_title">一只野生的错误出现了</string>
     <string name="error_dialog_message">请附上运行日志文件并提交给开发者！</string>
     <string name="emulated_screen_title">屏幕{}</string>
