@@ -317,6 +317,8 @@ namespace eka2l1 {
         }
     }
 
+    static constexpr std::uint32_t PREF_TAB_SYSTEM_INDEX = 1;
+
     void imgui_debugger::show_app_launch() {
         static ImGuiTextFilter app_search_box;
 
@@ -328,6 +330,7 @@ namespace eka2l1 {
 
             {
                 const std::string search_txt = common::get_localised_string(localised_strings, "search");
+                const std::string change_device_txt = common::get_localised_string(localised_strings, "app_launcher_change_device");
 
                 ImGui::Text("%s ", search_txt.c_str());
                 ImGui::SameLine();
@@ -337,6 +340,15 @@ namespace eka2l1 {
                 if (should_still_focus_on_keyboard) {
                     ImGui::SetKeyboardFocusHere(-1);
                     should_still_focus_on_keyboard = false;
+                }
+
+                const float change_device_text_width = ImGui::CalcTextSize(change_device_txt.c_str()).x;
+                static constexpr float CHANGE_DEVICE_PADDING = 10.0f;
+
+                ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - change_device_text_width - CHANGE_DEVICE_PADDING);
+                if (ImGui::Button(change_device_txt.c_str())) {
+                    should_show_preferences = true;
+                    cur_pref_tab = PREF_TAB_SYSTEM_INDEX;
                 }
 
                 // Allow new design on old architecture app list

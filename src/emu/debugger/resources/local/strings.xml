@@ -50,6 +50,7 @@
     <string name="app_launcher_switch_to_style_title">Switch to</string>
     <string name="app_launcher_style_classical_str">Classical</string>
     <string name="app_launcher_style_modern_str">Modern</string>
+    <string name="app_launcher_change_device">Change device</string>
 
     <string name="error_dialog_title">A wild error appears</string>
     <string name="error_dialog_message">Please attach the log and report this to a developer!</string>
