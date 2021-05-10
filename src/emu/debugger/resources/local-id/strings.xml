@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Beralih ke</string>
     <string name="app_launcher_style_classical_str">Klasik</string>
     <string name="app_launcher_style_modern_str">Modern</string>
+    <string name="app_launcher_change_device">Change device</string>
     <string name="error_dialog_title">Kesalahan besar muncul</string>
     <string name="error_dialog_message">Harap lampirkan log dan laporkan ini ke pengembang!</string>
     <string name="emulated_screen_title">Layar {}</string>
