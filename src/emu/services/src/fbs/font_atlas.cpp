@@ -144,6 +144,14 @@ namespace eka2l1::epoc {
                 for (std::size_t i = 0; i < characters_.size() - 5; i++) {
                     characters_[last_use_[i]] = cinfos[i];
                 }
+            } else {
+                // Update the characters
+                for (char16_t i = 0; i < static_cast<char16_t>(to_rast.size()); i++) {
+                    characters_.emplace(to_rast[i], cinfos[i]);
+                }
+
+                builder->update_bitmap(atlas_handle_, reinterpret_cast<const char *>(atlas_data_.get()),
+                    width * width, { 0, 0 }, { width, width });
             }
         }
 
