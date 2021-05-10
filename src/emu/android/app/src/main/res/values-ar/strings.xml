@@ -13,6 +13,7 @@
     <string name="mount_sd">Mount MMC/SD card</string>
     <string name="no_devices_found">لم يتم العثور على أجهزة</string>
     <string name="exit">خروج</string>
+    <string name="rename">Rename</string>
     <string name="save_log">سجلات الحفظ</string>
     <string name="install">Install</string>
     <string name="device_dump">Device dump</string>
@@ -21,6 +22,7 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">طريقة التثبيت</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="no_device_dialog_title">لا يوجد جهاز مثبت!</string>
     <string name="no_device_installed">الرجاء تثبيت الجهاز. الملفات و ROM للجهاز الرمزي مطلوبة للتثبيت.\n\n<b>ملاحظة</b> يحتاج كل تطبيق إلى جهاز سيمبي مناسب لتشغيله.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
