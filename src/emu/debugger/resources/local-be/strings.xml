@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Пераключыць на</string>
     <string name="app_launcher_style_classical_str">Класічны</string>
     <string name="app_launcher_style_modern_str">Сучасны</string>
+    <string name="app_launcher_change_device">Change device</string>
     <string name="error_dialog_title">З\'яўляецца дзікая памылка</string>
     <string name="error_dialog_message">Калі ласка, прымацуйце лог і паведаміце распрацоўшчыка пра гэта!</string>
     <string name="emulated_screen_title">Экран {}</string>
