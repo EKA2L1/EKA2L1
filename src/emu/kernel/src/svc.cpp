@@ -5320,6 +5320,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x01, chunk_base),
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x18, mutex_count_eka1),
         BRIDGE_REGISTER(0x19, mutex_wait_eka1),
         BRIDGE_REGISTER(0x1A, mutex_signal_eka1),
         BRIDGE_REGISTER(0x1B, process_id),
