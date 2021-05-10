@@ -33,8 +33,7 @@ namespace eka2l1::epoc {
         , husband_(nullptr)
         , state_(state_none)
         , sync_thread_(nullptr)
-        , sync_status_(0)
-        , requester_thread_(nullptr) {
+        , sync_status_(0) {
         kernel_system *kern = client->get_ws().get_kernel_system();
 
         // Each message is an integer. Allow maximum of 10 messages
@@ -90,13 +89,9 @@ namespace eka2l1::epoc {
             // First integer looks like a sync status too. Probably for other side around.
             // TODO: Use it.
             window_handle = *(reinterpret_cast<std::uint32_t *>(cmd.data_ptr) + 1);
-            
-            epoc::notify_info to_abort_nof;
-            to_abort_nof.sts = *reinterpret_cast<address*>(cmd.data_ptr);
-            to_abort_nof.requester = ctx.msg->own_thr;
-            requester_thread_ = to_abort_nof.requester;
 
-            dsa_must_abort_queue_->notify_available(to_abort_nof);
+            dsa_must_stop_notify_.sts = *reinterpret_cast<address*>(cmd.data_ptr);
+            dsa_must_stop_notify_.requester = ctx.msg->own_thr;
         } else {
             window_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
         }
@@ -176,8 +171,7 @@ namespace eka2l1::epoc {
             sync_thread_->suspend();
         }
 
-        dsa_must_abort_queue_->cancel_data_available(requester_thread_);
-        requester_thread_ = nullptr;
+        dsa_must_stop_notify_.complete(epoc::error_cancel);
     }
 
     void dsa::get_sync_info(service::ipc_context &ctx, ws_cmd &cmd) {
@@ -242,7 +236,8 @@ namespace eka2l1::epoc {
                 kernel_system *kern = client->get_ws().get_kernel_system();
                 std::int32_t target_handle = 0;
 
-                target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+                target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ?
+                    dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
 
                 ctx.complete(target_handle);
                 break;
