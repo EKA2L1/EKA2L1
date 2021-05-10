@@ -13,6 +13,7 @@
     <string name="mount_sd">挂载MMC/SD卡</string>
     <string name="no_devices_found">未找到设备</string>
     <string name="exit">退出</string>
+    <string name="rename">Rename</string>
     <string name="save_log">保存日志</string>
     <string name="install">安装</string>
     <string name="device_dump">设备转储文件</string>
@@ -21,6 +22,7 @@
     <string name="firmware">固件</string>
     <string name="path_to_firmware">VPL路径</string>
     <string name="install_method">安装方式</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="no_device_dialog_title">未安装设备！</string>
     <string name="no_device_installed">请安装设备。安装塞班设备需要安装文件和ROM包\n\n<b>注意：</b> 每个应用都需要合适的塞班设备才能运行。</string>
     <string name="install_device_note_may_need_rpkg">对于S60v2或更高版本的设备，您可能需要提供额外的RPKG文件。如果安装程序检测到需要RPKG文件，路径选择器将会自动弹出。</string>
