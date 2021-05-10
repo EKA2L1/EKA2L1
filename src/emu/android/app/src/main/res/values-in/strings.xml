@@ -13,6 +13,7 @@
     <string name="mount_sd">Pasang MMC/SD Card</string>
     <string name="no_devices_found">Tidak ada firmware perangkat yang ditemukan</string>
     <string name="exit">Keluar</string>
+    <string name="rename">Rename</string>
     <string name="save_log">Simpan log</string>
     <string name="install">Instal</string>
     <string name="device_dump">Dump perangkat</string>
@@ -21,6 +22,7 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Jalur ke VPL</string>
     <string name="install_method">Metode instalasi</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="no_device_dialog_title">Tidak ada perangkat yang terinstal!</string>
     <string name="no_device_installed">Harap instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, diperlukan file tambahan yang bernama RPKG. Jika perangkat tersebut terdeteksi maka muncul permintaan untuk memasukkan file tersebut.</string>
