@@ -13,6 +13,7 @@
     <string name="mount_sd">Подключить MMC/SD карту</string>
     <string name="no_devices_found">Устройства не найдены</string>
     <string name="exit">Выход</string>
+    <string name="rename">Rename</string>
     <string name="save_log">Сохранить лог</string>
     <string name="install">Установить</string>
     <string name="device_dump">Device dump</string>
@@ -21,6 +22,7 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">Способ установки</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="no_device_dialog_title">Нет установленных устройств!</string>
     <string name="no_device_installed">Пожалуйста, установите устройство. Для установки необходимы файлы и ROM устройства Symbian.\n\n<b>Примечание:</b> Каждому приложению для запуска потребуется подходящее устройство Symbian.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
