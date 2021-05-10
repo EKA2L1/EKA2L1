@@ -878,8 +878,19 @@ namespace eka2l1 {
         };
 
         for (std::size_t i = 0; i < all_prefs.size(); i++) {
+            bool pushed_color = false;
+
+            if (cur_pref_tab == i) {
+                ImGui::PushStyleColor(ImGuiCol_Text, GUI_COLOR_TEXT_TITLE);
+                pushed_color = true;
+            }
+
             if (ImGui::Button(all_prefs[i].first.c_str())) {
                 cur_pref_tab = i;
+            }
+
+            if (pushed_color) {
+                ImGui::PopStyleColor();
             }
 
             ImGui::SameLine(0, 1);
