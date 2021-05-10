@@ -76,8 +76,9 @@ namespace eka2l1::epoc {
 
         if (attached_window->resize_needed) {
             // Try to resize our bitmap. My NVIDIA did forgive me if texture has same spec
-            // as before, but not Intel...
+            // as before, but not Intel... Note: NVIDIA also
             cmd_builder->resize_bitmap(attached_window->driver_win_id, attached_window->size);
+            attached_window->resize_needed = false;
         }
 
         cmd_builder->bind_bitmap(attached_window->driver_win_id);
