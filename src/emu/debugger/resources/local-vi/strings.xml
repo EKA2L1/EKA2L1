@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Chuyển sang</string>
     <string name="app_launcher_style_classical_str">Kiểu cổ điển</string>
     <string name="app_launcher_style_modern_str">Kiểu hiện đại</string>
+    <string name="app_launcher_change_device">Change device</string>
     <string name="error_dialog_title">Lỗi xuất hiện</string>
     <string name="error_dialog_message">Hãy lấy file log và báo cáo lỗi này cho nhà phát triển!</string>
     <string name="emulated_screen_title">Màn hình {}</string>
