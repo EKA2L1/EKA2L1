@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="error">Erro</string>
-    <string name="no_data">Não há dados</string>
+    <string name="no_data">Sem dados</string>
     <string name="search">Pesquisar</string>
     <string name="about">Sobre</string>
     <string name="settings">Configurações</string>
@@ -13,7 +13,7 @@
     <string name="mount_sd">Montar cartões MMC/SD</string>
     <string name="no_devices_found">Nenhum dispositivo encontrado</string>
     <string name="exit">Sair</string>
-    <string name="rename">Rename</string>
+    <string name="rename">Renomear</string>
     <string name="save_log">Salvar log</string>
     <string name="install">Instalar</string>
     <string name="device_dump">Despejo de dispositivo</string>
@@ -22,7 +22,7 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Caminho para VPL</string>
     <string name="install_method">Método de instalação</string>
-    <string name="enter_new_name">Enter new name</string>
+    <string name="enter_new_name">Insira o novo nome</string>
     <string name="no_device_dialog_title">Nenhum dispositivo instalado!</string>
     <string name="no_device_installed">Por favor instale um dispositivo. Arquivos e ROM de um dispositivo Symbian são necessários para a instalação.\n\n<b>Nota:</b> Cada aplicativo precisará de um dispositivo Symbian adequado para ser executado.</string>
     <string name="install_device_note_may_need_rpkg">Para dispositivos S60v2 ou superior, você pode precisar fornecer um arquivo adicional chamado RPKG. O selecionador de caminhos irá aparecer se o instalador detectar a necessidade disso.</string>
