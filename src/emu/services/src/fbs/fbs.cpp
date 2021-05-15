@@ -278,7 +278,7 @@ namespace eka2l1 {
                                 "FbsSharedChunk",
                                 0,
                                 0x10000,
-                                0x200000,
+                                (kern->is_eka1() ? 0x600000 : 0x200000),
                                 prot_read_write,
                                 kernel::chunk_type::normal,
                                 kernel::chunk_access::global,
