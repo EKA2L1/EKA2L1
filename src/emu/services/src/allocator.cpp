@@ -18,6 +18,7 @@
  */
 
 #include <services/allocator.h>
+#include <common/algorithm.h>
 #include <kernel/chunk.h>
 
 namespace eka2l1::epoc {
@@ -27,7 +28,7 @@ namespace eka2l1::epoc {
     }
 
     bool chunk_allocator::expand(std::size_t target) {
-        return target_chunk->adjust(target);
+        return target_chunk->adjust(common::min<std::size_t>(target_chunk->max_size(), target));
     }
 
     address chunk_allocator::to_address(const void *addr, kernel::process *pr) {
