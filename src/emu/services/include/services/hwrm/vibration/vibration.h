@@ -18,7 +18,7 @@
  */
 
 #include <services/hwrm/resource.h>
-#include <drivers/hwrm/vibration.h>>
+#include <drivers/hwrm/vibration.h>
 
 namespace eka2l1 {
     class kernel_system;
