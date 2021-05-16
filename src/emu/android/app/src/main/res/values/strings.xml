@@ -114,5 +114,5 @@
     <string name="recommended_devices_s60v1" translatable="false"><b>S60v1:</b> N-Gage</string>
     <string name="recommended_devices_s60v2" translatable="false"><b>S60v2:</b> Nokia N70</string>
     <string name="recommended_devices_s60v3" translatable="false"><b>S60v3:</b> Nokia 5320 XpressMusic, Nokia E5</string>
-    <string name="recommended_devices_s60v5" translatable="false"><b>S60v5:</b> Nokia 5800 XpressMusic, Nokia 5230 XpressMusic</string>
+    <string name="recommended_devices_s60v5" translatable="false"><b>S60v5:</b> Nokia 5800 XpressMusic, Nokia 5230</string>
 </resources>
