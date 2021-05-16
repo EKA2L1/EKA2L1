@@ -73,5 +73,5 @@
     <string name="log_saved">Il log è stato salvato</string>
     <string name="about_icon_by">&lt;BR&gt;Icona da: </string>
     <string name="version">Versione: </string>
-    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="recommended_devices_note"><b>Nota:</b> Si consiglia di utilizzare firmware S60v3 e superiori per l\'installazione di nuovi dispositivi.</string>
 </resources>
