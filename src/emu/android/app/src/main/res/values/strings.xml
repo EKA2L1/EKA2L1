@@ -30,6 +30,7 @@
     <string name="no_device_dialog_title">No device installed!</string>
     <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
 
     <string name="install_rpkg_corrupt">The RPKG file provided is corrupt!</string>
     <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
@@ -108,4 +109,10 @@
     <string name="about_icon_author" translatable="false">dmolina007 &amp; Frenesi</string>
     <string name="about_icon_by">&lt;BR>Icon by: </string>
     <string name="version">Version: </string>
+
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="recommended_devices_s60v1" translatable="false"><b>S60v1:</b> N-Gage</string>
+    <string name="recommended_devices_s60v2" translatable="false"><b>S60v2:</b> Nokia N70</string>
+    <string name="recommended_devices_s60v3" translatable="false"><b>S60v3:</b> Nokia 5320 XpressMusic, Nokia E5</string>
+    <string name="recommended_devices_s60v5" translatable="false"><b>S60v5:</b> Nokia 5800 XpressMusic, Nokia 5230 XpressMusic</string>
 </resources>

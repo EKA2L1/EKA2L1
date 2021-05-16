@@ -51,6 +51,7 @@ import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.filepicker.FilteredFilePickerActivity;
 import com.github.eka2l1.filepicker.FilteredFilePickerFragment;
+import com.skydoves.expandablelayout.ExpandableLayout;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.nononsenseapps.filepicker.Utils;
 
@@ -152,6 +153,15 @@ public class DeviceListFragment extends Fragment {
             });
 
             inputNameBuilder.show();
+        });
+
+        ExpandableLayout recommendedDevicesLayout = getActivity().findViewById(R.id.ex_recommended_device);
+        recommendedDevicesLayout.parentLayout.setOnClickListener(v -> {
+            if (recommendedDevicesLayout.isExpanded()) {
+                recommendedDevicesLayout.collapse();
+            } else {
+                recommendedDevicesLayout.expand();
+            }
         });
 
         Spinner spInstallMethod = getActivity().findViewById(R.id.sp_device_install_method);

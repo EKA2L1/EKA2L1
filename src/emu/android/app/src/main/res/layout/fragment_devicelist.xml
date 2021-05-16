@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fillViewport="true"
@@ -33,6 +34,24 @@
                 android:gravity="center"
                 android:text="@string/rename" />
         </LinearLayout>
+
+        <com.skydoves.expandablelayout.ExpandableLayout
+            android:id="@+id/ex_recommended_device"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            app:expandable_animation="accelerate"
+            app:expandable_duration="300"
+            app:expandable_isExpanded="false"
+            app:expandable_parentLayout="@layout/layout_recommended_device_parent"
+            app:expandable_secondLayout="@layout/layout_recommend_devices_second"
+            app:expandable_showSpinner="true"
+            app:expandable_spinner="@drawable/ic_arrow_down"
+            app:expandable_spinner_animate="true"
+            app:expandable_spinner_gravity="end"
+            app:expandable_spinner_margin="14dp"
+            app:expandable_spinner_size="32dp" />
 
         <TextView
             android:id="@+id/tv_additional_note"
