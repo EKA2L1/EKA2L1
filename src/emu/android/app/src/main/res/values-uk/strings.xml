@@ -26,6 +26,7 @@
     <string name="no_device_dialog_title">Жодного пристрою не встановлено!</string>
     <string name="no_device_installed">Будь ласка, встановіть пристрій. Файли і прошивка Symbian пристрою потрібні для встановлення.\n\n<b>Увага:</b> Для запуску для кожного додатку знадобиться придатний Symbian пристрій.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
     <string name="install_rpkg_corrupt">Наданий RPKG файл пошкоджений!</string>
     <string name="install_rpkg_file_not_found">Не вдалося відкрити файл RPKG!</string>
     <string name="install_raw_dump_fail_to_copy">Не вдалося скопіювати raw дамп файлів до цільового місця призначення!</string>
@@ -72,4 +73,5 @@
     <string name="log_saved">Лог збережено</string>
     <string name="about_icon_by">&lt;BR&gt;Іконка від: </string>
     <string name="version">Версія: </string>
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>
