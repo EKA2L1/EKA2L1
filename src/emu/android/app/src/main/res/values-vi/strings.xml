@@ -26,6 +26,7 @@
     <string name="no_device_dialog_title">Chưa thiết bị nào được cài đặt!</string>
     <string name="no_device_installed">Hãy cài đặt một thiết bị. Các tệp tin và ROM của một thiết bị Symbian cần thiết cho quá trình cài đặt.\n\n<b>Lưu ý:</b> Mỗi ứng dụng sẽ cần một thiết bị Symbian thích hợp để khởi chạy.</string>
     <string name="install_device_note_may_need_rpkg">Với các thiết bị S60v2 hoặc cao hơn, bạn có thể cần đến một file nữa tên là RPKG. Nút chọn đường dẫn sẽ xuất hiện nếu trình cài đặt phát hiện ra nó cần thiết.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
     <string name="install_rpkg_corrupt">File RPKG mà bạn cung cấp đã bị lỗi!</string>
     <string name="install_rpkg_file_not_found">File RPKG hiện tại không mở được!</string>
     <string name="install_raw_dump_fail_to_copy">Copy file raw dump tới đích đến lỗi!</string>
@@ -72,4 +73,5 @@
     <string name="log_saved">Log đã được lưu</string>
     <string name="about_icon_by">&lt;BR&gt;Icon bởi: </string>
     <string name="version">Phiên bản: </string>
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>
