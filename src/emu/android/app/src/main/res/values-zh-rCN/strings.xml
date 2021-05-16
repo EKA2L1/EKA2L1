@@ -26,7 +26,7 @@
     <string name="no_device_dialog_title">未安装设备！</string>
     <string name="no_device_installed">请安装设备。安装塞班设备需要安装文件和ROM包\n\n<b>注意：</b> 每个应用都需要合适的塞班设备才能运行。</string>
     <string name="install_device_note_may_need_rpkg">对于S60v2或更高版本的设备，您可能需要提供额外的RPKG文件。如果安装程序检测到需要RPKG文件，路径选择器将会自动弹出。</string>
-    <string name="recommended_devices_to_install">Recommend devices to install</string>
+    <string name="recommended_devices_to_install">推荐安装设备</string>
     <string name="install_rpkg_corrupt">提供的RPKG文件已损坏！</string>
     <string name="install_rpkg_file_not_found">无法打开指定的RPKG文件！</string>
     <string name="install_raw_dump_fail_to_copy">复制原始转储文件到目标路径失败！</string>
@@ -73,5 +73,5 @@
     <string name="log_saved">日志已保存</string>
     <string name="about_icon_by">&lt;BR&gt;图标：</string>
     <string name="version">版本： </string>
-    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="recommended_devices_note"><b>注：</b> 建议安装固件时使用S60v3及以上的设备。</string>
 </resources>
