@@ -26,6 +26,7 @@
     <string name="no_device_dialog_title">Walang naka-install na aparato!</string>
     <string name="no_device_installed">Mag-install ka ng aparato. Ang mga files at ROM ng isang Symbian cellphone ay kailangan para sa installation. \n\n<b>Paalala:</b> Bawat app ay kailangan ng angkop na aparato na Symbian para ito ay mag-load.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
     <string name="install_rpkg_corrupt">Ang RPKG file na ito ay sira!</string>
     <string name="install_rpkg_file_not_found">Ang natukoy na RPKG ay hindi pwedeng iload!</string>
     <string name="install_raw_dump_fail_to_copy">Nabigong nakopya ang raw dump files sa patutunguhan!</string>
@@ -72,4 +73,5 @@
     <string name="log_saved">Ang file ay nai-seyb</string>
     <string name="about_icon_by">&lt;BR&gt;Ang icon nito ay galing kay: </string>
     <string name="version">Bersyon: </string>
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>
