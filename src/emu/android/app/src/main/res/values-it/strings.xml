@@ -26,6 +26,7 @@
     <string name="no_device_dialog_title">Nessun dispositivo installato!</string>
     <string name="no_device_installed">Installa un dispositivo. Hai bisogno dei File e della ROM di un dispositivo Symbian per l\'installazione.\n\n<b>Nota:</b> Ogni app avrà bisogno di un dispositivo Symbian compatibile per l\'esecuzione.</string>
     <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG sarà necessario, ne verrà richiesto il percorso in fase di installazione.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
     <string name="install_rpkg_corrupt">Il file RPKG selezionato è corrotto!</string>
     <string name="install_rpkg_file_not_found">Non è possibile aprire il file RPKG!</string>
     <string name="install_raw_dump_fail_to_copy">Impossibile copiare il raw dump nel percorso selezionato!</string>
@@ -72,4 +73,5 @@
     <string name="log_saved">Il log è stato salvato</string>
     <string name="about_icon_by">&lt;BR&gt;Icona da: </string>
     <string name="version">Versione: </string>
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>
