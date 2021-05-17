@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Cambiar a</string>
     <string name="app_launcher_style_classical_str">Clásico</string>
     <string name="app_launcher_style_modern_str">Moderno</string>
+    <string name="app_launcher_change_device">Change device</string>
     <string name="error_dialog_title">Ha aparecido un error salvaje</string>
     <string name="error_dialog_message">Por favor, adjunte el archivo log y repórteselo a un desarrollador!</string>
     <string name="emulated_screen_title">Pantalla {}</string>

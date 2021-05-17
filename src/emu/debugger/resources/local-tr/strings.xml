@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Şuna geç</string>
     <string name="app_launcher_style_classical_str">Klasik</string>
     <string name="app_launcher_style_modern_str">Modern</string>
+    <string name="app_launcher_change_device">Change device</string>
     <string name="error_dialog_title">Tanımlanamayan bir hata oluştu</string>
     <string name="error_dialog_message">Lütfen günlük kaydını ekleyerek geliştiriciye bildirin!</string>
     <string name="emulated_screen_title">Ekran {}</string>

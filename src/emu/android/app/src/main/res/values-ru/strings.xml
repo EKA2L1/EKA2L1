@@ -13,6 +13,7 @@
     <string name="mount_sd">Подключить MMC/SD карту</string>
     <string name="no_devices_found">Устройства не найдены</string>
     <string name="exit">Выход</string>
+    <string name="rename">Rename</string>
     <string name="save_log">Сохранить лог</string>
     <string name="install">Установить</string>
     <string name="device_dump">Device dump</string>
@@ -21,9 +22,11 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">Способ установки</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="no_device_dialog_title">Нет установленных устройств!</string>
     <string name="no_device_installed">Пожалуйста, установите устройство. Для установки необходимы файлы и ROM устройства Symbian.\n\n<b>Примечание:</b> Каждому приложению для запуска потребуется подходящее устройство Symbian.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
     <string name="install_rpkg_corrupt">Указанный файл RPKG поврежден!</string>
     <string name="install_rpkg_file_not_found">Указанный RPKG файл не может быть открыт!</string>
     <string name="install_raw_dump_fail_to_copy">Не удалось скопировать сырой дамп файлов!</string>
@@ -70,4 +73,5 @@
     <string name="log_saved">Лог успешно сохранён</string>
     <string name="about_icon_by">&lt;BR&gt;Иконка от: </string>
     <string name="version">Версия: </string>
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>

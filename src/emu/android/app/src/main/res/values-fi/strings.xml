@@ -13,17 +13,20 @@
     <string name="mount_sd">Liitä MMC/SD-kortti</string>
     <string name="no_devices_found">Laitteita ei löytynyt</string>
     <string name="exit">Sulje</string>
+    <string name="rename">Rename</string>
     <string name="save_log">Tallenna loki</string>
     <string name="install">Asenna</string>
     <string name="device_dump">Device dump</string>
     <string name="path_to_rpkg">Polku RPKG:hen</string>
     <string name="path_to_rom">Polku ROM:iin</string>
-    <string name="firmware">Firmware</string>
+    <string name="firmware">Laiteohjelmisto</string>
     <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">Asennus menetelmä</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="no_device_dialog_title">No device installed!</string>
     <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
     <string name="install_rpkg_corrupt">The RPKG file provided is corrupt!</string>
     <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
     <string name="install_raw_dump_fail_to_copy">Fail to copy raw dump files to target destination!</string>
@@ -32,9 +35,9 @@
     <string name="install_already_exist">Device to install already exists!</string>
     <string name="install_product_determine_fail">Fail to determine product information!</string>
     <string name="install_device_vpl_invalid_msg">The firmware description file (VPL) file is invalid!</string>
-    <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
-    <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
-    <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
+    <string name="install_device_rofs_corrupt_msg">ROFS tiedosto on viallinen!</string>
+    <string name="install_device_rom_corrupt_msg">ROM tiedosto on viallinen!</string>
+    <string name="install_device_fpsx_corrupt_msg">FPSX tiedosto on viallinen!</string>
     <string name="pref_general_title">Yleiset</string>
     <string name="pref_system_title">Järjestelmä</string>
     <string name="pref_control_key_binding_sect_title">Näppäimen sitominen</string>
@@ -70,4 +73,5 @@
     <string name="log_saved">Loki on tallennettu</string>
     <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
     <string name="version">Versio: </string>
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>

@@ -13,6 +13,7 @@
     <string name="mount_sd">Pasang MMC/SD Card</string>
     <string name="no_devices_found">Tidak ada firmware perangkat yang ditemukan</string>
     <string name="exit">Keluar</string>
+    <string name="rename">Ganti nama</string>
     <string name="save_log">Simpan log</string>
     <string name="install">Instal</string>
     <string name="device_dump">Dump perangkat</string>
@@ -21,9 +22,11 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Jalur ke VPL</string>
     <string name="install_method">Metode instalasi</string>
+    <string name="enter_new_name">Masukkan nama baru</string>
     <string name="no_device_dialog_title">Tidak ada perangkat yang terinstal!</string>
     <string name="no_device_installed">Harap instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, diperlukan file tambahan yang bernama RPKG. Jika perangkat tersebut terdeteksi maka muncul permintaan untuk memasukkan file tersebut.</string>
+    <string name="recommended_devices_to_install">Rekomendasi firmware perangkat untuk diinstal</string>
     <string name="install_rpkg_corrupt">File RPKG yang disediakan telah rusak!</string>
     <string name="install_rpkg_file_not_found">File RPKG tidak bisa dibuka!</string>
     <string name="install_raw_dump_fail_to_copy">Gagal menyalin file raw dump ke tempat tujuan!</string>
@@ -70,4 +73,5 @@
     <string name="log_saved">Log telah disimpan</string>
     <string name="about_icon_by">&lt;BR&gt;Ikon oleh: </string>
     <string name="version">Versi: </string>
+    <string name="recommended_devices_note"><b>Catatan:</b> Direkomendasikan untuk menggunakan metode instalasi \"firmware\" untuk perangkat S60v3 ke atas.</string>
 </resources>

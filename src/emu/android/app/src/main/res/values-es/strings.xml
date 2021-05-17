@@ -13,6 +13,7 @@
     <string name="mount_sd">Montar tarjeta MMC/SD</string>
     <string name="no_devices_found">Ningún dispositivo encontrado</string>
     <string name="exit">Salir</string>
+    <string name="rename">Rename</string>
     <string name="save_log">Guardar log</string>
     <string name="install">Instalar</string>
     <string name="device_dump">Device dump</string>
@@ -21,9 +22,11 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Ruta al VPL</string>
     <string name="install_method">Método de instalación</string>
+    <string name="enter_new_name">Enter new name</string>
     <string name="no_device_dialog_title">¡Ningún dispositivo instalado!</string>
     <string name="no_device_installed">Por favor, instale un dispositivo. Se requieren ficheros y la ROM de un dispositivo Symbian.\n\n<b>Nota:</b> Cada aplicación requiere de un dispositivo Symbian concreto para funcionar.</string>
     <string name="install_device_note_may_need_rpkg">Para dispositivos S60v2 o superior puede que sea necesario proveer un fichero adicional llamado RPKG. Si el instalador lo determina necesario, aparecerá el selector de ruta para seleccionarlo.</string>
+    <string name="recommended_devices_to_install">Recommend devices to install</string>
     <string name="install_rpkg_corrupt">¡El fichero RPKG está corrupto!</string>
     <string name="install_rpkg_file_not_found">¡El fichero RPKG indicado no se pudo abrir!</string>
     <string name="install_raw_dump_fail_to_copy">¡Fallo copiado los ficheros de imagen en crudo a la ubicación de destino!</string>
@@ -70,4 +73,5 @@
     <string name="log_saved">El log ha sido guardado</string>
     <string name="about_icon_by">&lt;BR&gt;Icono por: </string>
     <string name="version">Versión: </string>
+    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>

@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Bura keçin</string>
     <string name="app_launcher_style_classical_str">Klassik</string>
     <string name="app_launcher_style_modern_str">Müasir</string>
+    <string name="app_launcher_change_device">Change device</string>
     <string name="error_dialog_title">Bilinməyən bir xəta göründü</string>
     <string name="error_dialog_message">Zəhmət olmasa jurnala əlavə edib tərtibatçıya xəbər verin!</string>
     <string name="emulated_screen_title">Ekran {}</string>

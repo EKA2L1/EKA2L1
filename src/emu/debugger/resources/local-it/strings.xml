@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Passa a</string>
     <string name="app_launcher_style_classical_str">Classico</string>
     <string name="app_launcher_style_modern_str">Moderno</string>
+    <string name="app_launcher_change_device">Cambia dispositivo</string>
     <string name="error_dialog_title">Errore inaspettato</string>
     <string name="error_dialog_message">Sei pregato di salvare il log e inviarlo ad uno sviluppatore!</string>
     <string name="emulated_screen_title">Schermo {}</string>

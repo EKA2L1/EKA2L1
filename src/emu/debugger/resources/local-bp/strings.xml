@@ -45,6 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Trocar para</string>
     <string name="app_launcher_style_classical_str">Clássico</string>
     <string name="app_launcher_style_modern_str">Moderno</string>
+    <string name="app_launcher_change_device">Trocar dispositivo</string>
     <string name="error_dialog_title">Ocorreu um erro brutal</string>
     <string name="error_dialog_message">Por favor, anexe o registro e reporte ao desenvolvedor!</string>
     <string name="emulated_screen_title">Tela {}</string>
