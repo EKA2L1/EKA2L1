@@ -3,9 +3,9 @@
     <string name="path">Pagtutuunan</string>
     <string name="change">I-palit</string>
     <string name="replace">Palitan</string>
-    <string name="load">I-Load</string>
-    <string name="save">I-seyb</string>
-    <string name="ok">Ok</string>
+    <string name="load">Ikarga</string>
+    <string name="save">I-save</string>
+    <string name="ok">OK</string>
     <string name="yes">Oo</string>
     <string name="no">Hindi</string>
     <string name="general">Pangkalahatan</string>
@@ -21,7 +21,7 @@
     <string name="help_menu_name">Tulong</string>
     <string name="file_menu_logger_item_name">Tiga lista</string>
     <string name="file_menu_launch_apps_item_name">Ilunsad ang app</string>
-    <string name="file_menu_packages_item_name">Mga packages</string>
+    <string name="file_menu_packages_item_name">Mga pakete</string>
     <string name="file_menu_packages_item_unavail_msg">Mag-install ka ng aparato para ma-access ang package manager!</string>
     <string name="file_menu_package_submenu_install_item_name">I-install</string>
     <string name="file_menu_package_submenu_list_item_name">Listahan</string>
@@ -107,7 +107,7 @@ Magiging mabagal ang emulator sa pagenable.</string>
     <string name="pref_hal_battery_level_string">Lebel ng baterya</string>
     <string name="pref_hal_signal_level_string">Kalakasan ng signal</string>
     <string name="pref_restart_needed_for_dvcchange_msg">Pakirestart ang emulator na ito sa mga pagbabago na nagawa sa lagayan ng data na maging epektibo</string>
-    <string name="packages_title">Mga packages</string>
+    <string name="packages_title">Mga pakete</string>
     <string name="packages_package_menu_name">Mga pakete</string>
     <string name="packages_install_string">I-install</string>
     <string name="packages_remove_string">Tanggalin</string>
