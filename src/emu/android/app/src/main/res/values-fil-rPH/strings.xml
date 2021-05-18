@@ -14,7 +14,7 @@
     <string name="no_devices_found">Walang nakitang mga aparato</string>
     <string name="exit">Umalis</string>
     <string name="rename">I-rename</string>
-    <string name="save_log">I-seyb ang log</string>
+    <string name="save_log">I-save ang log</string>
     <string name="install">I-install</string>
     <string name="device_dump">File mula sa aparato</string>
     <string name="path_to_rpkg">Pinaglalagayan ng RPKG</string>
