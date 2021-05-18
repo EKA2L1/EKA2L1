@@ -5,7 +5,7 @@
     <string name="search">Hanapin</string>
     <string name="about">Tungkol</string>
     <string name="settings">Mga settings</string>
-    <string name="packages">Mga packages</string>
+    <string name="packages">Mga pakete</string>
     <string name="devices">Mga aparato</string>
     <string name="processing">Nagproproseso...</string>
     <string name="completed">Tapos na!</string>
@@ -69,8 +69,8 @@
     <string name="layout_switch">Magpalit ng layout</string>
     <string name="hide_buttons">I-tago ang mga buttons</string>
     <string name="confirmation_required">Kinakailangan ang kumpirmasyon</string>
-    <string name="force_close_confirmation">Ang pwersahang pagsara ng applicasyon ay maaaring magresulta sa pagkawala ng data o masira ito! \nMag-proproceed?</string>
-    <string name="log_saved">Ang log ay nai-seyb</string>
+    <string name="force_close_confirmation">Ang pwersahang pagsara ng aplikasyon ay maaaring magresulta sa pagkawala o pagkasira ng data! \nItutuloy mo pa ba ito?</string>
+    <string name="log_saved">Ang file ay nai-save</string>
     <string name="about_icon_by">&lt;BR&gt;Ang icon nito ay galing kay: </string>
     <string name="version">Bersyon: </string>
     <string name="recommended_devices_note"><b>Paalala:</b> Nirerekomenda na gumamit ng firmware sa pag-iinstall ng mga aparato mula S60v3 pataas.</string>
