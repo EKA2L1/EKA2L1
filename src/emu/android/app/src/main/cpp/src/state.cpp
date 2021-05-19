@@ -130,6 +130,21 @@ namespace eka2l1::android {
             libmngr->load_patch_libraries(".//patch//");
             dispatch::libraries::register_functions(kern, disp);
 
+            if (!conf.cenrep_reset) {
+                io_system *io = symsys->get_io_system();
+
+                auto private_dir_c_persists = io->get_raw_path(u"C:\\Private\\10202be9\\persists\\");
+                auto private_dir_d_persists = io->get_raw_path(u"D:\\Private\\10202be9\\persists\\");
+                auto private_dir_e_persists = io->get_raw_path(u"E:\\Private\\10202be9\\persists\\");
+                
+                common::delete_folder(common::ucs2_to_utf8(*private_dir_c_persists));
+                common::delete_folder(common::ucs2_to_utf8(*private_dir_d_persists));
+                common::delete_folder(common::ucs2_to_utf8(*private_dir_e_persists));
+
+                conf.cenrep_reset = true;
+                conf.serialize();
+            }
+
             stage_two_inited = true;
         }
 
