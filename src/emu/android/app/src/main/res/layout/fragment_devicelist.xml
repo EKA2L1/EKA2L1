@@ -48,6 +48,7 @@
             app:expandable_secondLayout="@layout/layout_recommend_devices_second"
             app:expandable_showSpinner="true"
             app:expandable_spinner="@drawable/ic_arrow_down"
+            app:expandable_spinner_color="?attr/spinnerColor"
             app:expandable_spinner_animate="true"
             app:expandable_spinner_gravity="end"
             app:expandable_spinner_margin="14dp"
