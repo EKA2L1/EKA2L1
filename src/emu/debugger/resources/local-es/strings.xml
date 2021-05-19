@@ -45,7 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Cambiar a</string>
     <string name="app_launcher_style_classical_str">Clásico</string>
     <string name="app_launcher_style_modern_str">Moderno</string>
-    <string name="app_launcher_change_device">Change device</string>
+    <string name="app_launcher_change_device">Cambiar dispositivo</string>
     <string name="error_dialog_title">Ha aparecido un error salvaje</string>
     <string name="error_dialog_message">Por favor, adjunte el archivo log y repórteselo a un desarrollador!</string>
     <string name="emulated_screen_title">Pantalla {}</string>
@@ -119,7 +119,7 @@
     <string name="installer_language_choose_title">Elija el idioma de este paquete</string>
     <string name="install_device_wizard_title">Asistente de instalación de dispositivo</string>
     <string name="install_device_wizard_welcome_msg">¡Bienvenido al asistente de instalación de dispositivos! Para empezar, pulse el botón Continuar.</string>
-    <string name="install_device_wizard_device_dump_type_name">Device dump</string>
+    <string name="install_device_wizard_device_dump_type_name">Volcado del dispositivo</string>
     <string name="install_device_wizard_firmware_type_name">Firmware</string>
     <string name="install_device_choose_method_msg">Elija el método de instalación</string>
     <string name="install_device_rpkg_choose_msg">Especifique el archivo RPKG:</string>
