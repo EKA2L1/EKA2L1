@@ -44,9 +44,6 @@ namespace eka2l1::epoc::etel {
         std::vector<tsy_module_info> loaded_;
         std::vector<etel_module_entry> entries_;
 
-    protected:
-        std::string get_full_tsy_path(io_system *io, const std::string &module_name);
-
     public:
         explicit module_manager();
 
