@@ -37,6 +37,18 @@ namespace eka2l1::epoc::msv {
         list_path_ = DEFAULT_MSG_REG_LIST_FILE;
     }
 
+    mtm_registry::~mtm_registry() {
+        for (mtm_group &group: groups_) {
+            mtm_component *next_comp = group.comps_.next_;
+            while (next_comp) {
+                mtm_component *current = next_comp;
+                next_comp = next_comp->next_;
+
+                delete current;
+            }
+        }
+    }
+
     bool mtm_registry::install_group_from_rsc(const std::u16string &path) {
         symfile rsc_file = io_->open_file(path, READ_MODE | BIN_MODE);
 
@@ -134,6 +146,28 @@ namespace eka2l1::epoc::msv {
         }
 
         return nullptr;
+    }
+
+    mtm_component *mtm_registry::query_mtm_component(const epoc::uid_type &type) {
+        if (type.uid1 != 0x10000079) {
+            LOG_ERROR(SERVICE_MSV, "UID1 is not DLL magic (real value: 0x{:X})", type.uid1);
+            return nullptr;
+        }
+
+        auto ite1 = comps_.find(type.uid2);
+        if (ite1 == comps_.end()) {
+            return nullptr;
+        }
+
+        auto final_find = std::find_if(ite1->second.begin(), ite1->second.end(), [type](mtm_component *comp) {
+            return comp->specific_uid_ == type.uid3;
+        });
+
+        if (final_find == ite1->second.end()) {
+            return nullptr;
+        }
+
+        return *final_find;
     }
 
     std::vector<mtm_component *> &mtm_registry::get_components(const epoc::uid the_uid) {

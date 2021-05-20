@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/uid.h>
 #include <utils/consts.h>
 
 #include <cstdint>
@@ -73,6 +74,7 @@ namespace eka2l1::epoc::msv {
 
     public:
         explicit mtm_registry(io_system *io);
+        ~mtm_registry();
 
         void load_mtm_list();
         void save_mtm_list();
@@ -80,6 +82,8 @@ namespace eka2l1::epoc::msv {
         bool install_group(const std::u16string &path);
 
         mtm_group *query_mtm_group(const epoc::uid the_uid);
+        mtm_component *query_mtm_component(const epoc::uid_type &type);
+
         std::vector<mtm_component *> &get_components(const epoc::uid the_uid);
 
         mtm_group *get_group(const std::uint32_t idx) {

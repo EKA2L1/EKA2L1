@@ -230,6 +230,14 @@ namespace eka2l1 {
             fill_registered_mtm_dll_array(ctx);
             break;
 
+        case msv_get_mtm_path:
+            get_mtm_path(ctx);
+            break;
+
+        case msv_set_mtm_path:
+            set_mtm_path(ctx);
+            break;
+
         case msv_get_message_directory:
             get_message_directory(ctx);
             break;
@@ -517,6 +525,7 @@ namespace eka2l1 {
         }
 
         auto comps = server<msv_server>()->reg_.get_components(mtm_uid.value());
+        kernel_system *kern = server<msv_server>()->get_kernel_object_owner();
 
         std::uint8_t *argptr = ctx->get_descriptor_argument_ptr(1);
         const std::size_t argsize = ctx->get_argument_max_data_size(1);
@@ -537,10 +546,25 @@ namespace eka2l1 {
 
             // WARN (pent0): Currently force it to eat all stuffs as UTF8
             // std::string name_utf8 = common::ucs2_to_utf8(comp->name_);
-            epoc::absorb_des_string(comp->name_, seri, true);
-            seri.absorb(group->cap_send_);
-            seri.absorb(group->cap_body_);
-            seri.absorb(group->cap_avail_);
+            if (kern->is_eka1()) {
+                std::uint32_t length = static_cast<std::uint32_t>(comp->name_.length()) | (epoc::buf << 28);
+                std::uint32_t max_length = 50;
+
+                seri.absorb(length);
+                seri.absorb(max_length);
+
+                seri.absorb_impl(reinterpret_cast<std::uint8_t*>(comp->name_.data()), comp->name_.length() * sizeof(char16_t));
+
+                // This was supposed to be a TBuf<50>
+                std::uint32_t total_bytes_reserved = 100;
+                seri.absorb_impl(nullptr, total_bytes_reserved - comp->name_.length() * sizeof(char16_t));
+            } else {
+                epoc::absorb_des_string(comp->name_, seri, true);
+
+                seri.absorb(group->cap_send_);
+                seri.absorb(group->cap_body_);
+                seri.absorb(group->cap_avail_);
+            }
 
             std::uint32_t dll_uid = 0x10000079; ///< Dynamic DLL UID
             seri.absorb(dll_uid);
@@ -554,13 +578,80 @@ namespace eka2l1 {
             std::uint32_t version = (comp->build_) | ((comp->major_ & 0xFF) << 16) | ((comp->minor_ & 0xFF) << 8);
             seri.absorb(version);
 
-            if (comp->specific_uid_ == epoc::msv::MTM_DEFAULT_SPECIFIC_UID) {
+            // Legacy does not contain filename
+            if (!kern->is_eka1() && (comp->specific_uid_ == epoc::msv::MTM_DEFAULT_SPECIFIC_UID)) {
                 //std::string filename_utf8 = common::ucs2_to_utf8(comp->filename_);
                 epoc::absorb_des_string(comp->filename_, seri, true);
+            }
+
+            if (kern->is_eka1()) {
+                std::uint32_t cap_send_32 = group->cap_send_;
+                std::uint32_t cap_body_32 = group->cap_body_;
+                std::uint32_t cap_avail_32 = group->cap_avail_;
+
+                seri.absorb(cap_send_32);
+                seri.absorb(cap_body_32);
+                seri.absorb(cap_avail_32);
             }
         }
 
         ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()) + 4);
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::get_mtm_path(service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid1 = ctx->get_argument_value<epoc::uid>(0);
+        std::optional<epoc::uid> uid2 = ctx->get_argument_value<epoc::uid>(1);
+        std::optional<epoc::uid> uid3 = ctx->get_argument_value<epoc::uid>(2);
+
+        if (!uid1.has_value() || !uid2.has_value() || !uid3.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::uid_type type_to_find;
+        type_to_find.uid1 = uid1.value();
+        type_to_find.uid2 = uid2.value();
+        type_to_find.uid3 = uid3.value();
+
+        epoc::msv::mtm_component *comp = server<msv_server>()->reg_.query_mtm_component(type_to_find);
+        if (!comp) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        if (comp->filename_.empty()) {
+            ctx->complete(epoc::error_not_supported);
+            return;
+        }
+
+        ctx->write_arg(3, comp->filename_);
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::set_mtm_path(service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid1 = ctx->get_argument_value<epoc::uid>(0);
+        std::optional<epoc::uid> uid2 = ctx->get_argument_value<epoc::uid>(1);
+        std::optional<epoc::uid> uid3 = ctx->get_argument_value<epoc::uid>(2);
+        std::optional<std::u16string> path = ctx->get_argument_value<std::u16string>(3);
+
+        if (!uid1.has_value() || !uid2.has_value() || !uid3.has_value() || !path.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::uid_type type_to_find;
+        type_to_find.uid1 = uid1.value();
+        type_to_find.uid2 = uid2.value();
+        type_to_find.uid3 = uid3.value();
+
+        epoc::msv::mtm_component *comp = server<msv_server>()->reg_.query_mtm_component(type_to_find);
+        if (!comp) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        comp->filename_ = path.value();
         ctx->complete(epoc::error_none);
     }
 }
