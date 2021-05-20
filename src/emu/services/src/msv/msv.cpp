@@ -410,11 +410,6 @@ namespace eka2l1 {
         epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
         child_entries_ = indexer->get_entries_by_parent(details->parent_id_);
 
-        if (child_entries_.empty()) {
-            ctx->complete(epoc::error_not_found);
-            return;
-        }
-
         // TODO(pent0): Include the selection flags in slot 1
         std::uint8_t *buffer = reinterpret_cast<std::uint8_t *>(ctx->get_descriptor_argument_ptr(2));
         std::size_t buffer_max_size = ctx->get_argument_max_data_size(2);
