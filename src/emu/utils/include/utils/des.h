@@ -258,7 +258,7 @@ namespace eka2l1::epoc {
 
     // TODO, IMPORTANT (pent0): UCS2 string absorb needs Unicode compressor.
     template <typename T>
-    void absorb_des_string(std::basic_string<T> &str, common::chunkyseri &seri, const bool unicode) {
+    void absorb_des_string(std::basic_string<T> &str, common::chunkyseri &seri, bool unicode) {
         std::uint32_t len = static_cast<std::uint32_t>(str.length());
 
         if (seri.get_seri_mode() != common::SERI_MODE_READ) {
@@ -315,6 +315,10 @@ namespace eka2l1::epoc {
                 }
             }
 
+            if (len & 1) {
+                unicode = false;
+            }
+
             len >>= 1;
             str.resize(len);
             
@@ -331,6 +335,9 @@ namespace eka2l1::epoc {
                 common::unicode_expander expander;
                 expander.expand(reinterpret_cast<std::uint8_t*>(raw_temp.data()), source_size, reinterpret_cast<std::uint8_t*>(str.data()),
                     dest_size);
+
+                seri.backwards(raw_temp.length());
+                seri.absorb_impl(nullptr, source_size);
             } else {        
                 seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len * sizeof(T));
             }
