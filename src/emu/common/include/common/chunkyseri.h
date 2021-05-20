@@ -88,6 +88,15 @@ namespace eka2l1::common {
             return buf >= end;
         }
 
+        bool backwards(std::size_t len_back) {
+            if (buf - len_back < org) {
+                return false;
+            }
+            
+            buf -= len_back;
+            return true;
+        }
+
         chunkyseri_mode get_seri_mode() const {
             return mode;
         }

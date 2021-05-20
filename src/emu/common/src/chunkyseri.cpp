@@ -36,12 +36,16 @@ namespace eka2l1::common {
             break;
 
         case SERI_MODE_WRITE: {
-            memcpy(reinterpret_cast<void *>(buf), reinterpret_cast<const void *>(dat), s);
+            if (dat)
+                memcpy(reinterpret_cast<void *>(buf), reinterpret_cast<const void *>(dat), s);
+
             break;
         }
 
         case SERI_MODE_READ: {
-            memcpy(reinterpret_cast<void *>(dat), reinterpret_cast<const void *>(buf), s);
+            if (dat)
+                memcpy(reinterpret_cast<void *>(dat), reinterpret_cast<const void *>(buf), s);
+
             break;
         }
 
