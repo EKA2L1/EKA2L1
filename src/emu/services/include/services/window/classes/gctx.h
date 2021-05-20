@@ -122,10 +122,12 @@ namespace eka2l1::epoc {
         void draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd);
         void draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd);
 
-        void gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver);
+        void gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver, const bool ws);
         void gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd);
         void gdi_blt2(service::ipc_context &context, ws_cmd &cmd);
         void gdi_blt3(service::ipc_context &context, ws_cmd &cmd);
+        void gdi_ws_blt2(service::ipc_context &context, ws_cmd &cmd);
+        void gdi_ws_blt3(service::ipc_context &context, ws_cmd &cmd);
 
         void use_font(service::ipc_context &context, ws_cmd &cmd);
         void discard_font(service::ipc_context &context, ws_cmd &cmd);

@@ -19,6 +19,7 @@
  */
 
 #include <services/fbs/fbs.h>
+#include <services/window/classes/bitmap.h>
 #include <services/window/classes/gctx.h>
 #include <services/window/classes/scrdvc.h>
 #include <services/window/classes/wingroup.h>
@@ -446,11 +447,24 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void graphic_context::gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver) {
+    void graphic_context::gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver, const bool ws) {
         ws_cmd_gdi_blt3 *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt3 *>(cmd.data_ptr);
 
         // Try to get the bitmap
-        epoc::bitwise_bitmap *bmp = client->get_ws().get_bitmap(blt_cmd->handle);
+        epoc::bitwise_bitmap *bmp = nullptr;
+        
+        if (ws) {
+            epoc::wsbitmap *myside_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->handle));
+
+            if (!myside_bmp) {
+                context.complete(epoc::error_bad_handle);
+                return;
+            }
+
+            bmp = myside_bmp->bitmap_;
+        } else {
+            bmp = client->get_ws().get_bitmap(blt_cmd->handle);
+        }
 
         if (!bmp) {
             context.complete(epoc::error_bad_handle);
@@ -492,11 +506,19 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::gdi_blt2(service::ipc_context &context, ws_cmd &cmd) {
-        gdi_blt_impl(context, cmd, 2);
+        gdi_blt_impl(context, cmd, 2, false);
     }
 
     void graphic_context::gdi_blt3(service::ipc_context &context, ws_cmd &cmd) {
-        gdi_blt_impl(context, cmd, 3);
+        gdi_blt_impl(context, cmd, 3, false);
+    }
+
+    void graphic_context::gdi_ws_blt2(service::ipc_context &context, ws_cmd &cmd) {
+        gdi_blt_impl(context, cmd, 2, true);
+    }
+
+    void graphic_context::gdi_ws_blt3(service::ipc_context &context, ws_cmd &cmd) {
+        gdi_blt_impl(context, cmd, 3, true);
     }
 
     void graphic_context::set_brush_style(service::ipc_context &context, ws_cmd &cmd) {
@@ -731,6 +753,8 @@ namespace eka2l1::epoc {
             { ws_gc_u139_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
             { ws_gc_u139_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
             { ws_gc_u139_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
+            { ws_gc_u139_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
+            { ws_gc_u139_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
             { ws_gc_u139_free, { &graphic_context::free , true, true } }
         };
@@ -757,6 +781,8 @@ namespace eka2l1::epoc {
             { ws_gc_u151m1_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
             { ws_gc_u151m1_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
             { ws_gc_u151m1_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
+            { ws_gc_u151m1_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
+            { ws_gc_u151m1_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_u151m1_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
             { ws_gc_u151m1_free, { &graphic_context::free , true, true } }
         };
@@ -783,6 +809,8 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
             { ws_gc_u151m2_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
             { ws_gc_u151m2_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
+            { ws_gc_u151m2_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
+            { ws_gc_u151m2_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_u151m2_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
             { ws_gc_u151m2_free, { &graphic_context::free , true, true } }
         };
@@ -809,6 +837,8 @@ namespace eka2l1::epoc {
             { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
             { ws_gc_curr_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
             { ws_gc_curr_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
+            { ws_gc_curr_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
+            { ws_gc_curr_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
             { ws_gc_curr_free, { &graphic_context::free , true, true } }
         };
