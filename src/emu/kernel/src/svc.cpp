@@ -5404,6 +5404,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
         BRIDGE_REGISTER(0xC0006D, heap_switch),
         BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC0007B, add_event),
         BRIDGE_REGISTER(0xC00097, debug_command_execute),
         BRIDGE_REGISTER(0xC0009F, set_exception_handler_eka1),
         BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
