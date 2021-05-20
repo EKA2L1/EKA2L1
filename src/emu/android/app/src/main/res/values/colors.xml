@@ -4,6 +4,7 @@
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
 
+    <color name="ic_ducky_background">#FFFFFF</color>
     <color name="file_picker_accent">#ffb62e</color>
 
     <!--light theme color-->
@@ -11,6 +12,7 @@
     <color name="light_color_primary_dark">#1c1c1c</color>
     <color name="light_color_accent">#ff2e51</color>
     <color name="light_color_background">#fafafa</color>
+    <color name="light_color_spinner">#000000</color>
 
     <!--dark theme color-->
     <color name="dark_color_primary">#262e37</color>
@@ -18,4 +20,5 @@
     <color name="dark_color_accent">#0099ff</color>
     <color name="dark_color_background">#20272f</color>
     <color name="dark_color_text_primary">#ffffff</color>
+    <color name="dark_color_spinner">#ffffff</color>
 </resources>

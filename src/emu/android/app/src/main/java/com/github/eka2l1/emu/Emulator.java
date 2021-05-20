@@ -77,7 +77,7 @@ public class Emulator {
         boolean shouldUpdate = checkUpdate();
         updateFolder(context, "resources", shouldUpdate);
         updateFolder(context, "patch", shouldUpdate);
-        updateFolder(context, "compat", shouldUpdate);
+        copyFolder(context, "compat", shouldUpdate);
 
         setDirectory(EMULATOR_DIR);
     }
@@ -99,6 +99,13 @@ public class Emulator {
             if (patchFolder.exists()) {
                 FileUtils.deleteDirectory(patchFolder);
             }
+            FileUtils.copyAssetFolder(context, folderName, EMULATOR_DIR + folderName);
+        }
+    }
+
+    private static void copyFolder(Context context, String folderName, boolean shouldUpdate) {
+        File patchFolder = new File(EMULATOR_DIR, folderName);
+        if (shouldUpdate || !patchFolder.exists()) {
             FileUtils.copyAssetFolder(context, folderName, EMULATOR_DIR + folderName);
         }
     }

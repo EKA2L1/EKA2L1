@@ -19,6 +19,7 @@
 
 #include <android/state.h>
 #include <common/algorithm.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/version.h>
