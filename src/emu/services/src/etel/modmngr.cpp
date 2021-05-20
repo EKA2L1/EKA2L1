@@ -33,32 +33,8 @@ namespace eka2l1::epoc::etel {
     module_manager::module_manager() {
     }
 
-    std::string module_manager::get_full_tsy_path(io_system *io, const std::string &module_name) {
-        std::string fulled_module_path = module_name;
-
-        if (eka2l1::path_extension(fulled_module_path).empty()) {
-            fulled_module_path += ".tsy";
-        }
-
-        if (!eka2l1::has_root_name(fulled_module_path, true)) {
-            for (drive_number drv = drive_z; drv >= drive_a; drv--) {
-                if (io->get_drive_entry(drv)) {
-                    std::string absoluted = eka2l1::absolute_path(fulled_module_path, fmt::format(
-                        "{}:\\system\\libs\\", static_cast<char>(drive_to_char16(drv))));
-
-                    if (io->exist(common::utf8_to_ucs2(absoluted))) {
-                        fulled_module_path = absoluted;
-                        break;
-                    }
-                }
-            }
-        }
-
-        return fulled_module_path;
-    }
-
     bool module_manager::load_tsy(kernel_system *kern, io_system *io, const kernel::uid borrowed_session, const std::string &module_name) {
-        const std::string module_lowercased = common::lowercase_string(get_full_tsy_path(io, module_name));
+        const std::string module_lowercased = common::lowercase_string(eka2l1::replace_extension(eka2l1::filename(module_name), ""));
         auto find_result = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
             return info.name_ == module_lowercased;
         });
@@ -132,7 +108,7 @@ namespace eka2l1::epoc::etel {
     }
 
     bool module_manager::close_tsy(io_system *io, const kernel::uid borrowed, const std::string &module_name) {
-        const std::string module_lowercased = common::lowercase_string(get_full_tsy_path(io, module_name));
+        const std::string module_lowercased = common::lowercase_string(eka2l1::replace_extension(eka2l1::filename(module_name), ""));
 
         auto name_res = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
             return info.name_ == module_lowercased;
