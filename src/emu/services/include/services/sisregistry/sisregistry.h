@@ -190,7 +190,7 @@ namespace eka2l1 {
     };
 
     struct sisregistry_object : sisregistry_token {
-        std::string vendor_localized_name;
+        std::u16string vendor_localized_name;
         sisregistry_install_type install_type;
         std::vector<sisregistry_dependency> dependencies;
         std::vector<sisregistry_package> embedded_packages;

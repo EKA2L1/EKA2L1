@@ -103,6 +103,8 @@ namespace eka2l1 {
         for (uint32_t i = 0; i < count; i++) {
             sisregistry_controller_info info;
             info.do_state(seri);
+
+            controller_info.push_back(std::move(info));
         }
 
         std::uint32_t major = version.major;
@@ -141,21 +143,29 @@ namespace eka2l1 {
         for (size_t i = 0; i < count; i++) {
             sisregistry_dependency dependency;
             dependency.do_state(seri);
+
+            dependencies.push_back(std::move(dependency));
         }
         seri.absorb(count);
         for (size_t i = 0; i < count; i++) {
             sisregistry_package package;
             package.do_state(seri);
+
+            embedded_packages.push_back(std::move(package));
         }
         seri.absorb(count);
         for (size_t i = 0; i < count; i++) {
             sisregistry_property property;
             property.do_state(seri);
+
+            properties.push_back(std::move(property));
         }
         seri.absorb(count);
         for (size_t i = 0; i < count; i++) {
             sisregistry_file_description desc;
             desc.do_state(seri);
+
+            file_descriptions.push_back(std::move(desc));
         }
 
         trust_status.do_state(seri);
@@ -164,6 +174,8 @@ namespace eka2l1 {
         for (size_t i = 0; i < count; i++) {
             std::int32_t install_chain_index = 0;
             seri.absorb(install_chain_index);
+
+            install_chain_indices.push_back(install_chain_index);
         }
 
         seri.absorb(is_removable);
