@@ -579,7 +579,7 @@ namespace eka2l1 {
                 epoc::absorb_des_string(comp->filename_, seri, true);
             }
 
-            if (kern->is_eka1()) {
+            if (kern->is_eka1() && (kern->get_epoc_version() >= epocver::epoc81a)) {
                 std::uint32_t cap_send_32 = group->cap_send_;
                 std::uint32_t cap_body_32 = group->cap_body_;
                 std::uint32_t cap_avail_32 = group->cap_avail_;
