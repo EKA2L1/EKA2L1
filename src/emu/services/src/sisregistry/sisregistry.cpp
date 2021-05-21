@@ -21,6 +21,8 @@
 #include <system/epoc.h>
 #include <services/sisregistry/sisregistry.h>
 
+#include <package/registry.h>
+
 #include <utils/consts.h>
 #include <utils/err.h>
 
@@ -28,160 +30,6 @@
 #include <common/time.h>
 
 namespace eka2l1 {
-    void sisregistry_package::do_state(common::chunkyseri &seri) {
-        seri.absorb(uid);
-        epoc::absorb_des_string(package_name, seri, true);
-        epoc::absorb_des_string(vendor_name, seri, true);
-        seri.absorb(index);
-    }
-
-    void sisregistry_file_description::do_state(common::chunkyseri &seri) {
-        epoc::absorb_des_string(target, seri, true);
-        epoc::absorb_des_string(mime_type, seri, true);
-        seri.absorb(operation);
-        seri.absorb(operation_options);
-
-        hash.do_state(seri);
-
-        seri.absorb(uncompressed_length);
-        seri.absorb(index);
-        seri.absorb(sid);
-    }
-
-    void sisregistry_hash_container::do_state(common::chunkyseri &seri) {
-        algorithm = 1;
-        seri.absorb(algorithm);
-        epoc::absorb_des_string(data, seri, true);
-    }
-
-    void sisregistry_trust_status::do_state(common::chunkyseri &seri) {
-        seri.absorb(validation_status);
-        seri.absorb(revocation_status);
-        seri.absorb(result_date);
-        seri.absorb(last_check_date);
-        seri.absorb(quarantined);
-        seri.absorb(quarantined_date);
-    }
-
-    void sisregistry_dependency::do_state(common::chunkyseri &seri) {
-        seri.absorb(uid);
-        seri.absorb(from_version.u32);
-        seri.absorb(from_version.u32);
-        seri.absorb(from_version.u32);
-
-        seri.absorb(to_version.u32);
-        seri.absorb(to_version.u32);
-        seri.absorb(to_version.u32);
-    }
-
-    void sisregistry_property::do_state(common::chunkyseri &seri) {
-        seri.absorb(key);
-        seri.absorb(value);
-    }
-
-    void sisregistry_controller_info::do_state(common::chunkyseri &seri) {
-        seri.absorb(version.u32);
-        seri.absorb(version.u32);
-        seri.absorb(version.u32);
-        seri.absorb(offset);
-        hash.do_state(seri);
-    }
-
-    void sisregistry_token::do_state(common::chunkyseri &seri) {
-        sisregistry_package::do_state(seri);
-        std::uint32_t count = 0;
-
-        seri.absorb(drives);
-        seri.absorb(completely_present);
-
-        seri.absorb(count);
-        for (uint32_t i = 0; i < count; i++) {
-            epoc::uid uid;
-            seri.absorb(uid);
-        }
-        seri.absorb(count);
-        for (uint32_t i = 0; i < count; i++) {
-            sisregistry_controller_info info;
-            info.do_state(seri);
-
-            controller_info.push_back(std::move(info));
-        }
-
-        std::uint32_t major = version.major;
-        std::uint32_t minor = version.minor;
-        std::uint32_t build = version.build;
-
-        seri.absorb(major);
-        seri.absorb(minor);
-        seri.absorb(build);
-        seri.absorb(language);
-        seri.absorb(selected_drive);
-        seri.absorb(unused1);
-        seri.absorb(unused2);
-    }
-
-    void sisregistry_object::do_state(common::chunkyseri &seri) {
-        sisregistry_token::do_state(seri);
-        std::uint32_t count = 0;
-        
-        file_major_version = 5;
-        file_minor_version = 3;
-        seri.absorb(file_major_version);
-        seri.absorb(file_minor_version);
-
-        epoc::absorb_des_string(vendor_localized_name, seri, true);
-        seri.absorb(install_type);
-
-        seri.absorb(in_rom);
-        seri.absorb(deletable_preinstalled);
-        seri.absorb(signed_);
-        seri.absorb(trust);
-        seri.absorb(remove_with_last_dependent);
-        seri.absorb(trust_timestamp);
-
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            sisregistry_dependency dependency;
-            dependency.do_state(seri);
-
-            dependencies.push_back(std::move(dependency));
-        }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            sisregistry_package package;
-            package.do_state(seri);
-
-            embedded_packages.push_back(std::move(package));
-        }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            sisregistry_property property;
-            property.do_state(seri);
-
-            properties.push_back(std::move(property));
-        }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            sisregistry_file_description desc;
-            desc.do_state(seri);
-
-            file_descriptions.push_back(std::move(desc));
-        }
-
-        trust_status.do_state(seri);
-        
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            std::int32_t install_chain_index = 0;
-            seri.absorb(install_chain_index);
-
-            install_chain_indices.push_back(install_chain_index);
-        }
-
-        seri.absorb(is_removable);
-        seri.absorb(signed_by_sucert);
-    }
-
     sisregistry_server::sisregistry_server(eka2l1::system *sys)
         : service::typical_server(sys, "!SisRegistryServer") {
     }
@@ -379,9 +227,9 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_session::get_trust_status(eka2l1::service::ipc_context *ctx) {
-        sisregistry_trust_status status;
-        status.revocation_status = sisregistry_revocation_status::sisregistry_revocation_ocsp_good;
-        status.validation_status = sisregistry_validation_status::sisregistry_validation_validated;
+        package::trust_status status;
+        status.revocation_status = package::revocation_ocsp_good;
+        status.validation_status = package::validation_validated;
 
         ctx->write_data_to_descriptor_argument(0, status);
         ctx->complete(epoc::error_none);
@@ -390,7 +238,7 @@ namespace eka2l1 {
     void sisregistry_client_session::request_sid_to_filename(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
 
-        sisregistry_file_description desc;
+        package::file_description desc;
         desc.target = u"E:\\sys\\bin\\Sims2Pets_NGage.exe";
 
         std::vector<std::uint8_t> buf;
@@ -438,7 +286,7 @@ namespace eka2l1 {
     void sisregistry_client_session::get_entry(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
 
-        sisregistry_object object;
+        package::object object;
 
         std::vector<std::uint8_t> buf;
         common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
@@ -501,7 +349,7 @@ namespace eka2l1 {
         std::uint32_t file_count = 0;
         seri.absorb(file_count);
         for (size_t i = 0; i < file_count; i++) {
-            sisregistry_file_description desc;
+            package::file_description desc;
             desc.do_state(seri);
         }
     }
@@ -510,7 +358,7 @@ namespace eka2l1 {
         std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
         std::uint32_t size = ctx->get_argument_data_size(0);
         common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
-        sisregistry_package package;
+        package::package package;
         package.do_state(seri);
 
         server<sisregistry_server>()->added = true;
@@ -535,7 +383,7 @@ namespace eka2l1 {
         std::uint32_t property_count = 1;
         seri.absorb(property_count);
         for (size_t i = 0; i < property_count; i++) {
-            sisregistry_package package;
+            package::package package;
             package.index = 0;
             package.do_state(seri);
         }
@@ -549,7 +397,7 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_session::get_package(eka2l1::service::ipc_context *ctx) {
-        sisregistry_package package;
+        package::package package;
         package.uid = 0x2000AFDE;
         package.index = 0x01000000;
         package.package_name = u"The Sims 2 Pets";
@@ -604,7 +452,7 @@ namespace eka2l1 {
         }
 
         if (package_sid.value() == 0x2000AFDE) {
-            sisregistry_package package;
+            package::package package;
             package.uid = 0x2000AFDE;
             package.index = 0x01000000;
             package.package_name = u"The Sims 2 Pets";

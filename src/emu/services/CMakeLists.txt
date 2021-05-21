@@ -266,6 +266,7 @@ target_link_libraries(epocservs PRIVATE
         config
         epoc
         epockern
+        epocpkg
         drivers
         stb
         xxHash)
