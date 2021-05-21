@@ -23,7 +23,9 @@
 #include <utils/version.h>
 #include <utils/consts.h>
 
+#include <cstdint>
 #include <vector>
+#include <string>
 
 namespace eka2l1::common {
     class chunkyseri;
