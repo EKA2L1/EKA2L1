@@ -2160,6 +2160,10 @@ namespace eka2l1::epoc {
         thr->set_flags(org_flags ^ new_flags);
     }
 
+    BRIDGE_FUNC(void, thread_set_flags_eka1, std::uint32_t clear_mask, std::uint32_t set_mask, kernel::handle h) {
+        thread_set_flags(kern, h, clear_mask, set_mask);
+    }
+
     BRIDGE_FUNC(std::int32_t, thread_open_by_id, const std::uint32_t id, const epoc::owner_type owner) {
         kernel::thread *thr = kern->get_by_id<kernel::thread>(id);
 
@@ -5496,6 +5500,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00031, session_send_eka1),
         BRIDGE_REGISTER(0xC00034, thread_resume),
         BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
+        BRIDGE_REGISTER(0xC0003B, thread_set_flags_eka1),
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
