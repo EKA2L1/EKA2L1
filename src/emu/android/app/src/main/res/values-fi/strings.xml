@@ -46,9 +46,9 @@
     <string name="pref_theme_dark">Tumma</string>
     <string name="pref_enable_virtual_keyboard">Ota virtuaalinen näppäimistö käyttöön</string>
     <string name="pref_enable_actionbar">Ota käyttöön toimintopalkki</string>
-    <string name="pref_enable_statusbar">Ota tilapalkki käyttöön</string>
+    <string name="pref_enable_statusbar">Ota käyttöön tilapalkki</string>
     <string name="pref_wakelock">Pidä näyttö päällä</string>
-    <string name="pref_enable_vibration">Enable vibration</string>
+    <string name="pref_enable_vibration">Ota värinä käyttöön</string>
     <string name="pref_general_utilities_nearest_neighbor_filtering_msg">Ota käyttöön lähimmän naapurin suodatus</string>
     <string name="pref_system_language_option_name">Kieli</string>
     <string name="pref_system_real_time_accuracy_str">Reaaliaikainen tarkkuus</string>
@@ -64,7 +64,7 @@
     <string name="reset_mapping">Tyhjennä</string>
     <string name="layout_edit_finished">Muokkaustila päättynyt</string>
     <string name="layout_edit_finish">Lopeta muokkaustila</string>
-    <string name="layout_edit_mode">Näppäinasettelu muokkaustila</string>
+    <string name="layout_edit_mode">Näppäinasettelun muokkaustila</string>
     <string name="layout_scale_mode">Näppäinasettelun koon muuttamisen tila</string>
     <string name="layout_switch">Vaihda näppäinasettelua</string>
     <string name="hide_buttons">Piilota painikkeet</string>
