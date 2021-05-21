@@ -23,9 +23,16 @@
 #include <kernel/server.h>
 
 namespace eka2l1 {
+    namespace service {
+        class property;
+    }
+
     std::string get_comm_server_name_by_epocver(const epocver ver);
 
     class comm_server : public service::typical_server {
+    protected:
+        service::property *c32start_prop_;
+
     public:
         explicit comm_server(eka2l1::system *sys);
 
