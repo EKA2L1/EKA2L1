@@ -187,6 +187,7 @@ namespace eka2l1::epoc {
             execute_v81a_rendezvous_request_complete_thread = 0x37,
             execute_v81a_get_heap_thread = 0x38,
             execute_v81a_msg2_kill_sender = 0x3A,
+            execute_v81a_msg2_client = 0x3B,
             execute_v81a_set_tls = 0x3C,
             execute_v81a_free_tls = 0x3D,
             execute_v81a_dll_global_allocate = 0x3F,
@@ -201,6 +202,7 @@ namespace eka2l1::epoc {
             execute_v81a_property_define = 0x65,
             execute_v81a_property_delete = 0x66,
             execute_v81a_property_attach = 0x67,
+            execute_v81a_msgqueue_create = 0x6C,
             execute_v81a_msgqueue_send = 0x6E,
             execute_v81a_msgqueue_receive = 0x6F,
             execute_v81a_msgqueue_cancel_data_available = 0x71

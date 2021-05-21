@@ -84,21 +84,20 @@ namespace eka2l1::kernel {
         return false;
     }
 
-    bool msg_queue::notify_full(epoc::notify_info &info) {
-        if (msgs_.size() == max_length_) {
-            // Complete the request right away
-            info.complete(0);
+    bool msg_queue::notify_free(epoc::notify_info &info) {
+        if (msgs_.size() != max_length_) {
+            info.complete(epoc::error_none);
             return true;
         }
 
         // Find yet if this notification is already registered for the request thread
-        auto find_res = std::find_if(full_notifies_.begin(), full_notifies_.end(),
+        auto find_res = std::find_if(free_notifies_.begin(), free_notifies_.end(),
             [=](const epoc::notify_info &target_info) {
                 return target_info.requester == info.requester;
             });
 
-        if (find_res == full_notifies_.end()) {
-            full_notifies_.push_back(info);
+        if (find_res == free_notifies_.end()) {
+            free_notifies_.push_back(info);
             return true;
         }
 
@@ -112,6 +111,15 @@ namespace eka2l1::kernel {
 
         if (msgs_.empty()) {
             return false;
+        }
+        
+        if (msgs_.size() == max_length_) {
+            // Notify all available data
+            for (auto &notify : free_notifies_) {
+                notify.complete(0);
+            }
+
+            free_notifies_.clear();
         }
 
         msg_data &data = msgs_.front();
@@ -152,16 +160,6 @@ namespace eka2l1::kernel {
 
         // Push it
         msgs_.push(new_data);
-
-        // Check if full, then notify
-        if (msgs_.size() == max_length_) {
-            // Notify all available data
-            for (auto &notify : full_notifies_) {
-                notify.complete(0);
-            }
-
-            full_notifies_.clear();
-        }
 
         return true;
     }

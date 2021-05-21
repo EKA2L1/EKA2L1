@@ -41,7 +41,7 @@ namespace eka2l1::kernel {
         std::queue<msg_data> msgs_;
 
         std::vector<epoc::notify_info> avail_notifies_;
-        std::vector<epoc::notify_info> full_notifies_;
+        std::vector<epoc::notify_info> free_notifies_;
 
         msg_queue_callback_entry avail_callback_;
 
@@ -54,7 +54,7 @@ namespace eka2l1::kernel {
         }
 
         bool notify_available(epoc::notify_info &info);
-        bool notify_full(epoc::notify_info &info);
+        bool notify_free(epoc::notify_info &info);
 
         void cancel_data_available(kernel::thread *requester);
 
