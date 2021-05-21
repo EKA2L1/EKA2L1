@@ -163,7 +163,7 @@ namespace eka2l1::package {
             file_descriptions.push_back(std::move(desc));
         }
 
-        trust_status.do_state(seri);
+        trust_status_value.do_state(seri);
         
         seri.absorb(count);
         for (size_t i = 0; i < count; i++) {

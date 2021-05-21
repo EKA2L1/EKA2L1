@@ -30,7 +30,7 @@ namespace eka2l1::common {
 }
 
 namespace eka2l1::package {
-    enum validation_status {
+    enum validation_status_value {
         validation_unknown = 0,
         validation_expired = 10,
         validation_invalid = 20,
@@ -40,7 +40,7 @@ namespace eka2l1::package {
         validation_package_in_rom = 60 
     };
 
-    enum revocation_status {
+    enum revocation_status_value {
         revocation_unknown2 = 0,
         revocation_ocsp_not_performed = 10,
         revocation_ocsp_revoked = 20,
@@ -49,7 +49,7 @@ namespace eka2l1::package {
         revocation_ocsp_good = 50, 
     };
 
-    enum install_type { 
+    enum install_type_value {
         install_type_use_file_handle,
         install_type_use_file_name,
         install_type_use_caf,
@@ -76,8 +76,8 @@ namespace eka2l1::package {
     };
 
     struct trust_status {
-        validation_status validation_status;
-        revocation_status revocation_status;
+        validation_status_value validation_status;
+        revocation_status_value revocation_status;
         std::uint64_t result_date;
         std::uint64_t last_check_date;
         std::uint32_t quarantined;
@@ -148,7 +148,7 @@ namespace eka2l1::package {
 
     struct object : token {
         std::u16string vendor_localized_name;
-        install_type install_type;
+        install_type_value install_type;
         std::vector<dependency> dependencies;
         std::vector<package> embedded_packages;
         std::vector<property> properties;
@@ -163,7 +163,7 @@ namespace eka2l1::package {
         package_trust trust;
         std::int32_t remove_with_last_dependent;
         std::uint64_t trust_timestamp;
-        trust_status trust_status;
+        trust_status trust_status_value;
         std::vector<std::int32_t> install_chain_indices;
         std::vector<std::int32_t> supported_language_ids;
         std::vector<std::u16string> localized_package_names;
