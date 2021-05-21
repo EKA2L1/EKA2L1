@@ -79,6 +79,7 @@ namespace eka2l1::epoc::msv {
 
             starter = starter->next_;
 
+            comp.next_ = nullptr;
             comp.group_idx_ = static_cast<std::uint32_t>(groups_.size());
 
             loader::absorb_resource_string(info_reader, comp.name_);
