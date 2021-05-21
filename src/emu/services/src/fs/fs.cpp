@@ -118,15 +118,46 @@ namespace eka2l1 {
         }
 
         if (version < epocver::eka2) {
-            // Base subclose, see RFsBase from devpedia
-            if (ctx->msg->function > epoc::fs_msg_base_close) {
-                // Skip to open. EKA2 separate RFsBase into separate categories
-                ctx->msg->function += epoc::fs_msg_raw_subclose - epoc::fs_msg_base_close;
-            }
+            if ((ctx->msg->function >= epoc::fs_msg_transition_begin) && (version >= epocver::epoc81a)) {
+                const epoc::fs_message quick_lookup[] = {
+                    epoc::fs_msg_swap_filesystem,
+                    epoc::fs_msg_add_ext,
+                    epoc::fs_msg_mount_ext,
+                    epoc::fs_msg_dismount_ext,
+                    epoc::fs_msg_remove_ext,
+                    epoc::fs_msg_ext_name,
+                    epoc::fs_msg_startup_init_complete,
+                    epoc::fs_msg_raw_disk_write,
+                    epoc::fs_msg_max_client_operations,         // virus scanner opcode
+                    epoc::fs_msg_session_to_private,
+                    epoc::fs_msg_private_path,
+                    epoc::fs_msg_create_private_path,
+                    epoc::fs_msg_reserve_drive_space,
+                    epoc::fs_msg_get_reserve_access,
+                    epoc::fs_msg_release_reserve_access,
+                    epoc::fs_msg_erase_password,
 
-            if (ctx->msg->function > epoc::fs_msg_debug_function) {
-                // No debug function opcode
-                ctx->msg->function -= 1;
+                    // Add some more for reservations of OOB
+                    epoc::fs_msg_max_client_operations,
+                    epoc::fs_msg_max_client_operations,
+                    epoc::fs_msg_max_client_operations,
+                    epoc::fs_msg_max_client_operations,
+                    epoc::fs_msg_max_client_operations,
+                    epoc::fs_msg_max_client_operations
+                };
+
+                ctx->msg->function = quick_lookup[ctx->msg->function - epoc::fs_msg_transition_begin];
+            } else {
+                // Base subclose, see RFsBase from devpedia
+                if (ctx->msg->function > epoc::fs_msg_base_close) {
+                    // Skip to open. EKA2 separate RFsBase into separate categories
+                    ctx->msg->function += epoc::fs_msg_raw_subclose - epoc::fs_msg_base_close;
+                }
+
+                if (ctx->msg->function > epoc::fs_msg_debug_function) {
+                    // No debug function opcode
+                    ctx->msg->function -= 1;
+                }
             }
         }
 

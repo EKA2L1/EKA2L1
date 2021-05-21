@@ -167,4 +167,24 @@ namespace eka2l1::epoc {
         fs_msg_load_code_page = 142,
         fs_msg_max_client_operations
     };
+
+    enum fs_message_transition {
+        fs_msg_transition_swap_filesystem = 83,
+        fs_msg_transition_add_ext = 84,
+        fs_msg_transition_mount_ext = 85,
+        fs_msg_transition_dismount_ext = 86,
+        fs_msg_transition_remove_ext = 87,
+        fs_msg_transition_ext_name = 88,
+        fs_msg_transition_startup_init_complete = 89,
+        fs_msg_transition_raw_disk_write = 90,
+        fs_msg_transition_virus_scanner_name = 91,
+        fs_msg_transition_set_session_to_private = 92,
+        fs_msg_transition_private_path = 93,
+        fs_msg_transition_create_private_path = 94,
+        fs_msg_transition_reserve_drive_space = 95,
+        fs_msg_transition_get_reserve_access = 96,
+        fs_msg_transition_release_reserve_access = 97,
+        fs_msg_transition_erase_password = 98,
+        fs_msg_transition_begin = fs_msg_transition_swap_filesystem
+    };
 }
