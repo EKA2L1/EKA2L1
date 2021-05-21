@@ -260,6 +260,10 @@ namespace eka2l1 {
             }
         } else if (legacy_level_ == ETEL_LEGACY_LEVEL_TRANSITION) {
             switch (ctx->msg->function) {
+            case epoc::etel_old_phone_init:
+                init(ctx);
+                break;
+
             case epoc::etel_old_phone_get_status:
                 get_status(ctx);
                 break;

@@ -60,6 +60,7 @@ namespace eka2l1::epoc {
         etel_old_get_tsy_name = 13,
         etel_old_phone_get_info = 19,
         etel_old_set_extend_error_granularity = 14,
+        etel_old_phone_init = 15,
         etel_old_phone_get_caps = 22,
         etel_old_phone_get_status = 23,
         etel_old_phone_enumerate_lines = 24,
