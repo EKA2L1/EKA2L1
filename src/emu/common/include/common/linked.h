@@ -110,7 +110,7 @@ namespace eka2l1::common {
         }
 
         bool empty() const {
-            return elem_.next == &elem_;
+            return (elem_.next == &elem_) || (elem_.next == nullptr);
         }
     };
 
