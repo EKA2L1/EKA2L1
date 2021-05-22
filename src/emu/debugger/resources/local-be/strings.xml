@@ -45,7 +45,7 @@
     <string name="app_launcher_switch_to_style_title">Пераключыць на</string>
     <string name="app_launcher_style_classical_str">Класічны</string>
     <string name="app_launcher_style_modern_str">Сучасны</string>
-    <string name="app_launcher_change_device">Change device</string>
+    <string name="app_launcher_change_device">Змяніць прыладу</string>
     <string name="error_dialog_title">З\'яўляецца дзікая памылка</string>
     <string name="error_dialog_message">Калі ласка, прымацуйце лог і паведаміце распрацоўшчыка пра гэта!</string>
     <string name="emulated_screen_title">Экран {}</string>
@@ -119,8 +119,8 @@
     <string name="installer_language_choose_title">Выберыце мову для гэтага пакета</string>
     <string name="install_device_wizard_title">Майстар усталёўкі прылады</string>
     <string name="install_device_wizard_welcome_msg">Сардэчна запрашаем да майстра ўсталёўкі прылады! Каб пачаць працу, націсніце кнопку \"Працягнуць\".</string>
-    <string name="install_device_wizard_device_dump_type_name">Device dump</string>
-    <string name="install_device_wizard_firmware_type_name">Firmware</string>
+    <string name="install_device_wizard_device_dump_type_name">Ёмішча памяці прылады</string>
+    <string name="install_device_wizard_firmware_type_name">Прашыўка</string>
     <string name="install_device_choose_method_msg">Выберыце спосаб усталёўкі</string>
     <string name="install_device_rpkg_choose_msg">Калі ласка, укажыце файл перапакоўкі (RPKG):</string>
     <string name="install_device_firmware_vpl_choose_msg">Please specify the firmware description file (VPL):</string>
