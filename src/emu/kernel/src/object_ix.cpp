@@ -194,6 +194,10 @@ namespace eka2l1::kernel {
             if (index.free == false) {
                 index.object->decrease_access_count();
                 index.free = true;
+
+                if (index.object->get_access_count() <= 0 && index.object->get_object_type() != object_type::process && index.object->get_object_type() != object_type::thread) {
+                    kern->destroy(index.object);
+                }
             }
         }
     }
