@@ -159,6 +159,8 @@ namespace eka2l1::android {
         std::string root_z_path = add_path(conf->storage, "drives/z/");
         std::string rom_resident_path = add_path(conf->storage, "roms/");
 
+        eka2l1::create_directories(rom_resident_path);
+
         bool need_add_rpkg = false;
 
         if (install_rpkg) {
