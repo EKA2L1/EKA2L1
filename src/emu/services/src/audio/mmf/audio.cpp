@@ -39,8 +39,9 @@ namespace eka2l1 {
             init(sys->get_kernel_system());
         }
 
-        create_session<mmf_audio_server_session>(&context);
+        // We ruined it later, lol
         context.complete(epoc::error_none);
+        create_session<mmf_audio_server_session>(&context);
     }
 
     void mmf_audio_server::init(kernel_system *kern) {

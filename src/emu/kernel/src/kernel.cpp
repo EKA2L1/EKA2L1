@@ -623,30 +623,29 @@ namespace eka2l1 {
 
     ipc_msg_ptr kernel_system::create_msg(kernel::owner_type owner) {
         auto slot_free = std::find_if(msgs_.begin(), msgs_.end(),
-            [](auto slot) { return !slot || slot->free; });
+            [](auto &slot) { return !slot || slot->is_free(); });
 
         if (slot_free != msgs_.end()) {
             if (!*slot_free) {
-                ipc_msg_ptr msg = std::make_shared<ipc_msg>(crr_thread());
+                std::unique_ptr<ipc_msg> msg = std::make_unique<ipc_msg>(crr_thread());
                 *slot_free = std::move(msg);
             }
 
             slot_free->get()->own_thr = crr_thread();
-            slot_free->get()->free = false;
-            slot_free->get()->id = static_cast<std::uint32_t>(slot_free - msgs_.begin());
+            slot_free->get()->id = static_cast<std::uint32_t>(slot_free - msgs_.begin()) + 1;
 
-            return *slot_free;
+            return slot_free->get();
         }
 
         return nullptr;
     }
 
     ipc_msg_ptr kernel_system::get_msg(int handle) {
-        if (msgs_.size() <= handle) {
+        if ((msgs_.size() < handle) || (handle <= 0)) {
             return nullptr;
         }
 
-        return msgs_[handle];
+        return msgs_[handle - 1].get();
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
@@ -852,16 +851,13 @@ namespace eka2l1 {
     }
 
     void kernel_system::free_msg(ipc_msg_ptr msg) {
-        if (msg->locked()) {
-            return;
-        }
-
-        msg->free = true;
+        msg->type = ipc_message_type_wild;
+        msg->ref_count = 0;
     }
 
     /*! \brief Completely destroy a message. */
     void kernel_system::destroy_msg(ipc_msg_ptr msg) {
-        (msgs_.begin() + msg->id)->reset();
+        (msgs_.begin() + msg->id - 1)->reset();
     }
 
     property_ptr kernel_system::get_prop(int category, int key) {

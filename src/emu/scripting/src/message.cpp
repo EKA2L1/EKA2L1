@@ -71,7 +71,7 @@ namespace eka2l1::scripting {
             return nullptr;
         }
 
-        return std::make_unique<ipc_message_wrapper>(reinterpret_cast<std::uint64_t>(msg.get()));
+        return std::make_unique<ipc_message_wrapper>(reinterpret_cast<std::uint64_t>(msg));
     }
 }
 
@@ -87,7 +87,7 @@ extern "C" {
             return nullptr;
         }
 
-        return new eka2l1::scripting::ipc_message_wrapper(reinterpret_cast<std::uint64_t>(msg.get()));
+        return new eka2l1::scripting::ipc_message_wrapper(reinterpret_cast<std::uint64_t>(msg));
     }
 
     EKA2L1_EXPORT int symemu_ipc_message_function(eka2l1::scripting::ipc_message_wrapper *msg) {

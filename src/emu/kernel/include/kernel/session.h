@@ -61,6 +61,8 @@ namespace eka2l1 {
             std::vector<std::pair<bool, ipc_msg_ptr>> msgs_pool;
             ipc_msg_ptr disconnect_msg_;
 
+            common::roundabout in_progress_msgs_; 
+
             kernel::address cookie_address;
             kernel::handle associated_handle;
 
@@ -68,7 +70,7 @@ namespace eka2l1 {
             share_mode shmode_;
 
         protected:
-            int send(ipc_msg_ptr &msg);
+            int send(ipc_msg_ptr msg);
             ipc_msg_ptr get_free_msg();
 
             bool eligible_to_send(kernel::thread *thr);
@@ -83,6 +85,7 @@ namespace eka2l1 {
             }
 
             void destroy() override;
+            void detatch(const int code);
 
             int send_receive_sync(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts);
             int send_receive(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts);
@@ -109,7 +112,7 @@ namespace eka2l1 {
                 return svr == nullptr;
             }
 
-            void set_slot_free(ipc_msg_ptr &msg);
+            void set_slot_free(ipc_msg *msg);
         };
     }
 }

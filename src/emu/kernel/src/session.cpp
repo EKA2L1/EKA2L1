@@ -42,10 +42,13 @@ namespace eka2l1 {
 
                 for (auto &msg : msgs_pool) {
                     msg = std::make_pair(true, kern->create_msg(kernel::owner_type::process));
+                    msg.second->type = ipc_message_type_session;
                 }
             }
 
             disconnect_msg_ = kern->create_msg(kernel::owner_type::process);
+
+            disconnect_msg_->type = ipc_message_type_disconnect;
             disconnect_msg_->function = standard_ipc_message_disconnect;
             disconnect_msg_->own_thr = kern->crr_thread();
             disconnect_msg_->request_sts = 0;
@@ -53,9 +56,6 @@ namespace eka2l1 {
 
         // Disconnect
         session::~session() {
-            if (svr) {
-                svr->detach(this);
-            }
         }
 
         void session::set_share_mode(const share_mode shmode) {
@@ -95,12 +95,7 @@ namespace eka2l1 {
             return ipc_msg_ptr(nullptr);
         }
 
-        void session::set_slot_free(ipc_msg_ptr &msg) {
-            if (msgs_pool.empty()) {
-                kern->free_msg(msg);
-                return;
-            }
-
+        void session::set_slot_free(ipc_msg *msg) {
             auto wrap_msg = std::find_if(msgs_pool.begin(), msgs_pool.end(),
                 [&](const auto &wrap_msg) { return wrap_msg.second == msg; });
 
@@ -129,10 +124,6 @@ namespace eka2l1 {
 
         // This behaves a little different then other
         int session::send_receive_sync(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts) {
-            if (!eligible_to_send(kern->crr_thread())) {
-                return epoc::error_permission_denied;
-            }
-
             ipc_msg_ptr &msg = kern->crr_thread()->get_sync_msg();
 
             if (!msg) {
@@ -150,10 +141,6 @@ namespace eka2l1 {
         }
 
         int session::send_receive(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts) {
-            if (!eligible_to_send(kern->crr_thread())) {
-                return epoc::error_permission_denied;
-            }
-
             ipc_msg_ptr msg = get_free_msg();
 
             if (!msg) {
@@ -170,19 +157,20 @@ namespace eka2l1 {
             return 0;
         }
 
-        int session::send(ipc_msg_ptr &msg) {
+        int session::send(ipc_msg_ptr msg) {
+            msg->ref();
+
             if (!eligible_to_send(kern->crr_thread())) {
+                msg->unref();
                 return epoc::error_permission_denied;
             }
 
-            server_msg smsg;
+            msg->msg_session = (headless_) ? nullptr : this;
+            msg->session_ptr_lle = cookie_address;
 
-            smsg.real_msg = msg;
-            smsg.real_msg->msg_status = ipc_message_status::delivered;
-            smsg.real_msg->msg_session = (headless_) ? nullptr : this;
-            smsg.real_msg->session_ptr_lle = cookie_address;
+            in_progress_msgs_.push(&msg->session_msg_link);
 
-            return svr->deliver(smsg);
+            return svr->deliver(msg);
         }
 
         void session::send_destruct() {
@@ -190,22 +178,57 @@ namespace eka2l1 {
             send(disconnect_msg_);
         }
 
-        void session::destroy() {
-            // Free the message pool
-            for (const auto &msg : msgs_pool) {
-                kern->free_msg(msg.second);
-            }
-
-            if (!kern->crr_thread()) {
+        void session::detatch(const int error_code) {
+            if (!svr) {
                 return;
             }
 
-            // Try to send a disconnect message. Headless session and use sync message.
-            if (svr) {
-                send_destruct();
+            // Complete all messages in progress
+            while (!in_progress_msgs_.empty()) {
+                ipc_msg *msg = E_LOFF(in_progress_msgs_.first()->deque(), ipc_msg, session_msg_link);
 
-                if (svr->is_hle()) {
-                    svr->process_accepted_msg();
+                if (msg) {
+                    if ((msg->msg_status == ipc_message_status::accepted) || (msg->msg_status == ipc_message_status::delivered)) {
+                        if (msg->own_thr && (msg->own_thr->current_state() != kernel::thread_state::stop)) {
+                            epoc::request_status *final_sts = msg->request_sts.get(msg->own_thr->owning_process());
+                            if (final_sts) {
+                                msg->msg_status = ipc_message_status::completed;
+
+                                final_sts->set(error_code, kern->is_eka1());
+                                msg->own_thr->signal_request();
+                            }
+                        }
+
+                        msg->unref();
+                    }
+                }
+            }
+        }
+
+        void session::destroy() {
+            detatch(epoc::error_session_closed);
+
+            if (kern->crr_thread()) {
+                // Try to send a disconnect message. Headless session and use sync message.
+                if (svr) {
+                    send_destruct();
+
+                    if (svr->is_hle()) {
+                        svr->process_accepted_msg();
+                    }
+                }
+            }
+
+            // Free the message pool anyway
+            for (const auto &msg : msgs_pool) {
+                kern->free_msg(msg.second);
+            }
+            
+            if (svr) {
+                svr->detach(this);
+
+                if (!svr->is_hle()) {
+                    svr = nullptr;
                 }
             }
         }

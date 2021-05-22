@@ -72,9 +72,10 @@ namespace eka2l1::service {
     }
 
     void typical_server::process_accepted_msg() {
-        int res = receive(process_msg);
+        ipc_msg_ptr process_msg = nullptr;
+        receive(process_msg);
 
-        if (res == -1) {
+        if (!process_msg) {
             return;
         }
 

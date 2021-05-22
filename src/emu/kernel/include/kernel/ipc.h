@@ -21,8 +21,11 @@
 #pragma once
 
 #include <kernel/common.h>
+#include <common/linked.h>
 
 #include <mem/ptr.h>
+
+#include <atomic>
 #include <memory>
 
 namespace eka2l1 {
@@ -89,6 +92,13 @@ namespace eka2l1 {
         completed
     };
 
+    enum ipc_message_type {
+        ipc_message_type_disconnect,
+        ipc_message_type_sync,
+        ipc_message_type_session,
+        ipc_message_type_wild
+    };
+
     /* An IPC msg (ver 2) contains the IPC context. */
     /* Function: The IPC function ordinal */
     /* Arg: IPC args. Max args = 4 */
@@ -105,29 +115,23 @@ namespace eka2l1 {
         // Status of the message, if it's accepted or delivered
         ipc_message_status msg_status;
         std::uint32_t id;
-        std::uint32_t attrib = 0;
         kernel::handle thread_handle_low = 0;
 
-        enum {
-            MSG_ATTRIB_LOCK_FREE = 0x1
-        };
-
-        bool free : true;
-
-        void lock_free() {
-            attrib |= MSG_ATTRIB_LOCK_FREE;
-        }
-
-        void unlock_free() {
-            attrib &= ~MSG_ATTRIB_LOCK_FREE;
-        }
-
-        bool locked() {
-            return attrib & MSG_ATTRIB_LOCK_FREE;
-        }
+        std::atomic<std::uint16_t> ref_count;
+        ipc_message_type type;
+        
+        common::double_linked_queue_element session_msg_link;
+        common::double_linked_queue_element delivered_msg_link;
 
         explicit ipc_msg(kernel::thread *own);
+
+        void ref();
+        void unref();
+
+        bool is_free() {
+            return (type == ipc_message_type_wild) && (ref_count <= 0);
+        }
     };
 
-    using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
+    using ipc_msg_ptr = ipc_msg*;
 }

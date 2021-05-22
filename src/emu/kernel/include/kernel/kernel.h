@@ -262,7 +262,7 @@ namespace eka2l1 {
         friend class gdbstub;
         friend class kernel::process;
 
-        std::array<ipc_msg_ptr, 0x1000> msgs_;
+        std::array<std::unique_ptr<ipc_msg>, 0x1000> msgs_;
         std::mutex kern_lock_;
 
         std::vector<kernel_obj_unq_ptr> threads_;

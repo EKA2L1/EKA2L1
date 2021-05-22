@@ -37,9 +37,7 @@ namespace eka2l1 {
         }
 
         ipc_context::~ipc_context() {
-            if (auto_free) {
-                msg->msg_session->set_slot_free(msg);
-            }
+            msg->unref();
         }
 
         template <typename T>
@@ -344,9 +342,10 @@ namespace eka2l1 {
         // Processed asynchronously, use for HLE service where accepted function
         // is fetched imm
         void server::process_accepted_msg() {
-            int res = receive(process_msg);
+            ipc_msg_ptr process_msg = nullptr;
+            receive(process_msg);
 
-            if (res == -1) {
+            if (!process_msg) {
                 return;
             }
 

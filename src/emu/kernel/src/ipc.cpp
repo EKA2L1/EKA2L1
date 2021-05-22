@@ -19,6 +19,7 @@
  */
 
 #include <kernel/ipc.h>
+#include <kernel/session.h>
 
 namespace eka2l1 {
     ipc_arg::ipc_arg(int arg0, const int aflag) {
@@ -61,7 +62,37 @@ namespace eka2l1 {
         , request_sts(0)
         , msg_status(ipc_message_status::none)
         , id(0)
-        , attrib(0)
-        , thread_handle_low(0) {
+        , thread_handle_low(0)
+        , ref_count(0)
+        , type(ipc_message_type_wild) {
+    }
+
+    void ipc_msg::ref() {
+        ref_count++;
+    }
+
+    void ipc_msg::unref() {
+        if (--ref_count == 0) {
+            if (msg_session) {
+                session_msg_link.deque();
+            }
+
+            switch (type) {
+            case ipc_message_type_disconnect:
+                type = ipc_message_type_wild;
+                break;
+
+            case ipc_message_type_session:
+                if (msg_session) {
+                    msg_session->set_slot_free(this);
+                } else {
+                    type = ipc_message_type_wild;
+                }
+
+                break;
+            }
+
+            msg_session = nullptr;
+        }
     }
 }

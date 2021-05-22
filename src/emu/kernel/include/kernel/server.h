@@ -47,7 +47,7 @@ namespace eka2l1 {
         struct ipc_context;
 
         using ipc_func_wrapper = std::function<void(ipc_context &)>;
-        using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
+        using ipc_msg_ptr = ipc_msg*;
 
         /*! \brief A class represents an IPC function */
         struct ipc_func {
@@ -57,19 +57,6 @@ namespace eka2l1 {
             ipc_func(std::string iname, ipc_func_wrapper wr)
                 : name(std::move(iname))
                 , wrapper(wr) {}
-        };
-
-        /*! \brief A class represents server message. 
-         *
-		 *  A server message is ready when it has the destination to send
-        */
-        struct server_msg {
-            ipc_msg_ptr real_msg;
-            ipc_msg_ptr dest_msg;
-
-            bool is_ready() const {
-                return false;
-            }
         };
 
         struct message1 {
@@ -102,16 +89,13 @@ namespace eka2l1 {
         private:
             /** All the sessions connected to this server */
             std::vector<session *> sessions;
-
-            /** Messages that has been delivered but not accepted yet */
-            std::vector<server_msg> delivered_msgs;
+            common::roundabout delivered_msgs;
 
             /** The thread own this server */
             //thread_ptr owning_thread;
 
             /** Placeholder message uses for processing */
         protected:
-            ipc_msg_ptr process_msg;
             std::unordered_map<int, ipc_func> ipc_funcs;
 
         private:
@@ -120,15 +104,11 @@ namespace eka2l1 {
 
             kernel::thread *owner_thread;
             kernel::thread *request_own_thread;
-            ipc_msg_ptr request_msg;
-
-            void finish_request_lle(ipc_msg_ptr &session_msg, bool notify_owner);
 
             bool hle = false;
             bool unhandle_callback_enable = false;
 
         protected:
-            bool is_msg_delivered(ipc_msg_ptr &msg);
             bool ready();
 
             // These provides version in order to connect to the server
@@ -139,6 +119,7 @@ namespace eka2l1 {
             virtual void disconnect(service::ipc_context &ctx);
 
             virtual void on_unhandled_opcode(service::ipc_context &ctx) {}
+            void accept(ipc_msg_ptr msg, const bool notify_owner);
 
         public:
             std::uint32_t frequent_process_event;
@@ -155,26 +136,15 @@ namespace eka2l1 {
 
             virtual void destroy() override;
 
-            /*! Receive the message */
-            int receive(ipc_msg_ptr &msg);
-
-            /*! Accept a message that was waiting in the delivered queue */
-            int accept(server_msg msg);
-
-            /*! Deliver the message to the server. Message will be put in queue if it's not ready. */
-            int deliver(server_msg msg);
-
-            /*! Cancel a message in the delivered queue */
-            int cancel();
+            int deliver(ipc_msg_ptr msg);
+            void receive(ipc_msg_ptr &msg);
 
             void receive_async_lle(eka2l1::ptr<epoc::request_status> request_status,
                 eka2l1::ptr<message2> data);
-
             void cancel_async_lle();
 
             void register_ipc_func(uint32_t ordinal, ipc_func func);
 
-            /*! Process an message asynchrounously */
             virtual void process_accepted_msg();
 
             system *get_system() {

@@ -652,10 +652,8 @@ namespace eka2l1::epoc {
         if (kern->get_config()->log_ipc)
             LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
 
-        kern->call_ipc_complete_callbacks(msg.get(), val);
-
-        // Free the message
-        msg->free = true;
+        kern->call_ipc_complete_callbacks(msg, val);
+        msg->unref();
     }
 
      BRIDGE_FUNC(void, message_complete_handle, std::int32_t msg_handle, std::int32_t handle) {
@@ -671,10 +669,8 @@ namespace eka2l1::epoc {
         if (kern->get_config()->log_ipc)
             LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
 
-        kern->call_ipc_complete_callbacks(msg.get(), dup_handle);
-
-        // Free the message
-        msg->free = true;
+        kern->call_ipc_complete_callbacks(msg, dup_handle);
+        msg->unref();
     }
 
     BRIDGE_FUNC(void, message_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> cage) {
@@ -811,6 +807,8 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
+        msg->ref();
+
         ipc_arg_type arg_type = msg->args.get_arg_type(param);
         if (!(static_cast<std::uint32_t>(arg_type) & static_cast<std::uint32_t>(ipc_arg_type::flag_des))) {
             return epoc::error_argument;
@@ -823,7 +821,10 @@ namespace eka2l1::epoc {
             return epoc::error_argument;
         }
 
-        return do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, *info_host, start_offset);
+        const std::int32_t result = do_ipc_manipulation(kern, msg->own_thr, param_ptr_host, *info_host, start_offset);
+        msg->unref();
+
+        return result;
     }
     
     BRIDGE_FUNC(std::int32_t, message_ipc_copy_eka1, kernel::handle h, std::int32_t param, eka2l1::ptr<ipc_copy_info> info,
@@ -840,6 +841,8 @@ namespace eka2l1::epoc {
         if (!msg) {
             return epoc::error_bad_handle;
         }
+
+        msg->ref();
 
         ipc_arg_type arg_type = msg->args.get_arg_type(param);
         if (!(static_cast<std::uint32_t>(arg_type) & static_cast<std::uint32_t>(ipc_arg_type::flag_des))) {
@@ -874,6 +877,7 @@ namespace eka2l1::epoc {
             des_des->set_length(crr_process, result);
         }
 
+        msg->unref();
         return epoc::error_none;
     }
 
@@ -998,8 +1002,8 @@ namespace eka2l1::epoc {
             }
         }
 
-        auto handle = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(),
-            kern->crr_thread(), server_name).first;
+        kernel::owner_type handle_mode = (server_name.empty()) ? kernel::owner_type::process : kernel::owner_type::thread;
+        auto handle = kern->create_and_add<service::server>(handle_mode, kern->get_system(), kern->crr_thread(), server_name).first;
 
         if (handle != kernel::INVALID_HANDLE) {
             LOG_TRACE(KERNEL, "Server {} created", server_name);
@@ -3858,7 +3862,9 @@ namespace eka2l1::epoc {
         }
 
         const std::string server_name_in_str = common::ucs2_to_utf8(name->to_std_string(target_process));
-        const kernel::handle h = kern->create_and_add<service::server>(kernel::owner_type::process, kern->get_system(),
+        kernel::owner_type handle_owner = server_name_in_str.empty() ? kernel::owner_type::process : kernel::owner_type::thread;
+
+        const kernel::handle h = kern->create_and_add<service::server>(handle_owner, kern->get_system(),
             kern->crr_thread(), server_name_in_str).first;
 
         if (h == kernel::INVALID_HANDLE) {

@@ -281,7 +281,7 @@ namespace eka2l1 {
             request_sema = kern->create<kernel::semaphore>("requestSema" + common::to_string(eka2l1::random()), 0);
 
             sync_msg = kern->create_msg(owner_type::kernel);
-            sync_msg->lock_free();
+            sync_msg->type = ipc_message_type_sync;
 
             std::u16string name_16(name.begin(), name.end());
             memcpy(name_chunk->host_base(), name_16.data(), name.length() * 2);
@@ -342,11 +342,9 @@ namespace eka2l1 {
         }
     
         void thread::do_cleanup() {
-            sync_msg->unlock_free();
-            kern->free_msg(sync_msg);
-
             // Close all thread handles
             thread_handles.reset();
+            kern->free_msg(sync_msg);
         }
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {

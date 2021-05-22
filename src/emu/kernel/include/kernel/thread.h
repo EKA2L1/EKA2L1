@@ -47,7 +47,7 @@ namespace eka2l1 {
     class gdbstub;
 
     struct ipc_msg;
-    using ipc_msg_ptr = std::shared_ptr<ipc_msg>;
+    using ipc_msg_ptr = ipc_msg*;
 
     namespace kernel {
         namespace legacy {
