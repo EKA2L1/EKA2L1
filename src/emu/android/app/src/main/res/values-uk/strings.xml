@@ -16,10 +16,10 @@
     <string name="rename">Rename</string>
     <string name="save_log">Зберегти лог</string>
     <string name="install">Установити</string>
-    <string name="device_dump">Device dump</string>
+    <string name="device_dump">Вмістище пам\'яті пристрою</string>
     <string name="path_to_rpkg">Шлях до RPKG</string>
     <string name="path_to_rom">Шлях до ROM</string>
-    <string name="firmware">Firmware</string>
+    <string name="firmware">Прошивка</string>
     <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">Спосіб установлення</string>
     <string name="enter_new_name">Enter new name</string>
@@ -34,10 +34,10 @@
     <string name="install_rpkg_insufficent_size">RPKG файл занадто малий, мабуть ви не закінчили зняття РОМу!</string>
     <string name="install_already_exist">Пристрій, що встановлюється вже існує!</string>
     <string name="install_product_determine_fail">Не вдалося визначити інформацію про продукт!</string>
-    <string name="install_device_vpl_invalid_msg">The firmware description file (VPL) file is invalid!</string>
-    <string name="install_device_rofs_corrupt_msg">ROFS file is corrupted!</string>
-    <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
-    <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
+    <string name="install_device_vpl_invalid_msg">Файл опису прошивки (VPL) недійсний!</string>
+    <string name="install_device_rofs_corrupt_msg">Файл ROFS пошкоджений!</string>
+    <string name="install_device_rom_corrupt_msg">Файл ROM пошкоджений!</string>
+    <string name="install_device_fpsx_corrupt_msg">Файл FPSX пошкоджений!</string>
     <string name="pref_general_title">Загальні</string>
     <string name="pref_system_title">Системні</string>
     <string name="pref_control_key_binding_sect_title">Призначення клавіш</string>
