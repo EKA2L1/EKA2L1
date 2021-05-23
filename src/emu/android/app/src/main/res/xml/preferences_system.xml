@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.github.eka2l1.settings.IntEditTextPreference
+    <com.github.eka2l1.settings.IntListPreference
         android:defaultValue="-1"
         android:key="language"
         android:title="@string/pref_system_language_option_name" />

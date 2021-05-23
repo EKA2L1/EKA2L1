@@ -27,15 +27,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.preference.Preference;
+import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class SystemSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
@@ -46,21 +43,18 @@ public class SystemSettingsFragment extends PreferenceFragmentCompat {
         PreferenceManager preferenceManager = getPreferenceManager();
         preferenceManager.setPreferenceDataStore(dataStore);
         setPreferencesFromResource(R.xml.preferences_system, rootKey);
-        Preference languagePreference = findPreference("language");
+        ListPreference languagePreference = findPreference("language");
+        languagePreference.setEntries(Emulator.getLanguageNames());
+        languagePreference.setEntryValues(Emulator.getLanguageIds());
         languagePreference.setOnPreferenceChangeListener((preference, newValue) -> {
             Emulator.setLanguage(Integer.parseInt((String) newValue));
             return true;
         });
-        Preference rtosLevelPreference = findPreference("rtos-level");
+        ListPreference rtosLevelPreference = findPreference("rtos-level");
         rtosLevelPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-            Emulator.setRtosLevel(getRtosLevelValue((String) newValue));
+            Emulator.setRtosLevel(rtosLevelPreference.findIndexOfValue((String) newValue));
             return true;
         });
-    }
-
-    private int getRtosLevelValue(String str) {
-        String[] rtosArray = getResources().getStringArray(R.array.pref_system_real_time_accuracy_values);
-        return new ArrayList<>(Arrays.asList(rtosArray)).indexOf(str);
     }
 
     @Override

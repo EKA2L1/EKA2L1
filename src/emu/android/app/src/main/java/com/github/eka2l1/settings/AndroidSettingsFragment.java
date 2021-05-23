@@ -32,9 +32,6 @@ import androidx.preference.PreferenceManager;
 
 import com.github.eka2l1.R;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 public class AndroidSettingsFragment extends PreferenceFragmentCompat {
     private AppDataStore dataStore;
 
@@ -44,11 +41,6 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
         PreferenceManager preferenceManager = getPreferenceManager();
         preferenceManager.setPreferenceDataStore(dataStore);
         setPreferencesFromResource(R.xml.preferences_android, rootKey);
-    }
-
-    private int getRtosLevelValue(String str) {
-        String[] rtosArray = getResources().getStringArray(R.array.pref_system_real_time_accuracy_values);
-        return new ArrayList<>(Arrays.asList(rtosArray)).indexOf(str);
     }
 
     @Override

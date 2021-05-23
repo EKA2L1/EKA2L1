@@ -319,3 +319,31 @@ Java_com_github_eka2l1_emu_Emulator_getAppIcon(JNIEnv *env, jclass clazz, jlong 
 
     return jicons;
 }
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_github_eka2l1_emu_Emulator_getLanguageIds(
+        JNIEnv *env,
+        jclass clazz) {
+    std::vector<std::string> language_ids = state->launcher->get_language_ids();
+    jobjectArray jlanguage_ids = env->NewObjectArray(static_cast<jsize>(language_ids.size()),
+                                                 env->FindClass("java/lang/String"),
+                                                 nullptr);
+    for (jsize i = 0; i < language_ids.size(); ++i)
+        env->SetObjectArrayElement(jlanguage_ids, i, env->NewStringUTF(language_ids[i].c_str()));
+    return jlanguage_ids;
+}
+
+extern "C"
+JNIEXPORT jobjectArray JNICALL
+Java_com_github_eka2l1_emu_Emulator_getLanguageNames(
+        JNIEnv *env,
+        jclass clazz) {
+    std::vector<std::string> language_names = state->launcher->get_language_names();
+    jobjectArray jlanguage_names = env->NewObjectArray(static_cast<jsize>(language_names.size()),
+                                                  env->FindClass("java/lang/String"),
+                                                  nullptr);
+    for (jsize i = 0; i < language_names.size(); ++i)
+        env->SetObjectArrayElement(jlanguage_names, i, env->NewStringUTF(language_names[i].c_str()));
+    return jlanguage_names;
+}

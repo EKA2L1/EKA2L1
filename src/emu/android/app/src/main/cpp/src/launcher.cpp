@@ -28,6 +28,7 @@
 #include <system/installation/rpkg.h>
 #include <common/path.h>
 #include <common/fileutils.h>
+#include <common/language.h>
 #include <utils/locale.h>
 #include <utils/system.h>
 
@@ -323,5 +324,34 @@ namespace eka2l1::android {
             }
             builder->load_backup_state();
         }
+    }
+
+    std::vector<std::string> launcher::get_language_ids() {
+        std::vector<std::string> languages;
+
+        device_manager *dvc_mngr = sys->get_device_manager();
+        auto &dvcs = dvc_mngr->get_devices();
+        if (!dvcs.empty()) {
+            auto &dvc = dvcs[conf->device];
+            for (int language : dvc.languages) {
+                languages.push_back(std::to_string(language));
+            }
+        }
+        return languages;
+    }
+
+    std::vector<std::string> launcher::get_language_names() {
+        std::vector<std::string> languages;
+
+        device_manager *dvc_mngr = sys->get_device_manager();
+        auto &dvcs = dvc_mngr->get_devices();
+        if (!dvcs.empty()) {
+            auto &dvc = dvcs[conf->device];
+            for (int language : dvc.languages) {
+                const std::string lang_name = common::get_language_name_by_code(language);
+                languages.push_back(lang_name);
+            }
+        }
+        return languages;
     }
 }
