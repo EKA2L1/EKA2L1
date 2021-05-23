@@ -22,6 +22,7 @@
 #include <services/ui/cap/eiksrv.h>
 #include <services/window/window.h>
 
+#include <services/hwrm/power/power_def.h>
 #include <array>
 
 namespace eka2l1::epoc::cap {
@@ -54,6 +55,16 @@ namespace eka2l1::epoc::cap {
         : foreground_subscriber_id_(0) {
     }
 
+    static void battery_strength_change_callback(void *data, service::property *prop) {
+        eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer*>(data);
+        maintainer->set_battery_level(prop->get_int());
+    }
+
+    static void battery_charge_status_change_callback(void *data, service::property *prop) {
+        eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer*>(data);
+        maintainer->set_battery_charging(prop->get_int());
+    }
+
     eik_status_pane_maintainer::eik_status_pane_maintainer(kernel_system *kern)
         : prop_(nullptr) {
         prop_ = kern->create<service::property>();
@@ -61,6 +72,20 @@ namespace eka2l1::epoc::cap {
 
         prop_->first = AVKON_INTERNAL_UID;
         prop_->second = STATUS_PANE_SYSTEM_DATA_KEY;
+
+        service::property *another_prop = kern->get_prop(epoc::hwrm::power::STATE_UID,
+            epoc::hwrm::power::BATTERY_LEVEL_KEY);
+
+        if (another_prop) {
+            local_data_.battery_.strength_ = another_prop->get_int();
+            another_prop->add_data_change_callback(this, battery_strength_change_callback);
+        }
+
+        another_prop = kern->get_prop(epoc::hwrm::power::STATE_UID, epoc::hwrm::power::CHARGING_STATUS_KEY);
+        if (another_prop) {
+            local_data_.battery_.charging_ = another_prop->get_int();
+            another_prop->add_data_change_callback(this, battery_charge_status_change_callback);
+        }
 
         // Update data for the first time
         publish_data();

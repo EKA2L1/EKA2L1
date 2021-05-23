@@ -159,6 +159,8 @@ namespace eka2l1 {
         window_server *winserv;
         oom_ui_app_server *oom;
 
+        service::property *battery_level_prop;
+
         common::string_table localised_strings;
 
         std::mutex errors_mut;

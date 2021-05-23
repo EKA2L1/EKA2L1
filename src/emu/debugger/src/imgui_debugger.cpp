@@ -37,6 +37,7 @@
 #include <services/applist/applist.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/window/window.h>
+#include <services/hwrm/power/power_def.h>
 
 #include <utils/system.h>
 
@@ -63,8 +64,6 @@ namespace eka2l1 {
 
         conf->language = static_cast<int>(debugger->get_language_from_property(prop));
         conf->serialize();
-
-        prop->add_data_change_callback(userdata, language_property_change_handler);
     }
 
     void imgui_debugger::key_binder::reset() {
@@ -187,6 +186,7 @@ namespace eka2l1 {
         , alserv(nullptr)
         , winserv(nullptr)
         , oom(nullptr)
+        , battery_level_prop(nullptr)
         , should_show_menu_fullscreen(false)
         , sd_card_mount_choosen(false) 
         , back_from_fullscreen(false)
@@ -371,6 +371,7 @@ namespace eka2l1 {
             oom = reinterpret_cast<eka2l1::oom_ui_app_server *>(kern->get_by_name<service::server>("101fdfae_10207218_AppServer"));
 
             property_ptr lang_prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY);
+            battery_level_prop = kern->get_prop(epoc::hwrm::power::STATE_UID, epoc::hwrm::power::BATTERY_LEVEL_KEY);
 
             if (lang_prop)
                 lang_prop->add_data_change_callback(this, language_property_change_handler);

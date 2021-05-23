@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 EKA2L1 Team
+ * Copyright (c) 2021 EKA2L1 Team
  * 
  * This file is part of EKA2L1 project.
  * 
@@ -19,24 +19,24 @@
 
 #pragma once
 
-#include <services/hwrm/resource.h>
-
 namespace eka2l1 {
     class kernel_system;
-}
 
-namespace eka2l1::epoc {
-    /**
-     * \brief Class manages emulated device's lighting.
-     */
-    struct light_resource : public resource_interface {
-        kernel_system *kern_;
+    namespace service {
+        class property;
+    }
 
-        explicit light_resource(kernel_system *kern);
+    using property_ptr = service::property *;
 
-        void turn_on(service::ipc_context &ctx);
-        void get_supported_targets(service::ipc_context &ctx);
-        void cleanup(service::ipc_context &ctx);
-        void execute_command(service::ipc_context &ctx) override;
-    };
+    namespace epoc::hwrm::power {
+        struct resource_data {
+        private:
+            property_ptr charging_status_prop_;
+            property_ptr battery_level_prop_;
+            property_ptr battery_status_prop_;
+
+        public:
+            explicit resource_data(kernel_system *kern);
+        };
+    }
 }

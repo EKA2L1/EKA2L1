@@ -47,8 +47,6 @@ namespace eka2l1 {
             for (auto &callback : data_change_callbacks) {
                 callback.second(callback.first, this);
             }
-
-            data_change_callbacks.clear();
         }
 
         void property::define(service::property_type pt, uint32_t pre_allocated) {

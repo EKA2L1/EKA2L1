@@ -801,10 +801,12 @@ namespace eka2l1 {
 
         ImGui::PushItemWidth(col6 * 2 - 10);
 
-        if (ImGui::BeginCombo("##BatteryLevel", BATTERY_LEVEL_STRS[eik->get_pane_maintainer()->get_battery_level()])) {
+        if (ImGui::BeginCombo("##BatteryLevel", BATTERY_LEVEL_STRS[battery_level_prop->get_int()])) {
             for (std::uint32_t i = epoc::cap::BATTERY_LEVEL_MIN; i <= epoc::cap::BATTERY_LEVEL_MAX; i++) {
                 if (ImGui::Selectable(BATTERY_LEVEL_STRS[i])) {
-                    eik->get_pane_maintainer()->set_battery_level(i);
+                    if (battery_level_prop) {
+                        battery_level_prop->set_int(i);
+                    }
                 }
             }
 

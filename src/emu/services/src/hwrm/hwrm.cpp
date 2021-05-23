@@ -24,8 +24,6 @@
 #include <services/hwrm/vibration/vibration.h>
 #include <utils/err.h>
 
-
-
 namespace eka2l1 {
     hwrm_session::hwrm_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version) {
@@ -60,6 +58,7 @@ namespace eka2l1 {
     hwrm_server::hwrm_server(system *sys)
         : service::typical_server(sys, "!HWRMServer") {
         // konna koto ii na
+        power_data_ = std::make_unique<epoc::hwrm::power::resource_data>(kern);
     }
 
     void hwrm_server::connect(service::ipc_context &ctx) {

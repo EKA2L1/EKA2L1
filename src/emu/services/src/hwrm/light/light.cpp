@@ -74,6 +74,11 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void light_resource::turn_on(service::ipc_context &ctx) {
+        // TODO: Calling backend's light on...
+        ctx.complete(epoc::error_none);
+    }
+
     void light_resource::execute_command(service::ipc_context &ctx) {
         if ((ctx.msg->function >= 2000) && (ctx.msg->function < 3000)) {
             ctx.msg->function -= 1000;
@@ -89,6 +94,10 @@ namespace eka2l1::epoc {
             cleanup(ctx);
             break;
         }
+
+        case hwrm_light_op_on:
+            turn_on(ctx);
+            break;
 
         default:
             LOG_ERROR(SERVICE_HWRM, "Unimplemented operation for light resource: {} ({})", light_op_to_string(ctx.msg->function),
