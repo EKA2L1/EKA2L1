@@ -3411,6 +3411,20 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
+    std::int32_t thread_logon_cancel_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        kernel::thread *thr = kern->get<kernel::thread>(create_info->arg0_);
+        if (!thr) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_bad_handle);
+            return epoc::error_bad_handle;
+        }
+
+        thr->logon_cancel(create_info->arg1_, false);
+
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+        return epoc::error_none;
+    }
+
     std::int32_t duplicate_handle_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal, kernel::thread *target_thread) {
         // arg0 = output duplicated handle, arg1 = thread handle to duplicate on, arg2 = handle to duplicate
@@ -4501,6 +4515,9 @@ namespace eka2l1::epoc {
             case epoc::eka1_executor::execute_v81a_logon_thread:
                 return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
+            case epoc::eka1_executor::execute_v81a_logon_cancel_thread:
+                return thread_logon_cancel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
             case epoc::eka1_executor::execute_v81a_open_thread:
                 return thread_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
@@ -5436,6 +5453,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x20, process_exit_type),
         BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
         BRIDGE_REGISTER(0x32, thread_id),
+        BRIDGE_REGISTER(0x3C, thread_request_count),
+        BRIDGE_REGISTER(0x3D, thread_exit_type),
         BRIDGE_REGISTER(0x4D, wait_for_any_request),
         BRIDGE_REGISTER(0x4F, uchar_fold),
         BRIDGE_REGISTER(0x51, uchar_lowercase),

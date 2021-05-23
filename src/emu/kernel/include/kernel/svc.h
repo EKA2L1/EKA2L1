@@ -181,7 +181,7 @@ namespace eka2l1::epoc {
             execute_v81a_terminate_thread = 0x31,
             execute_v81a_panic_thread = 0x32,
             execute_v81a_logon_thread = 0x33,
-            execute_v81a_logon_cancel = 0x34,
+            execute_v81a_logon_cancel_thread = 0x34,
             execute_v81a_rendezvous_request_thread = 0x35,
             execute_v81a_rendezvous_request_cancel_thread = 0x36,
             execute_v81a_rendezvous_request_complete_thread = 0x37,
