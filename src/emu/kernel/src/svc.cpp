@@ -5374,6 +5374,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7E, session_create),
         BRIDGE_REGISTER(0x7F, session_create_from_handle),
         BRIDGE_REGISTER(0x83, timer_create),
+        BRIDGE_REGISTER(0x84, timer_after), // Actually TimerHighRes
         BRIDGE_REGISTER(0x85, after), // Actually AfterHighRes
         BRIDGE_REGISTER(0x86, change_notifier_create),
         BRIDGE_REGISTER(0x9B, wait_dll_lock),
