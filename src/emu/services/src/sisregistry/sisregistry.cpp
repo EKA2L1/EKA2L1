@@ -22,6 +22,7 @@
 #include <services/sisregistry/sisregistry.h>
 
 #include <package/registry.h>
+#include <package/manager.h>
 
 #include <utils/consts.h>
 #include <utils/err.h>
@@ -44,6 +45,10 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version) {
     }
 
+    sisregistry_client_subsession::sisregistry_client_subsession(const epoc::uid package_uid)
+        : package_uid_(package_uid) {
+    }
+
     void sisregistry_client_session::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() < epocver::epoc95) {
             if ((ctx->msg->function >= sisregistry_get_matching_supported_languages) &&
@@ -58,6 +63,26 @@ namespace eka2l1 {
             break;
         }
 
+        default: {
+            // it's not real subsession. An integer
+            std::optional<std::uint32_t> handle = ctx->get_argument_value<std::uint32_t>(3);
+            if (handle.has_value()) {
+                sisregistry_client_subsession_inst *inst = subsessions_.get(handle.value());
+                if (inst) {
+                    (*inst)->fetch(ctx);
+                    break;
+                }
+            }
+
+            LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry session 0x{:X}", ctx->msg->function);
+            ctx->complete(epoc::error_none);
+            break;
+        }
+        }
+    }
+
+    void sisregistry_client_subsession::fetch(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
         case sisregistry_version: {
             get_version(ctx);
             break;
@@ -83,6 +108,22 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_uid: {
+            request_uid(ctx);
+            break;
+        }
+
+        case sisregistry_non_removable: {
+            is_non_removable(ctx);
+            break;
+        }
+
+        case sisregistry_installed_uid: {
+            is_installed_uid(ctx);
+            break;
+        }
+
+        /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
             break;
@@ -100,16 +141,6 @@ namespace eka2l1 {
 
         case sisregistry_installed_packages: {
             request_package_augmentations(ctx);
-            break;
-        }
-
-        case sisregistry_installed_uid: {
-            is_installed_uid(ctx);
-            break;
-        }
-
-        case sisregistry_uid: {
-            request_uid(ctx);
             break;
         }
 
@@ -147,11 +178,6 @@ namespace eka2l1 {
             get_package(ctx);
             break;
         }
-        
-        case sisregistry_non_removable: {
-            is_non_removable(ctx);
-            break;
-        }
 
         case sisregistry_add_entry: {
             add_entry(ctx);
@@ -176,10 +202,10 @@ namespace eka2l1 {
         case sisregistry_sid_to_package: {
             sid_to_package(ctx);
             break;
-        }
+        }*/
 
         default:
-            LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry server 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry subsession 0x{:X}", ctx->msg->function);
             ctx->complete(epoc::error_none);
             break;
         }
@@ -189,53 +215,97 @@ namespace eka2l1 {
         auto uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         LOG_TRACE(SERVICE_SISREGISTRY, "Open new subsession for UID 0x{:X}", uid.value());
 
-        if (uid.value() == 0x20003b78 || (uid.value() == 0x2000AFDE && server<sisregistry_server>()->added))
-            ctx->complete(epoc::error_none);
-        else
+        // Do a check of the object inside
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        const package::object *obj = pkgmngr->package(uid.value());
+        if (!obj) {
+            LOG_ERROR(SERVICE_SISREGISTRY, "Package with UID 0x{:X} not found!", uid.value());
             ctx->complete(epoc::error_not_found);
-    }
 
-    void sisregistry_client_session::get_version(eka2l1::service::ipc_context *ctx) {
-        epoc::version version;
-        version.major = 1;
-        version.minor = 40;
-        version.build = 1557;
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument(0, version);
+        sisregistry_client_subsession_inst inst = std::make_unique<sisregistry_client_subsession>(uid.value());
+        std::uint32_t handle = static_cast<std::uint32_t>(subsessions_.add(inst));
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, handle);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::is_in_rom(eka2l1::service::ipc_context *ctx) {
-        uint32_t in_rom = false;
+    manager::packages *sisregistry_client_subsession::package_manager(service::ipc_context *ctx) {
+        return ctx->sys->get_packages();
+    }
 
-        ctx->write_data_to_descriptor_argument(0, in_rom);
+    package::object *sisregistry_client_subsession::package_object(service::ipc_context *ctx) {
+        manager::packages *pkgmngr = package_manager(ctx);
+        if (!pkgmngr) {
+            return nullptr;
+        }
+
+        return pkgmngr->package(package_uid_);
+    }
+
+    void sisregistry_client_subsession::get_version(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->version.u32);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::get_selected_drive(eka2l1::service::ipc_context *ctx) {
-        std::int32_t result = 'E';
+    void sisregistry_client_subsession::is_in_rom(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument(0, result);
+        ctx->write_data_to_descriptor_argument(0, obj->in_rom);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::get_trust_timestamp(eka2l1::service::ipc_context *ctx) {
-        std::uint64_t timestamp = common::get_current_time_in_microseconds_since_1ad();
+    void sisregistry_client_subsession::get_selected_drive(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument(0, timestamp);
+        ctx->write_data_to_descriptor_argument(0, obj->selected_drive);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::get_trust_status(eka2l1::service::ipc_context *ctx) {
-        package::trust_status status;
-        status.revocation_status = package::revocation_ocsp_good;
-        status.validation_status = package::validation_validated;
+    void sisregistry_client_subsession::get_trust_timestamp(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument(0, status);
+        ctx->write_data_to_descriptor_argument(0, obj->trust_timestamp);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::request_sid_to_filename(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::get_trust_status(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->trust_status_value);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_sid_to_filename(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
 
         package::file_description desc;
@@ -253,7 +323,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::request_stub_file_entries(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::request_stub_file_entries(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(1);
         LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_stub_file_entries 0x{:X}", package_mode.value());
@@ -276,14 +346,18 @@ namespace eka2l1 {
         }
     }
 
-    void sisregistry_client_session::request_uid(eka2l1::service::ipc_context *ctx) {
-        epoc::uid uid = 0x2000AFDE;
+    void sisregistry_client_subsession::request_uid(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument(0, uid);
+        ctx->write_data_to_descriptor_argument(0, obj->uid);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::get_entry(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::get_entry(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
 
         package::object object;
@@ -301,7 +375,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::request_files(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::request_files(eka2l1::service::ipc_context *ctx) {
         std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
         LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_files 0x{:X}", package_mode.value());
 
@@ -323,7 +397,7 @@ namespace eka2l1 {
         }
     }
 
-    void sisregistry_client_session::populate_files(common::chunkyseri &seri) {
+    void sisregistry_client_subsession::populate_files(common::chunkyseri &seri) {
         std::uint32_t file_count = 0;
         seri.absorb(file_count);
         for (size_t i = 0; i < file_count; i++) {
@@ -332,7 +406,7 @@ namespace eka2l1 {
         }
     }
 
-    void sisregistry_client_session::request_file_descriptions(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::request_file_descriptions(eka2l1::service::ipc_context *ctx) {
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
         populate_file_descriptions(seri);
 
@@ -345,7 +419,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::populate_file_descriptions(common::chunkyseri &seri) {
+    void sisregistry_client_subsession::populate_file_descriptions(common::chunkyseri &seri) {
         std::uint32_t file_count = 0;
         seri.absorb(file_count);
         for (size_t i = 0; i < file_count; i++) {
@@ -354,19 +428,19 @@ namespace eka2l1 {
         }
     }
 
-    void sisregistry_client_session::add_entry(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::add_entry(eka2l1::service::ipc_context *ctx) {
         std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
         std::uint32_t size = ctx->get_argument_data_size(0);
         common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
         package::package package;
         package.do_state(seri);
 
-        server<sisregistry_server>()->added = true;
+        //server<sisregistry_server>()->added = true;
 
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::request_package_augmentations(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::request_package_augmentations(eka2l1::service::ipc_context *ctx) {
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
         populate_augmentations(seri);
 
@@ -379,7 +453,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::populate_augmentations(common::chunkyseri &seri) {
+    void sisregistry_client_subsession::populate_augmentations(common::chunkyseri &seri) {
         std::uint32_t property_count = 1;
         seri.absorb(property_count);
         for (size_t i = 0; i < property_count; i++) {
@@ -389,14 +463,14 @@ namespace eka2l1 {
         }
     }
 
-    void sisregistry_client_session::is_preinstalled(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::is_preinstalled(eka2l1::service::ipc_context *ctx) {
         std::int32_t result = 0;
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(0, result);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::get_package(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::get_package(eka2l1::service::ipc_context *ctx) {
         package::package package;
         package.uid = 0x2000AFDE;
         package.index = 0x01000000;
@@ -416,21 +490,30 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::is_non_removable(eka2l1::service::ipc_context *ctx) {
-        uint32_t removable = true;
+    void sisregistry_client_subsession::is_non_removable(eka2l1::service::ipc_context *ctx) {
+        // It's actually removable, lol
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument(0, removable);
+        ctx->write_data_to_descriptor_argument(0, obj->is_removable);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::is_signed_by_sucert(eka2l1::service::ipc_context *ctx) {
-        uint32_t signed_by_sucert = false;
+    void sisregistry_client_subsession::is_signed_by_sucert(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument(0, signed_by_sucert);
+        ctx->write_data_to_descriptor_argument(0, obj->signed_by_sucert);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::is_installed_uid(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::is_installed_uid(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> package_uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         if (!package_uid) {
             ctx->complete(epoc::error_argument);
@@ -444,7 +527,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
     
-    void sisregistry_client_session::sid_to_package(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::sid_to_package(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> package_sid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         if (!package_sid.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -477,7 +560,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_not_found);
     }
 
-    void sisregistry_client_session::populate_sids(common::chunkyseri &seri) {
+    void sisregistry_client_subsession::populate_sids(common::chunkyseri &seri) {
         std::uint32_t count = 1;
         seri.absorb(count);
 
@@ -485,7 +568,7 @@ namespace eka2l1 {
         seri.absorb(single_uid);
     }
 
-    void sisregistry_client_session::request_sids(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::request_sids(eka2l1::service::ipc_context *ctx) {
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
         populate_sids(seri);
 

@@ -97,7 +97,7 @@ namespace eka2l1::loader {
             std::uint32_t name_len = 0;
             fread(&name_len, 4, 1, f);
 
-            name.resize(name_len);
+            name.resize(name_len / 2);
 
             // Read name offset
             fseek(f, sold.header.comp_name_ptr + 4 * sold.header.num_langs + i * 4, SEEK_SET);

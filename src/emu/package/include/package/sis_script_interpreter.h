@@ -27,6 +27,7 @@
 #include <vector>
 
 #include <loader/sis_fields.h>
+#include <package/manager.h>
 
 namespace eka2l1 {
     class system;
@@ -38,7 +39,6 @@ namespace eka2l1 {
     }
 
     namespace manager {
-        class packages;
         struct device;
     }
 
@@ -47,6 +47,13 @@ namespace eka2l1 {
     }
 
     namespace loader {
+        struct sis_registry_tree {
+            package::object package_info;
+            manager::controller_info controller_binary;
+
+            std::vector<sis_registry_tree> embeds;
+        };
+
         // An interpreter that runs SIS install script
         class ss_interpreter {
             sis_controller *main_controller;
@@ -54,12 +61,12 @@ namespace eka2l1 {
             config::state *conf;
 
             std::stack<sis_controller*> current_controllers;
+            std::vector<std::u16string> gathered_sis_paths;
 
             drive_number install_drive;
             common::ro_stream *data_stream;
 
             io_system *io;
-
             manager::packages *mngr;
             manager::device *current_dvc;
 
@@ -79,18 +86,9 @@ namespace eka2l1 {
              */
             int gasp_true_form_of_integral_expression(const sis_expression &expr);
 
-        public:
-            show_text_func show_text;                   ///< Hook function to display texts.
-            choose_lang_func choose_lang;               ///< Hook function to choose controller's language.
-            var_value_resolver_func var_resolver;       ///< Hook function to resolve SIS variable's value.
-
-            explicit ss_interpreter();
-            explicit ss_interpreter(common::ro_stream *stream,
-                io_system *io,
-                manager::packages *pkgmngr,
-                sis_controller *main_controller,
-                sis_data *inst_data,
-                drive_number install_drv);
+        protected:            
+            bool interpret(sis_install_block &install_block, sis_registry_tree &parent_tree, std::atomic<int> &progress, std::uint16_t crr_blck_idx = 0);
+            bool interpret(sis_controller *controller, sis_registry_tree &tree, const std::uint16_t base_data_idx, std::atomic<int> &progress);
 
             /**
              * \brief Get the data in the index of a buffer block in the SIS.
@@ -118,13 +116,18 @@ namespace eka2l1 {
              */
             void extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx);
 
-            bool interpret(sis_install_block &install_block, std::atomic<int> &progress,
-                uint16_t crr_blck_idx = 0);
+        public:
+            show_text_func show_text;                   ///< Hook function to display texts.
+            choose_lang_func choose_lang;               ///< Hook function to choose controller's language.
+            var_value_resolver_func var_resolver;       ///< Hook function to resolve SIS variable's value.
 
-            bool interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress);
+            explicit ss_interpreter(common::ro_stream *stream, io_system *io, manager::packages *mngr,
+                sis_controller *main_controller, sis_data *inst_data, drive_number install_drv);
 
-            bool interpret(std::atomic<int> &progress) {
-                return interpret(main_controller, 0, progress);
+            std::unique_ptr<sis_registry_tree> interpret(std::atomic<int> &progress);
+
+            const std::vector<std::u16string> &extra_sis_files() const {
+                return gathered_sis_paths;
             }
         };
     }

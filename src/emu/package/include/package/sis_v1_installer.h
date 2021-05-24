@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/types.h>
-#include <package/manager.h>
+#include <package/registry.h>
 
 #include <cstdint>
 #include <string>
@@ -22,6 +22,5 @@ namespace eka2l1::loader {
      * 
      * \returns True on success.
      */
-    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive,
-        manager::package_info &info, std::vector<std::u16string> &package_files);
+    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info);
 }

@@ -26,9 +26,13 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/types.h>
+#include <common/time.h>
 
 #include <vfs/vfs.h>
 #include <config/config.h>
+
+#include <loader/e32img.h>
+#include <loader/sis.h>
 
 #include <package/manager.h>
 #include <package/sis_script_interpreter.h>
@@ -59,18 +63,15 @@ namespace eka2l1 {
             return false;
         }
 
-        ss_interpreter::ss_interpreter() {
-        }
-
         ss_interpreter::ss_interpreter(common::ro_stream *stream,
             io_system *io,
-            manager::packages *pkgmngr,
+            manager::packages *mngr,
             sis_controller *main_controller,
             sis_data *inst_data,
             drive_number inst_drv)
             : data_stream(stream)
-            , mngr(pkgmngr)
             , io(io)
+            , mngr(mngr)
             , main_controller(main_controller)
             , install_data(inst_data)
             , install_drive(inst_drv) {
@@ -365,7 +366,109 @@ namespace eka2l1 {
             return pass;
         }
 
-        bool ss_interpreter::interpret(sis_controller *controller, const std::uint16_t base_data_idx, std::atomic<int> &progress) {
+        static bool fill_controller_registeration(io_system *io, loader::sis_controller *ctrl, package::object &parent, manager::controller_info &controller_info, const drive_number drive, const bool stub) {
+            controller_info.data_ = reinterpret_cast<std::uint8_t*>(ctrl->raw_data.data());
+            controller_info.size_ = ctrl->raw_data.size();
+
+            parent.vendor_name = ctrl->info.vendor_name.unicode_string;
+            parent.package_name = (reinterpret_cast<loader::sis_string *>(ctrl->info.names.fields[0].get()))->unicode_string;
+            parent.uid = ctrl->info.uid.uid;
+            parent.file_major_version = 5;
+            parent.file_minor_version = 4;
+            parent.in_rom = stub;
+            parent.is_removable = !stub;
+            parent.language = 1;
+            parent.version.major = ctrl->info.version.major;
+            parent.version.minor = ctrl->info.version.minor;
+            parent.version.build = ctrl->info.version.build;
+
+            parent.drives = stub ? (1 << (drive_z - drive_a)) : (1 << (drive - drive_a));
+            parent.selected_drive = parent.drives;
+            
+            package::controller_info the_new_controller_info;
+            the_new_controller_info.version.major = ctrl->info.version.major;
+            the_new_controller_info.version.minor = ctrl->info.version.minor;
+            the_new_controller_info.version.build = ctrl->info.version.build;
+
+            parent.controller_infos.push_back(std::move(the_new_controller_info));
+
+            LOG_INFO(PACKAGE, "Package {} registering with UID: 0x{:x}", common::ucs2_to_utf8(parent.package_name), parent.uid);
+
+            for (std::size_t i = 0; i < ctrl->install_block.files.fields.size(); i++) {
+                const loader::sis_file_des *file_des = reinterpret_cast<loader::sis_file_des *>(ctrl->install_block.files.fields[i].get());
+                std::u16string file_path = file_des->target.unicode_string;
+
+                if (file_path[0] == '!') {
+                    file_path[0] = drive_to_char16(drive);
+                } else {
+                    parent.drives |= 1 << (char16_to_drive(file_path[0]) - drive_a);
+                }
+
+                // If we are really going to install this
+                package::file_description desc;
+                desc.index = file_des->idx;
+                desc.mime_type = file_des->mime_type.unicode_string;
+                desc.hash.algorithm = static_cast<std::uint32_t>(file_des->hash.hash_method);
+                desc.hash.data.resize(file_des->hash.hash_data.raw_data.size());
+
+                std::memcpy(desc.hash.data.data(), file_des->hash.hash_data.raw_data.data(), desc.hash.data.size());
+                desc.operation = static_cast<std::int32_t>(file_des->op);
+                desc.operation_options = static_cast<std::int32_t>(file_des->op_op);
+                desc.uncompressed_length = file_des->len;
+                desc.target = file_path;
+                desc.sid = 0;
+
+                if (!file_des->caps.raw_data.empty()) {
+                    // It's an EXE file, so also gather the SID
+                    symfile exe_file = io->open_file(desc.target, READ_MODE | BIN_MODE);
+                    if (exe_file) {
+                        eka2l1::ro_file_stream exe_stream(exe_file.get());
+
+                        loader::e32img_header header;
+                        loader::e32img_header_extended extended_header;
+                        std::uint32_t uncomp_size = 0;
+                        epocver ver_used = epocver::eka1;
+
+                        extended_header.info.secure_id = 0;
+
+                        if (loader::parse_e32img_header(reinterpret_cast<common::ro_stream*>(&exe_stream), header, extended_header,
+                            uncomp_size, ver_used) == 0) {
+                            desc.sid = extended_header.info.secure_id;
+                        }
+                    }
+                }
+
+                parent.file_descriptions.push_back(std::move(desc));
+            }
+
+            for (auto &vendor_name_field: ctrl->info.vendor_names.fields) {
+                loader::sis_string *vendor_name_string = reinterpret_cast<loader::sis_string*>(vendor_name_field.get());
+                parent.localized_vendor_names.push_back(vendor_name_string->unicode_string);
+            }
+
+            for (auto &prop_field: ctrl->properties.properties.fields) {
+                sis_property *property_real = reinterpret_cast<sis_property*>(prop_field.get());
+
+                package::property new_prop;
+                new_prop.key = property_real->key;
+                new_prop.value = property_real->val;
+
+                parent.properties.push_back(std::move(new_prop));
+            }
+
+            parent.signed_ = 1;
+            parent.signed_by_sucert = 0;
+            parent.trust_timestamp = common::get_current_time_in_microseconds_since_1ad();
+            parent.current_drives = parent.drives;
+            parent.trust_status_value.revocation_status = package::revocation_ocsp_good;
+            parent.trust_status_value.validation_status = package::validation_validated;
+            parent.trust = package::package_trust_chain_validated_to_trust_anchor_and_ocsp_valid;
+            parent.install_type = static_cast<package::install_type_value>(ctrl->info.install_type);
+
+            return true;
+        }
+
+        bool ss_interpreter::interpret(sis_controller *controller, sis_registry_tree &me, const std::uint16_t base_data_idx, std::atomic<int> &progress) {
             // Set current controller
             current_controllers.push(controller);
 
@@ -395,141 +498,182 @@ namespace eka2l1 {
                 controller->chosen_lang = reinterpret_cast<sis_language *>(controller->langs.langs.fields[0].get())->language;
             }
 
-            // TODO: Choose options
-            const bool result = interpret(controller->install_block, progress, base_data_idx + controller->idx.data_index);
+            if (!fill_controller_registeration(io, controller, me.package_info, me.controller_binary, install_drive, install_data->data_units.fields.empty())) {
+                LOG_ERROR(PACKAGE, "Fail to fill package registeration");
+            }
+
+            const bool result = interpret(controller->install_block, me, progress, base_data_idx + controller->idx.data_index);
             current_controllers.pop();
             
             return result;
         }
 
-        bool ss_interpreter::interpret(sis_install_block &install_block, std::atomic<int> &progress, uint16_t crr_blck_idx) {
+        bool ss_interpreter::interpret(sis_install_block &install_block, sis_registry_tree &parent_tree, std::atomic<int> &progress, std::uint16_t crr_blck_idx) {
             // Process file
-            auto install_file = [&](sis_install_block &inst_blck, uint16_t crr_blck_idx) {
-                for (auto &wrap_file : inst_blck.files.fields) {
-                    sis_file_des *file = (sis_file_des *)(wrap_file.get());
-                    std::string raw_path = "";
-                    std::string install_path = "";
+            for (auto &wrap_file : install_block.files.fields) {
+                sis_file_des *file = reinterpret_cast<sis_file_des *>(wrap_file.get());
+                std::string raw_path = "";
+                std::string install_path = "";
 
-                    if (file->target.unicode_string.length() > 0) {
-                        install_path = get_install_path(file->target.unicode_string, install_drive);
-                        raw_path = common::ucs2_to_utf8(*(io->get_raw_path(common::utf8_to_ucs2(install_path))));
+                if (file->target.unicode_string.length() > 0) {
+                    install_path = get_install_path(file->target.unicode_string, install_drive);
+                    raw_path = common::ucs2_to_utf8(*(io->get_raw_path(common::utf8_to_ucs2(install_path))));
+                }
+
+                switch (file->op) {
+                case ss_op::text: {
+                    auto buf = get_small_file_buf(file->idx, crr_blck_idx);
+                    buf.push_back(0);
+
+                    bool yes_choosen = true;
+
+                    if (show_text) {
+                        show_text(reinterpret_cast<const char *>(buf.data()), true);
                     }
 
-                    switch (file->op) {
-                    case ss_op::EOpText: {
-                        auto buf = get_small_file_buf(file->idx, crr_blck_idx);
-                        buf.push_back(0);
+                    LOG_INFO(PACKAGE, "EOpText: {}", reinterpret_cast<const char *>(buf.data()));
 
-                        bool yes_choosen = true;
+                    switch (file->op_op) {
+                    case 1 << 10: { // Skip next files
+                        if (show_text) {
+                            yes_choosen = show_text("Skip next file?", false);
+                        }
+
+                        if (yes_choosen) {
+                            skip_next_file = true;
+                        }
+                        break;
+                    }
+
+                    case 1 << 11:
+                    case 1 << 12: { // Abort
+                        const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controllers.top()->info.uid.uid);
+                        LOG_INFO(PACKAGE, "{}", err_string);
 
                         if (show_text) {
-                            show_text(reinterpret_cast<const char *>(buf.data()), true);
+                            yes_choosen = show_text(err_string.c_str(), false);
                         }
 
-                        LOG_INFO(PACKAGE, "EOpText: {}", reinterpret_cast<const char *>(buf.data()));
-
-                        switch (file->op_op) {
-                        case 1 << 10: { // Skip next files
-                            if (show_text) {
-                                yes_choosen = show_text("Skip next file?", false);
+                        if (!yes_choosen) {
+                            for (const package::file_description &desc: parent_tree.package_info.file_descriptions) {
+                                // NULL types are not written yet assumingly. Only install to be deleted
+                                if (desc.operation == static_cast<std::int32_t>(loader::ss_op::install)) {
+                                    io->delete_entry(desc.target);
+                                }
                             }
 
-                            if (yes_choosen) {
-                                skip_next_file = true;
-                            }
-                            break;
-                        }
-
-                        case 1 << 11:
-                        case 1 << 12: { // Abort
-                            const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controllers.top()->info.uid.uid);
-
-                            LOG_ERROR(PACKAGE, "{}", err_string);
-
-                            if (show_text) {
-                                yes_choosen = show_text(err_string.c_str(), false);
-                            }
-
-                            if (!yes_choosen) {
-                                mngr->delete_files_and_bucket(current_controllers.top()->info.uid.uid);
-                            }
-
-                            break;
-                        }
-
-                        default: {
-                            break;
-                        }
+                            return false;
                         }
 
                         break;
                     }
 
-                    case ss_op::EOpInstall:
-                    case ss_op::EOpNull: {
-                        if (!skip_next_file) {
-                            bool lowered = false;
-
-                            if (common::is_platform_case_sensitive()) {
-                                raw_path = common::lowercase_string(raw_path);
-                                lowered = true;
-                            }
-
-                            extract_file(raw_path, file->idx, crr_blck_idx);
-
-                            LOG_INFO(PACKAGE, "EOpInstall: {}", raw_path);
-
-                            // Add to bucket
-                            mngr->add_to_file_bucket(current_controllers.top()->info.uid.uid, install_path);
-
-                            if (!lowered) {
-                                raw_path = common::lowercase_string(raw_path);
-                            }
-
-                            if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
-                                LOG_INFO(PACKAGE, "Detected an SmartInstaller SIS, path at: {}", raw_path);
-                                mngr->install_package(common::utf8_to_ucs2(raw_path), drive_c, progress);
-                            }
-                        } else {
-                            skip_next_file = false;
-                        }
-
+                    default: {
                         break;
                     }
-
-                    default:
-                        break;
                     }
+
+                    break;
                 }
-            };
 
-            install_file(install_block, crr_blck_idx);
+                case ss_op::install:
+                case ss_op::null: {
+                    if (!skip_next_file) {
+                        bool lowered = false;
 
-            // Parse if blocks
-            for (auto &wrap_if_statement : install_block.if_blocks.fields) {
-                sis_if *if_stmt = (sis_if *)(wrap_if_statement.get());
-                auto result = condition_passed(&if_stmt->expr);
-
-                if (result) {
-                    interpret(if_stmt->install_block, progress, crr_blck_idx);
-                } else {
-                    for (auto &wrap_else_branch : if_stmt->else_if.fields) {
-                        sis_else_if *else_branch = (sis_else_if *)(wrap_else_branch.get());
-
-                        if (condition_passed(&else_branch->expr)) {
-                            interpret(else_branch->install_block, progress, crr_blck_idx);
-                            break;
+                        if (common::is_platform_case_sensitive()) {
+                            raw_path = common::lowercase_string(raw_path);
+                            lowered = true;
                         }
+                        
+                        if (!install_data->data_units.fields.empty()) {
+                            extract_file(raw_path, file->idx, crr_blck_idx);
+                        }
+
+                        LOG_INFO(PACKAGE, "EOpInstall: {}", raw_path);
+
+                        if (!lowered) {
+                            raw_path = common::lowercase_string(raw_path);
+                        }
+
+                        if (FOUND_STR(raw_path.find(".sis")) || FOUND_STR(raw_path.find(".sisx"))) {
+                            if (!install_data->data_units.fields.empty() && (loader::identify_sis_type(raw_path).has_value())) {
+                                LOG_INFO(PACKAGE, "Detected an SmartInstaller SIS, path at: {}", raw_path);
+                                gathered_sis_paths.push_back(common::utf8_to_ucs2(raw_path));
+                            }
+                        }
+                    } else {
+                        skip_next_file = false;
                     }
+
+                    break;
+                }
+
+                default:
+                    break;
                 }
             }
 
             for (auto &wrap_mini_pkg : install_block.controllers.fields) {
-                sis_controller *ctrl = (sis_controller *)(wrap_mini_pkg.get());
-                interpret(ctrl, crr_blck_idx, progress);
+                sis_controller *ctrl = reinterpret_cast<sis_controller *>(wrap_mini_pkg.get());
+                sis_registry_tree child_tree;
+
+                if (interpret(ctrl, child_tree, crr_blck_idx, progress)) {
+                    parent_tree.embeds.push_back(std::move(child_tree));
+                }
+            }
+
+            // Parse if blocks
+            for (auto &wrap_if_statement : install_block.if_blocks.fields) {
+                sis_if *if_stmt = reinterpret_cast<sis_if *>(wrap_if_statement.get());
+                auto result = condition_passed(&if_stmt->expr);
+
+                if (result) {
+                    interpret(if_stmt->install_block, parent_tree, progress, crr_blck_idx);
+                } else {
+                    for (auto &wrap_else_branch : if_stmt->else_if.fields) {
+                        sis_else_if *else_branch = reinterpret_cast<sis_else_if *>(wrap_else_branch.get());
+
+                        if (condition_passed(&else_branch->expr)) {
+                            interpret(else_branch->install_block, parent_tree, progress, crr_blck_idx);
+                            break;
+                        }
+                    }
+                }
             }
 
             return true;
+        }
+
+        static void fill_embeds_to_package_info(sis_registry_tree &self) {
+            for (auto &embed: self.embeds) {
+                package::package embed_info;
+                embed_info.index = static_cast<std::int32_t>(self.package_info.embedded_packages.size());
+                embed_info.package_name = embed.package_info.package_name;
+                embed_info.vendor_name = embed.package_info.vendor_name;
+                embed_info.uid = embed.package_info.uid;
+
+                self.package_info.embedded_packages.push_back(std::move(embed_info));
+
+                fill_embeds_to_package_info(embed);
+                self.package_info.embedded_packages.insert(self.package_info.embedded_packages.end(), embed.package_info.embedded_packages.begin(), embed.package_info.embedded_packages.end());
+            }
+        }
+
+        std::unique_ptr<sis_registry_tree> ss_interpreter::interpret(std::atomic<int> &progress) {
+            if (install_data->data_units.fields.empty()) {
+                LOG_INFO(PACKAGE, "Interpreting a stub SIS");
+            }
+
+            std::unique_ptr<sis_registry_tree> trees = std::make_unique<sis_registry_tree>();
+            gathered_sis_paths.clear();
+
+            if (!interpret(main_controller, *trees, 0, progress)) {
+                return nullptr;
+            }
+
+            fill_embeds_to_package_info(*trees);
+            return trees;
         }
     }
 }

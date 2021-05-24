@@ -20,6 +20,7 @@
 
 #include <loader/sis_common.h>
 #include <loader/sis_fields.h>
+#include <loader/sis.h>
 
 #include <cassert>
 #include <cstdio>
@@ -36,7 +37,7 @@ namespace eka2l1 {
         };
 
         // Given a SIS path, identify the EPOC version
-        std::optional<epocver> get_epoc_ver(std::string path) {
+        std::optional<sis_type> identify_sis_type(const std::string &path) {
             FILE *f = fopen(path.c_str(), "rb");
 
             if (!f) {
@@ -54,22 +55,35 @@ namespace eka2l1 {
                 return std::nullopt;
             }
 
+            if (uid1 == static_cast<std::uint32_t>(sis_field_type::SISController)) {
+                return sis_type_new_stub;
+            }
+
             if (uid1 == uid1_cst) {
-                return epocver::epoc94;
+                return sis_type_new;
             }
 
-            if (uid2 == static_cast<std::uint32_t>(epoc_sis_type::epocu6)) {
-                return epocver::epocu6;
+            if ((uid2 == static_cast<std::uint32_t>(epoc_sis_type::epocu6)) ||
+                (uid2 == static_cast<std::uint32_t>(epoc_sis_type::epoc6))) {
+                return sis_type_old;
             }
 
-            return epocver::epoc6;
+            return std::nullopt;
         }
 
-        sis_contents parse_sis(std::string path) {
+        sis_contents parse_sis(const std::string &path, const bool is_stub) {
             sis_parser parser(path);
 
-            sis_header header = parser.parse_header();
-            sis_contents cs = parser.parse_contents();
+            if (!is_stub)
+                parser.parse_header();
+
+            sis_contents cs;
+            
+            if (is_stub) {
+                cs.controller = parser.parse_controller();
+            } else {
+                cs = parser.parse_contents();
+            }
 
             return cs;
         }
