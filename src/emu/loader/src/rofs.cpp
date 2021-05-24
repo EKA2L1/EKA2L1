@@ -25,18 +25,18 @@
 #include <common/cvt.h>
 
 namespace eka2l1::loader {
-    bool rofs_entry::read(common::ro_stream &stream) {
+    bool rofs_entry::read(common::ro_stream &stream, const int version) {
         const std::uint64_t start_pos = stream.tell();
 
         if (stream.read(&struct_size_, 2) != 2) {
             return false;
         }
 
-        if (stream.read(uids_, sizeof(uids_)) != sizeof(uids_)) {
+        if (version >= ROFS_MODERN_VERSION && stream.read(uids_, sizeof(uids_)) != sizeof(uids_)) {
             return false;
         }
 
-        if (stream.read(&uid_check_, 4) != 4) {
+        if (version >= ROFS_MODERN_VERSION && stream.read(&uid_check_, 4) != 4) {
             return false;
         }
 
@@ -73,12 +73,16 @@ namespace eka2l1::loader {
         }
 
         // Seek past the struct
-        stream.seek(start_pos + struct_size_, common::seek_where::beg);
+        int padding = 0;
+        if (version < ROFS_MODERN_VERSION) {
+            padding = 4 - stream.tell() & 3; // 4 byte aligned
+        }
+        stream.seek(start_pos + struct_size_ + padding, common::seek_where::beg);
 
         return true;
     }
 
-    bool rofs_dir::read(common::ro_stream &stream) {
+    bool rofs_dir::read(common::ro_stream &stream, const int version) {
         const std::uint64_t original_pos = stream.tell();
 
         if (stream.read(&struct_size_, 2) != 2) {
@@ -103,7 +107,7 @@ namespace eka2l1::loader {
 
         while (stream.tell() - original_pos < struct_size_) {
             rofs_entry subdir_entry;
-            if (!subdir_entry.read(stream)) {
+            if (!subdir_entry.read(stream, version)) {
                 return false;
             }
 
@@ -151,14 +155,14 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_directory(common::ro_stream &stream, const std::string &base, const std::uint32_t offset,
+    static bool extract_directory(common::ro_stream &stream, const std::string &base, const int version, const std::uint32_t offset,
         std::atomic<int> &progress, const int base_progress, const int max_progress) {
         eka2l1::create_directories(base);
         stream.seek(offset, common::seek_where::beg);
 
         // Read directory entry
         rofs_dir dir_var;
-        if (!dir_var.read(stream)) {
+        if (!dir_var.read(stream, version)) {
             return false;
         }
 
@@ -167,7 +171,7 @@ namespace eka2l1::loader {
             stream.seek(dir_var.file_block_addr_, common::seek_where::beg);
             while (stream.tell() - dir_var.file_block_addr_ < dir_var.file_block_size_) {
                 rofs_entry file_entry;
-                if (!file_entry.read(stream)) {
+                if (!file_entry.read(stream, version)) {
                     return false;
                 }
 
@@ -183,13 +187,23 @@ namespace eka2l1::loader {
                 subdir_name = common::lowercase_string(subdir_name);
             }
 
-            if (!extract_directory(stream, eka2l1::add_path(base, subdir_name + eka2l1::get_separator()), subdir_ent.file_addr_,
+            if (!extract_directory(stream, eka2l1::add_path(base, subdir_name + eka2l1::get_separator()), version, subdir_ent.file_addr_,
                 progress, base_progress, max_progress)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    bool supported_format(rofs_header &header) {
+        if (header.magic_[0] == 'R' && header.magic_[1] == 'O' && header.magic_[2] == 'L' && header.magic_[3] == 'F')
+            return true;
+        if (header.magic_[0] == 'R' && header.magic_[1] == 'O' && header.magic_[2] == 'F' && header.magic_[3] == 'S')
+            return true;
+        if (header.magic_[0] == 'R' && header.magic_[1] == 'O' && header.magic_[2] == 'F' && header.magic_[3] == 'x')
+            return true;
+        return false;
     }
     
     bool dump_rofs_system(common::ro_stream &stream, const std::string &path,std::atomic<int> &progress,
@@ -199,17 +213,16 @@ namespace eka2l1::loader {
             return false;
         }
 
-        if (rheader.magic_[0] != 'R' || (rheader.magic_[1] != 'O') || (rheader.magic_[2] != 'F')
-            || ((rheader.magic_[3] != 'S') && (rheader.magic_[3] != 'X'))) {
+        if (!supported_format(rheader)) {
             return false;
         }
 
-        if (rheader.magic_[3] == 'X') {
-            LOG_WARN(LOADER, "Untested ROFX variant, please contact developer if wronggoings");
+        if (rheader.magic_[3] == 'x') {
+            LOG_WARN(LOADER, "Untested ROFx variant, please contact developer if wronggoings");
         }
 
         int base_progress = progress.load();
-        const bool result = extract_directory(stream, path, rheader.dir_tree_offset_, progress,
+        const bool result = extract_directory(stream, path, rheader.rofs_format_version_, rheader.dir_tree_offset_, progress,
             base_progress, max_progress);
 
         if (!result) {
