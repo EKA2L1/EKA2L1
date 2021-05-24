@@ -28,11 +28,11 @@
     <string name="install_device_note_may_need_rpkg">Для пристроїв S60v2 чи вище вам може знадобитися надати додатковий файл під назвою RPKG. Засіб вибору шляху з\'явиться, якщо встановник виявить необхідність у ньому.</string>
     <string name="recommended_devices_to_install">Рекомендовані пристрої для встановлення</string>
     <string name="install_rpkg_corrupt">Наданий RPKG файл пошкоджений!</string>
-    <string name="install_rpkg_file_not_found">Не вдалося відкрити файл RPKG!</string>
-    <string name="install_raw_dump_fail_to_copy">Не вдалося скопіювати raw дамп файлів до цільового місця призначення!</string>
+    <string name="install_rpkg_file_not_found">Зазначений файл RPKG не можна відкрити!</string>
+    <string name="install_raw_dump_fail_to_copy">Не вдалося скопіювати файли необробленого вмістища пам\'яті до цільового місця призначення!</string>
     <string name="install_rom_fail_to_copy">Не вдалося скопіювати ROM до цільового місця призначення!</string>
     <string name="install_rpkg_insufficent_size">RPKG файл занадто малий, мабуть ви не закінчили зняття РОМу!</string>
-    <string name="install_already_exist">Пристрій, що встановлюється вже існує!</string>
+    <string name="install_already_exist">Пристрій для встановлення вже існує!</string>
     <string name="install_product_determine_fail">Не вдалося визначити інформацію про продукт!</string>
     <string name="install_device_vpl_invalid_msg">Файл опису прошивки (VPL) недійсний!</string>
     <string name="install_device_rofs_corrupt_msg">Файл ROFS пошкоджений!</string>
@@ -73,5 +73,5 @@
     <string name="log_saved">Лог збережено</string>
     <string name="about_icon_by">&lt;BR&gt;Іконка від: </string>
     <string name="version">Версія: </string>
-    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="recommended_devices_note"><b>Примітка:</b> Рекомендовано використовувати прошивку для встановлення пристроїв від S60v3 і вище.</string>
 </resources>
