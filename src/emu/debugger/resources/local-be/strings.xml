@@ -125,12 +125,12 @@
     <string name="install_device_rpkg_choose_msg">Калі ласка, укажыце файл перапакоўкі (RPKG):</string>
     <string name="install_device_firmware_vpl_choose_msg">Калі ласка, укажыце файл апісання прашыўкі (VPL):</string>
     <string name="install_device_rom_choose_msg">Калі ласка, укажыце файл ROM:</string>
-    <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
+    <string name="install_device_note_may_need_rpkg">Для прылад S60v2 ці вышэй вам можа спатрэбіцца падаць дадатковы файл пад назвай RPKG. Сродак выбару шляху з\'явіцца, калі ўсталёўшчык выявіць неабходнасць у ім.</string>
     <string name="install_device_wait_install_msg">Калі ласка, пачакайце, пакуль мы ўсталюем прыладу!</string>
     <string name="install_device_progress_rpkg_msg">Выманне RPKG ({}%)</string>
     <string name="install_device_progress_rom_msg">Усталёўка ROM ({}%)</string>
     <string name="install_device_progress_fpsx_msg">Усталёўка файлаў FPSX ({}%)</string>
-    <string name="install_device_install_rpkg_corrupt_msg">The RPKG file provided is corrupt!</string>
+    <string name="install_device_install_rpkg_corrupt_msg">Паданы файл RPKG пашкоджаны!</string>
     <string name="install_device_rpkg_file_not_found_msg">RPKG file specified can\'t be opened!</string>
     <string name="install_device_raw_dump_fail_to_copy_msg">Fail to copy raw dump files to target destination!</string>
     <string name="install_device_rom_fail_to_copy_msg">Fail to copy ROM to target destination!</string>
