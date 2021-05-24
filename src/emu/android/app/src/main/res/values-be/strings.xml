@@ -28,12 +28,12 @@
     <string name="install_device_note_may_need_rpkg">Для прылад S60v2 ці вышэй вам можа спатрэбіцца падаць дадатковы файл пад назвай RPKG. Сродак выбару шляху з\'явіцца, калі ўсталёўшчык выявіць неабходнасць у ім.</string>
     <string name="recommended_devices_to_install">Рэкамендаваныя прылады для ўсталёўкі</string>
     <string name="install_rpkg_corrupt">Паданы файл RPKG пашкоджаны!</string>
-    <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
-    <string name="install_raw_dump_fail_to_copy">Fail to copy raw dump files to target destination!</string>
-    <string name="install_rom_fail_to_copy">Fail to copy ROM to target destination!</string>
-    <string name="install_rpkg_insufficent_size">RPKG file is too small, the dump might be unfinished!</string>
-    <string name="install_already_exist">Device to install already exists!</string>
-    <string name="install_product_determine_fail">Fail to determine product information!</string>
+    <string name="install_rpkg_file_not_found">Указаны файл RPKG нельга адкрыць!</string>
+    <string name="install_raw_dump_fail_to_copy">Не ўдалося скапіяваць файлы неапрацаванага ёмішча памяці ў мэтавае месца прызначэння!</string>
+    <string name="install_rom_fail_to_copy">Не ўдалося скапіяваць файлы ROM у мэтавае месца прызначэння!</string>
+    <string name="install_rpkg_insufficent_size">Файл RPKG занадта малы, працэс выладоўвання ёмішча памяці можа быць незавершаны!</string>
+    <string name="install_already_exist">Прылада для ўсталёўкі ўжо існуе!</string>
+    <string name="install_product_determine_fail">Не ўдалося вызначыць інфармацыю аб прадукце!</string>
     <string name="install_device_vpl_invalid_msg">Файл апісання прашыўкі (VPL) нядзейсны!</string>
     <string name="install_device_rofs_corrupt_msg">Файл ROFS пашкоджаны!</string>
     <string name="install_device_rom_corrupt_msg">Файл ROM пашкоджаны!</string>
@@ -73,5 +73,5 @@
     <string name="log_saved">Лог захаваны</string>
     <string name="about_icon_by">&lt;BR&gt;Абразок ад: </string>
     <string name="version">Версія: </string>
-    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="recommended_devices_note"><b>Заўвага:</b> Рэкамендавана выкарыстоўваць прашыўку для ўсталёўкі прылад ад S60v3 і вышэй.</string>
 </resources>
