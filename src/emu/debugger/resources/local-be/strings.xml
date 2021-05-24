@@ -147,7 +147,7 @@
     <string name="install_device_choose_variant_popup_title">Выберыце варыянт прашыўкі</string>
     <string name="mmc_mount_success_dialog_title">Картка паспяхова падлучана!</string>
     <string name="mmc_mount_success_dialog_msg">MMC/SD картка падлучана! Усе дастасаванні на MMC/SD картцы перазагружаны.</string>
-    <string name="no_device_installed_msg">Вы не ўсталявалі ніякай прылады. Калі ласка, усталюйце прыладу або прытрымлівайцеся інструкцый з усталёўкі на старонцы EKA2L1 у GitHub wiki.</string>
+    <string name="no_device_installed_msg">Вы не ўсталявалі ніводнай прылады. Калі ласка, усталюйце прыладу або прытрымлівайцеся інструкцый з усталёўкі на старонцы EKA2L1 у GitHub wiki.</string>
     <string name="no_device_installed_opt_install_device_btn_name">Усталяваць прыладу</string>
     <string name="no_show_option_again_general_msg">Не паказваць гэтага зноў.</string>
     <string name="touchscreen_disabled_msg">Некаторыя з вашых бягучых спалучэнняў клавіш звязаны з кнопкамі мышы. Таму эмуляваны сэнсарны экран адключаны.</string>
