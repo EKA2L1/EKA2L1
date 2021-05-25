@@ -353,12 +353,14 @@ namespace eka2l1::common {
         unicode_mode = false;
 
         for (; this->dest_size > 0;) {
-            std::uint8_t b;
+            int last_source_size = this->source_size;
+            std::uint8_t b = 0;
 
             if (read_byte(&b)) {
                 bool result = (unicode_mode ? handle_ubyte(b) : handle_sbyte(b));
 
                 if (!result) {
+                    this->source_size = last_source_size;
                     break;
                 }
             } else {
@@ -459,11 +461,15 @@ namespace eka2l1::common {
 
     bool unicode_compressor::write_treatment_selection(const std::int32_t treatment) {
         if (treatment == unicode_char_treatment_plain_unicode) {
-            if (!write_byte8(SCU)) {
-                return false;
+            if (!unicode_mode) {
+                // Switch to Unicode mode
+                if (!write_byte8(SCU)) {
+                    return false;
+                }
+
+                unicode_mode = true;
             }
 
-            unicode_mode = true;
             return true;
         }
 
