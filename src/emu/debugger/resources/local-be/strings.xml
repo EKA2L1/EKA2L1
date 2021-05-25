@@ -39,7 +39,7 @@
     <string name="debugger_menu_objects_submenu_chunks_item_name">Чанкі</string>
     <string name="debugger_menu_services_submenu_window_tree_item_name">Дрэва вокнаў</string>
     <string name="view_menu_fullscreen_item_name">На ўвесь экран</string>
-    <string name="help_menu_about_item_name">Пра праграму</string>
+    <string name="help_menu_about_item_name">Аб праграме</string>
     <string name="app_launcher_title">Панэль запуску дастасаванняў</string>
     <string name="app_launcher_unavail_msg">Сервер спісаў дастасаванняў недаступны. Усталюйце прыладу, каб уключыць яго.</string>
     <string name="app_launcher_switch_to_style_title">Пераключыць на</string>
