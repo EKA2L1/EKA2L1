@@ -29,6 +29,8 @@ namespace eka2l1::common {
 }
 
 namespace eka2l1::loader {
+    static constexpr int const ROFS_MODERN_VERSION = 0x200;
+
     #pragma pack(push, 1)
     struct rofs_header {
         char magic_[4];
@@ -51,8 +53,8 @@ namespace eka2l1::loader {
 
     struct rofs_entry {
         std::uint16_t struct_size_;
-        std::uint32_t uids_[3];
-        std::uint32_t uid_check_;
+        std::uint32_t uids_[3];         ///< Only if rofs_format_version >= ROFS_MODERN_VERSION
+        std::uint32_t uid_check_;       ///< Only if rofs_format_version >= ROFS_MODERN_VERSION
         std::uint8_t name_offset_;      ///< Offset form the start of this entry. Probably for fast lookup in the code
         std::uint8_t att_;
         std::uint32_t file_size_;
@@ -60,7 +62,7 @@ namespace eka2l1::loader {
         std::uint8_t att_extra_;
         std::u16string filename_;
 
-        bool read(common::ro_stream &stream);
+        bool read(common::ro_stream &stream, const int version);
     };
 
     struct rofs_dir {
@@ -71,7 +73,7 @@ namespace eka2l1::loader {
         std::uint32_t file_block_size_;
         std::vector<rofs_entry> subdirs_;
 
-        bool read(common::ro_stream &stream);
+        bool read(common::ro_stream &stream, const int version);
     };
 
     bool dump_rofs_system(common::ro_stream &stream, const std::string &path, std::atomic<int> &progress,
