@@ -117,8 +117,8 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_file(common::ro_stream &stream, rofs_entry &entry, const std::string &base, std::atomic<int> &progress,
-        const int base_progress, const int max_progress) {
+    static bool extract_file(common::ro_stream &stream, rofs_entry &entry, const std::string &base,
+        const int file_offset, std::atomic<int> &progress, const int base_progress, const int max_progress) {
         std::string fname = common::ucs2_to_utf8(entry.filename_);
         if (common::is_platform_case_sensitive()) {
             fname = common::lowercase_string(fname);
@@ -128,7 +128,7 @@ namespace eka2l1::loader {
         std::ofstream extract_stream(fname, std::ios_base::binary);
 
         const std::uint64_t org_pos = stream.tell();
-        stream.seek(entry.file_addr_, common::seek_where::beg);
+        stream.seek(entry.file_addr_ - file_offset, common::seek_where::beg);
 
         static constexpr std::uint32_t CHUNK_SIZE = 0x10000;
         std::vector<char> buf;
@@ -155,10 +155,11 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_directory(common::ro_stream &stream, const std::string &base, const int version, const std::uint32_t offset,
+    static bool extract_directory(common::ro_stream &stream, const std::string &base,
+        const int version, const int file_offset, const std::uint32_t offset,
         std::atomic<int> &progress, const int base_progress, const int max_progress) {
         eka2l1::create_directories(base);
-        stream.seek(offset, common::seek_where::beg);
+        stream.seek(offset - file_offset, common::seek_where::beg);
 
         // Read directory entry
         rofs_dir dir_var;
@@ -167,15 +168,15 @@ namespace eka2l1::loader {
         }
 
         // Went through our files first
-        if (dir_var.file_block_addr_) {
-            stream.seek(dir_var.file_block_addr_, common::seek_where::beg);
-            while (stream.tell() - dir_var.file_block_addr_ < dir_var.file_block_size_) {
+        if (dir_var.file_block_addr_ - file_offset) {
+            stream.seek(dir_var.file_block_addr_ - file_offset, common::seek_where::beg);
+            while (stream.tell() - (dir_var.file_block_addr_ - file_offset) < dir_var.file_block_size_) {
                 rofs_entry file_entry;
                 if (!file_entry.read(stream, version)) {
                     return false;
                 }
 
-                if (!extract_file(stream, file_entry, base, progress, base_progress, max_progress)) {
+                if (!extract_file(stream, file_entry, base, file_offset, progress, base_progress, max_progress)) {
                     LOG_ERROR(LOADER, "Fail to extract file with name: {}", common::ucs2_to_utf8(file_entry.filename_));
                 }
             }
@@ -187,8 +188,8 @@ namespace eka2l1::loader {
                 subdir_name = common::lowercase_string(subdir_name);
             }
 
-            if (!extract_directory(stream, eka2l1::add_path(base, subdir_name + eka2l1::get_separator()), version, subdir_ent.file_addr_,
-                progress, base_progress, max_progress)) {
+            if (!extract_directory(stream, eka2l1::add_path(base, subdir_name + eka2l1::get_separator()),
+                version, file_offset, subdir_ent.file_addr_, progress, base_progress, max_progress)) {
                 return false;
             }
         }
@@ -221,9 +222,11 @@ namespace eka2l1::loader {
             LOG_WARN(LOADER, "Untested ROFx variant, please contact developer if wronggoings");
         }
 
+        // lets hope that ROFS isn't affected
+        int file_offset = rheader.dir_tree_offset_ - rheader.header_size_;
         int base_progress = progress.load();
-        const bool result = extract_directory(stream, path, rheader.rofs_format_version_, rheader.dir_tree_offset_, progress,
-            base_progress, max_progress);
+        const bool result = extract_directory(stream, path, rheader.rofs_format_version_, file_offset, rheader.dir_tree_offset_,
+            progress, base_progress, max_progress);
 
         if (!result) {
             return false;
