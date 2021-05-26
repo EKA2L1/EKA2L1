@@ -115,7 +115,7 @@
     <string name="packages_remove_confirmation_msg">Ви впевнені, що хочете видалити пакет ({})?</string>
     <string name="packages_package_vendor_string">Постачальник</string>
     <string name="packages_package_drive_located_string">Диск</string>
-    <string name="installer_text_popup_title">Спливаюче вікно встановника</string>
+    <string name="installer_text_popup_title">Вигулькове вікно встановника</string>
     <string name="installer_language_choose_title">Виберіть мову для цього пакета</string>
     <string name="install_device_wizard_title">Майстер установлення пристрою</string>
     <string name="install_device_wizard_welcome_msg">Ласкаво просимо до майстра встановлення пристрою! Щоб розпочати роботу, натисніть кнопку „Продовжити“.</string>
