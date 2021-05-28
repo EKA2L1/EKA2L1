@@ -112,7 +112,6 @@ namespace eka2l1 {
 
     view_session::view_session(service::typical_server *server, const kernel::uid session_uid, epoc::version client_version)
         : service::typical_session(server, session_uid, client_version)
-        , to_panic_(nullptr)
         , app_uid_(0) {
     }
 
@@ -225,8 +224,8 @@ namespace eka2l1 {
     }
 
     void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
-        to_panic_ = ctx->msg;
-        ctx->auto_free = false;
+        to_panic_.sts = ctx->msg->request_sts;
+        to_panic_.requester = ctx->msg->own_thr;
     }
 
     void view_session::get_priority(service::ipc_context *ctx) {
