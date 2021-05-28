@@ -190,9 +190,10 @@ namespace eka2l1 {
                 case hal_entry_display_screen_y_pixels:
                     return winserv_->get_screen(0)->size().y;
 
-                case hal_entry_machine_uid:
-                    return 0x20014DDD;
-                    //return current_dvc->machine_uid;
+                case hal_entry_machine_uid: {
+                    device *dvc = get_device_manager()->get_current();
+                    return dvc ? dvc->machine_uid : 0;
+                }
                 }
 
                 return 0;
