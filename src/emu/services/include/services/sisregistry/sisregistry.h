@@ -57,6 +57,8 @@ namespace eka2l1 {
         manager::packages *package_manager(service::ipc_context *ctx);
         package::object *package_object(service::ipc_context *ctx);
 
+        void populate_packages(common::chunkyseri &seri, std::vector<package::object *> &pkgs);
+
     public:
         explicit sisregistry_client_subsession(const epoc::uid package_uid);
 
@@ -73,7 +75,6 @@ namespace eka2l1 {
         void request_file_descriptions(eka2l1::service::ipc_context *ctx);
         void populate_file_descriptions(common::chunkyseri &seri);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
-        void populate_augmentations(common::chunkyseri &seri);
         void is_non_removable(eka2l1::service::ipc_context *ctx);
         void add_entry(eka2l1::service::ipc_context *ctx);
         void is_preinstalled(eka2l1::service::ipc_context *ctx);

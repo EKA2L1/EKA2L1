@@ -213,6 +213,19 @@ namespace eka2l1 {
             return nullptr;
         }
 
+        std::vector<package::object *> packages::augmentations(const uid app_uid) {
+            std::vector<package::object *> results;
+
+            auto ite_range = objects_.equal_range(app_uid);
+            for (auto ite = ite_range.first; ite != ite_range.second; ite++) {
+                if (ite->second.install_type == package::install_type_augmentations) {
+                    results.push_back(&(ite->second));
+                }
+            }
+
+            return results;
+        }
+
         bool packages::save_package(package::object &pkg) {
             bool result = true;
 

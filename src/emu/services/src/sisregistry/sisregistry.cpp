@@ -122,6 +122,11 @@ namespace eka2l1 {
             is_installed_uid(ctx);
             break;
         }
+        
+        case sisregistry_package_augmentations: {
+            request_package_augmentations(ctx);
+            break;
+        }
 
         /*
         case sisregistry_sid_to_filename: {
@@ -161,11 +166,6 @@ namespace eka2l1 {
 
         case sisregistry_file_descriptions: {
             request_file_descriptions(ctx);
-            break;
-        }
-        
-        case sisregistry_package_augmentations: {
-            request_package_augmentations(ctx);
             break;
         }
 
@@ -440,26 +440,55 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_subsession::request_package_augmentations(eka2l1::service::ipc_context *ctx) {
+    void sisregistry_client_subsession::request_package_augmentations(eka2l1::service::ipc_context *ctx) {        
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+        
+        manager::packages *mngr = package_manager(ctx);
+        const std::size_t max_buffer_size = ctx->get_argument_max_data_size(0);
+
+        std::vector<package::object *> results;
+
+        if (obj->install_type != package::install_type_augmentations) {
+            results = mngr->augmentations(obj->uid);
+        }
+
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-        populate_augmentations(seri);
+        populate_packages(seri, results);
+
+        if (seri.size() > max_buffer_size) {
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, static_cast<std::uint32_t>(seri.size()));
+            ctx->complete(epoc::error_overflow);
+
+            return;
+        }
 
         std::vector<char> buf(seri.size());
-        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-            common::SERI_MODE_WRITE);
-        populate_augmentations(seri);
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_packages(seri, results);
 
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_subsession::populate_augmentations(common::chunkyseri &seri) {
-        std::uint32_t property_count = 1;
+    void sisregistry_client_subsession::populate_packages(common::chunkyseri &seri, std::vector<package::object *> &pkgs) {
+        std::uint32_t property_count = static_cast<std::uint32_t>(pkgs.size());
         seri.absorb(property_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            pkgs.resize(property_count);
+        }
+
         for (size_t i = 0; i < property_count; i++) {
-            package::package package;
-            package.index = 0;
-            package.do_state(seri);
+            package::package copied_package = static_cast<package::package&>(*pkgs[i]);
+            copied_package.do_state(seri);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                static_cast<package::package&>(*pkgs[i]) = copied_package;
+            }
         }
     }
 
