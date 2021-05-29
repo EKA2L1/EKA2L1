@@ -226,6 +226,15 @@ namespace eka2l1 {
             return results;
         }
 
+        std::vector<uid> packages::installed_uids() const {
+            std::vector<uid> uniques;
+            
+            for (auto ite = objects_.begin(), end = objects_.end(); ite != end; ite = objects_.upper_bound(ite->first))
+                uniques.push_back(ite->first);
+
+            return uniques;
+        }
+
         bool packages::save_package(package::object &pkg) {
             bool result = true;
 

@@ -35,6 +35,7 @@ namespace eka2l1 {
         sisregistry_package_exists_in_rom = 0x1D,
         sisregistry_stub_file_entries = 0x1E,
         sisregistry_separator_minimum_read_user_data = 0x20,
+        sisregistry_installed_uids = 0x21,
         sisregistry_installed_packages = 0x22,
         sisregistry_sid_to_package = 0x23,
         sisregistry_installed_uid = 0x24,

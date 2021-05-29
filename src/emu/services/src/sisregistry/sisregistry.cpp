@@ -31,6 +31,37 @@
 #include <common/time.h>
 
 namespace eka2l1 {
+    static void populate_packages(common::chunkyseri &seri, std::vector<package::object *> &pkgs) {
+        std::uint32_t property_count = static_cast<std::uint32_t>(pkgs.size());
+        seri.absorb(property_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            pkgs.resize(property_count);
+        }
+
+        for (size_t i = 0; i < property_count; i++) {
+            package::package copied_package = static_cast<package::package&>(*pkgs[i]);
+            copied_package.do_state(seri);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                static_cast<package::package&>(*pkgs[i]) = copied_package;
+            }
+        }
+    }
+
+    static void populate_uids(common::chunkyseri &seri, std::vector<manager::uid> &uids) {
+        std::uint32_t uid_count = static_cast<std::uint32_t>(uids.size());
+        seri.absorb(uid_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            uids.resize(uid_count);
+        }
+
+        for (size_t i = 0; i < uid_count; i++) {
+            seri.absorb(uids[i]);
+        }
+    }
+
     sisregistry_server::sisregistry_server(eka2l1::system *sys)
         : service::typical_server(sys, "!SisRegistryServer") {
     }
@@ -63,13 +94,25 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_installed_uid: {
+            is_installed_uid(ctx);
+            break;
+        }
+
+        case sisregistry_installed_uids: {
+            installed_uids(ctx);
+            break;
+        }
+
         default: {
             // it's not real subsession. An integer
             std::optional<std::uint32_t> handle = ctx->get_argument_value<std::uint32_t>(3);
             if (handle.has_value()) {
                 sisregistry_client_subsession_inst *inst = subsessions_.get(handle.value());
                 if (inst) {
-                    (*inst)->fetch(ctx);
+                    if ((*inst)->fetch(ctx)) {
+                        subsessions_.remove(handle.value());
+                    }
                     break;
                 }
             }
@@ -81,8 +124,17 @@ namespace eka2l1 {
         }
     }
 
-    void sisregistry_client_subsession::fetch(service::ipc_context *ctx) {
+    bool sisregistry_client_subsession::fetch(service::ipc_context *ctx) {
+        bool del = false;
+
         switch (ctx->msg->function) {
+        case sisregistry_close_registry_entry: {
+            close_registry(ctx);
+            del = true;
+
+            break;
+        }
+
         case sisregistry_version: {
             get_version(ctx);
             break;
@@ -115,11 +167,6 @@ namespace eka2l1 {
 
         case sisregistry_non_removable: {
             is_non_removable(ctx);
-            break;
-        }
-
-        case sisregistry_installed_uid: {
-            is_installed_uid(ctx);
             break;
         }
         
@@ -209,6 +256,8 @@ namespace eka2l1 {
             ctx->complete(epoc::error_none);
             break;
         }
+
+        return del;
     }
 
     void sisregistry_client_session::open_registry_uid(eka2l1::service::ipc_context *ctx) {
@@ -237,6 +286,53 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void sisregistry_client_session::installed_uids(eka2l1::service::ipc_context *ctx) {
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        std::vector<manager::uid> uids_installed = pkgmngr->installed_uids();
+        const std::size_t max_buffer_size = ctx->get_argument_max_data_size(0);
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_uids(seri, uids_installed);
+
+        if (seri.size() > max_buffer_size) {
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, static_cast<std::uint32_t>(seri.size()));
+            ctx->complete(epoc::error_overflow);
+
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_uids(seri, uids_installed);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t*>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::is_installed_uid(eka2l1::service::ipc_context *ctx) {
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        std::optional<epoc::uid> package_uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        if (!package_uid.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::int32_t package_installed = static_cast<std::int32_t>(pkgmngr->installed(package_uid.value()));
+
+        ctx->write_data_to_descriptor_argument(1, package_installed);
+        ctx->complete(epoc::error_none);
+    }
+
     manager::packages *sisregistry_client_subsession::package_manager(service::ipc_context *ctx) {
         return ctx->sys->get_packages();
     }
@@ -247,7 +343,11 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        return pkgmngr->package(package_uid_);
+        return pkgmngr->package(package_uid_, index_);
+    }
+
+    void sisregistry_client_subsession::close_registry(eka2l1::service::ipc_context *ctx) {
+        ctx->complete(epoc::error_none);
     }
 
     void sisregistry_client_subsession::get_version(eka2l1::service::ipc_context *ctx) {
@@ -474,24 +574,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_subsession::populate_packages(common::chunkyseri &seri, std::vector<package::object *> &pkgs) {
-        std::uint32_t property_count = static_cast<std::uint32_t>(pkgs.size());
-        seri.absorb(property_count);
-
-        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-            pkgs.resize(property_count);
-        }
-
-        for (size_t i = 0; i < property_count; i++) {
-            package::package copied_package = static_cast<package::package&>(*pkgs[i]);
-            copied_package.do_state(seri);
-
-            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-                static_cast<package::package&>(*pkgs[i]) = copied_package;
-            }
-        }
-    }
-
     void sisregistry_client_subsession::is_preinstalled(eka2l1::service::ipc_context *ctx) {
         std::int32_t result = 0;
 
@@ -542,20 +624,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_subsession::is_installed_uid(eka2l1::service::ipc_context *ctx) {
-        std::optional<epoc::uid> package_uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-        if (!package_uid) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
-
-        LOG_TRACE(SERVICE_SISREGISTRY, "IsInstalledUid for 0x{:X} stubbed with false", package_uid.value());
-        std::int32_t result = 0;
-
-        ctx->write_data_to_descriptor_argument<std::int32_t>(1, result);
-        ctx->complete(epoc::error_none);
-    }
-    
     void sisregistry_client_subsession::sid_to_package(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> package_sid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         if (!package_sid.has_value()) {

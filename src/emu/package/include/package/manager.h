@@ -97,6 +97,7 @@ namespace eka2l1 {
             // No thread safe
             package::object *package(const uid app_uid, const std::int32_t index = 0);
             std::vector<package::object *> augmentations(const uid app_uid);
+            std::vector<uid> installed_uids() const;
 
             bool add_package(package::object &pkg, const controller_info *controller_info);
             bool save_package(package::object &pkg);

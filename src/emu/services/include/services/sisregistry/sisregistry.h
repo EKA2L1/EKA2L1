@@ -53,16 +53,17 @@ namespace eka2l1 {
     struct sisregistry_client_subsession {
     protected:
         epoc::uid package_uid_;
+        std::int32_t index_ = 0;
 
         manager::packages *package_manager(service::ipc_context *ctx);
         package::object *package_object(service::ipc_context *ctx);
 
-        void populate_packages(common::chunkyseri &seri, std::vector<package::object *> &pkgs);
+        void populate_sids(common::chunkyseri &seri);
 
     public:
         explicit sisregistry_client_subsession(const epoc::uid package_uid);
 
-        void fetch(service::ipc_context *ctx);
+        bool fetch(service::ipc_context *ctx);
         
         void get_version(eka2l1::service::ipc_context *ctx);
         void is_in_rom(eka2l1::service::ipc_context *ctx);
@@ -83,10 +84,9 @@ namespace eka2l1 {
         void get_trust_status(eka2l1::service::ipc_context *ctx);
         void request_sid_to_filename(eka2l1::service::ipc_context *ctx);
         void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
-        void is_installed_uid(eka2l1::service::ipc_context *ctx);
         void sid_to_package(eka2l1::service::ipc_context *ctx);
-        void populate_sids(common::chunkyseri &seri);
         void request_sids(eka2l1::service::ipc_context *ctx);
+        void close_registry(eka2l1::service::ipc_context *ctx);
     };
 
     using sisregistry_client_subsession_inst = std::unique_ptr<sisregistry_client_subsession>;
@@ -100,5 +100,7 @@ namespace eka2l1 {
 
         void fetch(service::ipc_context *ctx) override;
         void open_registry_uid(eka2l1::service::ipc_context *ctx);
+        void installed_uids(eka2l1::service::ipc_context *ctx);
+        void is_installed_uid(eka2l1::service::ipc_context *ctx);
     };
 }
