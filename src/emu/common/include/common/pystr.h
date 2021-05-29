@@ -164,6 +164,15 @@ namespace eka2l1::common {
             return lstrip().rstrip();
         }
 
+        basic_pystr<T> strip_reserverd() const {
+            auto news = str_;
+            const std::string res = "<>:\"/\\|\?*\r";
+            news.erase(std::remove_if(news.begin(), news.end(), [res](const char c) {
+                                      return std::find(res.begin(), res.end(), c) != res.end(); }),
+                       news.end());
+            return news;
+        }
+
         std::vector<basic_pystr<T>> split(const basic_pystr<T> &separator = ' ') const {
             std::vector<basic_pystr<T>> strs;
             std::basic_string<T> org_ = str_;
