@@ -88,6 +88,10 @@ namespace eka2l1::common {
             return buf >= end;
         }
 
+        std::uint8_t *current() const {
+            return buf;
+        }
+
         bool backwards(std::size_t len_back) {
             if (buf - len_back < org) {
                 return false;
