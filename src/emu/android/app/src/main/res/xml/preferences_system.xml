@@ -10,4 +10,8 @@
         android:entryValues="@array/pref_system_real_time_accuracy_values"
         android:key="rtos-level"
         android:title="@string/pref_system_real_time_accuracy_str" />
+    <com.github.eka2l1.settings.LongEditTextPreference
+        android:defaultValue="0"
+        android:key="imei"
+        android:title="@string/pref_hal_imei_option_name" />
 </PreferenceScreen>

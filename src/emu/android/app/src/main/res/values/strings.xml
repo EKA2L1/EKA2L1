@@ -64,6 +64,7 @@
     <string name="pref_system_real_time_accuracy_level_name_high">High</string>
     <string name="pref_system_time_delay_option_name">Time delay</string>
     <string name="pref_system_setting_inheritance_option_name">Setting inheritance</string>
+    <string name="pref_hal_imei_option_name" translatable="false">IMEI</string>
     <string name="emulated_screen_rotation_item_name">Rotation</string>
     <string name="emulated_screen_refresh_rate_item_name">Refresh rate</string>
 
