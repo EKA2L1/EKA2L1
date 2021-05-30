@@ -61,7 +61,7 @@ namespace eka2l1 {
         void populate_sids(common::chunkyseri &seri);
 
     public:
-        explicit sisregistry_client_subsession(const epoc::uid package_uid);
+        explicit sisregistry_client_subsession(const epoc::uid package_uid, const std::int32_t index = 0);
 
         bool fetch(service::ipc_context *ctx);
         
@@ -94,13 +94,14 @@ namespace eka2l1 {
     struct sisregistry_client_session : public service::typical_session {
     private:
         common::identity_container<sisregistry_client_subsession_inst> subsessions_;
-
     public:
         explicit sisregistry_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 
         void fetch(service::ipc_context *ctx) override;
         void open_registry_uid(eka2l1::service::ipc_context *ctx);
+        void open_registry_by_package(eka2l1::service::ipc_context *ctx);
         void installed_uids(eka2l1::service::ipc_context *ctx);
+        void installed_packages(eka2l1::service::ipc_context *ctx);
         void is_installed_uid(eka2l1::service::ipc_context *ctx);
     };
 }

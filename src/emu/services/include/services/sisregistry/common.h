@@ -22,6 +22,7 @@
 namespace eka2l1 {
     enum sisregistry_opcode {
         sisregistry_open_registry_uid = 0x0,
+        sisregistry_open_registry_package = 0x1,
         sisregistry_close_registry_entry = 0x3,
         sisregistry_version = 0x5,
         sisregistry_localized_vendor_name = 0x8,
