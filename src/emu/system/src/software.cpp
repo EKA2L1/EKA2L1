@@ -218,12 +218,12 @@ namespace eka2l1::loader {
         common::pystr sw_line_py(line_buffer);
         auto sw_infos = sw_line_py.split("\\n");
 
-        firmcode = sw_infos[2].std_str();
+        firmcode = sw_infos[2].strip_reserverd().std_str();
         manufacturer = "Unknown";
 
         if (sw_infos.size() >= 4) {
             // Not really... But better then nothing.
-            manufacturer = sw_infos[3].std_str();
+            manufacturer = sw_infos[3].strip_reserverd().std_str();
         }
 
         common::dynamic_ifile model_file(add_path(version_folder, "model.txt"));
