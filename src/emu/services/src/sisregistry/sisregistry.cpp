@@ -59,6 +59,37 @@ namespace eka2l1 {
         }
     }
 
+    static std::size_t populate_filenames_with_limitation(common::chunkyseri &seri, package::object *obj, const std::uint32_t start_index, const std::size_t max_size, std::int32_t &fcount) {
+        seri.absorb(fcount);
+        bool count_filename = (fcount == -1);
+
+        if (count_filename) {
+            fcount = 0;
+        }
+
+        std::size_t last_size = 0;
+
+        for (std::size_t i = start_index; i < (count_filename ? obj->file_descriptions.size() : (start_index + fcount)); i++) {
+            epoc::absorb_des_string(obj->file_descriptions[i].target, seri, true);
+
+            if (count_filename) {
+                if (seri.size() <= max_size) {
+                    last_size = seri.size();
+                    fcount++;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        // Can't possibly continue
+        if (!obj->file_descriptions.empty() && (fcount == 0)) {
+            return static_cast<std::size_t>(-1);
+        }
+
+        return last_size;
+    }
+
     static void populate_uids(common::chunkyseri &seri, std::vector<manager::uid> &uids) {
         std::uint32_t uid_count = static_cast<std::uint32_t>(uids.size());
         seri.absorb(uid_count);
@@ -196,6 +227,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_files: {
+            request_files(ctx);
+            break;
+        }
+
         /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
@@ -219,11 +255,6 @@ namespace eka2l1 {
 
         case sisregistry_sids: {
             request_sids(ctx);
-            break;
-        }
-
-        case sisregistry_files: {
-            request_files(ctx);
             break;
         }
 
@@ -502,6 +533,7 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_subsession::request_stub_file_entries(eka2l1::service::ipc_context *ctx) {
+        /*
         std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(1);
         LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_stub_file_entries 0x{:X}", package_mode.value());
@@ -511,8 +543,10 @@ namespace eka2l1 {
             ctx->write_data_to_descriptor_argument<std::uint32_t>(2, file_count);
             ctx->complete(epoc::error_none);
         } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
+            std::int32_t total_filename_can_store = -1;
+
             common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-            populate_files(seri);
+            const std::size_t final_size = populate_filenames_with_limitation()
 
             std::vector<char> buf(seri.size());
             seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
@@ -521,7 +555,7 @@ namespace eka2l1 {
 
             ctx->write_data_to_descriptor_argument(3, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
             ctx->complete(epoc::error_none);
-        }
+        }*/
     }
 
     void sisregistry_client_subsession::request_uid(eka2l1::service::ipc_context *ctx) {
@@ -554,34 +588,52 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_subsession::request_files(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
         std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
-        LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_files 0x{:X}", package_mode.value());
 
         if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_count) {
-            std::uint32_t file_count = 0;
+            std::uint32_t file_count = static_cast<std::uint32_t>(obj->file_descriptions.size());
             ctx->write_data_to_descriptor_argument<std::uint32_t>(1, file_count);
-            ctx->complete(epoc::error_none);
         } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
-            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-            populate_files(seri);
+            std::optional<std::uint32_t> start_index = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
+            if (!start_index.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
 
-            std::vector<char> buf(seri.size());
-            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-                common::SERI_MODE_WRITE);
-            populate_files(seri);
+            std::size_t max_buffer_size = ctx->get_argument_max_data_size(2);
+            std::int32_t total_filename_can_store = -1;
+
+            if (!max_buffer_size) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+            const std::size_t final_size = populate_filenames_with_limitation(seri, obj, start_index.value(), max_buffer_size, total_filename_can_store);
+
+            if (final_size == static_cast<std::size_t>(-1)) {
+                LOG_ERROR(SERVICE_SISREGISTRY, "Buffer too small to hold at least one filename!");
+
+                ctx->complete(epoc::error_no_memory);
+                return;
+            }
+
+            std::vector<char> buf(final_size);
+            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+            populate_filenames_with_limitation(seri, obj, start_index.value(), final_size, total_filename_can_store);
 
             ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
-            ctx->complete(epoc::error_none);
+        } else {
+            LOG_ERROR(SERVICE_SISREGISTRY, "Unidentified stub extraction mode {}", static_cast<std::int32_t>(package_mode.value()));
         }
-    }
 
-    void sisregistry_client_subsession::populate_files(common::chunkyseri &seri) {
-        std::uint32_t file_count = 0;
-        seri.absorb(file_count);
-        for (size_t i = 0; i < file_count; i++) {
-            std::u16string filename;
-            epoc::absorb_des_string(filename, seri, true);
-        }
+        ctx->complete(epoc::error_none);
     }
 
     void sisregistry_client_subsession::request_file_descriptions(eka2l1::service::ipc_context *ctx) {

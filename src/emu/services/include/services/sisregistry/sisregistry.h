@@ -72,7 +72,6 @@ namespace eka2l1 {
         void request_uid(eka2l1::service::ipc_context *ctx);
         void get_entry(eka2l1::service::ipc_context *ctx);
         void request_stub_file_entries(eka2l1::service::ipc_context *ctx);
-        void populate_files(common::chunkyseri &seri);
         void request_file_descriptions(eka2l1::service::ipc_context *ctx);
         void populate_file_descriptions(common::chunkyseri &seri);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
