@@ -76,7 +76,6 @@ namespace eka2l1 {
         void populate_file_descriptions(common::chunkyseri &seri);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
         void is_non_removable(eka2l1::service::ipc_context *ctx);
-        void add_entry(eka2l1::service::ipc_context *ctx);
         void is_preinstalled(eka2l1::service::ipc_context *ctx);
         void get_package(eka2l1::service::ipc_context *ctx);
         void get_trust_timestamp(eka2l1::service::ipc_context *ctx);
@@ -102,5 +101,6 @@ namespace eka2l1 {
         void installed_uids(eka2l1::service::ipc_context *ctx);
         void installed_packages(eka2l1::service::ipc_context *ctx);
         void is_installed_uid(eka2l1::service::ipc_context *ctx);
+        void add_entry(eka2l1::service::ipc_context *ctx);
     };
 }

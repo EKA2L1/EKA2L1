@@ -155,6 +155,11 @@ namespace eka2l1 {
             installed_packages(ctx);
             break;
         }
+        
+        case sisregistry_add_entry: {
+            add_entry(ctx);
+            break;
+        }
 
         default: {
             // it's not real subsession. An integer
@@ -270,11 +275,6 @@ namespace eka2l1 {
 
         case sisregistry_package_op: {
             get_package(ctx);
-            break;
-        }
-
-        case sisregistry_add_entry: {
-            add_entry(ctx);
             break;
         }
 
@@ -439,6 +439,38 @@ namespace eka2l1 {
         std::int32_t package_installed = static_cast<std::int32_t>(pkgmngr->installed(package_uid.value()));
 
         ctx->write_data_to_descriptor_argument(1, package_installed);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::add_entry(eka2l1::service::ipc_context *ctx) {
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
+        std::size_t item_def_size = ctx->get_argument_data_size(0);
+        
+        if (!item_def_ptr || !item_def_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        common::chunkyseri seri(item_def_ptr, item_def_size, common::SERI_MODE_READ);
+
+        package::object obj;
+        obj.do_state(seri);
+
+        manager::controller_info controller_info;
+        controller_info.data_ = ctx->get_descriptor_argument_ptr(2);
+        controller_info.size_ = ctx->get_argument_data_size(2);
+
+        if (!mngr->add_package(obj, &controller_info)) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
         ctx->complete(epoc::error_none);
     }
 
@@ -656,18 +688,6 @@ namespace eka2l1 {
             package::file_description desc;
             desc.do_state(seri);
         }
-    }
-
-    void sisregistry_client_subsession::add_entry(eka2l1::service::ipc_context *ctx) {
-        std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
-        std::uint32_t size = ctx->get_argument_data_size(0);
-        common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
-        package::package package;
-        package.do_state(seri);
-
-        //server<sisregistry_server>()->added = true;
-
-        ctx->complete(epoc::error_none);
     }
 
     void sisregistry_client_subsession::request_package_augmentations(eka2l1::service::ipc_context *ctx) {        
