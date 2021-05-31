@@ -237,6 +237,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_package_op: {
+            get_package(ctx);
+            break;
+        }
+
         /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
@@ -270,11 +275,6 @@ namespace eka2l1 {
 
         case sisregistry_preinstalled: {
             is_preinstalled(ctx);
-            break;
-        }
-
-        case sisregistry_package_op: {
-            get_package(ctx);
             break;
         }
 
@@ -732,22 +732,32 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_subsession::get_package(eka2l1::service::ipc_context *ctx) {
-        package::package package;
-        package.uid = 0x2000AFDE;
-        package.index = 0x01000000;
-        package.package_name = u"The Sims 2 Pets";
-        package.vendor_name = u"Electronic Arts Inc.";
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        package::package pkg = static_cast<package::package&>(*obj);
 
         std::vector<std::uint8_t> buf;
         common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-        package.do_state(seri);
+        pkg.do_state(seri);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
 
         buf.resize(seri.size());
 
         seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
-        package.do_state(seri);
+        pkg.do_state(seri);
 
-        ctx->write_data_to_descriptor_argument(0, buf.data(), buf.size());
+        ctx->write_data_to_descriptor_argument(0, buf.data(), static_cast<std::uint32_t>(buf.size()));
         ctx->complete(epoc::error_none);
     }
 
