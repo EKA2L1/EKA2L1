@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <config/options.inl>
+
 #include <array>
 #include <atomic>
 #include <cstdint>
@@ -100,7 +102,7 @@ namespace eka2l1::config {
         bool cenrep_reset { false };
 
         std::vector<keybind> keybinds;
-        std::string imei;
+        std::string imei{ DEFAULT_IMI };
 
         void serialize();
         void deserialize();
