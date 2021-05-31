@@ -174,6 +174,9 @@ namespace eka2l1::package {
         std::uint32_t is_removable;
 
         void do_state(common::chunkyseri &seri);
+        bool is_preinstalled() const {
+            return (install_type == install_type_preinstalled_app) || (install_type == install_type_preinstalled_patch);
+        }
     };
 
     static constexpr const char16_t *REGISTRY_STORE_FOLDER = u"\\sys\\install\\sisregistry\\";

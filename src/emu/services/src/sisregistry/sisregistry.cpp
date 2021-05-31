@@ -242,6 +242,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_preinstalled: {
+            is_preinstalled(ctx);
+            break;
+        }
+
         /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
@@ -270,11 +275,6 @@ namespace eka2l1 {
 
         case sisregistry_file_descriptions: {
             request_file_descriptions(ctx);
-            break;
-        }
-
-        case sisregistry_preinstalled: {
-            is_preinstalled(ctx);
             break;
         }
 
@@ -725,7 +725,13 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_subsession::is_preinstalled(eka2l1::service::ipc_context *ctx) {
-        std::int32_t result = 0;
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        std::int32_t result = static_cast<std::int32_t>(obj->is_preinstalled());
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(0, result);
         ctx->complete(epoc::error_none);
