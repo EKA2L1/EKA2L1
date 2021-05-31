@@ -247,6 +247,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_signed_by_sucert: {
+            is_signed_by_sucert(ctx);
+            break;
+        }
+
         /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
@@ -285,11 +290,6 @@ namespace eka2l1 {
 
         case sisregistry_embedded_packages: {
             request_package_augmentations(ctx);
-            break;
-        }
-
-        case sisregistry_signed_by_sucert: {
-            is_signed_by_sucert(ctx);
             break;
         }
 
