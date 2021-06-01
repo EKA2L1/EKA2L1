@@ -58,8 +58,6 @@ namespace eka2l1 {
         manager::packages *package_manager(service::ipc_context *ctx);
         package::object *package_object(service::ipc_context *ctx);
 
-        void populate_sids(common::chunkyseri &seri);
-
     public:
         explicit sisregistry_client_subsession(const epoc::uid package_uid, const std::int32_t index = 0);
 
@@ -80,7 +78,6 @@ namespace eka2l1 {
         void get_trust_status(eka2l1::service::ipc_context *ctx);
         void request_sid_to_filename(eka2l1::service::ipc_context *ctx);
         void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
-        void sid_to_package(eka2l1::service::ipc_context *ctx);
         void request_sids(eka2l1::service::ipc_context *ctx);
         void close_registry(eka2l1::service::ipc_context *ctx);
     };
@@ -101,5 +98,6 @@ namespace eka2l1 {
         void is_installed_uid(eka2l1::service::ipc_context *ctx);
         void add_entry(eka2l1::service::ipc_context *ctx);
         void package_exists_in_rom(eka2l1::service::ipc_context *ctx);
+        void sid_to_package(eka2l1::service::ipc_context *ctx);
     };
 }

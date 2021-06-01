@@ -179,6 +179,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_sid_to_package: {
+            sid_to_package(ctx);
+            break;
+        }
+
         default: {
             // it's not real subsession. An integer
             std::optional<std::uint32_t> handle = ctx->get_argument_value<std::uint32_t>(3);
@@ -275,6 +280,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_sids: {
+            request_sids(ctx);
+            break;
+        }
+
         /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
@@ -291,10 +301,6 @@ namespace eka2l1 {
             break;
         }
 
-        case sisregistry_sids: {
-            request_sids(ctx);
-            break;
-        }
         case sisregistry_dependent_packages: {
             request_package_augmentations(ctx);
             break;
@@ -304,11 +310,7 @@ namespace eka2l1 {
             request_package_augmentations(ctx);
             break;
         }
-
-        case sisregistry_sid_to_package: {
-            sid_to_package(ctx);
-            break;
-        }*/
+        */
 
         default:
             LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry subsession 0x{:X}", ctx->msg->function);
@@ -509,6 +511,52 @@ namespace eka2l1 {
 
         ctx->write_data_to_descriptor_argument(1, obj->in_rom);
         ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::sid_to_package(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> package_sid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        if (!package_sid.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::uint8_t *target_buffer = ctx->get_descriptor_argument_ptr(1);
+        std::size_t target_max_length = ctx->get_argument_max_data_size(1);
+
+        if (!target_buffer || !target_max_length) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        manager::packages *mngr = ctx->sys->get_packages();
+
+        for (auto &[uid, obj]: *mngr) {
+            if (std::find(obj.sids.begin(), obj.sids.end(), package_sid.value()) != obj.sids.end()) {
+                package::package target_pkg = static_cast<package::package&>(obj);
+
+                common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+                target_pkg.do_state(seri);
+
+                if (seri.size() > target_max_length) {
+                    std::uint32_t target_length = static_cast<std::uint32_t>(seri.size());
+
+                    ctx->write_data_to_descriptor_argument(1, target_length);
+                    ctx->complete(epoc::error_overflow);
+                    return;
+                }
+
+                ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
+
+                seri = common::chunkyseri(target_buffer, target_max_length, common::SERI_MODE_WRITE);
+                target_pkg.do_state(seri);
+
+                ctx->complete(epoc::error_none);
+                return;
+            }
+        }
+
+        LOG_TRACE(SERVICE_SISREGISTRY, "SidToPackage for 0x{:X} can't be found", package_sid.value());
+        ctx->complete(epoc::error_not_found);
     }
 
     manager::packages *sisregistry_client_subsession::package_manager(service::ipc_context *ctx) {
@@ -831,55 +879,27 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_subsession::sid_to_package(eka2l1::service::ipc_context *ctx) {
-        std::optional<epoc::uid> package_sid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-        if (!package_sid.has_value()) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
-
-        if (package_sid.value() == 0x2000AFDE) {
-            package::package package;
-            package.uid = 0x2000AFDE;
-            package.index = 0x01000000;
-            package.package_name = u"The Sims 2 Pets";
-            package.vendor_name = u"Electronic Arts Inc.";
-
-            std::vector<std::uint8_t> buf;
-            common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-            package.do_state(seri);
-
-            buf.resize(seri.size());
-
-            seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
-            package.do_state(seri);
-
-            ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
-            ctx->complete(epoc::error_none);
-
-            return;
-        }
-
-        LOG_TRACE(SERVICE_SISREGISTRY, "SidToPackage for 0x{:X} stubbed with not found", package_sid.value());
-        ctx->complete(epoc::error_not_found);
-    }
-
-    void sisregistry_client_subsession::populate_sids(common::chunkyseri &seri) {
-        std::uint32_t count = 1;
-        seri.absorb(count);
-
-        std::uint32_t single_uid = 0x2000AFDE;
-        seri.absorb(single_uid);
-    }
-
     void sisregistry_client_subsession::request_sids(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-        populate_sids(seri);
+        populate_uids(seri, obj->sids);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
 
         std::vector<char> buf(seri.size());
-        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-            common::SERI_MODE_WRITE);
-        populate_sids(seri);
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_uids(seri, obj->sids);
 
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
         ctx->complete(epoc::error_none);
