@@ -790,6 +790,10 @@ namespace eka2l1::epoc {
         ctx.complete(connected_count);
     }
 
+    void window_server_client::get_focus_screen(service::ipc_context &ctx, ws_cmd &cmd) {
+        ctx.complete(get_ws().focus_screen_->number);
+    }
+
     void window_server_client::get_ready(service::ipc_context &ctx, ws_cmd *cmd, const event_listener_type list_type) {
         epoc::notify_info info;
         info.requester = ctx.msg->own_thr;
@@ -1052,7 +1056,11 @@ namespace eka2l1::epoc {
         case ws_cl_op_get_number_screen:
             get_number_of_screen(ctx, cmd);
             break;
-            
+
+        case ws_cl_op_get_focus_screen:
+            get_focus_screen(ctx, cmd);
+            break;
+
         case ws_cl_op_raw_event:
             add_raw_event(ctx, cmd);
             break;
