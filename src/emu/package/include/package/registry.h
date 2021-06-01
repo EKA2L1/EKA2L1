@@ -177,9 +177,11 @@ namespace eka2l1::package {
         bool is_preinstalled() const {
             return (install_type == install_type_preinstalled_app) || (install_type == install_type_preinstalled_patch);
         }
+
+        std::uint64_t total_size() const;
     };
 
     static constexpr const char16_t *REGISTRY_STORE_FOLDER = u"\\sys\\install\\sisregistry\\";
     static constexpr const char16_t *REGISTRY_FILE_FORMAT = u"{:08x}.reg";
-    static constexpr const char *CONTROLLER_FILE_FORMAT = "00000000_{:04x}.ctl";
+    static constexpr const char16_t *CONTROLLER_FILE_FORMAT = u"{:08x}_{:04x}.ctl";
 }

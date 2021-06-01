@@ -47,6 +47,7 @@ namespace eka2l1 {
         sisregistry_file_descriptions = 0x2F,
         sisregistry_package_augmentations = 0x30,
         sisregistry_preinstalled = 0x32,
+        sisregistry_size = 0x33,
         sisregistry_package_op = 0x34,
         sisregistry_non_removable = 0x36,
         sisregistry_add_entry = 0x41,

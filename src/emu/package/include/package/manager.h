@@ -102,6 +102,7 @@ namespace eka2l1 {
             bool add_package(package::object &pkg, const controller_info *controller_info);
             bool save_package(package::object &pkg);
             bool uninstall_package(package::object &pkg);
+            bool remove_registeration(package::object &pkg);
 
             bool install_package(const std::u16string &path, const drive_number drive, std::atomic<int> &progress, const bool silent = false);
         };

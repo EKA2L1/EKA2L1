@@ -247,4 +247,13 @@ namespace eka2l1::package {
             }
         }
     }
+
+    std::uint64_t object::total_size() const {
+        std::uint64_t result = 0;
+        for (const auto &desc: file_descriptions) {
+            result += desc.uncompressed_length;
+        }
+
+        return result;
+    }
 }

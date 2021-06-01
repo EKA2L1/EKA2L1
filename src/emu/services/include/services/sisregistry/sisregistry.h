@@ -78,6 +78,7 @@ namespace eka2l1 {
         void request_sid_to_filename(eka2l1::service::ipc_context *ctx);
         void is_signed_by_sucert(eka2l1::service::ipc_context *ctx);
         void request_sids(eka2l1::service::ipc_context *ctx);
+        void request_size(eka2l1::service::ipc_context *ctx);
         void close_registry(eka2l1::service::ipc_context *ctx);
     };
 
@@ -99,5 +100,6 @@ namespace eka2l1 {
         void package_exists_in_rom(eka2l1::service::ipc_context *ctx);
         void sid_to_package(eka2l1::service::ipc_context *ctx);
         void get_entry(eka2l1::service::ipc_context *ctx);
+        void update_entry(eka2l1::service::ipc_context *ctx);
     };
 }

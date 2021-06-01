@@ -281,9 +281,9 @@ namespace eka2l1 {
             const std::lock_guard<std::mutex> guard(lockdown);
             const bool no_new_package = is_installed && (pkg.install_type == package::install_type_partial_update);
             auto ite_range = objects_.equal_range(pkg.uid);
-            std::int32_t ctrl_offset = 0;
 
-            pkg.index = 0;
+            std::int32_t ctrl_offset = 0;
+            package::object *base_package = &pkg;
 
             switch (pkg.install_type) {
             case package::install_type_normal_install:
@@ -291,7 +291,11 @@ namespace eka2l1 {
                 break;
 
             case package::install_type_partial_update:
-                pkg.index = -1;
+                if (no_new_package) {
+                    pkg.index = -1;
+                    base_package = package(pkg.uid);
+                }
+
                 break;
 
             default: {
@@ -315,35 +319,30 @@ namespace eka2l1 {
             }
             }
 
-            if (pkg.controller_infos.size() > 1) {
-                LOG_ERROR(PACKAGE, "Controller info of added package should only be 1!");
-                return false;
-            } else if (!pkg.controller_infos.empty()) {
+            if (!pkg.controller_infos.empty() && no_new_package) {
                 // Find free index
                 static constexpr std::int32_t MAX_INDEX = 100000;
-                for (std::int32_t i = 0; i < MAX_INDEX; i++) {
-                    bool overlapped = false;
-                    for (auto ite = ite_range.first; ite != ite_range.second; ite++) {
-                        for (const auto &controller_info: ite->second.controller_infos) {
+                for (std::size_t m = 0; m < pkg.controller_infos.size(); m++) {
+                    for (std::int32_t i = 0; i < MAX_INDEX; i++) {
+                        bool overlapped = false;
+                        for (const auto &controller_info: base_package->controller_infos) {
                             if (controller_info.offset == i) {
                                 overlapped = true;
                                 break;
                             }
                         }
-                    }
 
-                    if (!overlapped) {
-                        ctrl_offset = i;
-                        pkg.controller_infos.back().offset = i;
+                        if (!overlapped) {
+                            ctrl_offset = i;
+                            pkg.controller_infos[m].offset = i;
 
-                        break;
+                            break;
+                        }
                     }
                 }
             }
 
             if (no_new_package) {
-                package::object *base_package = package(pkg.uid);
-
                 package::package me_as_embed;
                 me_as_embed.uid = pkg.uid;
                 me_as_embed.package_name = pkg.package_name;
@@ -359,6 +358,14 @@ namespace eka2l1 {
                 base_package->dependencies.insert(base_package->dependencies.end(), pkg.dependencies.begin(), pkg.dependencies.end());
                 base_package->controller_infos.insert(base_package->controller_infos.end(), pkg.controller_infos.begin(), pkg.controller_infos.end());
 
+                // Also add the files in
+                for (std::size_t i = 0; i < pkg.file_descriptions.size(); i++) {
+                    package::file_description new_desc = pkg.file_descriptions[i];
+                    new_desc.index = static_cast<std::uint32_t>(base_package->file_descriptions.size() + i);
+
+                    base_package->file_descriptions.push_back(std::move(new_desc));
+                }
+
                 if (!save_package(*base_package)) {
                     LOG_ERROR(PACKAGE, "Unable to write package info for 0x{:X}", base_package->uid);
                 }
@@ -370,7 +377,7 @@ namespace eka2l1 {
             
             if (controller_info) {
                 const std::u16string residing_folder = get_virtual_registry_folder(residing_, pkg.uid);
-                const std::u16string controller_path = add_path(residing_folder, common::utf8_to_ucs2(fmt::format(package::CONTROLLER_FILE_FORMAT, ctrl_offset)));
+                const std::u16string controller_path = add_path(residing_folder, fmt::format(package::CONTROLLER_FILE_FORMAT, base_package->index, ctrl_offset));
 
                 symfile controller_file = sys->open_file(controller_path, WRITE_MODE | BIN_MODE);
 
@@ -394,6 +401,47 @@ namespace eka2l1 {
 
             return true;
         }
+
+        bool packages::remove_registeration(package::object &pkg) {
+            auto obj_ite_range = objects_.equal_range(pkg.uid);
+
+            auto pkg_ite = obj_ite_range.first;
+            bool found = false;
+
+            for (pkg_ite; pkg_ite != obj_ite_range.second; pkg_ite++) {
+                if ((pkg_ite->second.uid == pkg.uid) && (pkg_ite->second.index == pkg.index)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                return false;
+            }
+
+            // Delete registry file
+            const std::u16string vpath = get_virtual_registry_regfile(residing_, pkg.uid, pkg.index);
+
+            // Delete associated controllers
+            for (std::size_t i = 0; i < pkg.controller_infos.size(); i++) {
+                const std::u16string ctrl_path = add_path(get_virtual_registry_folder(residing_, pkg.uid),
+                    fmt::format(package::CONTROLLER_FILE_FORMAT, pkg.index, pkg.controller_infos[i].offset));
+
+                sys->delete_entry(ctrl_path);
+            }
+
+            // Remove the object
+            objects_.erase(pkg_ite);
+
+            if (objects_.find(pkg.uid) == objects_.end()) {
+                std::u16string the_reg_path = get_virtual_registry_folder(residing_, pkg.uid);
+                if (std::optional<std::u16string> real_reg_path = sys->get_raw_path(the_reg_path)) {
+                    common::delete_folder(common::ucs2_to_utf8(real_reg_path.value()));
+                }
+            }
+
+            return true;
+        }
         
         bool packages::uninstall_package(package::object &pkg) {
             auto obj_ite_range = objects_.equal_range(pkg.uid);
@@ -408,6 +456,10 @@ namespace eka2l1 {
                 }
             }
 
+            if (!found) {
+                return false;
+            }
+
             // Delete files as requested by objects
             for (const package::file_description &desc: pkg.file_descriptions) {
                 if ((desc.operation == static_cast<int>(loader::ss_op::install)) || (desc.operation == static_cast<int>(loader::ss_op::null))) {
@@ -415,20 +467,7 @@ namespace eka2l1 {
                 }
             }
 
-            // Delete registry file
-            const std::u16string vpath = get_virtual_registry_regfile(residing_, pkg.uid, pkg.index);
-
-            // Remove the object
-            objects_.erase(pkg_ite);
-
-            if (objects_.find(pkg.uid) == objects_.end()) {
-                std::u16string the_reg_path = get_virtual_registry_folder(residing_, pkg.uid);
-                if (std::optional<std::u16string> real_reg_path = sys->get_raw_path(the_reg_path)) {
-                    common::delete_folder(common::ucs2_to_utf8(real_reg_path.value()));
-                }
-            }
-
-            return true;
+            return remove_registeration(pkg);
         }
 
         bool packages::installed(uid app_uid) {
