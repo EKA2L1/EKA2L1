@@ -64,7 +64,6 @@ namespace eka2l1 {
         explicit sisregistry_client_subsession(const epoc::uid package_uid, const std::int32_t index = 0);
 
         bool fetch(service::ipc_context *ctx);
-        
         void get_version(eka2l1::service::ipc_context *ctx);
         void is_in_rom(eka2l1::service::ipc_context *ctx);
         void get_selected_drive(eka2l1::service::ipc_context *ctx);
@@ -102,5 +101,6 @@ namespace eka2l1 {
         void installed_packages(eka2l1::service::ipc_context *ctx);
         void is_installed_uid(eka2l1::service::ipc_context *ctx);
         void add_entry(eka2l1::service::ipc_context *ctx);
+        void package_exists_in_rom(eka2l1::service::ipc_context *ctx);
     };
 }

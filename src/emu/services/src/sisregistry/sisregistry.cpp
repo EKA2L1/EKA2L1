@@ -161,6 +161,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_package_exists_in_rom: {
+            package_exists_in_rom(ctx);
+            break;
+        }
+
         default: {
             // it's not real subsession. An integer
             std::optional<std::uint32_t> handle = ctx->get_argument_value<std::uint32_t>(3);
@@ -255,11 +260,6 @@ namespace eka2l1 {
         /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
-            break;
-        }
-
-        case sisregistry_package_exists_in_rom: {
-            is_in_rom(ctx);
             break;
         }
 
@@ -471,6 +471,31 @@ namespace eka2l1 {
             return;
         }
 
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::package_exists_in_rom(eka2l1::service::ipc_context *ctx) {
+        std::optional<manager::uid> package_uid = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
+        if (!package_uid.has_value()) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        // On real implementation, they check the whole SIS stub files rawly. This is to bypass entries that lie about their infos
+        // But I think I will trust my people for now. Hope you are right
+        package::object *obj = mngr->package(package_uid.value());
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(1, obj->in_rom);
         ctx->complete(epoc::error_none);
     }
 
