@@ -184,6 +184,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_get_entry: {
+            get_entry(ctx);
+            break;
+        }
+
         default: {
             // it's not real subsession. An integer
             std::optional<std::uint32_t> handle = ctx->get_argument_value<std::uint32_t>(3);
@@ -293,11 +298,6 @@ namespace eka2l1 {
 
         case sisregistry_stub_file_entries: {
             request_stub_file_entries(ctx);
-            break;
-        }
-
-         case sisregistry_get_entry: {
-            get_entry(ctx);
             break;
         }
 
@@ -559,6 +559,47 @@ namespace eka2l1 {
         ctx->complete(epoc::error_not_found);
     }
 
+    void sisregistry_client_session::get_entry(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        std::uint8_t *buf_ptr = ctx->get_descriptor_argument_ptr(1);
+        std::size_t buf_max_size = ctx->get_argument_max_data_size(1);
+
+        if (!uid.has_value() || !buf_ptr || !buf_max_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        package::object *object = mngr->package(uid.value());
+        if (!object) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        object->do_state(seri);
+
+        if (seri.size() > buf_max_size) {
+            std::uint32_t target_len = static_cast<std::uint32_t>(seri.size());
+            ctx->write_data_to_descriptor_argument(1, target_len);
+            ctx->complete(epoc::error_overflow);
+
+            return;
+        }
+
+        ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
+
+        seri = common::chunkyseri(buf_ptr, buf_max_size, common::SERI_MODE_WRITE);
+        object->do_state(seri);
+
+        ctx->complete(epoc::error_none);
+    }
+
     manager::packages *sisregistry_client_subsession::package_manager(service::ipc_context *ctx) {
         return ctx->sys->get_packages();
     }
@@ -686,24 +727,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_subsession::get_entry(eka2l1::service::ipc_context *ctx) {
-        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-
-        package::object object;
-
-        std::vector<std::uint8_t> buf;
-        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-        object.do_state(seri);
-
-        buf.resize(seri.size());
-
-        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
-        object.do_state(seri);
-
-        ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
-        ctx->complete(epoc::error_none);
-    }
-
     void sisregistry_client_subsession::request_files(eka2l1::service::ipc_context *ctx) {
         package::object *obj = package_object(ctx);
         if (!obj) {
@@ -809,7 +832,7 @@ namespace eka2l1 {
         seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
         populate_packages(seri, results);
 
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
         ctx->complete(epoc::error_none);
     }
 
@@ -901,7 +924,7 @@ namespace eka2l1 {
         seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
         populate_uids(seri, obj->sids);
 
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
         ctx->complete(epoc::error_none);
     }
 }

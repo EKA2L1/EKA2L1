@@ -67,7 +67,6 @@ namespace eka2l1 {
         void get_selected_drive(eka2l1::service::ipc_context *ctx);
         void request_files(eka2l1::service::ipc_context *ctx);
         void request_uid(eka2l1::service::ipc_context *ctx);
-        void get_entry(eka2l1::service::ipc_context *ctx);
         void request_stub_file_entries(eka2l1::service::ipc_context *ctx);
         void request_file_descriptions(eka2l1::service::ipc_context *ctx);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
@@ -99,5 +98,6 @@ namespace eka2l1 {
         void add_entry(eka2l1::service::ipc_context *ctx);
         void package_exists_in_rom(eka2l1::service::ipc_context *ctx);
         void sid_to_package(eka2l1::service::ipc_context *ctx);
+        void get_entry(eka2l1::service::ipc_context *ctx);
     };
 }
