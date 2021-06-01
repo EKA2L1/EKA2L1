@@ -103,6 +103,19 @@ namespace eka2l1 {
         }
     }
 
+    static void populate_file_descriptions(common::chunkyseri &seri, std::vector<package::file_description> &descs) {
+        std::uint32_t desc_count = static_cast<std::uint32_t>(descs.size());
+        seri.absorb(desc_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            descs.resize(desc_count);
+        }
+
+        for (size_t i = 0; i < desc_count; i++) {
+            descs[i].do_state(seri);
+        }
+    }
+
     sisregistry_server::sisregistry_server(eka2l1::system *sys)
         : service::typical_server(sys, "!SisRegistryServer") {
     }
@@ -257,6 +270,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_file_descriptions: {
+            request_file_descriptions(ctx);
+            break;
+        }
+
         /*
         case sisregistry_sid_to_filename: {
             request_sid_to_filename(ctx);
@@ -277,12 +295,6 @@ namespace eka2l1 {
             request_sids(ctx);
             break;
         }
-
-        case sisregistry_file_descriptions: {
-            request_file_descriptions(ctx);
-            break;
-        }
-
         case sisregistry_dependent_packages: {
             request_package_augmentations(ctx);
             break;
@@ -694,25 +706,29 @@ namespace eka2l1 {
     }
 
     void sisregistry_client_subsession::request_file_descriptions(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-        populate_file_descriptions(seri);
+        populate_file_descriptions(seri, obj->file_descriptions);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
 
         std::vector<char> buf(seri.size());
-        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-            common::SERI_MODE_WRITE);
-        populate_file_descriptions(seri);
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_file_descriptions(seri, obj->file_descriptions);
 
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
         ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_subsession::populate_file_descriptions(common::chunkyseri &seri) {
-        std::uint32_t file_count = 0;
-        seri.absorb(file_count);
-        for (size_t i = 0; i < file_count; i++) {
-            package::file_description desc;
-            desc.do_state(seri);
-        }
     }
 
     void sisregistry_client_subsession::request_package_augmentations(eka2l1::service::ipc_context *ctx) {        
