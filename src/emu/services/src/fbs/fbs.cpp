@@ -232,6 +232,14 @@ namespace eka2l1 {
             set_pixel_size_in_twips(ctx);
             break;
 
+        case fbs_set_default_glyph_bitmap_type:
+            set_default_glyph_bitmap_type(ctx);
+            break;
+
+        case fbs_get_default_glyph_bitmap_type:
+            get_default_glyph_bitmap_type(ctx);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_FBS, "Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;
