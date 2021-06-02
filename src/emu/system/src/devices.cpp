@@ -155,6 +155,7 @@ namespace eka2l1 {
         if (ifile.fail()) {
             LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {}).", lang_path);
         } else {
+            ifile.set_ucs2(0); // Nokia 7610 isn't having a BOM
             std::string line;
             while (ifile.getline(line)) {
                 if ((line == "") || (line[0] == '\0'))
