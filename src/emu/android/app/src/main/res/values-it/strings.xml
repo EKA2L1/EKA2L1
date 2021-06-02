@@ -25,7 +25,7 @@
     <string name="enter_new_name">Inserisci un nuovo nome</string>
     <string name="no_device_dialog_title">Nessun dispositivo installato!</string>
     <string name="no_device_installed">Installa un dispositivo. Hai bisogno dei File e della ROM di un dispositivo Symbian per l\'installazione.\n\n<b>Nota:</b> Ogni app avrà bisogno di un dispositivo Symbian compatibile per l\'esecuzione.</string>
-    <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG sarà necessario, ne verrà richiesto il percorso in fase di installazione.</string>
+    <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG dovesse essere necessario, ne verrà richiesto il percorso in fase di installazione.</string>
     <string name="recommended_devices_to_install">Device raccomandati da installare</string>
     <string name="install_rpkg_corrupt">Il file RPKG selezionato è corrotto!</string>
     <string name="install_rpkg_file_not_found">Non è possibile aprire il file RPKG!</string>

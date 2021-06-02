@@ -13,7 +13,7 @@
     <string name="mount_sd">Zamontuj kartę MMC/SD</string>
     <string name="no_devices_found">Nie znaleziono urządzeń</string>
     <string name="exit">Wyjście</string>
-    <string name="rename">Rename</string>
+    <string name="rename">Zmień nazwę</string>
     <string name="save_log">Zapisz log</string>
     <string name="install">Zainstaluj</string>
     <string name="device_dump">Zrzut urządzenia</string>
@@ -22,11 +22,11 @@
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Ścieżka do VPL</string>
     <string name="install_method">Metoda instalacji</string>
-    <string name="enter_new_name">Enter new name</string>
+    <string name="enter_new_name">Wprowadź nową nazwę</string>
     <string name="no_device_dialog_title">Nie zainstalowano urządzenia!</string>
     <string name="no_device_installed">Zainstaluj urządzenie. Pliki i ROM urządzenia Symbiana są potrzebne by zacząć instalację.\n\n<b>Uwaga:</b> każda aplikacja będzie potrzebować odpowiedniego urządzenia Symbiana, by się uruchomić.</string>
     <string name="install_device_note_may_need_rpkg">Dla urządzeń S60v2 lub wyższych, możesz musieć dostarczyć dodatkowy plik zwany RPKG. Wyskoczy okienko wybierania ścieżki pliku jeśli instalator wykryje że jest na to potrzeba.</string>
-    <string name="recommended_devices_to_install">Recommend devices to install</string>
+    <string name="recommended_devices_to_install">Zalecane urządzenia do zainstalowania</string>
     <string name="install_rpkg_corrupt">Podany plik RPKG jest uszkodzony!</string>
     <string name="install_rpkg_file_not_found">Podany plik RPKG nie może być otworzony!</string>
     <string name="install_raw_dump_fail_to_copy">Nie udało się skopiować plików surowego zrzutu do miejsca docelowego!</string>
@@ -73,5 +73,5 @@
     <string name="log_saved">Log został zapisany</string>
     <string name="about_icon_by">&lt;BR&gt;Ikona autorstwa: </string>
     <string name="version">Wersja: </string>
-    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="recommended_devices_note"><b>Uwaga:</b> zalecane jest używać firmware\'u do instalacji urządzeń od S60v3 i wyżej.</string>
 </resources>
