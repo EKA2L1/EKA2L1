@@ -68,6 +68,10 @@ namespace eka2l1::common {
             return stream_.fail();
         }
 
+        void set_ucs2(int ucs2) {
+            ucs2_ = ucs2;
+        }
+
         inline bool is_ucs2() {
             return ucs2_ != -1;
         }
