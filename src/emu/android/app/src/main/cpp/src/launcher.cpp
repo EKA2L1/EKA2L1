@@ -195,19 +195,23 @@ namespace eka2l1::android {
     std::vector<std::string> launcher::get_packages() {
         manager::packages *manager = sys->get_packages();
         std::vector<std::string> info;
-        for (int i = 0; i < manager->package_count(); i++) {
-            const manager::package_info *pkg = manager->package(i);
-            std::string name = common::ucs2_to_utf8(pkg->name);
-            std::string uid = std::to_string(pkg->id);
+        for (const auto &[pkg_uid, pkg]: *manager) {
+            std::string name = common::ucs2_to_utf8(pkg.package_name);
+            std::string uid = std::to_string(pkg.uid);
+            std::string index = std::to_string(pkg.index);
             info.push_back(uid);
+            info.push_back(index);
             info.push_back(name);
         }
         return info;
     }
 
-    void launcher::uninstall_package(std::uint32_t uid) {
+    void launcher::uninstall_package(std::uint32_t uid, std::int32_t ext_index) {
         manager::packages *manager = sys->get_packages();
-        manager->uninstall_package(uid);
+        package::object *obj = manager->package(uid, ext_index);
+
+        if (obj)
+            manager->uninstall_package(*obj);
     }
 
     void launcher::mount_sd_card(std::string &path) {

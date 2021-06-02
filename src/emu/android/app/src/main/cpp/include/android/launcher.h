@@ -59,7 +59,7 @@ namespace eka2l1::android {
         device_installation_error install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg);
         bool does_rom_need_rpkg(const std::string &rom_path);
         std::vector<std::string> get_packages();
-        void uninstall_package(std::uint32_t uid);
+        void uninstall_package(std::uint32_t uid, std::int32_t ext_index);
         void mount_sd_card(std::string &path);
         void load_config();
         void set_language(std::uint32_t language_id);

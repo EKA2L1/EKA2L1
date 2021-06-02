@@ -204,8 +204,8 @@ Java_com_github_eka2l1_emu_Emulator_getPackages(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_eka2l1_emu_Emulator_uninstallPackage(JNIEnv *env, jclass clazz, jint uid) {
-    state->launcher->uninstall_package(uid);
+Java_com_github_eka2l1_emu_Emulator_uninstallPackage(JNIEnv *env, jclass clazz, jint uid, jint ext_index) {
+    state->launcher->uninstall_package(uid, ext_index);
 }
 
 extern "C"

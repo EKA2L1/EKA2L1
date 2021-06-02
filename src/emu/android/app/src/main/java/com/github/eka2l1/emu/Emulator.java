@@ -131,7 +131,7 @@ public class Emulator {
                     }
                 }
 
-                AppItem item = new AppItem(appUid, apps[i + 1], finalIcon);
+                AppItem item = new AppItem(appUid, 0, apps[i + 1], finalIcon);
                 items.add(item);
             }
             emitter.onSuccess(items);
@@ -141,8 +141,8 @@ public class Emulator {
     public static ArrayList<AppItem> getPackagesList() {
         String[] packages = getPackages();
         ArrayList<AppItem> items = new ArrayList<>();
-        for (int i = 0; i < packages.length; i += 2) {
-            AppItem item = new AppItem(Long.parseLong(packages[i]), packages[i + 1], null);
+        for (int i = 0; i < packages.length; i += 3) {
+            AppItem item = new AppItem(Long.parseLong(packages[i]), Long.parseLong(packages[i + 1]), packages[i + 2], null);
             items.add(item);
         }
         return items;
@@ -209,7 +209,7 @@ public class Emulator {
 
     public static native String[] getPackages();
 
-    public static native void uninstallPackage(int uid);
+    public static native void uninstallPackage(int uid, int extIndex);
 
     public static native void mountSdCard(String path);
 
