@@ -26,7 +26,7 @@
     <string name="no_device_dialog_title">Hiçbir cihaz kurulu değil!</string>
     <string name="no_device_installed">Lütfen bir cihaz kurun. Kurulum için bir Symbian cihazının dosyaları ve \n\n ROM\'una ihtiyaç vardır. <b>Not:</b> Her uygulamanın çalışması için uygun Symbian cihazına ihtiyacı olacaktır.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
-    <string name="recommended_devices_to_install">Recommend devices to install</string>
+    <string name="recommended_devices_to_install">Önerilen cihaz yüklemeleri</string>
     <string name="install_rpkg_corrupt">Yüklenen RPKG dosyası bozuk!</string>
     <string name="install_rpkg_file_not_found">Belirtilen RPKG dosyası açılamıyor!</string>
     <string name="install_raw_dump_fail_to_copy">Raw dump dosyaları hedefe kopyalanamadı!</string>
@@ -73,5 +73,5 @@
     <string name="log_saved">Günlük kaydedildi</string>
     <string name="about_icon_by">&lt;BR&gt;Simge Üreticisi: </string>
     <string name="version">Sürüm: </string>
-    <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
+    <string name="recommended_devices_note"><b>Not:</b> Kurulum için S60v3 ve üzerine ait bir yazılım kullanmanız önerilir.</string>
 </resources>
