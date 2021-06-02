@@ -928,7 +928,7 @@ namespace eka2l1::epoc {
         epoc::security_info *sec_info = info.get(kern->crr_process());
         process_ptr pr = kern->get<kernel::process>(h);
 
-        query_security_info(&(*pr), sec_info);
+        query_security_info(pr, sec_info);
     }
 
     BRIDGE_FUNC(void, thread_security_info, kernel::handle h, eka2l1::ptr<epoc::security_info> info) {
@@ -2864,7 +2864,7 @@ namespace eka2l1::epoc {
 
     // Let all pass for now
     BRIDGE_FUNC(std::int32_t, plat_sec_diagnostic, eka2l1::ptr<void> plat_sec_info) {
-        return epoc::error_none;
+        return epoc::error_permission_denied;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, get_global_userdata) {

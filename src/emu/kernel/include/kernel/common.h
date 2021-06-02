@@ -122,6 +122,18 @@ namespace eka2l1::kernel {
         kern_exec_exception_no_handler = 3
     };
 
+    /**
+     * @brief List of configuration flag, with default flags being in the ROM header.
+     * 
+     * Kernel is able to enable/disable these flags to enable different kernel features.
+     * Refer to u32std.h for more flags. This only contains currently flags that emulator uses.
+     */
+    enum kern_config_flag {
+        kern_config_flag_ipcv1_available = 1 << 0,
+        kern_config_flag_plat_sec_enforce = 1 << 1,
+        kern_config_flag_plat_sec_diag = 1 << 2
+    };
+
     static constexpr std::uint32_t INVALID_HANDLE = 0xFFFFFFFF;
     static const char16_t *KERN_EXEC_CAT = u"KERN-EXEC";
 }
