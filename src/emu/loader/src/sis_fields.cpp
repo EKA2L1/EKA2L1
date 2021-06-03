@@ -319,6 +319,8 @@ namespace eka2l1 {
 
             parse_field_child(&contents);
 
+            LOG_TRACE(PACKAGE, "{} {}", (int)contents.type, contents.len_high);
+
             int controller_checksum_avail;
             peek(&controller_checksum_avail, 1, 4, stream.get());
 
@@ -361,6 +363,12 @@ namespace eka2l1 {
             sis_controller controller;
 
             parse_field_child(&controller, no_type);
+
+            controller.raw_data.resize(controller.len_low | (static_cast<std::uint64_t>(controller.len_high) << 32));
+            const std::size_t current_pos = stream->tellg();
+
+            stream->read(reinterpret_cast<char*>(controller.raw_data.data()), controller.raw_data.size());
+            stream->seekg(current_pos, std::ios_base::beg);
 
             controller.info = parse_info();
             controller.options = parse_supported_options();

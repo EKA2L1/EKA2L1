@@ -19,6 +19,8 @@
  */
 
 #include <loader/sis_old.h>
+#include <loader/sis.h>
+
 #include <package/sis_v1_installer.h>
 
 #include <common/algorithm.h>
@@ -28,26 +30,34 @@
 #include <common/path.h>
 
 #include <vfs/vfs.h>
-
 #include <cwctype>
 
 namespace eka2l1::loader {
-    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive,
-        manager::package_info &info, std::vector<std::u16string> &package_files) {
-        loader::sis_old res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
+    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info) {
+        std::optional<sis_old> res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
+        if (!res.has_value()) {
+            return false;
+        }
 
-        info.drive = drive;
-        info.id = res.header.uid1;
-        info.vendor_name = u"Nokia";
+        info.drives = 1 << (drive - drive_a);
+        info.uid = res->header.uid1;
+        info.package_name = res->comp_names[0];
+        info.vendor_name = u"Unknown";
+        info.install_type = package::install_type_normal_install;
 
-        // Pick first one
-        info.name = res.comp_names[0];
+        info.supported_language_ids.resize(res->langs.size());
+        for (std::size_t i = 0; i < info.supported_language_ids.size(); i++) {
+            info.supported_language_ids[i] = static_cast<std::int32_t>(res->langs[i]);
+        }
 
-        for (auto &file : res.files) {
+        info.current_drives = info.drives;
+        info.is_removable = true;
+
+        for (auto &file : res->files) {
             std::u16string dest = file.dest;
 
             if (dest.find(u"!") != std::u16string::npos) {
-                dest.replace(0, 1, (info.drive == 0) ? u"c" : u"e");
+                dest[0] = drive_to_char16(drive);
             }
 
             if (file.record.file_type != 1 && dest != u"") {
@@ -57,7 +67,10 @@ namespace eka2l1::loader {
                 continue;
             }
 
-            package_files.push_back(dest);
+            package::file_description desc;
+            desc.operation = static_cast<std::int32_t>(loader::ss_op::install);
+            desc.target = dest;
+
             symfile f = io->open_file(dest, WRITE_MODE | BIN_MODE);
 
             LOG_TRACE(PACKAGE, "Installing file {}", common::ucs2_to_utf8(dest));
@@ -79,11 +92,16 @@ namespace eka2l1::loader {
             stream.zalloc = nullptr;
             stream.zfree = nullptr;
 
-            if (!(res.header.op & 0x8)) {
+            if (!(res->header.op & 0x8)) {
                 if (inflateInit(&stream) != MZ_OK) {
                     return false;
                 }
             }
+
+            desc.uncompressed_length = left;
+            desc.operation_options = 0;
+            desc.index = static_cast<std::uint32_t>(info.file_descriptions.size());
+            desc.sid = 0;
 
             while (left > 0) {
                 size_t took = left < chunk ? left : chunk;
@@ -96,7 +114,7 @@ namespace eka2l1::loader {
                     return false;
                 }
 
-                if (res.header.op & 0x8)
+                if (res->header.op & 0x8)
                     f->write_file(temp.data(), 1, static_cast<uint32_t>(took));
                 else {
                     uint32_t inf;
@@ -107,8 +125,10 @@ namespace eka2l1::loader {
                 left -= took;
             }
 
-            if (!(res.header.op & 0x8))
+            if (!(res->header.op & 0x8))
                 inflateEnd(&stream);
+
+            info.file_descriptions.push_back(std::move(desc));
         }
 
         return false;

@@ -478,7 +478,7 @@ namespace eka2l1::common {
         common::dir_entry entry;
 
         while (iterator.next_entry(entry) == 0) {
-            std::string name = iterator.dir_name + entry.name;
+            std::string name = add_path(iterator.dir_name, entry.name);
 
             if (entry.type == common::file_type::FILE_DIRECTORY) {
                 if ((entry.name != ".") && (entry.name != "..")) {

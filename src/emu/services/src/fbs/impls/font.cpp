@@ -900,6 +900,21 @@ namespace eka2l1 {
         ctx->complete(true);
     }
 
+    void fbscli::set_default_glyph_bitmap_type(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> default_type = ctx->get_argument_value<std::uint32_t>(0);
+        if (!default_type.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        server<fbs_server>()->set_default_glyph_bitmap_type(static_cast<epoc::glyph_bitmap_type>(default_type.value()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void fbscli::get_default_glyph_bitmap_type(service::ipc_context *ctx) {
+        ctx->complete(static_cast<int>(server<fbs_server>()->get_default_glyph_bitmap_type()));
+    }
+
     fbsfont::~fbsfont() {
         // Free atlas + bitmap
         atlas.free(serv->get_graphics_driver());

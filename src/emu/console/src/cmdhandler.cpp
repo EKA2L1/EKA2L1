@@ -73,10 +73,18 @@ bool package_remove_option_handler(eka2l1::common::arg_parser *parser, void *use
         return false;
     }
 
-    std::uint32_t vuid = common::pystr(uid).as_int<std::uint32_t>();
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    manager::packages *pkgmngr = emu->symsys->get_packages();
+    std::uint32_t vuid = common::pystr(uid).as_int<std::uint32_t>();
 
-    bool result = emu->symsys->get_packages()->uninstall_package(vuid);
+    package::object *oobj = pkgmngr->package(vuid);
+    bool result = true;
+
+    if (oobj) {
+        result = pkgmngr->uninstall_package(*oobj);
+    } else {
+        result = false;
+    }
 
     if (!result) {
         *err = "Failed to remove package.";

@@ -126,6 +126,9 @@ namespace eka2l1 {
         , stream_state_(epoc::mmf_state_idle)
         , desired_state_(epoc::mmf_state_idle)
         , stream_(nullptr)
+        , volume_(5)
+        , left_balance_(50)
+        , right_balance_(50)
         , finished_(false) {
         conf_ = get_caps();
 
@@ -140,6 +143,8 @@ namespace eka2l1 {
         case epoc::mmf_state_tone_playing:
             stream_ = drivers::new_dsp_out_stream(drv, drivers::dsp_stream_backend::dsp_stream_backend_ffmpeg);
             stream_->set_properties(8000, 2);
+
+            reinterpret_cast<drivers::dsp_output_stream*>(stream_.get())->volume(volume_);
 
             break;
 
@@ -194,8 +199,7 @@ namespace eka2l1 {
             return;
         }
 
-        settings->vol_ = static_cast<std::int32_t>(reinterpret_cast<drivers::dsp_output_stream*>(
-            stream_.get())->volume());
+        settings->vol_ = volume_;
 
         ctx->write_data_to_descriptor_argument<epoc::mmf_dev_sound_proxy_settings>(2, settings.value());
         ctx->complete(epoc::error_none);
@@ -222,8 +226,26 @@ namespace eka2l1 {
             return;
         }
 
-        const std::uint32_t final_volume = common::clamp<std::uint32_t>(0, 100, settings->vol_);
-        (reinterpret_cast<drivers::dsp_output_stream*>(stream_.get()))->volume(final_volume);
+        volume_ = common::clamp<std::uint32_t>(0, 100, settings->vol_);
+        
+        if (stream_)
+            (reinterpret_cast<drivers::dsp_output_stream*>(stream_.get()))->volume(volume_);
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void mmf_dev_server_session::set_play_balance(service::ipc_context *ctx) {
+        std::optional<epoc::mmf_dev_sound_proxy_settings> settings
+            = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
+
+        if (!settings) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        // TODO: Mixing audio with this arguments in stream
+        left_balance_ = settings->left_percentage_;
+        right_balance_ = settings->right_percentage_;
 
         ctx->complete(epoc::error_none);
     }
@@ -629,6 +651,10 @@ namespace eka2l1 {
 
             case epoc::mmf_dev_cancel_buffer_to_be_filled:
                 cancel_buffer_to_be_filled(ctx);
+                break;
+
+            case epoc::mmf_dev_set_play_balance:
+                set_play_balance(ctx);
                 break;
 
             /*

@@ -23,18 +23,22 @@ import android.graphics.Bitmap;
 
 public class AppItem {
     private long uid;
+    private long extIndex;
     private String title;
     private Bitmap icon;
 
-    public AppItem(long uid, String title, Bitmap icon) {
+    public AppItem(long uid, long extIndex, String title, Bitmap icon) {
         this.uid = uid;
         this.title = title;
         this.icon = icon;
+        this.extIndex = extIndex;
     }
 
     public long getUid() {
         return uid;
     }
+
+    public long getExtIndex() { return extIndex; }
 
     public void setUid(long uid) {
         this.uid = uid;

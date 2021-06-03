@@ -20,12 +20,13 @@
 #pragma once
 
 #include <common/types.h>
+#include <package/registry.h>
 
 #include <atomic>
 #include <fstream>
 #include <functional>
+#include <map>
 #include <mutex>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -34,6 +35,7 @@ namespace eka2l1 {
 
     namespace loader {
         struct sis_controller;
+        struct sis_registry_tree;
 
         using show_text_func = std::function<bool(const char *, const bool)>;
         using choose_lang_func = std::function<int(const int *langs, const int count)>;
@@ -48,26 +50,24 @@ namespace eka2l1 {
     namespace manager {
         using uid = uint32_t;
 
-        struct package_info {
-            std::u16string name;
-            std::u16string vendor_name;
-            drive_number drive;
-
-            uid id;
+        struct controller_info {
+            std::uint8_t *data_;
+            std::size_t size_;
         };
+
+        using object_map_type = std::multimap<uid, package::object>;
 
         // A package manager, serves for managing packages
         class packages {
-            std::vector<package_info> pkgs;
-
-            bool load_sdb_yaml(const std::string &path);
-            bool write_sdb_yaml(const std::string &path);
+            object_map_type objects_;
+            drive_number residing_;
 
             io_system *sys;
             config::state *conf;
 
-            bool install_controller(loader::sis_controller *ctrl, drive_number drv);
-            void add_package(package_info &pkg);
+        protected:
+            void traverse_tree_and_add_packages(loader::sis_registry_tree &tree);
+            void install_sis_stubs();
 
         public:
             mutable std::mutex lockdown;
@@ -76,24 +76,35 @@ namespace eka2l1 {
             loader::choose_lang_func choose_lang;
             loader::var_value_resolver_func var_resolver;
 
-            explicit packages(io_system *sys, config::state *conf);
-
+            explicit packages(io_system *sys, config::state *conf, const drive_number residing = drive_c);
             bool installed(const uid pkg_uid);
 
+            void migrate_legacy_registries();
+            void load_registries();
+
             const std::size_t package_count() const {
-                return pkgs.size();
+                return objects_.size();
+            }
+
+            object_map_type::iterator begin() {
+                return objects_.begin();
+            }
+
+            object_map_type::iterator end() {
+                return objects_.end();
             }
 
             // No thread safe
-            const package_info *package(const std::size_t idx) const;
-            void get_file_bucket(const manager::uid pkg_uid, std::vector<std::string> &paths);
-            bool add_to_file_bucket(const uid package_uid, const std::string &path);
-            void delete_files_and_bucket(const uid package_uid);
+            package::object *package(const uid app_uid, const std::int32_t index = 0);
+            std::vector<package::object *> augmentations(const uid app_uid);
+            std::vector<uid> installed_uids() const;
 
-            bool install_package(const std::u16string &path, const drive_number drive,
-                std::atomic<int> &progress);
+            bool add_package(package::object &pkg, const controller_info *controller_info);
+            bool save_package(package::object &pkg);
+            bool uninstall_package(package::object &pkg);
+            bool remove_registeration(package::object &pkg);
 
-            bool uninstall_package(const uid app_uid);
+            bool install_package(const std::u16string &path, const drive_number drive, std::atomic<int> &progress, const bool silent = false);
         };
     }
 }

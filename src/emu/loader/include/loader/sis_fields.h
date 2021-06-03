@@ -257,29 +257,29 @@ namespace eka2l1 {
         };
 
         enum class ss_op {
-            EOpNull = 0,
-            EOpInstall = 1,
-            EOpRun = 2,
-            EOpText = 4
+            install = 1,
+            run = 2,
+            text = 4,
+            null = 8
         };
 
         enum class ss_io_option {
             EInstVerifyOnRestore = 1 << 15,
         };
 
-        enum class ss_fr_option {
-            EInstFileRunOptionInstall = 1 << 1,
-            EInstFileRunOptionUninstall = 1 << 2,
-            EInstFileRunOptionByMimeTime = 1 << 3,
-            EInstFileRunOptionWaitEnd = 1 << 4,
-            EInstFileRunOptionSendEnd = 1 << 5
+        enum class ss_fr_when_option {
+            install = 1 << 1,
+            uninstall = 1 << 2,
+            by_mime_type = 1 << 3,
+            wait_end = 1 << 4,
+            send_end = 1 << 5
         };
 
         enum class ss_ft_option {
-            EInstFileTextOptionContinue = 1 << 9,
-            EInstFileTextOptionSkipIfNo = 1 << 10,
-            EInstFileTextOptionAbortIfNo = 1 << 11,
-            EInstFileTextOptionExitIfNo = 1 << 12
+            let_continue = 1 << 9,
+            skip_if_no = 1 << 10,
+            abort_if_no = 1 << 11,
+            exit_if_no = 1 << 12
         };
 
         struct sis_capabilities : public sis_blob {};
@@ -362,6 +362,7 @@ namespace eka2l1 {
             sis_data_index idx;
 
             sis_lang chosen_lang = sis_lang::en;
+            std::vector<std::uint8_t> raw_data;
         };
 
         struct sis_expression;
@@ -417,7 +418,7 @@ namespace eka2l1 {
             void switch_stream();
             void set_alternative_stream(std::shared_ptr<std::istream> astream);
 
-            sis_parser(const std::string name);
+            explicit sis_parser(const std::string name);
             sis_header parse_header();
 
             // Parse a compressed block. Inflate the block if needed

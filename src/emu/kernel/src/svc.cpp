@@ -928,7 +928,7 @@ namespace eka2l1::epoc {
         epoc::security_info *sec_info = info.get(kern->crr_process());
         process_ptr pr = kern->get<kernel::process>(h);
 
-        query_security_info(&(*pr), sec_info);
+        query_security_info(pr, sec_info);
     }
 
     BRIDGE_FUNC(void, thread_security_info, kernel::handle h, eka2l1::ptr<epoc::security_info> info) {
@@ -971,16 +971,18 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        kernel::thread *owner = ss->get_server()->get_owner_thread();
+        server_ptr svr = ss->get_server();
+        kernel::thread *owner = svr->get_owner_thread();
         if (owner) {
             // It gets policy from the server running the process
             query_security_info(owner->owning_process(), info);
         } else {
-            // Sometimes it's HLEd, so fill all
             info->reset();
+            info->secure_id = svr->get_owner_secure_uid();
+            info->vendor_id = svr->get_owner_vendor_uid();
 
-            info->caps_u[0] = 0xFFFFFFFF;
-            info->caps_u[2] = 0xFFFFFFFF;
+            // Maybe HLE, set all capabilities to available
+            std::fill(info->caps_u, info->caps_u + epoc::security_info::total_caps_u_size, 0xFFFFFFFF);
         }
 
         return epoc::error_none;
@@ -2863,8 +2865,8 @@ namespace eka2l1::epoc {
     }
 
     // Let all pass for now
-    BRIDGE_FUNC(std::int32_t, plat_sec_diagnostic, eka2l1::ptr<void> plat_sec_info) {
-        return epoc::error_none;
+    BRIDGE_FUNC(std::int32_t, plat_sec_diagnostic, kernel::plat_sec_diagnostic *diag) {
+        return epoc::error_permission_denied;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, get_global_userdata) {
@@ -5342,6 +5344,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, thread_suspend),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
+        BRIDGE_REGISTER(0x30, thread_request_count),
         BRIDGE_REGISTER(0x31, thread_exit_type),
         BRIDGE_REGISTER(0x35, timer_cancel),
         BRIDGE_REGISTER(0x36, timer_after),
@@ -5436,6 +5439,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDA, plat_sec_diagnostic),
         BRIDGE_REGISTER(0xDB, exception_descriptor),
         BRIDGE_REGISTER(0xDC, thread_request_signal),
+        BRIDGE_REGISTER(0xDD, mutex_is_held),
         BRIDGE_REGISTER(0xDE, leave_start),
         BRIDGE_REGISTER(0xDF, leave_end),
         BRIDGE_REGISTER(0xE4, session_security_info),

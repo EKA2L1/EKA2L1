@@ -648,8 +648,8 @@ namespace eka2l1::arm::r12l1 {
 
         block->thumb_ = is_thumb;
 
-        LOG_TRACE(CPU_12L1R, "Compiling new block PC=0x{:X}, host=0x{:X}, thumb={}", addr,
-            reinterpret_cast<std::uint32_t>(block->translated_code_), is_thumb);
+        // LOG_TRACE(CPU_12L1R, "Compiling new block PC=0x{:X}, host=0x{:X}, thumb={}", addr,
+        //     reinterpret_cast<std::uint32_t>(block->translated_code_), is_thumb);
 
         std::unique_ptr<visit_session> visitor = nullptr;
 

@@ -323,20 +323,14 @@ namespace eka2l1::epoc {
             str.resize(len);
             
             if (unicode) {
-                std::string raw_temp;
-                raw_temp.resize((len + 5) * sizeof(T));
                 str.resize(len);
 
-                seri.absorb_impl(reinterpret_cast<std::uint8_t*>(&raw_temp[0]), raw_temp.length());
-
-                int source_size = static_cast<int>(raw_temp.length());
                 int dest_size = static_cast<int>(str.length() * sizeof(T));
+                int source_size = dest_size;
 
                 common::unicode_expander expander;
-                expander.expand(reinterpret_cast<std::uint8_t*>(raw_temp.data()), source_size, reinterpret_cast<std::uint8_t*>(str.data()),
-                    dest_size);
+                expander.expand(seri.current(), source_size, reinterpret_cast<std::uint8_t*>(str.data()), dest_size);
 
-                seri.backwards(raw_temp.length());
                 seri.absorb_impl(nullptr, source_size);
             } else {        
                 seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len * sizeof(T));

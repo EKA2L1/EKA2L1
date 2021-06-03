@@ -31,13 +31,13 @@
 
 namespace eka2l1 {
     namespace service {
-        ipc_context::ipc_context(const bool auto_free, const bool accurate_timing)
-            : auto_free(auto_free)
-            , accurate_timing(accurate_timing) {
+        ipc_context::ipc_context(const bool accurate_timing)
+            : accurate_timing(accurate_timing) {
         }
 
         ipc_context::~ipc_context() {
-            msg->unref();
+            if (auto_deref)
+                msg->unref();
         }
 
         template <typename T>
@@ -356,7 +356,7 @@ namespace eka2l1 {
 
             if (func_ite == ipc_funcs.end()) {
                 if (unhandle_callback_enable) {
-                    ipc_context context(true, conf->accurate_ipc_timing);
+                    ipc_context context(conf->accurate_ipc_timing);
 
                     context.sys = sys;
                     context.msg = process_msg;
@@ -371,7 +371,7 @@ namespace eka2l1 {
             }
 
             ipc_func ipf = func_ite->second;
-            ipc_context context(false, conf->accurate_ipc_timing);
+            ipc_context context(conf->accurate_ipc_timing);
             context.sys = sys;
             context.msg = process_msg;
 

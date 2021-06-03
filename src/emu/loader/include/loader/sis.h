@@ -33,8 +33,14 @@
 
 namespace eka2l1 {
     namespace loader {
+        enum sis_type {
+            sis_type_old,
+            sis_type_new,
+            sis_type_new_stub
+        };
+
         // Identify epoc version from the SIS
-        std::optional<epocver> get_epoc_ver(std::string path);
-        sis_contents parse_sis(std::string path);
+        std::optional<sis_type> identify_sis_type(const std::string &path);
+        sis_contents parse_sis(const std::string &path, const bool is_stub);
     }
 }

@@ -22,6 +22,7 @@
 #include <services/sisregistry/sisregistry.h>
 
 #include <package/registry.h>
+#include <package/manager.h>
 
 #include <utils/consts.h>
 #include <utils/err.h>
@@ -30,6 +31,104 @@
 #include <common/time.h>
 
 namespace eka2l1 {
+    static void populate_all_packages(common::chunkyseri &seri, manager::packages *mngr) {
+        std::uint32_t package_count = static_cast<std::uint32_t>(mngr->package_count());
+        seri.absorb(package_count);
+
+        for (const auto &pkg: *mngr) {
+            package::package copied_package = static_cast<const package::package&>(pkg.second);
+            copied_package.do_state(seri);
+        }
+    }
+
+    static void populate_packages(common::chunkyseri &seri, std::vector<package::object *> &pkgs) {
+        std::uint32_t property_count = static_cast<std::uint32_t>(pkgs.size());
+        seri.absorb(property_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            pkgs.resize(property_count);
+        }
+
+        for (size_t i = 0; i < property_count; i++) {
+            package::package copied_package = static_cast<package::package&>(*pkgs[i]);
+            copied_package.do_state(seri);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                static_cast<package::package&>(*pkgs[i]) = copied_package;
+            }
+        }
+    }
+
+    static void populate_raw_packages(common::chunkyseri &seri, std::vector<package::package> &pkgs) {
+        std::uint32_t property_count = static_cast<std::uint32_t>(pkgs.size());
+        seri.absorb(property_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            pkgs.resize(property_count);
+        }
+
+        for (size_t i = 0; i < property_count; i++) {
+            pkgs[i].do_state(seri);
+        }
+    }
+
+    static std::size_t populate_filenames_with_limitation(common::chunkyseri &seri, package::object *obj, const std::uint32_t start_index, const std::size_t max_size, std::int32_t &fcount) {
+        seri.absorb(fcount);
+        bool count_filename = (fcount == -1);
+
+        if (count_filename) {
+            fcount = 0;
+        }
+
+        std::size_t last_size = 0;
+
+        for (std::size_t i = start_index; i < (count_filename ? obj->file_descriptions.size() : (start_index + fcount)); i++) {
+            epoc::absorb_des_string(obj->file_descriptions[i].target, seri, true);
+
+            if (count_filename) {
+                if (seri.size() <= max_size) {
+                    last_size = seri.size();
+                    fcount++;
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        // Can't possibly continue
+        if (!obj->file_descriptions.empty() && (fcount == 0)) {
+            return static_cast<std::size_t>(-1);
+        }
+
+        return last_size;
+    }
+
+    static void populate_uids(common::chunkyseri &seri, std::vector<manager::uid> &uids) {
+        std::uint32_t uid_count = static_cast<std::uint32_t>(uids.size());
+        seri.absorb(uid_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            uids.resize(uid_count);
+        }
+
+        for (size_t i = 0; i < uid_count; i++) {
+            seri.absorb(uids[i]);
+        }
+    }
+
+    static void populate_file_descriptions(common::chunkyseri &seri, std::vector<package::file_description> &descs) {
+        std::uint32_t desc_count = static_cast<std::uint32_t>(descs.size());
+        seri.absorb(desc_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            descs.resize(desc_count);
+        }
+
+        for (size_t i = 0; i < desc_count; i++) {
+            descs[i].do_state(seri);
+        }
+    }
+
     sisregistry_server::sisregistry_server(eka2l1::system *sys)
         : service::typical_server(sys, "!SisRegistryServer") {
     }
@@ -44,6 +143,11 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version) {
     }
 
+    sisregistry_client_subsession::sisregistry_client_subsession(const epoc::uid package_uid, const std::int32_t index)
+        : package_uid_(package_uid)
+        , index_(index) {
+    }
+
     void sisregistry_client_session::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() < epocver::epoc95) {
             if ((ctx->msg->function >= sisregistry_get_matching_supported_languages) &&
@@ -55,6 +159,82 @@ namespace eka2l1 {
         switch (ctx->msg->function) {
         case sisregistry_open_registry_uid: {
             open_registry_uid(ctx);
+            break;
+        }
+
+        case sisregistry_open_registry_package: {
+            open_registry_by_package(ctx);
+            break;
+        }
+
+        case sisregistry_installed_uid: {
+            is_installed_uid(ctx);
+            break;
+        }
+
+        case sisregistry_installed_uids: {
+            installed_uids(ctx);
+            break;
+        }
+
+        case sisregistry_installed_packages: {
+            installed_packages(ctx);
+            break;
+        }
+        
+        case sisregistry_add_entry: {
+            add_entry(ctx);
+            break;
+        }
+
+        case sisregistry_package_exists_in_rom: {
+            package_exists_in_rom(ctx);
+            break;
+        }
+
+        case sisregistry_sid_to_package: {
+            sid_to_package(ctx);
+            break;
+        }
+
+        case sisregistry_get_entry: {
+            get_entry(ctx);
+            break;
+        }
+
+        case sisregistry_update_entry: {
+            update_entry(ctx);
+            break;
+        }
+
+        default: {
+            // it's not real subsession. An integer
+            std::optional<std::uint32_t> handle = ctx->get_argument_value<std::uint32_t>(3);
+            if (handle.has_value()) {
+                sisregistry_client_subsession_inst *inst = subsessions_.get(handle.value());
+                if (inst) {
+                    if ((*inst)->fetch(ctx)) {
+                        subsessions_.remove(handle.value());
+                    }
+                    break;
+                }
+            }
+
+            LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry session 0x{:X}", ctx->msg->function);
+            ctx->complete(epoc::error_none);
+            break;
+        }
+        }
+    }
+
+    bool sisregistry_client_subsession::fetch(service::ipc_context *ctx) {
+        bool del = false;
+
+        switch (ctx->msg->function) {
+        case sisregistry_close_registry_entry: {
+            close_registry(ctx);
+            del = true;
+
             break;
         }
 
@@ -83,53 +263,13 @@ namespace eka2l1 {
             break;
         }
 
-        case sisregistry_sid_to_filename: {
-            request_sid_to_filename(ctx);
-            break;
-        }
-
-        case sisregistry_package_exists_in_rom: {
-            is_in_rom(ctx);
-            break;
-        }
-
-        case sisregistry_stub_file_entries: {
-            request_stub_file_entries(ctx);
-            break;
-        }
-
-        case sisregistry_installed_packages: {
-            request_package_augmentations(ctx);
-            break;
-        }
-
-        case sisregistry_installed_uid: {
-            is_installed_uid(ctx);
-            break;
-        }
-
         case sisregistry_uid: {
             request_uid(ctx);
             break;
         }
 
-         case sisregistry_get_entry: {
-            get_entry(ctx);
-            break;
-        }
-
-        case sisregistry_sids: {
-            request_sids(ctx);
-            break;
-        }
-
-        case sisregistry_files: {
-            request_files(ctx);
-            break;
-        }
-
-        case sisregistry_file_descriptions: {
-            request_file_descriptions(ctx);
+        case sisregistry_non_removable: {
+            is_non_removable(ctx);
             break;
         }
         
@@ -138,8 +278,8 @@ namespace eka2l1 {
             break;
         }
 
-        case sisregistry_preinstalled: {
-            is_preinstalled(ctx);
+        case sisregistry_files: {
+            request_files(ctx);
             break;
         }
 
@@ -147,24 +287,9 @@ namespace eka2l1 {
             get_package(ctx);
             break;
         }
-        
-        case sisregistry_non_removable: {
-            is_non_removable(ctx);
-            break;
-        }
 
-        case sisregistry_add_entry: {
-            add_entry(ctx);
-            break;
-        }
-
-        case sisregistry_dependent_packages: {
-            request_package_augmentations(ctx);
-            break;
-        }
-
-        case sisregistry_embedded_packages: {
-            request_package_augmentations(ctx);
+        case sisregistry_preinstalled: {
+            is_preinstalled(ctx);
             break;
         }
 
@@ -173,277 +298,237 @@ namespace eka2l1 {
             break;
         }
 
-        case sisregistry_sid_to_package: {
-            sid_to_package(ctx);
+        case sisregistry_file_descriptions: {
+            request_file_descriptions(ctx);
+            break;
+        }
+
+        case sisregistry_sids: {
+            request_sids(ctx);
+            break;
+        }
+
+        case sisregistry_size: {
+            request_size(ctx);
+            break;
+        }
+
+        case sisregistry_package_name: {
+            request_package_name(ctx);
+            break;
+        }
+
+        case sisregistry_localized_vendor_name: {
+            request_vendor_localized_name(ctx);
+            break;
+        }
+
+        case sisregistry_embedded_packages: {
+            request_embedded_packages(ctx);
             break;
         }
 
         default:
-            LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry server 0x{:X}", ctx->msg->function);
+            LOG_ERROR(SERVICE_SISREGISTRY, "Unimplemented opcode for sisregistry subsession 0x{:X}", ctx->msg->function);
             ctx->complete(epoc::error_none);
             break;
         }
+
+        return del;
     }
 
     void sisregistry_client_session::open_registry_uid(eka2l1::service::ipc_context *ctx) {
         auto uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         LOG_TRACE(SERVICE_SISREGISTRY, "Open new subsession for UID 0x{:X}", uid.value());
 
-        if (uid.value() == 0x20003b78 || (uid.value() == 0x2000AFDE && server<sisregistry_server>()->added))
-            ctx->complete(epoc::error_none);
-        else
+        // Do a check of the object inside
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        const package::object *obj = pkgmngr->package(uid.value());
+        if (!obj) {
+            LOG_ERROR(SERVICE_SISREGISTRY, "Package with UID 0x{:X} not found!", uid.value());
             ctx->complete(epoc::error_not_found);
-    }
 
-    void sisregistry_client_session::get_version(eka2l1::service::ipc_context *ctx) {
-        epoc::version version;
-        version.major = 1;
-        version.minor = 40;
-        version.build = 1557;
-
-        ctx->write_data_to_descriptor_argument(0, version);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::is_in_rom(eka2l1::service::ipc_context *ctx) {
-        uint32_t in_rom = false;
-
-        ctx->write_data_to_descriptor_argument(0, in_rom);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::get_selected_drive(eka2l1::service::ipc_context *ctx) {
-        std::int32_t result = 'E';
-
-        ctx->write_data_to_descriptor_argument(0, result);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::get_trust_timestamp(eka2l1::service::ipc_context *ctx) {
-        std::uint64_t timestamp = common::get_current_time_in_microseconds_since_1ad();
-
-        ctx->write_data_to_descriptor_argument(0, timestamp);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::get_trust_status(eka2l1::service::ipc_context *ctx) {
-        package::trust_status status;
-        status.revocation_status = package::revocation_ocsp_good;
-        status.validation_status = package::validation_validated;
-
-        ctx->write_data_to_descriptor_argument(0, status);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::request_sid_to_filename(eka2l1::service::ipc_context *ctx) {
-        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-
-        package::file_description desc;
-        desc.target = u"E:\\sys\\bin\\Sims2Pets_NGage.exe";
-
-        std::vector<std::uint8_t> buf;
-        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-        desc.do_state(seri);
-
-        buf.resize(seri.size());
-        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
-        desc.do_state(seri);
-
-        ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::request_stub_file_entries(eka2l1::service::ipc_context *ctx) {
-        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-        std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(1);
-        LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_stub_file_entries 0x{:X}", package_mode.value());
-
-        if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_count) {
-            std::uint32_t file_count = 0;
-            ctx->write_data_to_descriptor_argument<std::uint32_t>(2, file_count);
-            ctx->complete(epoc::error_none);
-        } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
-            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-            populate_files(seri);
-
-            std::vector<char> buf(seri.size());
-            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-                common::SERI_MODE_WRITE);
-            populate_files(seri);
-
-            ctx->write_data_to_descriptor_argument(3, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
-            ctx->complete(epoc::error_none);
+            return;
         }
-    }
 
-    void sisregistry_client_session::request_uid(eka2l1::service::ipc_context *ctx) {
-        epoc::uid uid = 0x2000AFDE;
+        sisregistry_client_subsession_inst inst = std::make_unique<sisregistry_client_subsession>(uid.value());
+        std::uint32_t handle = static_cast<std::uint32_t>(subsessions_.add(inst));
 
-        ctx->write_data_to_descriptor_argument(0, uid);
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, handle);
         ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::get_entry(eka2l1::service::ipc_context *ctx) {
-        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-
-        package::object object;
-
-        std::vector<std::uint8_t> buf;
-        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-        object.do_state(seri);
-
-        buf.resize(seri.size());
-
-        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
-        object.do_state(seri);
-
-        ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::request_files(eka2l1::service::ipc_context *ctx) {
-        std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
-        LOG_TRACE(SERVICE_SISREGISTRY, "sisregistry_files 0x{:X}", package_mode.value());
-
-        if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_count) {
-            std::uint32_t file_count = 0;
-            ctx->write_data_to_descriptor_argument<std::uint32_t>(1, file_count);
-            ctx->complete(epoc::error_none);
-        } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
-            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-            populate_files(seri);
-
-            std::vector<char> buf(seri.size());
-            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-                common::SERI_MODE_WRITE);
-            populate_files(seri);
-
-            ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
-            ctx->complete(epoc::error_none);
+    void sisregistry_client_session::open_registry_by_package(eka2l1::service::ipc_context *ctx) {
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
         }
-    }
 
-    void sisregistry_client_session::populate_files(common::chunkyseri &seri) {
-        std::uint32_t file_count = 0;
-        seri.absorb(file_count);
-        for (size_t i = 0; i < file_count; i++) {
-            std::u16string filename;
-            epoc::absorb_des_string(filename, seri, true);
-        }
-    }
+        std::uint8_t *buffer = ctx->get_descriptor_argument_ptr(0);
+        std::size_t buffer_size = ctx->get_argument_max_data_size(0);
 
-    void sisregistry_client_session::request_file_descriptions(eka2l1::service::ipc_context *ctx) {
-        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-        populate_file_descriptions(seri);
-
-        std::vector<char> buf(seri.size());
-        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-            common::SERI_MODE_WRITE);
-        populate_file_descriptions(seri);
-
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::populate_file_descriptions(common::chunkyseri &seri) {
-        std::uint32_t file_count = 0;
-        seri.absorb(file_count);
-        for (size_t i = 0; i < file_count; i++) {
-            package::file_description desc;
-            desc.do_state(seri);
-        }
-    }
-
-    void sisregistry_client_session::add_entry(eka2l1::service::ipc_context *ctx) {
-        std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
-        std::uint32_t size = ctx->get_argument_data_size(0);
-        common::chunkyseri seri(item_def_ptr, size, common::SERI_MODE_READ);
-        package::package package;
-        package.do_state(seri);
-
-        server<sisregistry_server>()->added = true;
-
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::request_package_augmentations(eka2l1::service::ipc_context *ctx) {
-        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-        populate_augmentations(seri);
-
-        std::vector<char> buf(seri.size());
-        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-            common::SERI_MODE_WRITE);
-        populate_augmentations(seri);
-
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::populate_augmentations(common::chunkyseri &seri) {
-        std::uint32_t property_count = 1;
-        seri.absorb(property_count);
-        for (size_t i = 0; i < property_count; i++) {
-            package::package package;
-            package.index = 0;
-            package.do_state(seri);
-        }
-    }
-
-    void sisregistry_client_session::is_preinstalled(eka2l1::service::ipc_context *ctx) {
-        std::int32_t result = 0;
-
-        ctx->write_data_to_descriptor_argument<std::int32_t>(0, result);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::get_package(eka2l1::service::ipc_context *ctx) {
-        package::package package;
-        package.uid = 0x2000AFDE;
-        package.index = 0x01000000;
-        package.package_name = u"The Sims 2 Pets";
-        package.vendor_name = u"Electronic Arts Inc.";
-
-        std::vector<std::uint8_t> buf;
-        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-        package.do_state(seri);
-
-        buf.resize(seri.size());
-
-        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
-        package.do_state(seri);
-
-        ctx->write_data_to_descriptor_argument(0, buf.data(), buf.size());
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::is_non_removable(eka2l1::service::ipc_context *ctx) {
-        uint32_t removable = true;
-
-        ctx->write_data_to_descriptor_argument(0, removable);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::is_signed_by_sucert(eka2l1::service::ipc_context *ctx) {
-        uint32_t signed_by_sucert = false;
-
-        ctx->write_data_to_descriptor_argument(0, signed_by_sucert);
-        ctx->complete(epoc::error_none);
-    }
-
-    void sisregistry_client_session::is_installed_uid(eka2l1::service::ipc_context *ctx) {
-        std::optional<epoc::uid> package_uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
-        if (!package_uid) {
+        if (!buffer || (buffer_size == 0)) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        LOG_TRACE(SERVICE_SISREGISTRY, "IsInstalledUid for 0x{:X} stubbed with false", package_uid.value());
-        std::int32_t result = 0;
+        common::chunkyseri seri(buffer, buffer_size, common::SERI_MODE_READ);
 
-        ctx->write_data_to_descriptor_argument<std::int32_t>(1, result);
+        package::package need_to_open;
+        need_to_open.do_state(seri);
+
+        package::object *real_package = pkgmngr->package(need_to_open.uid, need_to_open.index);
+        if (!real_package) {
+            LOG_ERROR(PACKAGE, "Fail to open package with UID=0x{:X}, index={}", need_to_open.uid, need_to_open.index);
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+    
+        sisregistry_client_subsession_inst inst = std::make_unique<sisregistry_client_subsession>(real_package->uid, real_package->index);
+        std::uint32_t handle = static_cast<std::uint32_t>(subsessions_.add(inst));
+
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(3, handle);
         ctx->complete(epoc::error_none);
     }
-    
+
+    void sisregistry_client_session::installed_uids(eka2l1::service::ipc_context *ctx) {
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        std::vector<manager::uid> uids_installed = pkgmngr->installed_uids();
+        const std::size_t max_buffer_size = ctx->get_argument_max_data_size(0);
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_uids(seri, uids_installed);
+
+        if (seri.size() > max_buffer_size) {
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, static_cast<std::uint32_t>(seri.size()));
+            ctx->complete(epoc::error_overflow);
+
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_uids(seri, uids_installed);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t*>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::installed_packages(eka2l1::service::ipc_context *ctx) {
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        const std::size_t max_buffer_size = ctx->get_argument_max_data_size(0);
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_all_packages(seri, pkgmngr);
+
+        if (seri.size() > max_buffer_size) {
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, static_cast<std::uint32_t>(seri.size()));
+            ctx->complete(epoc::error_overflow);
+
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_all_packages(seri, pkgmngr);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t*>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::is_installed_uid(eka2l1::service::ipc_context *ctx) {
+        manager::packages *pkgmngr = ctx->sys->get_packages();
+        if (!pkgmngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        std::optional<epoc::uid> package_uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        if (!package_uid.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::int32_t package_installed = static_cast<std::int32_t>(pkgmngr->installed(package_uid.value()));
+
+        ctx->write_data_to_descriptor_argument(1, package_installed);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::add_entry(eka2l1::service::ipc_context *ctx) {
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
+        std::size_t item_def_size = ctx->get_argument_data_size(0);
+        
+        if (!item_def_ptr || !item_def_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        common::chunkyseri seri(item_def_ptr, item_def_size, common::SERI_MODE_READ);
+
+        package::object obj;
+        obj.do_state(seri);
+
+        manager::controller_info controller_info;
+        controller_info.data_ = ctx->get_descriptor_argument_ptr(2);
+        controller_info.size_ = ctx->get_argument_data_size(2);
+
+        if (!mngr->add_package(obj, &controller_info)) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::package_exists_in_rom(eka2l1::service::ipc_context *ctx) {
+        std::optional<manager::uid> package_uid = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
+        if (!package_uid.has_value()) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        // On real implementation, they check the whole SIS stub files rawly. This is to bypass entries that lie about their infos
+        // But I think I will trust my people for now. Hope you are right
+        package::object *obj = mngr->package(package_uid.value());
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(1, obj->in_rom);
+        ctx->complete(epoc::error_none);
+    }
+
     void sisregistry_client_session::sid_to_package(eka2l1::service::ipc_context *ctx) {
         std::optional<epoc::uid> package_sid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
         if (!package_sid.has_value()) {
@@ -451,50 +536,479 @@ namespace eka2l1 {
             return;
         }
 
-        if (package_sid.value() == 0x2000AFDE) {
-            package::package package;
-            package.uid = 0x2000AFDE;
-            package.index = 0x01000000;
-            package.package_name = u"The Sims 2 Pets";
-            package.vendor_name = u"Electronic Arts Inc.";
+        std::uint8_t *target_buffer = ctx->get_descriptor_argument_ptr(1);
+        std::size_t target_max_length = ctx->get_argument_max_data_size(1);
 
-            std::vector<std::uint8_t> buf;
-            common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-            package.do_state(seri);
+        if (!target_buffer || !target_max_length) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
 
-            buf.resize(seri.size());
+        manager::packages *mngr = ctx->sys->get_packages();
 
-            seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
-            package.do_state(seri);
+        for (auto &[uid, obj]: *mngr) {
+            if (std::find(obj.sids.begin(), obj.sids.end(), package_sid.value()) != obj.sids.end()) {
+                package::package target_pkg = static_cast<package::package&>(obj);
 
-            ctx->write_data_to_descriptor_argument(1, buf.data(), buf.size());
-            ctx->complete(epoc::error_none);
+                common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+                target_pkg.do_state(seri);
+
+                if (seri.size() > target_max_length) {
+                    std::uint32_t target_length = static_cast<std::uint32_t>(seri.size());
+
+                    ctx->write_data_to_descriptor_argument(1, target_length);
+                    ctx->complete(epoc::error_overflow);
+                    return;
+                }
+
+                ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
+
+                seri = common::chunkyseri(target_buffer, target_max_length, common::SERI_MODE_WRITE);
+                target_pkg.do_state(seri);
+
+                ctx->complete(epoc::error_none);
+                return;
+            }
+        }
+
+        LOG_TRACE(SERVICE_SISREGISTRY, "SidToPackage for 0x{:X} can't be found", package_sid.value());
+        ctx->complete(epoc::error_not_found);
+    }
+
+    void sisregistry_client_session::get_entry(eka2l1::service::ipc_context *ctx) {
+        std::optional<epoc::uid> uid = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
+        std::uint8_t *buf_ptr = ctx->get_descriptor_argument_ptr(1);
+        std::size_t buf_max_size = ctx->get_argument_max_data_size(1);
+
+        if (!uid.has_value() || !buf_ptr || !buf_max_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        package::object *object = mngr->package(uid.value());
+        if (!object) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        object->do_state(seri);
+
+        if (seri.size() > buf_max_size) {
+            std::uint32_t target_len = static_cast<std::uint32_t>(seri.size());
+            ctx->write_data_to_descriptor_argument(1, target_len);
+            ctx->complete(epoc::error_overflow);
 
             return;
         }
 
-        LOG_TRACE(SERVICE_SISREGISTRY, "SidToPackage for 0x{:X} stubbed with not found", package_sid.value());
-        ctx->complete(epoc::error_not_found);
+        ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
+
+        seri = common::chunkyseri(buf_ptr, buf_max_size, common::SERI_MODE_WRITE);
+        object->do_state(seri);
+
+        ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::populate_sids(common::chunkyseri &seri) {
-        std::uint32_t count = 1;
-        seri.absorb(count);
+    void sisregistry_client_session::update_entry(eka2l1::service::ipc_context *ctx) {
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
 
-        std::uint32_t single_uid = 0x2000AFDE;
-        seri.absorb(single_uid);
+        std::uint8_t *item_def_ptr = ctx->get_descriptor_argument_ptr(0);
+        std::size_t item_def_size = ctx->get_argument_data_size(0);
+        
+        if (!item_def_ptr || !item_def_size) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        common::chunkyseri seri(item_def_ptr, item_def_size, common::SERI_MODE_READ);
+
+        package::object obj;
+        obj.do_state(seri);
+
+        package::object *base_object = nullptr;
+
+        if (obj.install_type != package::install_type_augmentations) {
+            base_object = mngr->package(obj.uid);
+        } else {
+            base_object = mngr->package(obj.uid, obj.index);
+        }
+
+        if (!base_object) {
+            LOG_ERROR(SERVICE_SISREGISTRY, "No base package with UID 0x{:X} for update!", obj.uid);
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        manager::controller_info controller_info;
+        controller_info.data_ = ctx->get_descriptor_argument_ptr(2);
+        controller_info.size_ = ctx->get_argument_data_size(2);
+
+        package::object *current_object = mngr->package(obj.uid, obj.index);
+        if (!current_object || !mngr->remove_registeration(*current_object)) {
+            LOG_WARN(SERVICE_SISREGISTRY, "Failure to remove existing package for update");
+        }
+
+        if (!mngr->add_package(obj, &controller_info)) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        ctx->complete(epoc::error_none);
     }
 
-    void sisregistry_client_session::request_sids(eka2l1::service::ipc_context *ctx) {
+    manager::packages *sisregistry_client_subsession::package_manager(service::ipc_context *ctx) {
+        return ctx->sys->get_packages();
+    }
+
+    package::object *sisregistry_client_subsession::package_object(service::ipc_context *ctx) {
+        manager::packages *pkgmngr = package_manager(ctx);
+        if (!pkgmngr) {
+            return nullptr;
+        }
+
+        return pkgmngr->package(package_uid_, index_);
+    }
+
+    void sisregistry_client_subsession::close_registry(eka2l1::service::ipc_context *ctx) {
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::get_version(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->version.u32);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::is_in_rom(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->in_rom);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::get_selected_drive(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->selected_drive);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::get_trust_timestamp(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->trust_timestamp);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::get_trust_status(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->trust_status_value);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_uid(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->uid);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_files(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        std::optional<sisregistry_stub_extraction_mode> package_mode = ctx->get_argument_data_from_descriptor<sisregistry_stub_extraction_mode>(0);
+
+        if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_count) {
+            std::uint32_t file_count = static_cast<std::uint32_t>(obj->file_descriptions.size());
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(1, file_count);
+        } else if (package_mode == sisregistry_stub_extraction_mode::sisregistry_stub_extraction_mode_get_files) {
+            std::optional<std::uint32_t> start_index = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
+            if (!start_index.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            std::size_t max_buffer_size = ctx->get_argument_max_data_size(2);
+            std::int32_t total_filename_can_store = -1;
+
+            if (!max_buffer_size) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+            const std::size_t final_size = populate_filenames_with_limitation(seri, obj, start_index.value(), max_buffer_size, total_filename_can_store);
+
+            if (final_size == static_cast<std::size_t>(-1)) {
+                LOG_ERROR(SERVICE_SISREGISTRY, "Buffer too small to hold at least one filename!");
+
+                ctx->complete(epoc::error_no_memory);
+                return;
+            }
+
+            std::vector<char> buf(final_size);
+            seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+            populate_filenames_with_limitation(seri, obj, start_index.value(), final_size, total_filename_can_store);
+
+            ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        } else {
+            LOG_ERROR(SERVICE_SISREGISTRY, "Unidentified stub extraction mode {}", static_cast<std::int32_t>(package_mode.value()));
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_file_descriptions(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
-        populate_sids(seri);
+        populate_file_descriptions(seri, obj->file_descriptions);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
 
         std::vector<char> buf(seri.size());
-        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(),
-            common::SERI_MODE_WRITE);
-        populate_sids(seri);
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_file_descriptions(seri, obj->file_descriptions);
 
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_package_augmentations(eka2l1::service::ipc_context *ctx) {        
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+        
+        manager::packages *mngr = package_manager(ctx);
+        const std::size_t max_buffer_size = ctx->get_argument_max_data_size(0);
+
+        std::vector<package::object *> results;
+
+        if (obj->install_type != package::install_type_augmentations) {
+            results = mngr->augmentations(obj->uid);
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_packages(seri, results);
+
+        if (seri.size() > max_buffer_size) {
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, static_cast<std::uint32_t>(seri.size()));
+            ctx->complete(epoc::error_overflow);
+
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_packages(seri, results);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::is_preinstalled(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        std::int32_t result = static_cast<std::int32_t>(obj->is_preinstalled());
+
+        ctx->write_data_to_descriptor_argument<std::int32_t>(0, result);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::get_package(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        package::package pkg = static_cast<package::package&>(*obj);
+
+        std::vector<std::uint8_t> buf;
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        pkg.do_state(seri);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
+
+        buf.resize(seri.size());
+
+        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+        pkg.do_state(seri);
+
+        ctx->write_data_to_descriptor_argument(0, buf.data(), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::is_non_removable(eka2l1::service::ipc_context *ctx) {
+        // It's actually removable, lol
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->is_removable);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::is_signed_by_sucert(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->signed_by_sucert);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_sids(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_uids(seri, obj->sids);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_uids(seri, obj->sids);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+    
+    void sisregistry_client_subsession::request_size(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        std::int64_t final_size = static_cast<std::int64_t>(obj->total_size());
+
+        ctx->write_data_to_descriptor_argument<std::int64_t>(0, final_size);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_package_name(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_arg(0, obj->package_name);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_vendor_localized_name(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_arg(0, obj->vendor_localized_name);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_embedded_packages(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_raw_packages(seri, obj->embedded_packages);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_raw_packages(seri, obj->embedded_packages);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
         ctx->complete(epoc::error_none);
     }
 }

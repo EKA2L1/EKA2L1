@@ -228,6 +228,9 @@ namespace eka2l1 {
         : service::server(sys->get_kernel_system(), sys, nullptr, CENTRAL_REPO_SERVER_NAME, true)
         , id_counter(0) {
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_init, "CenRep::Init");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_create_int, "CenRep::CreateInt");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_create_real, "CenRep::CreateReal");
+        REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_create_string, "CenRep::CreateString");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_close, "CenRep::Close");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_reset, "CenRep::Reset");
         REGISTER_IPC(central_repo_server, redirect_msg_to_session, cen_rep_set_int, "CenRep::SetInt");
@@ -516,6 +519,12 @@ namespace eka2l1 {
     void central_repo_client_subsession::handle_message(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         // TODO: Faster way
+        case cen_rep_create_int:
+        case cen_rep_create_real:
+        case cen_rep_create_string:
+            create_value(ctx);
+            break;
+
         case cen_rep_notify_req_check:
             notify_nof_check(ctx);
             break;

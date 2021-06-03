@@ -217,6 +217,8 @@ namespace eka2l1 {
         void get_twips_height(service::ipc_context *ctx);
         void set_pixel_size_in_twips(service::ipc_context *ctx);
         void get_font_by_uid(service::ipc_context *ctx);
+        void set_default_glyph_bitmap_type(service::ipc_context *ctx);
+        void get_default_glyph_bitmap_type(service::ipc_context *ctx);
 
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
@@ -356,6 +358,7 @@ namespace eka2l1 {
         service::normal_object_container font_obj_container; ///< Specifically storing fonts
 
         eka2l1::vec2 pixel_size_in_twips;
+        epoc::glyph_bitmap_type default_glyph_bitmap_type;
 
     protected:
         void load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *dir);
@@ -526,6 +529,14 @@ namespace eka2l1 {
 
         void set_pixel_size_in_twips(const eka2l1::vec2 &new_pixel_size_in_twips) {
             pixel_size_in_twips = new_pixel_size_in_twips;
+        }
+
+        epoc::glyph_bitmap_type get_default_glyph_bitmap_type() const {
+            return default_glyph_bitmap_type;
+        }
+
+        void set_default_glyph_bitmap_type(const epoc::glyph_bitmap_type new_value) {
+            default_glyph_bitmap_type = new_value;
         }
     };
 }

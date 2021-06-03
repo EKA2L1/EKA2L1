@@ -52,10 +52,11 @@ namespace eka2l1::package {
     };
 
     enum install_type_value {
-        install_type_use_file_handle,
-        install_type_use_file_name,
-        install_type_use_caf,
-        install_type_use_open_file_name
+        install_type_normal_install,    // Base installation
+        install_type_augmentations,     // This is basically DLC
+        install_type_partial_update,    // Update to existing application
+        install_type_preinstalled_app,
+        install_type_preinstalled_patch
     };
 
     enum package_trust {
@@ -160,8 +161,8 @@ namespace eka2l1::package {
         std::uint32_t signed_;
         std::uint32_t signed_by_sucert;
         std::uint32_t deletable_preinstalled;
-        std::uint16_t file_major_version;
-        std::uint16_t file_minor_version;
+        std::uint16_t file_major_version { 5 };
+        std::uint16_t file_minor_version { 3 };
         package_trust trust;
         std::int32_t remove_with_last_dependent;
         std::uint64_t trust_timestamp;
@@ -173,5 +174,14 @@ namespace eka2l1::package {
         std::uint32_t is_removable;
 
         void do_state(common::chunkyseri &seri);
+        bool is_preinstalled() const {
+            return (install_type == install_type_preinstalled_app) || (install_type == install_type_preinstalled_patch);
+        }
+
+        std::uint64_t total_size() const;
     };
+
+    static constexpr const char16_t *REGISTRY_STORE_FOLDER = u"\\sys\\install\\sisregistry\\";
+    static constexpr const char16_t *REGISTRY_FILE_FORMAT = u"{:08x}.reg";
+    static constexpr const char16_t *CONTROLLER_FILE_FORMAT = u"{:08x}_{:04x}.ctl";
 }

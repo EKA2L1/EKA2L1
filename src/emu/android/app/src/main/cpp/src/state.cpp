@@ -146,6 +146,11 @@ namespace eka2l1::android {
                 conf.serialize();
             }
 
+            manager::packages *pkgmngr = symsys->get_packages();
+
+            pkgmngr->load_registries();
+            pkgmngr->migrate_legacy_registries();
+
             stage_two_inited = true;
         }
 

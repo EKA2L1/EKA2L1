@@ -292,6 +292,72 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void central_repo_client_subsession::create_value(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
+
+        if (!id) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        central_repo_entry_variant new_var;
+        bool hit = true;
+
+        switch (ctx->msg->function) {
+        case cen_rep_create_int:
+            new_var.etype = central_repo_entry_type::integer;
+            new_var.intd = ctx->msg->args.args[1];
+
+            break;
+
+        case cen_rep_create_real: {
+            new_var.etype = central_repo_entry_type::real;
+            std::optional<double> dd_val = ctx->get_argument_data_from_descriptor<double>(1);          
+        
+            if (!dd_val.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            new_var.reald = dd_val.value();
+            break;
+        }  
+
+        case cen_rep_create_string: {
+            new_var.etype = central_repo_entry_type::string;
+            std::optional<std::string> bb_val = ctx->get_argument_value<std::string>(1);
+
+            if (!bb_val.has_value()) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+
+            new_var.strd.resize(bb_val->length());
+            std::memcpy(new_var.strd.data(), bb_val->data(), bb_val->size());
+
+            break;
+        }
+
+        default:
+            hit = false;
+            break;
+        }
+
+        if (!hit) {
+            LOG_ERROR(SERVICE_CENREP, "Unknown create value type!");
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        if (!attach_repo->add_new_entry(id.value(), new_var)) {
+            LOG_ERROR(SERVICE_CENREP, "Fail to add new entry with id {}", id.value());
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
     void central_repo_client_subsession::set_value(service::ipc_context *ctx) {
         // We get the entry.
         // Use mode 1 (write) to get the entry, since we are modifying data.

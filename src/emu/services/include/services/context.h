@@ -49,7 +49,7 @@ namespace eka2l1 {
          * struct supported.
          */
         struct ipc_context {
-            explicit ipc_context(const bool auto_free = true, const bool accurate_timing = false);
+            explicit ipc_context(const bool accurate_timing = false);
             ~ipc_context();
 
             eka2l1::system *sys; ///< The system instance pointer.
@@ -58,7 +58,7 @@ namespace eka2l1 {
             bool signaled = false; ///< A safe-check if a request status is set. This allow setting multiple
                 ///< time with only one time it signaled the client.
 
-            bool auto_free = false; ///< Auto free this message when the context is destroyed. Useful
+            bool auto_deref = true; ///< Auto deref this message when the context is destroyed. Useful
                 ///< for HLE context.
 
             bool accurate_timing = false;

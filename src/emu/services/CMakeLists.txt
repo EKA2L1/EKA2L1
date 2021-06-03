@@ -84,6 +84,7 @@ add_library(epocservs
         include/services/remcon/target.h
         include/services/sensor/sensor.h
         include/services/shutdown/shutdown.h
+        include/services/sisregistry/common.h
         include/services/sisregistry/sisregistry.h
         include/services/sms/sa/sa.h
         include/services/sms/sendas/sendas.h

@@ -90,7 +90,8 @@ namespace eka2l1 {
         if (server<fs_server>()->kern->is_eka1()) {
             ss_path = server<fs_server>()->default_sys_path;
         } else {
-            ss_path = get_private_path(pr, (root_name.length() > 1) ? char16_to_drive(root_name[0]) : drive_c);
+            // The default session path is private path with system drive, see sf_main.cpp in sfile module, line 122
+            ss_path = get_private_path(pr, static_cast<drive_number>(server<fs_server>()->system_drive_prop->get_int()));
         }
     }
 

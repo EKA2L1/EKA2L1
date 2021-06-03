@@ -23,6 +23,8 @@
 #include <services/ui/view/common.h>
 #include <services/ui/view/queue.h>
 
+#include <utils/reqsts.h>
+
 #include <vector>
 
 namespace eka2l1 {
@@ -64,7 +66,7 @@ namespace eka2l1 {
     std::string get_view_server_name_by_epocver(const epocver ver);
 
     class view_session : public service::typical_session {
-        ipc_msg_ptr to_panic_;
+        epoc::notify_info to_panic_;
         ui::view::event_queue queue_;
         epoc::uid app_uid_;
 

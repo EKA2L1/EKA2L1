@@ -210,6 +210,7 @@ namespace eka2l1::epoc {
         void add_raw_event(service::ipc_context &ctx, ws_cmd &cmd);
         void set_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd);
         void get_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_focus_screen(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
         void add_redraw_listener(notify_info nof) {

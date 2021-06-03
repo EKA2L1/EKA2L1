@@ -20,6 +20,7 @@
 #pragma once
 
 #include <mem/ptr.h>
+#include <utils/sec.h>
 
 #include <cstdint>
 #include <functional>
@@ -118,8 +119,43 @@ namespace eka2l1::kernel {
         std::uint32_t num_processes_using_;
     };
 
+    enum plat_sec_type {
+        loader_capability_violation1,
+        loader_capability_violation2,
+        thread_capability_check_fail,
+        process_capability_check_fail,
+        kernel_secure_id_check_fail,
+        kernel_object_policy_check_fail,
+        handle_capability_check_fail,
+        creator_capability_check_fail,
+        message_capability_check_fail,
+        kernel_process_isolation_fail,
+        kernel_process_isolation_ipc_fail,
+        creator_policy_check_fail
+    };
+    
+    struct plat_sec_diagnostic {
+        plat_sec_type type_;
+        std::uint32_t args_[2];
+        eka2l1::ptr<char> context_text_;
+        std::int32_t context_text_length_;
+        epoc::security_info secinfo_;
+    };
+
     enum kern_exec_exception {
         kern_exec_exception_no_handler = 3
+    };
+
+    /**
+     * @brief List of configuration flag, with default flags being in the ROM header.
+     * 
+     * Kernel is able to enable/disable these flags to enable different kernel features.
+     * Refer to u32std.h for more flags. This only contains currently flags that emulator uses.
+     */
+    enum kern_config_flag {
+        kern_config_flag_ipcv1_available = 1 << 0,
+        kern_config_flag_plat_sec_enforce = 1 << 1,
+        kern_config_flag_plat_sec_diag = 1 << 2
     };
 
     static constexpr std::uint32_t INVALID_HANDLE = 0xFFFFFFFF;

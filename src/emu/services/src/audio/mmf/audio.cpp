@@ -39,8 +39,14 @@ namespace eka2l1 {
             init(sys->get_kernel_system());
         }
 
-        // We ruined it later, lol
+        // We ruined it later, lol. Also unref
+        service::session *ss = context.msg->msg_session;
+
         context.complete(epoc::error_none);
+        context.auto_deref = false;
+        context.msg->unref();
+        context.msg->msg_session = ss;
+
         create_session<mmf_audio_server_session>(&context);
     }
 

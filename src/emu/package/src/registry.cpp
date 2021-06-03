@@ -89,17 +89,28 @@ namespace eka2l1::package {
         seri.absorb(drives);
         seri.absorb(completely_present);
 
+        // UIDs
+        count = static_cast<std::uint32_t>(sids.size());
         seri.absorb(count);
-        for (uint32_t i = 0; i < count; i++) {
-            epoc::uid uid;
-            seri.absorb(uid);
-        }
-        seri.absorb(count);
-        for (uint32_t i = 0; i < count; i++) {
-            controller_info info;
-            info.do_state(seri);
 
-            controller_infos.push_back(std::move(info));
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            sids.resize(count);
+        }
+
+        for (uint32_t i = 0; i < count; i++) {
+            seri.absorb(sids[i]);
+        }
+
+        // Controller infos
+        count = static_cast<std::uint32_t>(controller_infos.size());
+        seri.absorb(count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            controller_infos.resize(count);
+        }
+
+        for (uint32_t i = 0; i < count; i++) {
+            controller_infos[i].do_state(seri);
         }
 
         std::uint32_t major = version.major;
@@ -109,6 +120,13 @@ namespace eka2l1::package {
         seri.absorb(major);
         seri.absorb(minor);
         seri.absorb(build);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            version.major = static_cast<std::uint8_t>(major);
+            version.minor = static_cast<std::uint8_t>(minor);
+            version.build = static_cast<std::uint16_t>(build);
+        }
+
         seri.absorb(language);
         seri.absorb(selected_drive);
         seri.absorb(unused1);
@@ -118,9 +136,7 @@ namespace eka2l1::package {
     void object::do_state(common::chunkyseri &seri) {
         token::do_state(seri);
         std::uint32_t count = 0;
-        
-        file_major_version = 5;
-        file_minor_version = 3;
+
         seri.absorb(file_major_version);
         seri.absorb(file_minor_version);
 
@@ -134,46 +150,110 @@ namespace eka2l1::package {
         seri.absorb(remove_with_last_dependent);
         seri.absorb(trust_timestamp);
 
+        // Dependencies
+        count = static_cast<std::uint32_t>(dependencies.size());
         seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            dependency dependency;
-            dependency.do_state(seri);
 
-            dependencies.push_back(std::move(dependency));
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            dependencies.resize(count);
         }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            package package;
-            package.do_state(seri);
 
-            embedded_packages.push_back(std::move(package));
+        for (size_t i = 0; i < count; i++) {
+            dependencies[i].do_state(seri);
         }
-        seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            property property;
-            property.do_state(seri);
 
-            properties.push_back(std::move(property));
+        // Embedded packages
+        count = static_cast<std::uint32_t>(embedded_packages.size());
+        seri.absorb(count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            embedded_packages.resize(count);
         }
-        seri.absorb(count);
         for (size_t i = 0; i < count; i++) {
-            file_description desc;
-            desc.do_state(seri);
+            embedded_packages[i].do_state(seri);
+        }
 
-            file_descriptions.push_back(std::move(desc));
+        // Properties
+        count = static_cast<std::uint32_t>(properties.size());
+        seri.absorb(count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            properties.resize(count);
+        }
+        for (size_t i = 0; i < count; i++) {
+            properties[i].do_state(seri);
+        }
+
+        // File descriptions
+        count = static_cast<std::uint32_t>(file_descriptions.size());
+        seri.absorb(count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            file_descriptions.resize(count);
+        }
+
+        for (size_t i = 0; i < count; i++) {
+            file_descriptions[i].do_state(seri);
         }
 
         trust_status_value.do_state(seri);
         
+        // Install chain index
+        count = static_cast<std::uint32_t>(install_chain_indices.size());
         seri.absorb(count);
-        for (size_t i = 0; i < count; i++) {
-            std::int32_t install_chain_index = 0;
-            seri.absorb(install_chain_index);
 
-            install_chain_indices.push_back(install_chain_index);
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            install_chain_indices.resize(count);
+        }
+        for (size_t i = 0; i < count; i++) {
+            seri.absorb(install_chain_indices[i]);
         }
 
         seri.absorb(is_removable);
         seri.absorb(signed_by_sucert);
+
+        if (file_major_version > 5 || ((file_major_version == 5) && (file_minor_version >= 4))) {
+            count = static_cast<std::uint32_t>(supported_language_ids.size());
+            seri.absorb(count);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                supported_language_ids.resize(count);
+            }
+
+            for (std::uint32_t i = 0; i < count; i++) {
+                seri.absorb(supported_language_ids[i]);
+            }
+
+            count = static_cast<std::uint32_t>(localized_package_names.size());
+            seri.absorb(count);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                localized_package_names.resize(count);
+            }
+
+            for (std::uint32_t i = 0; i < count; i++) {
+                epoc::absorb_des_string(localized_package_names[i], seri, true);
+            }
+
+            count = static_cast<std::uint32_t>(localized_vendor_names.size());
+            seri.absorb(count);
+
+            if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+                localized_vendor_names.resize(count);
+            }
+
+            for (std::uint32_t i = 0; i < count; i++) {
+                epoc::absorb_des_string(localized_vendor_names[i], seri, true);
+            }
+        }
+    }
+
+    std::uint64_t object::total_size() const {
+        std::uint64_t result = 0;
+        for (const auto &desc: file_descriptions) {
+            result += desc.uncompressed_length;
+        }
+
+        return result;
     }
 }

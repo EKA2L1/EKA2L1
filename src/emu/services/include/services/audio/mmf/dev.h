@@ -67,6 +67,10 @@ namespace eka2l1 {
         std::unique_ptr<drivers::dsp_stream> stream_;
         std::mutex dev_access_lock_;
 
+        std::uint32_t volume_;
+        std::int32_t left_balance_;
+        std::int32_t right_balance_;
+
         bool finished_;
 
     protected:
@@ -84,6 +88,7 @@ namespace eka2l1 {
         void set_volume(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
         void max_volume(service::ipc_context *ctx);
+        void set_play_balance(service::ipc_context *ctx);
         void set_priority_settings(service::ipc_context *ctx);
         void capabilities(service::ipc_context *ctx);
         void get_supported_input_data_types(service::ipc_context *ctx);

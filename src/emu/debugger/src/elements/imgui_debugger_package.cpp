@@ -31,6 +31,8 @@
 #include <common/language.h>
 #include <common/cvt.h>
 
+#include <loader/sis_fields.h>
+
 namespace eka2l1 {
     void imgui_debugger::do_install_package() {
         std::string path = "";
@@ -105,13 +107,17 @@ namespace eka2l1 {
 
         while (clipper.Step()) {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                const manager::package_info *pkg = manager->package(i);
-                std::string str = "0x" + common::to_string(pkg->id, std::hex);
+                auto ite = manager->begin();
+
+                std::advance(ite, i);
+                const package::object &obj = ite->second;
+
+                std::string str = "0x" + common::to_string(obj.uid, std::hex);
 
                 ImGui::Text("%s", str.c_str());
                 ImGui::NextColumn();
 
-                str = common::ucs2_to_utf8(pkg->name);
+                str = common::ucs2_to_utf8(obj.package_name);
 
                 if (ImGui::Selectable(str.c_str(), selected_package_index == i)) {
                     if (!should_package_manager_remove) {
@@ -137,13 +143,25 @@ namespace eka2l1 {
 
                 ImGui::NextColumn();
 
-                str = common::ucs2_to_utf8(pkg->vendor_name);
+                str = common::ucs2_to_utf8(obj.vendor_name);
 
                 ImGui::Text("%s", str.c_str());
                 ImGui::NextColumn();
 
-                str = static_cast<char>(drive_to_char16(pkg->drive));
-                str += ":";
+                str.clear();
+
+                for (std::uint32_t i = 0; i < drive_z - drive_a; i++) {
+                    if (obj.drives & (1 << i)) {
+                        str += static_cast<char>(drive_to_char16(static_cast<drive_number>(drive_a + i)));
+                        str += ":, ";
+                    }
+                }
+
+                // Remove extra ", " 
+                if (!str.empty()) {
+                    str.pop_back();
+                    str.pop_back();
+                }
 
                 ImGui::Text("%s", str.c_str());
                 ImGui::NextColumn();
@@ -155,13 +173,32 @@ namespace eka2l1 {
 
         if (should_package_manager_display_file_list) {
             const std::lock_guard<std::mutex> guard(manager->lockdown);
-            const manager::package_info *pkg = manager->package(selected_package_index);
 
-            if (pkg != nullptr) {
-                const std::string pkg_title = common::ucs2_to_utf8(pkg->name) + " (0x" + common::to_string(pkg->id, std::hex) + ") file lists";
+            auto ite = manager->begin();
+            std::advance(ite, selected_package_index);
+
+            if (ite != manager->end()) {
+                const package::object &obj = ite->second;
+                const std::string pkg_title = common::ucs2_to_utf8(obj.package_name) + " (0x" + common::to_string(obj.uid, std::hex) + ") file lists";
 
                 std::vector<std::string> paths;
-                manager->get_file_bucket(pkg->id, paths);
+                for (const auto &desc: obj.file_descriptions) {
+                    std::string operation = common::ucs2_to_utf8(desc.target);
+                    switch (static_cast<loader::ss_op>(desc.operation)) {
+                    case loader::ss_op::install:
+                        operation += " (Installed)";
+                        break;
+
+                    case loader::ss_op::null:
+                        operation += " (Delete when uninstall)";
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    paths.push_back(operation);
+                }
 
                 ImGui::Begin(pkg_title.c_str(), &should_package_manager_display_file_list);
 
@@ -175,18 +212,20 @@ namespace eka2l1 {
 
         if (should_package_manager_remove) {
             std::unique_lock<std::mutex> guard(manager->lockdown);
-            const manager::package_info *pkg = manager->package(selected_package_index);
+
+            auto ite = manager->begin();
+            std::advance(ite, selected_package_index);
 
             const std::string info_str = common::get_localised_string(localised_strings, "info");
             ImGui::OpenPopup(info_str.c_str());
 
             if (ImGui::BeginPopupModal(info_str.c_str(), &should_package_manager_remove)) {
-                if (pkg == nullptr) {
+                if (ite == manager->end()) {
                     const std::string no_package_str = common::get_localised_string(localised_strings, "packages_no_package_select_msg");
                     ImGui::Text("%s", no_package_str.c_str());
                 } else {
                     const std::string ask_question = fmt::format(common::get_localised_string(localised_strings,
-                        "packages_remove_confirmation_msg"), common::ucs2_to_utf8(pkg->name));
+                        "packages_remove_confirmation_msg"), common::ucs2_to_utf8(ite->second.package_name));
 
                     ImGui::Text("%s", ask_question.c_str());
                 }
@@ -202,9 +241,9 @@ namespace eka2l1 {
                     should_package_manager_remove = false;
                     should_package_manager_display_file_list = false;
 
-                    if (pkg != nullptr) {
+                    if (ite != manager->end()) {
                         guard.unlock();
-                        manager->uninstall_package(pkg->id);
+                        manager->uninstall_package(ite->second);
                         guard.lock();
                     }
                 }
