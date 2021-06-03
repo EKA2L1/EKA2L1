@@ -657,17 +657,20 @@ namespace eka2l1::epoc {
     }
 
      BRIDGE_FUNC(void, message_complete_handle, std::int32_t msg_handle, std::int32_t handle) {
-        std::int32_t dup_handle = kern->mirror(&(*kern->get<kernel::thread>(handle)), handle, kernel::owner_type::thread);
-
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
+        std::uint32_t dup_handle = kern->mirror(msg->own_thr, handle, kernel::owner_type::thread);
+
+        if (dup_handle == kernel::INVALID_HANDLE) {
+            LOG_ERROR(KERNEL, "Fail to duplicate handle to client thread for message completion!");
+        }
 
         if (msg->request_sts) {
-            (msg->request_sts.get(msg->own_thr->owning_process()))->set(dup_handle, kern->is_eka1());
+            (msg->request_sts.get(msg->own_thr->owning_process()))->set(static_cast<std::int32_t>(dup_handle), kern->is_eka1());
             msg->own_thr->signal_request();
         }
 
         if (kern->get_config()->log_ipc)
-            LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
+            LOG_TRACE(KERNEL, "Message completed with handle: {}, thread to signal: {}", dup_handle, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg, dup_handle);
         msg->unref();
