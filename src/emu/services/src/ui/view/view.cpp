@@ -200,10 +200,8 @@ namespace eka2l1 {
             std::copy(custom_message_buf, custom_message_buf + custom_message_size, &custom_message_buf_cop[0]);
         }
 
-        customs_.push(custom_message_buf_cop);
-
         queue_.queue_event({ ui::view::view_event::event_active_view, id.value(), server<view_server>()->active_view(),
-            custom_message_uid.value(), static_cast<std::int32_t>(custom_message_size) });
+            custom_message_uid.value(), static_cast<std::int32_t>(custom_message_size) }, custom_message_buf_cop);
 
         server<view_server>()->set_active(id.value());
         ctx->complete(epoc::error_none);
@@ -231,6 +229,12 @@ namespace eka2l1 {
     void view_session::get_priority(service::ipc_context *ctx) {
         const std::uint32_t priority = server<view_server>()->priority();
         ctx->write_data_to_descriptor_argument(0, &priority);
+        ctx->complete(epoc::error_none);
+    }
+
+    void view_session::get_custom_message(service::ipc_context *ctx) {
+        const ui::view::custom_message custom = queue_.current_custom_message();
+        ctx->write_data_to_descriptor_argument(0, custom.data(), static_cast<std::uint32_t>(custom.size()));
         ctx->complete(epoc::error_none);
     }
 
@@ -298,6 +302,10 @@ namespace eka2l1 {
 
         case view_opcode_create_deactivate_view_event:
             deactive_view(ctx, false);
+            break;
+
+        case view_opcode_request_custom_message:
+            get_custom_message(ctx);
             break;
 
         case view_opcode_set_background_color: {

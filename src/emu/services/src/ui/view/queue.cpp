@@ -35,18 +35,20 @@ namespace eka2l1::ui::view {
         }
     }
 
-    void event_queue::queue_event(const view_event &evt) {
+    void event_queue::queue_event(const view_event &evt, const custom_message &msg) {
         const std::lock_guard<std::mutex> guard(lock_);
 
         if (!nof_info_.empty()) {
             complete_write_and_notify_event(nof_info_, buffer_, evt);
+
+            current_custom_ = std::move(msg);
             buffer_ = nullptr;
 
             return;
         }
 
         // Queue the event
-        events_.push(evt);
+        events_.push({ evt, msg });
     }
 
     bool event_queue::hear(epoc::notify_info info, std::uint8_t *buffer) {
@@ -61,7 +63,9 @@ namespace eka2l1::ui::view {
             auto evt = std::move(events_.front());
             events_.pop();
 
-            complete_write_and_notify_event(info, buffer, evt);
+            complete_write_and_notify_event(info, buffer, evt.evt_);
+            current_custom_ = std::move(evt.custom_);
+
             return true;
         }
 

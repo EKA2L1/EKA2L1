@@ -62,15 +62,12 @@ namespace eka2l1 {
         view_opcode_priority_mirror = 105
     };
 
-    using custom_message = std::vector<std::uint8_t>;
     std::string get_view_server_name_by_epocver(const epocver ver);
 
     class view_session : public service::typical_session {
         epoc::notify_info to_panic_;
         ui::view::event_queue queue_;
         epoc::uid app_uid_;
-
-        std::queue<custom_message> customs_;
 
     public:
         void async_message_for_client_to_panic_with(service::ipc_context *ctx);
@@ -79,6 +76,7 @@ namespace eka2l1 {
         void request_view_event(service::ipc_context *ctx);
         void active_view(service::ipc_context *ctx, const bool /*should_complete*/);
         void deactive_view(service::ipc_context *ctx, const bool /*should_complete*/);
+        void get_custom_message(service::ipc_context *ctx);
 
         explicit view_session(service::typical_server *server, const kernel::uid session_uid, epoc::version client_version);
         void fetch(service::ipc_context *ctx) override;

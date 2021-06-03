@@ -27,18 +27,31 @@
 #include <vector>
 
 namespace eka2l1::ui::view {
+    using custom_message = std::vector<std::uint8_t>;
+
+    struct view_event_and_data {
+        view_event evt_;
+        custom_message custom_;        
+    };
+
     class event_queue {
-        std::queue<view_event> events_;
+        std::queue<view_event_and_data> events_;
 
         epoc::notify_info nof_info_;
         std::uint8_t *buffer_;
 
         std::mutex lock_;
 
+        custom_message current_custom_;
+
     public:
         explicit event_queue();
 
-        void queue_event(const view_event &evt);
+        void queue_event(const view_event &evt, const custom_message &msg = {});
         bool hear(epoc::notify_info info, std::uint8_t *complete_buffer);
+
+        custom_message current_custom_message() {
+            return current_custom_;
+        }
     };
 }
