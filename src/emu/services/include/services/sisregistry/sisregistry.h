@@ -70,6 +70,9 @@ namespace eka2l1 {
         void request_stub_file_entries(eka2l1::service::ipc_context *ctx);
         void request_file_descriptions(eka2l1::service::ipc_context *ctx);
         void request_package_augmentations(eka2l1::service::ipc_context *ctx);
+        void request_package_name(eka2l1::service::ipc_context *ctx);
+        void request_vendor_localized_name(eka2l1::service::ipc_context *ctx);
+        void request_embedded_packages(eka2l1::service::ipc_context *ctx);
         void is_non_removable(eka2l1::service::ipc_context *ctx);
         void is_preinstalled(eka2l1::service::ipc_context *ctx);
         void get_package(eka2l1::service::ipc_context *ctx);

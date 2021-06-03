@@ -59,6 +59,19 @@ namespace eka2l1 {
         }
     }
 
+    static void populate_raw_packages(common::chunkyseri &seri, std::vector<package::package> &pkgs) {
+        std::uint32_t property_count = static_cast<std::uint32_t>(pkgs.size());
+        seri.absorb(property_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            pkgs.resize(property_count);
+        }
+
+        for (size_t i = 0; i < property_count; i++) {
+            pkgs[i].do_state(seri);
+        }
+    }
+
     static std::size_t populate_filenames_with_limitation(common::chunkyseri &seri, package::object *obj, const std::uint32_t start_index, const std::size_t max_size, std::int32_t &fcount) {
         seri.absorb(fcount);
         bool count_filename = (fcount == -1);
@@ -297,6 +310,21 @@ namespace eka2l1 {
 
         case sisregistry_size: {
             request_size(ctx);
+            break;
+        }
+
+        case sisregistry_package_name: {
+            request_package_name(ctx);
+            break;
+        }
+
+        case sisregistry_localized_vendor_name: {
+            request_vendor_localized_name(ctx);
+            break;
+        }
+
+        case sisregistry_embedded_packages: {
+            request_embedded_packages(ctx);
             break;
         }
 
@@ -763,7 +791,7 @@ namespace eka2l1 {
             seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
             populate_filenames_with_limitation(seri, obj, start_index.value(), final_size, total_filename_can_store);
 
-            ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+            ctx->write_data_to_descriptor_argument(2, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
         } else {
             LOG_ERROR(SERVICE_SISREGISTRY, "Unidentified stub extraction mode {}", static_cast<std::int32_t>(package_mode.value()));
         }
@@ -793,7 +821,7 @@ namespace eka2l1 {
         seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
         populate_file_descriptions(seri, obj->file_descriptions);
 
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size());
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
         ctx->complete(epoc::error_none);
     }
 
@@ -933,6 +961,54 @@ namespace eka2l1 {
         std::int64_t final_size = static_cast<std::int64_t>(obj->total_size());
 
         ctx->write_data_to_descriptor_argument<std::int64_t>(0, final_size);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_package_name(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_arg(0, obj->package_name);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_vendor_localized_name(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_arg(0, obj->vendor_localized_name);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_embedded_packages(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_raw_packages(seri, obj->embedded_packages);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_raw_packages(seri, obj->embedded_packages);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
         ctx->complete(epoc::error_none);
     }
 }
