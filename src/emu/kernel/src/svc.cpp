@@ -971,16 +971,18 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        kernel::thread *owner = ss->get_server()->get_owner_thread();
+        server_ptr svr = ss->get_server();
+        kernel::thread *owner = svr->get_owner_thread();
         if (owner) {
             // It gets policy from the server running the process
             query_security_info(owner->owning_process(), info);
         } else {
-            // Sometimes it's HLEd, so fill all
             info->reset();
+            info->secure_id = svr->get_owner_secure_uid();
+            info->vendor_id = svr->get_owner_vendor_uid();
 
-            info->caps_u[0] = 0xFFFFFFFF;
-            info->caps_u[2] = 0xFFFFFFFF;
+            // Maybe HLE, set all capabilities to available
+            std::fill(info->caps_u, info->caps_u + epoc::security_info::total_caps_u_size, 0xFFFFFFFF);
         }
 
         return epoc::error_none;
@@ -2863,7 +2865,7 @@ namespace eka2l1::epoc {
     }
 
     // Let all pass for now
-    BRIDGE_FUNC(std::int32_t, plat_sec_diagnostic, eka2l1::ptr<void> plat_sec_info) {
+    BRIDGE_FUNC(std::int32_t, plat_sec_diagnostic, kernel::plat_sec_diagnostic *diag) {
         return epoc::error_permission_denied;
     }
 

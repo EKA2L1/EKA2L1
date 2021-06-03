@@ -20,6 +20,7 @@
 #pragma once
 
 #include <mem/ptr.h>
+#include <utils/sec.h>
 
 #include <cstdint>
 #include <functional>
@@ -116,6 +117,29 @@ namespace eka2l1::kernel {
         std::uint32_t num_open_in_current_process_;
         std::uint32_t num_threads_using_;
         std::uint32_t num_processes_using_;
+    };
+
+    enum plat_sec_type {
+        loader_capability_violation1,
+        loader_capability_violation2,
+        thread_capability_check_fail,
+        process_capability_check_fail,
+        kernel_secure_id_check_fail,
+        kernel_object_policy_check_fail,
+        handle_capability_check_fail,
+        creator_capability_check_fail,
+        message_capability_check_fail,
+        kernel_process_isolation_fail,
+        kernel_process_isolation_ipc_fail,
+        creator_policy_check_fail
+    };
+    
+    struct plat_sec_diagnostic {
+        plat_sec_type type_;
+        std::uint32_t args_[2];
+        eka2l1::ptr<char> context_text_;
+        std::int32_t context_text_length_;
+        epoc::security_info secinfo_;
     };
 
     enum kern_exec_exception {

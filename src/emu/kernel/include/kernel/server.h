@@ -49,6 +49,8 @@ namespace eka2l1 {
         using ipc_func_wrapper = std::function<void(ipc_context &)>;
         using ipc_msg_ptr = ipc_msg*;
 
+        using uid = std::uint32_t;
+
         /*! \brief A class represents an IPC function */
         struct ipc_func {
             ipc_func_wrapper wrapper;
@@ -146,6 +148,14 @@ namespace eka2l1 {
             void register_ipc_func(uint32_t ordinal, ipc_func func);
 
             virtual void process_accepted_msg();
+
+            virtual service::uid get_owner_secure_uid() const {
+                return 0xDEADC11E;
+            }
+
+            virtual service::uid get_owner_vendor_uid() const {
+                return 0;
+            }
 
             system *get_system() {
                 return sys;

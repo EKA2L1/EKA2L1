@@ -313,6 +313,14 @@ namespace eka2l1 {
     public:
         explicit fs_server(system *sys);
 
+        service::uid get_owner_secure_uid() const override {
+            return 0x100039E3;
+        }
+
+        service::uid get_owner_vendor_uid() const override {
+            return 0x100039E3;
+        }
+
         file *get_file(const kernel::uid session_uid, const std::uint32_t handle);
     };
 }
