@@ -523,12 +523,21 @@ namespace eka2l1 {
                 switch (file->op) {
                 case ss_op::text: {
                     auto buf = get_small_file_buf(file->idx, crr_blck_idx);
-                    buf.push_back(0);
 
                     bool yes_choosen = true;
 
-                    if (show_text) {
-                        show_text(reinterpret_cast<const char *>(buf.data()), true);
+                    if ((buf.size() >= 2) && (buf[0] == 0xFF) && (buf[1] == 0xFE)) {
+                        // BOM file
+                        std::string converted_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t*>(buf.data()) + 1,
+                            (buf.size() / 2) - 1));
+
+                        if (show_text) {
+                            show_text(reinterpret_cast<const char*>(converted_str.data()), true);
+                        }
+                    } else {
+                        if (show_text) {
+                            show_text(reinterpret_cast<const char *>(buf.data()), true);
+                        }
                     }
 
                     LOG_INFO(PACKAGE, "EOpText: {}", reinterpret_cast<const char *>(buf.data()));
