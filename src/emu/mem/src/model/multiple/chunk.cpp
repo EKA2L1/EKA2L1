@@ -255,11 +255,7 @@ namespace eka2l1::mem {
         multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
-            if (control_->using_old_mem_map()) {
-                return &mul_mmu->user_code_sec_;
-            } else {
-                return &mul_process->user_code_sec_;
-            }
+            return &mul_mmu->user_code_sec_;
         }
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL) {
@@ -294,10 +290,7 @@ namespace eka2l1::mem {
             return MEM_MODEL_CHUNK_ERR_INVALID_REGION;
         }
 
-        const bool should_code_local = (!control_->using_old_mem_map() && (create_info.flags & MEM_MODEL_CHUNK_REGION_USER_CODE));
-
-        if ((create_info.flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (create_info.flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA)
-            || should_code_local) {
+        if ((create_info.flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (create_info.flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA)) {
             is_local = true;
         } else {
             is_local = false;

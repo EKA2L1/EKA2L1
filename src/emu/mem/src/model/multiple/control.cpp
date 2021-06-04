@@ -126,7 +126,7 @@ namespace eka2l1::mem {
         if (mem_map_old) {
             should_from_global = ((addr >= shared_data_eka1) && (addr <= kern_mapping_eka1_end)) || (addr >= dll_static_data_eka1_end);
         } else {
-            should_from_global = ((addr >= shared_data) && (addr < ram_code_addr)) || (addr >= rom);
+            should_from_global = ((addr >= shared_data) && (addr < dll_static_data_flexible)) || (addr >= rom);
         }
 
         return should_from_global;

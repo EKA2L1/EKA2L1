@@ -67,10 +67,6 @@ namespace eka2l1::kernel {
     }
 
     bool codeseg::eligible_for_codeseg_reuse() {
-        if (!kern->is_eka1()) {
-            return false;
-        }
-
         mark = true;
 
         memory_system *mem = kern->get_memory_system();
@@ -126,9 +122,7 @@ namespace eka2l1::kernel {
         bool code_chunk_for_reuse = eligible_for_codeseg_reuse();
         bool need_patch_and_reloc = true;
 
-        if (kern->is_eka1()) {
-            unmark();
-        }
+        unmark();
 
         if (code_addr == 0) {
             // EKA1 try to reuse code segment...

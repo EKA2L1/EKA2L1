@@ -32,8 +32,7 @@ namespace eka2l1::mem {
         : mem_model_process(ctrl)
         , addr_space_id_(ctrl->rollover_fresh_addr_space())
         , user_local_sec_(local_data, ctrl->mem_map_old_ ? shared_data_eka1 : shared_data, ctrl->page_size())
-        , user_dll_static_data_sec_(ctrl->mem_map_old_ ? rom_bss_eka1 : dll_static_data, ctrl->mem_map_old_ ? dll_static_data_eka1_end : shared_data, ctrl->page_size())
-        , user_code_sec_(ctrl->mem_map_old_ ? ram_code_addr_eka1 : ram_code_addr, ctrl->mem_map_old_ ? ram_code_addr_eka1_end : dll_static_data, ctrl->page_size()) {
+        , user_dll_static_data_sec_(ctrl->mem_map_old_ ? rom_bss_eka1 : dll_static_data, ctrl->mem_map_old_ ? dll_static_data_eka1_end : shared_data, ctrl->page_size()) {
     }
 
     static constexpr std::size_t MAX_CHUNK_ALLOW_PER_PROCESS = 1024;
@@ -158,7 +157,7 @@ namespace eka2l1::mem {
         }
 
         for (auto &c : chunks_) {
-            if (c && (c->is_local || c->is_code)) {
+            if (c && c->is_local) {
                 // Local
                 c->unmap_from_cpu(this, mmu);
             }
@@ -167,7 +166,7 @@ namespace eka2l1::mem {
 
     void multiple_mem_model_process::remap_to_cpu(mmu_base *mmu) {
         for (auto &c : chunks_) {
-            if (c && (c->is_local || c->is_code)) {
+            if (c && c->is_local) {
                 // Local
                 c->map_to_cpu(this, mmu);
             }
