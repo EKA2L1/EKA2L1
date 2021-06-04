@@ -273,6 +273,8 @@ namespace eka2l1 {
                 
         void launch_app(service::ipc_context &ctx);
         void is_program(service::ipc_context &ctx);
+        void get_preferred_buf_size(service::ipc_context &ctx);
+        void get_app_for_document(service::ipc_context &ctx);
 
         void connect(service::ipc_context &ctx) override;
 

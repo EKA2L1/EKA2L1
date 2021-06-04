@@ -744,6 +744,23 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void applist_server::get_preferred_buf_size(service::ipc_context &ctx) {
+        LOG_TRACE(SERVICE_APPLIST, "AppList::GetPreferredBufSize stubbed to 0");
+
+        std::uint32_t buf_size = 0;
+        ctx.complete(buf_size);
+    }
+
+    void applist_server::get_app_for_document(service::ipc_context &ctx) {
+        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(2);
+
+        applist_app_for_document app;
+        app.uid = 0;
+
+        ctx.write_data_to_descriptor_argument<applist_app_for_document>(0, app);
+        ctx.complete(epoc::error_none);
+    }
+
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver) {
     }
@@ -838,6 +855,14 @@ namespace eka2l1 {
 
             case applist_request_app_icon_by_uid_and_size:
                 server<applist_server>()->get_app_icon(*ctx);
+                break;
+
+            case applist_request_preferred_buf_size:
+                server<applist_server>()->get_preferred_buf_size(*ctx);
+                break;
+
+            case applist_request_app_for_document:
+                server<applist_server>()->get_app_for_document(*ctx);
                 break;
 
             default:

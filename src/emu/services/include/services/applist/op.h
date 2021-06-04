@@ -27,6 +27,16 @@ namespace eka2l1 {
         applist_range_write_device_data_cap = 100,
     };
 
+    struct applist_data_type {
+        eka2l1::ptr<epoc::ptr_des8> data_type;
+        epoc::uid uid;
+    };
+
+    struct applist_app_for_document {
+        epoc::uid uid;
+        applist_data_type data_type;
+    };
+
     enum applist_request_oldarch {
         applist_request_oldarch_first = applist_range_unrestricted, // = 0
         applist_request_oldarch_init_list,
