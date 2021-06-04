@@ -181,6 +181,15 @@ namespace eka2l1 {
         eka2l1::vec2 pos;
     };
 
+    struct ws_cmd_draw_bitmap2 {
+        std::uint32_t handle;
+        eka2l1::rect dest_rect;
+    };
+
+    struct ws_cmd_draw_bitmap3: public ws_cmd_draw_bitmap2 {
+        eka2l1::rect source_rect;
+    };
+
     struct ws_cmd_window_group_list {
         std::int32_t priority;
         std::int32_t count;
@@ -194,6 +203,14 @@ namespace eka2l1 {
 
     struct ws_cmd_gdi_blt3 : public ws_cmd_gdi_blt2 {
         eka2l1::rect source_rect;
+    };
+
+    struct ws_cmd_draw_ws_bitmap_masked {
+        std::uint32_t source_handle;
+        std::uint32_t mask_handle;
+        eka2l1::rect dest_rect;
+        eka2l1::rect source_rect;
+        std::uint32_t invert_mask;
     };
 
     struct ws_cmd_gdi_blt_masked {

@@ -51,7 +51,7 @@ OPCODE3(ws_gc, draw_segmented_polygon, u139, 29, u151m2, 29, curr, 29)
 
 OPCODE4(ws_gc, draw_bitmap, u139, 30, u151m1, 30, u151m2, 30, curr, 30)
 OPCODE4(ws_gc, draw_bitmap2, u139, 31, u151m1, 31, u151m2, 31, curr, 31)
-OPCODE4(ws_gc, draw_bitmacurr, u139, 32, u151m1, 32, u151m2, 32, curr, 32)
+OPCODE4(ws_gc, draw_bitmap3, u139, 32, u151m1, 32, u151m2, 32, curr, 32)
 OPCODE3(ws_gc, draw_bitmap_masked, u151m1, 33, u151m2, 33, curr, 33)
 OPCODE2(ws_gc, ws_draw_bitmap_masked, u151m2, 34, curr, 34)
 OPCODE4(ws_gc, draw_text, u139, 33, u151m1, 34, u151m2, 35, curr, 35)

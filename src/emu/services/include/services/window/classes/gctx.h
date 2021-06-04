@@ -99,16 +99,20 @@ namespace eka2l1::epoc {
             eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
             const int baseline_offset, const int margin, const bool fill_surrounding);
 
-        void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
-            const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);
+        void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);
         bool do_command_set_brush_color();
         bool do_command_set_pen_color();
         
         void do_submit_clipping();
 
+        void draw_mask_impl(epoc::bitwise_bitmap *source_bitmap, epoc::bitwise_bitmap *mask_bitmap, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const bool invert_mask);
+
         void active(service::ipc_context &context, ws_cmd cmd);
         void deactive(service::ipc_context &context, ws_cmd &cmd);
         void draw_bitmap(service::ipc_context &context, ws_cmd &cmd);
+        void draw_bitmap_2(service::ipc_context &context, ws_cmd &cmd);
+        void draw_bitmap_3(service::ipc_context &context, ws_cmd &cmd);
+        void ws_draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_color(service::ipc_context &context, ws_cmd &cmd);
@@ -128,6 +132,7 @@ namespace eka2l1::epoc {
         void gdi_blt3(service::ipc_context &context, ws_cmd &cmd);
         void gdi_ws_blt2(service::ipc_context &context, ws_cmd &cmd);
         void gdi_ws_blt3(service::ipc_context &context, ws_cmd &cmd);
+        void gdi_ws_blt_masked(service::ipc_context &context, ws_cmd &cmd);
 
         void use_font(service::ipc_context &context, ws_cmd &cmd);
         void discard_font(service::ipc_context &context, ws_cmd &cmd);

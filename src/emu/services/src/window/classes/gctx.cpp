@@ -96,8 +96,7 @@ namespace eka2l1::epoc {
         do_submit_clipping();
     }
 
-    void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h,
-        const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
+    void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
         cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f, 0);
         ctx.complete(epoc::error_none);
     }
@@ -384,8 +383,106 @@ namespace eka2l1::epoc {
         }
 
         drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bw_bmp);
-        do_command_draw_bitmap(context, bmp_driver_handle, rect({ 0, 0 }, bw_bmp->header_.size_pixels),
-            rect(bitmap_cmd->pos, { 0, 0 }));
+        do_command_draw_bitmap(context, bmp_driver_handle, rect({ 0, 0 }, bw_bmp->header_.size_pixels), rect(bitmap_cmd->pos, { 0, 0 }));
+    }
+
+    void graphic_context::draw_bitmap_2(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_bitmap2 *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap2 *>(cmd.data_ptr);
+        epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
+
+        if (!bw_bmp) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bw_bmp);
+
+        eka2l1::rect dest_rect = bitmap_cmd->dest_rect;
+        dest_rect.transform_from_symbian_rectangle();
+
+        do_command_draw_bitmap(context, bmp_driver_handle, rect({ 0, 0 }, bw_bmp->header_.size_pixels), dest_rect);
+    }
+
+    void graphic_context::draw_bitmap_3(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_bitmap3 *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap3 *>(cmd.data_ptr);
+        epoc::bitwise_bitmap *bw_bmp = client->get_ws().get_bitmap(bitmap_cmd->handle);
+
+        if (!bw_bmp) {
+            context.complete(epoc::error_argument);
+            return;
+        }
+
+        drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bw_bmp);
+
+        eka2l1::rect source_rect = bitmap_cmd->source_rect;
+        eka2l1::rect dest_rect = bitmap_cmd->dest_rect;
+
+        source_rect.transform_from_symbian_rectangle();
+        dest_rect.transform_from_symbian_rectangle();
+
+        do_command_draw_bitmap(context, bmp_driver_handle, source_rect, dest_rect);
+    }
+
+    void graphic_context::draw_mask_impl(epoc::bitwise_bitmap *source_bitmap, epoc::bitwise_bitmap *mask_bitmap, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const bool invert_mask) {
+        drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(source_bitmap);
+        drivers::handle bmp_mask_driver_handle = handle_from_bitwise_bitmap(mask_bitmap);
+
+        std::uint32_t flags = 0;
+        const bool alpha_blending = (mask_bitmap->settings_.current_display_mode() == epoc::display_mode::gray256)
+            || (epoc::is_display_mode_alpha(mask_bitmap->settings_.current_display_mode()));
+
+        if (invert_mask && !alpha_blending) {
+            flags |= drivers::bitmap_draw_flag_invert_mask;
+        }
+
+        if (!alpha_blending) {
+            flags |= drivers::bitmap_draw_flag_flat_blending;
+        }
+
+        cmd_builder->set_blend_mode(true);
+        
+        // For non alpha blending we always want to take color buffer's alpha.
+        cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+            drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
+            (alpha_blending ? drivers::blend_factor::frag_out_alpha : drivers::blend_factor::one),
+            (alpha_blending ? drivers::blend_factor::one_minus_frag_out_alpha : drivers::blend_factor::one));
+
+        bool swizzle_alteration = false;
+        if (!alpha_blending && !epoc::is_display_mode_alpha(mask_bitmap->settings_.current_display_mode())) {
+            swizzle_alteration = true;
+            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
+        }
+
+        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, eka2l1::vec2(0, 0),
+            0.0f, flags);
+        cmd_builder->set_blend_mode(false);
+
+        if (swizzle_alteration) {
+            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
+                drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha);
+        }
+    }
+
+    void graphic_context::ws_draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_draw_ws_bitmap_masked *blt_cmd = reinterpret_cast<ws_cmd_draw_ws_bitmap_masked *>(cmd.data_ptr);
+
+        epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->source_handle));
+        epoc::wsbitmap *myside_mask_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->mask_handle));
+
+        if (!myside_source_bmp || !myside_mask_bmp) {
+            context.complete(epoc::error_bad_handle);
+            return;
+        }
+
+        eka2l1::rect source_rect = blt_cmd->source_rect;
+        eka2l1::rect dest_rect = blt_cmd->dest_rect;
+
+        source_rect.transform_from_symbian_rectangle();
+        dest_rect.transform_from_symbian_rectangle();
+
+        draw_mask_impl(myside_source_bmp->bitmap_, myside_mask_bmp->bitmap_, dest_rect, source_rect, static_cast<bool>(blt_cmd->invert_mask));
+        context.complete(epoc::error_none);
     }
 
     void graphic_context::gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
@@ -405,45 +502,29 @@ namespace eka2l1::epoc {
         dest_rect.size = source_rect.size;
         dest_rect.top = blt_cmd->pos;
 
-        drivers::handle bmp_driver_handle = handle_from_bitwise_bitmap(bmp);
-        drivers::handle bmp_mask_driver_handle = handle_from_bitwise_bitmap(masked);
+        draw_mask_impl(bmp, masked, dest_rect, source_rect, blt_cmd->invert_mask);
+        context.complete(epoc::error_none);
+    }
 
-        std::uint32_t flags = 0;
-        const bool alpha_blending = (masked->settings_.current_display_mode() == epoc::display_mode::gray256)
-            || (epoc::is_display_mode_alpha(masked->settings_.current_display_mode()));
+    void graphic_context::gdi_ws_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
+        ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked *>(cmd.data_ptr);
 
-        if (blt_cmd->invert_mask && !alpha_blending) {
-            flags |= drivers::bitmap_draw_flag_invert_mask;
+        epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->source_handle));
+        epoc::wsbitmap *myside_mask_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->mask_handle));
+
+        if (!myside_source_bmp || !myside_mask_bmp) {
+            context.complete(epoc::error_bad_handle);
+            return;
         }
 
-        if (!alpha_blending) {
-            flags |= drivers::bitmap_draw_flag_flat_blending;
-        }
+        eka2l1::rect source_rect = blt_cmd->source_rect;
+        source_rect.transform_from_symbian_rectangle();
 
-        cmd_builder->set_blend_mode(true);
-        
-        // For non alpha blending we always want to take color buffer's alpha.
-        cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
-            drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
-            (alpha_blending ? drivers::blend_factor::frag_out_alpha : drivers::blend_factor::one),
-            (alpha_blending ? drivers::blend_factor::one_minus_frag_out_alpha : drivers::blend_factor::one));
+        eka2l1::rect dest_rect;
+        dest_rect.size = source_rect.size;
+        dest_rect.top = blt_cmd->pos;
 
-        bool swizzle_alteration = false;
-        if (!alpha_blending && !epoc::is_display_mode_alpha(masked->settings_.current_display_mode())) {
-            swizzle_alteration = true;
-            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
-                drivers::channel_swizzle::blue, drivers::channel_swizzle::red);
-        }
-
-        cmd_builder->draw_bitmap(bmp_driver_handle, bmp_mask_driver_handle, dest_rect, source_rect, eka2l1::vec2(0, 0),
-            0.0f, flags);
-        cmd_builder->set_blend_mode(false);
-
-        if (swizzle_alteration) {
-            cmd_builder->set_swizzle(bmp_mask_driver_handle, drivers::channel_swizzle::red, drivers::channel_swizzle::green,
-                drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha);
-        }
-
+        draw_mask_impl(myside_source_bmp->bitmap_, myside_mask_bmp->bitmap_, dest_rect, source_rect, static_cast<bool>(blt_cmd->invert_mask));
         context.complete(epoc::error_none);
     }
 
@@ -748,6 +829,8 @@ namespace eka2l1::epoc {
             { ws_gc_u139_clear, { &graphic_context::clear , true, false } },
             { ws_gc_u139_clear_rect, { &graphic_context::clear_rect , true, false } },
             { ws_gc_u139_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
+            { ws_gc_u139_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
+            { ws_gc_u139_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
             { ws_gc_u139_draw_text, { &graphic_context::draw_text , true, false } },
             { ws_gc_u139_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
             { ws_gc_u139_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
@@ -756,6 +839,7 @@ namespace eka2l1::epoc {
             { ws_gc_u139_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
             { ws_gc_u139_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
+            { ws_gc_u139_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
             { ws_gc_u139_free, { &graphic_context::free , true, true } }
         };
 
@@ -776,6 +860,8 @@ namespace eka2l1::epoc {
             { ws_gc_u151m1_clear, { &graphic_context::clear , true, false } },
             { ws_gc_u151m1_clear_rect, { &graphic_context::clear_rect , true, false } },
             { ws_gc_u151m1_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
+            { ws_gc_u151m1_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
+            { ws_gc_u151m1_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
             { ws_gc_u151m1_draw_text, { &graphic_context::draw_text , true, false } },
             { ws_gc_u151m1_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
             { ws_gc_u151m1_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
@@ -784,6 +870,7 @@ namespace eka2l1::epoc {
             { ws_gc_u151m1_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
             { ws_gc_u151m1_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_u151m1_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
+            { ws_gc_u151m1_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
             { ws_gc_u151m1_free, { &graphic_context::free , true, true } }
         };
 
@@ -804,6 +891,9 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_clear, { &graphic_context::clear , true, false } },
             { ws_gc_u151m2_clear_rect, { &graphic_context::clear_rect , true, false } },
             { ws_gc_u151m2_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
+            { ws_gc_u151m2_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
+            { ws_gc_u151m2_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
+            { ws_gc_u151m2_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked , true, false } },
             { ws_gc_u151m2_draw_text, { &graphic_context::draw_text , true, false } },
             { ws_gc_u151m2_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
             { ws_gc_u151m2_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
@@ -812,6 +902,7 @@ namespace eka2l1::epoc {
             { ws_gc_u151m2_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
             { ws_gc_u151m2_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_u151m2_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
+            { ws_gc_u151m2_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
             { ws_gc_u151m2_free, { &graphic_context::free , true, true } }
         };
 
@@ -832,6 +923,9 @@ namespace eka2l1::epoc {
             { ws_gc_curr_clear, { &graphic_context::clear , true, false } },
             { ws_gc_curr_clear_rect, { &graphic_context::clear_rect , true, false } },
             { ws_gc_curr_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
+            { ws_gc_curr_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
+            { ws_gc_curr_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
+            { ws_gc_curr_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked , true, false } },
             { ws_gc_curr_draw_text, { &graphic_context::draw_text , true, false } },
             { ws_gc_curr_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
             { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
@@ -840,6 +934,7 @@ namespace eka2l1::epoc {
             { ws_gc_curr_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
             { ws_gc_curr_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
             { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
+            { ws_gc_curr_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
             { ws_gc_curr_free, { &graphic_context::free , true, true } }
         };
 
