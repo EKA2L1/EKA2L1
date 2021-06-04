@@ -36,7 +36,7 @@ namespace eka2l1::mem {
         , user_code_sec_(ctrl->mem_map_old_ ? ram_code_addr_eka1 : ram_code_addr, ctrl->mem_map_old_ ? ram_code_addr_eka1_end : dll_static_data, ctrl->page_size()) {
     }
 
-    static constexpr std::size_t MAX_CHUNK_ALLOW_PER_PROCESS = 512;
+    static constexpr std::size_t MAX_CHUNK_ALLOW_PER_PROCESS = 1024;
 
     multiple_mem_model_chunk *multiple_mem_model_process::allocate_chunk_struct_ptr() {
         if (chunks_.size() >= MAX_CHUNK_ALLOW_PER_PROCESS) {
