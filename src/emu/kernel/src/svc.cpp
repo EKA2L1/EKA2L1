@@ -193,6 +193,17 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(pr_real->get_exit_type());
     }
 
+    BRIDGE_FUNC(std::int32_t, process_exit_reason, kernel::handle h) {
+        process_ptr pr_real = kern->get<kernel::process>(h);
+
+        if (!pr_real) {
+            LOG_ERROR(KERNEL, "process_exit_reason: Invalid process");
+            return 0;
+        }
+
+        return static_cast<std::int32_t>(pr_real->get_exit_reason());
+    }
+
     BRIDGE_FUNC(void, process_rendezvous, std::int32_t complete_code) {
         kernel::process *pr = kern->crr_process();
         pr->rendezvous(complete_code);
@@ -2088,6 +2099,16 @@ namespace eka2l1::epoc {
         thr->set_priority(static_cast<eka2l1::kernel::thread_priority>(thread_pri));
     }
 
+    BRIDGE_FUNC(std::int32_t, thread_priority, kernel::handle h) {
+        thread_ptr thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            return epoc::error_bad_handle;
+        }
+
+        return static_cast<std::int32_t>(thr->get_priority());
+    }
+
     BRIDGE_FUNC(void, thread_resume, kernel::handle h) {
         thread_ptr thr = kern->get<kernel::thread>(h);
 
@@ -2558,6 +2579,13 @@ namespace eka2l1::epoc {
     }
 
     static constexpr std::uint32_t TICK_MASK = ~0b1;
+
+    BRIDGE_FUNC(std::uint32_t, fast_counter) {
+        const std::uint64_t DEFAULT_FAST_COUNTER_PERIOD = (microsecs_per_sec / epoc::HIGH_RES_TIMER_HZ);
+
+        ntimer *timing = kern->get_ntimer();
+        return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_FAST_COUNTER_PERIOD);
+    }
 
     BRIDGE_FUNC(std::uint32_t, ntick_count) {
         const std::uint64_t DEFAULT_NTICK_PERIOD = (microsecs_per_sec / epoc::NANOKERNEL_HZ);
@@ -5305,6 +5333,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800008, trap_handler),
         BRIDGE_REGISTER(0x00800009, set_trap_handler),
         BRIDGE_REGISTER(0x0080000D, debug_mask),
+        BRIDGE_REGISTER(0x0080000F, fast_counter),
         BRIDGE_REGISTER(0x00800010, ntick_count),
         BRIDGE_REGISTER(0x00800013, user_svr_rom_header_address),
         BRIDGE_REGISTER(0x00800014, user_svr_rom_root_dir_address),
@@ -5332,6 +5361,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x16, process_filename),
         BRIDGE_REGISTER(0x17, process_command_line),
         BRIDGE_REGISTER(0x18, process_exit_type),
+        BRIDGE_REGISTER(0x19, process_exit_reason),
         BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
         BRIDGE_REGISTER(0x1E, process_set_flags),
@@ -5345,6 +5375,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x27, session_share),
         BRIDGE_REGISTER(0x28, thread_resume),
         BRIDGE_REGISTER(0x29, thread_suspend),
+        BRIDGE_REGISTER(0x2A, thread_priority),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
         BRIDGE_REGISTER(0x30, thread_request_count),
