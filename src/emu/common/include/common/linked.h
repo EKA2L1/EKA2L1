@@ -140,11 +140,6 @@ namespace eka2l1::common {
         }
 
         double_linked_queue_element *highest() {
-            // Release code generation is corrupted somewhere on MSVC. Force fill is good so i guess it's the other.
-            // Either way, until when i can repro this in a short code, files and bug got fixed, this stays here.
-#ifdef _MSC_VER
-#pragma optimize("", off)
-#endif
             // Check the most significant bit and get the non-empty read queue
             for (std::uint32_t i = 0; i < NUM; i++) {
                 int non_empty = common::find_most_significant_bit_one(empty_mask[0]);
@@ -155,9 +150,6 @@ namespace eka2l1::common {
             }
 
             return nullptr;
-#ifdef _MSC_VER
-#pragma optimize("", on)
-#endif
         }
 
         bool is_empty(const std::uint32_t pri) {

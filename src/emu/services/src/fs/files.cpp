@@ -770,8 +770,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-#pragma optimize("", off)
-
     int fs_server_client::new_node(io_system *io, kernel::thread *sender, std::u16string name, int org_mode, bool overwrite, bool temporary) {
         int real_mode = org_mode & ~(epoc::fs::file_stream_text | epoc::fs::file_read_async_all | epoc::fs::file_big_size);
         epoc::fs::file_mode share_mode = static_cast<epoc::fs::file_mode>(real_mode & 0b11);
