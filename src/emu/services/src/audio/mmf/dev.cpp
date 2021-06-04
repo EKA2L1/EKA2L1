@@ -251,6 +251,29 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::init3(service::ipc_context *ctx) {
+        if (stream_ && stream_->is_playing()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
+        std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
+            = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
+
+        if (!state_settings.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::mmf_state state_wanted = static_cast<epoc::mmf_state>(state_settings->state_);
+        if ((state_wanted != epoc::mmf_state_playing) && (state_wanted != epoc::mmf_state_tone_playing)
+            && (state_wanted != epoc::mmf_state_playing_recording)) {
+            ctx->complete(epoc::error_not_supported);
+        }
+        std::uint32_t target_fourcc = state_settings->four_cc_;
+
+        desired_state_ = state_wanted;
+        init_stream_through_state();
+
         ctx->complete(epoc::error_none);
     }
 
@@ -595,6 +618,10 @@ namespace eka2l1 {
             switch (ctx->msg->function) {
             case epoc::mmf_dev_init0:
                 init0(ctx);
+                break;
+
+            case epoc::mmf_dev_init3:
+                init3(ctx);
                 break;
 
             case epoc::mmf_dev_config:
