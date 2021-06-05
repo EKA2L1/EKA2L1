@@ -45,6 +45,8 @@ namespace eka2l1::drivers {
 }
 
 namespace eka2l1::epoc {
+    const std::uint32_t WORD_PALETTE_ENTRIES_COUNT = 16;
+
     struct window;
     struct window_group;
 

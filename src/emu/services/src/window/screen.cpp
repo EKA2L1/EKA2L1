@@ -280,6 +280,10 @@ namespace eka2l1::epoc {
     }
 
     void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {
+        if (crr_mode != mode) {
+            LOG_TRACE(SERVICE_WINDOW, "Screen mode changed to {}", mode);
+        }
+
         crr_mode = mode;
         resize(drv, mode_info(mode)->size);
     }
@@ -353,19 +357,6 @@ namespace eka2l1::epoc {
     }
 
     std::uint8_t *screen::screen_buffer_ptr() {
-        std::uint8_t *right_address = reinterpret_cast<std::uint8_t*>(screen_buffer_chunk->host_base());
-        const std::uint32_t WORD_PALETTE_ENTRIES_COUNT = 16;
-
-        switch (disp_mode) {
-        case display_mode::color4k:
-        case display_mode::color64k:
-            right_address += sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
-            break;
-
-        default:
-            break;
-        }
-
-        return right_address;
+        return reinterpret_cast<std::uint8_t*>(screen_buffer_chunk->host_base()) + sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
     }
 }

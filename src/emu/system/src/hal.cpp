@@ -162,7 +162,7 @@ namespace eka2l1::epoc {
 
             // Intentional
             info.video_address_ = scr->screen_buffer_chunk->base(nullptr).ptr_address();
-            info.offset_to_first_pixel_ = 0;
+            info.offset_to_first_pixel_ = sizeof(std::uint16_t) * epoc::WORD_PALETTE_ENTRIES_COUNT;
             info.bits_per_pixel_ = static_cast<std::int32_t>(mode);
         }
 

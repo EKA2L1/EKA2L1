@@ -96,17 +96,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
     CFbsDrawDevice *device = NULL;
     const TUint16 wordModePaletteEntriesCount = 16;
 
-    // Adjust the address. Some mode has start of screen buffer storing external data.
-    // 12bpp and 16bpp stores 16 word palette entries.
-    switch (aMode) {
-    case EColor4KAlter:
-    case EColor64KAlter:
-        aAddress = reinterpret_cast<TUint8*>(aAddress) + wordModePaletteEntriesCount * sizeof(TUint16);
-        break;
-
-    default:
-        break;
-    }
+    aAddress = reinterpret_cast<TUint8*>(aAddress) + wordModePaletteEntriesCount * sizeof(TUint16);
 
     switch (aMode) {
     case EColor4KAlter:
