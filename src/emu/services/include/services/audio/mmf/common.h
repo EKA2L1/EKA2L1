@@ -28,9 +28,7 @@ namespace eka2l1::epoc {
         mmf_state_tone_playing = 2,
         mmf_state_recording = 3,
         mmf_state_playing_recording = 4,
-        mmf_state_converting = 5,
-        mmf_state_dead = 6,
-        mmf_state_ready = 7
+        mmf_state_converting = 5
     };
 
     enum mmf_encoding : std::uint32_t {

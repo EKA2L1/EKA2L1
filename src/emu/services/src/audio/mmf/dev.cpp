@@ -168,7 +168,6 @@ namespace eka2l1 {
                 finished_ = true;
             }
 
-            stream_state_ = epoc::mmf_state_ready;
             do_get_buffer_to_be_filled();
 
             kern->unlock();
@@ -310,7 +309,7 @@ namespace eka2l1 {
         caps.channels_ = 2;
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
         caps.rate_ = epoc::mmf_sample_rate_44100hz;
-        caps.buffer_size_ = samples_to_bytes(epoc::TARGET_REQUEST_SAMPLES, caps);
+        caps.buffer_size_ = 4096;
 
         return caps;
     }
@@ -410,7 +409,6 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::stop(service::ipc_context *ctx) {
-        stream_state_ = epoc::mmf_state_dead;
         stream_->stop();
 
         // Done waiting for all notifications to be completed/ignored, it's time to do deref buffer chunk
@@ -419,12 +417,12 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::play_init(service::ipc_context *ctx) {
-        if ((stream_state_ != epoc::mmf_state_dead) && (stream_state_ != epoc::mmf_state_idle)) {
+        if (stream_state_ != epoc::mmf_state_idle) {
             ctx->complete(epoc::error_in_use);
             return;
         }
 
-        stream_state_ = epoc::mmf_state_ready;
+        stream_state_ = desired_state_;
 
         // Launch the first buffer ready to be filled
         do_get_buffer_to_be_filled();
@@ -523,12 +521,10 @@ namespace eka2l1 {
             auto buf_old = (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_));
 
             buf_old->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
-            buf_old->request_size_ = common::min<std::uint32_t>(max_request_size_align, samples_to_bytes(
-                epoc::TARGET_REQUEST_SAMPLES, conf_));
+            buf_old->request_size_ = common::min<std::uint32_t>(max_request_size_align, 1000000);
         } else {
             buffer_fill_buf_->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
-            buffer_fill_buf_->request_size_ = common::min<std::uint32_t>(max_request_size_align, samples_to_bytes(
-                epoc::TARGET_REQUEST_SAMPLES, conf_));
+            buffer_fill_buf_->request_size_ = common::min<std::uint32_t>(max_request_size_align, 1000000);
         }
 
         buffer_fill_info_.complete(return_value);
@@ -550,11 +546,6 @@ namespace eka2l1 {
             buffer_fill_info_.complete(epoc::error_argument);
             return;
         }
-
-        if (stream_state_ == epoc::mmf_state_ready) {
-            // Just get it already
-            do_get_buffer_to_be_filled();
-        }
     }
 
     void mmf_dev_server_session::play_error(service::ipc_context *ctx) {
@@ -571,8 +562,8 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::play_data(service::ipc_context *ctx) {
-        if (stream_state_ != epoc::mmf_state_ready) {
-            ctx->complete(epoc::error_general);
+        if ((stream_state_ != epoc::mmf_state_playing) && (stream_state_ != epoc::mmf_state_playing_recording)) {
+            ctx->complete(epoc::error_not_supported);
             return;
         }
 
@@ -602,8 +593,6 @@ namespace eka2l1 {
             supplied_size = buf_new->buffer_size_;
             last_buffer_ = buf_new->last_buffer_;
         }
-
-        stream_state_ = epoc::mmf_state_playing;
 
         drivers::dsp_output_stream *out_stream = reinterpret_cast<drivers::dsp_output_stream*>(stream_.get());
         out_stream->write(reinterpret_cast<std::uint8_t*>(buffer_chunk_->host_base()), supplied_size);
