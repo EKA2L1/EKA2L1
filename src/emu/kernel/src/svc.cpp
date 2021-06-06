@@ -5403,6 +5403,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x59, exception_handler),
         BRIDGE_REGISTER(0x5A, set_exception_handler),
         BRIDGE_REGISTER(0x5D, is_exception_handled),
+        BRIDGE_REGISTER(0x5E, process_get_memory_info),
         BRIDGE_REGISTER(0x5F, library_get_memory_info),
         BRIDGE_REGISTER(0x63, process_type),
         BRIDGE_REGISTER(0x65, chunk_top),
