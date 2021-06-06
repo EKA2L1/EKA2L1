@@ -29,6 +29,10 @@
 
 namespace eka2l1 {
     static const char *MMF_DEV_SERVER_NAME = "!MMFDevServer";
+    static constexpr std::uint32_t MMF_BUFFER_SIZE_ALIGN = 0x800;
+    static constexpr std::uint32_t MMF_BUFFER_SIZE_MIN = 0x800;
+    static constexpr std::uint32_t MMF_BUFFER_SIZE_MAX = 0x4000;
+    static constexpr std::uint32_t MMF_BUFFER_SIZE_DEFAULT = 0x1000;
 
     const std::uint32_t freq_enum_to_number(const epoc::mmf_sample_rate rate) {
         switch (rate) {
@@ -109,6 +113,10 @@ namespace eka2l1 {
         return bb * channels_;
     }
 
+    std::uint32_t epoc::mmf_capabilities::buffer_size_recommended() const {
+        return common::align(average_bytes_per_sample() * freq_enum_to_number(rate_) / 4, MMF_BUFFER_SIZE_ALIGN, 0);
+    }
+
     mmf_dev_server::mmf_dev_server(eka2l1::system *sys)
         : service::typical_server(sys, MMF_DEV_SERVER_NAME) {
     }
@@ -144,7 +152,7 @@ namespace eka2l1 {
             stream_ = drivers::new_dsp_out_stream(drv, drivers::dsp_stream_backend::dsp_stream_backend_ffmpeg);
             stream_->set_properties(8000, 2);
 
-            reinterpret_cast<drivers::dsp_output_stream*>(stream_.get())->volume(volume_);
+            reinterpret_cast<drivers::dsp_output_stream*>(stream_.get())->volume(volume_ * 10);
 
             break;
 
@@ -183,7 +191,7 @@ namespace eka2l1 {
             return;
         }
 
-        settings->max_vol_ = 100;
+        settings->max_vol_ = 10;
 
         ctx->write_data_to_descriptor_argument<epoc::mmf_dev_sound_proxy_settings>(2, settings.value());
         ctx->complete(epoc::error_none);
@@ -225,10 +233,10 @@ namespace eka2l1 {
             return;
         }
 
-        volume_ = common::clamp<std::uint32_t>(0, 100, settings->vol_);
+        volume_ = common::clamp<std::uint32_t>(0, 10, settings->vol_);
         
         if (stream_)
-            (reinterpret_cast<drivers::dsp_output_stream*>(stream_.get()))->volume(volume_);
+            (reinterpret_cast<drivers::dsp_output_stream*>(stream_.get()))->volume(volume_ * 10);
 
         ctx->complete(epoc::error_none);
     }
@@ -309,7 +317,7 @@ namespace eka2l1 {
         caps.channels_ = 2;
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
         caps.rate_ = epoc::mmf_sample_rate_44100hz;
-        caps.buffer_size_ = 4096;
+        caps.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
 
         return caps;
     }
@@ -339,6 +347,7 @@ namespace eka2l1 {
         }
 
         conf_ = settings->conf_;
+        conf_.buffer_size_ = static_cast<std::int32_t>(common::clamp(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX, static_cast<std::uint32_t>(conf_.buffer_size_)));
 
         const std::uint32_t freq = freq_enum_to_number(conf_.rate_);
         std::uint32_t target_fourcc = 0;
@@ -515,16 +524,16 @@ namespace eka2l1 {
             return;
         }
 
-        const std::uint32_t max_request_size_align = common::align(conf_.buffer_size_, conf_.average_bytes_per_sample(), 0);
+        const std::uint32_t max_request_size_align = common::align(conf_.buffer_size_, MMF_BUFFER_SIZE_ALIGN, 1);
 
         if (ver_use <= epocver::epoc94) {
             auto buf_old = (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_));
 
             buf_old->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
-            buf_old->request_size_ = common::min<std::uint32_t>(max_request_size_align, 1000000);
+            buf_old->request_size_ = max_request_size_align;
         } else {
             buffer_fill_buf_->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
-            buffer_fill_buf_->request_size_ = common::min<std::uint32_t>(max_request_size_align, 1000000);
+            buffer_fill_buf_->request_size_ = max_request_size_align;
         }
 
         buffer_fill_info_.complete(return_value);

@@ -62,6 +62,7 @@ namespace eka2l1::epoc {
         std::int32_t buffer_size_;
 
         std::uint32_t average_bytes_per_sample() const;
+        std::uint32_t buffer_size_recommended() const;
     };
 
     struct mmf_dev_sound_proxy_settings {
