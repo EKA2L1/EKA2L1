@@ -82,7 +82,7 @@ namespace eka2l1::epoc {
         std::vector<int> modes;
 
         for (int i = 0; i < scr->scr_config.modes.size(); i++) {
-            modes.push_back(scr->scr_config.modes[i].mode_number);
+            modes.push_back(i);
         }
 
         ctx.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(&modes[0]),
