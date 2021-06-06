@@ -135,9 +135,7 @@ namespace eka2l1 {
             msg->own_thr = kern->crr_thread();
             msg->request_sts = request_sts;
 
-            send(msg);
-
-            return 0;
+            return send(msg);
         }
 
         int session::send_receive(const int function, const ipc_arg &args, eka2l1::ptr<epoc::request_status> request_sts) {
@@ -152,9 +150,7 @@ namespace eka2l1 {
             msg->request_sts = request_sts;
             msg->own_thr = kern->crr_thread();
 
-            send(msg);
-
-            return 0;
+            return send(msg);
         }
 
         int session::send(ipc_msg_ptr msg) {
