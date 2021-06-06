@@ -52,7 +52,8 @@ namespace eka2l1::epoc {
     }
 
     screen_device::screen_device(window_server_client_ptr client, epoc::screen *scr)
-        : window_client_obj(client, scr) {
+        : window_client_obj(client, scr)
+        , local_screen_mode_(scr->crr_mode) {
     }
 
     void screen_device::set_screen_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
@@ -63,7 +64,8 @@ namespace eka2l1::epoc {
 
             if (mode.size == info->pixel_size && number_to_orientation(mode.rotation) == info->orientation) {
                 // Eureka... Bắt được mày rồi....
-                scr->set_screen_mode(client->get_ws().get_graphics_driver(), i);
+                local_screen_mode_ = i;
+
                 ctx.complete(epoc::error_none);
                 return;
             }
@@ -122,7 +124,6 @@ namespace eka2l1::epoc {
     void screen_device::get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
         const bool twips) {
         const epoc::config::screen_mode &mode = scr->current_mode();
-
         if (twips) {
             pixel_twips_and_rot data;
             data.pixel_size = mode.size;
@@ -154,10 +155,16 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::is_screen_mode_dynamic(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        const epoc::config::screen_mode &mode = scr->current_mode();
+        const std::int32_t mode_invest = *reinterpret_cast<const std::int32_t*>(cmd.data_ptr);
+        const epoc::config::screen_mode *mode = scr->mode_info((mode_invest < 0) ? local_screen_mode_ : mode_invest);
+
+        if (!mode) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
 
         // The request code set is the boolean for whether screen mode is dynamic
-        if ((mode.size.x == -1) && (mode.size.y == -1)) {
+        if ((mode->size.x == -1) && (mode->size.y == -1)) {
             // Dynamiccc!!!!
             ctx.complete(1);
             return;
@@ -188,7 +195,13 @@ namespace eka2l1::epoc {
         switch (op) {
         case ws_sd_op_pixel_size: {
             // This doesn't take any arguments
-            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, scr->current_mode().size);
+            const epoc::config::screen_mode *mode = scr->mode_info(local_screen_mode_);
+            if (!mode) {
+                ctx.complete(epoc::error_general);
+                break;
+            }
+
+            ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, mode->size);
             ctx.complete(0);
 
             break;
@@ -196,7 +209,13 @@ namespace eka2l1::epoc {
 
         case ws_sd_op_twips_size: {
             // This doesn't take any arguments
-            eka2l1::vec2 screen_size = scr->current_mode().size * twips_mul;
+            const epoc::config::screen_mode *mode = scr->mode_info(local_screen_mode_);
+            if (!mode) {
+                ctx.complete(epoc::error_general);
+                break;
+            }
+
+            eka2l1::vec2 screen_size = mode->size * twips_mul;
             ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, screen_size);
             ctx.complete(0);
 

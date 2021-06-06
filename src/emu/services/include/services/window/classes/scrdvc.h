@@ -33,6 +33,10 @@ namespace eka2l1::epoc {
      * \brief Represents a screen.
      */
     struct screen_device : public window_client_obj {
+    private:
+        std::int32_t local_screen_mode_;
+
+    public:
         bool execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) override;
 
         void set_screen_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
