@@ -103,69 +103,71 @@ namespace eka2l1 {
         ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", drive_str.c_str());
         ImGui::NextColumn();
 
-        ImGuiListClipper clipper(static_cast<int>(manager->package_count()), ImGui::GetTextLineHeight());
+        ImGuiListClipper clipper(-1, ImGui::GetTextLineHeight());
 
-        while (clipper.Step()) {
-            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                auto ite = manager->begin();
+        for (int i = 0; i < manager->package_count(); i++) {
+            auto ite = manager->begin();
 
-                std::advance(ite, i);
-                const package::object &obj = ite->second;
-
-                std::string str = "0x" + common::to_string(obj.uid, std::hex);
-
-                ImGui::Text("%s", str.c_str());
-                ImGui::NextColumn();
-
-                str = common::ucs2_to_utf8(obj.package_name);
-
-                if (ImGui::Selectable(str.c_str(), selected_package_index == i)) {
-                    if (!should_package_manager_remove) {
-                        selected_package_index = i;
-                        should_package_manager_display_file_list = false;
-                    }
-                }
-
-                if (selected_package_index == i && ImGui::BeginPopupContextItem()) {
-                    const std::string filelist_menu_name = common::get_localised_string(localised_strings, "packages_file_lists_string");
-                    const std::string remove_menu_name = common::get_localised_string(localised_strings, "packages_remove_string");
-                    
-                    if (ImGui::MenuItem(filelist_menu_name.c_str())) {
-                        should_package_manager_display_file_list = true;
-                    }
-
-                    if (ImGui::MenuItem(remove_menu_name.c_str())) {
-                        should_package_manager_remove = true;
-                    }
-
-                    ImGui::EndPopup();
-                }
-
-                ImGui::NextColumn();
-
-                str = common::ucs2_to_utf8(obj.vendor_name);
-
-                ImGui::Text("%s", str.c_str());
-                ImGui::NextColumn();
-
-                str.clear();
-
-                for (std::uint32_t i = 0; i < drive_z - drive_a; i++) {
-                    if (obj.drives & (1 << i)) {
-                        str += static_cast<char>(drive_to_char16(static_cast<drive_number>(drive_a + i)));
-                        str += ":, ";
-                    }
-                }
-
-                // Remove extra ", " 
-                if (!str.empty()) {
-                    str.pop_back();
-                    str.pop_back();
-                }
-
-                ImGui::Text("%s", str.c_str());
-                ImGui::NextColumn();
+            std::advance(ite, i);
+            const package::object &obj = ite->second;
+            if (!obj.is_removable) {
+                continue;
             }
+            
+            clipper.Step();
+            std::string str = "0x" + common::to_string(obj.uid, std::hex);
+
+            ImGui::Text("%s", str.c_str());
+            ImGui::NextColumn();
+
+            str = common::ucs2_to_utf8(obj.package_name);
+
+            if (ImGui::Selectable(str.c_str(), selected_package_index == i)) {
+                if (!should_package_manager_remove) {
+                    selected_package_index = i;
+                    should_package_manager_display_file_list = false;
+                }
+            }
+
+            if (selected_package_index == i && ImGui::BeginPopupContextItem()) {
+                const std::string filelist_menu_name = common::get_localised_string(localised_strings, "packages_file_lists_string");
+                const std::string remove_menu_name = common::get_localised_string(localised_strings, "packages_remove_string");
+                    
+                if (ImGui::MenuItem(filelist_menu_name.c_str())) {
+                    should_package_manager_display_file_list = true;
+                }
+
+                if (ImGui::MenuItem(remove_menu_name.c_str())) {
+                    should_package_manager_remove = true;
+                }
+
+                ImGui::EndPopup();
+            }
+
+            ImGui::NextColumn();
+
+            str = common::ucs2_to_utf8(obj.vendor_name);
+
+            ImGui::Text("%s", str.c_str());
+            ImGui::NextColumn();
+
+            str.clear();
+
+            for (std::uint32_t i = 0; i < drive_z - drive_a; i++) {
+                if (obj.drives & (1 << i)) {
+                    str += static_cast<char>(drive_to_char16(static_cast<drive_number>(drive_a + i)));
+                    str += ":, ";
+                }
+            }
+
+            // Remove extra ", " 
+            if (!str.empty()) {
+                str.pop_back();
+                str.pop_back();
+            }
+
+            ImGui::Text("%s", str.c_str());
+            ImGui::NextColumn();
         }
 
         ImGui::Columns(1);

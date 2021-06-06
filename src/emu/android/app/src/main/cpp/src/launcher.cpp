@@ -196,6 +196,9 @@ namespace eka2l1::android {
         manager::packages *manager = sys->get_packages();
         std::vector<std::string> info;
         for (const auto &[pkg_uid, pkg]: *manager) {
+            if (!pkg.is_removable) {
+                continue;
+            }
             std::string name = common::ucs2_to_utf8(pkg.package_name);
             std::string uid = std::to_string(pkg.uid);
             std::string index = std::to_string(pkg.index);
