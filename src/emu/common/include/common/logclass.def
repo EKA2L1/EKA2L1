@@ -39,6 +39,7 @@ LOGCLASS(LDD, "Ldd", "Logical device driver")
 LOGCLASS(LDD_MMCIF, "Ldd.MmcIf", "Mmc driver")
 
 LOGCLASS(SERVICE_TRACK, "Service.Track", "Service tracking")
+LOGCLASS(SERVICE_ALARM, "Service.Alarm", "Alarm")
 LOGCLASS(SERVICE_APPLIST, "Service.Applist", "Applist")
 LOGCLASS(SERVICE_KEYSOUND, "Service.Keysound", "Keysound")
 LOGCLASS(SERVICE_BLUETOOTH, "Service.Bluetooth", "Bluetooth")

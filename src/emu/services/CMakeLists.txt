@@ -6,6 +6,7 @@ add_library(epocservs
         include/services/framework.h
         include/services/init.h
         include/services/utils.h
+        include/services/alarm/alarm.h
         include/services/applist/applist.h
         include/services/applist/common.h
         include/services/applist/op.h
@@ -127,6 +128,7 @@ add_library(epocservs
         src/framework.cpp
         src/init.cpp
         src/utils.cpp
+        src/alarm/alarm.cpp
         src/applist/applist.cpp
         src/applist/common.cpp
         src/applist/registeration.cpp

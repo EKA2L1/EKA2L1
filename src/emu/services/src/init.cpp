@@ -22,6 +22,7 @@
 
 #include <services/ui/icon/icon.h>
 #include <services/ui/skin/server.h>
+#include <services/alarm/alarm.h>
 #include <services/applist/applist.h>
 #include <services/audio/keysound/keysound.h>
 #include <services/audio/mmf/audio.h>
@@ -212,6 +213,7 @@ namespace eka2l1 {
             CREATE_SERVER(sys, drm_notifier_server);
             CREATE_SERVER(sys, sendas_server);
             CREATE_SERVER(sys, sisregistry_server);
+            CREATE_SERVER(sys, alarm_server);
             //CREATE_SERVER(sys, uiss_server);
 
             if (cfg->enable_srv_socket) {
