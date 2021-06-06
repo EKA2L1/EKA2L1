@@ -123,15 +123,21 @@ namespace eka2l1::epoc {
         const bool twips) {
         const epoc::config::screen_mode &mode = scr->current_mode();
 
-        pixel_and_rot result;
-        result.pixel_size = mode.size;
-        result.orientation = get_orientation_from_rotation(mode.rotation);
-
         if (twips) {
-            result.pixel_size = result.pixel_size * 15;
+            pixel_twips_and_rot data;
+            data.pixel_size = mode.size;
+            data.twips_size = mode.size * twips_mul;
+            data.orientation = number_to_orientation(mode.rotation);
+
+            ctx.write_data_to_descriptor_argument<pixel_twips_and_rot>(reply_slot, data);
+        } else {
+            pixel_and_rot data;
+            data.pixel_size = mode.size;
+            data.orientation = number_to_orientation(mode.rotation);
+
+            ctx.write_data_to_descriptor_argument<pixel_and_rot>(reply_slot, data);
         }
 
-        ctx.write_data_to_descriptor_argument<pixel_and_rot>(reply_slot, result);
         ctx.complete(0);
     }
 
