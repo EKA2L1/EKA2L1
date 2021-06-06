@@ -40,6 +40,9 @@ namespace eka2l1::service {
         , unhandle_callback_enable(unhandle_callback_enable) {
         obj_type = kernel::object_type::server;
 
+        if (owner_thread)
+            owner_thread->increase_access_count();
+
         REGISTER_IPC(server, connect, -1, "Server::Connect");
         REGISTER_IPC(server, disconnect, -2, "Server::Disconnect");
     }
@@ -83,6 +86,9 @@ namespace eka2l1::service {
     }
 
     void server::destroy() {
+        if (owner_thread)
+            owner_thread->decrease_access_count();
+
         for (std::size_t i = 0; i < sessions.size(); i++) {
             sessions[i]->detatch(epoc::error_server_terminated);
 

@@ -257,9 +257,13 @@ namespace eka2l1 {
             , flags(0) {
             if (owner) {
                 owner->increase_thread_count();
+                owner->increase_access_count();
+
                 real_priority = calculate_thread_priority(owning_process(), pri);
                 last_priority = real_priority;
             }
+
+            increase_access_count();
 
             create_time = timing->ticks();
 
@@ -333,7 +337,15 @@ namespace eka2l1 {
         void thread::destroy() {
             // Unlink from proces's thread list
             process_thread_link.deque();
-            owning_process()->decrease_thread_count();
+
+            kern->destroy(stack_chunk);
+            kern->destroy(name_chunk);
+            kern->destroy(local_data_chunk);
+            kern->destroy(request_sema);
+
+            if (owner) {
+                owner->decrease_access_count();
+            }
 
             if (state != kernel::thread_state::stop) {
                 stop();
@@ -486,6 +498,8 @@ namespace eka2l1 {
             if (mama->decrease_thread_count() == 0 || is_process_permanent() || ((exit_type == kernel::entity_exit_type::panic) && is_process_critical())) {
                 mama->kill(exit_type, exit_reason);
             }
+
+            decrease_access_count();
 
             kern->prepare_reschedule();
             return true;
@@ -666,7 +680,9 @@ namespace eka2l1 {
 
         void thread::owning_process(kernel::process *pr) {
             owner = reinterpret_cast<kernel_obj *>(pr);
+
             owning_process()->increase_thread_count();
+            owning_process()->increase_access_count();
 
             name_chunk->set_owner(pr);
             stack_chunk->set_owner(pr);

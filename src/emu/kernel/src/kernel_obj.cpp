@@ -62,5 +62,11 @@ namespace eka2l1 {
 
             name_will_full += name();
         }
+
+        void kernel_obj::decrease_access_count() {
+            if (--access_count <= 0) {
+                kern->destroy(this);
+            }
+        }
     }
 }

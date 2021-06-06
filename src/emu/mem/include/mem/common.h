@@ -42,7 +42,8 @@ namespace eka2l1::mem {
         MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA = 1 << 5,
         MEM_MODEL_CHUNK_TYPE_DISCONNECT = 1 << 6,
         MEM_MODEL_CHUNK_TYPE_NORMAL = 1 << 7,
-        MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED = 1 << 8
+        MEM_MODEL_CHUNK_TYPE_DOUBLE_ENDED = 1 << 8,
+        MEM_MODEL_CHUNK_INTERNAL_FORCE_FILL = 1 << 9
     };
 
     enum {

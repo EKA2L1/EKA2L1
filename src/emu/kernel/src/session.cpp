@@ -29,7 +29,7 @@
 namespace eka2l1 {
     namespace service {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
-            : kernel_obj(kern, "", kern->crr_process(), kernel::access_type::global_access) 
+            : kernel_obj(kern, "", nullptr, kernel::access_type::global_access) 
             , svr(svr)
             , cookie_address(0)
             , headless_(false) {
@@ -59,6 +59,10 @@ namespace eka2l1 {
         }
 
         void session::set_share_mode(const share_mode shmode) {
+            if (owner) {
+                owner->decrease_access_count();
+            }
+
             switch (shmode) {
             case SHARE_MODE_UNSHAREABLE:
                 owner = kern->crr_thread();
@@ -77,6 +81,10 @@ namespace eka2l1 {
             }
 
             shmode_ = shmode;
+
+            if (owner) {
+                owner->increase_access_count();
+            }
         }
 
         ipc_msg_ptr session::get_free_msg() {
@@ -227,6 +235,9 @@ namespace eka2l1 {
                     svr = nullptr;
                 }
             }
+
+            if (owner)
+                owner->decrease_access_count();
         }
     }
 }

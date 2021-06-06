@@ -44,6 +44,7 @@ namespace eka2l1::mem {
         std::vector<asid> attached_asids_;
 
         std::uint16_t granularity_shift_;
+        std::uint32_t create_flags_{ 0 };
 
         std::unique_ptr<common::bitmap_allocator> page_bma_;
         linear_section *get_section(const std::uint32_t flags);

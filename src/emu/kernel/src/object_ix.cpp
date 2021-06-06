@@ -157,10 +157,7 @@ namespace eka2l1::kernel {
                 return -1;
             }
 
-            obj->decrease_access_count();
-            totals--;
-
-            if (obj->get_access_count() <= 0 && obj->get_object_type() != object_type::process && obj->get_object_type() != object_type::thread) {
+            if (obj->get_access_count() <= 1) {
                 if (obj->get_object_type() == object_type::chunk) {
                     chunk_ptr c = reinterpret_cast<kernel::chunk *>(obj);
 
@@ -170,9 +167,10 @@ namespace eka2l1::kernel {
                         ret_value = 1;
                     }
                 }
-
-                kern->destroy(obj);
             }
+
+            obj->decrease_access_count();
+            totals--;
 
             objects[info.object_ix_index].free = true;
             objects[info.object_ix_index].object = nullptr;
@@ -194,10 +192,6 @@ namespace eka2l1::kernel {
             if (index.free == false) {
                 index.object->decrease_access_count();
                 index.free = true;
-
-                if (index.object->get_access_count() <= 0 && index.object->get_object_type() != object_type::process && index.object->get_object_type() != object_type::thread) {
-                    kern->destroy(index.object);
-                }
             }
         }
     }

@@ -169,6 +169,7 @@ namespace eka2l1::kernel {
         , generation_(0)
         , uid_change_callbacks(is_process_uid_type_change_callback_elem_free, make_process_uid_type_change_callback_elem_free) {
         obj_type = kernel::object_type::process;
+        increase_access_count();
 
         if (!process_name.empty() && process_name.back() == '\0') {
             this->process_name.pop_back();
@@ -191,7 +192,21 @@ namespace eka2l1::kernel {
             kern->destroy(dll_static_chunk);
         }
 
-        detatch_from_parent();
+        if (rom_bss_chunk_) {
+            kern->destroy(rom_bss_chunk_);
+        }
+
+        kern->destroy(dll_lock);
+
+        if (exit_type == entity_exit_type::pending) {
+            kill(kernel::entity_exit_type::kill, 0);
+        } else {
+            process_handles.reset();
+        }
+
+        if (codeseg) {
+            codeseg->detach(this);
+        }
     }
 
     std::string process::name() const {
@@ -303,7 +318,7 @@ namespace eka2l1::kernel {
 
     void process::set_priority(const process_priority new_pri) {
         priority = new_pri;
-        
+
         common::double_linked_queue_element *elem = thread_list.first();
         common::double_linked_queue_element *end = thread_list.end();
 
@@ -338,6 +353,10 @@ namespace eka2l1::kernel {
         } while (elem != end);
 
         finish_logons();
+
+        // Cleanup resources
+        process_handles.reset();
+        decrease_access_count();
     }
 
     void *process::get_ptr_on_addr_space(address addr) {

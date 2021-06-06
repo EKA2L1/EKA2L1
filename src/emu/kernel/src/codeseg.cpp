@@ -32,6 +32,8 @@ namespace eka2l1::kernel {
         , state(codeseg_state_none)
         , export_table_fixed_(false)
         , code_chunk_shared(nullptr) {
+        obj_type = kernel::object_type::codeseg;
+
         std::copy(info.uids, info.uids + 3, uids);
         code_base = info.code_base;
         data_base = info.data_base;
@@ -323,7 +325,7 @@ namespace eka2l1::kernel {
 
         if (attaches.empty()) {
             // MUDA MUDA MUDA MUDA MUDA MUDA MUDA
-            kern->destroy(kern->get_by_id<kernel::codeseg>(uid));
+            kern->destroy(this);
         }
 
         return true;

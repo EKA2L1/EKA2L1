@@ -121,6 +121,11 @@ namespace eka2l1 {
             return;
         }
 
+        process_ptr request_pr = ctx.msg->own_thr->owning_process();
+        if (request_pr) {
+            request_pr->add_child_process(pr);
+        }
+
         kernel::handle pr_handle = kern->open_handle_with_thread(ctx.msg->own_thr, pr, static_cast<kernel::owner_type>(handle_owner));
 
         if (info) {

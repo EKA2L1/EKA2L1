@@ -970,12 +970,20 @@ namespace eka2l1::epoc {
         query_security_info(msg->own_thr->owning_process(), sec_info);
     }
 
-    BRIDGE_FUNC(void, creator_security_info, eka2l1::ptr<epoc::security_info> info) {
-        epoc::security_info *sec_info = info.get(kern->crr_process());
+    BRIDGE_FUNC(void, creator_security_info, epoc::security_info *info) {
+        if (!info) {
+            return;
+        }
 
-        // Supposed to initialize in process_loaded
-        epoc::security_info creator_info;
-        *sec_info = creator_info;
+        kernel::process *crr_process = kern->crr_process();
+        kernel::process *owner = crr_process->get_parent_process();
+
+        if (!owner) {
+            LOG_TRACE(KERNEL, "Process is a wild child, has no parents. Creator info is empty.");
+            *info = epoc::security_info{};
+        } else {
+            *info = std::move(owner->get_sec_info());
+        }
     }
 
     BRIDGE_FUNC(std::int32_t, session_security_info, std::int32_t h, epoc::security_info *info) {

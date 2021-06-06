@@ -290,6 +290,8 @@ namespace eka2l1::mem {
             return MEM_MODEL_CHUNK_ERR_INVALID_REGION;
         }
 
+        create_flags_ = create_info.flags;
+
         if ((create_info.flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) || (create_info.flags & MEM_MODEL_CHUNK_REGION_DLL_STATIC_DATA)) {
             is_local = true;
         } else {
@@ -334,6 +336,7 @@ namespace eka2l1::mem {
                 static_cast<int>(total_pt << control_->page_per_tab_shift_), false);
 
             max_size_ <<= control_->page_size_bits_;
+            create_flags_ |= MEM_MODEL_CHUNK_INTERNAL_FORCE_FILL;
         }
 
         base_ = addr;
@@ -380,6 +383,14 @@ namespace eka2l1::mem {
     multiple_mem_model_chunk::~multiple_mem_model_chunk() {
         // Decommit the whole things
         decommit(0, max_size_);
+
+        // Free the region that previously allocated from the allocator
+        if (!(create_flags_ & MEM_MODEL_CHUNK_INTERNAL_FORCE_FILL)) {
+            linear_section *sec = get_section(create_flags_);
+
+            if (sec)
+                sec->alloc_.free((base_ - sec->beg_) >> control_->page_size_bits_, max_size_ >> control_->page_size_bits_);
+        }
 
         // Ignore the result, just unmap things
         if (!is_external_host)
