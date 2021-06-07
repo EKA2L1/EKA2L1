@@ -32,6 +32,8 @@
 #include <common/random.h>
 #include <utils/err.h>
 
+#include <services/fs/sec.h>
+
 namespace eka2l1 {
     bool file_attrib::claim_exclusive(const kernel::uid pr_uid) {
         if (owner == pr_uid) {
@@ -361,6 +363,11 @@ namespace eka2l1 {
         }
 
         auto new_path_abs = get_full_symbian_path(ss_path, new_path.value());
+        if (!check_path_capabilities_pass(new_path_abs, ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_resource_modify_access_policy, epoc::fs::sys_resource_modify_access_policy)) {
+            ctx->complete(epoc::error_permission_denied);
+            return;
+        }
+
         bool res = ctx->sys->get_io_system()->rename(vfs_file->file_name(), new_path_abs);
 
         if (!res) {
@@ -678,6 +685,11 @@ namespace eka2l1 {
 
         target_file_path.value() = get_full_symbian_path(ss_path, target_file_path.value());
 
+        if (!check_path_capabilities_pass(target_file_path.value(), ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_read_only_access_policy, epoc::fs::resource_read_only_access_policy)) {
+            ctx->complete(epoc::error_permission_denied);
+            return;
+        }
+
         // Get the buffer length
         const std::uint32_t buffer_length = ctx->get_argument_value<std::uint32_t>(3).value();
 
@@ -783,11 +795,35 @@ namespace eka2l1 {
             access_mode = 0;
         }
 
+        if (real_mode & epoc::fs::file_write) {
+            if (!overwrite) {
+                access_mode |= (READ_MODE | WRITE_MODE);
+            } else {
+                access_mode |= WRITE_MODE;
+            }
+        } else {
+            // Since EFileRead = 0, they default to read mode if nothing is specified more
+            // Note also the document said mode is automatically set to write with Filereplace (overwrite boolean)
+            access_mode |= (overwrite ? WRITE_MODE : READ_MODE);
+        }
+
+        if ((access_mode & WRITE_MODE) && (share_mode == epoc::fs::file_share_readers_only)) {
+            return epoc::error_argument;
+        }
+
+        kernel::process *own_pr = sender->owning_process();
+        kernel::uid own_pr_uid = own_pr->unique_id();
+
+        // Check capabilities
+        if (!check_path_capabilities_pass(name, own_pr, epoc::fs::private_comp_access_policy, (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::sys_read_only_access_policy,
+            (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::resource_read_only_access_policy)) {
+            LOG_ERROR(SERVICE_EFSRV, "New file node fails capabilities requirements with path={}, process UID=0x{:X}", common::ucs2_to_utf8(name), own_pr_uid);
+            return epoc::error_permission_denied;
+        }
+
         // Check the attribute first
         fs_node *new_node = server<fs_server>()->make_new<fs_node>();
         auto &node_attrib = server<fs_server>()->attribs[name];
-
-        kernel::uid own_pr_uid = sender->owning_process()->unique_id();
 
         if (node_attrib.is_exlusive()) {
             // Check if we can open it
@@ -823,23 +859,6 @@ namespace eka2l1 {
         // TODO
 
         //======================= DO OPEN AND FILL ==========================
-
-        if (real_mode & epoc::fs::file_write) {
-            if (!overwrite) {
-                access_mode |= (READ_MODE | WRITE_MODE);
-            } else {
-                access_mode |= WRITE_MODE;
-            }
-        } else {
-            // Since EFileRead = 0, they default to read mode if nothing is specified more
-            // Note also the document said mode is automatically set to write with Filereplace (overwrite boolean)
-            access_mode |= (overwrite ? WRITE_MODE : READ_MODE);
-        }
-
-        if ((access_mode & WRITE_MODE) && (share_mode == epoc::fs::file_share_readers_only)) {
-            return epoc::error_argument;
-        }
-
         new_node->vfs_node = io->open_file(name, access_mode);
 
         if (!new_node->vfs_node) {

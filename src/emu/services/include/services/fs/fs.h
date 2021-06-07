@@ -42,6 +42,10 @@ namespace eka2l1::service {
 }
 
 namespace eka2l1 {
+    namespace epoc {
+        struct security_policy;
+    }
+
     namespace epoc::fs {
         std::string get_server_name_through_epocver(const epocver ver);
     }
@@ -93,6 +97,7 @@ namespace eka2l1 {
     };
 
     std::u16string get_full_symbian_path(const std::u16string &session_path, const std::u16string &target_path);
+    bool check_path_capabilities_pass(const std::u16string &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy);
 
     struct fs_server_client : public service::typical_session {
         std::u16string ss_path;

@@ -60,6 +60,7 @@ add_library(epocservs
         include/services/fbs/font_store.h
         include/services/fbs/palette.h
         include/services/featmgr/featmgr.h
+        include/services/fs/sec.h
         include/services/fs/fs.h
         include/services/hwrm/def.h
         include/services/hwrm/hwrm.h

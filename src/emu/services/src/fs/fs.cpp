@@ -41,8 +41,70 @@
 #include <vfs/vfs.h>
 
 #include <utils/err.h>
+#include <common/path.h>
+#include <common/pystr.h>
+
+#include <services/fs/sec.h>
 
 namespace eka2l1 {
+    bool check_path_capabilities_pass(const std::u16string &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy) {
+        if (!pr->get_kernel_object_owner()->support_capabilities()) {
+            return true;
+        }
+
+        const std::u16string path_lowered = common::lowercase_ucs2_string(path);
+        eka2l1::path_iterator_16 iterator(path_lowered);
+
+        std::int8_t policy_checK_type = -1;
+
+        // Skip the drive part...
+        iterator++;
+
+        if (iterator) {
+            if (*iterator == u"private") {
+                policy_checK_type = 0;
+            } else if (*iterator == u"sys") {
+                policy_checK_type = 1;
+            } else if (*iterator == u"resource") {
+                policy_checK_type = 2;
+            }
+
+            if (policy_checK_type != -1) {
+                if (iterator)
+                    iterator++;
+            }
+        }
+
+        if ((!iterator) || (policy_checK_type == -1)) {
+            // No more components up ahead, it's a nice pass
+            return true;
+        }
+
+        switch (policy_checK_type) {
+        case 0: {
+            common::pystr16 hexstr(*iterator);
+            const std::uint32_t sid_in_path = hexstr.as_int<std::uint32_t>(0, 16);
+
+            if (sid_in_path != pr->get_sec_info().secure_id) {
+                return pr->satisfy(private_policy);
+            }
+
+            return true;
+        }
+
+        case 1:
+            return pr->satisfy(sys_policy);
+
+        case 2:
+            return pr->satisfy(resource_policy);
+
+        default:
+            break;
+        }
+
+        return true;
+    }
+
     static std::u16string get_private_path_trim_uid(kernel::process *pr) {
         // Try to get the app uid
         uint32_t uid = std::get<2>(pr->get_uid_type());
@@ -324,6 +386,11 @@ namespace eka2l1 {
         }
 
         auto path = get_full_symbian_path(ss_path, given_path.value());
+        if (!check_path_capabilities_pass(path, ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_resource_modify_access_policy, epoc::fs::sys_resource_modify_access_policy)) {
+            ctx->complete(epoc::error_permission_denied);
+            return;
+        }
+        
         io_system *io = ctx->sys->get_io_system();
 
         bool success = io->delete_entry(path);
@@ -582,6 +649,12 @@ namespace eka2l1 {
         }
 
         dir.value() = eka2l1::absolute_path(dir.value(), ss_path, true);
+
+        if (!check_path_capabilities_pass(dir.value(), ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_resource_modify_access_policy, epoc::fs::sys_resource_modify_access_policy)) {
+            ctx->complete(epoc::error_permission_denied);
+            return;
+        }
+
         io_system *io = ctx->sys->get_io_system();
 
         bool res = false;
@@ -645,6 +718,11 @@ namespace eka2l1 {
 
         std::u16string fname = std::move(*fname_op);
         fname = get_full_symbian_path(ss_path, fname);
+
+        if (!check_path_capabilities_pass(fname, ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_read_only_access_policy, epoc::fs::resource_read_only_access_policy)) {
+            ctx->complete(epoc::error_permission_denied);
+            return;
+        }
 
         LOG_INFO(SERVICE_EFSRV, "Get entry of: {}", common::ucs2_to_utf8(fname));
 
