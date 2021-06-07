@@ -1027,7 +1027,8 @@ namespace eka2l1::epoc {
         }
 
         kernel::owner_type handle_mode = (server_name.empty()) ? kernel::owner_type::process : kernel::owner_type::thread;
-        auto handle = kern->create_and_add<service::server>(handle_mode, kern->get_system(), kern->crr_thread(), server_name).first;
+        auto handle = kern->create_and_add<service::server>(handle_mode, kern->get_system(), kern->crr_thread(), server_name,
+            false, false, static_cast<service::share_mode>(mode)).first;
 
         if (handle != kernel::INVALID_HANDLE) {
             LOG_TRACE(KERNEL, "Server {} created", server_name);
@@ -1068,6 +1069,13 @@ namespace eka2l1::epoc {
     }
 
     static std::int32_t do_create_session_from_server(kernel_system *kern, server_ptr server, std::int32_t msg_slot_count, eka2l1::ptr<void> sec, std::int32_t mode) {
+        const service::share_mode sv_share = server->get_share_mode();
+
+        if (sv_share < mode) {
+            LOG_ERROR(KERNEL, "Share mode of session is not eligible to be on the server!");
+            return (sv_share == service::SHARE_MODE_UNSHAREABLE) ? epoc::error_access_denied : epoc::error_permission_denied;
+        }
+
         auto session_and_handle = kern->create_and_add<service::session>(
             get_session_owner_type_from_share(static_cast<service::share_mode>(mode)), server, msg_slot_count);
 
@@ -1116,6 +1124,13 @@ namespace eka2l1::epoc {
 
         if (!ss) {
             return epoc::error_bad_handle;
+        }
+
+        const service::share_mode sv_share = ss->get_server()->get_share_mode();
+
+        if (share > sv_share) {
+            LOG_ERROR(KERNEL, "Share mode to set is not eligible to be on the server!");
+            return (sv_share == service::SHARE_MODE_UNSHAREABLE) ? epoc::error_access_denied : epoc::error_permission_denied;
         }
 
         const service::share_mode prev_share = ss->get_share_mode();
@@ -3919,8 +3934,9 @@ namespace eka2l1::epoc {
         const std::string server_name_in_str = common::ucs2_to_utf8(name->to_std_string(target_process));
         kernel::owner_type handle_owner = server_name_in_str.empty() ? kernel::owner_type::process : kernel::owner_type::thread;
 
+        // In EKA1, sessions can only be shared inside a process.
         const kernel::handle h = kern->create_and_add<service::server>(handle_owner, kern->get_system(),
-            kern->crr_thread(), server_name_in_str).first;
+            kern->crr_thread(), server_name_in_str, false, false, service::SHARE_MODE_SHAREABLE).first;
 
         if (h == kernel::INVALID_HANDLE) {
             finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);

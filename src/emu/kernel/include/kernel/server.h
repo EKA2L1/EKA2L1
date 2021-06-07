@@ -110,6 +110,8 @@ namespace eka2l1 {
             bool hle = false;
             bool unhandle_callback_enable = false;
 
+            service::share_mode shmode_;
+
         protected:
             bool ready();
 
@@ -127,7 +129,7 @@ namespace eka2l1 {
             std::uint32_t frequent_process_event;
 
             explicit server(kernel_system *kern, system *sys, kernel::thread *owner, const std::string name, bool hle = false,
-                bool unhandle_callback_enable = false);
+                bool unhandle_callback_enable = false, const service::share_mode shmode = service::SHARE_MODE_GLOBAL_SHAREABLE);
             ~server() override;
 
             void attach(session *svse) {
@@ -167,6 +169,10 @@ namespace eka2l1 {
 
             kernel::thread *get_owner_thread() {
                 return owner_thread;
+            }
+
+            service::share_mode get_share_mode() const {
+                return shmode_;
             }
         };
     }

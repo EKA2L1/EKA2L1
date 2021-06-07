@@ -48,6 +48,14 @@ namespace eka2l1::hle {
     using func_map = std::map<uint32_t, eka2l1::hle::epoc_import_func>;
 }
 
+namespace eka2l1::service {
+    enum share_mode {
+        SHARE_MODE_UNSHAREABLE = 0,
+        SHARE_MODE_SHAREABLE = 1,
+        SHARE_MODE_GLOBAL_SHAREABLE = 2
+    };
+};
+
 namespace eka2l1::kernel {
     using handle = std::uint32_t;
     using uid = std::uint64_t;

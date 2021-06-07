@@ -649,6 +649,10 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
+        if (!obj) {
+            return true;
+        }
+
         switch (obj->get_object_type()) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                                                         \
     case kernel::object_type::obj_type: {                                                                        \

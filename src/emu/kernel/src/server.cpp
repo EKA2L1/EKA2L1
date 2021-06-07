@@ -32,12 +32,13 @@ namespace eka2l1::service {
     }
 
     // Create a server with name
-    server::server(kernel_system *kern, system *sys, kernel::thread *owner, const std::string name, bool hle, bool unhandle_callback_enable)
+    server::server(kernel_system *kern, system *sys, kernel::thread *owner, const std::string name, bool hle, bool unhandle_callback_enable, const service::share_mode shmode)
         : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
         , sys(sys)
         , hle(hle)
         , owner_thread(owner)
-        , unhandle_callback_enable(unhandle_callback_enable) {
+        , unhandle_callback_enable(unhandle_callback_enable)
+        , shmode_(shmode) {
         obj_type = kernel::object_type::server;
 
         if (owner_thread)

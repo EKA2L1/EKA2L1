@@ -52,18 +52,8 @@ namespace eka2l1 {
             disconnect_msg_->function = standard_ipc_message_disconnect;
             disconnect_msg_->own_thr = kern->crr_thread();
             disconnect_msg_->request_sts = 0;
-        }
 
-        // Disconnect
-        session::~session() {
-        }
-
-        void session::set_share_mode(const share_mode shmode) {
-            if (owner) {
-                owner->decrease_access_count();
-            }
-
-            switch (shmode) {
+            switch (svr->get_share_mode()) {
             case SHARE_MODE_UNSHAREABLE:
                 owner = kern->crr_thread();
                 break;
@@ -80,11 +70,17 @@ namespace eka2l1 {
                 break;
             }
 
-            shmode_ = shmode;
-
             if (owner) {
                 owner->increase_access_count();
             }
+        }
+
+        // Disconnect
+        session::~session() {
+        }
+
+        void session::set_share_mode(const share_mode shmode) {
+            shmode_ = shmode;
         }
 
         ipc_msg_ptr session::get_free_msg() {

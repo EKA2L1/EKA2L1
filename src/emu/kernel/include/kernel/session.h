@@ -41,12 +41,6 @@ namespace eka2l1 {
     using server_ptr = service::server *;
 
     namespace service {
-        enum share_mode {
-            SHARE_MODE_UNSHAREABLE = 0,
-            SHARE_MODE_SHAREABLE = 1,
-            SHARE_MODE_GLOBAL_SHAREABLE = 2
-        };
-
         /*! \brief An IPC session 
 		 *
          *  A session is a bridge between server and client.
