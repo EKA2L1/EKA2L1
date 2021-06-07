@@ -25,6 +25,7 @@
 #include <common/virtualmem.h>
 
 #include <common/log.h>
+#include <cpu/arm_interface.h>
 
 namespace eka2l1::mem {
     std::size_t multiple_mem_model_chunk::commit(const vm_address offset, const std::size_t size) {
@@ -390,6 +391,14 @@ namespace eka2l1::mem {
 
             if (sec)
                 sec->alloc_.free((base_ - sec->beg_) >> control_->page_size_bits_, max_size_ >> control_->page_size_bits_);
+        }
+
+        if (is_code) {
+            control_multiple *control_mm = reinterpret_cast<control_multiple*>(control_);
+            for (auto &mmu: control_mm->mmus_) {
+                // Clear the instruction cache at that range, code may reuse it later
+                mmu->cpu_->imb_range(base_, max_size_);
+            }
         }
 
         // Ignore the result, just unmap things
