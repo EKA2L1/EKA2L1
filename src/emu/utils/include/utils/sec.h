@@ -295,7 +295,7 @@ namespace eka2l1::epoc {
             std::uint8_t extra_caps[4];
         };
 
-        security_policy() = default;
+        security_policy();
         ~security_policy() = default;
 
         explicit security_policy(std::vector<capability> c_caps);

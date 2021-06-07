@@ -30,8 +30,17 @@ namespace eka2l1::epoc {
         }
     }
 
+    security_policy::security_policy() {
+        sec_id = 0;
+        type = always_pass;
+
+        caps[0] = 0;
+        caps[1] = 0;
+        caps[2] = 0;
+    }
+
     security_policy::security_policy(std::vector<capability> c_caps) {
-        assert(c_caps.size() > 0 && c_caps.size() < 8);
+        assert(c_caps.size() >= 0 && c_caps.size() < 8);
 
         std::fill(caps, caps + 3, static_cast<std::uint8_t>(cap_none));
         std::fill(extra_caps, extra_caps + 4, static_cast<std::uint8_t>(cap_none));
