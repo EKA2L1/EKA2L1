@@ -53,7 +53,12 @@ CDirectScreenBitmapImpl::CDirectScreenBitmapImpl()
 TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aSettingsFlags) {
 #ifdef EKA2
     const TInt screenNum = (aSettingsFlags >> 28) & 7;
+    TInt offsetToFirstPixel = 0;
+
     HAL::Get(screenNum, HAL::EDisplayMemoryAddress, (TInt &)(iData));
+    HAL::Get(screenNum, HAL::EDisplayOffsetToFirstPixel, offsetToFirstPixel);
+
+    iData = reinterpret_cast<TUint32*>(reinterpret_cast<TUint8*>(iData) + offsetToFirstPixel);
 #else
     const TInt screenNum = 0;
 #endif
