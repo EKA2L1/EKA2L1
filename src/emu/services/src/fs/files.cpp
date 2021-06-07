@@ -793,7 +793,7 @@ namespace eka2l1 {
             // Check if we can open it
             if (node_attrib.owner != own_pr_uid) {
                 // Access denied
-                return epoc::error_access_denied;
+                return epoc::error_in_use;
             }
         }
 
@@ -802,7 +802,7 @@ namespace eka2l1 {
         if (share_mode == epoc::fs::file_share_exclusive) {
             // Try to claim and return denied if we can't
             if (!node_attrib.claim_exclusive(own_pr_uid)) {
-                return epoc::error_access_denied;
+                return epoc::error_in_use;
             }
         }
 
@@ -837,7 +837,7 @@ namespace eka2l1 {
         }
 
         if ((access_mode & WRITE_MODE) && (share_mode == epoc::fs::file_share_readers_only)) {
-            return epoc::error_access_denied;
+            return epoc::error_argument;
         }
 
         new_node->vfs_node = io->open_file(name, access_mode);

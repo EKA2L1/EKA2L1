@@ -349,6 +349,7 @@ namespace eka2l1 {
          * \returns String lowercased.
          */
         std::string lowercase_string(std::string str);
+        std::string uppercase_string(std::string str);
 
         /**
          * \brief Lowercase UCS2 string.

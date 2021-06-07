@@ -43,15 +43,19 @@
 #include <utils/err.h>
 
 namespace eka2l1 {
-    static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
-        const char16_t drive_dos_char = drive_to_char16(drive);
-        const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
-
+    static std::u16string get_private_path_trim_uid(kernel::process *pr) {
         // Try to get the app uid
         uint32_t uid = std::get<2>(pr->get_uid_type());
-        std::string hex_id = common::to_string(uid, std::hex);
+        std::string hex_id = common::uppercase_string(common::to_string(uid, std::hex));
 
-        return drive_u16 + u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+        return u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+    }
+
+    static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
+        const char16_t drive_dos_char = drive_to_char16(drive);        
+        const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
+
+        return drive_u16 + get_private_path_trim_uid(pr);
     }
 
     std::u16string get_full_symbian_path(const std::u16string &session_path, const std::u16string &target_path) {
@@ -689,9 +693,7 @@ namespace eka2l1 {
     }
 
     void fs_server::private_path(service::ipc_context *ctx) {
-        std::u16string path = u"\\private\\"
-            + common::utf8_to_ucs2(common::to_string(std::get<2>(ctx->msg->own_thr->owning_process()->get_uid_type()), std::hex))
-            + u"\\";
+        std::u16string path = get_private_path_trim_uid(ctx->msg->own_thr->owning_process());
 
         ctx->write_arg(0, path);
         ctx->complete(epoc::error_none);

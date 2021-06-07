@@ -181,6 +181,13 @@ namespace eka2l1 {
 
             return str;
         }
+        
+        std::string uppercase_string(std::string str) {
+            std::transform(str.begin(), str.end(), str.begin(),
+                [](const char c) -> unsigned char { return std::toupper(c); });
+
+            return str;
+        }
 
         std::u16string lowercase_ucs2_string(std::u16string str) {
             // TODO: Better try
