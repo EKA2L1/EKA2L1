@@ -37,7 +37,7 @@ namespace eka2l1 {
                 io_system *io = sys->get_io_system();
                 
                 io->unmount(drive_e);
-                io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable,
+                io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected,
                     common::utf8_to_ucs2(result));
 
                 sd_card_mount_choosen = true;
