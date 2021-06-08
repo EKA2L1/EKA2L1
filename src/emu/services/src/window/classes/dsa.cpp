@@ -114,7 +114,7 @@ namespace eka2l1::epoc {
         if (husband_->is_dsa_active()) {
             LOG_WARN(SERVICE_WINDOW, "Husband window is currently active in a DSA, silently pass");
 
-            ctx.complete(0);
+            ctx.complete(1);
             return;
         }
 
