@@ -491,13 +491,17 @@ namespace eka2l1::epoc {
         case EWsWinOpRequiredDisplayMode: {
             // On s60 and fowards, this method is ignored. So even with lower version, just ignore
             // them. Like they don't mean anything.
-            LOG_TRACE(SERVICE_WINDOW, "SetRequiredDisplayMode ignored.");
-            [[fallthrough]];
+            dmode = *reinterpret_cast<epoc::display_mode*>(cmd.data_ptr);
+            if (epoc::get_num_colors_from_display_mode(dmode) > epoc::get_num_colors_from_display_mode(scr->disp_mode)) {
+                dmode = scr->disp_mode;
+            }
+            ctx.complete(static_cast<int>(dmode));
+            break;
         }
 
         // Fall through to get system display mode
         case EWsWinOpGetDisplayMode: {
-            ctx.complete(static_cast<int>(display_mode()));
+            ctx.complete(static_cast<int>(dmode));
             break;
         }
 
