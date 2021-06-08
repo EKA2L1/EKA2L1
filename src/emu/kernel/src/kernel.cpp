@@ -428,6 +428,7 @@ namespace eka2l1 {
 
         // Set CPU SVC handler
         cpu_->system_call_handler = [this](const std::uint32_t ordinal) {
+            // crr_thread()->add_last_syscall(ordinal);
             get_lib_manager()->call_svc(ordinal);
 
             // EKA1 does not use BX LR to jump back, they let kernel do it
@@ -443,8 +444,6 @@ namespace eka2l1 {
                 cpu_->set_pc(jump_back & ~0b1);
                 cpu_->set_cpsr(cpsr);
             }
-
-            crr_thread()->add_last_syscall(ordinal);
         };
 
         cpu_->exception_handler = [this](arm::exception_type exception_type, const std::uint32_t data) {
