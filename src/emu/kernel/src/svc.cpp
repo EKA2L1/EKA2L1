@@ -5448,6 +5448,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x77, thread_rename),
         BRIDGE_REGISTER(0x78, process_rename),
         BRIDGE_REGISTER(0x7A, process_logon),
+        BRIDGE_REGISTER(0x7B, process_logon_cancel),
         BRIDGE_REGISTER(0x7C, thread_process),
         BRIDGE_REGISTER(0x7D, server_create),
         BRIDGE_REGISTER(0x7E, session_create),
