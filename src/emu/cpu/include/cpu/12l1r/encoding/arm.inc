@@ -219,7 +219,7 @@ INST(arm_UMULL,         "UMULL",               "cccc0000100Sddddaaaammmm1001nnnn
 
 // Multiply (Halfword) instructions
 //INST(arm_SMLALxy,       "SMLALXY",             "cccc00010100ddddaaaammmm1xy0nnnn") // v5xP
-//INST(arm_SMLAxy,        "SMLAXY",              "cccc00010000ddddaaaammmm1xy0nnnn") // v5xP
+INST(arm_SMLAxy,        "SMLAXY",              "cccc00010000ddddaaaammmm1xy0nnnn") // v5xP
 INST(arm_SMULxy,        "SMULXY",              "cccc00010110dddd0000mmmm1xy0nnnn") // v5xP
 
 // Multiply (Word by Halfword) instructions
