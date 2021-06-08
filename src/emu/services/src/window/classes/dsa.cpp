@@ -106,6 +106,7 @@ namespace eka2l1::epoc {
         }
 
         husband_ = user;
+        state_ = state_prepare;
 
         // We allow the whole window region to be DSAed!
         // But what is the point... To override a DSA? Should that be possible...
@@ -119,7 +120,6 @@ namespace eka2l1::epoc {
 
         LOG_TRACE(SERVICE_WINDOW, "DSA requested for window {}", user->id);
 
-        state_ = state_prepare;
         husband_->set_dsa_active(true);
         husband_->direct = this;
 
