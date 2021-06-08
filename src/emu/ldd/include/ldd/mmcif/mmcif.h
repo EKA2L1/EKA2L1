@@ -22,6 +22,24 @@
 #include <kernel/ldd.h>
 
 namespace eka2l1::ldd {
+    enum mmcif_control_op {
+        mmcif_control_op_select_card = 4,
+        mmcif_control_op_card_info = 6
+    };
+
+    enum mmcif_card_type : std::uint32_t {
+        mmcif_card_type_rom,
+        mmcif_card_type_flash,
+        mmcif_card_type_io,
+        mmcif_card_type_other,
+        mmcif_card_type_unk
+    };
+
+    struct mmcif_card_legacy {
+        std::uint32_t cid_[4];
+        mmcif_card_type ctype_;
+    };
+
     class mmcif_channel: public channel {
     public:
         explicit mmcif_channel(kernel_system *kern, system *sys, epoc::version ver);
@@ -37,8 +55,6 @@ namespace eka2l1::ldd {
 
     /**
      * @brief MMC interface channel factory.
-     * 
-     * 明日？我不要. Filler
      */
     class mmcif_factory: public factory {
     public:

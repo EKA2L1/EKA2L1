@@ -103,6 +103,7 @@ namespace eka2l1::config {
 
         std::vector<keybind> keybinds;
         std::string imei{ DEFAULT_IMI };
+        std::string mmc_id{ DEFAULT_MMC_ID };
 
         void serialize();
         void deserialize();

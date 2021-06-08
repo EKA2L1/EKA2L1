@@ -22,10 +22,28 @@
 
 #include <kernel/thread.h>
 #include <kernel/process.h>
+#include <kernel/kernel.h>
 
 #include <common/log.h>
 
+#include <config/config.h>
+#include <common/pystr.h>
+
 namespace eka2l1::ldd {
+    static void get_cid_from_config(config::state *conf, std::uint32_t *dat) {
+        common::pystr strconf(conf->mmc_id);
+        std::vector<common::pystr> nums = strconf.split('-');
+
+        if (nums.size() != 4) {
+            LOG_WARN(LDD_MMCIF, "Config's MMC ID does not have full 4 code numbers!");
+        }
+
+        for (std::size_t i = 0; i < nums.size(); i++) {
+            const std::uint32_t num = nums[i].as_int<std::uint32_t>(0, 16);
+            dat[i] = num;
+        }
+    }
+
     mmcif_factory::mmcif_factory(kernel_system *kern, system *sys)
         : factory(kern, sys) {
     }
@@ -44,7 +62,26 @@ namespace eka2l1::ldd {
 
     std::int32_t mmcif_channel::do_control(kernel::thread *r, const std::uint32_t n, const eka2l1::ptr<void> arg1,
         const eka2l1::ptr<void> arg2) {
-        LOG_TRACE(LDD_MMCIF, "Unimplemented control opcode {}", n);
+        if (kern->is_eka1()) {
+            switch (n) {
+            case mmcif_control_op_select_card:
+                LOG_TRACE(LDD_MMCIF, "Card slot {} selected", arg1.ptr_address());
+                break;
+
+            case mmcif_control_op_card_info: {
+                mmcif_card_legacy *info = arg1.cast<mmcif_card_legacy>().get(r->owning_process());
+                if (info) {
+                    info->ctype_ = mmcif_card_type_rom;
+                    get_cid_from_config(kern->get_config(), info->cid_);
+                }
+                break;
+            }
+
+            default:
+                LOG_TRACE(LDD_MMCIF, "Unimplemented control opcode {}", n);
+            }
+        }
+
         return 0;
     }
 

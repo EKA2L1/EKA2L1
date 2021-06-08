@@ -25,6 +25,10 @@
 #define DEFAULT_IMI "540806859904945"
 #endif
 
+#ifndef DEFAULT_MMC_ID
+#define DEFAULT_MMC_ID "00000000-00000000-00000000-00000000"
+#endif
+
 OPTION(ui-scale, ui_scale, 1.0f)
 OPTION(bkg-alpha, bkg_transparency, 129)
 OPTION(bkg-path, bkg_path, "")
@@ -67,6 +71,7 @@ OPTION(rtos-level, rtos_level, "mid")
 OPTION(ui-new-style, ui_new_style, true)
 OPTION(cenrep-reset, cenrep_reset, false)
 OPTION(imei, imei, DEFAULT_IMI)
+OPTION(mmc-id, mmc_id, DEFAULT_MMC_ID)
 
 #ifdef OPTION
 #undef OPTION
