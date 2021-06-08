@@ -3624,6 +3624,7 @@ namespace eka2l1::epoc {
         epoc::desc16 *category = eka2l1::ptr<epoc::desc16>(create_info->arg2_).get(target_thread->owning_process());
 
         const std::u16string exit_category_u16 = category->to_std_string(target_thread->owning_process());
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
 
         if (!thr->kill(kernel::entity_exit_type::panic, exit_category_u16, reason)) {
             std::string thr_fullname;
@@ -3632,7 +3633,6 @@ namespace eka2l1::epoc {
             LOG_WARN(KERNEL, "Unable to panic thread {}", thr_fullname);
         }
 
-        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
 
@@ -3670,6 +3670,7 @@ namespace eka2l1::epoc {
         }
 
         const std::int32_t reason = static_cast<std::int32_t>(create_info->arg1_);
+        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
 
         if (!thr->kill(kernel::entity_exit_type::kill, common::utf8_to_ucs2("None"), reason)) {
             std::string thr_fullname;
@@ -3678,7 +3679,6 @@ namespace eka2l1::epoc {
             LOG_WARN(KERNEL, "Unable to kill thread {}", thr_fullname);
         }
 
-        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
 
@@ -4206,13 +4206,17 @@ namespace eka2l1::epoc {
                 category = cate_ptr->to_std_string(target_process);
             }
 
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+
             msg->own_thr->kill(static_cast<kernel::entity_exit_type>(create_info->arg1_), category, static_cast<std::int32_t>(
                 create_info->arg2_));
         } else {
             LOG_ERROR(KERNEL, "Fail to kill sender thread");
+
+            // Finish anyway        
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         }
-        
-        finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
+
         return epoc::error_none;
     }
 
