@@ -71,8 +71,6 @@ namespace eka2l1 {
         std::int32_t left_balance_;
         std::int32_t right_balance_;
 
-        bool finished_;
-
     protected:
         void do_get_buffer_to_be_filled();
         void init_stream_through_state();

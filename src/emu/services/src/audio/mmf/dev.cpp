@@ -136,8 +136,7 @@ namespace eka2l1 {
         , stream_(nullptr)
         , volume_(5)
         , left_balance_(50)
-        , right_balance_(50)
-        , finished_(false) {
+        , right_balance_(50) {
         conf_ = get_caps();
 
         kernel_system *kern = serv->get_system()->get_kernel_system();
@@ -168,18 +167,17 @@ namespace eka2l1 {
             
             // Lock the access to this variable
             const std::lock_guard<std::mutex> guard(dev_access_lock_);
-            
-            if (finish_info_.empty()) {
-                finished_ = false;
-            } else {
-                finish_info_.complete(epoc::error_none);
-                finished_ = true;
-            }
 
-            do_get_buffer_to_be_filled();
+            if (last_buffer_) {
+                finish_info_.complete(epoc::error_underflow);
+            } else {
+                do_get_buffer_to_be_filled();
+            }
 
             kern->unlock();
         }, nullptr);
+
+        // TODO: Add callback to report underflow (data completed playing, but no new data supplied)
     }
 
     void mmf_dev_server_session::max_volume(service::ipc_context *ctx) {
@@ -419,6 +417,7 @@ namespace eka2l1 {
 
     void mmf_dev_server_session::stop(service::ipc_context *ctx) {
         stream_->stop();
+        stream_state_ = epoc::mmf_state_idle;
 
         // Done waiting for all notifications to be completed/ignored, it's time to do deref buffer chunk
         deref_audio_buffer_chunk();
@@ -427,7 +426,12 @@ namespace eka2l1 {
 
     void mmf_dev_server_session::play_init(service::ipc_context *ctx) {
         if (stream_state_ != epoc::mmf_state_idle) {
-            ctx->complete(epoc::error_in_use);
+            if ((stream_state_ == epoc::mmf_state_playing) || (stream_state_ == epoc::mmf_state_playing_recording)) {
+                ctx->complete(epoc::error_none);
+            } else {
+                ctx->complete(epoc::error_not_ready);
+            }
+
             return;
         }
 
@@ -559,14 +563,6 @@ namespace eka2l1 {
 
     void mmf_dev_server_session::play_error(service::ipc_context *ctx) {
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
-
-        if (finished_) {
-            ctx->complete(epoc::error_none);
-            finished_ = false;
-
-            return;
-        }
-
         finish_info_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
@@ -577,7 +573,6 @@ namespace eka2l1 {
         }
 
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
-        finished_ = false;
 
         kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
         epocver ver_use = kern->get_epoc_version();
