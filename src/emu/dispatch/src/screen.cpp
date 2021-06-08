@@ -72,6 +72,8 @@ namespace eka2l1::dispatch {
                 command_builder->update_bitmap(scr->dsa_texture, reinterpret_cast<const char*>(scr->screen_buffer_ptr()),
                     buffer_size, { 0, 0 }, screen_size);
 
+                scr->last_texture_access = 1;
+
                 // NOTE: This is a hack for some apps that dont fill alpha
                 // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
                 switch (scr->disp_mode) {

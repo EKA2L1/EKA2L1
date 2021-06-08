@@ -369,12 +369,12 @@ namespace eka2l1 {
             scr->absolute_pos.x = static_cast<int>(winpos.x);
             scr->absolute_pos.y = static_cast<int>(winpos.y);
 
-            draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos, scaled_no_dsa, scr->ui_rotation);
-
-            if (scr->dsa_texture) {
+            if (scr->last_texture_access) {
                 const int rotation = (scr->current_mode().rotation + scr->ui_rotation) % 360;
 
                 draw_a_screen(reinterpret_cast<ImTextureID>(scr->dsa_texture), winpos, scaled_dsa, rotation);
+            } else {
+                draw_a_screen(reinterpret_cast<ImTextureID>(scr->screen_texture), winpos, scaled_no_dsa, scr->ui_rotation);
             }
 
             scr->screen_mutex.unlock();

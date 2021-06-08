@@ -311,9 +311,8 @@ namespace eka2l1::android {
                 dest.size = eka2l1::vec2(width, height);
 
                 builder->set_texture_filter(scr->screen_texture, filter, filter);
-                builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), 0.0f,
-                    drivers::bitmap_draw_flag_no_flip);
-                if (scr->dsa_texture) {
+
+                if (scr->last_texture_access) {
                     builder->set_texture_filter(scr->dsa_texture, filter, filter);
                     advance_dsa_pos_around_origin(dest, crr_mode.rotation);
 
@@ -325,6 +324,9 @@ namespace eka2l1::android {
 
                     builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0),
                         static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
+                } else {    
+                    builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), 0.0f,
+                        drivers::bitmap_draw_flag_no_flip);
                 }
 
                 scr->screen_mutex.unlock();

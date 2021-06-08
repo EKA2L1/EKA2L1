@@ -95,6 +95,7 @@ namespace eka2l1::epoc {
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
         , last_vsync(0)
+        , last_texture_access(0)
         , scr_config(scr_conf)
         , crr_mode(0)
         , next(nullptr)
@@ -128,6 +129,7 @@ namespace eka2l1::epoc {
 
         // Done! Unbind and submit this to the driver
         cmd_builder->bind_bitmap(0);
+        last_texture_access = 0;
     }
 
     void screen::redraw(drivers::graphics_driver *driver) {

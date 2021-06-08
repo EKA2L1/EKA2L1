@@ -67,6 +67,7 @@ namespace eka2l1::epoc {
         epoc::display_mode disp_mode;
 
         std::uint64_t last_vsync;
+        std::atomic<bool> last_texture_access;
 
         epoc::config::screen scr_config; ///< All mode of this screen
         std::uint8_t crr_mode; ///< The current mode being used by the screen.
