@@ -150,8 +150,8 @@ namespace eka2l1::common {
             T::set_code_pointer(region + offset);
         }
 
-        size_t get_space_left() const {
-            return region_size - (T::get_code_pointer() - region);
+        std::int64_t get_space_left() const {
+            return static_cast<std::int64_t>(region_size) - (T::get_code_pointer() - region);
         }
 
     private:
