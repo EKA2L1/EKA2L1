@@ -34,6 +34,7 @@ bool rpkg_unpack_option_handler(eka2l1::common::arg_parser *parser, void *userda
 bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 bool list_devices_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 bool fullscreen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
+bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 
 #if ENABLE_SCRIPTING
 bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);

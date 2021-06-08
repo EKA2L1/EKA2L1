@@ -39,6 +39,7 @@
 #include <services/applist/applist.h>
 
 #include <utils/apacmd.h>
+#include <vfs/vfs.h>
 
 using namespace eka2l1;
 
@@ -261,6 +262,22 @@ bool fullscreen_option_handler(eka2l1::common::arg_parser *parser, void *userdat
     
     emu->init_fullscreen = true;
     *err = "";
+
+    return true;
+}
+
+bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    const char *path = parser->next_token();
+
+    if (!path) {
+        *err = "No folder specified";
+        return true;
+    }
+
+    eka2l1::io_system *io = emu->symsys->get_io_system();
+    io->unmount(drive_e);
+    io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, common::utf8_to_ucs2(path));
 
     return true;
 }

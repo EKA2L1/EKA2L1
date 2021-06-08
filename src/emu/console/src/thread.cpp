@@ -675,6 +675,7 @@ namespace eka2l1::desktop {
         parser.add("--install, --i", "Install a SIS.", app_install_option_handler);
         parser.add("--remove, --r", "Remove an package.", package_remove_option_handler);
         parser.add("--fullscreen", "Display the emulator in fullscreen.", fullscreen_option_handler);
+        parser.add("--mount", "Load a folder as a Game Card ROM", mount_card_option_handler);
 
 #if ENABLE_PYTHON_SCRIPTING
         parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
