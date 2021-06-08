@@ -664,6 +664,7 @@ namespace eka2l1::common::armgen {
         void SMLALS(arm_reg destLo, arm_reg destHi, arm_reg rn, arm_reg rm);
 
         void SMULxy(arm_reg dest, arm_reg rn, arm_reg rm, bool m, bool n);
+        void SMLAxy(arm_reg dest, arm_reg rn, arm_reg rm, arm_reg ra, bool m, bool n);
 
         void SXTB(arm_reg dest, arm_reg op2, std::uint8_t rotation_base_8 = 0);
         void SXTH(arm_reg dest, arm_reg op2, std::uint8_t rotation = 0);
