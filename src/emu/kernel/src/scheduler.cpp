@@ -97,9 +97,16 @@ namespace eka2l1::kernel {
             mem::mem_model_process *mm_process = crr_process ? crr_process->get_mem_model() : nullptr;
 
             if (crr_process != newt->owning_process()) {
+                // Call the callbacks and release the process, no longerneed to read it
                 kern->call_process_switch_callbacks(run_core, crr_process, newt->owning_process());
 
+                if (crr_process)
+                    crr_process->decrease_access_count();
+
+                // Reference the use of the new process here
                 crr_process = newt->owning_process();
+                crr_process->increase_access_count();
+
                 mm_process = crr_process->get_mem_model();
 
                 core_mmu->set_current_addr_space(mm_process->address_space_id());
