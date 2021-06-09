@@ -753,10 +753,21 @@ namespace eka2l1 {
 
     void applist_server::get_app_for_document(service::ipc_context &ctx) {
         std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(2);
+        if (!path.has_value()) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
 
         applist_app_for_document app;
         app.uid = 0;
         app.data_type.uid = 0;
+
+        LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype stubbed with file extension");
+
+        const std::u16string ext = eka2l1::path_extension(path.value());
+        if (!ext.empty()) {
+            app.data_type.data_type.assign(nullptr, common::uppercase_string(common::ucs2_to_utf8(ext.substr(1))));
+        }
 
         ctx.write_data_to_descriptor_argument<applist_app_for_document>(0, app);
         ctx.complete(epoc::error_none);
