@@ -37,6 +37,10 @@
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
+    bool graphic_context::no_building() const {
+        return !attached_window || (attached_window->size == eka2l1::vec2(0, 0));
+    }
+
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         attached_window = reinterpret_cast<epoc::window_user *>(client->get_object(window_to_attach_handle));
@@ -47,6 +51,13 @@ namespace eka2l1::epoc {
         // Afaik that the pointer to CWsScreenDevice is internal, so not so scared of general users touching
         // this.
         context.complete(attached_window->scr->number);
+
+        if (no_building()) {
+            cmd_list = nullptr;
+            cmd_builder = nullptr;
+
+            return;
+        }
 
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -97,48 +108,56 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect) {
-        cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f, 0);
+        if (cmd_builder)
+            cmd_builder->draw_bitmap(h, 0, dest_rect, source_rect, eka2l1::vec2(0, 0), 0.0f, 0);
+
         ctx.complete(epoc::error_none);
     }
 
     void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
         eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
         const int baseline_offset, const int margin, const bool fill_surrounding) {
-        eka2l1::rect area(top_left, bottom_right - top_left);
-        if (fill_surrounding) {
-            // The effective box colour depends on the drawing mode. As the document says
-            if (do_command_set_brush_color()) {
-                cmd_builder->draw_rectangle(area);
-            }
-        }
-
-        // TODO: Pen outline >_<
-        eka2l1::vecx<std::uint8_t, 4> color;
-        color = common::rgb_to_vec(pen_color);
-        cmd_builder->set_brush_color({ color[1], color[2], color[3] });
-
-        // Add the baseline offset. Where text will sit on.
-        area.top.y += baseline_offset;
-
-        if (align == epoc::text_alignment::right) {
-            area.top.x -= margin;
-        } else {
-            area.top.x += margin;
-        }
-
         // Complete it first, cause we gonna open up the kernel
         ctx.complete(epoc::error_none);
 
-        kernel_system *kern = client->get_ws().get_kernel_system();
+        if (cmd_builder) {
+            eka2l1::rect area(top_left, bottom_right - top_left);
+            if (fill_surrounding) {
+                // The effective box colour depends on the drawing mode. As the document says
+                if (do_command_set_brush_color()) {
+                    cmd_builder->draw_rectangle(area);
+                }
+            }
 
-        kern->unlock();
-        text_font->atlas.draw_text(text, area, align, client->get_ws().get_graphics_driver(),
-            cmd_builder.get());
+            // TODO: Pen outline >_<
+            eka2l1::vecx<std::uint8_t, 4> color;
+            color = common::rgb_to_vec(pen_color);
+            cmd_builder->set_brush_color({ color[1], color[2], color[3] });
 
-        kern->lock();
+            // Add the baseline offset. Where text will sit on.
+            area.top.y += baseline_offset;
+
+            if (align == epoc::text_alignment::right) {
+                area.top.x -= margin;
+            } else {
+                area.top.x += margin;
+            }
+
+            kernel_system *kern = client->get_ws().get_kernel_system();
+
+            kern->unlock();
+            text_font->atlas.draw_text(text, area, align, client->get_ws().get_graphics_driver(),
+                cmd_builder.get());
+
+            kern->lock();
+        }
     }
 
     bool graphic_context::do_command_set_brush_color() {
+        if (!cmd_builder) {
+            return false;
+        }
+
         eka2l1::vecx<std::uint8_t, 4> color = common::rgb_to_vec(brush_color);
 
         // Don't bother even sending any draw command

@@ -92,6 +92,7 @@ namespace eka2l1::epoc {
         };
 
         void reset_context();
+        bool no_building() const;
 
         drivers::handle handle_from_bitwise_bitmap(epoc::bitwise_bitmap *bmp);
 
