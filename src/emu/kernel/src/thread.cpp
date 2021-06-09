@@ -257,7 +257,6 @@ namespace eka2l1 {
             , flags(0) {
             if (owner) {
                 owner->increase_thread_count();
-                owner->increase_access_count();
 
                 real_priority = calculate_thread_priority(owning_process(), pri);
                 last_priority = real_priority;

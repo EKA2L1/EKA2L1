@@ -43,6 +43,7 @@ namespace eka2l1 {
             , type(type)
             , pos_access(chnk_access) {
             obj_type = object_type::chunk;
+
             mem::mem_model_chunk_creation_info create_info{};
 
             create_info.perm = protection;
@@ -136,10 +137,14 @@ namespace eka2l1 {
         }
 
         void chunk::destroy() {
+            kernel::process *own = get_own_process();
+
             if (!mmc_impl_unq_)
-                get_own_process()->get_mem_model()->delete_chunk(mmc_impl_);
+                own->get_mem_model()->delete_chunk(mmc_impl_);
             else
                 mmc_impl_unq_.reset();
+
+            own->decrease_access_count();
         }
 
         void chunk::open_to(process *own) {

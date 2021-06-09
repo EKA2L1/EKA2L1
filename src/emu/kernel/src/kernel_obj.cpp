@@ -36,6 +36,10 @@ namespace eka2l1 {
                 // GET RID!
                 this->obj_name.pop_back();
             }
+
+            if (owner) {
+                owner->increase_access_count();
+            }
         }
 
         void kernel_obj::do_state(common::chunkyseri &seri) {

@@ -127,7 +127,7 @@ namespace eka2l1 {
         }
 
         property_reference::property_reference(kernel_system *kern, property *prop)
-            : kernel::kernel_obj(kern, "", prop_)
+            : kernel::kernel_obj(kern, "", prop)
             , prop_(prop) {
             obj_type = kernel::object_type::prop_ref;
         }

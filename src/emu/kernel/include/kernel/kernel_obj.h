@@ -107,7 +107,11 @@ namespace eka2l1 {
 
         public:
             virtual ~kernel_obj() {}
-            virtual void destroy() {}
+            virtual void destroy() {
+                if (owner) {
+                    owner->decrease_access_count();
+                }
+            }
 
             virtual void open_to(process *own) {}
 
@@ -137,7 +141,14 @@ namespace eka2l1 {
 
             // WARNING: This function have not ever set child owner. Child owner stays the same.
             void set_owner(kernel_obj *new_owner) {
+                if (owner) {
+                    owner->decrease_access_count();
+                }
+
                 owner = new_owner;
+
+                if (owner)
+                    owner->increase_access_count();
             }
 
             void full_name(std::string &name_will_full);
