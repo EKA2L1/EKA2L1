@@ -277,6 +277,7 @@ namespace eka2l1::android {
             builder->set_swapchain_size(swapchain_size);
 
             builder->backup_state();
+            builder->bind_bitmap(0);
 
             builder->clear({ 0xFF, 0xD0, 0xD0, 0xD0 }, drivers::draw_buffer_bit_color_buffer);
             builder->set_cull_mode(false);
