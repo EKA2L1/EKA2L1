@@ -144,7 +144,8 @@ namespace eka2l1 {
             else
                 mmc_impl_unq_.reset();
 
-            own->decrease_access_count();
+            if (own)
+                own->decrease_access_count();
         }
 
         void chunk::open_to(process *own) {
