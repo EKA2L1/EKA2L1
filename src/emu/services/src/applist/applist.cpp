@@ -756,6 +756,7 @@ namespace eka2l1 {
 
         applist_app_for_document app;
         app.uid = 0;
+        app.data_type.uid = 0;
 
         ctx.write_data_to_descriptor_argument<applist_app_for_document>(0, app);
         ctx.complete(epoc::error_none);

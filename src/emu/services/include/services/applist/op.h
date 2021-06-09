@@ -28,7 +28,7 @@ namespace eka2l1 {
     };
 
     struct applist_data_type {
-        eka2l1::ptr<epoc::ptr_des8> data_type;
+        epoc::buf_static<char, 256> data_type;
         epoc::uid uid;
     };
 
@@ -36,6 +36,8 @@ namespace eka2l1 {
         epoc::uid uid;
         applist_data_type data_type;
     };
+
+    static_assert(sizeof(applist_app_for_document) == 272);
 
     enum applist_request_oldarch {
         applist_request_oldarch_first = applist_range_unrestricted, // = 0
