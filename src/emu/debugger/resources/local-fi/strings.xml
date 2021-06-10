@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Tätä valintaa ei tallenneta emulaattorin sammutuksen jälkeen. Ei toimi, kun GDBStub on käytössä.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Järjestelmäkutsu</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Tarkka IPC-ajoitus</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Parantaa järjestelmän tarkkuutta, mutta saattaa aiheuttaa hidastumista.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Ota B-Trace käyttöön</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Ota käyttöön kernelin jäljitys, joka on käytössä ajurissa. Saattaa aiheuttaa hidastumista.</string>
     <string name="pref_general_utilities_string">Apuohjelmat</string>
