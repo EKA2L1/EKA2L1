@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Opsi ini tidak akan disimpan setelah emulator dimatikan. Tidak efektif jika GDBStub diaktifkan.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Panggilan sistem</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Pengaturan waktu IPC yang akurat</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Meningkatkan akurasi sistem, tetapi dapat menyebabkan perlambatan.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Aktifkan B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Aktifkan pelacakan kernel yang digunakan di driver. Pelambatan diharapkan aktif.</string>
     <string name="pref_general_utilities_string">Peralatan</string>
