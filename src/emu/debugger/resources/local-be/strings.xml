@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Гэтая опцыя не будзе захавана пасля выключэння эмулятара. Неэфектыўна, калі ўключаны GDBStub.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Сістэмныя выклікі</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Дакладная сінхранізацыя IPC</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Палепшыць дакладнасць сістэмы, але можа прывесці да запаволення.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Уключыць B-Трасаванне</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Уключыць трасаванне ядра, якое выкарыстоўваецца ў драйверы. Пры ўключэнні чакаецца запаволенне.</string>
     <string name="pref_general_utilities_string">Утыліты</string>
