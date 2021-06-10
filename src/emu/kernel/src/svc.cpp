@@ -654,14 +654,13 @@ namespace eka2l1::epoc {
         if (msg->request_sts) {
             (msg->request_sts.get(msg->own_thr->owning_process()))->set(val, kern->is_eka1());
             msg->own_thr->signal_request();
+            if (kern->get_config()->log_ipc)
+                LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
         }
 
         if (msg->thread_handle_low) {
             kern->close(msg->thread_handle_low);
         }
-
-        if (kern->get_config()->log_ipc)
-            LOG_TRACE(KERNEL, "Message completed with code: {}, thread to signal: {}", val, msg->own_thr->name());
 
         kern->call_ipc_complete_callbacks(msg, val);
         msg->unref();
