@@ -585,8 +585,7 @@ namespace eka2l1 {
                     break;
                 }
 
-                case ss_op::install:
-                case ss_op::null: {
+                case ss_op::install: {
                     if (!skip_next_file) {
                         bool lowered = false;
 
