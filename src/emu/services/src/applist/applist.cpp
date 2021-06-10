@@ -42,6 +42,8 @@
 #include <utils/err.h>
 #include <functional>
 
+#include <config/config.h>
+
 namespace eka2l1 {
     const std::string get_app_list_server_name_by_epocver(const epocver ver) {
         if (ver < epocver::epoc81a) {
@@ -762,11 +764,17 @@ namespace eka2l1 {
         app.uid = 0;
         app.data_type.uid = 0;
 
-        LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype stubbed with file extension");
+        config::state *conf = kern->get_config();
 
-        const std::u16string ext = eka2l1::path_extension(path.value());
-        if (!ext.empty()) {
-            app.data_type.data_type.assign(nullptr, common::uppercase_string(common::ucs2_to_utf8(ext.substr(1))));
+        if (conf && conf->mime_detection) {
+            LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype stubbed with file extension");
+
+            const std::u16string ext = eka2l1::path_extension(path.value());
+            if (!ext.empty()) {
+                app.data_type.data_type.assign(nullptr, common::uppercase_string(common::ucs2_to_utf8(ext.substr(1))));
+            }
+        } else {
+            LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype left empty!");
         }
 
         ctx.write_data_to_descriptor_argument<applist_app_for_document>(0, app);

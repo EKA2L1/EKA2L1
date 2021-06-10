@@ -31,8 +31,7 @@
 
 namespace eka2l1 {
     namespace service {
-        ipc_context::ipc_context(const bool accurate_timing)
-            : accurate_timing(accurate_timing) {
+        ipc_context::ipc_context() {
         }
 
         ipc_context::~ipc_context() {
@@ -146,15 +145,7 @@ namespace eka2l1 {
 
                 // Avoid signal twice to cause undefined behavior
                 if (!signaled) {
-                    if (accurate_timing) {
-                        ntimer *timing = sys->get_ntimer();
-
-                        // TODO(pent0): No hardcode
-                        timing->schedule_event(200, kern->get_ipc_realtime_signal_event(), msg->own_thr->unique_id());
-                    } else {
-                        msg->own_thr->signal_request();
-                    }
-
+                    msg->own_thr->signal_request();
                     signaled = true;
                 }
             }
@@ -356,7 +347,7 @@ namespace eka2l1 {
 
             if (func_ite == ipc_funcs.end()) {
                 if (unhandle_callback_enable) {
-                    ipc_context context(conf->accurate_ipc_timing);
+                    ipc_context context;
 
                     context.sys = sys;
                     context.msg = process_msg;
@@ -371,7 +362,7 @@ namespace eka2l1 {
             }
 
             ipc_func ipf = func_ite->second;
-            ipc_context context(conf->accurate_ipc_timing);
+            ipc_context context;
             context.sys = sys;
             context.msg = process_msg;
 

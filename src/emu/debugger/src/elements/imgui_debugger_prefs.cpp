@@ -183,7 +183,6 @@ namespace eka2l1 {
         const std::string cpu_step_str = common::get_localised_string(localised_strings, "pref_general_debugging_cpu_step_checkbox_title");
         const std::string ipc_str = common::get_localised_string(localised_strings, "pref_general_debugging_ipc_checkbox_title");
         const std::string system_calls_str = common::get_localised_string(localised_strings, "pref_general_debugging_system_calls_checkbox_title");
-        const std::string accurate_ipc_timing_str = common::get_localised_string(localised_strings, "pref_general_debugging_ait_checkbox_title");
         const std::string enable_btrace_str = common::get_localised_string(localised_strings, "pref_general_debugging_enable_btrace_checkbox_title");
         
         ImGui::Checkbox(cpu_read_str.c_str(), &conf->log_read);
@@ -196,11 +195,6 @@ namespace eka2l1 {
 
         ImGui::Checkbox(system_calls_str.c_str(), &conf->log_svc);
         ImGui::SameLine(col2);
-        ImGui::Checkbox(accurate_ipc_timing_str.c_str(), &conf->accurate_ipc_timing);
-        if (ImGui::IsItemHovered()) {
-            const std::string ait_tt = common::get_localised_string(localised_strings, "pref_general_debugging_ait_tooltip_msg");
-            ImGui::SetTooltip("%s", ait_tt.c_str());
-        }
 
         ImGui::Checkbox(enable_btrace_str.c_str(), &conf->enable_btrace);
 
@@ -208,8 +202,6 @@ namespace eka2l1 {
             const std::string btrace_tt = common::get_localised_string(localised_strings, "pref_general_debugging_btrace_tooltip_msg");
             ImGui::SetTooltip("%s", btrace_tt.c_str());
         }
-
-        ImGui::SameLine(col2);
 
         bool do_we_step = conf->stepping.load();
         ImGui::Checkbox(cpu_step_str.c_str(), &do_we_step);

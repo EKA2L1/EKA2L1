@@ -49,7 +49,7 @@ namespace eka2l1 {
          * struct supported.
          */
         struct ipc_context {
-            explicit ipc_context(const bool accurate_timing = false);
+            explicit ipc_context();
             ~ipc_context();
 
             eka2l1::system *sys; ///< The system instance pointer.

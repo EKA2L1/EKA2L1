@@ -2587,8 +2587,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        const bool accurate_timing = kern->get_config()->accurate_ipc_timing;
-        timer->after(kern->crr_thread(), req_sts, us_at - (accurate_timing ? kern->home_time() : common::get_current_time_in_microseconds_since_1ad()));
+        timer->after(kern->crr_thread(), req_sts, us_at - common::get_current_time_in_microseconds_since_1ad());
     }
 
     BRIDGE_FUNC(void, timer_cancel, kernel::handle h) {

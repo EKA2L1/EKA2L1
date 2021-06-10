@@ -758,11 +758,6 @@ namespace eka2l1 {
             return false;
         }
 
-        if ((dvc->ver >= epocver::epoc81a) && (dvc->ver < epocver::eka2)) {
-            conf_->enable_srv_ecom = false;
-            conf_->enable_srv_cdl = false;
-        }
-
         // Setup outsiders
         setup_outsider();
         invoke_system_reset_callbacks();

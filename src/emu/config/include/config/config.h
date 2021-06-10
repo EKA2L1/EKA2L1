@@ -71,21 +71,13 @@ namespace eka2l1::config {
 
         std::string storage = "data"; // Set this to dot, avoid making it absolute
 
-        bool enable_srv_ecom{ true };
-        bool enable_srv_cenrep{ true };
         bool enable_srv_backup{ true };
-        bool enable_srv_install{ true };
         bool enable_srv_rights{ true };
         bool enable_srv_sa{ true };
         bool enable_srv_drm{ true };
-        bool enable_srv_eikapp_ui{ true };
         bool enable_srv_akn_icon{ false };
-        bool enable_srv_akn_skin{ true };
-        bool enable_srv_cdl{ true };
-        bool enable_srv_socket{ true };
 
         bool fbs_enable_compression_queue{ false };
-        bool accurate_ipc_timing{ false };
         bool enable_btrace{ false };
 
         bool stop_warn_touch_disabled { false };
@@ -94,6 +86,7 @@ namespace eka2l1::config {
         bool nearest_neighbor_filtering { true };
         bool integer_scaling { true };
         bool cpu_load_save { true };
+        bool mime_detection { true };
 
         std::atomic<bool> stepping { false };
         std::string rtos_level;
