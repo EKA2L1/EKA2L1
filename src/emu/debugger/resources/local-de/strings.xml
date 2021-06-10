@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">System calls</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Genaues IPC-Timing</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Verbessert die Genauigkeit des Systems, kann aber zu einer Verlangsamung führen.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">B-Trace aktivieren</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Aktiviere Kernelverfolgung, die im Treiber verwendet wird. Verlangsamung erwartet, wenn aktiviert.</string>
     <string name="pref_general_utilities_string">Werkzeuge</string>
