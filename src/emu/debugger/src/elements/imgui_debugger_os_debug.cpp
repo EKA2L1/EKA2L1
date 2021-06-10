@@ -219,7 +219,7 @@ namespace eka2l1 {
         case kernel::thread_state::create:
             return "unschedule";
         case kernel::thread_state::wait:
-            return "wating";
+            return "waiting";
         case kernel::thread_state::wait_fast_sema:
             return "waiting (fast semaphore)";
         case kernel::thread_state::wait_mutex:
