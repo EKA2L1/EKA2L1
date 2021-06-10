@@ -33,6 +33,8 @@ namespace eka2l1 {
             , data_type(service::property_type::unk) {
             obj_type = kernel::object_type::prop;
             bindata.reserve(512);
+
+            increase_access_count();
         }
 
         bool property::is_defined() {
