@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Цю опцію не буде збережено після вимкнення емулятора. Неефективно, коли ввімкнено GDBStub.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Системні виклики</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Точна синхронізація IPC</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Поліпшить точність системи, але може призвести до уповільнення.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Увімкнути B-трасування</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Увімкнути трасування ядра, що використовується в драйвері. Під час увімкнення очікується уповільнення.</string>
     <string name="pref_general_utilities_string">Утиліти</string>
