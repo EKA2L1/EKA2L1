@@ -62,7 +62,8 @@ namespace eka2l1::manager {
         , ipc_complete_callback_handle(0)
         , breakpoint_hit_callback_handle(0)
         , process_switch_callback_handle(0)
-        , codeseg_loaded_callback_handle(0) {
+        , codeseg_loaded_callback_handle(0)
+        , imb_range_callback_handle(0) {
         scripting::set_current_instance(sys);
     }
 
@@ -87,6 +88,10 @@ namespace eka2l1::manager {
 
         if (uid_change_callback_handle) {
             kern->unregister_uid_of_process_change_callback(uid_change_callback_handle);
+        }
+
+        if (imb_range_callback_handle) {
+            kern->unregister_imb_range_callback(imb_range_callback_handle);
         }
 
         modules.clear();
@@ -185,6 +190,10 @@ namespace eka2l1::manager {
             uid_change_callback_handle = kern->register_uid_process_change_callback([this](kernel::process *aff, kernel::process_uid_type type) {
                 handle_uid_process_change(aff, std::get<2>(type));
             });
+
+            imb_range_callback_handle = kern->register_imb_range_callback([this](kernel::process *pr, const address addr, const std::size_t size) {
+                handle_imb_range(pr, addr, size);
+            });
         }
 
         if (modules.find(module) == modules.end()) {
@@ -224,7 +233,15 @@ namespace eka2l1::manager {
     void scripts::write_breakpoint_block(kernel::process *pr, const vaddress target) {
         const vaddress aligned = target & ~1;
 
+        if (!pr) {
+            return;
+        }
+
         std::uint32_t *data = reinterpret_cast<std::uint32_t *>(pr->get_ptr_on_addr_space(aligned));
+        if (!data) {
+            return;
+        }
+
         auto ite = std::find_if(breakpoints[aligned].list_.begin(), breakpoints[aligned].list_.end(),
             [=](const breakpoint_info &info) { return (info.attached_process_ == 0) || (info.attached_process_ == pr->get_uid()); });
 
@@ -253,6 +270,10 @@ namespace eka2l1::manager {
         }
 
         std::uint32_t *data = reinterpret_cast<std::uint32_t *>(pr->get_ptr_on_addr_space(target & ~1));
+        if (!data) {
+            return false;
+        }
+
         data[0] = source_value->second;
 
         sources.erase(source_value);
@@ -298,7 +319,12 @@ namespace eka2l1::manager {
         info.invoke_ = func;
         info.attached_process_ = process_uid;
 
-        breakpoint_wait_patch.push_back(info);
+        if (lib_name_lower == "constantaddr") {
+            info.flags_ = 0;
+            breakpoints[addr & ~1].list_.push_back(std::move(info));
+        } else {
+            breakpoint_wait_patch.push_back(info);
+        }
     }
 
     void scripts::patch_library_hook(const std::string &name, const std::vector<vaddress> &exports) {
@@ -495,5 +521,9 @@ namespace eka2l1::manager {
                 }
             }
         }
+    }
+
+    void scripts::handle_imb_range(kernel::process *p, const address addr, const std::size_t ss) {
+        write_breakpoint_blocks(p);
     }
 }
