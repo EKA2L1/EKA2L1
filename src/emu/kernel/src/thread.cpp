@@ -506,9 +506,9 @@ namespace eka2l1 {
                 mama->kill(exit_type, exit_reason);
             }
 
+            kern->prepare_reschedule();
             decrease_access_count();
 
-            kern->prepare_reschedule();
             return true;
         }
         
