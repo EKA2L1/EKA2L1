@@ -107,6 +107,9 @@ namespace eka2l1 {
         const std::uint32_t session_handle = kern->open_handle_with_thread(ctx->msg->own_thr,
             dev_session_, kernel::owner_type::process);
 
+        // Once the client get this session handle, it's not to our responsiblity anymore
+        dev_session_ = nullptr;
+
         ctx->complete(static_cast<int>(session_handle));
     }
 
