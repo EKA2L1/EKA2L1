@@ -306,25 +306,27 @@ namespace eka2l1::kernel {
         attached_info *attach_info = attach_info_ptr->get();
 
         // Free the chunk data
-        if (attach_info->data_chunk) {
-            if (attach_info->data_chunk->position_access() != kernel::chunk_access::dll_static_data) {
-                kern->destroy(attach_info->data_chunk);
-            } else {
-                memory_system *mem = kern->get_memory_system();
+        if (!kern->wipeout_in_progress()) {
+            if (attach_info->data_chunk) {
+                if (attach_info->data_chunk->position_access() != kernel::chunk_access::dll_static_data) {
+                    kern->destroy(attach_info->data_chunk);
+                } else {
+                    memory_system *mem = kern->get_memory_system();
 
-                const std::uint32_t offset = data_base - attach_info->data_chunk->base(de_foe).ptr_address();    
-                const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
+                    const std::uint32_t offset = data_base - attach_info->data_chunk->base(de_foe).ptr_address();    
+                    const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
 
-                attach_info->data_chunk->decommit(offset, data_size_align);
+                    attach_info->data_chunk->decommit(offset, data_size_align);
+                }
             }
-        }
 
-        if (!code_chunk_shared && attach_info->code_chunk) {
-            kern->destroy(attach_info->code_chunk);
+            if (!code_chunk_shared && attach_info->code_chunk) {
+                kern->destroy(attach_info->code_chunk);
+            }
+    
+            attach_info->closing_lib_link.deque();
+            attach_info->process_link.deque();
         }
-
-        attach_info->closing_lib_link.deque();
-        attach_info->process_link.deque();
 
         attaches.erase(attaches.begin() + std::distance(attaches.data(), attach_info_ptr));
 
@@ -387,6 +389,10 @@ namespace eka2l1::kernel {
     }
 
     void codeseg::deref(kernel::thread *foe_thr) {
+        if (!foe_thr) {
+            return;
+        }
+
         auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
             return info->attached_process == foe_thr->owning_process();
         });

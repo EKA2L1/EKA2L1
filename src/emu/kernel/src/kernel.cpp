@@ -85,7 +85,8 @@ namespace eka2l1 {
         , dll_global_data_last_offset_(0)
         , inactivity_starts_(0)
         , nanokern_pr_(nullptr)
-        , custom_code_chunk(nullptr) {
+        , custom_code_chunk(nullptr)
+        , wiping_(false) {
         reset();
     }
 
@@ -94,6 +95,7 @@ namespace eka2l1 {
     }
 
     void kernel_system::wipeout() {
+        wiping_ = true;
         timing_->remove_event(realtime_ipc_signal_evt_);
 
         if (rom_map_) {
@@ -104,7 +106,8 @@ namespace eka2l1 {
 
 #define OBJECT_CONTAINER_CLEANUP(container)             \
     for (auto &obj: container) {                        \
-        obj->destroy();                                 \
+        if (obj)                                        \
+            obj->destroy();                             \
     }                                                   \
     container.clear();
 
@@ -129,6 +132,9 @@ namespace eka2l1 {
 
         if (btrace_inst_)
             btrace_inst_->close_trace_session();
+
+        cpu_->clear_instruction_cache();
+        wiping_ = false;
     }
 
     void kernel_system::reset() {
@@ -648,7 +654,7 @@ namespace eka2l1 {
     }
 
     bool kernel_system::destroy(kernel_obj_ptr obj) {
-        if (!obj) {
+        if (!obj || wiping_) {
             return true;
         }
 

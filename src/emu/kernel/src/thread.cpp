@@ -355,7 +355,9 @@ namespace eka2l1 {
     
         void thread::do_cleanup() {
             // Close all thread handles
-            thread_handles.reset();
+            if (!kern->wipeout_in_progress())
+                thread_handles.reset();
+
             kern->free_msg(sync_msg);
 
             while (!closing_libs.empty()) {

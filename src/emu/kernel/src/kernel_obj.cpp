@@ -68,8 +68,10 @@ namespace eka2l1 {
         }
 
         void kernel_obj::decrease_access_count() {
-            if (--access_count == 0) {
-                kern->destroy(this);
+            if (!kern->wipeout_in_progress()) {
+                if (--access_count == 0) {
+                    kern->destroy(this);
+                }
             }
         }
     }

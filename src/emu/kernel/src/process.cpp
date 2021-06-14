@@ -189,25 +189,25 @@ namespace eka2l1::kernel {
     }
 
     void process::destroy() {
-        if (dll_static_chunk) {
-            kern->destroy(dll_static_chunk);
-        }
-
-        if (rom_bss_chunk_) {
-            kern->destroy(rom_bss_chunk_);
-        }
-
         kern->destroy(dll_lock);
 
         if (exit_type == entity_exit_type::pending) {
             kill(kernel::entity_exit_type::kill, 0);
-        } else {
+        } else if (!kern->wipeout_in_progress()) {
             process_handles.reset();
         }
 
         while (!codeseg_list.empty()) {
             kernel::codeseg::attached_info *info = E_LOFF(codeseg_list.first()->deque(), kernel::codeseg::attached_info, process_link);
             info->parent_seg->detach(this);
+        }
+
+        if (dll_static_chunk) {
+            kern->destroy(dll_static_chunk);
+        }
+
+        if (rom_bss_chunk_) {
+            kern->destroy(rom_bss_chunk_);
         }
     }
 
@@ -357,7 +357,9 @@ namespace eka2l1::kernel {
         finish_logons();
 
         // Cleanup resources
-        process_handles.reset();
+        if (!kern->wipeout_in_progress())
+            process_handles.reset();
+
         decrease_access_count();
     }
 

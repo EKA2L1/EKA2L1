@@ -337,6 +337,8 @@ namespace eka2l1 {
         kernel::chunk *custom_code_chunk;
         address exception_handler_guard_;
 
+        bool wiping_;
+
     protected:
         void setup_new_process(process_ptr pr);
 
@@ -768,6 +770,10 @@ namespace eka2l1 {
          * This include spawning neccessary proccesses.
          */
         void start_bootload();
+
+        const bool wipeout_in_progress() const {
+            return wiping_;
+        }
     };
 
     struct kernel_lock {
