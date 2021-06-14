@@ -41,6 +41,15 @@ namespace eka2l1 {
         }
 
         std::optional<uint32_t> library::get_ordinal_address(kernel::process *pr, const std::uint32_t idx) {
+            if (codeseg->state_with(pr) != codeseg_state_attached) {
+                if (!kern->is_eka1()) {
+                    LOG_WARN(KERNEL, "Weird behaviour: trying to lookup when codeseg is not attached on EKA2!");
+                }
+
+                codeseg->attach(pr);
+                codeseg->attached_report(pr);
+            }
+
             return codeseg->lookup(pr, idx);
         }
 
