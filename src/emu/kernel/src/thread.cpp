@@ -251,6 +251,7 @@ namespace eka2l1 {
             , exception_handler(0)
             , exception_mask(0)
             , trap_stack(0)
+            , cached_detach(false)
             , sleep_level(0)
             , metadata(nullptr)
             , backup_state(thread_state::stop)
@@ -889,7 +890,7 @@ namespace eka2l1 {
                     break;
                 }
 
-                kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, process_link);
+                kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, closing_lib_link);
 
                 info->parent_seg->detaching_report(info->attached_process);
                 info->parent_seg->queries_call_list(info->attached_process, results);
@@ -905,7 +906,7 @@ namespace eka2l1 {
                     break;
                 }
 
-                kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, process_link);
+                kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, closing_lib_link);
 
                 info->parent_seg->unmark();
                 first = first->next;
@@ -915,8 +916,9 @@ namespace eka2l1 {
         }
 
         std::int32_t thread::get_detach_eps_limit(std::int32_t *count, address *addrs) {
-            if (cached_detach_eps.empty()) {
+            if (!cached_detach) {
                 cached_detach_eps = get_detach_eps();
+                cached_detach = true;
             }
 
             *count = common::min<std::int32_t>(*count, static_cast<std::int32_t>(cached_detach_eps.size()));
@@ -927,6 +929,7 @@ namespace eka2l1 {
                 return epoc::error_none;
             }
 
+            cached_detach = false;
             return epoc::error_eof;
         }
     }

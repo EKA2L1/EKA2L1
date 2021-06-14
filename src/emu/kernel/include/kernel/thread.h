@@ -233,6 +233,7 @@ namespace eka2l1 {
             address trap_stack;
 
             std::vector<address> cached_detach_eps;
+            bool cached_detach;
 
         protected:
             epoc9_std_epoc_thread_create_info *metadata;
