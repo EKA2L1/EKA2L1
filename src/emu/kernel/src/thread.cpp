@@ -895,22 +895,8 @@ namespace eka2l1 {
                 kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, closing_lib_link);
 
                 info->parent_seg->detaching_report(info->attached_process);
-                info->parent_seg->queries_call_list(info->attached_process, results);
+                results.push_back(info->parent_seg->get_entry_point(info->attached_process));
 
-                first = first->next;
-            } while (first != end);
-
-            first = closing_libs.first();
-            end = closing_libs.end();
-
-            do {
-                if (!first) {
-                    break;
-                }
-
-                kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, closing_lib_link);
-
-                info->parent_seg->unmark();
                 first = first->next;
             } while (first != end);
 

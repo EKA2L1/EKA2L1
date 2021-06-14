@@ -98,7 +98,17 @@ namespace eka2l1::kernel {
             });
  
             if (att) {
-                att->get()->use_count++;
+                if (!mark) {
+                    att->get()->use_count++;
+                    mark = true;
+
+                    for (auto &dep: dependencies) {
+                        dep.dep_->attach(new_foe, forcefully);
+                    }
+
+                    mark = false;
+                }
+
                 return false;
             }
         }
@@ -403,9 +413,20 @@ namespace eka2l1::kernel {
 
         attached_info *attach_info = attach_info_ptr->get();
 
-        attach_info->use_count--;
-        if (attach_info->use_count == 0) {
-            foe_thr->closing_libs.push(&attach_info->closing_lib_link);
+        if (!mark) {
+            mark = true;
+
+            attach_info->use_count--;
+
+            if (attach_info->use_count == 0) {
+                foe_thr->closing_libs.push(&attach_info->closing_lib_link);
+
+                for (std::size_t i = 0; i < dependencies.size(); i++) {
+                    dependencies[i].dep_->deref(foe_thr);
+                }
+            }
+
+            mark = false;
         }
     }
 
