@@ -82,6 +82,7 @@ namespace eka2l1::epoc {
             flags_enable_pbe = 1 << 10,
             flags_in_redraw = 1 << 11,
             flag_focus_receiveable = 1 << 12,
+            flag_winmode_fixed = 1 << 13
         };
     
         std::uint32_t flags;

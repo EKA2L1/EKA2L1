@@ -28,6 +28,7 @@
 #include <services/window/window.h>
 
 #include <kernel/timing.h>
+#include <kernel/kernel.h>
 
 #include <common/log.h>
 #include <common/vecx.h>
@@ -92,6 +93,11 @@ namespace eka2l1::epoc {
                 // Going fullscreen
                 size = scr->size();
             }
+        }
+
+        kernel_system *kern = client->get_ws().get_kernel_system();
+        if (kern->get_epoc_version() >= epocver::epoc94) {
+            flags |= flag_winmode_fixed;
         }
 
         set_client_handle(client_handle);
@@ -489,11 +495,12 @@ namespace eka2l1::epoc {
 
         switch (op) {
         case EWsWinOpRequiredDisplayMode: {
-            // On s60 and fowards, this method is ignored. So even with lower version, just ignore
-            // them. Like they don't mean anything.
-            dmode = *reinterpret_cast<epoc::display_mode*>(cmd.data_ptr);
-            if (epoc::get_num_colors_from_display_mode(dmode) > epoc::get_num_colors_from_display_mode(scr->disp_mode)) {
-                dmode = scr->disp_mode;
+            // On s60v5 and fowards, this method is ignored (it seems so on s60v5, def on s^3)
+            if (!(flags & flag_winmode_fixed)) {
+                dmode = *reinterpret_cast<epoc::display_mode*>(cmd.data_ptr);
+                if (epoc::get_num_colors_from_display_mode(dmode) > epoc::get_num_colors_from_display_mode(scr->disp_mode)) {
+                    dmode = scr->disp_mode;
+                }
             }
             ctx.complete(static_cast<int>(dmode));
             break;

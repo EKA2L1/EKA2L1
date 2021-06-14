@@ -318,10 +318,18 @@ namespace eka2l1::epoc {
             return;
         }
 
+        kernel_system *kern = get_ws().get_kernel_system();
+        epoc::display_mode disp = (header->dmode == epoc::display_mode::none) ? parent->scr->disp_mode : header->dmode;
+
+        if (kern->get_epoc_version() >= epocver::epoc94) {
+            // It seems that the mode is fixed to screen mode starting from s60v5. like a migration...?
+            disp = parent->scr->disp_mode;
+        }
+
         // We have to be child's parent child, which is top user.
         window_client_obj_ptr win = std::make_unique<epoc::window_user>(this, parent->scr,
             (parent->type == window_kind::group) ? parent->child : parent, header->win_type,
-            (header->dmode == epoc::display_mode::none) ? parent->scr->disp_mode : header->dmode, header->client_handle);
+            disp, header->client_handle);
 
         ctx.complete(add_object(win));
     }
