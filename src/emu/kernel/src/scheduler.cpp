@@ -80,6 +80,8 @@ namespace eka2l1::kernel {
                 oldt->state = thread_state::ready;
                 oldt->time = oldt->timeslice;
             }
+
+            oldt->decrease_access_count();
         }
 
         memory_system *mem = kern->get_memory_system();
@@ -93,6 +95,7 @@ namespace eka2l1::kernel {
             // timing->unschedule_event(wakeup_evt, newt->unique_id());
             crr_thread = newt;
             crr_thread->state = thread_state::run;
+            crr_thread->increase_access_count();
             
             mem::mem_model_process *mm_process = crr_process ? crr_process->get_mem_model() : nullptr;
 
