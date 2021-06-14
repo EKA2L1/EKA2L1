@@ -29,7 +29,6 @@
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
         : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
-        , state(codeseg_state_none)
         , export_table_fixed_(false)
         , code_chunk_shared(nullptr) {
         obj_type = kernel::object_type::codeseg;
@@ -94,18 +93,15 @@ namespace eka2l1::kernel {
         }
 
         if (!forcefully) {
-            if (common::find_and_ret_if(attaches, [=](const attached_info &info) {
-                    return info.attached_process == new_foe;
-                })) {
+            auto att = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+                return info->attached_process == new_foe;
+            });
+ 
+            if (att) {
+                att->get()->use_count++;
                 return false;
             }
         }
-
-        if (state == codeseg_state_attaching) {
-            return true;
-        }
-
-        state = codeseg_state_attaching;
 
         // Allocate new data chunk for this!
         memory_system *mem = kern->get_memory_system();
@@ -198,8 +194,8 @@ namespace eka2l1::kernel {
         LOG_INFO(KERNEL, "{} runtime code: 0x{:x}", name(), the_addr_of_code_run);
         LOG_INFO(KERNEL, "{} runtime data: 0x{:x}", name(), the_addr_of_data_run);
 
-        attaches.push_back({ new_foe, dt_chunk, code_chunk });
-        
+        attaches.emplace_back(std::make_unique<attached_info>(this, new_foe, dt_chunk, code_chunk));
+  
         // Attach all of its dependencies
         for (auto &dependency: dependencies) {
             dependency.dep_->attach(new_foe);
@@ -290,20 +286,24 @@ namespace eka2l1::kernel {
             }
         }
 
-        state = codeseg_state_attached;
+        if (new_foe)
+            new_foe->codeseg_list.push(&attaches.back()->process_link);
+
         kern->run_codeseg_loaded_callback(obj_name, new_foe, this);
 
         return true;
     }
 
     bool codeseg::detach(kernel::process *de_foe) {
-        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == de_foe;
+        auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == de_foe;
         });
 
-        if (attach_info == nullptr) {
+        if (attach_info_ptr == nullptr) {
             return false;
         }
+
+        attached_info *attach_info = attach_info_ptr->get();
 
         // Free the chunk data
         if (attach_info->data_chunk) {
@@ -323,7 +323,10 @@ namespace eka2l1::kernel {
             kern->destroy(attach_info->code_chunk);
         }
 
-        attaches.erase(attaches.begin() + std::distance(attaches.data(), attach_info));
+        attach_info->closing_lib_link.deque();
+        attach_info->process_link.deque();
+
+        attaches.erase(attaches.begin() + std::distance(attaches.data(), attach_info_ptr));
 
         if (attaches.empty()) {
             // MUDA MUDA MUDA MUDA MUDA MUDA MUDA
@@ -331,6 +334,85 @@ namespace eka2l1::kernel {
         }
 
         return true;
+    }
+
+    bool codeseg::attached_report(kernel::process *foe) {
+        auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == foe;
+        });
+
+        if (!attach_info_ptr) {
+            return false;
+        }
+
+        attached_info *attach_info = attach_info_ptr->get();
+
+        if (attach_info->state == codeseg_state_attached) {
+            return true;
+        }
+
+        attach_info->state = codeseg_state_attached;
+        for (auto &dep: dependencies) {
+            if (!dep.dep_->attached_report(foe)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool codeseg::detaching_report(kernel::process *foe) {
+        auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == foe;
+        });
+
+        if (!attach_info_ptr) {
+            return false;
+        }
+
+        attached_info *attach_info = attach_info_ptr->get();
+
+        if (attach_info->state == codeseg_state_detatching) {
+            return true;
+        }
+
+        attach_info->state = codeseg_state_detatching;
+        for (auto &dep: dependencies) {
+            if (!dep.dep_->detaching_report(foe)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void codeseg::deref(kernel::thread *foe_thr) {
+        auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == foe_thr->owning_process();
+        });
+
+        if (!attach_info_ptr) {
+            return;
+        }
+
+        attached_info *attach_info = attach_info_ptr->get();
+
+        attach_info->use_count--;
+        if (attach_info->use_count == 0) {
+            foe_thr->closing_libs.push(&attach_info->closing_lib_link);
+        }
+    }
+
+    codeseg_state codeseg::state_with(kernel::process *foe) {
+        auto attach_info = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == foe;
+        });
+
+        if (!attach_info) {
+            return codeseg_state_detached;
+        }
+
+        return attach_info->get()->state;
     }
 
     address codeseg::get_code_run_addr(kernel::process *pr, std::uint8_t **base) {
@@ -343,13 +425,15 @@ namespace eka2l1::kernel {
         }
 
         // Find our stuffs
-        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == pr;
+        auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == pr;
         });
 
-        if (attach_info == nullptr) {
+        if (attach_info_ptr == nullptr) {
             return 0;
         }
+
+        attached_info *attach_info = attach_info_ptr->get();
 
         if (base) {
             *base = reinterpret_cast<std::uint8_t *>(attach_info->code_chunk->host_base());
@@ -373,13 +457,15 @@ namespace eka2l1::kernel {
         }
 
         // Find our stuffs
-        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == pr;
+        auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == pr;
         });
 
-        if (attach_info == nullptr || !attach_info->data_chunk) {
+        if ((attach_info_ptr == nullptr) || (!attach_info_ptr->get()->data_chunk)) {
             return 0;
         }
+
+        attached_info *attach_info = attach_info_ptr->get();
 
         if (base) {
             *base = reinterpret_cast<std::uint8_t *>(attach_info->data_chunk->host_base());
@@ -390,14 +476,15 @@ namespace eka2l1::kernel {
 
     std::uint32_t codeseg::get_exception_descriptor(kernel::process *pr) {
         // Find our stuffs
-        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == pr;
+        auto attach_info_ptr = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == pr;
         });
 
-        if (attach_info == nullptr) {
+        if (attach_info_ptr == nullptr) {
             return 0;
         }
 
+        attached_info *attach_info = attach_info_ptr->get();
         return attach_info->code_chunk->base(pr).ptr_address() + exception_descriptor;
     }
 
@@ -407,15 +494,15 @@ namespace eka2l1::kernel {
         }
 
         // Find our stuffs
-        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == pr;
+        auto attach_info = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == pr;
         });
 
         if (attach_info == nullptr) {
             return 0;
         }
 
-        return attach_info->code_chunk->base(pr).ptr_address() + ep;
+        return attach_info->get()->code_chunk->base(pr).ptr_address() + ep;
     }
 
     address codeseg::lookup_no_relocate(const std::uint32_t ord) {
@@ -433,15 +520,15 @@ namespace eka2l1::kernel {
             return lookup_res;
         }
 
-        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == pr;
+        auto attach_info = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == pr;
         });
 
         if (attach_info == nullptr) {
             return 0;
         }
 
-        return attach_info->code_chunk->base(pr).ptr_address() + lookup_res - code_base;
+        return attach_info->get()->code_chunk->base(pr).ptr_address() + lookup_res - code_base;
     }
 
     void codeseg::queries_call_list(kernel::process *pr, std::vector<std::uint32_t> &call_list) {
@@ -492,8 +579,8 @@ namespace eka2l1::kernel {
             return export_table;
         }
 
-        auto attach_info = common::find_and_ret_if(attaches, [=](const attached_info &info) {
-            return info.attached_process == pr;
+        auto attach_info = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
+            return info->attached_process == pr;
         });
 
         if (attach_info == nullptr) {
@@ -501,7 +588,7 @@ namespace eka2l1::kernel {
         }
 
         std::vector<std::uint32_t> new_table = export_table;
-        const std::uint32_t delta = attach_info->code_chunk->base(pr).ptr_address() - code_base;
+        const std::uint32_t delta = attach_info->get()->code_chunk->base(pr).ptr_address() - code_base;
 
         for (auto &entry : new_table) {
             entry += delta;

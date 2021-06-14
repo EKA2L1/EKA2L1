@@ -35,9 +35,9 @@ namespace eka2l1 {
     namespace kernel {
         library::library(kernel_system *kern, codeseg_ptr codeseg)
             : kernel_obj(kern, codeseg->name(), nullptr, access_type::global_access)
-            , codeseg(std::move(codeseg)) {
+            , codeseg(std::move(codeseg))
+            , reffed(false) {
             obj_type = object_type::library;
-            state = library_state::loaded;
         }
 
         std::optional<uint32_t> library::get_ordinal_address(kernel::process *pr, const std::uint32_t idx) {
@@ -45,9 +45,7 @@ namespace eka2l1 {
         }
 
         std::vector<uint32_t> library::attach(kernel::process *pr) {
-            if (state == library_state::loaded) {
-                state = library_state::attaching;
-
+            if (codeseg->state_with(pr) == codeseg_state_detached) {
                 std::vector<std::uint32_t> call_list;
 
                 codeseg->attach(pr);
@@ -55,27 +53,25 @@ namespace eka2l1 {
 
                 codeseg->unmark();
 
+                reffed = true;
+
                 return call_list;
             }
 
             return std::vector<uint32_t>{};
         }
 
-        void library::detach(kernel::process *pr) {
-            codeseg->detach(pr);
+        void library::destroy() {
+            if (reffed) {
+                codeseg->deref(kern->crr_thread());
+            }
         }
 
-        bool library::attached() {
-            if (state == library_state::attached || state != library_state::attaching) {
-                return false;
-            }
-
-            state = library_state::attached;
-            return true;
+        bool library::attached(kernel::process *pr) {
+            return codeseg->attached_report(pr);
         }
 
         void library::do_state(common::chunkyseri &seri) {
-            seri.absorb(state);
             // TODO
         }
     }

@@ -356,6 +356,11 @@ namespace eka2l1 {
             // Close all thread handles
             thread_handles.reset();
             kern->free_msg(sync_msg);
+
+            while (!closing_libs.empty()) {
+                kernel::codeseg::attached_info *info = E_LOFF(closing_libs.first()->deque(), kernel::codeseg::attached_info, closing_lib_link);
+                info->parent_seg->detach(info->attached_process);
+            }
         }
 
         tls_slot *thread::get_tls_slot(uint32_t handle, uint32_t dll_uid) {
@@ -871,6 +876,58 @@ namespace eka2l1 {
             }
 
             return E_LOFF(process_thread_link.next, kernel::thread, process_thread_link);
+        }
+
+        std::vector<std::uint32_t> thread::get_detach_eps() {
+            std::vector<std::uint32_t> results;
+
+            common::double_linked_queue_element *first = closing_libs.first();
+            common::double_linked_queue_element *end = closing_libs.end();
+
+            do {
+                if (!first) {
+                    break;
+                }
+
+                kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, process_link);
+
+                info->parent_seg->detaching_report(info->attached_process);
+                info->parent_seg->queries_call_list(info->attached_process, results);
+
+                first = first->next;
+            } while (first != end);
+
+            first = closing_libs.first();
+            end = closing_libs.end();
+
+            do {
+                if (!first) {
+                    break;
+                }
+
+                kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, process_link);
+
+                info->parent_seg->unmark();
+                first = first->next;
+            } while (first != end);
+
+            return results;
+        }
+
+        std::int32_t thread::get_detach_eps_limit(std::int32_t *count, address *addrs) {
+            if (cached_detach_eps.empty()) {
+                cached_detach_eps = get_detach_eps();
+            }
+
+            *count = common::min<std::int32_t>(*count, static_cast<std::int32_t>(cached_detach_eps.size()));
+            if (*count) {
+                std::memcpy(addrs, cached_detach_eps.data(), *count * sizeof(address));
+                cached_detach_eps.erase(cached_detach_eps.begin(), cached_detach_eps.begin() + *count);
+
+                return epoc::error_none;
+            }
+
+            return epoc::error_eof;
         }
     }
 

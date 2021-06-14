@@ -87,6 +87,7 @@ namespace eka2l1::kernel {
 
         // Attach this codeseg to our process
         codeseg->attach(this);
+        codeseg->attached_report(this);
     
         // Get security info
         sec_info = codeseg->get_sec_info();
@@ -204,8 +205,9 @@ namespace eka2l1::kernel {
             process_handles.reset();
         }
 
-        if (codeseg) {
-            codeseg->detach(this);
+        while (!codeseg_list.empty()) {
+            kernel::codeseg::attached_info *info = E_LOFF(codeseg_list.first()->deque(), kernel::codeseg::attached_info, process_link);
+            info->parent_seg->detach(this);
         }
     }
 

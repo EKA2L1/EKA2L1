@@ -105,6 +105,7 @@ namespace eka2l1::kernel {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
         friend class thread;
+        friend class codeseg;
 
         enum {
             FLAG_NONE = 0,
@@ -145,8 +146,10 @@ namespace eka2l1::kernel {
         epoc::security_info sec_info;
 
         common::roundabout thread_list;
+        common::roundabout codeseg_list;
 
         std::vector<kernel::process*> child_processes_;
+
         kernel::process *parent_process_;
         kernel::chunk *rom_bss_chunk_;
 

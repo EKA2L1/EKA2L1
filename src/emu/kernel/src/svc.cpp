@@ -1825,10 +1825,21 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, static_call_list, std::int32_t *total, std::uint32_t *list_ptr) {
         kernel::process *pr = kern->crr_process();
-        return get_call_list_from_codeseg(pr->get_codeseg(), pr, total, list_ptr);
+        kernel::codeseg *seg = pr->get_codeseg();
+
+        const std::int32_t res = get_call_list_from_codeseg(seg, pr, total, list_ptr);
+        if ((res == 0) && (kern->get_epoc_version() < epocver::epoc10)) {
+            seg->attached_report(pr);
+        }
+
+        return res;
     }
 
     BRIDGE_FUNC(void, static_call_done) {
+        kernel::process *pr = kern->crr_process();
+        kernel::codeseg *seg = pr->get_codeseg();
+
+        seg->attached_report(pr);
     }
 
     BRIDGE_FUNC(std::int32_t, wait_dll_lock) {
@@ -1857,8 +1868,30 @@ namespace eka2l1::epoc {
 
         *num_eps.get(pr) = num_to_copy;
 
-        address *episode_choose_your_story = ep_list.cast<address>().get(pr);
+        address *episode_choose_your_story = nullptr;
+        
+        if (kern->is_eka1()) {
+            eka2l1::ptr<address> *arr_ptr = ep_list.cast<eka2l1::ptr<address>>().get(pr);
+            if (!arr_ptr) {
+                LOG_ERROR(KERNEL, "Entry point list for libraries has invalid address = 0x{:X}", ep_list.ptr_address());
+                return epoc::error_argument;
+            }
+
+            episode_choose_your_story = arr_ptr->get(pr);
+        } else {
+            episode_choose_your_story = ep_list.cast<address>().get(pr);
+        }
+
+        if (!episode_choose_your_story) {
+            LOG_ERROR(KERNEL, "Entry point list for libraries has invalid address = 0x{:X}", ep_list.ptr_address());
+            return epoc::error_argument;
+        }
+
         std::memcpy(episode_choose_your_story, entries.data(), num_to_copy * sizeof(address));
+
+        if (kern->is_eka1()) {
+            lib->get_codeseg()->attached_report(pr);
+        }
 
         return epoc::error_none;
     }
@@ -1887,12 +1920,20 @@ namespace eka2l1::epoc {
             return epoc::error_bad_handle;
         }
 
-        bool attached_result = lib->attached();
+        bool attached_result = lib->attached(kern->crr_process());
 
         if (!attached_result) {
             return epoc::error_general;
         }
 
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, library_detach, std::int32_t *count, address *ep) {
+        return kern->crr_thread()->get_detach_eps_limit(count, ep);
+    }
+
+    BRIDGE_FUNC(std::int32_t, library_detached) {
         return epoc::error_none;
     }
 
@@ -1944,27 +1985,6 @@ namespace eka2l1::epoc {
         type->uid1 = std::get<0>(types_of_codeseg);
         type->uid2 = std::get<1>(types_of_codeseg);
         type->uid3 = std::get<2>(types_of_codeseg);
-    }
-
-    BRIDGE_FUNC(std::int32_t, library_entry_point_queries, kernel::handle h, std::int32_t *total, eka2l1::ptr<address> *list_ptr_guest) {
-        kernel::library *lib = kern->get<kernel::library>(h);
-
-        if (!lib) {
-            return epoc::error_bad_handle;
-        }
-
-        kernel::process *crr_process = kern->crr_process();
-
-        if (!list_ptr_guest) {
-            return epoc::error_argument;
-        }
-
-        address *ep_list = list_ptr_guest->get(crr_process);
-        if (!ep_list) {
-            return epoc::error_argument;
-        }
-
-        return get_call_list_from_codeseg(lib->get_codeseg(), kern->crr_process(), total, ep_list);
     }
 
     BRIDGE_FUNC(std::int32_t, library_entry_point, kernel::handle h) {
@@ -5308,6 +5328,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9E, library_attach),
         BRIDGE_REGISTER(0x9F, library_attached),
         BRIDGE_REGISTER(0xA0, static_call_list),
+        BRIDGE_REGISTER(0xA1, library_detach),
+        BRIDGE_REGISTER(0xA2, library_detached),
         BRIDGE_REGISTER(0xA3, last_thread_handle),
         BRIDGE_REGISTER(0xA4, thread_rendezvous),
         BRIDGE_REGISTER(0xA5, process_rendezvous),
@@ -5464,6 +5486,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x9D, library_attach),
         BRIDGE_REGISTER(0x9E, library_attached),
         BRIDGE_REGISTER(0x9F, static_call_list),
+        BRIDGE_REGISTER(0xA0, library_detach),
+        BRIDGE_REGISTER(0xA1, library_detached),
         BRIDGE_REGISTER(0xA2, last_thread_handle),
         BRIDGE_REGISTER(0xA3, thread_rendezvous),
         BRIDGE_REGISTER(0xA4, process_rendezvous),
@@ -5542,7 +5566,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xFE, static_call_list),
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
         BRIDGE_REGISTER(0x800011, library_entry_point),
-        BRIDGE_REGISTER(0x800015, library_entry_point_queries),
+        BRIDGE_REGISTER(0x800015, library_attach),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
         BRIDGE_REGISTER(0x80001C, process_find_next),
         BRIDGE_REGISTER(0x80001E, process_filename_eka1),
@@ -5649,7 +5673,7 @@ namespace eka2l1::epoc {
         // User server calls
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
         BRIDGE_REGISTER(0x800011, library_entry_point),
-        BRIDGE_REGISTER(0x800015, library_entry_point_queries),
+        BRIDGE_REGISTER(0x800015, library_attach),
         BRIDGE_REGISTER(0x800016, library_filename_eka1),
         BRIDGE_REGISTER(0x80001C, process_find_next),
         BRIDGE_REGISTER(0x80001E, process_filename_eka1),

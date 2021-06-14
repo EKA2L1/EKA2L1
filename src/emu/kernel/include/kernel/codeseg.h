@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/linked.h>
 #include <kernel/kernel_obj.h>
 #include <mem/ptr.h>
 #include <utils/sec.h>
@@ -32,6 +33,7 @@ namespace eka2l1 {
         class chunk;
         class process;
         class codeseg;
+        class thread;
     }
 
     using codeseg_ptr = kernel::codeseg *;
@@ -85,10 +87,38 @@ namespace eka2l1::kernel {
     enum codeseg_state {
         codeseg_state_none,
         codeseg_state_attaching,
-        codeseg_state_attached
+        codeseg_state_attached,
+        codeseg_state_detatching,
+        codeseg_state_detached
     };
 
     class codeseg : public kernel::kernel_obj {
+    public:
+        struct attached_info {
+            kernel::process *attached_process;
+            kernel::codeseg *parent_seg;
+
+            std::uint32_t use_count;
+
+            chunk_ptr data_chunk;
+            chunk_ptr code_chunk;
+
+            codeseg_state state;
+
+            common::double_linked_queue_element closing_lib_link;
+            common::double_linked_queue_element process_link;
+
+            explicit attached_info(kernel::codeseg *parentseg, kernel::process *pr, chunk_ptr dtc, chunk_ptr cc)
+                : attached_process(pr)
+                , parent_seg(parentseg)
+                , use_count(1)
+                , data_chunk(dtc)
+                , code_chunk(cc)
+                , state(codeseg_state_attaching) {
+            }
+        };
+
+    private:
         std::uint32_t uids[3];
 
         std::uint32_t code_addr;
@@ -118,20 +148,12 @@ namespace eka2l1::kernel {
 
         bool mark{ false };
 
-        struct attached_info {
-            kernel::process *attached_process;
-
-            chunk_ptr data_chunk;
-            chunk_ptr code_chunk;
-        };
-
-        std::vector<attached_info> attaches;
+        std::vector<std::unique_ptr<attached_info>> attaches;
         std::vector<address> premade_eps;
 
         chunk_ptr code_chunk_shared;
 
         std::vector<std::uint64_t> relocation_list;
-        codeseg_state state;
 
         bool export_table_fixed_;
 
@@ -166,6 +188,12 @@ namespace eka2l1::kernel {
 
         bool attach(kernel::process *new_foe, const bool forcefully = false);
         bool detach(kernel::process *de_foe);
+
+        bool attached_report(kernel::process *foe);
+        bool detaching_report(kernel::process *foe);
+
+        codeseg_state state_with(kernel::process *foe);
+        void deref(kernel::thread *foe_thread);
 
         /*! \brief Add new dependency.
         */

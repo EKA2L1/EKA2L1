@@ -222,9 +222,6 @@ namespace eka2l1 {
             info->handle = lib_handle_and_obj.first;
             ctx.write_data_to_descriptor_argument(0, *info);
         } else {
-            // They auto attach on eka1
-            lib_handle_and_obj.second->attach(own_pr);
-
             info_eka1->result_handle = lib_handle_and_obj.first;
             ctx.write_data_to_descriptor_argument(0, *info_eka1);
         }

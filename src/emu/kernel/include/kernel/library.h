@@ -12,24 +12,18 @@ namespace eka2l1::kernel {
 
     class library : public kernel_obj {
         codeseg_ptr codeseg;
-
-        enum class library_state {
-            loaded,
-            attaching,
-            attached,
-            detach_pending,
-            detaching
-        } state;
+        bool reffed;
 
     public:
         library(kernel_system *kern, codeseg_ptr codeseg);
         ~library() {}
 
+        void destroy() override;
+
         std::optional<uint32_t> get_ordinal_address(kernel::process *pr, const std::uint32_t idx);
         std::vector<uint32_t> attach(kernel::process *pr);
 
-        void detach(kernel::process *pr);
-        bool attached();
+        bool attached(kernel::process *pr);
 
         codeseg_ptr get_codeseg() {
             return codeseg;

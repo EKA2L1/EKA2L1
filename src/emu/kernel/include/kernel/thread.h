@@ -149,6 +149,7 @@ namespace eka2l1 {
             friend class mutex;
             friend class semaphore;
             friend class process;
+            friend class codeseg;
             friend class service::faker;
             friend class legacy::sync_object_base;
 
@@ -224,10 +225,14 @@ namespace eka2l1 {
             common::double_linked_queue_element suspend_link;
             common::double_linked_queue_element process_thread_link;
 
+            common::roundabout closing_libs;
+
             address exception_handler;
             std::uint32_t exception_mask;
 
             address trap_stack;
+
+            std::vector<address> cached_detach_eps;
 
         protected:
             epoc9_std_epoc_thread_create_info *metadata;
@@ -408,6 +413,9 @@ namespace eka2l1 {
             void add_last_syscall(const std::uint32_t syscall);
 
             kernel::thread *next_in_process();
+
+            std::vector<std::uint32_t> get_detach_eps();
+            std::int32_t get_detach_eps_limit(std::int32_t *count, address *addrs);
 
             thread_state current_state() const {
                 return state;

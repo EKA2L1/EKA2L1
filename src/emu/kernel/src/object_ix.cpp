@@ -157,20 +157,12 @@ namespace eka2l1::kernel {
                 return -1;
             }
 
-            if (obj->get_access_count() <= 1) {
-                if (obj->get_object_type() == object_type::chunk) {
-                    chunk_ptr c = reinterpret_cast<kernel::chunk *>(obj);
-
-                    // This is a force hack signaling the closing one is chunk heap, which means the
-                    // thread is in destruction, and detach needed
-                    if (c->is_chunk_heap()) {
-                        ret_value = 1;
-                    }
-                }
-            }
-
             obj->decrease_access_count();
             totals--;
+
+            if (totals == 0) {
+                ret_value = 1;
+            }
 
             objects[info.object_ix_index].free = true;
             objects[info.object_ix_index].object = nullptr;
