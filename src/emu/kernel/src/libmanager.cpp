@@ -765,7 +765,7 @@ namespace eka2l1::hle {
             for (std::size_t i = 0; i < search_paths.size(); i++) {
                 bool only_once = eka2l1::has_root_name(search_paths[i], true);
 
-                for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+                for (drive_number drv = drive_a; drv <= drive_z; drv = static_cast<drive_number>(static_cast<int>(drv) + 1)) {
                     const char16_t drvc = drive_to_char16(drv);
 
                     if (!only_once) {
@@ -851,7 +851,7 @@ namespace eka2l1::hle {
                     continue;
                 }
 
-                for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
+                for (drive_number drv = drive_a; drv <= drive_z; drv = static_cast<drive_number>(static_cast<int>(drv) + 1)) {
                     const char16_t drvc = drive_to_char16(drv);
 
                     if (!org_root_name.empty()) {
