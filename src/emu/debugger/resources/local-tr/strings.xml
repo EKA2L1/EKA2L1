@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Bu seçim öykünücü kapatıldıktan sonra kaydedilmez. GDBStub etkinken etkisi yoktur.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Sistem çağrıları</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Dakik IPC zamanlaması</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Sistem tutarlılığını artırır, ama yavaşlamalara neden olabilir.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">B-Trace aktif et</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Sürücüde kullanılan \"kernel tracing\"-i aktif et. Aktif olduğunda yavaşlamalar gözlemlenir.</string>
     <string name="pref_general_utilities_string">Araçlar</string>

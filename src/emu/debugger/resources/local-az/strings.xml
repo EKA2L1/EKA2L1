@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Bu seçim emulyator söndürüldükdən sonra saxlanılmayacaq. GDBStub fəal olduqda təsiri yoxdur.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Sistem zəngləri</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Dəqiq IPC zamanlaması</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Sistem dəqiqliyini artırır, amma yavaşlamaya səbəb ola bilər.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">B-Trace aktivləşdir</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Sürücüdə istifadə olunan \"kernel tracing\"-i aktiv et. Aktiv olduqda yavaşlama gözlənilir.</string>
     <string name="pref_general_utilities_string">Alətlər</string>

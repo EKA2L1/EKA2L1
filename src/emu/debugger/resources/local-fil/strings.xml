@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Ang opsyon na ito ay hindi maiseseyb pagtatapos mapatay ang emulator. Hindi ito gagana kung ang GDBStub ay naka-enabled.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Pagtawag sa system</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Eksaktong timing ng IPC</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Magiimprove ito ng kawastuhan ng system pero ito ay magreresulta sa paglag o pagbagal.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">I-enable ang B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">I-enable ang kernel tracing na ginagamit sa driver.
 Magiging mabagal ang emulator sa pagenable.</string>

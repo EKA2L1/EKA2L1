@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Cette option ne sera pas sauvegardée après l\'arrêt de l\'émulateur. Inefficace quand GDBStub est activé.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Libellés système</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Chronométrage précis des IPCs</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Améliore la précision du système, mais peut entraîner un ralentissement.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Activer le traçage</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Activer le traçage du noyau utilisé sur le disque. Ralentissement à prévoir si activé.</string>
     <string name="pref_general_utilities_string">Utilitaires</string>

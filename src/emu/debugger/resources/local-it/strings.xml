@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Quest\'opzione non verrà salvata dopo lo spegnimento dell\'emulatore. Non efficace quando GDBStub è abilitato.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Chiamate di sistema</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Tempistica IPC accurata</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Migliora l\'accuratezza del sistema, ma potrebbe causare rallentamenti.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Abilita B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Abilita il tracciamento del kernel usato. Calo di prestazioni se attivo.</string>
     <string name="pref_general_utilities_string">Utilità</string>
@@ -125,7 +123,7 @@
     <string name="install_device_rpkg_choose_msg">Scegli il file RPKG:</string>
     <string name="install_device_firmware_vpl_choose_msg">Specifica il file di descrizione del firmware (VPL):</string>
     <string name="install_device_rom_choose_msg">Sei pregato di specificare il file della ROM:</string>
-    <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG sarà necessario, ne verrà richiesto il percorso in fase di installazione.</string>
+    <string name="install_device_note_may_need_rpkg">Per i dispositivi con S60v2 o superiore, potrebbe essere richiesto il file aggiuntivo chiamato RPKG. Se il file RPKG dovesse essere necessario, ne verrà richiesto il percorso in fase di installazione.</string>
     <string name="install_device_wait_install_msg">Sei pregato di attendere mentre installo il dispositivo!</string>
     <string name="install_device_progress_rpkg_msg">Estrazione file RPKG ({}%)</string>
     <string name="install_device_progress_rom_msg">Installazione ROM ({}%)</string>

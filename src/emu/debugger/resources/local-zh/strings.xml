@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">此选项将不会在模拟器关闭后保存，当GDBStub启用时则无效。</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">系统调用</string>
-    <string name="pref_general_debugging_ait_checkbox_title">准确的 IPC 时间</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">提高系统的准确性，但可能会导致运行缓慢。</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">启用B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">启用驱动的内核追踪功能，启用后大概率会拖慢运行速度。</string>
     <string name="pref_general_utilities_string">工具</string>

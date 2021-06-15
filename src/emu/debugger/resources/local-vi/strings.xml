@@ -65,8 +65,6 @@
     <string name="pref_general_debugging_cpu_step_checkbox_tooltip_msg">Lựa chọn này sẽ không được lưu sau khi giả lập thoát. Vô tác dụng khi GDBStub đang được bật.</string>
     <string name="pref_general_debugging_ipc_checkbox_title">IPC</string>
     <string name="pref_general_debugging_system_calls_checkbox_title">Hàm gọi hệ thống</string>
-    <string name="pref_general_debugging_ait_checkbox_title">Căn chuẩn IPC</string>
-    <string name="pref_general_debugging_ait_tooltip_msg">Cải thiện độ chính xác của hệ thống, nhưng có thể gây ra sự chậm lại.</string>
     <string name="pref_general_debugging_enable_btrace_checkbox_title">Kích hoạt B-Trace</string>
     <string name="pref_general_debugging_btrace_tooltip_msg">Kích hoạt tính năng lần lại được sử dụng trong driver. Sự chậm lại có thể xảy ra khi kích hoạt.</string>
     <string name="pref_general_utilities_string">Tiện ích</string>
