@@ -571,7 +571,7 @@ namespace eka2l1 {
     }
 
     void gdbstub::handle_get_thread_halt_reason() {
-        send_signal(current_thread, current_thread ? latest_signal : current_thread->exit_reason);
+        send_signal(current_thread, current_thread ? current_thread->exit_reason : latest_signal);
     }
 
     void gdbstub::handle_set_argv() {
