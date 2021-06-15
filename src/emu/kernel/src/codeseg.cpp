@@ -173,7 +173,7 @@ namespace eka2l1::kernel {
                         prot_read_write, kernel::chunk_type::normal, acc, kernel::chunk_attrib::anonymous,
                         0x00, false, data_base, nullptr);
                 } else {
-                    dt_chunk = new_foe->get_rom_bss_chunk();
+                    dt_chunk = new_foe->get_rom_bss_chunk(data_base);
                     add_offset = data_base - dt_chunk->base(new_foe).ptr_address();
 
                     if (!dt_chunk->commit(add_offset, data_size_align)) {

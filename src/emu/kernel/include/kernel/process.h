@@ -101,6 +101,26 @@ namespace eka2l1::kernel {
     using process_uid_type_change_callback = std::function<void(void*, const process_uid_type &)>;
     using process_uid_type_change_callback_elem = std::pair<void*, process_uid_type_change_callback>;
 
+    /**
+     * This ROM BSS manager works on the assumption that:
+     * 
+     * 1. A ROM BSS never crosses to another page table's different chunk.
+     * 2. The BSS address is always aligned to page bits.
+     */
+    struct process_bss_man {
+    private:
+        kernel_system *kern_;
+        process_ptr parent_;
+
+        std::map<address, chunk_ptr> bss_sects_;
+
+    public:
+        explicit process_bss_man(kernel_system *kern, process_ptr parent);
+        ~process_bss_man();
+
+        chunk_ptr make_bss_section_accordingly(const address addr);
+    };
+
     class process : public kernel_obj {
         friend class eka2l1::kernel_system;
         friend class thread_scheduler;
@@ -149,9 +169,9 @@ namespace eka2l1::kernel {
         common::roundabout codeseg_list;
 
         std::vector<kernel::process*> child_processes_;
+        std::unique_ptr<process_bss_man> bss_man_;
 
         kernel::process *parent_process_;
-        kernel::chunk *rom_bss_chunk_;
 
         std::uint32_t time_delay_;
         bool setting_inheritence_;
@@ -273,10 +293,7 @@ namespace eka2l1::kernel {
             return flags;
         }
 
-        chunk_ptr get_rom_bss_chunk() const {
-            return rom_bss_chunk_;
-        }
-
+        chunk_ptr get_rom_bss_chunk(const address addr);
         std::uint32_t get_entry_point_address();
 
         process_priority get_priority() const {

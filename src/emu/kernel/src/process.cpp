@@ -143,6 +143,47 @@ namespace eka2l1::kernel {
         return 0;
     }
 
+    process_bss_man::process_bss_man(kernel_system *kern, process_ptr parent)
+        : kern_(kern)
+        , parent_(parent) {
+
+    }
+
+    process_bss_man::~process_bss_man() {
+        for (auto &[addr, chunk]: bss_sects_) {
+            kern_->destroy(chunk);
+        }
+    }
+
+    chunk_ptr process_bss_man::make_bss_section_accordingly(const address addr) {
+        // This is equals to what a page table can hold information on. On old model, a chunk is allocated with this granularity
+        static constexpr std::uint32_t BSS_SECT_SIZE = 0x100000;
+
+        memory_system *mem = kern_->get_memory_system();
+        std::size_t total_size = 0;
+
+        const address base = get_rom_bss_addr(mem->get_model_type(), kern_->is_eka1(), total_size);
+        if ((addr < base) || (addr >= base + total_size)) {
+            LOG_ERROR(KERNEL, "ROM BSS chunk has invalid address! (value=0x{:X})", addr);
+            return nullptr;
+        }
+
+        // Round it up to a BSS section size
+        const address new_addr = (addr & ~(BSS_SECT_SIZE - 1));
+        auto bss_sect_res = bss_sects_.find(new_addr);
+
+        if (bss_sect_res != bss_sects_.end()) {
+            return bss_sect_res->second;
+        }
+
+        chunk_ptr rom_bss_chunk = kern_->create<kernel::chunk>(mem, parent_, fmt::format("RomBssChunkSect{:X}For{}", new_addr, parent_->unique_id()),
+            0, 0, BSS_SECT_SIZE, prot_read_write, kernel::chunk_type::disconnected, kernel::chunk_access::dll_static_data,
+            kernel::chunk_attrib::none, 0x00, false, new_addr);
+
+        bss_sects_.emplace(new_addr, rom_bss_chunk);
+        return rom_bss_chunk;
+    }
+
     static bool is_process_uid_type_change_callback_elem_free(const process_uid_type_change_callback_elem &elem) {
         return !elem.first;
     }
@@ -166,6 +207,7 @@ namespace eka2l1::kernel {
         , flags(0)
         , priority(kernel::process_priority::foreground)
         , exit_type(kernel::entity_exit_type::pending)
+        , bss_man_(nullptr)
         , parent_process_(nullptr)
         , time_delay_(0) 
         , setting_inheritence_(true)
@@ -181,13 +223,6 @@ namespace eka2l1::kernel {
         // Create mem model implementation
         mm_impl_ = mem::make_new_mem_model_process(mem->get_control(), mem->get_model_type());
         generation_ = refresh_generation();
-
-        std::size_t total_size = 0;
-        const address base = get_rom_bss_addr(mem->get_model_type(), kern->is_eka1(), total_size);
-        
-        rom_bss_chunk_ = kern->create<kernel::chunk>(mem, this, fmt::format("RomBssChunkProcess{}", uid),
-            0, 0, total_size, prot_read_write, kernel::chunk_type::disconnected, kernel::chunk_access::dll_static_data,
-            kernel::chunk_attrib::none, 0x00, false, base);
     }
 
     void process::destroy() {
@@ -208,9 +243,7 @@ namespace eka2l1::kernel {
             kern->destroy(dll_static_chunk);
         }
 
-        if (rom_bss_chunk_) {
-            kern->destroy(rom_bss_chunk_);
-        }
+        bss_man_.reset();
     }
 
     std::string process::name() const {
@@ -263,6 +296,14 @@ namespace eka2l1::kernel {
         for (auto &uid_change_callback: uid_change_callbacks) {
             uid_change_callback.second(uid_change_callback.first, uids);
         }
+    }
+
+    chunk_ptr process::get_rom_bss_chunk(const address addr) {
+        if (!bss_man_) {
+            bss_man_ = std::make_unique<process_bss_man>(kern, this);
+        }
+
+        return bss_man_->make_bss_section_accordingly(addr);
     }
 
     chunk_ptr process::get_dll_static_chunk(const address target_addr, const std::uint32_t size, std::uint32_t *offset) {
