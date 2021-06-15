@@ -110,6 +110,11 @@ namespace eka2l1::loader {
         stream->read(reinterpret_cast<void *>(&section.size), 4);
         stream->read(reinterpret_cast<void *>(&section.num_relocs), 4);
 
+        if (section.size <= 8) {
+            section.num_relocs = 0;
+            return;
+        }
+
         for (uint32_t i = 0; i < section.num_relocs; i++) {
             e32_reloc_entry reloc_entry;
 
