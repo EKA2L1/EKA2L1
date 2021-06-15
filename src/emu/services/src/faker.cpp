@@ -173,6 +173,7 @@ namespace eka2l1::service {
         }
 
         seg->attach(process_);
+        seg->unmark();
 
         std::uint8_t *trampoline = nullptr;
 

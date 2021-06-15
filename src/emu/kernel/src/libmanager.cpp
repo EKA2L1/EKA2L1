@@ -484,6 +484,8 @@ namespace eka2l1::hle {
             }
 
             patch_seg->attach(nullptr, true);
+            patch_seg->unmark();
+
             patches_[i].patch_ = patch_seg;
         }
 
@@ -801,36 +803,31 @@ namespace eka2l1::hle {
     }
 
     codeseg_ptr lib_manager::load(const std::u16string &name) {
-        auto load_depend_on_drive = [&](drive_number drv, const std::u16string &lib_path) -> codeseg_ptr {
-            auto entry = io_->get_drive_entry(drv);
+        auto load_depend_on_drive = [&](const std::u16string &lib_path) -> codeseg_ptr {
+            symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE | additional_mode_);
+            if (!f) {
+                LOG_ERROR(KERNEL, "Can't open {}", common::ucs2_to_utf8(lib_path));
+                return nullptr;
+            }
 
-            if (entry) {
-                symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE | additional_mode_);
-                if (!f) {
-                    LOG_ERROR(KERNEL, "Can't open {}", common::ucs2_to_utf8(lib_path));
+            eka2l1::ro_file_stream image_data_stream(f.get());
+
+            if (f->is_in_rom()) {
+                auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version());
+                if (!romimg) {
                     return nullptr;
                 }
 
-                eka2l1::ro_file_stream image_data_stream(f.get());
-
-                if (f->is_in_rom()) {
-                    auto romimg = loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&image_data_stream), mem_, kern_->get_epoc_version());
-                    if (!romimg) {
-                        return nullptr;
-                    }
-
-                    return load_as_romimg(*romimg, lib_path);
-                } else {
-                    auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
-                    if (!e32img) {
-                        return nullptr;
-                    }
-
-                    return load_as_e32img(*e32img, lib_path);
+                return load_as_romimg(*romimg, lib_path);
+            } else {
+                auto e32img = loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&image_data_stream));
+                if (!e32img) {
+                    return nullptr;
                 }
+
+                return load_as_e32img(*e32img, lib_path);
             }
 
-            LOG_TRACE(KERNEL, "No drive entry!!!!! What");
             return nullptr;
         };
 
@@ -867,7 +864,7 @@ namespace eka2l1::hle {
                     lib_path += fname;
 
                     if (io_->exist(lib_path)) {
-                        auto result = load_depend_on_drive(drv, lib_path);
+                        auto result = load_depend_on_drive(lib_path);
                         if (result != nullptr) {
                             result->set_full_path(lib_path);
                             return result;
@@ -882,7 +879,6 @@ namespace eka2l1::hle {
             return nullptr;
         }
 
-        drive_number drv = char16_to_drive(lib_path[0]);
         if (!io_->exist(lib_path)) {
             return nullptr;
         }
@@ -890,7 +886,7 @@ namespace eka2l1::hle {
         // Add the codeseg that trying to be loaded path to search path, for dependencies search.
         search_paths.insert(search_paths.begin(), eka2l1::file_directory(lib_path, true));
 
-        if (auto cs = load_depend_on_drive(drv, lib_path)) {
+        if (auto cs = load_depend_on_drive(lib_path)) {
             cs->set_full_path(lib_path);
             search_paths.erase(search_paths.begin());
             return cs;

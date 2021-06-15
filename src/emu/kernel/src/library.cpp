@@ -47,6 +47,8 @@ namespace eka2l1 {
                 }
 
                 codeseg->attach(pr);
+                codeseg->unmark();
+
                 codeseg->attached_report(pr);
             }
 
@@ -58,8 +60,9 @@ namespace eka2l1 {
                 std::vector<std::uint32_t> call_list;
 
                 codeseg->attach(pr);
-                codeseg->queries_call_list(pr, call_list);
+                codeseg->unmark();
 
+                codeseg->queries_call_list(pr, call_list);
                 codeseg->unmark();
 
                 reffed = true;
@@ -73,6 +76,7 @@ namespace eka2l1 {
         void library::destroy() {
             if (reffed) {
                 codeseg->deref(kern->crr_thread());
+                codeseg->unmark();
             }
         }
 

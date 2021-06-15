@@ -193,6 +193,7 @@ namespace eka2l1::kernel {
         bool detaching_report(kernel::process *foe);
 
         codeseg_state state_with(kernel::process *foe);
+
         void deref(kernel::thread *foe_thread);
 
         /*! \brief Add new dependency.

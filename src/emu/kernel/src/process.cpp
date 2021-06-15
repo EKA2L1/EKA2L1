@@ -87,6 +87,8 @@ namespace eka2l1::kernel {
 
         // Attach this codeseg to our process
         codeseg->attach(this);
+        codeseg->unmark();
+
         codeseg->attached_report(this);
     
         // Get security info

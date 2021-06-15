@@ -105,8 +105,6 @@ namespace eka2l1::kernel {
                     for (auto &dep: dependencies) {
                         dep.dep_->attach(new_foe, forcefully);
                     }
-
-                    mark = false;
                 }
 
                 return false;
@@ -425,8 +423,6 @@ namespace eka2l1::kernel {
                     dependencies[i].dep_->deref(foe_thr);
                 }
             }
-
-            mark = false;
         }
     }
 

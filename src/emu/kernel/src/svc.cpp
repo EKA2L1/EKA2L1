@@ -1890,7 +1890,7 @@ namespace eka2l1::epoc {
         std::memcpy(episode_choose_your_story, entries.data(), num_to_copy * sizeof(address));
 
         if (kern->is_eka1()) {
-            lib->get_codeseg()->attached_report(pr);
+            lib->attached(pr);
         }
 
         return epoc::error_none;
