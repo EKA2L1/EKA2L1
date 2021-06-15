@@ -930,9 +930,11 @@ namespace eka2l1 {
 
             kernel_system *kern = requester->get_kernel_object_owner();
 
-            sts.get(requester->owning_process())->set(err_code, kern->is_eka1());
-            sts = 0;
+            epoc::request_status *sts_real = sts.get(requester->owning_process());
+            if (sts_real)
+                sts_real->set(err_code, kern->is_eka1());
 
+            sts = 0;
             requester->signal_request();
         }
 
