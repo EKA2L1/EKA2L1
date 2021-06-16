@@ -102,6 +102,7 @@ namespace eka2l1::epoc {
         mmf_dev_max_volume = 7,
         mmf_dev_volume = 8,
         mmf_dev_set_volume = 9,
+        mmf_dev_play_balance = 13,
         mmf_dev_set_play_balance = 14,
         // Two of this are guessed from RE and from error I get stubbing
         mmf_dev_buffer_to_be_filled = 19,

@@ -239,6 +239,22 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void mmf_dev_server_session::play_balance(service::ipc_context *ctx) {
+        std::optional<epoc::mmf_dev_sound_proxy_settings> settings
+            = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
+
+        if (!settings) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        settings->left_percentage_ = left_balance_;
+        settings->right_percentage_ = right_balance_;
+
+        ctx->write_data_to_descriptor_argument<epoc::mmf_dev_sound_proxy_settings>(2, settings.value());            
+        ctx->complete(epoc::error_none);
+    }
+
     void mmf_dev_server_session::set_play_balance(service::ipc_context *ctx) {
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -671,6 +687,10 @@ namespace eka2l1 {
 
             case epoc::mmf_dev_cancel_buffer_to_be_filled:
                 cancel_buffer_to_be_filled(ctx);
+                break;
+
+            case epoc::mmf_dev_play_balance:
+                play_balance(ctx);
                 break;
 
             case epoc::mmf_dev_set_play_balance:

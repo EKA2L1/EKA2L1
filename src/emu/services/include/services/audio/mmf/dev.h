@@ -87,6 +87,7 @@ namespace eka2l1 {
         void volume(service::ipc_context *ctx);
         void max_volume(service::ipc_context *ctx);
         void set_play_balance(service::ipc_context *ctx);
+        void play_balance(service::ipc_context *ctx);
         void set_priority_settings(service::ipc_context *ctx);
         void capabilities(service::ipc_context *ctx);
         void get_supported_input_data_types(service::ipc_context *ctx);
