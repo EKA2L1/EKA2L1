@@ -82,7 +82,8 @@ namespace eka2l1::epoc {
             flags_enable_pbe = 1 << 10,
             flags_in_redraw = 1 << 11,
             flag_focus_receiveable = 1 << 12,
-            flag_winmode_fixed = 1 << 13
+            flag_winmode_fixed = 1 << 13,
+            flag_visiblity_event_report = 1 << 14
         };
     
         std::uint32_t flags;
@@ -121,6 +122,7 @@ namespace eka2l1::epoc {
 
         void set_fade(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void window_group_id(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 
         bool execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
 

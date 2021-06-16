@@ -288,6 +288,11 @@ namespace eka2l1::epoc {
         }
     }
 
+    void window::enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        flags |= flag_visiblity_event_report;
+        ctx.complete(epoc::error_none);
+    }
+
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
         kernel_system *kern = client->get_ws().get_kernel_system();
@@ -382,6 +387,10 @@ namespace eka2l1::epoc {
  
         case EWsWinOpWindowGroupId:
             window_group_id(ctx, cmd);
+            return true;
+
+        case EWsWinOpEnableVisibilityChangeEvents:
+            enable_visiblity_change_events(ctx, cmd);
             return true;    
 
         default: {
