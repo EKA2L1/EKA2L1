@@ -22,6 +22,7 @@
 
 #include <services/ui/icon/icon.h>
 #include <services/ui/skin/server.h>
+#include <services/accessory/accessory.h>
 #include <services/alarm/alarm.h>
 #include <services/applist/applist.h>
 #include <services/audio/keysound/keysound.h>
@@ -222,6 +223,7 @@ namespace eka2l1 {
 
             CREATE_SERVER(sys, comm_server);
             CREATE_SERVER(sys, btman_server);
+            CREATE_SERVER(sys, accessory_server);
 
             // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
