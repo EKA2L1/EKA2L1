@@ -278,6 +278,11 @@ namespace eka2l1 {
             break;
         }
 
+        case sisregistry_dependent_packages: {
+            request_dependent_packages(ctx);
+            break;
+        }
+
         case sisregistry_files: {
             request_files(ctx);
             break;
@@ -325,6 +330,11 @@ namespace eka2l1 {
 
         case sisregistry_embedded_packages: {
             request_embedded_packages(ctx);
+            break;
+        }
+
+        case sisregistry_install_type_op: {
+            install_type(ctx);
             break;
         }
 
@@ -1009,6 +1019,53 @@ namespace eka2l1 {
         populate_raw_packages(seri, obj->embedded_packages);
 
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_dependent_packages(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+        
+        manager::packages *mngr = package_manager(ctx);
+        const std::size_t max_buffer_size = ctx->get_argument_max_data_size(0);
+
+        std::vector<package::object *> results;
+
+        if ((obj->install_type != package::install_type_augmentations) && (obj->install_type != package::install_type_preinstalled_patch)) {
+            results = mngr->dependents(obj->uid);
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_packages(seri, results);
+
+        if (seri.size() > max_buffer_size) {
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, static_cast<std::uint32_t>(seri.size()));
+            ctx->complete(epoc::error_overflow);
+
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_packages(seri, results);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::install_type(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        std::int32_t itype = obj->install_type;
+
+        ctx->write_data_to_descriptor_argument<std::int32_t>(0, itype);
         ctx->complete(epoc::error_none);
     }
 }

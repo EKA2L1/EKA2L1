@@ -226,6 +226,19 @@ namespace eka2l1 {
             return results;
         }
 
+        std::vector<package::object *> packages::dependents(const uid app_uid) {
+            std::vector<package::object *> results;
+
+            auto ite_range = objects_.equal_range(app_uid);
+            for (auto ite = ite_range.first; ite != ite_range.second; ite++) {
+                if (ite->second.index != 0) {
+                    results.push_back(&(ite->second));
+                }
+            }
+
+            return results;
+        }
+
         std::vector<uid> packages::installed_uids() const {
             std::vector<uid> uniques;
             

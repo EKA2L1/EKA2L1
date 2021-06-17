@@ -73,6 +73,8 @@ namespace eka2l1 {
         void request_package_name(eka2l1::service::ipc_context *ctx);
         void request_vendor_localized_name(eka2l1::service::ipc_context *ctx);
         void request_embedded_packages(eka2l1::service::ipc_context *ctx);
+        void request_dependent_packages(eka2l1::service::ipc_context *ctx);
+        void install_type(eka2l1::service::ipc_context *ctx);
         void is_non_removable(eka2l1::service::ipc_context *ctx);
         void is_preinstalled(eka2l1::service::ipc_context *ctx);
         void get_package(eka2l1::service::ipc_context *ctx);

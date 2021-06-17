@@ -33,6 +33,7 @@ namespace eka2l1 {
         sisregistry_trust_timestamp = 0x16,
         sisregistry_trust_status_op = 0x17,
         sisregistry_sid_to_filename = 0x19,
+        sisregistry_shutdown_all_apps = 0x1A,
         sisregistry_package_exists_in_rom = 0x1D,
         sisregistry_stub_file_entries = 0x1E,
         sisregistry_separator_minimum_read_user_data = 0x20,
