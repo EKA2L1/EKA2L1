@@ -46,7 +46,7 @@ namespace eka2l1::package {
     void hash_container::do_state(common::chunkyseri &seri) {
         algorithm = 1;
         seri.absorb(algorithm);
-        epoc::absorb_des_string(data, seri, true);
+        epoc::absorb_des_string(data, seri, false);
     }
 
     void trust_status::do_state(common::chunkyseri &seri) {
