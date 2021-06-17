@@ -243,6 +243,13 @@ namespace eka2l1::epoc {
             return 0;
         }
 
+        int backlight_on(int *a1, int *a2, const std::uint16_t device_num) {
+            LOG_TRACE(SYSTEM, "Backlight on stubbed to false");
+            *a1 = false;
+
+            return 0;
+        }
+
         explicit display_hal(system *sys)
             : hal(sys)
             , winserv_(nullptr) {
@@ -251,6 +258,7 @@ namespace eka2l1::epoc {
             REGISTER_HAL_FUNC(display_hal_specified_mode_info, display_hal, specified_mode_info);
             REGISTER_HAL_FUNC(display_hal_colors, display_hal, color_count);
             REGISTER_HAL_FUNC(display_hal_mode, display_hal, mode);
+            REGISTER_HAL_FUNC(display_hal_backlight_on, display_hal, backlight_on);
 
             winserv_ = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
                 eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
@@ -293,11 +301,42 @@ namespace eka2l1::epoc {
         }
     };
 
+    struct keyboard_hal: public hal {
+        int get_info(int *a1, int *a2, const std::uint16_t device_num) {
+            epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
+            epoc::keyboard_info_v01 *info_ptr = reinterpret_cast<epoc::keyboard_info_v01 *>(
+                package->get_pointer(sys->get_kernel_system()->crr_process()));
+
+            if (!info_ptr) {
+                return epoc::error_argument;
+            }
+
+            LOG_TRACE(SYSTEM, "GetKeyboardInfo stubbed with keypad");
+
+            // Middle, left right softkeys, 4 arrow keys, one call button and end call button
+            // 9 number keys. That should be 18
+            static constexpr const std::uint32_t MAX_KEYPAD_APP_KEY_NUM = 4;
+            static constexpr const std::uint32_t MAX_KEYPAD_KEY_NUM = 18;
+
+            info_ptr->app_keys_ = MAX_KEYPAD_APP_KEY_NUM;
+            info_ptr->device_keys_ = MAX_KEYPAD_KEY_NUM;
+            info_ptr->type_ = keyboard_type_numpad;
+
+            return 0;
+        }
+
+        explicit keyboard_hal(system *sys)
+            : hal(sys) {
+            REGISTER_HAL_FUNC(keyboard_hal_get_info, keyboard_hal, get_info);
+        }
+    };
+
     void init_hal(eka2l1::system *sys) {
         REGISTER_HAL_D(sys, hal_category_kernel, kern_hal);
         REGISTER_HAL(sys, hal_category_variant, variant_hal);
         REGISTER_HAL(sys, hal_category_display, display_hal);
         REGISTER_HAL(sys, hal_category_digister, digitiser_hal);
+        REGISTER_HAL(sys, hal_category_keyboard, keyboard_hal);
     }
 
     int do_hal(eka2l1::system *sys, uint32_t cage, uint32_t func, int *a1, int *a2) {

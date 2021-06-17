@@ -132,6 +132,10 @@ namespace eka2l1::epoc {
         digitiser_hal_orientation = 11
     };
 
+    enum keyboard_hal_function {
+        keyboard_hal_get_info = 2
+    };
+
     struct memory_info_v1 {
         std::uint32_t total_ram_in_bytes_;
         std::uint32_t total_rom_in_bytes_;
@@ -187,6 +191,19 @@ namespace eka2l1::epoc {
         eka2l1::vec2 offset_to_first_usable_;
         eka2l1::vec2 size_usable_;
     };
+    
+    enum keyboard_type : std::int32_t {
+        keyboard_type_numpad = 0,
+        keyboard_type_full = 1
+    };
+
+#pragma pack(push, 1)
+    struct keyboard_info_v01 {
+        std::int32_t device_keys_;
+        std::int32_t app_keys_;
+        keyboard_type type_;
+    };
+#pragma pack(pop)
 
     enum xy_input_type: std::uint32_t {
         xy_input_type_none,
@@ -217,7 +234,8 @@ namespace eka2l1::epoc {
         hal_category_kernel = 0,
         hal_category_variant = 1,
         hal_category_display = 4,
-        hal_category_digister = 5
+        hal_category_digister = 5,
+        hal_category_keyboard = 9
     };
 
     /*! \brief A HAL function. Each function has minimum of 0 arg and maximum of 2 args. */
