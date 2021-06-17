@@ -283,8 +283,11 @@ namespace eka2l1::epoc {
             }
 
             if (unicode) {
+                raw.resize(raw.size() * 2);
+
+                // Sometimes compression may be inefficient. Lol. So make dest size a bit larger
                 int source_size = static_cast<int>(str.length() * sizeof(T));
-                int dest_size = source_size;
+                int dest_size = static_cast<int>(raw.size());
 
                 // Compress the data
                 common::unicode_compressor compressor;
@@ -326,7 +329,7 @@ namespace eka2l1::epoc {
                 str.resize(len);
 
                 int dest_size = static_cast<int>(str.length() * sizeof(T));
-                int source_size = dest_size;
+                int source_size = common::min<int>(dest_size * 2, static_cast<int>(seri.left()));
 
                 common::unicode_expander expander;
                 expander.expand(seri.current(), source_size, reinterpret_cast<std::uint8_t*>(str.data()), dest_size);
