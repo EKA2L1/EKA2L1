@@ -433,8 +433,13 @@ namespace eka2l1 {
             return;
         }
 
+        LOG_TRACE(SERVICE_FBS, "Basic information for Typeface support is provided, excluding minimum height and number of heights.");
+
         support->info_.name = info->face_attrib.name.to_std_string(nullptr);
-        support->is_scalable_ = false;
+        support->max_height_in_twips_ = info->metrics.max_height * twips_mul;
+        support->num_heights_ = 1;
+        support->min_height_in_twips_ = 0;
+        support->is_scalable_ = info->adapter->vectorizable();
 
         ctx->write_data_to_descriptor_argument(1, support);
         ctx->complete(epoc::error_none);
