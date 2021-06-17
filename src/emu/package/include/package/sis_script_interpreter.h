@@ -68,7 +68,6 @@ namespace eka2l1 {
 
             io_system *io;
             manager::packages *mngr;
-            manager::device *current_dvc;
 
             bool skip_next_file{ false };
 

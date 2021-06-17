@@ -484,6 +484,12 @@ namespace eka2l1 {
         }
 
         void packages::traverse_tree_and_add_packages(loader::sis_registry_tree &tree) {
+            // TODO: We should ask for user permission first!
+            if (installed(tree.package_info.uid)) {
+                package::object *obj = package(tree.package_info.uid);
+                uninstall_package(*obj);
+            }
+
             add_package(tree.package_info, &tree.controller_binary);
             for (std::size_t i = 0; i < tree.embeds.size(); i++) {
                 traverse_tree_and_add_packages(tree.embeds[i]);

@@ -84,6 +84,10 @@ namespace eka2l1::common {
             return buf - org;
         }
 
+        std::size_t left() {
+            return end - buf;
+        }
+
         bool eos() {
             return buf >= end;
         }
