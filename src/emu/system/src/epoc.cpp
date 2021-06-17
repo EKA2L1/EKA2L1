@@ -199,6 +199,33 @@ namespace eka2l1 {
                 return 0;
             };
 
+            packages_->choose_lang = [&](const int *langs, const int count) {
+                device *dvc = get_device_manager()->get_current();
+                if (!dvc) {
+                    LOG_WARN(SYSTEM, "No device is currently available, language choosen for package is: {}", num_to_lang(langs[0]));
+                    return langs[0];
+                }
+
+                const int current_lang = get_config()->language;
+
+                // First up, pick the device's current language
+                auto lang_ite = std::find(langs, langs + count, current_lang);
+                if (lang_ite != langs + count) {
+                    LOG_INFO(SYSTEM, "Picked language for package: {}", num_to_lang(current_lang));
+                    return current_lang;
+                }
+
+                // Pick the device's default language code
+                lang_ite = std::find(langs, langs + count, dvc->default_language_code);
+                if (lang_ite != langs + count) {
+                    LOG_INFO(SYSTEM, "Picked language for package: {}", num_to_lang(dvc->default_language_code));
+                    return dvc->default_language_code;
+                }
+
+                LOG_INFO(SYSTEM, "Picked language for package: {}", num_to_lang(langs[0]));
+                return langs[0];
+            };
+
             if (!stub_->is_server_enabled() && conf_->enable_gdbstub) {
                 stub_->init(kern_.get(), io_.get());
                 stub_->toggle_server(true);
