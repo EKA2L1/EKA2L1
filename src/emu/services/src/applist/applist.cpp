@@ -772,6 +772,8 @@ namespace eka2l1 {
             const std::u16string ext = eka2l1::path_extension(path.value());
             if (!ext.empty()) {
                 app.data_type.data_type.assign(nullptr, common::uppercase_string(common::ucs2_to_utf8(ext.substr(1))));
+            } else {
+                app.data_type.data_type.assign(nullptr, "UNK");
             }
         } else {
             LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype left empty!");
