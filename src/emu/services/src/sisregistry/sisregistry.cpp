@@ -30,6 +30,8 @@
 #include <common/chunkyseri.h>
 #include <common/time.h>
 
+#include <common/cvt.h>
+
 namespace eka2l1 {
     static void populate_all_packages(common::chunkyseri &seri, manager::packages *mngr) {
         std::uint32_t package_count = static_cast<std::uint32_t>(mngr->package_count());
@@ -69,6 +71,19 @@ namespace eka2l1 {
 
         for (size_t i = 0; i < property_count; i++) {
             pkgs[i].do_state(seri);
+        }
+    }
+
+    static void populate_dependencies(common::chunkyseri &seri, std::vector<package::dependency> &deps) {
+        std::uint32_t property_count = static_cast<std::uint32_t>(deps.size());
+        seri.absorb(property_count);
+
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            deps.resize(property_count);
+        }
+
+        for (size_t i = 0; i < property_count; i++) {
+            deps[i].do_state(seri);
         }
     }
 
@@ -184,6 +199,11 @@ namespace eka2l1 {
         
         case sisregistry_add_entry: {
             add_entry(ctx);
+            break;
+        }
+
+        case sisregistry_delete_entry: {
+            delete_entry(ctx);
             break;
         }
 
@@ -335,6 +355,16 @@ namespace eka2l1 {
 
         case sisregistry_install_type_op: {
             install_type(ctx);
+            break;
+        }
+
+        case sisregistry_dependencies: {
+            request_dependencies(ctx);
+            break;
+        }
+
+        case sisregistry_deletable_preinstalled: {
+            is_deletable_preinstalled(ctx);
             break;
         }
 
@@ -509,6 +539,39 @@ namespace eka2l1 {
         if (!mngr->add_package(obj, &controller_info)) {
             ctx->complete(epoc::error_general);
             return;
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_session::delete_entry(eka2l1::service::ipc_context *ctx) {
+        std::optional<manager::uid> pkg_uid = ctx->get_argument_data_from_descriptor<manager::uid>(0);
+        std::optional<std::u16string> package_name = ctx->get_argument_value<std::u16string>(1);
+        std::optional<std::u16string> vendor_name = ctx->get_argument_value<std::u16string>(2);
+
+        if (!pkg_uid.has_value() || !package_name.has_value() || !vendor_name.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        manager::packages *mngr = ctx->sys->get_packages();
+        if (!mngr) {
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        package::object *obj = mngr->package(pkg_uid.value(), package_name.value(), vendor_name.value());
+        if (!obj) {
+            LOG_ERROR(SERVICE_SISREGISTRY, "Unable to find package with UID=0x{:X}, package name={}, vendor name={}", pkg_uid.value(), common::ucs2_to_utf8(package_name.value()),
+                common::ucs2_to_utf8(vendor_name.value()));
+
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        if (!mngr->remove_registeration(*obj)) {
+            LOG_ERROR(SERVICE_SISREGISTRY, "Failed to remove registeration of package with UID=0x{:X}, package name={}, vendor name={}", pkg_uid.value(), common::ucs2_to_utf8(package_name.value()),
+                common::ucs2_to_utf8(vendor_name.value()));
         }
 
         ctx->complete(epoc::error_none);
@@ -1066,6 +1129,43 @@ namespace eka2l1 {
         std::int32_t itype = obj->install_type;
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(0, itype);
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::request_dependencies(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
+        populate_dependencies(seri, obj->dependencies);
+
+        if (seri.size() > ctx->get_argument_max_data_size(0)) {
+            std::uint32_t expected_size = static_cast<std::uint32_t>(seri.size());
+
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, expected_size);
+            ctx->complete(epoc::error_overflow);
+            return;
+        }
+
+        std::vector<char> buf(seri.size());
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(&buf[0]), buf.size(), common::SERI_MODE_WRITE);
+        populate_dependencies(seri, obj->dependencies);
+
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&buf[0]), static_cast<std::uint32_t>(buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sisregistry_client_subsession::is_deletable_preinstalled(eka2l1::service::ipc_context *ctx) {
+        package::object *obj = package_object(ctx);
+        if (!obj) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(0, obj->deletable_preinstalled);
         ctx->complete(epoc::error_none);
     }
 }

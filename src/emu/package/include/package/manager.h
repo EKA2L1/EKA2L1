@@ -96,6 +96,7 @@ namespace eka2l1 {
 
             // No thread safe
             package::object *package(const uid app_uid, const std::int32_t index = 0);
+            package::object *package(const uid app_uid, const std::u16string package_name, const std::u16string vendor_name);
             std::vector<package::object *> augmentations(const uid app_uid);
             std::vector<package::object *> dependents(const uid app_uid);
             std::vector<uid> installed_uids() const;

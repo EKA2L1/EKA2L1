@@ -74,9 +74,11 @@ namespace eka2l1 {
         void request_vendor_localized_name(eka2l1::service::ipc_context *ctx);
         void request_embedded_packages(eka2l1::service::ipc_context *ctx);
         void request_dependent_packages(eka2l1::service::ipc_context *ctx);
+        void request_dependencies(eka2l1::service::ipc_context *ctx);
         void install_type(eka2l1::service::ipc_context *ctx);
         void is_non_removable(eka2l1::service::ipc_context *ctx);
         void is_preinstalled(eka2l1::service::ipc_context *ctx);
+        void is_deletable_preinstalled(eka2l1::service::ipc_context *ctx);
         void get_package(eka2l1::service::ipc_context *ctx);
         void get_trust_timestamp(eka2l1::service::ipc_context *ctx);
         void get_trust_status(eka2l1::service::ipc_context *ctx);
@@ -102,6 +104,7 @@ namespace eka2l1 {
         void installed_packages(eka2l1::service::ipc_context *ctx);
         void is_installed_uid(eka2l1::service::ipc_context *ctx);
         void add_entry(eka2l1::service::ipc_context *ctx);
+        void delete_entry(eka2l1::service::ipc_context *ctx);
         void package_exists_in_rom(eka2l1::service::ipc_context *ctx);
         void sid_to_package(eka2l1::service::ipc_context *ctx);
         void get_entry(eka2l1::service::ipc_context *ctx);

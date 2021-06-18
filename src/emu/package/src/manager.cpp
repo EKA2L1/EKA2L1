@@ -213,6 +213,17 @@ namespace eka2l1 {
             return nullptr;
         }
 
+        package::object *packages::package(const uid app_uid, const std::u16string package_name, const std::u16string vendor_name) {
+            auto ite_range = objects_.equal_range(app_uid);
+            for (auto ite = ite_range.first; ite != ite_range.second; ite++) {
+                if ((package_name.empty() || (package_name == ite->second.package_name)) && (vendor_name.empty() || (vendor_name == ite->second.vendor_name))) {
+                    return &(ite->second);
+                }
+            }
+
+            return nullptr;
+        }
+
         std::vector<package::object *> packages::augmentations(const uid app_uid) {
             std::vector<package::object *> results;
 
