@@ -1767,6 +1767,29 @@ namespace eka2l1::epoc {
             return ret_handle;
         }
 
+        LOG_ERROR(KERNEL, "Unable to instantiate handle for object opening with owner={}", owner);
+        return epoc::error_general;
+    }
+
+    BRIDGE_FUNC(std::int32_t, handle_open_object_by_find_handle, std::int32_t owner, epoc::find_handle *finder) {
+        if (!finder) {
+            LOG_ERROR(KERNEL, "Find handle object pointer is null!");
+            return epoc::error_argument;
+        }
+
+        kernel_obj_ptr obj = kern->get_object_from_find_handle(finder->handle);
+        if (!obj) {
+            LOG_ERROR(KERNEL, "Can't open object with find handle: 0x{:X}", finder->handle);
+            return epoc::error_not_found;
+        }
+
+        kernel::handle ret_handle = kern->mirror(obj, static_cast<eka2l1::kernel::owner_type>(owner));
+
+        if (ret_handle != kernel::INVALID_HANDLE) {
+            return ret_handle;
+        }
+
+        LOG_ERROR(KERNEL, "Unable to instantiate handle for object opening with owner={}", owner);
         return epoc::error_general;
     }
 
@@ -5459,6 +5482,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x63, process_type),
         BRIDGE_REGISTER(0x65, chunk_top),
         BRIDGE_REGISTER(0x67, thread_create),
+        BRIDGE_REGISTER(0x68, handle_open_object_by_find_handle),
         BRIDGE_REGISTER(0x69, handle_close),
         BRIDGE_REGISTER(0x6A, chunk_new),
         BRIDGE_REGISTER(0x6B, chunk_adjust),
