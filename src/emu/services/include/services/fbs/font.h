@@ -72,7 +72,8 @@ namespace eka2l1::epoc {
             bold = 0x1,
             italic = 0x2,
             serif = 0x4,
-            mono_width = 0x8
+            mono_width = 0x8,
+            symbol = 0x10
         };
 
         bufc_static<char16_t, 32> name;
@@ -107,6 +108,8 @@ namespace eka2l1::epoc {
         };
     };
 
+    static_assert(sizeof(typeface_info) == 56);
+
     struct typeface_support {
         typeface_info info_;
         std::uint32_t num_heights_;
@@ -114,6 +117,8 @@ namespace eka2l1::epoc {
         std::int32_t max_height_in_twips_;
         std::int32_t is_scalable_;
     };
+
+    static_assert(sizeof(typeface_support) == 72);
 
     struct font_style_base {
         enum {

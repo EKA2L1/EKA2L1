@@ -433,15 +433,28 @@ namespace eka2l1 {
             return;
         }
 
-        LOG_TRACE(SERVICE_FBS, "Basic information for Typeface support is provided, excluding minimum height and number of heights.");
+        LOG_TRACE(SERVICE_FBS, "Basic information for Typeface support is provided, excluding number of heights and flags");
 
         support->info_.name = info->face_attrib.name.to_std_string(nullptr);
+        support->info_.flags = 0;
         support->max_height_in_twips_ = info->metrics.max_height * twips_mul;
+        support->min_height_in_twips_ = info->face_attrib.min_size_in_pixels * twips_mul;
         support->num_heights_ = 1;
-        support->min_height_in_twips_ = 0;
         support->is_scalable_ = info->adapter->vectorizable();
 
-        ctx->write_data_to_descriptor_argument(1, support);
+        if (info->face_attrib.style & epoc::open_font_face_attrib::serif) {
+            support->info_.flags |= epoc::typeface_info::tf_serif;
+        }
+
+        if (!(info->face_attrib.style & epoc::open_font_face_attrib::mono_width)) {
+            support->info_.flags |= epoc::typeface_info::tf_propotional;
+        }
+
+        if (info->face_attrib.style & epoc::open_font_face_attrib::symbol) {
+            support->info_.flags |= epoc::typeface_info::tf_symbol;
+        }
+
+        ctx->write_data_to_descriptor_argument(1, support.value());
         ctx->complete(epoc::error_none);
     }
 

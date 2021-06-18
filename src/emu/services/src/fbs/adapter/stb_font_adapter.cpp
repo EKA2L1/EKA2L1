@@ -106,7 +106,20 @@ namespace eka2l1::epoc::adapter {
             face_attrib.style |= open_font_face_attrib::italic;
         }
 
-        // TODO: Serif and monotype flags
+        // TODO: Serif flags
+        int y0, y1 = 0;
+        int x0_M, x1_M, x0_i, x1_i = 0;
+
+        int res1 = stbtt_GetCodepointBox(info, 'M', &x0_M, &y0, &x1_M, &y1);
+        int res2 = stbtt_GetCodepointBox(info, 'i', &x0_i, &y0, &x1_i, &y1);
+
+        if (!res1 || !res2) {
+            face_attrib.style |= open_font_face_attrib::symbol;
+        } else {
+            if (abs(x1_i - x0_i) == abs(x1_M - x0_M)) {
+                face_attrib.style |= open_font_face_attrib::mono_width;
+            }
+        }
 
         const auto os2_off = stbtt__find_table(&data_[0], off, "OS/2");
 
@@ -123,6 +136,10 @@ namespace eka2l1::epoc::adapter {
             if (off + os2_off + 84 + 2 < data_.size()) {
                 face_attrib.min_size_in_pixels = *reinterpret_cast<const std::uint16_t *>(&data_[0] + off + os2_off + 84);
             }
+        }
+
+        if (face_attrib.min_size_in_pixels <= 0) {
+            face_attrib.min_size_in_pixels = 1;
         }
 
         return true;
@@ -190,7 +207,6 @@ namespace eka2l1::epoc::adapter {
         std::uint8_t *result;
         int x0, x1, y0, y1 = 0;
 
-        // Let's look for a glass slipper that fit you
         stbtt_GetFontBoundingBox(info, &x0, &y0, &x1, &y1);
         const float scale_factor = static_cast<float>(font_size) / static_cast<float>(y1 - y0);
 
@@ -226,11 +242,9 @@ namespace eka2l1::epoc::adapter {
 
         if (code == 0) {
             // Fallback character.
-            // I honestly love you! Let me tell me this to you...
             code = '?';
         }
 
-        // And I'm sure you love me! It's going to get through
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
 
@@ -242,7 +256,6 @@ namespace eka2l1::epoc::adapter {
         int left_side_bearing = 0;
         int x0, x1, y0, y1 = 0;
 
-        // Let's look for a glass slipper that fit you
         if (get_codepoint) {
             stbtt_GetCodepointHMetrics(info, static_cast<int>(code), &adv_width, &left_side_bearing);
             stbtt_GetCodepointBox(info, static_cast<int>(code), &x0, &y0, &x1, &y1);
