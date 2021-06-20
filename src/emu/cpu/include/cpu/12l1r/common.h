@@ -32,8 +32,8 @@ namespace eka2l1::arm::r12l1 {
 
     static constexpr std::uint32_t CPSR_THUMB_FLAG_MASK = 0x20;
     static constexpr std::uint32_t CPSR_BIT_POS = 5;
-    static constexpr std::uint32_t THRESHOLD_LEFT_TO_RESET_CACHE = 0x10000;
-    static constexpr std::uint32_t THRESHOLD_LEFT_TO_RESET_CACHE_FUZZ = 0x50000;
+    static constexpr std::uint32_t THRESHOLD_LEFT_TO_RESET_CACHE = 0x30000;
+    static constexpr std::uint32_t THRESHOLD_LEFT_TO_RESET_CACHE_FUZZ = 0x100000;
 
     std::uint32_t expand_arm_imm(std::uint8_t imm, const int rot);
     std::uint32_t expand_arm_shift(std::uint32_t imm, common::armgen::shift_type shift, const std::uint8_t imm5);
