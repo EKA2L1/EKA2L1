@@ -45,6 +45,15 @@
 #include <config/config.h>
 
 namespace eka2l1 {
+    static void populate_icon_sizes(common::chunkyseri &seri, apa_app_registry *reg) {
+        std::uint32_t size = reg->app_icons.size();
+        seri.absorb(size);
+        for (const auto &icon : reg->app_icons) {
+            seri.absorb(icon.bmp_->bitmap_->header_.size_pixels.x);
+            seri.absorb(icon.bmp_->bitmap_->header_.size_pixels.y);
+        }
+    }
+
     const std::string get_app_list_server_name_by_epocver(const epocver ver) {
         if (ver < epocver::epoc81a) {
             return "AppListServer";
@@ -646,6 +655,41 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void applist_server::get_app_icon_sizes(service::ipc_context &ctx) {
+        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
+
+        if (!app_uid) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        apa_app_registry *reg = get_registration(app_uid.value());
+
+        if (!reg) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        if (reg->app_icons.size() == 0) {
+            ctx.complete(epoc::error_not_supported);
+            return;
+        }
+
+        std::vector<std::uint8_t> buf;
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        populate_icon_sizes(seri, reg);
+
+        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+        populate_icon_sizes(seri, reg);
+
+        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
+            ctx.write_data_to_descriptor_argument(3, buf.data(), static_cast<std::uint32_t>(buf.size()));
+        } else {
+            ctx.write_data_to_descriptor_argument(2, buf.data(), static_cast<std::uint32_t>(buf.size()));
+        }
+        ctx.complete(epoc::error_none);
+    }
+
     void applist_server::launch_app(service::ipc_context &ctx) {
         std::optional<std::u16string> cmd_line = ctx.get_argument_value<std::u16string>(0);
         if (!cmd_line) {
@@ -805,6 +849,10 @@ namespace eka2l1 {
 
             case applist_request_oldarch_app_icon_by_uid_and_size:
                 server<applist_server>()->get_app_icon(*ctx);
+                break;
+
+            case applist_request_oldarch_get_app_icon_sizes:
+                server<applist_server>()->get_app_icon_sizes(*ctx);
                 break;
 
             default:
