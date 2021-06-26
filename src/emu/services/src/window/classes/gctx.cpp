@@ -979,7 +979,9 @@ namespace eka2l1::epoc {
             if (cli_ver.build <= WS_OLDARCH_VER) {
                 FIND_OPCODE(op, v139u_opcode_handlers)
             } else if (cli_ver.build <= WS_NEWARCH_VER) {
-                if (kern->get_epoc_version() <= epocver::epoc81b) {
+                if (kern->get_epoc_version() <= epocver::epoc80) {
+                    FIND_OPCODE(op, v139u_opcode_handlers)
+                } else if (kern->get_epoc_version() <= epocver::epoc81b) {
                     FIND_OPCODE(op, v151u_m1_opcode_handlers)
                 } else if (kern->get_epoc_version() <= epocver::epoc94) {
                     FIND_OPCODE(op, v151u_m2_opcode_handlers)
