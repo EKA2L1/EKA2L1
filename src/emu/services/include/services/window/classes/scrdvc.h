@@ -40,6 +40,7 @@ namespace eka2l1::epoc {
         bool execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) override;
 
         void set_screen_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
+        void set_screen_mode_and_rotation2(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void get_screen_size_mode_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);
         void get_screen_size_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,

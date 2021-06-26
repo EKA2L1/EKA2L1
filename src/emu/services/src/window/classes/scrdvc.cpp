@@ -75,6 +75,25 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_not_supported);
     }
 
+    void screen_device::set_screen_mode_and_rotation2(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        pixel_and_rot *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
+
+        for (int i = 0; i < scr->scr_config.modes.size(); i++) {
+            epoc::config::screen_mode &mode = scr->scr_config.modes[i];
+
+            if (mode.size == info->pixel_size && number_to_orientation(mode.rotation) == info->orientation) {
+                // Eureka... Bắt được mày rồi....
+                local_screen_mode_ = i;
+
+                ctx.complete(epoc::error_none);
+                return;
+            }
+        }
+
+        LOG_ERROR(SERVICE_WINDOW, "Unable to set size and orientation: mode not found!");
+        ctx.complete(epoc::error_not_supported);
+    }
+
     void screen_device::set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         const int mode = *reinterpret_cast<int *>(cmd.data_ptr);
         scr->set_screen_mode(client->get_ws().get_graphics_driver(), mode);
@@ -258,6 +277,11 @@ namespace eka2l1::epoc {
 
         case ws_sd_op_set_screen_size_and_rotation: {
             set_screen_mode_and_rotation(ctx, cmd);
+            break;
+        }
+
+        case ws_sd_op_set_screen_size_and_rotation2: {
+            set_screen_mode_and_rotation2(ctx, cmd);
             break;
         }
 
