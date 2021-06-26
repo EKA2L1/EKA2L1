@@ -105,7 +105,9 @@ namespace eka2l1::loader {
             return epocver::epoc93;
 
         case 2:
-            if (minor <= 8)
+            if (minor < 8)
+                return epocver::epoc80;
+            else if (minor == 8)
                 return epocver::epoc81a;
             else
                 return epocver::epoc81b;
