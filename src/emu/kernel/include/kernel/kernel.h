@@ -466,7 +466,7 @@ namespace eka2l1 {
         }
 
         bool is_ipc_old() const {
-            return kern_ver_ < epocver::epoc81a;
+            return kern_ver_ < epocver::epoc80;
         }
 
         bool is_eka1() const {

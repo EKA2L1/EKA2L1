@@ -36,6 +36,10 @@ namespace eka2l1::epoc {
     void register_epocv10(eka2l1::hle::lib_manager &mngr) {
         ADD_SVC_REGISTERS(mngr, svc_register_funcs_v10);
     }
+
+    void register_epocv80(eka2l1::hle::lib_manager &mngr) {
+        ADD_SVC_REGISTERS(mngr, svc_register_funcs_v80);
+    }
     
     void register_epocv81a(eka2l1::hle::lib_manager &mngr) {
         ADD_SVC_REGISTERS(mngr, svc_register_funcs_v81a);

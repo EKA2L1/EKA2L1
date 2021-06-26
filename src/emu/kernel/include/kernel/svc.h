@@ -144,6 +144,70 @@ namespace eka2l1::epoc {
             execute_v6_share_session = 0x54
         };
 
+        enum attribute_epoc80a {
+            execute_v80_create_chunk_normal = 0x00,
+            execute_v80_create_chunk_normal_global = 0x01,
+            execute_v80_open_chunk_global = 0x02,
+            execute_v80_chunk_adjust = 0x03,
+            execute_v80_compress_heap = 0x04,
+            execute_v80_add_logical_device = 0x05,
+            execute_v80_free_logical_device = 0x06,
+            execute_v80_add_physical_device = 0x08,
+            execute_v80_create_logical_channel = 0x0A,
+            execute_v80_open_find_handle = 0x0E,
+            execute_v80_duplicate_handle = 0x0F,
+            execute_v80_close_handle = 0x10,
+            execute_v80_create_server_global = 0x15,
+            execute_v80_create_session = 0x16,
+            execute_v80_create_mutex = 0x17,
+            execute_v80_open_mutex_global = 0x18,
+            execute_v80_create_sema = 0x19,
+            execute_v80_open_sema_global = 0x1A,
+            execute_v80_create_timer = 0x1B,
+            execute_v80_open_process_by_id = 0x1F,
+            execute_v80_rename_process = 0x20,
+            execute_v80_logon_process = 0x25,
+            execute_v80_logon_cancel_process = 0x26,
+            execute_v80_rendezvous_request_process = 0x27,
+            execute_v80_rendezvous_cancel_process = 0x28,
+            execute_v80_rendezvous_complete_process = 0x29,
+            execute_v80_create_thread = 0x2A,
+            execute_v80_set_initial_parameter_thread = 0x2B,
+            execute_v80_open_thread = 0x2C,
+            execute_v80_open_thread_by_id = 0x2D,
+            execute_v80_get_thread_own_process = 0x2E,
+            execute_v80_rename_thread = 0x2F,
+            execute_v80_kill_thread = 0x30,
+            execute_v80_terminate_thread = 0x31,
+            execute_v80_panic_thread = 0x32,
+            execute_v80_logon_thread = 0x33,
+            execute_v80_logon_cancel_thread = 0x34,
+            execute_v80_rendezvous_request_thread = 0x35,
+            execute_v80_rendezvous_request_cancel_thread = 0x36,
+            execute_v80_rendezvous_request_complete_thread = 0x37,
+            execute_v80_get_heap_thread = 0x38,
+            execute_v80_msg2_kill_sender = 0x3A,
+            execute_v80_msg2_client = 0x3B,
+            execute_v80_set_tls = 0x3C,
+            execute_v80_free_tls = 0x3D,
+            execute_v80_dll_global_allocate = 0x3F,
+            execute_v80_open_debug = 0x47,
+            execute_v80_close_debug = 0x48,
+            execute_v80_undertaker_create = 0x4C,
+            execute_v80_undertaker_logon = 0x4D,
+            execute_v80_undertaker_logon_cancel = 0x4E,
+            execute_v80_create_chunk_double_ended = 0x54,
+            execute_v80_create_chunk_double_ended_global = 0x55,
+            execute_v80_share_session = 0x5C,
+            execute_v80_property_define = 0x65,
+            execute_v80_property_delete = 0x66,
+            execute_v80_property_attach = 0x67,
+            execute_v80_msgqueue_create = 0x6C,
+            execute_v80_msgqueue_send = 0x6E,
+            execute_v80_msgqueue_receive = 0x6F,
+            execute_v80_msgqueue_cancel_data_available = 0x71
+        };
+
         enum attribute_epoc81a {
             execute_v81a_create_chunk_normal = 0x00,
             execute_v81a_create_chunk_normal_global = 0x01,
@@ -243,6 +307,9 @@ namespace eka2l1::epoc {
 
     ///> @brief The SVC map for Symbian S^3.
     extern const eka2l1::hle::func_map svc_register_funcs_v10;
+
+    ///> @brief The SVC map for Symbian 8.0.
+    extern const eka2l1::hle::func_map svc_register_funcs_v80;
 
     ///> @brief The SVC map for Symbian 8.1a.
     extern const eka2l1::hle::func_map svc_register_funcs_v81a;

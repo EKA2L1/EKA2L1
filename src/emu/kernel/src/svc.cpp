@@ -4575,6 +4575,172 @@ namespace eka2l1::epoc {
                 LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
                 break;
             }
+        } else if (kver == epocver::epoc80) {
+            switch (attribute & 0xFF) {
+            case epoc::eka1_executor::execute_v80_create_chunk_normal:
+            case epoc::eka1_executor::execute_v80_create_chunk_double_ended:
+            case epoc::eka1_executor::execute_v80_create_chunk_normal_global:
+            case epoc::eka1_executor::execute_v80_create_chunk_double_ended_global:
+                return chunk_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_open_chunk_global:
+            case epoc::eka1_executor::execute_v80_open_mutex_global:
+                return open_object_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_open_find_handle:
+                return open_object_through_find_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_chunk_adjust:
+                return chunk_adjust_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_create_mutex:
+                return mutex_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_create_sema:
+                return sema_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_open_sema_global:
+                return sema_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_create_thread:
+                return thread_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_create_session:
+                return session_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_share_session:
+                return session_share_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_create_server_global:
+                return server_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_create_timer:
+                return timer_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_logon_thread:
+                return thread_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_logon_cancel_thread:
+                return thread_logon_cancel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_open_thread:
+                return thread_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_open_thread_by_id:
+                return thread_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_get_thread_own_process:
+                return thread_get_own_process_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_set_initial_parameter_thread:
+                return thread_set_initial_parameter_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_rename_thread:
+                return thread_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_kill_thread:
+                return thread_kill_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_open_process_by_id:
+                return process_open_by_id_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_rename_process:
+                return process_rename_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_logon_process:
+                return process_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_logon_cancel_process:
+                return process_logon_cancel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_rendezvous_request_process:
+                return process_rendezvous_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_rendezvous_complete_process:
+                return process_rendezvous_complete_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_rendezvous_request_thread:
+                return thread_rendezvous_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_rendezvous_request_complete_thread:
+                return thread_rendezvous_complete_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_panic_thread:
+                return thread_panic_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_duplicate_handle:
+                return duplicate_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_set_tls:
+                return dll_set_tls_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_free_tls:
+                return dll_free_tls_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_close_handle:
+                return close_handle_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_open_debug:
+                return debug_open_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_close_debug:
+                return debug_close_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_compress_heap:
+                return compress_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_get_heap_thread:
+                return thread_get_heap_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_dll_global_allocate:
+                return dll_global_data_alloc(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_add_logical_device:
+                return add_logical_device_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_free_logical_device:
+                return free_logical_device_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_create_logical_channel:
+                return create_logical_channel_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_undertaker_create:
+                return undertaker_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_undertaker_logon:
+                return undertaker_logon_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_add_physical_device:
+                return physical_device_add_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_msg2_kill_sender:
+                return message2_kill_sender_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_msg2_client:
+                return message2_client_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_property_define:
+                return property_define_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_property_attach:
+                return property_attach_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_msgqueue_create:
+                return msgqueue_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_msgqueue_send:
+                return msgqueue_send_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_msgqueue_receive:
+                return msgqueue_receive_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v80_msgqueue_cancel_data_available:
+                return msgqueue_cancel_data_available_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            default:
+                LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
+                break;
+            }
         } else if (kver == epocver::epoc81a) {
             switch (attribute & 0xFF) {
             case epoc::eka1_executor::execute_v81a_create_chunk_normal:
@@ -5557,6 +5723,113 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xDF, leave_end),
         BRIDGE_REGISTER(0xE4, session_security_info),
         BRIDGE_REGISTER(0xE7, btrace_out)
+    };
+
+     const eka2l1::hle::func_map svc_register_funcs_v80 = {
+        BRIDGE_REGISTER(0x01, chunk_base),
+        BRIDGE_REGISTER(0x02, chunk_size),
+        BRIDGE_REGISTER(0x03, chunk_max_size),
+        BRIDGE_REGISTER(0x18, mutex_count_eka1),
+        BRIDGE_REGISTER(0x19, mutex_wait_eka1),
+        BRIDGE_REGISTER(0x1A, mutex_signal_eka1),
+        BRIDGE_REGISTER(0x1B, process_id),
+        BRIDGE_REGISTER(0x20, process_exit_type),
+        BRIDGE_REGISTER(0x2A, semaphore_wait_eka1),
+        BRIDGE_REGISTER(0x32, thread_id),
+        BRIDGE_REGISTER(0x3C, thread_request_count),
+        BRIDGE_REGISTER(0x3D, thread_exit_type),
+        BRIDGE_REGISTER(0x4D, wait_for_any_request),
+        BRIDGE_REGISTER(0x4F, uchar_fold),
+        BRIDGE_REGISTER(0x51, uchar_lowercase),
+        BRIDGE_REGISTER(0x52, uchar_uppercase),
+        BRIDGE_REGISTER(0x53, uchar_get_category),
+        BRIDGE_REGISTER(0x6C, heap),
+        BRIDGE_REGISTER(0x70, tick_count),
+        BRIDGE_REGISTER(0x72, push_trap_frame),
+        BRIDGE_REGISTER(0x73, pop_trap_frame),
+        BRIDGE_REGISTER(0x74, active_scheduler),
+        BRIDGE_REGISTER(0x75, set_active_scheduler),
+        BRIDGE_REGISTER(0x80, dll_tls),
+        BRIDGE_REGISTER(0x81, trap_handler),
+        BRIDGE_REGISTER(0x82, set_trap_handler),
+        BRIDGE_REGISTER(0x8D, locked_inc_32),
+        BRIDGE_REGISTER(0x8E, locked_dec_32),
+        BRIDGE_REGISTER(0xB8, user_svr_rom_root_dir_address),
+        BRIDGE_REGISTER(0xBC, user_svr_rom_header_address),
+        BRIDGE_REGISTER(0xFE, static_call_list),
+        BRIDGE_REGISTER(0x800010, library_lookup_eka1),
+        BRIDGE_REGISTER(0x800011, library_entry_point),
+        BRIDGE_REGISTER(0x800015, library_attach),
+        BRIDGE_REGISTER(0x800016, library_filename_eka1),
+        BRIDGE_REGISTER(0x80001C, process_find_next),
+        BRIDGE_REGISTER(0x80001E, process_filename_eka1),
+        BRIDGE_REGISTER(0x80001F, process_command_line_eka1),
+        BRIDGE_REGISTER(0x80002C, semaphore_signal_n_eka1),
+        BRIDGE_REGISTER(0x80002D, server_find_next),
+        BRIDGE_REGISTER(0x800033, thread_find_next),
+        BRIDGE_REGISTER(0x800042, thread_read_ipc_to_des8),
+        BRIDGE_REGISTER(0x800043, thread_read_ipc_to_des16),
+        BRIDGE_REGISTER(0x800044, thread_write_ipc_to_des8),
+        BRIDGE_REGISTER(0x800045, thread_write_ipc_to_des16),
+        BRIDGE_REGISTER(0x800054, des8_match),
+        BRIDGE_REGISTER(0x800055, des16_match),
+        BRIDGE_REGISTER(0x800056, desc8_find),
+        BRIDGE_REGISTER(0x800058, des8_locate_fold),
+        BRIDGE_REGISTER(0x800059, des16_locate_fold),
+        BRIDGE_REGISTER(0x80005A, handle_name_eka1),
+        BRIDGE_REGISTER(0x80005C, handle_info_eka1),
+        BRIDGE_REGISTER(0x800060, user_language),
+        BRIDGE_REGISTER(0x800068, locale_refresh),
+        BRIDGE_REGISTER(0x80006E, time_now),
+        BRIDGE_REGISTER(0x80007C, user_svr_screen_info),
+        BRIDGE_REGISTER(0x80007D, dll_global_data_allocated),
+        BRIDGE_REGISTER(0x80007E, dll_global_data_read),
+        BRIDGE_REGISTER(0x80007F, dll_global_data_write),
+        BRIDGE_REGISTER(0x800083, user_svr_hal_get),
+        BRIDGE_REGISTER(0x8000A8, heap_created),
+        BRIDGE_REGISTER(0x8000A9, library_type_eka1),
+        BRIDGE_REGISTER(0x8000AA, process_type_eka1),
+        BRIDGE_REGISTER(0x8000AB, get_locale_char_set),
+        BRIDGE_REGISTER(0x8000AF, process_set_type_eka1),
+        BRIDGE_REGISTER(0x8000BB, user_svr_dll_filename),
+        BRIDGE_REGISTER(0x8000C0, process_command_line_length),
+        BRIDGE_REGISTER(0x8000C2, get_inactivity_time),
+        BRIDGE_REGISTER(0x8000C9, clear_inactivity_time),
+        BRIDGE_REGISTER(0x8000CC, imb_range),
+        BRIDGE_REGISTER(0x8000DA, property_subscribe),
+        BRIDGE_REGISTER(0x8000DC, property_find_get_int),
+        BRIDGE_REGISTER(0x8000DF, property_get_int),
+        BRIDGE_REGISTER(0x8000E2, property_find_set_int),
+        BRIDGE_REGISTER(0x8000E4, message_get_des_length),
+        BRIDGE_REGISTER(0x8000E6, message_ipc_copy_eka1),
+        BRIDGE_REGISTER(0x8000EA, message_queue_notify_space_available),
+        BRIDGE_REGISTER(0x8000EB, message_queue_notify_data_available),
+        BRIDGE_REGISTER(0xC0001D, process_resume),
+        BRIDGE_REGISTER(0xC00024, process_set_priority_eka1),
+        BRIDGE_REGISTER(0xC0002B, semaphore_signal_eka1),
+        BRIDGE_REGISTER(0xC0002E, server_receive),
+        BRIDGE_REGISTER(0xC0002F, server_cancel),
+        BRIDGE_REGISTER(0xC00030, set_session_ptr),
+        BRIDGE_REGISTER(0xC00031, session_send_eka1),
+        BRIDGE_REGISTER(0xC00034, thread_resume),
+        BRIDGE_REGISTER(0xC00037, thread_set_priority_eka1),
+        BRIDGE_REGISTER(0xC0003B, thread_set_flags_eka1),
+        BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
+        BRIDGE_REGISTER(0xC00047, timer_cancel),
+        BRIDGE_REGISTER(0xC00048, timer_after_eka1),
+        BRIDGE_REGISTER(0xC0004E, request_signal),
+        BRIDGE_REGISTER(0xC0005E, after),
+        BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
+        BRIDGE_REGISTER(0xC0006D, heap_switch),
+        BRIDGE_REGISTER(0xC00076, the_executor_eka1),
+        BRIDGE_REGISTER(0xC0007B, add_event),
+        BRIDGE_REGISTER(0xC00097, debug_command_execute),
+        BRIDGE_REGISTER(0xC0009F, set_exception_handler_eka1),
+        BRIDGE_REGISTER(0xC000A1, raise_exception_eka1),
+        BRIDGE_REGISTER(0xC000BF, session_send_sync_eka1),
+        BRIDGE_REGISTER(0xC10000, hle_dispatch),
+        BRIDGE_REGISTER(0xC10001, hle_dispatch_2),
+        BRIDGE_REGISTER(0xC20000, restore_thread_exception_state)
     };
     
     const eka2l1::hle::func_map svc_register_funcs_v81a = {
