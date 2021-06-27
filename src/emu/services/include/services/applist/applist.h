@@ -67,7 +67,8 @@ namespace eka2l1 {
     };
 
     enum apa_legacy_level {
-        APA_LEGACY_LEVEL_OLD = -2,
+        APA_LEGACY_LEVEL_OLD = -3,
+        APA_LEGACY_LEVEL_S60V2 = -2,
         APA_LEGACY_LEVEL_TRANSITION = -1,
         APA_LEGACY_LEVEL_MORDEN = 0
     };

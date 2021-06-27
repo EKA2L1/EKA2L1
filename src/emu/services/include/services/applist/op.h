@@ -74,6 +74,41 @@ namespace eka2l1 {
         applist_request_oldarch_get_file_ownership_infos
     };
 
+    enum applist_request_s60v2 {
+        applist_request_s60v2_first = applist_range_unrestricted, // = 0
+        applist_request_s60v2_init_list,
+        applist_request_s60v2_get_next_app,
+        applist_request_s60v2_embed_count,
+        applist_request_s60v2_app_count,
+        applist_request_s60v2_app_info,
+        applist_request_s60v2_get_app_capability,
+        applist_request_s60v2_start_app_without_returning_thread_id,
+        applist_request_s60v2_start_app_returning_thread_id,
+        applist_request_s60v2_recognize_data,
+        applist_request_s60v2_recognize_specific_data, // = 10
+        applist_request_s60v2_app_for_data_type,
+        applist_request_s60v2_start_document,
+        applist_request_s60v2_start_document_by_data_type,
+        applist_request_s60v2_start_document_by_uid,
+        applist_request_s60v2_create_document_by_uid,
+        applist_request_s60v2_app_icon_by_uid,
+        applist_request_s60v2_app_for_document,
+        applist_request_s60v2_is_program,
+        applist_request_s60v2_get_confidence,
+        applist_request_s60v2_set_accepted_confidence, // = 20
+        applist_request_s60v2_get_buf_size,
+        applist_request_s60v2_set_buf_size,
+        applist_request_s60v2_get_data_types_phase1,
+        applist_request_s60v2_get_data_types_phase2,
+        applist_request_s60v2_set_notify,
+        applist_request_s60v2_cancel_notify,
+        applist_request_s60v2_close_server,
+        applist_request_s60v2_app_icon_by_uid_and_size,
+        applist_request_s60v2_get_app_icon_sizes,
+        applist_request_s60v2_get_app_views, // = 30
+        applist_request_s60v2_view_icon_by_uid_and_size
+    };
+
     enum applist_request_transition {
         applist_request_trans_first = applist_range_unrestricted, // = 0
         applist_request_trans_init_full_list,

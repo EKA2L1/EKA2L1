@@ -457,8 +457,10 @@ namespace eka2l1 {
     }
 
     int applist_server::legacy_level() {
-        if (kern->get_epoc_version() < epocver::epoc81a) {
+        if (kern->get_epoc_version() < epocver::epoc80) {
             return APA_LEGACY_LEVEL_OLD;
+        } else if (kern->get_epoc_version() < epocver::epoc81a) {
+            return APA_LEGACY_LEVEL_S60V2;
         } else if (kern->get_epoc_version() < epocver::eka2) {
             return APA_LEGACY_LEVEL_TRANSITION;
         }
@@ -679,14 +681,11 @@ namespace eka2l1 {
         common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
         populate_icon_sizes(seri, reg);
 
+        buf.resize(seri.size());
         seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
         populate_icon_sizes(seri, reg);
 
-        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
-            ctx.write_data_to_descriptor_argument(3, buf.data(), static_cast<std::uint32_t>(buf.size()));
-        } else {
-            ctx.write_data_to_descriptor_argument(2, buf.data(), static_cast<std::uint32_t>(buf.size()));
-        }
+        ctx.write_data_to_descriptor_argument(2, buf.data(), static_cast<std::uint32_t>(buf.size()));
         ctx.complete(epoc::error_none);
     }
 
@@ -853,6 +852,20 @@ namespace eka2l1 {
 
             case applist_request_oldarch_get_app_icon_sizes:
                 server<applist_server>()->get_app_icon_sizes(*ctx);
+                break;
+
+            default:
+                LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode {}", ctx->msg->function);
+                break;
+            }
+        } else if (llevel == APA_LEGACY_LEVEL_S60V2) {
+            switch (ctx->msg->function) {
+            case applist_request_s60v2_app_info:
+                server<applist_server>()->get_app_info(*ctx);
+                break;
+
+            case applist_request_s60v2_app_icon_by_uid_and_size:
+                server<applist_server>()->get_app_icon(*ctx);
                 break;
 
             default:
