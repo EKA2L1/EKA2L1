@@ -203,7 +203,9 @@ namespace eka2l1::epoc {
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
 
-        if (client->client_version().build <= WS_OLDARCH_VER) {
+        kernel_system *kern = client->get_ws().get_kernel_system();
+
+        if (client->client_version().build <= WS_OLDARCH_VER || kern->get_epoc_version() <= epocver::epoc80) {
             switch (op) {
             case ws_dsa_old_get_sync_thread:
                 get_sync_info(ctx, cmd);
@@ -264,7 +266,7 @@ namespace eka2l1::epoc {
                 break;
             }
             }
-        }
+        } 
 
         return quit;
     }
