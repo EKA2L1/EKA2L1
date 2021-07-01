@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
+ * Copyright (c) 2019 EKA2L1 Team.
  * 
- * This file is part of EKA2L1 project.
+ * This file is part of EKA2L1 project 
+ * (see bentokun.github.com/EKA2L1).
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,20 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/audio/audio.h>
-#include <drivers/audio/backend/cubeb/audio_cubeb.h>
+#pragma once
 
-namespace eka2l1::drivers {
-    audio_driver_instance make_audio_driver(const audio_driver_backend backend) {
-        switch (backend) {
-        case audio_driver_backend::cubeb: {
-            return std::make_unique<cubeb_audio_driver>();
-        }
+#include <common/platform.h>
 
-        default:
-            break;
-        }
+#if EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
 
-        return nullptr;
-    }
-}
+void seh_handler_translator_func(unsigned int u, EXCEPTION_POINTERS *excp);
+#endif

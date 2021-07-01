@@ -33,6 +33,7 @@ add_subdirectory(services)
 add_subdirectory(system)
 add_subdirectory(utils)
 add_subdirectory(vfs)
+add_subdirectory(qt)
 
 if (ANDROID)
     include_directories(android/app/src/main)
