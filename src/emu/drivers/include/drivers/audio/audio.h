@@ -54,5 +54,6 @@ namespace eka2l1::drivers {
         cubeb
     };
 
-    std::unique_ptr<audio_driver> make_audio_driver(const audio_driver_backend backend);
+    using audio_driver_instance = std::unique_ptr<audio_driver>;
+    audio_driver_instance make_audio_driver(const audio_driver_backend backend);
 }
