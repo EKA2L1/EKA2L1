@@ -1664,6 +1664,14 @@ namespace eka2l1 {
         return crr;
     }
 
+    epoc::screen *window_server::get_screens() {
+        if (!loaded) {
+            do_base_init();
+        }
+
+        return screens;
+    }
+
     epoc::window_group *window_server::get_group_from_id(const epoc::ws::uid id) {
         epoc::screen *current = screens;
 
