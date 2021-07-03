@@ -682,8 +682,7 @@ namespace eka2l1 {
     }
 
     bool system_impl::install_package(std::u16string path, drive_number drv) {
-        std::atomic<int> h;
-        return packages_->install_package(path, drv, h);
+        return packages_->install_package(path, drv);
     }
 
     bool system_impl::load_rom(const std::string &path) {

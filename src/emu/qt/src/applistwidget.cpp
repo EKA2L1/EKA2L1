@@ -1,5 +1,6 @@
 #include <qt/applistwidget.h>
 #include <services/applist/applist.h>
+#include <utils/apacmd.h>
 #include <services/fbs/fbs.h>
 #include <common/buffer.h>
 
@@ -8,6 +9,12 @@
 #include <QBitmap>
 
 static QSize ICON_GRID_SIZE = QSize(64, 64);
+
+applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name, int registry_index, QListWidget *parent)
+    : QListWidgetItem(icon, name, parent),
+      registry_index_(registry_index) {
+
+}
 
 applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss)
     : QListWidget(parent)
@@ -26,14 +33,41 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
 
     // This vector icon list is synced with
     std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
-    for (eka2l1::apa_app_registry &reg: registries) {
-        if (!reg.caps.is_hidden) {
-            add_registeration_item(reg);
+    for (std::size_t i = 0; i < registries.size(); i++) {
+        if (!registries[i].caps.is_hidden) {
+            add_registeration_item(registries[i], static_cast<int>(i));
         }
     }
 }
 
-void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg) {
+eka2l1::apa_app_registry *applist_widget::get_registry_from_widget_item(QListWidgetItem *item) {
+    if (!item) {
+        return nullptr;
+    }
+
+    applist_widget_item *item_translated = reinterpret_cast<applist_widget_item*>(item);
+    std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
+
+    if (registries.size() <= item_translated->registry_index_) {
+        return nullptr;
+    }
+
+    return &registries[item_translated->registry_index_];
+}
+
+bool applist_widget::launch_from_widget_item(QListWidgetItem *item) {
+    eka2l1::apa_app_registry *registry = get_registry_from_widget_item(item);
+    if (registry) {
+        eka2l1::epoc::apa::command_line cmd_line;
+        cmd_line.launch_cmd_ = eka2l1::epoc::apa::command_open;
+
+        return lister_->launch_app(*registry, cmd_line, nullptr);
+    }
+
+    return false;
+}
+
+void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const int index) {
     QString app_name = QString::fromUtf16(reg.mandatory_info.long_caption.to_std_string(nullptr).data(), reg.mandatory_info.long_caption.get_length());
 
     std::optional<eka2l1::apa_app_masked_icon_bitmap> icon_pair = lister_->get_icon(reg, 0);
@@ -89,7 +123,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg) {
     QIcon final_icon;
 
     if (!icon_pair_rendered) {
-        final_icon = QIcon(":/assets/duck_icon.png");
+        final_icon = QIcon(":/assets/duck_tank.png");
     } else {
         if ((final_pixmap.size().width() < ICON_GRID_SIZE.width()) && (final_pixmap.size().height() < ICON_GRID_SIZE.height())) {
             QPoint position_to_draw = QPoint(((64 - final_pixmap.size().width()) / 2), ((64 - final_pixmap.size().height()) / 2));
@@ -105,7 +139,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg) {
         }
     }
 
-    QListWidgetItem *newItem = new QListWidgetItem(final_icon, app_name, this);
+    QListWidgetItem *newItem = new applist_widget_item(final_icon, app_name, index, this);
     newItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
 
     // Sometimes app can't have full name. Just display it :)

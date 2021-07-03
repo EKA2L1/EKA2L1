@@ -14,7 +14,7 @@
    <string>About EKA2L1</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="eka2l1.qrc">
+   <iconset resource="../eka2l1.qrc">
     <normaloff>:/assets/duck_tank.png</normaloff>:/assets/duck_tank.png</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
@@ -29,7 +29,7 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="eka2l1.qrc">:/assets/duck_tank.png</pixmap>
+        <pixmap resource="../eka2l1.qrc">:/assets/duck_tank.png</pixmap>
        </property>
       </widget>
      </item>
@@ -78,8 +78,8 @@
   </layout>
  </widget>
  <resources>
-  <include location="eka2l1.qrc"/>
-  <include location="eka2l1.qrc"/>
+  <include location="../eka2l1.qrc"/>
+  <include location="../eka2l1.qrc"/>
  </resources>
  <connections/>
 </ui>

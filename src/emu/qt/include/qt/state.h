@@ -58,7 +58,7 @@ namespace eka2l1::desktop {
         std::unique_ptr<drivers::audio_driver> audio_driver;
         std::unique_ptr<config::app_settings> app_settings;
 
-        drivers::emu_window_ptr window;
+        drivers::emu_window *window;
         drivers::emu_controller_ptr joystick_controller;
 
         std::atomic<bool> should_emu_quit;

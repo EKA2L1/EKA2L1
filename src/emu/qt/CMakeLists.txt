@@ -21,6 +21,7 @@ set(PROJECT_SOURCES
         include/qt/aboutdialog.h
         include/qt/applistwidget.h
         include/qt/cmdhandler.h
+        include/qt/displaywidget.h
         include/qt/mainwindow.h
         include/qt/seh_handler.h
         include/qt/state.h
@@ -29,6 +30,7 @@ set(PROJECT_SOURCES
         src/aboutdialog.ui
         src/applistwidget.cpp
         src/cmdhandler.cpp
+        src/displaywidget.cpp
         src/main.cpp
         src/mainwindow.cpp
         src/mainwindow.ui

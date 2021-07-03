@@ -30,6 +30,7 @@
 #include <qt/seh_handler.h>
 #include <qt/state.h>
 #include <qt/thread.h>
+#include <qt/displaywidget.h>
 
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
@@ -132,7 +133,6 @@ static eka2l1::drivers::input_event on_ui_window_key_press(void *userdata, const
 namespace eka2l1::desktop {
     static constexpr const char *graphics_driver_thread_name = "Graphics thread";
     static constexpr const char *os_thread_name = "Symbian OS thread";
-    static constexpr const char *hli_thread_name = "High level interface thread";
 
     static int graphics_driver_thread_initialization(emulator &state) {
         // Halloween decoration breath of the graphics
@@ -143,14 +143,12 @@ namespace eka2l1::desktop {
             return -1;
         }
 
-        state.window = drivers::new_emu_window(eka2l1::drivers::window_api::glfw);
-
         state.window->raw_mouse_event = on_ui_window_mouse_evt;
         state.window->button_pressed = on_ui_window_key_press;
         state.window->button_released = on_ui_window_key_release;
         state.window->touch_move = on_ui_window_touch_move;
 
-        //state.window->init(window_title, eka2l1::vec2(1080, 720), drivers::emu_window_flag_maximum_size);
+        state.window->init("Emulator display", eka2l1::vec2(800, 600), drivers::emu_window_flag_maximum_size);
         state.window->set_userdata(&state);
         state.window->make_current();
 
@@ -159,7 +157,7 @@ namespace eka2l1::desktop {
         state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl);
         state.symsys->set_graphics_driver(state.graphics_driver.get());
 
-        drivers::emu_window *window = state.window.get();
+        drivers::emu_window *window = state.window;
 
         switch (state.graphics_driver->get_current_api()) {
         case drivers::graphic_api::opengl: {
@@ -192,7 +190,7 @@ namespace eka2l1::desktop {
         };
 
         // Signal that the initialization is done
-        state.graphics_sema.notify(2);
+        state.graphics_sema.notify();
         return 0;
     }
 
@@ -293,6 +291,8 @@ namespace eka2l1::desktop {
 
         if (kern)
             kern->stop_cores_idling();
+
+        state.graphics_driver->abort();
     }
 
     int emulator_entry(QApplication &application, emulator &state, const int argc, const char **argv) {
@@ -370,14 +370,18 @@ namespace eka2l1::desktop {
         window_title += std::string(" - ") + random_references[eka2l1::random_range(0, random_references_count - 1)];
 
         main_window window(nullptr, state);
-        window.setWindowTitle(QString::fromUtf8(window_title.c_str()));
         window.show();
+        window.setWindowTitle(QString::fromUtf8(window_title.c_str()));
+
+        state.window = window.render_window();
+        std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 
         const int exec_code = application.exec();
         kill_emulator(state);
 
         // Wait for OS thread to die
         os_thread_obj.join();
+        graphics_thread_obj.join();
 
         return exec_code;
     }
