@@ -413,9 +413,7 @@ namespace eka2l1 {
             return screen_configs[num];
         }
 
-        epoc::screen *get_screens() {
-            return screens;
-        }
+        epoc::screen *get_screens();
 
         epoc::screen *get_current_focus_screen() {
             return focus_screen_;

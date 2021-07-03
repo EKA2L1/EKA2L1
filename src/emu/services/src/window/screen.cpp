@@ -84,6 +84,30 @@ namespace eka2l1::epoc {
         }
     };
 
+    bool focus_callback_free_check_func(screen::focus_change_callback &data) {
+        return !data.second;
+    }
+
+    void focus_callback_free_func(screen::focus_change_callback &data) {
+        data.second = nullptr;
+    }
+
+    bool screen_redraw_callback_free_check_func(screen::screen_redraw_callback &data) {
+        return !data.second;
+    }
+
+    void screen_redraw_callback_free_func(screen::screen_redraw_callback &data) {
+        data.second = nullptr;
+    }
+
+    bool screen_mode_change_callback_free_check_func(screen::screen_mode_change_callback &data) {
+        return !data.second;
+    }
+
+    void screen_mode_change_callback_free_func(screen::screen_mode_change_callback &data) {
+        data.second = nullptr;
+    }
+
     screen::screen(const int number, epoc::config::screen &scr_conf)
         : number(number)
         , ui_rotation(0)
@@ -98,9 +122,12 @@ namespace eka2l1::epoc {
         , last_texture_access(0)
         , scr_config(scr_conf)
         , crr_mode(0)
+        , focus(nullptr)
         , next(nullptr)
         , screen_buffer_chunk(nullptr)
-        , focus(nullptr) {
+        , focus_callbacks(focus_callback_free_check_func, focus_callback_free_func)
+        , screen_redraw_callbacks(screen_redraw_callback_free_check_func, screen_redraw_callback_free_func)
+        , screen_mode_change_callbacks(screen_mode_change_callback_free_check_func, screen_mode_change_callback_free_func) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
         disp_mode = scr_conf.disp_mode;
 
@@ -142,6 +169,8 @@ namespace eka2l1::epoc {
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
         redraw(cmd_builder.get(), true);
         driver->submit_command_list(*cmd_list);
+
+        fire_screen_redraw_callbacks(false);
     }
 
     void screen::deinit(drivers::graphics_driver *driver) {
@@ -274,20 +303,67 @@ namespace eka2l1::epoc {
         }
     }
 
+    void screen::fire_screen_redraw_callbacks(const bool is_dsa) {
+        for (auto &callback: screen_redraw_callbacks) {
+            callback.second(callback.first, this, is_dsa);
+        }
+    }
+
+    void screen::fire_screen_mode_change_callbacks(const int old_mode) {
+        for (auto &callback: screen_mode_change_callbacks) {
+            callback.second(callback.first, this, old_mode);
+        }
+    }
+
     std::size_t screen::add_focus_change_callback(void *userdata, focus_change_callback_handler handler) {
         const std::lock_guard<std::mutex> guard(screen_mutex);
-        focus_callbacks.push_back({ userdata, handler });
 
-        return focus_callbacks.size();
+        focus_change_callback callback_pair = { userdata, handler };
+        return focus_callbacks.add(callback_pair);
+    }
+
+    bool screen::remove_focus_change_callback(const std::size_t cb) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+        return focus_callbacks.remove(cb);
+    }
+
+    std::size_t screen::add_screen_redraw_callback(void *userdata, screen_redraw_callback_handler handler) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+
+        screen_redraw_callback callback_pair = { userdata, handler };
+        return screen_redraw_callbacks.add(callback_pair);
+    }
+
+    bool screen::remove_screen_redraw_callback(const std::size_t cb) {
+        return screen_redraw_callbacks.remove(cb);
+    }
+
+    std::size_t screen::add_screen_mode_change_callback(void *userdata, screen_mode_change_callback_handler handler) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+
+        screen_mode_change_callback callback_pair = { userdata, handler };
+        return screen_mode_change_callbacks.add(callback_pair);
+    }
+
+    bool screen::remove_screen_mode_change_callback(const std::size_t cb) {
+        return screen_mode_change_callbacks.remove(cb);
     }
 
     void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {
+        const int old_mode = crr_mode;
+        bool should_fire_cb = false;
+
         if (crr_mode != mode) {
             LOG_TRACE(SERVICE_WINDOW, "Screen mode changed to {}", mode);
+            should_fire_cb = true;
         }
 
         crr_mode = mode;
         resize(drv, mode_info(mode)->size);
+
+        if (should_fire_cb) {
+            fire_screen_mode_change_callbacks(old_mode);
+        }
     }
 
     void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
