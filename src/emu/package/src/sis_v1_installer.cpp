@@ -33,7 +33,7 @@
 #include <cwctype>
 
 namespace eka2l1::loader {
-    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info) {
+    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info, progress_changed_callback cb) {
         std::optional<sis_old> res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
         if (!res.has_value()) {
             return false;
@@ -52,6 +52,17 @@ namespace eka2l1::loader {
 
         info.current_drives = info.drives;
         info.is_removable = true;
+
+        std::size_t total_size = 0;
+        std::size_t decomped = 0;
+        for (auto &file: res->files) {
+            total_size += file.record.org_file_len;
+        }
+
+        if (res->files.empty()) {
+            if (cb)
+                cb(1, 1);
+        }
 
         for (auto &file : res->files) {
             std::u16string dest = file.dest;
@@ -114,12 +125,23 @@ namespace eka2l1::loader {
                     return false;
                 }
 
-                if (res->header.op & 0x8)
+                if (res->header.op & 0x8) {
                     f->write_file(temp.data(), 1, static_cast<uint32_t>(took));
-                else {
+                    decomped += took;
+                } else {
                     uint32_t inf;
-                    bool res = flate::inflate_data(&stream, temp.data(), inflated.data(), static_cast<uint32_t>(took), &inf);
+                    flate::inflate_data(&stream, temp.data(), inflated.data(), static_cast<uint32_t>(took), &inf);
+
                     f->write_file(inflated.data(), 1, inf);
+                    decomped += inf;
+                }
+
+                if (cb) {
+                    if (total_size != 0) {
+                        cb(decomped, total_size);
+                    } else {
+                        cb(1, 1);
+                    }
                 }
 
                 left -= took;
