@@ -31,6 +31,12 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     setIconSize(ICON_GRID_SIZE);
     setViewMode(ViewMode::IconMode);
 
+    reload_whole_list();
+}
+
+void applist_widget::reload_whole_list() {
+    clear();
+
     // This vector icon list is synced with
     std::vector<eka2l1::apa_app_registry> &registries = lister_->get_registerations();
     for (std::size_t i = 0; i < registries.size(); i++) {

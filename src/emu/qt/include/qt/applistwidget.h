@@ -29,6 +29,8 @@ private:
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss);
     bool launch_from_widget_item(QListWidgetItem *item);
+
+    void reload_whole_list();
 };
 
 #endif // APPLISTWIDGET_H
