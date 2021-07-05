@@ -214,7 +214,7 @@ namespace eka2l1 {
 
     device_manager::device_manager(config::state *conf)
         : conf(conf)
-        , current(nullptr) {
+        , current_index(0) {
         load_devices();
     }
 
@@ -248,16 +248,25 @@ namespace eka2l1 {
 
     bool device_manager::set_current(const std::string &firmcode) {
         const std::lock_guard<std::mutex> guard(lock);
-        current = get(firmcode);
-        
-        return current;
+        auto result = std::find_if(devices.begin(), devices.end(),
+            [&](const device &dvc) { return dvc.firmware_code == firmcode; });
+
+        if (result != devices.end()) {
+            current_index = static_cast<std::int32_t>(std::distance(devices.begin(), result));
+            return true;
+        }
+
+        return false;
     }
 
     bool device_manager::set_current(const std::uint8_t idx) {
         const std::lock_guard<std::mutex> guard(lock);
-        current = get(idx);
+        if (idx >= devices.size()) {
+            return false;
+        }
 
-        return current;
+        current_index = static_cast<std::int32_t>(idx);
+        return true;
     }
 
     add_device_error device_manager::add_new_device(const std::string &firmcode, const std::string &model, const std::string &manufacturer, const epocver ver, const std::uint32_t machine_uid) {
@@ -306,6 +315,7 @@ namespace eka2l1 {
         dvc.machine_uid = machine_uid;
 
         devices.push_back(dvc);
+
         return add_device_none;
     }
 
@@ -316,8 +326,17 @@ namespace eka2l1 {
             [&](const device &dvc) { return dvc.firmware_code == firmcode; });
 
         if (result != devices.end()) {
+            if (current_index > std::distance(devices.begin(), result)) {
+                current_index--;
+            }
+
             devices.erase(result);
             save_devices();
+
+            if (current_index >= devices.size()) {
+                current_index = static_cast<std::int32_t>(devices.size()) - 1;
+            }
+
             return true;
         }
 
