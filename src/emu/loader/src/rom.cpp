@@ -383,7 +383,7 @@ namespace eka2l1::loader {
     }
 
     static bool dump_rom_file(common::ro_stream *stream, rom_entry &entry, const std::string &path_base, const std::uint32_t rom_base,
-        std::atomic<int> &progress, const int base_progress, const int max_progress) {
+        std::size_t &passed_size, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::u16string fname = entry.name;
         if (common::is_platform_case_sensitive()) {
             fname = common::lowercase_ucs2_string(fname);
@@ -400,13 +400,20 @@ namespace eka2l1::loader {
         std::vector<char> buf;
 
         while (size_left > 0) {
+            if (cancel_cb && cancel_cb()) {
+                return false;
+            }
+
             const std::int64_t size_take = common::min(MAX_CHUNK_SIZE, size_left);
             buf.resize(size_take);
 
             stream->read(buf.data(), buf.size());
             file_out_stream.write(buf.data(), buf.size());
 
-            progress = common::max(progress.load(), base_progress + static_cast<int>(stream->tell() * max_progress / stream->size()));
+            passed_size += size_take;
+            if (progress_cb) {
+                progress_cb(passed_size, stream->size());
+            }
 
             size_left -= size_take;
         }
@@ -415,12 +422,12 @@ namespace eka2l1::loader {
     }
 
     static bool dump_rom_directory(common::ro_stream *stream, rom_dir &dir, std::string base, std::uint32_t rom_base,
-        std::atomic<int> &progress, const int base_progress, const int max_progress) {
+        std::size_t &passed_size, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         eka2l1::create_directories(base);
 
         for (auto &entry: dir.entries) {
             if (!(entry.attrib & 0x10) && (entry.size != 0)) {
-                if (!dump_rom_file(stream, entry, base, rom_base, progress, base_progress, max_progress)) {
+                if (!dump_rom_file(stream, entry, base, rom_base, passed_size, progress_cb, cancel_cb)) {
                     return false;
                 }
             }
@@ -436,7 +443,7 @@ namespace eka2l1::loader {
                 new_base = eka2l1::add_path(base, common::ucs2_to_utf8(subdir.name));
             }
 
-            if (!dump_rom_directory(stream, subdir, new_base, rom_base, progress, base_progress, max_progress)) {
+            if (!dump_rom_directory(stream, subdir, new_base, rom_base, passed_size, progress_cb, cancel_cb)) {
                 return false;
             }
         }
@@ -444,23 +451,23 @@ namespace eka2l1::loader {
         return true;
     }
 
-    bool dump_rom_files(common::ro_stream *stream, const std::string &dest_base, std::atomic<int> &progress,
-        const int max_progress) {
+    bool dump_rom_files(common::ro_stream *stream, const std::string &dest_base, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::optional<rom> rom_parse_result = load_rom(stream);
         if (!rom_parse_result.has_value()) {
             return false;
         }
 
-        int base_progress = progress.load();
+        std::size_t passed_size = 0;
 
         for (root_dir &rdir: rom_parse_result->root.root_dirs) {
-            if (!dump_rom_directory(stream, rdir.dir, dest_base, rom_parse_result->header.rom_base, progress, base_progress, max_progress)) {
+            if (!dump_rom_directory(stream, rdir.dir, dest_base, rom_parse_result->header.rom_base, passed_size, progress_cb, cancel_cb)) {
                 return false;
             }
         }
 
-        // Make it full!
-        progress = base_progress + max_progress;
+        if (progress_cb)
+            progress_cb(1, 1);
+
         return true;
     }
 }
