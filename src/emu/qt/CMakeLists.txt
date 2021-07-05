@@ -21,6 +21,7 @@ set(PROJECT_SOURCES
         include/qt/aboutdialog.h
         include/qt/applistwidget.h
         include/qt/cmdhandler.h
+        include/qt/device_install_dialog.h
         include/qt/displaywidget.h
         include/qt/mainwindow.h
         include/qt/seh_handler.h
@@ -30,6 +31,8 @@ set(PROJECT_SOURCES
         src/aboutdialog.ui
         src/applistwidget.cpp
         src/cmdhandler.cpp
+        src/device_install_dialog.cpp
+        src/device_install_dialog.ui
         src/displaywidget.cpp
         src/main.cpp
         src/mainwindow.cpp
