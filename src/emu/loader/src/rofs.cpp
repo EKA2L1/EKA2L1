@@ -118,7 +118,7 @@ namespace eka2l1::loader {
     }
 
     static bool extract_file(common::ro_stream &stream, rofs_entry &entry, const std::string &base,
-        const int file_offset, std::atomic<int> &progress, const int base_progress, const int max_progress) {
+        const int file_offset, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, std::size_t &max_pos) {
         std::string fname = common::ucs2_to_utf8(entry.filename_);
         if (common::is_platform_case_sensitive()) {
             fname = common::lowercase_string(fname);
@@ -135,6 +135,10 @@ namespace eka2l1::loader {
 
         std::int64_t size_left = static_cast<std::int64_t>(entry.file_size_);
         while (size_left > 0) {
+            if (cancel_cb && cancel_cb()) {
+                return false;
+            }
+
             const std::uint32_t size_to_take = common::min<std::uint32_t>(static_cast<std::uint32_t>(size_left),
                 CHUNK_SIZE);
 
@@ -145,7 +149,10 @@ namespace eka2l1::loader {
                 LOG_WARN(LOADER, "Can't read {} bytes, skipping", size_to_take - amount_read);
             }
 
-            progress = common::max(progress.load(), base_progress + static_cast<int>(stream.tell() * max_progress / stream.size()));
+            if (progress_cb) {
+                max_pos = common::max(max_pos, stream.tell());
+                progress_cb(max_pos, stream.size());
+            }
 
             extract_stream.write(buf.data(), size_to_take);
             size_left -= size_to_take;
@@ -157,7 +164,7 @@ namespace eka2l1::loader {
 
     static bool extract_directory(common::ro_stream &stream, const std::string &base,
         const int version, const int file_offset, const std::uint32_t offset,
-        std::atomic<int> &progress, const int base_progress, const int max_progress) {
+        progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, std::size_t &max_pos) {
         eka2l1::create_directories(base);
         stream.seek(offset - file_offset, common::seek_where::beg);
 
@@ -171,12 +178,16 @@ namespace eka2l1::loader {
         if (dir_var.file_block_addr_ - file_offset) {
             stream.seek(dir_var.file_block_addr_ - file_offset, common::seek_where::beg);
             while (stream.tell() - (dir_var.file_block_addr_ - file_offset) < dir_var.file_block_size_) {
+                if (cancel_cb && cancel_cb()) {
+                    return false;
+                }
+
                 rofs_entry file_entry;
                 if (!file_entry.read(stream, version)) {
                     return false;
                 }
 
-                if (!extract_file(stream, file_entry, base, file_offset, progress, base_progress, max_progress)) {
+                if (!extract_file(stream, file_entry, base, file_offset, progress_cb, cancel_cb, max_pos)) {
                     LOG_ERROR(LOADER, "Fail to extract file with name: {}", common::ucs2_to_utf8(file_entry.filename_));
                 }
             }
@@ -189,7 +200,8 @@ namespace eka2l1::loader {
             }
 
             if (!extract_directory(stream, eka2l1::add_path(base, subdir_name + eka2l1::get_separator()),
-                version, file_offset, subdir_ent.file_addr_, progress, base_progress, max_progress)) {
+                version, file_offset, subdir_ent.file_addr_, progress_cb, cancel_cb, max_pos
+                                   )) {
                 return false;
             }
         }
@@ -207,8 +219,7 @@ namespace eka2l1::loader {
         return false;
     }
     
-    bool dump_rofs_system(common::ro_stream &stream, const std::string &path,std::atomic<int> &progress,
-        const int max_progress) {
+    bool dump_rofs_system(common::ro_stream &stream, const std::string &path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         rofs_header rheader;
         if (stream.read(&rheader, sizeof(rofs_header)) != sizeof(rofs_header)) {
             return false;
@@ -224,15 +235,19 @@ namespace eka2l1::loader {
 
         // lets hope that ROFS isn't affected
         int file_offset = rheader.dir_tree_offset_ - rheader.header_size_;
-        int base_progress = progress.load();
+        std::size_t max_pos = 0;
+
         const bool result = extract_directory(stream, path, rheader.rofs_format_version_, file_offset, rheader.dir_tree_offset_,
-            progress, base_progress, max_progress);
+            progress_cb, cancel_cb, max_pos);
 
         if (!result) {
             return false;
         }
 
-        progress = base_progress + max_progress;
+        if (progress_cb) {
+            progress_cb(1, 1);
+        }
+
         return true;
     }
 }

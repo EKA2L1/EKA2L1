@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <atomic>
 #include <cstdint>
 #include <string>
@@ -76,6 +78,5 @@ namespace eka2l1::loader {
         bool read(common::ro_stream &stream, const int version);
     };
 
-    bool dump_rofs_system(common::ro_stream &stream, const std::string &path, std::atomic<int> &progress,
-        const int max_progress = 100);
+    bool dump_rofs_system(common::ro_stream &stream, const std::string &path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
 }
