@@ -100,10 +100,15 @@ namespace eka2l1 {
 
     static device_installation_error dump_data_from_fpsx(loader::firmware::fpsx_header &header, common::ro_stream &stream, const std::string &drives_c_path,
         const std::string &drives_e_path, const std::string &drives_z_path, const std::string &rom_resident_path,
-        std::atomic<int> &progress, const int max_progress) {
+        progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         if (header.type_ == loader::firmware::FPSX_TYPE_INVALID) {
-            progress += max_progress;
+            if (progress_cb)
+                progress_cb(1, 1);
             return device_installation_none;
+        }
+
+        if (cancel_cb && cancel_cb()) {
+            return device_installation_general_failure;
         }
 
         std::vector<char> buf;
@@ -124,8 +129,14 @@ namespace eka2l1 {
                         static_cast<decltype(header_rofs)>(*root.cert_blocks_[0].header_);
 
                     const std::string stt = header_rofs.description_;
+                    bool canceled = false;
+
                     if (stt.find("CORE") != std::string::npos) {
                         for (std::size_t i = 0; i < root.code_blocks_.size(); i++) {
+                            if (cancel_cb && cancel_cb()) {
+                                canceled = true;
+                                break;
+                            }
                             std::uint32_t skip_taken = 0;
 
                             if (ignore_bootstrap_left != 0) {
@@ -147,6 +158,10 @@ namespace eka2l1 {
 
                             ignore_bootstrap_left -= skip_taken;
                         }
+                    }
+
+                    if (cancel_cb && cancel_cb()) {
+                        return device_installation_general_failure;
                     }
                 }
             }
@@ -178,7 +193,8 @@ namespace eka2l1 {
             common::ro_std_file_stream rom_read_stream(rom_final_path, true);
 
             if (!loader::dump_rom_files(reinterpret_cast<common::ro_stream*>(&rom_read_stream),
-                drives_z_path, progress, max_progress)) {
+                drives_z_path, progress_cb, cancel_cb)) {
+                common::remove(rom_final_path);
                 return device_installation_rom_file_corrupt;
             }
         }
@@ -253,13 +269,14 @@ namespace eka2l1 {
 
             fclose(fat_image_file);
 
-            progress += max_progress;
+            if (progress_cb)
+                progress_cb(1, 1);
         } else {
             // Extract the ROFS image
             common::ro_std_file_stream rofs_img_stream(image_path, true);
 
             // Dump quality ROFS content!!!!!
-            if (!loader::dump_rofs_system(rofs_img_stream, drives_z_path, progress, max_progress)) {
+            if (!loader::dump_rofs_system(rofs_img_stream, drives_z_path, progress_cb, cancel_cb)) {
                 LOG_ERROR(SYSTEM, "Error while dumping ROFS!");
                 return device_installation_rofs_corrupt;
             }
@@ -272,7 +289,8 @@ namespace eka2l1 {
 
     device_installation_error install_firmware(device_manager *dvcmngr, const std::string &vpl_path,
         const std::string &drives_c_path, const std::string &drives_e_path, const std::string &drives_z_path,
-        const std::string &rom_resident_path, device_firmware_choose_variant_callback choose_callback, std::atomic<int> &progress) {
+        const std::string &rom_resident_path, device_firmware_choose_variant_callback choose_callback,
+        progress_changed_callback progress_callback, cancel_requested_callback cancel_callback) {
         std::string cur_dir;
         if (!eka2l1::get_current_directory(cur_dir)) {
             LOG_ERROR(SYSTEM, "Can't get current directory!");
@@ -396,11 +414,10 @@ namespace eka2l1 {
         if (average_progress_max == 0) {
             LOG_ERROR(SYSTEM, "Why is there nothing to install!");
             return device_installation_vpl_file_invalid;
-        } else {
-            average_progress_max = 100 / average_progress_max;
         }
 
         std::string drives_z_temp_path = eka2l1::add_path(drives_z_path, "temp\\");
+        std::size_t so_far = 0;
 
         for (auto &fpsx_filename: filenames) {
             common::ro_std_file_stream fpsx_file_stream(fpsx_filename, true);
@@ -412,12 +429,22 @@ namespace eka2l1 {
                 return device_installation_fpsx_corrupt;
             }
 
+            progress_changed_callback wrapped_progress = nullptr;
+            if (progress_callback) {
+                wrapped_progress = [progress_callback, average_progress_max, so_far](const std::size_t taken, const std::size_t max) {
+                    return progress_callback(so_far * (100 / average_progress_max) + taken * (100 / average_progress_max) / max, 100);
+                };
+            }
+
             const auto result = dump_data_from_fpsx(fpsx_head.value(), fpsx_file_stream, drives_c_path, drives_e_path, drives_z_temp_path,
-                rom_resident_path, progress, average_progress_max);
+                rom_resident_path, wrapped_progress, cancel_callback);
 
             if (result != device_installation_none) {
+                common::delete_folder(drives_z_temp_path);
                 return result;
             }
+
+            so_far++;
         }
 
         // Start analyze and put it into device list
@@ -461,7 +488,10 @@ namespace eka2l1 {
             return device_installation_general_failure;
         }
 
-        progress = 100;
+        if (progress_callback) {
+            progress_callback(1, 1);
+        }
+
         return device_installation_none;
     }
 }

@@ -40,7 +40,6 @@
 
 namespace eka2l1::loader {
     bool should_install_requires_additional_rpkg(const std::string &path) {
-        static constexpr address EKA2_ROM_BASE = 0x80000000;
         common::ro_std_file_stream rom_file_stream(path, true);
 
         if (!rom_file_stream.valid()) {
@@ -65,7 +64,7 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent) {
+    static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent, const std::size_t total, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
         std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
             ::tolower);
@@ -87,33 +86,57 @@ namespace eka2l1::loader {
         int64_t take_def = 0x10000;
 
         std::array<char, 0x10000> temp;
+        bool failed = false;
 
         while (left) {
+            if (progress_cb) {
+                progress_cb(ftell(parent), total);
+            }
+
+            if (cancel_cb && cancel_cb()) {
+                failed = true;
+                break;
+            }
+
             int64_t take = left < take_def ? left : take_def;
 
             if (fread(temp.data(), 1, take, parent) != take) {
-                return false;
+                failed = true;
+                break;
             }
 
             if (fwrite(temp.data(), 1, take, wf) != take) {
-                return false;
+                failed = true;
+                break;
             }
 
             left -= take;
         }
 
         fclose(wf);
-
-        return true;
+        return !failed;
     }
 
-    device_installation_error install_rom(device_manager *dvcmngr, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, std::atomic<int> &res, const int max_progress) {
+    device_installation_error install_rom(device_manager *dvcmngr, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         const std::string temp_z_path = eka2l1::add_path(drives_z_resident_path, "temp\\");
         common::ro_std_file_stream rom_file_stream(path, true); 
-        const bool err = loader::dump_rom_files(reinterpret_cast<common::ro_stream*>(&rom_file_stream),
-            temp_z_path, res, max_progress);
+        progress_changed_callback wrapped_cb_1 = nullptr;
+
+        if (progress_cb) {
+            wrapped_cb_1 = [progress_cb](const std::size_t taked, const std::size_t total) {
+                progress_cb(taked / 3, total);
+            };
+        }
+
+        const bool err = loader::dump_rom_files(reinterpret_cast<common::ro_stream*>(&rom_file_stream), temp_z_path, wrapped_cb_1, cancel_cb);
+
         if (!err) {
+            common::delete_folder(temp_z_path);
             return device_installation_rom_file_corrupt;
+        }
+
+        if (progress_cb) {
+            progress_cb(1, 3);
         }
 
         epocver ver = determine_rpkg_symbian_version(temp_z_path);
@@ -124,7 +147,7 @@ namespace eka2l1::loader {
 
         if (!determine_rpkg_product_info(temp_z_path, manufacturer, firmcode, model)) {
             LOG_ERROR(SYSTEM, "Revert all changes");
-            eka2l1::common::remove(temp_z_path);
+            eka2l1::common::delete_folder(temp_z_path);
 
             return device_installation_determine_product_failure;
         }
@@ -137,7 +160,7 @@ namespace eka2l1::loader {
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
-            eka2l1::common::remove(add_path(drives_z_resident_path, firmcode_low + "\\"));
+            common::delete_folder(add_path(drives_z_resident_path, firmcode_low + "\\"));
 
             switch (err_adddvc) {
             case add_device_existed:
@@ -150,20 +173,36 @@ namespace eka2l1::loader {
             return device_installation_general_failure;
         }
 
+        if (progress_cb) {
+            progress_cb(2, 3);
+        }
+
         const std::string rom_path = add_path(rom_resident_path, firmcode_low + "\\");
         eka2l1::create_directories(rom_path);
 
-        eka2l1::common::copy_file(path, eka2l1::add_path(rom_path, "SYM.ROM"), true);        
+        eka2l1::common::copy_file(path, eka2l1::add_path(rom_path, "SYM.ROM"), true);
+
+        if (progress_cb) {
+            progress_cb(3, 3);
+        }
+
         return device_installation_none;
     }
 
     device_installation_error install_rpkg(device_manager *dvcmngr, const std::string &path, const std::string &devices_rom_path,
-        std::string &firmware_code_ret, std::atomic<int> &res, const int max_progress) {
+        std::string &firmware_code_ret, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         FILE *f = fopen(path.data(), "rb");
 
         if (!f) {
             return device_installation_not_exist;
         }
+
+        fseek(f, 0, SEEK_END);
+
+        // Total steps is 10. For progress reporting.
+        const std::size_t total_size = ftell(f) * 10 / 9;
+
+        fseek(f, 0, SEEK_SET);
 
         rpkg_header header;
 
@@ -212,8 +251,6 @@ namespace eka2l1::loader {
             return device_installation_rpkg_corrupt;
         }
 
-        float accumulated = 0.f;
-
         while (!feof(f)) {
             total_read_size = 0;
 
@@ -240,17 +277,26 @@ namespace eka2l1::loader {
 
             LOG_INFO(SYSTEM, "Extracting: {}", common::ucs2_to_utf8(entry.path));
 
-            if (!extract_file(devices_rom_path, f, entry)) {
+            if (!extract_file(devices_rom_path, f, entry, total_size, progress_cb, cancel_cb)) {
                 break;
             }
 
-            accumulated += static_cast<float>(max_progress) / header.count;
-            res = static_cast<int>(accumulated);
+            if (progress_cb) {
+                progress_cb(ftell(f), total_size);
+            }
         }
 
         fclose(f);
 
         const std::string folder_extracted = add_path(devices_rom_path, "temp\\");
+
+        if (cancel_cb && cancel_cb()) {
+            common::delete_folder(folder_extracted);
+            return device_installation_general_failure;
+        }
+
+        progress_cb(9, 10);
+
         epocver ver = determine_rpkg_symbian_version(folder_extracted);
 
         std::string manufacturer;
@@ -259,7 +305,7 @@ namespace eka2l1::loader {
 
         if (!determine_rpkg_product_info(folder_extracted, manufacturer, firmcode, model)) {
             LOG_ERROR(SYSTEM, "Revert all changes");
-            eka2l1::common::remove(add_path(devices_rom_path, "\\temp\\"));
+            common::delete_folder(add_path(devices_rom_path, "\\temp\\"));
 
             return device_installation_determine_product_failure;
         }
@@ -273,7 +319,7 @@ namespace eka2l1::loader {
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
-            eka2l1::common::remove(add_path(devices_rom_path, firmcode_low + "\\"));
+            common::delete_folder(add_path(devices_rom_path, firmcode_low + "\\"));
 
             switch (err_adddvc) {
             case add_device_existed:
@@ -286,7 +332,10 @@ namespace eka2l1::loader {
             return device_installation_general_failure;
         }
 
-        res = 100;
+        if (progress_cb) {
+            progress_cb(10, 10);
+        }
+
         return device_installation_none;
     }
 }
