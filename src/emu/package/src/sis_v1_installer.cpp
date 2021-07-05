@@ -25,6 +25,7 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/flate.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -33,7 +34,7 @@
 #include <cwctype>
 
 namespace eka2l1::loader {
-    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info, progress_changed_callback cb) {
+    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::optional<sis_old> res = *loader::parse_sis_old(common::ucs2_to_utf8(path));
         if (!res.has_value()) {
             return false;
@@ -60,11 +61,20 @@ namespace eka2l1::loader {
         }
 
         if (res->files.empty()) {
-            if (cb)
-                cb(1, 1);
+            if (progress_cb)
+                progress_cb(1, 1);
         }
 
-        for (auto &file : res->files) {
+        std::size_t processed = 0;
+        bool canceled = false;
+
+        for (; processed < res->files.size(); processed++) {
+            loader::sis_old_file &file = res->files[processed];
+            if (cancel_cb && cancel_cb()) {
+                canceled = true;
+                break;
+            }
+
             std::u16string dest = file.dest;
 
             if (dest.find(u"!") != std::u16string::npos) {
@@ -115,6 +125,11 @@ namespace eka2l1::loader {
             desc.sid = 0;
 
             while (left > 0) {
+                if (cancel_cb && cancel_cb()) {
+                    canceled = true;
+                    break;
+                }
+
                 size_t took = left < chunk ? left : chunk;
                 size_t readed = fread(temp.data(), 1, took, sis_file);
 
@@ -122,7 +137,9 @@ namespace eka2l1::loader {
                     fclose(sis_file);
                     f->close();
 
-                    return false;
+                    canceled = true;
+
+                    break;
                 }
 
                 if (res->header.op & 0x8) {
@@ -136,11 +153,11 @@ namespace eka2l1::loader {
                     decomped += inf;
                 }
 
-                if (cb) {
+                if (progress_cb) {
                     if (total_size != 0) {
-                        cb(decomped, total_size);
+                        progress_cb(decomped, total_size);
                     } else {
-                        cb(1, 1);
+                        progress_cb(1, 1);
                     }
                 }
 
@@ -150,9 +167,22 @@ namespace eka2l1::loader {
             if (!(res->header.op & 0x8))
                 inflateEnd(&stream);
 
+            if (canceled) {
+                common::remove(common::ucs2_to_utf8(dest));
+                break;
+            }
+
             info.file_descriptions.push_back(std::move(desc));
         }
 
-        return false;
+        if (canceled) {
+            for (std::size_t i = 0; i < processed; i++) {
+                common::remove(common::ucs2_to_utf8(info.file_descriptions[i].target));
+            }
+
+            return false;
+        }
+
+        return true;
     }
 }

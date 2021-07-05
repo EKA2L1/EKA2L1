@@ -114,7 +114,8 @@ namespace eka2l1 {
             bool uninstall_package(package::object &pkg);
             bool remove_registeration(package::object &pkg);
 
-            package::installation_result install_package(const std::u16string &path, const drive_number drive, progress_changed_callback cb = nullptr, const bool silent = false);
+            package::installation_result install_package(const std::u16string &path, const drive_number drive, progress_changed_callback progress_cb = nullptr,
+                                                         cancel_requested_callback cancel_cb = nullptr, const bool silent = false);
         };
     }
 }
