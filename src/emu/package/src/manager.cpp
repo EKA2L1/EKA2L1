@@ -77,7 +77,7 @@ namespace eka2l1 {
                         while (std::optional<entry_info> stub_file_info = stub_dir_iterator->get_next_entry()) {
                             auto stub_file_real_path = sys->get_raw_path(common::utf8_to_ucs2(stub_file_info->full_path));
                             if (stub_file_real_path.has_value()) {
-                                install_package(stub_file_real_path.value(), drv, nullptr, true);
+                                install_package(stub_file_real_path.value(), drv, nullptr, nullptr, true);
                             }
                         }
                     }
@@ -519,7 +519,7 @@ namespace eka2l1 {
             }
         }
 
-        package::installation_result packages::install_package(const std::u16string &path, const drive_number drive, progress_changed_callback cb, const bool silent) {
+        package::installation_result packages::install_package(const std::u16string &path, const drive_number drive, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, const bool silent) {
             std::optional<loader::sis_type> sis_ver = loader::identify_sis_type(common::ucs2_to_utf8(path));
 
             if (!sis_ver) {
@@ -546,13 +546,13 @@ namespace eka2l1 {
                     interpreter.var_resolver = var_resolver;
                 }
 
-                std::unique_ptr<loader::sis_registry_tree> new_infos = interpreter.interpret(cb);
+                std::unique_ptr<loader::sis_registry_tree> new_infos = interpreter.interpret(progress_cb, cancel_cb);
 
                 if (new_infos) {
                     traverse_tree_and_add_packages(*new_infos);
 
                     for (const auto &another_path: interpreter.extra_sis_files()) {
-                        install_package(another_path, drive, cb);
+                        install_package(another_path, drive, progress_cb, cancel_cb);
                     }
                 } else {
                     return package::installation_result_aborted;
@@ -562,7 +562,9 @@ namespace eka2l1 {
                 final_obj.file_major_version = 5;
                 final_obj.file_minor_version = 4;
 
-                loader::install_sis_old(path, sys, drive, final_obj, cb);
+                if (!loader::install_sis_old(path, sys, drive, final_obj, progress_cb, cancel_cb)) {
+                    return package::installation_result_invalid;
+                }
 
                 add_package(final_obj, nullptr);
             }

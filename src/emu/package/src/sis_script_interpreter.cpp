@@ -129,7 +129,7 @@ namespace eka2l1 {
             fclose(temp);
         }
 
-        void ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
+        bool ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
             std::string rp = eka2l1::file_directory(path);
             eka2l1::create_directories(rp);
 
@@ -168,8 +168,14 @@ namespace eka2l1 {
             }
 
             std::uint32_t total_inflated_size = 0;
+            bool cancel_requested = false;
 
             while (left > 0) {
+                if (cancel_cb && cancel_cb()) {
+                    cancel_requested = true;
+                    break;
+                }
+
                 std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
                 int grab = static_cast<int>(left < CHUNK_SIZE ? left : CHUNK_SIZE);
 
@@ -177,7 +183,7 @@ namespace eka2l1 {
 
                 if (!data_stream->valid()) {
                     LOG_ERROR(PACKAGE, "Stream fail, skipping this file, should report to developers.");
-                    return;
+                    return false;
                 }
 
                 if (compressed.algorithm == sis_compressed_algorithm::deflated) {
@@ -186,8 +192,8 @@ namespace eka2l1 {
                     auto res = flate::inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
 
                     if (!res) {
-                        LOG_ERROR(PACKAGE, "Uncompress failed! Report to developers");
-                        return;
+                        LOG_ERROR(PACKAGE, "Decompress failed! Report to developers");
+                        return false;
                     }
 
                     fwrite(temp_inflated_chunk.data(), 1, inflated_size, file);
@@ -211,7 +217,7 @@ namespace eka2l1 {
             }
 
             if (compressed.algorithm == sis_compressed_algorithm::deflated) {
-                if (total_inflated_size != compressed.uncompressed_size) {
+                if (!cancel_requested && (total_inflated_size != compressed.uncompressed_size)) {
                     LOG_ERROR(PACKAGE, "Sanity check failed: Total inflated size not equal to specified uncompress size "
                               "in SISCompressed ({} vs {})!",
                         total_inflated_size, compressed.uncompressed_size);
@@ -221,12 +227,13 @@ namespace eka2l1 {
             }
 
             fclose(file);
-        }
 
-        static bool is_expression_integral_type(const ss_expr_op op) {
-            return (op == ss_expr_op::EPrimTypeNumber)
-                || (op == ss_expr_op::EPrimTypeOption)
-                || (op == ss_expr_op::EPrimTypeVariable);
+            if (cancel_requested) {
+                common::remove(path);
+                return false;
+            }
+
+            return true;
         }
 
         int ss_interpreter::gasp_true_form_of_integral_expression(const sis_expression &expr) {
@@ -670,7 +677,7 @@ namespace eka2l1 {
             }
         }
 
-        std::unique_ptr<sis_registry_tree> ss_interpreter::interpret(progress_changed_callback cb) {
+        std::unique_ptr<sis_registry_tree> ss_interpreter::interpret(progress_changed_callback cb, cancel_requested_callback ccb) {
             if (install_data->data_units.fields.empty()) {
                 LOG_INFO(PACKAGE, "Interpreting a stub SIS");
             }
@@ -684,16 +691,33 @@ namespace eka2l1 {
             extract_target_decomped_size = 0;
 
             progress_changed_cb = cb;
+            cancel_cb = ccb;
 
             if (!interpret(main_controller, *trees, 0)) {
                 return nullptr;
             }
 
             if (extract_targets.empty()) {
-                cb(1, 1);
+                if (cb)
+                    cb(1, 1);
             } else {
-                for (const extract_target_info &target: extract_targets) {
-                    extract_file(target.file_path_, target.data_unit_block_index_, target.data_unit_index_);
+                std::size_t n = 0;
+                bool cancel_requested = false;
+
+                for (; n < extract_targets.size(); n++) {
+                    extract_target_info &target = extract_targets[n];
+                    if (!extract_file(target.file_path_, target.data_unit_block_index_, target.data_unit_index_)) {
+                        cancel_requested = true;
+                        break;
+                    }
+                }
+
+                if (cancel_requested) {
+                    for (std::size_t i = 0; i < n; i++) {
+                        common::remove(extract_targets[i].file_path_);
+                    }
+
+                    return nullptr;
                 }
             }
 
