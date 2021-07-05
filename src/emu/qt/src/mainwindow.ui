@@ -79,6 +79,7 @@
     <addaction name="action_package_manager"/>
     <addaction name="separator"/>
     <addaction name="action_mount_game_card_dump"/>
+    <addaction name="action_mount_recent_dumps"/>
     <addaction name="separator"/>
     <addaction name="action_settings"/>
    </widget>
@@ -193,6 +194,11 @@
   <action name="action_fullscreen">
    <property name="text">
     <string>Fullscreen</string>
+   </property>
+  </action>
+  <action name="action_mount_recent_dumps">
+   <property name="text">
+    <string>Recent dumps</string>
    </property>
   </action>
  </widget>
