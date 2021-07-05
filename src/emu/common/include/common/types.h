@@ -168,6 +168,7 @@ inline bool operator < (const language lhs, const language rhs) {
 const char *num_to_lang(const int num);
 
 using progress_changed_callback = std::function<void(const std::size_t, const std::size_t)>;
+using cancel_requested_callback = std::function<bool()>;
 
 // Formatting helper, type-specific preprocessing for improving safety and functionality
 template <typename T, typename = void>
