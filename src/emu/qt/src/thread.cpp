@@ -243,17 +243,32 @@ namespace eka2l1::desktop {
         eka2l1::common::set_thread_name(os_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
-        const bool success = state.stage_two();
+        bool first_time = true;
 
-        state.init_event.set();
-        state.graphics_sema.wait();
+        while (true) {
+            const bool success = state.stage_two();
+            state.init_event.set();
+
+            if (first_time) {
+                state.graphics_sema.wait();
+                first_time = false;
+            }
+
+            if (success) {
+                break;
+            }
+
+            // Try wait for initialization from other parties to make this success.
+            state.init_event.reset();
+            state.init_event.wait();
+        }
 
         // Register SEH handler for this thread
 #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
         _set_se_translator(seh_handler_translator_func);
 #endif
 
-        while (success && !state.should_emu_quit) {
+        while (!state.should_emu_quit) {
 #if ENABLE_SEH_HANDLER
             try {
 #endif
@@ -272,10 +287,7 @@ namespace eka2l1::desktop {
             }
         }
 
-        if (success) {
-            state.symsys.reset();
-        }
-
+        state.symsys.reset();
         state.graphics_sema.notify();
         
 #if EKA2L1_PLATFORM(WIN32)
@@ -293,6 +305,7 @@ namespace eka2l1::desktop {
             kern->stop_cores_idling();
 
         state.graphics_driver->abort();
+        state.init_event.set();
     }
 
     int emulator_entry(QApplication &application, emulator &state, const int argc, const char **argv) {
