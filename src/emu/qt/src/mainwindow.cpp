@@ -2,13 +2,17 @@
 #include <qt/displaywidget.h>
 #include <qt/mainwindow.h>
 #include <qt/aboutdialog.h>
+#include <qt/device_install_dialog.h>
 #include <qt/state.h>
 #include "./ui_mainwindow.h"
 
 #include <system/epoc.h>
 #include <kernel/kernel.h>
 
+#include <common/algorithm.h>
 #include <common/language.h>
+#include <common/platform.h>
+#include <common/path.h>
 
 #include <services/applist/applist.h>
 #include <services/window/window.h>
@@ -16,12 +20,16 @@
 #include <services/fbs/fbs.h>
 #include <package/manager.h>
 
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QFileDialog>
 #include <QFuture>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QProgressDialog>
 #include <QtConcurrent/QtConcurrent>
+
+static constexpr const char *RECENT_MOUNT_SETTINGS_NAME = "recentMountFolders";
 
 static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
     switch (rotation) {
@@ -149,32 +157,8 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
 
-    eka2l1::system *system = emulator_state_.symsys.get();
-    if (system) {
-        eka2l1::kernel_system *kernel = system->get_kernel_system();
-        if (kernel) {
-            const std::string al_server_name = eka2l1::get_app_list_server_name_by_epocver(kernel->get_epoc_version());
-            const std::string fbs_server_name = eka2l1::epoc::get_fbs_server_name_by_epocver(kernel->get_epoc_version());
-
-            eka2l1::applist_server *al_serv = reinterpret_cast<eka2l1::applist_server*>(kernel->get_by_name<eka2l1::service::server>(al_server_name));
-            eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server*>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
-
-            if (al_serv && fbs_serv) {
-                applist_ = new applist_widget(this, al_serv, fbs_serv);
-                ui_->layout_main->addWidget(applist_);
-            }
-        }
-
-        eka2l1::manager::packages *pkgmngr = system->get_packages();
-        pkgmngr->show_text = [this](const char *text, const bool one_button) -> bool {
-            // We only have one receiver, so it's ok ;)
-            return emit package_install_text_ask(text, one_button);
-        };
-
-        pkgmngr->choose_lang = [this](const int *languages, const int language_count) -> int {
-            return emit package_install_language_choose(languages, language_count);
-        };
-    }
+    setup_app_list();
+    setup_package_installer_ui_hooks();
 
     if (!applist_) {
         ui_->label_al_not_available->setVisible(true);
@@ -185,28 +169,214 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
 
     ui_->layout_main->addWidget(displayer_);
 
+    recent_mount_folder_menu_ = new QMenu(this);
+
+    recent_mount_clear_ = new QAction(this);
+    recent_mount_clear_->setText(tr("Clear menu"));
+
+    connect(recent_mount_clear_, &QAction::triggered, this, &main_window::on_recent_mount_clear_clicked);
+
+    for (std::size_t i = 0; i < MAX_RECENT_ENTRIES; i++) {
+        recent_mount_folder_actions_[i] = new QAction(this);
+        recent_mount_folder_actions_[i]->setVisible(false);
+
+        recent_mount_folder_menu_->addAction(recent_mount_folder_actions_[i]);
+        connect(recent_mount_folder_actions_[i], &QAction::triggered, this, &main_window::on_recent_mount_card_folder_clicked);
+    }
+
+    recent_mount_folder_menu_->addSeparator();
+    recent_mount_folder_menu_->addAction(recent_mount_clear_);
+
+    refresh_recent_mounts();
+
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
+    connect(ui_->action_device, &QAction::triggered, this, &main_window::on_device_install_clicked);
+    connect(ui_->action_mount_game_card_dump, &QAction::triggered, this, &main_window::on_mount_card_clicked);
 
     connect(this, &main_window::package_install_progress_change, this, &main_window::on_package_install_progress_change);
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
 
-    connect(applist_, &QListWidget::itemClicked, this, &main_window::on_app_clicked);
+    setAcceptDrops(true);
 }
 
-main_window::~main_window()
-{
+void main_window::setup_app_list() {
+    if (applist_)
+        return;
+
+    eka2l1::system *system = emulator_state_.symsys.get();
+    eka2l1::kernel_system *kernel = system->get_kernel_system();
+    if (kernel) {
+        const std::string al_server_name = eka2l1::get_app_list_server_name_by_epocver(kernel->get_epoc_version());
+        const std::string fbs_server_name = eka2l1::epoc::get_fbs_server_name_by_epocver(kernel->get_epoc_version());
+
+        eka2l1::applist_server *al_serv = reinterpret_cast<eka2l1::applist_server*>(kernel->get_by_name<eka2l1::service::server>(al_server_name));
+        eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server*>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
+
+        if (al_serv && fbs_serv) {
+            applist_ = new applist_widget(this, al_serv, fbs_serv);
+            ui_->layout_main->addWidget(applist_);
+
+            connect(applist_, &QListWidget::itemClicked, this, &main_window::on_app_clicked);
+        }
+    }
+}
+
+void main_window::setup_package_installer_ui_hooks() {
+    eka2l1::system *system = emulator_state_.symsys.get();
+    eka2l1::manager::packages *pkgmngr = system->get_packages();
+
+    pkgmngr->show_text = [this](const char *text, const bool one_button) -> bool {
+        // We only have one receiver, so it's ok ;)
+        return emit package_install_text_ask(text, one_button);
+    };
+
+    pkgmngr->choose_lang = [this](const int *languages, const int language_count) -> int {
+        return emit package_install_language_choose(languages, language_count);
+    };
+}
+
+main_window::~main_window() {
     if (applist_) {
         delete applist_;
+    }
+
+    if (displayer_) {
+        delete displayer_;
+    }
+
+    delete recent_mount_folder_menu_;
+    delete recent_mount_clear_;
+
+    for (std::size_t i = 0; i < MAX_RECENT_ENTRIES; i++) {
+        delete recent_mount_folder_actions_[i];
     }
 
     delete ui_;
 }
 
 void main_window::on_about_triggered() {
-    about_dialog *aboutDiag = new about_dialog(this);
-    aboutDiag->show();
+    about_dialog *about_diag = new about_dialog(this);
+    about_diag->show();
+}
+
+void main_window::on_new_device_added() {
+    if (!applist_) {
+        ui_->label_al_not_available->setVisible(false);
+
+        emulator_state_.symsys->startup();
+        emulator_state_.symsys->set_device(0);
+
+        // Set and wait for reinitialization
+        emulator_state_.init_event.set();
+        emulator_state_.init_event.wait();
+
+        setup_app_list();
+    }
+}
+
+void main_window::on_device_install_clicked() {
+    device_install_dialog *install_diag = new device_install_dialog(this, emulator_state_.symsys->get_device_manager(), emulator_state_.conf);
+    connect(install_diag, &device_install_dialog::new_device_added, this, &main_window::on_new_device_added);
+
+    install_diag->show();
+}
+
+void main_window::refresh_recent_mounts() {
+    QSettings settings;
+    QStringList recent_mount_folders = settings.value(RECENT_MOUNT_SETTINGS_NAME).toStringList();
+
+    std::size_t i = 0;
+
+    for (; i < eka2l1::common::min(recent_mount_folders.size(), static_cast<qsizetype>(MAX_RECENT_ENTRIES)); i++) {
+        recent_mount_folder_actions_[i]->setText(QString("&%1 %2").arg(i + 1).arg(recent_mount_folders[i]));
+        recent_mount_folder_actions_[i]->setData(recent_mount_folders[i]);
+        recent_mount_folder_actions_[i]->setVisible(true);
+    }
+
+    for (; i < MAX_RECENT_ENTRIES; i++) {
+        recent_mount_folder_actions_[i]->setVisible(false);
+    }
+
+    if (recent_mount_folders.isEmpty()) {
+        ui_->action_mount_recent_dumps->setVisible(false);
+        ui_->action_mount_recent_dumps->setMenu(nullptr);
+    } else {
+        ui_->action_mount_recent_dumps->setVisible(true);
+        ui_->action_mount_recent_dumps->setMenu(recent_mount_folder_menu_);
+    }
+}
+
+void main_window::mount_game_card_dump(QString mount_folder) {
+    if (eka2l1::is_separator(mount_folder.back().unicode())) {
+        // We don't care much about the last separator. This is for system folder check ;)
+        mount_folder.erase(mount_folder.begin() + mount_folder.size() - 1, mount_folder.end());
+    }
+
+    if (mount_folder.endsWith("system", Qt::CaseInsensitive)) {
+#if !EKA2L1_PLATFORM(WIN32)
+        if (mount_folder.endsWith("system", Qt::CaseSensitive)) {
+            QMessageBox::Information(this, tr("The game card dump has case-sensitive files. This may cause problems with the emulator."));
+        }
+#endif
+
+        QMessageBox::StandardButton result = QMessageBox::question(this, tr("Game card dump folder correction"), tr("The selected path seems to be incorrect.<br>"
+            "Do you want the emulator to correct it?"));
+
+        if (result == QMessageBox::Yes) {
+            mount_folder.erase(mount_folder.begin() + mount_folder.length() - 7, mount_folder.end());
+        }
+    }
+
+    eka2l1::io_system *io = emulator_state_.symsys->get_io_system();
+
+    io->unmount(drive_e);
+    io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, mount_folder.toStdU16String());
+
+    QSettings settings;
+    QStringList recent_mount_folders = settings.value(RECENT_MOUNT_SETTINGS_NAME).toStringList();
+
+    if (recent_mount_folders.size() == MAX_RECENT_ENTRIES) {
+        recent_mount_folders.removeLast();
+    }
+
+    if (recent_mount_folders.indexOf(mount_folder) == -1)
+        recent_mount_folders.prepend(mount_folder);
+
+    settings.setValue(RECENT_MOUNT_SETTINGS_NAME, recent_mount_folders);
+    settings.sync();
+
+    refresh_recent_mounts();
+
+    if (applist_) {
+        applist_->reload_whole_list();
+    }
+}
+
+void main_window::on_recent_mount_clear_clicked() {
+    QSettings settings;
+    QStringList empty_list;
+
+    // I'm utterly failure, can't write more. Pure lazy
+    settings.setValue(RECENT_MOUNT_SETTINGS_NAME, empty_list);
+    settings.sync();
+
+    refresh_recent_mounts();
+}
+
+void main_window::on_recent_mount_card_folder_clicked() {
+    QAction *being = qobject_cast<QAction*>(sender());
+    if (being) {
+        mount_game_card_dump(being->data().toString());
+    }
+}
+
+void main_window::on_mount_card_clicked() {
+    QString mount_folder = QFileDialog::getExistingDirectory(this, tr("Choose the game card dump folder"));
+    if (!mount_folder.isEmpty()) {
+        mount_game_card_dump(mount_folder);
+    }
 }
 
 void main_window::setup_screen_draw() {
@@ -272,8 +442,9 @@ int main_window::on_package_install_language_choose(const int *languages, const 
         language_string_list.push_back(QString::fromUtf8(lang_name_in_std.c_str()));
     }
 
-    QString result = QInputDialog::getItem(this, tr("Choose a language for the package"), QString(), language_string_list);
-    if (result.isEmpty()) {
+    bool go_fine = false;
+    QString result = QInputDialog::getItem(this, tr("Choose a language for the package"), QString(), language_string_list, 0, false, &go_fine);
+    if (result.isEmpty() || !go_fine) {
         return -1;
     }
 
@@ -286,22 +457,21 @@ int main_window::on_package_install_language_choose(const int *languages, const 
     return languages[index];
 }
 
-void main_window::on_package_install_clicked() {
-    QString package_file_path = QFileDialog::getOpenFileName(this, tr("Choose the file to install"),
-                                                             QString(), tr("SIS files (*.sis *.sisx)"));
-
+void main_window::spawn_package_install_camper(QString package_file_path) {
     if (!package_file_path.isEmpty()) {
         eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
         if (pkgmngr) {
             current_package_install_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
 
-            current_package_install_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint);
+            current_package_install_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
             current_package_install_dialog_->setWindowTitle(tr("Installing package progress"));
             current_package_install_dialog_->show();
 
             QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path]() {
                 return pkgmngr->install_package(package_file_path.toStdU16String(), drive_e, [this](const std::size_t done, const std::size_t total) {
                     emit package_install_progress_change(done, total);
+                }, [this] {
+                    return current_package_install_dialog_->wasCanceled();
                 });
             });
 
@@ -310,30 +480,44 @@ void main_window::on_package_install_clicked() {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
 
+            bool no_more_info = false;
+
+            if (current_package_install_dialog_->wasCanceled()) {
+                no_more_info = true;
+            }
+
             current_package_install_dialog_->close();
 
-            switch (install_future.result()) {
-            case eka2l1::package::installation_result_aborted: {
-                QMessageBox::information(this, tr("Installation aborted"), tr("The installation has been canceled"));
-                break;
-            }
+            if (!no_more_info) {
+                switch (install_future.result()) {
+                case eka2l1::package::installation_result_aborted: {
+                    QMessageBox::information(this, tr("Installation aborted"), tr("The installation has been canceled"));
+                    break;
+                }
 
-            case eka2l1::package::installation_result_invalid: {
-                QMessageBox::critical(this, tr("Installation failed"), tr("Fail to install package at path: %1. "
-                    "Ensure the path points to a valid SIS/SISX file.").arg(package_file_path));
-                break;
-            }
+                case eka2l1::package::installation_result_invalid: {
+                    QMessageBox::critical(this, tr("Installation failed"), tr("Fail to install package at path: %1. "
+                        "Ensure the path points to a valid SIS/SISX file.").arg(package_file_path));
+                    break;
+                }
 
-            case eka2l1::package::installation_result_success: {
-                QMessageBox::information(this, tr("Installation success"), tr("Package has been successfully installed"));
-                break;
-            }
+                case eka2l1::package::installation_result_success: {
+                    QMessageBox::information(this, tr("Installation success"), tr("Package has been successfully installed"));
+                    break;
+                }
 
-            default:
-                break;
+                default:
+                    break;
+                }
             }
         }
     }
+}
+
+void main_window::on_package_install_clicked() {
+    QString package_file_path = QFileDialog::getOpenFileName(this, tr("Choose the file to install"),
+                                                             QString(), tr("SIS file (*.sis *.sisx)"));
+    spawn_package_install_camper(package_file_path);
 }
 
 void main_window::resizeEvent(QResizeEvent *event) {
@@ -362,6 +546,28 @@ void main_window::resizeEvent(QResizeEvent *event) {
                     scr = scr->next;
                 }
             }
+        }
+    }
+}
+
+void main_window::dragEnterEvent(QDragEnterEvent *event) {
+    if (event->mimeData()->hasUrls()) {
+        QList<QUrl> list_url = event->mimeData()->urls();
+        if (list_url.size() == 1) {
+            QString local_path = list_url[0].toLocalFile();
+            if (local_path.endsWith(".sis") || local_path.endsWith(".sisx")) {
+                event->acceptProposedAction();
+            }
+        }
+    }
+}
+
+void main_window::dropEvent(QDropEvent *event) {
+    QList<QUrl> list_url = event->mimeData()->urls();
+    if (list_url.size() == 1) {
+        QString local_path = list_url[0].toLocalFile();
+        if (local_path.endsWith(".sis") || local_path.endsWith(".sisx")) {
+            spawn_package_install_camper(local_path);
         }
     }
 }
