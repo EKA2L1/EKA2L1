@@ -512,6 +512,10 @@ namespace eka2l1::kernel {
         }
     }
 
+    bool process::has_child_process(kernel::process *pr) {
+        return (std::find(child_processes_.begin(), child_processes_.end(), pr) != child_processes_.end());
+    }
+
     void process::detatch_from_parent() {
         if (parent_process_) {
             auto &child_array = parent_process_->child_processes_;
