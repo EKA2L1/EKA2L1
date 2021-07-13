@@ -48,6 +48,7 @@ namespace eka2l1::epoc::adapter {
 
     public:
         explicit gdr_font_file_adapter(std::vector<std::uint8_t> &data_);
+        ~gdr_font_file_adapter() override;
 
         bool is_valid() override {
             // This is valid if the stream still exists
