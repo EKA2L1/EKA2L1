@@ -119,15 +119,13 @@ static void on_ui_window_key_release(void *userdata, const int key) {
         emu->winserv->queue_input_from_driver(key_evt);
 }
 
-static eka2l1::drivers::input_event on_ui_window_key_press(void *userdata, const int key) {
+static void on_ui_window_key_press(void *userdata, const int key) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::pressed);
 
     const std::lock_guard<std::mutex> guard(emu->lockdown);
     if (emu->winserv)
         emu->winserv->queue_input_from_driver(key_evt);
-
-    return key_evt;
 }
 
 namespace eka2l1::desktop {
@@ -161,8 +159,7 @@ namespace eka2l1::desktop {
 
         switch (state.graphics_driver->get_current_api()) {
         case drivers::graphic_api::opengl: {
-            state.graphics_driver->set_display_hook([window, &state]() {
-                //window->set_fullscreen(state.);
+            state.graphics_driver->set_display_hook([window]() {
                 window->swap_buffer();
                 window->poll_events();
             });
@@ -184,7 +181,8 @@ namespace eka2l1::desktop {
             const std::lock_guard<std::mutex> guard(state.lockdown);
             auto evt = make_controller_event_driver(jid, button, pressed);
 
-            if (state.winserv) {
+            // If the handler accepts it
+            if (state.ui_main->controller_event_handler(evt) && state.winserv) {
                 state.winserv->queue_input_from_driver(evt);
             }
         };
@@ -306,6 +304,8 @@ namespace eka2l1::desktop {
 
         state.graphics_driver->abort();
         state.init_event.set();
+
+        delete state.ui_main;
     }
 
     int emulator_entry(QApplication &application, emulator &state, const int argc, const char **argv) {
@@ -382,11 +382,11 @@ namespace eka2l1::desktop {
 
         window_title += std::string(" - ") + random_references[eka2l1::random_range(0, random_references_count - 1)];
 
-        main_window window(nullptr, state);
-        window.show();
-        window.setWindowTitle(QString::fromUtf8(window_title.c_str()));
+        state.ui_main = new main_window(nullptr, state);
+        state.ui_main->show();
+        state.ui_main->setWindowTitle(QString::fromUtf8(window_title.c_str()));
 
-        state.window = window.render_window();
+        state.window = state.ui_main->render_window();
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 
         const int exec_code = application.exec();

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>700</width>
-    <height>264</height>
+    <height>290</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -28,6 +28,12 @@
    </property>
    <item row="2" column="0">
     <widget class="QWidget" name="rpkg_browse_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <layout class="QHBoxLayout" name="rpkg_browse_layout">
       <item>
        <widget class="QLabel" name="rpkg_edit_name_label">
@@ -55,6 +61,12 @@
    </item>
    <item row="0" column="0">
     <widget class="QWidget" name="installation_choose_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <layout class="QHBoxLayout" name="installation_choose_layout" stretch="0,0">
       <property name="spacing">
        <number>2</number>
@@ -94,6 +106,12 @@
    </item>
    <item row="5" column="0">
     <widget class="QWidget" name="opinion_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <layout class="QHBoxLayout" name="confirmation_layout">
       <item>
        <widget class="QPushButton" name="confirmation_install_btn">
@@ -126,6 +144,12 @@
    </item>
    <item row="1" column="0">
     <widget class="QWidget" name="rom_browse_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <layout class="QHBoxLayout" name="rom_browse_layout">
       <item>
        <widget class="QLabel" name="rom_edit_name_label">
@@ -156,6 +180,12 @@
    </item>
    <item row="3" column="0">
     <widget class="QWidget" name="vpl_browse_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <layout class="QHBoxLayout" name="vpl_browse_layout">
       <item>
        <widget class="QLabel" name="vpl_edit_name_label">

@@ -3,18 +3,25 @@
 #include <qt/mainwindow.h>
 #include <qt/aboutdialog.h>
 #include <qt/device_install_dialog.h>
+#include <qt/settings_dialog.h>
 #include <qt/state.h>
+#include <qt/utils.h>
 #include "./ui_mainwindow.h"
 
 #include <system/epoc.h>
+#include <system/devices.h>
 #include <kernel/kernel.h>
 
 #include <common/algorithm.h>
+#include <common/fileutils.h>
 #include <common/language.h>
 #include <common/platform.h>
 #include <common/path.h>
 
+#include <config/app_settings.h>
+
 #include <services/applist/applist.h>
+#include <services/ui/cap/oom_app.h>
 #include <services/window/window.h>
 #include <services/window/screen.h>
 #include <services/fbs/fbs.h>
@@ -27,9 +34,8 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QProgressDialog>
+#include <QSettings>
 #include <QtConcurrent/QtConcurrent>
-
-static constexpr const char *RECENT_MOUNT_SETTINGS_NAME = "recentMountFolders";
 
 static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
     switch (rotation) {
@@ -117,10 +123,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     dest.top = eka2l1::vec2(x, y);
     dest.size = eka2l1::vec2(width, height);
 
-    cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
-    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), 0.0f, eka2l1::drivers::bitmap_draw_flag_no_flip);
-
-    if (scr->dsa_texture) {
+    if (scr->last_texture_access) {
         cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
         advance_dsa_pos_around_origin(dest, crr_mode.rotation);
 
@@ -131,6 +134,9 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         }
 
         cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(crr_mode.rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+    } else {
+        cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
+        cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), 0.0f, eka2l1::drivers::bitmap_draw_flag_no_flip);
     }
 
     cmd_builder->load_backup_state();
@@ -189,12 +195,37 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
 
     refresh_recent_mounts();
 
+    current_device_label_ = new QLabel(this);
+    screen_status_label_ = new QLabel(this);
+
+    current_device_label_->setAlignment(Qt::AlignCenter);
+    screen_status_label_->setAlignment(Qt::AlignRight);
+
+    ui_->status_bar->addPermanentWidget(current_device_label_, 1);
+    ui_->status_bar->addPermanentWidget(screen_status_label_, 1);
+
+    ui_->action_pause->setEnabled(false);
+    ui_->action_restart->setEnabled(false);
+
+    addAction(ui_->action_fullscreen);
+
+    refresh_current_device_label();
+    make_default_binding_profile();
+
+    QSettings settings;
+    ui_->status_bar->setVisible(!settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
+    active_screen_number_ = settings.value(SHOW_SCREEN_NUMBER_SETTINGS_NAME, 0).toInt();
+
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
+    connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
     connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
     connect(ui_->action_device, &QAction::triggered, this, &main_window::on_device_install_clicked);
     connect(ui_->action_mount_game_card_dump, &QAction::triggered, this, &main_window::on_mount_card_clicked);
+    connect(ui_->action_fullscreen, &QAction::toggled, this, &main_window::on_fullscreen_toogled);
+    connect(ui_->action_restart, &QAction::triggered, this, &main_window::on_restart_requested);
 
     connect(this, &main_window::package_install_progress_change, this, &main_window::on_package_install_progress_change);
+    connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update);
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
 
@@ -215,10 +246,10 @@ void main_window::setup_app_list() {
         eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server*>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
 
         if (al_serv && fbs_serv) {
-            applist_ = new applist_widget(this, al_serv, fbs_serv);
+            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system());
             ui_->layout_main->addWidget(applist_);
 
-            connect(applist_, &QListWidget::itemClicked, this, &main_window::on_app_clicked);
+            connect(applist_, &applist_widget::app_launch, this, &main_window::on_app_clicked);
         }
     }
 }
@@ -237,6 +268,14 @@ void main_window::setup_package_installer_ui_hooks() {
     };
 }
 
+eka2l1::epoc::screen *main_window::get_current_active_screen() {
+    return ::get_current_active_screen(emulator_state_.symsys.get(), active_screen_number_);
+}
+
+eka2l1::config::app_setting *main_window::get_active_app_setting() {
+    return ::get_active_app_setting(emulator_state_.symsys.get(), *emulator_state_.app_settings, active_screen_number_);
+}
+
 main_window::~main_window() {
     if (applist_) {
         delete applist_;
@@ -253,12 +292,110 @@ main_window::~main_window() {
         delete recent_mount_folder_actions_[i];
     }
 
+    delete current_device_label_;
+    delete screen_status_label_;
+
     delete ui_;
+}
+
+void main_window::refresh_current_device_label() {
+    eka2l1::device_manager *dvcmngr = emulator_state_.symsys->get_device_manager();
+    if (dvcmngr) {
+        eka2l1::device *crr = dvcmngr->get_current();
+        if (crr) {
+            current_device_label_->setText(QString("%1 (%2)").arg(QString::fromUtf8(crr->model.c_str()), QString::fromUtf8(crr->firmware_code)));
+        }
+    }
 }
 
 void main_window::on_about_triggered() {
     about_dialog *about_diag = new about_dialog(this);
     about_diag->show();
+}
+
+void main_window::on_settings_triggered() {
+    settings_dialog *settings_diag = new settings_dialog(this, emulator_state_.symsys.get(), emulator_state_.joystick_controller.get(),
+                                                         emulator_state_.app_settings.get(), emulator_state_.conf);
+
+    connect(settings_diag, &settings_dialog::cursor_visibility_change, this, &main_window::on_cursor_visibility_change);
+    connect(settings_diag, &settings_dialog::status_bar_visibility_change, this, &main_window::on_status_bar_visibility_change);
+    connect(settings_diag, &settings_dialog::relaunch, this, &main_window::on_relaunch_request);
+    connect(settings_diag, &settings_dialog::restart, this, &main_window::on_device_set_requested);
+    connect(settings_diag, &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
+    connect(this, &main_window::app_launching, settings_diag, &settings_dialog::on_app_launching);
+    connect(this, &main_window::controller_button_press, settings_diag, &settings_dialog::on_controller_button_press);
+    connect(this, &main_window::screen_focus_group_changed, settings_diag, &settings_dialog::refresh_app_configuration_details);
+    connect(this, &main_window::restart_requested, settings_diag, &settings_dialog::on_restart_requested_from_main);
+
+    settings_diag->show();
+}
+
+void main_window::on_device_set_requested(const int index) {
+    displayer_->setVisible(false);
+
+    eka2l1::system *system = emulator_state_.symsys.get();
+    if (system) {
+        eka2l1::epoc::screen *scr = get_current_active_screen();
+        if (scr) {
+            scr->remove_screen_mode_change_callback(active_screen_mode_change_callback_);
+            scr->remove_screen_redraw_callback(active_screen_draw_callback_);
+            scr->remove_focus_change_callback(active_screen_focus_change_callback_);
+
+            active_screen_draw_callback_ = 0;
+            active_screen_mode_change_callback_ = 0;
+            active_screen_focus_change_callback_ = 0;
+        }
+    }
+
+    if (applist_) {
+        delete applist_;
+        applist_ = nullptr;
+    }
+
+    if (system) {
+        if (index < 0) {
+            system->reset();
+        } else {
+            system->set_device(static_cast<std::uint8_t>(index));
+        }
+    }
+
+    setup_app_list();
+    refresh_current_device_label();
+    screen_status_label_->clear();
+
+    ui_->action_pause->setEnabled(false);
+    ui_->action_restart->setEnabled(false);
+}
+
+void main_window::on_restart_requested() {
+    on_device_set_requested(-1);
+    emit restart_requested();
+}
+
+void main_window::on_relaunch_request() {
+    QString program = QApplication::applicationFilePath();
+    QStringList arguments = QApplication::arguments();
+    QString workingDirectory = QDir::currentPath();
+    QProcess::startDetached(program, arguments, workingDirectory);
+
+    close();
+}
+
+void main_window::on_cursor_visibility_change(bool visible) {
+    if (visible) {
+        displayer_->setCursor(Qt::ArrowCursor);
+    } else {
+        displayer_->setCursor(Qt::BlankCursor);
+    }
+}
+
+void main_window::on_status_bar_visibility_change(bool visible) {
+    ui_->status_bar->setVisible(visible);
+}
+
+void main_window::on_status_bar_update(const std::uint64_t fps) {
+    screen_status_label_->setText(QString("%1 FPS").arg(fps));
 }
 
 void main_window::on_new_device_added() {
@@ -272,6 +409,7 @@ void main_window::on_new_device_added() {
         emulator_state_.init_event.set();
         emulator_state_.init_event.wait();
 
+        refresh_current_device_label();
         setup_app_list();
     }
 }
@@ -281,6 +419,26 @@ void main_window::on_device_install_clicked() {
     connect(install_diag, &device_install_dialog::new_device_added, this, &main_window::on_new_device_added);
 
     install_diag->show();
+}
+
+void main_window::on_fullscreen_toogled(bool checked) {
+    if (!displayer_->isVisible()) {
+        return;
+    }
+
+    if (checked) {
+        ui_->status_bar->hide();
+        ui_->menu_bar->setVisible(false);
+
+        showFullScreen();
+    } else {
+        ui_->status_bar->show();
+        ui_->menu_bar->setVisible(true);
+
+        showNormal();
+    }
+
+    displayer_->set_fullscreen(checked);
 }
 
 void main_window::refresh_recent_mounts() {
@@ -382,31 +540,24 @@ void main_window::on_mount_card_clicked() {
 void main_window::setup_screen_draw() {
     eka2l1::system *system = emulator_state_.symsys.get();
     if (system) {
-        eka2l1::kernel_system *kernel = system->get_kernel_system();
-        if (kernel) {
-            const std::string win_server_name = eka2l1::get_winserv_name_by_epocver(kernel->get_epoc_version());
-            eka2l1::window_server *win_serv = reinterpret_cast<eka2l1::window_server*>(kernel->get_by_name<eka2l1::service::server>(win_server_name));
+        eka2l1::epoc::screen *scr = get_current_active_screen();
+        if (scr) {
+            active_screen_draw_callback_ = scr->add_screen_redraw_callback(&emulator_state_, [this](void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
+                draw_emulator_screen(userdata, scr, is_dsa);
+                emit status_bar_update(scr->last_fps);
+            });
 
-            if (win_serv) {
-                eka2l1::epoc::screen *scr = win_serv->get_screens();
-                while (scr) {
-                    if (scr->number == active_screen_number_) {
-                        active_screen_draw_callback_ = scr->add_screen_redraw_callback(&emulator_state_, draw_emulator_screen);
-                        active_screen_mode_change_callback_ = scr->add_screen_mode_change_callback(&emulator_state_, mode_change_screen);
+            active_screen_mode_change_callback_ = scr->add_screen_mode_change_callback(&emulator_state_, mode_change_screen);
+            active_screen_focus_change_callback_ = scr->add_focus_change_callback(&emulator_state_, [this](void *userdata, eka2l1::epoc::window_group *, eka2l1::epoc::focus_change_property) {
+                emit screen_focus_group_changed();
+            });
 
-                        mode_change_screen(&emulator_state_, scr, 0);
-
-                        break;
-                    }
-
-                    scr = scr->next;
-                }
-            }
+            mode_change_screen(&emulator_state_, scr, 0);
         }
     }
 }
 
-void main_window::on_app_clicked(QListWidgetItem *item) {
+void main_window::on_app_clicked(applist_widget_item *item) {
     if (!active_screen_draw_callback_) {
         setup_screen_draw();
     }
@@ -415,6 +566,13 @@ void main_window::on_app_clicked(QListWidgetItem *item) {
         applist_->setVisible(false);
         displayer_->setVisible(true);
         displayer_->setFocus();
+
+        ui_->action_pause->setEnabled(true);
+        ui_->action_restart->setEnabled(true);
+
+        on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
+
+        emit app_launching();
     } else {
         LOG_ERROR(eka2l1::FRONTEND_UI, "Fail to launch the selected application!");
     }
@@ -530,22 +688,9 @@ void main_window::resizeEvent(QResizeEvent *event) {
 
     eka2l1::system *system = emulator_state_.symsys.get();
     if (system) {
-        eka2l1::kernel_system *kernel = system->get_kernel_system();
-        if (kernel) {
-            const std::string win_server_name = eka2l1::get_winserv_name_by_epocver(kernel->get_epoc_version());
-            eka2l1::window_server *win_serv = reinterpret_cast<eka2l1::window_server*>(kernel->get_by_name<eka2l1::service::server>(win_server_name));
-
-            if (win_serv) {
-                eka2l1::epoc::screen *scr = win_serv->get_screens();
-                while (scr) {
-                    if (scr->number == active_screen_number_) {
-                        draw_emulator_screen(&emulator_state_, scr, true);
-                        break;
-                    }
-
-                    scr = scr->next;
-                }
-            }
+        eka2l1::epoc::screen *scr = get_current_active_screen();
+        if (scr) {
+            draw_emulator_screen(&emulator_state_, scr, true);
         }
     }
 }
@@ -570,4 +715,47 @@ void main_window::dropEvent(QDropEvent *event) {
             spawn_package_install_camper(local_path);
         }
     }
+}
+
+bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) {
+    emit controller_button_press(event);
+    return (displayer_ && displayer_->isVisible() && displayer_->hasFocus());
+}
+
+void main_window::make_default_binding_profile() {
+    // Create default profile if there is none
+    eka2l1::common::dir_iterator ite("bindings\\");
+    eka2l1::common::dir_entry entry;
+
+    int entry_count = 0;
+
+    while (ite.next_entry(entry) >= 0) {
+        entry_count++;
+    }
+
+    if (!entry_count) {
+        emulator_state_.conf.current_keybind_profile = "default";
+        make_default_keybind_profile(emulator_state_.conf.keybinds);
+
+        emulator_state_.conf.serialize();
+    }
+}
+
+void main_window::on_app_setting_changed() {
+    eka2l1::epoc::screen *scr = get_current_active_screen();
+    if (!scr || !scr->focus || !emulator_state_.app_settings) {
+        return;
+    }
+
+    std::optional<eka2l1::akn_running_app_info> info = ::get_active_app_info(emulator_state_.symsys.get(), active_screen_number_);
+    if (!info.has_value()) {
+        return;
+    }
+
+    eka2l1::config::app_setting setting;
+    setting.fps = scr->refresh_rate;
+    setting.time_delay = info->associated_->get_time_delay();
+    setting.child_inherit_setting = info->associated_->get_child_inherit_setting();
+
+    emulator_state_.app_settings->add_or_replace_setting(info->app_uid_, setting);
 }

@@ -48,6 +48,8 @@ namespace eka2l1 {
     class window_server;
 }
 
+class main_window;
+
 namespace eka2l1::desktop {
     /**
      * \brief State of the emulator on desktop.
@@ -76,6 +78,8 @@ namespace eka2l1::desktop {
 
         std::mutex lockdown;
         std::size_t sys_reset_cbh;
+
+        main_window *ui_main;
 
         explicit emulator();
 

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>900</width>
     <height>600</height>
    </rect>
   </property>
@@ -60,7 +60,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>900</width>
      <height>25</height>
     </rect>
    </property>
@@ -114,7 +114,6 @@
      <addaction name="action_window_tree"/>
     </widget>
     <addaction name="action_pause"/>
-    <addaction name="action_stop"/>
     <addaction name="action_restart"/>
     <addaction name="separator"/>
     <addaction name="menu_objects"/>
@@ -192,8 +191,17 @@
    </property>
   </action>
   <action name="action_fullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Fullscreen</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+F</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WindowShortcut</enum>
    </property>
   </action>
   <action name="action_mount_recent_dumps">
