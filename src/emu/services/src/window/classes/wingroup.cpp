@@ -157,6 +157,14 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
+    void window_group::set_name(const std::u16string &new_name) {
+        name = std::move(new_name);
+
+        if (this == scr->focus) {
+            scr->fire_focus_change_callbacks(focus_change_name);
+        }
+    }
+
     void window_group::set_name(service::ipc_context &context, ws_cmd &cmd) {
         std::optional<std::u16string> name_re;
         
@@ -180,7 +188,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        name = std::move(*name_re);
+        set_name(name_re.value());
         context.complete(epoc::error_none);
     }
     

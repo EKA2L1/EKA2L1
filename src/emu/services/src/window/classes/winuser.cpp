@@ -81,7 +81,9 @@ namespace eka2l1::epoc {
         , driver_win_id(0)
         , shadow_height(0)
         , max_pointer_buffer_(0)
-        , last_draw_(0) {
+        , last_draw_(0)
+        , last_fps_sync_(0)
+        , fps_count_(0) {
         if (parent->type != epoc::window_kind::top_client && parent->type != epoc::window_kind::client) {
             LOG_ERROR(SERVICE_WINDOW, "Parent is not a window client type!");
         } else {
@@ -242,6 +244,7 @@ namespace eka2l1::epoc {
             // Limit the framerate, independent from screen vsync
             const std::uint64_t crr = timing->microseconds();
             const std::uint64_t time_spend_per_frame_us = 1000000 / scr->refresh_rate;
+
             std::uint64_t wait_time = 0;
 
             if (crr - last_draw_ < time_spend_per_frame_us) {
@@ -251,6 +254,15 @@ namespace eka2l1::epoc {
             }
 
             last_draw_ = ((crr + time_spend_per_frame_us - 1) / time_spend_per_frame_us) * time_spend_per_frame_us;
+
+            if (crr - last_fps_sync_ >= common::microsecs_per_sec) {
+                scr->last_fps = fps_count_;
+
+                last_fps_sync_ = crr;
+                fps_count_ = 0;
+            }
+
+            fps_count_++;
 
             sched->schedule(client->get_ws().get_graphics_driver(), scr, crr + wait_time);
             drawer->sleep(static_cast<std::uint32_t>(wait_time));

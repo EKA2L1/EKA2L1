@@ -54,7 +54,12 @@ namespace eka2l1::epoc {
     struct window_group;
     struct screen;
 
-    using focus_change_callback_handler = std::function<void(void*, window_group*)>;
+    enum focus_change_property {
+        focus_change_target,
+        focus_change_name
+    };
+
+    using focus_change_callback_handler = std::function<void(void*, window_group*, focus_change_property)>;
     using screen_redraw_callback_handler = std::function<void(void*, screen*, bool)>;
     using screen_mode_change_callback_handler = std::function<void(void*, screen*, const int)>;
 
@@ -75,6 +80,9 @@ namespace eka2l1::epoc {
         epoc::display_mode disp_mode;
 
         std::uint64_t last_vsync;
+        std::uint64_t last_fps_check;
+        std::uint64_t last_fps;
+        std::uint64_t frame_passed_per_sec;
         std::atomic<bool> last_texture_access;
 
         epoc::config::screen scr_config; ///< All mode of this screen
@@ -105,7 +113,7 @@ namespace eka2l1::epoc {
         common::identity_container<screen_redraw_callback> screen_redraw_callbacks;
         common::identity_container<screen_mode_change_callback> screen_mode_change_callbacks;
 
-        void fire_focus_change_callbacks();
+        void fire_focus_change_callbacks(const focus_change_property property);
         void fire_screen_redraw_callbacks(const bool is_dsa);
         void fire_screen_mode_change_callbacks(const int old_mode);
 
