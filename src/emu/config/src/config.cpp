@@ -18,7 +18,9 @@
  */
 
 #include <common/algorithm.h>
+#include <common/fileutils.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include <config/config.h>
 #include <fstream>
@@ -73,20 +75,7 @@ namespace eka2l1::config {
         emitter << YAML::EndMap;
     }
 
-    void state::serialize() {
-        YAML::Emitter emitter;
-        emitter << YAML::BeginMap;
-
-        #define OPTION(name, variable, default) config_file_emit_single(emitter, #name, variable);
-        #include <config/options.inl>
-        #undef OPTION
-
-        emitter << YAML::EndMap;
-
-        std::ofstream file("config.yml");
-        file << emitter.c_str();
-        file.close();
-
+    void keybind_profile::serialize(const std::string &file) {
         YAML::Emitter keybind_emitter;
         keybind_emitter << YAML::BeginSeq;
         for (const auto &kb : keybinds) {
@@ -94,28 +83,15 @@ namespace eka2l1::config {
         }
         keybind_emitter << YAML::EndSeq;
 
-        std::ofstream keybind_file("keybind.yml");
+        std::ofstream keybind_file(file);
         keybind_file << keybind_emitter.c_str();
         keybind_file.close();
     }
 
-    void state::deserialize() {
-        YAML::Node node;
-
-        try {
-            node = YAML::LoadFile("config.yml");
-        } catch (...) {
-            serialize();
-            return;
-        }
-
-        #define OPTION(name, variable, default_value) get_yaml_value(node, #name, &variable, default_value);
-        #include <config/options.inl>
-        #undef OPTION
-
+    void keybind_profile::deserialize(const std::string &file) {
         YAML::Node keybind_node;
         try {
-            keybind_node = YAML::LoadFile("keybind.yml");
+            keybind_node = YAML::LoadFile(file);
         } catch (...) {
             return;
         }
@@ -134,5 +110,43 @@ namespace eka2l1::config {
             }
             keybinds.emplace_back(kb);
         }
+    }
+
+    void state::serialize(const bool with_bindings) {
+        YAML::Emitter emitter;
+        emitter << YAML::BeginMap;
+
+        #define OPTION(name, variable, default) config_file_emit_single(emitter, #name, variable);
+        #include <config/options.inl>
+        #undef OPTION
+
+        emitter << YAML::EndMap;
+
+        std::ofstream file("config.yml");
+        file << emitter.c_str();
+        file.close();
+
+        if (with_bindings) {
+            eka2l1::create_directories("bindings");
+            keybinds.serialize(fmt::format("bindings/{}.yml", current_keybind_profile));
+        }
+    }
+
+    void state::deserialize(const bool with_bindings) {
+        YAML::Node node;
+
+        try {
+            node = YAML::LoadFile("config.yml");
+        } catch (...) {
+            serialize();
+            return;
+        }
+
+        #define OPTION(name, variable, default_value) get_yaml_value(node, #name, &variable, default_value);
+        #include <config/options.inl>
+        #undef OPTION
+
+        if (with_bindings)
+            keybinds.deserialize(fmt::format("bindings/{}.yml", current_keybind_profile));
     }
 }

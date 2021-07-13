@@ -64,6 +64,8 @@ OPTION(ui-new-style, ui_new_style, true)
 OPTION(cenrep-reset, cenrep_reset, false)
 OPTION(imei, imei, DEFAULT_IMI)
 OPTION(mmc-id, mmc_id, DEFAULT_MMC_ID)
+OPTION(audio-master-volume, audio_master_volume, 100)
+OPTION(current-keybind-profile, current_keybind_profile, "default")
 
 #ifdef OPTION
 #undef OPTION
