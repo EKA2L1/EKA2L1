@@ -63,6 +63,11 @@ namespace eka2l1 {
                 write(&len, sizeof(len));
                 write(&str[0], static_cast<std::uint32_t>(len) * sizeof(T));
             }
+			
+            virtual bool write_text(const std::string &str) {
+                write(&str[0], static_cast<std::uint32_t>(str.length()));
+                return valid();
+			}
         };
 
         class ro_stream : public basic_stream {
@@ -298,6 +303,11 @@ namespace eka2l1 {
                 const std::uint64_t current_pos = fo_.tellp();
 
                 return current_pos - pos;
+            }
+
+            bool write_text(const std::string &str) override {
+                fo_ << str;
+                return fo_.good();
             }
 
             void seek(const std::int64_t amount, common::seek_where wh) override {
