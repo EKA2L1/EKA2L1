@@ -1352,6 +1352,11 @@ namespace eka2l1 {
     }
 
     window_server::~window_server() {
+        if (!clients.empty()) {
+            LOG_WARN(SERVICE_WINDOW, "Kernel is having a leakage with window server!");
+            clients.clear();
+        }
+
         drivers::graphics_driver *drv = get_graphics_driver();
 
         // Destroy all screens
@@ -1762,31 +1767,6 @@ namespace eka2l1 {
         }
     }
 
-    void window_server::reset_key_mappings() {
-        input_mapping.key_input_map = {
-            { KEY_F1, epoc::std_key_device_0 },
-            { KEY_F2, epoc::std_key_device_1 },
-            { KEY_ENTER, epoc::std_key_device_3 },
-            { KEY_SLASH, epoc::std_key_hash },
-            { KEY_BACKSPACE, epoc::std_key_backspace },
-            { KEY_STAR, '*' },
-            { KEY_NUM0, '0' },
-            { KEY_NUM1, '1' },
-            { KEY_NUM2, '2' },
-            { KEY_NUM3, '3' },
-            { KEY_NUM4, '4' },
-            { KEY_NUM5, '5' },
-            { KEY_NUM6, '6' },
-            { KEY_NUM7, '7' },
-            { KEY_NUM8, '8' },
-            { KEY_NUM9, '9' },
-            { KEY_RIGHT, epoc::std_key_right_arrow },
-            { KEY_LEFT, epoc::std_key_left_arrow },
-            { KEY_DOWN, epoc::std_key_down_arrow },
-            { KEY_UP, epoc::std_key_up_arrow }
-        };
-    }
-
     void window_server::delete_key_mapping(const std::uint32_t target) {
         for (auto ite = input_mapping.key_input_map.begin(); ite != input_mapping.key_input_map.end(); ite++) {
             if (ite->second == target) {
@@ -1804,11 +1784,12 @@ namespace eka2l1 {
     }
 
     void window_server::init_key_mappings() {
-        reset_key_mappings();
+        input_mapping.key_input_map.clear();
+        input_mapping.button_input_map.clear();
 
         config::state *conf = kern->get_config();
 
-        for (auto &kb : conf->keybinds) {
+        for (auto &kb : conf->keybinds.keybinds) {
             delete_key_mapping(kb.target);
 
             bool is_mouse = (kb.source.type == config::KEYBIND_TYPE_MOUSE);

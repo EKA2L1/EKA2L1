@@ -318,7 +318,6 @@ namespace eka2l1 {
             epoc::key_map key_input_map;
         } input_mapping;
 
-        void reset_key_mappings();
         void delete_key_mapping(const std::uint32_t target);
 
     private:
@@ -379,7 +378,6 @@ namespace eka2l1 {
         void init_screens();
         void init_ws_mem();
         void init_repeatable();
-        void init_key_mappings();
         void emit_ws_thread_code();
 
         void make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr);
@@ -479,5 +477,7 @@ namespace eka2l1 {
 
         void send_event_to_window_group(epoc::window_group *group, const epoc::event &evt);
         void send_event_to_window_groups(const epoc::event &evt);
+
+        void init_key_mappings();
     };
 }
