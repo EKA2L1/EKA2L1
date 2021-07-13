@@ -60,13 +60,13 @@ namespace eka2l1 {
                     for (int i = 0; i < axis_count; i++) {
                         if (std::fabs(axes[i] - current_pad.axis[i]) > ANALOG_MIN_DIFFERENCE) {
                             if (current_pad.axis[i] < ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, button_count + i * 2, true);
+                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2, true);
                             } else if (current_pad.axis[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] < ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, button_count + i * 2, false);
+                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2, false);
                             } else if (current_pad.axis[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, button_count + i * 2 + 1, true);
+                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2 + 1, true);
                             } else if (current_pad.axis[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, button_count + i * 2 + 1, false);
+                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2 + 1, false);
                             }
                             current_pad.axis[i] = axes[i];
                         }
@@ -92,6 +92,49 @@ namespace eka2l1 {
         void emu_controller_glfw3::stop_polling() {
             shall_stop = true;
             polling_thread->join();
+        }
+
+        const char *emu_controller_glfw3::button_to_string(const int button_code) {
+            const char *FAST_LOOKUP_SIMPLE[] = {
+                "A",
+                "B",
+                "X",
+                "Y",
+                "LB",
+                "RB",
+                "Back",
+                "Start",
+                "Guide",
+                "LT",
+                "RT",
+                "Dpad Up",
+                "Dpad Right",
+                "Dpad Down",
+                "Dpad Left"
+            };
+
+            if (button_code <= GLFW_GAMEPAD_BUTTON_LAST) {
+                return FAST_LOOKUP_SIMPLE[button_code];
+            }
+
+            switch (button_code) {
+            case CONTROLLER_BUTTON_CODE_JOYSTICK_DOWN:
+                return "Joystick Down";
+
+            case CONTROLLER_BUTTON_CODE_JOYSTICK_LEFT:
+                return "Joystick Left";
+
+            case CONTROLLER_BUTTON_CODE_JOYSTICK_RIGHT:
+                return "Joystick Right";
+
+            case CONTROLLER_BUTTON_CODE_JOYSTICK_UP:
+                return "Joystick Up";
+
+            default:
+                break;
+            }
+
+            return nullptr;
         }
     }
 }

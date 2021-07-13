@@ -30,6 +30,14 @@
 
 namespace eka2l1 {
     namespace drivers {
+        enum controller_button_code {
+            CONTROLLER_BUTTON_CODE_JOYSTICK_BASE = 300,
+            CONTROLLER_BUTTON_CODE_JOYSTICK_RIGHT = CONTROLLER_BUTTON_CODE_JOYSTICK_BASE,
+            CONTROLLER_BUTTON_CODE_JOYSTICK_LEFT,
+            CONTROLLER_BUTTON_CODE_JOYSTICK_DOWN,
+            CONTROLLER_BUTTON_CODE_JOYSTICK_UP
+        };
+
         class emu_controller_glfw3 : public emu_controller {
             struct gamepad_state {
                 // true if pressed
@@ -50,6 +58,7 @@ namespace eka2l1 {
             explicit emu_controller_glfw3();
             void start_polling() override;
             void stop_polling() override;
+            const char *button_to_string(const int button_code) override;
         };
     }
 }

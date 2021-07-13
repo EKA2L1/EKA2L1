@@ -125,13 +125,13 @@ namespace eka2l1 {
             std::function<void(void *)> touch_released;
 
             /*! Call when a button is pressed. User sets their own call, shutdown and center button */
-            std::function<void(void *, uint16_t)> button_pressed;
+            std::function<void(void *, uint32_t)> button_pressed;
 
             /*! Call when a button is released */
-            std::function<void(void *, uint16_t)> button_released;
+            std::function<void(void *, uint32_t)> button_released;
 
             /*! Call when a button is held */
-            std::function<void(void *, uint16_t)> button_hold;
+            std::function<void(void *, uint32_t)> button_hold;
 
             /*! Call when the window is closed */
             std::function<void(void *)> close_hook;
