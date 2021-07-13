@@ -1398,6 +1398,10 @@ namespace eka2l1 {
         auto pdat = std::make_pair(callback, userdata);
         return drive_change_callbacks.add(pdat);
     }
+
+    bool io_system::remove_drive_change_notify(const std::size_t handle) {
+        return drive_change_callbacks.remove(handle);
+    }
     
     void io_system::invoke_drive_change_callbacks(drive_number drv, drive_action act) {
         for (auto &callback: drive_change_callbacks) {
