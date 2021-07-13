@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <services/context.h>
 #include <services/framework.h>
 #include <kernel/server.h>
@@ -46,6 +48,8 @@ namespace eka2l1 {
             std::int32_t sp_flag;
             std::int32_t app_screen_mode;
         };
+
+        struct window_group;
     }
 
     enum oom_ui_app_op {
@@ -146,6 +150,7 @@ namespace eka2l1 {
     };
 
     std::vector<akn_running_app_info> get_akn_app_infos(window_server *winsrv);
+    std::optional<akn_running_app_info> get_akn_app_info_from_window_group(epoc::window_group *group);
 
     class oom_ui_app_session : public service::typical_session {
         std::int32_t blank_count;
