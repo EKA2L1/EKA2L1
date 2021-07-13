@@ -75,6 +75,10 @@ namespace eka2l1 {
             return &devices[current_index];
         }
 
+        std::int32_t get_current_index() const {
+            return current_index;
+        }
+
         device *lastest() {
             if (devices.empty())
                 return nullptr;
