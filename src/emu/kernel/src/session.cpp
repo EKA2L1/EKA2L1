@@ -208,14 +208,13 @@ namespace eka2l1 {
         void session::destroy() {
             detatch(epoc::error_session_closed);
 
-            if (kern->crr_thread()) {
-                // Try to send a disconnect message. Headless session and use sync message.
-                if (svr) {
+            // Try to send a disconnect message. Headless session and use sync message.
+            if (svr) {
+                if (svr->is_hle() || kern->crr_thread())
                     send_destruct();
 
-                    if (svr->is_hle()) {
-                        svr->process_accepted_msg();
-                    }
+                if (svr->is_hle()) {
+                    svr->process_accepted_msg();
                 }
             }
 
