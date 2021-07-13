@@ -44,6 +44,12 @@ namespace eka2l1::loader {
         int len;
     };
 
+    enum mif_icon_type {
+        mif_icon_type_bmp = 0,
+        mif_icon_type_svg = 1,
+        mif_icon_type_nvg = 2
+    };
+
     struct mif_icon_header {
         std::int32_t uid;
         std::int32_t version;
