@@ -67,21 +67,31 @@ namespace eka2l1 {
             return false;
         }
 
-        if (stream->read(&reg.caps.is_hidden, 1) != 1) {
+        std::int8_t temp = 0;
+
+        if (stream->read(&temp, 1) != 1) {
             return false;
         }
 
-        if (stream->read(&reg.caps.ability, 1) != 1) {
+        reg.caps.is_hidden = temp;
+
+        if (stream->read(&temp, 1) != 1) {
             return false;
         }
 
-        if (stream->read(&reg.caps.support_being_asked_to_create_new_file, 1) != 1) {
+        reg.caps.ability = static_cast<apa_capability::embeddability>(temp);
+
+        if (stream->read(&temp, 1) != 1) {
             return false;
         }
 
-        if (stream->read(&reg.caps.launch_in_background, 1) != 1) {
+        reg.caps.support_being_asked_to_create_new_file = temp;
+
+        if (stream->read(&temp, 1) != 1) {
             return false;
         }
+
+        reg.caps.launch_in_background = temp;
 
         std::u16string group_name;
         if (!read_str16_aligned(stream, group_name)) {
