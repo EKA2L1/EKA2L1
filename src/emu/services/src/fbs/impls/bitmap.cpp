@@ -1243,60 +1243,71 @@ namespace eka2l1 {
             return true;
         }
 
-        bool convert_to_argb8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest) {
-            if (!bmp) {
-                return false;
+        bool convert_to_argb8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp) {
+            if (byte_width == -1) {
+                byte_width = get_byte_width(header.size_pixels.x, header.bit_per_pixels);
             }
 
-            std::uint8_t *data_ptr = bmp->data_pointer(serv);
             std::vector<std::uint8_t> decomp_data;
+            common::ro_stream *current_to_look = &source;
 
-            if (bmp->compression_type() != bitmap_file_no_compression) {
-                decomp_data.resize(bmp->byte_width_ * bmp->header_.size_pixels.y);
-                common::ro_buf_stream source_stream(data_ptr, bmp->data_size());
+            std::unique_ptr<common::ro_buf_stream> decomp_data_source_stream;
+
+            if (comp != bitmap_file_no_compression) {
+                decomp_data.resize(byte_width * header.size_pixels.y);
                 common::wo_buf_stream decomp_dest_stream(decomp_data.data(), decomp_data.size());
 
-                switch (bmp->compression_type()) {
+                switch (comp) {
                 case bitmap_file_byte_rle_compression:
-                    decompress_rle<8>(reinterpret_cast<common::ro_stream*>(&source_stream),
+                    decompress_rle<8>(reinterpret_cast<common::ro_stream*>(&source),
                         reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
                     break;
 
                 case bitmap_file_twelve_bit_rle_compression:
-                    decompress_rle<12>(reinterpret_cast<common::ro_stream*>(&source_stream),
+                    decompress_rle<12>(reinterpret_cast<common::ro_stream*>(&source),
                         reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
                     break;
 
                 case bitmap_file_sixteen_bit_rle_compression:
-                    decompress_rle<16>(reinterpret_cast<common::ro_stream*>(&source_stream),
+                    decompress_rle<16>(reinterpret_cast<common::ro_stream*>(&source),
                         reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
                     break;
 
                 case bitmap_file_twenty_four_bit_rle_compression:
-                    decompress_rle<24>(reinterpret_cast<common::ro_stream*>(&source_stream),
+                    decompress_rle<24>(reinterpret_cast<common::ro_stream*>(&source),
                         reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
                     break;
 
                 default:
-                    LOG_ERROR(SERVICE_FBS, "Unsupported compression type {}", static_cast<int>(bmp->compression_type()));
+                    LOG_ERROR(SERVICE_FBS, "Unsupported compression type {}", header.compression);
                     return false;
                 }
 
-                data_ptr = decomp_data.data();
+                decomp_data_source_stream = std::make_unique<common::ro_buf_stream>(decomp_data.data(), decomp_data.size());
+                current_to_look = decomp_data_source_stream.get();
             }
 
-            switch (bmp->settings_.initial_display_mode()) {
+            current_to_look->seek(0, common::seek_where::beg);
+            const epoc::display_mode dpm = get_display_mode_from_bpp(header.bit_per_pixels);
+
+            switch (dpm) {
             case epoc::display_mode::color256:
-                for (std::size_t y = 0; y < bmp->header_.size_pixels.y; y++) {
-                    for (std::size_t x = 0; x < bmp->header_.size_pixels.x; x++) {
-                        const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t *>(data_ptr + y * bmp->byte_width_ + x);
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {
+                    current_to_look->seek(y * byte_width, common::seek_where::beg);
+
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        std::uint8_t pixel = 0;
+                        if (current_to_look->read(&pixel, 1) != 1) {
+                            return false;
+                        }
+
                         std::uint32_t palette_color = epoc::get_suitable_palette_256(serv->get_kernel_object_owner()->get_epoc_version())[pixel];
 
                         std::uint8_t a = 255;
 
-                        dest.write(reinterpret_cast<const char *>(&palette_color) + 0, 1);
-                        dest.write(reinterpret_cast<const char *>(&palette_color) + 1, 1);
                         dest.write(reinterpret_cast<const char *>(&palette_color) + 2, 1);
+                        dest.write(reinterpret_cast<const char *>(&palette_color) + 1, 1);
+                        dest.write(reinterpret_cast<const char *>(&palette_color) + 0, 1);
                         dest.write(&a, 1);
                     }
                 }
@@ -1304,12 +1315,17 @@ namespace eka2l1 {
                 break;
 
             case epoc::display_mode::color4k:
-                for (std::size_t y = 0; y < bmp->header_.size_pixels.y; y++) {
-                    for (std::size_t x = 0; x < bmp->header_.size_pixels.x; x++) {
-                        const std::uint16_t pixel = *reinterpret_cast<const std::uint16_t *>(data_ptr + y * bmp->byte_width_ + x * 2);
-                        std::uint8_t b = static_cast<std::uint8_t>(((pixel >> 8) & 0xF) * 17);
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {
+                    current_to_look->seek(y * byte_width, common::seek_where::beg);
+
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        std::uint16_t pixel = 0;
+                        if (current_to_look->read(&pixel, 2) != 2) {
+                            return false;
+                        }
+                        std::uint8_t r = static_cast<std::uint8_t>(((pixel >> 8) & 0xF) * 17);
                         std::uint8_t g = static_cast<std::uint8_t>(((pixel >> 4) & 0xF) * 17);
-                        std::uint8_t r =  static_cast<std::uint8_t>((pixel & 0xF) * 17);
+                        std::uint8_t b = static_cast<std::uint8_t>((pixel & 0xF) * 17);
                         std::uint8_t a = 255;
                         dest.write(&b, 1);
                         dest.write(&g, 1);
@@ -1321,9 +1337,15 @@ namespace eka2l1 {
                 break;
 
             case epoc::display_mode::color64k:
-                for (std::size_t y = 0; y < bmp->header_.size_pixels.y; y++) {
-                    for (std::size_t x = 0; x < bmp->header_.size_pixels.x; x++) {
-                        const std::uint16_t pixel = *reinterpret_cast<const std::uint16_t *>(data_ptr + y * bmp->byte_width_ + x * 2);
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {
+                    current_to_look->seek(y * byte_width, common::seek_where::beg);
+
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        std::uint16_t pixel = 0;
+                        if (current_to_look->read(&pixel, 2) != 2) {
+                            return false;
+                        }
+
                         std::uint8_t r = static_cast<std::uint8_t>((pixel & 0xF800) >> 8);
                         r += r >> 5;
 
@@ -1344,9 +1366,14 @@ namespace eka2l1 {
                 break;
 
             case epoc::display_mode::color16m:
-                for (std::size_t y = 0; y < bmp->header_.size_pixels.y; y++) {
-                    for (std::size_t x = 0; x < bmp->header_.size_pixels.x; x++) {
-                        const std::uint8_t *base = data_ptr + y * bmp->byte_width_ + x * 2;
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {
+                    current_to_look->seek(y * byte_width, common::seek_where::beg);
+
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        std::uint8_t base[3];
+                        if (current_to_look->read(base, 3) != 3) {
+                            return false;
+                        }
 
                         std::uint8_t a = 255;
                         dest.write(base, 3);
@@ -1357,10 +1384,14 @@ namespace eka2l1 {
                 break;
 
             case epoc::display_mode::gray256:
-                for (std::size_t y = 0; y < bmp->header_.size_pixels.y; y++) {
-                    for (std::size_t x = 0; x < bmp->header_.size_pixels.x; x++) {
-                        const std::uint8_t pixel = *reinterpret_cast<const std::uint8_t *>(data_ptr + y * bmp->byte_width_ + x);
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {
+                    current_to_look->seek(y * byte_width, common::seek_where::beg);
 
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        std::uint8_t pixel = 0;
+                        if (current_to_look->read(&pixel, 1) != 1) {
+                            return false;
+                        }
                         dest.write(&pixel, 1);
                         dest.write(&pixel, 1);
                         dest.write(&pixel, 1);
@@ -1371,10 +1402,13 @@ namespace eka2l1 {
                 break;
 
             case epoc::display_mode::gray2:
-                for (std::size_t y = 0; y < bmp->header_.size_pixels.y; y++) {
-                    for (std::size_t x = 0; x < bmp->header_.size_pixels.x; x++) {
-                        std::uint32_t word_per_line = (bmp->header_.size_pixels.x + 31) / 32;
-                        std::uint32_t color = (reinterpret_cast<std::uint32_t*>(data_ptr))[y * word_per_line + x / 32];
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        std::uint32_t color = 0;
+                        current_to_look->seek(y * byte_width + (x / 32) * 4, common::seek_where::beg);
+                        if (current_to_look->read(&color, 4) != 4) {
+                            return false;
+                        }
                         std::uint32_t converted_color = 0;
                         if (color & (1 << (x & 0x1F))) {
                             converted_color = 0xFFFFFFFF;
@@ -1387,11 +1421,36 @@ namespace eka2l1 {
                 break;
 
             default:
-                LOG_ERROR(SERVICE_FBS, "Unsupported display mode to convert to ARGB8888 {}", static_cast<int>(bmp->settings_.initial_display_mode()));
+                LOG_ERROR(SERVICE_FBS, "Unsupported display mode to convert to ARGB8888 {}", static_cast<int>(dpm));
                 return false;
             }
 
             return true;
+        }
+
+        bool convert_to_argb8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest) {
+            if (!bmp) {
+                return false;
+            }
+
+            std::uint8_t *data_ptr = bmp->data_pointer(serv);
+            common::ro_buf_stream buf_stream(data_ptr, bmp->data_size());
+            return convert_to_argb8888(serv, buf_stream, dest, bmp->header_, bmp->byte_width_, bmp->compression_type());
+        }
+
+        bool convert_to_argb8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest) {
+            std::size_t max_data = 0;
+            if (!file.read_single_bitmap_raw(index, nullptr, max_data)) {
+                return false;
+            }
+
+            std::vector<std::uint8_t> data(max_data);
+            if (!file.read_single_bitmap_raw(index, data.data(), max_data)) {
+                return false;
+            }
+
+            common::ro_buf_stream buf_stream(data.data(), data.size());
+            return convert_to_argb8888(serv, buf_stream, dest, file.sbm_headers[index], -1, static_cast<bitmap_file_compression>(file.sbm_headers[index].compression));
         }
     }
 
