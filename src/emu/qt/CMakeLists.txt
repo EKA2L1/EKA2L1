@@ -12,7 +12,7 @@ if(ANDROID)
 endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools OpenGLWidgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools OpenGLWidgets Svg REQUIRED)
 
 set(TS_FILES translations/eka2l1_en_US.ts)
 set(RESOURCE_FILES eka2l1.qrc)
@@ -25,8 +25,10 @@ set(PROJECT_SOURCES
         include/qt/displaywidget.h
         include/qt/mainwindow.h
         include/qt/seh_handler.h
+        include/qt/settings_dialog.h
         include/qt/state.h
         include/qt/thread.h
+        include/qt/utils.h
         src/aboutdialog.cpp
         src/aboutdialog.ui
         src/applistwidget.cpp
@@ -38,8 +40,11 @@ set(PROJECT_SOURCES
         src/mainwindow.cpp
         src/mainwindow.ui
         src/seh_handler.cpp
+        src/settings_dialog.cpp
+        src/settings_dialog.ui
         src/state.cpp
         src/thread.cpp
+        src/utils.cpp
         ${RESOURCE_FILES}
         ${TS_FILES}
 )
@@ -68,8 +73,9 @@ endif()
 target_include_directories(eka2l1_qt PUBLIC include)
 
 target_link_libraries(eka2l1_qt PRIVATE
-    Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets
+    Qt${QT_VERSION_MAJOR}::Svg
+    Qt${QT_VERSION_MAJOR}::Widgets
     common
     config
     drivers

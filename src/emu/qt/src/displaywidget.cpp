@@ -90,7 +90,11 @@ void display_widget::shutdown() {
 }
 
 void display_widget::set_fullscreen(const bool is_fullscreen) {
-    // todo
+    if (is_fullscreen) {
+        showFullScreen();
+    } else {
+        showNormal();
+    }
 }
 
 bool display_widget::should_quit() {
@@ -138,70 +142,14 @@ bool display_widget::cursor_visiblity() {
     return true;
 }
 
-static int translate_key_to_emu_standard(const int qt_key) {
-    static const int QT_MAP_TO_STANDARD_SPECIAL[] = {
-        KEY_ESCAPE,         // Key_Escape
-        KEY_TAB,            // Key_Tab
-        KEY_NULL,           // Key_Backtab
-        KEY_BACKSPACE,      // Key_Backspace
-        KEY_NULL,           // Key_Return
-        KEY_ENTER,          // Key_Enter
-        KEY_INSERT,         // Key_Insert
-        KEY_DELETE,         // Key_Delete
-        KEY_PAUSE,          // Key_Pause
-        KEY_PRINTSCR,       // Key_PrintScreen
-        KEY_NULL,           // Key_SysReq
-        KEY_NULL,           // Key_Clear
-        KEY_HOME,           // Key_Home
-        KEY_END,            // Key_End
-        KEY_LEFT,           // Key_Left
-        KEY_UP,             // Key_Up
-        KEY_RIGHT,          // Key_Right
-        KEY_DOWN,           // Key_Down
-        KEY_NULL,           // Key_PageUp
-        KEY_NULL,           // Key_PageDown
-        KEY_LEFT_SHIFT,     // Key_Shifts
-        KEY_LEFT_CONTROL,   // Key_Control
-        KEY_NULL,           // Key_Meta
-        KEY_LEFT_ALT,       // Key_Alt
-        KEY_NULL,           // Key_CapLocks
-        KEY_NULL,           // Key_NumLocks
-        KEY_NULL,           // Key_ScrollLocks
-        KEY_F1,
-        KEY_F2,
-        KEY_F3,
-        KEY_F4,
-        KEY_F5,
-        KEY_F6,
-        KEY_F7,
-        KEY_F8,
-        KEY_F9,
-        KEY_F10,
-        KEY_F11,
-        KEY_F12
-    };
-
-    static constexpr int MAP_COUNT = sizeof(QT_MAP_TO_STANDARD_SPECIAL) / sizeof(int);
-
-    if (qt_key >= Qt::Key_Escape) {
-        if (qt_key < Qt::Key_Escape + MAP_COUNT) {
-            return QT_MAP_TO_STANDARD_SPECIAL[qt_key - Qt::Key_Escape];
-        }
-
-        return KEY_NULL;
-    }
-
-    return qt_key;
-}
-
 void display_widget::keyPressEvent(QKeyEvent* event) {
     if (button_pressed) {
-        button_pressed(userdata_, static_cast<std::uint16_t>(translate_key_to_emu_standard(static_cast<int>(event->key()))));
+        button_pressed(userdata_, event->key());
     }
 }
 
 void display_widget::keyReleaseEvent(QKeyEvent* event) {
     if (button_released) {
-        button_released(userdata_, static_cast<std::uint16_t>(translate_key_to_emu_standard(static_cast<int>(event->key()))));
+        button_released(userdata_, event->key());
     }
 }
