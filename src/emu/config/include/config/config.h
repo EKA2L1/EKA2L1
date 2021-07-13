@@ -32,6 +32,7 @@ namespace eka2l1::config {
     static constexpr const char *KEYBIND_TYPE_KEY = "key";
     static constexpr const char *KEYBIND_TYPE_CONTROLLER = "controller";
     static constexpr const char *KEYBIND_TYPE_MOUSE = "mouse";
+    static constexpr const char *KEYBIND_DEFAULT_FILE = "keybind.yml";
 
     struct keybind {
         struct {
@@ -45,6 +46,13 @@ namespace eka2l1::config {
             } data;
         } source;
         std::uint32_t target; // target keycode
+    };
+
+    struct keybind_profile {
+        std::vector<keybind> keybinds;
+
+        void serialize(const std::string &file = KEYBIND_DEFAULT_FILE);
+        void deserialize(const std::string &file = KEYBIND_DEFAULT_FILE);
     };
 
     struct state {
@@ -65,6 +73,7 @@ namespace eka2l1::config {
         int device{ 0 };
         int language{ -1 };
         int emulator_language{ -1 };
+        int audio_master_volume{ 100 };
 
         bool enable_gdbstub{ false };
         int gdb_port{ 24689 };
@@ -94,11 +103,13 @@ namespace eka2l1::config {
         bool ui_new_style { true };
         bool cenrep_reset { false };
 
-        std::vector<keybind> keybinds;
+        keybind_profile keybinds;
+
         std::string imei{ DEFAULT_IMI };
         std::string mmc_id{ DEFAULT_MMC_ID };
+        std::string current_keybind_profile{ "default" };
 
-        void serialize();
-        void deserialize();
+        void serialize(const bool with_bindings = true);
+        void deserialize(const bool with_bindings = true);
     };
 }
