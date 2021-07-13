@@ -187,6 +187,8 @@ namespace eka2l1 {
         std::uint32_t flags{ 0 };
 
         std::vector<std::int64_t> watchs_;
+        std::size_t drive_change_handle_;
+
         fbs_server *fbsserv;
 
         enum {
