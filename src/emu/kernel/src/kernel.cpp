@@ -161,6 +161,9 @@ namespace eka2l1 {
 
         dll_global_data_chunk_ = nullptr;
         custom_code_chunk = nullptr;
+        global_data_chunk_ = nullptr;
+
+        dll_global_data_offset_.clear();
 
         // Clear CPU caches. No reason to keep it.
         cpu_->clear_instruction_cache();
