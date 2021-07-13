@@ -119,6 +119,9 @@ namespace eka2l1::epoc {
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
         , last_vsync(0)
+        , last_fps_check(0)
+        , last_fps(0)
+        , frame_passed_per_sec(0)
         , last_texture_access(0)
         , scr_config(scr_conf)
         , crr_mode(0)
@@ -277,12 +280,12 @@ namespace eka2l1::epoc {
                 serv->set_focus_screen(new_focus_screen);
 
                 alternative_focus->gain_focus();
-                new_focus_screen->fire_focus_change_callbacks();
+                new_focus_screen->fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = alternative_focus->last_refresh_rate;
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
-                fire_focus_change_callbacks();
+                fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = focus->last_refresh_rate;
             }
@@ -295,11 +298,11 @@ namespace eka2l1::epoc {
         return reinterpret_cast<epoc::window_group*>(root->child);
     }
     
-    void screen::fire_focus_change_callbacks() {
+    void screen::fire_focus_change_callbacks(const focus_change_property property) {
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
         for (auto &callback : focus_callbacks) {
-            callback.second(callback.first, focus);
+            callback.second(callback.first, focus, property);
         }
     }
 
@@ -335,6 +338,7 @@ namespace eka2l1::epoc {
     }
 
     bool screen::remove_screen_redraw_callback(const std::size_t cb) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
         return screen_redraw_callbacks.remove(cb);
     }
 
@@ -346,6 +350,7 @@ namespace eka2l1::epoc {
     }
 
     bool screen::remove_screen_mode_change_callback(const std::size_t cb) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
         return screen_mode_change_callbacks.remove(cb);
     }
 
@@ -368,6 +373,7 @@ namespace eka2l1::epoc {
 
     void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
         const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
+
         std::uint64_t delta = tnow - last_vsync;
 
         const std::uint64_t microsecs_a_frame = 1000000 / refresh_rate;
@@ -380,6 +386,16 @@ namespace eka2l1::epoc {
 
         // Skip last vsync to next frame
         last_vsync = ((tnow + microsecs_a_frame - 1) / microsecs_a_frame) * microsecs_a_frame;
+
+        const std::uint64_t delta_fps = tnow - last_fps_check;
+        if (delta_fps >= common::microsecs_per_sec) {
+            last_fps = frame_passed_per_sec;
+            last_fps_check = tnow;
+
+            frame_passed_per_sec = 0;
+        }
+
+        frame_passed_per_sec++;
     }
 
     const epoc::config::screen_mode *screen::mode_info(const int number) const {
