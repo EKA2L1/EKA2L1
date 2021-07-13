@@ -507,10 +507,11 @@ namespace eka2l1 {
         }
 
         void packages::traverse_tree_and_add_packages(loader::sis_registry_tree &tree) {
-            // TODO: We should ask for user permission first!
+            // TODO: We should ask for user permission first! This is also not correct
+            // Just remove that registeration, not the files...
             if (installed(tree.package_info.uid)) {
                 package::object *obj = package(tree.package_info.uid);
-                uninstall_package(*obj);
+                remove_registeration(*obj);
             }
 
             add_package(tree.package_info, &tree.controller_binary);
