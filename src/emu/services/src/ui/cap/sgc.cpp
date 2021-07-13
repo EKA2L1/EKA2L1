@@ -96,7 +96,11 @@ namespace eka2l1::epoc::cap {
         , hardware_layout_prop_(nullptr) {
     }
 
-    static void update_screen_state_from_wg_callback(void *userdata, epoc::window_group *group) {
+    static void update_screen_state_from_wg_callback(void *userdata, epoc::window_group *group, eka2l1::epoc::focus_change_property property) {
+        if (property != eka2l1::epoc::focus_change_target) {
+            return;
+        }
+
         reinterpret_cast<sgc_server *>(userdata)->update_screen_state_from_wg(group);
     }
 
