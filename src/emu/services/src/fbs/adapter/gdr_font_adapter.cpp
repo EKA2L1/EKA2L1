@@ -48,6 +48,12 @@ namespace eka2l1::epoc::adapter {
         // Note: Stream is unusable after constructor. It just there for sanity check.
     }
 
+    gdr_font_file_adapter::~gdr_font_file_adapter() {
+        for (auto &alloc: dynamic_alloc_list_) {
+            delete alloc;
+        }
+    }
+
     std::size_t gdr_font_file_adapter::count() {
         return store_.typefaces_.size();
     }
