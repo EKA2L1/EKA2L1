@@ -106,6 +106,10 @@ namespace eka2l1::drivers {
         if (metadata) {
             delete metadata;
         }
+
+        if (program != 0) {
+            glDeleteProgram(program);
+        }
     }
 
     bool ogl_shader::create(graphics_driver *driver, const char *vert_data, const std::size_t vert_size,
