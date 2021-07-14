@@ -34,7 +34,7 @@ namespace eka2l1::drivers {
         void change_texture_format(const texture_format format) override;
 
         void set_filter_minmag(const bool min, const filter_option op) override;
-        void set_channel_swizzle(channel_swizzles swizz) override;
+        void set_channel_swizzle(const channel_swizzles &swizz) override;
 
         void bind(graphics_driver *driver, const int binding) override;
         void unbind(graphics_driver *driver) override;

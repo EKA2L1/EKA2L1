@@ -325,11 +325,11 @@ namespace eka2l1 {
         return path.substr(0, path.length() - fn.length());
     }
 
-    std::string absolute_path(std::string str, std::string current_dir, bool symbian_use) {
+    std::string absolute_path(const std::string &str, const std::string &current_dir, bool symbian_use) {
         return absolute_path_impl<char>(str, current_dir, symbian_use, get_separator);
     }
 
-    std::u16string absolute_path(std::u16string str, std::u16string current_dir, bool symbian_use) {
+    std::u16string absolute_path(const std::u16string &str, const std::u16string &current_dir, bool symbian_use) {
         return absolute_path_impl<char16_t>(str, current_dir, symbian_use, get_separator_16);
     }
 
@@ -349,43 +349,43 @@ namespace eka2l1 {
         return add_path_impl<char16_t>(path1, path2, symbian_use, get_separator_16);
     }
 
-    std::string filename(std::string path, bool symbian_use) {
+    std::string filename(const std::string &path, bool symbian_use) {
         return filename_impl<char>(path, symbian_use, get_separator);
     }
 
-    std::u16string filename(std::u16string path, bool symbian_use) {
+    std::u16string filename(const std::u16string &path, bool symbian_use) {
         return filename_impl<char16_t>(path, symbian_use, get_separator);
     }
 
-    std::string file_directory(std::string path, bool symbian_use) {
+    std::string file_directory(const std::string &path, bool symbian_use) {
         return file_directory_impl<char>(path, symbian_use);
     }
 
-    std::u16string file_directory(std::u16string path, bool symbian_use) {
+    std::u16string file_directory(const std::u16string &path, bool symbian_use) {
         return file_directory_impl<char16_t>(path, symbian_use);
     }
 
-    std::string root_name(std::string path, bool symbian_use) {
+    std::string root_name(const std::string &path, bool symbian_use) {
         return root_name_impl<char>(path, symbian_use, get_separator);
     }
 
-    std::u16string root_name(std::u16string path, bool symbian_use) {
+    std::u16string root_name(const std::u16string &path, bool symbian_use) {
         return root_name_impl<char16_t>(path, symbian_use, get_separator_16);
     }
 
-    std::string root_dir(std::string path, bool symbian_use) {
+    std::string root_dir(const std::string &path, bool symbian_use) {
         return root_dir_impl<char>(path, symbian_use, get_separator);
     }
 
-    std::u16string root_dir(std::u16string path, bool symbian_use) {
+    std::u16string root_dir(const std::u16string &path, bool symbian_use) {
         return root_dir_impl<char16_t>(path, symbian_use, get_separator_16);
     }
 
-    std::string root_path(std::string path, bool symbian_use) {
+    std::string root_path(const std::string &path, bool symbian_use) {
         return root_path_impl<char>(path, symbian_use, get_separator);
     }
 
-    std::u16string root_path(std::u16string path, bool symbian_use) {
+    std::u16string root_path(const std::u16string &path, bool symbian_use) {
         return root_path_impl<char16_t>(path, symbian_use, get_separator_16);
     }
 
@@ -441,7 +441,7 @@ namespace eka2l1 {
 #endif
     }
 
-    void create_directories(std::string path) {
+    void create_directories(const std::string &path) {
         std::string crr_path = "";
 
         path_iterator ite;

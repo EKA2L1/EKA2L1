@@ -211,7 +211,7 @@ namespace eka2l1 {
             is_fullscreen_now = is_fullscreen;
         }
 
-        void emu_window_glfw3::change_title(std::string new_title) {
+        void emu_window_glfw3::change_title(const std::string &new_title) {
             glfwSetWindowTitle(emu_win, new_title.c_str());
         }
 

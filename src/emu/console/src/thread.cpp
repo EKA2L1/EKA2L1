@@ -108,7 +108,7 @@ static eka2l1::drivers::input_event make_controller_event_driver(int jid, int bu
     return evt;
 }
 
-static void on_ui_window_mouse_scrolling(void *userdata, eka2l1::vec2d v) {
+static void on_ui_window_mouse_scrolling(void *userdata, const eka2l1::vec2d &v) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     const std::lock_guard<std::mutex> guard(emu->lockdown);
 

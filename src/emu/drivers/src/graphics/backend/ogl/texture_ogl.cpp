@@ -193,7 +193,7 @@ namespace eka2l1::drivers {
         unbind(nullptr);
     }
 
-    static GLint translate_hal_swizzle_to_gl_swizzle(channel_swizzle swizz) {
+    static GLint translate_hal_swizzle_to_gl_swizzle(const channel_swizzle &swizz) {
         switch (swizz) {
         case channel_swizzle::red:
             return GL_RED;
@@ -221,7 +221,7 @@ namespace eka2l1::drivers {
         return GL_ONE;
     }
 
-    void ogl_texture::set_channel_swizzle(channel_swizzles swizz) {
+    void ogl_texture::set_channel_swizzle(const channel_swizzles &swizz) {
         GLint swizz_gl[4];
 
         for (int i = 0; i < 4; i++) {

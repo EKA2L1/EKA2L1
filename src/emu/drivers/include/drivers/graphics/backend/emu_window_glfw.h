@@ -45,7 +45,7 @@ namespace eka2l1 {
             explicit emu_window_glfw3();
             bool get_mouse_button_hold(const int mouse_btt) override;
 
-            void change_title(std::string new_title) override;
+            void change_title(const std::string &new_title) override;
 
             void init(std::string title, vec2 size, const std::uint32_t flags) override;
             void make_current() override;

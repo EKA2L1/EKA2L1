@@ -213,11 +213,11 @@ namespace eka2l1::epoc {
         void get_focus_screen(service::ipc_context &ctx, ws_cmd &cmd);
 
     public:
-        void add_redraw_listener(notify_info nof) {
+        void add_redraw_listener(const notify_info &nof) {
             redraws.set_listener(nof);
         }
 
-        void add_event_listener(notify_info nof) {
+        void add_event_listener(const notify_info &nof) {
             events.set_listener(nof);
         }
 

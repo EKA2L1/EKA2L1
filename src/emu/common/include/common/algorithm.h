@@ -237,7 +237,7 @@ namespace eka2l1 {
          * \param idx The Nth appearance
          * \param pos The position to start looking for
          */
-        size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos = 0);
+        size_t find_nth(const std::string &targ, const std::string &str, size_t idx, size_t pos = 0);
 
         /*! Remove a string from another string if possible */
         void remove(std::string &inp, std::string to_remove);

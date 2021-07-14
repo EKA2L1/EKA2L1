@@ -216,7 +216,7 @@ namespace eka2l1::common {
             return static_cast<T>(std::stod(key));
         }
 
-        static bool is_my_type(const ini_node_ptr node) {
+        static bool is_my_type(const ini_node_ptr &node) {
             return (node->get_node_type() == INI_NODE_PAIR);
         }
     };
@@ -286,7 +286,7 @@ namespace eka2l1::common {
 
         std::size_t get(const char *key, std::vector<std::string> &val, int *error_code = nullptr);
 
-        static bool is_my_type(const ini_node_ptr node) {
+        static bool is_my_type(const ini_node_ptr &node) {
             return (node->get_node_type() == INI_NODE_SECTION);
         }
 

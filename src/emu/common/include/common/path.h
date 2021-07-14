@@ -28,13 +28,13 @@ namespace eka2l1 {
 	    \param current_dir The current directory.
 		\param str The path
 	*/
-    std::string absolute_path(std::string str, std::string current_dir, bool symbian_use = false);
+    std::string absolute_path(const std::string &str, const std::string &current_dir, bool symbian_use = false);
 
     /*! \brief Absolute a path.
 	    \param current_dir The current directory.
 		\param str The path
 	*/
-    std::u16string absolute_path(std::u16string str, std::u16string current_dir, bool symbian_use = false);
+    std::u16string absolute_path(const std::u16string &str, const std::u16string &current_dir, bool symbian_use = false);
 
     /*! \brief Get the relative path.
 		\param str The path
@@ -59,50 +59,50 @@ namespace eka2l1 {
     /*! \brief Get the root name.
 		\param str The path
 	*/
-    std::string root_name(std::string path, bool symbian_use = false);
+    std::string root_name(const std::string &path, bool symbian_use = false);
 
     /*! \brief Get the root name.
 		\param str The path
 	*/
-    std::u16string root_name(std::u16string path, bool symbian_use = false);
+    std::u16string root_name(const std::u16string &path, bool symbian_use = false);
 
     /*! \brief Get the root directory.
 		\param str The path
 	*/
-    std::string root_dir(std::string path, bool symbian_use = false);
+    std::string root_dir(const std::string &path, bool symbian_use = false);
 
     /*! \brief Get the root directory.
 		\param str The path
 	*/
-    std::u16string root_dir(std::u16string path, bool symbian_use = false);
+    std::u16string root_dir(const std::u16string &path, bool symbian_use = false);
 
     /*! \brief Get the root path.
 		\param str The path
 	*/
-    std::string root_path(std::string path, bool symbian_use = false);
+    std::string root_path(const std::string &path, bool symbian_use = false);
 
     /*! \brief Get the root path.
 		\param str The path
 	*/
-    std::u16string root_path(std::u16string path, bool symbian_use = false);
+    std::u16string root_path(const std::u16string &path, bool symbian_use = false);
 
     /*! \brief Get the file name.
 		\param str The path
 	*/
-    std::string filename(std::string path, bool symbian_use = false);
+    std::string filename(const std::string &path, bool symbian_use = false);
 
     /*! \brief Get the file name.
 		\param str The path
 	*/
-    std::u16string filename(std::u16string path, bool symbian_use = false);
+    std::u16string filename(const std::u16string &path, bool symbian_use = false);
 
     /*! \brief Get the file directory.
 	*/
-    std::string file_directory(std::string path, bool symbian_use = false);
+    std::string file_directory(const std::string &path, bool symbian_use = false);
 
     /*! \brief Get the file directory.
 	*/
-    std::u16string file_directory(std::u16string path, bool symbian_use = false);
+    std::u16string file_directory(const std::u16string &path, bool symbian_use = false);
 
     std::string path_extension(const std::string &path);
 
@@ -122,7 +122,7 @@ namespace eka2l1 {
     bool is_dir(std::string path);
 
     /*! \brief Create directories. */
-    void create_directories(std::string path);
+    void create_directories(const std::string &path);
 
     bool set_current_directory(const std::string &path);
     bool get_current_directory(std::string &path);

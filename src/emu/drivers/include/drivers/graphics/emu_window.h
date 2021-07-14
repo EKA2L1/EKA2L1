@@ -94,7 +94,7 @@ namespace eka2l1 {
             /**
              * \brief Change the window title.
 			*/
-            virtual void change_title(std::string) = 0;
+            virtual void change_title(const std::string&) = 0;
 
             virtual vec2 window_size() = 0;
             virtual vec2 window_fb_size() = 0;

@@ -50,7 +50,7 @@ namespace eka2l1::drivers {
         virtual void change_texture_format(const texture_format format) = 0;
 
         virtual void set_filter_minmag(const bool min, const filter_option op) = 0;
-        virtual void set_channel_swizzle(channel_swizzles swizz) = 0;
+        virtual void set_channel_swizzle(const channel_swizzles &swizz) = 0;
 
         virtual void bind(graphics_driver *driver, const int binding) = 0;
         virtual void unbind(graphics_driver *driver) = 0;

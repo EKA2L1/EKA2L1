@@ -42,7 +42,7 @@ namespace eka2l1 {
 #endif
         }
 
-        size_t find_nth(std::string targ, std::string str, size_t idx, size_t pos) {
+        size_t find_nth(const std::string &targ, const std::string &str, size_t idx, size_t pos) {
             size_t found_pos = targ.find(str, pos);
 
             if (1 == idx || found_pos == std::string::npos) {
@@ -52,7 +52,7 @@ namespace eka2l1 {
             return find_nth(targ, str, idx - 1, found_pos + 1);
         }
 
-        void remove(std::string &inp, std::string to_remove) {
+        void remove(std::string &inp, const std::string &to_remove) {
             size_t pos = 0;
 
             do {

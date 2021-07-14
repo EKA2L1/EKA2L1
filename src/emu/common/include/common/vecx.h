@@ -43,7 +43,7 @@ namespace eka2l1 {
         }
 
         // Allow non-explicit
-        vecx(const std::initializer_list<T> list)
+        vecx(const std::initializer_list<T> &list)
             : elements(list) {
         }
 
@@ -246,14 +246,14 @@ namespace eka2l1 {
             return (size.x > 0) && (size.y > 0) && (top.x >= 0) && (top.y >= 0);
         }
 
-        bool contains(const eka2l1::vec2 point) {
+        bool contains(const eka2l1::vec2 &point) {
             if ((top.x <= point.x) && (top.y <= point.y) && (top.x + size.x >= point.x) && (top.y + size.y >= point.y))
                 return true;
 
             return false;
         }
 
-        bool contains(const eka2l1::rect rect) const {
+        bool contains(const eka2l1::rect &rect) const {
             return (top.x + size.x >= rect.top.x + rect.size.x) && (top.y + size.y >= rect.top.y + rect.size.y)
                 && (top.x <= rect.top.x) && (top.y <= rect.top.y);
         }
@@ -262,7 +262,7 @@ namespace eka2l1 {
             return top + size;
         }
 
-        void merge(eka2l1::rect other) {
+        void merge(const eka2l1::rect &other) {
             if (contains(other)) {
                 return;
             }
