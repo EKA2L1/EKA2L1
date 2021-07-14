@@ -69,7 +69,7 @@ namespace eka2l1 {
         }
     }
 
-    static void extract_directory(Fat::Image &img, Fat::Entry mee, std::string dir_path) {
+    static void extract_directory(Fat::Image &img, Fat::Entry mee, const std::string &dir_path) {
         eka2l1::create_directories(dir_path);
 
         while (img.get_next_entry(mee)) {

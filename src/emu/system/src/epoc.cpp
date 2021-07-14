@@ -473,7 +473,7 @@ namespace eka2l1 {
             return dispatcher_.get();
         }
 
-        void mount(drive_number drv, const drive_media media, std::string path,
+        void mount(drive_number drv, const drive_media media, const std::string &path,
             const std::uint32_t attrib = io_attrib_none);
 
         bool reset(const bool lock_sys);
@@ -481,7 +481,7 @@ namespace eka2l1 {
         void load_scripts();
         void do_state(common::chunkyseri &seri);
 
-        bool install_package(std::u16string path, drive_number drv);
+        bool install_package(const std::u16string &path, drive_number drv);
         bool load_rom(const std::string &path);
 
         void request_exit();
@@ -681,7 +681,7 @@ namespace eka2l1 {
         return 1;
     }
 
-    bool system_impl::install_package(std::u16string path, drive_number drv) {
+    bool system_impl::install_package(const std::u16string &path, drive_number drv) {
         std::atomic<int> h;
         return packages_->install_package(path, drv, h);
     }
@@ -728,7 +728,7 @@ namespace eka2l1 {
         return true;
     }
 
-    void system_impl::mount(drive_number drv, const drive_media media, std::string path,
+    void system_impl::mount(drive_number drv, const drive_media media, const std::string &path,
         const std::uint32_t attrib) {
         io_->mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
     }
@@ -936,7 +936,7 @@ namespace eka2l1 {
         return impl->get_dispatcher();
     }
 
-    void system::mount(drive_number drv, const drive_media media, std::string path,
+    void system::mount(drive_number drv, const drive_media media, const std::string &path,
         const std::uint32_t attrib) {
         return impl->mount(drv, media, path, attrib);
     }
@@ -949,7 +949,7 @@ namespace eka2l1 {
         return impl->load_scripts();
     }
 
-    bool system::install_package(std::u16string path, drive_number drv) {
+    bool system::install_package(const std::u16string &path, drive_number drv) {
         return impl->install_package(path, drv);
     }
 

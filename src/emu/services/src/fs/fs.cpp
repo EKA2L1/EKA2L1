@@ -627,7 +627,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    bool is_e32img(symfile f) {
+    bool is_e32img(const symfile &f) {
         int sig;
 
         f->seek(12, file_seek_mode::beg);

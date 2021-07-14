@@ -414,7 +414,7 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool dump_rom_directory(common::ro_stream *stream, rom_dir &dir, std::string base, std::uint32_t rom_base,
+    static bool dump_rom_directory(common::ro_stream *stream, rom_dir &dir, const std::string &base, std::uint32_t rom_base,
         std::atomic<int> &progress, const int base_progress, const int max_progress) {
         eka2l1::create_directories(base);
 

@@ -47,7 +47,7 @@ namespace eka2l1 {
     public:
         file_parser(std::u16string name, std::u16string related, file_parse parse);
 
-        void parse(std::u16string default_path);
+        void parse(const std::u16string &default_path);
         file_parse get_result();
     };
 }

@@ -146,7 +146,7 @@ namespace eka2l1 {
 
         void set_config(config::state *conf);
 
-        void mount(drive_number drv, const drive_media media, std::string path,
+        void mount(drive_number drv, const drive_media media, const std::string &path,
             const std::uint32_t attrib = io_attrib_none);
 
         bool reset();
@@ -156,7 +156,7 @@ namespace eka2l1 {
         void load_scripts();
 
         bool set_device(const std::uint8_t idx);
-        bool install_package(std::u16string path, drive_number drv);
+        bool install_package(const std::u16string &path, drive_number drv);
 
         void request_exit();
         bool should_exit() const;

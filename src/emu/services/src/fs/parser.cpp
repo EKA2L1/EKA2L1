@@ -30,7 +30,7 @@ namespace eka2l1 {
         , parse_(parse) {
     }
 
-    void file_parser::parse(std::u16string default_path) {
+    void file_parser::parse(const std::u16string &default_path) {
         memset(parse_.fields, 0, sizeof(parse_.fields));
 
         std::u16string lex[3];
