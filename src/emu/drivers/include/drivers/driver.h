@@ -150,10 +150,11 @@ namespace eka2l1::drivers {
     template <typename... Args>
     command *make_command(const std::uint16_t opcode, int *status, Args... arguments) {
         command *cmd = new command(opcode, status);
-        command_helper helper(cmd);
 
-        if constexpr (sizeof...(Args) > 0)
+        if constexpr (sizeof...(Args) > 0) {
+            command_helper helper(cmd);
             push_arguments(helper, arguments...);
+        }
 
         return cmd;
     }

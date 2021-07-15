@@ -379,9 +379,9 @@ namespace eka2l1 {
 
             ImVec2 yes_btn_size(yes_str_width + 10.0f, ImGui::GetFontSize() + 10.0f);
             ImVec2 no_btn_size(no_str_width + 10.0f, ImGui::GetFontSize() + 10.0f);
-            ImVec2 ok_btn_size(ok_str_width + 10.0f, ImGui::GetFontSize() + 10.0f);
 
             if (device_wizard_state.stage == device_wizard::ENDING) {
+                ImVec2 ok_btn_size(ok_str_width + 10.0f, ImGui::GetFontSize() + 10.0f);
                 ImGui::SameLine((ImGui::GetWindowSize().x - ok_btn_size.x) / 2);
 
                 if (ImGui::Button(ok_str.c_str(), ok_btn_size)) {

@@ -71,9 +71,8 @@ namespace eka2l1 {
                     name += common::ucs2_to_utf8(registerations[i].mandatory_info.short_caption.to_std_string(nullptr));
                 }
 
-                const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
-
                 if (app_search_box.PassFilter(name.c_str())) {
+                    const std::string uid_name = common::to_string(registerations[i].mandatory_info.uid, std::hex);
                     ImGui::Text("%s", uid_name.c_str());
                     ImGui::NextColumn();
 

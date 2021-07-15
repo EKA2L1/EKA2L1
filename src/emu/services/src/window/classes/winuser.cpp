@@ -284,11 +284,11 @@ namespace eka2l1::epoc {
         if (resize_needed) {
             // Queue a resize command
             auto cmd_list = drv->new_command_list();
-            auto cmd_builder = drv->new_command_builder(cmd_list.get());
 
             if (driver_win_id == 0) {
                 driver_win_id = drivers::create_bitmap(drv, size, 32);
             } else {
+                auto cmd_builder = drv->new_command_builder(cmd_list.get());
                 cmd_builder->resize_bitmap(driver_win_id, size);
                 cmd_builder->bind_bitmap(driver_win_id);
             }

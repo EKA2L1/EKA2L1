@@ -759,7 +759,7 @@ namespace eka2l1 {
                 alternative_stream.reset();
             }
 
-            alternative_stream = astream;
+            alternative_stream = std::move(astream);
         }
     }
 }

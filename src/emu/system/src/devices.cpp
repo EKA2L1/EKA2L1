@@ -301,7 +301,7 @@ namespace eka2l1 {
             default_language = languages[0];
 
         device dvc = { ver, firmcode, manufacturer, model };
-        dvc.languages = languages;
+        dvc.languages = std::move(languages);
         dvc.default_language_code = default_language;
         dvc.machine_uid = machine_uid;
 

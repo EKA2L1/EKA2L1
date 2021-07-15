@@ -173,7 +173,7 @@ namespace eka2l1 {
             return false;
         }
 
-        reg.icon_file_path = cap;
+        reg.icon_file_path = std::move(cap);
 
         // TODO: Read view list and localised group name
 

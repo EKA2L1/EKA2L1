@@ -36,7 +36,7 @@ namespace eka2l1 {
         std::u16string lex[3];
         lex[0] = name_;
         lex[1] = related_;
-        lex[2] = default_path;
+        lex[2] = std::move(default_path);
 
         std::int32_t pos = 0;
         for (auto i = 0; i < LEX_COMPONENTS; i++) {

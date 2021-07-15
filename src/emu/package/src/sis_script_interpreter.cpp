@@ -55,7 +55,7 @@ namespace eka2l1 {
             return false;
         }
 
-        bool ss_interpreter::package(sis_uid uid) {
+        bool ss_interpreter::package(const sis_uid &uid) {
             if (mngr->installed(uid.uid)) {
                 return true;
             }
@@ -415,7 +415,7 @@ namespace eka2l1 {
                 desc.operation = static_cast<std::int32_t>(file_des->op);
                 desc.operation_options = static_cast<std::int32_t>(file_des->op_op);
                 desc.uncompressed_length = file_des->len;
-                desc.target = file_path;
+                desc.target = std::move(file_path);
                 desc.sid = 0;
 
                 if (!file_des->caps.raw_data.empty()) {
@@ -513,10 +513,9 @@ namespace eka2l1 {
             for (auto &wrap_file : install_block.files.fields) {
                 sis_file_des *file = reinterpret_cast<sis_file_des *>(wrap_file.get());
                 std::string raw_path = "";
-                std::string install_path = "";
 
                 if (file->target.unicode_string.length() > 0) {
-                    install_path = get_install_path(file->target.unicode_string, install_drive);
+                    std::string install_path = get_install_path(file->target.unicode_string, install_drive);
                     raw_path = common::ucs2_to_utf8(*(io->get_raw_path(common::utf8_to_ucs2(install_path))));
                 }
 
@@ -526,16 +525,13 @@ namespace eka2l1 {
 
                     bool yes_choosen = true;
 
-                    if ((buf.size() >= 2) && (buf[0] == 0xFF) && (buf[1] == 0xFE)) {
-                        // BOM file
-                        std::string converted_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t*>(buf.data()) + 1,
-                            (buf.size() / 2) - 1));
-
-                        if (show_text) {
-                            show_text(reinterpret_cast<const char*>(converted_str.data()), true);
-                        }
-                    } else {
-                        if (show_text) {
+                    if (show_text) {
+                        if ((buf.size() >= 2) && (buf[0] == 0xFF) && (buf[1] == 0xFE)) {
+                            // BOM file
+                            std::string converted_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t *>(buf.data()) + 1,
+                                (buf.size() / 2) - 1));
+                            show_text(reinterpret_cast<const char *>(converted_str.data()), true);
+                        } else {
                             show_text(reinterpret_cast<const char *>(buf.data()), true);
                         }
                     }

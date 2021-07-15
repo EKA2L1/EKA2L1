@@ -599,7 +599,7 @@ namespace eka2l1 {
                     LOG_ERROR(GDBSTUB, "Please specify absolute path of this DLL/EXE in emulated device!");
                 }
 
-                target_codeseg_path = target_string;
+                target_codeseg_path = std::move(target_string);
             }
         }
 

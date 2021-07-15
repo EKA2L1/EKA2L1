@@ -264,7 +264,7 @@ namespace eka2l1 {
                 try_1[0] = localised_path[0];
 
                 if (io->exist(try_1)) {
-                    reg.icon_file_path = try_1;
+                    reg.icon_file_path = std::move(try_1);
                 } else {
                     reg.icon_file_path.clear();
                 }

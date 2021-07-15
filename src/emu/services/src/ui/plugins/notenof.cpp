@@ -40,12 +40,11 @@ namespace eka2l1::epoc::notifier {
             return;
         }
 
-        common::chunkyseri seri(data_ptr, data_size, common::chunkyseri_mode::SERI_MODE_READ);
-
         if (kern_->is_eka1()) {
             std::uint16_t type = 0;
             char unk = 0;
 
+            common::chunkyseri seri(data_ptr, data_size, common::chunkyseri_mode::SERI_MODE_READ);
             seri.absorb(type);
             seri.absorb(unk);
 

@@ -459,8 +459,8 @@ namespace eka2l1 {
     }
 
     template <typename T, typename Q>
-    void fbscli::fill_bitmap_information(T *bmpfont, Q *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
-        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector) {
+    void fbscli::fill_bitmap_information(T *bmpfont, Q *of, epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user,
+        const std::uint32_t desired_height, const std::optional<std::pair<float, float>> &scale_vector) {
         fbs_server *serv = server<fbs_server>();
 
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
@@ -570,17 +570,19 @@ namespace eka2l1 {
         free_general_data(bmpfont);
     }
 
-    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v1, epoc::open_font_v1>(epoc::bitmapfont_v1 *bitmapfont, epoc::open_font_v1 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
-        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
+    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v1, epoc::open_font_v1>(epoc::bitmapfont_v1 *bitmapfont,
+        epoc::open_font_v1 *of, epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user,
+        const std::uint32_t desired_height, const std::optional<std::pair<float, float>> &scale_vector);
 
-    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v2, epoc::open_font_v2>(epoc::bitmapfont_v2 *bitmapfont, epoc::open_font_v2 *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
-        kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector);
+    template void fbscli::fill_bitmap_information<epoc::bitmapfont_v2, epoc::open_font_v2>(epoc::bitmapfont_v2 *bitmapfont,
+        epoc::open_font_v2 *of, epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user,
+        const std::uint32_t desired_height, const std::optional<std::pair<float, float>> &scale_vector);
 
     template void fbs_server::destroy_bitmap_font<epoc::bitmapfont_v1>(epoc::bitmapfont_v1 *bmpfont);
     template void fbs_server::destroy_bitmap_font<epoc::bitmapfont_v2>(epoc::bitmapfont_v2 *bmpfont);
 
-    epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user, const std::uint32_t desired_height,
-        std::optional<std::pair<float, float>> scale_vector) {
+    epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user,
+        const std::uint32_t desired_height, const std::optional<std::pair<float, float>> &scale_vector) {
         fbs_server *serv = server<fbs_server>();
 #define DO_BITMAP_OPEN_FONT_CREATION(ver)                                                               \
         epoc::open_font_v##ver *of = serv->allocate_general_data<epoc::open_font_v##ver>();             \
