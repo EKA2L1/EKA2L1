@@ -149,7 +149,7 @@ namespace eka2l1::manager {
             }
 #endif
 
-            if (!call_module_entry(name.c_str())) {
+            if (!call_module_entry(name)) {
                 // If the module entry failed, we still success, but not execute any futher method            
                 return eka2l1::set_current_directory(crr_path);
             }

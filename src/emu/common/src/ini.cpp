@@ -364,7 +364,7 @@ namespace eka2l1::common {
 
                     sec = create_section(first_token.c_str());
                 } else {
-                    std::string next_tok = first_token.c_str();
+                    std::string next_tok = first_token;
 
                     if ((!next_tok.empty()) && (next_tok[0] == '#')) {
                         // It's comment

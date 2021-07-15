@@ -168,7 +168,7 @@ namespace eka2l1::kernel {
         common::roundabout thread_list;
         common::roundabout codeseg_list;
 
-        std::vector<kernel::process*> child_processes_;
+        std::list<kernel::process*> child_processes_;
         std::unique_ptr<process_bss_man> bss_man_;
 
         kernel::process *parent_process_;

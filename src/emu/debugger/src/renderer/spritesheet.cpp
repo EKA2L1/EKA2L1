@@ -60,7 +60,7 @@ namespace eka2l1::renderer {
 
     bool spritesheet::load(drivers::graphics_driver *driver, drivers::graphics_command_list_builder *builder,
         const std::string &texture_filename, const std::string &meta_filename, const int fps) {
-        sheet_ = renderer::load_texture_from_file(driver, builder, texture_filename.c_str(), false, &width_, &height_);
+        sheet_ = renderer::load_texture_from_file(driver, builder, texture_filename, false, &width_, &height_);
 
         if (sheet_ == 0) {
             return false;
