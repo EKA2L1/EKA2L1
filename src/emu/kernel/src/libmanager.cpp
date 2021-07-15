@@ -77,12 +77,12 @@ namespace eka2l1::hle {
 
     static std::string get_real_dll_name(std::string dll_name) {
         const std::string ext = eka2l1::path_extension(dll_name);
-        size_t dll_name_end_pos = dll_name.find_first_of("{");
+        size_t dll_name_end_pos = dll_name.find_first_of('{');
 
         if (FOUND_STR(dll_name_end_pos)) {
             dll_name = dll_name.substr(0, dll_name_end_pos);
         } else {
-            dll_name_end_pos = dll_name.find_last_of("[");
+            dll_name_end_pos = dll_name.find_last_of('[');
 
             if (FOUND_STR(dll_name_end_pos)) {
                 dll_name = dll_name.substr(0, dll_name_end_pos);

@@ -42,18 +42,15 @@ namespace eka2l1 {
             remove(org, " ");
             // Remove class in arg
 
-            std::size_t beg = org.find("(");
-            std::size_t end = org.find(")");
-
+            std::size_t beg = org.find('(');
+            std::size_t end = org.find(')');
             std::string sub = org.substr(beg, end);
 
             remove(sub, "class");
             remove(sub, "const");
             remove(sub, "struct");
 
-            auto res = org.substr(0, beg) + sub + org.substr(end + 1);
-
-            return res;
+            return org.substr(0, beg) + sub + org.substr(end + 1);
         }
     }
 }

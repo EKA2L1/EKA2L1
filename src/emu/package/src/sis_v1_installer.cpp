@@ -56,7 +56,7 @@ namespace eka2l1::loader {
         for (auto &file : res->files) {
             std::u16string dest = file.dest;
 
-            if (dest.find(u"!") != std::u16string::npos) {
+            if (dest.find(u'!') != std::u16string::npos) {
                 dest[0] = drive_to_char16(drive);
             }
 

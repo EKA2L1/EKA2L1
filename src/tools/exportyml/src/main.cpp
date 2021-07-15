@@ -74,7 +74,7 @@ std::vector<function> read_idt(const fs::path &path) {
         std::string line;
         std::getline(idt, line);
 
-        if (line[0] == ';' || line == "") {
+        if (line[0] == ';' || line.empty()) {
             continue;
         }
 
@@ -189,8 +189,8 @@ std::string normalize_for_hash(std::string org) {
     remove(org, " ");
     // Remove class in arg
 
-    std::size_t beg = org.find("(");
-    std::size_t end = org.find(")");
+    std::size_t beg = org.find('(');
+    std::size_t end = org.find(')');
 
     if (beg == std::string::npos || end == std::string::npos) {
         return org;
@@ -202,9 +202,7 @@ std::string normalize_for_hash(std::string org) {
     remove(sub, "const");
     remove(sub, "struct");
 
-    auto res = org.substr(0, beg) + sub + org.substr(end + 1);
-
-    return res;
+    return org.substr(0, beg) + sub + org.substr(end + 1);
 }
 
 void yml_link(std::vector<function> &funcs, const fs::path &path) {
