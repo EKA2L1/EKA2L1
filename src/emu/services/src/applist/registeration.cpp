@@ -40,7 +40,7 @@ namespace eka2l1 {
         }
 
         if (len == 0) {
-            dat = u"";
+            dat.clear();
             return true;
         }
 

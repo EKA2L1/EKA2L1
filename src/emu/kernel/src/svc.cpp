@@ -2781,7 +2781,7 @@ namespace eka2l1::epoc {
         if (name.ptr_address()) {
             name_str = name.get(cur_pr)->to_std_string(cur_pr);
         } else {
-            name_str = "";
+            name_str.clear();
         }
 
         auto queue_ptr = kern->create_and_add<kernel::msg_queue>

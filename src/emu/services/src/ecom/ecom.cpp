@@ -393,7 +393,7 @@ namespace eka2l1 {
         // Data is empty. No match string, no extended interfaces whatsoever
         if (data.length() == 0) {
             extended_interfaces.resize(0);
-            match_str = "";
+            match_str.clear();
 
             return true;
         }

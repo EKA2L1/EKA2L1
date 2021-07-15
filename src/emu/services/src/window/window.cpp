@@ -1280,7 +1280,7 @@ namespace eka2l1 {
                     style_node->get_as<common::ini_pair>()->get(styles);
                     scr_mode.style = styles[0];
                 } else {
-                    scr_mode.style = "";
+                    scr_mode.style.clear();
                 }
 
                 scr.modes.push_back(scr_mode);

@@ -155,7 +155,7 @@ namespace eka2l1 {
 
         try {
             devices_node = std::move(YAML::LoadFile(add_path(conf->storage, "devices.yml")));
-        } catch (YAML::Exception exception) {
+        } catch (YAML::Exception &exception) {
             return;
         }
 
@@ -171,7 +171,7 @@ namespace eka2l1 {
             
             try {
                 machine_uid = device_node.second["machine-uid"].as<int>();
-            } catch (YAML::Exception exception) {
+            } catch (YAML::Exception &exception) {
                 machine_uid = 0;
             }
 
@@ -279,7 +279,7 @@ namespace eka2l1 {
             ifile.set_ucs2(0); // Nokia 7610 isn't having a BOM
             std::string line;
             while (ifile.getline(line)) {
-                if ((line == "") || (line[0] == '\0'))
+                if ((line.empty()) || (line[0] == '\0'))
                     break;
 
                 if ((line == "\r") || (line == "\n") || (line == "\r\n")) {

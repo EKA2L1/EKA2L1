@@ -113,7 +113,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         cmdlinestr = cmdline;
 
         if (cmdlinestr.substr(0, 2) == "--") {
-            cmdlinestr = "";
+            cmdlinestr.clear();
         } else {
             parser->next_token();
         }
@@ -261,7 +261,7 @@ bool fullscreen_option_handler(eka2l1::common::arg_parser *parser, void *userdat
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
     
     emu->init_fullscreen = true;
-    *err = "";
+    err->clear();
 
     return true;
 }

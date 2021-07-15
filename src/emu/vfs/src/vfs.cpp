@@ -570,8 +570,6 @@ namespace eka2l1 {
 
             iterator++;
 
-            std::vector<std::string> components;
-
             for (; iterator; iterator++) {
                 const std::u16string ite_value = *iterator;
                 if (ite_value == u"..") {
@@ -641,7 +639,7 @@ namespace eka2l1 {
             const std::string root = eka2l1::root_name(path_ucs8);
             std::u16string vert_path_copy = vert_path;
 
-            if (root == "" || !mappings[ascii_to_drive_number(static_cast<char>(std::towlower(root[0])))].second) {
+            if (root.empty() || !mappings[ascii_to_drive_number(static_cast<char>(std::towlower(root[0])))].second) {
                 return std::nullopt;
             }
 

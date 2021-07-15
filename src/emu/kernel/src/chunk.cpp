@@ -62,7 +62,7 @@ namespace eka2l1 {
             if (chnk_access == chunk_access::local) {
                 create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_LOCAL;
 
-                if (name == "") {
+                if (name.empty()) {
                     obj_name = "local" + common::to_string(eka2l1::random());
                 }
             }

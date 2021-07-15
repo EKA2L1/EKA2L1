@@ -245,6 +245,6 @@ namespace eka2l1 {
 
     template <typename T>
     bool has_filename(std::basic_string<T> path, bool symbian_use) {
-        return filename(path, symbian_use) != "";
+        return !filename(path, symbian_use).empty();
     }
 }

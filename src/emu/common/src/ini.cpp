@@ -358,7 +358,7 @@ namespace eka2l1::common {
                 if (first_token[0] == '[') {
                     first_token = first_token.substr(1, first_token.length() - 2);
 
-                    if (first_token == "") {
+                    if (first_token.empty()) {
                         return -2;
                     }
 

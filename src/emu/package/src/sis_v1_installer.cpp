@@ -60,7 +60,7 @@ namespace eka2l1::loader {
                 dest[0] = drive_to_char16(drive);
             }
 
-            if (file.record.file_type != 1 && dest != u"") {
+            if (file.record.file_type != 1 && !dest.empty()) {
                 std::string rp = eka2l1::file_directory(common::ucs2_to_utf8(dest));
                 io->create_directories(common::utf8_to_ucs2(rp));
             } else {

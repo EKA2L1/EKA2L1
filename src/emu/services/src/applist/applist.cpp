@@ -266,7 +266,7 @@ namespace eka2l1 {
                 if (io->exist(try_1)) {
                     reg.icon_file_path = try_1;
                 } else {
-                    reg.icon_file_path = u"";
+                    reg.icon_file_path.clear();
                 }
             }
         }
