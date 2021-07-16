@@ -113,6 +113,8 @@ namespace eka2l1::config {
     }
 
     void state::serialize(const bool with_bindings) {
+        audio_master_volume = common::clamp(0, 100, audio_master_volume);
+
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
 
@@ -145,6 +147,8 @@ namespace eka2l1::config {
         #define OPTION(name, variable, default_value) get_yaml_value(node, #name, &variable, default_value);
         #include <config/options.inl>
         #undef OPTION
+
+        audio_master_volume = common::clamp(0, 100, audio_master_volume);
 
         if (with_bindings)
             keybinds.deserialize(fmt::format("bindings/{}.yml", current_keybind_profile));
