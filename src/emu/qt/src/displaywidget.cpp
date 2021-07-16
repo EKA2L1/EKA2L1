@@ -1,5 +1,6 @@
 #include <qt/displaywidget.h>
 #include <common/log.h>
+#include <common/algorithm.h>
 
 #include <QWindow>
 #include <QtOpenGLWidgets>
@@ -151,5 +152,44 @@ void display_widget::keyPressEvent(QKeyEvent* event) {
 void display_widget::keyReleaseEvent(QKeyEvent* event) {
     if (button_released) {
         button_released(userdata_, event->key());
+    }
+}
+
+void display_widget::mousePressEvent(QMouseEvent* event) {
+    const qreal pixel_ratio = devicePixelRatioF();
+
+    if (raw_mouse_event) {
+        const int button = eka2l1::common::find_most_significant_bit_one(event->button());
+        raw_mouse_event(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio), button, 0);
+    }
+
+    if (touch_pressed && (event->button() == Qt::LeftButton)) {
+        touch_pressed(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio));
+    }
+}
+
+void display_widget::mouseReleaseEvent(QMouseEvent* event) {
+    if (raw_mouse_event) {
+        const qreal pixel_ratio = devicePixelRatioF();
+
+        const int button = eka2l1::common::find_most_significant_bit_one(event->button());
+        raw_mouse_event(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio), button, 2);
+    }
+
+    if (touch_released && (event->button() == Qt::LeftButton)) {
+        touch_released(userdata_);
+    }
+}
+
+void display_widget::mouseMoveEvent(QMouseEvent* event) {
+    const qreal pixel_ratio = devicePixelRatioF();
+
+    if (raw_mouse_event) {
+        const int button = eka2l1::common::find_most_significant_bit_one(event->buttons());
+        raw_mouse_event(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio), button, 1);
+    }
+
+    if (touch_move && (event->buttons() & Qt::LeftButton)) {
+        touch_move(userdata_, eka2l1::vec2(event->pos().x() * pixel_ratio, event->pos().y() * pixel_ratio));
     }
 }

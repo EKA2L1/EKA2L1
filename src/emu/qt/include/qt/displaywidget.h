@@ -56,11 +56,9 @@ public:
 
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
-    /*
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
-    void closeEvent(QCloseEvent* event) override;*/
 };
 
 #endif // DISPLAY_WIDGET_H
