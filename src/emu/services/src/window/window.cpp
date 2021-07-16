@@ -1620,14 +1620,14 @@ namespace eka2l1 {
     }
 
     void window_server::init_screens() {
-        kernel_system *kern = get_kernel_system();
+        kernel_system *kernel = get_kernel_system();
 
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0));
         epoc::screen *crr = screens;
         crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
 
-        create_screen_buffer_for_dsa(kern, crr);
+        create_screen_buffer_for_dsa(kernel, crr);
 
         // Create other available screens. Plugged in screen later will be created explicitly
         for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
@@ -1637,7 +1637,7 @@ namespace eka2l1 {
 
             if ((crr->size().x != -1) && (crr->size().y != -1)) {
                 crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
-                create_screen_buffer_for_dsa(kern, crr);
+                create_screen_buffer_for_dsa(kernel, crr);
             }
         }
 
@@ -1999,7 +1999,7 @@ namespace eka2l1 {
 
         if (!scr) {
             LOG_TRACE(SERVICE_WINDOW, "Screen number {} doesnt exist", scr_num);
-            return false;
+            return 0;
         }
 
         bool hit_priority = false;
@@ -2030,7 +2030,7 @@ namespace eka2l1 {
 
         if (!scr) {
             LOG_TRACE(SERVICE_WINDOW, "Screen number {} doesnt exist", scr_num);
-            return false;
+            return 0;
         }
 
         window_group_tree_moonwalker walker(scr, infos, window_group_tree_moonwalker::FLAGS_GET_CHAIN, pri, max);

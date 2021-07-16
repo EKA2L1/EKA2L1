@@ -318,22 +318,23 @@ namespace eka2l1 {
     void gdbstub::remove_breakpoint(breakpoint_type type, std::uint32_t addr) {
         breakpoint_map &p = get_breakpoint_map(type);
 
-        const auto bp = p.find(addr);
-        if (bp == p.end()) {
+        const auto it = p.find(addr);
+        if (it == p.end()) {
             return;
         }
 
+        const eka2l1::breakpoint breakpoint = it->second;
         LOG_DEBUG(GDBSTUB, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
-            bp->second.len, bp->second.addr, static_cast<int>(type));
+            breakpoint.len, breakpoint.addr, static_cast<int>(type));
 
         if (type == breakpoint_type::Execute) {
             kernel::process *target_process = current_thread->owning_process();
 
             if (target_process) {
-                std::uint8_t *buff = reinterpret_cast<std::uint8_t*>(target_process->get_ptr_on_addr_space(bp->second.addr));
+                std::uint8_t *buff = reinterpret_cast<std::uint8_t *>(target_process->get_ptr_on_addr_space(breakpoint.addr));
                 
                 if (buff) {
-                    std::memcpy(buff, &(bp->second.inst[0]), bp->second.len);
+                    std::memcpy(buff, &(breakpoint.inst[0]), breakpoint.len);
                     kern->get_cpu()->clear_instruction_cache();
                 }
             }
@@ -364,13 +365,14 @@ namespace eka2l1 {
         }
 
         const breakpoint_map &p = get_breakpoint_map(type);
-        const auto bp = p.find(addr);
+        const auto it = p.find(addr);
 
-        if (bp == p.end()) {
+        if (it == p.end()) {
             return false;
         }
 
-        std::uint32_t len = bp->second.len;
+        const eka2l1::breakpoint breakpoint = it->second;
+        std::uint32_t len = breakpoint.len;
 
         // IDA Pro defaults to 4-byte breakpoints for all non-hardware breakpoints
         // no matter if it's a 4-byte or 2-byte instruction. When you execute a
@@ -384,11 +386,11 @@ namespace eka2l1 {
             len = 1;
         }
 
-        if (bp->second.active && (addr >= bp->second.addr && addr < bp->second.addr + len)) {
+        if (breakpoint.active && (addr >= breakpoint.addr && addr < breakpoint.addr + len)) {
             LOG_DEBUG(GDBSTUB, 
                 "Found breakpoint type {} @ {:08x}, range: {:08x}"
                 " - {:08x} ({:x} bytes)",
-                static_cast<int>(type), addr, bp->second.addr, bp->second.addr + len, len);
+                static_cast<int>(type), addr, breakpoint.addr, breakpoint.addr + len, len);
             return true;
         }
 
@@ -747,9 +749,10 @@ namespace eka2l1 {
         std::string buffer = fmt::format("T{:02x}", latest_signal);
 
         if (full) {
+            eka2l1::arm::core *cpu = kern->get_cpu();
             buffer += fmt::format("{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", PC_REGISTER,
-                htonl(kern->get_cpu()->get_pc()), SP_REGISTER, htonl(kern->get_cpu()->get_sp()),
-                LR_REGISTER, htonl(kern->get_cpu()->get_lr()));
+                htonl(cpu->get_pc()), SP_REGISTER, htonl(cpu->get_sp()),
+                LR_REGISTER, htonl(cpu->get_lr()));
         }
 
         if (thread) {

@@ -45,13 +45,14 @@ void print_typeface_list_header_info(std::vector<eka2l1::loader::gdr::typeface> 
     LOG_INFO(eka2l1::SYSTEM, "=============== TYPEFACE LIST ======================");
     
     for (std::size_t i = 0; i < typefaces.size(); i++) {
-        LOG_INFO(eka2l1::SYSTEM, "- {}:", eka2l1::common::ucs2_to_utf8(typefaces[i].header_.name_));
-        LOG_INFO(eka2l1::SYSTEM, "\t+ Flags: {}", typefaces[i].header_.flags_);
+        const auto header = typefaces[i].header_;
+        LOG_INFO(eka2l1::SYSTEM, "- {}:", eka2l1::common::ucs2_to_utf8(header.name_));
+        LOG_INFO(eka2l1::SYSTEM, "\t+ Flags: {}", header.flags_);
         LOG_INFO(eka2l1::SYSTEM, "\t+ Font bitmap header:");
-        for (std::size_t j = 0; j < typefaces[i].header_.bitmap_headers_.size(); j++) {
-            LOG_INFO(eka2l1::SYSTEM, "\t\t* UID: 0x{:X}", typefaces[i].header_.bitmap_headers_[j].uid_);
-            LOG_INFO(eka2l1::SYSTEM, "\t\t* Factor: ({}, {})", typefaces[i].header_.bitmap_headers_[j].width_factor_,
-                typefaces[i].header_.bitmap_headers_[j].height_factor_);
+        for (std::size_t j = 0; j < header.bitmap_headers_.size(); j++) {
+            LOG_INFO(eka2l1::SYSTEM, "\t\t* UID: 0x{:X}", header.bitmap_headers_[j].uid_);
+            LOG_INFO(eka2l1::SYSTEM, "\t\t* Factor: ({}, {})", header.bitmap_headers_[j].width_factor_,
+                header.bitmap_headers_[j].height_factor_);
             LOG_INFO(eka2l1::SYSTEM, "");
         }
     }
