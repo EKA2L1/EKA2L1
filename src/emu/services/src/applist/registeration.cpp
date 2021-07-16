@@ -692,7 +692,7 @@ namespace eka2l1 {
 
                         fbs_bitmap_data_info info;
                         info.size_ = bmp_header.size_pixels;
-                        info.dpm_ = epoc::get_display_mode_from_bpp(bmp_header.bit_per_pixels);
+                        info.dpm_ = epoc::get_display_mode_from_bpp(bmp_header.bit_per_pixels, bmp_header.color);
                         info.comp_ = static_cast<epoc::bitmap_file_compression>(bmp_header.compression);
 
                         std::vector<std::uint8_t> data_to_read;
@@ -756,7 +756,7 @@ namespace eka2l1 {
                 info.data_ = icon_list_file.sbm_headers[i].header_len + icon_list_file.trailer.sbm_offsets[i]
                     + mbm_data.data();
                 info.data_size_ = icon_list_file.sbm_headers[i].bitmap_size - icon_list_file.sbm_headers[i].header_len;
-                info.dpm_ = epoc::get_display_mode_from_bpp(icon_list_file.sbm_headers[i].bit_per_pixels);
+                info.dpm_ = epoc::get_display_mode_from_bpp(icon_list_file.sbm_headers[i].bit_per_pixels, icon_list_file.sbm_headers[i].color);
 
                 info.size_.x = icon_list_file.sbm_headers[i].size_pixels.x;
                 info.size_.y = icon_list_file.sbm_headers[i].size_pixels.y;

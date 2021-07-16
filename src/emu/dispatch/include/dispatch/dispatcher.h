@@ -51,39 +51,76 @@ namespace eka2l1 {
 namespace eka2l1::dispatch {
     struct patch_info;
     struct dsp_epoc_audren_sema;
+    struct dsp_manager;
 
-    struct dsp_epoc_stream {
+    enum dsp_medium_type {
+        DSP_MEDIUM_TYPE_EPOC_STREAM = 0,
+        DSP_MEDIUM_TYPE_EPOC_PLAYER = 1
+    };
+
+    struct dsp_medium {
+    protected:
+        dsp_manager *manager_;
+        std::uint32_t logical_volume_;
+
+        dsp_medium_type type_;
+
+    public:
+        explicit dsp_medium(dsp_manager *manager, dsp_medium_type type);
+        virtual ~dsp_medium() {}
+
+        virtual std::uint32_t volume() const {
+            return logical_volume_;
+        }
+
+        dsp_medium_type type() const {
+            return type_;
+        }
+
+        virtual std::uint32_t max_volume() const = 0;
+        virtual void volume(const std::uint32_t volume) = 0;
+    };
+
+    struct dsp_epoc_stream : public dsp_medium {
         std::unique_ptr<drivers::dsp_stream> ll_stream_;
         epoc::notify_info copied_info_;
 
-        dsp_epoc_audren_sema *audren_sema_;
-
         std::mutex lock_;
 
-        explicit dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream, dsp_epoc_audren_sema *sema);
-        ~dsp_epoc_stream();
+        explicit dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream, dsp_manager *manager);
+        ~dsp_epoc_stream() override;
+
+        void volume(const std::uint32_t volume) override;
+        std::uint32_t max_volume() const override;
+
+        std::uint32_t volume() const override {
+            return dsp_medium::volume();
+        }
     };
 
     enum dsp_epoc_player_flags {
         dsp_epoc_player_flags_prepare_play_when_queue = 1 << 0
     };
 
-    struct dsp_epoc_player {
+    struct dsp_epoc_player : public dsp_medium {
     public:
         std::unique_ptr<epoc::rw_des_stream> custom_stream_;
         std::unique_ptr<drivers::player> impl_;
+
         std::uint32_t flags_;
 
-        dsp_epoc_audren_sema *audren_sema_;
-
-        explicit dsp_epoc_player(std::unique_ptr<drivers::player> &impl, dsp_epoc_audren_sema *sema, const std::uint32_t init_flags)
-            : impl_(std::move(impl))
-            , flags_(init_flags)
-            , audren_sema_(sema) {
-        }
+        explicit dsp_epoc_player(std::unique_ptr<drivers::player> &impl, dsp_manager *manager, const std::uint32_t init_flags);
+        ~dsp_epoc_player() override;
 
         bool should_prepare_play_when_queue() const {
             return flags_ & dsp_epoc_player_flags_prepare_play_when_queue;
+        }
+
+        void volume(const std::uint32_t volume) override;
+        std::uint32_t max_volume() const override;
+
+        std::uint32_t volume() const override {
+            return dsp_medium::volume();
         }
     };
 
@@ -100,24 +137,66 @@ namespace eka2l1::dispatch {
         void release(void * /* owner */);
     };
 
+    struct dsp_manager {
+    private:
+        std::atomic<std::uint32_t> master_volume_;
+        std::unique_ptr<dsp_epoc_audren_sema> audren_sema_;
+        object_manager<dsp_medium> mediums_;
+
+    public:
+        explicit dsp_manager();
+
+        object_manager<dsp_medium>::handle add_object(std::unique_ptr<dsp_medium> &obj) {
+            return mediums_.add_object(obj);
+        }
+
+        template <typename T>
+        T *get_object(const object_manager<dsp_medium>::handle handle) {
+            dsp_medium *medium = mediums_.get_object(handle);
+            if (!medium) {
+                return nullptr;
+            }
+
+            if constexpr(std::is_same_v<T, dsp_epoc_stream>) {
+                if (medium->type() != DSP_MEDIUM_TYPE_EPOC_STREAM) {
+                    return nullptr;
+                }
+            }
+
+            if constexpr(std::is_same_v<T, dsp_epoc_player>) {
+                if (medium->type() != DSP_MEDIUM_TYPE_EPOC_PLAYER) {
+                    return nullptr;
+                }
+            }
+
+            return reinterpret_cast<T*>(medium);
+        }
+
+        bool remove_object(const object_manager<dsp_medium>::handle handle) {
+            return mediums_.remove_object(handle);
+        }
+
+        dsp_epoc_audren_sema *audio_renderer_semaphore() {
+            return audren_sema_.get();
+        }
+
+        void master_volume(const std::uint32_t volume);
+        std::uint32_t master_volume() const;
+    };
+
     struct dispatcher {
     private:
-        std::unique_ptr<dsp_epoc_audren_sema> audren_sema_;
-
         kernel::chunk *trampoline_chunk_;
-
         hle::lib_manager *libmngr_;
         memory_system *mem_;
 
         std::uint32_t trampoline_allocated_;
+        dsp_manager dsp_manager_;
 
         void shutdown();
 
     public:
         window_server *winserv_;
-
-        object_manager<dsp_epoc_player> audio_players_;
-        object_manager<dsp_epoc_stream> dsp_streams_;
 
         ntimer *timing_;
 
@@ -127,9 +206,11 @@ namespace eka2l1::dispatch {
         bool patch_libraries(const std::u16string &path, patch_info *patches,
             const std::size_t patch_count);
 
-        dsp_epoc_audren_sema *get_audren_sema();
-
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);
         void update_all_screens(eka2l1::system *sys);
+
+        dsp_manager &get_dsp_manager() {
+            return dsp_manager_;
+        }
     };
 }
