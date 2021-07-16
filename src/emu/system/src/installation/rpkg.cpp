@@ -75,8 +75,7 @@ namespace eka2l1::loader {
         std::string dir = eka2l1::file_directory(real_path);
         eka2l1::create_directories(dir);
 
-        FILE *wf
-            = fopen(real_path.c_str(), "wb");
+        FILE *wf = fopen(real_path.c_str(), "wb");
 
         if (!wf) {
             LOG_INFO(SYSTEM, "Skipping with real path: {}, dir: {}", real_path, dir);
@@ -92,10 +91,12 @@ namespace eka2l1::loader {
             int64_t take = left < take_def ? left : take_def;
 
             if (fread(temp.data(), 1, take, parent) != take) {
+                fclose(wf);
                 return false;
             }
 
             if (fwrite(temp.data(), 1, take, wf) != take) {
+                fclose(wf);
                 return false;
             }
 
@@ -159,9 +160,9 @@ namespace eka2l1::loader {
 
     device_installation_error install_rpkg(device_manager *dvcmngr, const std::string &path, const std::string &devices_rom_path,
         std::string &firmware_code_ret, std::atomic<int> &res, const int max_progress) {
-        FILE *f = fopen(path.data(), "rb");
+        FILE *package = fopen(path.data(), "rb");
 
-        if (!f) {
+        if (!package) {
             return device_installation_not_exist;
         }
 
@@ -169,7 +170,8 @@ namespace eka2l1::loader {
 
         std::size_t total_read_size = 0;
 
-        if (fread(&header.magic, 4, 4, f) != 4) {
+        if (fread(&header.magic, 4, 4, package) != 4) {
+            fclose(package);
             return device_installation_insufficent;
         }
 
@@ -187,41 +189,41 @@ namespace eka2l1::loader {
                 break;
 
             default:
-                fclose(f);
+                fclose(package);
                 return device_installation_rpkg_corrupt;
             }
         }
 
-        total_read_size += fread(&header.major_rom, 1, 1, f);
-        total_read_size += fread(&header.minor_rom, 1, 1, f);
-        total_read_size += fread(&header.build_rom, 1, 2, f);
-        total_read_size += fread(&header.count, 1, 4, f);
+        total_read_size += fread(&header.major_rom, 1, 1, package);
+        total_read_size += fread(&header.minor_rom, 1, 1, package);
+        total_read_size += fread(&header.build_rom, 1, 2, package);
+        total_read_size += fread(&header.count, 1, 4, package);
 
         header.machine_uid = 0;
         header.header_size = 0;
 
         if (!is_ver_one) {
-            total_read_size += fread(&header.header_size, 1, 4, f);
-            total_read_size += fread(&header.machine_uid, 1, 4, f);
+            total_read_size += fread(&header.header_size, 1, 4, package);
+            total_read_size += fread(&header.machine_uid, 1, 4, package);
         } else {
             header.header_size = 24;
         }
 
         if (total_read_size != header.header_size) {
-            fclose(f);
+            fclose(package);
             return device_installation_rpkg_corrupt;
         }
 
         float accumulated = 0.f;
 
-        while (!feof(f)) {
+        while (!feof(package)) {
             total_read_size = 0;
 
             rpkg_entry entry;
 
-            total_read_size += fread(&entry.attrib, 1, 8, f);
-            total_read_size += fread(&entry.time, 1, 8, f);
-            total_read_size += fread(&entry.path_len, 1, 8, f);
+            total_read_size += fread(&entry.attrib, 1, 8, package);
+            total_read_size += fread(&entry.time, 1, 8, package);
+            total_read_size += fread(&entry.path_len, 1, 8, package);
 
             if (total_read_size != 24) {
                 break;
@@ -231,8 +233,8 @@ namespace eka2l1::loader {
 
             total_read_size = 0;
 
-            total_read_size += fread(entry.path.data(), 1, entry.path_len * 2, f);
-            total_read_size += fread(&entry.data_size, 1, 8, f);
+            total_read_size += fread(entry.path.data(), 1, entry.path_len * 2, package);
+            total_read_size += fread(&entry.data_size, 1, 8, package);
 
             if (total_read_size != entry.path_len * 2 + 8) {
                 break;
@@ -240,7 +242,7 @@ namespace eka2l1::loader {
 
             LOG_INFO(SYSTEM, "Extracting: {}", common::ucs2_to_utf8(entry.path));
 
-            if (!extract_file(devices_rom_path, f, entry)) {
+            if (!extract_file(devices_rom_path, package, entry)) {
                 break;
             }
 
@@ -248,7 +250,7 @@ namespace eka2l1::loader {
             res = static_cast<int>(accumulated);
         }
 
-        fclose(f);
+        fclose(package);
 
         const std::string folder_extracted = add_path(devices_rom_path, "temp\\");
         epocver ver = determine_rpkg_symbian_version(folder_extracted);
