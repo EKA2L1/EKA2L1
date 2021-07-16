@@ -36,8 +36,8 @@ namespace eka2l1 {
                     const float *axes = glfwGetJoystickAxes(jid, &axis_count);
                     const unsigned char *buttons = glfwGetJoystickButtons(jid, &button_count);
 
-                    // Only allow the maximum of 4 axes
-                    axis_count = std::min<int>(axis_count, 4);
+                    // Only allow the maximum of 6 axes, 2 being LT and RT, treats them as button
+                    axis_count = std::min<int>(axis_count, 6);
 
                     if (gamepads.count(jid) == 0) {
                         gamepads[jid] = { std::vector<bool>(button_count, false),
@@ -59,14 +59,18 @@ namespace eka2l1 {
                     }
                     for (int i = 0; i < axis_count; i++) {
                         if (std::fabs(axes[i] - current_pad.axis[i]) > ANALOG_MIN_DIFFERENCE) {
-                            if (current_pad.axis[i] < ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2, true);
-                            } else if (current_pad.axis[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] < ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2, false);
-                            } else if (current_pad.axis[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2 + 1, true);
-                            } else if (current_pad.axis[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD) {
-                                on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2 + 1, false);
+                            if (i < GLFW_GAMEPAD_AXIS_LEFT_TRIGGER) {
+                                if (current_pad.axis[i] < ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD) {
+                                    on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2, true);
+                                } else if (current_pad.axis[i] >= ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] < ANALOG_ACKNOWLEDGE_THRESHOLD) {
+                                    on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2, false);
+                                } else if (current_pad.axis[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD) {
+                                    on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2 + 1, true);
+                                } else if (current_pad.axis[i] <= -ANALOG_ACKNOWLEDGE_THRESHOLD && axes[i] > -ANALOG_ACKNOWLEDGE_THRESHOLD) {
+                                    on_button_event(jid, CONTROLLER_BUTTON_CODE_JOYSTICK_BASE + i * 2 + 1, false);
+                                }
+                            } else {
+                                on_button_event(jid, CONTROLLER_BUTTON_CODE_LEFT_TRIGGER + (i - GLFW_GAMEPAD_AXIS_LEFT_TRIGGER), (axes[i] > current_pad.axis[i]));
                             }
                             current_pad.axis[i] = axes[i];
                         }
@@ -118,17 +122,35 @@ namespace eka2l1 {
             }
 
             switch (button_code) {
-            case CONTROLLER_BUTTON_CODE_JOYSTICK_DOWN:
-                return "Joystick Down";
+            case CONTROLLER_BUTTON_CODE_LEFT_STICK_DOWN:
+                return "Left joystick Down";
 
-            case CONTROLLER_BUTTON_CODE_JOYSTICK_LEFT:
-                return "Joystick Left";
+            case CONTROLLER_BUTTON_CODE_LEFT_STICK_LEFT:
+                return "Left joystick Left";
 
-            case CONTROLLER_BUTTON_CODE_JOYSTICK_RIGHT:
-                return "Joystick Right";
+            case CONTROLLER_BUTTON_CODE_LEFT_STICK_RIGHT:
+                return "Left joystick Right";
 
-            case CONTROLLER_BUTTON_CODE_JOYSTICK_UP:
-                return "Joystick Up";
+            case CONTROLLER_BUTTON_CODE_LEFT_STICK_UP:
+                return "Left joystick Up";
+
+            case CONTROLLER_BUTTON_CODE_RIGHT_STICK_DOWN:
+                return "Right joystick Down";
+
+            case CONTROLLER_BUTTON_CODE_RIGHT_STICK_LEFT:
+                return "Right joystick Left";
+
+            case CONTROLLER_BUTTON_CODE_RIGHT_STICK_RIGHT:
+                return "Right joystick Right";
+
+            case CONTROLLER_BUTTON_CODE_RIGHT_STICK_UP:
+                return "Right joystick Up";
+
+            case CONTROLLER_BUTTON_CODE_LEFT_TRIGGER:
+                return "Left trigger";
+
+            case CONTROLLER_BUTTON_CODE_RIGHT_TRIGGER:
+                return "Right trigger";
 
             default:
                 break;
