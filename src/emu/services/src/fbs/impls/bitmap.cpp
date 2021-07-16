@@ -702,7 +702,7 @@ namespace eka2l1 {
 
             // Get display mode
             loader::sbm_header &header_to_give = mbmf_.sbm_headers[load_options->bitmap_id];
-            const epoc::display_mode dpm = epoc::get_display_mode_from_bpp(header_to_give.bit_per_pixels);
+            const epoc::display_mode dpm = epoc::get_display_mode_from_bpp(header_to_give.bit_per_pixels, header_to_give.color);
 
             bws_bmp->construct(header_to_give, dpm, bmp_data, bmp_data_base, support_current_display_mode, false);
             bws_bmp->offset_from_me_ = (err_code == fbs_load_data_err_small_bitmap);
@@ -1243,7 +1243,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool convert_to_argb8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp) {
+        bool convert_to_argb8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp, const bool make_standard_mask) {
             if (byte_width == -1) {
                 byte_width = get_byte_width(header.size_pixels.x, header.bit_per_pixels);
             }
@@ -1288,7 +1288,7 @@ namespace eka2l1 {
             }
 
             current_to_look->seek(0, common::seek_where::beg);
-            const epoc::display_mode dpm = get_display_mode_from_bpp(header.bit_per_pixels);
+            const epoc::display_mode dpm = get_display_mode_from_bpp(header.bit_per_pixels, header.color);
 
             switch (dpm) {
             case epoc::display_mode::color256:
@@ -1303,7 +1303,7 @@ namespace eka2l1 {
 
                         std::uint32_t palette_color = epoc::get_suitable_palette_256(serv->get_kernel_object_owner()->get_epoc_version())[pixel];
 
-                        std::uint8_t a = 255;
+                        std::uint8_t a = ((make_standard_mask) ? ((palette_color & 0xFFFFFF) == 0xFFFFFF) : 1) * 255;
 
                         dest.write(reinterpret_cast<const char *>(&palette_color) + 2, 1);
                         dest.write(reinterpret_cast<const char *>(&palette_color) + 1, 1);
@@ -1326,7 +1326,7 @@ namespace eka2l1 {
                         std::uint8_t r = static_cast<std::uint8_t>(((pixel >> 8) & 0xF) * 17);
                         std::uint8_t g = static_cast<std::uint8_t>(((pixel >> 4) & 0xF) * 17);
                         std::uint8_t b = static_cast<std::uint8_t>((pixel & 0xF) * 17);
-                        std::uint8_t a = 255;
+                        std::uint8_t a = ((make_standard_mask) ? ((r == 255) && (g == 255) && (b == 255)) : 1) * 255;
                         dest.write(&b, 1);
                         dest.write(&g, 1);
                         dest.write(&r, 1);
@@ -1355,7 +1355,7 @@ namespace eka2l1 {
                         std::uint8_t b = static_cast<std::uint8_t>((pixel & 0x001F) << 3);
                         b += b >> 5;
 
-                        std::uint8_t a = 255;
+                        std::uint8_t a = ((make_standard_mask) ? ((r == 255) && (g == 255) && (b == 255)) : 1) * 255;
                         dest.write(&b, 1);
                         dest.write(&g, 1);
                         dest.write(&r, 1);
@@ -1375,7 +1375,7 @@ namespace eka2l1 {
                             return false;
                         }
 
-                        std::uint8_t a = 255;
+                        std::uint8_t a = ((make_standard_mask) ? ((base[0] == 255) && (base[1] == 255) && (base[2] == 255)) : 1) * 255;
                         dest.write(base, 3);
                         dest.write(&a, 1);
                     }
@@ -1428,17 +1428,17 @@ namespace eka2l1 {
             return true;
         }
 
-        bool convert_to_argb8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest) {
+        bool convert_to_argb8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest, const bool make_standard_mask) {
             if (!bmp) {
                 return false;
             }
 
             std::uint8_t *data_ptr = bmp->data_pointer(serv);
             common::ro_buf_stream buf_stream(data_ptr, bmp->data_size());
-            return convert_to_argb8888(serv, buf_stream, dest, bmp->header_, bmp->byte_width_, bmp->compression_type());
+            return convert_to_argb8888(serv, buf_stream, dest, bmp->header_, bmp->byte_width_, bmp->compression_type(), make_standard_mask);
         }
 
-        bool convert_to_argb8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest) {
+        bool convert_to_argb8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask) {
             std::size_t max_data = 0;
             if (!file.read_single_bitmap_raw(index, nullptr, max_data)) {
                 return false;
@@ -1450,7 +1450,7 @@ namespace eka2l1 {
             }
 
             common::ro_buf_stream buf_stream(data.data(), data.size());
-            return convert_to_argb8888(serv, buf_stream, dest, file.sbm_headers[index], -1, static_cast<bitmap_file_compression>(file.sbm_headers[index].compression));
+            return convert_to_argb8888(serv, buf_stream, dest, file.sbm_headers[index], -1, static_cast<bitmap_file_compression>(file.sbm_headers[index].compression), make_standard_mask);
         }
     }
 
