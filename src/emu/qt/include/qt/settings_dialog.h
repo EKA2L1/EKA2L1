@@ -61,6 +61,8 @@ private:
     void refresh_keybind_button(QPushButton *button);
     void active_keybind_profile_change();
     void refresh_configuration_for_who(const bool clear);
+    void on_check_imei_validity_clicked();
+    QString get_imei_error_string(const int err);
 
 private slots:
     void on_nearest_neighbor_toggled(bool val);
@@ -87,13 +89,11 @@ private slots:
     void on_device_validate_requested();
     void on_rta_combo_choose(const int index);
     void on_system_language_choose(const int index);
-    void on_system_battery_slider_value_moved();
-    void on_system_battery_slider_value_released();
+    void on_system_battery_slider_value_moved(int value);
+    void on_master_volume_value_changed(int value);
 
-    void on_fps_slider_released();
-    void on_fps_slider_value_changed();
-    void on_time_delay_slider_released();
-    void on_time_delay_value_changed();
+    void on_fps_slider_value_changed(int value);
+    void on_time_delay_value_changed(int value);
     void on_inherit_settings_toggled(bool checked);
 
 public slots:
@@ -115,6 +115,7 @@ public:
     ~settings_dialog();
 
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     Ui::settings_dialog *ui_;

@@ -8,6 +8,8 @@
 #include <common/fileutils.h>
 #include <common/language.h>
 #include <common/path.h>
+#include <common/crypt.h>
+#include <dispatch/dispatcher.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/input/emu_controller.h>
 #include <services/window/window.h>
@@ -227,6 +229,10 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
         ui_->system_he_rta_combo->setCurrentIndex(RTA_HIGH_INDEX);
     }
 
+    ui_->system_prop_imei_edit->setText(QString::fromUtf8(configuration_.imei.c_str()));
+    ui_->system_audio_vol_slider->setValue(configuration_.audio_master_volume);
+    ui_->system_audio_current_val_label->setText(QString("%1").arg(configuration_.audio_master_volume));
+
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
 
@@ -272,10 +278,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->emulator_display_nearest_neightbor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_nearest_neighbor_toggled);
     connect(ui_->emulator_display_hide_cursor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cursor_visibility_change);
 
-    connect(ui_->app_config_fps_slider, &QSlider::sliderReleased, this, &settings_dialog::on_fps_slider_released);
-    connect(ui_->app_config_fps_slider, &QSlider::sliderMoved, this, &settings_dialog::on_fps_slider_value_changed);
-    connect(ui_->app_config_time_delay_slider, &QSlider::sliderReleased, this, &settings_dialog::on_fps_slider_released);
-    connect(ui_->app_config_time_delay_slider, &QSlider::sliderMoved, this, &settings_dialog::on_time_delay_value_changed);
+    connect(ui_->app_config_fps_slider, &QSlider::valueChanged, this, &settings_dialog::on_fps_slider_value_changed);
+    connect(ui_->app_config_time_delay_slider, &QSlider::valueChanged, this, &settings_dialog::on_time_delay_value_changed);
     connect(ui_->app_config_inherit_settings_child_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_inherit_settings_toggled);
 
     connect(ui_->interface_status_bar_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_status_bar_visibility_change);
@@ -294,8 +298,9 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_prop_lang_combobox, &QComboBox::activated, this, &settings_dialog::on_system_language_choose);
     connect(ui_->system_general_validate_dvc_btn, &QPushButton::clicked, this, &settings_dialog::on_device_validate_requested);
     connect(ui_->system_general_rescan_dvcs_btn, &QPushButton::clicked, this, &settings_dialog::on_device_rescan_requested);
-    connect(ui_->system_prop_bat_slider, &QSlider::sliderReleased, this, &settings_dialog::on_system_battery_slider_value_released);
-    connect(ui_->system_prop_bat_slider, &QSlider::sliderMoved, this, &settings_dialog::on_system_battery_slider_value_moved);
+    connect(ui_->system_prop_bat_slider, &QSlider::valueChanged, this, &settings_dialog::on_system_battery_slider_value_moved);
+    connect(ui_->system_prop_imei_check_btn, &QPushButton::clicked, this, &settings_dialog::on_check_imei_validity_clicked);
+    connect(ui_->system_audio_vol_slider, &QSlider::valueChanged, this, &settings_dialog::on_master_volume_value_changed);
 
     connect(ui_->settings_tab, &QTabWidget::currentChanged, this, &settings_dialog::on_tab_changed);
     connect(ui_->control_profile_add_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_add_clicked);
@@ -657,8 +662,6 @@ bool settings_dialog::eventFilter(QObject *obj, QEvent *event) {
 
             eka2l1::window_server *win_serv = get_window_server_through_system(system_);
 
-
-
             if (win_serv) {
                 win_serv->delete_key_mapping(target_bind_code);
                 win_serv->input_mapping.key_input_map[key_event->key()] = static_cast<eka2l1::epoc::std_scan_code>(target_bind_code);
@@ -679,7 +682,7 @@ bool settings_dialog::eventFilter(QObject *obj, QEvent *event) {
             const std::uint32_t mouse_button_order = eka2l1::common::find_most_significant_bit_one(mouse_event->button()) + eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE;
             const int target_bind_code = target_bind_codes_[target_bind_];
 
-            target_bind_->setText(QString("M%1").arg(mouse_button_order - eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE));
+            target_bind_->setText(tr("Mouse button %1").arg(mouse_button_order - eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE));
 
             eka2l1::window_server *win_serv = get_window_server_through_system(system_);
 
@@ -865,30 +868,26 @@ void settings_dialog::refresh_app_configuration_details() {
     refresh_configuration_for_who(false);
 }
 
-void settings_dialog::on_fps_slider_value_changed() {
-    ui_->app_config_fps_current_val->setText(QString("%1").arg(ui_->app_config_fps_slider->value()));
-}
+void settings_dialog::on_fps_slider_value_changed(int value) {
+    ui_->app_config_fps_current_val->setText(QString("%1").arg(value));
 
-void settings_dialog::on_fps_slider_released() {
     eka2l1::epoc::screen *scr = get_current_active_screen(system_);
     if (!scr) {
         return;
     }
 
-    scr->refresh_rate = static_cast<std::uint8_t>(ui_->app_config_fps_slider->value());
+    scr->refresh_rate = static_cast<std::uint8_t>(value);
     emit active_app_setting_changed();
 }
 
-void settings_dialog::on_time_delay_slider_released() {
+void settings_dialog::on_time_delay_value_changed(int value) {
+    ui_->app_config_time_delay_current_val->setText(QString("%1").arg(value));
+
     std::optional<eka2l1::akn_running_app_info> info = ::get_active_app_info(system_);
     if (info.has_value()) {
-        info->associated_->set_time_delay(static_cast<std::uint32_t>(ui_->app_config_time_delay_slider->value()));
+        info->associated_->set_time_delay(static_cast<std::uint32_t>(value));
         emit active_app_setting_changed();
     }
-}
-
-void settings_dialog::on_time_delay_value_changed() {
-    ui_->app_config_time_delay_current_val->setText(QString("%1").arg(ui_->app_config_time_delay_slider->value()));
 }
 
 void settings_dialog::on_inherit_settings_toggled(bool checked) {
@@ -899,18 +898,78 @@ void settings_dialog::on_inherit_settings_toggled(bool checked) {
     }
 }
 
-void settings_dialog::on_system_battery_slider_value_moved() {
-    ui_->system_prop_bat_current_val_label->setText(QString("%1").arg(ui_->system_prop_bat_slider->value()));
-}
+void settings_dialog::on_system_battery_slider_value_moved(int value) {
+    ui_->system_prop_bat_current_val_label->setText(QString("%1").arg(value));
 
-void settings_dialog::on_system_battery_slider_value_released() {
     eka2l1::kernel_system *kernel = system_->get_kernel_system();
     if (kernel) {
         kernel->lock();
         eka2l1::property_ptr power_prop = kernel->get_prop(eka2l1::epoc::hwrm::power::STATE_UID, eka2l1::epoc::hwrm::power::BATTERY_LEVEL_KEY);
         if (power_prop) {
-            power_prop->set_int(ui_->system_prop_bat_slider->value() * eka2l1::epoc::hwrm::power::BATTERY_LEVEL_MAX / 100);
+            power_prop->set_int(value * eka2l1::epoc::hwrm::power::BATTERY_LEVEL_MAX / 100);
         }
         kernel->unlock();
+    }
+}
+
+void settings_dialog::on_master_volume_value_changed(int value) {
+    ui_->system_audio_current_val_label->setText(QString("%1").arg(value));
+
+    eka2l1::dispatch::dispatcher *dispatcher = system_->get_dispatcher();
+    if (dispatcher) {
+        eka2l1::dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        manager.master_volume(static_cast<std::uint32_t>(value));
+
+        configuration_.audio_master_volume = value;
+        configuration_.serialize();
+    }
+}
+
+QString settings_dialog::get_imei_error_string(const int err) {
+    switch (err) {
+    case eka2l1::crypt::IMEI_ERROR_INVALID_CHARACTER:
+        return tr("IMEI sequence contains non-numeric character!");
+
+    case eka2l1::crypt::IMEI_ERROR_INVALID_SUM:
+        return tr("IMEI sequence has invalid sum!");
+
+    case eka2l1::crypt::IMEI_ERROR_NO_RIGHT_LENGTH:
+        return tr("IMEI sequence length must be 15!");
+
+    default:
+        break;
+    }
+
+    return tr("Unidentified error!");
+}
+
+void settings_dialog::on_check_imei_validity_clicked() {
+    const std::string value = ui_->system_prop_imei_edit->text().toStdString();
+    const eka2l1::crypt::imei_valid_error validity = eka2l1::crypt::is_imei_valid(value);
+    if (validity == eka2l1::crypt::IMEI_ERROR_NONE) {
+        QMessageBox::information(this, tr("IMEI valid!"), tr("The IMEI sequence is valid!"));
+    } else {
+        const QString target = get_imei_error_string(validity);
+        QMessageBox::critical(this, tr("IMEI invalid!"), target);
+    }
+}
+
+void settings_dialog::closeEvent(QCloseEvent *event) {
+    const std::string value = ui_->system_prop_imei_edit->text().toStdString();
+    const eka2l1::crypt::imei_valid_error validity = eka2l1::crypt::is_imei_valid(value);
+
+    if (validity != eka2l1::crypt::IMEI_ERROR_NONE) {
+        const QString error_string = get_imei_error_string(validity);
+        const QString reminder = tr("Your IMEI is invalid because: %1.<br>Do you want to edit the current IMEI instead of closing? Choosing \"No\" will save the current IMEI value.").arg(error_string);
+
+        if (QMessageBox::question(this, tr("Cancel closing"), reminder) == QMessageBox::Yes) {
+            event->ignore();
+        } else {
+            configuration_.imei = value;
+            event->accept();
+        }
+    } else {
+        configuration_.imei = value;
+        event->accept();
     }
 }
