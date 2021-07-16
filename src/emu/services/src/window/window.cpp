@@ -1163,7 +1163,7 @@ namespace eka2l1 {
 
             if (kern->get_epoc_version() <= epocver::epoc6) {
                 loader::rom *rom_info = kern->get_rom_info();
-                const epoc::display_mode conv_res = epoc::get_display_mode_from_bpp(rom_info->header.eka1_diff1.bits_per_pixel);
+                const epoc::display_mode conv_res = epoc::get_display_mode_from_bpp(rom_info->header.eka1_diff1.bits_per_pixel, true);
 
                 if (scr_mode_global != epoc::display_mode::color_last) {
                     scr_mode_global = conv_res;

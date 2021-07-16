@@ -99,16 +99,16 @@ namespace eka2l1::epoc {
         }
     }
 
-    epoc::display_mode get_display_mode_from_bpp(const int bpp) {
+    epoc::display_mode get_display_mode_from_bpp(const int bpp, const bool has_color) {
         switch (bpp) {
         case 1:
             return epoc::display_mode::gray2;
         case 2:
             return epoc::display_mode::gray4;
         case 4:
-            return epoc::display_mode::color16;
+            return (has_color ? epoc::display_mode::color16 : epoc::display_mode::gray16);
         case 8:
-            return epoc::display_mode::color256;
+            return (has_color ? epoc::display_mode::color256 : epoc::display_mode::gray256);
         case 12:
             return epoc::display_mode::color4k;
         case 16:
