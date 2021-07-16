@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
@@ -380,7 +380,7 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_8">
           <item row="0" column="0">
-           <layout class="QHBoxLayout" name="system_audio_volmod_layout">
+           <layout class="QHBoxLayout" name="system_audio_volmod_layout" stretch="1,2,2">
             <item>
              <widget class="QLabel" name="system_general_vol_slide_label">
               <property name="sizePolicy">
@@ -505,7 +505,7 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_7">
           <item row="1" column="0">
-           <layout class="QHBoxLayout" name="system_he_cpu_layout">
+           <layout class="QHBoxLayout" name="system_he_cpu_layout" stretch="1,2">
             <item>
              <widget class="QLabel" name="system_he_cpu_label">
               <property name="sizePolicy">
@@ -536,7 +536,7 @@
            </layout>
           </item>
           <item row="3" column="0">
-           <layout class="QHBoxLayout" name="system_he_rta_layout">
+           <layout class="QHBoxLayout" name="system_he_rta_layout" stretch="1,2">
             <item>
              <widget class="QLabel" name="system_he_rta_label">
               <property name="toolTip">
@@ -583,8 +583,42 @@
           <string>Properties</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_9">
+          <item row="3" column="0">
+           <layout class="QHBoxLayout" name="system_prop_imei_layout" stretch="1,2,2">
+            <item>
+             <widget class="QLabel" name="system_prop_imei_label">
+              <property name="text">
+               <string>IMEI</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="system_prop_imei_edit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="system_prop_imei_check_btn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Check</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
           <item row="1" column="0">
-           <layout class="QHBoxLayout" name="system_prop_batlvl_layout">
+           <layout class="QHBoxLayout" name="system_prop_batlvl_layout" stretch="1,2,1">
             <item>
              <widget class="QLabel" name="system_prop_bat_label">
               <property name="text">
@@ -623,8 +657,8 @@
             </item>
            </layout>
           </item>
-          <item row="2" column="0">
-           <layout class="QHBoxLayout" name="system_prop_lang_layout">
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="system_prop_lang_layout" stretch="1,2">
             <item>
              <widget class="QLabel" name="system_prop_lang_label">
               <property name="sizePolicy">
@@ -640,27 +674,6 @@
             </item>
             <item>
              <widget class="QComboBox" name="system_prop_lang_combobox"/>
-            </item>
-           </layout>
-          </item>
-          <item row="3" column="0">
-           <layout class="QHBoxLayout" name="system_prop_imei_layout">
-            <item>
-             <widget class="QLabel" name="system_prop_imei_label">
-              <property name="text">
-               <string>IMEI</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="system_prop_imei_edit">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
             </item>
            </layout>
           </item>

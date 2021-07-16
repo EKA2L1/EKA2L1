@@ -36,7 +36,10 @@
      <item>
       <widget class="QScrollArea" name="scroll_area">
        <property name="styleSheet">
-        <string notr="true">border: none</string>
+        <string notr="true"/>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
        </property>
        <property name="widgetResizable">
         <bool>true</bool>
