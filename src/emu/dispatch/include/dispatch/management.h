@@ -90,5 +90,13 @@ namespace eka2l1::dispatch {
 
             return objs_[h - 1].get();
         }
+
+        typename std::vector<std::unique_ptr<T>>::iterator begin() {
+            return objs_.begin();
+        }
+
+        typename std::vector<std::unique_ptr<T>>::iterator end() {
+            return objs_.end();
+        }
     };
 }

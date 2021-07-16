@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config/config.h>
 #include <dispatch/dispatcher.h>
 #include <dispatch/register.h>
 #include <dispatch/libraries/register.h>
@@ -36,11 +37,11 @@ namespace eka2l1::dispatch {
     static std::uint32_t MAX_TRAMPOLINE_CHUNK_SIZE = 0x4000;
 
     dispatcher::dispatcher(kernel_system *kern, ntimer *timing)
-        : winserv_(nullptr)
-        , trampoline_chunk_(nullptr)
+        : trampoline_chunk_(nullptr)
         , libmngr_(nullptr)
         , mem_(nullptr)
-        , trampoline_allocated_(0) {
+        , trampoline_allocated_(0)
+        , winserv_(nullptr) {
         trampoline_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr, "DispatcherTrampolines", 0,
             MAX_TRAMPOLINE_CHUNK_SIZE, MAX_TRAMPOLINE_CHUNK_SIZE, prot_read_write_exec, kernel::chunk_type::normal,
             kernel::chunk_access::rom, kernel::chunk_attrib::none);
@@ -48,7 +49,7 @@ namespace eka2l1::dispatch {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(
             eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
 
-        audren_sema_ = std::make_unique<dsp_epoc_audren_sema>();
+        dsp_manager_.master_volume(kern->get_config()->audio_master_volume);
 
         // Set global variables
         timing_ = timing;
@@ -85,10 +86,6 @@ namespace eka2l1::dispatch {
             dispatch::update_screen(sys, 0, scr->number, 1, &up_rect);
             scr = scr->next;
         }
-    }
-
-    dsp_epoc_audren_sema *dispatcher::get_audren_sema() {
-        return audren_sema_.get();
     }
 
     bool dispatcher::patch_libraries(const std::u16string &path, patch_info *patches,
