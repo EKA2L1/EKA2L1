@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QProgressDialog>
+#include <QPointer>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -35,6 +36,7 @@ namespace eka2l1 {
 class applist_widget;
 class applist_widget_item;
 class display_widget;
+class settings_dialog;
 
 class main_window : public QMainWindow
 {
@@ -57,11 +59,14 @@ private:
     QLabel *current_device_label_;
     QLabel *screen_status_label_;
 
+    QPointer<settings_dialog> settings_dialog_;
+
     void setup_screen_draw();
     void setup_app_list();
     void setup_package_installer_ui_hooks();
     void refresh_recent_mounts();
     void refresh_current_device_label();
+    void refresh_mount_availbility();
     void mount_game_card_dump(QString path);
     void spawn_package_install_camper(QString package_install_path);
     void make_default_binding_profile();

@@ -104,7 +104,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     eka2l1::vec2 size = crr_mode.size;
     src.size = size;
 
-    float mult = (float)(window_width) / size.x;
+    float mult = static_cast<float>(window_width) / size.x;
     float width = size.x * mult;
     float height = size.y * mult;
     std::uint32_t x = 0;
@@ -156,6 +156,7 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
     , active_screen_number_(0)
     , active_screen_draw_callback_(0)
     , active_screen_mode_change_callback_(0)
+    , settings_dialog_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
     , displayer_(nullptr)
@@ -211,6 +212,7 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
 
     refresh_current_device_label();
     make_default_binding_profile();
+    refresh_mount_availbility();
 
     QSettings settings;
     ui_->status_bar->setVisible(!settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
@@ -246,7 +248,7 @@ void main_window::setup_app_list() {
         eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server*>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
 
         if (al_serv && fbs_serv) {
-            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system());
+            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system(), true);
             ui_->layout_main->addWidget(applist_);
 
             connect(applist_, &applist_widget::app_launch, this, &main_window::on_app_clicked);
@@ -314,20 +316,24 @@ void main_window::on_about_triggered() {
 }
 
 void main_window::on_settings_triggered() {
-    settings_dialog *settings_diag = new settings_dialog(this, emulator_state_.symsys.get(), emulator_state_.joystick_controller.get(),
-                                                         emulator_state_.app_settings.get(), emulator_state_.conf);
+    if (!settings_dialog_) {
+        settings_dialog_ = new settings_dialog(this, emulator_state_.symsys.get(), emulator_state_.joystick_controller.get(),
+                                                             emulator_state_.app_settings.get(), emulator_state_.conf);
 
-    connect(settings_diag, &settings_dialog::cursor_visibility_change, this, &main_window::on_cursor_visibility_change);
-    connect(settings_diag, &settings_dialog::status_bar_visibility_change, this, &main_window::on_status_bar_visibility_change);
-    connect(settings_diag, &settings_dialog::relaunch, this, &main_window::on_relaunch_request);
-    connect(settings_diag, &settings_dialog::restart, this, &main_window::on_device_set_requested);
-    connect(settings_diag, &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
-    connect(this, &main_window::app_launching, settings_diag, &settings_dialog::on_app_launching);
-    connect(this, &main_window::controller_button_press, settings_diag, &settings_dialog::on_controller_button_press);
-    connect(this, &main_window::screen_focus_group_changed, settings_diag, &settings_dialog::refresh_app_configuration_details);
-    connect(this, &main_window::restart_requested, settings_diag, &settings_dialog::on_restart_requested_from_main);
+        connect(settings_dialog_.get(), &settings_dialog::cursor_visibility_change, this, &main_window::on_cursor_visibility_change);
+        connect(settings_dialog_.get(), &settings_dialog::status_bar_visibility_change, this, &main_window::on_status_bar_visibility_change);
+        connect(settings_dialog_.get(), &settings_dialog::relaunch, this, &main_window::on_relaunch_request);
+        connect(settings_dialog_.get(), &settings_dialog::restart, this, &main_window::on_device_set_requested);
+        connect(settings_dialog_.get(), &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
+        connect(this, &main_window::app_launching, settings_dialog_.get(), &settings_dialog::on_app_launching);
+        connect(this, &main_window::controller_button_press, settings_dialog_.get(), &settings_dialog::on_controller_button_press);
+        connect(this, &main_window::screen_focus_group_changed, settings_dialog_.get(), &settings_dialog::refresh_app_configuration_details);
+        connect(this, &main_window::restart_requested, settings_dialog_.get(), &settings_dialog::on_restart_requested_from_main);
 
-    settings_diag->show();
+        settings_dialog_->show();
+    } else {
+        settings_dialog_->raise();
+    }
 }
 
 void main_window::on_device_set_requested(const int index) {
@@ -362,6 +368,7 @@ void main_window::on_device_set_requested(const int index) {
 
     setup_app_list();
     refresh_current_device_label();
+    refresh_mount_availbility();
     screen_status_label_->clear();
 
     ui_->action_pause->setEnabled(false);
@@ -758,4 +765,20 @@ void main_window::on_app_setting_changed() {
     setting.child_inherit_setting = info->associated_->get_child_inherit_setting();
 
     emulator_state_.app_settings->add_or_replace_setting(info->app_uid_, setting);
+}
+
+void main_window::refresh_mount_availbility() {
+    ui_->action_mount_recent_dumps->setEnabled(false);
+    ui_->action_mount_game_card_dump->setEnabled(false);
+
+    eka2l1::system *system = emulator_state_.symsys.get();
+    if (system) {
+        eka2l1::kernel_system *kern = system->get_kernel_system();
+        if (kern) {
+            if (kern->is_eka1()) {
+                ui_->action_mount_game_card_dump->setEnabled(true);
+                ui_->action_mount_recent_dumps->setEnabled(true);
+            }
+        }
+    }
 }
