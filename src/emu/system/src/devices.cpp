@@ -219,7 +219,6 @@ namespace eka2l1 {
     }
 
     device_manager::~device_manager() {
-        save_devices();
     }
 
     void device_manager::clear() {
