@@ -67,7 +67,6 @@ namespace eka2l1::dispatch {
             dsp_medium *medium = medium_unq.get();
 
             if (medium) {
-                LOG_TRACE(eka2l1::FRONTEND_UI, "medium audio");
                 medium->volume(medium->volume());
             }
         }
@@ -97,7 +96,6 @@ namespace eka2l1::dispatch {
 
         logical_volume_ = volume;
 
-        LOG_TRACE(eka2l1::FRONTEND_UI, "Volume adjusted to {}", logical_volume_ * manager_->master_volume() / 100);
         out_stream.volume(logical_volume_ * manager_->master_volume() / 100);
     }
 
