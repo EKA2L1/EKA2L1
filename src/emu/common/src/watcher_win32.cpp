@@ -361,16 +361,19 @@ namespace eka2l1::common {
                 SetEvent(removed_nof);
         };
 
+        DWORD wait_result = 0;
+
         if (!is_in_loop) {
             // Notify the wait thread, specifically the watch list change event
             SetEvent(waits_[1]);
 
-            WaitForSingleObject(removed_nof, INFINITE);
+            // Some problems pop up. Can not
+            wait_result = WaitForSingleObject(removed_nof, 1000);
             CloseHandle(removed_nof);
         } else {
             proceed_on_();
         }
 
-        return result;
+        return result && (wait_result != WAIT_TIMEOUT);
     }
 }
