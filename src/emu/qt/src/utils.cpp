@@ -9,6 +9,7 @@
 #include <services/ui/cap/oom_app.h>
 
 #include <QSettings>
+#include <QCheckBox>
 
 eka2l1::window_server *get_window_server_through_system(eka2l1::system *sys) {
     eka2l1::kernel_system *kernel = sys->get_kernel_system();
@@ -76,4 +77,25 @@ eka2l1::config::app_setting *get_active_app_setting(eka2l1::system *sys, eka2l1:
         return nullptr;
     }
     return settings.get_setting(info->app_uid_);
+}
+
+QMessageBox::StandardButton make_dialog_with_checkbox_and_choices(const QString &title, const QString &text, const QString &checkbox_text, const bool checkbox_state, dialog_checkbox_toggled_callback checkbox_callback, const bool two_choices) {
+    QCheckBox *checkbox = new QCheckBox(checkbox_text);
+    QMessageBox dialog;
+    dialog.setWindowTitle(title);
+    dialog.setText(text);
+    dialog.setCheckBox(checkbox);
+    dialog.setIcon(QMessageBox::Information);
+    dialog.addButton(QMessageBox::Ok);
+
+    if (two_choices)
+        dialog.addButton(QMessageBox::Cancel);
+
+    dialog.setDefaultButton(QMessageBox::Ok);
+    checkbox->setChecked(checkbox_state);
+
+    QObject::connect(checkbox, &QCheckBox::toggled, checkbox_callback);
+
+    dialog.exec();
+    return static_cast<QMessageBox::StandardButton>(dialog.result());
 }
