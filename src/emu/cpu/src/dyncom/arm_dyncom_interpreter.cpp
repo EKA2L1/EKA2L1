@@ -932,8 +932,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu, std::uint32_t &num_instrs) {
         goto DISPATCH;                                                                             \
     inst_base = (arm_inst*)&cpu->trans_cache_buf[ptr]
 
-#define INC_PC(l) ptr += sizeof(arm_inst) + l
-#define INC_PC_STUB ptr += sizeof(arm_inst)
+#define INC_PC(l) ptr += (((sizeof(arm_inst) + l + 7) >> 3) << 3)
+#define INC_PC_STUB ptr += (((sizeof(arm_inst) + 7) >> 3) << 3)
 
 // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback to a
 // clunky switch statement.
