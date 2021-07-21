@@ -74,8 +74,8 @@ namespace eka2l1::epoc {
         brush_style fill_mode;
         pen_style line_mode;
 
-        common::rgb brush_color;
-        common::rgb pen_color;
+        common::rgba brush_color;
+        common::rgba pen_color;
 
         eka2l1::vec2 pen_size;
         eka2l1::rect clipping_rect;

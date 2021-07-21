@@ -309,7 +309,7 @@ namespace eka2l1::epoc {
                 &idx, 2);
 
             // Read RGB value
-            common::rgb color = 0;
+            common::rgba color = 0;
             stream_->read(base_offset + skn_desc_dfo_color_tab_color_rgb0 + i * skn_desc_dfo_color_tab_color_size,
                 &color, 4);
 
