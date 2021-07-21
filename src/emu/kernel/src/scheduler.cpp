@@ -59,6 +59,7 @@ namespace eka2l1::kernel {
 
         // !!!
         std::fill(readys, readys + sizeof(readys) / sizeof(readys[0]), nullptr);
+        idle_event.reset();
     }
 
     thread_scheduler::~thread_scheduler() {
@@ -67,7 +68,7 @@ namespace eka2l1::kernel {
 
     void thread_scheduler::stop_idling() {
         if (kern->should_core_idle_when_inactive()) {
-            idle_sema.notify();
+            idle_event.set();
         }
     }
 
@@ -129,7 +130,8 @@ namespace eka2l1::kernel {
             // Let free access to kernel now
             if (kern->should_core_idle_when_inactive()) {
                 kern->unlock();
-                idle_sema.wait();
+                idle_event.wait();
+                idle_event.reset();
                 kern->lock();
             }
         }
@@ -198,8 +200,8 @@ namespace eka2l1::kernel {
             thr->scheduler_link.previous = thr;
 
             // Well no need to idle anymore :D
-            if (kern->should_core_idle_when_inactive() && (idle_sema.count() < 0))
-                idle_sema.notify();
+            if (kern->should_core_idle_when_inactive() && !crr_thread)
+                idle_event.set();
 
             return;
         }
@@ -216,8 +218,8 @@ namespace eka2l1::kernel {
         readys[thr->real_priority]->scheduler_link.previous = thr;
 
         // Well no need to idle anymore :D
-        if (kern->should_core_idle_when_inactive() && (idle_sema.count() < 0))
-            idle_sema.notify();
+        if (kern->should_core_idle_when_inactive() && !crr_thread)
+            idle_event.set();
     }
 
     void thread_scheduler::dequeue_thread_from_ready(kernel::thread *thr) {
