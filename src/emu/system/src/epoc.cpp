@@ -281,14 +281,8 @@ namespace eka2l1 {
 
         bool set_device(const std::uint8_t idx) {
             start_access();
-            bool result = dvcmngr_->set_current(idx);
 
-            if (!result) {
-                end_access();
-                return false;
-            }
-
-            if (!reset(false)) {
+            if (!reset(false, static_cast<std::int32_t>(idx))) {
                 end_access();
                 return false;
             }
@@ -476,7 +470,7 @@ namespace eka2l1 {
         void mount(drive_number drv, const drive_media media, std::string path,
             const std::uint32_t attrib = io_attrib_none);
 
-        bool reset(const bool lock_sys);
+        bool reset(const bool lock_sys, const std::int32_t new_index = -1);
 
         void load_scripts();
         void do_state(common::chunkyseri &seri);
@@ -737,9 +731,17 @@ namespace eka2l1 {
         exit = true;
     }
 
-    bool system_impl::reset(const bool lock_sys) {
+    bool system_impl::reset(const bool lock_sys, const std::int32_t index) {
         if (lock_sys) {
             start_access();
+        }
+
+        if ((index >= 0) && (static_cast<std::size_t>(index) >= dvcmngr_->total())) {
+            if (lock_sys) {
+                end_access();
+            }
+
+            return false;
         }
 
         exit = false;
@@ -759,6 +761,15 @@ namespace eka2l1 {
         }
 
         hals_.clear();
+
+        if (index >= 0) {
+            if (!dvcmngr_->set_current(static_cast<std::uint8_t>(index))) {
+                if (lock_sys)
+                    end_access();
+
+                return false;
+            }
+        }
     
         device *dvc = dvcmngr_->get_current();
 
