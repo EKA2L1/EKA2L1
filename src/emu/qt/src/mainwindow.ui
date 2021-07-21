@@ -87,7 +87,17 @@
     <property name="title">
      <string>View</string>
     </property>
+    <widget class="QMenu" name="action_rotate_drop_menu">
+     <property name="title">
+      <string>Rotate screen</string>
+     </property>
+     <addaction name="action_rotate_0"/>
+     <addaction name="action_rotate_90"/>
+     <addaction name="action_rotate_180"/>
+     <addaction name="action_rotate_270"/>
+    </widget>
     <addaction name="action_fullscreen"/>
+    <addaction name="action_rotate_drop_menu"/>
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
@@ -99,25 +109,9 @@
     <property name="title">
      <string>Emulation</string>
     </property>
-    <widget class="QMenu" name="menu_objects">
-     <property name="title">
-      <string>Objects</string>
-     </property>
-     <addaction name="action_threads"/>
-     <addaction name="action_mutexes"/>
-     <addaction name="action_chunks"/>
-    </widget>
-    <widget class="QMenu" name="menu_services">
-     <property name="title">
-      <string>Services</string>
-     </property>
-     <addaction name="action_window_tree"/>
-    </widget>
     <addaction name="action_pause"/>
     <addaction name="action_restart"/>
     <addaction name="separator"/>
-    <addaction name="menu_objects"/>
-    <addaction name="menu_services"/>
    </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_emulation"/>
@@ -156,6 +150,9 @@
    </property>
   </action>
   <action name="action_pause">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Pause</string>
    </property>
@@ -207,6 +204,41 @@
   <action name="action_mount_recent_dumps">
    <property name="text">
     <string>Recent dumps</string>
+   </property>
+  </action>
+  <action name="action_rotate_0">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>0</string>
+   </property>
+  </action>
+  <action name="action_rotate_90">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>90</string>
+   </property>
+  </action>
+  <action name="action_rotate_180">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>180</string>
+   </property>
+  </action>
+  <action name="action_rotate_270">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>270</string>
    </property>
   </action>
  </widget>

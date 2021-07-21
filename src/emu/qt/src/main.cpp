@@ -4,8 +4,11 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
+#include <QFile>
 
 #include <memory>
+
+#include <common/log.h>
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +19,7 @@ int main(int argc, char *argv[])
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
+
     for (const QString &locale : uiLanguages) {
         const QString baseName = "eka2l1_" + QLocale(locale).name();
         if (translator.load(":/i18n/" + baseName)) {

@@ -49,7 +49,7 @@ applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name,
 
 }
 
-applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io)
+applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, const bool ngage_mode)
     : QWidget(parent)
     , search_bar_(nullptr)
     , list_widget_(nullptr)
@@ -69,7 +69,8 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     setLayout(layout_);
 
     // Well, just make it a part of the window. Hehe
-    list_widget_->setStyleSheet("border: none; background: transparent");
+    list_widget_->setFrameShape(QFrame::NoFrame);
+    list_widget_->viewport()->setAutoFillBackground(false);
 
     list_widget_->setFlow(QListWidget::Flow::LeftToRight);
     list_widget_->setResizeMode(QListWidget::ResizeMode::Adjust);
@@ -233,6 +234,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                 if (eka2l1::epoc::convert_to_argb8888(fbss_, file_mbm_parser, 0, converted_write_stream)) {
                     QImage main_bitmap_image(converted_data.data(), icon_header->size_pixels.x, icon_header->size_pixels.y,
                                              QImage::Format_ARGB32);
+
                     final_pixmap = QPixmap::fromImage(main_bitmap_image);
                     icon_pair_rendered = true;
                 }
@@ -252,17 +254,18 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
             } else {
                 QImage main_bitmap_image(main_bitmap_data.data(), main_bitmap->header_.size_pixels.x, main_bitmap->header_.size_pixels.y,
                                          QImage::Format_ARGB32);
+
                 if (icon_pair->second) {
                     eka2l1::epoc::bitwise_bitmap *second_bitmap = icon_pair->second;
                     const std::size_t second_bitmap_data_new_size = second_bitmap->header_.size_pixels.x * second_bitmap->header_.size_pixels.y * 4;
                     std::vector<std::uint8_t> second_bitmap_data(second_bitmap_data_new_size);
                     eka2l1::common::wo_buf_stream second_bitmap_buf(second_bitmap_data.data(), second_bitmap_data_new_size);
 
-                    if (!eka2l1::epoc::convert_to_argb8888(fbss_, second_bitmap, second_bitmap_buf)) {
+                    if (!eka2l1::epoc::convert_to_argb8888(fbss_, second_bitmap, second_bitmap_buf, true)) {
                         LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load mask bitmap icon of app {}", app_name.toStdString());
                     } else {
                         QImage mask_bitmap_image(second_bitmap_data.data(), second_bitmap->header_.size_pixels.x, second_bitmap->header_.size_pixels.y,
-                                                 QImage::Format_RGBA8888);
+                                                 QImage::Format_ARGB32);
 
                         QImage mask_bitmap_alpha_image = mask_bitmap_image.createAlphaMask().convertToFormat(QImage::Format_Mono);
                         mask_bitmap_alpha_image.invertPixels();

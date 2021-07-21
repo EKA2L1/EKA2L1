@@ -3,6 +3,7 @@
 
 #include <drivers/input/common.h>
 
+#include <QActionGroup>
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QProgressDialog>
@@ -43,6 +44,8 @@ class main_window : public QMainWindow
     Q_OBJECT
 
 private:
+    QApplication &application_;
+
     eka2l1::desktop::emulator &emulator_state_;
 
     int active_screen_number_;
@@ -60,6 +63,9 @@ private:
     QLabel *screen_status_label_;
 
     QPointer<settings_dialog> settings_dialog_;
+    QActionGroup *rotate_group_;
+
+    QMargins before_margins_;
 
     void setup_screen_draw();
     void setup_app_list();
@@ -70,6 +76,8 @@ private:
     void mount_game_card_dump(QString path);
     void spawn_package_install_camper(QString package_install_path);
     void make_default_binding_profile();
+    void on_screen_current_group_change_callback();
+    void switch_to_game_display_mode();
 
     eka2l1::epoc::screen *get_current_active_screen();
     eka2l1::config::app_setting *get_active_app_setting();
@@ -77,6 +85,7 @@ private:
 private slots:
     void on_about_triggered();
     void on_settings_triggered();
+    void on_package_manager_triggered();
     void on_package_install_clicked();
     void on_device_install_clicked();
     void on_package_install_progress_change(const std::size_t now, const std::size_t total);
@@ -92,11 +101,15 @@ private slots:
     void on_restart_requested();
     void on_device_set_requested(const int index = -1);
     void on_app_setting_changed();
+    void on_another_rotation_triggered(QAction *action);
+    void on_pause_toggled(bool checked);
 
     int on_package_install_language_choose(const int *languages, const int language_count);
 
     void on_app_clicked(applist_widget_item *item);
     void on_relaunch_request();
+
+    void on_theme_change_requested(const QString &text);
 
 signals:
     void package_install_progress_change(const std::size_t now, const std::size_t total);
@@ -109,12 +122,14 @@ signals:
     void screen_focus_group_changed();
 
 public:
-    main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_state);
+    main_window(QApplication &app, QWidget *parent, eka2l1::desktop::emulator &emulator_state);
     ~main_window();
 
     void resizeEvent(QResizeEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+
+    void setup_and_switch_to_game_mode();
 
     display_widget *render_window() {
         return displayer_;

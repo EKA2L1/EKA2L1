@@ -45,7 +45,7 @@ class applist_widget : public QWidget
 {
     Q_OBJECT;
 
-private:
+public:
     applist_search_bar *search_bar_;
     QListWidget *list_widget_;
     QGridLayout *layout_;
@@ -68,7 +68,8 @@ signals:
     void app_launch(applist_widget_item *item);
 
 public:
-    explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io);
+    explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
+                            const bool ngage_mode = false);
     ~applist_widget();
 
     bool launch_from_widget_item(applist_widget_item *item);

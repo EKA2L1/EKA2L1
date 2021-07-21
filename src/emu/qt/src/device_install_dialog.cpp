@@ -29,6 +29,8 @@ device_install_dialog::device_install_dialog(QWidget *parent, eka2l1::device_man
     ui(new Ui::device_install_dialog)
 {
     setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
+    setAttribute(Qt::WA_DeleteOnClose);
+
     ui->setupUi(this);
 
     ui->confirmation_install_btn->setDisabled(true);

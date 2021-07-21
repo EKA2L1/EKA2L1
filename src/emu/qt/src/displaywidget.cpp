@@ -14,6 +14,8 @@ display_widget::display_widget(QWidget *parent) :
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NativeWindow);
 
+    setMouseTracking(false);
+
     windowHandle()->setSurfaceType(QWindow::OpenGLSurface);
     windowHandle()->create();
 
@@ -182,6 +184,11 @@ void display_widget::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void display_widget::mouseMoveEvent(QMouseEvent* event) {
+    // Even with mouse tracking disabled, they still keep coming
+    if (event->buttons() == Qt::NoButton) {
+        return;
+    }
+
     const qreal pixel_ratio = devicePixelRatioF();
 
     if (raw_mouse_event) {
