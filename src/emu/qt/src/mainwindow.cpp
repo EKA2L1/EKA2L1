@@ -3,6 +3,7 @@
 #include <qt/mainwindow.h>
 #include <qt/aboutdialog.h>
 #include <qt/device_install_dialog.h>
+#include <qt/package_manager_dialog.h>
 #include <qt/settings_dialog.h>
 #include <qt/state.h>
 #include <qt/utils.h>
@@ -24,6 +25,7 @@
 #include <services/ui/cap/oom_app.h>
 #include <services/window/window.h>
 #include <services/window/screen.h>
+#include <services/window/classes/wingroup.h>
 #include <services/fbs/fbs.h>
 #include <package/manager.h>
 
@@ -36,6 +38,13 @@
 #include <QProgressDialog>
 #include <QSettings>
 #include <QtConcurrent/QtConcurrent>
+#include <QCheckBox>
+
+static constexpr const char *LAST_WINDOW_SIZE_SETTING = "lastWindowSize";
+static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
+static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
+static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
+static constexpr const char *NO_TOUCHSCREEN_DISABLE_WARN_SETTING = "disableNoTouchscreenWarn";
 
 static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, const int rotation) {
     switch (rotation) {
@@ -62,8 +71,13 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
         return;
     }
 
+    QSize new_minsize(scr->current_mode().size.x, scr->current_mode().size.y);
+    if ((scr->ui_rotation % 180) != 0) {
+        new_minsize = QSize(scr->current_mode().size.y, scr->current_mode().size.x);
+    }
+
     display_widget *widget = static_cast<display_widget*>(state_ptr->window);
-    widget->setMinimumSize(QSize(scr->current_mode().size.x, scr->current_mode().size.y));
+    widget->setMinimumSize(new_minsize);
 }
 
 static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
@@ -102,6 +116,10 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     auto &crr_mode = scr->current_mode();
 
     eka2l1::vec2 size = crr_mode.size;
+    if ((scr->ui_rotation % 180) != 0) {
+        std::swap(size.x, size.y);
+    }
+
     src.size = size;
 
     float mult = static_cast<float>(window_width) / size.x;
@@ -123,20 +141,29 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     dest.top = eka2l1::vec2(x, y);
     dest.size = eka2l1::vec2(width, height);
 
+    int normal_rotation = (crr_mode.rotation + scr->ui_rotation) % 360;
+
     if (scr->last_texture_access) {
         cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
-        advance_dsa_pos_around_origin(dest, crr_mode.rotation);
+        advance_dsa_pos_around_origin(dest, normal_rotation);
 
         // Rotate back to original size
-        if (crr_mode.rotation % 180 != 0) {
+        if (normal_rotation % 180 != 0) {
             std::swap(dest.size.x, dest.size.y);
             std::swap(src.size.x, src.size.y);
         }
 
-        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(crr_mode.rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
-    } else {
+        cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(normal_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+    } else {        
+        advance_dsa_pos_around_origin(dest, scr->ui_rotation);
+
+        if (scr->ui_rotation % 180 != 0) {
+            std::swap(dest.size.x, dest.size.y);
+            std::swap(src.size.x, src.size.y);
+        }
+
         cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
-        cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), 0.0f, eka2l1::drivers::bitmap_draw_flag_no_flip);
+        cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
     }
 
     cmd_builder->load_backup_state();
@@ -150,8 +177,9 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     state.graphics_driver->wait_for(&wait_status);
 }
 
-main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_state)
+main_window::main_window(QApplication &application, QWidget *parent, eka2l1::desktop::emulator &emulator_state)
     : QMainWindow(parent)
+    , application_(application)
     , emulator_state_(emulator_state)
     , active_screen_number_(0)
     , active_screen_draw_callback_(0)
@@ -164,7 +192,11 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
 
-    setup_app_list();
+    eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
+
+    if (kernel && kernel->get_thread_list().empty())
+        setup_app_list();
+
     setup_package_installer_ui_hooks();
 
     if (!applist_) {
@@ -214,9 +246,42 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
     make_default_binding_profile();
     refresh_mount_availbility();
 
+    rotate_group_ = new QActionGroup(this);
+    rotate_group_->addAction(ui_->action_rotate_0);
+    rotate_group_->addAction(ui_->action_rotate_90);
+    rotate_group_->addAction(ui_->action_rotate_180);
+    rotate_group_->addAction(ui_->action_rotate_270);
+
+    ui_->action_rotate_drop_menu->setDisabled(true);
+    ui_->action_fullscreen->setChecked(emulator_state_.init_fullscreen);
+
     QSettings settings;
+
     ui_->status_bar->setVisible(!settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     active_screen_number_ = settings.value(SHOW_SCREEN_NUMBER_SETTINGS_NAME, 0).toInt();
+
+    QVariant size_variant = settings.value(LAST_WINDOW_SIZE_SETTING);
+    if (size_variant.isValid()) {
+        resize(size_variant.toSize());
+    }
+
+    on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
+
+    QVariant no_notify_install = settings.value(NO_TOUCHSCREEN_DISABLE_WARN_SETTING);
+
+    if (!no_notify_install.isValid() || !no_notify_install.toBool()) {
+        for (auto &bind: emulator_state_.conf.keybinds.keybinds) {
+            if (bind.source.type == eka2l1::config::KEYBIND_TYPE_MOUSE) {
+                make_dialog_with_checkbox_and_choices(tr("Touchscreen disabled"), tr("Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.<br><br><b>Note:</b><br>Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys."),
+                    tr("Don't show this again"), false,  [](bool on) {
+                        QSettings settings;
+                        settings.setValue(NO_TOUCHSCREEN_DISABLE_WARN_SETTING, on);
+                    }, false);
+
+                break;
+            }
+        }
+    }
 
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
@@ -224,12 +289,17 @@ main_window::main_window(QWidget *parent, eka2l1::desktop::emulator &emulator_st
     connect(ui_->action_device, &QAction::triggered, this, &main_window::on_device_install_clicked);
     connect(ui_->action_mount_game_card_dump, &QAction::triggered, this, &main_window::on_mount_card_clicked);
     connect(ui_->action_fullscreen, &QAction::toggled, this, &main_window::on_fullscreen_toogled);
+    connect(ui_->action_pause, &QAction::toggled, this, &main_window::on_pause_toggled);
     connect(ui_->action_restart, &QAction::triggered, this, &main_window::on_restart_requested);
+    connect(ui_->action_package_manager, &QAction::triggered, this, &main_window::on_package_manager_triggered);
+
+    connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
 
     connect(this, &main_window::package_install_progress_change, this, &main_window::on_package_install_progress_change);
     connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update);
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
+    connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback);
 
     setAcceptDrops(true);
 }
@@ -252,6 +322,23 @@ void main_window::setup_app_list() {
             ui_->layout_main->addWidget(applist_);
 
             connect(applist_, &applist_widget::app_launch, this, &main_window::on_app_clicked);
+        }
+    }
+
+    if (!applist_) {
+        QSettings settings;
+        QVariant no_notify_install = settings.value(NO_DEVICE_INSTALL_DISABLE_NOF_SETTING);
+
+        if (!no_notify_install.isValid() || !no_notify_install.toBool()) {
+            const QMessageBox::StandardButton result = make_dialog_with_checkbox_and_choices(tr("No device installed"), tr("You have not installed any device. Please install a device or follow the installation instructions on EKA2L1's GitHub wiki page."),
+                tr("Don't show this again"), false,  [](bool on) {
+                    QSettings settings;
+                    settings.setValue(NO_DEVICE_INSTALL_DISABLE_NOF_SETTING, on);
+                }, true);
+
+            if (result == QMessageBox::Ok) {
+                on_device_install_clicked();
+            }
         }
     }
 }
@@ -279,6 +366,10 @@ eka2l1::config::app_setting *main_window::get_active_app_setting() {
 }
 
 main_window::~main_window() {
+    // Save last window size
+    QSettings settings;
+    settings.setValue(LAST_WINDOW_SIZE_SETTING, size());
+
     if (applist_) {
         delete applist_;
     }
@@ -297,6 +388,7 @@ main_window::~main_window() {
     delete current_device_label_;
     delete screen_status_label_;
 
+    delete rotate_group_;
     delete ui_;
 }
 
@@ -324,6 +416,7 @@ void main_window::on_settings_triggered() {
         connect(settings_dialog_.get(), &settings_dialog::status_bar_visibility_change, this, &main_window::on_status_bar_visibility_change);
         connect(settings_dialog_.get(), &settings_dialog::relaunch, this, &main_window::on_relaunch_request);
         connect(settings_dialog_.get(), &settings_dialog::restart, this, &main_window::on_device_set_requested);
+        connect(settings_dialog_.get(), &settings_dialog::theme_change_request, this, &main_window::on_theme_change_requested);
         connect(settings_dialog_.get(), &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
         connect(this, &main_window::app_launching, settings_dialog_.get(), &settings_dialog::on_app_launching);
         connect(this, &main_window::controller_button_press, settings_dialog_.get(), &settings_dialog::on_controller_button_press);
@@ -336,7 +429,18 @@ void main_window::on_settings_triggered() {
     }
 }
 
+void main_window::on_package_manager_triggered() {
+    if (emulator_state_.symsys) {
+        eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
+        if (pkgmngr) {
+            package_manager_dialog *mgdiag = new package_manager_dialog(this, pkgmngr);
+            mgdiag->exec();
+        }
+    }
+}
+
 void main_window::on_device_set_requested(const int index) {
+    ui_->action_rotate_drop_menu->setEnabled(false);
     displayer_->setVisible(false);
 
     eka2l1::system *system = emulator_state_.symsys.get();
@@ -373,6 +477,7 @@ void main_window::on_device_set_requested(const int index) {
 
     ui_->action_pause->setEnabled(false);
     ui_->action_restart->setEnabled(false);
+    ui_->action_pause->setChecked(false);
 }
 
 void main_window::on_restart_requested() {
@@ -380,11 +485,21 @@ void main_window::on_restart_requested() {
     emit restart_requested();
 }
 
+void main_window::on_pause_toggled(bool checked) {
+    if (checked) {
+        emulator_state_.should_emu_pause = true;
+    } else {
+        emulator_state_.should_emu_pause = false;
+        emulator_state_.pause_event.set();
+    }
+}
+
 void main_window::on_relaunch_request() {
     QString program = QApplication::applicationFilePath();
     QStringList arguments = QApplication::arguments();
     QString workingDirectory = QDir::currentPath();
-    QProcess::startDetached(program, arguments, workingDirectory);
+
+    QProcess::startDetached(program, arguments.mid(1), workingDirectory);
 
     close();
 }
@@ -437,10 +552,15 @@ void main_window::on_fullscreen_toogled(bool checked) {
         ui_->status_bar->hide();
         ui_->menu_bar->setVisible(false);
 
+        before_margins_ = ui_->layout_centralwidget->contentsMargins();
+        ui_->layout_centralwidget->setContentsMargins(0, 0, 0, 0);
+
         showFullScreen();
     } else {
         ui_->status_bar->show();
         ui_->menu_bar->setVisible(true);
+
+        ui_->layout_centralwidget->setContentsMargins(before_margins_);
 
         showNormal();
     }
@@ -538,9 +658,22 @@ void main_window::on_recent_mount_card_folder_clicked() {
 }
 
 void main_window::on_mount_card_clicked() {
-    QString mount_folder = QFileDialog::getExistingDirectory(this, tr("Choose the game card dump folder"));
+    QSettings settings;
+    QVariant last_mount_parent_variant = settings.value(LAST_MOUNT_FOLDER_SETTING);
+    QString last_mount_folder;
+
+    if (last_mount_parent_variant.isValid()) {
+        last_mount_folder = last_mount_parent_variant.toString();
+    }
+
+    QString mount_folder = QFileDialog::getExistingDirectory(this, tr("Choose the game card dump folder"), last_mount_folder);
     if (!mount_folder.isEmpty()) {
         mount_game_card_dump(mount_folder);
+
+        QDir mount_folder_dir(mount_folder);
+        mount_folder_dir.cdUp();
+
+        settings.setValue(LAST_MOUNT_FOLDER_SETTING, mount_folder_dir.absolutePath());
     }
 }
 
@@ -564,25 +697,42 @@ void main_window::setup_screen_draw() {
     }
 }
 
+void main_window::switch_to_game_display_mode() {
+    if (applist_)
+        applist_->setVisible(false);
+    else
+        ui_->label_al_not_available->setVisible(false);
+
+    displayer_->setVisible(true);
+    displayer_->setFocus();
+
+    ui_->action_pause->setEnabled(true);
+    ui_->action_restart->setEnabled(true);
+    ui_->action_rotate_drop_menu->setEnabled(true);
+
+    before_margins_ = ui_->layout_centralwidget->contentsMargins();
+    on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
+}
+
 void main_window::on_app_clicked(applist_widget_item *item) {
     if (!active_screen_draw_callback_) {
         setup_screen_draw();
     }
 
     if (applist_->launch_from_widget_item(item)) {
-        applist_->setVisible(false);
-        displayer_->setVisible(true);
-        displayer_->setFocus();
-
-        ui_->action_pause->setEnabled(true);
-        ui_->action_restart->setEnabled(true);
-
-        on_fullscreen_toogled(ui_->action_fullscreen->isChecked());
-
+        switch_to_game_display_mode();
         emit app_launching();
     } else {
         LOG_ERROR(eka2l1::FRONTEND_UI, "Fail to launch the selected application!");
     }
+}
+
+void main_window::setup_and_switch_to_game_mode() {
+    if (!active_screen_draw_callback_) {
+        setup_screen_draw();
+    }
+
+    switch_to_game_display_mode();
 }
 
 void main_window::on_package_install_progress_change(const std::size_t now, const std::size_t total) {
@@ -680,8 +830,18 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
 }
 
 void main_window::on_package_install_clicked() {
-    QString package_file_path = QFileDialog::getOpenFileName(this, tr("Choose the file to install"),
-                                                             QString(), tr("SIS file (*.sis *.sisx)"));
+    QSettings settings;
+    QString last_install_dir;
+
+    QVariant last_install_dir_variant = settings.value(LAST_PACKAGE_FOLDER_SETTING);
+    if (last_install_dir_variant.isValid()) {
+        last_install_dir = last_install_dir_variant.toString();
+    }
+
+    QString package_file_path = QFileDialog::getOpenFileName(this, tr("Choose the file to install"), last_install_dir, tr("SIS file (*.sis *.sisx)"));
+    if (!package_file_path.isEmpty()) {
+        settings.setValue(LAST_PACKAGE_FOLDER_SETTING, QFileInfo(package_file_path).absoluteDir().path());
+    }
     spawn_package_install_camper(package_file_path);
 }
 
@@ -736,7 +896,7 @@ void main_window::make_default_binding_profile() {
 
     int entry_count = 0;
 
-    while (ite.next_entry(entry) >= 0) {
+    while ((ite.next_entry(entry) >= 0) && (entry.name != ".") && (entry.name != "..")) {
         entry_count++;
     }
 
@@ -763,6 +923,7 @@ void main_window::on_app_setting_changed() {
     setting.fps = scr->refresh_rate;
     setting.time_delay = info->associated_->get_time_delay();
     setting.child_inherit_setting = info->associated_->get_child_inherit_setting();
+    setting.screen_rotation = scr->ui_rotation;
 
     emulator_state_.app_settings->add_or_replace_setting(info->app_uid_, setting);
 }
@@ -778,6 +939,71 @@ void main_window::refresh_mount_availbility() {
             if (kern->is_eka1()) {
                 ui_->action_mount_game_card_dump->setEnabled(true);
                 ui_->action_mount_recent_dumps->setEnabled(true);
+            }
+        }
+    }
+}
+
+void main_window::on_screen_current_group_change_callback() {
+    QAction *buttons[] = {
+        ui_->action_rotate_0,
+        ui_->action_rotate_90,
+        ui_->action_rotate_180,
+        ui_->action_rotate_270
+    };
+
+    eka2l1::config::app_setting *setting = get_active_app_setting();
+    eka2l1::epoc::screen *scr = get_current_active_screen();
+    if (setting && scr) {
+        scr->ui_rotation = setting->screen_rotation;
+        buttons[setting->screen_rotation / 90]->setChecked(true);
+
+        mode_change_screen(&emulator_state_, scr, 0);
+    }
+}
+
+void main_window::on_another_rotation_triggered(QAction *action) {
+    eka2l1::epoc::screen *scr = get_current_active_screen();
+    if (!scr) {
+        return;
+    }
+
+    if (action == ui_->action_rotate_0) {
+        scr->ui_rotation = 0;
+    } else if (action == ui_->action_rotate_90) {
+        scr->ui_rotation = 90;
+    } else if (action == ui_->action_rotate_180) {
+        scr->ui_rotation = 180;
+    } else if (action == ui_->action_rotate_270) {
+        scr->ui_rotation = 270;
+    }
+
+    on_app_setting_changed();
+    mode_change_screen(&emulator_state_, scr, 0);
+}
+
+void main_window::on_theme_change_requested(const QString &text) {
+    if (text.count() == 1) {
+        bool is_ok = false;
+        int num = text.toInt(&is_ok);
+
+        if (is_ok) {
+            QCoreApplication *app = QApplication::instance();
+            if (app) {
+                if (num == 0) {
+                    // Light mode, reset to default
+                    application_.setStyleSheet("");
+                } else {
+                    QFile f(":assets/themes/dark/style.qss");
+
+                    if (!f.exists())   {
+                        QMessageBox::critical(this, tr("Load theme failed!"), tr("The Dark theme's style file can't be found!"));
+                    } else {
+                        f.open(QFile::ReadOnly | QFile::Text);
+                        QTextStream ts(&f);
+                        application_.setStyleSheet(ts.readAll());
+                    }
+                }
             }
         }
     }

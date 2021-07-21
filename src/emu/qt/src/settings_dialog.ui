@@ -29,38 +29,17 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
        <string>General</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="data_storage_layout">
-         <item>
-          <widget class="QLabel" name="data_storage_name_label">
-           <property name="text">
-            <string>Emulator data path</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="data_storage_path_edit"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="data_storage_browse_btn">
-           <property name="text">
-            <string>Browse</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
        <item row="1" column="0" alignment="Qt::AlignTop">
         <widget class="QGroupBox" name="app_config_group_box">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -213,7 +192,7 @@
        <item row="6" column="0" alignment="Qt::AlignTop">
         <widget class="QGroupBox" name="debugging_group_box">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -288,6 +267,43 @@
          </layout>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="general_data_groupbox">
+         <property name="title">
+          <string>Data</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="data_storage_layout">
+            <item>
+             <widget class="QLabel" name="data_storage_name_label">
+              <property name="text">
+               <string>Emulator data path</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="data_storage_path_edit"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="data_storage_browse_btn">
+              <property name="text">
+               <string>Browse</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="general_clear_ui_config_btn">
+            <property name="text">
+             <string>Clear all UI configurations</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="interface_widget">
@@ -338,7 +354,18 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="interface_theme_combo"/>
+             <widget class="QComboBox" name="interface_theme_combo">
+              <item>
+               <property name="text">
+                <string>Light</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Dark</string>
+               </property>
+              </item>
+             </widget>
             </item>
            </layout>
           </item>
@@ -762,6 +789,22 @@
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="touchscreen_disable_label">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="control_bind_row1_layout">
          <item>
           <widget class="QWidget" name="control_bind_left_softkey_widget" native="true">
@@ -782,10 +825,16 @@
             <item alignment="Qt::AlignHCenter">
              <widget class="QPushButton" name="control_bind_left_softkey_btn">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
               </property>
               <property name="text">
                <string>PushButton</string>

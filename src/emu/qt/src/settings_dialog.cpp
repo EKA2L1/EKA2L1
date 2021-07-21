@@ -9,6 +9,7 @@
 #include <common/language.h>
 #include <common/path.h>
 #include <common/crypt.h>
+#include <cpu/arm_utils.h>
 #include <dispatch/dispatcher.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/input/emu_controller.h>
@@ -37,6 +38,9 @@
 static constexpr qsizetype RTA_LOW_INDEX = 0;
 static constexpr qsizetype RTA_MID_INDEX = 1;
 static constexpr qsizetype RTA_HIGH_INDEX = 2;
+
+static constexpr qsizetype DYNARMIC_COMBO_INDEX = 0;
+static constexpr qsizetype DYNCOM_COMBO_INDEX = 1;
 
 static void set_or_add_binding(eka2l1::config::keybind_profile &profile, eka2l1::config::keybind &new_bind) {
     bool exist_in_config = false;
@@ -84,8 +88,8 @@ void make_default_keybind_profile(eka2l1::config::keybind_profile &profile) {
     profile.keybinds.push_back(bind);
 
     // Middle softkey
-    bind.target = eka2l1::epoc::std_key_enter;
-    bind.source.data.keycode = Qt::Key_Enter;
+    bind.target = eka2l1::epoc::std_key_device_3;
+    bind.source.data.keycode = Qt::Key_Return;
 
     profile.keybinds.push_back(bind);
 
@@ -235,6 +239,21 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
+    ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
+
+    const arm_emulator_type type = system_->get_cpu_executor_type();
+    switch (type) {
+    case arm_emulator_type::dynarmic:
+        ui_->system_he_cpu_combo->setCurrentIndex(DYNARMIC_COMBO_INDEX);
+        break;
+
+    case arm_emulator_type::dyncom:
+        ui_->system_he_cpu_combo->setCurrentIndex(DYNCOM_COMBO_INDEX);
+        break;
+
+    default:
+        break;
+    }
 
     update_device_settings();
     refresh_available_system_languages();
@@ -245,7 +264,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
         { ui_->control_bind_down_arrow_btn, eka2l1::epoc::std_key_down_arrow },
         { ui_->control_bind_left_arrow_btn, eka2l1::epoc::std_key_left_arrow },
         { ui_->control_bind_right_arrow_btn, eka2l1::epoc::std_key_right_arrow },
-        { ui_->control_bind_mid_softkey_btn, eka2l1::epoc::std_key_enter },
+        { ui_->control_bind_mid_softkey_btn, eka2l1::epoc::std_key_device_3 },
         { ui_->control_bind_left_softkey_btn, eka2l1::epoc::std_key_device_0 },
         { ui_->control_bind_right_softkey_btn, eka2l1::epoc::std_key_device_1 },
         { ui_->control_bind_green_softkey_btn, eka2l1::epoc::std_key_application_0 },
@@ -278,11 +297,13 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->emulator_display_nearest_neightbor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_nearest_neighbor_toggled);
     connect(ui_->emulator_display_hide_cursor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cursor_visibility_change);
 
+    connect(ui_->general_clear_ui_config_btn, &QPushButton::clicked, this, &settings_dialog::on_ui_clear_all_configs_clicked);
     connect(ui_->app_config_fps_slider, &QSlider::valueChanged, this, &settings_dialog::on_fps_slider_value_changed);
     connect(ui_->app_config_time_delay_slider, &QSlider::valueChanged, this, &settings_dialog::on_time_delay_value_changed);
     connect(ui_->app_config_inherit_settings_child_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_inherit_settings_toggled);
 
     connect(ui_->interface_status_bar_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_status_bar_visibility_change);
+    connect(ui_->interface_theme_combo, &QComboBox::activated, this, &settings_dialog::on_theme_changed);
 
     connect(ui_->debugging_cpu_read_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_read_toggled);
     connect(ui_->debugging_cpu_write_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_write_toggled);
@@ -295,6 +316,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_device_combo, &QComboBox::activated, this, &settings_dialog::on_device_combo_choose);
     connect(ui_->system_device_current_rename_btn, &QPushButton::clicked, this, &settings_dialog::on_device_rename_requested);
     connect(ui_->system_he_rta_combo, &QComboBox::activated, this, &settings_dialog::on_rta_combo_choose);
+    connect(ui_->system_he_cpu_combo, &QComboBox::activated, this, &settings_dialog::on_cpu_backend_changed);
     connect(ui_->system_prop_lang_combobox, &QComboBox::activated, this, &settings_dialog::on_system_language_choose);
     connect(ui_->system_general_validate_dvc_btn, &QPushButton::clicked, this, &settings_dialog::on_device_validate_requested);
     connect(ui_->system_general_rescan_dvcs_btn, &QPushButton::clicked, this, &settings_dialog::on_device_rescan_requested);
@@ -332,7 +354,7 @@ void settings_dialog::on_status_bar_visibility_change(bool toggled) {
 }
 
 void settings_dialog::on_data_path_browse_clicked() {
-    QString path = QFileDialog::getExistingDirectory(this, tr("Choose the data folder"));
+    QString path = QFileDialog::getExistingDirectory(this, tr("Choose the data folder"), QString::fromStdString(configuration_.storage));
     if (!path.isEmpty()) {
         if (QMessageBox::question(this, tr("Relaunch needed"), tr("This change requires relaunching the emulator.<br>Do you want to continue?")) == QMessageBox::Yes) {
             ui_->data_storage_path_edit->setText(path);
@@ -556,7 +578,7 @@ void settings_dialog::refresh_available_system_languages(const int index) {
 
 void settings_dialog::refresh_device_utils_locking() {
     eka2l1::kernel_system *kern = system_->get_kernel_system();
-    if (kern->get_thread_list().empty()) {
+    if (!kern || kern->get_thread_list().empty()) {
         ui_->system_general_rescan_dvcs_btn->setDisabled(false);
         ui_->system_general_validate_dvc_btn->setDisabled(false);
     } else {
@@ -580,11 +602,17 @@ void settings_dialog::on_system_language_choose(const int index) {
 
 void settings_dialog::refresh_keybind_button(QPushButton *bind_widget) {
     const int target_bind_code = target_bind_codes_[bind_widget];
+
+    ui_->touchscreen_disable_label->setVisible(false);
     bind_widget->setText(tr("Unbind"));
 
     for (auto &keybind: configuration_.keybinds.keybinds) {
         if (keybind.target == target_bind_code) {
             bind_widget->setText(key_bind_entry_to_string(keybind));
+        }
+
+        if (keybind.source.type == eka2l1::config::KEYBIND_TYPE_MOUSE) {
+            ui_->touchscreen_disable_label->setVisible(true);
         }
     }
 }
@@ -636,7 +664,7 @@ QString settings_dialog::key_bind_entry_to_string(eka2l1::config::keybind &bind)
     if (bind.source.type == eka2l1::config::KEYBIND_TYPE_KEY) {
         return QKeySequence(bind.source.data.keycode).toString();
     } else if (bind.source.type == eka2l1::config::KEYBIND_TYPE_MOUSE) {
-        return tr("Mouse button %1").arg(bind.source.data.keycode);
+        return tr("Mouse button %1").arg(bind.source.data.keycode - eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE);
     } else if (bind.source.type == eka2l1::config::KEYBIND_TYPE_CONTROLLER) {
         QString first_result = tr("Controller %1 : Button %2").arg(bind.source.data.button.controller_id);
         // Backend may not be able to initialized, so should do a check
@@ -828,13 +856,14 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
     ui_->app_config_all_widget->setVisible(false);
 
     eka2l1::kernel_system *kernel = system_->get_kernel_system();
-    kernel->lock();
+    if (kernel)
+        kernel->lock();
 
     QString format_string = tr("<b>Configuration for:</b> %1");
 
     if (clear) {
         ui_->app_config_for_who_label->setText(format_string.arg(tr("None")));
-    } else {
+    } else if (kernel) {
         std::optional<eka2l1::akn_running_app_info> info = ::get_active_app_info(system_);
 
         if (!info.has_value()) {
@@ -857,7 +886,8 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
         }
     }
 
-    kernel->unlock();
+    if (kernel)
+        kernel->unlock();
 }
 
 void settings_dialog::on_restart_requested_from_main() {
@@ -971,5 +1001,47 @@ void settings_dialog::closeEvent(QCloseEvent *event) {
     } else {
         configuration_.imei = value;
         event->accept();
+    }
+}
+
+void settings_dialog::on_theme_changed(int value) {
+    if (value <= 1) {
+        QSettings settings;
+        settings.setValue(THEME_SETTING_NAME, value);
+
+        emit theme_change_request(QString("%1").arg(value));
+    } else {
+        emit theme_change_request(ui_->interface_theme_combo->itemText(value));
+    }
+}
+
+void settings_dialog::on_cpu_backend_changed(int value) {
+    arm_emulator_type type = arm_emulator_type::dynarmic;
+    switch (value) {
+    case DYNARMIC_COMBO_INDEX:
+        type = arm_emulator_type::dynarmic;
+        break;
+
+    case DYNCOM_COMBO_INDEX:
+        type = arm_emulator_type::dyncom;
+        break;
+
+    default:
+        break;
+    }
+
+    if (type != system_->get_cpu_executor_type()) {
+        QMessageBox::information(this, tr("Relaunch needed"), tr("This change will be effective on the next launch of the emulator."));
+    }
+
+    configuration_.cpu_backend = eka2l1::arm::arm_emulator_type_to_string(type);
+    configuration_.serialize();
+}
+
+void settings_dialog::on_ui_clear_all_configs_clicked() {
+    const QMessageBox::StandardButton button = QMessageBox::question(this, tr("Confirmation"), tr("Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared."));
+    if (button == QMessageBox::Yes) {
+        QSettings settings;
+        settings.clear();
     }
 }

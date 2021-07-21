@@ -33,6 +33,7 @@ class emu_controller;
 }
 
 static constexpr const char *STATUS_BAR_HIDDEN_SETTING_NAME = "statusBarHidden";
+static constexpr const char *THEME_SETTING_NAME = "theme";
 
 void make_default_keybind_profile(eka2l1::config::keybind_profile &profile);
 
@@ -95,6 +96,9 @@ private slots:
     void on_fps_slider_value_changed(int value);
     void on_time_delay_value_changed(int value);
     void on_inherit_settings_toggled(bool checked);
+    void on_theme_changed(int value);
+    void on_cpu_backend_changed(int value);
+    void on_ui_clear_all_configs_clicked();
 
 public slots:
     void on_app_launching();
@@ -108,6 +112,7 @@ signals:
     void relaunch();
     void restart(const int index);
     void active_app_setting_changed();
+    void theme_change_request(const QString &theme_name);
 
 public:
     explicit settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller,
