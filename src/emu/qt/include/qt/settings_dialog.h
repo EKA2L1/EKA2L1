@@ -99,6 +99,7 @@ private slots:
     void on_theme_changed(int value);
     void on_cpu_backend_changed(int value);
     void on_ui_clear_all_configs_clicked();
+    void on_ui_language_changed(int index);
 
 public slots:
     void on_app_launching();

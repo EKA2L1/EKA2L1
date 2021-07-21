@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="en_US">
+<TS version="2.1">
 <context>
     <name>about_dialog</name>
     <message>
@@ -68,6 +68,11 @@
 <context>
     <name>device_install_dialog</name>
     <message>
+        <location filename="../src/device_install_dialog.ui" line="20"/>
+        <source>Device install wizard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/device_install_dialog.ui" line="41"/>
         <source>RPKG</source>
         <translation type="unfinished"></translation>
@@ -77,31 +82,6 @@
         <location filename="../src/device_install_dialog.ui" line="174"/>
         <location filename="../src/device_install_dialog.ui" line="207"/>
         <source>Browse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.ui" line="20"/>
-        <source>Device install wizard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.ui" line="157"/>
-        <source>ROM</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.ui" line="193"/>
-        <source>VPL</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.ui" line="125"/>
-        <source>Install</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.ui" line="138"/>
-        <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -117,6 +97,26 @@
     <message>
         <location filename="../src/device_install_dialog.ui" line="99"/>
         <source>Firmware (VPL)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/device_install_dialog.ui" line="125"/>
+        <source>Install</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/device_install_dialog.ui" line="138"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/device_install_dialog.ui" line="157"/>
+        <source>ROM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/device_install_dialog.ui" line="193"/>
+        <source>VPL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -368,16 +368,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="609"/>
-        <source>Game card dump folder correction</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.cpp" line="605"/>
-        <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/mainwindow.cpp" line="275"/>
         <source>Touchscreen disabled</source>
         <translation type="unfinished"></translation>
@@ -409,6 +399,16 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/mainwindow.cpp" line="605"/>
+        <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="609"/>
+        <source>Game card dump folder correction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/mainwindow.cpp" line="609"/>
         <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
         <translation type="unfinished"></translation>
@@ -429,23 +429,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="841"/>
-        <source>Choose the file to install</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.cpp" line="841"/>
-        <source>SIS file (*.sis *.sisx)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.cpp" line="1000"/>
-        <source>Load theme failed!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.cpp" line="1000"/>
-        <source>The Dark theme&apos;s style file can&apos;t be found!</source>
+        <location filename="../src/mainwindow.cpp" line="779"/>
+        <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -484,8 +469,23 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="779"/>
-        <source>Cancel</source>
+        <location filename="../src/mainwindow.cpp" line="841"/>
+        <source>Choose the file to install</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="841"/>
+        <source>SIS file (*.sis *.sisx)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1000"/>
+        <source>Load theme failed!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1000"/>
+        <source>The Dark theme&apos;s style file can&apos;t be found!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -560,8 +560,18 @@
 <context>
     <name>settings_dialog</name>
     <message>
+        <location filename="../src/settings_dialog.ui" line="20"/>
+        <source>Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="36"/>
         <source>General</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="48"/>
+        <source>Application</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -573,6 +583,26 @@
         <location filename="../src/settings_dialog.ui" line="101"/>
         <location filename="../src/settings_dialog.ui" line="149"/>
         <source>TextLabel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="120"/>
+        <source>Time delay (0-500us)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="159"/>
+        <source>Save screen scale and rotations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="169"/>
+        <source>Inherit these settings for child processes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="185"/>
+        <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -621,6 +651,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.ui" line="273"/>
+        <source>Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="281"/>
         <source>Emulator data path</source>
         <translation type="unfinished"></translation>
@@ -631,58 +666,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.ui" line="300"/>
+        <source>Clear all UI configurations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="311"/>
         <source>Interface</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="344"/>
-        <source>User interface</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="377"/>
-        <source>Language</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="352"/>
-        <source>Theme</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/settings_dialog.ui" line="317"/>
         <source>Emulator display</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="20"/>
-        <source>Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="48"/>
-        <source>Application</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="169"/>
-        <source>Inherit these settings for child processes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="159"/>
-        <source>Save screen scale and rotations</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="120"/>
-        <source>Time delay (0-500us)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="185"/>
-        <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -696,6 +691,31 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.ui" line="344"/>
+        <source>User interface</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="352"/>
+        <source>Theme</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="360"/>
+        <source>Light</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="365"/>
+        <source>Dark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="377"/>
+        <source>Language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/settings_dialog.ui" line="389"/>
         <source>Disable status bar</source>
         <translation type="unfinished"></translation>
@@ -703,6 +723,64 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="400"/>
         <source>System</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="406"/>
+        <source>Audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="420"/>
+        <source>Volume</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="443"/>
+        <location filename="../src/settings_dialog.ui" line="681"/>
+        <location filename="../src/settings_dialog.ui" line="1453"/>
+        <source>0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="455"/>
+        <source>Devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="472"/>
+        <source>Current</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="495"/>
+        <location filename="../src/settings_dialog.ui" line="771"/>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="506"/>
+        <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="509"/>
+        <source>Rescan devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="516"/>
+        <source>Check for faults in current device and fix them so that EKA2L1 can emulate the device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="519"/>
+        <source>Validate current device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="531"/>
+        <source>Hardware emulation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -746,64 +824,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="455"/>
-        <source>Devices</source>
+        <location filename="../src/settings_dialog.ui" line="610"/>
+        <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="273"/>
-        <source>Data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="300"/>
-        <source>Clear all UI configurations</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="360"/>
-        <source>Light</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="365"/>
-        <source>Dark</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="420"/>
-        <source>Volume</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="472"/>
-        <source>Current</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="495"/>
-        <location filename="../src/settings_dialog.ui" line="771"/>
-        <source>Rename</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="506"/>
-        <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="509"/>
-        <source>Rescan devices</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="516"/>
-        <source>Check for faults in current device and fix them so that EKA2L1 can emulate the device.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="519"/>
-        <source>Validate current device</source>
+        <location filename="../src/settings_dialog.ui" line="618"/>
+        <source>IMEI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -814,6 +841,31 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="652"/>
         <source>Battery level (0 - 100)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="698"/>
+        <source>System language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="720"/>
+        <source>Control</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="735"/>
+        <source>Profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="758"/>
+        <source>Add</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="784"/>
+        <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -858,6 +910,26 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="891"/>
         <source>Right softkey</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="927"/>
+        <source>Left arrow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="940"/>
+        <source>Button</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="959"/>
+        <source>Middle softkey</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="991"/>
+        <source>Right arrow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -921,85 +993,13 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="758"/>
-        <source>Add</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="784"/>
-        <source>Delete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="927"/>
-        <source>Left arrow</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="940"/>
-        <source>Button</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="959"/>
-        <source>Middle softkey</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="991"/>
-        <source>Right arrow</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/settings_dialog.ui" line="1421"/>
         <source>*</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="443"/>
-        <location filename="../src/settings_dialog.ui" line="681"/>
-        <location filename="../src/settings_dialog.ui" line="1453"/>
-        <source>0</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/settings_dialog.ui" line="1485"/>
         <source>#</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="406"/>
-        <source>Audio</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="610"/>
-        <source>Properties</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="698"/>
-        <source>System language</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="618"/>
-        <source>IMEI</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="531"/>
-        <source>Hardware emulation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="720"/>
-        <source>Control</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="735"/>
-        <source>Profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

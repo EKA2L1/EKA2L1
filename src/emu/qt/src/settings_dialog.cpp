@@ -240,6 +240,28 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
+    
+    QVariant current_language_variant = settings.value(LANGUAGE_SETTING_NAME);
+
+    QDir language_dir(":/languages/");
+    language_dir.setNameFilters({ "*.qm" });
+
+    QStringList language_file_list = language_dir.entryList();
+    for (qsizetype i = 0; i < language_file_list.count(); i++) {
+        QTranslator translator;
+        if (translator.load(":/languages/" + language_file_list[i])) {
+            QString locale_name = translator.language();
+
+            if (!locale_name.isEmpty()) {
+                QLocale locale(locale_name);
+                ui_->interface_language_combo->addItem(locale.nativeLanguageName() + QString(" (%1)").arg(locale_name));
+
+                if (current_language_variant.isValid() && (current_language_variant.toString() == locale_name)) {
+                    ui_->interface_language_combo->setCurrentIndex(ui_->interface_language_combo->count() - 1);
+                }
+            }
+        }
+    }
 
     const arm_emulator_type type = system_->get_cpu_executor_type();
     switch (type) {
@@ -304,6 +326,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 
     connect(ui_->interface_status_bar_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_status_bar_visibility_change);
     connect(ui_->interface_theme_combo, &QComboBox::activated, this, &settings_dialog::on_theme_changed);
+    connect(ui_->interface_language_combo, &QComboBox::activated, this, &settings_dialog::on_ui_language_changed);
 
     connect(ui_->debugging_cpu_read_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_read_toggled);
     connect(ui_->debugging_cpu_write_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_write_toggled);
@@ -1043,5 +1066,19 @@ void settings_dialog::on_ui_clear_all_configs_clicked() {
     if (button == QMessageBox::Yes) {
         QSettings settings;
         settings.clear();
+    }
+}
+
+void settings_dialog::on_ui_language_changed(int index) {
+    const QString language_name = ui_->interface_language_combo->itemText(index);
+    const qsizetype language_code_bracket_pos = language_name.lastIndexOf('(');
+
+    if (language_code_bracket_pos != -1) {
+        QSettings settings;
+        QString language_code = language_name.mid(language_code_bracket_pos + 1, language_name.length() - language_code_bracket_pos - 2);
+
+        settings.setValue(LANGUAGE_SETTING_NAME, language_code);
+
+        QMessageBox::information(this, tr("Relaunch needed"), tr("The language will be updated on the next launch of the emulator."));
     }
 }
