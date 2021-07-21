@@ -20,12 +20,9 @@
 package com.github.eka2l1.applist;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -38,6 +35,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -49,20 +47,16 @@ import com.github.eka2l1.MainActivity;
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
 import com.github.eka2l1.emu.EmulatorActivity;
-import com.github.eka2l1.filepicker.FilteredFilePickerActivity;
-import com.github.eka2l1.filepicker.FilteredFilePickerFragment;
 import com.github.eka2l1.info.AboutDialogFragment;
 import com.github.eka2l1.settings.AppSettingsFragment;
 import com.github.eka2l1.settings.SettingsFragment;
 import com.github.eka2l1.util.LogUtils;
+import com.github.eka2l1.util.PickDirResultContract;
+import com.github.eka2l1.util.PickFileResultContract;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.nononsenseapps.filepicker.FilePickerActivity;
-import com.nononsenseapps.filepicker.Utils;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -74,21 +68,25 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-
 public class AppsListFragment extends ListFragment {
-    private static final int SISX_CODE = 0;
-    private static final int SDCARD_CODE = 1;
-
     private CompositeDisposable compositeDisposable;
     private AppsListAdapter adapter;
     private boolean restartNeeded;
+    private final ActivityResultLauncher<String[]> openSisLauncher = registerForActivityResult(
+            new PickFileResultContract(),
+            this::onSisResult);
+    private final ActivityResultLauncher<Void> openSDCardLauncher = registerForActivityResult(
+            new PickDirResultContract(),
+            this::onSDCardResult);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         adapter = new AppsListAdapter(getContext());
         compositeDisposable = new CompositeDisposable();
+        getParentFragmentManager().setFragmentResultListener("result", this, (key, bundle) -> {
+            restartNeeded = bundle.getBoolean("restartNeeded");
+        });
     }
 
     @Override
@@ -107,27 +105,18 @@ public class AppsListFragment extends ListFragment {
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setTitle(R.string.app_name);
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
-        fab.setOnClickListener(v -> {
-            Intent i = new Intent(getActivity(), FilteredFilePickerActivity.class);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-            i.putExtra(FilePickerActivity.EXTRA_SINGLE_CLICK, true);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-            i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-            i.putExtra(FilePickerActivity.EXTRA_START_PATH, FilteredFilePickerFragment.getLastPath());
-            i.putExtra(FilteredFilePickerActivity.EXTRA_EXTENSIONS, new String[]{".sis", ".sisx"});
-            startActivityForResult(i, SISX_CODE);
-        });
+        fab.setOnClickListener(v -> openSisLauncher.launch(new String[]{".sis", ".sisx"}));
     }
 
     private void switchToDeviceList() {
         DeviceListFragment deviceListFragment = new DeviceListFragment();
-        deviceListFragment.setTargetFragment(this, 0);
         getParentFragmentManager().beginTransaction()
                 .replace(R.id.container, deviceListFragment)
                 .addToBackStack(null)
                 .commit();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @SuppressLint("CheckResult")
     private void prepareApps() {
         ProgressDialog dialog = new ProgressDialog(getActivity());
@@ -141,38 +130,26 @@ public class AppsListFragment extends ListFragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(new DisposableSingleObserver<ArrayList<AppItem>>() {
                     @Override
-                    public void onSuccess(ArrayList<AppItem> appItems) {
+                    public void onSuccess(@NonNull ArrayList<AppItem> appItems) {
                         adapter.setItems(appItems);
                         dialog.cancel();
                     }
 
                     @Override
-                    public void onError(Throwable e) {
+                    public void onError(@NonNull Throwable e) {
                         Toast.makeText(getContext(), R.string.no_devices_found, Toast.LENGTH_SHORT).show();
                         dialog.cancel();
 
                         AlertDialog installDeviceAskDialog = new AlertDialog.Builder(getActivity())
                                 .setTitle(R.string.no_device_dialog_title)
                                 .setMessage(R.string.no_device_installed)
-                                .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                        switchToDeviceList();
-                                    }
-                                }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                }).create();
+                                .setPositiveButton(R.string.install, (d, id) -> {
+                                    d.cancel();
+                                    switchToDeviceList();
+                                }).setNegativeButton(android.R.string.cancel, (d, id) -> d.cancel()).create();
                         installDeviceAskDialog.show();
                     }
                 });
-    }
-
-    public void setRestartNeeded(boolean restartNeeded) {
-        this.restartNeeded = restartNeeded;
     }
 
     @Override
@@ -185,7 +162,7 @@ public class AppsListFragment extends ListFragment {
 
     private void restart() {
         Intent intent = new Intent(getActivity(), MainActivity.class);
-        intent.addFlags(FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         Runtime.getRuntime().exit(0);
     }
@@ -196,24 +173,26 @@ public class AppsListFragment extends ListFragment {
         compositeDisposable.clear();
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    private void onSisResult(String path) {
         if (!Emulator.isInitialized()) {
             Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
             return;
         }
-        if (resultCode == Activity.RESULT_OK) {
-            List<Uri> files = Utils.getSelectedFilesFromResult(data);
-            for (Uri uri : files) {
-                File file = Utils.getFileForUri(uri);
-                String path = file.getAbsolutePath();
-                if (requestCode == SISX_CODE) {
-                    installApp(path);
-                } else {
-                    mountSdCard(path);
-                }
-            }
+        if (path == null) {
+            return;
         }
+        installApp(path);
+    }
+
+    private void onSDCardResult(String path) {
+        if (!Emulator.isInitialized()) {
+            Toast.makeText(getContext(), R.string.error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (path == null) {
+            return;
+        }
+        mountSdCard(path);
     }
 
     private void installApp(String path) {
@@ -241,7 +220,7 @@ public class AppsListFragment extends ListFragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.main, menu);
         final MenuItem searchItem = menu.findItem(R.id.action_search);
@@ -270,47 +249,34 @@ public class AppsListFragment extends ListFragment {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_about:
-                AboutDialogFragment aboutDialogFragment = new AboutDialogFragment();
-                aboutDialogFragment.show(getParentFragmentManager(), "about");
-                break;
-            case R.id.action_settings:
-                SettingsFragment settingsFragment = new SettingsFragment();
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.container, settingsFragment)
-                        .addToBackStack(null)
-                        .commit();
-                break;
-            case R.id.action_packages:
-                PackageListFragment packageListFragment = new PackageListFragment();
-                packageListFragment.setTargetFragment(this, 0);
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.container, packageListFragment)
-                        .addToBackStack(null)
-                        .commit();
-                break;
-            case R.id.action_devices:
-                switchToDeviceList();
-                break;
-            case R.id.action_mount_sd:
-                Intent i = new Intent(getActivity(), FilteredFilePickerActivity.class);
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-                i.putExtra(FilePickerActivity.EXTRA_SINGLE_CLICK, false);
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-                i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
-                i.putExtra(FilePickerActivity.EXTRA_START_PATH, FilteredFilePickerFragment.getLastPath());
-                startActivityForResult(i, SDCARD_CODE);
-                break;
-            case R.id.action_save_log:
-                try {
-                    LogUtils.writeLog();
-                    Toast.makeText(getActivity(), R.string.log_saved, Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getActivity(), R.string.error, Toast.LENGTH_SHORT).show();
-                }
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_about) {
+            AboutDialogFragment aboutDialogFragment = new AboutDialogFragment();
+            aboutDialogFragment.show(getParentFragmentManager(), "about");
+        } else if (itemId == R.id.action_settings) {
+            SettingsFragment settingsFragment = new SettingsFragment();
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.container, settingsFragment)
+                    .addToBackStack(null)
+                    .commit();
+        } else if (itemId == R.id.action_packages) {
+            PackageListFragment packageListFragment = new PackageListFragment();
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.container, packageListFragment)
+                    .addToBackStack(null)
+                    .commit();
+        } else if (itemId == R.id.action_devices) {
+            switchToDeviceList();
+        } else if (itemId == R.id.action_mount_sd) {
+            openSDCardLauncher.launch(null);
+        } else if (itemId == R.id.action_save_log) {
+            try {
+                LogUtils.writeLog();
+                Toast.makeText(getActivity(), R.string.log_saved, Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(getActivity(), R.string.error, Toast.LENGTH_SHORT).show();
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -327,17 +293,15 @@ public class AppsListFragment extends ListFragment {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         int index = info.position;
         AppItem appItem = adapter.getItem(index);
-        switch (item.getItemId()) {
-            case R.id.action_context_settings:
-                AppSettingsFragment appSettingsFragment = new AppSettingsFragment();
-                Bundle args = new Bundle();
-                args.putLong(AppSettingsFragment.APP_UID_KEY, appItem.getUid());
-                appSettingsFragment.setArguments(args);
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.container, appSettingsFragment)
-                        .addToBackStack(null)
-                        .commit();
-                break;
+        if (item.getItemId() == R.id.action_context_settings) {
+            AppSettingsFragment appSettingsFragment = new AppSettingsFragment();
+            Bundle args = new Bundle();
+            args.putLong(AppSettingsFragment.APP_UID_KEY, appItem.getUid());
+            appSettingsFragment.setArguments(args);
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.container, appSettingsFragment)
+                    .addToBackStack(null)
+                    .commit();
         }
         return super.onContextItemSelected(item);
     }

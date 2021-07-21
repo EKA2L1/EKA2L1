@@ -80,23 +80,23 @@ public class PackageListFragment extends ListFragment {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         int index = info.position;
         AppItem appItem = adapter.getItem(index);
-        switch (item.getItemId()) {
-            case R.id.action_context_remove:
-                Emulator.uninstallPackage((int) appItem.getUid(), (int) appItem.getExtIndex());
-                preparePackages();
-                Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
-                ((AppsListFragment) getTargetFragment()).setRestartNeeded(true);
-                break;
+        if (item.getItemId() == R.id.action_context_remove) {
+            Emulator.uninstallPackage((int) appItem.getUid(), (int) appItem.getExtIndex());
+            preparePackages();
+            Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
+
+            Bundle result = new Bundle();
+            result.putBoolean("restartNeeded", true);
+            getParentFragmentManager().setFragmentResult("request", result);
         }
         return super.onContextItemSelected(item);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                getParentFragmentManager().popBackStackImmediate();
-                return true;
+        if (item.getItemId() == android.R.id.home) {
+            getParentFragmentManager().popBackStackImmediate();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

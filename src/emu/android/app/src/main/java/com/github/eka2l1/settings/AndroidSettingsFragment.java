@@ -60,10 +60,9 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                getParentFragmentManager().popBackStackImmediate();
-                return true;
+        if (item.getItemId() == android.R.id.home) {
+            getParentFragmentManager().popBackStackImmediate();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

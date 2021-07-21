@@ -66,16 +66,15 @@ public class MainActivity extends BaseActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_CODE:
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Restart to apply theme
-                    recreate();
-                } else {
-                    Toast.makeText(this, R.string.error, Toast.LENGTH_SHORT).show();
-                }
+        if (requestCode == PERMISSION_REQUEST_CODE) {// If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Restart to apply theme
+                recreate();
+            } else {
+                Toast.makeText(this, R.string.error, Toast.LENGTH_SHORT).show();
+            }
         }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }

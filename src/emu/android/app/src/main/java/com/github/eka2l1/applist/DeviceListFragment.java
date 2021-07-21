@@ -20,12 +20,8 @@
 package com.github.eka2l1.applist;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
@@ -41,6 +37,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -49,16 +46,11 @@ import androidx.fragment.app.Fragment;
 
 import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Emulator;
-import com.github.eka2l1.filepicker.FilteredFilePickerActivity;
-import com.github.eka2l1.filepicker.FilteredFilePickerFragment;
+import com.github.eka2l1.util.PickFileResultContract;
 import com.skydoves.expandablelayout.ExpandableLayout;
-import com.nononsenseapps.filepicker.FilePickerActivity;
-import com.nononsenseapps.filepicker.Utils;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -66,10 +58,6 @@ import io.reactivex.observers.DisposableCompletableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class DeviceListFragment extends Fragment {
-    private static final int VPL_CODE = 0;
-    private static final int RPKG_CODE = 1;
-    private static final int ROM_CODE = 2;
-
     private enum INSTALL_MODE {DEVICE_DUMP, FIRMWARE}
 
     private INSTALL_MODE mode;
@@ -82,6 +70,15 @@ public class DeviceListFragment extends Fragment {
 
     private boolean firmwareSet, rpkgSet, romSet, needRpkg;
     private ArrayAdapter<String> deviceAdapter;
+    private final ActivityResultLauncher<String[]> openVplLauncher = registerForActivityResult(
+            new PickFileResultContract(),
+            this::onVPLResult);
+    private final ActivityResultLauncher<String[]> openRpkgLauncher = registerForActivityResult(
+            new PickFileResultContract(),
+            this::onRpkgResult);
+    private final ActivityResultLauncher<String[]> openRomLauncher = registerForActivityResult(
+            new PickFileResultContract(),
+            this::onRomResult);
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -114,7 +111,10 @@ public class DeviceListFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Emulator.setCurrentDevice(position);
-                ((AppsListFragment) getTargetFragment()).setRestartNeeded(true);
+
+                Bundle result = new Bundle();
+                result.putBoolean("restartNeeded", true);
+                getParentFragmentManager().setFragmentResult("result", result);
             }
 
             @Override
@@ -138,19 +138,12 @@ public class DeviceListFragment extends Fragment {
             containLayout.addView(inputNameField, params);
             inputNameBuilder.setView(containLayout);
 
-            inputNameBuilder.setPositiveButton(getString(android.R.string.ok), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    Emulator.setDeviceName(Emulator.getCurrentDevice(), inputNameField.getText().toString());
-                    updateDeviceList();
-                }
+            inputNameBuilder.setPositiveButton(getString(android.R.string.ok), (dialogInterface, i) -> {
+                Emulator.setDeviceName(Emulator.getCurrentDevice(), inputNameField.getText().toString());
+                updateDeviceList();
             });
-            inputNameBuilder.setNegativeButton(getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                }
-            });
+            inputNameBuilder.setNegativeButton(getString(android.R.string.cancel),
+                    (dialogInterface, i) -> dialogInterface.cancel());
 
             inputNameBuilder.show();
         });
@@ -189,68 +182,44 @@ public class DeviceListFragment extends Fragment {
         });
 
         Button btRPKG = getActivity().findViewById(R.id.bt_rpkg);
-        btRPKG.setOnClickListener(v -> {
-            Intent i = new Intent(getActivity(), FilteredFilePickerActivity.class);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-            i.putExtra(FilePickerActivity.EXTRA_SINGLE_CLICK, true);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-            i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-            i.putExtra(FilePickerActivity.EXTRA_START_PATH, FilteredFilePickerFragment.getLastPath());
-            i.putExtra(FilteredFilePickerActivity.EXTRA_EXTENSIONS, new String[]{".RPKG", ".rpkg"});
-            startActivityForResult(i, RPKG_CODE);
-        });
+        btRPKG.setOnClickListener(v -> openRpkgLauncher.launch(new String[]{".RPKG", ".rpkg"}));
         Button btROM = getActivity().findViewById(R.id.bt_rom);
-        btROM.setOnClickListener(v -> {
-            Intent i = new Intent(getActivity(), FilteredFilePickerActivity.class);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-            i.putExtra(FilePickerActivity.EXTRA_SINGLE_CLICK, true);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-            i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-            i.putExtra(FilePickerActivity.EXTRA_START_PATH, FilteredFilePickerFragment.getLastPath());
-            i.putExtra(FilteredFilePickerActivity.EXTRA_EXTENSIONS, new String[]{".ROM", ".rom"});
-            startActivityForResult(i, ROM_CODE);
-        });
+        btROM.setOnClickListener(v -> openRomLauncher.launch(new String[]{".ROM", ".rom"}));
         Button btFirmware = getActivity().findViewById(R.id.bt_firmware);
-        btFirmware.setOnClickListener(v -> {
-            Intent i = new Intent(getActivity(), FilteredFilePickerActivity.class);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-            i.putExtra(FilePickerActivity.EXTRA_SINGLE_CLICK, true);
-            i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-            i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-            i.putExtra(FilePickerActivity.EXTRA_START_PATH, FilteredFilePickerFragment.getLastPath());
-            i.putExtra(FilteredFilePickerActivity.EXTRA_EXTENSIONS, new String[]{".VPL", ".vpl"});
-            startActivityForResult(i, VPL_CODE);
-        });
+        btFirmware.setOnClickListener(v -> openVplLauncher.launch(new String[]{".VPL", ".vpl"}));
         Button btInstall = getActivity().findViewById(R.id.bt_device_install);
         btInstall.setOnClickListener(v -> installDevice());
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if ((requestCode >= VPL_CODE && requestCode <= ROM_CODE) && resultCode == Activity.RESULT_OK) {
-            List<Uri> files = Utils.getSelectedFilesFromResult(data);
-            for (Uri uri : files) {
-                File file = Utils.getFileForUri(uri);
-                String path = file.getAbsolutePath();
-                if (requestCode == VPL_CODE) {
-                    tvVPL.setText(path);
-                    firmwareSet = true;
-                } else if (requestCode == RPKG_CODE) {
-                    tvRPKG.setText(path);
-                    rpkgSet = true;
-                } else {
-                    tvROM.setText(path);
-                    romSet = true;
+    private void onVPLResult(String path) {
+        if (path == null) {
+            return;
+        }
+        tvVPL.setText(path);
+        firmwareSet = true;
+    }
 
-                    if (Emulator.doesRomNeedRPKG(path)) {
-                        needRpkg = true;
-                        llRpkg.setVisibility(View.VISIBLE);
-                    } else {
-                        needRpkg = false;
-                        llRpkg.setVisibility(View.GONE);
-                    }
-                }
-            }
+    private void onRpkgResult(String path) {
+        if (path == null) {
+            return;
+        }
+        tvRPKG.setText(path);
+        rpkgSet = true;
+    }
+
+    private void onRomResult(String path) {
+        if (path == null) {
+            return;
+        }
+        tvROM.setText(path);
+        romSet = true;
+
+        if (Emulator.doesRomNeedRPKG(path)) {
+            needRpkg = true;
+            llRpkg.setVisibility(View.VISIBLE);
+        } else {
+            needRpkg = false;
+            llRpkg.setVisibility(View.GONE);
         }
     }
 
@@ -291,12 +260,16 @@ public class DeviceListFragment extends Fragment {
                     public void onComplete() {
                         dialog.cancel();
                         updateDeviceList();
-                        ((AppsListFragment) getTargetFragment()).setRestartNeeded(true);
+
+                        Bundle result = new Bundle();
+                        result.putBoolean("restartNeeded", true);
+                        getParentFragmentManager().setFragmentResult("request", result);
+
                         Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
-                    public void onError(Throwable e) {
+                    public void onError(@NonNull Throwable e) {
                         dialog.cancel();
 
                         int code = Integer.parseInt(e.getMessage());
@@ -350,10 +323,9 @@ public class DeviceListFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                getParentFragmentManager().popBackStackImmediate();
-                return true;
+        if (item.getItemId() == android.R.id.home) {
+            getParentFragmentManager().popBackStackImmediate();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

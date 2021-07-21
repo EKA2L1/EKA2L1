@@ -230,28 +230,22 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     }
 
     private void handleVkOptions(int id) {
-        switch (id) {
-            case R.id.action_layout_edit_mode:
-                keyboard.setLayoutEditMode(VirtualKeyboard.LAYOUT_KEYS);
-                Toast.makeText(this, R.string.layout_edit_mode,
-                        Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.action_layout_scale_mode:
-                keyboard.setLayoutEditMode(VirtualKeyboard.LAYOUT_SCALES);
-                Toast.makeText(this, R.string.layout_scale_mode,
-                        Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.action_layout_edit_finish:
-                keyboard.setLayoutEditMode(VirtualKeyboard.LAYOUT_EOF);
-                Toast.makeText(this, R.string.layout_edit_finished,
-                        Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.action_layout_switch:
-                showSetLayoutDialog();
-                break;
-            case R.id.action_hide_buttons:
-                showHideButtonDialog();
-                break;
+        if (id == R.id.action_layout_edit_mode) {
+            keyboard.setLayoutEditMode(VirtualKeyboard.LAYOUT_KEYS);
+            Toast.makeText(this, R.string.layout_edit_mode,
+                    Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.action_layout_scale_mode) {
+            keyboard.setLayoutEditMode(VirtualKeyboard.LAYOUT_SCALES);
+            Toast.makeText(this, R.string.layout_scale_mode,
+                    Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.action_layout_edit_finish) {
+            keyboard.setLayoutEditMode(VirtualKeyboard.LAYOUT_EOF);
+            Toast.makeText(this, R.string.layout_edit_finished,
+                    Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.action_layout_switch) {
+            showSetLayoutDialog();
+        } else if (id == R.id.action_hide_buttons) {
+            showHideButtonDialog();
         }
     }
 
@@ -281,7 +275,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     }
 
     private int getToolBarHeight() {
-        int[] attrs = new int[]{R.attr.actionBarSize};
+        int[] attrs = new int[]{android.R.attr.actionBarSize};
         TypedArray ta = obtainStyledAttributes(attrs);
         int toolBarHeight = ta.getDimensionPixelSize(0, -1);
         ta.recycle();

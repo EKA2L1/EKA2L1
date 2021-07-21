@@ -136,15 +136,13 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                getParentFragmentManager().popBackStackImmediate();
-                break;
-            case R.id.action_reset_mapping:
-                androidToSymbian.clear();
-                KeyMapper.initArray(androidToSymbian);
-                KeyMapper.saveArrayPref(androidToSymbian);
-                break;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            getParentFragmentManager().popBackStackImmediate();
+        } else if (itemId == R.id.action_reset_mapping) {
+            androidToSymbian.clear();
+            KeyMapper.initArray(androidToSymbian);
+            KeyMapper.saveArrayPref(androidToSymbian);
         }
         return super.onOptionsItemSelected(item);
     }
