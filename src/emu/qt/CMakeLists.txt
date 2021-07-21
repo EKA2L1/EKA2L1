@@ -14,8 +14,26 @@ endif()
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools OpenGLWidgets Svg REQUIRED)
 
-set(TS_FILES translations/eka2l1_en_US.ts)
-set(RESOURCE_FILES eka2l1.qrc assets/themes/dark/style.qrc)
+# Make list of TS files, and add them to resources. Credits from Yuzu CMakeLists
+set(TS_FOLDER translations)
+
+file(GLOB_RECURSE TS_FILES ${TS_FOLDER}/*.ts)
+
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_create_translation(QM_FILES ${CMAKE_CURRENT_SOURCE_DIR} ${TS_FILES})
+else()
+    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+endif()
+
+set(LANGUAGE_QRC_FILE ${CMAKE_CURRENT_BINARY_DIR}/languages.qrc)
+file(WRITE ${LANGUAGE_QRC_FILE} "<RCC><qresource prefix=\"languages\">\n")
+foreach (QM ${QM_FILES})
+    get_filename_component(QM_FILE ${QM} NAME)
+    file(APPEND ${LANGUAGE_QRC_FILE} "<file>${QM_FILE}</file>\n")
+endforeach (QM)
+file(APPEND ${LANGUAGE_QRC_FILE} "</qresource></RCC>")
+
+set(RESOURCE_FILES eka2l1.qrc assets/themes/dark/style.qrc ${CMAKE_CURRENT_BINARY_DIR}/languages.qrc)
 
 if (WIN32)
     set(RESOURCE_FILES ${RESOURCE_FILES} eka2l1.rc)
@@ -53,7 +71,6 @@ set(PROJECT_SOURCES
         src/thread.cpp
         src/utils.cpp
         ${RESOURCE_FILES}
-        ${TS_FILES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -61,8 +78,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
-
-    qt_create_translation(QM_FILES ${CMAKE_CURRENT_SOURCE_DIR} ${TS_FILES})
 else()
     if(ANDROID)
         add_library(eka2l1_qt SHARED
@@ -73,8 +88,6 @@ else()
             ${PROJECT_SOURCES}
         )
     endif()
-
-    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
 target_include_directories(eka2l1_qt PUBLIC include)
