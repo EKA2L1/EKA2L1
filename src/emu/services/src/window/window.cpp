@@ -1392,7 +1392,12 @@ namespace eka2l1 {
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::released) ? epoc::event_code::key_up
             : epoc::event_code::key_down;
         
-        std::optional<std::uint32_t> key_received = epoc::map_key_to_inputcode(map, driver_evt_.key_.code_);
+        std::optional<std::uint32_t> key_received = std::nullopt;
+        if (driver_evt_.type_ == drivers::input_event_type::key_raw)
+            key_received = driver_evt_.key_.code_;
+        else
+            key_received = epoc::map_key_to_inputcode(map, driver_evt_.key_.code_);
+
         bool found_correspond_mapping = true;
 
         if (!key_received.has_value()) {
@@ -1521,6 +1526,7 @@ namespace eka2l1 {
         // Translate host event to guest event
         switch (input_event.type_) {
         case drivers::input_event_type::key:
+        case drivers::input_event_type::key_raw:
             make_key_event(input_mapping.key_input_map, input_event, guest_event);
             key_shipper.add_new_event(guest_event);
             key_shipper.start_shipping();
