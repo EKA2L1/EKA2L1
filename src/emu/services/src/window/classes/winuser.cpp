@@ -589,6 +589,15 @@ namespace eka2l1::epoc {
 
             clear_color = *reinterpret_cast<int *>(cmd.data_ptr);
             clear_color_enable = true;
+
+            kernel_system *kern = client->get_ws().get_kernel_system();
+
+            if (!kern->is_eka1()) {
+                // From EKA2, color that passed through the server is 0xaarrggbb. R and B channels are swapped
+                // The call that makes the color is TRgb::Internal()
+                clear_color = (clear_color & 0xFF00FF00) | ((clear_color & 0xFF) << 16) | ((clear_color & 0xFF0000) >> 16);
+            }
+
             ctx.complete(epoc::error_none);
 
             break;

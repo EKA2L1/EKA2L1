@@ -131,8 +131,8 @@ namespace eka2l1::epoc {
 
             // TODO: Pen outline >_<
             eka2l1::vecx<std::uint8_t, 4> color;
-            color = common::rgb_to_vec(pen_color);
-            cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+            color = common::rgba_to_vec(pen_color);
+            cmd_builder->set_brush_color({ color[0], color[1], color[2] });
 
             // Add the baseline offset. Where text will sit on.
             area.top.y += baseline_offset;
@@ -158,7 +158,7 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        eka2l1::vecx<std::uint8_t, 4> color = common::rgb_to_vec(brush_color);
+        eka2l1::vecx<std::uint8_t, 4> color = common::rgba_to_vec(brush_color);
 
         // Don't bother even sending any draw command
         switch (fill_mode) {
@@ -167,14 +167,14 @@ namespace eka2l1::epoc {
 
         case brush_style::solid:
             if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
-                if (color[0] == 0) {
+                if (color[3] == 0) {
                     // Nothing, dont draw
                     return false;
                 }
 
-                cmd_builder->set_brush_color_detail({ color[1], color[2], color[3], color[0] });
+                cmd_builder->set_brush_color_detail({ color[0], color[1], color[2], color[3] });
             } else {
-                cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
             }
 
             break;
@@ -188,7 +188,7 @@ namespace eka2l1::epoc {
     }
 
     bool graphic_context::do_command_set_pen_color() {
-        eka2l1::vecx<std::uint8_t, 4> color = common::rgb_to_vec(pen_color);
+        eka2l1::vecx<std::uint8_t, 4> color = common::rgba_to_vec(pen_color);
 
         // Don't bother even sending any draw command
         switch (line_mode) {
@@ -197,14 +197,14 @@ namespace eka2l1::epoc {
 
         case pen_style::solid:
             if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
-                if (color[0] == 0) {
+                if (color[3] == 0) {
                     // Nothing, dont draw
                     return false;
                 }
 
-                cmd_builder->set_brush_color_detail({ color[1], color[2], color[3], color[0] });
+                cmd_builder->set_brush_color_detail({ color[0], color[1], color[2], color[3] });
             } else {
-                cmd_builder->set_brush_color({ color[1], color[2], color[3] });
+                cmd_builder->set_brush_color({ color[0], color[1], color[2] });
             }
 
             break;
@@ -338,12 +338,28 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
-        brush_color = *reinterpret_cast<const common::rgb *>(cmd.data_ptr);
+        kernel_system *kern = context.sys->get_kernel_system();
+        brush_color = *reinterpret_cast<const common::rgba *>(cmd.data_ptr);
+
+        if (!kern->is_eka1()) {
+            // From EKA2, color that passed through the server is 0xaarrggbb. R and B channels are swapped
+            // The call that makes the color is TRgb::Internal()
+            brush_color = (brush_color & 0xFF00FF00) | ((brush_color & 0xFF) << 16) | ((brush_color & 0xFF0000) >> 16);
+        }
+
         context.complete(epoc::error_none);
     }
 
     void graphic_context::set_pen_color(service::ipc_context &context, ws_cmd &cmd) {
-        pen_color = *reinterpret_cast<const common::rgb *>(cmd.data_ptr);
+        kernel_system *kern = context.sys->get_kernel_system();
+        pen_color = *reinterpret_cast<const common::rgba *>(cmd.data_ptr);
+
+        if (!kern->is_eka1()) {
+            // From EKA2, color that passed through the server is 0xaarrggbb. R and B channels are swapped
+            // The call that makes the color is TRgb::Internal()
+            pen_color = (pen_color & 0xFF00FF00) | ((pen_color & 0xFF) << 16) | ((pen_color & 0xFF0000) >> 16);
+        }
+
         context.complete(epoc::error_none);
     }
     

@@ -59,7 +59,7 @@ namespace eka2l1::epoc {
         int mode;
         int rotation;
 
-        common::rgb color;
+        common::rgba color;
         epoc::rfile file_native;
         bool app_icon;
 

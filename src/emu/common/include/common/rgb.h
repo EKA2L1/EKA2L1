@@ -27,12 +27,12 @@
 #include <cstdint>
 
 namespace eka2l1::common {
-    inline vecx<std::uint8_t, 4> rgb_to_vec(const std::uint32_t rgb) {
-        return vecx<std::uint8_t, 4>{ static_cast<std::uint8_t>(rgb >> 24),
-            static_cast<std::uint8_t>((rgb & 0x00FF0000) >> 16),
-            static_cast<std::uint8_t>((rgb & 0x0000FF00) >> 8),
-            static_cast<std::uint8_t>(rgb & 0x000000FF) };
+    inline vecx<std::uint8_t, 4> rgba_to_vec(const std::uint32_t rgba) {
+        return vecx<std::uint8_t, 4>{ static_cast<std::uint8_t>(rgba & 0x000000FF),
+            static_cast<std::uint8_t>((rgba & 0x0000FF00) >> 8),
+            static_cast<std::uint8_t>((rgba & 0x00FF0000) >> 16),
+            static_cast<std::uint8_t>(rgba >> 24) };
     }
 
-    using rgb = std::uint32_t;
+    using rgba = std::uint32_t;
 }

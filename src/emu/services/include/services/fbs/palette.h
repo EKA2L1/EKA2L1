@@ -25,7 +25,7 @@
 #include <common/types.h>
 
 namespace eka2l1::epoc {
-    using palette_256 = std::array<common::rgb, 256>;
+    using palette_256 = std::array<common::rgba, 256>;
 
     static palette_256 color_256_palette_old = {
         0, 0xCCFFFF, 0x99FFFF, 0x66FFFF, 0x33FFFF, 0xFFFF, 0xFFCCFF,
