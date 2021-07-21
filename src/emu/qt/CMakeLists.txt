@@ -15,7 +15,11 @@ find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools OpenGLWidgets Svg REQUIRED)
 
 set(TS_FILES translations/eka2l1_en_US.ts)
-set(RESOURCE_FILES eka2l1.qrc)
+set(RESOURCE_FILES eka2l1.qrc assets/themes/dark/style.qrc)
+
+if (WIN32)
+    set(RESOURCE_FILES ${RESOURCE_FILES} eka2l1.rc)
+endif()
 
 set(PROJECT_SOURCES
         include/qt/aboutdialog.h
@@ -24,6 +28,7 @@ set(PROJECT_SOURCES
         include/qt/device_install_dialog.h
         include/qt/displaywidget.h
         include/qt/mainwindow.h
+        include/qt/package_manager_dialog.h
         include/qt/seh_handler.h
         include/qt/settings_dialog.h
         include/qt/state.h
@@ -39,6 +44,8 @@ set(PROJECT_SOURCES
         src/main.cpp
         src/mainwindow.cpp
         src/mainwindow.ui
+        src/package_manager_dialog.cpp
+        src/package_manager_dialog.ui
         src/seh_handler.cpp
         src/settings_dialog.cpp
         src/settings_dialog.ui
@@ -92,6 +99,57 @@ set_target_properties(eka2l1_qt PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING 0.0.4.2
 )
 
+set_target_properties(eka2l1_qt PROPERTIES OUTPUT_NAME eka2l1_qt
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin")
+
+add_dependencies(eka2l1_qt scdv mediaclientaudio mediaclientaudiostream)
+
+add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/scripts"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/scripts/disabled"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/resources"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:eka2l1_qt>/compat"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/panic.json" "$<TARGET_FILE_DIR:eka2l1_qt>"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/panic/domaincli.py" "$<TARGET_FILE_DIR:eka2l1_qt>/scripts/disabled/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/miscs/utils/leavehook.py" "$<TARGET_FILE_DIR:eka2l1_qt>/scripts/disabled/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/drivers/resources/" "$<TARGET_FILE_DIR:eka2l1_qt>/resources/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/src/emu/config/compat/" "$<TARGET_FILE_DIR:eka2l1_qt>/compat/")
+
+if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
+        add_custom_command(
+                TARGET eka2l1_qt
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LUA_DLL_PATH}" "$<TARGET_FILE_DIR:eka2l1_qt>"
+        )
+
+        set_target_properties(eka2l1_qt PROPERTIES ENABLE_EXPORTS 1)
+
+        if (UNIX AND (NOT APPLE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
+            target_link_libraries(eka2l1_qt PRIVATE -Wl,--whole-archive $<TARGET_FILE:symemu> -Wl,--no-whole-archive)
+        elseif(MSVC)
+            set_target_properties(eka2l1_qt PROPERTIES LINK_FLAGS /WHOLEARCHIVE:symemu.lib)
+        else()
+            target_link_libraries(eka2l1_qt PRIVATE symemu)
+        endif()
+endif()
+
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(eka2l1_qt)
+endif()
+
+if (WIN32)
+    get_target_property(QMAKE_EXE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+    get_filename_component(QT_BIN_DIR "${QMAKE_EXE}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
+
+    add_custom_command(
+        TARGET eka2l1_qt
+        POST_BUILD
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-compiler-runtime --no-opengl-sw --no-quick --plugindir "$<TARGET_FILE_DIR:eka2l1_qt>/qt/plugins" --release "$<TARGET_FILE:eka2l1_qt>")
 endif()
