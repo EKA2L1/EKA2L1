@@ -125,102 +125,102 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="179"/>
+        <location filename="../src/device_install_dialog.cpp" line="180"/>
         <source>Installation completed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="180"/>
+        <location filename="../src/device_install_dialog.cpp" line="181"/>
         <source>Device %1 (%2) has been successfully installed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="188"/>
+        <location filename="../src/device_install_dialog.cpp" line="189"/>
         <source>The device has already been installed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="192"/>
+        <location filename="../src/device_install_dialog.cpp" line="193"/>
         <source>Fail to determine product information from the dump!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="196"/>
+        <location filename="../src/device_install_dialog.cpp" line="197"/>
         <source>One of the FPSX files provided in the firmware is corrupted!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="200"/>
+        <location filename="../src/device_install_dialog.cpp" line="201"/>
         <source>An unknown error has occured. Please contact the developers with your log!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="204"/>
+        <location filename="../src/device_install_dialog.cpp" line="205"/>
         <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="208"/>
+        <location filename="../src/device_install_dialog.cpp" line="209"/>
         <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="212"/>
+        <location filename="../src/device_install_dialog.cpp" line="213"/>
         <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="216"/>
+        <location filename="../src/device_install_dialog.cpp" line="217"/>
         <source>Fail to copy ROM file!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="220"/>
+        <location filename="../src/device_install_dialog.cpp" line="221"/>
         <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="224"/>
+        <location filename="../src/device_install_dialog.cpp" line="225"/>
         <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="228"/>
+        <location filename="../src/device_install_dialog.cpp" line="229"/>
         <source>The provided VPL file is invalid. Please check your firmware files again!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="236"/>
+        <location filename="../src/device_install_dialog.cpp" line="237"/>
         <source>Installation failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="245"/>
+        <location filename="../src/device_install_dialog.cpp" line="246"/>
         <source>Choose VPL file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="246"/>
+        <location filename="../src/device_install_dialog.cpp" line="247"/>
         <source>VPL file (*.vpl)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="255"/>
+        <location filename="../src/device_install_dialog.cpp" line="256"/>
         <source>Choose the ROM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="256"/>
+        <location filename="../src/device_install_dialog.cpp" line="257"/>
         <source>ROM file (*.rom *.ROM)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="280"/>
+        <location filename="../src/device_install_dialog.cpp" line="281"/>
         <source>Choose the RPKG</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="281"/>
+        <location filename="../src/device_install_dialog.cpp" line="282"/>
         <source>RPKG file (*.rpkg *.RPKG)</source>
         <translation type="unfinished"></translation>
     </message>

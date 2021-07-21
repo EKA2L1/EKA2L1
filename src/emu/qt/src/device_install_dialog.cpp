@@ -141,7 +141,7 @@ void device_install_dialog::on_install_triggered() {
 
         if (ui->rom_browse_widget->isVisible()) {
             if (ui->rpkg_browse_widget->isVisible()) {
-                error = eka2l1::loader::install_rpkg(device_mngr_, ui->rpkg_path_line_edit->text().toStdString(), rom_resident_path, firmware_code, progress_update_cb_func, cancel_cb_func);
+                error = eka2l1::loader::install_rpkg(device_mngr_, ui->rpkg_path_line_edit->text().toStdString(), root_z_path, firmware_code, progress_update_cb_func, cancel_cb_func);
                 need_copy_rom = true;
             } else {
                 error = eka2l1::loader::install_rom(device_mngr_, ui->rom_path_line_edit->text().toStdString(), rom_resident_path, root_z_path, progress_update_cb_func, cancel_cb_func);
@@ -160,6 +160,7 @@ void device_install_dialog::on_install_triggered() {
 
         if (need_copy_rom) {
             const std::string rom_directory = eka2l1::add_path(conf_.storage, eka2l1::add_path("roms", firmware_code + "\\"));
+            eka2l1::create_directories(rom_directory);
             eka2l1::common::copy_file(ui->rom_path_line_edit->text().toStdString(), eka2l1::add_path(rom_directory, "SYM.ROM"), true);
         }
 
