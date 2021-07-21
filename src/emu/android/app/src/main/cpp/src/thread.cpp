@@ -218,7 +218,7 @@ namespace eka2l1::android {
 
     void press_key(emulator &state, int key, int key_state) {
         eka2l1::drivers::input_event evt;
-        evt.type_ = eka2l1::drivers::input_event_type::key;
+        evt.type_ = eka2l1::drivers::input_event_type::key_raw;
         evt.key_.state_ = static_cast<eka2l1::drivers::key_state>(key_state);
         evt.key_.code_ = key;
         state.winserv->queue_input_from_driver(evt);
