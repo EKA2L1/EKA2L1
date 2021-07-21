@@ -150,7 +150,7 @@ namespace eka2l1::loader {
             }
 
             if (progress_cb) {
-                max_pos = common::max(max_pos, stream.tell());
+                max_pos = common::max(max_pos, static_cast<std::size_t>(stream.tell()));
                 progress_cb(max_pos, stream.size());
             }
 
