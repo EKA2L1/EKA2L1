@@ -52,6 +52,7 @@ namespace eka2l1::desktop {
         , stage_two_inited(false)
         , first_time(true)
         , init_fullscreen(false)
+        , init_app_launched(false)
         , winserv(nullptr)
         , sys_reset_cbh(0) {
     }

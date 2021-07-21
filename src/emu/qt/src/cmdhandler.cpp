@@ -146,6 +146,8 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             cmdline.launch_cmd_ = epoc::apa::command_create;
 
             svr->launch_app(*registry, cmdline, nullptr);
+            emu->init_app_launched = true;
+
             return true;
         }
 
@@ -161,6 +163,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                 LOG_ERROR(FRONTEND_CMDLINE, "Unable to launch process: {}", tokstr);
             } else {
                 pr->run();
+                emu->init_app_launched = true;
             }
 
             return true;
@@ -177,6 +180,8 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                 cmdline.launch_cmd_ = epoc::apa::command_create;
 
                 svr->launch_app(reg, cmdline, nullptr);
+                emu->init_app_launched = true;
+
                 return true;
             }
         }
@@ -280,6 +285,33 @@ bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdat
     io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, common::utf8_to_ucs2(path));
 
     return true;
+}
+
+bool device_set_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    const char *device = parser->next_token();
+
+    if (!device) {
+        *err = "No device specified";
+        return true;
+    }
+
+    auto &devices_list = emu->symsys->get_device_manager()->get_devices();
+    bool found = false;
+
+    for (std::size_t i = 0; i < devices_list.size(); i++) {
+        if (device == devices_list[i].firmware_code) {
+            if (emu->conf.device != static_cast<int>(i)) {
+                emu->conf.device = static_cast<int>(i);
+                emu->symsys->set_device(static_cast<std::uint8_t>(i));
+            }
+
+            found = true;
+            break;
+        }
+    }
+
+    return found;
 }
 
 #if ENABLE_PYTHON_SCRIPTING

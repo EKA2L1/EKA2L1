@@ -89,18 +89,6 @@ static eka2l1::drivers::input_event make_controller_event_driver(int jid, int bu
     return evt;
 }
 
-static void on_ui_window_touch_move(void *userdata, eka2l1::vec2 v) {
-    eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
-
-    // Make repeat event for button 0 (left mouse click)
-    auto mouse_evt = make_mouse_event_driver(static_cast<float>(v.x), static_cast<float>(v.y), 0, 1);
-
-    const std::lock_guard<std::mutex> guard(emu->lockdown);
-
-    if (emu->winserv)
-        emu->winserv->queue_input_from_driver(mouse_evt);
-}
-
 static eka2l1::drivers::input_event make_key_event_driver(const int key, const eka2l1::drivers::key_state key_state) {
     eka2l1::drivers::input_event evt;
     evt.type_ = eka2l1::drivers::input_event_type::key;
@@ -144,7 +132,6 @@ namespace eka2l1::desktop {
         state.window->raw_mouse_event = on_ui_window_mouse_evt;
         state.window->button_pressed = on_ui_window_key_press;
         state.window->button_released = on_ui_window_key_release;
-        state.window->touch_move = on_ui_window_touch_move;
 
         state.window->init("Emulator display", eka2l1::vec2(800, 600), drivers::emu_window_flag_maximum_size);
         state.window->set_userdata(&state);
@@ -188,7 +175,7 @@ namespace eka2l1::desktop {
         };
 
         // Signal that the initialization is done
-        state.graphics_sema.notify();
+        state.graphics_sema.notify(2);
         return 0;
     }
 
@@ -198,7 +185,6 @@ namespace eka2l1::desktop {
 
         state.joystick_controller->stop_polling();
         state.graphics_driver.reset();
-        state.window->shutdown();
 
         if (!drivers::destroy_window_library(eka2l1::drivers::window_api::glfw)) {
             return -1;
@@ -244,6 +230,10 @@ namespace eka2l1::desktop {
         bool first_time = true;
 
         while (true) {
+            if (state.should_emu_quit) {
+                break;
+            }
+
             const bool success = state.stage_two();
             state.init_event.set();
 
@@ -281,10 +271,12 @@ namespace eka2l1::desktop {
 #endif
 
             if (state.should_emu_pause && !state.should_emu_quit) {
-                //state.debugger->wait_for_debugger();
+                state.pause_event.wait();
+                state.pause_event.reset();
             }
         }
 
+        state.kill_event.wait();
         state.symsys.reset();
         state.graphics_sema.notify();
         
@@ -294,18 +286,20 @@ namespace eka2l1::desktop {
     }
 
     void kill_emulator(emulator &state) {
-        state.should_emu_pause = false;
         state.should_emu_quit = true;
+        state.should_emu_pause = false;
+
+        state.pause_event.set();
 
         kernel_system *kern = state.symsys->get_kernel_system();
 
-        if (kern)
+        if (kern) {
             kern->stop_cores_idling();
+        }
 
         state.graphics_driver->abort();
         state.init_event.set();
-
-        delete state.ui_main;
+        state.kill_event.set();
     }
 
     int emulator_entry(QApplication &application, emulator &state, const int argc, const char **argv) {
@@ -329,7 +323,8 @@ namespace eka2l1::desktop {
                                         "\t\t\t    eka2l1 --run Bounce\n"
                                         "\t\t\t    eka2l1 --run 0x200412ED\n",
             app_specifier_option_handler);
-
+        parser.add("--device", "Set a device to be ran, through the given firmware code. This device will also be saved in the configuration as the current device.\n"
+                               "Example: --device RH-29", device_set_option_handler);
         parser.add("--install, --i", "Install a SIS.", app_install_option_handler);
         parser.add("--remove, --r", "Remove an package.", package_remove_option_handler);
         parser.add("--fullscreen", "Display the emulator in fullscreen.", fullscreen_option_handler);
@@ -382,12 +377,17 @@ namespace eka2l1::desktop {
 
         window_title += std::string(" - ") + random_references[eka2l1::random_range(0, random_references_count - 1)];
 
-        state.ui_main = new main_window(nullptr, state);
+        state.ui_main = new main_window(application, nullptr, state);
         state.ui_main->show();
         state.ui_main->setWindowTitle(QString::fromUtf8(window_title.c_str()));
 
         state.window = state.ui_main->render_window();
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
+
+        state.graphics_sema.wait();
+        if (state.init_app_launched) {
+            state.ui_main->setup_and_switch_to_game_mode();
+        }
 
         const int exec_code = application.exec();
         kill_emulator(state);
@@ -396,6 +396,7 @@ namespace eka2l1::desktop {
         os_thread_obj.join();
         graphics_thread_obj.join();
 
+        delete state.ui_main;
         return exec_code;
     }
 }
