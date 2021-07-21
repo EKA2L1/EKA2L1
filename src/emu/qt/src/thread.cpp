@@ -264,7 +264,8 @@ namespace eka2l1::desktop {
 #if ENABLE_SEH_HANDLER
             } catch (std::exception &exc) {
                 std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
-                state.debugger->queue_error(exc.what());
+                // TODO： Come back and make this display in UI
+                // state.debugger->queue_error(exc.what());
                 state.should_emu_quit = true;
                 break;
             }
