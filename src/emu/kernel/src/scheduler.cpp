@@ -198,7 +198,7 @@ namespace eka2l1::kernel {
             thr->scheduler_link.previous = thr;
 
             // Well no need to idle anymore :D
-            if (kern->should_core_idle_when_inactive() && !crr_thread)
+            if (kern->should_core_idle_when_inactive() && (idle_sema.count() < 0))
                 idle_sema.notify();
 
             return;
@@ -216,7 +216,7 @@ namespace eka2l1::kernel {
         readys[thr->real_priority]->scheduler_link.previous = thr;
 
         // Well no need to idle anymore :D
-        if (kern->should_core_idle_when_inactive() && !crr_thread)
+        if (kern->should_core_idle_when_inactive() && (idle_sema.count() < 0))
             idle_sema.notify();
     }
 
