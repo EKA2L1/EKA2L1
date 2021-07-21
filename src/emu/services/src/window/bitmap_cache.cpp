@@ -51,6 +51,9 @@ namespace eka2l1::epoc {
     }
 
     void bitmap_cache::clean(drivers::graphics_driver *drv) {
+        if (!drv) {
+            return;
+        }
         auto llist = drv->new_command_list();
         auto builder = drv->new_command_builder(llist.get());
 

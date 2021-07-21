@@ -62,13 +62,13 @@ namespace eka2l1::epoc {
             eka2l1::vec2 abs_pos = winuser->absolute_position();
 
             if (winuser->clear_color_enable) {
-                auto color_extracted = common::rgb_to_vec(winuser->clear_color);
+                auto color_extracted = common::rgba_to_vec(winuser->clear_color);
 
                 if (winuser->display_mode() <= epoc::display_mode::color16mu) {
-                    color_extracted[0] = 255;
+                    color_extracted[3] = 255;
                 }
 
-                builder_->set_brush_color_detail({ color_extracted[1], color_extracted[2], color_extracted[3], color_extracted[0] });
+                builder_->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
                 builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size));
             } else {
                 builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
@@ -302,19 +302,22 @@ namespace eka2l1::epoc {
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
         for (auto &callback : focus_callbacks) {
-            callback.second(callback.first, focus, property);
+            if (callback.second)
+                callback.second(callback.first, focus, property);
         }
     }
 
     void screen::fire_screen_redraw_callbacks(const bool is_dsa) {
         for (auto &callback: screen_redraw_callbacks) {
-            callback.second(callback.first, this, is_dsa);
+            if (callback.second)
+                callback.second(callback.first, this, is_dsa);
         }
     }
 
     void screen::fire_screen_mode_change_callbacks(const int old_mode) {
         for (auto &callback: screen_mode_change_callbacks) {
-            callback.second(callback.first, this, old_mode);
+            if (callback.second)
+                callback.second(callback.first, this, old_mode);
         }
     }
 
