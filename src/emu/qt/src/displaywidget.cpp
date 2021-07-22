@@ -146,12 +146,20 @@ bool display_widget::cursor_visiblity() {
 }
 
 void display_widget::keyPressEvent(QKeyEvent* event) {
+    if (event->isAutoRepeat()) {
+        return;
+    }
+
     if (button_pressed) {
         button_pressed(userdata_, event->key());
     }
 }
 
 void display_widget::keyReleaseEvent(QKeyEvent* event) {
+    if (event->isAutoRepeat()) {
+        return;
+    }
+
     if (button_released) {
         button_released(userdata_, event->key());
     }
