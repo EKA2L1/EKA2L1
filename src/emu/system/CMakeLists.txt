@@ -29,6 +29,7 @@ target_link_libraries(epoc PRIVATE
         epocservs
         FAT
         gdbstub
+        miniz
         pugixml)
 
 if (EKA2L1_ENABLE_SCRIPTING_ABILITY)

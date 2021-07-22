@@ -61,7 +61,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_file">
@@ -75,10 +75,18 @@
      <addaction name="action_package"/>
      <addaction name="action_device"/>
     </widget>
+    <widget class="QMenu" name="menu_mount_game_card_dump">
+     <property name="title">
+      <string>Mount game card dump</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="action_mount_game_card_folder"/>
+     <addaction name="action_mount_game_card_zip"/>
+    </widget>
     <addaction name="menu_install"/>
     <addaction name="action_package_manager"/>
     <addaction name="separator"/>
-    <addaction name="action_mount_game_card_dump"/>
+    <addaction name="menu_mount_game_card_dump"/>
     <addaction name="action_mount_recent_dumps"/>
     <addaction name="separator"/>
     <addaction name="action_settings"/>
@@ -137,11 +145,6 @@
   <action name="action_package_manager">
    <property name="text">
     <string>Package manager</string>
-   </property>
-  </action>
-  <action name="action_mount_game_card_dump">
-   <property name="text">
-    <string>Mount game card dump</string>
    </property>
   </action>
   <action name="action_settings">
@@ -239,6 +242,16 @@
    </property>
    <property name="text">
     <string>270</string>
+   </property>
+  </action>
+  <action name="action_mount_game_card_folder">
+   <property name="text">
+    <string>Folder</string>
+   </property>
+  </action>
+  <action name="action_mount_game_card_zip">
+   <property name="text">
+    <string>Zip</string>
    </property>
   </action>
  </widget>

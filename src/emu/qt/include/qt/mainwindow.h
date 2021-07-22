@@ -53,7 +53,7 @@ private:
     std::size_t active_screen_mode_change_callback_;
     std::size_t active_screen_focus_change_callback_;
 
-    QProgressDialog *current_package_install_dialog_;
+    QProgressDialog *current_progress_dialog_;
 
     QMenu *recent_mount_folder_menu_;
     QAction *recent_mount_folder_actions_[MAX_RECENT_ENTRIES];
@@ -88,10 +88,11 @@ private slots:
     void on_package_manager_triggered();
     void on_package_install_clicked();
     void on_device_install_clicked();
-    void on_package_install_progress_change(const std::size_t now, const std::size_t total);
+    void on_progress_dialog_change(const std::size_t now, const std::size_t total);
     bool on_package_install_text_ask(const char *text, const bool one_button);
     void on_new_device_added();
     void on_mount_card_clicked();
+    void on_mount_zip_clicked();
     void on_recent_mount_clear_clicked();
     void on_recent_mount_card_folder_clicked();
     void on_status_bar_update(const std::uint64_t fps);
@@ -112,7 +113,7 @@ private slots:
     void on_theme_change_requested(const QString &text);
 
 signals:
-    void package_install_progress_change(const std::size_t now, const std::size_t total);
+    void progress_dialog_change(const std::size_t now, const std::size_t total);
     void status_bar_update(const std::uint64_t fps);
     bool package_install_text_ask(const char *text, const bool one_button);
     int package_install_language_choose(const int *languages, const int language_count);

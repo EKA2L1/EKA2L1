@@ -74,6 +74,8 @@
 #include <services/window/window.h>
 #include <services/window/screen.h>
 
+#include <miniz.h>
+
 namespace eka2l1 {
     #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
 
@@ -467,8 +469,8 @@ namespace eka2l1 {
             return dispatcher_.get();
         }
 
-        void mount(drive_number drv, const drive_media media, std::string path,
-            const std::uint32_t attrib = io_attrib_none);
+        void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
+        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 
         bool reset(const bool lock_sys, const std::int32_t new_index = -1);
 
@@ -726,6 +728,108 @@ namespace eka2l1 {
         io_->mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
     }
 
+    zip_mount_error system_impl::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+        std::unique_ptr<mz_zip_archive> archive = std::make_unique<mz_zip_archive>();
+        if (!mz_zip_reader_init_file(archive.get(), zip_path.c_str(), 0)) {
+            return zip_mount_error_not_zip;
+        }
+
+        // Locate the system folder, if does not exist, is not a valid game card dump
+        const std::uint32_t num_files = mz_zip_reader_get_num_files(archive.get());
+        bool system_found = false;
+
+        std::vector<std::string> list_files;
+
+        struct extract_zip_callback_data {
+            progress_changed_callback progress_cb_;
+            cancel_requested_callback cancel_cb_;    
+            std::size_t total_uncomp_size_;
+            std::size_t size_uncomped_so_far_;
+            std::unique_ptr<std::ofstream> file_stream_;
+            bool was_canceled_;
+        } callback_data;
+
+        callback_data.progress_cb_ = progress_cb;
+        callback_data.cancel_cb_ = cancel_cb;
+        callback_data.total_uncomp_size_ = 0;
+        callback_data.size_uncomped_so_far_ = 0;
+        callback_data.was_canceled_ = false;
+
+        for (std::uint32_t i = 0; i < num_files; i++) {
+            mz_zip_archive_file_stat file_stat;
+            if (mz_zip_reader_file_stat(archive.get(), i, &file_stat)) {
+                // Length of system
+                std::string root_folder(file_stat.m_filename, file_stat.m_filename + 6);
+                if (common::compare_ignore_case(root_folder.c_str(), "system") == 0) {
+                    system_found = true;
+                }
+
+                list_files.push_back(file_stat.m_filename);
+                callback_data.total_uncomp_size_ += file_stat.m_uncomp_size;
+            } else {
+                mz_zip_reader_end(archive.get());
+                return zip_mount_error_corrupt;
+            }
+        }
+
+        if (!system_found) {
+            mz_zip_reader_end(archive.get());
+            return zip_mount_error_no_system_folder;
+        }
+
+        std::string current_dir;
+        eka2l1::get_current_directory(current_dir);
+
+        const std::string temp_folder = eka2l1::absolute_path("cache/temp/", current_dir);
+
+        eka2l1::common::delete_folder(temp_folder);
+        eka2l1::create_directories(temp_folder);
+
+        std::uint32_t extracted = 0;
+
+        for (std::size_t extracted = 0; extracted < list_files.size(); extracted++) {
+            const std::string path_to_file = eka2l1::add_path(temp_folder, list_files[extracted]);
+            eka2l1::create_directories(eka2l1::file_directory(path_to_file));
+            callback_data.file_stream_ = std::make_unique<std::ofstream>(path_to_file, std::ios::binary);
+
+            if (!mz_zip_reader_extract_to_callback(archive.get(), static_cast<mz_uint>(extracted), [](void *userdata, mz_uint64 offset, const void *buf, std::size_t n) -> std::size_t {
+                extract_zip_callback_data *data_ptr = reinterpret_cast<extract_zip_callback_data*>(userdata);
+                
+                if (data_ptr->cancel_cb_ && data_ptr->cancel_cb_()) {
+                    data_ptr->was_canceled_ = true;
+                    return 0;
+                }
+
+                std::size_t written = data_ptr->file_stream_->tellp();
+                data_ptr->file_stream_->write(reinterpret_cast<const char*>(buf), n);
+                
+                std::size_t current_pos = data_ptr->file_stream_->tellp();
+                written = current_pos - written;
+
+                if (written == n) {
+                    data_ptr->size_uncomped_so_far_ += written;
+
+                    if (data_ptr->progress_cb_) {
+                        data_ptr->progress_cb_(data_ptr->size_uncomped_so_far_, data_ptr->total_uncomp_size_);
+                    }
+                }
+
+                return static_cast<std::size_t>(written);
+            }, &callback_data, 0)) {
+                callback_data.file_stream_.reset();
+                eka2l1::common::delete_folder(temp_folder);
+
+                mz_zip_reader_end(archive.get());
+                return zip_mount_error_corrupt;
+            }
+        }
+
+        mz_zip_reader_end(archive.get());
+        mount(drv, media, temp_folder, base_attrib | io_attrib_write_protected | io_attrib_removeable);
+
+        return zip_mount_error_none;
+    }
+
     void system_impl::request_exit() {
         cpu->stop();
         exit = true;
@@ -949,6 +1053,10 @@ namespace eka2l1 {
     void system::mount(drive_number drv, const drive_media media, std::string path,
         const std::uint32_t attrib) {
         return impl->mount(drv, media, path, attrib);
+    }
+
+    zip_mount_error system::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+        return impl->mount_game_zip(drv, media, zip_path, base_attrib, progress_cb, cancel_cb);
     }
 
     bool system::reset() {
