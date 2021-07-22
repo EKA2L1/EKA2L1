@@ -317,11 +317,6 @@ namespace eka2l1::drivers {
             glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(mask_bmp->tex->texture_handle()));
         }
 
-        // For unknown reason my intel driver go out for an all out attack and garbage the filter...
-        // so i have to set it here...
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
         // Build model matrix
         glm::mat4 model_matrix = glm::identity<glm::mat4>();
         model_matrix = glm::translate(model_matrix, { dest_rect.top.x, dest_rect.top.y, 0.0f });
