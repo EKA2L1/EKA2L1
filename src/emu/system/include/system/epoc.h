@@ -85,6 +85,13 @@ namespace eka2l1 {
     using hal_instance = std::unique_ptr<epoc::hal>;
     using system_reset_callback_type = std::function<void(system *)>;
 
+    enum zip_mount_error {
+        zip_mount_error_none,
+        zip_mount_error_not_zip,
+        zip_mount_error_no_system_folder,
+        zip_mount_error_corrupt
+    };
+
     struct system_create_components {
         drivers::graphics_driver *graphics_;
         drivers::audio_driver *audio_;
@@ -146,8 +153,9 @@ namespace eka2l1 {
 
         void set_config(config::state *conf);
 
-        void mount(drive_number drv, const drive_media media, std::string path,
-            const std::uint32_t attrib = io_attrib_none);
+        void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
+        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib = io_attrib_none,
+                                       progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 
         bool reset();
 

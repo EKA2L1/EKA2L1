@@ -287,7 +287,8 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
     connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
     connect(ui_->action_device, &QAction::triggered, this, &main_window::on_device_install_clicked);
-    connect(ui_->action_mount_game_card_dump, &QAction::triggered, this, &main_window::on_mount_card_clicked);
+    connect(ui_->action_mount_game_card_folder, &QAction::triggered, this, &main_window::on_mount_card_clicked);
+    connect(ui_->action_mount_game_card_zip, &QAction::triggered, this, &main_window::on_mount_zip_clicked);
     connect(ui_->action_fullscreen, &QAction::toggled, this, &main_window::on_fullscreen_toogled);
     connect(ui_->action_pause, &QAction::toggled, this, &main_window::on_pause_toggled);
     connect(ui_->action_restart, &QAction::triggered, this, &main_window::on_restart_requested);
@@ -295,7 +296,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     connect(rotate_group_, &QActionGroup::triggered, this, &main_window::on_another_rotation_triggered);
 
-    connect(this, &main_window::package_install_progress_change, this, &main_window::on_package_install_progress_change);
+    connect(this, &main_window::progress_dialog_change, this, &main_window::on_progress_dialog_change);
     connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update);
     connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
     connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
@@ -593,31 +594,86 @@ void main_window::refresh_recent_mounts() {
     }
 }
 
-void main_window::mount_game_card_dump(QString mount_folder) {
-    if (eka2l1::is_separator(mount_folder.back().unicode())) {
+void main_window::mount_game_card_dump(QString mount_path) {
+    if (eka2l1::is_separator(mount_path.back().unicode())) {
         // We don't care much about the last separator. This is for system folder check ;)
-        mount_folder.erase(mount_folder.begin() + mount_folder.size() - 1, mount_folder.end());
-    }
-
-    if (mount_folder.endsWith("system", Qt::CaseInsensitive)) {
-#if !EKA2L1_PLATFORM(WIN32)
-        if (mount_folder.endsWith("system", Qt::CaseSensitive)) {
-            QMessageBox::information(this, tr("Game card problem"), tr("The game card dump has case-sensitive files. This may cause problems with the emulator."));
-        }
-#endif
-
-        QMessageBox::StandardButton result = QMessageBox::question(this, tr("Game card dump folder correction"), tr("The selected path seems to be incorrect.<br>"
-            "Do you want the emulator to correct it?"));
-
-        if (result == QMessageBox::Yes) {
-            mount_folder.erase(mount_folder.begin() + mount_folder.length() - 7, mount_folder.end());
-        }
+        mount_path.erase(mount_path.begin() + mount_path.size() - 1, mount_path.end());
     }
 
     eka2l1::io_system *io = emulator_state_.symsys->get_io_system();
 
-    io->unmount(drive_e);
-    io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, mount_folder.toStdU16String());
+    const std::string path_ext = eka2l1::path_extension(mount_path.toStdString());
+    if (!eka2l1::is_dir(mount_path.toStdString()) && (eka2l1::common::compare_ignore_case(path_ext.c_str(), ".zip") == 0)) {
+        io->unmount(drive_e);
+        current_progress_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
+
+        current_progress_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
+        current_progress_dialog_->setWindowTitle(tr("Extracting game dump files"));
+        current_progress_dialog_->setWindowModality(Qt::ApplicationModal);
+        current_progress_dialog_->show();
+
+        QFuture<eka2l1::zip_mount_error> extract_future = QtConcurrent::run([this, mount_path]() -> eka2l1::zip_mount_error {
+            return emulator_state_.symsys->mount_game_zip(drive_e, drive_media::physical, mount_path.toStdString(), 0,  [this](const std::size_t done, const std::size_t total) {
+                emit progress_dialog_change(done, total);
+            }, [this] {
+                return current_progress_dialog_->wasCanceled();
+            });
+        });
+
+        while (!extract_future.isFinished()) {
+            QCoreApplication::processEvents();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        bool no_more_info = false;
+
+        if (current_progress_dialog_->wasCanceled()) {
+            no_more_info = true;
+        }
+
+        current_progress_dialog_->close();
+        const QString title_dialog = tr("Mounting aborted");
+
+        if (!no_more_info) {
+            switch (extract_future.result()) {
+            case eka2l1::zip_mount_error_corrupt: {
+                QMessageBox::critical(this, title_dialog, tr("The ZIP file is corrupted!"));
+                break;
+            }
+
+            case eka2l1::zip_mount_error_no_system_folder: {
+                QMessageBox::critical(this, title_dialog, tr("The ZIP does not have System folder in the root folder. "
+                    "System folder must exist in a game dump."));
+                break;
+            }
+
+            case eka2l1::zip_mount_error_not_zip: {
+                QMessageBox::critical(this, title_dialog, tr("The choosen file is not a ZIP file!"));
+            }
+
+            default:
+                break;
+            }
+        }
+    } else {
+        io->unmount(drive_e);
+        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, mount_path.toStdU16String());
+
+        if (mount_path.endsWith("system", Qt::CaseInsensitive)) {
+    #if !EKA2L1_PLATFORM(WIN32)
+            if (mount_folder.endsWith("system", Qt::CaseSensitive)) {
+                QMessageBox::information(this, tr("Game card problem"), tr("The game card dump has case-sensitive files. This may cause problems with the emulator."));
+            }
+    #endif
+
+            QMessageBox::StandardButton result = QMessageBox::question(this, tr("Game card dump folder correction"), tr("The selected path seems to be incorrect.<br>"
+                "Do you want the emulator to correct it?"));
+
+            if (result == QMessageBox::Yes) {
+                mount_path.erase(mount_path.begin() + mount_path.length() - 7, mount_path.end());
+            }
+        }
+    }
 
     QSettings settings;
     QStringList recent_mount_folders = settings.value(RECENT_MOUNT_SETTINGS_NAME).toStringList();
@@ -626,8 +682,8 @@ void main_window::mount_game_card_dump(QString mount_folder) {
         recent_mount_folders.removeLast();
     }
 
-    if (recent_mount_folders.indexOf(mount_folder) == -1)
-        recent_mount_folders.prepend(mount_folder);
+    if (recent_mount_folders.indexOf(mount_path) == -1)
+        recent_mount_folders.prepend(mount_path);
 
     settings.setValue(RECENT_MOUNT_SETTINGS_NAME, recent_mount_folders);
     settings.sync();
@@ -671,6 +727,26 @@ void main_window::on_mount_card_clicked() {
         mount_game_card_dump(mount_folder);
 
         QDir mount_folder_dir(mount_folder);
+        mount_folder_dir.cdUp();
+
+        settings.setValue(LAST_MOUNT_FOLDER_SETTING, mount_folder_dir.absolutePath());
+    }
+}
+
+void main_window::on_mount_zip_clicked() {
+    QSettings settings;
+    QVariant last_mount_parent_variant = settings.value(LAST_MOUNT_FOLDER_SETTING);
+    QString last_mount_folder;
+
+    if (last_mount_parent_variant.isValid()) {
+        last_mount_folder = last_mount_parent_variant.toString();
+    }
+
+    QString mount_zip = QFileDialog::getOpenFileName(this, tr("Choose the game card zip"), last_mount_folder, "ZIP file (*.zip)");
+    if (!mount_zip.isEmpty()) {
+        mount_game_card_dump(mount_zip);
+
+        QDir mount_folder_dir(mount_zip);
         mount_folder_dir.cdUp();
 
         settings.setValue(LAST_MOUNT_FOLDER_SETTING, mount_folder_dir.absolutePath());
@@ -735,8 +811,8 @@ void main_window::setup_and_switch_to_game_mode() {
     switch_to_game_display_mode();
 }
 
-void main_window::on_package_install_progress_change(const std::size_t now, const std::size_t total) {
-    current_package_install_dialog_->setValue(static_cast<int>(now * 100 / total));
+void main_window::on_progress_dialog_change(const std::size_t now, const std::size_t total) {
+    current_progress_dialog_->setValue(static_cast<int>(now * 100 / total));
 }
 
 bool main_window::on_package_install_text_ask(const char *text, const bool one_button) {
@@ -776,17 +852,17 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
     if (!package_file_path.isEmpty()) {
         eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
         if (pkgmngr) {
-            current_package_install_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
+            current_progress_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
 
-            current_package_install_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
-            current_package_install_dialog_->setWindowTitle(tr("Installing package progress"));
-            current_package_install_dialog_->show();
+            current_progress_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
+            current_progress_dialog_->setWindowTitle(tr("Installing package progress"));
+            current_progress_dialog_->show();
 
             QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path]() {
                 return pkgmngr->install_package(package_file_path.toStdU16String(), drive_e, [this](const std::size_t done, const std::size_t total) {
-                    emit package_install_progress_change(done, total);
+                    emit progress_dialog_change(done, total);
                 }, [this] {
-                    return current_package_install_dialog_->wasCanceled();
+                    return current_progress_dialog_->wasCanceled();
                 });
             });
 
@@ -797,11 +873,11 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
 
             bool no_more_info = false;
 
-            if (current_package_install_dialog_->wasCanceled()) {
+            if (current_progress_dialog_->wasCanceled()) {
                 no_more_info = true;
             }
 
-            current_package_install_dialog_->close();
+            current_progress_dialog_->close();
 
             if (!no_more_info) {
                 switch (install_future.result()) {
@@ -930,14 +1006,14 @@ void main_window::on_app_setting_changed() {
 
 void main_window::refresh_mount_availbility() {
     ui_->action_mount_recent_dumps->setEnabled(false);
-    ui_->action_mount_game_card_dump->setEnabled(false);
+    ui_->menu_mount_game_card_dump->setEnabled(false);
 
     eka2l1::system *system = emulator_state_.symsys.get();
     if (system) {
         eka2l1::kernel_system *kern = system->get_kernel_system();
         if (kern) {
             if (kern->is_eka1()) {
-                ui_->action_mount_game_card_dump->setEnabled(true);
+                ui_->menu_mount_game_card_dump->setEnabled(true);
                 ui_->action_mount_recent_dumps->setEnabled(true);
             }
         }
