@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string notr="true">MainWindow</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../eka2l1.qrc">
@@ -217,7 +217,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>0</string>
+    <string notr="true">0</string>
    </property>
   </action>
   <action name="action_rotate_90">
@@ -225,7 +225,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>90</string>
+    <string notr="true">90</string>
    </property>
   </action>
   <action name="action_rotate_180">
@@ -233,7 +233,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>180</string>
+    <string notr="true">180</string>
    </property>
   </action>
   <action name="action_rotate_270">
@@ -241,7 +241,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>270</string>
+    <string notr="true">270</string>
    </property>
   </action>
   <action name="action_mount_game_card_folder">
@@ -251,7 +251,7 @@
   </action>
   <action name="action_mount_game_card_zip">
    <property name="text">
-    <string>Zip</string>
+    <string notr="true">Zip</string>
    </property>
   </action>
  </widget>

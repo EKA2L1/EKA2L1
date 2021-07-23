@@ -68,11 +68,6 @@
 <context>
     <name>device_install_dialog</name>
     <message>
-        <location filename="../src/device_install_dialog.ui" line="41"/>
-        <source>RPKG</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/device_install_dialog.ui" line="55"/>
         <location filename="../src/device_install_dialog.ui" line="174"/>
         <location filename="../src/device_install_dialog.ui" line="207"/>
@@ -82,16 +77,6 @@
     <message>
         <location filename="../src/device_install_dialog.ui" line="20"/>
         <source>Device install wizard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.ui" line="157"/>
-        <source>ROM</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/device_install_dialog.ui" line="193"/>
-        <source>VPL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -228,11 +213,6 @@
 <context>
     <name>main_window</name>
     <message>
-        <location filename="../src/mainwindow.ui" line="20"/>
-        <source>MainWindow</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/mainwindow.ui" line="50"/>
         <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
         <translation type="unfinished"></translation>
@@ -343,33 +323,8 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="220"/>
-        <source>0</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="228"/>
-        <source>90</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="236"/>
-        <source>180</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="244"/>
-        <source>270</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/mainwindow.ui" line="249"/>
         <source>Folder</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="254"/>
-        <source>Zip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -603,17 +558,6 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="36"/>
         <source>General</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="72"/>
-        <source>FPS (0-120)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="101"/>
-        <location filename="../src/settings_dialog.ui" line="149"/>
-        <source>TextLabel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -868,30 +812,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="840"/>
-        <location filename="../src/settings_dialog.ui" line="872"/>
-        <location filename="../src/settings_dialog.ui" line="904"/>
-        <location filename="../src/settings_dialog.ui" line="972"/>
-        <location filename="../src/settings_dialog.ui" line="1004"/>
-        <location filename="../src/settings_dialog.ui" line="1040"/>
-        <location filename="../src/settings_dialog.ui" line="1072"/>
-        <location filename="../src/settings_dialog.ui" line="1104"/>
-        <location filename="../src/settings_dialog.ui" line="1140"/>
-        <location filename="../src/settings_dialog.ui" line="1172"/>
-        <location filename="../src/settings_dialog.ui" line="1204"/>
-        <location filename="../src/settings_dialog.ui" line="1240"/>
-        <location filename="../src/settings_dialog.ui" line="1272"/>
-        <location filename="../src/settings_dialog.ui" line="1298"/>
-        <location filename="../src/settings_dialog.ui" line="1334"/>
-        <location filename="../src/settings_dialog.ui" line="1366"/>
-        <location filename="../src/settings_dialog.ui" line="1398"/>
-        <location filename="../src/settings_dialog.ui" line="1434"/>
-        <location filename="../src/settings_dialog.ui" line="1466"/>
-        <location filename="../src/settings_dialog.ui" line="1498"/>
-        <source>PushButton</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/settings_dialog.ui" line="859"/>
         <source>Up arrow</source>
         <translation type="unfinished"></translation>
@@ -977,11 +897,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.ui" line="940"/>
-        <source>Button</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../src/settings_dialog.ui" line="959"/>
         <source>Middle softkey</source>
         <translation type="unfinished"></translation>
@@ -1021,11 +936,6 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="698"/>
         <source>System language</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/settings_dialog.ui" line="618"/>
-        <source>IMEI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

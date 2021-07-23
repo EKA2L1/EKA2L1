@@ -38,7 +38,7 @@
       <item>
        <widget class="QLabel" name="rpkg_edit_name_label">
         <property name="text">
-         <string>RPKG</string>
+         <string notr="true">RPKG</string>
         </property>
        </widget>
       </item>
@@ -154,7 +154,7 @@
       <item>
        <widget class="QLabel" name="rom_edit_name_label">
         <property name="text">
-         <string>ROM</string>
+         <string notr="true">ROM</string>
         </property>
        </widget>
       </item>
@@ -190,7 +190,7 @@
       <item>
        <widget class="QLabel" name="vpl_edit_name_label">
         <property name="text">
-         <string>VPL</string>
+         <string notr="true">VPL</string>
         </property>
        </widget>
       </item>
