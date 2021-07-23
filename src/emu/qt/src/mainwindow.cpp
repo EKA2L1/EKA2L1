@@ -661,7 +661,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
 
         if (mount_path.endsWith("system", Qt::CaseInsensitive)) {
     #if !EKA2L1_PLATFORM(WIN32)
-            if (mount_folder.endsWith("system", Qt::CaseSensitive)) {
+            if (mount_path.endsWith("system", Qt::CaseSensitive)) {
                 QMessageBox::information(this, tr("Game card problem"), tr("The game card dump has case-sensitive files. This may cause problems with the emulator."));
             }
     #endif
