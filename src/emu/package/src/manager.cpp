@@ -77,8 +77,7 @@ namespace eka2l1 {
                         while (std::optional<entry_info> stub_file_info = stub_dir_iterator->get_next_entry()) {
                             auto stub_file_real_path = sys->get_raw_path(common::utf8_to_ucs2(stub_file_info->full_path));
                             if (stub_file_real_path.has_value()) {
-                                std::atomic<int> progress;
-                                install_package(stub_file_real_path.value(), drv, progress, true);
+                                install_package(stub_file_real_path.value(), drv, nullptr, nullptr, true);
                             }
                         }
                     }
@@ -508,10 +507,11 @@ namespace eka2l1 {
         }
 
         void packages::traverse_tree_and_add_packages(loader::sis_registry_tree &tree) {
-            // TODO: We should ask for user permission first!
+            // TODO: We should ask for user permission first! This is also not correct
+            // Just remove that registeration, not the files...
             if (installed(tree.package_info.uid)) {
                 package::object *obj = package(tree.package_info.uid);
-                uninstall_package(*obj);
+                remove_registeration(*obj);
             }
 
             add_package(tree.package_info, &tree.controller_binary);
@@ -520,11 +520,11 @@ namespace eka2l1 {
             }
         }
 
-        bool packages::install_package(const std::u16string &path, const drive_number drive, std::atomic<int> &progress, const bool silent) {
+        package::installation_result packages::install_package(const std::u16string &path, const drive_number drive, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, const bool silent) {
             std::optional<loader::sis_type> sis_ver = loader::identify_sis_type(common::ucs2_to_utf8(path));
 
             if (!sis_ver) {
-                return false;
+                return package::installation_result_invalid;
             }
 
             if (sis_ver.value() != loader::sis_type_old) {
@@ -547,31 +547,31 @@ namespace eka2l1 {
                     interpreter.var_resolver = var_resolver;
                 }
 
-                std::unique_ptr<loader::sis_registry_tree> new_infos = interpreter.interpret(progress);
+                std::unique_ptr<loader::sis_registry_tree> new_infos = interpreter.interpret(progress_cb, cancel_cb);
 
                 if (new_infos) {
                     traverse_tree_and_add_packages(*new_infos);
 
                     for (const auto &another_path: interpreter.extra_sis_files()) {
-                        install_package(another_path, drive, progress);
+                        install_package(another_path, drive, progress_cb, cancel_cb);
                     }
+                } else {
+                    return package::installation_result_aborted;
                 }
             } else {
                 package::object final_obj;
                 final_obj.file_major_version = 5;
                 final_obj.file_minor_version = 4;
 
-                loader::install_sis_old(path, sys, drive, final_obj);
+                if (!loader::install_sis_old(path, sys, drive, final_obj, progress_cb, cancel_cb)) {
+                    return package::installation_result_invalid;
+                }
 
                 add_package(final_obj, nullptr);
             }
 
-            if (show_text && !silent) {
-                show_text("Installation done!", true);
-            }
-
             LOG_TRACE(PACKAGE, "Installation done!");
-            return true;
+            return package::installation_result_success;
         }
     }
 }

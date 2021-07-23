@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <atomic>
 #include <functional>
 #include <string>
@@ -63,6 +65,19 @@ namespace eka2l1 {
             std::stack<sis_controller*> current_controllers;
             std::vector<std::u16string> gathered_sis_paths;
 
+            struct extract_target_info {
+                std::string file_path_;
+                std::uint32_t data_unit_index_;
+                std::uint16_t data_unit_block_index_;
+            };
+
+            std::vector<extract_target_info> extract_targets;
+            std::size_t extract_target_accumulated_size;
+            std::size_t extract_target_decomped_size;
+
+            progress_changed_callback progress_changed_cb;
+            cancel_requested_callback cancel_cb;
+
             drive_number install_drive;
             common::ro_stream *data_stream;
 
@@ -86,8 +101,8 @@ namespace eka2l1 {
             int gasp_true_form_of_integral_expression(const sis_expression &expr);
 
         protected:            
-            bool interpret(sis_install_block &install_block, sis_registry_tree &parent_tree, std::atomic<int> &progress, std::uint16_t crr_blck_idx = 0);
-            bool interpret(sis_controller *controller, sis_registry_tree &tree, const std::uint16_t base_data_idx, std::atomic<int> &progress);
+            bool interpret(sis_install_block &install_block, sis_registry_tree &parent_tree, std::uint16_t crr_blck_idx = 0);
+            bool interpret(sis_controller *controller, sis_registry_tree &tree, const std::uint16_t base_data_idx);
 
             /**
              * \brief Get the data in the index of a buffer block in the SIS.
@@ -113,7 +128,7 @@ namespace eka2l1 {
              * \param data_idx      The index of the source buffer in block buffer.
              * \param crr_block_idx The block index..
              */
-            void extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx);
+            bool extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx);
 
         public:
             show_text_func show_text;                   ///< Hook function to display texts.
@@ -123,7 +138,7 @@ namespace eka2l1 {
             explicit ss_interpreter(common::ro_stream *stream, io_system *io, manager::packages *mngr,
                 sis_controller *main_controller, sis_data *inst_data, drive_number install_drv);
 
-            std::unique_ptr<sis_registry_tree> interpret(std::atomic<int> &progress);
+            std::unique_ptr<sis_registry_tree> interpret(progress_changed_callback cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 
             const std::vector<std::u16string> &extra_sis_files() const {
                 return gathered_sis_paths;

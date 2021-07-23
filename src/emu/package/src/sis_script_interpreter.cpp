@@ -69,12 +69,16 @@ namespace eka2l1 {
             sis_controller *main_controller,
             sis_data *inst_data,
             drive_number inst_drv)
-            : data_stream(stream)
-            , io(io)
-            , mngr(mngr)
-            , main_controller(main_controller)
+            : main_controller(main_controller)
             , install_data(inst_data)
-            , install_drive(inst_drv) {
+            , conf(nullptr)
+            , extract_target_accumulated_size(0)
+            , extract_target_decomped_size(0)
+            , progress_changed_cb(nullptr)
+            , install_drive(inst_drv)
+            , data_stream(stream)
+            , io(io)
+            , mngr(mngr) {
         }
 
         std::vector<uint8_t> ss_interpreter::get_small_file_buf(uint32_t data_idx, uint16_t crr_blck_idx) {
@@ -125,7 +129,7 @@ namespace eka2l1 {
             fclose(temp);
         }
 
-        void ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
+        bool ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
             std::string rp = eka2l1::file_directory(path);
             eka2l1::create_directories(rp);
 
@@ -164,8 +168,14 @@ namespace eka2l1 {
             }
 
             std::uint32_t total_inflated_size = 0;
+            bool cancel_requested = false;
 
             while (left > 0) {
+                if (cancel_cb && cancel_cb()) {
+                    cancel_requested = true;
+                    break;
+                }
+
                 std::fill(temp_chunk.begin(), temp_chunk.end(), 0);
                 int grab = static_cast<int>(left < CHUNK_SIZE ? left : CHUNK_SIZE);
 
@@ -173,7 +183,7 @@ namespace eka2l1 {
 
                 if (!data_stream->valid()) {
                     LOG_ERROR(PACKAGE, "Stream fail, skipping this file, should report to developers.");
-                    return;
+                    return false;
                 }
 
                 if (compressed.algorithm == sis_compressed_algorithm::deflated) {
@@ -182,21 +192,32 @@ namespace eka2l1 {
                     auto res = flate::inflate_data(&stream, temp_chunk.data(), temp_inflated_chunk.data(), grab, &inflated_size);
 
                     if (!res) {
-                        LOG_ERROR(PACKAGE, "Uncompress failed! Report to developers");
-                        return;
+                        LOG_ERROR(PACKAGE, "Decompress failed! Report to developers");
+                        return false;
                     }
 
                     fwrite(temp_inflated_chunk.data(), 1, inflated_size, file);
+
                     total_inflated_size += inflated_size;
+                    extract_target_decomped_size += inflated_size;
                 } else {
                     fwrite(temp_chunk.data(), 1, grab, file);
+                    extract_target_decomped_size += grab;
                 }
 
                 left -= grab;
+
+                if (progress_changed_cb) {
+                    if (extract_target_accumulated_size != 0) {
+                        progress_changed_cb(extract_target_decomped_size, extract_target_accumulated_size);
+                    } else {
+                        progress_changed_cb(100, 100);
+                    }
+                }
             }
 
             if (compressed.algorithm == sis_compressed_algorithm::deflated) {
-                if (total_inflated_size != compressed.uncompressed_size) {
+                if (!cancel_requested && (total_inflated_size != compressed.uncompressed_size)) {
                     LOG_ERROR(PACKAGE, "Sanity check failed: Total inflated size not equal to specified uncompress size "
                               "in SISCompressed ({} vs {})!",
                         total_inflated_size, compressed.uncompressed_size);
@@ -206,12 +227,13 @@ namespace eka2l1 {
             }
 
             fclose(file);
-        }
 
-        static bool is_expression_integral_type(const ss_expr_op op) {
-            return (op == ss_expr_op::EPrimTypeNumber)
-                || (op == ss_expr_op::EPrimTypeOption)
-                || (op == ss_expr_op::EPrimTypeVariable);
+            if (cancel_requested) {
+                common::remove(path);
+                return false;
+            }
+
+            return true;
         }
 
         int ss_interpreter::gasp_true_form_of_integral_expression(const sis_expression &expr) {
@@ -468,7 +490,7 @@ namespace eka2l1 {
             return true;
         }
 
-        bool ss_interpreter::interpret(sis_controller *controller, sis_registry_tree &me, const std::uint16_t base_data_idx, std::atomic<int> &progress) {
+        bool ss_interpreter::interpret(sis_controller *controller, sis_registry_tree &me, const std::uint16_t base_data_idx) {
             // Set current controller
             current_controllers.push(controller);
 
@@ -502,13 +524,13 @@ namespace eka2l1 {
                 LOG_ERROR(PACKAGE, "Fail to fill package registeration");
             }
 
-            const bool result = interpret(controller->install_block, me, progress, base_data_idx + controller->idx.data_index);
+            const bool result = interpret(controller->install_block, me, base_data_idx + controller->idx.data_index);
             current_controllers.pop();
             
             return result;
         }
 
-        bool ss_interpreter::interpret(sis_install_block &install_block, sis_registry_tree &parent_tree, std::atomic<int> &progress, std::uint16_t crr_blck_idx) {
+        bool ss_interpreter::interpret(sis_install_block &install_block, sis_registry_tree &parent_tree, std::uint16_t crr_blck_idx) {
             // Process file
             for (auto &wrap_file : install_block.files.fields) {
                 sis_file_des *file = reinterpret_cast<sis_file_des *>(wrap_file.get());
@@ -524,7 +546,8 @@ namespace eka2l1 {
                 case ss_op::text: {
                     auto buf = get_small_file_buf(file->idx, crr_blck_idx);
 
-                    bool yes_choosen = true;
+                    bool one_button = (static_cast<loader::ss_ft_option>(file->op_op) == ss_ft_option::let_continue);
+                    bool result = true;
 
                     if ((buf.size() >= 2) && (buf[0] == 0xFF) && (buf[1] == 0xFE)) {
                         // BOM file
@@ -532,45 +555,25 @@ namespace eka2l1 {
                             (buf.size() / 2) - 1));
 
                         if (show_text) {
-                            show_text(reinterpret_cast<const char*>(converted_str.data()), true);
+                            result = show_text(reinterpret_cast<const char*>(converted_str.data()), one_button);
                         }
                     } else {
                         if (show_text) {
-                            show_text(reinterpret_cast<const char *>(buf.data()), true);
+                            result = show_text(reinterpret_cast<const char *>(buf.data()), one_button);
                         }
                     }
 
                     LOG_INFO(PACKAGE, "EOpText: {}", reinterpret_cast<const char *>(buf.data()));
 
-                    switch (file->op_op) {
-                    case 1 << 10: { // Skip next files
-                        if (show_text) {
-                            yes_choosen = show_text("Skip next file?", false);
-                        }
-
-                        if (yes_choosen) {
-                            skip_next_file = true;
-                        }
+                    switch (static_cast<loader::ss_ft_option>(file->op_op)) {
+                    case loader::ss_ft_option::skip_if_no: { // Skip next files
+                        skip_next_file = !result;
                         break;
                     }
 
-                    case 1 << 11:
-                    case 1 << 12: { // Abort
-                        const std::string err_string = fmt::format("Continue the installation for this package? (0x{:X})", current_controllers.top()->info.uid.uid);
-                        LOG_INFO(PACKAGE, "{}", err_string);
-
-                        if (show_text) {
-                            yes_choosen = show_text(err_string.c_str(), false);
-                        }
-
-                        if (!yes_choosen) {
-                            for (const package::file_description &desc: parent_tree.package_info.file_descriptions) {
-                                // NULL types are not written yet assumingly. Only install to be deleted
-                                if (desc.operation == static_cast<std::int32_t>(loader::ss_op::install)) {
-                                    io->delete_entry(desc.target);
-                                }
-                            }
-
+                    case loader::ss_ft_option::abort_if_no:
+                    case loader::ss_ft_option::exit_if_no: {
+                        if (!result) {
                             return false;
                         }
 
@@ -595,10 +598,14 @@ namespace eka2l1 {
                         }
                         
                         if (!install_data->data_units.fields.empty()) {
-                            extract_file(raw_path, file->idx, crr_blck_idx);
-                        }
+                            extract_target_info info;
+                            info.file_path_ = raw_path;
+                            info.data_unit_block_index_ = file->idx;
+                            info.data_unit_index_ = crr_blck_idx;
 
-                        LOG_INFO(PACKAGE, "EOpInstall: {}", raw_path);
+                            extract_targets.push_back(info);
+                            extract_target_accumulated_size += file->uncompressed_len;
+                        }
 
                         if (!lowered) {
                             raw_path = common::lowercase_string(raw_path);
@@ -626,8 +633,10 @@ namespace eka2l1 {
                 sis_controller *ctrl = reinterpret_cast<sis_controller *>(wrap_mini_pkg.get());
                 sis_registry_tree child_tree;
 
-                if (interpret(ctrl, child_tree, crr_blck_idx, progress)) {
+                if (interpret(ctrl, child_tree, crr_blck_idx)) {
                     parent_tree.embeds.push_back(std::move(child_tree));
+                } else {
+                    return false;
                 }
             }
 
@@ -637,13 +646,13 @@ namespace eka2l1 {
                 auto result = condition_passed(&if_stmt->expr);
 
                 if (result) {
-                    interpret(if_stmt->install_block, parent_tree, progress, crr_blck_idx);
+                    interpret(if_stmt->install_block, parent_tree, crr_blck_idx);
                 } else {
                     for (auto &wrap_else_branch : if_stmt->else_if.fields) {
                         sis_else_if *else_branch = reinterpret_cast<sis_else_if *>(wrap_else_branch.get());
 
                         if (condition_passed(&else_branch->expr)) {
-                            interpret(else_branch->install_block, parent_tree, progress, crr_blck_idx);
+                            interpret(else_branch->install_block, parent_tree, crr_blck_idx);
                             break;
                         }
                     }
@@ -668,16 +677,48 @@ namespace eka2l1 {
             }
         }
 
-        std::unique_ptr<sis_registry_tree> ss_interpreter::interpret(std::atomic<int> &progress) {
+        std::unique_ptr<sis_registry_tree> ss_interpreter::interpret(progress_changed_callback cb, cancel_requested_callback ccb) {
             if (install_data->data_units.fields.empty()) {
                 LOG_INFO(PACKAGE, "Interpreting a stub SIS");
             }
 
             std::unique_ptr<sis_registry_tree> trees = std::make_unique<sis_registry_tree>();
-            gathered_sis_paths.clear();
 
-            if (!interpret(main_controller, *trees, 0, progress)) {
+            gathered_sis_paths.clear();
+            extract_targets.clear();
+
+            extract_target_accumulated_size = 0;
+            extract_target_decomped_size = 0;
+
+            progress_changed_cb = cb;
+            cancel_cb = ccb;
+
+            if (!interpret(main_controller, *trees, 0)) {
                 return nullptr;
+            }
+
+            if (extract_targets.empty()) {
+                if (cb)
+                    cb(1, 1);
+            } else {
+                std::size_t n = 0;
+                bool cancel_requested = false;
+
+                for (; n < extract_targets.size(); n++) {
+                    extract_target_info &target = extract_targets[n];
+                    if (!extract_file(target.file_path_, target.data_unit_block_index_, target.data_unit_index_)) {
+                        cancel_requested = true;
+                        break;
+                    }
+                }
+
+                if (cancel_requested) {
+                    for (std::size_t i = 0; i < n; i++) {
+                        common::remove(extract_targets[i].file_path_);
+                    }
+
+                    return nullptr;
+                }
             }
 
             fill_embeds_to_package_info(*trees);

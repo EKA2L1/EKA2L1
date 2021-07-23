@@ -30,8 +30,6 @@
 #include <fstream>
 
 namespace eka2l1::dispatch {
-    static constexpr std::uint32_t FPS_LIMIT = 60;
-
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         drivers::graphics_driver *driver = sys->get_graphics_driver();
@@ -73,6 +71,7 @@ namespace eka2l1::dispatch {
                     buffer_size, { 0, 0 }, screen_size);
 
                 scr->last_texture_access = 1;
+                scr->fire_screen_redraw_callbacks(true);
 
                 // NOTE: This is a hack for some apps that dont fill alpha
                 // TODO: Figure out why or better solution (maybe the display mode is not really correct?)

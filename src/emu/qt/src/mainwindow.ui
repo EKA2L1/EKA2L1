@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>main_window</class>
+ <widget class="QMainWindow" name="main_window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../eka2l1.qrc">
+    <normaloff>:/assets/duck_tank.png</normaloff>:/assets/duck_tank.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <layout class="QGridLayout" name="layout_centralwidget">
+    <property name="sizeConstraint">
+     <enum>QLayout::SetDefaultConstraint</enum>
+    </property>
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="layout_main">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <item row="0" column="0" alignment="Qt::AlignHCenter">
+       <widget class="QLabel" name="label_al_not_available">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>App launcher is unavailable.&lt;br&gt;Install a device to continue.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menu_bar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>900</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_file">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <widget class="QMenu" name="menu_install">
+     <property name="title">
+      <string>Install</string>
+     </property>
+     <addaction name="action_package"/>
+     <addaction name="action_device"/>
+    </widget>
+    <widget class="QMenu" name="menu_mount_game_card_dump">
+     <property name="title">
+      <string>Mount game card dump</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="action_mount_game_card_folder"/>
+     <addaction name="action_mount_game_card_zip"/>
+    </widget>
+    <addaction name="menu_install"/>
+    <addaction name="action_package_manager"/>
+    <addaction name="separator"/>
+    <addaction name="menu_mount_game_card_dump"/>
+    <addaction name="action_mount_recent_dumps"/>
+    <addaction name="separator"/>
+    <addaction name="action_settings"/>
+   </widget>
+   <widget class="QMenu" name="menu_view">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="action_rotate_drop_menu">
+     <property name="title">
+      <string>Rotate screen</string>
+     </property>
+     <addaction name="action_rotate_0"/>
+     <addaction name="action_rotate_90"/>
+     <addaction name="action_rotate_180"/>
+     <addaction name="action_rotate_270"/>
+    </widget>
+    <addaction name="action_fullscreen"/>
+    <addaction name="action_rotate_drop_menu"/>
+   </widget>
+   <widget class="QMenu" name="menu_help">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="action_about"/>
+   </widget>
+   <widget class="QMenu" name="menu_emulation">
+    <property name="title">
+     <string>Emulation</string>
+    </property>
+    <addaction name="action_pause"/>
+    <addaction name="action_restart"/>
+    <addaction name="separator"/>
+   </widget>
+   <addaction name="menu_file"/>
+   <addaction name="menu_emulation"/>
+   <addaction name="menu_view"/>
+   <addaction name="menu_help"/>
+  </widget>
+  <widget class="QStatusBar" name="status_bar"/>
+  <action name="action_about">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="action_package">
+   <property name="text">
+    <string>Package</string>
+   </property>
+  </action>
+  <action name="action_device">
+   <property name="text">
+    <string>Device</string>
+   </property>
+  </action>
+  <action name="action_package_manager">
+   <property name="text">
+    <string>Package manager</string>
+   </property>
+  </action>
+  <action name="action_settings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="action_pause">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Pause</string>
+   </property>
+  </action>
+  <action name="action_stop">
+   <property name="text">
+    <string>Stop</string>
+   </property>
+  </action>
+  <action name="action_restart">
+   <property name="text">
+    <string>Restart</string>
+   </property>
+  </action>
+  <action name="action_threads">
+   <property name="text">
+    <string>Threads</string>
+   </property>
+  </action>
+  <action name="action_mutexes">
+   <property name="text">
+    <string>Mutexes</string>
+   </property>
+  </action>
+  <action name="action_chunks">
+   <property name="text">
+    <string>Chunks</string>
+   </property>
+  </action>
+  <action name="action_window_tree">
+   <property name="text">
+    <string>Window tree</string>
+   </property>
+  </action>
+  <action name="action_fullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fullscreen</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+F</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WindowShortcut</enum>
+   </property>
+  </action>
+  <action name="action_mount_recent_dumps">
+   <property name="text">
+    <string>Recent dumps</string>
+   </property>
+  </action>
+  <action name="action_rotate_0">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>0</string>
+   </property>
+  </action>
+  <action name="action_rotate_90">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>90</string>
+   </property>
+  </action>
+  <action name="action_rotate_180">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>180</string>
+   </property>
+  </action>
+  <action name="action_rotate_270">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>270</string>
+   </property>
+  </action>
+  <action name="action_mount_game_card_folder">
+   <property name="text">
+    <string>Folder</string>
+   </property>
+  </action>
+  <action name="action_mount_game_card_zip">
+   <property name="text">
+    <string>Zip</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../eka2l1.qrc"/>
+  <include location="../eka2l1.qrc"/>
+ </resources>
+ <connections/>
+</ui>

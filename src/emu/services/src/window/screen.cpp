@@ -62,13 +62,13 @@ namespace eka2l1::epoc {
             eka2l1::vec2 abs_pos = winuser->absolute_position();
 
             if (winuser->clear_color_enable) {
-                auto color_extracted = common::rgb_to_vec(winuser->clear_color);
+                auto color_extracted = common::rgba_to_vec(winuser->clear_color);
 
                 if (winuser->display_mode() <= epoc::display_mode::color16mu) {
-                    color_extracted[0] = 255;
+                    color_extracted[3] = 255;
                 }
 
-                builder_->set_brush_color_detail({ color_extracted[1], color_extracted[2], color_extracted[3], color_extracted[0] });
+                builder_->set_brush_color_detail({ color_extracted[0], color_extracted[1], color_extracted[2], color_extracted[3] });
                 builder_->draw_rectangle(eka2l1::rect(abs_pos, winuser->size));
             } else {
                 builder_->set_brush_color(eka2l1::vec3(255, 255, 255));
@@ -84,6 +84,30 @@ namespace eka2l1::epoc {
         }
     };
 
+    bool focus_callback_free_check_func(screen::focus_change_callback &data) {
+        return !data.second;
+    }
+
+    void focus_callback_free_func(screen::focus_change_callback &data) {
+        data.second = nullptr;
+    }
+
+    bool screen_redraw_callback_free_check_func(screen::screen_redraw_callback &data) {
+        return !data.second;
+    }
+
+    void screen_redraw_callback_free_func(screen::screen_redraw_callback &data) {
+        data.second = nullptr;
+    }
+
+    bool screen_mode_change_callback_free_check_func(screen::screen_mode_change_callback &data) {
+        return !data.second;
+    }
+
+    void screen_mode_change_callback_free_func(screen::screen_mode_change_callback &data) {
+        data.second = nullptr;
+    }
+
     screen::screen(const int number, epoc::config::screen &scr_conf)
         : number(number)
         , ui_rotation(0)
@@ -95,12 +119,18 @@ namespace eka2l1::epoc {
         , dsa_texture(0)
         , disp_mode(display_mode::color16ma)
         , last_vsync(0)
+        , last_fps_check(0)
+        , last_fps(0)
+        , frame_passed_per_sec(0)
         , last_texture_access(0)
         , scr_config(scr_conf)
         , crr_mode(0)
+        , focus(nullptr)
         , next(nullptr)
         , screen_buffer_chunk(nullptr)
-        , focus(nullptr) {
+        , focus_callbacks(focus_callback_free_check_func, focus_callback_free_func)
+        , screen_redraw_callbacks(screen_redraw_callback_free_check_func, screen_redraw_callback_free_func)
+        , screen_mode_change_callbacks(screen_mode_change_callback_free_check_func, screen_mode_change_callback_free_func) {
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
         disp_mode = scr_conf.disp_mode;
 
@@ -142,6 +172,8 @@ namespace eka2l1::epoc {
         auto cmd_builder = driver->new_command_builder(cmd_list.get());
         redraw(cmd_builder.get(), true);
         driver->submit_command_list(*cmd_list);
+
+        fire_screen_redraw_callbacks(false);
     }
 
     void screen::deinit(drivers::graphics_driver *driver) {
@@ -248,12 +280,12 @@ namespace eka2l1::epoc {
                 serv->set_focus_screen(new_focus_screen);
 
                 alternative_focus->gain_focus();
-                new_focus_screen->fire_focus_change_callbacks();
+                new_focus_screen->fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = alternative_focus->last_refresh_rate;
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
-                fire_focus_change_callbacks();
+                fire_focus_change_callbacks(focus_change_target);
 
                 refresh_rate = focus->last_refresh_rate;
             }
@@ -266,32 +298,85 @@ namespace eka2l1::epoc {
         return reinterpret_cast<epoc::window_group*>(root->child);
     }
     
-    void screen::fire_focus_change_callbacks() {
+    void screen::fire_focus_change_callbacks(const focus_change_property property) {
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
         for (auto &callback : focus_callbacks) {
-            callback.second(callback.first, focus);
+            if (callback.second)
+                callback.second(callback.first, focus, property);
+        }
+    }
+
+    void screen::fire_screen_redraw_callbacks(const bool is_dsa) {
+        for (auto &callback: screen_redraw_callbacks) {
+            if (callback.second)
+                callback.second(callback.first, this, is_dsa);
+        }
+    }
+
+    void screen::fire_screen_mode_change_callbacks(const int old_mode) {
+        for (auto &callback: screen_mode_change_callbacks) {
+            if (callback.second)
+                callback.second(callback.first, this, old_mode);
         }
     }
 
     std::size_t screen::add_focus_change_callback(void *userdata, focus_change_callback_handler handler) {
         const std::lock_guard<std::mutex> guard(screen_mutex);
-        focus_callbacks.push_back({ userdata, handler });
 
-        return focus_callbacks.size();
+        focus_change_callback callback_pair = { userdata, handler };
+        return focus_callbacks.add(callback_pair);
+    }
+
+    bool screen::remove_focus_change_callback(const std::size_t cb) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+        return focus_callbacks.remove(cb);
+    }
+
+    std::size_t screen::add_screen_redraw_callback(void *userdata, screen_redraw_callback_handler handler) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+
+        screen_redraw_callback callback_pair = { userdata, handler };
+        return screen_redraw_callbacks.add(callback_pair);
+    }
+
+    bool screen::remove_screen_redraw_callback(const std::size_t cb) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+        return screen_redraw_callbacks.remove(cb);
+    }
+
+    std::size_t screen::add_screen_mode_change_callback(void *userdata, screen_mode_change_callback_handler handler) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+
+        screen_mode_change_callback callback_pair = { userdata, handler };
+        return screen_mode_change_callbacks.add(callback_pair);
+    }
+
+    bool screen::remove_screen_mode_change_callback(const std::size_t cb) {
+        const std::lock_guard<std::mutex> guard(screen_mutex);
+        return screen_mode_change_callbacks.remove(cb);
     }
 
     void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {
+        const int old_mode = crr_mode;
+        bool should_fire_cb = false;
+
         if (crr_mode != mode) {
             LOG_TRACE(SERVICE_WINDOW, "Screen mode changed to {}", mode);
+            should_fire_cb = true;
         }
 
         crr_mode = mode;
         resize(drv, mode_info(mode)->size);
+
+        if (should_fire_cb) {
+            fire_screen_mode_change_callbacks(old_mode);
+        }
     }
 
     void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
         const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
+
         std::uint64_t delta = tnow - last_vsync;
 
         const std::uint64_t microsecs_a_frame = 1000000 / refresh_rate;
@@ -304,6 +389,16 @@ namespace eka2l1::epoc {
 
         // Skip last vsync to next frame
         last_vsync = ((tnow + microsecs_a_frame - 1) / microsecs_a_frame) * microsecs_a_frame;
+
+        const std::uint64_t delta_fps = tnow - last_fps_check;
+        if (delta_fps >= common::microsecs_per_sec) {
+            last_fps = frame_passed_per_sec;
+            last_fps_check = tnow;
+
+            frame_passed_per_sec = 0;
+        }
+
+        frame_passed_per_sec++;
     }
 
     const epoc::config::screen_mode *screen::mode_info(const int number) const {

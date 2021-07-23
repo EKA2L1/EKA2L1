@@ -172,7 +172,9 @@ namespace eka2l1::common {
 
         if (handle == INVALID_HANDLE_VALUE) {
             handle = nullptr;
-            delete find_data;
+
+            WIN32_FIND_DATA *find_data_casted = reinterpret_cast<WIN32_FIND_DATA*>(find_data);
+            delete find_data_casted;
         }
 #endif
     }

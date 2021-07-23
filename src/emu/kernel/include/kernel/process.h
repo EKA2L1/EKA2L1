@@ -343,6 +343,8 @@ namespace eka2l1::kernel {
          */
         void add_child_process(kernel::process *pr);
 
+        bool has_child_process(kernel::process *pr);
+
         entity_exit_type get_exit_type() const {
             return exit_type;
         }

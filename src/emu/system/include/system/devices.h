@@ -49,8 +49,9 @@ namespace eka2l1 {
     */
     class device_manager {
         std::vector<device> devices;
-        device *current;
         config::state *conf;
+
+        std::int32_t current_index;
 
     public:
         std::mutex lock;
@@ -67,7 +68,22 @@ namespace eka2l1 {
         }
 
         device *get_current() {
-            return current;
+            if ((current_index < 0) || (current_index >= devices.size())) {
+                return nullptr;
+            }
+
+            return &devices[current_index];
+        }
+
+        std::int32_t get_current_index() const {
+            return current_index;
+        }
+
+        device *lastest() {
+            if (devices.empty())
+                return nullptr;
+
+            return &devices.back();
         }
 
         void save_devices();

@@ -73,9 +73,22 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v1
+        with:
+          path: ../Qt
+          key: ${{ runner.os }}-QtCache
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '6.1.1'
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
       - name: CMake configure
-        run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
 
       - name: CMake build
         run: cmake --build build --config ${{ matrix.config }} --parallel 2

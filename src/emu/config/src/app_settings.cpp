@@ -33,6 +33,8 @@ namespace eka2l1::config {
     app_setting::app_setting()
         : fps(60)
         , time_delay(0)
+        , screen_rotation(0)
+        , screen_scale(1)
         , child_inherit_setting(false) {
     }
 

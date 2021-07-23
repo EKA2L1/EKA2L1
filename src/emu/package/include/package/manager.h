@@ -42,6 +42,14 @@ namespace eka2l1 {
         using var_value_resolver_func = std::function<std::int32_t(std::uint32_t)>;
     }
 
+    namespace package {
+        enum installation_result {
+            installation_result_success = 0,
+            installation_result_aborted = 1,
+            installation_result_invalid = 2
+        };
+    }
+
     namespace config {
         struct state;
     }
@@ -106,7 +114,8 @@ namespace eka2l1 {
             bool uninstall_package(package::object &pkg);
             bool remove_registeration(package::object &pkg);
 
-            bool install_package(const std::u16string &path, const drive_number drive, std::atomic<int> &progress, const bool silent = false);
+            package::installation_result install_package(const std::u16string &path, const drive_number drive, progress_changed_callback progress_cb = nullptr,
+                                                         cancel_requested_callback cancel_cb = nullptr, const bool silent = false);
         };
     }
 }

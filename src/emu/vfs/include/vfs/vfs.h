@@ -342,6 +342,7 @@ namespace eka2l1 {
         void validate_for_host();
 
         std::size_t register_drive_change_notify(drive_change_notify_callback callback, void *userdata);
+        bool remove_drive_change_notify(const std::size_t handle);
         
         std::optional<std::u16string> get_raw_path(const std::u16string &path);
 

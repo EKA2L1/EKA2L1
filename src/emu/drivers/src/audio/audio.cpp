@@ -21,7 +21,7 @@
 #include <drivers/audio/backend/cubeb/audio_cubeb.h>
 
 namespace eka2l1::drivers {
-    std::unique_ptr<audio_driver> make_audio_driver(const audio_driver_backend backend) {
+    audio_driver_instance make_audio_driver(const audio_driver_backend backend) {
         switch (backend) {
         case audio_driver_backend::cubeb: {
             return std::make_unique<cubeb_audio_driver>();

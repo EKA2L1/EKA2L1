@@ -59,6 +59,17 @@ namespace eka2l1::common {
          * @returns     True if timeout is hit.
          */
         bool wait(const std::size_t duration_us = 0);
+
+        /**
+         * @brief Get the current count of the semaphore.
+         *
+         * Negative count means that the semaphore is holding threads.
+         *
+         * @return The current count.
+         */
+        int count() const {
+            return count_.load();
+        }
     };
 
     class event_impl;

@@ -66,7 +66,8 @@ namespace eka2l1 {
 
     applist_server::applist_server(system *sys)
         : service::typical_server(sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()))
-        , fbsserv(nullptr) {
+        , drive_change_handle_(0)
+        , fbsserv(nullptr){
     }
 
     applist_server::~applist_server() {
@@ -75,6 +76,8 @@ namespace eka2l1 {
         for (const auto w: watchs_) {
             io->unwatch_directory(w);    
         }
+
+        io->remove_drive_change_notify(drive_change_handle_);
     }
     
     bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
@@ -449,7 +452,7 @@ namespace eka2l1 {
         sort_registry_list();
 
         // Register drive change callback
-        io->register_drive_change_notify([this](void *userdata, drive_number drv, drive_action act) {
+        drive_change_handle_ = io->register_drive_change_notify([this](void *userdata, drive_number drv, drive_action act) {
             return on_drive_change(userdata, drv, act);
         }, io);
 

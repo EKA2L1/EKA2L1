@@ -71,7 +71,7 @@ namespace eka2l1 {
             int yield_evt;
             std::uint32_t ticks_yield;
 
-            common::semaphore idle_sema;
+            common::event idle_event;
 
         protected:
             kernel::thread *next_ready_thread();

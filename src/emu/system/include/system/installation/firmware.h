@@ -35,5 +35,6 @@ namespace eka2l1 {
 
     device_installation_error install_firmware(device_manager *dvc, const std::string &vpl_path,
         const std::string &drives_c_path, const std::string &drives_e_path, const std::string &drives_z_path,
-        const std::string &rom_resident_path, device_firmware_choose_variant_callback choose_callback, std::atomic<int> &progress);
+        const std::string &rom_resident_path, device_firmware_choose_variant_callback choose_callback, progress_changed_callback progress_callback,
+        cancel_requested_callback cancel_cb);
 }

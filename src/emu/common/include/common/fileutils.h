@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <common/types.h>
+
 #include <atomic>
 #include <cstdint>
 #include <string>

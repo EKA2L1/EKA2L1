@@ -33,6 +33,10 @@ namespace eka2l1::config {
     public:
         std::uint32_t fps;
         std::uint32_t time_delay;
+
+        int screen_rotation;
+        float screen_scale;
+
         bool child_inherit_setting;
 
         explicit app_setting();

@@ -285,7 +285,7 @@ Java_com_github_eka2l1_emu_Emulator_getAppIcon(JNIEnv *env, jclass clazz, jlong 
     eka2l1::common::wo_buf_stream dest_stream(reinterpret_cast<std::uint8_t*>(data_to_write), icon_pair->first->header_.size_pixels.x
         * icon_pair->first->header_.size_pixels.y * 4);
 
-    if (!eka2l1::epoc::convert_to_argb8888(state->launcher->get_fbs_serv(), icon_pair->first, dest_stream)) {
+    if (!eka2l1::epoc::convert_to_argb8888(state->launcher->get_fbs_serv(), icon_pair->first, dest_stream, false)) {
         env->DeleteLocalRef(source_bitmap);
         env->DeleteLocalRef(jicons);
 
@@ -308,7 +308,7 @@ Java_com_github_eka2l1_emu_Emulator_getAppIcon(JNIEnv *env, jclass clazz, jlong 
         dest_stream = eka2l1::common::wo_buf_stream(reinterpret_cast<std::uint8_t*>(data_to_write),
             icon_pair->second->header_.size_pixels.x * icon_pair->second->header_.size_pixels.y * 4);
 
-        if (!eka2l1::epoc::convert_to_argb8888(state->launcher->get_fbs_serv(), icon_pair->second, dest_stream)) {
+        if (!eka2l1::epoc::convert_to_argb8888(state->launcher->get_fbs_serv(), icon_pair->second, dest_stream, true)) {
             env->DeleteLocalRef(mask_bitmap);
             return jicons;
         }

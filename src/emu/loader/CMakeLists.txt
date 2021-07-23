@@ -14,6 +14,7 @@ add_library(epocloader
         include/loader/sis_old.h
         include/loader/sis.h
         include/loader/spi.h
+        include/loader/svgb.h
         src/e32img.cpp
         src/fpsx.cpp
         src/gdr.cpp
@@ -27,6 +28,7 @@ add_library(epocloader
         src/sis_old.cpp
         src/sis.cpp
         src/spi.cpp
+        src/svgb.cpp
         )
 
 target_include_directories(epocloader PUBLIC include)

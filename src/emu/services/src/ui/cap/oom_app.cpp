@@ -293,6 +293,33 @@ namespace eka2l1 {
         get_sgc_server()->init(kern, sys->get_graphics_driver());
         eik->init(kern);
     }
+
+    std::optional<akn_running_app_info> get_akn_app_info_from_window_group(epoc::window_group *group) {
+        // AKN window group format: 2 hex digit shows status, null terminator, UID in hex
+        // null terminator, App name, null terminator
+        common::pystr16 the_name = group->name;
+        const std::vector<common::pystr16> the_name_parts = the_name.split(u'\0');
+
+        if (the_name_parts.size() >= 3) {
+            akn_running_app_info info;
+
+            info.app_name_ = the_name_parts[2].std_str();
+            info.app_uid_ = the_name_parts[1].as_int<std::uint32_t>(0, 16);
+            info.flags_ = the_name_parts[0].as_int<std::uint32_t>(0, 16);
+            info.screen_number_ = group->scr->number;
+            info.associated_ = group->client->get_client()->owning_process();
+
+            if ((info.app_uid_ != 0) && (info.flags_ != 0)) {
+                if (group->scr->focus == group) {
+                    info.flags_ |= akn_running_app_info::FLAG_CURRENTLY_PLAY;
+                }
+
+                return info;
+            }
+        }
+
+        return std::nullopt;
+    }
     
     std::vector<akn_running_app_info> get_akn_app_infos(window_server *winsrv) {
         std::vector<akn_running_app_info> infos;
@@ -301,26 +328,8 @@ namespace eka2l1 {
         while (scr) {
             epoc::window_group *group = scr->get_group_chain();
             while (group && (group->type == epoc::window_kind::group)) {
-                // AKN window group format: 2 hex digit shows status, null terminator, UID in hex
-                // null terminator, App name, null terminator
-                common::pystr16 the_name = group->name;
-                const std::vector<common::pystr16> the_name_parts = the_name.split(u'\0');
-
-                if (the_name_parts.size() >= 3) {
-                    akn_running_app_info info;
-                    info.app_name_ = the_name_parts[2].std_str();
-                    info.app_uid_ = the_name_parts[1].as_int<std::uint32_t>(0, 16);
-                    info.flags_ = the_name_parts[0].as_int<std::uint32_t>(0, 16);
-                    info.screen_number_ = scr->number;
-                    info.associated_ = group->client->get_client()->owning_process();
-
-                    if ((info.app_uid_ != 0) && (info.flags_ != 0)) {
-                        if (scr->focus == group) {
-                            info.flags_ |= akn_running_app_info::FLAG_CURRENTLY_PLAY;
-                        }
-    
-                        infos.push_back(info);
-                    }
+                if (std::optional<akn_running_app_info> info = get_akn_app_info_from_window_group(group)) {
+                    infos.push_back(info.value());
                 }
 
                 group = reinterpret_cast<epoc::window_group*>(group->sibling);

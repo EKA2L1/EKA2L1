@@ -34,6 +34,8 @@ namespace eka2l1 {
             virtual void start_polling() = 0;
             virtual void stop_polling() = 0;
 
+            virtual const char *button_to_string(const int button_code) = 0;
+
             /**
              * \brief Callback on controller button event.
              * 

@@ -24,6 +24,8 @@
 SETTING(fps, fps, 60)
 SETTING(time-delay, time_delay, 0)
 SETTING(should-child-inherit-setting, child_inherit_setting, true)
+SETTING(screen-rotation, screen_rotation, 0)
+SETTING(screen-scale, screen_scale, 1)
 
 #ifdef SETTING
 #undef SETTING

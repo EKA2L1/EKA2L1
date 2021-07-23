@@ -20,6 +20,8 @@
 #pragma once
 
 #include <common/vecx.h>
+#include <common/container.h>
+
 #include <drivers/graphics/common.h>
 #include <services/window/classes/config.h>
 #include <services/window/common.h>
@@ -27,6 +29,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <functional>
 #include <mutex>
 #include <vector>
 
@@ -49,6 +52,16 @@ namespace eka2l1::epoc {
 
     struct window;
     struct window_group;
+    struct screen;
+
+    enum focus_change_property {
+        focus_change_target,
+        focus_change_name
+    };
+
+    using focus_change_callback_handler = std::function<void(void*, window_group*, focus_change_property)>;
+    using screen_redraw_callback_handler = std::function<void(void*, screen*, bool)>;
+    using screen_mode_change_callback_handler = std::function<void(void*, screen*, const int)>;
 
     struct screen {
         int number;
@@ -67,6 +80,9 @@ namespace eka2l1::epoc {
         epoc::display_mode disp_mode;
 
         std::uint64_t last_vsync;
+        std::uint64_t last_fps_check;
+        std::uint64_t last_fps;
+        std::uint64_t frame_passed_per_sec;
         std::atomic<bool> last_texture_access;
 
         epoc::config::screen scr_config; ///< All mode of this screen
@@ -89,13 +105,26 @@ namespace eka2l1::epoc {
         std::map<std::int32_t, eka2l1::rect> pointer_areas_;
         eka2l1::vec2 pointer_cursor_pos_;
 
-        typedef void (*focus_change_callback_handler)(void *userdata, epoc::window_group *focus);
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
+        using screen_redraw_callback = std::pair<void*, screen_redraw_callback_handler>;
+        using screen_mode_change_callback = std::pair<void*, screen_mode_change_callback_handler>;
 
-        std::vector<focus_change_callback> focus_callbacks;
+        common::identity_container<focus_change_callback> focus_callbacks;
+        common::identity_container<screen_redraw_callback> screen_redraw_callbacks;
+        common::identity_container<screen_mode_change_callback> screen_mode_change_callbacks;
 
-        void fire_focus_change_callbacks();
+        void fire_focus_change_callbacks(const focus_change_property property);
+        void fire_screen_redraw_callbacks(const bool is_dsa);
+        void fire_screen_mode_change_callbacks(const int old_mode);
+
         std::size_t add_focus_change_callback(void *userdata, focus_change_callback_handler handler);
+        bool remove_focus_change_callback(const std::size_t cb);
+
+        std::size_t add_screen_redraw_callback(void *userdata, screen_redraw_callback_handler handler);
+        bool remove_screen_redraw_callback(const std::size_t cb);
+
+        std::size_t add_screen_mode_change_callback(void *userdata, screen_mode_change_callback_handler handler);
+        bool remove_screen_mode_change_callback(const std::size_t cb);
 
         void vsync(ntimer *timing, std::uint64_t &next_vsync_us);
 
