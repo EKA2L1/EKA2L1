@@ -87,5 +87,7 @@ namespace eka2l1::epoc::adapter {
         std::uint32_t unique_id(const std::size_t face_index) override {
             return INVALID_FONT_TF_UID;
         }
+
+        bool has_character(const std::size_t face_index, const std::int32_t codepoint) override;
     };
 }

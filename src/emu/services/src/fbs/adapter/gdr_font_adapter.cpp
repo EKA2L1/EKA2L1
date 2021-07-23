@@ -437,4 +437,8 @@ namespace eka2l1::epoc::adapter {
     void gdr_font_file_adapter::end_get_atlas(const std::int32_t handle) {
         pack_contexts_.remove(handle);
     }
+    
+    bool gdr_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint) {
+        return (get_character(face_index, codepoint) != nullptr);
+    }
 }

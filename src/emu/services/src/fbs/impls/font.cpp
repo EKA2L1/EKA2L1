@@ -929,6 +929,25 @@ namespace eka2l1 {
         ctx->complete(static_cast<int>(server<fbs_server>()->get_default_glyph_bitmap_type()));
     }
 
+    void fbscli::has_character(service::ipc_context *ctx) {
+        // Look for bitmap font with this same handle
+        const fbsfont *font = get_font_object(ctx);
+
+        if (!font) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::optional<std::int32_t> code = ctx->get_argument_value<std::int32_t>(1);
+        if (!code.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        const std::int32_t result = static_cast<std::int32_t>(font->of_info.adapter->has_character(font->of_info.idx, code.value()));
+        ctx->complete(result);
+    }
+
     fbsfont::~fbsfont() {
         // Free atlas + bitmap
         atlas.free(serv->get_graphics_driver());

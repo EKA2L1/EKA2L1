@@ -239,6 +239,10 @@ namespace eka2l1 {
             get_default_glyph_bitmap_type(ctx);
             break;
 
+        case fbs_has_character:
+            has_character(ctx);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_FBS, "Unhandled FBScli opcode 0x{:X}", ctx->msg->function);
             break;

@@ -113,6 +113,12 @@ namespace eka2l1::epoc::adapter {
          * @returns     0xFFFFFFFF on failure or unavailable
          */
         virtual std::uint32_t unique_id(const std::size_t face_index) = 0;
+
+        /**
+         * @brief       Check if a character exists.
+         * @param       codepoint         The Unicode codepoint of the character to check against.
+         */
+        virtual bool has_character(const std::size_t face_index, const std::int32_t codepoint) = 0;
     };
 
     enum class font_file_adapter_kind {

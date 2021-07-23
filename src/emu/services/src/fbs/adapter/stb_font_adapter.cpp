@@ -350,4 +350,15 @@ namespace eka2l1::epoc::adapter {
 
         return true;
     }
+
+    bool stb_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint) {
+        int off = 0;
+        stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
+
+        if (!info) {
+            return false;
+        }
+
+        return (stbtt_FindGlyphIndex(info, codepoint) != 0);
+    }
 }
