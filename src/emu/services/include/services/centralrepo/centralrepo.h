@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/centralrepo/repo.h>
 #include <kernel/server.h>
+#include <services/centralrepo/repo.h>
 
 #include <atomic>
 #include <map>

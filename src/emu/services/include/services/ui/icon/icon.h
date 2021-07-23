@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/ui/icon/common.h>
 #include <services/faker.h>
 #include <services/framework.h>
+#include <services/ui/icon/common.h>
 
 #include <memory>
 

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/internet/protocols/udp/udp.h>
 #include <common/log.h>
+#include <services/internet/protocols/udp/udp.h>
 
 namespace eka2l1::epoc::internet {
     udp_host_resolver::udp_host_resolver(udp_protocol *papa)
@@ -33,7 +33,7 @@ namespace eka2l1::epoc::internet {
     bool udp_host_resolver::host_name(const std::u16string &name) {
         return true;
     }
-    
+
     bool udp_host_resolver::get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) {
         LOG_WARN(SERVICE_BLUETOOTH, "Get host by address stubbed to not found");
         return false;

@@ -100,7 +100,7 @@ namespace eka2l1::common {
             if (buf - len_back < org) {
                 return false;
             }
-            
+
             buf -= len_back;
             return true;
         }

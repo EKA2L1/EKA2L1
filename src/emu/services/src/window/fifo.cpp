@@ -139,11 +139,11 @@ namespace eka2l1::epoc {
                 limit--;
             }
         }
-        
+
         redraw_event_full full_event;
         full_event.owner_ = owner;
         full_event.evt_ = evt;
-        
+
         std::uint32_t id = queue_event_dont_care(full_event);
         q_.back().pri = pri;
 

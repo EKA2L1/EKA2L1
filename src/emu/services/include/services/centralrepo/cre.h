@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <services/centralrepo/repo.h>
 #include <memory>
+#include <services/centralrepo/repo.h>
 
 namespace eka2l1 {
     namespace common {

@@ -441,7 +441,7 @@ namespace eka2l1::common::armgen {
             std::int32_t offset = static_cast<std::uint32_t>(pool.loc - reinterpret_cast<intptr_t>(pool.ldr_address) - 8);
 
             // Backpatch the LDR
-            *reinterpret_cast<std::uint32_t*>(pool.ldr_address) |= (offset >= 0) << 23 | abs(offset);
+            *reinterpret_cast<std::uint32_t *>(pool.ldr_address) |= (offset >= 0) << 23 | abs(offset);
         }
 
         // TODO: Save a copy of previous pools in case they are still in range.
@@ -1098,7 +1098,7 @@ namespace eka2l1::common::armgen {
     void armx_emitter::SVC(operand2 op) {
         write32(condition | (0x0F << 24) | op.Imm24());
     }
-    
+
     void armx_emitter::LDRLIT(arm_reg dest, std::uint32_t offset, bool Add) {
         write32(condition | 0x05 << 24 | Add << 23 | 0x1F << 16 | dest << 12 | offset);
     }
@@ -1744,8 +1744,10 @@ namespace eka2l1::common::armgen {
             }
         }
         // Moving NEON registers
-        int SrcSize = Src < D0 ? 1 : Src < Q0 ? 2 : 4;
-        int DestSize = Dest < D0 ? 1 : Dest < Q0 ? 2 : 4;
+        int SrcSize = Src < D0 ? 1 : Src < Q0 ? 2
+                                              : 4;
+        int DestSize = Dest < D0 ? 1 : Dest < Q0 ? 2
+                                                 : 4;
         bool Single = DestSize == 1;
         bool Quad = DestSize == 4;
 

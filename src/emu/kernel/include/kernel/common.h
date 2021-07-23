@@ -67,11 +67,11 @@ namespace eka2l1::kernel {
         panic = 2,
         pending = 3
     };
-    
+
     enum hal_data_eka1 {
-        #define HAL_ENTRY(short_name, detail_name, ord, ord_old) hal_data_eka1_##short_name = ord_old,
-        #include <kernel/hal.def>
-        #undef HAL_ENTRY
+#define HAL_ENTRY(short_name, detail_name, ord, ord_old) hal_data_eka1_##short_name = ord_old,
+#include <kernel/hal.def>
+#undef HAL_ENTRY
     };
 
     struct epoc9_thread_create_info {
@@ -110,9 +110,9 @@ namespace eka2l1::kernel {
         };
 
         std::int32_t state_[TRAP_MAX_STATE];
-        address next_;                ///< Next trap address.
-        address result_;              ///< Trap result code pointer.
-        address trap_handler_;              ///< Pointer to trap handler.
+        address next_; ///< Next trap address.
+        address result_; ///< Trap result code pointer.
+        address trap_handler_; ///< Pointer to trap handler.
     };
 
     struct char_set {
@@ -141,7 +141,7 @@ namespace eka2l1::kernel {
         kernel_process_isolation_ipc_fail,
         creator_policy_check_fail
     };
-    
+
     struct plat_sec_diagnostic {
         plat_sec_type type_;
         std::uint32_t args_[2];

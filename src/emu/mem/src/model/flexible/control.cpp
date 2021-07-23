@@ -26,7 +26,7 @@ namespace eka2l1::mem::flexible {
         : control_base(monitor, alloc, conf, psize_bits, mem_map_old)
         , rom_sec_(rom, global_data, page_size())
         , code_sec_(ram_code_addr, dll_static_data, page_size())
-        , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size())  {
+        , kernel_mapping_sec_(kernel_mapping, kernel_mapping_end, page_size()) {
         // Instantiate the page directory manager
         dir_mngr_ = std::make_unique<page_directory_manager>(MAX_PAGE_DIR_ALLOW);
         chunk_mngr_ = std::make_unique<chunk_manager>();
@@ -37,14 +37,13 @@ namespace eka2l1::mem::flexible {
 
     control_flexible::~control_flexible() {
     }
-    
 
     mmu_base *control_flexible::get_or_create_mmu(arm::core *cc) {
-        for (auto &inst: mmus_) {
+        for (auto &inst : mmus_) {
             if (!inst) {
-                inst = std::make_unique<mmu_flexible>(reinterpret_cast<control_base*>(this),
+                inst = std::make_unique<mmu_flexible>(reinterpret_cast<control_base *>(this),
                     cc, conf_);
-                
+
                 return inst.get();
             } else {
                 if (inst->cpu_ == cc) {
@@ -53,7 +52,7 @@ namespace eka2l1::mem::flexible {
             }
         }
 
-        auto new_inst = std::make_unique<mmu_flexible>(reinterpret_cast<control_base*>(this),
+        auto new_inst = std::make_unique<mmu_flexible>(reinterpret_cast<control_base *>(this),
             cc, conf_);
 
         mmus_.push_back(std::move(new_inst));
@@ -81,7 +80,7 @@ namespace eka2l1::mem::flexible {
 
         return target_dir->get_pointer(addr);
     }
-    
+
     page_info *control_flexible::get_page_info(const asid id, const vm_address addr) {
         if ((id <= 0) || (addr >= (mem_map_old_ ? rom_eka1 : rom))) {
             // Directory của kernel

@@ -112,7 +112,7 @@ namespace eka2l1::kernel {
         if (msgs_.empty()) {
             return false;
         }
-        
+
         if (msgs_.size() == max_length_) {
             // Notify all available data
             for (auto &notify : free_notifies_) {

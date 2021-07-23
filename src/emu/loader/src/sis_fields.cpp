@@ -367,7 +367,7 @@ namespace eka2l1 {
             controller.raw_data.resize(controller.len_low | (static_cast<std::uint64_t>(controller.len_high) << 32));
             const std::size_t current_pos = stream->tellg();
 
-            stream->read(reinterpret_cast<char*>(controller.raw_data.data()), controller.raw_data.size());
+            stream->read(reinterpret_cast<char *>(controller.raw_data.data()), controller.raw_data.size());
             stream->seekg(current_pos, std::ios_base::beg);
 
             controller.info = parse_info();

@@ -23,8 +23,8 @@
 #include <services/window/screen.h>
 #include <services/window/window.h>
 
-#include <common/time.h>
 #include <common/rgb.h>
+#include <common/time.h>
 #include <drivers/itc.h>
 
 #include <kernel/kernel.h>
@@ -145,7 +145,7 @@ namespace eka2l1::epoc {
         if (need_bind) {
             cmd_builder->bind_bitmap(screen_texture);
         }
-        
+
         cmd_builder->set_blend_mode(true);
         cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
@@ -293,11 +293,11 @@ namespace eka2l1::epoc {
 
         return (new_focus_screen ? alternative_focus : focus);
     }
-    
+
     epoc::window_group *screen::get_group_chain() {
-        return reinterpret_cast<epoc::window_group*>(root->child);
+        return reinterpret_cast<epoc::window_group *>(root->child);
     }
-    
+
     void screen::fire_focus_change_callbacks(const focus_change_property property) {
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
@@ -308,14 +308,14 @@ namespace eka2l1::epoc {
     }
 
     void screen::fire_screen_redraw_callbacks(const bool is_dsa) {
-        for (auto &callback: screen_redraw_callbacks) {
+        for (auto &callback : screen_redraw_callbacks) {
             if (callback.second)
                 callback.second(callback.first, this, is_dsa);
         }
     }
 
     void screen::fire_screen_mode_change_callbacks(const int old_mode) {
-        for (auto &callback: screen_mode_change_callbacks) {
+        for (auto &callback : screen_mode_change_callbacks) {
             if (callback.second)
                 callback.second(callback.first, this, old_mode);
         }
@@ -454,6 +454,6 @@ namespace eka2l1::epoc {
     }
 
     std::uint8_t *screen::screen_buffer_ptr() {
-        return reinterpret_cast<std::uint8_t*>(screen_buffer_chunk->host_base()) + sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
+        return reinterpret_cast<std::uint8_t *>(screen_buffer_chunk->host_base()) + sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
     }
 }

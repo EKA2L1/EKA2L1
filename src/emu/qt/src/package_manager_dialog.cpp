@@ -17,16 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qt/package_manager_dialog.h>
 #include "ui_package_manager_dialog.h"
+#include <qt/package_manager_dialog.h>
 
-#include <package/manager.h>
 #include <loader/sis_fields.h>
+#include <package/manager.h>
 
+#include <QGridLayout>
+#include <QListWidget>
 #include <QMenu>
 #include <QMessageBox>
-#include <QListWidget>
-#include <QGridLayout>
 
 #include <common/log.h>
 
@@ -36,11 +36,10 @@ package_manager_table_info_item::package_manager_table_info_item(const std::uint
     , index_(index) {
 }
 
-package_manager_dialog::package_manager_dialog(QWidget *parent, eka2l1::manager::packages *packages) :
-    QDialog(parent),
-    packages_(packages),
-    ui_(new Ui::package_manager_dialog)
-{
+package_manager_dialog::package_manager_dialog(QWidget *parent, eka2l1::manager::packages *packages)
+    : QDialog(parent)
+    , packages_(packages)
+    , ui_(new Ui::package_manager_dialog) {
     ui_->setupUi(this);
     refresh_package_manager_items();
 
@@ -53,8 +52,7 @@ package_manager_dialog::package_manager_dialog(QWidget *parent, eka2l1::manager:
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-package_manager_dialog::~package_manager_dialog()
-{
+package_manager_dialog::~package_manager_dialog() {
     delete ui_;
 }
 
@@ -63,7 +61,7 @@ void package_manager_dialog::refresh_package_manager_items() {
 
     int current_row = 0;
 
-    for (auto &package: *packages_) {
+    for (auto &package : *packages_) {
         if (package.second.is_removable) {
             ui_->package_list_widget->insertRow(ui_->package_list_widget->rowCount());
 
@@ -111,7 +109,7 @@ void package_manager_dialog::on_search_bar_edit(const QString &new_text) {
 void package_manager_dialog::on_custom_menu_requested(const QPoint &pos) {
     QTableWidgetItem *item = ui_->package_list_widget->itemAt(pos);
     if (item) {
-        current_item_ = reinterpret_cast<package_manager_table_info_item*>(ui_->package_list_widget->item(item->row(), 0));
+        current_item_ = reinterpret_cast<package_manager_table_info_item *>(ui_->package_list_widget->item(item->row(), 0));
 
         QMenu the_menu;
         the_menu.addAction(ui_->action_package_uninstall);

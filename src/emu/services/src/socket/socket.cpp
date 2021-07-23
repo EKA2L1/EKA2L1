@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/socket/socket.h>
 #include <services/socket/server.h>
+#include <services/socket/socket.h>
 
 #include <utils/err.h>
 
@@ -30,7 +30,7 @@ namespace eka2l1::epoc::socket {
     }
 
     bool socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
-        std::uint8_t *buffer, const std::size_t avail_size) { 
+        std::uint8_t *buffer, const std::size_t avail_size) {
         LOG_ERROR(SERVICE_BLUETOOTH, "Unhandled bluetooth option family {} (id {})", option_family, option_id);
         return false;
     }
@@ -73,7 +73,7 @@ namespace eka2l1::epoc::socket {
                 return;
             }
 
-            dest_buffer = reinterpret_cast<std::uint8_t*>(data_des_real->get_pointer(caller));
+            dest_buffer = reinterpret_cast<std::uint8_t *>(data_des_real->get_pointer(caller));
             custom_buf = data_des_real;
         } else {
             option_name = ctx->get_argument_value<std::uint32_t>(0);
@@ -127,7 +127,7 @@ namespace eka2l1::epoc::socket {
 
             epoc::desc8 *data_des_real = desc_data->data_.get(caller);
             if (data_des_real) {
-                source_buffer = reinterpret_cast<std::uint8_t*>(data_des_real->get_pointer(caller));
+                source_buffer = reinterpret_cast<std::uint8_t *>(data_des_real->get_pointer(caller));
             }
         } else {
             option_name = ctx->get_argument_value<std::uint32_t>(0);
@@ -152,12 +152,12 @@ namespace eka2l1::epoc::socket {
 
         ctx->complete(epoc::error_none);
     }
-    
+
     void socket_socket::close(service::ipc_context *ctx) {
         parent_->subsessions_.remove(id_);
         ctx->complete(epoc::error_none);
     }
-    
+
     void socket_socket::dispatch(service::ipc_context *ctx) {
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
@@ -185,7 +185,7 @@ namespace eka2l1::epoc::socket {
             case socket_so_close:
                 close(ctx);
                 return;
-                
+
             default:
                 break;
             }

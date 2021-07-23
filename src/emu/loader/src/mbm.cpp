@@ -95,7 +95,7 @@ namespace eka2l1::loader {
                     return false;
             }
         } else {
-            for (const std::size_t i: index_to_loads) {
+            for (const std::size_t i : index_to_loads) {
                 if (!do_load_header(i))
                     return false;
             }

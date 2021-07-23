@@ -21,12 +21,12 @@
 
 #include <drivers/input/emu_controller.h>
 
-#include <map>
-#include <vector>
-#include <thread>
-#include <memory>
-#include <atomic>
 #include <GLFW/glfw3.h>
+#include <atomic>
+#include <map>
+#include <memory>
+#include <thread>
+#include <vector>
 
 namespace eka2l1 {
     namespace drivers {

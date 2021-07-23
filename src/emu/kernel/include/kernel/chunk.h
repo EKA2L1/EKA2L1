@@ -23,8 +23,8 @@
 #include <kernel/kernel_obj.h>
 #include <mem/ptr.h>
 
-#include <mem/mem.h>
 #include <mem/chunk.h>
+#include <mem/mem.h>
 
 #include <common/types.h>
 

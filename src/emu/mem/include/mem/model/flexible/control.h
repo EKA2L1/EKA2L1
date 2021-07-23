@@ -19,17 +19,17 @@
 
 #pragma once
 
+#include <mem/control.h>
 #include <mem/model/flexible/addrspace.h>
 #include <mem/model/flexible/chnkmngr.h>
 #include <mem/model/flexible/dirmngr.h>
 #include <mem/model/flexible/mmu.h>
 #include <mem/model/section.h>
-#include <mem/control.h>
 
 #include <memory>
 
 namespace eka2l1::mem::flexible {
-    struct control_flexible: public control_base {
+    struct control_flexible : public control_base {
     private:
         friend struct mmu_flexible;
         friend struct memory_object;
@@ -41,9 +41,9 @@ namespace eka2l1::mem::flexible {
         std::unique_ptr<chunk_manager> chunk_mngr_;
         std::unique_ptr<address_space> kern_addr_space_;
 
-        linear_section  rom_sec_;                       ///< ROM linear section.
-        linear_section  kernel_mapping_sec_;            ///< Kernel mapping linear section.
-        linear_section  code_sec_;                      ///< Code section.
+        linear_section rom_sec_; ///< ROM linear section.
+        linear_section kernel_mapping_sec_; ///< Kernel mapping linear section.
+        linear_section code_sec_; ///< Code section.
 
         std::vector<std::unique_ptr<mmu_flexible>> mmus_;
 
@@ -70,7 +70,7 @@ namespace eka2l1::mem::flexible {
          * \returns An ASID identify the address space. -1 if a new one can't be create.
          */
         asid rollover_fresh_addr_space() override;
-        
+
         /**
          * \brief Assign page tables at linear base address to page directories.
          */

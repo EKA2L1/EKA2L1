@@ -17,12 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <loader/rofs.h>
 #include <common/buffer.h>
 #include <common/log.h>
+#include <loader/rofs.h>
 
-#include <common/path.h>
 #include <common/cvt.h>
+#include <common/path.h>
 
 namespace eka2l1::loader {
     bool rofs_entry::read(common::ro_stream &stream, const int version) {
@@ -144,7 +144,7 @@ namespace eka2l1::loader {
 
             buf.resize(size_to_take);
 
-            const std::uint64_t amount_read = stream.read(buf.data(), size_to_take) ;
+            const std::uint64_t amount_read = stream.read(buf.data(), size_to_take);
             if (amount_read < size_to_take) {
                 LOG_WARN(LOADER, "Can't read {} bytes, skipping", size_to_take - amount_read);
             }
@@ -193,15 +193,14 @@ namespace eka2l1::loader {
             }
         }
 
-        for (auto &subdir_ent: dir_var.subdirs_) {
+        for (auto &subdir_ent : dir_var.subdirs_) {
             std::string subdir_name = common::ucs2_to_utf8(subdir_ent.filename_);
             if (common::is_platform_case_sensitive()) {
                 subdir_name = common::lowercase_string(subdir_name);
             }
 
             if (!extract_directory(stream, eka2l1::add_path(base, subdir_name + eka2l1::get_separator()),
-                version, file_offset, subdir_ent.file_addr_, progress_cb, cancel_cb, max_pos
-                                   )) {
+                    version, file_offset, subdir_ent.file_addr_, progress_cb, cancel_cb, max_pos)) {
                 return false;
             }
         }
@@ -218,7 +217,7 @@ namespace eka2l1::loader {
             return true;
         return false;
     }
-    
+
     bool dump_rofs_system(common::ro_stream &stream, const std::string &path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         rofs_header rheader;
         if (stream.read(&rheader, sizeof(rofs_header)) != sizeof(rofs_header)) {

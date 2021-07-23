@@ -76,8 +76,8 @@ namespace eka2l1::epoc {
         std::vector<epoc::event> pointer_buffer_;
 
         std::uint64_t last_draw_;
-		std::uint64_t last_fps_sync_;
-		std::uint64_t fps_count_;
+        std::uint64_t last_fps_sync_;
+        std::uint64_t fps_count_;
 
         void invalidate(const eka2l1::rect &irect);
         void wipeout();

@@ -70,7 +70,7 @@ namespace eka2l1 {
         fill_drive_info(info.get(), io_drive.has_value() ? &io_drive.value() : nullptr, client_version());
 
         ctx->write_data_to_descriptor_argument<drive_number>(0, drv);
-        ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t*>(info.get()), info_variant_size, nullptr, true);
+        ctx->write_data_to_descriptor_argument(1, reinterpret_cast<std::uint8_t *>(info.get()), info_variant_size, nullptr, true);
 
         ctx->complete(epoc::error_none);
     }
@@ -128,9 +128,8 @@ namespace eka2l1 {
             info->media_att |= epoc::fs::media_att_write_protected;
         }
 
-        if (ver.major >= 2) {    
-            reinterpret_cast<epoc::fs::drive_info_v2*>(info)->connection_bus_type =
-                epoc::fs::connection_bus_internal;
+        if (ver.major >= 2) {
+            reinterpret_cast<epoc::fs::drive_info_v2 *>(info)->connection_bus_type = epoc::fs::connection_bus_internal;
         }
     }
 
@@ -147,7 +146,7 @@ namespace eka2l1 {
         info = std::move(get_drive_info_struct(client_version(), info_variant_size));
         fill_drive_info(info.get(), io_drive.has_value() ? &io_drive.value() : nullptr, client_version());
 
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t*>(info.get()), info_variant_size,
+        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(info.get()), info_variant_size,
             nullptr, true);
 
         ctx->complete(epoc::error_none);
@@ -230,19 +229,19 @@ namespace eka2l1 {
 
     void fs_server_client::volume(service::ipc_context *ctx) {
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
-        
+
         if (static_cast<std::uint32_t>(drv) == DEFAULT_DRIVE_NUM) {
             drv = static_cast<drive_number>(server<fs_server>()->system_drive_prop->get_int());
         }
-        
+
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(static_cast<drive_number>(drv));
 
-#define VOLUME_INFO_GETTERS(info_name)                                                      \
-    LOG_WARN(SERVICE_EFSRV, "Volume size stubbed with 1GB");                                               \
-    fill_drive_info(reinterpret_cast<epoc::fs::drive_info_v1*>(&info_name.drv_info),        \
-        io_drive.has_value() ? &io_drive.value() : nullptr, cli_ver);                       \
-    info_name.uid = drv;                                                                    \
-    info_name.size = common::GB(1);                                                         \
+#define VOLUME_INFO_GETTERS(info_name)                                                \
+    LOG_WARN(SERVICE_EFSRV, "Volume size stubbed with 1GB");                          \
+    fill_drive_info(reinterpret_cast<epoc::fs::drive_info_v1 *>(&info_name.drv_info), \
+        io_drive.has_value() ? &io_drive.value() : nullptr, cli_ver);                 \
+    info_name.uid = drv;                                                              \
+    info_name.size = common::GB(1);                                                   \
     info_name.free = common::GB(1);
 
         const epoc::version cli_ver = client_version();

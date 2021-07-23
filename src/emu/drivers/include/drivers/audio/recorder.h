@@ -22,7 +22,7 @@
 #include <drivers/audio/player.h>
 
 namespace eka2l1::drivers {
-    class recorder: public player {
+    class recorder : public player {
     public:
     };
 }

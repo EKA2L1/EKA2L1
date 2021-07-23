@@ -54,7 +54,7 @@ namespace eka2l1::common {
 
         SetThreadPriority(handle, windows_priority);
     }
-    
+
 #if defined(_MSC_VER)
     static constexpr const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
@@ -120,7 +120,7 @@ namespace eka2l1::common {
         pthread_setname_np(pthread_self(), thread_name);
 #endif
     }
-        
+
     void set_thread_priority(const thread_priority pri) {
         pthread_t this_thread = pthread_self();
 

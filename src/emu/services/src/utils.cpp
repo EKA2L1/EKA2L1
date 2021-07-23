@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/utils.h>
 #include <services/context.h>
+#include <services/utils.h>
 
 #include <kernel/kernel.h>
 

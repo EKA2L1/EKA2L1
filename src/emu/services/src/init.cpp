@@ -20,8 +20,6 @@
 
 #include <common/platform.h>
 
-#include <services/ui/icon/icon.h>
-#include <services/ui/skin/server.h>
 #include <services/accessory/accessory.h>
 #include <services/alarm/alarm.h>
 #include <services/applist/applist.h>
@@ -33,10 +31,8 @@
 #include <services/cdl/cdl.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/comm/comm.h>
-#include <services/internet/connmonitor.h>
-#include <services/internet/nifman.h>
-#include <services/drm/notifier/notifier.h>
 #include <services/drm/helper.h>
+#include <services/drm/notifier/notifier.h>
 #include <services/drm/rights.h>
 #include <services/ecom/ecom.h>
 #include <services/etel/etel.h>
@@ -45,6 +41,8 @@
 #include <services/fs/fs.h>
 #include <services/hwrm/hwrm.h>
 #include <services/install/install.h>
+#include <services/internet/connmonitor.h>
+#include <services/internet/nifman.h>
 #include <services/loader/loader.h>
 #include <services/msv/msv.h>
 #include <services/notifier/notifier.h>
@@ -58,19 +56,20 @@
 #include <services/sysagt/sysagt.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/ui/eikappui.h>
+#include <services/ui/icon/icon.h>
+#include <services/ui/skin/server.h>
 #include <services/ui/view/view.h>
 #include <services/uiss/uiss.h>
 #include <services/unipertar/unipertar.h>
 #include <services/window/window.h>
 
-#include <system/epoc.h>
 #include <services/init.h>
+#include <system/epoc.h>
 #include <utils/locale.h>
 #include <utils/system.h>
 
 #include <config/config.h>
 #include <system/devices.h>
-
 
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
@@ -247,7 +246,7 @@ namespace eka2l1 {
             {
                 std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
                 std::unique_ptr<service::server> aud_serv = std::make_unique<mmf_audio_server>(sys,
-                    reinterpret_cast<mmf_dev_server*>(dev_serv.get()));
+                    reinterpret_cast<mmf_dev_server *>(dev_serv.get()));
 
                 kernel_system *kern = sys->get_kernel_system();
                 kern->add_custom_server(dev_serv);

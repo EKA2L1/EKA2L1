@@ -35,7 +35,7 @@ namespace eka2l1 {
 
     btman_server::btman_server(eka2l1::system *sys)
         : service::typical_server(sys, get_btman_server_name_by_epocver(sys->get_symbian_version_use())) {
-        socket_server *ssock = reinterpret_cast<socket_server*>(kern->get_by_name<service::server>(
+        socket_server *ssock = reinterpret_cast<socket_server *>(kern->get_by_name<service::server>(
             get_socket_server_name_by_epocver(kern->get_epoc_version())));
 
         if (ssock) {

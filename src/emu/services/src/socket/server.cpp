@@ -23,8 +23,8 @@
 #include <services/socket/agent/genconn.h>
 #include <services/socket/connection.h>
 #include <services/socket/host.h>
-#include <services/socket/socket.h>
 #include <services/socket/server.h>
+#include <services/socket/socket.h>
 #include <system/epoc.h>
 
 #include <utils/err.h>
@@ -63,7 +63,7 @@ namespace eka2l1 {
     }
 
     epoc::socket::protocol *socket_server::find_protocol_by_name(const std::u16string &name) {
-        for (auto &pr: protocols_) {
+        for (auto &pr : protocols_) {
             if (pr.second->name() == name) {
                 return pr.second.get();
             }
@@ -97,7 +97,7 @@ namespace eka2l1 {
     }
 
     bool socket_server::add_agent(std::unique_ptr<epoc::socket::connect_agent> &ag) {
-        for (const auto &agt: agents_) {
+        for (const auto &agt : agents_) {
             if (agt->agent_name() == ag->agent_name()) {
                 return false;
             }
@@ -175,7 +175,7 @@ namespace eka2l1 {
                 return;
             }
         }
-    
+
         LOG_ERROR(SERVICE_ESOCK, "Unimplemented opcode for Socket server 0x{:X}", ctx->msg->function);
     }
 
@@ -187,7 +187,7 @@ namespace eka2l1 {
             static_cast<std::uint32_t>(name.length()));
         ctx->complete(epoc::error_none);
     }
-    
+
     void socket_client_session::cn_get_long_des_setting(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_ESOCK, "CnGetLongDesSetting stubbed");
         ctx->complete(epoc::error_none);
@@ -260,7 +260,7 @@ namespace eka2l1 {
                 return;
             }
 
-            conn = reinterpret_cast<epoc::socket::socket_connection_proxy*>(inst->get());
+            conn = reinterpret_cast<epoc::socket::socket_connection_proxy *>(inst->get());
         }
 
         // Try to instantiate the host resolver
@@ -314,7 +314,7 @@ namespace eka2l1 {
 
             return;
         }
-        
+
         // Create new session
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 

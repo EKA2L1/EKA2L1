@@ -14,37 +14,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="50"/>
+        <location filename="../src/aboutdialog.cpp" line="49"/>
         <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="53"/>
+        <location filename="../src/aboutdialog.cpp" line="52"/>
         <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="64"/>
+        <location filename="../src/aboutdialog.cpp" line="63"/>
         <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="78"/>
+        <location filename="../src/aboutdialog.cpp" line="77"/>
         <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="92"/>
+        <location filename="../src/aboutdialog.cpp" line="91"/>
         <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="106"/>
+        <location filename="../src/aboutdialog.cpp" line="105"/>
         <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="120"/>
+        <location filename="../src/aboutdialog.cpp" line="119"/>
         <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -60,7 +60,7 @@
 <context>
     <name>applist_widget</name>
     <message>
-        <location filename="../src/applistwidget.cpp" line="335"/>
+        <location filename="../src/applistwidget.cpp" line="333"/>
         <source>&lt;br&gt;App UID: 0x%1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -105,107 +105,107 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="117"/>
+        <location filename="../src/device_install_dialog.cpp" line="115"/>
         <source>Choose the firmware variant to install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="199"/>
+        <location filename="../src/device_install_dialog.cpp" line="197"/>
         <source>Installation completed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="200"/>
+        <location filename="../src/device_install_dialog.cpp" line="198"/>
         <source>Device %1 (%2) has been successfully installed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="208"/>
+        <location filename="../src/device_install_dialog.cpp" line="206"/>
         <source>The device has already been installed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="212"/>
+        <location filename="../src/device_install_dialog.cpp" line="210"/>
         <source>Fail to determine product information from the dump!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="216"/>
+        <location filename="../src/device_install_dialog.cpp" line="214"/>
         <source>One of the FPSX files provided in the firmware is corrupted!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="220"/>
+        <location filename="../src/device_install_dialog.cpp" line="218"/>
         <source>An unknown error has occured. Please contact the developers with your log!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="224"/>
+        <location filename="../src/device_install_dialog.cpp" line="222"/>
         <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="228"/>
+        <location filename="../src/device_install_dialog.cpp" line="226"/>
         <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="232"/>
+        <location filename="../src/device_install_dialog.cpp" line="230"/>
         <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="236"/>
+        <location filename="../src/device_install_dialog.cpp" line="234"/>
         <source>Fail to copy ROM file!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="240"/>
+        <location filename="../src/device_install_dialog.cpp" line="238"/>
         <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="244"/>
+        <location filename="../src/device_install_dialog.cpp" line="242"/>
         <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="248"/>
+        <location filename="../src/device_install_dialog.cpp" line="246"/>
         <source>The provided VPL file is invalid. Please check your firmware files again!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="256"/>
+        <location filename="../src/device_install_dialog.cpp" line="254"/>
         <source>Installation failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="265"/>
+        <location filename="../src/device_install_dialog.cpp" line="263"/>
         <source>Choose VPL file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="266"/>
+        <location filename="../src/device_install_dialog.cpp" line="264"/>
         <source>VPL file (*.vpl)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="275"/>
+        <location filename="../src/device_install_dialog.cpp" line="273"/>
         <source>Choose the ROM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="276"/>
+        <location filename="../src/device_install_dialog.cpp" line="274"/>
         <source>ROM file (*.rom *.ROM)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="300"/>
+        <location filename="../src/device_install_dialog.cpp" line="298"/>
         <source>Choose the RPKG</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/device_install_dialog.cpp" line="301"/>
+        <location filename="../src/device_install_dialog.cpp" line="299"/>
         <source>RPKG file (*.rpkg *.RPKG)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -328,159 +328,159 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="233"/>
+        <location filename="../src/mainwindow.cpp" line="231"/>
         <source>Clear menu</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="294"/>
+        <location filename="../src/mainwindow.cpp" line="293"/>
         <source>Touchscreen disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="294"/>
+        <location filename="../src/mainwindow.cpp" line="293"/>
         <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="295"/>
-        <location filename="../src/mainwindow.cpp" line="354"/>
+        <location filename="../src/mainwindow.cpp" line="294"/>
+        <location filename="../src/mainwindow.cpp" line="355"/>
         <source>Don&apos;t show this again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="353"/>
+        <location filename="../src/mainwindow.cpp" line="354"/>
         <source>No device installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="353"/>
+        <location filename="../src/mainwindow.cpp" line="354"/>
         <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="630"/>
+        <location filename="../src/mainwindow.cpp" line="632"/>
         <source>Extracting game dump files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="654"/>
+        <location filename="../src/mainwindow.cpp" line="653"/>
         <source>Mounting aborted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="659"/>
+        <location filename="../src/mainwindow.cpp" line="658"/>
         <source>The ZIP file is corrupted!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="664"/>
+        <location filename="../src/mainwindow.cpp" line="663"/>
         <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="670"/>
+        <location filename="../src/mainwindow.cpp" line="669"/>
         <source>The choosen file is not a ZIP file!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="684"/>
+        <location filename="../src/mainwindow.cpp" line="683"/>
         <source>Game card problem</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="684"/>
+        <location filename="../src/mainwindow.cpp" line="683"/>
         <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="688"/>
+        <location filename="../src/mainwindow.cpp" line="687"/>
         <source>Game card dump folder correction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="688"/>
+        <location filename="../src/mainwindow.cpp" line="687"/>
         <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="744"/>
+        <location filename="../src/mainwindow.cpp" line="743"/>
         <source>Choose the game card dump folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="764"/>
+        <location filename="../src/mainwindow.cpp" line="763"/>
         <source>Choose the game card zip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="838"/>
+        <location filename="../src/mainwindow.cpp" line="837"/>
         <source>Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="856"/>
+        <location filename="../src/mainwindow.cpp" line="855"/>
         <source>Choose a language for the package</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="627"/>
-        <location filename="../src/mainwindow.cpp" line="874"/>
+        <location filename="../src/mainwindow.cpp" line="629"/>
+        <location filename="../src/mainwindow.cpp" line="873"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="877"/>
+        <location filename="../src/mainwindow.cpp" line="876"/>
         <source>Installing package progress</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="904"/>
+        <location filename="../src/mainwindow.cpp" line="900"/>
         <source>Installation aborted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="904"/>
+        <location filename="../src/mainwindow.cpp" line="900"/>
         <source>The installation has been canceled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="909"/>
+        <location filename="../src/mainwindow.cpp" line="905"/>
         <source>Installation failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="909"/>
+        <location filename="../src/mainwindow.cpp" line="905"/>
         <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="915"/>
+        <location filename="../src/mainwindow.cpp" line="912"/>
         <source>Installation success</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="915"/>
+        <location filename="../src/mainwindow.cpp" line="912"/>
         <source>Package has been successfully installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="936"/>
+        <location filename="../src/mainwindow.cpp" line="933"/>
         <source>Choose the file to install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="936"/>
+        <location filename="../src/mainwindow.cpp" line="933"/>
         <source>SIS file (*.sis *.sisx)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1095"/>
+        <location filename="../src/mainwindow.cpp" line="1092"/>
         <source>Load theme failed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1095"/>
+        <location filename="../src/mainwindow.cpp" line="1092"/>
         <source>The Dark theme&apos;s style file can&apos;t be found!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -528,27 +528,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/package_manager_dialog.cpp" line="128"/>
+        <location filename="../src/package_manager_dialog.cpp" line="126"/>
         <source>Uninstall failed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/package_manager_dialog.cpp" line="128"/>
+        <location filename="../src/package_manager_dialog.cpp" line="126"/>
         <source>Failed to uninstall the package</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/package_manager_dialog.cpp" line="144"/>
+        <location filename="../src/package_manager_dialog.cpp" line="142"/>
         <source>%1&apos;s files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/package_manager_dialog.cpp" line="153"/>
+        <location filename="../src/package_manager_dialog.cpp" line="151"/>
         <source>Installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/package_manager_dialog.cpp" line="157"/>
+        <location filename="../src/package_manager_dialog.cpp" line="155"/>
         <source>Delete on uninstall</source>
         <translation type="unfinished"></translation>
     </message>
@@ -954,174 +954,174 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="399"/>
+        <location filename="../src/settings_dialog.cpp" line="397"/>
         <source>Choose the data folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="401"/>
-        <location filename="../src/settings_dialog.cpp" line="1076"/>
-        <location filename="../src/settings_dialog.cpp" line="1101"/>
+        <location filename="../src/settings_dialog.cpp" line="399"/>
+        <location filename="../src/settings_dialog.cpp" line="1071"/>
+        <location filename="../src/settings_dialog.cpp" line="1096"/>
         <source>Relaunch needed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="401"/>
+        <location filename="../src/settings_dialog.cpp" line="399"/>
         <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="520"/>
+        <location filename="../src/settings_dialog.cpp" line="517"/>
         <source>Please wait</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="521"/>
+        <location filename="../src/settings_dialog.cpp" line="518"/>
         <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="541"/>
+        <location filename="../src/settings_dialog.cpp" line="538"/>
         <source>Validation done!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="541"/>
+        <location filename="../src/settings_dialog.cpp" line="538"/>
         <source>The validation has successfully completed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="552"/>
+        <location filename="../src/settings_dialog.cpp" line="549"/>
         <source>Enter new device name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="649"/>
+        <location filename="../src/settings_dialog.cpp" line="645"/>
         <source>Unbind</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="694"/>
+        <location filename="../src/settings_dialog.cpp" line="690"/>
         <source>Waiting for input</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="709"/>
-        <location filename="../src/settings_dialog.cpp" line="755"/>
+        <location filename="../src/settings_dialog.cpp" line="705"/>
+        <location filename="../src/settings_dialog.cpp" line="751"/>
         <source>Mouse button %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="711"/>
-        <location filename="../src/settings_dialog.cpp" line="797"/>
+        <location filename="../src/settings_dialog.cpp" line="707"/>
+        <location filename="../src/settings_dialog.cpp" line="793"/>
         <source>Controller %1 : Button %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="823"/>
-        <location filename="../src/settings_dialog.cpp" line="847"/>
+        <location filename="../src/settings_dialog.cpp" line="818"/>
+        <location filename="../src/settings_dialog.cpp" line="842"/>
         <source>Enter profile name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="831"/>
+        <location filename="../src/settings_dialog.cpp" line="826"/>
         <source>Profile creation failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="831"/>
-        <location filename="../src/settings_dialog.cpp" line="855"/>
+        <location filename="../src/settings_dialog.cpp" line="826"/>
+        <location filename="../src/settings_dialog.cpp" line="850"/>
         <source>A profile with that name already exists!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="855"/>
+        <location filename="../src/settings_dialog.cpp" line="850"/>
         <source>Profile rename failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="870"/>
+        <location filename="../src/settings_dialog.cpp" line="865"/>
         <source>Profile deletion failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="870"/>
+        <location filename="../src/settings_dialog.cpp" line="865"/>
         <source>This is the only profile left!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="904"/>
+        <location filename="../src/settings_dialog.cpp" line="899"/>
         <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/settings_dialog.cpp" line="902"/>
         <location filename="../src/settings_dialog.cpp" line="907"/>
-        <location filename="../src/settings_dialog.cpp" line="912"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1003"/>
+        <location filename="../src/settings_dialog.cpp" line="998"/>
         <source>IMEI sequence contains non-numeric character!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1006"/>
+        <location filename="../src/settings_dialog.cpp" line="1001"/>
         <source>IMEI sequence has invalid sum!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1009"/>
+        <location filename="../src/settings_dialog.cpp" line="1004"/>
         <source>IMEI sequence length must be 15!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1015"/>
+        <location filename="../src/settings_dialog.cpp" line="1010"/>
         <source>Unidentified error!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1022"/>
+        <location filename="../src/settings_dialog.cpp" line="1017"/>
         <source>IMEI valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1022"/>
+        <location filename="../src/settings_dialog.cpp" line="1017"/>
         <source>The IMEI sequence is valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1025"/>
+        <location filename="../src/settings_dialog.cpp" line="1020"/>
         <source>IMEI invalid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1035"/>
+        <location filename="../src/settings_dialog.cpp" line="1030"/>
         <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1037"/>
+        <location filename="../src/settings_dialog.cpp" line="1032"/>
         <source>Cancel closing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1076"/>
+        <location filename="../src/settings_dialog.cpp" line="1071"/>
         <source>This change will be effective on the next launch of the emulator.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1084"/>
+        <location filename="../src/settings_dialog.cpp" line="1079"/>
         <source>Confirmation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1084"/>
+        <location filename="../src/settings_dialog.cpp" line="1079"/>
         <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1101"/>
+        <location filename="../src/settings_dialog.cpp" line="1096"/>
         <source>The language will be updated on the next launch of the emulator.</source>
         <translation type="unfinished"></translation>
     </message>

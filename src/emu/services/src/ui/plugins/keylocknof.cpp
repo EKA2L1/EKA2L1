@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <kernel/kernel.h>
 #include <services/ui/plugins/common.h>
 #include <services/ui/plugins/keylocknof.h>
-#include <kernel/kernel.h>
 
 #include <utils/err.h>
 
-#include <common/log.h>
 #include <common/chunkyseri.h>
+#include <common/log.h>
 
 namespace eka2l1::epoc::notifier {
     void keylock_plugin::handle(epoc::desc8 *request, epoc::des8 *respone, epoc::notify_info &complete_info) {
@@ -35,10 +35,10 @@ namespace eka2l1::epoc::notifier {
 
         kernel::process *pr_req = complete_info.requester->owning_process();
 
-        std::uint8_t *data_ptr = reinterpret_cast<std::uint8_t*>(request->get_pointer(pr_req));
+        std::uint8_t *data_ptr = reinterpret_cast<std::uint8_t *>(request->get_pointer(pr_req));
         std::uint32_t data_size = request->get_length();
-        
-        std::uint8_t *given_respone = reinterpret_cast<std::uint8_t*>(respone->get_pointer(pr_req));
+
+        std::uint8_t *given_respone = reinterpret_cast<std::uint8_t *>(respone->get_pointer(pr_req));
         std::uint32_t given_respone_max = request->get_max_length(pr_req);
 
         if (!data_ptr || !data_size || !given_respone || !given_respone_max) {

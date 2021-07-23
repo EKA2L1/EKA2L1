@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/msv/msv.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <utils/consts.h>
@@ -32,7 +32,6 @@
 #include <common/time.h>
 
 #include <system/devices.h>
-
 
 #include <common/path.h>
 
@@ -548,7 +547,7 @@ namespace eka2l1 {
                 seri.absorb(length);
                 seri.absorb(max_length);
 
-                seri.absorb_impl(reinterpret_cast<std::uint8_t*>(comp->name_.data()), comp->name_.length() * sizeof(char16_t));
+                seri.absorb_impl(reinterpret_cast<std::uint8_t *>(comp->name_.data()), comp->name_.length() * sizeof(char16_t));
 
                 // This was supposed to be a TBuf<50>
                 std::uint32_t total_bytes_reserved = 100;

@@ -59,11 +59,11 @@ namespace eka2l1 {
 
             return new_string;
         }
-        
+
         std::wstring ucs2_to_wstr(const std::u16string &str) {
             std::wstring_convert<std::codecvt_utf16<wchar_t>, wchar_t> converter;
-            auto wstr = converter.from_bytes(reinterpret_cast<const char*>(&str[0]),
-                            reinterpret_cast<const char*>(&str[0] + str.size()));
+            auto wstr = converter.from_bytes(reinterpret_cast<const char *>(&str[0]),
+                reinterpret_cast<const char *>(&str[0] + str.size()));
 
             if (wstr.back() == L'\0') {
                 wstr.pop_back();
@@ -71,11 +71,11 @@ namespace eka2l1 {
 
             return wstr;
         }
-        
+
         std::wstring utf8_to_wstr(const std::string &str) {
             std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-            auto wstr = converter.from_bytes(reinterpret_cast<const char*>(&str[0]),
-                            reinterpret_cast<const char*>(&str[0] + str.size()));
+            auto wstr = converter.from_bytes(reinterpret_cast<const char *>(&str[0]),
+                reinterpret_cast<const char *>(&str[0] + str.size()));
 
             if (wstr.back() == L'\0') {
                 wstr.pop_back();

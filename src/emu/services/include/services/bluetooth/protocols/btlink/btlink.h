@@ -28,7 +28,7 @@ namespace eka2l1::epoc::bt {
     class midman;
     class btlink_protocol;
 
-    class btlink_host_resolver: public socket::host_resolver {
+    class btlink_host_resolver : public socket::host_resolver {
     private:
         btlink_protocol *papa_;
 
@@ -37,12 +37,12 @@ namespace eka2l1::epoc::bt {
 
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;
-        
+
         bool get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) override;
         bool get_by_name(epoc::socket::name_entry &supply_and_result) override;
     };
 
-    class btlink_protocol: public socket::protocol {
+    class btlink_protocol : public socket::protocol {
     private:
         // lmao no
         midman *mid_;
@@ -56,7 +56,7 @@ namespace eka2l1::epoc::bt {
         midman *get_midman() {
             return mid_;
         }
-        
+
         virtual std::u16string name() const override {
             return u"BTLinkManager";
         }
@@ -68,7 +68,7 @@ namespace eka2l1::epoc::bt {
         virtual std::uint32_t id() const override {
             return BTLINK_MANAGER_PROTOCOL_ID;
         }
-        
+
         virtual epoc::version ver() const override {
             epoc::version v;
             v.major = 0;
@@ -86,7 +86,7 @@ namespace eka2l1::epoc::bt {
             // L2CAP will be the one handling this. This stack is currently only used for managing links.
             return nullptr;
         }
-        
+
         virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver() override {
             return std::make_unique<btlink_host_resolver>(this);
         }

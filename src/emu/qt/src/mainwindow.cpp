@@ -17,37 +17,38 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "./ui_mainwindow.h"
+#include <qt/aboutdialog.h>
 #include <qt/applistwidget.h>
+#include <qt/device_install_dialog.h>
 #include <qt/displaywidget.h>
 #include <qt/mainwindow.h>
-#include <qt/aboutdialog.h>
-#include <qt/device_install_dialog.h>
 #include <qt/package_manager_dialog.h>
 #include <qt/settings_dialog.h>
 #include <qt/state.h>
 #include <qt/utils.h>
-#include "./ui_mainwindow.h"
 
-#include <system/epoc.h>
-#include <system/devices.h>
 #include <kernel/kernel.h>
+#include <system/devices.h>
+#include <system/epoc.h>
 
 #include <common/algorithm.h>
 #include <common/fileutils.h>
 #include <common/language.h>
-#include <common/platform.h>
 #include <common/path.h>
+#include <common/platform.h>
 
 #include <config/app_settings.h>
 
-#include <services/applist/applist.h>
-#include <services/ui/cap/oom_app.h>
-#include <services/window/window.h>
-#include <services/window/screen.h>
-#include <services/window/classes/wingroup.h>
-#include <services/fbs/fbs.h>
 #include <package/manager.h>
+#include <services/applist/applist.h>
+#include <services/fbs/fbs.h>
+#include <services/ui/cap/oom_app.h>
+#include <services/window/classes/wingroup.h>
+#include <services/window/screen.h>
+#include <services/window/window.h>
 
+#include <QCheckBox>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
@@ -57,7 +58,6 @@
 #include <QProgressDialog>
 #include <QSettings>
 #include <QtConcurrent/QtConcurrent>
-#include <QCheckBox>
 
 static constexpr const char *LAST_WINDOW_SIZE_SETTING = "lastWindowSize";
 static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
@@ -85,7 +85,7 @@ static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, cons
 }
 
 static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const int old_mode) {
-    eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator*>(userdata);
+    eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     if (!state_ptr) {
         return;
     }
@@ -95,12 +95,12 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
         new_minsize = QSize(scr->current_mode().size.y, scr->current_mode().size.x);
     }
 
-    display_widget *widget = static_cast<display_widget*>(state_ptr->window);
+    display_widget *widget = static_cast<display_widget *>(state_ptr->window);
     widget->setMinimumSize(new_minsize);
 }
 
 static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
-    eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator*>(userdata);
+    eka2l1::desktop::emulator *state_ptr = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     if (!state_ptr) {
         return;
     }
@@ -109,14 +109,13 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     std::unique_ptr<eka2l1::drivers::graphics_command_list> cmd_list = state.graphics_driver->new_command_list();
     std::unique_ptr<eka2l1::drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(
-            cmd_list.get());
+        cmd_list.get());
 
     eka2l1::rect viewport;
     eka2l1::rect src;
     eka2l1::rect dest;
 
-    eka2l1::drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest :
-        eka2l1::drivers::filter_option::linear;
+    eka2l1::drivers::filter_option filter = state.conf.nearest_neighbor_filtering ? eka2l1::drivers::filter_option::nearest : eka2l1::drivers::filter_option::linear;
 
     const auto window_width = state.window->window_fb_size().x;
     const auto window_height = state.window->window_fb_size().y;
@@ -173,7 +172,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         }
 
         cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(normal_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
-    } else {        
+    } else {
         advance_dsa_pos_around_origin(dest, scr->ui_rotation);
 
         if (scr->ui_rotation % 180 != 0) {
@@ -206,8 +205,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     , settings_dialog_(nullptr)
     , ui_(new Ui::main_window)
     , applist_(nullptr)
-    , displayer_(nullptr)
-{
+    , displayer_(nullptr) {
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
 
@@ -289,13 +287,15 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     QVariant no_notify_install = settings.value(NO_TOUCHSCREEN_DISABLE_WARN_SETTING);
 
     if (!no_notify_install.isValid() || !no_notify_install.toBool()) {
-        for (auto &bind: emulator_state_.conf.keybinds.keybinds) {
+        for (auto &bind : emulator_state_.conf.keybinds.keybinds) {
             if (bind.source.type == eka2l1::config::KEYBIND_TYPE_MOUSE) {
-                make_dialog_with_checkbox_and_choices(tr("Touchscreen disabled"), tr("Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.<br><br><b>Note:</b><br>Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys."),
-                    tr("Don't show this again"), false,  [](bool on) {
+                make_dialog_with_checkbox_and_choices(
+                    tr("Touchscreen disabled"), tr("Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.<br><br><b>Note:</b><br>Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys."),
+                    tr("Don't show this again"), false, [](bool on) {
                         QSettings settings;
                         settings.setValue(NO_TOUCHSCREEN_DISABLE_WARN_SETTING, on);
-                    }, false);
+                    },
+                    false);
 
                 break;
             }
@@ -334,8 +334,8 @@ void main_window::setup_app_list() {
         const std::string al_server_name = eka2l1::get_app_list_server_name_by_epocver(kernel->get_epoc_version());
         const std::string fbs_server_name = eka2l1::epoc::get_fbs_server_name_by_epocver(kernel->get_epoc_version());
 
-        eka2l1::applist_server *al_serv = reinterpret_cast<eka2l1::applist_server*>(kernel->get_by_name<eka2l1::service::server>(al_server_name));
-        eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server*>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
+        eka2l1::applist_server *al_serv = reinterpret_cast<eka2l1::applist_server *>(kernel->get_by_name<eka2l1::service::server>(al_server_name));
+        eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server *>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
 
         if (al_serv && fbs_serv) {
             applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system(), true);
@@ -350,11 +350,13 @@ void main_window::setup_app_list() {
         QVariant no_notify_install = settings.value(NO_DEVICE_INSTALL_DISABLE_NOF_SETTING);
 
         if (!no_notify_install.isValid() || !no_notify_install.toBool()) {
-            const QMessageBox::StandardButton result = make_dialog_with_checkbox_and_choices(tr("No device installed"), tr("You have not installed any device. Please install a device or follow the installation instructions on EKA2L1's GitHub wiki page."),
-                tr("Don't show this again"), false,  [](bool on) {
+            const QMessageBox::StandardButton result = make_dialog_with_checkbox_and_choices(
+                tr("No device installed"), tr("You have not installed any device. Please install a device or follow the installation instructions on EKA2L1's GitHub wiki page."),
+                tr("Don't show this again"), false, [](bool on) {
                     QSettings settings;
                     settings.setValue(NO_DEVICE_INSTALL_DISABLE_NOF_SETTING, on);
-                }, true);
+                },
+                true);
 
             if (result == QMessageBox::Ok) {
                 on_device_install_clicked();
@@ -430,7 +432,7 @@ void main_window::on_about_triggered() {
 void main_window::on_settings_triggered() {
     if (!settings_dialog_) {
         settings_dialog_ = new settings_dialog(this, emulator_state_.symsys.get(), emulator_state_.joystick_controller.get(),
-                                                             emulator_state_.app_settings.get(), emulator_state_.conf);
+            emulator_state_.app_settings.get(), emulator_state_.conf);
 
         connect(settings_dialog_.get(), &settings_dialog::cursor_visibility_change, this, &main_window::on_cursor_visibility_change);
         connect(settings_dialog_.get(), &settings_dialog::status_bar_visibility_change, this, &main_window::on_status_bar_visibility_change);
@@ -632,11 +634,8 @@ void main_window::mount_game_card_dump(QString mount_path) {
         current_progress_dialog_->show();
 
         QFuture<eka2l1::zip_mount_error> extract_future = QtConcurrent::run([this, mount_path]() -> eka2l1::zip_mount_error {
-            return emulator_state_.symsys->mount_game_zip(drive_e, drive_media::physical, mount_path.toStdString(), 0,  [this](const std::size_t done, const std::size_t total) {
-                emit progress_dialog_change(done, total);
-            }, [this] {
-                return current_progress_dialog_->wasCanceled();
-            });
+            return emulator_state_.symsys->mount_game_zip(
+                drive_e, drive_media::physical, mount_path.toStdString(), 0, [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
         });
 
         while (!extract_future.isFinished()) {
@@ -662,7 +661,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
 
             case eka2l1::zip_mount_error_no_system_folder: {
                 QMessageBox::critical(this, title_dialog, tr("The ZIP does not have System folder in the root folder. "
-                    "System folder must exist in a game dump."));
+                                                             "System folder must exist in a game dump."));
                 break;
             }
 
@@ -679,14 +678,14 @@ void main_window::mount_game_card_dump(QString mount_path) {
         io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, mount_path.toStdU16String());
 
         if (mount_path.endsWith("system", Qt::CaseInsensitive)) {
-    #if !EKA2L1_PLATFORM(WIN32)
+#if !EKA2L1_PLATFORM(WIN32)
             if (mount_path.endsWith("system", Qt::CaseSensitive)) {
                 QMessageBox::information(this, tr("Game card problem"), tr("The game card dump has case-sensitive files. This may cause problems with the emulator."));
             }
-    #endif
+#endif
 
             QMessageBox::StandardButton result = QMessageBox::question(this, tr("Game card dump folder correction"), tr("The selected path seems to be incorrect.<br>"
-                "Do you want the emulator to correct it?"));
+                                                                                                                        "Do you want the emulator to correct it?"));
 
             if (result == QMessageBox::Yes) {
                 mount_path.erase(mount_path.begin() + mount_path.length() - 7, mount_path.end());
@@ -726,7 +725,7 @@ void main_window::on_recent_mount_clear_clicked() {
 }
 
 void main_window::on_recent_mount_card_folder_clicked() {
-    QAction *being = qobject_cast<QAction*>(sender());
+    QAction *being = qobject_cast<QAction *>(sender());
     if (being) {
         mount_game_card_dump(being->data().toString());
     }
@@ -878,11 +877,8 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
             current_progress_dialog_->show();
 
             QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path]() {
-                return pkgmngr->install_package(package_file_path.toStdU16String(), drive_e, [this](const std::size_t done, const std::size_t total) {
-                    emit progress_dialog_change(done, total);
-                }, [this] {
-                    return current_progress_dialog_->wasCanceled();
-                });
+                return pkgmngr->install_package(
+                    package_file_path.toStdU16String(), drive_e, [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
             });
 
             while (!install_future.isFinished()) {
@@ -907,7 +903,8 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
 
                 case eka2l1::package::installation_result_invalid: {
                     QMessageBox::critical(this, tr("Installation failed"), tr("Fail to install package at path: %1. "
-                        "Ensure the path points to a valid SIS/SISX file.").arg(package_file_path));
+                                                                              "Ensure the path points to a valid SIS/SISX file.")
+                                                                               .arg(package_file_path));
                     break;
                 }
 
@@ -1091,7 +1088,7 @@ void main_window::on_theme_change_requested(const QString &text) {
                 } else {
                     QFile f(":assets/themes/dark/style.qss");
 
-                    if (!f.exists())   {
+                    if (!f.exists()) {
                         QMessageBox::critical(this, tr("Load theme failed!"), tr("The Dark theme's style file can't be found!"));
                     } else {
                         f.open(QFile::ReadOnly | QFile::Text);

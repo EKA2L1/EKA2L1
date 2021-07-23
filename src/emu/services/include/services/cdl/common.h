@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <cstdint>
 #include <common/uid.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 

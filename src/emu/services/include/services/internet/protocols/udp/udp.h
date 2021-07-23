@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/socket/protocol.h>
 #include <services/internet/protocols/common.h>
+#include <services/socket/protocol.h>
 
 #include <string>
 
@@ -37,7 +37,7 @@ namespace eka2l1::epoc::internet {
 
         std::u16string host_name() const override;
         bool host_name(const std::u16string &name) override;
-        
+
         bool get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) override;
         bool get_by_name(epoc::socket::name_entry &supply_and_result) override;
     };
@@ -59,7 +59,7 @@ namespace eka2l1::epoc::internet {
         virtual std::uint32_t id() const override {
             return INET_UDP_PROTOCOL_ID;
         }
-        
+
         virtual epoc::version ver() const override {
             epoc::version v;
             v.major = 0;
@@ -77,7 +77,7 @@ namespace eka2l1::epoc::internet {
             // L2CAP will be the one handling this. This stack is currently only used for managing links.
             return nullptr;
         }
-        
+
         virtual std::unique_ptr<epoc::socket::host_resolver> make_host_resolver() override {
             return std::make_unique<udp_host_resolver>(this);
         }

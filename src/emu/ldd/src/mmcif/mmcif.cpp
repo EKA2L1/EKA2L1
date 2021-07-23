@@ -20,14 +20,14 @@
 #include <ldd/mmcif/consts.h>
 #include <ldd/mmcif/mmcif.h>
 
-#include <kernel/thread.h>
-#include <kernel/process.h>
 #include <kernel/kernel.h>
+#include <kernel/process.h>
+#include <kernel/thread.h>
 
 #include <common/log.h>
 
-#include <config/config.h>
 #include <common/pystr.h>
+#include <config/config.h>
 
 namespace eka2l1::ldd {
     static void get_cid_from_config(config::state *conf, std::uint32_t *dat) {

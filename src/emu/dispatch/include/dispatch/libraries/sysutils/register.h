@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <dispatch/libraries/register.h>
 #include <cstdint>
+#include <dispatch/libraries/register.h>
 
 namespace eka2l1::dispatch {
     static patch_info SYSUTILS_PATCH_EPOCV81A_INFOS[] = {

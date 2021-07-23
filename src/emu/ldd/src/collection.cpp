@@ -23,18 +23,18 @@
 
 #include <system/epoc.h>
 
-#include <unordered_map>
 #include <functional>
 #include <string>
+#include <unordered_map>
 
 namespace eka2l1::ldd {
-    #define FACTORY_DECLARE(type)                                               \
-        std::unique_ptr<factory> factory_create_##type(system *ss) {             \
-            return std::make_unique<type>(ss->get_kernel_system(), ss);         \
-        }
+#define FACTORY_DECLARE(type)                                       \
+    std::unique_ptr<factory> factory_create_##type(system *ss) {    \
+        return std::make_unique<type>(ss->get_kernel_system(), ss); \
+    }
 
-    #define FACTORY_REGISTER(lddname, type)                                     \
-        { lddname, factory_create_##type }
+#define FACTORY_REGISTER(lddname, type) \
+    { lddname, factory_create_##type }
 
     FACTORY_DECLARE(mmcif_factory)
     FACTORY_DECLARE(ecomm_factory)

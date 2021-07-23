@@ -38,7 +38,7 @@ namespace eka2l1::epoc::etel {
         auto find_result = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
             return info.name_ == module_lowercased;
         });
-    
+
         if (find_result != loaded_.end()) {
             // The module already loaded.
             if (!std::binary_search(find_result->used_sessions_.begin(), find_result->used_sessions_.end(), borrowed_session)) {

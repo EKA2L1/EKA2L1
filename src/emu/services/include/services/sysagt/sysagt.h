@@ -48,10 +48,10 @@ namespace eka2l1 {
 
     struct system_agent_notify_info {
         epoc::notify_info woke_target_;
-        epoc::des8 *target_uid_;            ///< Descriptor to write UID that got notified.
-        epoc::des8 *state_value_;           ///< Descriptor to write state value of UID on event.
+        epoc::des8 *target_uid_; ///< Descriptor to write UID that got notified.
+        epoc::des8 *state_value_; ///< Descriptor to write state value of UID on event.
 
-        std::uint32_t uid_nof_;             ///< UID to notify. Unsigned -1 means any.
+        std::uint32_t uid_nof_; ///< UID to notify. Unsigned -1 means any.
 
         explicit system_agent_notify_info()
             : target_uid_(nullptr)
@@ -67,7 +67,7 @@ namespace eka2l1 {
         void connect(service::ipc_context &context) override;
     };
 
-    struct system_agent_event_queue {        
+    struct system_agent_event_queue {
         system_agent_notify_info info_;
         bool buffering_;
 

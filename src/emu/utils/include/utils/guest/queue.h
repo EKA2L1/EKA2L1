@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <mem/ptr.h>
 #include <cstdint>
+#include <mem/ptr.h>
 
 namespace eka2l1::utils {
     struct double_queue_link {

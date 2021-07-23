@@ -51,7 +51,7 @@ namespace eka2l1::epoc::etel {
         bool close_tsy(io_system *io, const kernel::uid borrowed_session, const std::string &module_name);
 
         void unload_from_sessions(io_system *io, const kernel::uid borrowed_session);
-        
+
         std::optional<std::uint32_t> get_entry_real_index(const std::uint32_t respective_index, const etel_entry_type type);
 
         bool get_entry(const std::uint32_t real_index, etel_module_entry **entry);

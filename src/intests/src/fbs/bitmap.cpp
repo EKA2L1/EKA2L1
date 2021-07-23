@@ -38,7 +38,7 @@ void FbsBitmapCheckSettingsL() {
 
     RFs fs;
     fs.Connect(-1);
-    
+
     fs.SetSessionToPrivate(instance->GetWorkingDrive());
     fs.SessionPath(holderFilename);
     holderFilename.Append(_L("assets\\holder.mbm"));

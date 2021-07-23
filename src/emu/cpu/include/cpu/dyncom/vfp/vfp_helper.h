@@ -32,12 +32,12 @@
 
 #pragma once
 
-#include <cstdio>
 #include <common/types.h>
-#include <cpu/dyncom/vfp/asm_vfp.h>
 #include <cpu/dyncom/armstate.h>
+#include <cpu/dyncom/vfp/asm_vfp.h>
+#include <cstdio>
 
-#define do_div(n, base)                                                                            \
+#define do_div(n, base) \
     { n /= base; }
 
 enum : std::uint32_t {
@@ -96,7 +96,7 @@ inline std::uint32_t vfp_shiftright32jamming(std::uint32_t val, unsigned int shi
     return val;
 }
 
-inline std::uint64_t  vfp_shiftright64jamming(std::uint64_t  val, unsigned int shift) {
+inline std::uint64_t vfp_shiftright64jamming(std::uint64_t val, unsigned int shift) {
     if (shift) {
         if (shift < 64)
             val = val >> shift | ((val << (64 - shift)) != 0);
@@ -106,7 +106,7 @@ inline std::uint64_t  vfp_shiftright64jamming(std::uint64_t  val, unsigned int s
     return val;
 }
 
-inline std::uint32_t vfp_hi64to32jamming(std::uint64_t  val) {
+inline std::uint32_t vfp_hi64to32jamming(std::uint64_t val) {
     std::uint32_t v;
     std::uint32_t highval = val >> 32;
     std::uint32_t lowval = val & 0xffffffff;
@@ -119,23 +119,23 @@ inline std::uint32_t vfp_hi64to32jamming(std::uint64_t  val) {
     return v;
 }
 
-inline void add128(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t  nh, std::uint64_t  nl, std::uint64_t  mh, std::uint64_t  ml) {
+inline void add128(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t nh, std::uint64_t nl, std::uint64_t mh, std::uint64_t ml) {
     *resl = nl + ml;
     *resh = nh + mh;
     if (*resl < nl)
         *resh += 1;
 }
 
-inline void sub128(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t  nh, std::uint64_t  nl, std::uint64_t  mh, std::uint64_t  ml) {
+inline void sub128(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t nh, std::uint64_t nl, std::uint64_t mh, std::uint64_t ml) {
     *resl = nl - ml;
     *resh = nh - mh;
     if (*resl > nl)
         *resh -= 1;
 }
 
-inline void mul64to128(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t  n, std::uint64_t  m) {
+inline void mul64to128(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t n, std::uint64_t m) {
     std::uint32_t nh, nl, mh, ml;
-    std::uint64_t  rh, rma, rmb, rl;
+    std::uint64_t rh, rma, rmb, rl;
 
     nl = static_cast<std::uint32_t>(n);
     ml = static_cast<std::uint32_t>(m);
@@ -159,19 +159,19 @@ inline void mul64to128(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t  
     *resh = rh;
 }
 
-inline void shift64left(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t  n) {
+inline void shift64left(std::uint64_t *resh, std::uint64_t *resl, std::uint64_t n) {
     *resh = n >> 63;
     *resl = n << 1;
 }
 
-inline std::uint64_t  vfp_hi64multiply64(std::uint64_t  n, std::uint64_t  m) {
-    std::uint64_t  rh, rl;
+inline std::uint64_t vfp_hi64multiply64(std::uint64_t n, std::uint64_t m) {
+    std::uint64_t rh, rl;
     mul64to128(&rh, &rl, n, m);
     return rh | (rl != 0);
 }
 
-inline std::uint64_t  vfp_estimate_div128to64(std::uint64_t  nh, std::uint64_t  nl, std::uint64_t  m) {
-    std::uint64_t  mh, ml, remh, reml, termh, terml, z;
+inline std::uint64_t vfp_estimate_div128to64(std::uint64_t nh, std::uint64_t nl, std::uint64_t m) {
+    std::uint64_t mh, ml, remh, reml, termh, terml, z;
 
     if (nh >= m)
         return ~0ULL;
@@ -205,8 +205,8 @@ inline std::uint64_t  vfp_estimate_div128to64(std::uint64_t  nh, std::uint64_t  
 
 // Single-precision
 struct vfp_single {
-    std::int16_t  exponent;
-    std::uint16_t  sign;
+    std::int16_t exponent;
+    std::uint16_t sign;
     std::uint32_t significand;
 };
 
@@ -226,7 +226,7 @@ struct vfp_single {
 #define vfp_single_packed_sign(v) ((v)&0x80000000)
 #define vfp_single_packed_negate(v) ((v) ^ 0x80000000)
 #define vfp_single_packed_abs(v) ((v) & ~0x80000000)
-#define vfp_single_packed_exponent(v)                                                              \
+#define vfp_single_packed_exponent(v) \
     (((v) >> VFP_SINGLE_MANTISSA_BITS) & ((1 << VFP_SINGLE_EXPONENT_BITS) - 1))
 #define vfp_single_packed_mantissa(v) ((v) & ((1 << VFP_SINGLE_MANTISSA_BITS) - 1))
 
@@ -242,7 +242,7 @@ enum : std::uint32_t {
     VFP_SNAN = (VFP_NAN | VFP_NAN_SIGNAL)
 };
 
-inline int vfp_single_type(const vfp_single* s) {
+inline int vfp_single_type(const vfp_single *s) {
     int type = VFP_NUMBER;
     if (s->exponent == 255) {
         if (s->significand == 0)
@@ -263,7 +263,7 @@ inline int vfp_single_type(const vfp_single* s) {
 // Unpack a single-precision float.  Note that this returns the magnitude
 // of the single-precision float mantissa with the 1. if necessary,
 // aligned to bit 30.
-inline std::uint32_t vfp_single_unpack(vfp_single* s, std::int32_t  val, std::uint32_t fpscr) {
+inline std::uint32_t vfp_single_unpack(vfp_single *s, std::int32_t val, std::uint32_t fpscr) {
     std::uint32_t exceptions = 0;
     s->sign = vfp_single_packed_sign(val) >> 16;
     s->exponent = vfp_single_packed_exponent(val);
@@ -286,20 +286,19 @@ inline std::uint32_t vfp_single_unpack(vfp_single* s, std::int32_t  val, std::ui
 
 // Re-pack a single-precision float. This assumes that the float is
 // already normalised such that the MSB is bit 30, _not_ bit 31.
-inline std::int32_t  vfp_single_pack(const vfp_single* s) {
-    std::uint32_t val = (s->sign << 16) + (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
-              (s->significand >> VFP_SINGLE_LOW_BITS);
+inline std::int32_t vfp_single_pack(const vfp_single *s) {
+    std::uint32_t val = (s->sign << 16) + (s->exponent << VFP_SINGLE_MANTISSA_BITS) + (s->significand >> VFP_SINGLE_LOW_BITS);
     return (std::int32_t)val;
 }
 
-std::uint32_t vfp_single_normaliseround(ARMul_State* state, int sd, vfp_single* vs, std::uint32_t fpscr, std::uint32_t exceptions,
-                              const char* func);
+std::uint32_t vfp_single_normaliseround(ARMul_State *state, int sd, vfp_single *vs, std::uint32_t fpscr, std::uint32_t exceptions,
+    const char *func);
 
 // Double-precision
 struct vfp_double {
-    std::int16_t  exponent;
-    std::uint16_t  sign;
-    std::uint64_t  significand;
+    std::int16_t exponent;
+    std::uint16_t sign;
+    std::uint64_t significand;
 };
 
 #define VFP_DOUBLE_MANTISSA_BITS (52)
@@ -314,11 +313,11 @@ struct vfp_double {
 #define vfp_double_packed_sign(v) ((v) & (1ULL << 63))
 #define vfp_double_packed_negate(v) ((v) ^ (1ULL << 63))
 #define vfp_double_packed_abs(v) ((v) & ~(1ULL << 63))
-#define vfp_double_packed_exponent(v)                                                              \
+#define vfp_double_packed_exponent(v) \
     (((v) >> VFP_DOUBLE_MANTISSA_BITS) & ((1 << VFP_DOUBLE_EXPONENT_BITS) - 1))
 #define vfp_double_packed_mantissa(v) ((v) & ((1ULL << VFP_DOUBLE_MANTISSA_BITS) - 1))
 
-inline int vfp_double_type(const vfp_double* s) {
+inline int vfp_double_type(const vfp_double *s) {
     int type = VFP_NUMBER;
     if (s->exponent == 2047) {
         if (s->significand == 0)
@@ -339,12 +338,12 @@ inline int vfp_double_type(const vfp_double* s) {
 // Unpack a double-precision float.  Note that this returns the magnitude
 // of the double-precision float mantissa with the 1. if necessary,
 // aligned to bit 62.
-inline std::uint32_t vfp_double_unpack(vfp_double* s, std::int64_t val, std::uint32_t fpscr) {
+inline std::uint32_t vfp_double_unpack(vfp_double *s, std::int64_t val, std::uint32_t fpscr) {
     std::uint32_t exceptions = 0;
     s->sign = vfp_double_packed_sign(val) >> 48;
     s->exponent = vfp_double_packed_exponent(val);
 
-    std::uint64_t  significand = ((std::uint64_t)val << (64 - VFP_DOUBLE_MANTISSA_BITS)) >> 2;
+    std::uint64_t significand = ((std::uint64_t)val << (64 - VFP_DOUBLE_MANTISSA_BITS)) >> 2;
     if (s->exponent && s->exponent != 2047)
         significand |= (1ULL << 62);
     s->significand = significand;
@@ -362,9 +361,8 @@ inline std::uint32_t vfp_double_unpack(vfp_double* s, std::int64_t val, std::uin
 
 // Re-pack a double-precision float. This assumes that the float is
 // already normalised such that the MSB is bit 30, _not_ bit 31.
-inline std::int64_t vfp_double_pack(const vfp_double* s) {
-    std::uint64_t  val = ((std::uint64_t)s->sign << 48) + ((std::uint64_t)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
-              (s->significand >> VFP_DOUBLE_LOW_BITS);
+inline std::int64_t vfp_double_pack(const vfp_double *s) {
+    std::uint64_t val = ((std::uint64_t)s->sign << 48) + ((std::uint64_t)s->exponent << VFP_DOUBLE_MANTISSA_BITS) + (s->significand >> VFP_DOUBLE_LOW_BITS);
     return (std::int64_t)val;
 }
 
@@ -384,10 +382,13 @@ std::uint32_t vfp_estimate_sqrt_significand(std::uint32_t exponent, std::uint32_
 //  OP_SD     - The instruction exceptionally writes to a single precision result.
 //  OP_DD     - The instruction exceptionally writes to a double precision result.
 //  OP_SM     - The instruction exceptionally reads from a single precision operand.
-enum : std::uint32_t { OP_SCALAR = (1 << 0), OP_SD = (1 << 1), OP_DD = (1 << 1), OP_SM = (1 << 2) };
+enum : std::uint32_t { OP_SCALAR = (1 << 0),
+    OP_SD = (1 << 1),
+    OP_DD = (1 << 1),
+    OP_SM = (1 << 2) };
 
 struct op {
-    std::uint32_t (*const fn)(ARMul_State* state, int dd, int dn, int dm, std::uint32_t fpscr);
+    std::uint32_t (*const fn)(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr);
     std::uint32_t flags;
 };
 
@@ -419,7 +420,7 @@ inline std::uint32_t fls(std::uint32_t x) {
     return r;
 }
 
-std::uint32_t vfp_double_multiply(vfp_double* vdd, vfp_double* vdn, vfp_double* vdm, std::uint32_t fpscr);
-std::uint32_t vfp_double_add(vfp_double* vdd, vfp_double* vdn, vfp_double* vdm, std::uint32_t fpscr);
-std::uint32_t vfp_double_normaliseround(ARMul_State* state, int dd, vfp_double* vd, std::uint32_t fpscr, std::uint32_t exceptions,
-                              const char* func);
+std::uint32_t vfp_double_multiply(vfp_double *vdd, vfp_double *vdn, vfp_double *vdm, std::uint32_t fpscr);
+std::uint32_t vfp_double_add(vfp_double *vdd, vfp_double *vdn, vfp_double *vdm, std::uint32_t fpscr);
+std::uint32_t vfp_double_normaliseround(ARMul_State *state, int dd, vfp_double *vd, std::uint32_t fpscr, std::uint32_t exceptions,
+    const char *func);

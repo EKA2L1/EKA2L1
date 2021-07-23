@@ -26,9 +26,8 @@
 #include <cpu/dyncom/vfp/asm_vfp.h>
 #include <cpu/dyncom/vfp/vfp.h>
 
-void VFPInit(ARMul_State* state) {
-    state->VFP[VFP_FPSID] = VFP_FPSID_IMPLMEN << 24 | VFP_FPSID_SW << 23 | VFP_FPSID_SUBARCH << 16 |
-                            VFP_FPSID_PARTNUM << 8 | VFP_FPSID_VARIANT << 4 | VFP_FPSID_REVISION;
+void VFPInit(ARMul_State *state) {
+    state->VFP[VFP_FPSID] = VFP_FPSID_IMPLMEN << 24 | VFP_FPSID_SW << 23 | VFP_FPSID_SUBARCH << 16 | VFP_FPSID_PARTNUM << 8 | VFP_FPSID_VARIANT << 4 | VFP_FPSID_REVISION;
     state->VFP[VFP_FPEXC] = 0;
     state->VFP[VFP_FPSCR] = 0;
 
@@ -41,7 +40,7 @@ void VFPInit(ARMul_State* state) {
     state->VFP[VFP_MVFR1] = 0;
 }
 
-void VMOVBRS(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t n, std::uint32_t *value) {
+void VMOVBRS(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t n, std::uint32_t *value) {
     if (to_arm) {
         *value = state->ExtReg[n];
     } else {
@@ -49,7 +48,7 @@ void VMOVBRS(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::uin
     }
 }
 
-void VMOVBRRD(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2) {
+void VMOVBRRD(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2) {
     if (to_arm) {
         *value2 = state->ExtReg[n * 2 + 1];
         *value1 = state->ExtReg[n * 2];
@@ -58,7 +57,7 @@ void VMOVBRRD(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::ui
         state->ExtReg[n * 2] = *value1;
     }
 }
-void VMOVBRRSS(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2) {
+void VMOVBRRSS(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2) {
     if (to_arm) {
         *value1 = state->ExtReg[n + 0];
         *value2 = state->ExtReg[n + 1];
@@ -68,7 +67,7 @@ void VMOVBRRSS(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::u
     }
 }
 
-void VMOVI(ARMul_State* state, std::uint32_t single, std::uint32_t d, std::uint32_t imm) {
+void VMOVI(ARMul_State *state, std::uint32_t single, std::uint32_t d, std::uint32_t imm) {
     if (single) {
         state->ExtReg[d] = imm;
     } else {
@@ -77,7 +76,7 @@ void VMOVI(ARMul_State* state, std::uint32_t single, std::uint32_t d, std::uint3
         state->ExtReg[d * 2] = 0;
     }
 }
-void VMOVR(ARMul_State* state, std::uint32_t single, std::uint32_t d, std::uint32_t m) {
+void VMOVR(ARMul_State *state, std::uint32_t single, std::uint32_t d, std::uint32_t m) {
     if (single) {
         state->ExtReg[d] = state->ExtReg[m];
     } else {
@@ -88,25 +87,25 @@ void VMOVR(ARMul_State* state, std::uint32_t single, std::uint32_t d, std::uint3
 }
 
 /* Miscellaneous functions */
-std::int32_t  vfp_get_float(ARMul_State* state, unsigned int reg) {
+std::int32_t vfp_get_float(ARMul_State *state, unsigned int reg) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP get float: s{}=[{:08x}]", reg, state->ExtReg[reg]);
     return state->ExtReg[reg];
 }
 
-void vfp_put_float(ARMul_State* state, std::int32_t  val, unsigned int reg) {
+void vfp_put_float(ARMul_State *state, std::int32_t val, unsigned int reg) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP put float: s{} <= [{:08x}]", reg, val);
     state->ExtReg[reg] = val;
 }
 
-std::uint64_t  vfp_get_double(ARMul_State* state, unsigned int reg) {
-    std::uint64_t  result = ((std::uint64_t)state->ExtReg[reg * 2 + 1]) << 32 | state->ExtReg[reg * 2];
+std::uint64_t vfp_get_double(ARMul_State *state, unsigned int reg) {
+    std::uint64_t result = ((std::uint64_t)state->ExtReg[reg * 2 + 1]) << 32 | state->ExtReg[reg * 2];
     LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP get double: s[{}-{}]=[{:016llx}]", reg * 2 + 1, reg * 2, result);
     return result;
 }
 
-void vfp_put_double(ARMul_State* state, std::uint64_t  val, unsigned int reg) {
+void vfp_put_double(ARMul_State *state, std::uint64_t val, unsigned int reg) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP put double: s[{}-{}] <= [{:08x}-{:08x}]", reg * 2 + 1, reg * 2,
-              (std::uint32_t)(val >> 32), (std::uint32_t)(val & 0xffffffff));
+        (std::uint32_t)(val >> 32), (std::uint32_t)(val & 0xffffffff));
     state->ExtReg[reg * 2] = (std::uint32_t)(val & 0xffffffff);
     state->ExtReg[reg * 2 + 1] = (std::uint32_t)(val >> 32);
 }
@@ -114,7 +113,7 @@ void vfp_put_double(ARMul_State* state, std::uint64_t  val, unsigned int reg) {
 /*
  * Process bitmask of exception conditions. (from vfpmodule.c)
  */
-void vfp_raise_exceptions(ARMul_State* state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr) {
+void vfp_raise_exceptions(ARMul_State *state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP: raising exceptions {:08x}", exceptions);
 
     if (exceptions == VFP_EXCEPTION_ERROR) {

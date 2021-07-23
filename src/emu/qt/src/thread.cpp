@@ -27,10 +27,10 @@
 #include <common/vecx.h>
 #include <common/version.h>
 #include <qt/cmdhandler.h>
+#include <qt/displaywidget.h>
 #include <qt/seh_handler.h>
 #include <qt/state.h>
 #include <qt/thread.h>
-#include <qt/displaywidget.h>
 
 #include <drivers/graphics/emu_window.h>
 #include <drivers/graphics/graphics.h>
@@ -45,8 +45,8 @@
 #include <Windows.h>
 #endif
 
-#include <qt/mainwindow.h>
 #include <QApplication>
+#include <qt/mainwindow.h>
 
 static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const int button, const int action) {
     eka2l1::drivers::input_event evt;
@@ -101,7 +101,7 @@ static eka2l1::drivers::input_event make_key_event_driver(const int key, const e
 static void on_ui_window_key_release(void *userdata, const int key) {
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
     auto key_evt = make_key_event_driver(key, eka2l1::drivers::key_state::released);
-    
+
     const std::lock_guard<std::mutex> guard(emu->lockdown);
     if (emu->winserv)
         emu->winserv->queue_input_from_driver(key_evt);
@@ -280,7 +280,7 @@ namespace eka2l1::desktop {
         state.kill_event.wait();
         state.symsys.reset();
         state.graphics_sema.notify();
-        
+
 #if EKA2L1_PLATFORM(WIN32)
         CoUninitialize();
 #endif
@@ -309,7 +309,7 @@ namespace eka2l1::desktop {
         // Instantiate UI and High-level interface threads
         std::thread os_thread_obj(os_thread, std::ref(state));
         state.init_event.wait();
-        
+
         eka2l1::common::arg_parser parser(argc, argv);
 
         parser.add("--help, --h", "Display helps menu", help_option_handler);
@@ -325,7 +325,8 @@ namespace eka2l1::desktop {
                                         "\t\t\t    eka2l1 --run 0x200412ED\n",
             app_specifier_option_handler);
         parser.add("--device", "Set a device to be ran, through the given firmware code. This device will also be saved in the configuration as the current device.\n"
-                               "\t\t\t Example: --device RH-29", device_set_option_handler);
+                               "\t\t\t Example: --device RH-29",
+            device_set_option_handler);
         parser.add("--install, --i", "Install a SIS.", app_install_option_handler);
         parser.add("--remove, --r", "Remove an package.", package_remove_option_handler);
         parser.add("--fullscreen", "Display the emulator in fullscreen.", fullscreen_option_handler);

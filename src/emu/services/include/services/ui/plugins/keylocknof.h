@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/notifier/plugin.h>
 #include <functional>
+#include <services/notifier/plugin.h>
 #include <string>
 
 namespace eka2l1::epoc::notifier {

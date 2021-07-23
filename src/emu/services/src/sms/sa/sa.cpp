@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/sms/sa/sa.h>
 #include <services/context.h>
+#include <services/sms/sa/sa.h>
 
 #include <system/epoc.h>
 #include <utils/err.h>

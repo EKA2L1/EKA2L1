@@ -43,7 +43,7 @@ namespace eka2l1::kernel {
             return false;
         }
 
-        req_info_ = epoc::notify_info { request_sts, requester };
+        req_info_ = epoc::notify_info{ request_sts, requester };
         thread_handle_ = thr_handle;
 
         return true;

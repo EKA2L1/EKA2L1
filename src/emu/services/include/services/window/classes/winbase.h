@@ -85,7 +85,7 @@ namespace eka2l1::epoc {
             flag_winmode_fixed = 1 << 13,
             flag_visiblity_event_report = 1 << 14
         };
-    
+
         std::uint32_t flags;
 
         std::uint8_t black_map = 128;

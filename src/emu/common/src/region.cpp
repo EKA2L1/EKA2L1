@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/region.h>
 #include <common/algorithm.h>
+#include <common/region.h>
 
 #include <climits>
 
@@ -28,8 +28,8 @@ namespace eka2l1::common {
      */
 
     eka2l1::rect region::bounding_rect() const {
-        eka2l1::vec2 tl { INT_MAX, INT_MAX };
-        eka2l1::vec2 br { INT_MIN, INT_MIN };
+        eka2l1::vec2 tl{ INT_MAX, INT_MAX };
+        eka2l1::vec2 br{ INT_MIN, INT_MIN };
 
         for (std::size_t i = 0; i < rects_.size(); i++) {
             tl.x = common::min(tl.x, rects_[i].top.x);
@@ -38,7 +38,7 @@ namespace eka2l1::common {
             br.y = common::max(br.y, rects_[i].top.y + rects_[i].size.y);
         }
 
-        return eka2l1::rect { tl, br - tl };
+        return eka2l1::rect{ tl, br - tl };
     }
 
     bool region::add_rect(const eka2l1::rect &rect) {
@@ -54,18 +54,15 @@ namespace eka2l1::common {
         if (rect.contains(bounding_rect())) {
             rects_.clear();
             rects_.push_back(rect);
-            
+
             return true;
         }
 
         for (std::size_t i = 0; i < rects_.size(); i++) {
-            if ((rects_[i].top.x + rects_[i].size.x <= rect.top.x) || (rects_[i].top.x >= rect.top.x + rect.size.x) ||
-                (rects_[i].top.y + rects_[i].size.y <= rect.top.y) || (rects_[i].top.y >= rect.top.y + rect.size.y))
+            if ((rects_[i].top.x + rects_[i].size.x <= rect.top.x) || (rects_[i].top.x >= rect.top.x + rect.size.x) || (rects_[i].top.y + rects_[i].size.y <= rect.top.y) || (rects_[i].top.y >= rect.top.y + rect.size.y))
                 continue;
 
-            if ((rects_[i].top.x <= rect.top.x) && (rects_[i].top.y <= rect.top.y) && 
-                (rects_[i].top.x + rects_[i].size.x >= rect.top.x + rect.size.x) && 
-                (rects_[i].top.y + rects_[i].size.y >= rect.top.y + rect.size.y)) {
+            if ((rects_[i].top.x <= rect.top.x) && (rects_[i].top.y <= rect.top.y) && (rects_[i].top.x + rects_[i].size.x >= rect.top.x + rect.size.x) && (rects_[i].top.y + rects_[i].size.y >= rect.top.y + rect.size.y)) {
                 // This rectangle already covers the new rectangle, no modification done
                 return false;
             }
@@ -74,18 +71,17 @@ namespace eka2l1::common {
             intersector = rect.intersect(rects_[i]);
 
             if (intersector.top.y + intersector.size.y != rect.top.y + rect.size.y)
-                rects_.push_back(eka2l1::rect( { rect.top.x, intersector.top.y }, { rect.size.x, rect.size.y + rect.top.y - intersector.top.y }));
+                rects_.push_back(eka2l1::rect({ rect.top.x, intersector.top.y }, { rect.size.x, rect.size.y + rect.top.y - intersector.top.y }));
 
             if (intersector.top.y != rect.top.y)
-                rects_.push_back(eka2l1::rect( { rect.top.x, rect.top.y }, { rect.size.x, intersector.top.y - rect.top.y }));
+                rects_.push_back(eka2l1::rect({ rect.top.x, rect.top.y }, { rect.size.x, intersector.top.y - rect.top.y }));
 
-			if (intersector.top.x + intersector.size.x != rect.top.x + rect.size.x)
-				rects_.push_back(eka2l1::rect({ intersector.top.x + intersector.size.x, intersector.top.y },
+            if (intersector.top.x + intersector.size.x != rect.top.x + rect.size.x)
+                rects_.push_back(eka2l1::rect({ intersector.top.x + intersector.size.x, intersector.top.y },
                     { rect.top.x + rect.size.x - intersector.top.x - intersector.size.x, intersector.size.y }));
 
             if (intersector.top.x != rect.top.x)
-                rects_.push_back(eka2l1::rect( { rect.top.x, intersector.top.y }, { intersector.top.x - rect.top.x,
-                    intersector.size.y}));
+                rects_.push_back(eka2l1::rect({ rect.top.x, intersector.top.y }, { intersector.top.x - rect.top.x, intersector.size.y }));
 
             rects_.erase(rects_.begin() + i);
             return true;
@@ -107,7 +103,7 @@ namespace eka2l1::common {
                 rects_.erase(rects_.begin() + i);
                 return;
             }
-            
+
             const eka2l1::rect intersection_reg = rect.intersect(rects_[i]);
 
             if (!intersection_reg.empty()) {

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Log.h>
 #include "scdv/panic.h"
+#include <Log.h>
 
 #include "drawdvc24.h"
 

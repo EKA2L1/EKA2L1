@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/bluetooth/protocols/overall.h>
 #include <services/bluetooth/protocols/btlink/btlink.h>
 #include <services/bluetooth/protocols/l2cap/l2cap.h>
+#include <services/bluetooth/protocols/overall.h>
 #include <services/socket/server.h>
 
 #include <common/log.h>

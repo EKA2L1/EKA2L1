@@ -20,26 +20,25 @@
 #include <android/launcher.h>
 #include <android/state.h>
 
-#include <system/devices.h>
 #include <package/manager.h>
+#include <system/devices.h>
 
+#include <common/fileutils.h>
+#include <common/language.h>
+#include <common/path.h>
 #include <services/fbs/fbs.h>
 #include <system/installation/firmware.h>
 #include <system/installation/rpkg.h>
-#include <common/path.h>
-#include <common/fileutils.h>
-#include <common/language.h>
 #include <utils/locale.h>
 #include <utils/system.h>
 
 namespace eka2l1::android {
 
     launcher::launcher(eka2l1::system *sys)
-        :sys(sys)
+        : sys(sys)
         , conf(sys->get_config())
         , kern(sys->get_kernel_system())
-        , alserv(nullptr)
-    {
+        , alserv(nullptr) {
         if (kern) {
             alserv = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(get_app_list_server_name_by_epocver(
                 kern->get_epoc_version())));
@@ -83,7 +82,7 @@ namespace eka2l1::android {
     bool launcher::install_app(std::string &path) {
         std::u16string upath = common::utf8_to_ucs2(path);
 
-        return sys->install_package(upath,drive_number::drive_e);
+        return sys->install_package(upath, drive_number::drive_e);
     }
 
     std::vector<std::string> launcher::get_devices() {
@@ -171,7 +170,8 @@ namespace eka2l1::android {
                 result = eka2l1::loader::install_rom(dvc_mngr, rom_path, rom_resident_path, root_z_path, nullptr, nullptr);
             }
         } else {
-            result = eka2l1::install_firmware(dvc_mngr, rom_path, root_c_path, root_e_path, root_z_path, rom_resident_path,
+            result = eka2l1::install_firmware(
+                dvc_mngr, rom_path, root_c_path, root_e_path, root_z_path, rom_resident_path,
                 [](const std::vector<std::string> &variants) -> int { return 0; }, nullptr, nullptr);
         }
 
@@ -194,7 +194,7 @@ namespace eka2l1::android {
     std::vector<std::string> launcher::get_packages() {
         manager::packages *manager = sys->get_packages();
         std::vector<std::string> info;
-        for (const auto &[pkg_uid, pkg]: *manager) {
+        for (const auto &[pkg_uid, pkg] : *manager) {
             if (!pkg.is_removable) {
                 continue;
             }
@@ -222,7 +222,7 @@ namespace eka2l1::android {
         io_system *io = sys->get_io_system();
         io->unmount(drive_e);
         io->mount_physical_path(drive_e, drive_media::physical,
-                io_attrib_removeable | io_attrib_write_protected, upath);
+            io_attrib_removeable | io_attrib_write_protected, upath);
     }
 
     void launcher::load_config() {
@@ -261,15 +261,14 @@ namespace eka2l1::android {
     }
 
     void launcher::draw(drivers::graphics_command_list_builder *builder, std::uint32_t window_width,
-            std::uint32_t window_height) {
+        std::uint32_t window_height) {
         epoc::screen *scr = winserv->get_screens();
         if (scr) {
             eka2l1::rect viewport;
             eka2l1::rect src;
             eka2l1::rect dest;
 
-            drivers::filter_option filter = conf->nearest_neighbor_filtering ? drivers::filter_option::nearest :
-                drivers::filter_option::linear;
+            drivers::filter_option filter = conf->nearest_neighbor_filtering ? drivers::filter_option::nearest : drivers::filter_option::linear;
 
             eka2l1::vec2 swapchain_size(window_width, window_height);
             viewport.size = swapchain_size;
@@ -324,7 +323,7 @@ namespace eka2l1::android {
 
                     builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0),
                         static_cast<float>(crr_mode.rotation), drivers::bitmap_draw_flag_no_flip);
-                } else {    
+                } else {
                     builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), 0.0f,
                         drivers::bitmap_draw_flag_no_flip);
                 }

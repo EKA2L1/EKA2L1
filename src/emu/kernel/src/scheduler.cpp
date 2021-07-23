@@ -24,14 +24,14 @@
 #include <common/configure.h>
 #include <common/log.h>
 
+#include <functional>
 #include <kernel/kernel.h>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
+#include <kernel/timing.h>
 #include <mem/mem.h>
 #include <mem/mmu.h>
 #include <mem/process.h>
-#include <kernel/timing.h>
-#include <functional>
 
 namespace eka2l1::kernel {
     thread_scheduler::thread_scheduler(kernel_system *kern, ntimer *timing, arm::core *cpu)
@@ -86,7 +86,7 @@ namespace eka2l1::kernel {
         }
 
         memory_system *mem = kern->get_memory_system();
-        
+
         if (!core_mmu) {
             core_mmu = mem->get_mmu(run_core);
         }
@@ -97,7 +97,7 @@ namespace eka2l1::kernel {
             crr_thread = newt;
             crr_thread->state = thread_state::run;
             crr_thread->increase_access_count();
-            
+
             mem::mem_model_process *mm_process = crr_process ? crr_process->get_mem_model() : nullptr;
 
             if (crr_process != newt->owning_process()) {
@@ -180,7 +180,7 @@ namespace eka2l1::kernel {
                 next_thread = next_ready_thread();
                 queue_thread_ready(old_friend);
             }
-            
+
             if (!next_thread && kern->should_core_idle_when_inactive()) {
                 // Use our old outdated friend, it seems only one thread exists
                 next_thread = old_friend;
@@ -324,9 +324,9 @@ namespace eka2l1::kernel {
 
         thr->state = thread_state::ready;
         thr->time = thr->timeslice;
-        
+
         queue_thread_ready(thr);
-        
+
         kern->prepare_reschedule();
 
         return true;

@@ -118,9 +118,9 @@ namespace eka2l1::config {
         YAML::Emitter emitter;
         emitter << YAML::BeginMap;
 
-        #define OPTION(name, variable, default) config_file_emit_single(emitter, #name, variable);
-        #include <config/options.inl>
-        #undef OPTION
+#define OPTION(name, variable, default) config_file_emit_single(emitter, #name, variable);
+#include <config/options.inl>
+#undef OPTION
 
         emitter << YAML::EndMap;
 
@@ -144,9 +144,9 @@ namespace eka2l1::config {
             return;
         }
 
-        #define OPTION(name, variable, default_value) get_yaml_value(node, #name, &variable, default_value);
-        #include <config/options.inl>
-        #undef OPTION
+#define OPTION(name, variable, default_value) get_yaml_value(node, #name, &variable, default_value);
+#include <config/options.inl>
+#undef OPTION
 
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
 

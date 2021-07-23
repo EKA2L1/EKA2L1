@@ -42,7 +42,7 @@ namespace eka2l1 {
         class codeseg;
     }
 
-    using codeseg_ptr = kernel::codeseg*;
+    using codeseg_ptr = kernel::codeseg *;
 
     constexpr int GDB_BUFFER_SIZE = 10000;
 

@@ -34,7 +34,7 @@ namespace eka2l1::mem::flexible {
         std::unique_ptr<mapping> map_;
     };
 
-    struct flexible_mem_model_process: public mem_model_process {
+    struct flexible_mem_model_process : public mem_model_process {
         std::unique_ptr<address_space> addr_space_;
         std::vector<flexible_mem_model_chunk_attach_info> attachs_;
 

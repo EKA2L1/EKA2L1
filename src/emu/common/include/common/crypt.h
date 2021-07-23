@@ -25,10 +25,10 @@
 
 namespace eka2l1::crypt {
     enum imei_valid_error {
-        IMEI_ERROR_NONE = 0,                    ///< No error occured.
-        IMEI_ERROR_NO_RIGHT_LENGTH = -1,        ///< Length of sequence is not 15.
-        IMEI_ERROR_INVALID_SUM = -2,            ///< Total sum doubled module 10 is not 0.
-        IMEI_ERROR_INVALID_CHARACTER = -3       ///< At least one non-numeric character is in the sequence.
+        IMEI_ERROR_NONE = 0, ///< No error occured.
+        IMEI_ERROR_NO_RIGHT_LENGTH = -1, ///< Length of sequence is not 15.
+        IMEI_ERROR_INVALID_SUM = -2, ///< Total sum doubled module 10 is not 0.
+        IMEI_ERROR_INVALID_CHARACTER = -3 ///< At least one non-numeric character is in the sequence.
     };
 
     /** 

@@ -28,7 +28,7 @@
 #if defined(_MSC_VER)
 #define EKA2L1_EXPORT __declspec(dllexport)
 #else
-#define EKA2L1_EXPORT __attribute__ ((dllexport))
+#define EKA2L1_EXPORT __attribute__((dllexport))
 #endif
 #else
 #define EKA2L1_EXPORT __attribute__((visibility("default")))
@@ -161,7 +161,7 @@ enum class language {
 #undef LANG_DECL
 };
 
-inline bool operator < (const language lhs, const language rhs) {
+inline bool operator<(const language lhs, const language rhs) {
     return static_cast<int>(lhs) < static_cast<int>(rhs);
 }
 

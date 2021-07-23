@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <common/uid.h>
 #include <common/vecx.h>
 #include <cstdint>
-#include <common/uid.h>
 #include <vector>
 
 namespace eka2l1::common {

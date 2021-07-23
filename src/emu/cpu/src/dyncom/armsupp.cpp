@@ -26,8 +26,8 @@ std::uint8_t ARMul_UnsignedAbsoluteDifference(std::uint8_t left, std::uint8_t ri
 }
 
 // Add with carry, indicates if a carry-out or signed overflow occurred.
-std::uint32_t AddWithCarry(std::uint32_t left, std::uint32_t right, std::uint32_t carry_in, bool* carry_out_occurred,
-                 bool* overflow_occurred) {
+std::uint32_t AddWithCarry(std::uint32_t left, std::uint32_t right, std::uint32_t carry_in, bool *carry_out_occurred,
+    bool *overflow_occurred) {
     std::uint64_t unsigned_sum = (std::uint64_t)left + (std::uint64_t)right + (std::uint64_t)carry_in;
     std::int64_t signed_sum = (std::int64_t)(std::int32_t)left + (std::int64_t)(std::int32_t)right + (std::int64_t)carry_in;
     std::uint64_t result = (unsigned_sum & 0xFFFFFFFF);
@@ -153,7 +153,7 @@ std::uint16_t ARMul_UnsignedSaturatedSub16(std::uint16_t left, std::uint16_t rig
 }
 
 // Signed saturation.
-std::uint32_t ARMul_SignedSatQ(std::int32_t value, std::uint8_t shift, bool* saturation_occurred) {
+std::uint32_t ARMul_SignedSatQ(std::int32_t value, std::uint8_t shift, bool *saturation_occurred) {
     const std::uint32_t max = (1 << shift) - 1;
     const std::int32_t top = (value >> shift);
 
@@ -170,7 +170,7 @@ std::uint32_t ARMul_SignedSatQ(std::int32_t value, std::uint8_t shift, bool* sat
 }
 
 // Unsigned saturation
-std::uint32_t ARMul_UnsignedSatQ(std::int32_t value, std::uint8_t shift, bool* saturation_occurred) {
+std::uint32_t ARMul_UnsignedSatQ(std::int32_t value, std::uint8_t shift, bool *saturation_occurred) {
     const std::uint32_t max = (1 << shift) - 1;
 
     if (value < 0) {

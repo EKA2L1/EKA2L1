@@ -3,8 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <common/log.h>
 #include <common/bytes.h>
+#include <common/log.h>
 #include <cpu/dyncom/arm_dyncom.h>
 #include <cpu/dyncom/armstate.h>
 #include <cpu/dyncom/vfp/vfp.h>
@@ -204,9 +204,9 @@ std::uint8_t ARMul_State::ReadMemory8(std::uint32_t address) const {
     return value;
 }
 
-std::uint16_t  ARMul_State::ReadMemory16(std::uint32_t address) const {
+std::uint16_t ARMul_State::ReadMemory16(std::uint32_t address) const {
     eka2l1::arm::r12l1::tlb *cache = core->mem_cache();
-    if (std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(cache->lookup(address))) {
+    if (std::uint16_t *ptr = reinterpret_cast<std::uint16_t *>(cache->lookup(address))) {
         return *ptr;
     }
 
@@ -225,7 +225,7 @@ std::uint16_t  ARMul_State::ReadMemory16(std::uint32_t address) const {
 
 std::uint32_t ARMul_State::ReadMemory32(std::uint32_t address) const {
     eka2l1::arm::r12l1::tlb *cache = core->mem_cache();
-    if (std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(cache->lookup(address))) {
+    if (std::uint32_t *ptr = reinterpret_cast<std::uint32_t *>(cache->lookup(address))) {
         return *ptr;
     }
 
@@ -253,9 +253,9 @@ std::uint32_t ARMul_State::ReadCode(std::uint32_t address) const {
     return value;
 }
 
-std::uint64_t  ARMul_State::ReadMemory64(std::uint32_t address) const {
+std::uint64_t ARMul_State::ReadMemory64(std::uint32_t address) const {
     eka2l1::arm::r12l1::tlb *cache = core->mem_cache();
-    if (std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(cache->lookup(address))) {
+    if (std::uint64_t *ptr = reinterpret_cast<std::uint64_t *>(cache->lookup(address))) {
         return *ptr;
     }
 
@@ -290,7 +290,7 @@ void ARMul_State::WriteMemory16(std::uint32_t address, std::uint16_t data) {
         data = eka2l1::common::byte_swap(data);
 
     eka2l1::arm::r12l1::tlb *cache = core->mem_cache();
-    if (std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(cache->lookup(address))) {
+    if (std::uint16_t *ptr = reinterpret_cast<std::uint16_t *>(cache->lookup(address))) {
         *ptr = data;
         return;
     }
@@ -306,7 +306,7 @@ void ARMul_State::WriteMemory32(std::uint32_t address, std::uint32_t data) {
         data = eka2l1::common::byte_swap(data);
 
     eka2l1::arm::r12l1::tlb *cache = core->mem_cache();
-    if (std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(cache->lookup(address))) {
+    if (std::uint32_t *ptr = reinterpret_cast<std::uint32_t *>(cache->lookup(address))) {
         *ptr = data;
         return;
     }
@@ -317,12 +317,12 @@ void ARMul_State::WriteMemory32(std::uint32_t address, std::uint32_t data) {
     }
 }
 
-void ARMul_State::WriteMemory64(std::uint32_t address, std::uint64_t  data) {
+void ARMul_State::WriteMemory64(std::uint32_t address, std::uint64_t data) {
     if (InBigEndianMode())
         data = eka2l1::common::byte_swap(data);
 
     eka2l1::arm::r12l1::tlb *cache = core->mem_cache();
-    if (std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(cache->lookup(address))) {
+    if (std::uint64_t *ptr = reinterpret_cast<std::uint64_t *>(cache->lookup(address))) {
         *ptr = data;
         return;
     }
@@ -338,7 +338,7 @@ eka2l1::arm::exclusive_monitor *ARMul_State::exmonitor() {
 }
 
 eka2l1::arm::core *ARMul_State::parent() {
-    return reinterpret_cast<eka2l1::arm::core*>(core);
+    return reinterpret_cast<eka2l1::arm::core *>(core);
 }
 
 // Reads from the CP15 registers. Used with implementation of the MRC instruction.
@@ -510,7 +510,7 @@ std::uint32_t ARMul_State::ReadCP15Register(std::uint32_t crn, std::uint32_t opc
     }
 
     LOG_ERROR(eka2l1::CPU_DYNCOM, "MRC CRn={}, CRm={}, OP1={} OP2={} is not implemented. Returning zero.",
-              crn, crm, opcode_1, opcode_2);
+        crn, crm, opcode_1, opcode_2);
     return 0;
 }
 

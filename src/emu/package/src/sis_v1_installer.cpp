@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <loader/sis_old.h>
 #include <loader/sis.h>
+#include <loader/sis_old.h>
 
 #include <package/sis_v1_installer.h>
 
@@ -30,8 +30,8 @@
 #include <common/log.h>
 #include <common/path.h>
 
-#include <vfs/vfs.h>
 #include <cwctype>
+#include <vfs/vfs.h>
 
 namespace eka2l1::loader {
     bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
@@ -56,7 +56,7 @@ namespace eka2l1::loader {
 
         std::size_t total_size = 0;
         std::size_t decomped = 0;
-        for (auto &file: res->files) {
+        for (auto &file : res->files) {
             total_size += file.record.org_file_len;
         }
 

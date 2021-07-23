@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <kernel/server.h>
 #include <services/framework.h>
 #include <services/notifier/plugin.h>
-#include <kernel/server.h>
 
 namespace eka2l1 {
     enum notifier_opcode {

@@ -25,12 +25,12 @@
 #include <services/fbs/palette.h>
 #include <services/window/bitmap_cache.h>
 
-#include <system/epoc.h>
-#include <kernel/kernel.h>
 #include <kernel/chunk.h>
+#include <kernel/kernel.h>
+#include <system/epoc.h>
 
-#include <drivers/itc.h>
 #include <drivers/graphics/graphics.h>
+#include <drivers/itc.h>
 
 #include <algorithm>
 
@@ -57,7 +57,7 @@ namespace eka2l1::epoc {
         auto llist = drv->new_command_list();
         auto builder = drv->new_command_builder(llist.get());
 
-        for (const auto tex_handle: driver_textures) {
+        for (const auto tex_handle : driver_textures) {
             if (tex_handle) {
                 builder->destroy_bitmap(tex_handle);
             }
@@ -86,7 +86,7 @@ namespace eka2l1::epoc {
             for (std::size_t x = 0; x < bw_bmp->header_.size_pixels.x; x++) {
                 std::uint32_t word_per_line = (bw_bmp->header_.size_pixels.x + 31) / 32;
                 std::uint32_t color = original_ptr[y * word_per_line + x / 32];
-                std::uint32_t converted_color =  0;
+                std::uint32_t converted_color = 0;
                 if (color & (1 << (x & 0x1F))) {
                     converted_color = 0xFFFFFF;
                 }
@@ -191,7 +191,7 @@ namespace eka2l1::epoc {
             server_ptr ss = kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
                 kern->get_epoc_version()));
 
-            fbss_ = reinterpret_cast<fbs_server*>(ss);
+            fbss_ = reinterpret_cast<fbs_server *>(ss);
         }
 
         std::int64_t idx = 0;
@@ -323,7 +323,7 @@ namespace eka2l1::epoc {
             if (dsp == epoc::display_mode::none) {
                 dsp = bmp->settings_.initial_display_mode();
             }
-            
+
             if (dsp == epoc::display_mode::color16mu) {
                 builder->set_swizzle(driver_textures[idx], drivers::channel_swizzle::red, drivers::channel_swizzle::green,
                     drivers::channel_swizzle::blue, drivers::channel_swizzle::one);

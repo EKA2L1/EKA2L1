@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/backup/backup.h>
+#include <system/epoc.h>
 
 #include <utils/err.h>
 
@@ -30,7 +30,7 @@ namespace eka2l1 {
 
         return "!BackupServer";
     }
-    
+
     backup_server::backup_server(eka2l1::system *sys)
         : service::typical_server(sys, get_backup_server_name_through_epocver(sys->get_symbian_version_use())) {
     }

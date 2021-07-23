@@ -21,134 +21,134 @@
 #include <system/devices.h>
 #include <yaml-cpp/yaml.h>
 
-#include <common/types.h>
 #include <common/algorithm.h>
 #include <common/dynamicfile.h>
-#include <common/path.h>
 #include <common/log.h>
+#include <common/path.h>
+#include <common/types.h>
 
 #include <algorithm>
 #include <fstream>
-#include <sstream>
 #include <map>
+#include <sstream>
 
 namespace eka2l1 {
     static std::map<std::string, std::uint32_t> DEVICE_UID_MAP = {
-        { "nem-4", 0x101F8C19 },   // Nokia N-Gage
-        { "rh-29", 0x101FB2B1 },   // Nokia N-Gage QD
-        { "rm-325", 0x101FB3DD },  // Nokia 6600
-        { "rm-51", 0x10200F97 },   // Nokia 3230
-        { "rm-25", 0x101FB3F4 },   // Nokia 6260
-        { "nhl-12", 0x101F3EE3 },  // Nokia 6620
-        { "rh-67", 0x101FB3F3 },   // Nokia 6670
-        { "rh-51", 0x101FB3F3 },   // Nokia 7670
-        { "rm-1", 0x101FBB55 },    // Nokia 6630
-        { "rm-36", 0x10200F99 },   // Nokia 6680
-        { "rm-57", 0x10200F9C },   // Nokia 6681
-        { "rm-58", 0x10200F9B },   // Nokia 6682
-        { "rm-84", 0x10200F9A },   // Nokia N70
-        { "rm-99", 0x10200F9A },   // Nokia N70-5
-        { "rm-180", 0x10200F9A },  // Nokia N72
-        { "rm-42", 0x10200F98 },   // Nokia N90
-        { "rm-38", 0x200005F8 },   // Nokia 3250
-        { "rm-86", 0x20000602 },   // Nokia 5500 Sport
-        { "rm-170", 0x20002495 },  // Nokia E50
-        { "rm-171", 0x20002495 },  // Nokia E50-2
-        { "rm-49", 0x20001856 },   // Nokia E60
-        { "rm-89", 0x20001858 },   // Nokia E61
-        { "rm-227", 0x20002D7F },  // Nokia E61i
-        { "rm-88", 0x20001859 },   // Nokia E62
-        { "rm-208", 0x20000604 },  // Nokia E65
-        { "rm-24", 0x20001857 },   // Nokia E70
-        { "rm-67", 0x20001857 },   // Nokia N71
-        { "rm-132", 0x20001857 },  // Nokia N73
-        { "rm-133", 0x20001857 },  // Nokia N73-2
-        { "rm-128", 0x200005FE },  // Nokia N75
-        { "rm-194", 0x20000601 },  // Nokia N77
-        { "rm-92", 0x200005F9 },   // Nokia N80
-        { "rm-158", 0x200005FC },  // Nokia N91
-        { "rm-100", 0x200005FA },  // Nokia N92
-        { "rm-55", 0x20000600 },   // Nokia N93
-        { "rm-156", 0x20000605 },  // Nokia N93i
-        { "rm-157", 0x20000605 },  // Nokia N93i
-        { "rm-230", 0x20002D7C },  // Nokia 5700 XpressMusic
-        { "rm-122", 0x20002D7B },  // Nokia 6110 Navigator
-        { "rm-243", 0x20002D7E },  // Nokia 6120 Classic
-        { "rm-176", 0x20000606 },  // Nokia 6290
-        { "rm-426", 0x20002498 },  // Nokia E51
-        { "rm-407", 0x2000249b },  // Nokia E71
-        { "rm-493", 0x2000249b },  // Nokia E71??
-        { "ra-6", 0x20002496 },    // Nokia N90
-        { "rm-135", 0x2000060A },  // Nokia N76
+        { "nem-4", 0x101F8C19 }, // Nokia N-Gage
+        { "rh-29", 0x101FB2B1 }, // Nokia N-Gage QD
+        { "rm-325", 0x101FB3DD }, // Nokia 6600
+        { "rm-51", 0x10200F97 }, // Nokia 3230
+        { "rm-25", 0x101FB3F4 }, // Nokia 6260
+        { "nhl-12", 0x101F3EE3 }, // Nokia 6620
+        { "rh-67", 0x101FB3F3 }, // Nokia 6670
+        { "rh-51", 0x101FB3F3 }, // Nokia 7670
+        { "rm-1", 0x101FBB55 }, // Nokia 6630
+        { "rm-36", 0x10200F99 }, // Nokia 6680
+        { "rm-57", 0x10200F9C }, // Nokia 6681
+        { "rm-58", 0x10200F9B }, // Nokia 6682
+        { "rm-84", 0x10200F9A }, // Nokia N70
+        { "rm-99", 0x10200F9A }, // Nokia N70-5
+        { "rm-180", 0x10200F9A }, // Nokia N72
+        { "rm-42", 0x10200F98 }, // Nokia N90
+        { "rm-38", 0x200005F8 }, // Nokia 3250
+        { "rm-86", 0x20000602 }, // Nokia 5500 Sport
+        { "rm-170", 0x20002495 }, // Nokia E50
+        { "rm-171", 0x20002495 }, // Nokia E50-2
+        { "rm-49", 0x20001856 }, // Nokia E60
+        { "rm-89", 0x20001858 }, // Nokia E61
+        { "rm-227", 0x20002D7F }, // Nokia E61i
+        { "rm-88", 0x20001859 }, // Nokia E62
+        { "rm-208", 0x20000604 }, // Nokia E65
+        { "rm-24", 0x20001857 }, // Nokia E70
+        { "rm-67", 0x20001857 }, // Nokia N71
+        { "rm-132", 0x20001857 }, // Nokia N73
+        { "rm-133", 0x20001857 }, // Nokia N73-2
+        { "rm-128", 0x200005FE }, // Nokia N75
+        { "rm-194", 0x20000601 }, // Nokia N77
+        { "rm-92", 0x200005F9 }, // Nokia N80
+        { "rm-158", 0x200005FC }, // Nokia N91
+        { "rm-100", 0x200005FA }, // Nokia N92
+        { "rm-55", 0x20000600 }, // Nokia N93
+        { "rm-156", 0x20000605 }, // Nokia N93i
+        { "rm-157", 0x20000605 }, // Nokia N93i
+        { "rm-230", 0x20002D7C }, // Nokia 5700 XpressMusic
+        { "rm-122", 0x20002D7B }, // Nokia 6110 Navigator
+        { "rm-243", 0x20002D7E }, // Nokia 6120 Classic
+        { "rm-176", 0x20000606 }, // Nokia 6290
+        { "rm-426", 0x20002498 }, // Nokia E51
+        { "rm-407", 0x2000249b }, // Nokia E71
+        { "rm-493", 0x2000249b }, // Nokia E71??
+        { "ra-6", 0x20002496 }, // Nokia N90
+        { "rm-135", 0x2000060A }, // Nokia N76
         { "rm-149", 0x2000060A },
-        { "rm-256", 0x20002D83 },  // Nokia N81
+        { "rm-256", 0x20002D83 }, // Nokia N81
         { "rm-179", 0x20002D83 },
         { "rm-223", 0x20002D83 },
-        { "rm-313", 0x20002D85 },  // Nokia N82
+        { "rm-313", 0x20002D85 }, // Nokia N82
         { "rm-314", 0x20002D85 },
-        { "rm-159", 0x2000060B },  // Nokia N95
+        { "rm-159", 0x2000060B }, // Nokia N95
         { "rm-160", 0x2000060B },
         { "rm-245", 0x2000060B },
-        { "rm-320", 0x20002D84 },  // Nokia N95 8GB
-        { "rm-321", 0x2000060B },  
-        { "rm-409", 0x2000DA5A },  // Nokia 5320 XpressMusic
-        { "rm-431", 0x2000DA61 },  // Nokia 5630 XpressMusic
-        { "rm-465", 0x20014DD3 },  // Nokia 5730 XpressMusic
-        { "rm-367", 0x2000DA54 },  // Nokia 6210 Navigator
-        { "rm-328", 0x2000DA52 },  // Nokia 6220 Classic
-        { "rm-324", 0x2000DA57 },  // Nokia 6650
+        { "rm-320", 0x20002D84 }, // Nokia N95 8GB
+        { "rm-321", 0x2000060B },
+        { "rm-409", 0x2000DA5A }, // Nokia 5320 XpressMusic
+        { "rm-431", 0x2000DA61 }, // Nokia 5630 XpressMusic
+        { "rm-465", 0x20014DD3 }, // Nokia 5730 XpressMusic
+        { "rm-367", 0x2000DA54 }, // Nokia 6210 Navigator
+        { "rm-328", 0x2000DA52 }, // Nokia 6220 Classic
+        { "rm-324", 0x2000DA57 }, // Nokia 6650
         { "rm-400", 0x2000DA57 },
-        { "rm-235", 0x20002D81 },  // Nokia N78
+        { "rm-235", 0x20002D81 }, // Nokia N78
         { "rm-236", 0x20002D81 },
         { "rm-342", 0x20002D81 },
-        { "rm-346", 0x2000DA64 },  // Nokia N79
+        { "rm-346", 0x2000DA64 }, // Nokia N79
         { "rm-348", 0x2000DA64 },
         { "rm-349", 0x2000DA64 },
         { "rm-350", 0x2000DA64 },
-        { "rm-333", 0x20002D86 },  // Nokia N85
+        { "rm-333", 0x20002D86 }, // Nokia N85
         { "rm-334", 0x20002D86 },
         { "rm-335", 0x20002D86 },
-        { "rm-297", 0x20002D82 },  // Nokia N96
+        { "rm-297", 0x20002D82 }, // Nokia N96
         { "rm-472", 0x20002D82 },
         { "rm-247", 0x20002D82 },
-        { "rm-632", 0x20024100 },  // Nokia E5-00
+        { "rm-632", 0x20024100 }, // Nokia E5-00
         { "rm-634", 0x20024100 },
-        { "rm-627", 0x20029A76 },  // Nokia X5-01
-        { "rm-356", 0x2000DA56 },  // Nokia 5800 XpressMusic
+        { "rm-627", 0x20029A76 }, // Nokia X5-01
+        { "rm-356", 0x2000DA56 }, // Nokia 5800 XpressMusic
         { "rm-428", 0x2000DA56 },
-        { "rm-625", 0x20024104 },  // Nokia 5228
-        { "rm-588", 0x20023763 },  // Nokia 5230.1
-        { "rm-594", 0x20023764 },  // Nokia 5230.2
-        { "rm-629", 0x20024105 },  // Nokia 5230.3
-        { "rm-720", 0x2002C130 },  // Nokia C5-04
-        { "rm-612", 0x2002BF91 },  // Nokia C6-00
-        { "rm-505", 0x20014DDD },  // Nokia N97
+        { "rm-625", 0x20024104 }, // Nokia 5228
+        { "rm-588", 0x20023763 }, // Nokia 5230.1
+        { "rm-594", 0x20023764 }, // Nokia 5230.2
+        { "rm-629", 0x20024105 }, // Nokia 5230.3
+        { "rm-720", 0x2002C130 }, // Nokia C5-04
+        { "rm-612", 0x2002BF91 }, // Nokia C6-00
+        { "rm-505", 0x20014DDD }, // Nokia N97
         { "rm-507", 0x20014DDD },
         { "rm-506", 0x20014DDE },
-        { "rm-553", 0x20023766 },  // Nokia N97 Mini
+        { "rm-553", 0x20023766 }, // Nokia N97 Mini
         { "rm-555", 0x20023766 },
-        { "rm-559", 0x200227DD },  // Nokia X6-00
+        { "rm-559", 0x200227DD }, // Nokia X6-00
         { "rm-551", 0x200227DE },
         { "rm-552", 0x200227DF },
-        { "rm-718", 0x2002376A },  // Nokia C6-01
-        { "rm-675", 0x2002BF92 },  // Nokia C7-00
-        { "rm-691", 0x2002BF92 },  // Nokia C7-01
-        { "rm-626", 0x2002BF96 },  // Nokia E7-00
-        { "rm-596", 0x20029A73 },  // Nokia N8
-        { "rm-707", 0x20029A6F },  // Nokia X7-00
-        { "rm-609", 0x20023767 },  // Nokia E6-00
-        { "rm-749", 0x20035560 },  // Nokia Oro
-        { "rm-807", 0x2003AB64 },  // Nokia 808 PureView
-        { "rm-774", 0x2002BF94 },  // Nokia 701
-        { "rm-670", 0x2002C12C },  // Nokia 700
-        { "rm-779", 0x20035565 },  // Nokia 603
-        { "rm-750", 0x20035566 },  // Nokia 500
+        { "rm-718", 0x2002376A }, // Nokia C6-01
+        { "rm-675", 0x2002BF92 }, // Nokia C7-00
+        { "rm-691", 0x2002BF92 }, // Nokia C7-01
+        { "rm-626", 0x2002BF96 }, // Nokia E7-00
+        { "rm-596", 0x20029A73 }, // Nokia N8
+        { "rm-707", 0x20029A6F }, // Nokia X7-00
+        { "rm-609", 0x20023767 }, // Nokia E6-00
+        { "rm-749", 0x20035560 }, // Nokia Oro
+        { "rm-807", 0x2003AB64 }, // Nokia 808 PureView
+        { "rm-774", 0x2002BF94 }, // Nokia 701
+        { "rm-670", 0x2002C12C }, // Nokia 700
+        { "rm-779", 0x20035565 }, // Nokia 603
+        { "rm-750", 0x20035566 }, // Nokia 500
     };
 
     void device_manager::load_devices() {
         YAML::Node devices_node{};
 
-        {    
+        {
             const std::lock_guard<std::mutex> guard(lock);
             devices.clear();
         }
@@ -168,7 +168,7 @@ namespace eka2l1 {
             epocver ver = string_to_epocver(plat_ver.c_str());
 
             std::uint32_t machine_uid = 0;
-            
+
             try {
                 machine_uid = device_node.second["machine-uid"].as<int>();
             } catch (YAML::Exception exception) {
@@ -278,8 +278,7 @@ namespace eka2l1 {
 
         std::vector<int> languages;
         int default_language = -1;
-        const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + (ver < epocver::eka2 ?
-            "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
+        const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + (ver < epocver::eka2 ? "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
         common::dynamic_ifile ifile(lang_path);
         if (ifile.fail()) {
             LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {}).", lang_path);
@@ -293,7 +292,7 @@ namespace eka2l1 {
                 if ((line == "\r") || (line == "\n") || (line == "\r\n")) {
                     continue;
                 }
-                
+
                 const int lang_code = std::stoi(line);
                 if (line.find_first_of(",d") != std::string::npos) {
                     default_language = lang_code;

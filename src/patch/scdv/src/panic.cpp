@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <e32std.h>
 #include "scdv/panic.h"
+#include <e32std.h>
 
 namespace Scdv {
     void Panic(TPanicReason reason) {

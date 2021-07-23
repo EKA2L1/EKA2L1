@@ -18,12 +18,12 @@
  */
 
 #include <mem/ptr.h>
+#include <services/framework.h>
 #include <services/ui/skin/chunk_maintainer.h>
 #include <services/ui/skin/common.h>
 #include <services/ui/skin/icon_cfg.h>
 #include <services/ui/skin/settings.h>
 #include <services/ui/skin/skn.h>
-#include <services/framework.h>
 
 #include <queue>
 

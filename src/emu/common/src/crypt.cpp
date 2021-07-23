@@ -183,7 +183,7 @@ namespace eka2l1::crypt {
 
         return dest_written;
     }
-    
+
     static std::uint32_t calculate_checksum(const void *uids) {
         const std::uint8_t *cur = reinterpret_cast<decltype(cur)>(uids);
         const std::uint8_t *end = cur + 12;
@@ -205,7 +205,7 @@ namespace eka2l1::crypt {
     std::uint32_t calculate_checked_uid_checksum(const std::uint32_t *uids) {
         return (calculate_checksum(reinterpret_cast<const std::uint8_t *>(uids) + 1) << 16) | calculate_checksum(uids);
     }
-    
+
     imei_valid_error is_imei_valid(const std::string &supposed_imei) {
         if (supposed_imei.length() != 15) {
             return IMEI_ERROR_NO_RIGHT_LENGTH;

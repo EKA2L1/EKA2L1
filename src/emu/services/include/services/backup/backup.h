@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/framework.h>
 #include <kernel/server.h>
+#include <services/framework.h>
 #include <utils/reqsts.h>
 
 namespace eka2l1 {
@@ -60,7 +60,7 @@ namespace eka2l1 {
 
     public:
         explicit backup_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
-        
+
         void fetch(service::ipc_context *ctx) override;
         void get_backup_operation_state(service::ipc_context *ctx);
         void set_backup_operation_observer_present(service::ipc_context *ctx);

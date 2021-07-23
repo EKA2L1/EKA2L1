@@ -29,7 +29,7 @@ namespace eka2l1::loader {
         inferred = 0x3000
     };
 
-    enum relocate_section: std::uint16_t {
+    enum relocate_section : std::uint16_t {
         relocate_section_text = 0,
         relocate_section_data = 1
     };

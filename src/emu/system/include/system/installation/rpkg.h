@@ -1,7 +1,7 @@
 #pragma once
 
-#include <system/installation/common.h>
 #include <common/types.h>
+#include <system/installation/common.h>
 
 #include <atomic>
 #include <cstdint>

@@ -22,16 +22,15 @@
 #include <qt/utils.h>
 
 #include <QApplication>
-#include <QLocale>
-#include <QTranslator>
 #include <QFile>
+#include <QLocale>
 #include <QSettings>
+#include <QTranslator>
 
-#include <memory>
 #include <common/log.h>
+#include <memory>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
     QCoreApplication::setOrganizationName("EKA2L1");
@@ -48,7 +47,7 @@ int main(int argc, char *argv[])
         if (translator.load(":/languages/" + base_name)) {
             a.installTranslator(&translator);
             lang_loaded = true;
-        }  
+        }
     }
 
     if (!lang_loaded) {
@@ -65,5 +64,5 @@ int main(int argc, char *argv[])
     }
 
     eka2l1::desktop::emulator emulator_state;
-    return eka2l1::desktop::emulator_entry(a, emulator_state, argc, const_cast<const char**>(argv));
+    return eka2l1::desktop::emulator_entry(a, emulator_state, argc, const_cast<const char **>(argv));
 }

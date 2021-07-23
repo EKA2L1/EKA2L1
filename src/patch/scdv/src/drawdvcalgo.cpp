@@ -331,7 +331,7 @@ void CFbsDrawDeviceAlgorithm::SwapWidthAndHeight() {
 
 TRgb CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(TRgb aBufferColor, TRgb aWriteColor, const CGraphicsContext::TDrawMode aDrawMode) {
     TRgb currentColor;
-    
+
     switch (aDrawMode) {
     case CGraphicsContext::EDrawModePEN:
 #ifdef EKA2

@@ -96,7 +96,7 @@ static CFbsDrawDevice *InstantiateNewScreenDevice(const TUint32 aScreenNo, TAny 
     CFbsDrawDevice *device = NULL;
     const TUint16 wordModePaletteEntriesCount = 16;
 
-    aAddress = reinterpret_cast<TUint8*>(aAddress) + wordModePaletteEntriesCount * sizeof(TUint16);
+    aAddress = reinterpret_cast<TUint8 *>(aAddress) + wordModePaletteEntriesCount * sizeof(TUint16);
 
     switch (aMode) {
     case EColor4KAlter:
@@ -164,12 +164,12 @@ CFbsDrawDevice *CFbsDrawDevice::NewScreenDeviceL(TInt aScreenNo, TDisplayMode aD
 #else
     TPckgBuf<TScreenInfoV01> info;
     UserSvr::ScreenInfo(info);
-    
-    videoAddress = reinterpret_cast<TUint32*>(info().iScreenAddress);
+
+    videoAddress = reinterpret_cast<TUint32 *>(info().iScreenAddress);
 #endif
 
     TInt width, height = 0;
-    
+
 #ifdef EKA2
     HAL::Get(aScreenNo, HAL::EDisplayXPixels, width);
     HAL::Get(aScreenNo, HAL::EDisplayYPixels, height);

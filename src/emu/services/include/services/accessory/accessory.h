@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/framework.h>
 #include <common/container.h>
+#include <services/framework.h>
 
 #include <memory>
 
@@ -41,7 +41,7 @@ namespace eka2l1 {
         virtual bool fetch(service::ipc_context *ctx) = 0;
     };
 
-    struct accessory_single_connection_subsession: public accessory_subsession {
+    struct accessory_single_connection_subsession : public accessory_subsession {
     protected:
         epoc::notify_info accessory_connected_nof_;
 

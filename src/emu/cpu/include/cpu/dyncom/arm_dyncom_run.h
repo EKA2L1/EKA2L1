@@ -30,7 +30,7 @@
  * @return If the PC is being read, then the word-aligned PC value is returned.
  *         If the PC is not being read, then the value stored in the register is returned.
  */
-inline std::uint32_t CHECK_READ_REG15_WA(const ARMul_State* cpu, int Rn) {
+inline std::uint32_t CHECK_READ_REG15_WA(const ARMul_State *cpu, int Rn) {
     return (Rn == 15) ? ((cpu->Reg[15] & ~0x3) + cpu->GetInstructionSize() * 2) : cpu->Reg[Rn];
 }
 
@@ -43,6 +43,6 @@ inline std::uint32_t CHECK_READ_REG15_WA(const ARMul_State* cpu, int Rn) {
  * @return If the PC is being read, then the incremented PC value is returned.
  *         If the PC is not being read, then the values stored in the register is returned.
  */
-inline std::uint32_t CHECK_READ_REG15(const ARMul_State* cpu, int Rn) {
+inline std::uint32_t CHECK_READ_REG15(const ARMul_State *cpu, int Rn) {
     return (Rn == 15) ? ((cpu->Reg[15] & ~0x1) + cpu->GetInstructionSize() * 2) : cpu->Reg[Rn];
 }

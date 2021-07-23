@@ -277,10 +277,9 @@ namespace eka2l1 {
         }
 
         eka2l1::rect intersect(const eka2l1::rect &other) const {
-            eka2l1::rect r { {0, 0}, {0, 0} };
-            
-            if (empty() || other.empty() || (top.x + size.x <= other.top.x) || (top.y + size.y <= other.top.y) ||
-                (top.x >= other.top.x + other.size.x) || (top.y >= other.top.y + other.size.y)) {
+            eka2l1::rect r{ { 0, 0 }, { 0, 0 } };
+
+            if (empty() || other.empty() || (top.x + size.x <= other.top.x) || (top.y + size.y <= other.top.y) || (top.x >= other.top.x + other.size.x) || (top.y >= other.top.y + other.size.y)) {
                 return r;
             }
 

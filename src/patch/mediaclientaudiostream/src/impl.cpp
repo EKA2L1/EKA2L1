@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mda/common/audio.h>
-#include <Log.h>
 #include <AudCommon.h>
+#include <Log.h>
 #include <SoftInt.h>
+#include <mda/common/audio.h>
 
 #include "dispatch.h"
 #include "impl.h"
@@ -35,7 +35,6 @@ CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioOutputStream *aSt
     : CActive(CActive::EPriorityStandard)
     , iStream(aStream)
     , iCopied(NULL) {
-
 }
 
 void CMMFMdaOutputBufferQueue::WriteAndWait() {
@@ -133,8 +132,8 @@ CMMFMdaOutputOpen::~CMMFMdaOutputOpen() {
 
 static TInt OpenCompleteCallback(void *aUserdata) {
     LogOut(KMcaCat, _L("Open complete"));
-   
-    CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream*>(aUserdata);
+
+    CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream *>(aUserdata);
     stream->iCallback.MaoscOpenComplete(KErrNone);
 
     return 0;
@@ -168,7 +167,7 @@ CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback
     , iState(EMdaStateReady)
     , iBufferQueue(this)
     , iOpen()
-    , iSetPriorityUnimplNotified(EFalse) 
+    , iSetPriorityUnimplNotified(EFalse)
     , iCallback(aCallback) {
 }
 

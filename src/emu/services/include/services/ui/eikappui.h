@@ -55,7 +55,7 @@ namespace eka2l1 {
         std::string to_buf();
     };
 
-    class eikappui_session: public service::typical_session {
+    class eikappui_session : public service::typical_session {
     private:
         oom_ui_app_session *cap_session_;
 

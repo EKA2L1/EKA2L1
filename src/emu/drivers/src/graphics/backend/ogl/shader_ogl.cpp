@@ -56,7 +56,7 @@ namespace eka2l1::drivers {
             buf[name_len] = '\0';
 
             std::int32_t location = glGetAttribLocation(program, buf);
-            data.insert(data.end(), reinterpret_cast<std::uint8_t*>(&location), reinterpret_cast<std::uint8_t*>(&location) + sizeof(location));
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&location), reinterpret_cast<std::uint8_t *>(&location) + sizeof(location));
         }
 
         reinterpret_cast<std::uint16_t *>(&data[0])[1] = static_cast<std::uint16_t>(data.size());
@@ -73,7 +73,7 @@ namespace eka2l1::drivers {
             data.insert(data.end(), buf, buf + name_len);
 
             std::int32_t location = glGetUniformLocation(program, buf);
-            data.insert(data.end(), reinterpret_cast<std::uint8_t*>(&location), reinterpret_cast<std::uint8_t*>(&location) + sizeof(location));
+            data.insert(data.end(), reinterpret_cast<std::uint8_t *>(&location), reinterpret_cast<std::uint8_t *>(&location) + sizeof(location));
         }
     }
 
@@ -121,7 +121,7 @@ namespace eka2l1::drivers {
         glCompileShader(vert);
 
         int success;
-        char error[512] = {'\0'};
+        char error[512] = { '\0' };
 
         glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
 

@@ -30,7 +30,7 @@
 #include <Windows.h>
 
 namespace eka2l1::common {
-    typedef BOOL (*get_overlapped_result_ex_proc)(HANDLE hFile, LPOVERLAPPED lpOverlapped,    
+    typedef BOOL (*get_overlapped_result_ex_proc)(HANDLE hFile, LPOVERLAPPED lpOverlapped,
         LPDWORD lpNumberOfBytesTransferred, DWORD dwMilliseconds, BOOL bAlertable);
 
     struct directory_watcher_impl {

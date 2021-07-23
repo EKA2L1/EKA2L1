@@ -326,7 +326,7 @@ namespace eka2l1::epoc {
 
         common::ro_stream *stream_;
         plat_ver ver_;
-        language importer_lang_;
+        ::language importer_lang_;
 
         bool read_master_chunk();
         bool process_chunks(std::uint32_t base_offset, const std::int32_t count);
@@ -352,6 +352,6 @@ namespace eka2l1::epoc {
         std::string process_string(std::uint32_t base_offset, const std::uint16_t size);
 
         explicit skn_file(common::ro_stream *stream, plat_ver platform_version = { 2, 8 },
-            language lang = language::any);
+            ::language lang = ::language::any);
     };
 }

@@ -45,9 +45,9 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        #define LOGCLASS(name, short_nice_name, nice_name) short_nice_name,
+#define LOGCLASS(name, short_nice_name, nice_name) short_nice_name,
         static const char *LOG_CLASS_NAME_ARRAYS[LOG_CLASS_COUNT] = {
-            #include <common/logclass.def>
+#include <common/logclass.def>
         };
 
         return LOG_CLASS_NAME_ARRAYS[static_cast<int>(cls)];

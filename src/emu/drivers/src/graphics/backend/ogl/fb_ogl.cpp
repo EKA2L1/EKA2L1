@@ -18,15 +18,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <drivers/graphics/backend/ogl/fb_ogl.h>
 #include <drivers/graphics/backend/ogl/common_ogl.h>
+#include <drivers/graphics/backend/ogl/fb_ogl.h>
 #include <glad/glad.h>
 
 #include <common/log.h>
 #include <common/platform.h>
 
 namespace eka2l1::drivers {
-    ogl_framebuffer::ogl_framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_and_stencil_buffer)
+    ogl_framebuffer::ogl_framebuffer(std::initializer_list<texture *> color_buffer_list, texture *depth_and_stencil_buffer)
         : framebuffer(color_buffer_list, depth_and_stencil_buffer)
         , last_bind_type(framebuffer_bind_read_draw)
         , last_fb(-1) {
@@ -97,10 +97,10 @@ namespace eka2l1::drivers {
     }
 
     void ogl_framebuffer::unbind(graphics_driver *driver) {
-        if (last_fb != -1) {    
+        if (last_fb != -1) {
             auto enums = fb_bind_type_to_ogl_enum(last_bind_type);
             glBindFramebuffer(enums.first, last_fb);
-            
+
             last_fb = -1;
         }
     }
@@ -185,7 +185,7 @@ namespace eka2l1::drivers {
         glReadBuffer(GL_COLOR_ATTACHMENT0 + attachment_id);
         return true;
     }
-    
+
     bool ogl_framebuffer::blit(const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect, const std::uint32_t flags,
         const filter_option copy_filter) {
         std::uint32_t blit_mask_ogl = 0;
@@ -205,7 +205,7 @@ namespace eka2l1::drivers {
         glBlitFramebuffer(source_rect.top.x, source_rect.top.y, source_rect.top.x + source_rect.size.x, source_rect.top.y + source_rect.size.y,
             dest_rect.top.x, dest_rect.top.y, dest_rect.top.x + dest_rect.size.x, dest_rect.top.y + dest_rect.size.y,
             blit_mask_ogl, to_filter_option(copy_filter));
-        
+
         return true;
     }
 }

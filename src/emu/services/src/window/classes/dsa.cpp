@@ -44,7 +44,8 @@ namespace eka2l1::epoc {
             epoc::chunk_allocator *allocator = client->get_ws().allocator();
 
             sync_status_ = allocator->to_address(allocator->allocate_struct<epoc::request_status>(
-                epoc::status_pending, kern->is_eka1()), nullptr);
+                                                     epoc::status_pending, kern->is_eka1()),
+                nullptr);
 
             // Leech on the owner
             sync_thread_ = kern->create<kernel::thread>(kern->get_memory_system(), kern->get_ntimer(),
@@ -57,10 +58,10 @@ namespace eka2l1::epoc {
 
     dsa::~dsa() {
         do_cancel();
-        
+
         if (sync_thread_) {
             sync_thread_->stop();
-            
+
             epoc::chunk_allocator *allocator = client->get_ws().allocator();
             allocator->free(allocator->to_pointer(sync_status_.ptr_address(), nullptr));
 
@@ -84,16 +85,16 @@ namespace eka2l1::epoc {
         }
 
         std::uint32_t window_handle = 0;
-        
+
         if (sync_thread_ && (cmd.header.cmd_len == 8)) {
             // First integer looks like a sync status too. Probably for other side around.
             // TODO: Use it.
             window_handle = *(reinterpret_cast<std::uint32_t *>(cmd.data_ptr) + 1);
 
-            dsa_must_stop_notify_.sts = *reinterpret_cast<address*>(cmd.data_ptr);
+            dsa_must_stop_notify_.sts = *reinterpret_cast<address *>(cmd.data_ptr);
             dsa_must_stop_notify_.requester = ctx.msg->own_thr;
         } else {
-            window_handle = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+            window_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         }
 
         epoc::window_user *user = reinterpret_cast<epoc::window_user *>(client->get_object(window_handle));
@@ -238,8 +239,7 @@ namespace eka2l1::epoc {
                 kernel_system *kern = client->get_ws().get_kernel_system();
                 std::int32_t target_handle = 0;
 
-                target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ?
-                    dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
+                target_handle = kern->open_handle_with_thread(ctx.msg->own_thr, (op == ws_dsa_get_send_queue) ? dsa_must_abort_queue_ : dsa_complete_queue_, kernel::owner_type::process);
 
                 ctx.complete(target_handle);
                 break;
@@ -266,7 +266,7 @@ namespace eka2l1::epoc {
                 break;
             }
             }
-        } 
+        }
 
         return quit;
     }

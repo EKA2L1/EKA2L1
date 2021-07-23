@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <HwrmVibra.hpp>
 #include <HwrmConsts.hpp>
+#include <HwrmVibra.hpp>
 
 TInt RHWRMVibraRaw::Connect() {
     return iResource.Connect(EHWRMResourceTypeVibra);

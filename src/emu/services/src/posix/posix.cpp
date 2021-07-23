@@ -26,8 +26,8 @@
 #include <common/path.h>
 #include <common/platform.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 
 #include <utils/err.h>
 
@@ -44,10 +44,10 @@
 
 #define POSIX_REQUEST_FINISH_WITH_ERR(ctx, err) \
     *errnoptr = err;                            \
-    ctx.complete(epoc::error_none);   \
+    ctx.complete(epoc::error_none);             \
     return
 
-#define POSIX_REQUEST_FINISH(ctx)             \
+#define POSIX_REQUEST_FINISH(ctx)   \
     ctx.complete(epoc::error_none); \
     return
 

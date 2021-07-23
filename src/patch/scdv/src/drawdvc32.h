@@ -42,11 +42,11 @@ public:
     virtual TRgb ReadPixel(TInt aX, TInt aY) const;
     virtual void WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
     virtual void WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode);
-    
+
     virtual TInt Set(TInt aFactorX, TInt aFactorY, TInt aDivisorX, TInt aDivisorY);
     virtual void Get(TInt &aFactorX, TInt &aFactorY, TInt &aDivisorX, TInt &aDivisorY);
     virtual TBool IsScalingOff();
-    
+
     virtual TInt GetInterface(TInt aInterfaceId, TAny *&aInterface);
 };
 

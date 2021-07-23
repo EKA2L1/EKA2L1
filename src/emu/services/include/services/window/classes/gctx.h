@@ -103,7 +103,7 @@ namespace eka2l1::epoc {
         void do_command_draw_bitmap(service::ipc_context &ctx, drivers::handle h, const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect);
         bool do_command_set_brush_color();
         bool do_command_set_pen_color();
-        
+
         void do_submit_clipping();
 
         void draw_mask_impl(epoc::bitwise_bitmap *source_bitmap, epoc::bitwise_bitmap *mask_bitmap, const eka2l1::rect &dest_rect, const eka2l1::rect &source_rect, const bool invert_mask);

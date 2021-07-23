@@ -264,7 +264,7 @@ bool list_devices_option_handler(eka2l1::common::arg_parser *parser, void *userd
 
 bool fullscreen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
-    
+
     emu->init_fullscreen = true;
     *err = "";
 

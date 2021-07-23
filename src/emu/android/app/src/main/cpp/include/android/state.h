@@ -29,15 +29,15 @@
 #include <common/log.h>
 #include <common/queue.h>
 #include <common/sync.h>
-#include <system/epoc.h>
-#include <package/manager.h>
 #include <config/app_settings.h>
 #include <config/config.h>
+#include <package/manager.h>
+#include <system/epoc.h>
 
-#include <drivers/graphics/emu_window.h>
-#include <drivers/input/emu_controller.h>
 #include <android/emu_window_android.h>
 #include <android/launcher.h>
+#include <drivers/graphics/emu_window.h>
+#include <drivers/input/emu_controller.h>
 #include <services/window/window.h>
 
 namespace eka2l1 {

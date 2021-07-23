@@ -42,8 +42,8 @@ namespace eka2l1::common {
     }
 
     template <typename T>
-    T extract_bits(const T num, const std::uint8_t p, const std::uint8_t n) { 
-        return (((1 << n) - 1) & (num >> (p - 1))); 
+    T extract_bits(const T num, const std::uint8_t p, const std::uint8_t n) {
+        return (((1 << n) - 1) & (num >> (p - 1)));
     }
 
     template <typename T>
@@ -53,19 +53,19 @@ namespace eka2l1::common {
 
     template <typename T>
     constexpr std::uint8_t bit_size() {
-        if constexpr(std::is_same_v<T, std::uint8_t>) {
+        if constexpr (std::is_same_v<T, std::uint8_t>) {
             return 8;
         }
 
-        if constexpr(std::is_same_v<T, std::uint16_t>) {
+        if constexpr (std::is_same_v<T, std::uint16_t>) {
             return 16;
         }
 
-        if constexpr(std::is_same_v<T, std::uint32_t>) {
+        if constexpr (std::is_same_v<T, std::uint32_t>) {
             return 32;
         }
 
-        if constexpr(std::is_same_v<T, std::uint64_t>) {
+        if constexpr (std::is_same_v<T, std::uint64_t>) {
             return 64;
         }
 

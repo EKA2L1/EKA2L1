@@ -22,11 +22,11 @@
 #include <kernel/legacy/sync_object.h>
 
 namespace eka2l1::kernel::legacy {
-    class semaphore: public sync_object_base {
+    class semaphore : public sync_object_base {
     public:
         explicit semaphore(kernel_system *kern, const std::string sema_name, const std::int32_t initial_count,
             kernel::access_type access = access_type::local_access);
-        
+
         void wait();
         void signal(const std::int32_t count);
 

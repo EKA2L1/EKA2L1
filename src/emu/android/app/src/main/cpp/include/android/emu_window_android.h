@@ -35,8 +35,8 @@ namespace eka2l1 {
             vec2 emu_screen_size;
             vec2 pos_with_title;
 
-            ANativeWindow* render_window;
-            ANativeWindow* host_window;
+            ANativeWindow *render_window;
+            ANativeWindow *host_window;
             EGLConfig egl_config;
             EGLSurface egl_surface;
             EGLContext egl_context;

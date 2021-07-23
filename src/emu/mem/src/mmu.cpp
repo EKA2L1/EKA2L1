@@ -18,10 +18,10 @@
  */
 
 #include <common/log.h>
-#include <cpu/arm_interface.h>
 #include <config/config.h>
-#include <mem/mmu.h>
+#include <cpu/arm_interface.h>
 #include <mem/control.h>
+#include <mem/mmu.h>
 
 #include <mem/model/flexible/mmu.h>
 #include <mem/model/multiple/mmu.h>
@@ -32,16 +32,16 @@ namespace eka2l1::mem {
         , cpu_(cpu)
         , conf_(conf) {
         // Set CPU read/write functions
-        cpu->read_8bit = [this](const vm_address addr, std::uint8_t* data) { return read_8bit_data(addr, data); };
-        cpu->read_16bit = [this](const vm_address addr, std::uint16_t* data) { return read_16bit_data(addr, data); };
-        cpu->read_32bit = [this](const vm_address addr, std::uint32_t* data) { return read_32bit_data(addr, data); };
-        cpu->read_64bit = [this](const vm_address addr, std::uint64_t* data) { return read_64bit_data(addr, data); };
+        cpu->read_8bit = [this](const vm_address addr, std::uint8_t *data) { return read_8bit_data(addr, data); };
+        cpu->read_16bit = [this](const vm_address addr, std::uint16_t *data) { return read_16bit_data(addr, data); };
+        cpu->read_32bit = [this](const vm_address addr, std::uint32_t *data) { return read_32bit_data(addr, data); };
+        cpu->read_64bit = [this](const vm_address addr, std::uint64_t *data) { return read_64bit_data(addr, data); };
         cpu->read_code = [this](const vm_address addr, std::uint32_t *data) { return read_code(addr, data); };
 
-        cpu->write_8bit = [this](const vm_address addr, std::uint8_t* data) { return write_8bit_data(addr, data); };
-        cpu->write_16bit = [this](const vm_address addr, std::uint16_t* data) { return write_16bit_data(addr, data); };
-        cpu->write_32bit = [this](const vm_address addr, std::uint32_t* data) { return write_32bit_data(addr, data); };
-        cpu->write_64bit = [this](const vm_address addr, std::uint64_t* data) { return write_64bit_data(addr, data); };
+        cpu->write_8bit = [this](const vm_address addr, std::uint8_t *data) { return write_8bit_data(addr, data); };
+        cpu->write_16bit = [this](const vm_address addr, std::uint16_t *data) { return write_16bit_data(addr, data); };
+        cpu->write_32bit = [this](const vm_address addr, std::uint32_t *data) { return write_32bit_data(addr, data); };
+        cpu->write_64bit = [this](const vm_address addr, std::uint64_t *data) { return write_64bit_data(addr, data); };
 
         cpu->exclusive_write_8bit = [this](const vm_address addr, std::uint8_t value, std::uint8_t expected) {
             return write_exclusive<std::uint8_t>(addr, value, expected);
@@ -82,8 +82,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_);
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_);
 
         *data = *ptr;
 
@@ -91,7 +90,7 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Read 1 byte from address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
@@ -103,8 +102,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_));
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t *>(reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_));
 
         *data = *ptr;
 
@@ -112,7 +110,7 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Read 2 bytes from address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
@@ -124,8 +122,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_));
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_));
 
         *data = *ptr;
 
@@ -133,7 +130,7 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Read 4 bytes from address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
@@ -145,8 +142,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_));
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t *>(reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_));
 
         *data = *ptr;
 
@@ -154,7 +150,7 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Read 8 bytes from address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
@@ -166,8 +162,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint8_t *ptr = reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_);
+        std::uint8_t *ptr = reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_);
 
         *ptr = *data;
 
@@ -175,7 +170,7 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Write 1 byte to address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
@@ -187,8 +182,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint16_t *ptr = reinterpret_cast<std::uint16_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_));
+        std::uint16_t *ptr = reinterpret_cast<std::uint16_t *>(reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_));
 
         *ptr = *data;
 
@@ -196,7 +190,7 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Write 2 bytes to address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
@@ -208,8 +202,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint32_t *ptr = reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_));
+        std::uint32_t *ptr = reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_));
 
         *ptr = *data;
 
@@ -217,7 +210,7 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Write 4 bytes to address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
@@ -229,8 +222,7 @@ namespace eka2l1::mem {
             return false;
         }
 
-        std::uint64_t *ptr = reinterpret_cast<std::uint64_t*>(reinterpret_cast<std::uint8_t*>(inf->host_addr) +
-            (addr & manager_->offset_mask_));
+        std::uint64_t *ptr = reinterpret_cast<std::uint64_t *>(reinterpret_cast<std::uint8_t *>(inf->host_addr) + (addr & manager_->offset_mask_));
 
         *ptr = *data;
 
@@ -238,14 +230,14 @@ namespace eka2l1::mem {
             LOG_TRACE(MEMORY, "Write 8 bytes to address 0x{:X}", addr);
         }
 
-        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t*>(inf->host_addr),
+        cpu_->set_tlb_page(addr & ~manager_->offset_mask_, reinterpret_cast<std::uint8_t *>(inf->host_addr),
             inf->perm);
 
         return true;
     }
 
     bool mmu_base::read_code(const vm_address addr, std::uint32_t *data) {
-        std::uint32_t *code = reinterpret_cast<std::uint32_t*>(manager_->get_host_pointer(
+        std::uint32_t *code = reinterpret_cast<std::uint32_t *>(manager_->get_host_pointer(
             current_addr_space(), addr));
 
         if (!code) {

@@ -40,7 +40,7 @@ namespace eka2l1::drivers {
         const GLubyte *ver_string = glGetString(GL_VERSION);
         const char *gles_header = "OpenGL ES";
 
-        if (ver_string && (strncmp(reinterpret_cast<const char*>(ver_string), gles_header, strlen(gles_header)) == 0)) {
+        if (ver_string && (strncmp(reinterpret_cast<const char *>(ver_string), gles_header, strlen(gles_header)) == 0)) {
             is_gles = true;
         }
 
@@ -55,10 +55,10 @@ namespace eka2l1::drivers {
             std::int32_t ext_count = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &ext_count);
 
-            for(std::int32_t i = 0; i < ext_count; i++) {
+            for (std::int32_t i = 0; i < ext_count; i++) {
                 const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
-                auto ite = std::find(GL_REQUIRED_EXTENSIONS.begin(), GL_REQUIRED_EXTENSIONS.end(), 
-                    std::string(reinterpret_cast<const char*>(next_extension)));
+                auto ite = std::find(GL_REQUIRED_EXTENSIONS.begin(), GL_REQUIRED_EXTENSIONS.end(),
+                    std::string(reinterpret_cast<const char *>(next_extension)));
 
                 if (ite != GL_REQUIRED_EXTENSIONS.end()) {
                     GL_REQUIRED_EXTENSIONS.erase(ite);
@@ -69,7 +69,7 @@ namespace eka2l1::drivers {
                 LOG_ERROR(DRIVER_GRAPHICS, "Some OpenGL extensions are missing in order for the emulator to work.");
                 LOG_ERROR(DRIVER_GRAPHICS, "Please upgrade your machine! Here is the list of missing extensions.");
 
-                for (const auto &ext_left: GL_REQUIRED_EXTENSIONS) {
+                for (const auto &ext_left : GL_REQUIRED_EXTENSIONS) {
                     LOG_ERROR(DRIVER_GRAPHICS, "- {}", ext_left);
                 }
             }
@@ -337,7 +337,7 @@ namespace eka2l1::drivers {
             dest_rect.size.y = source_rect.size.y;
         }
 
-        model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(origin.x), static_cast<float>(origin.y), 0.0f)); 
+        model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(origin.x), static_cast<float>(origin.y), 0.0f));
         model_matrix = glm::rotate(model_matrix, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
         model_matrix = glm::translate(model_matrix, glm::vec3(static_cast<float>(-origin.x), static_cast<float>(-origin.y), 0.0f));
 
@@ -386,8 +386,7 @@ namespace eka2l1::drivers {
         eka2l1::rect clip_rect;
         helper.pop(clip_rect);
 
-        glScissor(clip_rect.top.x, (clip_rect.size.y < 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y))
-            : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
+        glScissor(clip_rect.top.x, (clip_rect.size.y < 0) ? (current_fb_height - (clip_rect.top.y - clip_rect.size.y)) : clip_rect.top.y, clip_rect.size.x, common::abs(clip_rect.size.y));
     }
 
     static GLenum prim_mode_to_gl_enum(const graphics_primitive_mode prim_mode) {

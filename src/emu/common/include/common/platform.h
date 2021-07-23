@@ -57,9 +57,7 @@
 #ifdef __arm__
 #define EKA2L1_ARCH_ARM 1
 
-#if defined(__ARM_ARCH_7__) || \
-      defined(__ARM_ARCH_7A__) || \
-      defined(__ARM_ARCH_7S__)
+#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7S__)
 #define EKA2L1_ARCH_ARMV7 1
 #endif
 

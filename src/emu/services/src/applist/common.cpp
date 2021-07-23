@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/applist/common.h>
 #include <common/buffer.h>
+#include <services/applist/common.h>
 
 namespace eka2l1 {
     bool apa_capability::internalize(common::ro_stream &stream) {

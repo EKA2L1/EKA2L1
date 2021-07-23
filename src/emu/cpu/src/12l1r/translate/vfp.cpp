@@ -496,8 +496,7 @@ namespace eka2l1::arm::r12l1 {
             float_marker_.use(static_cast<common::armgen::arm_reg>(start_push + i), FLOAT_MARKER_USE_READ);
         }
 
-        return emit_memory_access_chain(common::armgen::R13, list_to_push, false, true, true, false, (sz ?
-            ACCESS_CHAIN_REG_TYPE_D : ACCESS_CHAIN_REG_TYPE_S));
+        return emit_memory_access_chain(common::armgen::R13, list_to_push, false, true, true, false, (sz ? ACCESS_CHAIN_REG_TYPE_D : ACCESS_CHAIN_REG_TYPE_S));
     }
 
     bool arm_translate_visitor::vfp_VPOP(common::cc_flags cond, bool D, std::size_t Vd, bool sz, std::uint8_t imm8) {
@@ -519,8 +518,7 @@ namespace eka2l1::arm::r12l1 {
             float_marker_.use(static_cast<common::armgen::arm_reg>(start_pop + i), FLOAT_MARKER_USE_WRITE);
         }
 
-        return emit_memory_access_chain(common::armgen::R13, list_to_push, true, false, true, true, (sz ?
-            ACCESS_CHAIN_REG_TYPE_D : ACCESS_CHAIN_REG_TYPE_S));
+        return emit_memory_access_chain(common::armgen::R13, list_to_push, true, false, true, true, (sz ? ACCESS_CHAIN_REG_TYPE_D : ACCESS_CHAIN_REG_TYPE_S));
     }
 
     bool arm_translate_visitor::vfp_VSTM_a1(common::cc_flags cond, bool p, bool u, bool D, bool w, reg_index n, std::size_t Vd, std::uint8_t imm8) {

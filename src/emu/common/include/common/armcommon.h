@@ -31,14 +31,14 @@ namespace eka2l1::common {
     };
 
     namespace armgen {
-		enum shift_type {
-			ST_LSL = 0,
-			ST_ASL = 0,
-			ST_LSR = 1,
-			ST_ASR = 2,
-			ST_ROR = 3,
-			ST_RRX = 4
-		};
+        enum shift_type {
+            ST_LSL = 0,
+            ST_ASL = 0,
+            ST_LSR = 1,
+            ST_ASR = 2,
+            ST_ROR = 3,
+            ST_RRX = 4
+        };
     }
 
     const std::uint32_t NO_COND = 0xE0000000;

@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <common/uid.h>
 #include <services/ecom/plugin.h>
 #include <services/framework.h>
-#include <common/uid.h>
 
 #include <string>
 #include <vector>
@@ -148,7 +148,7 @@ namespace eka2l1 {
 
         bool get_resolved_implementations(std::vector<ecom_implementation_info_ptr> &collect_vector, const epoc::uid interface_uid, const ecom_resolver_params &params,
             const bool generic_wildcard_match);
-        
+
         bool construct_impl_creation_method(kernel::thread *requester, ecom_implementation_info *info, epoc::fs::entry &dll_entry,
             epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp = true);
 

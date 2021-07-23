@@ -184,7 +184,7 @@ namespace eka2l1::loader {
         if (!stream) {
             return epoc::error_argument;
         }
-        
+
         stream->seek(0, common::seek_where::beg);
 
         stream->read(&header.uid1, 4);
@@ -196,7 +196,7 @@ namespace eka2l1::loader {
         if (header.sig != E32IMG_SIGNATURE) {
             return epoc::error_corrupt;
         }
-        
+
         std::uint32_t uid_type[3] = { static_cast<std::uint32_t>(header.uid1), header.uid2, header.uid3 };
         if (crypt::calculate_checked_uid_checksum(uid_type) != header.check) {
             return epoc::error_corrupt;
@@ -246,7 +246,7 @@ namespace eka2l1::loader {
 
             header.priority = static_cast<std::uint16_t>(priority_val);
 
-            if (!(header.flags & 0xF000000)) {    
+            if (!(header.flags & 0xF000000)) {
                 header.compression_type = 0;
             }
         } else {
@@ -327,7 +327,7 @@ namespace eka2l1::loader {
         if (parse_e32img_header(stream, img.header, img.header_extended, img.uncompressed_size, img.epoc_ver) != epoc::error_none) {
             return std::nullopt;
         }
-        
+
         int header_format = (static_cast<int>(img.header.flags) >> 24) & 0xF;
         if (header_format > 0) {
             img.has_extended_header = true;

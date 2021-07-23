@@ -19,17 +19,17 @@
 
 #pragma once
 
-#include <common/vecx.h>
 #include <common/container.h>
+#include <common/vecx.h>
 
 #include <drivers/graphics/common.h>
 #include <services/window/classes/config.h>
 #include <services/window/common.h>
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
-#include <functional>
 #include <mutex>
 #include <vector>
 
@@ -59,9 +59,9 @@ namespace eka2l1::epoc {
         focus_change_name
     };
 
-    using focus_change_callback_handler = std::function<void(void*, window_group*, focus_change_property)>;
-    using screen_redraw_callback_handler = std::function<void(void*, screen*, bool)>;
-    using screen_mode_change_callback_handler = std::function<void(void*, screen*, const int)>;
+    using focus_change_callback_handler = std::function<void(void *, window_group *, focus_change_property)>;
+    using screen_redraw_callback_handler = std::function<void(void *, screen *, bool)>;
+    using screen_mode_change_callback_handler = std::function<void(void *, screen *, const int)>;
 
     struct screen {
         int number;
@@ -106,8 +106,8 @@ namespace eka2l1::epoc {
         eka2l1::vec2 pointer_cursor_pos_;
 
         using focus_change_callback = std::pair<void *, focus_change_callback_handler>;
-        using screen_redraw_callback = std::pair<void*, screen_redraw_callback_handler>;
-        using screen_mode_change_callback = std::pair<void*, screen_mode_change_callback_handler>;
+        using screen_redraw_callback = std::pair<void *, screen_redraw_callback_handler>;
+        using screen_mode_change_callback = std::pair<void *, screen_mode_change_callback_handler>;
 
         common::identity_container<focus_change_callback> focus_callbacks;
         common::identity_container<screen_redraw_callback> screen_redraw_callbacks;

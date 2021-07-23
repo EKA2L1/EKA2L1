@@ -31,7 +31,7 @@ namespace eka2l1::ui::view {
 
     struct view_event_and_data {
         view_event evt_;
-        custom_message custom_;        
+        custom_message custom_;
     };
 
     class event_queue {

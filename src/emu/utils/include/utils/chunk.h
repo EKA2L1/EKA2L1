@@ -1,7 +1,7 @@
 #pragma once
 
-#include <utils/des.h>
 #include <cstdint>
+#include <utils/des.h>
 
 namespace eka2l1::epoc {
     struct eka1_normal_chunk_create_description {

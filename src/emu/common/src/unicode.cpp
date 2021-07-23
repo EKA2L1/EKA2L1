@@ -21,8 +21,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/unicode.h>
 #include <common/log.h>
+#include <common/unicode.h>
 #include <vector>
 
 namespace eka2l1::common {
@@ -378,7 +378,7 @@ namespace eka2l1::common {
             treatment_ = unicode_char_treatment_plain_ascii;
         } else {
             treatment_ = state.dynamic_window_offset_index(code);
-            
+
             if (treatment_ == -1) {
                 treatment_ = state.static_window_index(code);
 
@@ -434,7 +434,7 @@ namespace eka2l1::common {
                 if (!write_byte8(static_cast<std::uint8_t>(SQ0 + i))) {
                     return false;
                 }
-        
+
                 if (!write_byte8(c.code_ - dynamic_windows[i] + 0x80)) {
                     return false;
                 }
@@ -524,7 +524,7 @@ namespace eka2l1::common {
             if (!write_byte8(static_cast<std::uint8_t>(treatment))) {
                 return false;
             }
-            
+
             unicode_mode = false;
             dynamic_window_index_ = 4;
             dynamic_windows[4] = base;
@@ -541,8 +541,7 @@ namespace eka2l1::common {
         if (!unicode_mode) {
             while (!actions_.empty()) {
                 action &act = actions_.front();
-                if ((act.treatment_ == unicode_char_treatment_plain_ascii) || ((act.code_ >= active_window_base)
-                    && (act.code_ < active_window_base + 128))) {
+                if ((act.treatment_ == unicode_char_treatment_plain_ascii) || ((act.code_ >= active_window_base) && (act.code_ < active_window_base + 128))) {
                     if (!write_char(act))
                         return;
 
@@ -561,7 +560,7 @@ namespace eka2l1::common {
             for (std::size_t i = 0; i < actions_.size(); i++) {
                 if (actions_[i].treatment_ == first_treatment)
                     sequence_size++;
-                else                
+                else
                     break;
             }
 
@@ -602,7 +601,7 @@ namespace eka2l1::common {
                 break;
             }
 
-            actions_.emplace_back(static_cast<unicode_comp_state&>(*this), uc);
+            actions_.emplace_back(static_cast<unicode_comp_state &>(*this), uc);
             if (actions_.size() == ACTION_FLUSH_SIZE) {
                 write_run();
             }

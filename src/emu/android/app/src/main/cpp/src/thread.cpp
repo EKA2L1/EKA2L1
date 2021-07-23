@@ -36,7 +36,7 @@ namespace eka2l1::android {
 
         state.window = std::make_unique<drivers::emu_window_android>();
         state.window->init("Hello there", eka2l1::vec2(0, 0),
-                           drivers::emu_window_flag_maximum_size);
+            drivers::emu_window_flag_maximum_size);
         state.window->set_userdata(&state);
 
         state.window->init_gl();
@@ -110,7 +110,7 @@ namespace eka2l1::android {
         // Build a last command list to destroy resources
         std::unique_ptr<drivers::graphics_command_list> cmd_list = state.graphics_driver->new_command_list();
         std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(
-                cmd_list.get());
+            cmd_list.get());
 
         // Submit destroy to driver. UI thread resources
         state.graphics_driver->submit_command_list(*cmd_list);
@@ -131,7 +131,7 @@ namespace eka2l1::android {
 
         std::unique_ptr<drivers::graphics_command_list> cmd_list = state.graphics_driver->new_command_list();
         std::unique_ptr<drivers::graphics_command_list_builder> cmd_builder = state.graphics_driver->new_command_builder(
-                cmd_list.get());
+            cmd_list.get());
 
         while (!state.should_ui_quit) {
             state.launcher->draw(cmd_builder.get(), state.window->window_width, state.window->window_height);
@@ -165,7 +165,7 @@ namespace eka2l1::android {
 #if !defined(NDEBUG)
             try {
 #endif
-            state.symsys->loop();
+                state.symsys->loop();
 #if !defined(NDEBUG)
             } catch (std::exception &exc) {
                 LOG_ERROR(FRONTEND_CMDLINE, "Main loop exited with exception: ", exc.what());

@@ -18,12 +18,12 @@
  */
 
 #include <kernel/libmanager.h>
+#include <services/fbs/fbs.h>
 #include <services/ui/icon/common.h>
 #include <services/ui/icon/icon.h>
-#include <services/fbs/fbs.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <common/log.h>

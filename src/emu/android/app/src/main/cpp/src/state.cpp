@@ -23,9 +23,9 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/version.h>
+#include <dispatch/libraries/register.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
-#include <dispatch/libraries/register.h>
 
 #include <system/devices.h>
 
@@ -57,7 +57,7 @@ namespace eka2l1::android {
         // Initialize the logger
         log::setup_log(nullptr);
 
-        LOG_INFO(FRONTEND_CMDLINE,  "EKA2L1 v0.0.1 ({}-{})", GIT_BRANCH, GIT_COMMIT_HASH);
+        LOG_INFO(FRONTEND_CMDLINE, "EKA2L1 v0.0.1 ({}-{})", GIT_BRANCH, GIT_COMMIT_HASH);
 
         // Start to read the configs
         conf.deserialize();
@@ -77,8 +77,8 @@ namespace eka2l1::android {
             symsys->startup();
 
             if (!symsys->set_device(conf.device)) {
-                LOG_ERROR(FRONTEND_CMDLINE,  "Failed to set a device, device index is out of range (device index in config file is: {})", conf.device);
-                LOG_INFO(FRONTEND_CMDLINE,  "We are setting the default device back to the first device on the installed list for you");
+                LOG_ERROR(FRONTEND_CMDLINE, "Failed to set a device, device index is out of range (device index in config file is: {})", conf.device);
+                LOG_INFO(FRONTEND_CMDLINE, "We are setting the default device back to the first device on the installed list for you");
 
                 conf.device = 0;
                 symsys->set_device(0);
@@ -89,7 +89,7 @@ namespace eka2l1::android {
             symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib_removeable);
 
             winserv = reinterpret_cast<eka2l1::window_server *>(symsys->get_kernel_system()->get_by_name<eka2l1::service::server>(
-                    eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
+                eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
         }
 
         first_time = true;
@@ -105,16 +105,16 @@ namespace eka2l1::android {
             device *dvc = dvcmngr->get_current();
 
             if (!dvc) {
-                LOG_ERROR(FRONTEND_CMDLINE,  "No current device is available. Stage two initialisation abort");
+                LOG_ERROR(FRONTEND_CMDLINE, "No current device is available. Stage two initialisation abort");
                 return false;
             }
 
-            LOG_INFO(FRONTEND_CMDLINE,  "Device being used: {} ({})", dvc->model, dvc->firmware_code);
+            LOG_INFO(FRONTEND_CMDLINE, "Device being used: {} ({})", dvc->model, dvc->firmware_code);
 
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
             // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
-                          eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
+                eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
 
             // Create audio driver
             audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb);
@@ -137,7 +137,7 @@ namespace eka2l1::android {
                 auto private_dir_c_persists = io->get_raw_path(u"C:\\Private\\10202be9\\persists\\");
                 auto private_dir_d_persists = io->get_raw_path(u"D:\\Private\\10202be9\\persists\\");
                 auto private_dir_e_persists = io->get_raw_path(u"E:\\Private\\10202be9\\persists\\");
-                
+
                 common::delete_folder(common::ucs2_to_utf8(*private_dir_c_persists));
                 common::delete_folder(common::ucs2_to_utf8(*private_dir_d_persists));
                 common::delete_folder(common::ucs2_to_utf8(*private_dir_e_persists));

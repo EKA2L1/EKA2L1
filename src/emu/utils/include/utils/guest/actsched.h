@@ -19,9 +19,9 @@
 
 #pragma once
 
+#include <mem/ptr.h>
 #include <utils/guest/queue.h>
 #include <utils/reqsts.h>
-#include <mem/ptr.h>
 
 #include <cstdint>
 
@@ -33,7 +33,7 @@ namespace eka2l1::utils {
     struct active_object {
         std::uint32_t vtable_;
         epoc::request_status sts_;
-        
+
         double_queue_link link_;
 
         void dump(kernel::process *owner);

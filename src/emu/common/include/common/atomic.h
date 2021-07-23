@@ -21,5 +21,5 @@
 
 namespace eka2l1::common {
     template <typename T>
-    bool atomic_compare_and_swap(volatile T* pointer, T value, T expected);
+    bool atomic_compare_and_swap(volatile T *pointer, T value, T expected);
 }

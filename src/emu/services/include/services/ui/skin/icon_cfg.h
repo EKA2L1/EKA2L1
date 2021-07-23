@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <common/types.h>
 #include <common/common.h>
+#include <common/types.h>
 
 #include <vector>
 

@@ -20,9 +20,9 @@
 #include <scripting/instance.h>
 #include <scripting/session.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/session.h>
+#include <system/epoc.h>
 
 namespace eka2l1::scripting {
     session_wrapper::session_wrapper(std::uint64_t handle)
@@ -41,29 +41,29 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-    EKA2L1_EXPORT void symemu_free_session(eka2l1::scripting::session_wrapper *ss) {
-        delete ss;
+EKA2L1_EXPORT void symemu_free_session(eka2l1::scripting::session_wrapper *ss) {
+    delete ss;
+}
+
+EKA2L1_EXPORT eka2l1::scripting::session_wrapper *symemu_session_from_handle(const std::uint32_t handle) {
+    eka2l1::kernel_system *kern = eka2l1::scripting::get_current_instance()->get_kernel_system();
+    eka2l1::service::session *ss = kern->get<eka2l1::service::session>(handle);
+
+    if (!ss) {
+        return nullptr;
     }
 
-    EKA2L1_EXPORT eka2l1::scripting::session_wrapper *symemu_session_from_handle(const std::uint32_t handle) {
-        eka2l1::kernel_system *kern = eka2l1::scripting::get_current_instance()->get_kernel_system();
-        eka2l1::service::session *ss = kern->get<eka2l1::service::session>(handle);
+    return new eka2l1::scripting::session_wrapper(reinterpret_cast<std::uint64_t>(ss));
+}
 
-        if (!ss) {
-            return nullptr;
-        }
+EKA2L1_EXPORT eka2l1::scripting::server_wrapper *symemu_session_server(eka2l1::scripting::session_wrapper *ss) {
+    eka2l1::service::session *ss_impl = ss->get_session_handle();
+    eka2l1::service::server *sv = ss_impl->get_server();
 
-        return new eka2l1::scripting::session_wrapper(reinterpret_cast<std::uint64_t>(ss));
+    if (!sv) {
+        return nullptr;
     }
 
-    EKA2L1_EXPORT eka2l1::scripting::server_wrapper *symemu_session_server(eka2l1::scripting::session_wrapper *ss) {
-        eka2l1::service::session *ss_impl = ss->get_session_handle();
-        eka2l1::service::server *sv = ss_impl->get_server();
-
-        if (!sv) {
-            return nullptr;
-        }
-
-        return new eka2l1::scripting::server_wrapper(reinterpret_cast<std::uint64_t>(sv));
-    }
+    return new eka2l1::scripting::server_wrapper(reinterpret_cast<std::uint64_t>(sv));
+}
 }

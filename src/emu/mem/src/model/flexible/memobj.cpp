@@ -18,9 +18,9 @@
  */
 
 #include <mem/model/flexible/addrspace.h>
-#include <mem/model/flexible/memobj.h>
-#include <mem/model/flexible/mapping.h>
 #include <mem/model/flexible/control.h>
+#include <mem/model/flexible/mapping.h>
+#include <mem/model/flexible/memobj.h>
 
 #include <common/algorithm.h>
 #include <common/log.h>
@@ -59,7 +59,7 @@ namespace eka2l1::mem::flexible {
         const std::uint32_t size_to_commit = static_cast<std::uint32_t>(total_pages << control_->page_size_bits_);
 
         if (!external_) {
-            const bool alloc_result = common::commit(reinterpret_cast<std::uint8_t*>(data_) + start_offset,
+            const bool alloc_result = common::commit(reinterpret_cast<std::uint8_t *>(data_) + start_offset,
                 size_to_commit, perm);
 
             if (!alloc_result) {
@@ -67,19 +67,18 @@ namespace eka2l1::mem::flexible {
             }
         }
 
-        control_flexible *ctrl_fx = reinterpret_cast<control_flexible*>(control_);
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible *>(control_);
 
         // Map to all mappings
-        for (auto &mapping: mappings_) {
+        for (auto &mapping : mappings_) {
             if (!mapping->map(this, page_offset, total_pages, perm)) {
                 LOG_WARN(MEMORY, "Unable to map committed memory to a mapping!");
             }
-            
-            for (auto &mm: ctrl_fx->mmus_) {
+
+            for (auto &mm : ctrl_fx->mmus_) {
                 if (mapping->owner_->id() == mm->current_addr_space()) {
                     // Map it to CPU right away
-                    mm->map_to_cpu(mapping->base_ + start_offset, size_to_commit, reinterpret_cast<std::uint8_t*>(data_) +
-                        start_offset, perm);
+                    mm->map_to_cpu(mapping->base_ + start_offset, size_to_commit, reinterpret_cast<std::uint8_t *>(data_) + start_offset, perm);
 
                     break;
                 }
@@ -98,7 +97,7 @@ namespace eka2l1::mem::flexible {
         const std::uint32_t size_to_decommit = static_cast<std::uint32_t>(total_pages << control_->page_size_bits_);
 
         if (!external_) {
-            const bool deresult = common::decommit(reinterpret_cast<std::uint8_t*>(data_) + start_offset,
+            const bool deresult = common::decommit(reinterpret_cast<std::uint8_t *>(data_) + start_offset,
                 size_to_decommit);
 
             if (!deresult) {
@@ -106,15 +105,15 @@ namespace eka2l1::mem::flexible {
             }
         }
 
-        control_flexible *ctrl_fx = reinterpret_cast<control_flexible*>(control_);
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible *>(control_);
 
         // Unmap decomitted memory from all mappings
-        for (auto &mapping: mappings_) {
+        for (auto &mapping : mappings_) {
             if (!mapping->unmap(page_offset, total_pages)) {
                 LOG_WARN(MEMORY, "Unable to unmap decommitted memory from a mapping!");
             }
-            
-            for (auto &mm: ctrl_fx->mmus_) {
+
+            for (auto &mm : ctrl_fx->mmus_) {
                 if (mapping->owner_->id() == mm->current_addr_space()) {
                     // Unmap from to CPU right away
                     mm->unmap_from_cpu(mapping->base_ + start_offset, size_to_decommit);

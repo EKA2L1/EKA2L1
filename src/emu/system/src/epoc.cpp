@@ -33,8 +33,8 @@
 #include <disasm/disasm.h>
 
 #include <system/consts.h>
-#include <system/hal.h>
 #include <system/epoc.h>
+#include <system/hal.h>
 
 #include <utils/panic.h>
 
@@ -56,9 +56,9 @@
 
 #include <dispatch/dispatcher.h>
 #include <kernel/libmanager.h>
+#include <kernel/timing.h>
 #include <ldd/collection.h>
 #include <loader/rom.h>
-#include <kernel/timing.h>
 #include <services/init.h>
 #include <vfs/vfs.h>
 
@@ -68,19 +68,19 @@
 #include <config/app_settings.h>
 #include <config/config.h>
 
+#include <package/manager.h>
+#include <services/window/screen.h>
+#include <services/window/window.h>
 #include <system/devices.h>
 #include <system/software.h>
-#include <package/manager.h>
-#include <services/window/window.h>
-#include <services/window/screen.h>
 
 #include <miniz.h>
 
 namespace eka2l1 {
-    #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
+#define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
 
     enum hal_entry {
-        #include <kernel/hal.def>
+#include <kernel/hal.def>
     };
 
     system_create_components::system_create_components()
@@ -88,9 +88,8 @@ namespace eka2l1 {
         , audio_(nullptr)
         , conf_(nullptr)
         , settings_(nullptr) {
-
     }
-    
+
     class system_impl {
         std::mutex mut;
 
@@ -232,10 +231,10 @@ namespace eka2l1 {
                 stub_->init(kern_.get(), io_.get());
                 stub_->toggle_server(true);
             }
-            
+
             if (stub_->is_server_enabled()) {
                 gdb_stub_breakpoint_callback_handle_ = kern_->register_breakpoint_hit_callback([this](arm::core *cpu_core, kernel::thread *target,
-                    const std::uint32_t addr) {
+                                                                                                   const std::uint32_t addr) {
                     if (stub_->is_connected()) {
                         cpu_core->stop();
                         cpu_core->set_pc(addr);
@@ -256,8 +255,7 @@ namespace eka2l1 {
             io_->set_epoc_ver(ever);
 
             // Use flexible model on 9.5 and onwards.
-            mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, (ever >= epocver::epoc95) ?
-                mem::mem_model_type::flexible : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
+            mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, (ever >= epocver::epoc95) ? mem::mem_model_type::flexible : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
 
             io_->install_memory(mem_.get());
 
@@ -292,7 +290,7 @@ namespace eka2l1 {
             end_access();
             return true;
         }
-        
+
         bool rescan_devices(const drive_number romdrv) {
             bool actually_found = false;
 
@@ -350,7 +348,7 @@ namespace eka2l1 {
         void validate_current_device() {
             io_->validate_for_host();
         }
-        
+
         std::size_t add_system_reset_callback(system_reset_callback_type type) {
             return reset_callbacks_.add(type);
         }
@@ -360,7 +358,7 @@ namespace eka2l1 {
         }
 
         void invoke_system_reset_callbacks() {
-            for (auto cb: reset_callbacks_) {
+            for (auto cb : reset_callbacks_) {
                 cb(parent_);
             }
         }
@@ -502,7 +500,7 @@ namespace eka2l1 {
         while (scripts_dir.next_entry(scripts_entry) == 0) {
             const std::string ext = path_extension(scripts_entry.name);
 
-            if ((scripts_entry.type == common::FILE_REGULAR) &&  ((ext== ".py") || (ext == ".lua"))) {
+            if ((scripts_entry.type == common::FILE_REGULAR) && ((ext == ".py") || (ext == ".lua"))) {
                 auto module_name = filename(scripts_entry.name);
                 scripting_->import_module(".//scripts//" + module_name);
             }
@@ -534,7 +532,7 @@ namespace eka2l1 {
             disassembler_.get());
 
         epoc::init_panic_descriptions();
-        
+
 #if ENABLE_SCRIPTING == 1
         load_scripts();
 #endif
@@ -742,7 +740,7 @@ namespace eka2l1 {
 
         struct extract_zip_callback_data {
             progress_changed_callback progress_cb_;
-            cancel_requested_callback cancel_cb_;    
+            cancel_requested_callback cancel_cb_;
             std::size_t total_uncomp_size_;
             std::size_t size_uncomped_so_far_;
             std::unique_ptr<std::ofstream> file_stream_;
@@ -792,30 +790,32 @@ namespace eka2l1 {
             eka2l1::create_directories(eka2l1::file_directory(path_to_file));
             callback_data.file_stream_ = std::make_unique<std::ofstream>(path_to_file, std::ios::binary);
 
-            if (!mz_zip_reader_extract_to_callback(archive.get(), static_cast<mz_uint>(extracted), [](void *userdata, mz_uint64 offset, const void *buf, std::size_t n) -> std::size_t {
-                extract_zip_callback_data *data_ptr = reinterpret_cast<extract_zip_callback_data*>(userdata);
-                
-                if (data_ptr->cancel_cb_ && data_ptr->cancel_cb_()) {
-                    data_ptr->was_canceled_ = true;
-                    return 0;
-                }
+            if (!mz_zip_reader_extract_to_callback(
+                    archive.get(), static_cast<mz_uint>(extracted), [](void *userdata, mz_uint64 offset, const void *buf, std::size_t n) -> std::size_t {
+                        extract_zip_callback_data *data_ptr = reinterpret_cast<extract_zip_callback_data *>(userdata);
 
-                std::size_t written = data_ptr->file_stream_->tellp();
-                data_ptr->file_stream_->write(reinterpret_cast<const char*>(buf), n);
-                
-                std::size_t current_pos = data_ptr->file_stream_->tellp();
-                written = current_pos - written;
+                        if (data_ptr->cancel_cb_ && data_ptr->cancel_cb_()) {
+                            data_ptr->was_canceled_ = true;
+                            return 0;
+                        }
 
-                if (written == n) {
-                    data_ptr->size_uncomped_so_far_ += written;
+                        std::size_t written = data_ptr->file_stream_->tellp();
+                        data_ptr->file_stream_->write(reinterpret_cast<const char *>(buf), n);
 
-                    if (data_ptr->progress_cb_) {
-                        data_ptr->progress_cb_(data_ptr->size_uncomped_so_far_, data_ptr->total_uncomp_size_);
-                    }
-                }
+                        std::size_t current_pos = data_ptr->file_stream_->tellp();
+                        written = current_pos - written;
 
-                return static_cast<std::size_t>(written);
-            }, &callback_data, 0)) {
+                        if (written == n) {
+                            data_ptr->size_uncomped_so_far_ += written;
+
+                            if (data_ptr->progress_cb_) {
+                                data_ptr->progress_cb_(data_ptr->size_uncomped_so_far_, data_ptr->total_uncomp_size_);
+                            }
+                        }
+
+                        return static_cast<std::size_t>(written);
+                    },
+                    &callback_data, 0)) {
                 callback_data.file_stream_.reset();
                 eka2l1::common::delete_folder(temp_folder);
 
@@ -855,7 +855,7 @@ namespace eka2l1 {
         kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
 
         dispatcher_.reset();
-        
+
         if (kern_) {
             kern_->reset();
         }
@@ -874,7 +874,7 @@ namespace eka2l1 {
                 return false;
             }
         }
-    
+
         device *dvc = dvcmngr_->get_current();
 
         if (conf_->language == -1) {
@@ -886,10 +886,9 @@ namespace eka2l1 {
         set_symbian_version_use(dvc->ver);
 
         cpu->clear_instruction_cache();
-        
+
         // Load ROM
-        const std::string rom_path = add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(
-            common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
+        const std::string rom_path = add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
 
         if (!load_rom(rom_path)) {
             if (lock_sys) {
@@ -1102,7 +1101,7 @@ namespace eka2l1 {
     void system::validate_current_device() {
         impl->validate_current_device();
     }
-    
+
     std::size_t system::add_system_reset_callback(system_reset_callback_type cb) {
         return impl->add_system_reset_callback(cb);
     }

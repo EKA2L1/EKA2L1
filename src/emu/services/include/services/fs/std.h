@@ -134,14 +134,14 @@ namespace eka2l1::epoc::fs {
         std::uint32_t drive_att;
         std::uint32_t media_att;
     };
-    
+
     static_assert(sizeof(drive_info_v1) == 16, "Size of drive info v1 is incorrect");
 
     struct drive_info_v2 : public drive_info_v1 {
         epoc::fs::connection_bus_type connection_bus_type;
     };
 
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct volume_info_v1 {
         drive_info_v1 drv_info;
         std::uint32_t uid;
@@ -149,11 +149,11 @@ namespace eka2l1::epoc::fs {
         std::int64_t free;
         epoc::bufc_static<char16_t, 0x100> name;
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     static_assert(sizeof(volume_info_v1) == 552, "Size of volume info v1 is incorrect");
 
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct volume_info_v2 {
         drive_info_v2 drv_info;
         std::uint32_t uid;
@@ -168,7 +168,7 @@ namespace eka2l1::epoc::fs {
         std::uint32_t reserved3;
         std::uint32_t reserved4;
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     struct io_drive_param_info {
         int block_size;

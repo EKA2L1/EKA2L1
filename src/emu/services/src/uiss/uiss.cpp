@@ -39,7 +39,7 @@ namespace eka2l1 {
 
     void uiss_client_session::fetch(service::ipc_context *ctx) {
         LOG_ERROR(SERVICE_UISS, "Unimplemented opcode for uiss 0x{:X}", ctx->msg->function);
-        
+
         epoc::notify_info info;
         info.sts = ctx->msg->request_sts;
         info.requester = ctx->msg->own_thr;

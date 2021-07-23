@@ -19,13 +19,13 @@
 
 #pragma once
 
-#include <services/socket/common.h>
 #include <common/container.h>
+#include <services/socket/common.h>
 
 #include <cstdint>
 #include <functional>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace eka2l1 {
     class socket_server;
@@ -44,7 +44,7 @@ namespace eka2l1::epoc::socket {
         std::int32_t error_;
     };
 
-    using progress_advance_callback = std::function<void(conn_progress*)>;
+    using progress_advance_callback = std::function<void(conn_progress *)>;
 
     enum setting_type {
         setting_type_bool,
@@ -56,9 +56,9 @@ namespace eka2l1::epoc::socket {
     protected:
         common::identity_container<progress_advance_callback> progress_callbacks_;
 
-        protocol *pr_;          ///< Connection protocol.
-        socket *sock_;          ///< Connect requester.
-        saddress dest_;          ///< The target address to connect to.
+        protocol *pr_; ///< Connection protocol.
+        socket *sock_; ///< Connect requester.
+        saddress dest_; ///< The target address to connect to.
 
     public:
         explicit connection(protocol *pr, saddress dest);
@@ -81,7 +81,8 @@ namespace eka2l1::epoc::socket {
          * @returns (size_t)(-1) on failure, else the written size to the buffer.
          */
         virtual std::size_t get_setting(const std::u16string &setting_name, const setting_type type, std::uint8_t *dest_buffer,
-            std::size_t avail_size) = 0;
+            std::size_t avail_size)
+            = 0;
     };
 
     /**

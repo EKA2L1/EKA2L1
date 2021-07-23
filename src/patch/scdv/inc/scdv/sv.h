@@ -36,8 +36,8 @@ struct TFastBlitInfo {
 };
 
 extern "C" {
-    HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles);
-    HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo);
+HLE_DISPATCH_FUNC(void, UpdateScreen, 1, const TUint32 aScreenNumber, const TUint32 aNumberOfRect, const TRect *aRectangles);
+HLE_DISPATCH_FUNC(void, FastBlit, 2, const TFastBlitInfo *aInfo);
 }
 
 #endif

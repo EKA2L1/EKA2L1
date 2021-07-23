@@ -24,11 +24,11 @@
 #include <common/log.h>
 #include <common/pystr.h>
 
-#include <system/epoc.h>
-#include <system/devices.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/cre.h>
 #include <services/context.h>
+#include <system/devices.h>
+#include <system/epoc.h>
 
 #include <utils/err.h>
 #include <vfs/vfs.h>
@@ -196,7 +196,7 @@ namespace eka2l1 {
                         std::uint8_t val = hex_string.substr(i, 2).as_int<std::uint8_t>(0, 16);
                         entry.data.strd.push_back(static_cast<char>(val));
                     }
-                } 
+                }
                 break;
             }
 
@@ -379,7 +379,7 @@ namespace eka2l1 {
 
             repo_folder_to_searches.push_back(repo_dir + private_dir_persists);
 
-            for (const std::u16string &repo_folder: repo_folder_to_searches) {    
+            for (const std::u16string &repo_folder : repo_folder_to_searches) {
                 if (is_first_repo && !io->exist(repo_folder)) {
                     // Create one if it doesn't exist, for the future
                     io->create_directories(repo_folder);

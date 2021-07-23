@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <kernel/server.h>
 #include <services/context.h>
 #include <services/framework.h>
-#include <kernel/server.h>
 #include <utils/des.h>
 
 #include <mem/ptr.h>
@@ -84,7 +84,7 @@ namespace eka2l1 {
 
         bool exclusive{ false };
         kernel::uid process{ 0 };
-        
+
         void deref() override;
     };
 

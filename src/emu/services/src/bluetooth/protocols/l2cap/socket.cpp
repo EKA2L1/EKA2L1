@@ -17,22 +17,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/bluetooth/protocols/l2cap/l2cap.h>
-#include <services/bluetooth/btmidman.h>
 #include <common/log.h>
+#include <services/bluetooth/btmidman.h>
+#include <services/bluetooth/protocols/l2cap/l2cap.h>
 
 namespace eka2l1::epoc::bt {
     std::size_t l2cap_socket::get_link_count(std::uint8_t *buffer, const std::size_t avail_size) {
         LOG_TRACE(SERVICE_BLUETOOTH, "Link count stubbed with 0");
-        
+
         if (avail_size < 4) {
             return static_cast<std::size_t>(-1);
         }
 
-        *reinterpret_cast<std::uint32_t*>(buffer) = 0;
+        *reinterpret_cast<std::uint32_t *>(buffer) = 0;
         return 4;
     }
-    
+
     std::size_t l2cap_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
         if (option_family == SOL_BT_LINK_MANAGER) {

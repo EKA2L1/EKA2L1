@@ -33,8 +33,8 @@
 #include <services/fs/fs.h>
 #include <services/window/common.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 #include <vfs/vfs.h>
 
@@ -201,13 +201,11 @@ namespace eka2l1 {
 
             if (data) {
                 if (data < base) {
-                    data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(base) -
-                        reinterpret_cast<const std::uint8_t *>(data));
+                    data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(base) - reinterpret_cast<const std::uint8_t *>(data));
 
                     data_offset_ *= -1;
                 } else {
-                    data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) -
-                        reinterpret_cast<const std::uint8_t *>(base));
+                    data_offset_ = static_cast<int>(reinterpret_cast<const std::uint8_t *>(data) - reinterpret_cast<const std::uint8_t *>(base));
                 }
             } else {
                 data_offset_ = 0;
@@ -227,9 +225,8 @@ namespace eka2l1 {
 
         void bitwise_bitmap::post_construct(fbs_server *serv) {
             if (serv->legacy_level() >= FBS_LEGACY_LEVEL_S60V1) {
-                if ((header_.compression == epoc::bitmap_file_byte_rle_compression) ||
-                    (header_.compression == epoc::bitmap_file_twelve_bit_rle_compression))
-                header_.compression += epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE;
+                if ((header_.compression == epoc::bitmap_file_byte_rle_compression) || (header_.compression == epoc::bitmap_file_twelve_bit_rle_compression))
+                    header_.compression += epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE;
             }
 
             // Set large bitmap flag so that the data pointer base is in large chunk
@@ -242,7 +239,7 @@ namespace eka2l1 {
             }
         }
 
-        struct bitmap_copy_writer: public common::wo_stream {
+        struct bitmap_copy_writer : public common::wo_stream {
             std::uint8_t *dest_;
 
             std::uint32_t source_byte_width_;
@@ -258,7 +255,7 @@ namespace eka2l1 {
                 , dest_byte_width_(dest_bw)
                 , max_line_(max_line) {
             }
-            
+
             void seek(const std::int64_t amount, common::seek_where wh) override {
                 assert(false);
             }
@@ -270,7 +267,7 @@ namespace eka2l1 {
             std::uint64_t tell() const override {
                 return dest_byte_width_ * pos_.y + pos_.x;
             }
-            
+
             std::uint64_t left() override {
                 return max_line_ * dest_byte_width_ - tell();
             }
@@ -282,7 +279,7 @@ namespace eka2l1 {
             std::uint64_t write(const void *buf, const std::uint64_t write_size) override {
                 std::uint64_t consumed = 0;
 
-                const std::uint8_t *buf8 = reinterpret_cast<const std::uint8_t*>(buf);
+                const std::uint8_t *buf8 = reinterpret_cast<const std::uint8_t *>(buf);
                 const std::uint32_t width_write = common::min<std::uint32_t>(source_byte_width_, dest_byte_width_);
 
                 while (consumed < write_size) {
@@ -292,7 +289,7 @@ namespace eka2l1 {
 
                     const std::int64_t write_this_line = common::min<std::int64_t>(static_cast<std::int64_t>(write_size - consumed),
                         width_write - pos_.x);
-                    
+
                     std::memcpy(dest_ + pos_.y * dest_byte_width_ + pos_.x, buf8 + consumed, write_this_line);
                     pos_.x += static_cast<int>(write_this_line);
 
@@ -313,7 +310,7 @@ namespace eka2l1 {
             const int dest_byte_width = get_byte_width(dest_size.x, header_.bit_per_pixels);
 
             std::uint8_t *src_base = data_pointer(serv);
-            std::uint8_t *dest_base = dest; 
+            std::uint8_t *dest_base = dest;
             std::uint8_t *src = src_base;
 
             // copy with compressed data not supported yet
@@ -325,24 +322,24 @@ namespace eka2l1 {
 
                 switch (compression_type()) {
                 case bitmap_file_byte_rle_compression:
-                    decompress_rle<8>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    decompress_rle<8>(reinterpret_cast<common::ro_stream *>(&source_stream), reinterpret_cast<common::wo_stream *>(&writer));
                     break;
 
                 case bitmap_file_twelve_bit_rle_compression:
-                    decompress_rle<12>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    decompress_rle<12>(reinterpret_cast<common::ro_stream *>(&source_stream), reinterpret_cast<common::wo_stream *>(&writer));
                     break;
 
                 case bitmap_file_sixteen_bit_rle_compression:
-                    decompress_rle<16>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    decompress_rle<16>(reinterpret_cast<common::ro_stream *>(&source_stream), reinterpret_cast<common::wo_stream *>(&writer));
                     break;
 
                 case bitmap_file_twenty_four_bit_rle_compression:
-                    decompress_rle<24>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    decompress_rle<24>(reinterpret_cast<common::ro_stream *>(&source_stream), reinterpret_cast<common::wo_stream *>(&writer));
                     break;
 
                 case bitmap_file_thirty_two_a_bit_rle_compression:
                 case bitmap_file_thirty_two_u_bit_rle_compression:
-                    decompress_rle<32>(reinterpret_cast<common::ro_stream*>(&source_stream), reinterpret_cast<common::wo_stream*>(&writer));
+                    decompress_rle<32>(reinterpret_cast<common::ro_stream *>(&source_stream), reinterpret_cast<common::wo_stream *>(&writer));
                     break;
 
                 default:
@@ -374,7 +371,7 @@ namespace eka2l1 {
 
             return epoc::error_none;
         }
-            
+
         bitmap_file_compression bitwise_bitmap::compression_type() const {
             if (header_.compression >= epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE) {
                 return static_cast<bitmap_file_compression>(header_.compression - epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE);
@@ -382,21 +379,21 @@ namespace eka2l1 {
 
             return static_cast<bitmap_file_compression>(header_.compression);
         }
-        
+
         std::uint8_t *bitwise_bitmap::data_pointer(fbs_server *ss) {
             // Use traditional method for on-rom bitmap that does not have additional info
             if (!allocator_ || !pile_ || !ss->is_large_bitmap(header_.bitmap_size - sizeof(loader::sbm_header))) {
-                return reinterpret_cast<std::uint8_t*>(this) + data_offset_;
+                return reinterpret_cast<std::uint8_t *>(this) + data_offset_;
             }
 
             return ss->get_large_chunk_base() + data_offset_;
         }
-        
+
         std::uint32_t bitwise_bitmap::data_size() const {
             return header_.bitmap_size - header_.header_len;
         }
     }
-    
+
     struct load_bitmap_arg {
         std::uint32_t bitmap_id;
         std::int32_t share;
@@ -452,8 +449,9 @@ namespace eka2l1 {
         }
 
         std::size_t size_when_compressed = get_byte_width(mbmf_.sbm_headers[idx_].size_pixels.x,
-            mbmf_.sbm_headers[idx_].bit_per_pixels) * mbmf_.sbm_headers[idx_].size_pixels.y;
-        
+                                               mbmf_.sbm_headers[idx_].bit_per_pixels)
+            * mbmf_.sbm_headers[idx_].size_pixels.y;
+
         if (!mbmf_.read_single_bitmap(idx_, nullptr, size_when_compressed)) {
             *err_code = fbs_load_data_err_read_decomp_fail;
             return nullptr;
@@ -675,7 +673,7 @@ namespace eka2l1 {
                 break;
 
             case fbs_load_data_err_small_bitmap:
-                bmp_data_base = reinterpret_cast<std::uint8_t*>(bws_bmp);
+                bmp_data_base = reinterpret_cast<std::uint8_t *>(bws_bmp);
                 break;
 
             case fbs_load_data_err_out_of_mem: {
@@ -707,8 +705,7 @@ namespace eka2l1 {
             bws_bmp->construct(header_to_give, dpm, bmp_data, bmp_data_base, support_current_display_mode, false);
             bws_bmp->offset_from_me_ = (err_code == fbs_load_data_err_small_bitmap);
 
-            bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len +
-                size_when_decomp);
+            bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len + size_when_decomp);
 
             bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
             bws_bmp->post_construct(fbss);
@@ -767,10 +764,11 @@ namespace eka2l1 {
         const std::size_t byte_width = get_byte_width(info.size_.x, epoc::get_bpp_from_display_mode(info.dpm_));
 
         std::size_t original_bytes = (info.data_size_ == 0) ? calculate_aligned_bitmap_bytes(
-            info.size_, info.dpm_) : info.data_size_;
+                                         info.size_, info.dpm_)
+                                                            : info.data_size_;
 
         std::size_t alloc_bytes = original_bytes + final_reserve_each_side * byte_width * 2;
-        
+
         void *data = nullptr;
         std::uint8_t *base = nullptr;
         bool smol = false;
@@ -782,7 +780,7 @@ namespace eka2l1 {
             std::size_t avail_dest_size = common::align(alloc_bytes, 4);
 
             if (!is_large_bitmap(static_cast<std::uint32_t>(org_dest_size))) {
-                base = reinterpret_cast<std::uint8_t*>(bws_bmp);
+                base = reinterpret_cast<std::uint8_t *>(bws_bmp);
                 data = shared_chunk_allocator->allocate(avail_dest_size);
 
                 smol = true;
@@ -815,7 +813,7 @@ namespace eka2l1 {
         const std::size_t reserved_bytes = (bws_bmp->byte_width_ * final_reserve_each_side);
 
         bws_bmp->data_offset_ += static_cast<std::int32_t>(reserved_bytes);
-        data = reinterpret_cast<std::uint8_t*>(data) + reserved_bytes;
+        data = reinterpret_cast<std::uint8_t *>(data) + reserved_bytes;
 
         if (info.data_) {
             std::memcpy(data, info.data_, common::min<std::size_t>(info.data_size_, original_bytes));
@@ -916,8 +914,9 @@ namespace eka2l1 {
         const std::uint32_t addr_off = fbss->host_ptr_to_guest_shared_offset(bmp->bitmap_);
 
         // From Anna the slot to write this moved to 1.
-        const bool use_bmp_handles_writeback = (server<fbs_server>()->get_system()->get_symbian_version_use() 
-            >= epocver::epoc10);;
+        const bool use_bmp_handles_writeback = (server<fbs_server>()->get_system()->get_symbian_version_use()
+            >= epocver::epoc10);
+        ;
 
         if (use_spec_legacy) {
             specs.handle = handle_ret;
@@ -983,11 +982,11 @@ namespace eka2l1 {
             const int size_added_reserve = size_total + reserved_each_size * dest_byte_width * 2;
 
             if (fbss->is_large_bitmap(size_total)) {
-                dest_data = reinterpret_cast<std::uint8_t*>(fbss->allocate_large_data(size_added_reserve));
+                dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_large_data(size_added_reserve));
                 base = fbss->get_large_chunk_base();
             } else {
-                dest_data = reinterpret_cast<std::uint8_t*>(fbss->allocate_general_data_impl(size_added_reserve));
-                base = reinterpret_cast<std::uint8_t*>(new_bmp->bitmap_);
+                dest_data = reinterpret_cast<std::uint8_t *>(fbss->allocate_general_data_impl(size_added_reserve));
+                base = reinterpret_cast<std::uint8_t *>(new_bmp->bitmap_);
 
                 offset_from_me_now = true;
             }
@@ -1259,23 +1258,23 @@ namespace eka2l1 {
 
                 switch (comp) {
                 case bitmap_file_byte_rle_compression:
-                    decompress_rle<8>(reinterpret_cast<common::ro_stream*>(&source),
-                        reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
+                    decompress_rle<8>(reinterpret_cast<common::ro_stream *>(&source),
+                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
                     break;
 
                 case bitmap_file_twelve_bit_rle_compression:
-                    decompress_rle<12>(reinterpret_cast<common::ro_stream*>(&source),
-                        reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
+                    decompress_rle<12>(reinterpret_cast<common::ro_stream *>(&source),
+                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
                     break;
 
                 case bitmap_file_sixteen_bit_rle_compression:
-                    decompress_rle<16>(reinterpret_cast<common::ro_stream*>(&source),
-                        reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
+                    decompress_rle<16>(reinterpret_cast<common::ro_stream *>(&source),
+                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
                     break;
 
                 case bitmap_file_twenty_four_bit_rle_compression:
-                    decompress_rle<24>(reinterpret_cast<common::ro_stream*>(&source),
-                        reinterpret_cast<common::wo_stream*>(&decomp_dest_stream));
+                    decompress_rle<24>(reinterpret_cast<common::ro_stream *>(&source),
+                        reinterpret_cast<common::wo_stream *>(&decomp_dest_stream));
                     break;
 
                 default:

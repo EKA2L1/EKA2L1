@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <system/installation/common.h>
 #include <common/types.h>
+#include <system/installation/common.h>
 
 #include <atomic>
 #include <cstdint>
@@ -29,7 +29,7 @@
 #include <vector>
 
 namespace eka2l1 {
-    using device_firmware_choose_variant_callback = std::function<int(const std::vector<std::string>&)>;
+    using device_firmware_choose_variant_callback = std::function<int(const std::vector<std::string> &)>;
 
     class device_manager;
 

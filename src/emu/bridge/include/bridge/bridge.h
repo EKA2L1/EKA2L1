@@ -44,7 +44,7 @@ namespace eka2l1 {
 
         /*! \brief Call a HLE function with return value. */
         template <typename T, typename... args, size_t... indices>
-        void call(void (*export_fn)(T*, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::core *cpu, kernel::process *pr, T *data) {
+        void call(void (*export_fn)(T *, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::core *cpu, kernel::process *pr, T *data) {
             (*export_fn)(data, read<args, indices, args...>(cpu, layout, pr)...);
         }
 

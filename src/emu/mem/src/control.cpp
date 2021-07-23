@@ -54,22 +54,22 @@ namespace eka2l1::mem {
         }
 
         if (exclusive_monitor_) {
-            exclusive_monitor_->read_8bit = [this](arm::core *core, const vm_address addr, std::uint8_t* data) {
+            exclusive_monitor_->read_8bit = [this](arm::core *core, const vm_address addr, std::uint8_t *data) {
                 mmu_base *mm = get_or_create_mmu(core);
                 return mm->read_8bit_data(addr, data);
             };
-            
-            exclusive_monitor_->read_16bit = [this](arm::core *core, const vm_address addr, std::uint16_t* data) {
+
+            exclusive_monitor_->read_16bit = [this](arm::core *core, const vm_address addr, std::uint16_t *data) {
                 mmu_base *mm = get_or_create_mmu(core);
-                return mm->read_16bit_data(addr, data); 
+                return mm->read_16bit_data(addr, data);
             };
 
-            exclusive_monitor_->read_32bit = [this](arm::core *core, const vm_address addr, std::uint32_t* data) {
+            exclusive_monitor_->read_32bit = [this](arm::core *core, const vm_address addr, std::uint32_t *data) {
                 mmu_base *mm = get_or_create_mmu(core);
                 return mm->read_32bit_data(addr, data);
             };
 
-            exclusive_monitor_->read_64bit = [this](arm::core *core, const vm_address addr, std::uint64_t* data) {
+            exclusive_monitor_->read_64bit = [this](arm::core *core, const vm_address addr, std::uint64_t *data) {
                 mmu_base *mm = get_or_create_mmu(core);
                 return mm->read_64bit_data(addr, data);
             };
@@ -95,14 +95,14 @@ namespace eka2l1::mem {
             };
         }
     }
-    
+
     control_base::~control_base() {
     }
-    
+
     page_table *control_base::create_new_page_table() {
         return alloc_->create_new(page_size_bits_);
     }
-    
+
     control_impl make_new_control(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,
         const mem_model_type model) {
         switch (model) {
@@ -120,5 +120,5 @@ namespace eka2l1::mem {
 
         return nullptr;
     }
-    
+
 }

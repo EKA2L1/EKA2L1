@@ -21,8 +21,8 @@
 #include <services/audio/mmf/dev.h>
 #include <utils/err.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 
 #include <common/algorithm.h>
 #include <common/log.h>
@@ -151,7 +151,7 @@ namespace eka2l1 {
             stream_ = drivers::new_dsp_out_stream(drv, drivers::dsp_stream_backend::dsp_stream_backend_ffmpeg);
             stream_->set_properties(8000, 2);
 
-            reinterpret_cast<drivers::dsp_output_stream*>(stream_.get())->volume(volume_ * 10);
+            reinterpret_cast<drivers::dsp_output_stream *>(stream_.get())->volume(volume_ * 10);
 
             break;
 
@@ -161,21 +161,23 @@ namespace eka2l1 {
         }
 
         // Register complete callback
-        stream_->register_callback(drivers::dsp_stream_notification_buffer_copied, [this](void *userdata) {
-            kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
-            kern->lock();
-            
-            // Lock the access to this variable
-            const std::lock_guard<std::mutex> guard(dev_access_lock_);
+        stream_->register_callback(
+            drivers::dsp_stream_notification_buffer_copied, [this](void *userdata) {
+                kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
+                kern->lock();
 
-            if (last_buffer_) {
-                finish_info_.complete(epoc::error_underflow);
-            } else {
-                do_get_buffer_to_be_filled();
-            }
+                // Lock the access to this variable
+                const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
-            kern->unlock();
-        }, nullptr);
+                if (last_buffer_) {
+                    finish_info_.complete(epoc::error_underflow);
+                } else {
+                    do_get_buffer_to_be_filled();
+                }
+
+                kern->unlock();
+            },
+            nullptr);
 
         // TODO: Add callback to report underflow (data completed playing, but no new data supplied)
     }
@@ -232,9 +234,9 @@ namespace eka2l1 {
         }
 
         volume_ = common::clamp<std::uint32_t>(0, 10, settings->vol_);
-        
+
         if (stream_)
-            (reinterpret_cast<drivers::dsp_output_stream*>(stream_.get()))->volume(volume_ * 10);
+            (reinterpret_cast<drivers::dsp_output_stream *>(stream_.get()))->volume(volume_ * 10);
 
         ctx->complete(epoc::error_none);
     }
@@ -251,7 +253,7 @@ namespace eka2l1 {
         settings->left_percentage_ = left_balance_;
         settings->right_percentage_ = right_balance_;
 
-        ctx->write_data_to_descriptor_argument<epoc::mmf_dev_sound_proxy_settings>(2, settings.value());            
+        ctx->write_data_to_descriptor_argument<epoc::mmf_dev_sound_proxy_settings>(2, settings.value());
         ctx->complete(epoc::error_none);
     }
 
@@ -365,7 +367,7 @@ namespace eka2l1 {
 
         const std::uint32_t freq = freq_enum_to_number(conf_.rate_);
         std::uint32_t target_fourcc = 0;
-        
+
         switch (conf_.encoding_) {
         case epoc::mmf_encoding_8bit_pcm:
             target_fourcc = drivers::PCM8_FOUR_CC_CODE;
@@ -505,7 +507,7 @@ namespace eka2l1 {
         if (buffer_fill_info_.empty()) {
             return;
         }
-        
+
         kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
         epocver ver_use = kern->get_epoc_version();
 
@@ -525,15 +527,15 @@ namespace eka2l1 {
 
             last_buffer_handle_ = kern->open_handle_with_thread(buffer_fill_info_.requester, buffer_chunk_, kernel::owner_type::thread);
             return_value = last_buffer_handle_;
-            
+
             if (ver_use <= epocver::epoc94) {
-                (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_))->chunk_op_ = epoc::mmf_dev_chunk_op_open;
+                (reinterpret_cast<epoc::mmf_dev_hw_buf_v1 *>(buffer_fill_buf_))->chunk_op_ = epoc::mmf_dev_chunk_op_open;
             } else {
                 buffer_fill_buf_->chunk_op_ = epoc::mmf_dev_chunk_op_open;
             }
         } else {
             if (ver_use <= epocver::epoc94) {
-                (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_))->chunk_op_ = epoc::mmf_dev_chunk_op_none;
+                (reinterpret_cast<epoc::mmf_dev_hw_buf_v1 *>(buffer_fill_buf_))->chunk_op_ = epoc::mmf_dev_chunk_op_none;
             } else {
                 buffer_fill_buf_->chunk_op_ = epoc::mmf_dev_chunk_op_none;
             }
@@ -547,7 +549,7 @@ namespace eka2l1 {
         const std::uint32_t max_request_size_align = common::align(conf_.buffer_size_, MMF_BUFFER_SIZE_ALIGN, 1);
 
         if (ver_use <= epocver::epoc94) {
-            auto buf_old = (reinterpret_cast<epoc::mmf_dev_hw_buf_v1*>(buffer_fill_buf_));
+            auto buf_old = (reinterpret_cast<epoc::mmf_dev_hw_buf_v1 *>(buffer_fill_buf_));
 
             buf_old->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
             buf_old->request_size_ = max_request_size_align;
@@ -569,7 +571,7 @@ namespace eka2l1 {
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
         buffer_fill_info_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
-        buffer_fill_buf_ = reinterpret_cast<epoc::mmf_dev_hw_buf_v2*>(ctx->get_descriptor_argument_ptr(2));
+        buffer_fill_buf_ = reinterpret_cast<epoc::mmf_dev_hw_buf_v2 *>(ctx->get_descriptor_argument_ptr(2));
 
         if (!buffer_fill_buf_) {
             buffer_fill_info_.complete(epoc::error_argument);
@@ -614,8 +616,8 @@ namespace eka2l1 {
             last_buffer_ = buf_new->last_buffer_;
         }
 
-        drivers::dsp_output_stream *out_stream = reinterpret_cast<drivers::dsp_output_stream*>(stream_.get());
-        out_stream->write(reinterpret_cast<std::uint8_t*>(buffer_chunk_->host_base()), supplied_size);
+        drivers::dsp_output_stream *out_stream = reinterpret_cast<drivers::dsp_output_stream *>(stream_.get());
+        out_stream->write(reinterpret_cast<std::uint8_t *>(buffer_chunk_->host_base()), supplied_size);
 
         ctx->complete(epoc::error_none);
     }
@@ -697,7 +699,7 @@ namespace eka2l1 {
                 set_play_balance(ctx);
                 break;
 
-            /*
+                /*
             case epoc::mmf_dev_get_supported_input_data_types:
                 get_supported_input_data_types(ctx);
                 break;

@@ -22,9 +22,9 @@
 #include <scripting/process.h>
 #include <scripting/thread.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/thread.h>
+#include <system/epoc.h>
 
 #if ENABLE_PYTHON_SCRIPTING
 #include <pybind11/pybind11.h>
@@ -114,86 +114,85 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-    EKA2L1_EXPORT void symemu_free_thread(eka2l1::scripting::thread *thr) {
-        delete thr;
+EKA2L1_EXPORT void symemu_free_thread(eka2l1::scripting::thread *thr) {
+    delete thr;
+}
+
+EKA2L1_EXPORT eka2l1::scripting::thread *symemu_get_current_thread() {
+    eka2l1::kernel::thread *thr = eka2l1::scripting::get_current_instance()->get_kernel_system()->crr_thread();
+
+    if (!thr) {
+        return nullptr;
     }
 
-    EKA2L1_EXPORT eka2l1::scripting::thread *symemu_get_current_thread() {
-        eka2l1::kernel::thread *thr = eka2l1::scripting::get_current_instance()->
-            get_kernel_system()->crr_thread();
+    return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(thr));
+}
 
-        if (!thr) {
-            return nullptr;
-        }
-
-        return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(thr));
+EKA2L1_EXPORT eka2l1::scripting::thread *symemu_next_thread_in_process(eka2l1::scripting::thread *thr) {
+    eka2l1::kernel::thread *nnt = thr->get_thread_handle()->next_in_process();
+    if (!nnt) {
+        return nullptr;
     }
 
-    EKA2L1_EXPORT eka2l1::scripting::thread *symemu_next_thread_in_process(eka2l1::scripting::thread *thr) {
-        eka2l1::kernel::thread *nnt = thr->get_thread_handle()->next_in_process();
-        if (!nnt) {
-            return nullptr;
-        }
+    return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(nnt));
+}
 
-        return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(nnt));
+EKA2L1_EXPORT eka2l1::scripting::process *symemu_thread_own_process(eka2l1::scripting::thread *thr) {
+    eka2l1::kernel::process *pr = thr->get_thread_handle()->owning_process();
+    if (!pr) {
+        return nullptr;
     }
 
-    EKA2L1_EXPORT eka2l1::scripting::process *symemu_thread_own_process(eka2l1::scripting::thread *thr) {
-        eka2l1::kernel::process *pr = thr->get_thread_handle()->owning_process();
-        if (!pr) {
-            return nullptr;
-        }
+    return new eka2l1::scripting::process(reinterpret_cast<std::uint64_t>(pr));
+}
 
-        return new eka2l1::scripting::process(reinterpret_cast<std::uint64_t>(pr));
-    }
+EKA2L1_EXPORT std::uint32_t symemu_thread_stack_base(eka2l1::scripting::thread *thr) {
+    return thr->get_stack_base();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_thread_stack_base(eka2l1::scripting::thread *thr) {
-        return thr->get_stack_base();
-    }
+EKA2L1_EXPORT std::uint32_t symemu_thread_get_heap_base(eka2l1::scripting::thread *thr) {
+    return thr->get_heap_base();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_thread_get_heap_base(eka2l1::scripting::thread *thr) {
-        return thr->get_heap_base();
-    }
+EKA2L1_EXPORT std::uint32_t symemu_thread_get_register(eka2l1::scripting::thread *thr, uint8_t index) {
+    return thr->get_register(index);
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_thread_get_register(eka2l1::scripting::thread *thr, uint8_t index) {
-        return thr->get_register(index);
-    }
+EKA2L1_EXPORT uint32_t symemu_thread_get_pc(eka2l1::scripting::thread *thr) {
+    return thr->get_pc();
+}
 
-    EKA2L1_EXPORT uint32_t symemu_thread_get_pc(eka2l1::scripting::thread *thr) {
-        return thr->get_pc();
-    }
+EKA2L1_EXPORT uint32_t symemu_thread_get_lr(eka2l1::scripting::thread *thr) {
+    return thr->get_lr();
+}
 
-    EKA2L1_EXPORT uint32_t symemu_thread_get_lr(eka2l1::scripting::thread *thr) {
-        return thr->get_lr();
-    }
+EKA2L1_EXPORT uint32_t symemu_thread_get_sp(eka2l1::scripting::thread *thr) {
+    return thr->get_sp();
+}
 
-    EKA2L1_EXPORT uint32_t symemu_thread_get_sp(eka2l1::scripting::thread *thr) {
-        return thr->get_sp();
-    }
+EKA2L1_EXPORT uint32_t symemu_thread_get_cpsr(eka2l1::scripting::thread *thr) {
+    return thr->get_cpsr();
+}
 
-    EKA2L1_EXPORT uint32_t symemu_thread_get_cpsr(eka2l1::scripting::thread *thr) {
-        return thr->get_cpsr();
-    }
+EKA2L1_EXPORT int symemu_thread_get_exit_reason(eka2l1::scripting::thread *thr) {
+    return thr->get_exit_reason();
+}
 
-    EKA2L1_EXPORT int symemu_thread_get_exit_reason(eka2l1::scripting::thread *thr) {
-        return thr->get_exit_reason();
-    }
+EKA2L1_EXPORT int symemu_thread_current_state(eka2l1::scripting::thread *thr) {
+    return thr->get_state();
+}
 
-    EKA2L1_EXPORT int symemu_thread_current_state(eka2l1::scripting::thread *thr) {
-        return thr->get_state();
-    }
+EKA2L1_EXPORT int symemu_thread_priority(eka2l1::scripting::thread *thr) {
+    return thr->get_priority();
+}
 
-    EKA2L1_EXPORT int symemu_thread_priority(eka2l1::scripting::thread *thr) {
-        return thr->get_priority();
-    }
+EKA2L1_EXPORT const char *symemu_thread_name(eka2l1::scripting::thread *thr) {
+    std::string data = thr->get_name();
+    char *ret_val = new char[data.length() + 1];
 
-    EKA2L1_EXPORT const char *symemu_thread_name(eka2l1::scripting::thread *thr) {
-        std::string data = thr->get_name();
-        char *ret_val = new char[data.length() + 1];
+    std::memcpy(ret_val, data.data(), data.length());
+    ret_val[data.length()] = '\0';
 
-        std::memcpy(ret_val, data.data(), data.length());
-        ret_val[data.length()] = '\0';
-
-        return ret_val;
-    }
+    return ret_val;
+}
 }

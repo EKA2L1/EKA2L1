@@ -155,7 +155,7 @@ namespace eka2l1 {
 
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
         zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib = io_attrib_none,
-                                       progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
+            progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 
         bool reset();
 

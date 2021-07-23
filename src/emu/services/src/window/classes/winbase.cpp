@@ -24,8 +24,8 @@
 #include <services/window/screen.h>
 #include <services/window/window.h>
 
-#include <kernel/timing.h>
 #include <kernel/kernel.h>
+#include <kernel/timing.h>
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
@@ -384,14 +384,14 @@ namespace eka2l1::epoc {
             set_fade(ctx, cmd);
             return true;
         }
- 
+
         case EWsWinOpWindowGroupId:
             window_group_id(ctx, cmd);
             return true;
 
         case EWsWinOpEnableVisibilityChangeEvents:
             enable_visiblity_change_events(ctx, cmd);
-            return true;    
+            return true;
 
         default: {
             break;

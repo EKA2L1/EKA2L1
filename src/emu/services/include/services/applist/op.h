@@ -50,7 +50,7 @@ namespace eka2l1 {
         applist_request_oldarch_start_app,
         applist_request_oldarch_recognize_data,
         applist_request_oldarch_recognize_specific_data,
-        applist_request_oldarch_app_for_data_type,      // = 10
+        applist_request_oldarch_app_for_data_type, // = 10
         applist_request_oldarch_start_document,
         applist_request_oldarch_start_document_by_data_type,
         applist_request_oldarch_start_document_by_uid,
@@ -60,7 +60,7 @@ namespace eka2l1 {
         applist_request_oldarch_is_program,
         applist_request_oldarch_get_confidence,
         applist_request_oldarch_set_accepted_confidence,
-        applist_request_oldarch_get_buf_size,   // = 20
+        applist_request_oldarch_get_buf_size, // = 20
         applist_request_oldarch_set_buf_size,
         applist_request_oldarch_get_data_types_phase1,
         applist_request_oldarch_get_data_types_phase2,
@@ -70,7 +70,7 @@ namespace eka2l1 {
         applist_request_oldarch_app_icon_by_uid_and_size,
         applist_request_oldarch_get_app_icon_sizes,
         applist_request_oldarch_get_app_views,
-        applist_request_oldarch_view_icon_by_uid_and_size,  // = 30
+        applist_request_oldarch_view_icon_by_uid_and_size, // = 30
         applist_request_oldarch_get_file_ownership_infos
     };
 

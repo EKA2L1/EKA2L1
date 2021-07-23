@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utils/uchar.h>
 #include <cctype>
+#include <utils/uchar.h>
 
 namespace eka2l1::epoc {
     // TODO (bent): Probably not really accurate yet.
@@ -56,11 +56,11 @@ namespace eka2l1::epoc {
     const uchar uppercase_uchar(const uchar c, std::locale &ln) {
         return std::toupper(static_cast<wchar_t>(c), ln);
     }
-    
+
     const uchar lowercase_uchar(const uchar c, std::locale &ln) {
         return std::tolower(static_cast<wchar_t>(c), ln);
     }
-    
+
     const uchar fold_uchar(const uchar c, std::locale &ln) {
         // TODO: Proper implementation. For now just uppercase so it does not yell
         return uppercase_uchar(c, ln);

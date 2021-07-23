@@ -18,8 +18,8 @@
  */
 
 #include <cpu/12l1r/block_gen.h>
-#include <cpu/12l1r/float_marker.h>
 #include <cpu/12l1r/core_state.h>
+#include <cpu/12l1r/float_marker.h>
 
 namespace eka2l1::arm::r12l1 {
     float_marker::float_marker(dashixiong_block *bblock)

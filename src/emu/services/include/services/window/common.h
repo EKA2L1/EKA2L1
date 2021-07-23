@@ -660,10 +660,10 @@ namespace eka2l1::epoc {
     std_scan_code post_processing_scancode(std_scan_code input_code, int ui_rotation);
 
     static constexpr std::uint32_t KEYBIND_TYPE_MOUSE_CODE_BASE = 0x10000000;
-    
+
     typedef std::map<std::pair<int, int>, std::uint32_t> button_map;
     typedef std::map<std::uint32_t, std::uint32_t> key_map;
-    
+
     std::optional<std::uint32_t> map_button_to_inputcode(button_map &map, int controller_id, int button);
     std::optional<std::uint32_t> map_key_to_inputcode(key_map &map, std::uint32_t keycode);
 }

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/comm/comm.h>
+#include <system/epoc.h>
 
 #include <kernel/property.h>
 #include <utils/err.h>
@@ -40,7 +40,7 @@ namespace eka2l1 {
         c32start_prop_ = kern->create<service::property>();
         c32start_prop_->first = C32START_FIRST_UID;
         c32start_prop_->second = 1;
-        
+
         // On S60v2 it will keep spin loop until this value reach larger then 9. Not sure what it is...
         c32start_prop_->define(service::property_type::int_data, 4);
         c32start_prop_->set_int(10);

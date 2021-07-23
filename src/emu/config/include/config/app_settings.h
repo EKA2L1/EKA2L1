@@ -28,7 +28,7 @@ namespace eka2l1::epoc {
 
 namespace eka2l1::config {
     struct state;
-    
+
     struct app_setting {
     public:
         std::uint32_t fps;

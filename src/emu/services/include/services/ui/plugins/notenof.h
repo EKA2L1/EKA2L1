@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/notifier/plugin.h>
 #include <functional>
+#include <services/notifier/plugin.h>
 #include <string>
 
 namespace eka2l1::epoc::notifier {
@@ -41,10 +41,10 @@ namespace eka2l1::epoc::notifier {
         note_type_text = 13
     };
 
-    using note_display_callback = std::function<void(const note_type, const std::string&, epoc::notify_info)>;
+    using note_display_callback = std::function<void(const note_type, const std::string &, epoc::notify_info)>;
     using note_display_cancel_callback = std::function<void()>;
 
-    class note_display_plugin: public plugin_base {
+    class note_display_plugin : public plugin_base {
         note_display_callback callback_;
         note_display_cancel_callback cancel_callback_;
 

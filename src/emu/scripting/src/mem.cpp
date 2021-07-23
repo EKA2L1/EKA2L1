@@ -21,8 +21,8 @@
 #include <scripting/instance.h>
 #include <scripting/mem.h>
 
-#include <system/epoc.h>
 #include <mem/mem.h>
+#include <system/epoc.h>
 #include <utils/des.h>
 
 namespace eka2l1::scripting {
@@ -56,19 +56,19 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-    EKA2L1_EXPORT std::uint8_t symemu_mem_read_byte(const std::uint32_t addr) {
-        return eka2l1::scripting::read_byte(addr);
-    }
-    
-    EKA2L1_EXPORT std::uint16_t symemu_mem_read_word(const std::uint32_t addr) {
-        return eka2l1::scripting::read_word(addr);
-    }
+EKA2L1_EXPORT std::uint8_t symemu_mem_read_byte(const std::uint32_t addr) {
+    return eka2l1::scripting::read_byte(addr);
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_mem_read_dword(const std::uint32_t addr) {
-        return eka2l1::scripting::read_dword(addr);
-    }
-    
-    EKA2L1_EXPORT std::uint64_t symemu_mem_read_qword(const std::uint32_t addr) {
-        return eka2l1::scripting::read_qword(addr);
-    }
+EKA2L1_EXPORT std::uint16_t symemu_mem_read_word(const std::uint32_t addr) {
+    return eka2l1::scripting::read_word(addr);
+}
+
+EKA2L1_EXPORT std::uint32_t symemu_mem_read_dword(const std::uint32_t addr) {
+    return eka2l1::scripting::read_dword(addr);
+}
+
+EKA2L1_EXPORT std::uint64_t symemu_mem_read_qword(const std::uint32_t addr) {
+    return eka2l1::scripting::read_qword(addr);
+}
 }

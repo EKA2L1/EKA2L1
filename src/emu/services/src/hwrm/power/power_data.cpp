@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <kernel/kernel.h>
 #include <services/hwrm/power/power_data.h>
 #include <services/hwrm/power/power_def.h>
-#include <kernel/kernel.h>
 
 #include <common/log.h>
 

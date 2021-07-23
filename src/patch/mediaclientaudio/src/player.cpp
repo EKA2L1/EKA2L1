@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mdaaudiosampleplayer.h>
-#include <mda/common/resource.h>
 #include <Log.h>
+#include <mda/common/resource.h>
+#include <mdaaudiosampleplayer.h>
 
 #include "common.h"
 #include "dispatch.h"

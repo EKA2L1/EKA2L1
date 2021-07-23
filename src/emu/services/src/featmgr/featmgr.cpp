@@ -20,10 +20,10 @@
 
 #include <common/log.h>
 
-#include <system/epoc.h>
+#include <services/context.h>
 #include <services/featmgr/featmgr.h>
 #include <services/featmgr/op.h>
-#include <services/context.h>
+#include <system/epoc.h>
 #include <utils/des.h>
 #include <utils/err.h>
 #include <vfs/vfs.h>

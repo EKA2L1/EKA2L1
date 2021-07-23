@@ -21,8 +21,8 @@
 
 #include <services/framework.h>
 #include <services/hwrm/light/light_data.h>
-#include <services/hwrm/resource.h>
 #include <services/hwrm/power/power_data.h>
+#include <services/hwrm/resource.h>
 #include <services/hwrm/vibration/vibration_data.h>
 
 #include <memory>

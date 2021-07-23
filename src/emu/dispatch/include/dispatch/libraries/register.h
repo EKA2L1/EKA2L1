@@ -25,12 +25,12 @@ namespace eka2l1 {
 
 namespace eka2l1::dispatch {
     struct dispatcher;
-    
+
     struct patch_info {
         std::uint32_t dispatch_number_;
         std::uint32_t ordinal_number_;
     };
-    
+
     namespace libraries {
         void register_functions(kernel_system *kern, dispatcher *disp);
     }

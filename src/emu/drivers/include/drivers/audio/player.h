@@ -125,7 +125,7 @@ namespace eka2l1::drivers {
 
         virtual void set_repeat(const std::int32_t repeat_times, const std::uint64_t silence_intervals_micros) = 0;
         virtual void set_position(const std::uint64_t pos_in_us) = 0;
-        
+
         virtual bool set_dest_freq(const std::uint32_t freq) = 0;
         virtual bool set_dest_channel_count(const std::uint32_t cn) = 0;
         virtual bool set_dest_encoding(const std::uint32_t enc) = 0;
@@ -134,7 +134,7 @@ namespace eka2l1::drivers {
         virtual std::uint32_t get_dest_freq() = 0;
         virtual std::uint32_t get_dest_channel_count() = 0;
         virtual std::uint32_t get_dest_encoding() = 0;
-        
+
         virtual bool prepare_play_newest() = 0;
         virtual bool is_playing() const = 0;
     };

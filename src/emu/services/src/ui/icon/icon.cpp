@@ -17,13 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/fbs/fbs.h>
 #include <services/ui/icon/icon.h>
 #include <services/ui/icon/ops.h>
-#include <services/fbs/fbs.h>
 
 #include <common/cvt.h>
-#include <system/epoc.h>
 #include <loader/mif.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 #include <vfs/vfs.h>
 

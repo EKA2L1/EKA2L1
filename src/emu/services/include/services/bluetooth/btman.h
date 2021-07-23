@@ -21,8 +21,8 @@
 
 #include <services/bluetooth/btmidman.h>
 
-#include <services/framework.h>
 #include <kernel/server.h>
+#include <services/framework.h>
 
 namespace eka2l1 {
     std::string get_btman_server_name_by_epocver(const epocver ver);

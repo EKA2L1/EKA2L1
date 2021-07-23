@@ -19,17 +19,17 @@
  */
 #pragma once
 
-#include <kernel/legacy/mutex.h>
-#include <kernel/legacy/sema.h>
-#include <kernel/common.h>
 #include <kernel/btrace.h>
 #include <kernel/change_notifier.h>
 #include <kernel/chunk.h>
 #include <kernel/codeseg.h>
+#include <kernel/common.h>
 #include <kernel/kernel_obj.h>
 #include <kernel/ldd.h>
-#include <kernel/library.h>
+#include <kernel/legacy/mutex.h>
+#include <kernel/legacy/sema.h>
 #include <kernel/libmanager.h>
+#include <kernel/library.h>
 #include <kernel/msgqueue.h>
 #include <kernel/mutex.h>
 #include <kernel/object_ix.h>
@@ -43,9 +43,9 @@
 #include <kernel/server.h>
 #include <kernel/session.h>
 
-#include <common/types.h>
 #include <common/container.h>
 #include <common/hash.h>
+#include <common/types.h>
 #include <common/wildcard.h>
 
 #include <kernel/ipc.h>
@@ -60,8 +60,8 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <unordered_map>
 #include <regex>
+#include <unordered_map>
 
 namespace eka2l1 {
 #define SYNCHRONIZE_ACCESS const std::lock_guard<std::mutex> guard(kern_lock)
@@ -96,9 +96,9 @@ namespace eka2l1 {
     using library_ptr = kernel::library *;
     using codeseg_ptr = kernel::codeseg *;
     using property_ref_ptr = service::property_reference *;
-    using mutex_legacy_ptr = kernel::legacy::mutex*;
-    using sema_legacy_ptr = kernel::legacy::semaphore*;
-    using undertaker_ptr = kernel::undertaker*;
+    using mutex_legacy_ptr = kernel::legacy::mutex *;
+    using sema_legacy_ptr = kernel::legacy::semaphore *;
+    using undertaker_ptr = kernel::undertaker *;
 
     using kernel_obj_unq_ptr = std::unique_ptr<kernel::kernel_obj>;
     using prop_ident_pair = std::pair<int, int>;
@@ -152,10 +152,10 @@ namespace eka2l1 {
     static constexpr std::uint32_t FIND_HANDLE_OBJ_TYPE_SHIFT = 28;
 
     struct find_handle {
-        std::uint32_t index;                  ///< Index of the object in the separate object container.
-                                    ///< On EKA2L1 this index starts from 1.
-        std::uint64_t object_id;    ///< The ID of the kernel object.
-        kernel_obj_ptr obj;         ///< The corresponded kernel object found.
+        std::uint32_t index; ///< Index of the object in the separate object container.
+            ///< On EKA2L1 this index starts from 1.
+        std::uint64_t object_id; ///< The ID of the kernel object.
+        kernel_obj_ptr obj; ///< The corresponded kernel object found.
     };
 
     namespace arm {
@@ -179,7 +179,7 @@ namespace eka2l1 {
      * @param reqstsaddr        Address of the request status.
      * @param callee            Thread that sent this message.
      */
-    using ipc_send_callback = std::function<void(const std::string&, const int, const ipc_arg&, address, kernel::thread*)>;
+    using ipc_send_callback = std::function<void(const std::string &, const int, const ipc_arg &, address, kernel::thread *)>;
 
     /**
      * @brief Callback invoked by the kernel when an IPC message completes.
@@ -187,7 +187,7 @@ namespace eka2l1 {
      * @param msg               Pointer to the message that being completed.
      * @param complete_code     The code that used to complete this message.
      */
-    using ipc_complete_callback = std::function<void(ipc_msg*, const std::int32_t)>;
+    using ipc_complete_callback = std::function<void(ipc_msg *, const std::int32_t)>;
 
     /**
      * @brief Callback invoked by the kernel when a thread is killed.
@@ -196,7 +196,7 @@ namespace eka2l1 {
      * @param category          The category of the kill.
      * @param reason            The reason for this thread being killed.
      */
-    using thread_kill_callback = std::function<void(kernel::thread*, const std::string&, const std::int32_t)>;
+    using thread_kill_callback = std::function<void(kernel::thread *, const std::string &, const std::int32_t)>;
 
     /**
      * @brief Callback invoked when a breakpoint is hit.
@@ -205,7 +205,7 @@ namespace eka2l1 {
      * @param thread            Pointer to the thread that the breakpoint is triggered on.
      * @param addr              Address of the breakpoint.
      */
-    using breakpoint_callback = std::function<void(arm::core*, kernel::thread*, const std::uint32_t)>;
+    using breakpoint_callback = std::function<void(arm::core *, kernel::thread *, const std::uint32_t)>;
 
     /**
      * @brief Callback invoked when a process switch happens on a core scheduler.
@@ -214,7 +214,7 @@ namespace eka2l1 {
      * @param old               The process bout to be switched.
      * @param new               The new process to switched to.
      */
-    using process_switch_callback = std::function<void(arm::core*, kernel::process*, kernel::process*)>;
+    using process_switch_callback = std::function<void(arm::core *, kernel::process *, kernel::process *)>;
 
     /**
      * @brief Callback invoked when a codeseg is loaded.
@@ -223,7 +223,7 @@ namespace eka2l1 {
      * @param process   The owner process of the codeseg.
      * @param csptr     Pointer to the target codeseg.
      */
-    using codeseg_loaded_callback = std::function<void(const std::string&, kernel::process*, codeseg_ptr)>;
+    using codeseg_loaded_callback = std::function<void(const std::string &, kernel::process *, codeseg_ptr)>;
 
     /**
      * @brief Callback invoked when Instruction Memory Barrier is called.
@@ -232,14 +232,14 @@ namespace eka2l1 {
      * @param address       The address that needs to use the IMB
      * @param size          The number of bytes to flush.
      */
-    using imb_range_callback = std::function<void(kernel::process*, address, const std::size_t)>;
+    using imb_range_callback = std::function<void(kernel::process *, address, const std::size_t)>;
 
     /**
      * @brief Callback invoked when an LDD is requested to be loaded.
      * 
      * @param name          Name of the LDD. 
      */
-    using ldd_factory_request_callback = std::function<ldd::factory_instantiate_func(const char*)>;
+    using ldd_factory_request_callback = std::function<ldd::factory_instantiate_func(const char *)>;
 
     /**
      * @brief Callback when a process's UID changes.
@@ -247,7 +247,7 @@ namespace eka2l1 {
      * @param process       Pointer to the process that changes their UID.
      * @param old_uid       The previous UID types.
      */
-    using uid_of_process_change_callback = std::function<void(kernel::process*, kernel::process_uid_type)>;
+    using uid_of_process_change_callback = std::function<void(kernel::process *, kernel::process_uid_type)>;
 
     struct kernel_global_data {
         kernel::char_set char_set_;
@@ -327,10 +327,10 @@ namespace eka2l1 {
         using cache_interpreter_func = std::function<bool(arm::core *)>;
         std::map<std::uint32_t, cache_interpreter_func> cache_inters_;
 
-        kernel::chunk* dll_global_data_chunk_;
+        kernel::chunk *dll_global_data_chunk_;
         std::map<address, std::uint64_t> dll_global_data_offset_;
         std::uint32_t dll_global_data_last_offset_;
-        
+
         std::uint64_t inactivity_starts_;
         kernel::process *nanokern_pr_;
 
@@ -383,7 +383,7 @@ namespace eka2l1 {
         std::size_t register_imb_range_callback(imb_range_callback callback);
         std::size_t register_ldd_factory_request_callback(ldd_factory_request_callback callback);
         std::size_t register_uid_process_change_callback(uid_of_process_change_callback callback);
-        
+
         bool unregister_codeseg_loaded_callback(const std::size_t handle);
         bool unregister_ipc_send_callback(const std::size_t handle);
         bool unregister_ipc_complete_callback(const std::size_t handle);
@@ -665,7 +665,7 @@ namespace eka2l1 {
         template <typename T>
         T *add_object(std::unique_ptr<T> &obj) {
             constexpr kernel::object_type obj_type = get_object_type<T>();
-            
+
 #define ADD_OBJECT_TO_CONTAINER(type, container, additional_setup) \
     case type:                                                     \
         additional_setup;                                          \
@@ -723,7 +723,7 @@ namespace eka2l1 {
             T *obj = create<T>(creation_args...);
             return std::make_pair(open_handle_with_thread(thr, obj, owner), obj);
         }
-        
+
         kernel_obj_ptr get_object_from_find_handle(const std::uint32_t find_handle);
 
         // Lock the kernel

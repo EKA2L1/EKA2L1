@@ -174,7 +174,7 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::is_screen_mode_dynamic(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        const std::int32_t mode_invest = *reinterpret_cast<const std::int32_t*>(cmd.data_ptr);
+        const std::int32_t mode_invest = *reinterpret_cast<const std::int32_t *>(cmd.data_ptr);
         const epoc::config::screen_mode *mode = scr->mode_info((mode_invest < 0) ? local_screen_mode_ : mode_invest);
 
         if (!mode) {

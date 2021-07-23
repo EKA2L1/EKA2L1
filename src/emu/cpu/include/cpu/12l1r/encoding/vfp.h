@@ -27,7 +27,7 @@ namespace eka2l1::arm::r12l1 {
         static const struct tables_type {
             table_type unconditional;
             table_type conditional;
-        } tables = []{
+        } tables = [] {
             table_type list = {
 
 #define INST(fn, name, bitstring) decoder::detail<vfp_matcher<V>>::get_matcher(&V::fn, name, bitstring),
@@ -36,20 +36,20 @@ namespace eka2l1::arm::r12l1 {
 
             };
 
-            const auto division = std::stable_partition(list.begin(), list.end(), [&](const auto& matcher) {
+            const auto division = std::stable_partition(list.begin(), list.end(), [&](const auto &matcher) {
                 return (matcher.get_mask() & 0xF0000000) == 0xF0000000;
             });
 
-            return tables_type {
-                table_type{list.begin(), division},
-                table_type{division, list.end()},
+            return tables_type{
+                table_type{ list.begin(), division },
+                table_type{ division, list.end() },
             };
         }();
 
         const bool is_unconditional = (instruction & 0xF0000000) == 0xF0000000;
-        const table_type& table = is_unconditional ? tables.unconditional : tables.conditional;
+        const table_type &table = is_unconditional ? tables.unconditional : tables.conditional;
 
-        const auto matches_instruction = [instruction](const auto& matcher){ return matcher.matches(instruction); };
+        const auto matches_instruction = [instruction](const auto &matcher) { return matcher.matches(instruction); };
 
         auto iter = std::find_if(table.begin(), table.end(), matches_instruction);
         return iter != table.end() ? std::optional<std::reference_wrapper<const vfp_matcher<V>>>(*iter) : std::nullopt;

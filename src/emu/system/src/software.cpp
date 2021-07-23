@@ -214,7 +214,7 @@ namespace eka2l1::loader {
             LOG_ERROR(SYSTEM, "Can't load sw.txt!");
             return false;
         }
-        
+
         sw_file.getline(line_buffer);
 
         common::pystr sw_line_py(line_buffer);

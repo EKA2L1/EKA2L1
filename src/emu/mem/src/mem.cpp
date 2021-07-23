@@ -25,8 +25,8 @@
 
 #include <cpu/arm_interface.h>
 
-#include <mem/mem.h>
 #include <mem/allocator/std_page_allocator.h>
+#include <mem/mem.h>
 #include <mem/mmu.h>
 #include <mem/ptr.h>
 

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/hwrm/resource.h>
 #include <drivers/hwrm/vibration.h>
+#include <services/hwrm/resource.h>
 
 namespace eka2l1 {
     class kernel_system;

@@ -94,6 +94,7 @@ namespace eka2l1 {
     struct sisregistry_client_session : public service::typical_session {
     private:
         common::identity_container<sisregistry_client_subsession_inst> subsessions_;
+
     public:
         explicit sisregistry_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
 

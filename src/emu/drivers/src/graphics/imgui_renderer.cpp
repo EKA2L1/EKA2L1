@@ -120,8 +120,7 @@ namespace eka2l1::drivers {
 
         const eka2l1::vec2 swapchain_size(fb_width, fb_height);
         cmd_builder->set_swapchain_size(swapchain_size);
-        cmd_builder->set_ortho_size(eka2l1::vec2(static_cast<int>(io.DisplaySize.x), static_cast<int>(
-            io.DisplaySize.y)));
+        cmd_builder->set_ortho_size(eka2l1::vec2(static_cast<int>(io.DisplaySize.x), static_cast<int>(io.DisplaySize.y)));
 
         // Backup GL state
         cmd_builder->backup_state();
@@ -198,10 +197,10 @@ namespace eka2l1::drivers {
                     eka2l1::vec2{ static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x), -static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y) });
 
                 cmd_builder->clip_rect(clip_rect);
-                
+
                 if (pcmd->UserCallback) {
                     ImDrawCmd cmd_copy = *pcmd;
-                    
+
                     drivers::graphics_command_callback_data data;
 
                     data.builder_ = cmd_builder;
@@ -209,11 +208,11 @@ namespace eka2l1::drivers {
 
                     cmd_copy.UserCallbackData = &data;
                     cmd_copy.UserCallback(cmd_list, &cmd_copy);
-            
+
                     // Bind them back, in case buffer bindings are modified
                     cmd_builder->bind_buffer(vbo);
                     cmd_builder->bind_buffer(ibo);
-                    
+
                     cmd_builder->use_program(shader);
                 } else {
                     cmd_builder->bind_texture(reinterpret_cast<drivers::handle>(pcmd->TextureId), 0);

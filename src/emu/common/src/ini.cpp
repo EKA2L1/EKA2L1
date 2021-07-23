@@ -290,7 +290,7 @@ namespace eka2l1::common {
 
             std::size_t begin = counter;
 
-            while (counter < line.length() && line[counter] != cto_stop 
+            while (counter < line.length() && line[counter] != cto_stop
                 && line[counter] != ',' && line[counter] != '\t') {
                 counter++;
             }
@@ -421,7 +421,7 @@ namespace eka2l1::common {
                                 if (stream.eof()) {
                                     break;
                                 }
-                                
+
                                 first_token = stream.next_string();
                                 continue;
                             } else {

@@ -19,8 +19,8 @@
 
 #include <Log.h>
 
-#include "scdv/panic.h"
 #include "drawdvcb.h"
+#include "scdv/panic.h"
 
 TUint8 *CFbsDrawDeviceByteBuffer::GetPixelStartAddress(TInt aX, TInt aY) const {
     TInt originalX = aX;

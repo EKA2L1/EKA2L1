@@ -68,7 +68,7 @@ namespace eka2l1::drivers {
 
     public:
         explicit player_wmf(audio_driver *driver);
-        
+
         bool make_backend_source(player_request_instance &request) override;
 
         void reset_request(player_request_instance &request) override;
@@ -79,10 +79,10 @@ namespace eka2l1::drivers {
 
         void read_and_transcode(player_request_instance &request, const std::uint32_t out_stream_idx, const std::uint64_t time_stamp_source, const std::uint64_t duration_source);
         bool set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) override;
-        
+
         bool crop() override;
         bool record() override;
-        
+
         bool set_dest_encoding(const std::uint32_t enc) override;
         bool set_dest_freq(const std::uint32_t freq) override;
         bool set_dest_channel_count(const std::uint32_t cn) override;

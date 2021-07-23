@@ -23,7 +23,7 @@ namespace eka2l1::epoc {
     enum std_scan_code {
         std_key_null = 0x00,
         std_key_backspace = 0x01,
-        std_key_tab = 0x02, 
+        std_key_tab = 0x02,
         std_key_enter = 0x03,
         std_key_escape = 0x04,
         std_key_space = 0x05,

@@ -19,9 +19,9 @@
 
 #pragma once
 
+#include <mem/chunk.h>
 #include <mem/model/flexible/mapping.h>
 #include <mem/model/flexible/memobj.h>
-#include <mem/chunk.h>
 
 #include <common/algorithm.h>
 #include <common/allocator.h>
@@ -29,7 +29,7 @@
 namespace eka2l1::mem::flexible {
     struct flexible_mem_model_process;
 
-    struct flexible_mem_model_chunk: public mem_model_chunk {
+    struct flexible_mem_model_chunk : public mem_model_chunk {
     protected:
         friend struct flexible_mem_model_process;
 
@@ -48,7 +48,7 @@ namespace eka2l1::mem::flexible {
     public:
         explicit flexible_mem_model_chunk(control_base *control, const asid id);
         ~flexible_mem_model_chunk() override;
-        
+
         const vm_address base(mem_model_process *process) override;
 
         void *host_base() override;

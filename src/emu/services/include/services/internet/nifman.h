@@ -21,8 +21,8 @@
 
 #include <services/socket/connection.h>
 
-#include <services/framework.h>
 #include <kernel/server.h>
+#include <services/framework.h>
 
 namespace eka2l1 {
     enum nifman_opcode {
@@ -31,7 +31,7 @@ namespace eka2l1 {
     };
 
     class socket_server;
-    
+
     class nifman_server : public service::typical_server {
     protected:
         socket_server *sock_serv_;

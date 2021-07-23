@@ -27,7 +27,7 @@
 #include <hal.h>
 #endif
 
-struct CDirectScreenBitmapImpl: public CDirectScreenBitmap {
+struct CDirectScreenBitmapImpl : public CDirectScreenBitmap {
     TUint32 *iData;
     TSize iSize;
     TUint32 iFlags;
@@ -36,10 +36,10 @@ struct CDirectScreenBitmapImpl: public CDirectScreenBitmap {
 public:
     explicit CDirectScreenBitmapImpl();
 
-    virtual TInt Create(const TRect& aScreenRect, TSettingsFlags aSettingsFlags);
-    virtual TInt BeginUpdate(TAcceleratedBitmapInfo& aBitmapInfo);
-    virtual void EndUpdate(TRequestStatus& aComplete);
-    virtual void EndUpdate(const TRect& aScreenRect, TRequestStatus& aComplete);
+    virtual TInt Create(const TRect &aScreenRect, TSettingsFlags aSettingsFlags);
+    virtual TInt BeginUpdate(TAcceleratedBitmapInfo &aBitmapInfo);
+    virtual void EndUpdate(TRequestStatus &aComplete);
+    virtual void EndUpdate(const TRect &aScreenRect, TRequestStatus &aComplete);
     virtual void Close();
 };
 
@@ -50,7 +50,7 @@ CDirectScreenBitmapImpl::CDirectScreenBitmapImpl()
     , iScreenNum(0) {
 }
 
-TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aSettingsFlags) {
+TInt CDirectScreenBitmapImpl::Create(const TRect &aScreenRect, TSettingsFlags aSettingsFlags) {
 #ifdef EKA2
     const TInt screenNum = (aSettingsFlags >> 28) & 7;
     TInt offsetToFirstPixel = 0;
@@ -58,7 +58,7 @@ TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aS
     HAL::Get(screenNum, HAL::EDisplayMemoryAddress, (TInt &)(iData));
     HAL::Get(screenNum, HAL::EDisplayOffsetToFirstPixel, offsetToFirstPixel);
 
-    iData = reinterpret_cast<TUint32*>(reinterpret_cast<TUint8*>(iData) + offsetToFirstPixel);
+    iData = reinterpret_cast<TUint32 *>(reinterpret_cast<TUint8 *>(iData) + offsetToFirstPixel);
 #else
     const TInt screenNum = 0;
 #endif
@@ -74,7 +74,7 @@ TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aS
 #else
     TPckgBuf<TScreenInfoV01> info;
     UserSvr::ScreenInfo(info);
-    
+
     iSize.iWidth = info().iScreenSize.iWidth;
     iSize.iHeight = info().iScreenSize.iHeight;
 #endif
@@ -94,21 +94,21 @@ TInt CDirectScreenBitmapImpl::Create(const TRect& aScreenRect, TSettingsFlags aS
     return KErrNone;
 }
 
-TInt CDirectScreenBitmapImpl::BeginUpdate(TAcceleratedBitmapInfo& aBitmapInfo) {
+TInt CDirectScreenBitmapImpl::BeginUpdate(TAcceleratedBitmapInfo &aBitmapInfo) {
 #ifdef EKA2
     aBitmapInfo.iDisplayMode = EColor16MA;
 #else
-    aBitmapInfo.iDisplayMode = EColor64K;     // TODO
+    aBitmapInfo.iDisplayMode = EColor64K; // TODO
 #endif
-    aBitmapInfo.iAddress = reinterpret_cast<TUint8*>(iData);
+    aBitmapInfo.iAddress = reinterpret_cast<TUint8 *>(iData);
     aBitmapInfo.iSize = iSize;
     aBitmapInfo.iLinePitch = iSize.iWidth * 4;
-    aBitmapInfo.iPixelShift = 5;    // Should be 2^5 = 32
+    aBitmapInfo.iPixelShift = 5; // Should be 2^5 = 32
 
     return KErrNone;
 }
 
-void CDirectScreenBitmapImpl::EndUpdate(TRequestStatus& aComplete) {
+void CDirectScreenBitmapImpl::EndUpdate(TRequestStatus &aComplete) {
     TRect rect;
     rect.iTl = TPoint(0, 0);
     rect.iBr = rect.iTl + iSize;
@@ -116,7 +116,7 @@ void CDirectScreenBitmapImpl::EndUpdate(TRequestStatus& aComplete) {
     EndUpdate(rect, aComplete);
 }
 
-void CDirectScreenBitmapImpl::EndUpdate(const TRect& aScreenRect, TRequestStatus& aComplete) {
+void CDirectScreenBitmapImpl::EndUpdate(const TRect &aScreenRect, TRequestStatus &aComplete) {
     UpdateScreen(1, iScreenNum, 1, &aScreenRect);
 
     TRequestStatus *status = &aComplete;

@@ -17,19 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qt/applistwidget.h>
-#include <services/applist/applist.h>
-#include <utils/apacmd.h>
-#include <services/fbs/fbs.h>
 #include <common/buffer.h>
 #include <common/cvt.h>
 #include <common/path.h>
+#include <qt/applistwidget.h>
+#include <services/applist/applist.h>
+#include <services/fbs/fbs.h>
+#include <utils/apacmd.h>
 
-#include <vector>
-#include <QPainter>
 #include <QBitmap>
 #include <QLineEdit>
+#include <QPainter>
 #include <QtSvg/QSvgRenderer>
+#include <vector>
 
 #include <loader/mif.h>
 #include <loader/svgb.h>
@@ -63,9 +63,8 @@ void applist_search_bar::on_search_bar_content_changed(QString content) {
 }
 
 applist_widget_item::applist_widget_item(const QIcon &icon, const QString &name, int registry_index, QListWidget *parent)
-    : QListWidgetItem(icon, name, parent),
-      registry_index_(registry_index) {
-
+    : QListWidgetItem(icon, name, parent)
+    , registry_index_(registry_index) {
 }
 
 applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io, const bool ngage_mode)
@@ -75,8 +74,7 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     , layout_(nullptr)
     , lister_(lister)
     , fbss_(fbss)
-    , io_(io)
-{
+    , io_(io) {
     search_bar_ = new applist_search_bar(this);
     list_widget_ = new QListWidget(this);
 
@@ -130,15 +128,15 @@ void applist_widget::on_search_content_changed(QString content) {
 
     hide_all();
 
-    QList<QListWidgetItem*> matches(list_widget_->findItems(content, Qt::MatchFlag::MatchContains));
+    QList<QListWidgetItem *> matches(list_widget_->findItems(content, Qt::MatchFlag::MatchContains));
 
-    for(QListWidgetItem* item : matches) {
+    for (QListWidgetItem *item : matches) {
         item->setHidden(false);
     }
 }
 
 void applist_widget::on_list_widget_item_clicked(QListWidgetItem *item) {
-    applist_widget_item *item_translated = reinterpret_cast<applist_widget_item*>(item);
+    applist_widget_item *item_translated = reinterpret_cast<applist_widget_item *>(item);
     emit app_launch(item_translated);
 }
 
@@ -193,7 +191,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
 
         if (file_route) {
             eka2l1::ro_file_stream file_route_stream(file_route.get());
-            eka2l1::loader::mif_file file_mif_parser(reinterpret_cast<eka2l1::common::ro_stream*>(&file_route_stream));
+            eka2l1::loader::mif_file file_mif_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
 
             if (file_mif_parser.do_parse()) {
                 std::vector<std::uint8_t> data;
@@ -216,7 +214,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                         std::unique_ptr<QSvgRenderer> renderer = nullptr;
                         if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
                             if (errors[0].reason_ == eka2l1::loader::svgb_convert_error_invalid_file) {
-                                QByteArray content(reinterpret_cast<const char*>(data.data()) + sizeof(eka2l1::loader::mif_icon_header), data.size() - sizeof(eka2l1::loader::mif_icon_header));
+                                QByteArray content(reinterpret_cast<const char *>(data.data()) + sizeof(eka2l1::loader::mif_icon_header), data.size() - sizeof(eka2l1::loader::mif_icon_header));
                                 renderer = std::make_unique<QSvgRenderer>(content);
                             }
                         } else {
@@ -243,7 +241,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
         eka2l1::symfile file_route = io_->open_file(reg.icon_file_path, READ_MODE | BIN_MODE);
         if (file_route) {
             eka2l1::ro_file_stream file_route_stream(file_route.get());
-            eka2l1::loader::mbm_file file_mbm_parser(reinterpret_cast<eka2l1::common::ro_stream*>(&file_route_stream));
+            eka2l1::loader::mbm_file file_mbm_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
 
             if (file_mbm_parser.do_read_headers() && !file_mbm_parser.sbm_headers.empty()) {
                 eka2l1::loader::sbm_header *icon_header = &file_mbm_parser.sbm_headers[0];
@@ -252,7 +250,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
 
                 if (eka2l1::epoc::convert_to_argb8888(fbss_, file_mbm_parser, 0, converted_write_stream)) {
                     QImage main_bitmap_image(converted_data.data(), icon_header->size_pixels.x, icon_header->size_pixels.y,
-                                             QImage::Format_ARGB32);
+                        QImage::Format_ARGB32);
 
                     final_pixmap = QPixmap::fromImage(main_bitmap_image);
                     icon_pair_rendered = true;
@@ -272,7 +270,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                 LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load main icon of app {}", app_name.toStdString());
             } else {
                 QImage main_bitmap_image(main_bitmap_data.data(), main_bitmap->header_.size_pixels.x, main_bitmap->header_.size_pixels.y,
-                                         QImage::Format_ARGB32);
+                    QImage::Format_ARGB32);
 
                 if (icon_pair->second) {
                     eka2l1::epoc::bitwise_bitmap *second_bitmap = icon_pair->second;
@@ -284,7 +282,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                         LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load mask bitmap icon of app {}", app_name.toStdString());
                     } else {
                         QImage mask_bitmap_image(second_bitmap_data.data(), second_bitmap->header_.size_pixels.x, second_bitmap->header_.size_pixels.y,
-                                                 QImage::Format_ARGB32);
+                            QImage::Format_ARGB32);
 
                         QImage mask_bitmap_alpha_image = mask_bitmap_image.createAlphaMask().convertToFormat(QImage::Format_Mono);
                         mask_bitmap_alpha_image.invertPixels();

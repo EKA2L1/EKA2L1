@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <services/allocator.h>
 #include <services/fbs/adapter/font_adapter.h>
 #include <services/fbs/bitmap.h>
 #include <services/fbs/compress_queue.h>
@@ -31,7 +32,6 @@
 #include <services/fbs/font_store.h>
 #include <services/framework.h>
 #include <services/window/common.h>
-#include <services/allocator.h>
 
 #include <common/allocator.h>
 #include <common/hash.h>
@@ -183,7 +183,7 @@ namespace eka2l1 {
 
         epoc::open_font_glyph_v1_use_for_fbs *glyph_info_for_legacy_return_;
         address glyph_info_for_legacy_return_addr_;
-        
+
         // Info is adjusted after this function to fit the spec
         epoc::bitmapfont_base *create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec,
             kernel::process *font_user, const std::uint32_t desired_height, std::optional<std::pair<float, float>> scale_vector = std::nullopt);
@@ -454,7 +454,7 @@ namespace eka2l1 {
 
         template <typename T>
         void destroy_bitmap_font(T *bitmapfont);
-        
+
         /**
          * \brief Load image data to large chunk.
          * 
@@ -505,7 +505,7 @@ namespace eka2l1 {
          * 
          * Using a shared global chunk, this could be solved someway.
         */
-        template <typename T, typename ...Args>
+        template <typename T, typename... Args>
         T *allocate_general_data(Args... construct_args) {
             return shared_chunk_allocator->allocate_struct<T>(construct_args...);
         }

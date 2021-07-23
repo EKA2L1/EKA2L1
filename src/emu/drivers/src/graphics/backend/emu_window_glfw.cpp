@@ -18,8 +18,8 @@
  */
 
 #include <common/log.h>
-#include <common/raw_bind.h>
 #include <common/platform.h>
+#include <common/raw_bind.h>
 
 #include <drivers/graphics/backend/cursor_glfw.h>
 #include <drivers/graphics/backend/emu_window_glfw.h>
@@ -165,9 +165,9 @@ namespace eka2l1 {
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor_to_try[i]);
                     glfwWindowHint(GLFW_OPENGL_PROFILE, mode_to_try[i]);
 
-    #if EKA2L1_PLATFORM(MACOS)
+#if EKA2L1_PLATFORM(MACOS)
                     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-    #endif
+#endif
 
                     emu_win = glfwCreateWindow(size.x, size.y, title.data(), (flags & emu_window_flag_fullscreen) ? monitor : nullptr, nullptr);
 
@@ -175,7 +175,7 @@ namespace eka2l1 {
                         break;
                     }
                 }
-                
+
                 if (!emu_win) {
                     LOG_ERROR(DRIVER_GRAPHICS, "Can't create window! Check if your PC support at least OpenGL 3.1!");
                     return;
@@ -249,8 +249,8 @@ namespace eka2l1 {
                 return false;
             }
 
-            cursor_glfw *cur_real = reinterpret_cast<cursor_glfw*>(cur);
-            glfwSetCursor(emu_win, reinterpret_cast<GLFWcursor*>(cur_real->raw_handle()));
+            cursor_glfw *cur_real = reinterpret_cast<cursor_glfw *>(cur);
+            glfwSetCursor(emu_win, reinterpret_cast<GLFWcursor *>(cur_real->raw_handle()));
 
             return true;
         }

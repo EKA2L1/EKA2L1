@@ -20,10 +20,10 @@
 #ifndef APPLISTWIDGET_H
 #define APPLISTWIDGET_H
 
-#include <QListWidget>
-#include <QLabel>
-#include <QHBoxLayout>
 #include <QGridLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QListWidget>
 
 namespace eka2l1 {
     class applist_server;
@@ -33,14 +33,14 @@ namespace eka2l1 {
     struct apa_app_registry;
 }
 
-class applist_widget_item: public QListWidgetItem {
+class applist_widget_item : public QListWidgetItem {
 public:
     int registry_index_;
 
     applist_widget_item(const QIcon &icon, const QString &name, int registry_index, QListWidget *listview);
 };
 
-class applist_search_bar: public QWidget {
+class applist_search_bar : public QWidget {
     Q_OBJECT;
 
 private:
@@ -60,8 +60,7 @@ public:
     ~applist_search_bar();
 };
 
-class applist_widget : public QWidget
-{
+class applist_widget : public QWidget {
     Q_OBJECT;
 
 public:
@@ -88,7 +87,7 @@ signals:
 
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
-                            const bool ngage_mode = false);
+        const bool ngage_mode = false);
     ~applist_widget();
 
     bool launch_from_widget_item(applist_widget_item *item);

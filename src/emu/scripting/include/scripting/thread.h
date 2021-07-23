@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace eka2l1 {
     namespace kernel {

@@ -73,7 +73,7 @@ namespace eka2l1 {
         APA_LEGACY_LEVEL_MORDEN = 0
     };
 
-    using apa_app_masked_icon_bitmap = std::pair<epoc::bitwise_bitmap*, epoc::bitwise_bitmap*>;
+    using apa_app_masked_icon_bitmap = std::pair<epoc::bitwise_bitmap *, epoc::bitwise_bitmap *>;
 
     struct apa_app_registry {
         apa_app_info mandatory_info;
@@ -274,7 +274,7 @@ namespace eka2l1 {
         void get_app_icon_sizes(service::ipc_context &ctx);
         void get_native_executable_name_if_non_native(service::ipc_context &ctx);
         void app_info_provided_by_reg_file(service::ipc_context &ctx);
-                
+
         void launch_app(service::ipc_context &ctx);
         void is_program(service::ipc_context &ctx);
         void get_preferred_buf_size(service::ipc_context &ctx);

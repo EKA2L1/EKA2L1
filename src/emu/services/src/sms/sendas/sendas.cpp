@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/sms/sendas/sendas.h>
+#include <system/epoc.h>
 
 #include <utils/err.h>
 

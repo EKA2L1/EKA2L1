@@ -47,7 +47,7 @@ namespace eka2l1 {
         struct ipc_context;
 
         using ipc_func_wrapper = std::function<void(ipc_context &)>;
-        using ipc_msg_ptr = ipc_msg*;
+        using ipc_msg_ptr = ipc_msg *;
 
         using uid = std::uint32_t;
 

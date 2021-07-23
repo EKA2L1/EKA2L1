@@ -31,19 +31,19 @@ namespace eka2l1 {
         shutdown_server_query_power_state
     };
 
-    class shutdown_session: public service::typical_session {
+    class shutdown_session : public service::typical_session {
         epoc::notify_info nof_;
 
     public:
         explicit shutdown_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
-        
+
         void fetch(service::ipc_context *context) override;
-        
+
         void request_notify(service::ipc_context *context);
         void cancel_notify(service::ipc_context *context);
     };
 
-    class shutdown_server: public service::typical_server {
+    class shutdown_server : public service::typical_server {
     public:
         explicit shutdown_server(eka2l1::system *sys);
         void connect(service::ipc_context &context) override;

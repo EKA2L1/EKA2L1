@@ -22,8 +22,8 @@
 #include <system/epoc.h>
 #include <utils/err.h>
 
-#include <services/ui/eikappui.h>
 #include <services/ui/cap/oom_app.h>
+#include <services/ui/eikappui.h>
 
 #include <cstring>
 
@@ -57,9 +57,9 @@ namespace eka2l1 {
 
     void eikappui_server::connect(service::ipc_context &ctx) {
         if (!cap_server_) {
-            cap_server_ = reinterpret_cast<oom_ui_app_server*>(kern->get_by_name<service::server>(OOM_APP_UI_SERVER_NAME));
+            cap_server_ = reinterpret_cast<oom_ui_app_server *>(kern->get_by_name<service::server>(OOM_APP_UI_SERVER_NAME));
         }
-    
+
         create_session<eikappui_session>(&ctx);
         typical_server::connect(ctx);
     }
@@ -91,10 +91,10 @@ namespace eka2l1 {
     eikappui_session::eikappui_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version)
         , cap_session_(nullptr) {
-        eikappui_server *parent = reinterpret_cast<eikappui_server*>(svr);
+        eikappui_server *parent = reinterpret_cast<eikappui_server *>(svr);
         cap_session_ = parent->cap_server_->create_session_impl<oom_ui_app_session>(client_ss_uid, client_version, true);
     }
-    
+
     eikappui_session::~eikappui_session() {
         eikappui_server *serv = server<eikappui_server>();
         serv->cap_server_->remove_session(client_ss_uid_);

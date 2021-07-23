@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/repo.h>
 #include <services/context.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 
-#include <system/devices.h>
 #include <common/cvt.h>
+#include <system/devices.h>
 
 #include <algorithm>
 #include <chrono>
@@ -107,7 +107,7 @@ namespace eka2l1 {
         }
     }
 
-    central_repo_client_subsession::central_repo_client_subsession() 
+    central_repo_client_subsession::central_repo_client_subsession()
         : flags(0) {
         set_transaction_mode(central_repo_transaction_mode::read_write);
     }
@@ -312,8 +312,8 @@ namespace eka2l1 {
 
         case cen_rep_create_real: {
             new_var.etype = central_repo_entry_type::real;
-            std::optional<double> dd_val = ctx->get_argument_data_from_descriptor<double>(1);          
-        
+            std::optional<double> dd_val = ctx->get_argument_data_from_descriptor<double>(1);
+
             if (!dd_val.has_value()) {
                 ctx->complete(epoc::error_argument);
                 return;
@@ -321,7 +321,7 @@ namespace eka2l1 {
 
             new_var.reald = dd_val.value();
             break;
-        }  
+        }
 
         case cen_rep_create_string: {
             new_var.etype = central_repo_entry_type::string;
@@ -698,7 +698,7 @@ namespace eka2l1 {
             partial_key = *ctx->get_argument_value<std::uint32_t>(0);
         } else {
             std::optional<central_repo_key_filter> filter = ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
-            
+
             if (!filter.has_value()) {
                 ctx->complete(epoc::error_argument);
                 return;

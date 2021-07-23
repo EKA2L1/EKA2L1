@@ -18,8 +18,8 @@
  */
 
 #include <cpu/12l1r/block_gen.h>
-#include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/common.h>
+#include <cpu/12l1r/core_state.h>
 #include <cpu/12l1r/tlb.h>
 #include <cpu/12l1r/visit_session.h>
 
@@ -385,7 +385,8 @@ namespace eka2l1::arm::r12l1 {
                             mapped = base_backup;
                         } else if ((base_guest_reg_idx == last_reg) && (load && writeback)) {
                             LOG_WARN(CPU_12L1R, "Trying to execute unpredictable behaviour loading "
-                                                "to base register with writeback enabled, reg=r{}", last_reg);
+                                                "to base register with writeback enabled, reg=r{}",
+                                last_reg);
 
                             skip_me = true;
                         } else {

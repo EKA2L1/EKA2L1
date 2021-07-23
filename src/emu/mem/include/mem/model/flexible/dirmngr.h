@@ -40,7 +40,7 @@ namespace eka2l1::mem::flexible {
 
     public:
         explicit page_directory_manager(const std::uint32_t max_dir_count);
-    
+
         /**
          * @brief   Allocate a new page directory.
          * 

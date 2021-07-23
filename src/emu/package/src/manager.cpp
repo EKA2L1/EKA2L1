@@ -18,11 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <common/chunkyseri.h>
 
 #include <loader/e32img.h>
 #include <loader/sis.h>
@@ -60,7 +60,7 @@ namespace eka2l1 {
             std::u16string package_uid_folder = common::utf8_to_ucs2(fmt::format("{:08x}", package_uid)) + u"\\";
             return get_virtual_registry_parent_folder(residing) + package_uid_folder;
         }
-        
+
         static std::u16string get_virtual_registry_regfile(const drive_number residing, const uid package_uid, const std::uint32_t index) {
             return get_virtual_registry_folder(residing, package_uid) + fmt::format(package::REGISTRY_FILE_FORMAT, index);
         }
@@ -84,7 +84,7 @@ namespace eka2l1 {
                 }
             }
         }
-    
+
         void packages::load_registries() {
             static constexpr const char16_t *STUB_CACHED_PATH_FORMAT = u"{}:\\stubcached";
             const std::u16string stub_cached_path = fmt::format(STUB_CACHED_PATH_FORMAT, drive_to_char16(drive_z));
@@ -155,7 +155,7 @@ namespace eka2l1 {
                 package::object obj;
 
                 drive_number residing = static_cast<drive_number>(app["drive"].as<int>());
-    
+
                 obj.drives = 1 << (residing - drive_a);
                 obj.uid = app["uid"].as<manager::uid>();
                 obj.package_name = common::utf8_to_ucs2(app["name"].as<std::string>());
@@ -251,7 +251,7 @@ namespace eka2l1 {
 
         std::vector<uid> packages::installed_uids() const {
             std::vector<uid> uniques;
-            
+
             for (auto ite = objects_.begin(), end = objects_.end(); ite != end; ite = objects_.upper_bound(ite->first))
                 uniques.push_back(ite->first);
 
@@ -268,7 +268,7 @@ namespace eka2l1 {
             common::chunkyseri object_buffer_serializer(nullptr, 0, common::SERI_MODE_MEASURE);
 
             pkg.do_state(object_buffer_serializer);
-            
+
             serialized_object_buffer.resize(object_buffer_serializer.size());
             object_buffer_serializer = common::chunkyseri(serialized_object_buffer.data(), serialized_object_buffer.size(), common::SERI_MODE_WRITE);
 
@@ -300,7 +300,7 @@ namespace eka2l1 {
             if (is_installed && (pkg.install_type == package::install_type_normal_install)) {
                 return false;
             }
-            
+
             const std::lock_guard<std::mutex> guard(lockdown);
             const bool no_new_package = is_installed && (pkg.install_type == package::install_type_partial_update);
             auto ite_range = objects_.equal_range(pkg.uid);
@@ -348,7 +348,7 @@ namespace eka2l1 {
                 for (std::size_t m = 0; m < pkg.controller_infos.size(); m++) {
                     for (std::int32_t i = 0; i < MAX_INDEX; i++) {
                         bool overlapped = false;
-                        for (const auto &controller_info: base_package->controller_infos) {
+                        for (const auto &controller_info : base_package->controller_infos) {
                             if (controller_info.offset == i) {
                                 overlapped = true;
                                 break;
@@ -397,7 +397,7 @@ namespace eka2l1 {
                     LOG_ERROR(PACKAGE, "Unable to write package info for 0x{:X}", pkg.uid);
                 }
             }
-            
+
             if (controller_info) {
                 const std::u16string residing_folder = get_virtual_registry_folder(residing_, pkg.uid);
                 const std::u16string controller_path = add_path(residing_folder, fmt::format(package::CONTROLLER_FILE_FORMAT, base_package->index, ctrl_offset));
@@ -409,16 +409,15 @@ namespace eka2l1 {
                     if (controller_file->write_file(&file_size, sizeof(file_size), 1) != sizeof(file_size)) {
                         LOG_ERROR(PACKAGE, "Unable to write size of controller to controller file!");
                     }
-                    
-                    if (controller_file->write_file(controller_info->data_, static_cast<std::uint32_t>(controller_info->size_), 1) !=
-                        static_cast<std::uint32_t>(controller_info->size_)) {
+
+                    if (controller_file->write_file(controller_info->data_, static_cast<std::uint32_t>(controller_info->size_), 1) != static_cast<std::uint32_t>(controller_info->size_)) {
                         LOG_ERROR(PACKAGE, "Unable to write controller data to file!");
                     }
 
                     controller_file->close();
                 }
             }
-            
+
             if (!no_new_package)
                 objects_.emplace(pkg.uid, std::move(pkg));
 
@@ -465,7 +464,7 @@ namespace eka2l1 {
 
             return true;
         }
-        
+
         bool packages::uninstall_package(package::object &pkg) {
             auto obj_ite_range = objects_.equal_range(pkg.uid);
 
@@ -484,7 +483,7 @@ namespace eka2l1 {
             }
 
             // Delete files as requested by objects
-            for (const package::file_description &desc: pkg.file_descriptions) {
+            for (const package::file_description &desc : pkg.file_descriptions) {
                 if ((desc.operation == static_cast<int>(loader::ss_op::install)) || (desc.operation == static_cast<int>(loader::ss_op::null))) {
                     sys->delete_entry(desc.target);
                 }
@@ -552,7 +551,7 @@ namespace eka2l1 {
                 if (new_infos) {
                     traverse_tree_and_add_packages(*new_infos);
 
-                    for (const auto &another_path: interpreter.extra_sis_files()) {
+                    for (const auto &another_path : interpreter.extra_sis_files()) {
                         install_package(another_path, drive, progress_cb, cancel_cb);
                     }
                 } else {

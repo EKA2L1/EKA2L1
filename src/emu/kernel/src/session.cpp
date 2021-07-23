@@ -29,7 +29,7 @@
 namespace eka2l1 {
     namespace service {
         session::session(kernel_system *kern, server_ptr svr, int async_slot_count)
-            : kernel_obj(kern, "", nullptr, kernel::access_type::global_access) 
+            : kernel_obj(kern, "", nullptr, kernel::access_type::global_access)
             , svr(svr)
             , cookie_address(0)
             , headless_(false) {
@@ -222,7 +222,7 @@ namespace eka2l1 {
             for (const auto &msg : msgs_pool) {
                 kern->free_msg(msg.second);
             }
-            
+
             if (svr) {
                 svr->detach(this);
 

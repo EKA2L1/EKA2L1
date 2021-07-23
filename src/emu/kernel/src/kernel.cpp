@@ -104,11 +104,11 @@ namespace eka2l1 {
 
         rom_map_ = nullptr;
 
-#define OBJECT_CONTAINER_CLEANUP(container)             \
-    for (auto &obj: container) {                        \
-        if (obj)                                        \
-            obj->destroy();                             \
-    }                                                   \
+#define OBJECT_CONTAINER_CLEANUP(container) \
+    for (auto &obj : container) {           \
+        if (obj)                            \
+            obj->destroy();                 \
+    }                                       \
     container.clear();
 
         // Delete one by one in order. Do not change the order
@@ -177,9 +177,7 @@ namespace eka2l1 {
                 (core->get_cpsr() & 0x20) ? 2 : 4, core->get_pc(),
                 (core->get_cpsr() & 0x20) ? true : false);
 
-            LOG_TRACE(KERNEL, "Last instruction: {} (0x{:x})", disassemble_inst, (core->get_cpsr() & 0x20)
-                    ? *reinterpret_cast<std::uint16_t *>(pc_data)
-                    : *reinterpret_cast<std::uint32_t *>(pc_data));
+            LOG_TRACE(KERNEL, "Last instruction: {} (0x{:x})", disassemble_inst, (core->get_cpsr() & 0x20) ? *reinterpret_cast<std::uint16_t *>(pc_data) : *reinterpret_cast<std::uint32_t *>(pc_data));
         }
 
         pc_data = reinterpret_cast<std::uint8_t *>(crr_process()->get_ptr_on_addr_space(core->get_lr()));
@@ -189,9 +187,7 @@ namespace eka2l1 {
                 core->get_lr() % 2 != 0 ? 2 : 4, core->get_lr() - core->get_lr() % 2,
                 core->get_lr() % 2 != 0 ? true : false);
 
-            LOG_TRACE(KERNEL, "LR instruction: {} (0x{:x})", disassemble_inst, (core->get_lr() % 2 != 0)
-                    ? *reinterpret_cast<std::uint16_t *>(pc_data)
-                    : *reinterpret_cast<std::uint32_t *>(pc_data));
+            LOG_TRACE(KERNEL, "LR instruction: {} (0x{:x})", disassemble_inst, (core->get_lr() % 2 != 0) ? *reinterpret_cast<std::uint16_t *>(pc_data) : *reinterpret_cast<std::uint32_t *>(pc_data));
         }
 
         kernel::thread *target_to_stop = crr_thread();
@@ -207,7 +203,7 @@ namespace eka2l1 {
 
     bool kernel_system::cpu_exception_handle_unpredictable(arm::core *core, const address occurred) {
         auto read_crr_func = [&](const address addr) -> std::uint32_t {
-            const std::uint32_t *val = reinterpret_cast<std::uint32_t*>(crr_process()->get_ptr_on_addr_space(addr));
+            const std::uint32_t *val = reinterpret_cast<std::uint32_t *>(crr_process()->get_ptr_on_addr_space(addr));
             return val ? *val : 0;
         };
 
@@ -245,13 +241,12 @@ namespace eka2l1 {
 
             const std::uint32_t source_reg = static_cast<int>(inst->ops[1].reg) - static_cast<int>(arm::reg::R0);
             const std::uint32_t dest_reg = static_cast<int>(inst->ops[0].reg) - static_cast<int>(arm::reg::R0);
-        
+
             auto func_generated = [=](arm::core *core) -> bool {
                 auto source_val = core->get_reg(source_reg);
 
                 if (dest_reg == 15) {
-                    core->set_cpsr((source_val & 1) ? (core->get_cpsr() | 0x20) :
-                        (core->get_cpsr() & ~0x20));
+                    core->set_cpsr((source_val & 1) ? (core->get_cpsr() | 0x20) : (core->get_cpsr() & ~0x20));
                 }
 
                 core->set_reg(dest_reg, source_val);
@@ -267,10 +262,9 @@ namespace eka2l1 {
         // Glimmerati: POP { R4 - LR }
         case arm::instruction::POP: {
             std::uint16_t reg_list = 0;
-            
+
             for (std::size_t i = 0; i < inst->ops.size(); i++) {
-                reg_list |= 1 << (static_cast<std::uint32_t>(inst->ops[i].reg) - static_cast<std::uint32_t>(
-                    arm::reg::R0));
+                reg_list |= 1 << (static_cast<std::uint32_t>(inst->ops[i].reg) - static_cast<std::uint32_t>(arm::reg::R0));
             }
 
             auto func_generated = [reg_list](arm::core *core) -> bool {
@@ -306,12 +300,12 @@ namespace eka2l1 {
             };
 
             func_generated(core);
-            
+
             // Increase PC
             core->set_pc(occurred + ((occurred & 1) ? 2 : 4));
             cache_inters_.emplace(inst_value, func_generated);
             break;
-        } 
+        }
 
         default:
             return false;
@@ -324,8 +318,7 @@ namespace eka2l1 {
         switch (exception_type) {
         case arm::exception_type_access_violation_read:
         case arm::exception_type_access_violation_write:
-            LOG_ERROR(KERNEL, "Access violation {} address 0x{:X} in thread {}", (exception_type == arm::exception_type_access_violation_read) ?
-                      "reading" : "writing", exception_data, crr_thread()->name());
+            LOG_ERROR(KERNEL, "Access violation {} address 0x{:X} in thread {}", (exception_type == arm::exception_type_access_violation_read) ? "reading" : "writing", exception_data, crr_thread()->name());
             break;
 
         case arm::exception_type_undefined_inst:
@@ -344,7 +337,7 @@ namespace eka2l1 {
             return;
 
         case arm::exception_type_breakpoint:
-            for (auto &breakpoint_callback_func: breakpoint_callbacks_) {
+            for (auto &breakpoint_callback_func : breakpoint_callbacks_) {
                 breakpoint_callback_func(core, crr_thread(), exception_data);
             }
 
@@ -367,7 +360,7 @@ namespace eka2l1 {
         nanokern_pr_ = spawn_new_process(KERN_EXE_NAME);
         if (nanokern_pr_) {
             nanokern_pr_->set_is_kernel_process(true);
-            
+
             // Try to set to the bootloader UID? (Wait is this the one)
             auto current_uid_type = nanokern_pr_->get_uid_type();
             std::get<2>(current_uid_type) = BOOTLOADER_UID;
@@ -409,8 +402,8 @@ namespace eka2l1 {
             common::cpu_info info;
             info.bARMv7 = false;
 
-            common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(custom_code_chunk->host_base()), info);
-            exception_handler_guard_ = static_cast<std::uint32_t>(emitter.get_code_pointer() - reinterpret_cast<std::uint8_t*>(custom_code_chunk->host_base()));
+            common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t *>(custom_code_chunk->host_base()), info);
+            exception_handler_guard_ = static_cast<std::uint32_t>(emitter.get_code_pointer() - reinterpret_cast<std::uint8_t *>(custom_code_chunk->host_base()));
 
             // R0 = reason, R1 = handler.
             // We already push some variables onto the stack beforehand in the system call, so we just
@@ -429,7 +422,7 @@ namespace eka2l1 {
     void kernel_system::install_memory(memory_system *new_mem) {
         mem_ = new_mem;
     }
-    
+
     // For user-provided EPOC version
     void kernel_system::set_epoc_version(const epocver ver) {
         kern_ver_ = ver;
@@ -461,7 +454,7 @@ namespace eka2l1 {
     }
 
     eka2l1::ptr<kernel_global_data> kernel_system::get_global_user_data_pointer() {
-        if (!global_data_chunk_) {    
+        if (!global_data_chunk_) {
             // Make global data
             static constexpr std::uint32_t GLOBAL_DATA_SIZE = 0x1000;
             global_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "Kernel global data", 0, GLOBAL_DATA_SIZE,
@@ -469,14 +462,14 @@ namespace eka2l1 {
                 kernel::chunk_attrib::none, 0x00);
 
             if (global_data_chunk_) {
-                kernel_global_data *data = reinterpret_cast<kernel_global_data*>(global_data_chunk_->host_base());
+                kernel_global_data *data = reinterpret_cast<kernel_global_data *>(global_data_chunk_->host_base());
                 data->reset();
             }
         }
 
         return global_data_chunk_->base(nullptr).cast<kernel_global_data>();
     }
-    
+
     kernel::thread *kernel_system::crr_thread() {
         return thr_sch_->current_thread();
     }
@@ -498,50 +491,50 @@ namespace eka2l1 {
     void kernel_system::unschedule_wakeup() {
         thr_sch_->unschedule_wakeup();
     }
-    
+
     void kernel_system::prepare_reschedule() {
         get_cpu()->stop();
     }
 
     void kernel_system::call_ipc_send_callbacks(const std::string &server_name, const int ord, const ipc_arg &args,
         address reqsts_addr, kernel::thread *callee) {
-        for (auto &ipc_send_callback_func: ipc_send_callbacks_) {
+        for (auto &ipc_send_callback_func : ipc_send_callbacks_) {
             ipc_send_callback_func(server_name, ord, args, reqsts_addr, callee);
         }
     }
 
     void kernel_system::call_ipc_complete_callbacks(ipc_msg *msg, const int complete_code) {
-        for (auto &ipc_complete_callback_func: ipc_complete_callbacks_) {
+        for (auto &ipc_complete_callback_func : ipc_complete_callbacks_) {
             ipc_complete_callback_func(msg, complete_code);
         }
     }
 
     void kernel_system::call_thread_kill_callbacks(kernel::thread *target, const std::string &category, const std::int32_t reason) {
-        for (auto &thread_kill_callback_func: thread_kill_callbacks_) {
+        for (auto &thread_kill_callback_func : thread_kill_callbacks_) {
             thread_kill_callback_func(target, category, reason);
         }
     }
 
     void kernel_system::call_process_switch_callbacks(arm::core *run_core, kernel::process *old, kernel::process *new_one) {
-        for (auto &process_switch_callback_func: process_switch_callback_funcs_) {
+        for (auto &process_switch_callback_func : process_switch_callback_funcs_) {
             process_switch_callback_func(run_core, old, new_one);
         }
     }
 
     void kernel_system::run_codeseg_loaded_callback(const std::string &lib_name, kernel::process *attacher, codeseg_ptr target) {
-        for (auto &codeseg_loaded_callback_func: codeseg_loaded_callback_funcs_) {
+        for (auto &codeseg_loaded_callback_func : codeseg_loaded_callback_funcs_) {
             codeseg_loaded_callback_func(lib_name, attacher, target);
         }
     }
 
     void kernel_system::run_imb_range_callback(kernel::process *caller, address range_addr, const std::size_t range_size) {
-        for (auto &imb_range_callback_func: imb_range_callback_funcs_) {
+        for (auto &imb_range_callback_func : imb_range_callback_funcs_) {
             imb_range_callback_func(caller, range_addr, range_size);
         }
     }
 
     void kernel_system::run_uid_of_process_change_callback(kernel::process *aff, kernel::process_uid_type type) {
-        for (auto &uid_callback_func: uid_of_process_callback_funcs_) {
+        for (auto &uid_callback_func : uid_of_process_callback_funcs_) {
             uid_callback_func(aff, type);
         }
     }
@@ -553,7 +546,7 @@ namespace eka2l1 {
     std::size_t kernel_system::register_ipc_send_callback(ipc_send_callback callback) {
         return ipc_send_callbacks_.add(callback);
     }
-    
+
     std::size_t kernel_system::register_ipc_complete_callback(ipc_complete_callback callback) {
         return ipc_complete_callbacks_.add(callback);
     }
@@ -581,7 +574,7 @@ namespace eka2l1 {
     std::size_t kernel_system::register_uid_process_change_callback(uid_of_process_change_callback callback) {
         return uid_of_process_callback_funcs_.add(callback);
     }
-    
+
     bool kernel_system::unregister_ipc_send_callback(const std::size_t handle) {
         return ipc_send_callbacks_.remove(handle);
     }
@@ -593,11 +586,11 @@ namespace eka2l1 {
     bool kernel_system::unregister_thread_kill_callback(const std::size_t handle) {
         return thread_kill_callbacks_.remove(handle);
     }
-    
+
     bool kernel_system::unregister_breakpoint_hit_callback(const std::size_t handle) {
         return breakpoint_callbacks_.remove(handle);
     }
-    
+
     bool kernel_system::unregister_process_switch_callback(const std::size_t handle) {
         return process_switch_callback_funcs_.remove(handle);
     }
@@ -619,7 +612,7 @@ namespace eka2l1 {
     }
 
     ldd::factory_instantiate_func kernel_system::suitable_ldd_instantiate_func(const char *name) {
-        for (auto &ldd_factory_req_callback_func: ldd_factory_req_callback_funcs_) {
+        for (auto &ldd_factory_req_callback_func : ldd_factory_req_callback_funcs_) {
             auto res = ldd_factory_req_callback_func(name);
             if (res) {
                 return res;
@@ -833,7 +826,7 @@ namespace eka2l1 {
         info.num_processes_using_ = 0;
 
         for (std::size_t i = 0; i < threads_.size(); i++) {
-            kernel::thread *thr = reinterpret_cast<kernel::thread*>(threads_[i].get());
+            kernel::thread *thr = reinterpret_cast<kernel::thread *>(threads_[i].get());
 
             if (thr->thread_handles.has(the_object)) {
                 info.num_threads_using_++;
@@ -845,7 +838,7 @@ namespace eka2l1 {
         }
 
         for (std::size_t i = 0; i < processes_.size(); i++) {
-            kernel::process *pr = reinterpret_cast<kernel::process*>(processes_[i].get());
+            kernel::process *pr = reinterpret_cast<kernel::process *>(processes_[i].get());
 
             if (pr->process_handles.has(the_object)) {
                 info.num_processes_using_++;
@@ -856,8 +849,8 @@ namespace eka2l1 {
     }
 
     void kernel_system::complete_undertakers(kernel::thread *literally_dies) {
-        for (auto &kobj: undertakers_) {
-            kernel::undertaker *utaker = reinterpret_cast<kernel::undertaker*>(kobj.get());
+        for (auto &kobj : undertakers_) {
+            kernel::undertaker *utaker = reinterpret_cast<kernel::undertaker *>(kobj.get());
             utaker->complete(literally_dies);
         }
     }
@@ -1049,25 +1042,27 @@ namespace eka2l1 {
 
         // NOTE: See about the starting index of find handle info in the struct's document!
         switch (type) {
-#define OBJECT_SEARCH(obj_type, obj_map)                                                       \
-    case kernel::object_type::obj_type: {                                                      \
+#define OBJECT_SEARCH(obj_type, obj_map)                                                           \
+    case kernel::object_type::obj_type: {                                                          \
         auto res = std::find_if(obj_map.begin() + start - 1, obj_map.end(), [&](const auto &rhs) { \
-            std::string to_compare = "";                                                       \
-            if (use_full_name) {                                                               \
-                rhs->full_name(to_compare);                                                    \
-            } else {                                                                           \
-                to_compare = rhs->name();                                                      \
-            }                                                                                  \
-            return std::regex_match(to_compare, filter);                                       \
-        });                                                                                    \
-        if (res == obj_map.end())                                                              \
-            return std::nullopt;                                                               \
-        handle_find_info.index = ((static_cast<std::uint32_t>(std::distance(obj_map.begin(),   \
-            res)) + 1) & FIND_HANDLE_IDX_MASK) | (static_cast<std::uint32_t>(type) <<          \
-            FIND_HANDLE_OBJ_TYPE_SHIFT);                                                       \
-        handle_find_info.object_id = (*res)->unique_id();                                      \
-        handle_find_info.obj = reinterpret_cast<kernel_obj_ptr>(res->get());                   \
-        return handle_find_info;                                                               \
+            std::string to_compare = "";                                                           \
+            if (use_full_name) {                                                                   \
+                rhs->full_name(to_compare);                                                        \
+            } else {                                                                               \
+                to_compare = rhs->name();                                                          \
+            }                                                                                      \
+            return std::regex_match(to_compare, filter);                                           \
+        });                                                                                        \
+        if (res == obj_map.end())                                                                  \
+            return std::nullopt;                                                                   \
+        handle_find_info.index = ((static_cast<std::uint32_t>(std::distance(obj_map.begin(),       \
+                                       res))                                                       \
+                                      + 1)                                                         \
+                                     & FIND_HANDLE_IDX_MASK)                                       \
+            | (static_cast<std::uint32_t>(type) << FIND_HANDLE_OBJ_TYPE_SHIFT);                    \
+        handle_find_info.object_id = (*res)->unique_id();                                          \
+        handle_find_info.obj = reinterpret_cast<kernel_obj_ptr>(res->get());                       \
+        return handle_find_info;                                                                   \
     }
 
             OBJECT_SEARCH(mutex, mutexes_)
@@ -1102,26 +1097,26 @@ namespace eka2l1 {
         const kernel::object_type objtype = static_cast<kernel::object_type>(find_handle >> FIND_HANDLE_OBJ_TYPE_SHIFT);
 
         switch (objtype) {
-#define GET_OBJECT(typename, container)             \
-    case kernel::object_type::typename: {           \
-        if (index >= container.size())              \
-            return nullptr;                         \
-        return container[index].get();              \
+#define GET_OBJECT(typename, container)   \
+    case kernel::object_type::typename: { \
+        if (index >= container.size())    \
+            return nullptr;               \
+        return container[index].get();    \
     }
-        GET_OBJECT(mutex, mutexes_)
-        GET_OBJECT(sema, semas_)
-        GET_OBJECT(chunk, chunks_)
-        GET_OBJECT(thread, threads_)
-        GET_OBJECT(process, processes_)
-        GET_OBJECT(change_notifier, change_notifiers_)
-        GET_OBJECT(library, libraries_)
-        GET_OBJECT(codeseg, codesegs_)
-        GET_OBJECT(server, servers_)
-        GET_OBJECT(prop, props_)
-        GET_OBJECT(prop_ref, prop_refs_)
-        GET_OBJECT(session, sessions_)
-        GET_OBJECT(timer, timers_)
-        GET_OBJECT(msg_queue, message_queues_)
+            GET_OBJECT(mutex, mutexes_)
+            GET_OBJECT(sema, semas_)
+            GET_OBJECT(chunk, chunks_)
+            GET_OBJECT(thread, threads_)
+            GET_OBJECT(process, processes_)
+            GET_OBJECT(change_notifier, change_notifiers_)
+            GET_OBJECT(library, libraries_)
+            GET_OBJECT(codeseg, codesegs_)
+            GET_OBJECT(server, servers_)
+            GET_OBJECT(prop, props_)
+            GET_OBJECT(prop_ref, prop_refs_)
+            GET_OBJECT(session, sessions_)
+            GET_OBJECT(timer, timers_)
+            GET_OBJECT(msg_queue, message_queues_)
 
         default:
             break;
@@ -1186,7 +1181,7 @@ namespace eka2l1 {
         }
 
         if (data_ptr) {
-            *data_ptr = reinterpret_cast<std::uint8_t*>(dll_global_data_chunk_->host_base()) + static_cast<std::uint32_t>(find_result->second);
+            *data_ptr = reinterpret_cast<std::uint8_t *>(dll_global_data_chunk_->host_base()) + static_cast<std::uint32_t>(find_result->second);
         }
 
         if (size_of_data) {
@@ -1195,11 +1190,11 @@ namespace eka2l1 {
 
         return static_cast<std::uint32_t>(find_result->second) + dll_global_data_chunk_->base(nullptr).ptr_address();
     }
-    
-    bool kernel_system::allocate_global_dll_space(const address handle, const std::uint32_t size, 
+
+    bool kernel_system::allocate_global_dll_space(const address handle, const std::uint32_t size,
         address &data_ptr_guest, std::uint8_t **data_ptr_host) {
         static constexpr std::uint32_t GLOBAL_DLL_DATA_CHUNK_SIZE = 0x100000;
-        
+
         if (!dll_global_data_chunk_) {
             dll_global_data_chunk_ = create<kernel::chunk>(mem_, nullptr, "EKA1_DllGlobalDataChunk",
                 0, GLOBAL_DLL_DATA_CHUNK_SIZE, static_cast<std::size_t>(GLOBAL_DLL_DATA_CHUNK_SIZE), prot_read_write,
@@ -1219,9 +1214,9 @@ namespace eka2l1 {
         data_ptr_guest = dll_global_data_chunk_->base(nullptr).ptr_address() + dll_global_data_last_offset_;
 
         if (data_ptr_host) {
-            *data_ptr_host = reinterpret_cast<std::uint8_t*>(dll_global_data_chunk_->host_base()) + dll_global_data_last_offset_;
+            *data_ptr_host = reinterpret_cast<std::uint8_t *>(dll_global_data_chunk_->host_base()) + dll_global_data_last_offset_;
         }
-        
+
         dll_global_data_last_offset_ += size;
         return true;
     }
@@ -1267,8 +1262,7 @@ namespace eka2l1 {
             inactivity_starts_ = timing_->microseconds();
         }
 
-        return static_cast<std::uint32_t>((timing_->microseconds() - inactivity_starts_) /
-            common::microsecs_per_sec);
+        return static_cast<std::uint32_t>((timing_->microseconds() - inactivity_starts_) / common::microsecs_per_sec);
     }
 
     void kernel_system::reset_inactivity_time() {

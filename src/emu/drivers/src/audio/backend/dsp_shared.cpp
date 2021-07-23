@@ -171,7 +171,7 @@ namespace eka2l1::drivers {
                 if (!encoded) {
                     break;
                 }
-                
+
                 pointer_ = 0;
 
                 if (format_ == PCM16_FOUR_CC_CODE) {
@@ -179,12 +179,12 @@ namespace eka2l1::drivers {
                 } else {
                     decode_data(encoded.value(), decoded_);
                 }
-                
+
                 // Callback that internal buffer has been copied
                 {
                     std::size_t total_sample = (decoded_.size() / sizeof(std::uint16_t));
                     samples_copied_ += total_sample;
-                    
+
                     const std::lock_guard<std::mutex> guard(callback_lock_);
                     if (buffer_copied_callback_) {
                         buffer_copied_callback_(buffer_copied_userdata_);

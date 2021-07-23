@@ -145,10 +145,10 @@ namespace eka2l1::epoc {
         }
     };
 
-    struct font_style_v1: public font_style_base {
+    struct font_style_v1 : public font_style_base {
     };
 
-    struct font_style_v2: public font_style_base {
+    struct font_style_v2 : public font_style_base {
         eka2l1::ptr<void> reserved1;
         eka2l1::ptr<void> reserved2;
     };
@@ -162,7 +162,7 @@ namespace eka2l1::epoc {
         font_style_v1 style;
     };
 
-    struct font_spec_v2: public font_spec_base {
+    struct font_spec_v2 : public font_spec_base {
         font_style_v2 style;
     };
 
@@ -189,7 +189,7 @@ namespace eka2l1::epoc {
         eka2l1::ptr<void> vtable;
     };
 
-    struct bitmapfont_v1: public bitmapfont_base {
+    struct bitmapfont_v1 : public bitmapfont_base {
         font_spec_v1 spec_in_twips;
         alg_style algorithic_style;
 
@@ -226,7 +226,7 @@ namespace eka2l1::epoc {
         eka2l1::ptr<void> sharper;
     };
 
-    struct open_font_v1: public open_font_base {
+    struct open_font_v1 : public open_font_base {
         std::int32_t file_offset;
         std::int32_t face_index_offset;
         std::int32_t glyph_cache_offset;
@@ -235,7 +235,7 @@ namespace eka2l1::epoc {
         eka2l1::ptr<void> reserved;
     };
 
-    struct open_font_v2: public open_font_base {
+    struct open_font_v2 : public open_font_base {
         std::int32_t font_captial_offset;
         std::int32_t font_max_ascent;
         std::int32_t font_standard_descent;
@@ -262,7 +262,7 @@ namespace eka2l1::epoc {
         std::int16_t vertical_bearing_x;
         std::int16_t vertical_bearing_y;
         std::int16_t vertical_advance;
-        glyph_bitmap_type bitmap_type;          ///< Note, this is always 1 bit bitmap type on EKA1
+        glyph_bitmap_type bitmap_type; ///< Note, this is always 1 bit bitmap type on EKA1
         std::int16_t reserved;
     };
 
@@ -291,7 +291,7 @@ namespace eka2l1::epoc {
         void destroy(fbscli *cli);
     };
 
-    struct open_font_glyph_v1: public open_font_glyph_v3 {
+    struct open_font_glyph_v1 : public open_font_glyph_v3 {
     };
 
     /**
@@ -299,10 +299,10 @@ namespace eka2l1::epoc {
      * 
      * It has one extra field metric_offset, like the s60v5 version!
      */
-    struct open_font_glyph_v1_use_for_fbs: public open_font_glyph_v2 {
+    struct open_font_glyph_v1_use_for_fbs : public open_font_glyph_v2 {
     };
 
-    struct open_font_glyph_cache_entry_v1: public open_font_glyph_v1 {
+    struct open_font_glyph_cache_entry_v1 : public open_font_glyph_v1 {
         eka2l1::ptr<open_font_glyph_cache_entry_v1> prev_;
         eka2l1::ptr<open_font_glyph_cache_entry_v1> next_;
     };
@@ -321,7 +321,7 @@ namespace eka2l1::epoc {
         std::int32_t last_use; /*< A number that tells last time this was reference.
                                                  The smaller the number is, the less recent it was referenced. */
     };
-    
+
     struct open_font_session_cache_entry_v1 : public open_font_glyph_v1 {
         std::int32_t font_offset; ///< Offset of the font that contains this glyph.
         std::int32_t last_use; /*< A number that tells last time this was reference.

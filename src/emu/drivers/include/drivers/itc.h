@@ -40,7 +40,7 @@ namespace eka2l1::drivers {
     struct command_list;
     class graphics_driver;
 
-    using graphics_driver_dialog_callback = std::function<void(const char*)>;
+    using graphics_driver_dialog_callback = std::function<void(const char *)>;
 
     /** \brief Create a new bitmap in the server size.
       *
@@ -211,7 +211,8 @@ namespace eka2l1::drivers {
          */
         virtual void draw_bitmap(drivers::handle h, drivers::handle maskh, const eka2l1::rect &dest_rect,
             const eka2l1::rect &source_rect, const eka2l1::vec2 &origin = eka2l1::vec2(0, 0),
-            const float rotation = 0.0f, const std::uint32_t flags = 0) = 0;
+            const float rotation = 0.0f, const std::uint32_t flags = 0)
+            = 0;
 
         /**
          * \brief Draw a rectangle with brush color.
@@ -316,7 +317,8 @@ namespace eka2l1::drivers {
          * @param on_both_stencil_depth_pass        Action to take when both stencil and depth test pass.
          */
         virtual void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
-            const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) = 0;
+            const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass)
+            = 0;
 
         /**
          * @brief Set stencil pass condition.
@@ -327,7 +329,8 @@ namespace eka2l1::drivers {
          * @param mask                      The mask that is AND to both value in stencil buffer with the ref value.
          */
         virtual void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
-            const int cond_func_ref_value, const std::uint32_t mask) = 0;
+            const int cond_func_ref_value, const std::uint32_t mask)
+            = 0;
 
         /**
          * @brief Set the value to AND with each value be written to stencil buffer.
@@ -470,7 +473,7 @@ namespace eka2l1::drivers {
         void set_viewport(const eka2l1::rect &viewport_rect) override;
 
         void set_depth(const bool enable) override;
-        
+
         void set_stencil(const bool enable) override;
 
         void set_cull_mode(const bool enable) override;
@@ -483,7 +486,7 @@ namespace eka2l1::drivers {
 
         void set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
             const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) override;
-        
+
         void set_stencil_pass_condition(const stencil_face face_operate_on, const condition_func cond_func,
             const int cond_func_ref_value, const std::uint32_t mask) override;
 
@@ -503,7 +506,7 @@ namespace eka2l1::drivers {
         void destroy_bitmap(drivers::handle h) override;
 
         void set_swapchain_size(const eka2l1::vec2 &swsize) override;
-        
+
         void set_ortho_size(const eka2l1::vec2 &osize) override;
 
         void set_texture_filter(drivers::handle h, const drivers::filter_option min, const drivers::filter_option mag) override;

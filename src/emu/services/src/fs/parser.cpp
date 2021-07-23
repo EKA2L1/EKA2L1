@@ -18,13 +18,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/fs/parser.h>
 #include <common/path.h>
+#include <services/fs/parser.h>
 
 #include <algorithm>
 
 namespace eka2l1 {
-    file_parser::file_parser(std::u16string name, std::u16string related, file_parse parse) 
+    file_parser::file_parser(std::u16string name, std::u16string related, file_parse parse)
         : name_(name)
         , related_(related)
         , parse_(parse) {
@@ -104,7 +104,7 @@ namespace eka2l1 {
     }
 
     void file_parser::parse_name(std::u16string name) {
-        std::u16string fname = eka2l1::filename(name, true); 
+        std::u16string fname = eka2l1::filename(name, true);
         std::size_t pos_end = fname.find_last_of('.');
         if (pos_end != std::string::npos) {
             fname = fname.substr(0, pos_end);
@@ -116,11 +116,11 @@ namespace eka2l1 {
             if (fname.find('?') != std::string::npos) {
                 parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_one;
             }
-            
+
             if (fname.find('*') != std::string::npos) {
                 parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_any;
             }
-            
+
             result += fname;
             done = true;
         }
@@ -135,7 +135,7 @@ namespace eka2l1 {
             if (ext.find('?') != std::string::npos) {
                 parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_one;
             }
-            
+
             if (ext.find('*') != std::string::npos) {
                 parse_.wild |= file_wild::file_wild_name | file_wild::file_wild_either | file_wild::file_wild_is_kmatch_any;
             }

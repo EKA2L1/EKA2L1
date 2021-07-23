@@ -19,8 +19,8 @@
  */
 
 #include <kernel/kernel.h>
-#include <kernel/thread.h>
 #include <kernel/property.h>
+#include <kernel/thread.h>
 #include <utils/err.h>
 
 #include <common/log.h>

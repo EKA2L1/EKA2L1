@@ -43,7 +43,7 @@ void print_header_info(eka2l1::loader::gdr::header &the_header) {
 
 void print_typeface_list_header_info(std::vector<eka2l1::loader::gdr::typeface> &typefaces) {
     LOG_INFO(eka2l1::SYSTEM, "=============== TYPEFACE LIST ======================");
-    
+
     for (std::size_t i = 0; i < typefaces.size(); i++) {
         LOG_INFO(eka2l1::SYSTEM, "- {}:", eka2l1::common::ucs2_to_utf8(typefaces[i].header_.name_));
         LOG_INFO(eka2l1::SYSTEM, "\t+ Flags: {}", typefaces[i].header_.flags_);
@@ -71,7 +71,7 @@ void print_bitmap_font_info(std::vector<eka2l1::loader::gdr::font_bitmap> &fonts
         LOG_INFO(eka2l1::SYSTEM, "- Posture:                {}", fonts[i].header_.posture_);
         LOG_INFO(eka2l1::SYSTEM, "- Stroke weight:          {}", fonts[i].header_.stroke_weight_);
         LOG_INFO(eka2l1::SYSTEM, "");
-        
+
         for (std::size_t j = 0; j < fonts[i].code_sections_.size(); j++) {
             for (std::size_t k = 0; k < fonts[i].code_sections_[j].chars_.size(); k++) {
                 LOG_INFO(eka2l1::SYSTEM, "- Character code {} bitmap:", fonts[i].code_sections_[j].header_.start_ + k);
@@ -84,11 +84,10 @@ void print_bitmap_font_info(std::vector<eka2l1::loader::gdr::font_bitmap> &fonts
                     continue;
                 }
 
-                const std::uint16_t target_width = the_char.metric_->move_in_pixels_ -
-                    ((the_char.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : the_char.metric_->right_adjust_in_pixels_)
+                const std::uint16_t target_width = the_char.metric_->move_in_pixels_ - ((the_char.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : the_char.metric_->right_adjust_in_pixels_)
                     - the_char.metric_->left_adj_in_pixels_;
 
-                for (std::uint16_t y = 0; y < the_char.metric_->height_in_pixels_; y++) { 
+                for (std::uint16_t y = 0; y < the_char.metric_->height_in_pixels_; y++) {
                     std::string buf;
 
                     for (std::uint16_t x = 0; x < target_width; x++) {
@@ -100,7 +99,7 @@ void print_bitmap_font_info(std::vector<eka2l1::loader::gdr::font_bitmap> &fonts
                 }
 
                 LOG_INFO(eka2l1::SYSTEM, "");
-            }    
+            }
         }
 
         LOG_INFO(eka2l1::SYSTEM, "");
@@ -122,7 +121,7 @@ int main(int argc, char **argv) {
     eka2l1::common::ro_std_file_stream stream(target_gdr, true);
     eka2l1::loader::gdr::file_store store;
 
-    if (!eka2l1::loader::gdr::parse_store(reinterpret_cast<eka2l1::common::ro_stream*>(&stream), store)) {
+    if (!eka2l1::loader::gdr::parse_store(reinterpret_cast<eka2l1::common::ro_stream *>(&stream), store)) {
         LOG_ERROR(eka2l1::SYSTEM, "Error while parsing GDR file!");
         return -2;
     }

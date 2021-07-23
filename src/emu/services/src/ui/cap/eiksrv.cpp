@@ -22,8 +22,8 @@
 #include <services/ui/cap/eiksrv.h>
 #include <services/window/window.h>
 
-#include <services/hwrm/power/power_def.h>
 #include <array>
+#include <services/hwrm/power/power_def.h>
 
 namespace eka2l1::epoc::cap {
     enum {
@@ -56,12 +56,12 @@ namespace eka2l1::epoc::cap {
     }
 
     static void battery_strength_change_callback(void *data, service::property *prop) {
-        eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer*>(data);
+        eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer *>(data);
         maintainer->set_battery_level(prop->get_int());
     }
 
     static void battery_charge_status_change_callback(void *data, service::property *prop) {
-        eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer*>(data);
+        eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer *>(data);
         maintainer->set_battery_charging(prop->get_int());
     }
 

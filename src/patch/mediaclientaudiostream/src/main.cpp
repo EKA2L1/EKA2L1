@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mda/common/audio.h>
-#include <mda/common/resource.h>
 #include <AudCommon.h>
 #include <Log.h>
+#include <mda/common/audio.h>
+#include <mda/common/resource.h>
 
 #include "dispatch.h"
 #include "impl.h"

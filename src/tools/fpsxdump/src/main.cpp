@@ -55,14 +55,13 @@ int main(int argc, char **argv) {
 
         std::uint32_t ignore_bootstrap_left = 0xC00;
 
-        for (auto &root: header->btree_.roots_) {
+        for (auto &root : header->btree_.roots_) {
             if (root.cert_blocks_.size() == 0) {
                 continue;
             }
 
             if (root.cert_blocks_[0].btype_ == eka2l1::loader::firmware::BLOCK_TYPE_ROFS_HASH) {
-                eka2l1::loader::firmware::block_header_rofs_hash &header_rofs = 
-                    static_cast<decltype(header_rofs)>(*root.cert_blocks_[0].header_);
+                eka2l1::loader::firmware::block_header_rofs_hash &header_rofs = static_cast<decltype(header_rofs)>(*root.cert_blocks_[0].header_);
 
                 const std::string stt = header_rofs.description_;
                 if (stt.find("CORE") != std::string::npos) {
@@ -119,7 +118,7 @@ int main(int argc, char **argv) {
     auto &blocks = appropiate_block->code_blocks_;
     bool flag = true;
 
-    for (auto &uda_bin_block: blocks) {
+    for (auto &uda_bin_block : blocks) {
         if (uda_bin_block.ctype_ == eka2l1::loader::firmware::CONTENT_TYPE_CODE) {
             stream.seek(uda_bin_block.data_offset_in_stream_, eka2l1::common::seek_where::beg);
             buf.resize(uda_bin_block.header_->data_size_);

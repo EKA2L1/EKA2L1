@@ -232,7 +232,7 @@ namespace eka2l1::drivers {
 
         return res;
     }
-    
+
     std::uint32_t player_shared::get_dest_freq() {
         const std::lock_guard<std::mutex> guard(lock_);
         player_request_instance &request_ref = requests_.back();

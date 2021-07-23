@@ -29,11 +29,11 @@ namespace eka2l1::mem::flexible {
 
     flexible_mem_model_process::flexible_mem_model_process(control_base *control)
         : mem_model_process(control) {
-        addr_space_ = std::make_unique<address_space>(reinterpret_cast<control_flexible*>(control));
+        addr_space_ = std::make_unique<address_space>(reinterpret_cast<control_flexible *>(control));
     }
 
     int flexible_mem_model_process::create_chunk(mem_model_chunk *&chunk, const mem_model_chunk_creation_info &create_info) {
-        control_flexible *fl_control = reinterpret_cast<control_flexible*>(control_);
+        control_flexible *fl_control = reinterpret_cast<control_flexible *>(control_);
 
         // Allocate a new chunk struct
         flexible_mem_model_chunk *new_chunk_flexible = fl_control->chunk_mngr_->new_chunk(control_, addr_space_->id());
@@ -63,7 +63,7 @@ namespace eka2l1::mem::flexible {
         }
 
         // Pretty much success.
-        chunk = reinterpret_cast<mem_model_chunk*>(new_chunk_flexible);
+        chunk = reinterpret_cast<mem_model_chunk *>(new_chunk_flexible);
         return 0;
     }
 
@@ -71,8 +71,8 @@ namespace eka2l1::mem::flexible {
         // First, try to detach ourself from this chunk
         if (detach_chunk(chunk)) {
             // Mark this chunk in manager as free
-            control_flexible *fl_control = reinterpret_cast<control_flexible*>(control_);
-            fl_control->chunk_mngr_->destroy(reinterpret_cast<flexible_mem_model_chunk*>(chunk));
+            control_flexible *fl_control = reinterpret_cast<control_flexible *>(control_);
+            fl_control->chunk_mngr_->destroy(reinterpret_cast<flexible_mem_model_chunk *>(chunk));
         }
     }
 
@@ -92,7 +92,7 @@ namespace eka2l1::mem::flexible {
             return false;
         }
 
-        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk*>(chunk);
+        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk *>(chunk);
 
         // Instantiate new attach info, including new mapping for ourselves
         flexible_mem_model_chunk_attach_info attach_info;
@@ -126,7 +126,7 @@ namespace eka2l1::mem::flexible {
         }
 
         // Remove the mapping attached to this memory object
-        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk*>(chunk);
+        flexible_mem_model_chunk *fl_chunk = reinterpret_cast<flexible_mem_model_chunk *>(chunk);
         fl_chunk->mem_obj_->detach_mapping(chunk_ite->map_.get());
 
         attachs_.erase(chunk_ite);
@@ -139,7 +139,7 @@ namespace eka2l1::mem::flexible {
     }
 
     void flexible_mem_model_process::unmap_from_cpu(mmu_base *mmu) {
-        for (auto &attached: attachs_) {
+        for (auto &attached : attachs_) {
             if (should_do_cpu_manipulate(attached.chunk_->flags_)) {
                 // This chunk has it address not fixed, so unmap from the CPU
                 attached.chunk_->unmap_from_cpu(this, mmu);
@@ -148,7 +148,7 @@ namespace eka2l1::mem::flexible {
     }
 
     void flexible_mem_model_process::remap_to_cpu(mmu_base *mmu) {
-        for (auto &attached: attachs_) {
+        for (auto &attached : attachs_) {
             if (should_do_cpu_manipulate(attached.chunk_->flags_)) {
                 // This chunk has it address not fixed, so map to the CPU
                 attached.chunk_->map_to_cpu(this, mmu);

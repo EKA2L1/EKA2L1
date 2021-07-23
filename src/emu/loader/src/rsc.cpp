@@ -22,8 +22,8 @@
  */
 
 #include <common/algorithm.h>
-#include <common/bytes.h>
 #include <common/buffer.h>
+#include <common/bytes.h>
 #include <common/chunkyseri.h>
 #include <common/dictcomp.h>
 #include <common/log.h>
@@ -520,7 +520,6 @@ namespace eka2l1::loader {
     }
 
     rsc_file_morden::~rsc_file_morden() {
-
     }
 
     enum {
@@ -553,7 +552,7 @@ namespace eka2l1::loader {
             if (seri->read(&max_resource_size_, 2) != 2) {
                 return false;
             }
-            
+
             if (seri->read(&lookup_table_read_bit_count_, 1) != 1) {
                 return false;
             }
@@ -587,8 +586,7 @@ namespace eka2l1::loader {
 
         // Read offset table
         res_data_offset_table_.resize(resource_count_ + 1);
-        if (seri->read(resource_index_section_offset_, res_data_offset_table_.data(), res_data_offset_table_.size() * 2) != 
-            res_data_offset_table_.size() * 2) {
+        if (seri->read(resource_index_section_offset_, res_data_offset_table_.data(), res_data_offset_table_.size() * 2) != res_data_offset_table_.size() * 2) {
             return false;
         }
 
@@ -618,14 +616,14 @@ namespace eka2l1::loader {
         std::int16_t current_offset = offset;
 
         while (bit_read < count) {
-            const std::int8_t bit_to_read_once = 
-                static_cast<std::int8_t>(common::min<std::int16_t>(8 - (current_offset & 7), count - bit_read));
+            const std::int8_t bit_to_read_once = static_cast<std::int8_t>(common::min<std::int16_t>(8 - (current_offset & 7), count - bit_read));
 
             if ((bit_to_read_once == 8) && ((current_offset & 7) == 0)) {
                 result |= lookup_mode_ ? (lookup_data_[current_offset >> 3] << bit_read) : (res_data_[current_offset >> 3] << bit_read);
             } else {
                 result |= common::extract_bits(lookup_mode_ ? lookup_data_[current_offset >> 3] : res_data_[current_offset >> 3],
-                    (current_offset & 7) + 1, bit_to_read_once) << bit_read;
+                              (current_offset & 7) + 1, bit_to_read_once)
+                    << bit_read;
             }
 
             bit_read += bit_to_read_once;
@@ -670,7 +668,7 @@ namespace eka2l1::loader {
 
                         if (read_bits(iterate_offset, 1).value() == 1) {
                             iterate_offset++;
-                            
+
                             // Repeat count with 8
                             std::uint16_t repeat_count = read_bits(iterate_offset, 8).value();
                             iterate_offset += 8;
@@ -718,7 +716,7 @@ namespace eka2l1::loader {
                 iterate_offset += lookup_table_read_bit_count_;
 
                 bool previous_mode = lookup_mode_;
-                read_internal(lookup_id + 1, buffer, true);        
+                read_internal(lookup_id + 1, buffer, true);
                 lookup_mode_ = previous_mode;
             }
         }
@@ -754,7 +752,7 @@ namespace eka2l1::loader {
 
         impl_ = std::make_unique<rsc_file_legacy>(stream);
     }
-    
+
     rsc_file::rsc_file(common::ro_stream *seri) {
         instantiate_impl(seri);
     }

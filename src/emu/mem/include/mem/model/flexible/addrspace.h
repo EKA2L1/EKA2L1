@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <mem/model/section.h>
 #include <mem/common.h>
+#include <mem/model/section.h>
 #include <mem/page.h>
 
 #include <memory>
@@ -34,7 +34,7 @@ namespace eka2l1::mem::flexible {
 
     struct address_space {
         page_directory *dir_;
-        std::vector<mapping*> mappings_;
+        std::vector<mapping *> mappings_;
 
         control_flexible *control_;
 

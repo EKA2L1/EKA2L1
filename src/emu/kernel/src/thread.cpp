@@ -25,6 +25,7 @@
 #include <config/config.h>
 
 #include <kernel/common.h>
+#include <kernel/ipc.h>
 #include <kernel/kernel.h>
 #include <kernel/mutex.h>
 #include <kernel/sema.h>
@@ -32,10 +33,9 @@
 #include <mem/mem.h>
 #include <mem/ptr.h>
 #include <utils/err.h>
+#include <utils/guest/actsched.h>
 #include <utils/panic.h>
 #include <utils/reqsts.h>
-#include <utils/guest/actsched.h>
-#include <kernel/ipc.h>
 
 namespace eka2l1 {
     namespace kernel {
@@ -307,7 +307,7 @@ namespace eka2l1 {
             create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
                 name_chunk->base(owner).ptr_address(), epa);
 
-            metadata = reinterpret_cast<epoc9_std_epoc_thread_create_info*>(stack_top_ptr);
+            metadata = reinterpret_cast<epoc9_std_epoc_thread_create_info *>(stack_top_ptr);
 
             // Create local data chunk
             // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
@@ -352,7 +352,7 @@ namespace eka2l1 {
                 do_cleanup();
             }
         }
-    
+
         void thread::do_cleanup() {
             // Close all thread handles
             if (!kern->wipeout_in_progress())
@@ -440,8 +440,7 @@ namespace eka2l1 {
                 if ((code == 41) || (code == 42) || (code == 43) || (code == 46)) {
                     // Dump the scheduler
                     kernel::process *papa_pr = owning_process();
-                    utils::active_scheduler *sched = ldata->scheduler.cast<utils::active_scheduler>().
-                        get(papa_pr);
+                    utils::active_scheduler *sched = ldata->scheduler.cast<utils::active_scheduler>().get(papa_pr);
 
                     if (sched) {
                         sched->dump(papa_pr);
@@ -450,7 +449,7 @@ namespace eka2l1 {
             }
         }
 
-        bool thread::kill(const entity_exit_type the_exit_type, const std::u16string &category, 
+        bool thread::kill(const entity_exit_type the_exit_type, const std::u16string &category,
             const std::int32_t reason) {
             if (state == kernel::thread_state::stop) {
                 return false;
@@ -511,7 +510,7 @@ namespace eka2l1 {
 
             return true;
         }
-        
+
         void thread::update_priority() {
             last_priority = real_priority;
 
@@ -568,10 +567,9 @@ namespace eka2l1 {
         }
 
         bool thread::is_suspended() const {
-            return (state == thread_state::create) || (state == thread_state::wait) ||
-                (state == thread_state::wait_fast_sema_suspend) || (state == thread_state::wait_mutex_suspend);
+            return (state == thread_state::create) || (state == thread_state::wait) || (state == thread_state::wait_fast_sema_suspend) || (state == thread_state::wait_mutex_suspend);
         }
-        
+
         bool thread::set_initial_userdata(const address userdata) {
             if (!is_suspended() || !metadata) {
                 return false;
@@ -580,7 +578,7 @@ namespace eka2l1 {
             metadata->ptr = userdata;
             return true;
         }
-        
+
         bool thread::suspend() {
             if (is_suspended()) {
                 return true;
@@ -774,9 +772,9 @@ namespace eka2l1 {
         void thread::add_ticks(const int num) {
             time = common::max(0, time - num);
         }
-    
+
         address thread::push_trap_frame(const address new_trap) {
-            kernel::process* mom = owning_process();
+            kernel::process *mom = owning_process();
             kernel::trap *the_trap = eka2l1::ptr<kernel::trap>(new_trap).get(mom);
 
             if (!the_trap) {
@@ -796,7 +794,7 @@ namespace eka2l1 {
                 return 0;
             }
 
-            kernel::process* mom = owning_process();
+            kernel::process *mom = owning_process();
             kernel::trap *the_trap = eka2l1::ptr<kernel::trap>(trap_stack).get(mom);
 
             const address trap_popped = trap_stack;
@@ -814,8 +812,7 @@ namespace eka2l1 {
                     if (reg_list & (1 << i)) {
                         crr_sp -= 4;
 
-                        std::uint32_t *val_ptr = reinterpret_cast<std::uint32_t*>(owning_process()->
-                            get_ptr_on_addr_space(crr_sp));
+                        std::uint32_t *val_ptr = reinterpret_cast<std::uint32_t *>(owning_process()->get_ptr_on_addr_space(crr_sp));
 
                         if (!val_ptr) {
                             LOG_ERROR(KERNEL, "Stack of thread {} overflowed", name());
@@ -853,7 +850,7 @@ namespace eka2l1 {
             }
 
             backup_state = thread_state::stop;
-        }    
+        }
 
         static constexpr std::uint32_t MAX_SYSCALL_STACK = 4;
 

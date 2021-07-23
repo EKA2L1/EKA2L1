@@ -7,9 +7,9 @@
 
 #include <memory>
 
+#include <cpu/12l1r/tlb.h>
 #include <cpu/arm_interface.h>
 #include <cpu/dyncom/armstate.h>
-#include <cpu/12l1r/tlb.h>
 
 namespace eka2l1::arm {
     class dyncom_core final : public core {

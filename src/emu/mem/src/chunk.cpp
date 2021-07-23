@@ -35,7 +35,7 @@ namespace eka2l1::mem {
     const vm_address mem_model_chunk::top() const {
         return top_ << control_->page_size_bits_;
     }
-    
+
     bool mem_model_chunk::adjust(const vm_address bottom, const vm_address top) {
         const std::size_t top_page_off = ((top + control_->page_size() - 1) >> control_->page_size_bits_);
         const std::size_t bottom_page_off = (bottom >> control_->page_size_bits_);
@@ -77,7 +77,7 @@ namespace eka2l1::mem {
         mmu_base *mmu, const bool map) {
         // Get the base address for this process
         const vm_address base_addr = base(process);
-        
+
         if (!base_addr) {
             LOG_ERROR(MEMORY, "Unable to get base address of this chunk!");
             return;
@@ -127,7 +127,7 @@ namespace eka2l1::mem {
             }
         }
     }
-    
+
     mem_model_chunk_impl make_new_mem_model_chunk(control_base *control, const asid addr_space_id,
         const mem_model_type mmt) {
         switch (mmt) {

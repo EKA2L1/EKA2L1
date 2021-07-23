@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mem/model/multiple/control.h>
 #include <common/log.h>
+#include <mem/model/multiple/control.h>
 
 namespace eka2l1::mem {
     control_multiple::control_multiple(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, std::size_t psize_bits, const bool mem_map_old)
@@ -34,11 +34,11 @@ namespace eka2l1::mem {
     }
 
     mmu_base *control_multiple::get_or_create_mmu(arm::core *cc) {
-        for (auto &inst: mmus_) {
+        for (auto &inst : mmus_) {
             if (!inst) {
-                inst = std::make_unique<mmu_multiple>(reinterpret_cast<control_base*>(this),
+                inst = std::make_unique<mmu_multiple>(reinterpret_cast<control_base *>(this),
                     cc, conf_);
-                
+
                 return inst.get();
             } else {
                 if (inst->cpu_ == cc) {
@@ -47,14 +47,14 @@ namespace eka2l1::mem {
             }
         }
 
-        auto new_inst = std::make_unique<mmu_multiple>(reinterpret_cast<control_base*>(this),
+        auto new_inst = std::make_unique<mmu_multiple>(reinterpret_cast<control_base *>(this),
             cc, conf_);
 
         mmus_.push_back(std::move(new_inst));
 
         return mmus_.back().get();
     }
-    
+
     asid control_multiple::rollover_fresh_addr_space() {
         // Try to find existing unoccpied page directory
         for (std::size_t i = 0; i < dirs_.size(); i++) {
@@ -75,7 +75,7 @@ namespace eka2l1::mem {
 
         return static_cast<asid>(dirs_.size());
     }
-    
+
     void control_multiple::assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags, asid *id_list, const std::uint32_t id_list_size) {
         // Extract the page directory offset
         const std::uint32_t pde_off = linear_addr >> page_table_index_shift_;

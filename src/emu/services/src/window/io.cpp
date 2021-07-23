@@ -148,8 +148,7 @@ namespace eka2l1::epoc {
 
             // TODO: My assumption... For now.
             // Actually this smells like a hack
-            const bool repeatable = !is_device_std_key_not_repeatable(static_cast
-                <epoc::std_scan_code>(evt.key_evt_.scancode));
+            const bool repeatable = !is_device_std_key_not_repeatable(static_cast<epoc::std_scan_code>(evt.key_evt_.scancode));
 
             epoc::event extra_event = evt;
             extra_event.type = epoc::event_code::key;
@@ -160,8 +159,7 @@ namespace eka2l1::epoc {
             const std::uint32_t the_code = epoc::map_scancode_to_keycode(static_cast<std_scan_code>(
                 evt.key_evt_.scancode));
 
-            const std::uint64_t data_for_repeatable = extra_event.key_evt_.scancode | (static_cast<std::uint64_t>(
-                extra_event.key_evt_.code) << 32);
+            const std::uint64_t data_for_repeatable = extra_event.key_evt_.scancode | (static_cast<std::uint64_t>(extra_event.key_evt_.code) << 32);
 
             if (!dont_send_extra_key_event) {
                 extra_event.key_evt_.code = the_code;

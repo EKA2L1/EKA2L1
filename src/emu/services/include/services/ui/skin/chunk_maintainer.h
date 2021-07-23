@@ -19,10 +19,10 @@
 
 #pragma once
 
+#include <services/fbs/fbs.h>
 #include <services/ui/skin/bitmap_store.h>
 #include <services/ui/skin/common.h>
 #include <services/ui/skin/skn.h>
-#include <services/fbs/fbs.h>
 
 #include <cstdint>
 #include <string>

@@ -52,9 +52,8 @@ namespace eka2l1::common {
 
     template <typename T>
     std::size_t match_wildcard_in_string(const std::basic_string<T> &reference, const std::basic_string<T> &match_pattern,
-        const bool is_fold) {  
-        std::basic_regex<T> reg(wildcard_to_regex_string(match_pattern), (is_fold ? std::regex_constants::icase :
-            std::regex_constants::basic));
+        const bool is_fold) {
+        std::basic_regex<T> reg(wildcard_to_regex_string(match_pattern), (is_fold ? std::regex_constants::icase : std::regex_constants::basic));
 
         std::match_results<typename std::basic_string<T>::const_iterator> match_result;
         if (std::regex_search(reference, match_result, reg)) {
@@ -63,7 +62,7 @@ namespace eka2l1::common {
 
         return std::basic_string<T>::npos;
     }
-    
+
     template std::size_t match_wildcard_in_string<char>(const std::string &reference, const std::string &match_pattern,
         const bool is_fold);
     template std::size_t match_wildcard_in_string<wchar_t>(const std::wstring &reference, const std::wstring &match_pattern,

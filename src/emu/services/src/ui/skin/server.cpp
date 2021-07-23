@@ -17,20 +17,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/fbs/fbs.h>
 #include <services/ui/skin/common.h>
 #include <services/ui/skin/ops.h>
 #include <services/ui/skin/server.h>
 #include <services/ui/skin/skn.h>
 #include <services/ui/skin/utils.h>
-#include <services/fbs/fbs.h>
 #include <vfs/vfs.h>
 
 #include <common/cvt.h>
 #include <common/log.h>
 #include <utils/err.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 
 namespace eka2l1 {
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)

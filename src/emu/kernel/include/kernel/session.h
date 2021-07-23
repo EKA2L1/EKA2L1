@@ -55,7 +55,7 @@ namespace eka2l1 {
             std::vector<std::pair<bool, ipc_msg_ptr>> msgs_pool;
             ipc_msg_ptr disconnect_msg_;
 
-            common::roundabout in_progress_msgs_; 
+            common::roundabout in_progress_msgs_;
 
             kernel::address cookie_address;
             kernel::handle associated_handle;

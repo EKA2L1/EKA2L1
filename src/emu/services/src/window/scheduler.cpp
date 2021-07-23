@@ -55,7 +55,7 @@ namespace eka2l1::epoc {
             callback_datas_[i].screen_number = i;
         }
     }
-    
+
     animation_scheduler::~animation_scheduler() {
         const std::lock_guard<std::mutex> guard(lock_);
 
@@ -75,7 +75,7 @@ namespace eka2l1::epoc {
 
     void animation_scheduler::schedule(drivers::graphics_driver *driver, screen *scr, const std::uint64_t time) {
         const std::lock_guard<std::mutex> guard(lock_);
-        
+
         // Get screen number
         if (schedules_.size() <= scr->number) {
             return;

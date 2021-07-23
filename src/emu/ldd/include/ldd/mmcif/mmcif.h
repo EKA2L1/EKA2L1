@@ -40,7 +40,7 @@ namespace eka2l1::ldd {
         mmcif_card_type ctype_;
     };
 
-    class mmcif_channel: public channel {
+    class mmcif_channel : public channel {
     public:
         explicit mmcif_channel(kernel_system *kern, system *sys, epoc::version ver);
         ~mmcif_channel() override {}
@@ -56,7 +56,7 @@ namespace eka2l1::ldd {
     /**
      * @brief MMC interface channel factory.
      */
-    class mmcif_factory: public factory {
+    class mmcif_factory : public factory {
     public:
         explicit mmcif_factory(kernel_system *kern, system *sys);
 

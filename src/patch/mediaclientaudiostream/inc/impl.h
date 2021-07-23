@@ -33,11 +33,11 @@ enum TMdaState {
     EMdaStateStop = 4
 };
 
-struct TMMFMdaBufferNode: public TDblQueLink {
+struct TMMFMdaBufferNode : public TDblQueLink {
     const TDesC8 *iBuffer;
 };
 
-struct CMMFMdaOutputBufferQueue: public CActive {
+struct CMMFMdaOutputBufferQueue : public CActive {
     CMMFMdaAudioOutputStream *iStream;
     TDblQue<TMMFMdaBufferNode> iBufferNodes;
 
@@ -57,16 +57,16 @@ struct CMMFMdaOutputBufferQueue: public CActive {
     virtual void DoCancel();
 };
 
-class CMMFMdaOutputOpen: public CIdle {
+class CMMFMdaOutputOpen : public CIdle {
 protected:
     TBool iIsFixup;
 
 public:
     explicit CMMFMdaOutputOpen();
     ~CMMFMdaOutputOpen();
-    
+
     void FixupActiveStatus();
-    
+
     void Open(CMMFMdaAudioOutputStream *iStream);
     void DoCancel();
 };

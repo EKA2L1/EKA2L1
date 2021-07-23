@@ -97,7 +97,7 @@ namespace eka2l1 {
 
                 if (packed_size != sizeof(T)) {
                     LOG_WARN(SERVICE_TRACK, "Getting packed struct with mismatch size ({} vs {}), size to get "
-                             "will be automatically clamped",
+                                            "will be automatically clamped",
                         packed_size, sizeof(T));
                 }
 

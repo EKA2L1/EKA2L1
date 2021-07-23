@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
+#include <common/uid.h>
 #include <kernel/libmanager.h>
 #include <kernel/process.h>
 #include <services/ecom/common.h>
 #include <services/ecom/ecom.h>
 #include <services/fs/std.h>
+#include <system/epoc.h>
 #include <utils/dll.h>
-#include <common/uid.h>
 #include <vfs/vfs.h>
 
 #include <utils/err.h>
@@ -91,7 +91,7 @@ namespace eka2l1 {
         // Take the first one
         return construct_impl_creation_method(requester, implementations[0].get(), dll_entry, dtor_key, err, check_cap_comp);
     }
-    
+
     bool ecom_server::get_implementation_dll_info(kernel::thread *requester, const epoc::uid interface_uid,
         const epoc::uid implementation_uid, epoc::fs::entry &dll_entry, epoc::uid &dtor_key, std::int32_t *err, const bool check_cap_comp) {
         if (implementation_uid == 0) {
@@ -179,7 +179,7 @@ namespace eka2l1 {
         case ecom_get_resolved_creation_method:
         case ecom_get_custom_resolved_creation_method: {
             std::int32_t error_code = 0;
-            
+
             if (!generic_match) {
                 ctx->complete(epoc::error_argument);
                 return;

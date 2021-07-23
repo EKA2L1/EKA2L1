@@ -19,16 +19,16 @@
 
 #include <config/config.h>
 #include <dispatch/dispatcher.h>
-#include <dispatch/register.h>
 #include <dispatch/libraries/register.h>
+#include <dispatch/register.h>
 #include <dispatch/screen.h>
 #include <kernel/kernel.h>
 #include <services/window/window.h>
-#include <utils/event.h>
 #include <utils/err.h>
+#include <utils/event.h>
 
-#include <common/log.h>
 #include <common/armemitter.h>
+#include <common/log.h>
 #include <system/epoc.h>
 
 #include <mem/mem.h>
@@ -101,7 +101,7 @@ namespace eka2l1::dispatch {
             if (!orgaddr) {
                 continue;
             }
-            
+
             const address entryentry = trampoline_chunk_->base(nullptr).ptr_address() + trampoline_allocated_;
 
             if (seg->is_rom()) {
@@ -116,18 +116,19 @@ namespace eka2l1::dispatch {
                         offset_do_write -= 2;
                     }
 
-                    ptr = reinterpret_cast<std::uint8_t*>(ptr) + offset_do_write;
+                    ptr = reinterpret_cast<std::uint8_t *>(ptr) + offset_do_write;
                 } else {
                     std::memcpy(ptr, hle::ARM_TRAMPOLINE_ASM, sizeof(hle::ARM_TRAMPOLINE_ASM));
-                    ptr = reinterpret_cast<std::uint8_t*>(ptr) + sizeof(hle::ARM_TRAMPOLINE_ASM);
+                    ptr = reinterpret_cast<std::uint8_t *>(ptr) + sizeof(hle::ARM_TRAMPOLINE_ASM);
                 }
 
-                *reinterpret_cast<std::uint32_t*>(ptr) = entryentry;
+                *reinterpret_cast<std::uint32_t *>(ptr) = entryentry;
             }
 
-            std::uint32_t *start_base = reinterpret_cast<std::uint32_t*>(reinterpret_cast<std::uint8_t*>(
-                trampoline_chunk_->host_base()) + trampoline_allocated_);
-  
+            std::uint32_t *start_base = reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::uint8_t *>(
+                                                                              trampoline_chunk_->host_base())
+                + trampoline_allocated_);
+
             start_base[0] = 0xEFC10001;
             start_base[1] = patches[i].dispatch_number_;
 

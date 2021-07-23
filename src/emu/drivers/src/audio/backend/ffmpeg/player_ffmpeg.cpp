@@ -133,7 +133,7 @@ namespace eka2l1::drivers {
 
         set_position_for_custom_format(request, 0);
     }
-    
+
     bool player_ffmpeg::is_ready_to_play(player_request_instance &request) {
         player_ffmpeg_request *request_ff = reinterpret_cast<player_ffmpeg_request *>(request.get());
         return request_ff && request_ff->format_context_;
@@ -213,19 +213,19 @@ namespace eka2l1::drivers {
     }
 
     static int ffmpeg_custom_rw_io_read(void *opaque, std::uint8_t *buf, int buf_size) {
-        common::rw_stream *stream = reinterpret_cast<common::rw_stream*>(opaque);
+        common::rw_stream *stream = reinterpret_cast<common::rw_stream *>(opaque);
         const std::uint64_t size = stream->read(buf, buf_size);
 
         return static_cast<int>(size);
     }
 
     static int ffmpeg_custom_rw_io_write(void *opaque, std::uint8_t *buf, int buf_size) {
-        common::rw_stream *stream = reinterpret_cast<common::rw_stream*>(opaque);
+        common::rw_stream *stream = reinterpret_cast<common::rw_stream *>(opaque);
         const std::uint64_t size = stream->write(buf, buf_size);
 
         return static_cast<int>(size);
     }
-	
+
     std::int64_t ffmpeg_custom_rw_io_seek(void *opaque, int64_t offset, int whence) {
         whence &= ~AVSEEK_FORCE;
         common::seek_where pos_seek_mode = common::seek_where::beg;
@@ -248,7 +248,7 @@ namespace eka2l1::drivers {
             return -1;
         }
 
-        common::rw_stream *stream = reinterpret_cast<common::rw_stream*>(opaque);
+        common::rw_stream *stream = reinterpret_cast<common::rw_stream *>(opaque);
         stream->seek(offset, pos_seek_mode);
 
         return static_cast<std::int64_t>(stream->tell());
@@ -260,7 +260,7 @@ namespace eka2l1::drivers {
 
         static constexpr std::uint32_t CUSTOM_IO_BUFFER_SIZE = 8192;
 
-        request_ff->custom_io_buffer_ = reinterpret_cast<std::uint8_t*>(av_malloc(CUSTOM_IO_BUFFER_SIZE));
+        request_ff->custom_io_buffer_ = reinterpret_cast<std::uint8_t *>(av_malloc(CUSTOM_IO_BUFFER_SIZE));
 
         if (!request_ff->custom_io_buffer_) {
             return false;
@@ -275,7 +275,7 @@ namespace eka2l1::drivers {
         }
 
         const std::lock_guard<std::mutex> guard(lock_);
-        
+
         requests_.push(std::move(request));
         return true;
     }
@@ -426,7 +426,7 @@ namespace eka2l1::drivers {
                 request_ff->custom_io_buffer_ = nullptr;
             }
         };
-        
+
         if (avformat_open_input(&request_ff->format_context_, request_ff->url_.c_str(), nullptr, nullptr) < 0) {
             LOG_ERROR(DRIVER_AUD, "Error while opening AVFormat Input!");
             avformat_free_context(request_ff->format_context_);

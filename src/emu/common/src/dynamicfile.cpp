@@ -84,8 +84,7 @@ namespace eka2l1::common {
                 stream_.read(&hi, 1);
             }
 
-            if ((static_cast<char16_t>((hi << 8) | lo) == u'\n') || (stream_.fail()) ||
-                (stream_.eof())) {
+            if ((static_cast<char16_t>((hi << 8) | lo) == u'\n') || (stream_.fail()) || (stream_.eof())) {
                 return true;
             }
 

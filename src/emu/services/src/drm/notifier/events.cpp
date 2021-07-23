@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/drm/notifier/events.h>
 #include <common/buffer.h>
+#include <services/drm/notifier/events.h>
 
 namespace eka2l1::drm {
     bool notifier_event::internalize(common::ro_stream &stream) {
@@ -59,7 +59,7 @@ namespace eka2l1::drm {
 
         return true;
     }
-    
+
     bool notifier_modify_event::internalize(common::ro_stream &stream) {
         if (!notifier_event::internalize(stream)) {
             return false;
@@ -77,7 +77,7 @@ namespace eka2l1::drm {
 
         return true;
     }
-    
+
     bool notifier_time_change_event::internalize(common::ro_stream &stream) {
         if (!notifier_event::internalize(stream)) {
             return false;

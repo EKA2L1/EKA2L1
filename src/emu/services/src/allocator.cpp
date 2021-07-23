@@ -17,13 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/allocator.h>
 #include <common/algorithm.h>
 #include <kernel/chunk.h>
+#include <services/allocator.h>
 
 namespace eka2l1::epoc {
     chunk_allocator::chunk_allocator(chunk_ptr de_chunk)
-        : block_allocator(reinterpret_cast<std::uint8_t*>(de_chunk->host_base()), de_chunk->committed())
+        : block_allocator(reinterpret_cast<std::uint8_t *>(de_chunk->host_base()), de_chunk->committed())
         , target_chunk(std::move(de_chunk)) {
     }
 
@@ -32,11 +32,10 @@ namespace eka2l1::epoc {
     }
 
     address chunk_allocator::to_address(const void *addr, kernel::process *pr) {
-        return static_cast<address>(reinterpret_cast<const std::uint8_t*>(addr) - reinterpret_cast<const std::uint8_t*>(
-            target_chunk->host_base())) + target_chunk->base(pr).ptr_address();
+        return static_cast<address>(reinterpret_cast<const std::uint8_t *>(addr) - reinterpret_cast<const std::uint8_t *>(target_chunk->host_base())) + target_chunk->base(pr).ptr_address();
     }
 
     void *chunk_allocator::to_pointer(const address addr, kernel::process *pr) {
-        return reinterpret_cast<std::uint8_t*>(target_chunk->host_base()) + (addr -target_chunk->base(pr).ptr_address());
+        return reinterpret_cast<std::uint8_t *>(target_chunk->host_base()) + (addr - target_chunk->base(pr).ptr_address());
     }
 }

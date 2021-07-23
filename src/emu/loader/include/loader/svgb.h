@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#define SVG_ATTR_DECODE_PROTOTYPE(f) static bool f(svgb_decode_state& state, const svg_attr * attr, const svg_element * elem, common::ro_stream& in, common::wo_stream &out);
+#define SVG_ATTR_DECODE_PROTOTYPE(f) static bool f(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out);
 
 namespace eka2l1::loader {
     struct svg_fill {
@@ -40,8 +40,8 @@ namespace eka2l1::loader {
     };
 
     struct svg_path_seg_type {
-        char command_;       /* command character */
-        int params_;         /* number of parameters */
+        char command_; /* command character */
+        int params_; /* number of parameters */
     };
 
     struct svg_element_attr {
@@ -50,10 +50,10 @@ namespace eka2l1::loader {
     };
 
     struct svg_element {
-        std::string name_;                          /* element name */
-        std::int16_t code_;                         /* element code */
-        const svg_element_attr* attr_;              /* additional attributes */
-        int nattr_;                                 /* number of additional attributes */
+        std::string name_; /* element name */
+        std::int16_t code_; /* element code */
+        const svg_element_attr *attr_; /* additional attributes */
+        int nattr_; /* number of additional attributes */
     };
 
     struct svg_attr;
@@ -61,8 +61,7 @@ namespace eka2l1::loader {
 
     using svg_attr_decode_callback = std::function<bool(svgb_decode_state &, const svg_attr *, const svg_element *, common::ro_stream &in, common::wo_stream &out)>;
 
-    struct svg_attr
-    {
+    struct svg_attr {
         std::string name_;
         svg_attr_decode_callback decode_;
     };
@@ -74,7 +73,7 @@ namespace eka2l1::loader {
     };
 
     struct svg_block {
-        const svg_element * element_;
+        const svg_element *element_;
     };
 
     enum svgb_convert_error {
@@ -100,14 +99,12 @@ namespace eka2l1::loader {
         svgb_convert_error_description(svgb_convert_error reason, std::uint64_t byte_position)
             : reason_(reason)
             , byte_position_(byte_position) {
-
         }
 
         svgb_convert_error_description(svgb_convert_error reason, std::uint64_t byte_position, const std::string &data1)
             : reason_(reason)
             , byte_position_(byte_position)
             , data1_(data1) {
-
         }
 
         svgb_convert_error_description(svgb_convert_error reason, std::uint64_t byte_position, const std::string &data1, const std::string &data2)
@@ -115,7 +112,6 @@ namespace eka2l1::loader {
             , byte_position_(byte_position)
             , data1_(data1)
             , data2_(data2) {
-
         }
     };
 

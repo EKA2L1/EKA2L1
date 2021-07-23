@@ -21,15 +21,15 @@
 #include <common/algorithm.h>
 #include <common/buffer.h>
 #include <common/cvt.h>
-#include <common/flate.h>
 #include <common/fileutils.h>
+#include <common/flate.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <common/types.h>
 #include <common/time.h>
+#include <common/types.h>
 
-#include <vfs/vfs.h>
 #include <config/config.h>
+#include <vfs/vfs.h>
 
 #include <loader/e32img.h>
 #include <loader/sis.h>
@@ -219,7 +219,7 @@ namespace eka2l1 {
             if (compressed.algorithm == sis_compressed_algorithm::deflated) {
                 if (!cancel_requested && (total_inflated_size != compressed.uncompressed_size)) {
                     LOG_ERROR(PACKAGE, "Sanity check failed: Total inflated size not equal to specified uncompress size "
-                              "in SISCompressed ({} vs {})!",
+                                       "in SISCompressed ({} vs {})!",
                         total_inflated_size, compressed.uncompressed_size);
                 }
 
@@ -270,8 +270,7 @@ namespace eka2l1 {
 
             int pass = 0;
 
-            if ((expr->left_expr && (expr->left_expr->op == ss_expr_op::EPrimTypeString)) ||
-                (expr->right_expr && (expr->right_expr->op == ss_expr_op::EPrimTypeString))) {
+            if ((expr->left_expr && (expr->left_expr->op == ss_expr_op::EPrimTypeString)) || (expr->right_expr && (expr->right_expr->op == ss_expr_op::EPrimTypeString))) {
                 if (expr->left_expr->op != expr->right_expr->op) {
                     LOG_ERROR(PACKAGE, "String expression can only be compared with string expression");
                     return -1;
@@ -389,7 +388,7 @@ namespace eka2l1 {
         }
 
         static bool fill_controller_registeration(io_system *io, loader::sis_controller *ctrl, package::object &parent, manager::controller_info &controller_info, const drive_number drive, const bool stub) {
-            controller_info.data_ = reinterpret_cast<std::uint8_t*>(ctrl->raw_data.data());
+            controller_info.data_ = reinterpret_cast<std::uint8_t *>(ctrl->raw_data.data());
             controller_info.size_ = ctrl->raw_data.size();
 
             parent.vendor_name = ctrl->info.vendor_name.unicode_string;
@@ -406,7 +405,7 @@ namespace eka2l1 {
 
             parent.drives = stub ? (1 << (drive_z - drive_a)) : (1 << (drive - drive_a));
             parent.selected_drive = parent.drives;
-            
+
             package::controller_info the_new_controller_info;
             the_new_controller_info.version.major = ctrl->info.version.major;
             the_new_controller_info.version.minor = ctrl->info.version.minor;
@@ -453,8 +452,9 @@ namespace eka2l1 {
 
                         extended_header.info.secure_id = 0;
 
-                        if (loader::parse_e32img_header(reinterpret_cast<common::ro_stream*>(&exe_stream), header, extended_header,
-                            uncomp_size, ver_used) == 0) {
+                        if (loader::parse_e32img_header(reinterpret_cast<common::ro_stream *>(&exe_stream), header, extended_header,
+                                uncomp_size, ver_used)
+                            == 0) {
                             desc.sid = extended_header.info.secure_id;
                         }
                     }
@@ -463,13 +463,13 @@ namespace eka2l1 {
                 parent.file_descriptions.push_back(std::move(desc));
             }
 
-            for (auto &vendor_name_field: ctrl->info.vendor_names.fields) {
-                loader::sis_string *vendor_name_string = reinterpret_cast<loader::sis_string*>(vendor_name_field.get());
+            for (auto &vendor_name_field : ctrl->info.vendor_names.fields) {
+                loader::sis_string *vendor_name_string = reinterpret_cast<loader::sis_string *>(vendor_name_field.get());
                 parent.localized_vendor_names.push_back(vendor_name_string->unicode_string);
             }
 
-            for (auto &prop_field: ctrl->properties.properties.fields) {
-                sis_property *property_real = reinterpret_cast<sis_property*>(prop_field.get());
+            for (auto &prop_field : ctrl->properties.properties.fields) {
+                sis_property *property_real = reinterpret_cast<sis_property *>(prop_field.get());
 
                 package::property new_prop;
                 new_prop.key = property_real->key;
@@ -526,7 +526,7 @@ namespace eka2l1 {
 
             const bool result = interpret(controller->install_block, me, base_data_idx + controller->idx.data_index);
             current_controllers.pop();
-            
+
             return result;
         }
 
@@ -551,11 +551,11 @@ namespace eka2l1 {
 
                     if ((buf.size() >= 2) && (buf[0] == 0xFF) && (buf[1] == 0xFE)) {
                         // BOM file
-                        std::string converted_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t*>(buf.data()) + 1,
+                        std::string converted_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t *>(buf.data()) + 1,
                             (buf.size() / 2) - 1));
 
                         if (show_text) {
-                            result = show_text(reinterpret_cast<const char*>(converted_str.data()), one_button);
+                            result = show_text(reinterpret_cast<const char *>(converted_str.data()), one_button);
                         }
                     } else {
                         if (show_text) {
@@ -596,7 +596,7 @@ namespace eka2l1 {
                             raw_path = common::lowercase_string(raw_path);
                             lowered = true;
                         }
-                        
+
                         if (!install_data->data_units.fields.empty()) {
                             extract_target_info info;
                             info.file_path_ = raw_path;
@@ -663,7 +663,7 @@ namespace eka2l1 {
         }
 
         static void fill_embeds_to_package_info(sis_registry_tree &self) {
-            for (auto &embed: self.embeds) {
+            for (auto &embed : self.embeds) {
                 package::package embed_info;
                 embed_info.index = static_cast<std::int32_t>(self.package_info.embedded_packages.size());
                 embed_info.package_name = embed.package_info.package_name;

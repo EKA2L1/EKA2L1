@@ -21,14 +21,14 @@
 
 #include <config/app_settings.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
-#include <services/window/window.h>
-#include <services/window/classes/wingroup.h>
 #include <services/ui/cap/oom_app.h>
+#include <services/window/classes/wingroup.h>
+#include <services/window/window.h>
+#include <system/epoc.h>
 
-#include <QSettings>
 #include <QCheckBox>
+#include <QSettings>
 
 eka2l1::window_server *get_window_server_through_system(eka2l1::system *sys) {
     eka2l1::kernel_system *kernel = sys->get_kernel_system();
@@ -37,7 +37,7 @@ eka2l1::window_server *get_window_server_through_system(eka2l1::system *sys) {
     }
 
     const std::string win_server_name = eka2l1::get_winserv_name_by_epocver(kernel->get_epoc_version());
-    return reinterpret_cast<eka2l1::window_server*>(kernel->get_by_name<eka2l1::service::server>(win_server_name));
+    return reinterpret_cast<eka2l1::window_server *>(kernel->get_by_name<eka2l1::service::server>(win_server_name));
 }
 
 eka2l1::epoc::screen *get_current_active_screen(eka2l1::system *sys, const int provided_num) {
@@ -84,7 +84,7 @@ std::optional<eka2l1::akn_running_app_info> get_active_app_info(eka2l1::system *
             }
         }
 
-        group = reinterpret_cast<eka2l1::epoc::window_group*>(group->sibling);
+        group = reinterpret_cast<eka2l1::epoc::window_group *>(group->sibling);
     }
 
     return best_info;

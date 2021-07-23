@@ -19,10 +19,10 @@
 
 #include <common/chunkyseri.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <services/cdl/cdl.h>
 #include <services/cdl/ops.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 
 namespace eka2l1 {

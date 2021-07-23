@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include <drivers/graphics/cursor.h>
 #include <GLFW/glfw3.h>
+#include <drivers/graphics/cursor.h>
 
 namespace eka2l1::drivers {
-    class cursor_glfw: public cursor {
+    class cursor_glfw : public cursor {
         GLFWcursor *cursor_;
 
     public:
@@ -35,7 +35,7 @@ namespace eka2l1::drivers {
         }
     };
 
-    class cursor_controller_glfw: public cursor_controller {
+    class cursor_controller_glfw : public cursor_controller {
     public:
         std::unique_ptr<cursor> create(const cursor_type type) override;
     };

@@ -24,8 +24,8 @@
 
 #include <drivers/audio/dsp.h>
 
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace eka2l1 {
     namespace kernel {

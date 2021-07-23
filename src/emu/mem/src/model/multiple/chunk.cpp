@@ -71,8 +71,8 @@ namespace eka2l1::mem {
 
             const vm_address crr_base_addr = base_;
 
-            multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
-            control_multiple *mul_ctrl = reinterpret_cast<control_multiple*>(control_);
+            multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process *>(own_process_);
+            control_multiple *mul_ctrl = reinterpret_cast<control_multiple *>(control_);
 
             // Fill the entry
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
@@ -92,7 +92,7 @@ namespace eka2l1::mem {
                 } else {
                     // Map those just mapped to the CPU. It will love this
                     if (size_just_mapped != 0) {
-                        for (auto &mm: mul_ctrl->mmus_) {
+                        for (auto &mm : mul_ctrl->mmus_) {
                             if (!own_process_ || mul_process->addr_space_id_ == mm->current_addr_space()) {
                                 mm->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
                                 break;
@@ -108,7 +108,7 @@ namespace eka2l1::mem {
 
             // Map the rest
             if (size_just_mapped != 0) {
-                for (auto &mm: mul_ctrl->mmus_) {
+                for (auto &mm : mul_ctrl->mmus_) {
                     if (!own_process_ || mul_process->addr_space_id_ == mm->current_addr_space()) {
                         mm->map_to_cpu(off_start_just_mapped, size_just_mapped, host_start_just_mapped, permission_);
                         break;
@@ -170,8 +170,8 @@ namespace eka2l1::mem {
             const auto pt_base = (running_offset >> control_->chunk_shift_) << control_->chunk_shift_;
             const vm_address crr_base_addr = base_;
 
-            multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
-            control_multiple *mul_ctrl = reinterpret_cast<control_multiple*>(control_);
+            multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process *>(own_process_);
+            control_multiple *mul_ctrl = reinterpret_cast<control_multiple *>(control_);
 
             // Fill the entry
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
@@ -190,7 +190,7 @@ namespace eka2l1::mem {
                     // Map those just mapped to the CPU. It will love this
                     if (size_just_unmapped != 0) {
                         // Use linear loop since the size is expected to be small
-                        for (auto &mm: mul_ctrl->mmus_) {
+                        for (auto &mm : mul_ctrl->mmus_) {
                             if (!own_process_ || mul_process->addr_space_id_ == mm->current_addr_space()) {
                                 mm->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
                                 break;
@@ -206,7 +206,7 @@ namespace eka2l1::mem {
             // Unmap the rest
             if (size_just_unmapped != 0) {
                 //LOG_TRACE(MEMORY, "Unmapped from CPU: 0x{:X}, size 0x{:X}", off_start_just_unmapped, size_just_unmapped);
-                for (auto &mm: mul_ctrl->mmus_) {
+                for (auto &mm : mul_ctrl->mmus_) {
                     if (!own_process_ || mul_process->addr_space_id_ == mm->current_addr_space()) {
                         mm->unmap_from_cpu(off_start_just_unmapped, size_just_unmapped);
                         break;
@@ -253,7 +253,7 @@ namespace eka2l1::mem {
 
     linear_section *multiple_mem_model_chunk::get_section(const std::uint32_t flags) {
         control_multiple *mul_mmu = reinterpret_cast<control_multiple *>(control_);
-        multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process*>(own_process_);
+        multiple_mem_model_process *mul_process = reinterpret_cast<multiple_mem_model_process *>(own_process_);
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
             return &mul_mmu->user_code_sec_;
@@ -394,8 +394,8 @@ namespace eka2l1::mem {
         }
 
         if (is_code) {
-            control_multiple *control_mm = reinterpret_cast<control_multiple*>(control_);
-            for (auto &mmu: control_mm->mmus_) {
+            control_multiple *control_mm = reinterpret_cast<control_multiple *>(control_);
+            for (auto &mmu : control_mm->mmus_) {
                 // Clear the instruction cache at that range, code may reuse it later
                 mmu->cpu_->imb_range(base_, max_size_);
             }

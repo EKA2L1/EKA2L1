@@ -24,7 +24,7 @@ struct TTest {
 class CTestManager {
 public:
     TInt GetWorkingDrive() const {
-    	return iWorkingDrive;
+        return iWorkingDrive;
     }
 
     /**
@@ -52,7 +52,6 @@ public:
     ~CTestManager();
 
     void ExpectInputFileEqualL(const TDesC8 &aData);
-
 
 private:
     void ConstructL(const TAbsorberMode aAbsorbMode);

@@ -21,8 +21,8 @@
 #include <services/fs/fs.h>
 #include <services/fs/std.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <common/algorithm.h>
@@ -598,7 +598,7 @@ namespace eka2l1 {
         }
 
         const epoc::handle dup_handle = obj_table_.add(node);
-        
+
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         auto &node_attrib = server<fs_server>()->attribs[f->file_name()];
@@ -617,12 +617,12 @@ namespace eka2l1 {
 
     void fs_server_client::file_att(service::ipc_context *ctx) {
         std::int32_t target_handle = *ctx->get_argument_value<std::int32_t>(3);
-        
+
         if (!target_handle) {
             ctx->complete(epoc::error_argument);
             return;
         }
-        
+
         fs_node *node = get_file_node(target_handle);
 
         if (!node) {
@@ -643,12 +643,12 @@ namespace eka2l1 {
 
     void fs_server_client::file_set_att(service::ipc_context *ctx) {
         std::int32_t target_handle = *ctx->get_argument_value<std::int32_t>(3);
-        
+
         if (!target_handle) {
             ctx->complete(epoc::error_argument);
             return;
         }
-        
+
         fs_node *node = get_file_node(target_handle);
 
         if (!node) {
@@ -816,7 +816,7 @@ namespace eka2l1 {
 
         // Check capabilities
         if (!check_path_capabilities_pass(name, own_pr, epoc::fs::private_comp_access_policy, (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::sys_read_only_access_policy,
-            (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::resource_read_only_access_policy)) {
+                (access_mode & WRITE_MODE) ? epoc::fs::sys_resource_modify_access_policy : epoc::fs::resource_read_only_access_policy)) {
             LOG_ERROR(SERVICE_EFSRV, "New file node fails capabilities requirements with path={}, process UID=0x{:X}", common::ucs2_to_utf8(name), own_pr_uid);
             return epoc::error_permission_denied;
         }

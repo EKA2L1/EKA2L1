@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/framework.h>
 #include <kernel/server.h>
+#include <services/framework.h>
 
 namespace eka2l1 {
     class sendas_server : public service::typical_server {

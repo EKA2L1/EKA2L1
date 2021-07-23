@@ -19,9 +19,9 @@
 
 #pragma once
 
+#include <bridge/bridge.h>
 #include <cstdint>
 #include <functional>
-#include <bridge/bridge.h>
 
 namespace eka2l1 {
     class system;
@@ -32,7 +32,7 @@ namespace eka2l1 {
 }
 
 #define BRIDGE_FUNC_DISPATCHER(ret, name, ...) ret name(system *sys, const std::uint32_t func_num, ##__VA_ARGS__)
-#define BRIDGE_REGISTER_DISPATCHER(func_sid, func)                                                  \
-    {                                                                                               \
-        func_sid, eka2l1::hle::bridge(&func)                                                        \
+#define BRIDGE_REGISTER_DISPATCHER(func_sid, func) \
+    {                                              \
+        func_sid, eka2l1::hle::bridge(&func)       \
     }

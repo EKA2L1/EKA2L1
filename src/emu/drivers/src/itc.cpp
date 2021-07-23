@@ -126,7 +126,7 @@ namespace eka2l1::drivers {
 
         return handle_num;
     }
-    
+
     bool open_native_dialog(graphics_driver *driver, const char *filter, drivers::graphics_driver_dialog_callback callback, const bool is_folder) {
         return static_cast<bool>(send_sync_command(driver, graphics_driver_native_dialog, filter, &callback, is_folder));
     }
@@ -269,7 +269,7 @@ namespace eka2l1::drivers {
             rgb_current_factor, a_frag_output_factor, a_current_factor);
         get_command_list().add(cmd);
     }
-    
+
     void server_graphics_command_list_builder::set_stencil_action(const stencil_face face_operate_on, const stencil_action on_stencil_fail,
         const stencil_action on_stencil_pass_depth_fail, const stencil_action on_both_stencil_depth_pass) {
         command *cmd = make_command(graphics_driver_stencil_set_action, nullptr, face_operate_on, on_stencil_fail,

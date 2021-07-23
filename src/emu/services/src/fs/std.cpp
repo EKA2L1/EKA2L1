@@ -66,7 +66,7 @@ namespace eka2l1::epoc::fs {
 
         return attrib;
     }
-    
+
     void build_symbian_entry_from_emulator_entry(io_system *io, entry_info &info, epoc::fs::entry &sym_entry) {
         sym_entry.size = static_cast<std::uint32_t>(info.size);
         sym_entry.size_high = static_cast<std::uint32_t>(info.size >> 32);
@@ -80,7 +80,7 @@ namespace eka2l1::epoc::fs {
 
         // Stub some dead value for debugging
         sym_entry.uid1 = sym_entry.uid2 = sym_entry.uid3 = 0xDEADBEEF;
-        
+
         if (info.type == io_component_type::file) {
             // Temporarily open it to read UIDs
             symfile f = io->open_file(fullpath_ucs2, READ_MODE | BIN_MODE);

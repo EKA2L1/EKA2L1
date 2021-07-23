@@ -40,7 +40,7 @@ namespace eka2l1::drivers {
 
     class framebuffer : public graphics_object {
     protected:
-        std::vector<texture*> color_buffers;
+        std::vector<texture *> color_buffers;
         texture *depth_and_stencil_buffer;
 
     protected:
@@ -57,7 +57,7 @@ namespace eka2l1::drivers {
          * @param color_buffer_list                 List of color buffer to attach to this framebuffer.
          * @param depth_and_stencil_buffer          Depth and stencil buffer to attach to this framebuffer.
          */
-        explicit framebuffer(std::initializer_list<texture*> color_buffer_list, texture *depth_and_stencil_buffer)
+        explicit framebuffer(std::initializer_list<texture *> color_buffer_list, texture *depth_and_stencil_buffer)
             : color_buffers(color_buffer_list)
             , depth_and_stencil_buffer(depth_and_stencil_buffer) {
         }
@@ -101,7 +101,8 @@ namespace eka2l1::drivers {
          * @returns     True on success.
          */
         virtual bool blit(const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect, const std::uint32_t flags,
-            const filter_option copy_filter) = 0;
+            const filter_option copy_filter)
+            = 0;
 
         virtual bool remove_color_buffer(const std::int32_t position) = 0;
 
@@ -110,6 +111,6 @@ namespace eka2l1::drivers {
 
     using framebuffer_ptr = std::unique_ptr<framebuffer>;
 
-    framebuffer_ptr make_framebuffer(graphics_driver *driver, std::initializer_list<texture*> color_buffer_list,
+    framebuffer_ptr make_framebuffer(graphics_driver *driver, std::initializer_list<texture *> color_buffer_list,
         texture *depth_and_stencil_buffer);
 }

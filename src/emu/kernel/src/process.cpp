@@ -43,8 +43,8 @@ namespace eka2l1::kernel {
         const epoc::uid this_uid = std::get<2>(uids);
         std::int32_t max_generation = 0;
 
-        for (auto &pr_raw: kern->processes_) {
-            kernel::process *pr = reinterpret_cast<kernel::process*>(pr_raw.get());
+        for (auto &pr_raw : kern->processes_) {
+            kernel::process *pr = reinterpret_cast<kernel::process *>(pr_raw.get());
             if ((this_uid == std::get<2>(pr->uids)) && pr->access_count > 0) {
                 // If they have same name, increase the generation
                 if (common::compare_ignore_case(obj_name.c_str(), pr->obj_name.c_str()) == 0)
@@ -90,7 +90,7 @@ namespace eka2l1::kernel {
         codeseg->unmark();
 
         codeseg->attached_report(this);
-    
+
         // Get security info
         sec_info = codeseg->get_sec_info();
         priority = pri;
@@ -146,11 +146,10 @@ namespace eka2l1::kernel {
     process_bss_man::process_bss_man(kernel_system *kern, process_ptr parent)
         : kern_(kern)
         , parent_(parent) {
-
     }
 
     process_bss_man::~process_bss_man() {
-        for (auto &[addr, chunk]: bss_sects_) {
+        for (auto &[addr, chunk] : bss_sects_) {
             kern_->destroy(chunk);
         }
     }
@@ -209,7 +208,7 @@ namespace eka2l1::kernel {
         , exit_type(kernel::entity_exit_type::pending)
         , bss_man_(nullptr)
         , parent_process_(nullptr)
-        , time_delay_(0) 
+        , time_delay_(0)
         , setting_inheritence_(true)
         , generation_(0)
         , uid_change_callbacks(is_process_uid_type_change_callback_elem_free, make_process_uid_type_change_callback_elem_free) {
@@ -288,12 +287,12 @@ namespace eka2l1::kernel {
 
         uids = std::move(type);
         generation_ = refresh_generation();
-        
+
         reload_compat_setting();
 
         kern->run_uid_of_process_change_callback(this, old_type);
-        
-        for (auto &uid_change_callback: uid_change_callbacks) {
+
+        for (auto &uid_change_callback : uid_change_callbacks) {
             uid_change_callback.second(uid_change_callback.first, uids);
         }
     }
@@ -309,7 +308,7 @@ namespace eka2l1::kernel {
     chunk_ptr process::get_dll_static_chunk(const address target_addr, const std::uint32_t size, std::uint32_t *offset) {
         if (!dll_static_chunk) {
             const std::uint32_t SIZE_STATIC_CHUNK = kern->is_eka1() ? (mem::dll_static_data_eka1_end - mem::dll_static_data_eka1)
-                : (mem::shared_data - mem::dll_static_data);
+                                                                    : (mem::shared_data - mem::dll_static_data);
 
             dll_static_chunk = kern->create<kernel::chunk>(mem, this, "", 0, 0, SIZE_STATIC_CHUNK,
                 prot_read_write, kernel::chunk_type::disconnected, kernel::chunk_access::dll_static_data, kernel::chunk_attrib::anonymous,
@@ -431,8 +430,7 @@ namespace eka2l1::kernel {
     bool process::logon_cancel(eka2l1::ptr<epoc::request_status> logon_request, bool rendezvous) {
         decltype(rendezvous_requests) *container = rendezvous ? &rendezvous_requests : &logon_requests;
 
-        const auto find_result = std::find(container->begin(), container->end(),epoc::notify_info(logon_request,
-            kern->crr_thread()));
+        const auto find_result = std::find(container->begin(), container->end(), epoc::notify_info(logon_request, kern->crr_thread()));
 
         if (find_result == container->end()) {
             return false;

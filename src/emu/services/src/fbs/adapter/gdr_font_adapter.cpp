@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/fbs/adapter/gdr_font_adapter.h>
 #include <common/bytes.h>
+#include <services/fbs/adapter/gdr_font_adapter.h>
 
 #define STB_RECT_PACK_IMPLEMENTATION
 #include <stb_rect_pack.h>
@@ -39,8 +39,8 @@ namespace eka2l1::epoc::adapter {
         : pack_contexts_(is_gdr_pack_context_free, free_gdr_pack_context) {
         // Instantiate a read-only buffer stream
         buf_stream_ = std::make_unique<common::ro_buf_stream>(&data[0], data.size());
-        
-        if (!loader::gdr::parse_store(reinterpret_cast<common::ro_stream*>(buf_stream_.get()), store_)) {
+
+        if (!loader::gdr::parse_store(reinterpret_cast<common::ro_stream *>(buf_stream_.get()), store_)) {
             // Do this so a sanity check can happens
             buf_stream_.release();
         }
@@ -49,7 +49,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     gdr_font_file_adapter::~gdr_font_file_adapter() {
-        for (auto &alloc: dynamic_alloc_list_) {
+        for (auto &alloc : dynamic_alloc_list_) {
             delete alloc;
         }
     }
@@ -66,7 +66,7 @@ namespace eka2l1::epoc::adapter {
         // Use the first
         return store_.typefaces_[face_index].font_bitmaps_[0]->header_.uid_;
     }
-    
+
     bool gdr_font_file_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
         // Look for the index of the typeface
         if (!is_valid() || (idx >= store_.typefaces_.size())) {
@@ -89,7 +89,7 @@ namespace eka2l1::epoc::adapter {
         if (the_typeface.analysed_style_ & loader::gdr::typeface::FLAG_BOLD) {
             face_attrib.style |= open_font_face_attrib::bold;
         }
-        
+
         if (the_typeface.analysed_style_ & loader::gdr::typeface::FLAG_ITALIC) {
             face_attrib.style |= open_font_face_attrib::italic;
         }
@@ -116,10 +116,10 @@ namespace eka2l1::epoc::adapter {
         }
 
         // No baseline correction
-        metrics.baseline_correction = 0;                            // For the whole font
-        metrics.descent = -(metrics.ascent - metrics.max_height);      // Correct?
-        metrics.design_height = metrics.max_height;                 // Dunno, maybe wrong ;(
-        metrics.max_depth = 0;                                      // Help I dunno what this is
+        metrics.baseline_correction = 0; // For the whole font
+        metrics.descent = -(metrics.ascent - metrics.max_height); // Correct?
+        metrics.design_height = metrics.max_height; // Dunno, maybe wrong ;(
+        metrics.max_depth = 0; // Help I dunno what this is
 
         return true;
     }
@@ -131,8 +131,8 @@ namespace eka2l1::epoc::adapter {
 
         loader::gdr::typeface &the_typeface = store_.typefaces_[idx];
 
-        for (auto &font_bitmap: the_typeface.font_bitmaps_) {
-            for (auto &code_section: font_bitmap->code_sections_) {
+        for (auto &font_bitmap : the_typeface.font_bitmaps_) {
+            for (auto &code_section : font_bitmap->code_sections_) {
                 if ((code_section.header_.start_ <= code) && (code <= code_section.header_.end_)) {
                     // Found you!
                     return &code_section.chars_[code - code_section.header_.start_];
@@ -142,7 +142,7 @@ namespace eka2l1::epoc::adapter {
 
         return nullptr;
     }
-    
+
     bool gdr_font_file_adapter::get_glyph_metric(const std::size_t idx, std::uint32_t code, open_font_character_metric &character_metric, const std::int32_t baseline_horz_off,
         const std::uint16_t font_size) {
         loader::gdr::character *the_char = get_character(idx, code);
@@ -192,7 +192,7 @@ namespace eka2l1::epoc::adapter {
         std::uint32_t *src = the_char->data_.data();
 
         const std::int16_t target_width = the_char->metric_->move_in_pixels_ - the_char->metric_->left_adj_in_pixels_ - the_char->metric_->right_adjust_in_pixels_;
-        
+
         const float scale_factor = static_cast<float>(font_size) / static_cast<float>(whole_metrics.max_height);
         const std::int16_t scaled_width = static_cast<std::int16_t>(std::roundf(target_width * scale_factor));
         const std::int16_t scaled_char_height = static_cast<std::int16_t>(scale_factor * the_char->metric_->height_in_pixels_);
@@ -223,8 +223,10 @@ namespace eka2l1::epoc::adapter {
 
         std::int16_t total_line_processed_so_far = 0;
         std::uint32_t total_bit_write = 0;
-        
-        #define WRITE_BIT_32(bit) compressed_bitmap[(total_bit_write >> 5)] |= ((bit & 1) << (total_bit_write & 31)); total_bit_write++
+
+#define WRITE_BIT_32(bit)                                                               \
+    compressed_bitmap[(total_bit_write >> 5)] |= ((bit & 1) << (total_bit_write & 31)); \
+    total_bit_write++
 
         auto compare_line_equal = [&](std::uint32_t p_l1, std::uint32_t p_l2, const std::uint32_t n) -> bool {
             std::uint32_t left = n;
@@ -241,11 +243,9 @@ namespace eka2l1::epoc::adapter {
                 std::uint32_t part1read = std::min<std::uint32_t>(maximum_1, to_read);
                 std::uint32_t part2read = std::min<std::uint32_t>(maximum_2, to_read);
 
-                std::uint32_t l1p = common::extract_bits(src[pos1 >> 5], (pos1 & 31), part1read) |
-                    ((maximum_1 < to_read) ? (common::extract_bits(src[(pos1 >> 5) + 1], 0, to_read - maximum_1) << part1read) : 0);
+                std::uint32_t l1p = common::extract_bits(src[pos1 >> 5], (pos1 & 31), part1read) | ((maximum_1 < to_read) ? (common::extract_bits(src[(pos1 >> 5) + 1], 0, to_read - maximum_1) << part1read) : 0);
 
-                std::uint32_t l2p = common::extract_bits(src[pos2 >> 5], (pos2 & 31), part2read) |
-                    ((maximum_2 < to_read) ? (common::extract_bits(src[(pos2 >> 5) + 1], 0, to_read - maximum_2) << part2read) : 0);
+                std::uint32_t l2p = common::extract_bits(src[pos2 >> 5], (pos2 & 31), part2read) | ((maximum_2 < to_read) ? (common::extract_bits(src[(pos2 >> 5) + 1], 0, to_read - maximum_2) << part2read) : 0);
 
                 if (l1p != l2p) {
                     return false;
@@ -269,8 +269,7 @@ namespace eka2l1::epoc::adapter {
 
                 bool got_in = false;
 
-                while ((count < 15) && (total_line_processed_so_far + count < scaled_char_height) && 
-                    (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, scaled_width) == mode)) {
+                while ((count < 15) && (total_line_processed_so_far + count < scaled_char_height) && (compare_line_equal(total_line_processed_so_far + (mode ? 0 : (count - 1)), total_line_processed_so_far + count, scaled_width) == mode)) {
                     count++;
                     got_in = true;
                 }
@@ -280,7 +279,7 @@ namespace eka2l1::epoc::adapter {
                 }
             }
 
-            WRITE_BIT_32(mode ? 0 : 1);            // Repeat mode if line equal
+            WRITE_BIT_32(mode ? 0 : 1); // Repeat mode if line equal
 
             // Write the repeat count
             WRITE_BIT_32(count & 1);
@@ -302,7 +301,7 @@ namespace eka2l1::epoc::adapter {
 
             total_line_processed_so_far += count;
         }
-        #undef WRITE_BIT_32
+#undef WRITE_BIT_32
 
         if (bmp_type)
             *bmp_type = epoc::glyph_bitmap_type::monochrome_glyph_bitmap;
@@ -319,11 +318,11 @@ namespace eka2l1::epoc::adapter {
 
         // In case this adapter get destroyed. It will free this data.
         dynamic_alloc_list_.push_back(compressed_bitmap);
-        return reinterpret_cast<std::uint8_t*>(compressed_bitmap);
+        return reinterpret_cast<std::uint8_t *>(compressed_bitmap);
     }
 
     void gdr_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
-        auto store_result = std::find(dynamic_alloc_list_.begin(), dynamic_alloc_list_.end(), reinterpret_cast<std::uint32_t*>(data));
+        auto store_result = std::find(dynamic_alloc_list_.begin(), dynamic_alloc_list_.end(), reinterpret_cast<std::uint32_t *>(data));
 
         if (store_result != dynamic_alloc_list_.end()) {
             delete data;
@@ -356,9 +355,9 @@ namespace eka2l1::epoc::adapter {
         }
 
         std::vector<stbrp_rect> rect_build;
-        std::vector<loader::gdr::character*> the_chars;
+        std::vector<loader::gdr::character *> the_chars;
         rect_build.resize(num_code);
-        
+
         epoc::open_font_metrics metrics;
         get_metrics(idx, metrics);
 
@@ -394,13 +393,12 @@ namespace eka2l1::epoc::adapter {
                 info[i].x1 = rect_build[i].x + rect_build[i].w;
                 info[i].y1 = rect_build[i].y + the_chars[i]->metric_->height_in_pixels_;
 
-                const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ -
-                    the_chars[i]->metric_->right_adjust_in_pixels_;
+                const std::int16_t target_width = the_chars[i]->metric_->move_in_pixels_ - the_chars[i]->metric_->left_adj_in_pixels_ - the_chars[i]->metric_->right_adjust_in_pixels_;
 
                 info[i].xoff = the_chars[i]->metric_->left_adj_in_pixels_ * scale_factor;
                 info[i].yoff = -(the_chars[i]->metric_->ascent_in_pixels_) * scale_factor;
                 info[i].xoff2 = info[i].xoff + scale_factor * target_width;
-                info[i].yoff2 =  info[i].yoff + (the_chars[i]->metric_->height_in_pixels_ * scale_factor);
+                info[i].yoff2 = info[i].yoff + (the_chars[i]->metric_->height_in_pixels_ * scale_factor);
                 info[i].xadv = the_chars[i]->metric_->move_in_pixels_ * scale_factor;
 
                 loader::gdr::bitmap &bmp = the_chars[i]->data_;

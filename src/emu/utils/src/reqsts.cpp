@@ -21,8 +21,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utils/reqsts.h>
 #include <common/chunkyseri.h>
+#include <utils/reqsts.h>
 
 namespace eka2l1::epoc {
     void request_status::do_state(common::chunkyseri &seri) {

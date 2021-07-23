@@ -30,8 +30,8 @@
 
 enum class ThumbDecodeStatus {
     UNDEFINED, // Undefined Thumb instruction
-    DECODED,   // Instruction decoded to ARM equivalent
-    BRANCH,    // Thumb branch (already processed)
+    DECODED, // Instruction decoded to ARM equivalent
+    BRANCH, // Thumb branch (already processed)
     UNINITIALIZED,
 };
 

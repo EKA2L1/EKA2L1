@@ -17,11 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/hwrm/hwrm.h>
 #include <services/hwrm/light/light.h>
 #include <services/hwrm/op.h>
 #include <services/hwrm/vibration/vibration.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 
 namespace eka2l1 {

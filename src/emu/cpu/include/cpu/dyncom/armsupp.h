@@ -15,18 +15,18 @@
 bool AddOverflow(std::uint32_t, std::uint32_t, std::uint32_t);
 bool SubOverflow(std::uint32_t, std::uint32_t, std::uint32_t);
 
-std::uint32_t AddWithCarry(std::uint32_t, std::uint32_t, std::uint32_t, bool*, bool*);
+std::uint32_t AddWithCarry(std::uint32_t, std::uint32_t, std::uint32_t, bool *, bool *);
 bool ARMul_AddOverflowQ(std::uint32_t, std::uint32_t);
 
-std::uint8_t  ARMul_SignedSaturatedAdd8(std::uint8_t, std::uint8_t);
-std::uint8_t  ARMul_SignedSaturatedSub8(std::uint8_t, std::uint8_t);
-std::uint16_t  ARMul_SignedSaturatedAdd16(std::uint16_t, std::uint16_t);
-std::uint16_t  ARMul_SignedSaturatedSub16(std::uint16_t, std::uint16_t);
+std::uint8_t ARMul_SignedSaturatedAdd8(std::uint8_t, std::uint8_t);
+std::uint8_t ARMul_SignedSaturatedSub8(std::uint8_t, std::uint8_t);
+std::uint16_t ARMul_SignedSaturatedAdd16(std::uint16_t, std::uint16_t);
+std::uint16_t ARMul_SignedSaturatedSub16(std::uint16_t, std::uint16_t);
 
-std::uint8_t  ARMul_UnsignedSaturatedAdd8(std::uint8_t, std::uint8_t);
-std::uint16_t  ARMul_UnsignedSaturatedAdd16(std::uint16_t, std::uint16_t);
-std::uint8_t  ARMul_UnsignedSaturatedSub8(std::uint8_t, std::uint8_t);
-std::uint16_t  ARMul_UnsignedSaturatedSub16(std::uint16_t, std::uint16_t);
-std::uint8_t  ARMul_UnsignedAbsoluteDifference(std::uint8_t, std::uint8_t);
-std::uint32_t ARMul_SignedSatQ(std::int32_t, std::uint8_t, bool*);
-std::uint32_t ARMul_UnsignedSatQ(std::int32_t, std::uint8_t, bool*);
+std::uint8_t ARMul_UnsignedSaturatedAdd8(std::uint8_t, std::uint8_t);
+std::uint16_t ARMul_UnsignedSaturatedAdd16(std::uint16_t, std::uint16_t);
+std::uint8_t ARMul_UnsignedSaturatedSub8(std::uint8_t, std::uint8_t);
+std::uint16_t ARMul_UnsignedSaturatedSub16(std::uint16_t, std::uint16_t);
+std::uint8_t ARMul_UnsignedAbsoluteDifference(std::uint8_t, std::uint8_t);
+std::uint32_t ARMul_SignedSatQ(std::int32_t, std::uint8_t, bool *);
+std::uint32_t ARMul_UnsignedSatQ(std::int32_t, std::uint8_t, bool *);

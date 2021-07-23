@@ -27,8 +27,8 @@
 #include <services/window/screen.h>
 #include <services/window/window.h>
 
-#include <kernel/timing.h>
 #include <kernel/kernel.h>
+#include <kernel/timing.h>
 
 #include <common/log.h>
 #include <common/vecx.h>
@@ -364,7 +364,7 @@ namespace eka2l1::epoc {
         if (cmd.header.cmd_len == 0) {
             redraw_rect_curr = bounding_rect();
         } else {
-            redraw_rect_curr = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+            redraw_rect_curr = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
             redraw_rect_curr.transform_from_symbian_rectangle();
         }
 
@@ -456,7 +456,7 @@ namespace eka2l1::epoc {
         if (!prototype_irect.empty() && whole_win.contains(prototype_irect)) {
             invalidate(prototype_irect);
         }
-        
+
         context.complete(epoc::error_none);
     }
 
@@ -466,13 +466,13 @@ namespace eka2l1::epoc {
         invalidate(bounding_rect());
         context.complete(epoc::error_none);
     }
-    
+
     void window_user::get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd) {
         context.complete(static_cast<std::int32_t>(redraw_region.rects_.size()));
     }
 
     void window_user::get_invalid_region(service::ipc_context &context, ws_cmd &cmd) {
-        std::int32_t to_get_count = *reinterpret_cast<std::int32_t*>(cmd.data_ptr);
+        std::int32_t to_get_count = *reinterpret_cast<std::int32_t *>(cmd.data_ptr);
 
         if (to_get_count < 0) {
             context.complete(epoc::error_argument);
@@ -489,11 +489,11 @@ namespace eka2l1::epoc {
             transformed[i].transform_to_symbian_rectangle();
         }
 
-        context.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t*>(transformed.data()),
+        context.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(transformed.data()),
             to_get_count * sizeof(eka2l1::rect));
         context.complete(epoc::error_none);
     }
-    
+
     bool window_user::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
         bool quit = false;
@@ -509,7 +509,7 @@ namespace eka2l1::epoc {
         case EWsWinOpRequiredDisplayMode: {
             // On s60v5 and fowards, this method is ignored (it seems so on s60v5, def on s^3)
             if (!(flags & flag_winmode_fixed)) {
-                dmode = *reinterpret_cast<epoc::display_mode*>(cmd.data_ptr);
+                dmode = *reinterpret_cast<epoc::display_mode *>(cmd.data_ptr);
                 if (epoc::get_num_colors_from_display_mode(dmode) > epoc::get_num_colors_from_display_mode(scr->disp_mode)) {
                     dmode = scr->disp_mode;
                 }

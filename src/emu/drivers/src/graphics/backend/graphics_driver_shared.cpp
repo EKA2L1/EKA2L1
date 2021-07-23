@@ -125,21 +125,20 @@ namespace eka2l1::drivers {
         tex.reset();
         fb.reset();
     }
-    
+
     void bitmap::resize(graphics_driver *driver, const eka2l1::vec2 &new_size) {
         auto tex_to_replace = std::move(instantiate_suit_color_bitmap_texture(driver, new_size, bpp));
         auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
-        
+
         if (fb) {
             auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, ds_tex_to_replace.get());
-            
+
             fb->bind(driver, framebuffer_bind_read);
             new_fb->bind(driver, framebuffer_bind_draw);
 
             eka2l1::rect copy_region;
             copy_region.top = { 0, 0 };
-            copy_region.size = eka2l1::object_size(common::min<int>(tex->get_size().x, new_size.x), common::min<int>(
-                tex->get_size().y, new_size.y));
+            copy_region.size = eka2l1::object_size(common::min<int>(tex->get_size().x, new_size.x), common::min<int>(tex->get_size().y, new_size.y));
 
             fb->blit(copy_region, copy_region, draw_buffer_bit_color_buffer, filter_option::linear);
 
@@ -157,7 +156,7 @@ namespace eka2l1::drivers {
         ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size()));
         fb = make_framebuffer(driver, { tex.get() }, ds_tex.get());
     }
-    
+
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
         : graphics_driver(gr_api)
         , binding(nullptr)
@@ -236,23 +235,23 @@ namespace eka2l1::drivers {
 
         if (is_stricted()) {
             switch (bmp->bpp) {
-                case 8:
-                    bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
-                                                    channel_swizzle::red, channel_swizzle::red });
-                    break;
+            case 8:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::red,
+                    channel_swizzle::red, channel_swizzle::red });
+                break;
 
-                case 16:
-                    bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
-                                                    channel_swizzle::blue, channel_swizzle::one });
-                    break;
+            case 16:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
+                    channel_swizzle::blue, channel_swizzle::one });
+                break;
 
-                case 24:
-                    bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
-                                                    channel_swizzle::red, channel_swizzle::one });
-                    break;
+            case 24:
+                bmp->tex->set_channel_swizzle({ channel_swizzle::blue, channel_swizzle::green,
+                    channel_swizzle::red, channel_swizzle::one });
+                break;
 
-                default:
-                    break;
+            default:
+                break;
             }
         } else {
             switch (data_format) {
@@ -683,7 +682,7 @@ namespace eka2l1::drivers {
         helper.pop(mag);
 
         texture *texobj = nullptr;
-        
+
         if (h & HANDLE_BITMAP) {
             // Bind bitmap as texture
             bitmap *b = get_bitmap(h);

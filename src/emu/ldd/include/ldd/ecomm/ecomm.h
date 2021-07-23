@@ -22,7 +22,7 @@
 #include <kernel/ldd.h>
 
 namespace eka2l1::ldd {
-    class ecomm_channel: public channel {
+    class ecomm_channel : public channel {
     public:
         explicit ecomm_channel(kernel_system *kern, system *sys, epoc::version ver);
         ~ecomm_channel() override {}
@@ -38,7 +38,7 @@ namespace eka2l1::ldd {
     /**
      * @brief 明日？我不要. Filler
      */
-    class ecomm_factory: public factory {
+    class ecomm_factory : public factory {
     public:
         explicit ecomm_factory(kernel_system *kern, system *sys);
 

@@ -22,33 +22,33 @@
 
 #include <drivers/input/common.h>
 
-#include <QPushButton>
 #include <QDialog>
 #include <QMap>
+#include <QPushButton>
 
 namespace Ui {
-class settings_dialog;
+    class settings_dialog;
 }
 
 namespace eka2l1 {
-class system;
+    class system;
 
-namespace config {
-struct keybind;
-struct keybind_profile;
-struct state;
+    namespace config {
+        struct keybind;
+        struct keybind_profile;
+        struct state;
 
-struct app_setting;
-class app_settings;
-}
+        struct app_setting;
+        class app_settings;
+    }
 
-namespace epoc {
-struct window_group;
-}
+    namespace epoc {
+        struct window_group;
+    }
 
-namespace drivers {
-class emu_controller;
-}
+    namespace drivers {
+        class emu_controller;
+    }
 }
 
 static constexpr const char *STATUS_BAR_HIDDEN_SETTING_NAME = "statusBarHidden";
@@ -56,8 +56,7 @@ static constexpr const char *THEME_SETTING_NAME = "theme";
 
 void make_default_keybind_profile(eka2l1::config::keybind_profile &profile);
 
-class settings_dialog : public QDialog
-{
+class settings_dialog : public QDialog {
     Q_OBJECT
 
 private:
@@ -68,7 +67,7 @@ private:
 
     QPushButton *target_bind_;
     QString target_original_text_;
-    QMap<QPushButton*, int> target_bind_codes_;
+    QMap<QPushButton *, int> target_bind_codes_;
 
     QString key_bind_entry_to_string(eka2l1::config::keybind &bind);
 
@@ -136,7 +135,7 @@ signals:
 
 public:
     explicit settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller,
-                             eka2l1::config::app_settings *app_settings, eka2l1::config::state &configuration);
+        eka2l1::config::app_settings *app_settings, eka2l1::config::state &configuration);
     ~settings_dialog();
 
     bool eventFilter(QObject *obj, QEvent *event) override;

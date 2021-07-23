@@ -167,9 +167,8 @@ namespace eka2l1::common {
         basic_pystr<T> strip_reserverd() const {
             auto news = str_;
             const std::string res = "<>:\"/\\|\?*\r";
-            news.erase(std::remove_if(news.begin(), news.end(), [res](const char c) {
-                                      return std::find(res.begin(), res.end(), c) != res.end(); }),
-                       news.end());
+            news.erase(std::remove_if(news.begin(), news.end(), [res](const char c) { return std::find(res.begin(), res.end(), c) != res.end(); }),
+                news.end());
             return news;
         }
 

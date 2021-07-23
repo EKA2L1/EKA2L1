@@ -18,11 +18,11 @@
  */
 
 #include <common/log.h>
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
 #include <services/audio/mmf/audio.h>
 #include <services/audio/mmf/dev.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 
 namespace eka2l1 {

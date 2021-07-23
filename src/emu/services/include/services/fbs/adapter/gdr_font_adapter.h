@@ -40,7 +40,7 @@ namespace eka2l1::epoc::adapter {
         loader::gdr::file_store store_;
         std::unique_ptr<common::ro_stream> buf_stream_;
 
-        std::vector<std::uint32_t*> dynamic_alloc_list_;
+        std::vector<std::uint32_t *> dynamic_alloc_list_;
         common::identity_container<gdr_font_atlas_pack_context> pack_contexts_;
 
     protected:

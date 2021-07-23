@@ -27,8 +27,8 @@
 #include <services/audio/keysound/ringtab.h>
 #include <utils/err.h>
 
-#include <system/epoc.h>
 #include <kernel/process.h>
+#include <system/epoc.h>
 
 #include <cmath>
 
@@ -222,12 +222,12 @@ namespace eka2l1 {
         std::uint8_t type_for_keysound = 0;
 
         if (repeat.value() == 0) {
-            type_for_keysound = 0;      // Short sound
+            type_for_keysound = 0; // Short sound
         } else {
             if (previous_repeat_ == 0) {
-                type_for_keysound = 1;      // Long key sound
+                type_for_keysound = 1; // Long key sound
             } else {
-                type_for_keysound = 2;      // Repeat key sound
+                type_for_keysound = 2; // Repeat key sound
             }
         }
 

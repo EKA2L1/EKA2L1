@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <common/log.h>
 #include <bridge/arg_layout.h>
+#include <common/log.h>
 
 #include <tuple>
 

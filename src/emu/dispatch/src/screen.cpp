@@ -22,10 +22,10 @@
 #include <dispatch/screen.h>
 
 #include <drivers/graphics/graphics.h>
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <services/window/common.h>
 #include <services/window/window.h>
+#include <system/epoc.h>
 
 #include <fstream>
 
@@ -57,7 +57,7 @@ namespace eka2l1::dispatch {
                     guard.unlock();
 
                     drivers::handle bitmap_handle = drivers::create_bitmap(driver, screen_size, epoc::get_bpp_from_display_mode(scr->disp_mode));
-                    
+
                     kern->lock();
                     guard.lock();
 
@@ -67,7 +67,7 @@ namespace eka2l1::dispatch {
                 auto command_list = driver->new_command_list();
                 auto command_builder = driver->new_command_builder(command_list.get());
 
-                command_builder->update_bitmap(scr->dsa_texture, reinterpret_cast<const char*>(scr->screen_buffer_ptr()),
+                command_builder->update_bitmap(scr->dsa_texture, reinterpret_cast<const char *>(scr->screen_buffer_ptr()),
                     buffer_size, { 0, 0 }, screen_size);
 
                 scr->last_texture_access = 1;

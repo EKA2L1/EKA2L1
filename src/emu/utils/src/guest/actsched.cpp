@@ -17,11 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utils/guest/actsched.h>
 #include <common/log.h>
+#include <utils/guest/actsched.h>
 
 namespace eka2l1::utils {
-    void active_object::dump(kernel::process *owner) {;
+    void active_object::dump(kernel::process *owner) {
+        ;
         LOG_INFO(UTILS, "\t-Code: {}", sts_.status);
 
         std::string flag_string;
@@ -42,7 +43,7 @@ namespace eka2l1::utils {
         LOG_INFO(UTILS, "\t-Flags: {} ({})", flag_string, sts_.flags);
         LOG_INFO(UTILS, "-----------------------------------");
     }
-    
+
     void active_scheduler::dump(kernel::process *owner) {
         LOG_INFO(UTILS, "Active scheduler dump");
         LOG_INFO(UTILS, "(note: Address of active object = address of request status)");

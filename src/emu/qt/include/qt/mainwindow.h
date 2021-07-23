@@ -23,14 +23,16 @@
 #include <drivers/input/common.h>
 
 #include <QActionGroup>
-#include <QMainWindow>
 #include <QListWidgetItem>
-#include <QProgressDialog>
+#include <QMainWindow>
 #include <QPointer>
+#include <QProgressDialog>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class main_window; }
+namespace Ui {
+    class main_window;
+}
 QT_END_NAMESPACE
 
 static constexpr std::size_t MAX_RECENT_ENTRIES = 5;
@@ -58,8 +60,7 @@ class applist_widget_item;
 class display_widget;
 class settings_dialog;
 
-class main_window : public QMainWindow
-{
+class main_window : public QMainWindow {
     Q_OBJECT
 
 private:

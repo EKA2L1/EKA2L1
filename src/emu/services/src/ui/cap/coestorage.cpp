@@ -59,12 +59,12 @@ namespace eka2l1::epoc {
         eka2l1::central_repo *rep = fep_repo();
         eka2l1::central_repo_entry *ccre = get_ccr_entry(rep, fep_framework_repo_key_default_fepid,
             eka2l1::central_repo_entry_type::string);
-        
+
         if (!ccre) {
             return std::nullopt;
         }
 
-        return std::u16string(reinterpret_cast<char16_t*>(ccre->data.strd.data()), ccre->data.strd.size() / 2);
+        return std::u16string(reinterpret_cast<char16_t *>(ccre->data.strd.data()), ccre->data.strd.size() / 2);
     }
 
     void coe_data_storage::default_fep(const std::u16string &the_fep) {
@@ -90,7 +90,7 @@ namespace eka2l1::epoc {
 
     void coe_data_storage::serialize() {
         eka2l1::central_repo *rep = fep_repo();
-        
+
         if (rep) {
             rep->write_changes(io_, dmngr_);
         }

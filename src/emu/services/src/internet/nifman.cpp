@@ -17,13 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/internet/nifman.h>
 #include <services/socket/server.h>
+#include <system/epoc.h>
 
-#include <utils/err.h>
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
+#include <utils/err.h>
 
 namespace eka2l1 {
     nifman_server::nifman_server(eka2l1::system *sys)
@@ -33,7 +33,7 @@ namespace eka2l1 {
 
     void nifman_server::connect(service::ipc_context &context) {
         if (!sock_serv_) {
-            sock_serv_ = reinterpret_cast<socket_server*>(kern->get_by_name<service::server>(
+            sock_serv_ = reinterpret_cast<socket_server *>(kern->get_by_name<service::server>(
                 get_socket_server_name_by_epocver(kern->get_epoc_version())));
         }
 
@@ -83,7 +83,7 @@ namespace eka2l1 {
             ctx->complete(epoc::error_not_ready);
             return;
         }
-        
+
         std::optional<std::u16string> table_name = ctx->get_argument_value<std::u16string>(0);
         std::optional<std::u16string> column_name = ctx->get_argument_value<std::u16string>(1);
 
@@ -93,7 +93,7 @@ namespace eka2l1 {
         }
 
         const std::u16string setting_name = table_name.value() + u"\\" + column_name.value();
-        
+
         std::uint8_t *dest_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t max_size = ctx->get_argument_max_data_size(2);
 

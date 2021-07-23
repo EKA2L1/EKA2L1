@@ -440,11 +440,13 @@ namespace eka2l1::arm::r12l1 {
                    [&](std::uint8_t expected) -> bool {
 #if R12L1_ENABLE_FUZZ
                        if (flags_ & FLAG_ENABLE_FUZZ) {
-                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                           return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
                        }
 #endif
                        return (parent_->exclusive_write_8bit(addr, val, expected) > 0);
-                   }) ? 0 : 1;
+                   })
+            ? 0
+            : 1;
     }
 
     bool dashixiong_block::write_ex_word(const vaddress addr, const std::uint16_t val) {
@@ -452,11 +454,13 @@ namespace eka2l1::arm::r12l1 {
                    [&](std::uint16_t expected) -> bool {
 #if R12L1_ENABLE_FUZZ
                        if (flags_ & FLAG_ENABLE_FUZZ) {
-                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                           return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
                        }
 #endif
                        return (parent_->exclusive_write_16bit(addr, val, expected) > 0);
-                   }) ? 0 : 1;
+                   })
+            ? 0
+            : 1;
     }
 
     bool dashixiong_block::write_ex_dword(const vaddress addr, const std::uint32_t val) {
@@ -464,11 +468,13 @@ namespace eka2l1::arm::r12l1 {
                    [&](std::uint32_t expected) -> bool {
 #if R12L1_ENABLE_FUZZ
                        if (flags_ & FLAG_ENABLE_FUZZ) {
-                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                           return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
                        }
 #endif
                        return (parent_->exclusive_write_32bit(addr, val, expected) > 0);
-                   }) ? 0 : 1;
+                   })
+            ? 0
+            : 1;
     }
 
     bool dashixiong_block::write_ex_qword(const vaddress addr, const std::uint64_t val) {
@@ -476,11 +482,13 @@ namespace eka2l1::arm::r12l1 {
                    [&](std::uint64_t expected) -> bool {
 #if R12L1_ENABLE_FUZZ
                        if (flags_ & FLAG_ENABLE_FUZZ) {
-                            return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
+                           return static_cast<std::int32_t>(interpreter_monitor_->exclusive_operation_results_[parent_->core_number()]);
                        }
 #endif
                        return (parent_->exclusive_write_64bit(addr, val, expected) > 0);
-                   }) ? 0 : 1;
+                   })
+            ? 0
+            : 1;
     }
 
     void dashixiong_block::enter_dispatch(core_state *cstate) {
@@ -719,25 +727,25 @@ namespace eka2l1::arm::r12l1 {
             if (is_thumb) {
                 if (inst_size == THUMB_INST_SIZE_THUMB32) {
                     if (auto decoder = decode_thumb32<thumb_translate_visitor>(inst)) {
-                        should_continue = decoder->get().call(static_cast<thumb_translate_visitor&>(*visitor), inst);
+                        should_continue = decoder->get().call(static_cast<thumb_translate_visitor &>(*visitor), inst);
                     } else {
-                        should_continue = static_cast<thumb_translate_visitor&>(*visitor).thumb32_UDF();
+                        should_continue = static_cast<thumb_translate_visitor &>(*visitor).thumb32_UDF();
                     }
                 } else {
                     if (auto decoder = decode_thumb16<thumb_translate_visitor>(static_cast<std::uint16_t>(inst))) {
-                        should_continue = decoder->get().call(static_cast<thumb_translate_visitor&>(*visitor), inst);
+                        should_continue = decoder->get().call(static_cast<thumb_translate_visitor &>(*visitor), inst);
                     } else {
-                        should_continue = static_cast<thumb_translate_visitor&>(*visitor).thumb16_UDF();
+                        should_continue = static_cast<thumb_translate_visitor &>(*visitor).thumb16_UDF();
                     }
                 }
             } else {
                 // ARM decoding. NEON -> VFP -> ARM
                 if (auto decoder = decode_vfp<arm_translate_visitor>(inst)) {
-                    should_continue = decoder->get().call(static_cast<arm_translate_visitor&>(*visitor), inst);
+                    should_continue = decoder->get().call(static_cast<arm_translate_visitor &>(*visitor), inst);
                 } else if (auto decoder = decode_arm<arm_translate_visitor>(inst)) {
-                    should_continue = decoder->get().call(static_cast<arm_translate_visitor&>(*visitor), inst);
+                    should_continue = decoder->get().call(static_cast<arm_translate_visitor &>(*visitor), inst);
                 } else {
-                    should_continue = static_cast<arm_translate_visitor&>(*visitor).arm_UDF();
+                    should_continue = static_cast<arm_translate_visitor &>(*visitor).arm_UDF();
                 }
 
                 inst_size = 4;
@@ -775,16 +783,16 @@ namespace eka2l1::arm::r12l1 {
                     return parent_->monitor_->read_64bit(parent_, addr, dat);
                 };
 
-                interpreter_monitor_->write_8bit = [&](core * cc, address addr, std::uint8_t v1, std::uint8_t v2) -> std::int32_t {
+                interpreter_monitor_->write_8bit = [&](core *cc, address addr, std::uint8_t v1, std::uint8_t v2) -> std::int32_t {
                     return parent_->monitor_->write_8bit(parent_, addr, v1, v2);
                 };
-                interpreter_monitor_->write_16bit = [&](core * cc, address addr, std::uint16_t v1, std::uint16_t v2) -> std::int32_t {
+                interpreter_monitor_->write_16bit = [&](core *cc, address addr, std::uint16_t v1, std::uint16_t v2) -> std::int32_t {
                     return parent_->monitor_->write_16bit(parent_, addr, v1, v2);
                 };
-                interpreter_monitor_->write_32bit = [&](core * cc, address addr, std::uint32_t v1, std::uint32_t v2) -> std::int32_t {
+                interpreter_monitor_->write_32bit = [&](core *cc, address addr, std::uint32_t v1, std::uint32_t v2) -> std::int32_t {
                     return parent_->monitor_->write_32bit(parent_, addr, v1, v2);
                 };
-                interpreter_monitor_->write_64bit = [&](core * cc, address addr, std::uint64_t v1, std::uint64_t v2) -> std::int32_t {
+                interpreter_monitor_->write_64bit = [&](core *cc, address addr, std::uint64_t v1, std::uint64_t v2) -> std::int32_t {
                     return parent_->monitor_->write_64bit(parent_, addr, v1, v2);
                 };
 

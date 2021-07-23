@@ -20,16 +20,16 @@
 #pragma once
 
 #include <cstdint>
+#include <dispatch/management.h>
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
-#include <dispatch/management.h>
 
 #include <utils/des.h>
 #include <utils/reqsts.h>
 
 #include <atomic>
-#include <vector>
 #include <memory>
+#include <vector>
 
 // Foward declarations
 namespace eka2l1 {
@@ -157,19 +157,19 @@ namespace eka2l1::dispatch {
                 return nullptr;
             }
 
-            if constexpr(std::is_same_v<T, dsp_epoc_stream>) {
+            if constexpr (std::is_same_v<T, dsp_epoc_stream>) {
                 if (medium->type() != DSP_MEDIUM_TYPE_EPOC_STREAM) {
                     return nullptr;
                 }
             }
 
-            if constexpr(std::is_same_v<T, dsp_epoc_player>) {
+            if constexpr (std::is_same_v<T, dsp_epoc_player>) {
                 if (medium->type() != DSP_MEDIUM_TYPE_EPOC_PLAYER) {
                     return nullptr;
                 }
             }
 
-            return reinterpret_cast<T*>(medium);
+            return reinterpret_cast<T *>(medium);
         }
 
         bool remove_object(const object_manager<dsp_medium>::handle handle) {

@@ -20,8 +20,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace eka2l1 {
     class ntimer;

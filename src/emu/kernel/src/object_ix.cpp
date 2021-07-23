@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/kernel.h>
 #include <kernel/chunk.h>
+#include <kernel/kernel.h>
 #include <kernel/object_ix.h>
 
 #include <common/chunkyseri.h>
@@ -180,16 +180,16 @@ namespace eka2l1::kernel {
     }
 
     void object_ix::reset() {
-        for (auto &index: objects) {
+        for (auto &index : objects) {
             if (index.free == false) {
                 index.object->decrease_access_count();
                 index.free = true;
             }
         }
     }
-    
+
     bool object_ix::has(kernel_obj_ptr obj) {
-        for (const auto &index: objects) {
+        for (const auto &index : objects) {
             if ((index.object == obj) && (index.free == false)) {
                 return true;
             }
@@ -201,7 +201,7 @@ namespace eka2l1::kernel {
     std::uint32_t object_ix::count(kernel_obj_ptr obj) {
         std::uint32_t so_far = 0;
 
-        for (const auto &index: objects) {
+        for (const auto &index : objects) {
             if ((index.free == false) && (index.object == obj)) {
                 so_far++;
             }

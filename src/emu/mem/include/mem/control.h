@@ -108,7 +108,7 @@ namespace eka2l1::mem {
         template <typename T>
         std::int32_t write_exclusive(const address addr, T value, T expected,
             const mem::asid optional_asid = -1) {
-            auto *real_ptr = reinterpret_cast<volatile T*>(get_host_pointer(optional_asid,
+            auto *real_ptr = reinterpret_cast<volatile T *>(get_host_pointer(optional_asid,
                 addr));
 
             if (!real_ptr) {
@@ -135,13 +135,13 @@ namespace eka2l1::mem {
          * \returns An ASID identify the address space. -1 if a new one can't be create.
          */
         virtual asid rollover_fresh_addr_space() = 0;
-        
+
         /**
          * \brief Assign page tables at linear base address to page directories.
          */
         virtual void assign_page_table(page_table *tab, const vm_address linear_addr, const std::uint32_t flags, asid *id_list = nullptr, const std::uint32_t id_list_size = 0) = 0;
     };
-    
+
     using control_impl = std::unique_ptr<control_base>;
 
     control_impl make_new_control(arm::exclusive_monitor *monitor, page_table_allocator *alloc, config::state *conf, const std::size_t psize_bits, const bool mem_map_old,

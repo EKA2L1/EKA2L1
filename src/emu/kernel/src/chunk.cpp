@@ -24,11 +24,11 @@
 #include <common/log.h>
 #include <common/random.h>
 
-#include <kernel/kernel.h>
 #include <kernel/chunk.h>
+#include <kernel/kernel.h>
 
-#include <mem/mem.h>
 #include <mem/chunk.h>
+#include <mem/mem.h>
 #include <mem/process.h>
 
 namespace eka2l1 {
@@ -53,7 +53,7 @@ namespace eka2l1 {
                 access = access_type::global_access;
                 create_info.flags |= mem::MEM_MODEL_CHUNK_REGION_USER_GLOBAL;
             }
-            
+
             if (attrib == chunk_attrib::anonymous) {
                 // Don't use the name given by that, it's anonymous omg!!!
                 obj_name = "anonymous" + common::to_string(eka2l1::random());
@@ -126,7 +126,7 @@ namespace eka2l1 {
             // Note that the doc does not specify if this is used in future. I don't think it will.
             // Please look at t_chunk.cpp test in mmu category of OSS. It has only been tested on chunk creation.
             if (!force_host_map) {
-                std::uint8_t *base_ptr = reinterpret_cast<std::uint8_t*>(mmc_impl_->host_base());
+                std::uint8_t *base_ptr = reinterpret_cast<std::uint8_t *>(mmc_impl_->host_base());
                 std::fill(base_ptr + bottom, base_ptr + top, clear_byte);
             }
 

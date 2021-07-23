@@ -20,14 +20,13 @@
 #ifndef DISPLAY_WIDGET_H
 #define DISPLAY_WIDGET_H
 
-#include <drivers/graphics/emu_window.h>
-#include <QWidget>
 #include <QOpenGLContext>
+#include <QWidget>
+#include <drivers/graphics/emu_window.h>
 
 class display_window_widget;
 
-class display_widget : public QWidget, public eka2l1::drivers::emu_window
-{
+class display_widget : public QWidget, public eka2l1::drivers::emu_window {
     Q_OBJECT
 
 private:
@@ -73,11 +72,11 @@ public:
         return nullptr;
     }
 
-    void keyPressEvent(QKeyEvent* event) override;
-    void keyReleaseEvent(QKeyEvent* event) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
 };
 
 #endif // DISPLAY_WIDGET_H

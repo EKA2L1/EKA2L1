@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <utils/des.h>
 #include <cstdint>
+#include <utils/des.h>
 
 namespace eka2l1::epoc::acc {
     static constexpr std::uint32_t GENERIC_ID_ARRAY_COUNT = 10;
@@ -41,7 +41,7 @@ namespace eka2l1::epoc::acc {
         std::uint64_t caps_subblocks_;
         epoc::buf_static<char16_t, MODEL_ID_MAX_LENGTH> hw_model_id_;
         std::uint64_t hw_device_id_;
-        std::int32_t dbid_; 
+        std::int32_t dbid_;
     };
 
     struct generic_id {

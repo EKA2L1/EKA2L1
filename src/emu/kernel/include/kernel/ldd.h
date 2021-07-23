@@ -37,7 +37,7 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::ldd {
-    class channel: public kernel::kernel_obj {
+    class channel : public kernel::kernel_obj {
     protected:
         system *sys_;
         epoc::version ver_;
@@ -45,13 +45,15 @@ namespace eka2l1::ldd {
     public:
         explicit channel(kernel_system *kern, system *sys, epoc::version ver);
         ~channel() override {}
-        
+
         virtual std::int32_t do_control(kernel::thread *r, const std::uint32_t n,
-            const eka2l1::ptr<void> arg1, const eka2l1::ptr<void> arg2) = 0;
+            const eka2l1::ptr<void> arg1, const eka2l1::ptr<void> arg2)
+            = 0;
 
         virtual std::int32_t do_request(epoc::notify_info info, const std::uint32_t n,
             const eka2l1::ptr<void> arg1, const eka2l1::ptr<void> arg2,
-            const bool is_supervisor) = 0;
+            const bool is_supervisor)
+            = 0;
     };
 
     /**
@@ -59,7 +61,7 @@ namespace eka2l1::ldd {
      * 
      * Can have a name to identify channel category.
      */
-    class factory: public kernel::kernel_obj {
+    class factory : public kernel::kernel_obj {
     protected:
         system *sys_;
 

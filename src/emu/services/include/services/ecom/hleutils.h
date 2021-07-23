@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <common/uid.h>
 #include <mem/ptr.h>
 #include <services/faker.h>
-#include <common/uid.h>
 
 #include <cstdint>
 

@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <kernel/server.h>
 #include <services/context.h>
 #include <services/framework.h>
-#include <kernel/server.h>
 #include <services/ui/cap/coestorage.h>
 #include <services/ui/cap/eiksrv.h>
 #include <services/ui/cap/sgc.h>
@@ -158,13 +158,12 @@ namespace eka2l1 {
 
     public:
         explicit oom_ui_app_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version, const bool is_old_layout = false);
-        
+
         void blank_screen(service::ipc_context *ctx);
         void unblank_screen(service::ipc_context *ctx);
         void redraw_status_pane(service::ipc_context *ctx);
         void fetch(service::ipc_context *ctx) override;
     };
-
 
     static const char *OOM_APP_UI_SERVER_NAME = "101fdfae_10207218_AppServer";
 

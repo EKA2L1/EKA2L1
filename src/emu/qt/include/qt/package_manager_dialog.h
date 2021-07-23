@@ -20,8 +20,8 @@
 #ifndef PACKAGE_MANAGER_DIALOG_H
 #define PACKAGE_MANAGER_DIALOG_H
 
-#include <QTableWidgetItem>
 #include <QDialog>
+#include <QTableWidgetItem>
 
 namespace Ui {
     class package_manager_dialog;
@@ -33,7 +33,7 @@ namespace eka2l1 {
     }
 }
 
-class package_manager_table_info_item: public QTableWidgetItem {
+class package_manager_table_info_item : public QTableWidgetItem {
 private:
     std::uint32_t uid_;
     int index_;
@@ -50,8 +50,7 @@ public:
     }
 };
 
-class package_manager_dialog : public QDialog
-{
+class package_manager_dialog : public QDialog {
     Q_OBJECT
 
 private:

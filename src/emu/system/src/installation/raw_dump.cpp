@@ -17,13 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/installation/raw_dump.h>
 #include <system/devices.h>
+#include <system/installation/raw_dump.h>
 #include <system/software.h>
 
 #include <common/algorithm.h>
-#include <common/log.h>
 #include <common/fileutils.h>
+#include <common/log.h>
 #include <common/path.h>
 
 namespace eka2l1::loader {
@@ -45,12 +45,12 @@ namespace eka2l1::loader {
         if (!common::move_file(temp_path, add_path(devices_z_path, platform_name + eka2l1::get_separator()))) {
             return device_installation_raw_dump_fail_to_copy;
         }
-        
+
         const add_device_error err_adddvc = dvcmngr->add_new_device(platform_name, model, manufacturer, ver, 0);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be installed!", platform_name);
-            
+
             switch (err_adddvc) {
             case add_device_existed:
                 return device_installation_already_exist;

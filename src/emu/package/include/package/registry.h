@@ -20,12 +20,12 @@
 #pragma once
 
 #include <common/uid.h>
-#include <utils/version.h>
 #include <utils/consts.h>
+#include <utils/version.h>
 
 #include <cstdint>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace eka2l1::common {
     class chunkyseri;
@@ -39,7 +39,7 @@ namespace eka2l1::package {
         validation_unsigned = 30,
         validation_validated = 40,
         validation_validated_to_anchor = 50,
-        validation_package_in_rom = 60 
+        validation_package_in_rom = 60
     };
 
     enum revocation_status_value {
@@ -48,13 +48,13 @@ namespace eka2l1::package {
         revocation_ocsp_revoked = 20,
         revocation_ocsp_unknown = 30,
         revocation_ocsp_transient = 40,
-        revocation_ocsp_good = 50, 
+        revocation_ocsp_good = 50,
     };
 
     enum install_type_value {
-        install_type_normal_install,    // Base installation
-        install_type_augmentations,     // This is basically DLC
-        install_type_partial_update,    // Update to existing application
+        install_type_normal_install, // Base installation
+        install_type_augmentations, // This is basically DLC
+        install_type_partial_update, // Update to existing application
         install_type_preinstalled_app,
         install_type_preinstalled_patch
     };
@@ -64,7 +64,7 @@ namespace eka2l1::package {
         package_trust_validation_failed = 50,
         package_trust_certificate_chain_no_trust_anchor = 100,
         package_trust_certificate_chain_validated_to_trust_anchor = 200,
-        package_trust_chain_validated_to_trust_anchor_ocsp_transient_error = 300, 
+        package_trust_chain_validated_to_trust_anchor_ocsp_transient_error = 300,
         package_trust_chain_validated_to_trust_anchor_and_ocsp_valid = 400,
         package_trust_built_into_rom = 500
     };
@@ -145,7 +145,7 @@ namespace eka2l1::package {
         std::uint32_t selected_drive;
         std::int32_t unused1;
         std::int32_t unused2;
-        
+
         void do_state(common::chunkyseri &seri);
     };
 
@@ -161,8 +161,8 @@ namespace eka2l1::package {
         std::uint32_t signed_;
         std::uint32_t signed_by_sucert;
         std::uint32_t deletable_preinstalled;
-        std::uint16_t file_major_version { 5 };
-        std::uint16_t file_minor_version { 3 };
+        std::uint16_t file_major_version{ 5 };
+        std::uint16_t file_minor_version{ 3 };
         package_trust trust;
         std::int32_t remove_with_last_dependent;
         std::uint64_t trust_timestamp;

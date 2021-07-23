@@ -66,7 +66,7 @@ namespace eka2l1::arm::r12l1 {
         dashixiong_block *big_block_;
 
         reg_cache reg_supplier_;
-		float_marker float_marker_;
+        float_marker float_marker_;
 
         explicit visit_session(dashixiong_block *bro, translated_block *crr);
         bool condition_passed(common::cc_flags cc, const bool force_end_last = false);

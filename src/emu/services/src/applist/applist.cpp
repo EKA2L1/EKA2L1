@@ -20,8 +20,8 @@
 
 #include <services/applist/applist.h>
 #include <services/applist/op.h>
-#include <services/fbs/fbs.h>
 #include <services/context.h>
+#include <services/fbs/fbs.h>
 
 #include <common/benchmark.h>
 #include <common/cvt.h>
@@ -31,16 +31,16 @@
 #include <common/types.h>
 
 #include <common/common.h>
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <loader/rsc.h>
+#include <system/epoc.h>
 #include <utils/apacmd.h>
 #include <utils/bafl.h>
 #include <utils/des.h>
 #include <vfs/vfs.h>
 
-#include <utils/err.h>
 #include <functional>
+#include <utils/err.h>
 
 #include <config/config.h>
 
@@ -67,19 +67,19 @@ namespace eka2l1 {
     applist_server::applist_server(system *sys)
         : service::typical_server(sys, get_app_list_server_name_by_epocver(sys->get_symbian_version_use()))
         , drive_change_handle_(0)
-        , fbsserv(nullptr){
+        , fbsserv(nullptr) {
     }
 
     applist_server::~applist_server() {
         io_system *io = sys->get_io_system();
 
-        for (const auto w: watchs_) {
-            io->unwatch_directory(w);    
+        for (const auto w : watchs_) {
+            io->unwatch_directory(w);
         }
 
         io->remove_drive_change_notify(drive_change_handle_);
     }
-    
+
     bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
         const language ideal_lang) {
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
@@ -98,10 +98,10 @@ namespace eka2l1 {
 
         reg.land_drive = land_drive;
         reg.rsc_path = path;
-        reg.mandatory_info.app_path = eka2l1::replace_extension(path, u".app");     // It seems so.
+        reg.mandatory_info.app_path = eka2l1::replace_extension(path, u".app"); // It seems so.
 
-        if (!read_registeration_info_aif(reinterpret_cast<common::ro_stream*>(&std_rsc_raw), reg, land_drive, 
-            ideal_lang)) {
+        if (!read_registeration_info_aif(reinterpret_cast<common::ro_stream *>(&std_rsc_raw), reg, land_drive,
+                ideal_lang)) {
             return false;
         }
 
@@ -122,25 +122,23 @@ namespace eka2l1 {
 
         f->seek(0, file_seek_mode::beg);
 
-        if (!read_icon_data_aif(reinterpret_cast<common::ro_stream*>(&std_rsc_raw), fbsserv, reg.app_icons,
-            romaddr)) {
+        if (!read_icon_data_aif(reinterpret_cast<common::ro_stream *>(&std_rsc_raw), fbsserv, reg.app_icons,
+                romaddr)) {
             return false;
         }
 
         std::u16string caption_file_path = eka2l1::replace_extension(path, u"") + u"_caption.rsc";
         caption_file_path = utils::get_nearest_lang_file(io, caption_file_path, ideal_lang, land_drive);
-        
+
         f = io->open_file(caption_file_path, READ_MODE | BIN_MODE);
 
         if (f) {
             eka2l1::ro_file_stream caption_file_stream(f.get());
             if (!caption_file_stream.valid()) {
-                LOG_INFO(SERVICE_APPLIST, "Caption file for {} is corrupted!", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
-                    to_std_string(nullptr)));
+                LOG_INFO(SERVICE_APPLIST, "Caption file for {} is corrupted!", common::ucs2_to_utf8(reg.mandatory_info.short_caption.to_std_string(nullptr)));
             } else {
-                if (!read_caption_data_oldarch(reinterpret_cast<common::ro_stream*>(&caption_file_stream), reg)) {
-                    LOG_INFO(SERVICE_APPLIST, "Failed to read caption file for {}", common::ucs2_to_utf8(reg.mandatory_info.short_caption.
-                        to_std_string(nullptr)));
+                if (!read_caption_data_oldarch(reinterpret_cast<common::ro_stream *>(&caption_file_stream), reg)) {
+                    LOG_INFO(SERVICE_APPLIST, "Failed to read caption file for {}", common::ucs2_to_utf8(reg.mandatory_info.short_caption.to_std_string(nullptr)));
                 }
             }
         }
@@ -148,7 +146,7 @@ namespace eka2l1 {
         if (reg.mandatory_info.short_caption.get_length() == 0) {
             reg.caps.is_hidden = true;
         }
-        
+
         regs.push_back(std::move(reg));
         return true;
     }
@@ -365,7 +363,7 @@ namespace eka2l1 {
     }
 
     void applist_server::on_drive_change(void *userdata, drive_number drv, drive_action act) {
-        io_system *io = reinterpret_cast<io_system*>(userdata);
+        io_system *io = reinterpret_cast<io_system *>(userdata);
 
         switch (act) {
         case drive_action_mount:
@@ -397,7 +395,7 @@ namespace eka2l1 {
                     const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
                         ent->full_path, ent->name + OLDARCH_REG_FILE_EXT, true));
 
-                    load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language());    
+                    load_registry_oldarch(io, aif_reg_file, drv, kern->get_current_language());
                 }
             }
         }
@@ -436,7 +434,7 @@ namespace eka2l1 {
         }
     }
 
-    void applist_server::rescan_registries(eka2l1::io_system *io) {        
+    void applist_server::rescan_registries(eka2l1::io_system *io) {
         LOG_INFO(SERVICE_APPLIST, "Loading app registries");
 
         for (drive_number drv = drive_z; drv >= drive_a; drv--) {
@@ -454,7 +452,8 @@ namespace eka2l1 {
         // Register drive change callback
         drive_change_handle_ = io->register_drive_change_notify([this](void *userdata, drive_number drv, drive_action act) {
             return on_drive_change(userdata, drv, act);
-        }, io);
+        },
+            io);
 
         LOG_INFO(SERVICE_APPLIST, "Done loading!");
     }
@@ -477,11 +476,11 @@ namespace eka2l1 {
     }
 
     void applist_server::init() {
-        fbsserv = reinterpret_cast<fbs_server*>(kern->get_by_name<service::server>(
+        fbsserv = reinterpret_cast<fbs_server *>(kern->get_by_name<service::server>(
             epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version())));
 
         rescan_registries(sys->get_io_system());
-    
+
         flags |= AL_INITED;
     }
 
@@ -604,7 +603,7 @@ namespace eka2l1 {
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
         std::optional<std::int32_t> icon_size_width = std::nullopt;
         std::optional<std::int32_t> icon_size_height = std::nullopt;
-        
+
         if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
             std::optional<eka2l1::vec2> size_vec = ctx.get_argument_data_from_descriptor<eka2l1::vec2>(1);
             if (size_vec.has_value()) {
@@ -721,7 +720,7 @@ namespace eka2l1 {
         if (!launch_app(app_launch, cmd_line.value(), &thread_id, ctx.msg->own_thr->owning_process())) {
             LOG_ERROR(SERVICE_APPLIST, "Failed to create new app process (command line: {})", common::ucs2_to_utf8(cmd_line.value()));
             ctx.complete(epoc::error_no_memory);
-            
+
             return;
         }
 
@@ -741,7 +740,7 @@ namespace eka2l1 {
             ctx.complete(epoc::error_argument);
             return;
         }
-        
+
         hle::lib_manager *lmngr = kern->get_lib_manager();
         std::int32_t is_program = false;
 
@@ -760,7 +759,7 @@ namespace eka2l1 {
             ctx.complete(epoc::error_argument);
             return;
         }
-        
+
         hle::lib_manager *lmngr = kern->get_lib_manager();
 
         if (!lmngr->load(path.value())) {
@@ -840,7 +839,7 @@ namespace eka2l1 {
             case applist_request_oldarch_app_info:
                 server<applist_server>()->get_app_info(*ctx);
                 break;
-    
+
             case applist_request_oldarch_start_app:
                 server<applist_server>()->launch_app(*ctx);
                 break;
@@ -1014,18 +1013,16 @@ namespace eka2l1 {
         if (registry.app_icons[index * 2].bmp_)
             real_bmp = registry.app_icons[index * 2].bmp_->bitmap_;
         else
-            real_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry. app_icons[index * 2].bmp_rom_addr_).get(
-                sys->get_memory_system());
+            real_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry.app_icons[index * 2].bmp_rom_addr_).get(sys->get_memory_system());
 
         if (!real_bmp) {
             return std::nullopt;
         }
-            
+
         if (registry.app_icons[index * 2 + 1].bmp_)
             real_mask_bmp = registry.app_icons[index * 2 + 1].bmp_->bitmap_;
         else
-            real_mask_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry.app_icons[index * 2 + 1].bmp_rom_addr_).get(
-                sys->get_memory_system());
+            real_mask_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(registry.app_icons[index * 2 + 1].bmp_rom_addr_).get(sys->get_memory_system());
 
         return std::make_optional(std::make_pair(real_bmp, real_mask_bmp));
     }

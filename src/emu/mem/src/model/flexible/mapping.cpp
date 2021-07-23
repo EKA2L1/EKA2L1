@@ -18,9 +18,9 @@
  */
 
 #include <mem/model/flexible/addrspace.h>
+#include <mem/model/flexible/control.h>
 #include <mem/model/flexible/mapping.h>
 #include <mem/model/flexible/memobj.h>
-#include <mem/model/flexible/control.h>
 
 #include <common/log.h>
 
@@ -28,10 +28,10 @@ namespace eka2l1::mem::flexible {
     mapping::mapping(address_space *owner)
         : owner_(owner) {
     }
-    
+
     mapping::~mapping() {
         // Unmap all memory mapped
-        unmap(0, occupied_);   
+        unmap(0, occupied_);
     }
 
     bool mapping::instantiate(const std::size_t page_occupied, const std::uint32_t flags, const vm_address forced) {
@@ -56,7 +56,7 @@ namespace eka2l1::mem::flexible {
             if (total_page != static_cast<int>(page_occupied)) {
                 LOG_WARN(MEMORY, "Unable to allocate all pages given in the mapping instantiate parameter");
             }
-            
+
             base_ = sect->beg_ + (offset << owner_->control_->page_size_bits_);
         } else {
             base_ = forced;
@@ -77,19 +77,19 @@ namespace eka2l1::mem::flexible {
 
         control_base *control = owner_->control_;
 
-        const std::uint32_t start_offset = + (index << control->page_size_bits_);
+        const std::uint32_t start_offset = +(index << control->page_size_bits_);
 
         vm_address start_addr = base_ + start_offset;
         const vm_address end_addr = start_addr + static_cast<vm_address>(count << control->page_size_bits_);
 
         const std::size_t page_size = control->page_size();
-        std::uint8_t *starting_point_host = reinterpret_cast<std::uint8_t*>(obj->ptr()) + start_offset;
+        std::uint8_t *starting_point_host = reinterpret_cast<std::uint8_t *>(obj->ptr()) + start_offset;
 
         page_table *faulty = nullptr;
 
         while (start_addr < end_addr) {
             const std::uint32_t ptoff = start_addr >> control->page_table_index_shift_;
-            
+
             std::uint32_t next_end_addr = ((ptoff + 1) << control->chunk_shift_);
             next_end_addr = std::min<std::uint32_t>(next_end_addr, end_addr);
 
@@ -138,7 +138,7 @@ namespace eka2l1::mem::flexible {
 
         while (start_addr < end_addr) {
             const std::uint32_t ptoff = start_addr >> control->chunk_shift_;
-            
+
             std::uint32_t next_end_addr = ((ptoff + 1) << control->chunk_shift_);
             next_end_addr = std::min<std::uint32_t>(next_end_addr, end_addr);
 

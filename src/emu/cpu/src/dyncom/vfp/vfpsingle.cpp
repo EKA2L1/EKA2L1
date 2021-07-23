@@ -64,12 +64,12 @@ static struct vfp_single vfp_single_default_qnan = {
     VFP_SINGLE_SIGNIFICAND_QNAN,
 };
 
-static void vfp_single_dump(const char* str, struct vfp_single* s) {
+static void vfp_single_dump(const char *str, struct vfp_single *s) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "{}: sign={} exponent={} significand={:08x}", str, s->sign != 0,
-              s->exponent, s->significand);
+        s->exponent, s->significand);
 }
 
-static void vfp_single_normalise_denormal(struct vfp_single* vs) {
+static void vfp_single_normalise_denormal(struct vfp_single *vs) {
     int bits = 31 - fls(vs->significand);
 
     vfp_single_dump("normalise_denormal: in", vs);
@@ -82,8 +82,8 @@ static void vfp_single_normalise_denormal(struct vfp_single* vs) {
     vfp_single_dump("normalise_denormal: out", vs);
 }
 
-std::uint32_t vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_single* vs, std::uint32_t fpscr,
-                              std::uint32_t exceptions, const char* func) {
+std::uint32_t vfp_single_normaliseround(ARMul_State *state, int sd, struct vfp_single *vs, std::uint32_t fpscr,
+    std::uint32_t exceptions, const char *func) {
     std::uint32_t significand, incr, rmode;
     int exponent, shift, underflow;
 
@@ -221,7 +221,7 @@ std::uint32_t vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_s
 pack:
     vfp_single_dump("pack: final", vs);
     {
-        std::int32_t  d = vfp_single_pack(vs);
+        std::int32_t d = vfp_single_pack(vs);
         LOG_TRACE(eka2l1::CPU_DYNCOM, "{}: d(s{})={:08x} exceptions={:08x}", func, sd, d, exceptions);
         vfp_put_float(state, d, sd);
     }
@@ -233,9 +233,9 @@ pack:
  * Propagate the NaN, setting exceptions if it is signalling.
  * 'n' is always a NaN.  'm' may be a number, NaN or infinity.
  */
-static std::uint32_t vfp_propagate_nan(struct vfp_single* vsd, struct vfp_single* vsn, struct vfp_single* vsm,
-                             std::uint32_t fpscr) {
-    struct vfp_single* nan;
+static std::uint32_t vfp_propagate_nan(struct vfp_single *vsd, struct vfp_single *vsn, struct vfp_single *vsm,
+    std::uint32_t fpscr) {
+    struct vfp_single *nan;
     int tn, tm = 0;
 
     tn = vfp_single_type(vsn);
@@ -275,29 +275,57 @@ static std::uint32_t vfp_propagate_nan(struct vfp_single* vsd, struct vfp_single
 /*
  * Extended operations
  */
-static std::uint32_t vfp_single_fabs(ARMul_State* state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fabs(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     vfp_put_float(state, vfp_single_packed_abs(m), sd);
     return 0;
 }
 
-static std::uint32_t vfp_single_fcpy(ARMul_State* state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcpy(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     vfp_put_float(state, m, sd);
     return 0;
 }
 
-static std::uint32_t vfp_single_fneg(ARMul_State* state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fneg(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     vfp_put_float(state, vfp_single_packed_negate(m), sd);
     return 0;
 }
 
-static const std::uint16_t  sqrt_oddadjust[] = {
-    0x0004, 0x0022, 0x005d, 0x00b1, 0x011d, 0x019f, 0x0236, 0x02e0,
-    0x039c, 0x0468, 0x0545, 0x0631, 0x072b, 0x0832, 0x0946, 0x0a67,
+static const std::uint16_t sqrt_oddadjust[] = {
+    0x0004,
+    0x0022,
+    0x005d,
+    0x00b1,
+    0x011d,
+    0x019f,
+    0x0236,
+    0x02e0,
+    0x039c,
+    0x0468,
+    0x0545,
+    0x0631,
+    0x072b,
+    0x0832,
+    0x0946,
+    0x0a67,
 };
 
-static const std::uint16_t  sqrt_evenadjust[] = {
-    0x0a2d, 0x08af, 0x075a, 0x0629, 0x051a, 0x0429, 0x0356, 0x029e,
-    0x0200, 0x0179, 0x0109, 0x00af, 0x0068, 0x0034, 0x0012, 0x0002,
+static const std::uint16_t sqrt_evenadjust[] = {
+    0x0a2d,
+    0x08af,
+    0x075a,
+    0x0629,
+    0x051a,
+    0x0429,
+    0x0356,
+    0x029e,
+    0x0200,
+    0x0179,
+    0x0109,
+    0x00af,
+    0x0068,
+    0x0034,
+    0x0012,
+    0x0002,
 };
 
 std::uint32_t vfp_estimate_sqrt_significand(std::uint32_t exponent, std::uint32_t significand) {
@@ -322,13 +350,13 @@ std::uint32_t vfp_estimate_sqrt_significand(std::uint32_t exponent, std::uint32_
             return (std::int32_t)a >> 1;
     }
     {
-        std::uint64_t  v = (std::uint64_t)a << 31;
+        std::uint64_t v = (std::uint64_t)a << 31;
         do_div(v, z);
         return (std::uint32_t)(v + (z >> 1));
     }
 }
 
-static std::uint32_t vfp_single_fsqrt(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fsqrt(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm, vsd, *vsp;
     int ret, tm;
     std::uint32_t exceptions = 0;
@@ -389,7 +417,7 @@ static std::uint32_t vfp_single_fsqrt(ARMul_State* state, int sd, std::int32_t  
         if (vsd.significand < 2) {
             vsd.significand = 0xffffffff;
         } else {
-            std::uint64_t  term;
+            std::uint64_t term;
             std::int64_t rem;
             vsm.significand <<= static_cast<std::uint32_t>((vsm.exponent & 1) == 0);
             term = (std::uint64_t)vsd.significand * vsd.significand;
@@ -417,15 +445,14 @@ static std::uint32_t vfp_single_fsqrt(ARMul_State* state, int sd, std::int32_t  
  * Greater than	:= C
  * Unordered	:= CV
  */
-static std::uint32_t vfp_compare(ARMul_State* state, int sd, std::int32_t signal_on_qnan, std::int32_t m, std::uint32_t fpscr) {
-    std::int32_t  d;
+static std::uint32_t vfp_compare(ARMul_State *state, int sd, std::int32_t signal_on_qnan, std::int32_t m, std::uint32_t fpscr) {
+    std::int32_t d;
     std::uint32_t ret = 0;
 
     d = vfp_get_float(state, sd);
     if (vfp_single_packed_exponent(m) == 255 && vfp_single_packed_mantissa(m)) {
         ret |= FPSCR_CFLAG | FPSCR_VFLAG;
-        if (signal_on_qnan ||
-            !(vfp_single_packed_mantissa(m) & (1 << (VFP_SINGLE_MANTISSA_BITS - 1))))
+        if (signal_on_qnan || !(vfp_single_packed_mantissa(m) & (1 << (VFP_SINGLE_MANTISSA_BITS - 1))))
             /*
              * Signalling NaN, or signalling on quiet NaN
              */
@@ -434,8 +461,7 @@ static std::uint32_t vfp_compare(ARMul_State* state, int sd, std::int32_t signal
 
     if (vfp_single_packed_exponent(d) == 255 && vfp_single_packed_mantissa(d)) {
         ret |= FPSCR_CFLAG | FPSCR_VFLAG;
-        if (signal_on_qnan ||
-            !(vfp_single_packed_mantissa(d) & (1 << (VFP_SINGLE_MANTISSA_BITS - 1))))
+        if (signal_on_qnan || !(vfp_single_packed_mantissa(d) & (1 << (VFP_SINGLE_MANTISSA_BITS - 1))))
             /*
              * Signalling NaN, or signalling on quiet NaN
              */
@@ -477,23 +503,23 @@ static std::uint32_t vfp_compare(ARMul_State* state, int sd, std::int32_t signal
     return ret;
 }
 
-static std::uint32_t vfp_single_fcmp(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmp(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 0, m, fpscr);
 }
 
-static std::uint32_t vfp_single_fcmpe(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmpe(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 1, m, fpscr);
 }
 
-static std::uint32_t vfp_single_fcmpz(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmpz(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 0, 0, fpscr);
 }
 
-static std::uint32_t vfp_single_fcmpez(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmpez(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 1, 0, fpscr);
 }
 
-static std::uint32_t vfp_single_fcvtd(ARMul_State* state, int dd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcvtd(ARMul_State *state, int dd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm;
     struct vfp_double vdd;
     int tm;
@@ -535,7 +561,7 @@ pack_nan:
     return exceptions;
 }
 
-static std::uint32_t vfp_single_fuito(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fuito(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vs;
 
     vs.sign = 0;
@@ -545,7 +571,7 @@ static std::uint32_t vfp_single_fuito(ARMul_State* state, int sd, std::int32_t  
     return vfp_single_normaliseround(state, sd, &vs, fpscr, 0, "fuito");
 }
 
-static std::uint32_t vfp_single_fsito(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fsito(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vs;
 
     vs.sign = (m & 0x80000000) >> 16;
@@ -555,7 +581,7 @@ static std::uint32_t vfp_single_fsito(ARMul_State* state, int sd, std::int32_t  
     return vfp_single_normaliseround(state, sd, &vs, fpscr, 0, "fsito");
 }
 
-static std::uint32_t vfp_single_ftoui(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftoui(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm;
     std::uint32_t d, exceptions = 0;
     int rmode = fpscr & FPSCR_RMODE_MASK;
@@ -641,11 +667,11 @@ static std::uint32_t vfp_single_ftoui(ARMul_State* state, int sd, std::int32_t  
     return exceptions;
 }
 
-static std::uint32_t vfp_single_ftouiz(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftouiz(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_single_ftoui(state, sd, unused, m, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
-static std::uint32_t vfp_single_ftosi(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftosi(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm;
     std::uint32_t d, exceptions = 0;
     int rmode = fpscr & FPSCR_RMODE_MASK;
@@ -722,44 +748,44 @@ static std::uint32_t vfp_single_ftosi(ARMul_State* state, int sd, std::int32_t  
     return exceptions;
 }
 
-static std::uint32_t vfp_single_ftosiz(ARMul_State* state, int sd, std::int32_t  unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftosiz(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_single_ftosi(state, sd, unused, m, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
 static struct op fops_ext[] = {
-    {vfp_single_fcpy, 0},  // 0x00000000 - FEXT_FCPY
-    {vfp_single_fabs, 0},  // 0x00000001 - FEXT_FABS
-    {vfp_single_fneg, 0},  // 0x00000002 - FEXT_FNEG
-    {vfp_single_fsqrt, 0}, // 0x00000003 - FEXT_FSQRT
-    {nullptr, 0},
-    {nullptr, 0},
-    {nullptr, 0},
-    {nullptr, 0},
-    {vfp_single_fcmp, OP_SCALAR},   // 0x00000008 - FEXT_FCMP
-    {vfp_single_fcmpe, OP_SCALAR},  // 0x00000009 - FEXT_FCMPE
-    {vfp_single_fcmpz, OP_SCALAR},  // 0x0000000A - FEXT_FCMPZ
-    {vfp_single_fcmpez, OP_SCALAR}, // 0x0000000B - FEXT_FCMPEZ
-    {nullptr, 0},
-    {nullptr, 0},
-    {nullptr, 0},
-    {vfp_single_fcvtd, OP_SCALAR | OP_DD}, // 0x0000000F - FEXT_FCVT
-    {vfp_single_fuito, OP_SCALAR},         // 0x00000010 - FEXT_FUITO
-    {vfp_single_fsito, OP_SCALAR},         // 0x00000011 - FEXT_FSITO
-    {nullptr, 0},
-    {nullptr, 0},
-    {nullptr, 0},
-    {nullptr, 0},
-    {nullptr, 0},
-    {nullptr, 0},
-    {vfp_single_ftoui, OP_SCALAR},  // 0x00000018 - FEXT_FTOUI
-    {vfp_single_ftouiz, OP_SCALAR}, // 0x00000019 - FEXT_FTOUIZ
-    {vfp_single_ftosi, OP_SCALAR},  // 0x0000001A - FEXT_FTOSI
-    {vfp_single_ftosiz, OP_SCALAR}, // 0x0000001B - FEXT_FTOSIZ
+    { vfp_single_fcpy, 0 }, // 0x00000000 - FEXT_FCPY
+    { vfp_single_fabs, 0 }, // 0x00000001 - FEXT_FABS
+    { vfp_single_fneg, 0 }, // 0x00000002 - FEXT_FNEG
+    { vfp_single_fsqrt, 0 }, // 0x00000003 - FEXT_FSQRT
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { vfp_single_fcmp, OP_SCALAR }, // 0x00000008 - FEXT_FCMP
+    { vfp_single_fcmpe, OP_SCALAR }, // 0x00000009 - FEXT_FCMPE
+    { vfp_single_fcmpz, OP_SCALAR }, // 0x0000000A - FEXT_FCMPZ
+    { vfp_single_fcmpez, OP_SCALAR }, // 0x0000000B - FEXT_FCMPEZ
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { vfp_single_fcvtd, OP_SCALAR | OP_DD }, // 0x0000000F - FEXT_FCVT
+    { vfp_single_fuito, OP_SCALAR }, // 0x00000010 - FEXT_FUITO
+    { vfp_single_fsito, OP_SCALAR }, // 0x00000011 - FEXT_FSITO
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { vfp_single_ftoui, OP_SCALAR }, // 0x00000018 - FEXT_FTOUI
+    { vfp_single_ftouiz, OP_SCALAR }, // 0x00000019 - FEXT_FTOUIZ
+    { vfp_single_ftosi, OP_SCALAR }, // 0x0000001A - FEXT_FTOSI
+    { vfp_single_ftosiz, OP_SCALAR }, // 0x0000001B - FEXT_FTOSIZ
 };
 
-static std::uint32_t vfp_single_fadd_nonnumber(struct vfp_single* vsd, struct vfp_single* vsn,
-                                     struct vfp_single* vsm, std::uint32_t fpscr) {
-    struct vfp_single* vsp;
+static std::uint32_t vfp_single_fadd_nonnumber(struct vfp_single *vsd, struct vfp_single *vsn,
+    struct vfp_single *vsm, std::uint32_t fpscr) {
+    struct vfp_single *vsp;
     std::uint32_t exceptions = 0;
     int tn, tm;
 
@@ -797,8 +823,8 @@ static std::uint32_t vfp_single_fadd_nonnumber(struct vfp_single* vsd, struct vf
     return exceptions;
 }
 
-static std::uint32_t vfp_single_add(struct vfp_single* vsd, struct vfp_single* vsn, struct vfp_single* vsm,
-                          std::uint32_t fpscr) {
+static std::uint32_t vfp_single_add(struct vfp_single *vsd, struct vfp_single *vsn, struct vfp_single *vsm,
+    std::uint32_t fpscr) {
     std::uint32_t exp_diff, m_sig;
 
     if (vsn->significand & 0x80000000 || vsm->significand & 0x80000000) {
@@ -855,8 +881,8 @@ static std::uint32_t vfp_single_add(struct vfp_single* vsd, struct vfp_single* v
     return 0;
 }
 
-static std::uint32_t vfp_single_multiply(struct vfp_single* vsd, struct vfp_single* vsn,
-                               struct vfp_single* vsm, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_multiply(struct vfp_single *vsd, struct vfp_single *vsn,
+    struct vfp_single *vsm, std::uint32_t fpscr) {
     vfp_single_dump("VSN", vsn);
     vfp_single_dump("VSM", vsm);
 
@@ -912,11 +938,11 @@ static std::uint32_t vfp_single_multiply(struct vfp_single* vsd, struct vfp_sing
 #define NEG_MULTIPLY (1 << 0)
 #define NEG_SUBTRACT (1 << 1)
 
-static std::uint32_t vfp_single_multiply_accumulate(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr,
-                                          std::uint32_t negate, const char* func) {
+static std::uint32_t vfp_single_multiply_accumulate(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr,
+    std::uint32_t negate, const char *func) {
     vfp_single vsd, vsp, vsn, vsm;
     std::uint32_t exceptions = 0;
-    std::int32_t  v;
+    std::int32_t v;
 
     v = vfp_get_float(state, sn);
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, v);
@@ -954,7 +980,7 @@ static std::uint32_t vfp_single_multiply_accumulate(ARMul_State* state, int sd, 
 /*
  * sd = sd + (sn * sm)
  */
-static std::uint32_t vfp_single_fmac(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fmac(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, 0, "fmac");
 }
@@ -962,7 +988,7 @@ static std::uint32_t vfp_single_fmac(ARMul_State* state, int sd, int sn, std::in
 /*
  * sd = sd - (sn * sm)
  */
-static std::uint32_t vfp_single_fnmac(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fnmac(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     // TODO: this one has its arguments inverted, investigate.
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sd, sn);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_MULTIPLY, "fnmac");
@@ -971,7 +997,7 @@ static std::uint32_t vfp_single_fnmac(ARMul_State* state, int sd, int sn, std::i
 /*
  * sd = -sd + (sn * sm)
  */
-static std::uint32_t vfp_single_fmsc(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fmsc(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT, "fmsc");
 }
@@ -979,19 +1005,19 @@ static std::uint32_t vfp_single_fmsc(ARMul_State* state, int sd, int sn, std::in
 /*
  * sd = -sd - (sn * sm)
  */
-static std::uint32_t vfp_single_fnmsc(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fnmsc(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT | NEG_MULTIPLY,
-                                          "fnmsc");
+        "fnmsc");
 }
 
 /*
  * sd = sn * sm
  */
-static std::uint32_t vfp_single_fmul(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fmul(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
-    std::int32_t  n = vfp_get_float(state, sn);
+    std::int32_t n = vfp_get_float(state, sn);
 
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, n);
 
@@ -1010,10 +1036,10 @@ static std::uint32_t vfp_single_fmul(ARMul_State* state, int sd, int sn, std::in
 /*
  * sd = -(sn * sm)
  */
-static std::uint32_t vfp_single_fnmul(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fnmul(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
-    std::int32_t  n = vfp_get_float(state, sn);
+    std::int32_t n = vfp_get_float(state, sn);
 
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, n);
 
@@ -1033,10 +1059,10 @@ static std::uint32_t vfp_single_fnmul(ARMul_State* state, int sd, int sn, std::i
 /*
  * sd = sn + sm
  */
-static std::uint32_t vfp_single_fadd(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fadd(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
-    std::int32_t  n = vfp_get_float(state, sn);
+    std::int32_t n = vfp_get_float(state, sn);
 
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, n);
 
@@ -1059,7 +1085,7 @@ static std::uint32_t vfp_single_fadd(ARMul_State* state, int sd, int sn, std::in
 /*
  * sd = sn - sm
  */
-static std::uint32_t vfp_single_fsub(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fsub(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     /*
      * Subtraction is addition with one sign inverted. Unpack the second operand to perform FTZ if
@@ -1083,10 +1109,10 @@ static std::uint32_t vfp_single_fsub(ARMul_State* state, int sd, int sn, std::in
 /*
  * sd = sn / sm
  */
-static std::uint32_t vfp_single_fdiv(ARMul_State* state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fdiv(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
-    std::int32_t  n = vfp_get_float(state, sn);
+    std::int32_t n = vfp_get_float(state, sn);
     int tm, tn;
 
     LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, n);
@@ -1151,7 +1177,7 @@ static std::uint32_t vfp_single_fdiv(ARMul_State* state, int sd, int sn, std::in
         vsd.exponent++;
     }
     {
-        std::uint64_t  significand = (std::uint64_t)vsn.significand << 32;
+        std::uint64_t significand = (std::uint64_t)vsn.significand << 32;
         do_div(significand, vsm.significand);
         vsd.significand = (std::uint32_t)significand;
     }
@@ -1188,22 +1214,28 @@ invalid:
 }
 
 static struct op fops[] = {
-    {vfp_single_fmac, 0},  {vfp_single_fmsc, 0},  {vfp_single_fmul, 0},
-    {vfp_single_fadd, 0},  {vfp_single_fnmac, 0}, {vfp_single_fnmsc, 0},
-    {vfp_single_fnmul, 0}, {vfp_single_fsub, 0},  {vfp_single_fdiv, 0},
+    { vfp_single_fmac, 0 },
+    { vfp_single_fmsc, 0 },
+    { vfp_single_fmul, 0 },
+    { vfp_single_fadd, 0 },
+    { vfp_single_fnmac, 0 },
+    { vfp_single_fnmsc, 0 },
+    { vfp_single_fnmul, 0 },
+    { vfp_single_fsub, 0 },
+    { vfp_single_fdiv, 0 },
 };
 
 #define FREG_BANK(x) ((x)&0x18)
 #define FREG_IDX(x) ((x)&7)
 
-std::uint32_t vfp_single_cpdo(ARMul_State* state, std::uint32_t inst, std::uint32_t fpscr) {
+std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr) {
     std::uint32_t op = inst & FOP_MASK;
     std::uint32_t exceptions = 0;
     unsigned int dest;
     unsigned int sn = vfp_get_sn(inst);
     unsigned int sm = vfp_get_sm(inst);
     unsigned int vecitr, veclen, vecstride;
-    struct op* fop;
+    struct op *fop;
 
     vecstride = 1 + ((fpscr & FPSCR_STRIDE_MASK) == FPSCR_STRIDE_MASK);
 
@@ -1233,23 +1265,23 @@ std::uint32_t vfp_single_cpdo(ARMul_State* state, std::uint32_t inst, std::uint3
 
     if (!fop->fn) {
         LOG_CRITICAL(eka2l1::CPU_DYNCOM, "could not find single op {}, inst=0x{:x}@0x{:x}",
-                     FEXT_TO_IDX(inst), inst, state->Reg[15]);
+            FEXT_TO_IDX(inst), inst, state->Reg[15]);
         //Crash();
         goto invalid;
     }
 
     for (vecitr = 0; vecitr <= veclen; vecitr += 1 << FPSCR_LENGTH_BIT) {
-        std::int32_t  m = vfp_get_float(state, sm);
+        std::int32_t m = vfp_get_float(state, sm);
         std::uint32_t except;
         char type;
 
         type = (fop->flags & OP_DD) ? 'd' : 's';
         if (op == FOP_EXT)
             LOG_TRACE(eka2l1::CPU_DYNCOM, "itr{} ({}{}) = op[{}] (s{}={:08x})", vecitr >> FPSCR_LENGTH_BIT,
-                      type, dest, sn, sm, m);
+                type, dest, sn, sm, m);
         else
             LOG_TRACE(eka2l1::CPU_DYNCOM, "itr{} ({}{}) = (s{}) op[{}] (s{}={:08x})",
-                      vecitr >> FPSCR_LENGTH_BIT, type, dest, sn, FOP_TO_IDX(op), sm, m);
+                vecitr >> FPSCR_LENGTH_BIT, type, dest, sn, FOP_TO_IDX(op), sm, m);
 
         except = fop->fn(state, dest, sn, m, fpscr);
         LOG_TRACE(eka2l1::CPU_DYNCOM, "itr{}: exceptions={:08x}", vecitr >> FPSCR_LENGTH_BIT, except);

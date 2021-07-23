@@ -32,10 +32,10 @@
 #endif
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <tuple>
 #include <unordered_map>
-#include <memory>
 #include <variant>
 #include <vector>
 
@@ -49,7 +49,7 @@ namespace eka2l1 {
         class codeseg;
     }
 
-    using codeseg_ptr = kernel::codeseg*;
+    using codeseg_ptr = kernel::codeseg *;
 
     namespace arm {
         class core;
@@ -62,13 +62,13 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::manager {
-    typedef void (__stdcall *ipc_sent_lua_func)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
-        std::uint32_t, std::uint32_t, eka2l1::scripting::thread*);
-    typedef void (__stdcall *ipc_completed_lua_func)(eka2l1::scripting::ipc_message_wrapper*);
-    typedef void (__stdcall *breakpoint_hit_lua_func)();
+    typedef void(__stdcall *ipc_sent_lua_func)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+        std::uint32_t, std::uint32_t, eka2l1::scripting::thread *);
+    typedef void(__stdcall *ipc_completed_lua_func)(eka2l1::scripting::ipc_message_wrapper *);
+    typedef void(__stdcall *breakpoint_hit_lua_func)();
 
     using breakpoint_hit_func = std::variant<pybind11::function, breakpoint_hit_lua_func>;
-    using ipc_operation_func = std::variant<pybind11::function, void*>;
+    using ipc_operation_func = std::variant<pybind11::function, void *>;
     using ipc_operation_func_list = std::vector<ipc_operation_func>;
 
     struct breakpoint_info {

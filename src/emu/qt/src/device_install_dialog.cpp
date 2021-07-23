@@ -17,15 +17,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qt/device_install_dialog.h>
 #include "ui_device_install_dialog.h"
+#include <qt/device_install_dialog.h>
 
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 
-#include <system/installation/rpkg.h>
 #include <system/installation/firmware.h>
+#include <system/installation/rpkg.h>
 
 #include <config/config.h>
 #include <system/devices.h>
@@ -34,19 +34,18 @@
 #include <QFuture>
 #include <QtConcurrent/QtConcurrent>
 
-#include <QMessageBox>
 #include <QInputDialog>
+#include <QMessageBox>
 
 static constexpr std::int32_t INSTALL_METHOD_DEVICE_DUMP_INDEX = 0;
 static constexpr std::int32_t INSTALL_METHOD_FIRMWARE_INDEX = 1;
 
-device_install_dialog::device_install_dialog(QWidget *parent, eka2l1::device_manager *dvcmngr, eka2l1::config::state &conf) :
-    QDialog(parent),
-    conf_(conf),
-    device_mngr_(dvcmngr),
-    canceled_(false),
-    ui(new Ui::device_install_dialog)
-{
+device_install_dialog::device_install_dialog(QWidget *parent, eka2l1::device_manager *dvcmngr, eka2l1::config::state &conf)
+    : QDialog(parent)
+    , conf_(conf)
+    , device_mngr_(dvcmngr)
+    , canceled_(false)
+    , ui(new Ui::device_install_dialog) {
     setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
     setAttribute(Qt::WA_DeleteOnClose);
 
@@ -67,8 +66,7 @@ device_install_dialog::device_install_dialog(QWidget *parent, eka2l1::device_man
     connect(this, &device_install_dialog::firmware_variant_selects, this, &device_install_dialog::on_firmware_variant_selects, Qt::BlockingQueuedConnection);
 }
 
-device_install_dialog::~device_install_dialog()
-{
+device_install_dialog::~device_install_dialog() {
     delete ui;
 }
 
@@ -107,7 +105,7 @@ void device_install_dialog::on_progress_bar_update(const std::size_t so_far, con
     ui->install_progress_bar->setValue(static_cast<int>(so_far * 100 / total));
 }
 
-int device_install_dialog::on_firmware_variant_selects(const std::vector<std::string>& list) {
+int device_install_dialog::on_firmware_variant_selects(const std::vector<std::string> &list) {
     QStringList list_qstring;
     for (std::size_t i = 0; i < list.size(); i++) {
         list_qstring.push_back(QString::fromUtf8(list[i].c_str()));
@@ -263,7 +261,7 @@ void device_install_dialog::on_install_triggered() {
 
 void device_install_dialog::on_vpl_browse_triggered() {
     QString vpl_file_path = QFileDialog::getOpenFileName(this, tr("Choose VPL file"),
-                                                             QString(), tr("VPL file (*.vpl)"));
+        QString(), tr("VPL file (*.vpl)"));
 
     if (!vpl_file_path.isEmpty()) {
         ui->vpl_path_line_edit->setText(vpl_file_path);
@@ -273,7 +271,7 @@ void device_install_dialog::on_vpl_browse_triggered() {
 
 void device_install_dialog::on_rom_browse_triggered() {
     QString rom_file_path = QFileDialog::getOpenFileName(this, tr("Choose the ROM"),
-                                                             QString(), tr("ROM file (*.rom *.ROM)"));
+        QString(), tr("ROM file (*.rom *.ROM)"));
 
     if (!rom_file_path.isEmpty()) {
         ui->rom_path_line_edit->setText(rom_file_path);
@@ -298,7 +296,7 @@ void device_install_dialog::on_rom_browse_triggered() {
 
 void device_install_dialog::on_rpkg_browse_triggered() {
     QString rpkg_file_path = QFileDialog::getOpenFileName(this, tr("Choose the RPKG"),
-                                                             QString(), tr("RPKG file (*.rpkg *.RPKG)"));
+        QString(), tr("RPKG file (*.rpkg *.RPKG)"));
 
     if (!rpkg_file_path.isEmpty()) {
         ui->rpkg_path_line_edit->setText(rpkg_file_path);

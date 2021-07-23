@@ -20,8 +20,8 @@
 
 #include <common/algorithm.h>
 #include <common/log.h>
-#include <kernel/kernel.h>
 #include <kernel/codeseg.h>
+#include <kernel/kernel.h>
 #include <loader/common.h>
 
 #include <algorithm>
@@ -77,7 +77,7 @@ namespace eka2l1::kernel {
             return false;
         }
 
-        for (auto &dep: dependencies) {
+        for (auto &dep : dependencies) {
             if (!dep.dep_->mark && !dep.dep_->eligible_for_codeseg_reuse()) {
                 dep.dep_->mark = true;
                 return false;
@@ -96,13 +96,13 @@ namespace eka2l1::kernel {
             auto att = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
                 return info->attached_process == new_foe;
             });
- 
+
             if (att) {
                 if (!mark) {
                     att->get()->use_count++;
                     mark = true;
 
-                    for (auto &dep: dependencies) {
+                    for (auto &dep : dependencies) {
                         dep.dep_->attach(new_foe, forcefully);
                     }
                 }
@@ -118,7 +118,7 @@ namespace eka2l1::kernel {
 
         chunk_ptr code_chunk = nullptr;
         chunk_ptr dt_chunk = nullptr;
-        
+
         address the_addr_of_code_run = 0;
         address the_addr_of_data_run = 0;
 
@@ -198,20 +198,20 @@ namespace eka2l1::kernel {
             the_addr_of_data_run = data_addr;
             data_base_ptr = reinterpret_cast<std::uint8_t *>(kern->get_memory_system()->get_real_pointer(data_addr));
         }
-        
+
         LOG_INFO(KERNEL, "{} runtime code: 0x{:x}", name(), the_addr_of_code_run);
         LOG_INFO(KERNEL, "{} runtime data: 0x{:x}", name(), the_addr_of_data_run);
 
         attaches.emplace_back(std::make_unique<attached_info>(this, new_foe, dt_chunk, code_chunk));
-  
+
         // Attach all of its dependencies
-        for (auto &dependency: dependencies) {
+        for (auto &dependency : dependencies) {
             dependency.dep_->attach(new_foe);
 
             // Patch what imports we need
             if (need_patch_and_reloc) {
                 if ((code_addr && forcefully) || !code_addr) {
-                    for (const std::uint64_t import: dependency.import_info_) {
+                    for (const std::uint64_t import : dependency.import_info_) {
                         const std::uint16_t ord = (import & 0xFFFF);
                         const std::uint16_t adj = (import >> 16) & 0xFFFF;
                         const std::uint32_t offset_to_apply = (import >> 32) & 0xFFFFFFFF;
@@ -221,7 +221,7 @@ namespace eka2l1::kernel {
                             LOG_ERROR(KERNEL, "Invalid ordinal {}, requested from {}", ord, dependency.dep_->name());
                         }
 
-                        *reinterpret_cast<std::uint32_t*>(&code_base_ptr[offset_to_apply]) = addr + adj;
+                        *reinterpret_cast<std::uint32_t *>(&code_base_ptr[offset_to_apply]) = addr + adj;
                     }
                 }
             }
@@ -233,7 +233,7 @@ namespace eka2l1::kernel {
                 const std::uint32_t data_delta = the_addr_of_data_run - data_base;
 
                 // Relocate the image
-                for (const std::uint64_t relocate_info: relocation_list) {
+                for (const std::uint64_t relocate_info : relocation_list) {
                     const loader::relocation_type rel_type = static_cast<loader::relocation_type>((relocate_info >> 32) & 0xFFFF);
                     const std::uint32_t offset_to_relocate = static_cast<std::uint32_t>(relocate_info);
 
@@ -255,13 +255,13 @@ namespace eka2l1::kernel {
                         break;
                     }
 
-                    std::uint32_t *to_relocate_ptr = reinterpret_cast<std::uint32_t*>(&base_ptr[offset_to_relocate]);
+                    std::uint32_t *to_relocate_ptr = reinterpret_cast<std::uint32_t *>(&base_ptr[offset_to_relocate]);
 
                     switch (rel_type) {
                     case loader::relocation_type::data:
                         the_delta = data_delta;
                         break;
-                    
+
                     case loader::relocation_type::text:
                         the_delta = code_delta;
                         break;
@@ -321,7 +321,7 @@ namespace eka2l1::kernel {
                 } else {
                     memory_system *mem = kern->get_memory_system();
 
-                    const std::uint32_t offset = data_base - attach_info->data_chunk->base(de_foe).ptr_address();    
+                    const std::uint32_t offset = data_base - attach_info->data_chunk->base(de_foe).ptr_address();
                     const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
 
                     attach_info->data_chunk->decommit(offset, data_size_align);
@@ -331,7 +331,7 @@ namespace eka2l1::kernel {
             if (!code_chunk_shared && attach_info->code_chunk) {
                 kern->destroy(attach_info->code_chunk);
             }
-    
+
             attach_info->closing_lib_link.deque();
             attach_info->process_link.deque();
         }
@@ -362,7 +362,7 @@ namespace eka2l1::kernel {
         }
 
         attach_info->state = codeseg_state_attached;
-        for (auto &dep: dependencies) {
+        for (auto &dep : dependencies) {
             if (!dep.dep_->attached_report(foe)) {
                 return false;
             }
@@ -387,7 +387,7 @@ namespace eka2l1::kernel {
         }
 
         attach_info->state = codeseg_state_detatching;
-        for (auto &dep: dependencies) {
+        for (auto &dep : dependencies) {
             if (!dep.dep_->detaching_report(foe)) {
                 return false;
             }

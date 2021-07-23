@@ -98,7 +98,7 @@ namespace eka2l1 {
         }
 
         if (ids_.size() == 1) {
-            active_ = ui::view::view_id { 0, 0 };
+            active_ = ui::view::view_id{ 0, 0 };
         } else {
             if ((pos_of_current_view == VIEW_NOT_FOUND) || (pos_of_current_view < (ids_.size() - 1))) {
                 // Choose the lastest added one as active
@@ -156,7 +156,7 @@ namespace eka2l1 {
 
     void view_session::active_view(service::ipc_context *ctx, const bool /*should_complete*/) {
         kernel_system *kern = server<view_server>()->get_kernel_object_owner();
-        
+
         std::optional<epoc::uid> custom_message_uid;
         std::optional<ui::view::view_id> id;
         std::uint8_t *custom_message_buf = nullptr;
@@ -201,7 +201,8 @@ namespace eka2l1 {
         }
 
         queue_.queue_event({ ui::view::view_event::event_active_view, id.value(), server<view_server>()->active_view(),
-            custom_message_uid.value(), static_cast<std::int32_t>(custom_message_size) }, custom_message_buf_cop);
+                               custom_message_uid.value(), static_cast<std::int32_t>(custom_message_size) },
+            custom_message_buf_cop);
 
         server<view_server>()->set_active(id.value());
         ctx->complete(epoc::error_none);
@@ -211,7 +212,7 @@ namespace eka2l1 {
         view_server *svr = server<view_server>();
 
         const ui::view::view_id view_to_deactivate = svr->active_view();
-        
+
         // Deactivate view then get the one currently being activated
         svr->deactivate();
         const ui::view::view_id view_that_activated = svr->active_view();

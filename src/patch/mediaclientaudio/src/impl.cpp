@@ -45,8 +45,8 @@ CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
 
 static TInt OpenCompleteCallback(void *aUserdata) {
     LogOut(KMcaCat, _L("Open utility/recorder complete"));
-   
-    CMMFMdaAudioUtility *stream = reinterpret_cast<CMMFMdaAudioUtility*>(aUserdata);
+
+    CMMFMdaAudioUtility *stream = reinterpret_cast<CMMFMdaAudioUtility *>(aUserdata);
     stream->TransitionState(EMdaStateReady, KErrNone);
 
     return 0;
@@ -95,13 +95,13 @@ void CMMFMdaAudioUtility::ConstructL(const TUint32 aInitFlags) {
 }
 
 void CMMFMdaAudioUtility::TransitionState(const TMdaState aNewState, const TInt aError) {
-	const TMdaState previousState = iState;
-	
-	if (aError >= KErrNone) {
-		iState = aNewState;
-	}
-	
-	OnStateChanged(aNewState, previousState, aError);
+    const TMdaState previousState = iState;
+
+    if (aError >= KErrNone) {
+        iState = aNewState;
+    }
+
+    OnStateChanged(aNewState, previousState, aError);
 }
 
 CMMFMdaAudioUtility::~CMMFMdaAudioUtility() {
@@ -110,7 +110,7 @@ CMMFMdaAudioUtility::~CMMFMdaAudioUtility() {
 }
 
 void CMMFMdaAudioUtility::RunL() {
-	TransitionState(EMdaStateReady);
+    TransitionState(EMdaStateReady);
 }
 
 void CMMFMdaAudioUtility::DoCancel() {
@@ -149,7 +149,7 @@ void CMMFMdaAudioUtility::SupplyUrl(const TDesC &aFilename) {
 void CMMFMdaAudioUtility::SupplyData(TDesC8 &aData) {
     if ((iState == EMdaStatePlay) || (iState == EMdaStatePause)) {
         LogOut(KMcaCat, _L("Audio supplied while utility is being played."));
-        
+
         TransitionState(iState, KErrInUse);
         return;
     }
@@ -164,7 +164,7 @@ void CMMFMdaAudioUtility::SupplyData(TDesC8 &aData) {
 
     iDuration = durationObj;
     iPlayType = EMdaPlayTypeBuffer;
-    
+
     iOpener.Open(this);
 }
 
@@ -192,7 +192,7 @@ void CMMFMdaAudioUtility::Play() {
 }
 
 void CMMFMdaAudioUtility::Stop() {
-	TransitionState(EMdaStateReady, 1);
+    TransitionState(EMdaStateReady, 1);
     EAudioPlayerStop(0, iDispatchInstance);
 
     // Do cancel
@@ -265,11 +265,11 @@ void CMMFMdaAudioUtility::SetRepeats(const TInt aHowManyTimes, const TTimeInterv
 ///================== AUDIO PLAYER UTILITY ======================
 CMMFMdaAudioPlayerUtility::CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
     : CMMFMdaAudioUtility(aPriority, aPref)
-	, iCallback(aCallback) {
+    , iCallback(aCallback) {
 }
 
 CMMFMdaAudioPlayerUtility *CMMFMdaAudioPlayerUtility::NewL(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref) {
-	CMMFMdaAudioPlayerUtility *newUtil = new (ELeave) CMMFMdaAudioPlayerUtility(aCallback, aPriority, aPref);
+    CMMFMdaAudioPlayerUtility *newUtil = new (ELeave) CMMFMdaAudioPlayerUtility(aCallback, aPriority, aPref);
     CleanupStack::PushL(newUtil);
     newUtil->ConstructL(EAudioPlayerFlag_StartPreparePlayWhenQueue);
     CleanupStack::Pop(newUtil);
@@ -278,20 +278,20 @@ CMMFMdaAudioPlayerUtility *CMMFMdaAudioPlayerUtility::NewL(MMdaAudioPlayerCallba
 }
 
 void CMMFMdaAudioPlayerUtility::OnStateChanged(const TMdaState aCurrentState, const TMdaState aPrevState, const TInt aErr) {
-	switch (aCurrentState) {
-		case EMdaStateReady:
-			if (aErr != 1)
-				iCallback.MapcInitComplete(aErr, iDuration);
+    switch (aCurrentState) {
+    case EMdaStateReady:
+        if (aErr != 1)
+            iCallback.MapcInitComplete(aErr, iDuration);
 
-			break;
-			
-		case EMdaStateIdle:
-			iCallback.MapcPlayComplete(aErr);
-			break;
-			
-		default:
-			break;
-	}
+        break;
+
+    case EMdaStateIdle:
+        iCallback.MapcPlayComplete(aErr);
+        break;
+
+    default:
+        break;
+    }
 }
 
 ///================== AUDIO RECORDER UTILITY =======================
@@ -299,51 +299,50 @@ CMMFMdaAudioRecorderUtility::CMMFMdaAudioRecorderUtility(MMdaObjectStateChangeOb
     : CMMFMdaAudioUtility(aPriority, aPref)
     , iObserver(aObserver)
     , iContainerFormat(0) {
-	
 }
 
 CMMFMdaAudioRecorderUtility *CMMFMdaAudioRecorderUtility::NewL(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref) {
-	CMMFMdaAudioRecorderUtility *newUtil = new (ELeave) CMMFMdaAudioRecorderUtility(aObserver, aPriority, aPref);
-	CleanupStack::PushL(newUtil);
-	newUtil->ConstructL(0);
-	CleanupStack::Pop(newUtil);
+    CMMFMdaAudioRecorderUtility *newUtil = new (ELeave) CMMFMdaAudioRecorderUtility(aObserver, aPriority, aPref);
+    CleanupStack::PushL(newUtil);
+    newUtil->ConstructL(0);
+    CleanupStack::Pop(newUtil);
 
-	return newUtil;
+    return newUtil;
 }
 
 bool TranslateInternalStateToReleasedState(const TMdaState aState, CMdaAudioClipUtility::TState &aReleasedState) {
-	switch (aState) {
-		case EMdaStateIdle:
-			aReleasedState = CMdaAudioClipUtility::ENotReady;
-			break;
-			
-		case EMdaStateReady:
-			aReleasedState = CMdaAudioClipUtility::EOpen;
-			break;
-			
-		case EMdaStatePlay:
-			aReleasedState = CMdaAudioClipUtility::EPlaying;
-			break;
-			
-		case EMdaStateRecord:
-			aReleasedState = CMdaAudioClipUtility::ERecording;
-			break;
-			
-		default:
-			return false;
-	}
-	
-	return true;
+    switch (aState) {
+    case EMdaStateIdle:
+        aReleasedState = CMdaAudioClipUtility::ENotReady;
+        break;
+
+    case EMdaStateReady:
+        aReleasedState = CMdaAudioClipUtility::EOpen;
+        break;
+
+    case EMdaStatePlay:
+        aReleasedState = CMdaAudioClipUtility::EPlaying;
+        break;
+
+    case EMdaStateRecord:
+        aReleasedState = CMdaAudioClipUtility::ERecording;
+        break;
+
+    default:
+        return false;
+    }
+
+    return true;
 }
 
 void CMMFMdaAudioRecorderUtility::OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError) {
-	CMdaAudioClipUtility::TState currentTrans, prevTrans;
-	if (!TranslateInternalStateToReleasedState(aCurrentState, currentTrans) || !TranslateInternalStateToReleasedState(aPreviousState, prevTrans)) {
+    CMdaAudioClipUtility::TState currentTrans, prevTrans;
+    if (!TranslateInternalStateToReleasedState(aCurrentState, currentTrans) || !TranslateInternalStateToReleasedState(aPreviousState, prevTrans)) {
         return;
-	}
-	
-	// TODO: no nullptr? Haha hehe
-	iObserver.MoscoStateChangeEvent(NULL, prevTrans, currentTrans, aError);
+    }
+
+    // TODO: no nullptr? Haha hehe
+    iObserver.MoscoStateChangeEvent(NULL, prevTrans, currentTrans, aError);
 }
 
 TInt CMMFMdaAudioRecorderUtility::SetDestCodec(TFourCC aDestCodec) {
@@ -375,30 +374,30 @@ TInt CMMFMdaAudioRecorderUtility::GetDestSampleRate() {
 }
 
 TInt CMMFMdaAudioRecorderUtility::SetDestContainerFormat(const TUint32 aUid) {
-	// Check if the audio clip format is in our blacklist first
-	for (TUint32 i = 0; i < KBlackListAudioClipFormatCount; i++) {
-		if (aUid == KBlackListAudioClipFormat[i]) {
-			LogOut(KMcaCat, _L("Unsupport audio format with UID 0x%08x"), aUid);
-			return KErrNotSupported;
-		}
-	}
+    // Check if the audio clip format is in our blacklist first
+    for (TUint32 i = 0; i < KBlackListAudioClipFormatCount; i++) {
+        if (aUid == KBlackListAudioClipFormat[i]) {
+            LogOut(KMcaCat, _L("Unsupport audio format with UID 0x%08x"), aUid);
+            return KErrNotSupported;
+        }
+    }
 
-	// Translate audio format UID to FourCC
-	TFourCC audioFormatCC;
+    // Translate audio format UID to FourCC
+    TFourCC audioFormatCC;
 
-	switch (aUid) {
-	case KUidMdaClipFormatRawAmrDefine:
-		audioFormatCC = TFourCC(' ', 'A', 'M', 'R');
-		break;
+    switch (aUid) {
+    case KUidMdaClipFormatRawAmrDefine:
+        audioFormatCC = TFourCC(' ', 'A', 'M', 'R');
+        break;
 
-	case KUidMdaClipFormatWavDefine:
-		audioFormatCC = TFourCC(' ', 'W', 'A', 'V');
-		break;
+    case KUidMdaClipFormatWavDefine:
+        audioFormatCC = TFourCC(' ', 'W', 'A', 'V');
+        break;
 
-	default:
-		LogOut(KMcaCat, _L("Audio format to translate to FourCC undefined 0x%08x"), aUid);
-		return KErrNotSupported;
-	}
+    default:
+        LogOut(KMcaCat, _L("Audio format to translate to FourCC undefined 0x%08x"), aUid);
+        return KErrNotSupported;
+    }
 
     iContainerFormat = aUid;
     return KErrNone;

@@ -20,8 +20,8 @@
 #include <scripting/hook.h>
 #include <scripting/instance.h>
 
-#include <system/epoc.h>
 #include <scripting/manager.h>
+#include <system/epoc.h>
 
 #include <common/cvt.h>
 #include <cstring>
@@ -43,33 +43,33 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-    EKA2L1_EXPORT void symemu_free_string(char *pt) {
-        delete pt;
-    }
+EKA2L1_EXPORT void symemu_free_string(char *pt) {
+    delete pt;
+}
 
-    EKA2L1_EXPORT const char *symemu_std_utf16_to_utf8(const char *wstring, const int length) {
-        std::u16string data(reinterpret_cast<const char16_t*>(wstring), length);
-        std::string result = eka2l1::common::ucs2_to_utf8(data);
+EKA2L1_EXPORT const char *symemu_std_utf16_to_utf8(const char *wstring, const int length) {
+    std::u16string data(reinterpret_cast<const char16_t *>(wstring), length);
+    std::string result = eka2l1::common::ucs2_to_utf8(data);
 
-        char *result_raw = new char[result.length()];
-        std::memcpy(result_raw, result.data(), length);
+    char *result_raw = new char[result.length()];
+    std::memcpy(result_raw, result.data(), length);
 
-        return result_raw;
-    }
+    return result_raw;
+}
 
-    EKA2L1_EXPORT void symemu_cpu_register_lib_hook(const char *lib_name, const std::uint32_t ord, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
-        eka2l1::scripting::get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
-    }
+EKA2L1_EXPORT void symemu_cpu_register_lib_hook(const char *lib_name, const std::uint32_t ord, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
+    eka2l1::scripting::get_current_instance()->get_scripts()->register_library_hook(lib_name, ord, process_uid, func);
+}
 
-    EKA2L1_EXPORT void symemu_cpu_register_bkpt_hook(const char *image_name, const std::uint32_t addr, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
-        eka2l1::scripting::get_current_instance()->get_scripts()->register_breakpoint(image_name, addr, process_uid, func);
-    }
+EKA2L1_EXPORT void symemu_cpu_register_bkpt_hook(const char *image_name, const std::uint32_t addr, const std::uint32_t process_uid, eka2l1::manager::breakpoint_hit_lua_func func) {
+    eka2l1::scripting::get_current_instance()->get_scripts()->register_breakpoint(image_name, addr, process_uid, func);
+}
 
-    EKA2L1_EXPORT void symemu_register_ipc_sent_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_sent_lua_func func) {
-        eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 0, reinterpret_cast<void*>(func));
-    }
-    
-    EKA2L1_EXPORT void symemu_register_ipc_completed_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_completed_lua_func func) {
-        eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 2, reinterpret_cast<void*>(func));
-    }
+EKA2L1_EXPORT void symemu_register_ipc_sent_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_sent_lua_func func) {
+    eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 0, reinterpret_cast<void *>(func));
+}
+
+EKA2L1_EXPORT void symemu_register_ipc_completed_hook(const char *server_name, const int opcode, eka2l1::manager::ipc_completed_lua_func func) {
+    eka2l1::scripting::get_current_instance()->get_scripts()->register_ipc(server_name, opcode, 2, reinterpret_cast<void *>(func));
+}
 }

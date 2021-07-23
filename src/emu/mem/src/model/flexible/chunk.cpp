@@ -42,15 +42,14 @@ namespace eka2l1::mem::flexible {
         fixed_addr_ = create_info.addr;
         flags_ = create_info.flags;
 
-        const std::uint32_t total_pages_occupied = static_cast<std::uint32_t>((create_info.size +
-            control_->page_size() - 1) >> control_->page_size_bits_);
+        const std::uint32_t total_pages_occupied = static_cast<std::uint32_t>((create_info.size + control_->page_size() - 1) >> control_->page_size_bits_);
         max_size_ = total_pages_occupied << control_->page_size_bits_;
         bottom_ = 0;
         top_ = 0;
 
         // Create the mem object and page allocator
         mem_obj_ = std::make_unique<memory_object>(control_, total_pages_occupied, create_info.host_map);
-        
+
         if (!(create_info.flags & MEM_MODEL_CHUNK_TYPE_NORMAL))
             page_bma_ = std::make_unique<common::bitmap_allocator>(total_pages_occupied);
 
@@ -58,7 +57,7 @@ namespace eka2l1::mem::flexible {
 
         if (!owner_) {
             // Treats this as for kernel
-            control_flexible *fl_control = reinterpret_cast<control_flexible*>(control_);
+            control_flexible *fl_control = reinterpret_cast<control_flexible *>(control_);
             fixed_mapping_ = std::make_unique<mapping>(fl_control->kern_addr_space_.get());
             fixed_mapping_->instantiate(total_pages_occupied, flags_, fixed_addr_);
 
@@ -79,8 +78,7 @@ namespace eka2l1::mem::flexible {
             return 0;
         }
 
-        committed_ += (total_page_to_commit - (page_bma_ ? (page_bma_->allocated_count(dropping_place,
-            dropping_place + total_page_to_commit - 1)) : 0)) << control_->page_size_bits_;
+        committed_ += (total_page_to_commit - (page_bma_ ? (page_bma_->allocated_count(dropping_place, dropping_place + total_page_to_commit - 1)) : 0)) << control_->page_size_bits_;
 
         // Force fill as allocated
         if (page_bma_) {
@@ -111,7 +109,7 @@ namespace eka2l1::mem::flexible {
     bool flexible_mem_model_chunk::allocate(const std::size_t size) {
         const int total_page_to_allocate = static_cast<int>((size + control_->page_size() - 1) >> control_->page_size_bits_);
         int page_allocated = total_page_to_allocate;
-        
+
         const int page_offset = page_bma_->allocate_from(0, page_allocated);
 
         if ((page_allocated != total_page_to_allocate) || (page_offset == -1)) {
@@ -129,12 +127,12 @@ namespace eka2l1::mem::flexible {
     }
 
     void flexible_mem_model_chunk::unmap_from_cpu(mem_model_process *pr, mmu_base *mmu) {
-        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process*>(pr),
+        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process *>(pr),
             mmu, false);
     }
 
     void flexible_mem_model_chunk::map_to_cpu(mem_model_process *pr, mmu_base *mmu) {
-        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process*>(pr),
+        manipulate_cpu_map(page_bma_.get(), reinterpret_cast<flexible_mem_model_process *>(pr),
             mmu, true);
     }
 
@@ -148,7 +146,7 @@ namespace eka2l1::mem::flexible {
         }
 
         // Find our attacher
-        flexible_mem_model_process *process_attacher = reinterpret_cast<flexible_mem_model_process*>(process);
+        flexible_mem_model_process *process_attacher = reinterpret_cast<flexible_mem_model_process *>(process);
 
         // Find our chunks in the process
         auto info_result = std::find_if(process_attacher->attachs_.begin(), process_attacher->attachs_.end(),

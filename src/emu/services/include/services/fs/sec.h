@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <utils/sec.h>
 #include <cstdint>
+#include <utils/sec.h>
 
 namespace eka2l1::epoc::fs {
     static epoc::security_policy private_comp_access_policy({ epoc::cap_all_files });

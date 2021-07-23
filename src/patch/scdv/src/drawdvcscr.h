@@ -26,14 +26,15 @@
 #include "drawdvc16.h"
 #include "drawdvc32.h"
 
-#define SCRDVC_DECL()                                                       \
-    TUint32 iScreenNumber;                                                  \
-public:                                                                     \
-    TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride);   \
-    virtual TInt InitScreen();                                              \
-    virtual void Update();                                                  \
-    virtual void Update(const TRegion &aRegion);                            \
-    virtual void UpdateRegion(const TRect &aRect)                          
+#define SCRDVC_DECL()                                                     \
+    TUint32 iScreenNumber;                                                \
+                                                                          \
+public:                                                                   \
+    TInt Construct(TUint32 aScreenNumber, TSize aSize, TInt aDataStride); \
+    virtual TInt InitScreen();                                            \
+    virtual void Update();                                                \
+    virtual void Update(const TRegion &aRegion);                          \
+    virtual void UpdateRegion(const TRect &aRect)
 
 class CFbsTwelveBitScreenDrawDevice : public CFbsTwelveBitDrawDevice {
     SCRDVC_DECL();

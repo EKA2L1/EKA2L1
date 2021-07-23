@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <drivers/input/common.h>
 #include <drivers/graphics/common.h>
+#include <drivers/input/common.h>
 
 #include <common/vecx.h>
 #include <cstdint>
@@ -30,9 +30,9 @@
 #include <string>
 
 enum {
-    #define KEY_CODE(name, key_name, code) name = code,
-    #include <drivers/graphics/keycode.inc>
-    #undef KEY_CODE
+#define KEY_CODE(name, key_name, code) name = code,
+#include <drivers/graphics/keycode.inc>
+#undef KEY_CODE
 };
 
 const char *number_to_key_name(const int keycode);

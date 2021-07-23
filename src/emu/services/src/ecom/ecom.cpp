@@ -31,9 +31,9 @@
 #include <services/ecom/ecom.h>
 #include <vfs/vfs.h>
 
-#include <system/epoc.h>
-#include <loader/spi.h>
 #include <common/uid.h>
+#include <loader/spi.h>
+#include <system/epoc.h>
 
 #include <common/wildcard.h>
 #include <services/ecom/common.h>
@@ -170,7 +170,7 @@ namespace eka2l1 {
             init = true;
         }
 
-         // First, lookup the interface
+        // First, lookup the interface
         auto interface_ite = interfaces.find(interface_uid);
 
         // We can't find the interface!!
@@ -464,7 +464,7 @@ namespace eka2l1 {
 
         return true;
     }
-    
+
     void ecom_session::list_implementations(service::ipc_context *ctx) {
         // Clear last cache
         collected_impls_.clear();
@@ -517,7 +517,7 @@ namespace eka2l1 {
             return;
         }
 
-        for (ecom_implementation_info_ptr &implementation: collected_impls_) {
+        for (ecom_implementation_info_ptr &implementation : collected_impls_) {
             implementation->do_state(seri, support_extended_interface, is_using_old_ecom_abi());
         }
 

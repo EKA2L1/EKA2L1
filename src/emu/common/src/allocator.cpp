@@ -302,7 +302,7 @@ namespace eka2l1::common {
 
             std::uint32_t word_to_scan = (words_[start_bit >> 5] >> (start_bit & 31)) << (31 - (next_end_bit - 1) & 31);
             allocated_count += number_of_set_bits(word_to_scan);
-            
+
             start_bit = next_end_bit;
         }
 

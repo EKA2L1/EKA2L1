@@ -17,18 +17,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qt/displaywidget.h>
-#include <common/log.h>
 #include <common/algorithm.h>
+#include <common/log.h>
+#include <qt/displaywidget.h>
 
 #include <QWindow>
 #include <QtOpenGLWidgets>
 
-display_widget::display_widget(QWidget *parent) :
-    QWidget(parent),
-    userdata_(nullptr),
-    display_context_(nullptr),
-    shared_display_context_(nullptr) // For vulkan this may stay null all over
+display_widget::display_widget(QWidget *parent)
+    : QWidget(parent)
+    , userdata_(nullptr)
+    , display_context_(nullptr)
+    , shared_display_context_(nullptr) // For vulkan this may stay null all over
 {
     setAttribute(Qt::WA_PaintOnScreen);
     setAttribute(Qt::WA_NativeWindow);
@@ -68,7 +68,7 @@ display_widget::display_widget(QWidget *parent) :
     }
 }
 
-display_widget::~display_widget() {    
+display_widget::~display_widget() {
     if (shared_display_context_)
         delete shared_display_context_;
 
@@ -157,14 +157,13 @@ bool display_widget::set_cursor(eka2l1::drivers::cursor *cur) {
 }
 
 void display_widget::cursor_visiblity(const bool visi) {
-
 }
 
 bool display_widget::cursor_visiblity() {
     return true;
 }
 
-void display_widget::keyPressEvent(QKeyEvent* event) {
+void display_widget::keyPressEvent(QKeyEvent *event) {
     if (event->isAutoRepeat()) {
         return;
     }
@@ -174,7 +173,7 @@ void display_widget::keyPressEvent(QKeyEvent* event) {
     }
 }
 
-void display_widget::keyReleaseEvent(QKeyEvent* event) {
+void display_widget::keyReleaseEvent(QKeyEvent *event) {
     if (event->isAutoRepeat()) {
         return;
     }
@@ -184,7 +183,7 @@ void display_widget::keyReleaseEvent(QKeyEvent* event) {
     }
 }
 
-void display_widget::mousePressEvent(QMouseEvent* event) {
+void display_widget::mousePressEvent(QMouseEvent *event) {
     const qreal pixel_ratio = devicePixelRatioF();
 
     if (raw_mouse_event) {
@@ -197,7 +196,7 @@ void display_widget::mousePressEvent(QMouseEvent* event) {
     }
 }
 
-void display_widget::mouseReleaseEvent(QMouseEvent* event) {
+void display_widget::mouseReleaseEvent(QMouseEvent *event) {
     if (raw_mouse_event) {
         const qreal pixel_ratio = devicePixelRatioF();
 
@@ -210,7 +209,7 @@ void display_widget::mouseReleaseEvent(QMouseEvent* event) {
     }
 }
 
-void display_widget::mouseMoveEvent(QMouseEvent* event) {
+void display_widget::mouseMoveEvent(QMouseEvent *event) {
     // Even with mouse tracking disabled, they still keep coming
     if (event->buttons() == Qt::NoButton) {
         return;

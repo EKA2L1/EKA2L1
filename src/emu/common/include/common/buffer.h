@@ -63,11 +63,11 @@ namespace eka2l1 {
                 write(&len, sizeof(len));
                 write(&str[0], static_cast<std::uint32_t>(len) * sizeof(T));
             }
-			
+
             virtual bool write_text(const std::string &str) {
                 write(&str[0], static_cast<std::uint32_t>(str.length()));
                 return valid();
-			}
+            }
         };
 
         class ro_stream : public basic_stream {

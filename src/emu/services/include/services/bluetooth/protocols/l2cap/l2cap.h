@@ -29,12 +29,12 @@ namespace eka2l1::epoc::bt {
         l2cap_socket_oldarch_link_count = 0,
         l2cap_socket_oldarch_link_array = 1
     };
-    
+
     enum l2cap_socket_option {
         l2cap_socket_link_count = 3,
     };
-    
-    class l2cap_socket: public socket::socket {
+
+    class l2cap_socket : public socket::socket {
     private:
         l2cap_protocol *pr_;
 
@@ -45,10 +45,10 @@ namespace eka2l1::epoc::bt {
         explicit l2cap_socket(l2cap_protocol *pr)
             : pr_(pr) {
         }
-        
+
         virtual std::size_t get_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size) override;
-        
+
         virtual bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size) override;
     };
@@ -66,13 +66,13 @@ namespace eka2l1::epoc::bt {
         virtual std::uint32_t id() const override {
             return L2CAP_PROTOCOL_ID;
         }
-        
+
         virtual epoc::socket::socket_type sock_type() const override {
             return epoc::socket::socket_type_packet;
         }
 
         virtual std::int32_t message_size() const override;
-        
+
         virtual std::unique_ptr<epoc::socket::socket> make_socket() override {
             return std::make_unique<l2cap_socket>(this);
         }

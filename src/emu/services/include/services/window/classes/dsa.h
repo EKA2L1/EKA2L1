@@ -39,7 +39,7 @@ namespace eka2l1::epoc {
         kernel::msg_queue *dsa_must_abort_queue_; ///< Queue to notify clients that DSA operation must be stopped.
         kernel::msg_queue *dsa_complete_queue_; ///< Queue for client to report completion of a DSA operation.
 
-        kernel::thread *sync_thread_;           ///< Thread used for syncing with window operations.
+        kernel::thread *sync_thread_; ///< Thread used for syncing with window operations.
         eka2l1::ptr<epoc::request_status> sync_status_;
 
         epoc::notify_info dsa_must_stop_notify_;

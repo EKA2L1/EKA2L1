@@ -301,9 +301,9 @@ namespace eka2l1::epoc::adapter {
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
         stbtt_GetFontVMetrics(info, &ascent, &descent, &linegap);
 
-        return linegap; 
+        return linegap;
     }
-    
+
     void stb_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
         stbtt_FreeBitmap(data, nullptr);
     }

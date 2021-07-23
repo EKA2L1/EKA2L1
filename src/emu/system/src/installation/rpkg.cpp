@@ -27,8 +27,8 @@
 #include <vfs/vfs.h>
 
 #include <common/algorithm.h>
-#include <common/fileutils.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/pystr.h>
@@ -46,7 +46,7 @@ namespace eka2l1::loader {
             return false;
         }
 
-        auto rom_parse = load_rom(reinterpret_cast<common::ro_stream*>(&rom_file_stream));
+        auto rom_parse = load_rom(reinterpret_cast<common::ro_stream *>(&rom_file_stream));
         if (!rom_parse.has_value()) {
             return false;
         }
@@ -119,7 +119,7 @@ namespace eka2l1::loader {
 
     device_installation_error install_rom(device_manager *dvcmngr, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         const std::string temp_z_path = eka2l1::add_path(drives_z_resident_path, "temp\\");
-        common::ro_std_file_stream rom_file_stream(path, true); 
+        common::ro_std_file_stream rom_file_stream(path, true);
         progress_changed_callback wrapped_cb_1 = nullptr;
 
         if (progress_cb) {
@@ -128,7 +128,7 @@ namespace eka2l1::loader {
             };
         }
 
-        const bool err = loader::dump_rom_files(reinterpret_cast<common::ro_stream*>(&rom_file_stream), temp_z_path, wrapped_cb_1, cancel_cb);
+        const bool err = loader::dump_rom_files(reinterpret_cast<common::ro_stream *>(&rom_file_stream), temp_z_path, wrapped_cb_1, cancel_cb);
 
         if (!err) {
             common::delete_folder(temp_z_path);

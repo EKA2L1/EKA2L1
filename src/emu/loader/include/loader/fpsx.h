@@ -54,7 +54,7 @@ namespace eka2l1::loader::firmware {
         BLOCK_TYPE_H49 = 0x49
     };
 
-    enum tlv_entry_type: std::uint8_t {
+    enum tlv_entry_type : std::uint8_t {
         TLV_ENTRY_MORE_ROOT_KEY_HASH_MORE = 13,
         TLV_ENTRY_ERASE_AREA_BB5 = 18,
         TLV_ENTRY_ONENAND_SUBTYPE_UNK2 = 19,
@@ -113,7 +113,7 @@ namespace eka2l1::loader::firmware {
         virtual bool read(common::ro_stream &stream);
     };
 
-    struct tlv_entry_large: public tlv_entry {
+    struct tlv_entry_large : public tlv_entry {
         explicit tlv_entry_large(const tlv_entry_type type)
             : tlv_entry(type) {
         }
@@ -128,7 +128,7 @@ namespace eka2l1::loader::firmware {
         std::uint32_t end_;
     };
 
-    struct tlv_entry_erase_area_bb5: public tlv_entry {
+    struct tlv_entry_erase_area_bb5 : public tlv_entry {
         asic_type asic_type_;
         device_type device_type_;
 
@@ -141,7 +141,7 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct tlv_entry_string_collection: public tlv_entry {
+    struct tlv_entry_string_collection : public tlv_entry {
         std::vector<std::string> strs_;
 
         explicit tlv_entry_string_collection(const tlv_entry_type type)
@@ -151,7 +151,7 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct tlv_entry_time_since_epoch: public tlv_entry {
+    struct tlv_entry_time_since_epoch : public tlv_entry {
         std::uint32_t second_since_epoch_;
 
         explicit tlv_entry_time_since_epoch()
@@ -161,7 +161,7 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct tlv_entry_array: public tlv_entry_large {
+    struct tlv_entry_array : public tlv_entry_large {
         std::vector<tlv_entry_instance> elements_;
 
         explicit tlv_entry_array()
@@ -180,7 +180,7 @@ namespace eka2l1::loader::firmware {
         virtual bool read(common::ro_stream &stream);
     };
 
-    struct block_header_binary: public block_header {
+    struct block_header_binary : public block_header {
         asic_type flash_memory_;
         std::uint16_t unk2_;
         std::uint16_t data_checksum_;
@@ -189,7 +189,7 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct block_header_rofs_hash: public block_header {
+    struct block_header_rofs_hash : public block_header {
         std::uint8_t cmt_root_key_hash_sha1_[20];
         char description_[12];
         asic_type flash_memory_;
@@ -199,14 +199,14 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct block_header_core_cert: public block_header_rofs_hash {
+    struct block_header_core_cert : public block_header_rofs_hash {
         std::uint8_t rap_papub_keys_maybe_hash_sha1_[20];
         std::uint16_t unk2b_;
 
         bool read(common::ro_stream &stream) override;
     };
 
-    struct block_header_h2e: public block_header {
+    struct block_header_h2e : public block_header {
         asic_type flash_memory_;
         std::uint16_t unk2_;
         std::uint16_t data_checksum_;
@@ -215,7 +215,7 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct block_header_h30: public block_header {
+    struct block_header_h30 : public block_header {
         asic_type flash_memory_;
         std::uint16_t unk2_;
         std::uint16_t data_checksum_;
@@ -224,7 +224,7 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct block_header_h3a: public block_header {
+    struct block_header_h3a : public block_header {
         asic_type flash_memory_;
         std::uint16_t unk2_;
         std::uint16_t data_checksum_;
@@ -233,7 +233,7 @@ namespace eka2l1::loader::firmware {
         bool read(common::ro_stream &stream) override;
     };
 
-    struct block_header_h49: public block_header {
+    struct block_header_h49 : public block_header {
         std::uint16_t data_checksum_;
         char unk_[18];
 
@@ -272,7 +272,7 @@ namespace eka2l1::loader::firmware {
     struct fpsx_header {
         std::uint8_t magic_;
         std::uint32_t header_size_;
-        
+
         fpsx_type type_;
 
         std::vector<tlv_entry_instance> tlv_entries_;

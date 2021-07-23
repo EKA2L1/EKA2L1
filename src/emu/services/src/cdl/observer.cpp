@@ -17,10 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <loader/rsc.h>
 #include <services/cdl/cdl.h>
 #include <services/cdl/observer.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <common/cvt.h>

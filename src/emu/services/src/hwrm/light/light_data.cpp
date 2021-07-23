@@ -18,9 +18,9 @@
  */
 
 #include <kernel/kernel.h>
+#include <kernel/property.h>
 #include <services/hwrm/def.h>
 #include <services/hwrm/light/light_data.h>
-#include <kernel/property.h>
 
 #include <services/context.h>
 

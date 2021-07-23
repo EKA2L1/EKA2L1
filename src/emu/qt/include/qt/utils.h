@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <services/ui/cap/oom_app.h>
 #include <optional>
+#include <services/ui/cap/oom_app.h>
 
 #include <QMessageBox>
 

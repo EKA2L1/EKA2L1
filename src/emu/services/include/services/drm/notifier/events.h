@@ -43,7 +43,7 @@ namespace eka2l1::drm {
         virtual bool internalize(common::ro_stream &stream);
     };
 
-    struct notifier_add_remove_event: public notifier_event {
+    struct notifier_add_remove_event : public notifier_event {
         std::string content_id_;
         std::uint8_t status_;
 
@@ -54,7 +54,7 @@ namespace eka2l1::drm {
         bool internalize(common::ro_stream &stream) override;
     };
 
-    struct notifier_modify_event: public notifier_event {
+    struct notifier_modify_event : public notifier_event {
         std::string content_id_;
         std::uint32_t uid_;
 
@@ -65,10 +65,10 @@ namespace eka2l1::drm {
         bool internalize(common::ro_stream &stream) override;
     };
 
-    struct notifier_time_change_event: public notifier_event {
+    struct notifier_time_change_event : public notifier_event {
         epoc::time old_time_;
         epoc::time new_time_;
-        
+
         std::int32_t old_time_zone_;
         std::int32_t new_time_zone_;
 

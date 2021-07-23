@@ -36,8 +36,8 @@ namespace eka2l1::common {
     template <typename T>
     class identity_container {
     public:
-        using data_free_check_func = std::function<bool(T&)>;
-        using data_free_func = std::function<void(T&)>;
+        using data_free_check_func = std::function<bool(T &)>;
+        using data_free_func = std::function<void(T &)>;
 
     protected:
         std::vector<T> data_;
@@ -54,7 +54,7 @@ namespace eka2l1::common {
                 , container_(container) {
             }
 
-            iterator& operator ++ () {
+            iterator &operator++() {
                 do {
                     ite_++;
                 } while ((ite_ != container_->data_.end()) && (container_->check_(*ite_)));
@@ -62,11 +62,11 @@ namespace eka2l1::common {
                 return *this;
             }
 
-            bool operator != (const iterator &ite) {
+            bool operator!=(const iterator &ite) {
                 return ite_ != ite.ite_;
             }
 
-            T &operator *() {
+            T &operator*() {
                 return *ite_;
             }
         };
@@ -97,7 +97,7 @@ namespace eka2l1::common {
             data_.push_back(std::move(elem));
             return data_.size();
         }
-        
+
         bool remove(const std::size_t elem_id) {
             if ((elem_id == 0) || (elem_id > data_.size())) {
                 return false;

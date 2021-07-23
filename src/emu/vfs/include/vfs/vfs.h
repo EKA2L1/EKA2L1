@@ -22,8 +22,8 @@
 #include <common/buffer.h>
 #include <common/container.h>
 #include <common/types.h>
-#include <common/watcher.h>
 #include <common/uid.h>
+#include <common/watcher.h>
 
 #include <array>
 #include <atomic>
@@ -243,7 +243,7 @@ namespace eka2l1 {
         drive_action_unmount = 1
     };
 
-    using drive_change_notify_callback = std::function<void(void*, drive_number, drive_action)>;
+    using drive_change_notify_callback = std::function<void(void *, drive_number, drive_action)>;
 
     /* \brief An abstract filesystem
     */
@@ -263,7 +263,8 @@ namespace eka2l1 {
 
         virtual std::unique_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
         virtual std::unique_ptr<directory> open_directory(const std::u16string &path,
-            epoc::uid_type type, const std::uint32_t attrib) = 0;
+            epoc::uid_type type, const std::uint32_t attrib)
+            = 0;
 
         // Try to find an entry with specified address, with clue as base finding path. This is not recursive.
         virtual std::optional<std::u16string> find_entry_with_address(const std::u16string &clue, const address addr) {
@@ -301,7 +302,7 @@ namespace eka2l1 {
         virtual bool unwatch_directory(const std::int64_t handle) {
             return false;
         }
-        
+
         virtual bool install_memory(memory_system *mem) {
             return false;
         }
@@ -319,8 +320,8 @@ namespace eka2l1 {
     using file_system_inst = std::shared_ptr<abstract_file_system>;
     using filesystem_id = std::size_t;
 
-    using drive_change_callback_and_data = std::pair<drive_change_notify_callback, void*>;
-    
+    using drive_change_callback_and_data = std::pair<drive_change_notify_callback, void *>;
+
     class io_system {
     private:
         std::map<filesystem_id, file_system_inst> filesystems;
@@ -343,7 +344,7 @@ namespace eka2l1 {
 
         std::size_t register_drive_change_notify(drive_change_notify_callback callback, void *userdata);
         bool remove_drive_change_notify(const std::size_t handle);
-        
+
         std::optional<std::u16string> get_raw_path(const std::u16string &path);
 
         /*! \brief Add a new file system to the IO system

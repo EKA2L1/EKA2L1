@@ -20,8 +20,8 @@
 #include <ldd/ecomm/consts.h>
 #include <ldd/ecomm/ecomm.h>
 
-#include <kernel/thread.h>
 #include <kernel/process.h>
+#include <kernel/thread.h>
 
 #include <common/log.h>
 

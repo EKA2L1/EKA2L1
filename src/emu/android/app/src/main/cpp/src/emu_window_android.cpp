@@ -17,56 +17,55 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <android/emu_window_android.h>
 #include <common/log.h>
 #include <common/raw_bind.h>
-#include <android/emu_window_android.h>
 #include <glad/glad.h>
 
-static constexpr std::array<EGLint, 15> egl_attribs{EGL_SURFACE_TYPE,
-                                                    EGL_WINDOW_BIT,
-                                                    EGL_RENDERABLE_TYPE,
-                                                    EGL_OPENGL_ES3_BIT_KHR,
-                                                    EGL_BLUE_SIZE,
-                                                    8,
-                                                    EGL_GREEN_SIZE,
-                                                    8,
-                                                    EGL_RED_SIZE,
-                                                    8,
-                                                    EGL_DEPTH_SIZE,
-                                                    0,
-                                                    EGL_STENCIL_SIZE,
-                                                    0,
-                                                    EGL_NONE};
-static constexpr std::array<EGLint, 15> egl_fake_attribs{EGL_SURFACE_TYPE,
-                                                    EGL_PBUFFER_BIT,
-                                                    EGL_RENDERABLE_TYPE,
-                                                    EGL_OPENGL_ES3_BIT_KHR,
-                                                    EGL_BLUE_SIZE,
-                                                    8,
-                                                    EGL_GREEN_SIZE,
-                                                    8,
-                                                    EGL_RED_SIZE,
-                                                    8,
-                                                    EGL_DEPTH_SIZE,
-                                                    0,
-                                                    EGL_STENCIL_SIZE,
-                                                    0,
-                                                    EGL_NONE};
-static constexpr EGLint egl_pbuffer_attribs[5]{EGL_WIDTH,
-                                               10,
-                                               EGL_HEIGHT,
-                                               10,
-                                               EGL_NONE};
-static constexpr std::array<EGLint, 5> egl_empty_attribs{EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
-static constexpr std::array<EGLint, 4> egl_context_attribs{EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
+static constexpr std::array<EGLint, 15> egl_attribs{ EGL_SURFACE_TYPE,
+    EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE,
+    EGL_OPENGL_ES3_BIT_KHR,
+    EGL_BLUE_SIZE,
+    8,
+    EGL_GREEN_SIZE,
+    8,
+    EGL_RED_SIZE,
+    8,
+    EGL_DEPTH_SIZE,
+    0,
+    EGL_STENCIL_SIZE,
+    0,
+    EGL_NONE };
+static constexpr std::array<EGLint, 15> egl_fake_attribs{ EGL_SURFACE_TYPE,
+    EGL_PBUFFER_BIT,
+    EGL_RENDERABLE_TYPE,
+    EGL_OPENGL_ES3_BIT_KHR,
+    EGL_BLUE_SIZE,
+    8,
+    EGL_GREEN_SIZE,
+    8,
+    EGL_RED_SIZE,
+    8,
+    EGL_DEPTH_SIZE,
+    0,
+    EGL_STENCIL_SIZE,
+    0,
+    EGL_NONE };
+static constexpr EGLint egl_pbuffer_attribs[5]{ EGL_WIDTH,
+    10,
+    EGL_HEIGHT,
+    10,
+    EGL_NONE };
+static constexpr std::array<EGLint, 5> egl_empty_attribs{ EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+static constexpr std::array<EGLint, 4> egl_context_attribs{ EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
 
 namespace eka2l1 {
     namespace drivers {
 
         emu_window_android::emu_window_android()
-                : userdata(nullptr)
-                , is_fullscreen_now(false) {
-
+            : userdata(nullptr)
+            , is_fullscreen_now(false) {
         }
 
         bool emu_window_android::get_mouse_button_hold(const int mouse_btt) {
@@ -92,7 +91,6 @@ namespace eka2l1 {
             return false;
         }
         void emu_window_android::cursor_visiblity(const bool visi) {
-
         }
 
         bool emu_window_android::cursor_visiblity() {
@@ -104,7 +102,6 @@ namespace eka2l1 {
         }
 
         void emu_window_android::init(std::string title, vec2 size, const std::uint32_t flags) {
-
             emu_screen_size = size;
         }
 
@@ -117,7 +114,6 @@ namespace eka2l1 {
         }
 
         void emu_window_android::change_title(std::string new_title) {
-
         }
 
         void emu_window_android::make_current() {
@@ -125,7 +121,6 @@ namespace eka2l1 {
         }
 
         void emu_window_android::done_current() {
-
         }
 
         void emu_window_android::swap_buffer() {
@@ -136,11 +131,9 @@ namespace eka2l1 {
         }
 
         void emu_window_android::shutdown() {
-
         }
 
         void emu_window_android::poll_events() {
-
         }
 
         void emu_window_android::set_userdata(void *new_userdata) {
@@ -172,24 +165,24 @@ namespace eka2l1 {
                 return;
             }
             if (EGLint egl_num_configs{}; eglChooseConfig(egl_display, egl_fake_attribs.data(), &egl_config, 1,
-                                                          &egl_num_configs) != EGL_TRUE) {
+                                              &egl_num_configs)
+                != EGL_TRUE) {
                 LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
                 return;
             }
 
             if (egl_surface = eglCreatePbufferSurface(egl_display, egl_config, egl_pbuffer_attribs);
-                    egl_surface == EGL_NO_SURFACE) {
+                egl_surface == EGL_NO_SURFACE) {
                 LOG_CRITICAL(DRIVER_GRAPHICS, "eglCreatePbufferSurface() failed");
                 return;
             }
 
             if (egl_context = eglCreateContext(egl_display, egl_config, 0, egl_context_attribs.data());
-                    egl_context == EGL_NO_CONTEXT) {
+                egl_context == EGL_NO_CONTEXT) {
                 LOG_CRITICAL(DRIVER_GRAPHICS, "eglCreateContext() failed");
                 return;
             }
-            if (eglSurfaceAttrib(egl_display, egl_surface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_DESTROYED) !=
-                EGL_TRUE) {
+            if (eglSurfaceAttrib(egl_display, egl_surface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_DESTROYED) != EGL_TRUE) {
                 LOG_CRITICAL(DRIVER_GRAPHICS, "eglSurfaceAttrib() failed");
                 return;
             }
@@ -212,7 +205,8 @@ namespace eka2l1 {
             host_window = render_window;
 
             if (EGLint egl_num_configs{}; eglChooseConfig(egl_display, egl_attribs.data(), &egl_config, 1,
-                                                          &egl_num_configs) != EGL_TRUE) {
+                                              &egl_num_configs)
+                != EGL_TRUE) {
                 LOG_CRITICAL(DRIVER_GRAPHICS, "eglChooseConfig() failed");
                 return;
             }
@@ -221,8 +215,7 @@ namespace eka2l1 {
 
             create_surface();
 
-            if (eglSurfaceAttrib(egl_display, egl_surface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_DESTROYED) !=
-                EGL_TRUE) {
+            if (eglSurfaceAttrib(egl_display, egl_surface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_DESTROYED) != EGL_TRUE) {
                 LOG_CRITICAL(DRIVER_GRAPHICS, "eglSurfaceAttrib() failed");
                 return;
             }
@@ -243,7 +236,7 @@ namespace eka2l1 {
             ANativeWindow_setBuffersGeometry(host_window, 0, 0, format);
 
             if (egl_surface = eglCreateWindowSurface(egl_display, egl_config, host_window, 0);
-                    egl_surface == EGL_NO_SURFACE) {
+                egl_surface == EGL_NO_SURFACE) {
                 return;
             }
         }

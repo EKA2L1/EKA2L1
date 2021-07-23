@@ -17,14 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mdaaudiosampleeditor.h>
 #include <e32std.h>
+#include <mdaaudiosampleeditor.h>
 
 #include "common.h"
 
-CMdaAudioType* CMdaAudioClipUtility::TypeL() {
-	User::Leave(KErrNotSupported);
-	return NULL;
+CMdaAudioType *CMdaAudioClipUtility::TypeL() {
+    User::Leave(KErrNotSupported);
+    return NULL;
 }
 
 #if (MCA_NEW >= 2)
@@ -32,7 +32,6 @@ void CMdaAudioClipUtility::ClipUtil_Reserved3() {
 }
 
 void CMdaAudioClipUtility::ClipUtil_Reserved4() {
-	
 }
 #endif
 

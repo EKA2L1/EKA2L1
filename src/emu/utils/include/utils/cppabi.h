@@ -34,7 +34,7 @@ namespace eka2l1::utils {
         explicit cpp_abi_analyser(const std::uint8_t *start, const std::size_t text_size);
 
         virtual ~cpp_abi_analyser() {}
-        
+
         /**
          * @brief       Search for a vtable of a class, with given clues.
          * 
@@ -44,7 +44,7 @@ namespace eka2l1::utils {
         virtual offset search_vtable(std::vector<std::uint32_t> &addrs) = 0;
     };
 
-    class cpp_gcc98_abi_analyser: public cpp_abi_analyser {
+    class cpp_gcc98_abi_analyser : public cpp_abi_analyser {
     public:
         explicit cpp_gcc98_abi_analyser(const std::uint8_t *start, const std::size_t text_size);
         ~cpp_gcc98_abi_analyser() override {}

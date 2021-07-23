@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utils/des.h>
 #include <common/log.h>
+#include <utils/des.h>
 
 namespace eka2l1::epoc {
     std::uint32_t desc_base::get_max_length(eka2l1::kernel::process *pr) {
@@ -111,9 +111,8 @@ namespace eka2l1::epoc {
         : des_(des)
         , pr_(pr)
         , current_pos_(0) {
-
     }
-    
+
     void rw_des_stream::seek(const std::int64_t amount, common::seek_where wh) {
         const std::uint32_t max_len = des_->get_max_length(pr_);
 
@@ -166,7 +165,7 @@ namespace eka2l1::epoc {
     std::uint64_t rw_des_stream::size() {
         return des_->get_max_length(pr_);
     }
-    
+
     std::uint64_t rw_des_stream::read(void *buf, const std::uint64_t read_size) {
         const std::uint64_t to_read = common::min<std::uint64_t>(read_size, left());
         std::memcpy(buf, des_->get_pointer(pr_) + current_pos_, to_read);

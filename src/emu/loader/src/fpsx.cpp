@@ -17,11 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <loader/fpsx.h>
 #include <common/buffer.h>
+#include <loader/fpsx.h>
 
-#include <common/log.h>
 #include <common/bytes.h>
+#include <common/log.h>
 
 namespace eka2l1::loader::firmware {
     bool tlv_entry::read(common::ro_stream &stream) {
@@ -122,14 +122,14 @@ namespace eka2l1::loader::firmware {
             return false;
         }
 
-        second_since_epoch_ = *reinterpret_cast<std::uint32_t*>(content_.data());
+        second_since_epoch_ = *reinterpret_cast<std::uint32_t *>(content_.data());
         if (common::get_system_endian_type() == common::little_endian) {
             second_since_epoch_ = common::byte_swap(second_since_epoch_);
         }
 
         return true;
     }
-    
+
     static bool read_tlv_entries(common::ro_stream &stream, std::vector<tlv_entry_instance> &entries);
 
     bool tlv_entry_array::read(common::ro_stream &stream) {
@@ -470,8 +470,7 @@ namespace eka2l1::loader::firmware {
             return true;
         }
 
-        if ((blck.header_->data_offset_to_extract_ >= current_block_->header_->data_offset_to_extract_) &&
-            (blck.header_->data_offset_to_extract_ <= current_block_->header_->data_offset_to_extract_ + current_block_->header_->data_size_)) {
+        if ((blck.header_->data_offset_to_extract_ >= current_block_->header_->data_offset_to_extract_) && (blck.header_->data_offset_to_extract_ <= current_block_->header_->data_offset_to_extract_ + current_block_->header_->data_size_)) {
             block_tree_entry &entry_root_last = roots_.back();
             current_block_ = entry_root_last.add(blck);
             return true;
@@ -548,7 +547,7 @@ namespace eka2l1::loader::firmware {
 
         blck.data_offset_in_stream_ = stream.tell();
         stream.seek(common::align(blck.header_->data_size_, 512), common::seek_where::cur);
-    
+
         return blck;
     }
 
@@ -658,7 +657,7 @@ namespace eka2l1::loader::firmware {
             std::optional<block> blck = read_next_block(stream);
             if (!blck)
                 break;
-                
+
             if (!header.btree_.add(blck.value())) {
                 return std::nullopt;
             }

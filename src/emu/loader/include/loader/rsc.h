@@ -55,7 +55,7 @@ namespace eka2l1::loader {
         }
     };
 
-    class rsc_file_legacy: public rsc_file_impl_base {
+    class rsc_file_legacy : public rsc_file_impl_base {
     private:
         enum file_type {
             file_type_non_unicode = 0,
@@ -67,7 +67,7 @@ namespace eka2l1::loader {
         std::int16_t resource_index_section_offset_;
         std::int16_t lookup_table_end_;
         std::int16_t max_resource_size_;
-        std::int8_t  lookup_table_read_bit_count_;
+        std::int8_t lookup_table_read_bit_count_;
 
         std::vector<std::uint8_t> res_data_;
         std::vector<std::int16_t> res_data_offset_table_;
@@ -159,7 +159,7 @@ namespace eka2l1::loader {
 
     public:
         explicit rsc_file(common::ro_stream *stream);
-        
+
         std::vector<std::uint8_t> read(const int res_id);
         std::uint32_t get_uid(const int idx);
         std::uint16_t get_total_resources() const;

@@ -6,4 +6,4 @@
 
 struct ARMul_State;
 
-unsigned InterpreterMainLoop(ARMul_State* state, std::uint32_t &num_instrs);
+unsigned InterpreterMainLoop(ARMul_State *state, std::uint32_t &num_instrs);

@@ -21,8 +21,8 @@
 #include <common/algorithm.h>
 #include <common/chunkyseri.h>
 #include <common/log.h>
-#include <common/thread.h>
 #include <common/platform.h>
+#include <common/thread.h>
 
 #include <kernel/timing.h>
 
@@ -68,17 +68,17 @@ namespace eka2l1 {
 
         new_event_evt_.reset();
         pause_evt_.reset();
-        
+
         timer_thread_ = std::make_unique<std::thread>([this]() {
             loop();
         });
-        
+
         teletimer_->start();
     }
 
     void ntimer::set_realtime_level(const realtime_level lvl) {
         std::unique_lock<std::mutex> unq(lock_);
-        
+
         if (acc_level_ == lvl) {
             return;
         }
@@ -177,7 +177,7 @@ namespace eka2l1 {
         evt.event_type = event_type;
         evt.event_user_data = userdata;
 
-        bool should_nof = (events_.empty()) ||  (events_.back().event_time > evt.event_time);
+        bool should_nof = (events_.empty()) || (events_.back().event_time > evt.event_time);
         events_.push_back(evt);
 
         std::stable_sort(events_.begin(), events_.end(), [](const event &lhs, const event &rhs) {
@@ -279,7 +279,7 @@ namespace eka2l1 {
             }
         }
     }
-    
+
     realtime_level get_realtime_level_from_string(const char *c) {
         const std::string str = common::lowercase_string(std::string(c));
 
@@ -294,10 +294,10 @@ namespace eka2l1 {
         if (str == "high") {
             return realtime_level_high;
         }
-        
+
         return realtime_level_mid;
     }
-    
+
     const char *get_string_of_realtime_level(const realtime_level lvl) {
         switch (lvl) {
         case realtime_level_low:

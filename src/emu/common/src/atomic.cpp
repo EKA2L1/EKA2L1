@@ -26,50 +26,47 @@
 namespace eka2l1::common {
 #if _MSC_VER
     template <>
-    bool atomic_compare_and_swap(volatile std::uint8_t* pointer, std::uint8_t value, std::uint8_t expected) {
-        const std::uint8_t result =
-            _InterlockedCompareExchange8(reinterpret_cast<volatile char*>(pointer), value, expected);
+    bool atomic_compare_and_swap(volatile std::uint8_t *pointer, std::uint8_t value, std::uint8_t expected) {
+        const std::uint8_t result = _InterlockedCompareExchange8(reinterpret_cast<volatile char *>(pointer), value, expected);
         return result == expected;
     }
 
     template <>
-    bool atomic_compare_and_swap(volatile std::uint16_t* pointer, std::uint16_t value, std::uint16_t expected) {
-        const std::uint16_t result =
-            _InterlockedCompareExchange16(reinterpret_cast<volatile short*>(pointer), value, expected);
+    bool atomic_compare_and_swap(volatile std::uint16_t *pointer, std::uint16_t value, std::uint16_t expected) {
+        const std::uint16_t result = _InterlockedCompareExchange16(reinterpret_cast<volatile short *>(pointer), value, expected);
         return result == expected;
     }
 
     template <>
-    bool atomic_compare_and_swap(volatile std::uint32_t* pointer, std::uint32_t value, std::uint32_t expected) {
-        const std::uint32_t result =
-            _InterlockedCompareExchange(reinterpret_cast<volatile long*>(pointer), value, expected);
+    bool atomic_compare_and_swap(volatile std::uint32_t *pointer, std::uint32_t value, std::uint32_t expected) {
+        const std::uint32_t result = _InterlockedCompareExchange(reinterpret_cast<volatile long *>(pointer), value, expected);
         return result == expected;
     }
 
     template <>
-    bool atomic_compare_and_swap(volatile std::uint64_t* pointer, std::uint64_t value, std::uint64_t expected) {
-        const std::uint64_t result = _InterlockedCompareExchange64(reinterpret_cast<volatile __int64*>(pointer),
-                                                        value, expected);
+    bool atomic_compare_and_swap(volatile std::uint64_t *pointer, std::uint64_t value, std::uint64_t expected) {
+        const std::uint64_t result = _InterlockedCompareExchange64(reinterpret_cast<volatile __int64 *>(pointer),
+            value, expected);
         return result == expected;
     }
 #else
     template <>
-    bool atomic_compare_and_swap(volatile std::uint8_t* pointer, std::uint8_t value, std::uint8_t expected) {
+    bool atomic_compare_and_swap(volatile std::uint8_t *pointer, std::uint8_t value, std::uint8_t expected) {
         return __sync_bool_compare_and_swap(pointer, expected, value);
     }
 
     template <>
-    bool atomic_compare_and_swap(volatile std::uint16_t* pointer, std::uint16_t value, std::uint16_t expected) {
+    bool atomic_compare_and_swap(volatile std::uint16_t *pointer, std::uint16_t value, std::uint16_t expected) {
         return __sync_bool_compare_and_swap(pointer, expected, value);
     }
 
     template <>
-    bool atomic_compare_and_swap(volatile std::uint32_t* pointer, std::uint32_t value, std::uint32_t expected) {
+    bool atomic_compare_and_swap(volatile std::uint32_t *pointer, std::uint32_t value, std::uint32_t expected) {
         return __sync_bool_compare_and_swap(pointer, expected, value);
     }
 
     template <>
-    bool atomic_compare_and_swap(volatile std::uint64_t* pointer, std::uint64_t value, std::uint64_t expected) {
+    bool atomic_compare_and_swap(volatile std::uint64_t *pointer, std::uint64_t value, std::uint64_t expected) {
         return __sync_bool_compare_and_swap(pointer, expected, value);
     }
 #endif

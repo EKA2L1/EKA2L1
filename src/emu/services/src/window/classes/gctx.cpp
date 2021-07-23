@@ -250,14 +250,13 @@ namespace eka2l1::epoc {
             }
 
             common::region personal_clipping;
-            
+
             if (!clipping_rect.empty()) {
                 personal_clipping.add_rect(clipping_rect);
             }
 
             if (!clipping_region.empty()) {
-                personal_clipping = (personal_clipping.empty()) ? clipping_region :
-                    personal_clipping.intersect(clipping_region);
+                personal_clipping = (personal_clipping.empty()) ? clipping_region : personal_clipping.intersect(clipping_region);
             }
 
             *clip_region_temp = clip_region_temp->intersect(personal_clipping);
@@ -265,8 +264,7 @@ namespace eka2l1::epoc {
             if (clip_region_temp->rects_.size() <= 1) {
                 // We can use clipping directly
                 use_clipping = true;
-                the_clip = clip_region_temp->empty() ? eka2l1::rect({ 0, 0 }, { 0, 0 }) :
-                    clip_region_temp->rects_[0];
+                the_clip = clip_region_temp->empty() ? eka2l1::rect({ 0, 0 }, { 0, 0 }) : clip_region_temp->rects_[0];
             } else {
                 use_clipping = false;
                 stencil_one_for_valid = true;
@@ -301,8 +299,7 @@ namespace eka2l1::epoc {
             // Now set stencil buffer to only pass if value of pixel correspond in stencil buffer is not equal to 1 (invalid region),
             // or equal to 1 (if valid region)
             // Also disable writing to stencil buffer
-            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, stencil_one_for_valid ?
-                drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
+            cmd_builder->set_stencil_pass_condition(drivers::stencil_face::back_and_front, stencil_one_for_valid ? drivers::condition_func::equal : drivers::condition_func::not_equal, 1, 0xFF);
             cmd_builder->set_stencil_action(drivers::stencil_face::back_and_front, drivers::stencil_action::keep,
                 drivers::stencil_action::keep, drivers::stencil_action::keep);
         }
@@ -323,7 +320,7 @@ namespace eka2l1::epoc {
             // Renew this so that the graphic context can continue
             cmd_list = driver->new_command_list();
             cmd_builder = driver->new_command_builder(cmd_list.get());
-            
+
             cmd_builder->bind_bitmap(attached_window->driver_win_id);
             cmd_builder->set_depth(false);
 
@@ -362,7 +359,7 @@ namespace eka2l1::epoc {
 
         context.complete(epoc::error_none);
     }
-    
+
     void graphic_context::on_command_batch_done(service::ipc_context &ctx) {
         if (attached_window) {
             submit_queue_commands(ctx.msg->own_thr);
@@ -475,7 +472,7 @@ namespace eka2l1::epoc {
         }
 
         cmd_builder->set_blend_mode(true);
-        
+
         // For non alpha blending we always want to take color buffer's alpha.
         cmd_builder->blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
             drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
@@ -502,8 +499,8 @@ namespace eka2l1::epoc {
     void graphic_context::ws_draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_draw_ws_bitmap_masked *blt_cmd = reinterpret_cast<ws_cmd_draw_ws_bitmap_masked *>(cmd.data_ptr);
 
-        epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->source_handle));
-        epoc::wsbitmap *myside_mask_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->mask_handle));
+        epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap *>(client->get_object(blt_cmd->source_handle));
+        epoc::wsbitmap *myside_mask_bmp = reinterpret_cast<epoc::wsbitmap *>(client->get_object(blt_cmd->mask_handle));
 
         if (!myside_source_bmp || !myside_mask_bmp) {
             context.complete(epoc::error_bad_handle);
@@ -544,8 +541,8 @@ namespace eka2l1::epoc {
     void graphic_context::gdi_ws_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
         ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked *>(cmd.data_ptr);
 
-        epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->source_handle));
-        epoc::wsbitmap *myside_mask_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->mask_handle));
+        epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap *>(client->get_object(blt_cmd->source_handle));
+        epoc::wsbitmap *myside_mask_bmp = reinterpret_cast<epoc::wsbitmap *>(client->get_object(blt_cmd->mask_handle));
 
         if (!myside_source_bmp || !myside_mask_bmp) {
             context.complete(epoc::error_bad_handle);
@@ -568,9 +565,9 @@ namespace eka2l1::epoc {
 
         // Try to get the bitmap
         epoc::bitwise_bitmap *bmp = nullptr;
-        
+
         if (ws) {
-            epoc::wsbitmap *myside_bmp = reinterpret_cast<epoc::wsbitmap*>(client->get_object(blt_cmd->handle));
+            epoc::wsbitmap *myside_bmp = reinterpret_cast<epoc::wsbitmap *>(client->get_object(blt_cmd->handle));
 
             if (!myside_bmp) {
                 context.complete(epoc::error_bad_handle);
@@ -818,9 +815,9 @@ namespace eka2l1::epoc {
         do_command_draw_text(context, info->left_top_pos, info->right_bottom_pos, text,
             info->horiz, info->baseline_offset, info->left_mgr, true);
     }
-    
+
     void graphic_context::set_clipping_rect(service::ipc_context &context, ws_cmd &cmd) {
-        eka2l1::rect the_clip = *reinterpret_cast<eka2l1::rect*>(cmd.data_ptr);
+        eka2l1::rect the_clip = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
         the_clip.transform_from_symbian_rectangle();
 
         clipping_rect = the_clip;
@@ -848,129 +845,129 @@ namespace eka2l1::epoc {
         using ws_graphics_context_table_op = std::map<ws_graphics_context_opcode, std::tuple<ws_graphics_context_op_handler, bool, bool>>;
 
         static const ws_graphics_context_table_op v139u_opcode_handlers = {
-            { ws_gc_u139_active, { &graphic_context::active , false, false } },
-            { ws_gc_u139_set_clipping_rect, { &graphic_context::set_clipping_rect , false, false } },
-            { ws_gc_u139_set_brush_color, { &graphic_context::set_brush_color , false, false } },
-            { ws_gc_u139_set_brush_style, { &graphic_context::set_brush_style , false, false } },
-            { ws_gc_u139_set_pen_color, { &graphic_context::set_pen_color , false, false } },
-            { ws_gc_u139_set_pen_style, { &graphic_context::set_pen_style , false, false } },
-            { ws_gc_u139_set_pen_size, { &graphic_context::set_pen_size , false, false } },
-            { ws_gc_u139_deactive, { &graphic_context::deactive , false, false } },
-            { ws_gc_u139_reset, { &graphic_context::reset , false, false } },
-            { ws_gc_u139_use_font, { &graphic_context::use_font , false, false } },
-            { ws_gc_u139_discard_font, { &graphic_context::discard_font , false, false } },
-            { ws_gc_u139_draw_line, { &graphic_context::draw_line , true, false } },
-            { ws_gc_u139_draw_rect, { &graphic_context::draw_rect , true, false } },
-            { ws_gc_u139_clear, { &graphic_context::clear , true, false } },
-            { ws_gc_u139_clear_rect, { &graphic_context::clear_rect , true, false } },
-            { ws_gc_u139_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
-            { ws_gc_u139_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
-            { ws_gc_u139_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
-            { ws_gc_u139_draw_text, { &graphic_context::draw_text , true, false } },
-            { ws_gc_u139_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
-            { ws_gc_u139_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
-            { ws_gc_u139_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
-            { ws_gc_u139_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
-            { ws_gc_u139_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
-            { ws_gc_u139_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
-            { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
-            { ws_gc_u139_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
-            { ws_gc_u139_free, { &graphic_context::free , true, true } }
+            { ws_gc_u139_active, { &graphic_context::active, false, false } },
+            { ws_gc_u139_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_u139_set_brush_color, { &graphic_context::set_brush_color, false, false } },
+            { ws_gc_u139_set_brush_style, { &graphic_context::set_brush_style, false, false } },
+            { ws_gc_u139_set_pen_color, { &graphic_context::set_pen_color, false, false } },
+            { ws_gc_u139_set_pen_style, { &graphic_context::set_pen_style, false, false } },
+            { ws_gc_u139_set_pen_size, { &graphic_context::set_pen_size, false, false } },
+            { ws_gc_u139_deactive, { &graphic_context::deactive, false, false } },
+            { ws_gc_u139_reset, { &graphic_context::reset, false, false } },
+            { ws_gc_u139_use_font, { &graphic_context::use_font, false, false } },
+            { ws_gc_u139_discard_font, { &graphic_context::discard_font, false, false } },
+            { ws_gc_u139_draw_line, { &graphic_context::draw_line, true, false } },
+            { ws_gc_u139_draw_rect, { &graphic_context::draw_rect, true, false } },
+            { ws_gc_u139_clear, { &graphic_context::clear, true, false } },
+            { ws_gc_u139_clear_rect, { &graphic_context::clear_rect, true, false } },
+            { ws_gc_u139_draw_bitmap, { &graphic_context::draw_bitmap, true, false } },
+            { ws_gc_u139_draw_bitmap2, { &graphic_context::draw_bitmap_2, true, false } },
+            { ws_gc_u139_draw_bitmap3, { &graphic_context::draw_bitmap_3, true, false } },
+            { ws_gc_u139_draw_text, { &graphic_context::draw_text, true, false } },
+            { ws_gc_u139_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
+            { ws_gc_u139_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },
+            { ws_gc_u139_gdi_blt2, { &graphic_context::gdi_blt2, true, false } },
+            { ws_gc_u139_gdi_blt3, { &graphic_context::gdi_blt3, true, false } },
+            { ws_gc_u139_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2, true, false } },
+            { ws_gc_u139_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
+            { ws_gc_u139_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
+            { ws_gc_u139_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u139_free, { &graphic_context::free, true, true } }
         };
 
         static const ws_graphics_context_table_op v151u_m1_opcode_handlers = {
-            { ws_gc_u151m1_active, { &graphic_context::active , false, false } },
-            { ws_gc_u151m1_set_clipping_rect, { &graphic_context::set_clipping_rect , false, false } },
-            { ws_gc_u151m1_set_brush_color, { &graphic_context::set_brush_color , false, false } },
-            { ws_gc_u151m1_set_brush_style, { &graphic_context::set_brush_style , false, false } },
-            { ws_gc_u151m1_set_pen_color, { &graphic_context::set_pen_color , false, false } },
-            { ws_gc_u151m1_set_pen_style, { &graphic_context::set_pen_style , false, false } },
-            { ws_gc_u151m1_set_pen_size, { &graphic_context::set_pen_size , false, false } },
-            { ws_gc_u151m1_deactive, { &graphic_context::deactive , false, false } },
-            { ws_gc_u151m1_reset, { &graphic_context::reset , false, false } },
-            { ws_gc_u151m1_use_font, { &graphic_context::use_font , false, false } },
-            { ws_gc_u151m1_discard_font, { &graphic_context::discard_font , false, false } },
-            { ws_gc_u151m1_draw_line, { &graphic_context::draw_line , true, false } },
-            { ws_gc_u151m1_draw_rect, { &graphic_context::draw_rect , true, false } },
-            { ws_gc_u151m1_clear, { &graphic_context::clear , true, false } },
-            { ws_gc_u151m1_clear_rect, { &graphic_context::clear_rect , true, false } },
-            { ws_gc_u151m1_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
-            { ws_gc_u151m1_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
-            { ws_gc_u151m1_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
-            { ws_gc_u151m1_draw_text, { &graphic_context::draw_text , true, false } },
-            { ws_gc_u151m1_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
-            { ws_gc_u151m1_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
-            { ws_gc_u151m1_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
-            { ws_gc_u151m1_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
-            { ws_gc_u151m1_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
-            { ws_gc_u151m1_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
-            { ws_gc_u151m1_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
-            { ws_gc_u151m1_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
-            { ws_gc_u151m1_free, { &graphic_context::free , true, true } }
+            { ws_gc_u151m1_active, { &graphic_context::active, false, false } },
+            { ws_gc_u151m1_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_u151m1_set_brush_color, { &graphic_context::set_brush_color, false, false } },
+            { ws_gc_u151m1_set_brush_style, { &graphic_context::set_brush_style, false, false } },
+            { ws_gc_u151m1_set_pen_color, { &graphic_context::set_pen_color, false, false } },
+            { ws_gc_u151m1_set_pen_style, { &graphic_context::set_pen_style, false, false } },
+            { ws_gc_u151m1_set_pen_size, { &graphic_context::set_pen_size, false, false } },
+            { ws_gc_u151m1_deactive, { &graphic_context::deactive, false, false } },
+            { ws_gc_u151m1_reset, { &graphic_context::reset, false, false } },
+            { ws_gc_u151m1_use_font, { &graphic_context::use_font, false, false } },
+            { ws_gc_u151m1_discard_font, { &graphic_context::discard_font, false, false } },
+            { ws_gc_u151m1_draw_line, { &graphic_context::draw_line, true, false } },
+            { ws_gc_u151m1_draw_rect, { &graphic_context::draw_rect, true, false } },
+            { ws_gc_u151m1_clear, { &graphic_context::clear, true, false } },
+            { ws_gc_u151m1_clear_rect, { &graphic_context::clear_rect, true, false } },
+            { ws_gc_u151m1_draw_bitmap, { &graphic_context::draw_bitmap, true, false } },
+            { ws_gc_u151m1_draw_bitmap2, { &graphic_context::draw_bitmap_2, true, false } },
+            { ws_gc_u151m1_draw_bitmap3, { &graphic_context::draw_bitmap_3, true, false } },
+            { ws_gc_u151m1_draw_text, { &graphic_context::draw_text, true, false } },
+            { ws_gc_u151m1_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
+            { ws_gc_u151m1_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },
+            { ws_gc_u151m1_gdi_blt2, { &graphic_context::gdi_blt2, true, false } },
+            { ws_gc_u151m1_gdi_blt3, { &graphic_context::gdi_blt3, true, false } },
+            { ws_gc_u151m1_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2, true, false } },
+            { ws_gc_u151m1_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
+            { ws_gc_u151m1_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
+            { ws_gc_u151m1_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u151m1_free, { &graphic_context::free, true, true } }
         };
 
         static const ws_graphics_context_table_op v151u_m2_opcode_handlers = {
-            { ws_gc_u151m2_active, { &graphic_context::active , false, false } },
-            { ws_gc_u151m2_set_clipping_rect, { &graphic_context::set_clipping_rect , false, false } },
-            { ws_gc_u151m2_set_brush_color, { &graphic_context::set_brush_color , false, false } },
-            { ws_gc_u151m2_set_brush_style, { &graphic_context::set_brush_style , false, false } },
-            { ws_gc_u151m2_set_pen_color, { &graphic_context::set_pen_color , false, false } },
-            { ws_gc_u151m2_set_pen_style, { &graphic_context::set_pen_style , false, false } },
-            { ws_gc_u151m2_set_pen_size, { &graphic_context::set_pen_size , false, false } },
-            { ws_gc_u151m2_deactive, { &graphic_context::deactive , false, false } },
-            { ws_gc_u151m2_reset, { &graphic_context::reset , false, false } },
-            { ws_gc_u151m2_use_font, { &graphic_context::use_font , false, false } },
-            { ws_gc_u151m2_discard_font, { &graphic_context::discard_font , false, false } },
-            { ws_gc_u151m2_draw_line, { &graphic_context::draw_line , true, false } },
-            { ws_gc_u151m2_draw_rect, { &graphic_context::draw_rect , true, false } },
-            { ws_gc_u151m2_clear, { &graphic_context::clear , true, false } },
-            { ws_gc_u151m2_clear_rect, { &graphic_context::clear_rect , true, false } },
-            { ws_gc_u151m2_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
-            { ws_gc_u151m2_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
-            { ws_gc_u151m2_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
-            { ws_gc_u151m2_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked , true, false } },
-            { ws_gc_u151m2_draw_text, { &graphic_context::draw_text , true, false } },
-            { ws_gc_u151m2_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
-            { ws_gc_u151m2_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
-            { ws_gc_u151m2_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
-            { ws_gc_u151m2_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
-            { ws_gc_u151m2_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
-            { ws_gc_u151m2_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
-            { ws_gc_u151m2_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
-            { ws_gc_u151m2_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
-            { ws_gc_u151m2_free, { &graphic_context::free , true, true } }
+            { ws_gc_u151m2_active, { &graphic_context::active, false, false } },
+            { ws_gc_u151m2_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_u151m2_set_brush_color, { &graphic_context::set_brush_color, false, false } },
+            { ws_gc_u151m2_set_brush_style, { &graphic_context::set_brush_style, false, false } },
+            { ws_gc_u151m2_set_pen_color, { &graphic_context::set_pen_color, false, false } },
+            { ws_gc_u151m2_set_pen_style, { &graphic_context::set_pen_style, false, false } },
+            { ws_gc_u151m2_set_pen_size, { &graphic_context::set_pen_size, false, false } },
+            { ws_gc_u151m2_deactive, { &graphic_context::deactive, false, false } },
+            { ws_gc_u151m2_reset, { &graphic_context::reset, false, false } },
+            { ws_gc_u151m2_use_font, { &graphic_context::use_font, false, false } },
+            { ws_gc_u151m2_discard_font, { &graphic_context::discard_font, false, false } },
+            { ws_gc_u151m2_draw_line, { &graphic_context::draw_line, true, false } },
+            { ws_gc_u151m2_draw_rect, { &graphic_context::draw_rect, true, false } },
+            { ws_gc_u151m2_clear, { &graphic_context::clear, true, false } },
+            { ws_gc_u151m2_clear_rect, { &graphic_context::clear_rect, true, false } },
+            { ws_gc_u151m2_draw_bitmap, { &graphic_context::draw_bitmap, true, false } },
+            { ws_gc_u151m2_draw_bitmap2, { &graphic_context::draw_bitmap_2, true, false } },
+            { ws_gc_u151m2_draw_bitmap3, { &graphic_context::draw_bitmap_3, true, false } },
+            { ws_gc_u151m2_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked, true, false } },
+            { ws_gc_u151m2_draw_text, { &graphic_context::draw_text, true, false } },
+            { ws_gc_u151m2_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
+            { ws_gc_u151m2_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },
+            { ws_gc_u151m2_gdi_blt2, { &graphic_context::gdi_blt2, true, false } },
+            { ws_gc_u151m2_gdi_blt3, { &graphic_context::gdi_blt3, true, false } },
+            { ws_gc_u151m2_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2, true, false } },
+            { ws_gc_u151m2_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
+            { ws_gc_u151m2_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
+            { ws_gc_u151m2_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_u151m2_free, { &graphic_context::free, true, true } }
         };
 
         static const ws_graphics_context_table_op curr_opcode_handlers = {
-            { ws_gc_curr_active, { &graphic_context::active , false, false } },
-            { ws_gc_curr_set_clipping_rect, { &graphic_context::set_clipping_rect , false, false } },
-            { ws_gc_curr_set_brush_color, { &graphic_context::set_brush_color , false, false } },
-            { ws_gc_curr_set_brush_style, { &graphic_context::set_brush_style , false, false } },
-            { ws_gc_curr_set_pen_color, { &graphic_context::set_pen_color , false, false } },
-            { ws_gc_curr_set_pen_style, { &graphic_context::set_pen_style , false, false } },
-            { ws_gc_curr_set_pen_size, { &graphic_context::set_pen_size , false, false } },
-            { ws_gc_curr_deactive, { &graphic_context::deactive , false, false } },
-            { ws_gc_curr_reset, { &graphic_context::reset , false, false } },
+            { ws_gc_curr_active, { &graphic_context::active, false, false } },
+            { ws_gc_curr_set_clipping_rect, { &graphic_context::set_clipping_rect, false, false } },
+            { ws_gc_curr_set_brush_color, { &graphic_context::set_brush_color, false, false } },
+            { ws_gc_curr_set_brush_style, { &graphic_context::set_brush_style, false, false } },
+            { ws_gc_curr_set_pen_color, { &graphic_context::set_pen_color, false, false } },
+            { ws_gc_curr_set_pen_style, { &graphic_context::set_pen_style, false, false } },
+            { ws_gc_curr_set_pen_size, { &graphic_context::set_pen_size, false, false } },
+            { ws_gc_curr_deactive, { &graphic_context::deactive, false, false } },
+            { ws_gc_curr_reset, { &graphic_context::reset, false, false } },
             { ws_gc_curr_use_font, { &graphic_context::use_font, false, false } },
-            { ws_gc_curr_discard_font, { &graphic_context::discard_font , false, false } },
-            { ws_gc_curr_draw_line, { &graphic_context::draw_line , true, false } },
-            { ws_gc_curr_draw_rect, { &graphic_context::draw_rect , true, false } },
-            { ws_gc_curr_clear, { &graphic_context::clear , true, false } },
-            { ws_gc_curr_clear_rect, { &graphic_context::clear_rect , true, false } },
-            { ws_gc_curr_draw_bitmap, { &graphic_context::draw_bitmap , true, false } },
-            { ws_gc_curr_draw_bitmap2, { &graphic_context::draw_bitmap_2 , true, false } },
-            { ws_gc_curr_draw_bitmap3, { &graphic_context::draw_bitmap_3 , true, false } },
-            { ws_gc_curr_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked , true, false } },
-            { ws_gc_curr_draw_text, { &graphic_context::draw_text , true, false } },
-            { ws_gc_curr_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1 , true, false } },
-            { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2 , true, false } },
-            { ws_gc_curr_gdi_blt2, { &graphic_context::gdi_blt2 , true, false } },
-            { ws_gc_curr_gdi_blt3, { &graphic_context::gdi_blt3 , true, false } },
-            { ws_gc_curr_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2 , true, false } },
-            { ws_gc_curr_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3 , true, false } },
-            { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked , true, false } },
-            { ws_gc_curr_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked , true, false } },
-            { ws_gc_curr_free, { &graphic_context::free , true, true } }
+            { ws_gc_curr_discard_font, { &graphic_context::discard_font, false, false } },
+            { ws_gc_curr_draw_line, { &graphic_context::draw_line, true, false } },
+            { ws_gc_curr_draw_rect, { &graphic_context::draw_rect, true, false } },
+            { ws_gc_curr_clear, { &graphic_context::clear, true, false } },
+            { ws_gc_curr_clear_rect, { &graphic_context::clear_rect, true, false } },
+            { ws_gc_curr_draw_bitmap, { &graphic_context::draw_bitmap, true, false } },
+            { ws_gc_curr_draw_bitmap2, { &graphic_context::draw_bitmap_2, true, false } },
+            { ws_gc_curr_draw_bitmap3, { &graphic_context::draw_bitmap_3, true, false } },
+            { ws_gc_curr_ws_draw_bitmap_masked, { &graphic_context::ws_draw_bitmap_masked, true, false } },
+            { ws_gc_curr_draw_text, { &graphic_context::draw_text, true, false } },
+            { ws_gc_curr_draw_box_text_optimised1, { &graphic_context::draw_box_text_optimised1, true, false } },
+            { ws_gc_curr_draw_box_text_optimised2, { &graphic_context::draw_box_text_optimised2, true, false } },
+            { ws_gc_curr_gdi_blt2, { &graphic_context::gdi_blt2, true, false } },
+            { ws_gc_curr_gdi_blt3, { &graphic_context::gdi_blt3, true, false } },
+            { ws_gc_curr_gdi_ws_blt2, { &graphic_context::gdi_ws_blt2, true, false } },
+            { ws_gc_curr_gdi_ws_blt3, { &graphic_context::gdi_ws_blt3, true, false } },
+            { ws_gc_curr_gdi_blt_masked, { &graphic_context::gdi_blt_masked, true, false } },
+            { ws_gc_curr_gdi_ws_blt_masked, { &graphic_context::gdi_ws_blt_masked, true, false } },
+            { ws_gc_curr_free, { &graphic_context::free, true, true } }
         };
 
         epoc::version cli_ver = client->client_version();
@@ -979,14 +976,14 @@ namespace eka2l1::epoc {
         bool need_to_set_flushed = false;
         bool need_quit = false;
 
-#define FIND_OPCODE(op, table)                                               \
-    auto result = table.find(op);                                            \
-    if (result == table.end() || !std::get<0>(result->second)) {             \
+#define FIND_OPCODE(op, table)                                                               \
+    auto result = table.find(op);                                                            \
+    if (result == table.end() || !std::get<0>(result->second)) {                             \
         LOG_WARN(SERVICE_WINDOW, "Unimplemented graphics context opcode {}", cmd.header.op); \
-        return false;                                                        \
-    }                                                                        \
-    handler = std::get<0>(result->second);                                   \
-    need_to_set_flushed = std::get<1>(result->second);                       \
+        return false;                                                                        \
+    }                                                                                        \
+    handler = std::get<0>(result->second);                                                   \
+    need_to_set_flushed = std::get<1>(result->second);                                       \
     need_quit = std::get<2>(result->second);
 
         kernel_system *kern = client->get_ws().get_kernel_system();

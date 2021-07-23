@@ -17,11 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/ui/plugins/notenof.h>
 #include <kernel/kernel.h>
+#include <services/ui/plugins/notenof.h>
 
-#include <utils/err.h>
 #include <common/log.h>
+#include <utils/err.h>
 
 namespace eka2l1::epoc::notifier {
     void note_display_plugin::handle(epoc::desc8 *request, epoc::des8 *respone, epoc::notify_info &complete_info) {
@@ -32,7 +32,7 @@ namespace eka2l1::epoc::notifier {
 
         kernel::process *pr_req = complete_info.requester->owning_process();
 
-        std::uint8_t *data_ptr = reinterpret_cast<std::uint8_t*>(request->get_pointer(pr_req));
+        std::uint8_t *data_ptr = reinterpret_cast<std::uint8_t *>(request->get_pointer(pr_req));
         std::uint32_t data_size = request->get_length();
 
         if (!data_ptr || !data_size) {
@@ -49,7 +49,7 @@ namespace eka2l1::epoc::notifier {
             seri.absorb(type);
             seri.absorb(unk);
 
-            std::string to_display(reinterpret_cast<const char*>(data_ptr + sizeof(std::uint16_t) + sizeof(char)));
+            std::string to_display(reinterpret_cast<const char *>(data_ptr + sizeof(std::uint16_t) + sizeof(char)));
             LOG_TRACE(SERVICE_UI, "Trying to display dialog type: {} with message: {}", type, to_display);
 
             if (callback_) {

@@ -20,8 +20,8 @@
 #ifndef MEDIA_CLIENT_AUDIO_IMPL_H_
 #define MEDIA_CLIENT_AUDIO_IMPL_H_
 
-#include <mdaaudiosampleplayer.h>
 #include <mdaaudiosampleeditor.h>
+#include <mdaaudiosampleplayer.h>
 
 #include <e32base.h>
 #include <e32std.h>
@@ -39,19 +39,18 @@ enum TMdaPlayType {
     EMdaPlayTypeBuffer = 1
 };
 
-
 bool TranslateInternalStateToReleasedState(const TMdaState aState, CMdaAudioClipUtility::TState &aReleasedState);
 
 struct CMMFMdaAudioUtility;
 
-struct CMMFMdaAudioOpenComplete: public CIdle {
+struct CMMFMdaAudioOpenComplete : public CIdle {
 protected:
     TBool iIsFixup;
 
 public:
     CMMFMdaAudioOpenComplete();
     ~CMMFMdaAudioOpenComplete();
-    
+
     void Open(CMMFMdaAudioUtility *aUtil);
     void FixupActiveStatus();
 
@@ -69,11 +68,11 @@ protected:
     TInt iPriority;
     TMdaPriorityPreference iPref;
     TMdaPlayType iPlayType;
-    
+
 private:
     TMdaState iState;
     CMMFMdaAudioOpenComplete iOpener;
-    
+
 protected:
     TAny *iDispatchInstance;
     TTimeIntervalMicroSeconds iDuration;
@@ -113,37 +112,37 @@ public:
     const TTimeIntervalMicroSeconds &Duration() {
         return iDuration;
     }
-    
+
     const TMdaState State() const {
-    	return iState;
+        return iState;
     }
 
     void SetRepeats(const TInt aHowManyTimes, const TTimeIntervalMicroSeconds &aSilenceInterval);
-    
+
     // Base hook for devired
     virtual void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError) = 0;
 };
 
-struct CMMFMdaAudioPlayerUtility: public CMMFMdaAudioUtility {
+struct CMMFMdaAudioPlayerUtility : public CMMFMdaAudioUtility {
 private:
-	MMdaAudioPlayerCallback &iCallback;
-	
+    MMdaAudioPlayerCallback &iCallback;
+
 public:
-	CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+    CMMFMdaAudioPlayerUtility(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
     static CMMFMdaAudioPlayerUtility *NewL(MMdaAudioPlayerCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
-    
+
     virtual void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError);
 };
 
 struct CMMFMdaAudioRecorderUtility : public CMMFMdaAudioUtility {
 private:
-	MMdaObjectStateChangeObserver &iObserver;
+    MMdaObjectStateChangeObserver &iObserver;
     TUint32 iContainerFormat;
 
 public:
-	CMMFMdaAudioRecorderUtility(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
+    CMMFMdaAudioRecorderUtility(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
     static CMMFMdaAudioRecorderUtility *NewL(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
-    
+
     virtual void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError);
 
     TInt SetDestCodec(TFourCC aDestCodec);

@@ -58,7 +58,7 @@ namespace eka2l1::drivers {
             std::uint16_t name_len = *data;
 
             if (strncmp(name, reinterpret_cast<const char *>(data + 1), name_len) == 0) {
-                return *reinterpret_cast<const std::int32_t*>(&data[name_len + 1]);
+                return *reinterpret_cast<const std::int32_t *>(&data[name_len + 1]);
             }
 
             data += name_len + 5;

@@ -37,8 +37,8 @@
 #include <map>
 #include <mutex>
 #include <regex>
-#include <thread>
 #include <stack>
+#include <thread>
 
 #include <string.h>
 
@@ -516,7 +516,7 @@ namespace eka2l1 {
                     epoc::uid_type temp_uid;
 
                     std::ifstream temp_file_holder(eka2l1::add_path(iterator.dir_name, entry.name), std::ios_base::binary);
-                    if (temp_file_holder.read(reinterpret_cast<char*>(&temp_uid), sizeof(temp_uid))) {
+                    if (temp_file_holder.read(reinterpret_cast<char *>(&temp_uid), sizeof(temp_uid))) {
                         if (((utype.uid1 != 0) && (utype.uid1 != temp_uid.uid1)) || ((utype.uid2 != 0) && (utype.uid2 != temp_uid.uid2))
                             || ((utype.uid3 != 0) && (utype.uid3 != temp_uid.uid3))) {
                             continue;
@@ -628,7 +628,7 @@ namespace eka2l1 {
 
         std::optional<std::u16string> get_real_physical_path(const std::u16string &vert_path, bool *is_root = nullptr) {
             const std::int32_t stack_level = path_stack_level(vert_path);
-            
+
             if (stack_level < 0) {
                 return std::nullopt;
             }
@@ -763,7 +763,7 @@ namespace eka2l1 {
             if (mappings[static_cast<int>(drv)].second) {
                 mappings[static_cast<int>(drv)].second = false;
 
-                for (auto &watch_handle: watches[drv]) {
+                for (auto &watch_handle : watches[drv]) {
                     if (watcher_) {
                         watcher_->unwatch(static_cast<std::int32_t>(watch_handle));
                     }
@@ -876,7 +876,7 @@ namespace eka2l1 {
 
             if (!root.empty()) {
                 const drive_number drv = char16_to_drive(root[0]);
-                
+
                 if (!mappings[static_cast<int>(drv)].second) {
                     return nullptr;
                 }
@@ -934,7 +934,7 @@ namespace eka2l1 {
             }
 
             if (watcher_->unwatch(static_cast<std::int32_t>(handle))) {
-                for (auto &[drive, watch_array]: watches) {
+                for (auto &[drive, watch_array] : watches) {
                     auto ite = std::find(watch_array.begin(), watch_array.end(), handle);
                     if (ite != watch_array.end()) {
                         watch_array.erase(ite);
@@ -946,12 +946,12 @@ namespace eka2l1 {
 
             return false;
         }
-        
+
         void validate_for_host() override {
-           if (common::is_platform_case_sensitive()) {
+            if (common::is_platform_case_sensitive()) {
                 LOG_INFO(VFS, "Iterating through all emulated drive to lowercase all filesystem entities!");
 
-                for (auto &mapping: mappings) {
+                for (auto &mapping : mappings) {
                     if (!mapping.second) {
                         continue;
                     }
@@ -966,7 +966,6 @@ namespace eka2l1 {
     class rom_file_system : public physical_file_system {
         loader::rom *rom_cache;
         memory_system *mem;
-
 
     public:
         explicit rom_file_system(loader::rom *cache, memory_system *mem, epocver ver, const std::string &product_code)
@@ -990,7 +989,7 @@ namespace eka2l1 {
         bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
             return false;
         }
-        
+
         bool install_memory(memory_system *new_mem) override {
             mem = new_mem;
             return true;
@@ -1085,7 +1084,7 @@ namespace eka2l1 {
                 return std::nullopt;
             }
 
-            for (const auto &entry: the_base_dir->entries) {
+            for (const auto &entry : the_base_dir->entries) {
                 if (entry.address_lin == addr) {
                     return entry.name;
                 }
@@ -1305,7 +1304,7 @@ namespace eka2l1 {
 
         return std::nullopt;
     }
-    
+
     std::optional<std::u16string> io_system::get_raw_path(const std::u16string &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
@@ -1375,16 +1374,16 @@ namespace eka2l1 {
     void io_system::validate_for_host() {
         const std::lock_guard<std::mutex> guard(access_lock);
 
-        for (auto &filesystem: filesystems) {
+        for (auto &filesystem : filesystems) {
             filesystem.second->validate_for_host();
         }
     }
-    
+
     bool io_system::install_memory(memory_system *mem) {
         const std::lock_guard<std::mutex> guard(access_lock);
         bool res = false;
 
-        for (auto &filesystem: filesystems) {
+        for (auto &filesystem : filesystems) {
             if (filesystem.second->install_memory(mem))
                 res = true;
         }
@@ -1394,7 +1393,7 @@ namespace eka2l1 {
 
     std::size_t io_system::register_drive_change_notify(drive_change_notify_callback callback, void *userdata) {
         const std::lock_guard<std::mutex> guard(access_lock);
-        
+
         auto pdat = std::make_pair(callback, userdata);
         return drive_change_callbacks.add(pdat);
     }
@@ -1402,9 +1401,9 @@ namespace eka2l1 {
     bool io_system::remove_drive_change_notify(const std::size_t handle) {
         return drive_change_callbacks.remove(handle);
     }
-    
+
     void io_system::invoke_drive_change_callbacks(drive_number drv, drive_action act) {
-        for (auto &callback: drive_change_callbacks) {
+        for (auto &callback : drive_change_callbacks) {
             access_lock.unlock();
             callback.first(callback.second, drv, act);
             access_lock.lock();

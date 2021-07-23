@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/notifier/notifier.h>
 #include <services/notifier/queries.h>
+#include <system/epoc.h>
 
 #include <utils/consts.h>
 #include <utils/err.h>
@@ -77,7 +77,7 @@ namespace eka2l1 {
 
             return;
         }
-        
+
         kernel::process *caller_pr = ctx->msg->own_thr->owning_process();
 
         epoc::desc8 *request_data = eka2l1::ptr<epoc::desc8>(ctx->msg->args.args[1]).get(caller_pr);
@@ -95,7 +95,7 @@ namespace eka2l1 {
 
         plug->handle(request_data, respond_data, complete_info);
     }
-    
+
     void notifier_client_session::info_print(service::ipc_context *ctx) {
         std::optional<std::u16string> to_display = ctx->get_argument_value<std::u16string>(0);
 

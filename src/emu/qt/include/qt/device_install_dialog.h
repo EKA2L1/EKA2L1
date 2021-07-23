@@ -26,19 +26,18 @@
 #include <vector>
 
 namespace Ui {
-class device_install_dialog;
+    class device_install_dialog;
 }
 
 namespace eka2l1 {
-namespace config {
-    struct state;
+    namespace config {
+        struct state;
+    }
+
+    class device_manager;
 }
 
-class device_manager;
-}
-
-class device_install_dialog : public QDialog
-{
+class device_install_dialog : public QDialog {
     Q_OBJECT
 
 private:
@@ -55,12 +54,12 @@ private slots:
     void on_install_triggered();
     void on_cancel_triggered();
     void on_progress_bar_update(const std::size_t so_far, const std::size_t total);
-    int on_firmware_variant_selects(const std::vector<std::string>& list);
+    int on_firmware_variant_selects(const std::vector<std::string> &list);
 
 signals:
     void progress_bar_update(const std::size_t so_far, const std::size_t total);
     void new_device_added();
-    int firmware_variant_selects(const std::vector<std::string>& list);
+    int firmware_variant_selects(const std::vector<std::string> &list);
 
 public:
     explicit device_install_dialog(QWidget *parent, eka2l1::device_manager *dvcmngr, eka2l1::config::state &conf);

@@ -20,8 +20,8 @@
 #pragma once
 
 #include <mem/common.h>
-#include <mem/mmu.h>
 #include <mem/control.h>
+#include <mem/mmu.h>
 #include <mem/page.h>
 
 #include <array>

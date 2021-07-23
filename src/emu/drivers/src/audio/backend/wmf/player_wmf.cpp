@@ -30,10 +30,10 @@
 #include <drivers/audio/backend/wmf/player_wmf.h>
 
 #include <common/buffer.h>
-#include <common/fileutils.h>
-#include <common/path.h>
 #include <common/cvt.h>
+#include <common/fileutils.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include <propvarutil.h>
 
@@ -71,11 +71,11 @@ namespace eka2l1::drivers {
      * 
      * Implementation reference from bradenmcd's gist on GitHub. ID link 9106d2e1c46f40bca140.
      */
-    class rw_stream_com: public IStream {
+    class rw_stream_com : public IStream {
     protected:
         common::rw_stream *stream_;
         LONG count_;
-    
+
     public:
         explicit rw_stream_com(common::rw_stream *stream)
             : stream_(stream)
@@ -83,9 +83,9 @@ namespace eka2l1::drivers {
         }
 
         rw_stream_com(const rw_stream_com &) = delete;
-        rw_stream_com & operator=(const rw_stream_com &) = delete;
+        rw_stream_com &operator=(const rw_stream_com &) = delete;
 
-        virtual HRESULT __stdcall QueryInterface(const IID & iid, void ** ppv) {
+        virtual HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) {
             if (!ppv) {
                 return E_INVALIDARG;
             }
@@ -113,7 +113,7 @@ namespace eka2l1::drivers {
             return count_;
         }
 
-        virtual HRESULT __stdcall Read(void * pv, ULONG cb, ULONG * pcbRead) {
+        virtual HRESULT __stdcall Read(void *pv, ULONG cb, ULONG *pcbRead) {
             if (!pv || !pcbRead) {
                 return STG_E_INVALIDPOINTER;
             }
@@ -124,11 +124,11 @@ namespace eka2l1::drivers {
             return (*pcbRead < cb) ? S_FALSE : S_OK;
         }
 
-        virtual HRESULT __stdcall Write(const void * pv, ULONG cb, ULONG * pcbWritten) {
+        virtual HRESULT __stdcall Write(const void *pv, ULONG cb, ULONG *pcbWritten) {
             if (!pv || !pcbWritten) {
                 return STG_E_INVALIDPOINTER;
             }
-            
+
             const std::uint64_t size = stream_->write(pv, cb);
             *pcbWritten = static_cast<ULONG>(size);
 
@@ -136,7 +136,7 @@ namespace eka2l1::drivers {
         }
 
         virtual HRESULT __stdcall Seek(LARGE_INTEGER dlibMove, DWORD dwOrigin,
-                                    ULARGE_INTEGER * plibNewPosition) {
+            ULARGE_INTEGER *plibNewPosition) {
             common::seek_where whine = common::seek_where::beg;
 
             switch (dwOrigin) {
@@ -168,9 +168,9 @@ namespace eka2l1::drivers {
             return E_NOTIMPL;
         }
 
-        virtual HRESULT __stdcall CopyTo(IStream * pstm, ULARGE_INTEGER cb,
-                                        ULARGE_INTEGER * pcbRead,
-                                        ULARGE_INTEGER * pcbWritten) {
+        virtual HRESULT __stdcall CopyTo(IStream *pstm, ULARGE_INTEGER cb,
+            ULARGE_INTEGER *pcbRead,
+            ULARGE_INTEGER *pcbWritten) {
             return E_NOTIMPL;
         }
 
@@ -183,22 +183,22 @@ namespace eka2l1::drivers {
         }
 
         virtual HRESULT __stdcall LockRegion(ULARGE_INTEGER libOffset,
-                                            ULARGE_INTEGER cb,
-                                            DWORD dwLockType) {
+            ULARGE_INTEGER cb,
+            DWORD dwLockType) {
             return E_NOTIMPL;
         }
 
         virtual HRESULT __stdcall UnlockRegion(ULARGE_INTEGER libOffset,
-                                            ULARGE_INTEGER cb,
-                                            DWORD dwLockType) {
+            ULARGE_INTEGER cb,
+            DWORD dwLockType) {
             return E_NOTIMPL;
         }
 
-        virtual HRESULT __stdcall Stat(STATSTG * pstatstg, DWORD grfStatFlag) {
+        virtual HRESULT __stdcall Stat(STATSTG *pstatstg, DWORD grfStatFlag) {
             return E_NOTIMPL;
         }
 
-        virtual HRESULT __stdcall Clone(IStream ** ppstm) {
+        virtual HRESULT __stdcall Clone(IStream **ppstm) {
             return E_NOTIMPL;
         }
     };
@@ -216,7 +216,7 @@ namespace eka2l1::drivers {
             SafeRelease(&custom_stream_);
         }
     }
-    
+
     bool player_wmf_request::set_output_type(IMFMediaType *new_output_type) {
         if (!new_output_type) {
             return false;
@@ -478,7 +478,7 @@ namespace eka2l1::drivers {
 
     bool player_wmf::set_position_for_custom_format(player_request_instance &request, const std::uint64_t pos_in_us) {
         player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
-    
+
         // Time unit in 100 nanoseconds, convert to unit by mul with 10.
         PROPVARIANT time_to_seek = { pos_in_us * 10 };
         time_to_seek.vt = VT_I8;
@@ -493,7 +493,7 @@ namespace eka2l1::drivers {
     }
 
     void player_wmf::read_and_transcode(player_request_instance &request, const std::uint32_t out_stream_idx, const std::uint64_t time_stamp_source, const std::uint64_t duration_source) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(request.get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(request.get());
 
         // Seek the source stream to time stamp first
         if (!set_position_for_custom_format(request, time_stamp_source)) {
@@ -534,7 +534,7 @@ namespace eka2l1::drivers {
         }
 
         result = writer->SetInputMediaType(stream_idx, source_current_output_reader_type, nullptr);
-        
+
         if (result != S_OK) {
             LOG_ERROR(DRIVER_AUD, "Unable to set writer input media type!");
             return false;
@@ -552,7 +552,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::crop() {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(requests_.front().get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
 
         // Construct an temporary url to write new samples to
         const std::string url_new = eka2l1::file_directory(request_wmf->url_) + eka2l1::filename(request_wmf->url_) + "_temp" + eka2l1::path_extension(request_wmf->url_);
@@ -605,7 +605,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::set_dest_encoding(const std::uint32_t enc) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(requests_.front().get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
 
         if (!request_wmf) {
             return false;
@@ -649,7 +649,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::set_dest_freq(const std::uint32_t freq) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(requests_.front().get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
 
         if (!request_wmf) {
             return false;
@@ -683,8 +683,7 @@ namespace eka2l1::drivers {
                 std::uint32_t output_support_freq = 0;
                 std::uint32_t output_support_cn = 0;
 
-                if (SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &output_support_cn)) &&
-                    SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &output_support_freq))) {
+                if (SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &output_support_cn)) && SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &output_support_freq))) {
                     if ((output_support_freq >= freq) && (output_support_cn == request_wmf->channels_)) {
                         LOG_TRACE(DRIVER_AUD, "Destination sample rate is set to nearest supported: {}", output_support_freq);
                         return request_wmf->set_output_type(type);
@@ -699,7 +698,7 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::set_dest_channel_count(const std::uint32_t cn) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(requests_.front().get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
 
         if (!request_wmf) {
             return false;
@@ -733,8 +732,7 @@ namespace eka2l1::drivers {
                 std::uint32_t output_support_freq = 0;
                 std::uint32_t output_support_cn = 0;
 
-                if (SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &output_support_cn)) &&
-                    SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &output_support_freq))) {
+                if (SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &output_support_cn)) && SUCCEEDED(type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &output_support_freq))) {
                     if ((output_support_freq == request_wmf->channels_) && (output_support_cn == cn)) {
                         return request_wmf->set_output_type(type);
                     }
@@ -746,9 +744,9 @@ namespace eka2l1::drivers {
 
         return false;
     }
-    
+
     bool player_wmf::make_backend_source(player_request_instance &request) {
-        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request*>(requests_.front().get());
+        player_wmf_request *request_wmf = reinterpret_cast<player_wmf_request *>(requests_.front().get());
 
         if (!request_wmf) {
             return false;

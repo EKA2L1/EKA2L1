@@ -35,10 +35,10 @@ namespace eka2l1::drivers {
         cursor_type_nesw_resize,
         cursor_type_nwse_resize
     };
-    
+
     class cursor {
     public:
-        virtual ~cursor() {};
+        virtual ~cursor(){};
         virtual void *raw_handle() = 0;
     };
 

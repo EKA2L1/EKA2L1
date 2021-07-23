@@ -94,8 +94,8 @@ namespace eka2l1::epoc::apa {
             result += u"\" ";
 
             // Add tail end
-            result.append(reinterpret_cast<char16_t*>(tail_end_.data()), (tail_end_.length() + 1) >> 1);
-            
+            result.append(reinterpret_cast<char16_t *>(tail_end_.data()), (tail_end_.length() + 1) >> 1);
+
             // Other parameters are unused.
             return result;
         }
@@ -106,7 +106,7 @@ namespace eka2l1::epoc::apa {
         std::u16string data;
         data.resize((seri.size() + 1) >> 1);
 
-        seri = common::chunkyseri(reinterpret_cast<std::uint8_t*>(data.data()), data.length() * 2,
+        seri = common::chunkyseri(reinterpret_cast<std::uint8_t *>(data.data()), data.length() * 2,
             common::chunkyseri_mode::SERI_MODE_WRITE);
 
         do_it_newarch(seri);

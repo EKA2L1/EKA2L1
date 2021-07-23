@@ -23,9 +23,9 @@
 #include <services/drm/notifier/events.h>
 #include <services/framework.h>
 
+#include <kernel/server.h>
 #include <utils/des.h>
 #include <utils/reqsts.h>
-#include <kernel/server.h>
 
 #include <queue>
 #include <vector>
@@ -79,13 +79,13 @@ namespace eka2l1 {
 
     struct drm_notifier_client_session : public service::typical_session {
     private:
-        std::queue<drm_event_message*> msgs_;
+        std::queue<drm_event_message *> msgs_;
 
         epoc::notify_info notify_;
         std::uint8_t *to_write_data_;
         epoc::des8 *to_write_event_type_;
 
-        std::vector<drm_accept_event_type> accept_types_;     ///< Type of events that this session will accept to be notified of
+        std::vector<drm_accept_event_type> accept_types_; ///< Type of events that this session will accept to be notified of
 
     protected:
         /**

@@ -25,5 +25,5 @@ namespace eka2l1::loader {
      * \returns True on success.
      */
     bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info,
-                         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+        progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
 }

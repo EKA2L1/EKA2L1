@@ -34,7 +34,7 @@ namespace eka2l1 {
     shutdown_session::shutdown_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(svr, client_ss_uid, client_ver) {
     }
-    
+
     void shutdown_session::request_notify(service::ipc_context *context) {
         if (!nof_.empty()) {
             context->complete(epoc::error_in_use);

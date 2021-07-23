@@ -24,8 +24,8 @@
 #include <services/msv/entry.h>
 #include <services/msv/registry.h>
 
-#include <services/framework.h>
 #include <kernel/server.h>
+#include <services/framework.h>
 
 #include <utils/des.h>
 #include <utils/reqsts.h>

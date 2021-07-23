@@ -18,10 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/server.h>
 #include <mem/ptr.h>
+#include <system/epoc.h>
 
 #include <services/context.h>
 #include <utils/des.h>
@@ -321,7 +321,7 @@ namespace eka2l1 {
         bool ipc_context::satisfy(epoc::security_policy &policy, epoc::security_info *missing) {
             return msg->own_thr->owning_process()->satisfy(policy, missing);
         }
-        
+
         void server::connect(service::ipc_context &ctx) {
             ctx.complete(0);
         }

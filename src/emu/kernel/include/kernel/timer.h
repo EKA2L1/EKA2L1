@@ -52,7 +52,7 @@ namespace eka2l1 {
                 kernel::access_type access = access_type::local_access);
             ~timer();
 
-            bool after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts, 
+            bool after(kernel::thread *requester, eka2l1::ptr<epoc::request_status> sts,
                 std::uint64_t us_signal);
             bool request_finish();
             bool cancel_request();

@@ -24,9 +24,9 @@
 #include <common/cvt.h>
 #include <common/types.h>
 
-#include <system/installation/common.h>
 #include <services/applist/applist.h>
 #include <services/window/window.h>
+#include <system/installation/common.h>
 #include <utils/apacmd.h>
 
 namespace eka2l1 {

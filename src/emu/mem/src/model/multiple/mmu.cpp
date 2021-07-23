@@ -18,18 +18,18 @@
  */
 
 #include <algorithm>
-#include <mem/model/multiple/mmu.h>
 #include <mem/model/multiple/control.h>
+#include <mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {
     mmu_multiple::mmu_multiple(control_base *manager, arm::core *cpu, config::state *conf)
         : mmu_base(manager, cpu, conf)
         , cur_dir_(nullptr) {
-        cur_dir_ = &(reinterpret_cast<control_multiple*>(manager)->global_dir_);
+        cur_dir_ = &(reinterpret_cast<control_multiple *>(manager)->global_dir_);
     }
 
     bool mmu_multiple::set_current_addr_space(const asid id) {
-        control_multiple *ctrl_mul = reinterpret_cast<control_multiple*>(manager_);
+        control_multiple *ctrl_mul = reinterpret_cast<control_multiple *>(manager_);
 
         if (id == 0) {
             cur_dir_ = &ctrl_mul->global_dir_;
@@ -47,7 +47,7 @@ namespace eka2l1::mem {
     page_table *mmu_multiple::get_page_table_by_addr(const vm_address addr) {
         return cur_dir_->get_page_table(addr);
     }
-    
+
     const asid mmu_multiple::current_addr_space() const {
         if (cur_dir_) {
             return cur_dir_->id();

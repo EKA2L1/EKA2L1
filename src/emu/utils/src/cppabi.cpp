@@ -45,12 +45,12 @@ namespace eka2l1::utils {
         offset the_off = 0;
         const std::uint32_t *start_looking = nullptr;
 
-        for (const std::uint32_t addr: addrs) {
+        for (const std::uint32_t addr : addrs) {
             // Looking for this address's word first
             std::uint32_t looked = 0;
-            start_looking = reinterpret_cast<const std::uint32_t*>(end_ - 4);
+            start_looking = reinterpret_cast<const std::uint32_t *>(end_ - 4);
 
-            while ((start_looking >= reinterpret_cast<const std::uint32_t*>(start_)) && (looked <= MAXIMUM_ADDR_SEARCH_BACK)) {
+            while ((start_looking >= reinterpret_cast<const std::uint32_t *>(start_)) && (looked <= MAXIMUM_ADDR_SEARCH_BACK)) {
                 if (*start_looking == addr) {
                     break;
                 }
@@ -59,7 +59,7 @@ namespace eka2l1::utils {
                 start_looking--;
             }
 
-            if (((looked == MAXIMUM_ADDR_SEARCH_BACK) || (start_looking == reinterpret_cast<const std::uint32_t*>(start_))) && (*start_looking != addr)) {
+            if (((looked == MAXIMUM_ADDR_SEARCH_BACK) || (start_looking == reinterpret_cast<const std::uint32_t *>(start_))) && (*start_looking != addr)) {
                 // Abadon this clue
                 continue;
             }
@@ -67,7 +67,7 @@ namespace eka2l1::utils {
             looked = 0;
 
             // Begin search back to 0
-            while ((start_looking >= reinterpret_cast<const std::uint32_t*>(start_)) && (looked <= MAXIMUM_VTABLE_SEARCH_BACK)) {
+            while ((start_looking >= reinterpret_cast<const std::uint32_t *>(start_)) && (looked <= MAXIMUM_VTABLE_SEARCH_BACK)) {
                 if (*start_looking == 0) {
                     break;
                 }
@@ -75,8 +75,8 @@ namespace eka2l1::utils {
                 looked++;
                 start_looking--;
             }
-            
-            if (((looked == MAXIMUM_VTABLE_SEARCH_BACK) || (start_looking == reinterpret_cast<const std::uint32_t*>(start_))) && (*start_looking != 0)) {
+
+            if (((looked == MAXIMUM_VTABLE_SEARCH_BACK) || (start_looking == reinterpret_cast<const std::uint32_t *>(start_))) && (*start_looking != 0)) {
                 // Abadon this clue, yes
                 continue;
             }
@@ -88,7 +88,7 @@ namespace eka2l1::utils {
             // Yes because of the loop we do extra subtract
             start_looking++;
 
-            const offset the_new_off = reinterpret_cast<const std::uint8_t*>(start_looking) - start_;
+            const offset the_new_off = reinterpret_cast<const std::uint8_t *>(start_looking) - start_;
 
             if ((the_off != 0) && (the_off != the_new_off)) {
                 // Count this clue, but must match with previous

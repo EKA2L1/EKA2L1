@@ -21,10 +21,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
-#include <kernel/kernel.h>
 #include <kernel/chunk.h>
+#include <kernel/kernel.h>
 #include <kernel/libmanager.h>
+#include <system/epoc.h>
 
 #include <services/fbs/fbs.h>
 #include <services/fs/std.h>
@@ -96,8 +96,7 @@ namespace eka2l1 {
                 break;
 
             default: {
-                if ((ctx->msg->function > fbs_set_pixel_size_in_twips + 2) && 
-                    (ctx->msg->function < fbs_nearest_font_design_height_in_twips + 2)) {
+                if ((ctx->msg->function > fbs_set_pixel_size_in_twips + 2) && (ctx->msg->function < fbs_nearest_font_design_height_in_twips + 2)) {
                     ctx->msg->function -= 2;
                 }
 
@@ -129,7 +128,7 @@ namespace eka2l1 {
             num_typefaces(ctx);
             break;
         }
-                              
+
         case fbs_typeface_support: {
             typeface_support(ctx);
             break;
@@ -280,32 +279,32 @@ namespace eka2l1 {
     void fbs_server::initialize_server() {
         // Initialize those chunks
         shared_chunk = kern->create_and_add<kernel::chunk>(
-                                kernel::owner_type::kernel,
-                                kern->get_memory_system(),
-                                nullptr,
-                                "FbsSharedChunk",
-                                0,
-                                0x10000,
-                                (kern->is_eka1() ? 0x600000 : 0x200000),
-                                prot_read_write,
-                                kernel::chunk_type::normal,
-                                kernel::chunk_access::global,
-                                kernel::chunk_attrib::none)
-                            .second;
+                               kernel::owner_type::kernel,
+                               kern->get_memory_system(),
+                               nullptr,
+                               "FbsSharedChunk",
+                               0,
+                               0x10000,
+                               (kern->is_eka1() ? 0x600000 : 0x200000),
+                               prot_read_write,
+                               kernel::chunk_type::normal,
+                               kernel::chunk_access::global,
+                               kernel::chunk_attrib::none)
+                           .second;
 
         large_chunk = kern->create_and_add<kernel::chunk>(
-                                kernel::owner_type::kernel,
-                                kern->get_memory_system(),
-                                nullptr,
-                                "FbsLargeChunk",
-                                0,
-                                0,
-                                0x2000000,
-                                prot_read_write,
-                                kernel::chunk_type::normal,
-                                kernel::chunk_access::global,
-                                kernel::chunk_attrib::none)
-                            .second;
+                              kernel::owner_type::kernel,
+                              kern->get_memory_system(),
+                              nullptr,
+                              "FbsLargeChunk",
+                              0,
+                              0,
+                              0x2000000,
+                              prot_read_write,
+                              kernel::chunk_type::normal,
+                              kernel::chunk_access::global,
+                              kernel::chunk_attrib::none)
+                          .second;
 
         if (!shared_chunk || !large_chunk) {
             LOG_CRITICAL(SERVICE_FBS, "Can't create shared chunk and large chunk of FBS, exiting");
@@ -355,7 +354,7 @@ namespace eka2l1 {
             if (bmp_font_vtab == 0) {
                 LOG_ERROR(SERVICE_FBS, "Unable to find vtable address of CBitmapFont!");
             }
-            
+
             if (kern->is_eka1()) {
                 // For relocate later
                 bmp_font_vtab += fntstr_seg->get_code_base();
@@ -442,7 +441,7 @@ namespace eka2l1 {
         }
 
         clear_all_sessions();
-        
+
         font_obj_container.clear();
         obj_con.clear();
 
@@ -462,7 +461,7 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version)
         , glyph_info_for_legacy_return_(nullptr)
         , glyph_info_for_legacy_return_addr_(0) {
-        fbs_server *fbss = reinterpret_cast<fbs_server*>(serv);
+        fbs_server *fbss = reinterpret_cast<fbs_server *>(serv);
 
         if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
             if (fbss->legacy_level() == FBS_LEGACY_LEVEL_KERNEL_TRANSITION)

@@ -106,7 +106,7 @@ namespace eka2l1::common {
 
             // In case the last block made the current page exec/no-write, let's fix that.
             if (is_memory_wx_exclusive()) {
-                writeStart_ = reinterpret_cast<std::uint8_t*>(align_address_to_host_page(get_writeable_code_ptr()));
+                writeStart_ = reinterpret_cast<std::uint8_t *>(align_address_to_host_page(get_writeable_code_ptr()));
                 sizeEstimate *= get_host_page_size();
 
                 change_protection(writeStart_, sizeEstimate, prot_read_write);
@@ -118,7 +118,7 @@ namespace eka2l1::common {
             if (is_memory_wx_exclusive() && writeStart_ != nullptr) {
                 const uint8_t *end = get_code_ptr();
                 change_protection(writeStart_, common::align(end - writeStart_, get_host_page_size()),
-                        prot_read_exec);
+                    prot_read_exec);
 
                 writeStart_ = nullptr;
             }

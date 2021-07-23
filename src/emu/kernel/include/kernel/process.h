@@ -19,8 +19,8 @@
  */
 #pragma once
 
-#include <common/linked.h>
 #include <common/container.h>
+#include <common/linked.h>
 
 #include <kernel/common.h>
 #include <kernel/kernel_obj.h>
@@ -98,8 +98,8 @@ namespace eka2l1::kernel {
     class codeseg;
     using codeseg_ptr = kernel::codeseg *;
 
-    using process_uid_type_change_callback = std::function<void(void*, const process_uid_type &)>;
-    using process_uid_type_change_callback_elem = std::pair<void*, process_uid_type_change_callback>;
+    using process_uid_type_change_callback = std::function<void(void *, const process_uid_type &)>;
+    using process_uid_type_change_callback_elem = std::pair<void *, process_uid_type_change_callback>;
 
     /**
      * This ROM BSS manager works on the assumption that:
@@ -168,7 +168,7 @@ namespace eka2l1::kernel {
         common::roundabout thread_list;
         common::roundabout codeseg_list;
 
-        std::vector<kernel::process*> child_processes_;
+        std::vector<kernel::process *> child_processes_;
         std::unique_ptr<process_bss_man> bss_man_;
 
         kernel::process *parent_process_;
@@ -250,7 +250,7 @@ namespace eka2l1::kernel {
          * @returns The handle to the callback.
          */
         std::size_t register_uid_type_change_callback(void *userdata, process_uid_type_change_callback callback);
-        
+
         bool unregister_uid_type_change_callback(const std::size_t handle);
 
         kernel_obj_ptr get_object(const std::uint32_t handle);
@@ -355,7 +355,7 @@ namespace eka2l1::kernel {
 
         std::uint32_t get_time_delay() const;
         void set_time_delay(const std::uint32_t delay);
-        
+
         /**
          * @brief       Get the process where we should inherit settings from.
          * 

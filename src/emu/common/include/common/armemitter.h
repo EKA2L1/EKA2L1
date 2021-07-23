@@ -238,7 +238,7 @@ namespace eka2l1::common::armgen {
             value_ = base;
         }
 
-        operand2(arm_reg base, shift_type stype, std::uint8_t shift_imm)    // For IMM shifted register
+        operand2(arm_reg base, shift_type stype, std::uint8_t shift_imm) // For IMM shifted register
         {
             switch (stype) {
             case ST_LSL:

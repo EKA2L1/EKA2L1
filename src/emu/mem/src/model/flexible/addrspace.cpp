@@ -35,7 +35,7 @@ namespace eka2l1::mem::flexible {
     }
 
     linear_section *address_space::section(const std::uint32_t flags) {
-        control_flexible *fl_mmu = reinterpret_cast<control_flexible*>(control_);
+        control_flexible *fl_mmu = reinterpret_cast<control_flexible *>(control_);
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_CODE) {
             // Avoid separate code section now since complicated. TODO (pent0)
@@ -43,7 +43,8 @@ namespace eka2l1::mem::flexible {
         }
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL) {
-            return &shared_data_sec_;;
+            return &shared_data_sec_;
+            ;
         }
 
         if (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) {

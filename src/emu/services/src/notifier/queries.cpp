@@ -18,10 +18,10 @@
  */
 
 #include <services/notifier/queries.h>
-#include <services/ui/plugins/notenof.h>
 #include <services/ui/plugins/keylocknof.h>
+#include <services/ui/plugins/notenof.h>
 
-namespace eka2l1::epoc::notifier  {
+namespace eka2l1::epoc::notifier {
     void add_builtin_plugins(kernel_system *kern, std::vector<plugin_instance> &plugins) {
 #define ADD_PLUGIN(name) plugins.push_back(std::make_unique<name>(kern))
         ADD_PLUGIN(note_display_plugin);

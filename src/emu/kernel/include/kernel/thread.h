@@ -37,8 +37,8 @@
 #include <kernel/common.h>
 #include <kernel/object_ix.h>
 
-#include <utils/reqsts.h>
 #include <mem/ptr.h>
+#include <utils/reqsts.h>
 
 namespace eka2l1 {
     class kernel_system;
@@ -47,7 +47,7 @@ namespace eka2l1 {
     class gdbstub;
 
     struct ipc_msg;
-    using ipc_msg_ptr = ipc_msg*;
+    using ipc_msg_ptr = ipc_msg *;
 
     namespace kernel {
         namespace legacy {
@@ -375,7 +375,7 @@ namespace eka2l1 {
             }
 
             void set_process_permanent(const bool opt) {
-                flags &= ~ FLAG_PROCESS_PERMANENT;
+                flags &= ~FLAG_PROCESS_PERMANENT;
                 if (opt) {
                     flags |= FLAG_PROCESS_PERMANENT;
                 }
@@ -404,7 +404,7 @@ namespace eka2l1 {
             arm::core::thread_context &get_thread_context() {
                 return ctx;
             }
-            
+
             void call_exception_handler(const std::int32_t exec_type);
             void restore_before_exception_state();
 

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <package/registry.h>
 #include <common/chunkyseri.h>
+#include <package/registry.h>
 
 #include <utils/des.h>
 
@@ -197,7 +197,7 @@ namespace eka2l1::package {
         }
 
         trust_status_value.do_state(seri);
-        
+
         // Install chain index
         count = static_cast<std::uint32_t>(install_chain_indices.size());
         seri.absorb(count);
@@ -250,7 +250,7 @@ namespace eka2l1::package {
 
     std::uint64_t object::total_size() const {
         std::uint64_t result = 0;
-        for (const auto &desc: file_descriptions) {
+        for (const auto &desc : file_descriptions) {
             result += desc.uncompressed_length;
         }
 

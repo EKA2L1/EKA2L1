@@ -18,8 +18,8 @@
  */
 
 #include <services/fbs/adapter/font_adapter.h>
-#include <services/fbs/adapter/stb_font_adapter.h>
 #include <services/fbs/adapter/gdr_font_adapter.h>
+#include <services/fbs/adapter/stb_font_adapter.h>
 
 namespace eka2l1::epoc::adapter {
     std::unique_ptr<font_file_adapter_base> make_font_file_adapter(const font_file_adapter_kind kind, std::vector<std::uint8_t> &dat) {

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/sysagt/sysagt.h>
+#include <system/epoc.h>
 
 #include <utils/consts.h>
 #include <utils/err.h>
@@ -82,11 +82,9 @@ namespace eka2l1 {
         const std::size_t size_of_sources = ctx->get_argument_max_data_size(1);
         const std::size_t size_of_dest = ctx->get_argument_max_data_size(2);
 
-        std::uint32_t *sources = reinterpret_cast<std::uint32_t*>(ctx->
-            get_descriptor_argument_ptr(1));
+        std::uint32_t *sources = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(1));
 
-        std::uint32_t *dest = reinterpret_cast<std::uint32_t*>(ctx->
-            get_descriptor_argument_ptr(2));
+        std::uint32_t *dest = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(2));
 
         if ((size_of_sources < size_expected) || (size_of_dest < size_expected)
             || !sources || !dest) {
@@ -136,7 +134,7 @@ namespace eka2l1 {
         if (any) {
             info.uid_nof_ = 0xFFFFFFFF;
         } else {
-            std::uint32_t *uid_to_nof_ptr = reinterpret_cast<std::uint32_t*>(uid_des->get_pointer(own_pr));
+            std::uint32_t *uid_to_nof_ptr = reinterpret_cast<std::uint32_t *>(uid_des->get_pointer(own_pr));
             if (!uid_to_nof_ptr) {
                 ctx->complete(epoc::error_bad_descriptor);
                 return;
@@ -199,7 +197,7 @@ namespace eka2l1 {
         case system_agent_set_event_buffer_enabled:
             set_event_buffering(ctx);
             break;
-        
+
         default:
             LOG_ERROR(SERVICE_SYSAGT, "Unimplemented opcode for System Agent server 0x{:X}", ctx->msg->function);
             break;

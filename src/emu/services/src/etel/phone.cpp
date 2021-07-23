@@ -25,8 +25,8 @@
 #include <common/cvt.h>
 #include <config/config.h>
 
-#include <system/epoc.h>
 #include <system/devices.h>
+#include <system/epoc.h>
 
 namespace eka2l1 {
     etel_phone_subsession::etel_phone_subsession(etel_session *session, etel_phone *phone, const etel_legacy_level lvl)
@@ -85,8 +85,8 @@ namespace eka2l1 {
     void etel_phone_subsession::get_identity_caps(service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_ETEL, "Get identity caps hardcoded");
 
-        const std::uint32_t caps = epoc::etel_mobile_phone_identity_cap_get_manufacturer 
-            | epoc::etel_mobile_phone_identity_cap_get_model 
+        const std::uint32_t caps = epoc::etel_mobile_phone_identity_cap_get_manufacturer
+            | epoc::etel_mobile_phone_identity_cap_get_model
             | epoc::etel_mobile_phone_identity_cap_get_revision
             | epoc::etel_mobile_phone_identity_cap_get_serialnumber
             | epoc::etel_mobile_phone_identity_cap_get_subscriber_id;
@@ -188,11 +188,9 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_current_network(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");  
-        std::optional<epoc::etel_phone_network_info> network_info = 
-            ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
-        epoc::etel_phone_location_area *phone_location_area = 
-            reinterpret_cast<epoc::etel_phone_location_area *>(ctx->get_descriptor_argument_ptr(2));
+        LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");
+        std::optional<epoc::etel_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
+        epoc::etel_phone_location_area *phone_location_area = reinterpret_cast<epoc::etel_phone_location_area *>(ctx->get_descriptor_argument_ptr(2));
 
         network_info->mode_ = phone_->network_info_.mode_;
         network_info->status_ = phone_->network_info_.status_;

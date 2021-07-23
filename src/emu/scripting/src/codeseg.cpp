@@ -21,10 +21,10 @@
 #include <scripting/instance.h>
 #include <scripting/process.h>
 
-#include <system/epoc.h>
-#include <kernel/kernel.h>
 #include <kernel/codeseg.h>
+#include <kernel/kernel.h>
 #include <kernel/libmanager.h>
+#include <system/epoc.h>
 
 #include <common/cvt.h>
 
@@ -80,54 +80,54 @@ namespace eka2l1::scripting {
     }
 }
 
-extern "C" { 
-    EKA2L1_EXPORT void symemu_free_codeseg(eka2l1::scripting::codeseg* seg) {
-        delete seg;
+extern "C" {
+EKA2L1_EXPORT void symemu_free_codeseg(eka2l1::scripting::codeseg *seg) {
+    delete seg;
+}
+
+EKA2L1_EXPORT eka2l1::scripting::codeseg *symemu_load_codeseg(const char *path) {
+    eka2l1::system *sys = eka2l1::scripting::get_current_instance();
+    eka2l1::hle::lib_manager *libmngr = sys->get_lib_manager();
+
+    eka2l1::kernel::codeseg_ptr seg = libmngr->load(eka2l1::common::utf8_to_ucs2(path));
+
+    if (!seg) {
+        return nullptr;
     }
 
-    EKA2L1_EXPORT eka2l1::scripting::codeseg *symemu_load_codeseg(const char *path) {
-        eka2l1::system *sys = eka2l1::scripting::get_current_instance();
-        eka2l1::hle::lib_manager *libmngr = sys->get_lib_manager();
+    return new eka2l1::scripting::codeseg(reinterpret_cast<std::uint64_t>(seg));
+}
 
-        eka2l1::kernel::codeseg_ptr seg = libmngr->load(eka2l1::common::utf8_to_ucs2(path));
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_lookup(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr,
+    const std::uint32_t ord) {
+    return seg->real_seg_->lookup(pr ? pr->get_process_handle() : nullptr, ord);
+}
 
-        if (!seg) {
-            return nullptr;
-        }
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_code_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
+    return seg->real_seg_->get_code_run_addr(pr ? pr->get_process_handle() : nullptr);
+}
 
-        return new eka2l1::scripting::codeseg(reinterpret_cast<std::uint64_t>(seg));
-    }
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_data_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
+    return seg->real_seg_->get_data_run_addr(pr ? pr->get_process_handle() : nullptr);
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_lookup(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr,
-        const std::uint32_t ord) {
-        return seg->real_seg_->lookup(pr ? pr->get_process_handle() : nullptr, ord); 
-    }
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_bss_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
+    return seg->real_seg_->get_data_run_addr(pr ? pr->get_process_handle() : nullptr) + seg->real_seg_->get_data_size();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_code_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
-        return seg->real_seg_->get_code_run_addr(pr ? pr->get_process_handle() : nullptr);
-    }
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_code_size(eka2l1::scripting::codeseg *seg) {
+    return seg->code_size();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_data_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
-        return seg->real_seg_->get_data_run_addr(pr ? pr->get_process_handle() : nullptr);
-    }
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_data_size(eka2l1::scripting::codeseg *seg) {
+    return seg->data_size();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_bss_run_address(eka2l1::scripting::codeseg *seg, eka2l1::scripting::process *pr) {
-        return seg->real_seg_->get_data_run_addr(pr ? pr->get_process_handle() : nullptr) + seg->real_seg_->get_data_size();
-    }
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_bss_size(eka2l1::scripting::codeseg *seg) {
+    return seg->bss_size();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_code_size(eka2l1::scripting::codeseg *seg) {
-        return seg->code_size();
-    }
-
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_data_size(eka2l1::scripting::codeseg *seg) {
-        return seg->data_size();
-    }
-
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_bss_size(eka2l1::scripting::codeseg *seg) {
-        return seg->bss_size();
-    }
-
-    EKA2L1_EXPORT std::uint32_t symemu_codeseg_export_count(eka2l1::scripting::codeseg *seg) {
-        return seg->get_export_count();
-    }
+EKA2L1_EXPORT std::uint32_t symemu_codeseg_export_count(eka2l1::scripting::codeseg *seg) {
+    return seg->get_export_count();
+}
 }

@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <system/devices.h>
 #include <system/installation/firmware.h>
 #include <system/software.h>
-#include <system/devices.h>
 
 #include <common/algorithm.h>
 #include <common/buffer.h>
@@ -32,12 +32,12 @@
 #include <loader/rofs.h>
 #include <loader/rom.h>
 
-#include <pugixml.hpp>
 #include <fstream>
+#include <pugixml.hpp>
 
 #include <fat/fat.h>
 
-namespace eka2l1 {  
+namespace eka2l1 {
     static void extract_file(Fat::Image &img, Fat::Entry &entry, const std::string &path) {
         const std::u16string filename_16 = entry.get_filename();
         std::string filename = eka2l1::add_path(path, common::ucs2_to_utf8(filename_16));
@@ -65,7 +65,7 @@ namespace eka2l1 {
             size_left -= size_to_take;
             offset += size_to_take;
 
-            f.write(reinterpret_cast<const char*>(&temp_buf[0]), size_to_take);
+            f.write(reinterpret_cast<const char *>(&temp_buf[0]), size_to_take);
         }
     }
 
@@ -91,8 +91,7 @@ namespace eka2l1 {
                 }
             }
 
-            if ((mee.entry.file_attributes & (int)Fat::EntryAttribute::ARCHIVE) ||
-                (!(mee.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) && (mee.entry.file_size != 0))) {
+            if ((mee.entry.file_attributes & (int)Fat::EntryAttribute::ARCHIVE) || (!(mee.entry.file_attributes & (int)Fat::EntryAttribute::DIRECTORY) && (mee.entry.file_size != 0))) {
                 extract_file(img, mee, dir_path);
             }
         }
@@ -119,14 +118,13 @@ namespace eka2l1 {
             std::ofstream rom_stream(rom_path, std::ios_base::binary);
             std::uint32_t ignore_bootstrap_left = 0xC00;
 
-            for (auto &root: header.btree_.roots_) {
+            for (auto &root : header.btree_.roots_) {
                 if (root.cert_blocks_.size() == 0) {
                     continue;
                 }
 
                 if (root.cert_blocks_[0].btype_ == loader::firmware::BLOCK_TYPE_ROFS_HASH) {
-                    loader::firmware::block_header_rofs_hash &header_rofs = 
-                        static_cast<decltype(header_rofs)>(*root.cert_blocks_[0].header_);
+                    loader::firmware::block_header_rofs_hash &header_rofs = static_cast<decltype(header_rofs)>(*root.cert_blocks_[0].header_);
 
                     const std::string stt = header_rofs.description_;
                     bool canceled = false;
@@ -174,8 +172,8 @@ namespace eka2l1 {
                 common::ro_std_file_stream rom_read_stream(rom_path, true);
                 common::wo_std_file_stream rom_defraged_stream(rom_final_path, true);
 
-                defrag_result = loader::defrag_rom(reinterpret_cast<common::ro_stream*>(&rom_read_stream),
-                    reinterpret_cast<common::wo_stream*>(&rom_defraged_stream));
+                defrag_result = loader::defrag_rom(reinterpret_cast<common::ro_stream *>(&rom_read_stream),
+                    reinterpret_cast<common::wo_stream *>(&rom_defraged_stream));
             }
 
             if (defrag_result < 0) {
@@ -192,8 +190,8 @@ namespace eka2l1 {
 
             common::ro_std_file_stream rom_read_stream(rom_final_path, true);
 
-            if (!loader::dump_rom_files(reinterpret_cast<common::ro_stream*>(&rom_read_stream),
-                drives_z_path, progress_cb, cancel_cb)) {
+            if (!loader::dump_rom_files(reinterpret_cast<common::ro_stream *>(&rom_read_stream),
+                    drives_z_path, progress_cb, cancel_cb)) {
                 common::remove(rom_final_path);
                 return device_installation_rom_file_corrupt;
             }
@@ -218,7 +216,7 @@ namespace eka2l1 {
         auto &blocks = appropiate_block->code_blocks_;
         bool flag = true;
 
-        for (auto &uda_bin_block: blocks) {
+        for (auto &uda_bin_block : blocks) {
             if (uda_bin_block.ctype_ == loader::firmware::CONTENT_TYPE_CODE) {
                 stream.seek(uda_bin_block.data_offset_in_stream_, eka2l1::common::seek_where::beg);
                 buf.resize(uda_bin_block.header_->data_size_);
@@ -240,7 +238,7 @@ namespace eka2l1 {
                 }
             }
         }
-        
+
         rom_stream.close();
 
         // What to do with it now?
@@ -248,17 +246,17 @@ namespace eka2l1 {
             // Extract the FAT image, with some twists
             // I was using ifstream, but not sure why it fucked up
             FILE *fat_image_file = fopen(image_path.c_str(), "rb");
-            Fat::Image fat_img(fat_image_file,
+            Fat::Image fat_img(
+                fat_image_file,
                 // Read hook
                 [](void *userdata, void *buffer, std::uint32_t size) -> std::uint32_t {
-                    return static_cast<std::uint32_t>(fread(buffer, 1, size, reinterpret_cast<FILE*>(userdata)));
+                    return static_cast<std::uint32_t>(fread(buffer, 1, size, reinterpret_cast<FILE *>(userdata)));
                 },
                 // Seek hook
                 [](void *userdata, std::uint32_t offset, int mode) -> std::uint32_t {
-                    fseek(reinterpret_cast<FILE*>(userdata), offset, (mode == Fat::IMAGE_SEEK_MODE_BEG ? SEEK_SET :
-                        (mode == Fat::IMAGE_SEEK_MODE_CUR ? SEEK_CUR : SEEK_END)));
+                    fseek(reinterpret_cast<FILE *>(userdata), offset, (mode == Fat::IMAGE_SEEK_MODE_BEG ? SEEK_SET : (mode == Fat::IMAGE_SEEK_MODE_CUR ? SEEK_CUR : SEEK_END)));
 
-                    return ftell(reinterpret_cast<FILE*>(userdata));
+                    return ftell(reinterpret_cast<FILE *>(userdata));
                 });
 
             std::string fat_dump_base;
@@ -317,7 +315,7 @@ namespace eka2l1 {
         auto all_variants = variant_list.children("Variant");
         std::vector<std::string> all_variant_strings;
 
-        for (auto &variant: all_variants) {
+        for (auto &variant : all_variants) {
             pugi::xml_node variant_identification = variant.child("VariantIdentification");
             if (!variant_identification) {
                 LOG_ERROR(SYSTEM, "VPL variant does not contain identification!");
@@ -348,7 +346,7 @@ namespace eka2l1 {
         pugi::xml_node final_variant;
         int i = 0;
 
-        for (auto &variant: all_variants) {
+        for (auto &variant : all_variants) {
             if (i == variant_index) {
                 final_variant = variant;
             } else {
@@ -373,7 +371,7 @@ namespace eka2l1 {
         int average_progress_max = 0;
 
         auto file_nodes = file_list.children("File");
-        for (auto &file_node: file_nodes) {
+        for (auto &file_node : file_nodes) {
             pugi::xml_node type_of_file = file_node.child("FileType");
             if (!type_of_file || (common::compare_ignore_case(type_of_file.first_child().value(), "Binary") != 0)) {
                 continue;
@@ -387,10 +385,7 @@ namespace eka2l1 {
 
             file_sub_type = file_subtype_node.first_child().value();
 
-            if ((common::compare_ignore_case(file_sub_type.c_str(), "Mcu") == 0) ||
-                (common::compare_ignore_case(file_sub_type.c_str(), "Ppm") == 0) ||
-                (common::compare_ignore_case(file_sub_type.c_str(), "Content") == 0) ||
-                (common::compare_ignore_case(file_sub_type.c_str(), "MemoryCardContent") == 0)) {
+            if ((common::compare_ignore_case(file_sub_type.c_str(), "Mcu") == 0) || (common::compare_ignore_case(file_sub_type.c_str(), "Ppm") == 0) || (common::compare_ignore_case(file_sub_type.c_str(), "Content") == 0) || (common::compare_ignore_case(file_sub_type.c_str(), "MemoryCardContent") == 0)) {
                 // Get the filename
                 pugi::xml_node fname = file_node.child("Name");
                 if (!fname) {
@@ -419,7 +414,7 @@ namespace eka2l1 {
         std::string drives_z_temp_path = eka2l1::add_path(drives_z_path, "temp\\");
         std::size_t so_far = 0;
 
-        for (auto &fpsx_filename: filenames) {
+        for (auto &fpsx_filename : filenames) {
             common::ro_std_file_stream fpsx_file_stream(fpsx_filename, true);
             std::optional<loader::firmware::fpsx_header> fpsx_head = loader::firmware::read_fpsx_header(
                 fpsx_file_stream);
@@ -470,7 +465,7 @@ namespace eka2l1 {
         eka2l1::create_directories(eka2l1::file_directory(target_rom_path));
         common::move_file(drives_z_temp_path, add_path(drives_z_path, firmcode_low + "\\"));
         common::move_file(current_temp_rom, target_rom_path);
-        
+
         const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0);
 
         if (err_adddvc != add_device_none) {

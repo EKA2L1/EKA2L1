@@ -132,21 +132,21 @@ namespace eka2l1::epoc {
     };
 
     struct mmf_dev_hw_buf_v1 {
-        std::int32_t request_size_;             ///< The size of audio server needs.
-        std::int32_t last_buffer_;              ///< Mark to the server this is the last buffer gonna be sent.
-        std::int32_t buffer_size_;              ///< Total size the audio chunk offered.
+        std::int32_t request_size_; ///< The size of audio server needs.
+        std::int32_t last_buffer_; ///< Mark to the server this is the last buffer gonna be sent.
+        std::int32_t buffer_size_; ///< Total size the audio chunk offered.
 
-        mmf_dev_chunk_op chunk_op_;             ///< Request that the client side should reopen the chunk handle.
-                                                ///< May occur due to chunk recreating
+        mmf_dev_chunk_op chunk_op_; ///< Request that the client side should reopen the chunk handle.
+            ///< May occur due to chunk recreating
     };
 
     struct mmf_dev_hw_buf_v2 {
-        std::uint32_t buffer_type_;             ///< UID of the buffer.
-        std::int32_t request_size_;             ///< The size of audio server needs.
-        std::int32_t last_buffer_;              ///< Mark to the server this is the last buffer gonna be sent.
-        std::int32_t buffer_size_;              ///< Total size the audio chunk offered.
+        std::uint32_t buffer_type_; ///< UID of the buffer.
+        std::int32_t request_size_; ///< The size of audio server needs.
+        std::int32_t last_buffer_; ///< Mark to the server this is the last buffer gonna be sent.
+        std::int32_t buffer_size_; ///< Total size the audio chunk offered.
 
-        mmf_dev_chunk_op chunk_op_;             ///< Request that the client side should reopen the chunk handle.
-                                                ///< May occur due to chunk recreating
+        mmf_dev_chunk_op chunk_op_; ///< Request that the client side should reopen the chunk handle.
+            ///< May occur due to chunk recreating
     };
 }

@@ -6,28 +6,28 @@
 #include <cpu/dyncom/armsupp.h>
 
 namespace {
-struct InstructionSetEncodingItem {
-    const char* name;
-    int attribute_value;
-    int version;
-    std::uint32_t content[21];
-};
+    struct InstructionSetEncodingItem {
+        const char *name;
+        int attribute_value;
+        int version;
+        std::uint32_t content[21];
+    };
 
-// ARM versions
-enum {
-    INVALID = 0,
-    ARMALL,
-    ARMV4,
-    ARMV4T,
-    ARMV5T,
-    ARMV5TE,
-    ARMV5TEJ,
-    ARMV6,
-    ARM1176JZF_S,
-    ARMVFP2,
-    ARMVFP3,
-    ARMV6K,
-};
+    // ARM versions
+    enum {
+        INVALID = 0,
+        ARMALL,
+        ARMV4,
+        ARMV4T,
+        ARMV5T,
+        ARMV5TE,
+        ARMV5TEJ,
+        ARMV6,
+        ARM1176JZF_S,
+        ARMVFP2,
+        ARMVFP3,
+        ARMV6K,
+    };
 } // namespace
 
 // clang-format off
@@ -440,7 +440,7 @@ const InstructionSetEncodingItem arm_exclusion_code[] = {
 };
 // clang-format on
 
-ARMDecodeStatus decode_arm_instruction(std::uint32_t instr, int* idx) {
+ARMDecodeStatus decode_arm_instruction(std::uint32_t instr, int *idx) {
     int n = 0;
     int base = 0;
     int instr_slots = sizeof(arm_instruction) / sizeof(InstructionSetEncodingItem);
@@ -455,15 +455,14 @@ ARMDecodeStatus decode_arm_instruction(std::uint32_t instr, int* idx) {
             continue;
 
         while (n) {
-            if (arm_instruction[i].content[base + 1] == 31 &&
-                arm_instruction[i].content[base] == 0) {
+            if (arm_instruction[i].content[base + 1] == 31 && arm_instruction[i].content[base] == 0) {
                 // clrex
                 if (instr != arm_instruction[i].content[base + 2]) {
                     break;
                 }
             } else if (BITS(instr, arm_instruction[i].content[base],
-                            arm_instruction[i].content[base + 1]) !=
-                       arm_instruction[i].content[base + 2]) {
+                           arm_instruction[i].content[base + 1])
+                != arm_instruction[i].content[base + 2]) {
                 break;
             }
             base += 3;
@@ -480,8 +479,8 @@ ARMDecodeStatus decode_arm_instruction(std::uint32_t instr, int* idx) {
                 base = 0;
                 while (n) {
                     if (BITS(instr, arm_exclusion_code[i].content[base],
-                             arm_exclusion_code[i].content[base + 1]) !=
-                        arm_exclusion_code[i].content[base + 2]) {
+                            arm_exclusion_code[i].content[base + 1])
+                        != arm_exclusion_code[i].content[base + 2]) {
                         break;
                     }
                     base += 3;

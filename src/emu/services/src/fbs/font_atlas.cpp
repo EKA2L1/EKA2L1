@@ -80,7 +80,7 @@ namespace eka2l1::epoc {
             auto cinfos = std::make_unique<adapter::character_info[]>(initial_range_.second);
 
             pack_handle_ = adapter_->begin_get_atlas(atlas_data_.get(), { width, width });
-            
+
             if (pack_handle_ == -1) {
                 return false;
             }

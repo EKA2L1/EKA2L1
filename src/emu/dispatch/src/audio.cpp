@@ -63,7 +63,7 @@ namespace eka2l1::dispatch {
         master_volume_ = volume;
 
         // Refresh the volumes
-        for (auto &medium_unq: mediums_) {
+        for (auto &medium_unq : mediums_) {
             dsp_medium *medium = medium_unq.get();
 
             if (medium) {
@@ -81,14 +81,13 @@ namespace eka2l1::dispatch {
         , logical_volume_(100)
         , type_(type) {
     }
-    
+
     dsp_epoc_stream::dsp_epoc_stream(std::unique_ptr<drivers::dsp_stream> &stream, dsp_manager *manager)
         : dsp_medium(manager, DSP_MEDIUM_TYPE_EPOC_STREAM)
         , ll_stream_(std::move(stream)) {
     }
 
     dsp_epoc_stream::~dsp_epoc_stream() {
-        
     }
 
     void dsp_epoc_stream::volume(const std::uint32_t volume) {
@@ -111,7 +110,6 @@ namespace eka2l1::dispatch {
     }
 
     dsp_epoc_player::~dsp_epoc_player() {
-
     }
 
     void dsp_epoc_player::volume(const std::uint32_t volume) {
@@ -202,7 +200,7 @@ namespace eka2l1::dispatch {
         // TODO: Return duration
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_buffer, eka2l1::ptr<void> handle, epoc::des8 *buffer) {
         kernel::process *pr = sys->get_kernel_system()->crr_process();
 
@@ -215,7 +213,7 @@ namespace eka2l1::dispatch {
         }
 
         eplayer->custom_stream_ = std::make_unique<epoc::rw_des_stream>(buffer, pr);
-        if (!eplayer->impl_->queue_custom(reinterpret_cast<common::rw_stream*>(eplayer->custom_stream_.get()))) {
+        if (!eplayer->impl_->queue_custom(reinterpret_cast<common::rw_stream *>(eplayer->custom_stream_.get()))) {
             return epoc::error_not_supported;
         }
 
@@ -370,7 +368,7 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_dest_sample_rate, eka2l1::ptr<void> handle){
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_dest_sample_rate, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
         dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
@@ -381,7 +379,7 @@ namespace eka2l1::dispatch {
 
         return static_cast<std::int32_t>(eplayer->impl_->get_dest_freq());
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_dest_sample_rate, eka2l1::ptr<void> handle, const std::int32_t sample_rate) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
@@ -397,7 +395,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_dest_channel_count, eka2l1::ptr<void> handle) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
@@ -425,7 +423,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_dest_encoding, eka2l1::ptr<void> handle, std::uint32_t *encoding) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
@@ -458,7 +456,7 @@ namespace eka2l1::dispatch {
 
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_dest_container_format, eka2l1::ptr<void> handle, const std::uint32_t container_format) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
@@ -487,7 +485,7 @@ namespace eka2l1::dispatch {
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
         std::unique_ptr<dsp_medium> stream_new = std::make_unique<dsp_epoc_stream>(ll_stream, &manager);
 
-        dsp_epoc_stream *stream_org_new = reinterpret_cast<dsp_epoc_stream*>(stream_new.get());
+        dsp_epoc_stream *stream_org_new = reinterpret_cast<dsp_epoc_stream *>(stream_new.get());
 
         stream_org_new->ll_stream_->register_callback(
             drivers::dsp_stream_notification_buffer_copied, [](void *userdata) {
@@ -603,7 +601,7 @@ namespace eka2l1::dispatch {
 
         const std::lock_guard<std::mutex> guard(stream->lock_);
 
-        stream->copied_info_ = epoc::notify_info { req, sys->get_kernel_system()->crr_thread() };
+        stream->copied_info_ = epoc::notify_info{ req, sys->get_kernel_system()->crr_thread() };
         return epoc::error_none;
     }
 
@@ -675,7 +673,7 @@ namespace eka2l1::dispatch {
         *bytes = stream->ll_stream_->bytes_rendered();
         return epoc::error_none;
     }
-    
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_position, eka2l1::ptr<void> handle, std::uint64_t *the_time) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
@@ -703,5 +701,5 @@ namespace eka2l1::dispatch {
 
         stream->ll_stream_->reset_stat();
         return epoc::error_none;
-    } 
+    }
 }

@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mem/model/flexible/mmu.h>
 #include <mem/model/flexible/control.h>
+#include <mem/model/flexible/mmu.h>
 
 #include <common/log.h>
 
@@ -26,10 +26,10 @@ namespace eka2l1::mem::flexible {
     mmu_flexible::mmu_flexible(control_base *manager, arm::core *cpu, config::state *conf)
         : mmu_base(manager, cpu, conf) {
         // Set kernel directory as the first one active
-        control_flexible *ctrl_fx = reinterpret_cast<control_flexible*>(manager_);
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible *>(manager_);
         set_current_addr_space(ctrl_fx->kern_addr_space_->id());
     }
-    
+
     const asid mmu_flexible::current_addr_space() const {
         return cur_dir_->id();
     }
@@ -37,7 +37,7 @@ namespace eka2l1::mem::flexible {
     bool mmu_flexible::set_current_addr_space(const asid id) {
         // Try to get the page directory associated with this ID
         // Cố tìm page directory găn với cái ID này
-        control_flexible *ctrl_fx = reinterpret_cast<control_flexible*>(manager_);
+        control_flexible *ctrl_fx = reinterpret_cast<control_flexible *>(manager_);
         page_directory *associated_dir = ctrl_fx->dir_mngr_->get(id);
 
         if (!associated_dir) {

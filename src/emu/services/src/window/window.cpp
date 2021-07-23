@@ -23,6 +23,7 @@
 #include <services/window/window.h>
 
 #include <services/fbs/fbs.h>
+#include <services/utils.h>
 #include <services/window/classes/bitmap.h>
 #include <services/window/classes/dsa.h>
 #include <services/window/classes/gctx.h>
@@ -35,7 +36,6 @@
 #include <services/window/classes/winuser.h>
 #include <services/window/classes/wsobj.h>
 #include <services/window/common.h>
-#include <services/utils.h>
 
 #include <common/algorithm.h>
 #include <common/armemitter.h>
@@ -48,13 +48,13 @@
 #include <config/app_settings.h>
 #include <config/config.h>
 
-#include <utils/event.h>
 #include <utils/err.h>
+#include <utils/event.h>
 
-#include <system/devices.h>
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/timing.h>
+#include <system/devices.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <loader/rom.h>
@@ -277,7 +277,7 @@ namespace eka2l1::epoc {
             }
 
             parent_group = reinterpret_cast<epoc::window *>(get_object(header->parent_id));
-        
+
             if (!parent_group) {
                 LOG_WARN(SERVICE_WINDOW, "Unable to find parent for new group with ID = 0x{:x}. Use root", header->parent_id);
                 parent_group = target_screen->root.get();
@@ -425,7 +425,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
-        ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group*>(cmd.data_ptr);
+        ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group *>(cmd.data_ptr);
         epoc::window_group *group = get_ws().get_group_from_id(evt.id);
 
         if (!group) {
@@ -438,7 +438,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::send_event_to_all_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
-        ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group*>(cmd.data_ptr);
+        ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group *>(cmd.data_ptr);
         get_ws().send_event_to_window_groups(evt.evt);
 
         ctx.complete(epoc::error_none);
@@ -456,7 +456,7 @@ namespace eka2l1::epoc {
         kernel::process *caller_pr = ctx.msg->own_thr->owning_process();
 
         epoc::desc8 *msg_data_des = msg->data.get(caller_pr);
-        std::uint8_t *msg_data = reinterpret_cast<std::uint8_t*>(msg_data_des->get_pointer(caller_pr));
+        std::uint8_t *msg_data = reinterpret_cast<std::uint8_t *>(msg_data_des->get_pointer(caller_pr));
 
         if (!msg_data) {
             ctx.complete(epoc::error_argument);
@@ -477,7 +477,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::fetch_message(service::ipc_context &ctx, ws_cmd &cmd) {
-        const std::uint32_t group_id = *reinterpret_cast<std::uint32_t*>(cmd.data_ptr);
+        const std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         epoc::window_group *group = get_ws().get_group_from_id(group_id);
 
         if (!group) {
@@ -542,13 +542,13 @@ namespace eka2l1::epoc {
         if (kern->is_eka1()) {
             ws_cmd_find_window_group_identifier_thread_eka1 *find_info = reinterpret_cast<decltype(find_info)>(
                 cmd.data_ptr);
-            
+
             prev_id = find_info->previous_id;
             thr_id = find_info->thread_id;
         } else {
             ws_cmd_find_window_group_identifier_thread *find_info = reinterpret_cast<decltype(find_info)>(
                 cmd.data_ptr);
-            
+
             prev_id = find_info->previous_id;
             thr_id = find_info->thread_id;
         }
@@ -604,8 +604,7 @@ namespace eka2l1::epoc {
         kernel_system *kern = ctx.sys->get_kernel_system();
 
         if (kern->is_eka1()) {
-            ctx.write_data_to_descriptor_argument<kernel::uid_eka1>(reply_slot, static_cast<kernel::uid_eka1>(
-                thr_id));
+            ctx.write_data_to_descriptor_argument<kernel::uid_eka1>(reply_slot, static_cast<kernel::uid_eka1>(thr_id));
         } else {
             ctx.write_data_to_descriptor_argument<kernel::uid>(reply_slot, thr_id);
         }
@@ -709,7 +708,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_set_window_group_ordinal_position *set = reinterpret_cast<decltype(set)>(cmd.data_ptr);
-        
+
         window_server &serv = get_ws();
         epoc::window_group *group = serv.get_group_from_id(set->identifier);
 
@@ -809,7 +808,7 @@ namespace eka2l1::epoc {
         bool should_finish = false;
 
         if (cmd && cmd->header.cmd_len >= sizeof(address)) {
-            info.sts = *reinterpret_cast<address*>(cmd->data_ptr);
+            info.sts = *reinterpret_cast<address *>(cmd->data_ptr);
             should_finish = true;
         } else {
             info.sts = ctx.msg->request_sts;
@@ -838,10 +837,10 @@ namespace eka2l1::epoc {
         epoc::raw_event evt;
 
         if (cmd.header.cmd_len > sizeof(epoc::raw_event_eka1)) {
-            evt = *reinterpret_cast<epoc::raw_event*>(cmd.data_ptr);
+            evt = *reinterpret_cast<epoc::raw_event *>(cmd.data_ptr);
         } else {
             epoc::raw_event_eka1 evt_eka1;
-            evt_eka1 = *reinterpret_cast<epoc::raw_event_eka1*>(cmd.data_ptr);
+            evt_eka1 = *reinterpret_cast<epoc::raw_event_eka1 *>(cmd.data_ptr);
 
             evt.from_eka1_event(evt_eka1);
         }
@@ -849,14 +848,14 @@ namespace eka2l1::epoc {
         LOG_TRACE(SERVICE_WINDOW, "Add raw event stubbed, event type {}", evt.type_);
         ctx.complete(epoc::error_none);
     }
-    
+
     void window_server_client::set_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd) {
-        ws_cmd_keyboard_repeat_rate *repeat_rate = reinterpret_cast<ws_cmd_keyboard_repeat_rate*>(cmd.data_ptr);
+        ws_cmd_keyboard_repeat_rate *repeat_rate = reinterpret_cast<ws_cmd_keyboard_repeat_rate *>(cmd.data_ptr);
         get_ws().set_keyboard_repeat_rate(repeat_rate->initial_time, repeat_rate->next_time);
 
         ctx.complete(epoc::error_none);
     }
-    
+
     void window_server_client::get_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd) {
         std::uint64_t initial_time = 0;
         std::uint64_t next_time = 0;
@@ -1003,7 +1002,7 @@ namespace eka2l1::epoc {
         case ws_cl_op_find_window_group_identifier: {
             find_window_group_id(ctx, cmd);
             break;
-        }                                           
+        }
 
         case ws_cl_op_find_window_group_identifier_thread: {
             find_window_group_id_thread(ctx, cmd);
@@ -1170,7 +1169,7 @@ namespace eka2l1 {
                     use_in_ini = false;
                 }
             }
-            
+
             if (use_in_ini) {
                 scr_mode_global = epoc::string_to_display_mode(modes[0]);
 
@@ -1308,11 +1307,9 @@ namespace eka2l1 {
                 state_cfg.state_number = total_hardware_state - 1;
 
                 if (mode_normal_node || mode_alternate_node) {
-                    mode_normal_node->get_as<common::ini_pair>()->get(reinterpret_cast
-                        <std::uint32_t *>(&state_cfg.mode_normal), 1, 0);
+                    mode_normal_node->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&state_cfg.mode_normal), 1, 0);
 
-                    mode_alternate_node->get_as<common::ini_pair>()->get(reinterpret_cast
-                        <std::uint32_t *>(&state_cfg.mode_alternative), 1, 0);
+                    mode_alternate_node->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&state_cfg.mode_alternative), 1, 0);
 
                     // TODO: Switch key
                     scr.hardware_states.push_back(state_cfg);
@@ -1366,7 +1363,7 @@ namespace eka2l1 {
             delete screens;
             screens = next;
         }
-        
+
         get_ntimer()->remove_event(repeatable_event_);
         bmp_cache.clean(drv);
     }
@@ -1390,8 +1387,8 @@ namespace eka2l1 {
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.key_.state_ == drivers::key_state::released) ? epoc::event_code::key_up
-            : epoc::event_code::key_down;
-        
+                                                                                    : epoc::event_code::key_down;
+
         std::optional<std::uint32_t> key_received = std::nullopt;
         if (driver_evt_.type_ == drivers::input_event_type::key_raw)
             key_received = driver_evt_.key_.code_;
@@ -1415,9 +1412,9 @@ namespace eka2l1 {
     bool make_button_event(epoc::button_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.button_.state_ == drivers::button_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
-        
+
         std::optional<std::uint32_t> mapped = epoc::map_button_to_inputcode(map, driver_evt_.button_.controller_, driver_evt_.button_.button_);
-        
+
         if (!mapped.has_value()) {
             return false;
         }
@@ -1708,7 +1705,7 @@ namespace eka2l1 {
         info.bARMv7 = false;
         info.bASIMD = false;
 
-        common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t*>(ws_code_chunk->host_base()), info);
+        common::armgen::armx_emitter emitter(reinterpret_cast<std::uint8_t *>(ws_code_chunk->host_base()), info);
         sync_thread_code_offset = 0;
 
         // =========== DSA synchronization code ===============
@@ -1741,18 +1738,18 @@ namespace eka2l1 {
     void window_server::init_ws_mem() {
         if (!ws_global_mem_chunk) {
             ws_global_mem_chunk = kern->create_and_add<kernel::chunk>(
-                                    kernel::owner_type::kernel,
-                                    kern->get_memory_system(),
-                                    nullptr,
-                                    "WsGlobalMemChunk",
-                                    0,
-                                    0x2000,
-                                    0x2000,
-                                    prot_read_write,
-                                    kernel::chunk_type::normal,
-                                    kernel::chunk_access::global,
-                                    kernel::chunk_attrib::none)
-                                .second;
+                                          kernel::owner_type::kernel,
+                                          kern->get_memory_system(),
+                                          nullptr,
+                                          "WsGlobalMemChunk",
+                                          0,
+                                          0x2000,
+                                          0x2000,
+                                          prot_read_write,
+                                          kernel::chunk_type::normal,
+                                          kernel::chunk_access::global,
+                                          kernel::chunk_attrib::none)
+                                      .second;
 
             ws_code_chunk = kern->create_and_add<kernel::chunk>(
                                     kernel::owner_type::kernel,
@@ -1830,7 +1827,7 @@ namespace eka2l1 {
 
                 epoc::event repeatable_evt;
                 ntimer *timing = kern->get_ntimer();
-                
+
                 kern->lock();
 
                 repeatable_evt.type = epoc::event_code::key;
@@ -1853,7 +1850,7 @@ namespace eka2l1 {
                 get_focus()->queue_event(repeatable_evt);
 
                 kern->unlock();
-                
+
                 // Schedule next repeat
                 timing->schedule_event(next_repeat_delay_, repeatable_event_, data);
             });
@@ -2079,7 +2076,7 @@ namespace eka2l1 {
         initial_time = initial_repeat_delay_;
         next_time = next_repeat_delay_;
     }
-    
+
     void window_server::send_event_to_window_group(epoc::window_group *group, const epoc::event &evt) {
         epoc::window_server_client *cli = group->client;
 
@@ -2096,7 +2093,7 @@ namespace eka2l1 {
             epoc::window_group *group = scr->get_group_chain();
             while (group) {
                 send_event_to_window_group(group, evt);
-                group = reinterpret_cast<epoc::window_group*>(group->sibling);
+                group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 
             scr = scr->next;

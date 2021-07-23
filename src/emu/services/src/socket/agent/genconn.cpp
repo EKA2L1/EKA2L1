@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/socket/agent/genconn.h>
 #include <common/log.h>
+#include <services/socket/agent/genconn.h>
 
 namespace eka2l1::epoc::socket {
     std::unique_ptr<connection> generic_connect_agent::start_connection(conn_preferences &prefs) {

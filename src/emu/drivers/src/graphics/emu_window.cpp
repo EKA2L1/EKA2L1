@@ -22,9 +22,11 @@
 
 const char *number_to_key_name(const int keycode) {
     switch (keycode) {
-    #define KEY_CODE(name, real_name, code) case code: return real_name;
-    #include <drivers/graphics/keycode.inc>
-    #undef KEY_CODE
+#define KEY_CODE(name, real_name, code) \
+    case code:                          \
+        return real_name;
+#include <drivers/graphics/keycode.inc>
+#undef KEY_CODE
     default:
         break;
     }

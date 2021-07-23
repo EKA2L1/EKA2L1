@@ -21,8 +21,8 @@
 #include <services/fs/fs.h>
 #include <services/fs/std.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <common/algorithm.h>

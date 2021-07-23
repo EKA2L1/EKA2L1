@@ -192,7 +192,7 @@ namespace eka2l1::common {
 #if EKA2L1_ARCH(ARMV7)
         bARMv7 = true;
 #endif
-        
+
         vendor = VENDOR_ARM;
 
         // Get the information about the CPU

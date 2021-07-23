@@ -57,7 +57,7 @@ namespace eka2l1::common {
 
                 return false;
             }
-            
+
             cond_.wait(ulock);
         }
 
@@ -174,8 +174,8 @@ namespace eka2l1::common {
         void reset();
     };
 
-    event_impl::event_impl():
-        is_set_(false) {
+    event_impl::event_impl()
+        : is_set_(false) {
     }
 
     void event_impl::set() {
@@ -196,7 +196,7 @@ namespace eka2l1::common {
 
     bool event_impl::wait_for(const std::uint64_t duration_us) {
         std::unique_lock<std::mutex> unq(lock_);
-        
+
         if (!cond_.wait_for(unq, std::chrono::microseconds(duration_us), [this] { return is_set_; }))
             return false;
 

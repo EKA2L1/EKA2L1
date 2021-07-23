@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/legacy/sync_object.h>
 #include <kernel/kernel.h>
+#include <kernel/legacy/sync_object.h>
 
 #include <common/log.h>
 

@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
 #include <services/drm/notifier/notifier.h>
+#include <system/epoc.h>
 
 #include <utils/err.h>
 
@@ -47,10 +47,10 @@ namespace eka2l1 {
             ctx->complete(epoc::error_argument);
             return;
         }
-        
+
         kernel::process *pr = ctx->msg->own_thr->owning_process();
         std::uint8_t *data_to_send = eka2l1::ptr<std::uint8_t>(data_to_send_ptr.value()).get(pr);
-        
+
         if (!data_to_send || !server<drm_notifier_server>()->send_event(event_type_op.value(), data_to_send)) {
             ctx->complete(epoc::error_argument);
             return;
@@ -67,7 +67,7 @@ namespace eka2l1 {
             ctx->complete(epoc::error_argument);
             return;
         }
-        
+
         kernel::process *pr = ctx->msg->own_thr->owning_process();
 
         std::uint8_t *data_to_write = eka2l1::ptr<std::uint8_t>(data_to_write_guest_ptr.value()).get(pr);

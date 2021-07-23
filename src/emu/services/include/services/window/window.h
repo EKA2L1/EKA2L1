@@ -35,6 +35,7 @@
 #include <common/queue.h>
 #include <common/vecx.h>
 
+#include <services/allocator.h>
 #include <services/window/bitmap_cache.h>
 #include <services/window/classes/config.h>
 #include <services/window/common.h>
@@ -43,7 +44,6 @@
 #include <services/window/opheader.h>
 #include <services/window/scheduler.h>
 #include <services/window/screen.h>
-#include <services/allocator.h>
 
 #include <kernel/server.h>
 #include <mem/ptr.h>
@@ -355,8 +355,8 @@ namespace eka2l1 {
 
         address sync_thread_code_offset;
 
-        std::uint64_t initial_repeat_delay_;       ///< Time before first repeat event generated after the key event.
-        std::uint64_t next_repeat_delay_;          ///< Time that the next repeat event after the previous being generated.
+        std::uint64_t initial_repeat_delay_; ///< Time before first repeat event generated after the key event.
+        std::uint64_t next_repeat_delay_; ///< Time that the next repeat event after the previous being generated.
 
         int repeatable_event_;
 

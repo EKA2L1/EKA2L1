@@ -22,8 +22,8 @@
 
 #include <common/buffer.h>
 #include <common/chunkyseri.h>
-#include <common/unicode.h>
 #include <common/log.h>
+#include <common/unicode.h>
 #include <mem/ptr.h>
 
 #include <utils/cardinality.h>
@@ -76,7 +76,7 @@ namespace eka2l1::epoc {
         inline des_type get_descriptor_type() const {
             return static_cast<des_type>(info >> 28);
         }
-        
+
         inline bool is_valid_descriptor() const {
             return get_descriptor_type() < des_type_end;
         }
@@ -263,7 +263,7 @@ namespace eka2l1::epoc {
 
         if (seri.get_seri_mode() != common::SERI_MODE_READ) {
             std::string raw;
-            
+
             raw.resize(str.length() * sizeof(T));
             std::memcpy(raw.data(), str.data(), raw.length());
 
@@ -291,7 +291,7 @@ namespace eka2l1::epoc {
 
                 // Compress the data
                 common::unicode_compressor compressor;
-                len = compressor.compress(reinterpret_cast<std::uint8_t*>(str.data()), source_size, reinterpret_cast<std::uint8_t*>(raw.data()),
+                len = compressor.compress(reinterpret_cast<std::uint8_t *>(str.data()), source_size, reinterpret_cast<std::uint8_t *>(raw.data()),
                     dest_size);
             } else {
                 len = static_cast<std::uint32_t>(raw.length());
@@ -324,7 +324,7 @@ namespace eka2l1::epoc {
 
             len >>= 1;
             str.resize(len);
-            
+
             if (unicode) {
                 str.resize(len);
 
@@ -332,10 +332,10 @@ namespace eka2l1::epoc {
                 int source_size = common::min<int>(dest_size * 2, static_cast<int>(seri.left()));
 
                 common::unicode_expander expander;
-                expander.expand(seri.current(), source_size, reinterpret_cast<std::uint8_t*>(str.data()), dest_size);
+                expander.expand(seri.current(), source_size, reinterpret_cast<std::uint8_t *>(str.data()), dest_size);
 
                 seri.absorb_impl(nullptr, source_size);
-            } else {        
+            } else {
                 seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&str[0]), len * sizeof(T));
             }
         }
@@ -381,7 +381,7 @@ namespace eka2l1::epoc {
             // TODO: Actually check
             stream->read(&encoded[0], source_size);
 
-            const int len_written = expander.expand(reinterpret_cast<std::uint8_t*>(encoded.data()), source_size, nullptr, len);
+            const int len_written = expander.expand(reinterpret_cast<std::uint8_t *>(encoded.data()), source_size, nullptr, len);
 
             if (len_written != len) {
                 return false;
@@ -390,7 +390,7 @@ namespace eka2l1::epoc {
             stream->seek(offset + source_size, common::seek_where::beg);
 
             str.resize(len / sizeof(T));
-            expander.expand(reinterpret_cast<std::uint8_t*>(encoded.data()), source_size, reinterpret_cast<std::uint8_t*>(&str[0]), len);
+            expander.expand(reinterpret_cast<std::uint8_t *>(encoded.data()), source_size, reinterpret_cast<std::uint8_t *>(&str[0]), len);
         } else {
             str.resize(len);
             if (stream->read(&str[0], len * sizeof(T)) != len * sizeof(T)) {
@@ -401,7 +401,7 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    struct rw_des_stream: public common::rw_stream {
+    struct rw_des_stream : public common::rw_stream {
         epoc::des8 *des_;
         kernel::process *pr_;
 
@@ -409,13 +409,13 @@ namespace eka2l1::epoc {
 
     public:
         explicit rw_des_stream(epoc::des8 *des, kernel::process *pr);
-    
+
         void seek(const std::int64_t amount, common::seek_where wh) override;
         bool valid() override;
         std::uint64_t left() override;
         std::uint64_t tell() const override;
         std::uint64_t size() override;
-        
+
         std::uint64_t read(void *buf, const std::uint64_t read_size) override;
         std::uint64_t write(const void *buf, const std::uint64_t write_size) override;
     };

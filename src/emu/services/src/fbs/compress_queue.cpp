@@ -167,7 +167,7 @@ namespace eka2l1 {
 
         if (is_large) {
             new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_large_data(estimated_size));
-        } else {    
+        } else {
             new_data = reinterpret_cast<std::uint8_t *>(serv_->allocate_general_data_impl(estimated_size));
         }
 
@@ -209,7 +209,7 @@ namespace eka2l1 {
             clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - serv_->get_large_chunk_base());
             clean_bitmap->bitmap_->offset_from_me_ = false;
         } else {
-            clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - reinterpret_cast<std::uint8_t*>(clean_bitmap->bitmap_));
+            clean_bitmap->bitmap_->data_offset_ = static_cast<int>(new_data - reinterpret_cast<std::uint8_t *>(clean_bitmap->bitmap_));
             clean_bitmap->bitmap_->offset_from_me_ = true;
         }
 
@@ -227,7 +227,7 @@ namespace eka2l1 {
             bmp->clean_bitmap = clean_bitmap;
             bmp->bitmap_->settings_.dirty_bitmap(true);
         }
-        
+
         // Notify bitmap compression done. Now the thread can run.
         bmp->compress_done_nof.complete(epoc::error_none);
         finish_notify(epoc::error_none);

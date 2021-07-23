@@ -24,7 +24,7 @@ TInt ConvertFreqEnumToNumber(const TInt caps) {
     switch (caps) {
     case TMdaAudioDataSettings::ESampleRate8000Hz:
         return 8000;
-    
+
     case TMdaAudioDataSettings::ESampleRate11025Hz:
         return 11025;
 

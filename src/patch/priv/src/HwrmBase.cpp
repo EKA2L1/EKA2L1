@@ -49,7 +49,7 @@ TInt RHWRMResourceClient::Connect(THWRMResourceType aType) {
     }
 
     if (err != KErrNone) {
-        LogOut(KHWRMLogCategory, _L("Error while trying to instantiate a HWRM service (type %d)!"), 
+        LogOut(KHWRMLogCategory, _L("Error while trying to instantiate a HWRM service (type %d)!"),
             static_cast<TInt>(err));
 
         return err;

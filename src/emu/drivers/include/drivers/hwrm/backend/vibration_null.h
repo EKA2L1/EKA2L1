@@ -22,10 +22,9 @@
 #include <drivers/hwrm/vibration.h>
 
 namespace eka2l1::drivers::hwrm {
-    class vibrator_null: public vibrator {
+    class vibrator_null : public vibrator {
     public:
         ~vibrator_null() override {
-
         }
 
         void vibrate(const std::uint32_t millisecs, const std::int16_t intensity = MIN_INTENSITY - 1) override;

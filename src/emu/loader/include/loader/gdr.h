@@ -20,9 +20,9 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace eka2l1::common {
     class ro_stream;
@@ -43,13 +43,13 @@ namespace eka2l1::loader::gdr {
     };
 
     struct code_section_header {
-        std::uint16_t start_;           ///< The starting character code of this section.
-        std::uint16_t end_;             ///< The last character code of this section
+        std::uint16_t start_; ///< The starting character code of this section.
+        std::uint16_t end_; ///< The last character code of this section
         std::uint32_t character_offset_;
         std::uint32_t character_bitmap_offset_;
     };
 
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct font_bitmap_header {
         std::uint32_t uid_;
         std::uint8_t posture_;
@@ -64,15 +64,15 @@ namespace eka2l1::loader::gdr {
         std::uint32_t metric_count_;
         std::uint32_t code_section_count_;
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct typeface_font_bitmap_header {
         std::uint32_t uid_;
         std::uint8_t width_factor_;
         std::uint8_t height_factor_;
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     struct typeface_header {
         std::u16string name_;
@@ -145,7 +145,7 @@ namespace eka2l1::loader::gdr {
 
         typeface_header header_;
 
-        std::vector<font_bitmap*> font_bitmaps_;
+        std::vector<font_bitmap *> font_bitmaps_;
         std::uint32_t whole_coverage_[4];
         std::uint32_t analysed_style_;
     };

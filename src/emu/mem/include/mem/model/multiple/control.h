@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include <mem/model/multiple/mmu.h>
 #include <mem/control.h>
+#include <mem/model/multiple/mmu.h>
 #include <vector>
 
 namespace eka2l1::mem {
-    class control_multiple: public control_base {
+    class control_multiple : public control_base {
     private:
         friend struct multiple_mem_model_process;
         friend struct multiple_mem_model_chunk;
@@ -65,7 +65,7 @@ namespace eka2l1::mem {
          * \returns An ASID identify the address space. -1 if a new one can't be create.
          */
         asid rollover_fresh_addr_space() override;
-        
+
         /**
          * \brief Assign page tables at linear base address to page directories.
          */

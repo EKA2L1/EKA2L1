@@ -38,7 +38,7 @@ namespace eka2l1::epoc::msv {
     }
 
     mtm_registry::~mtm_registry() {
-        for (mtm_group &group: groups_) {
+        for (mtm_group &group : groups_) {
             mtm_component *next_comp = group.comps_.next_;
             while (next_comp) {
                 mtm_component *current = next_comp;

@@ -26,6 +26,6 @@ namespace eka2l1::drivers::hwrm {
         JNIEnv *env = common::jni::environment();
         jclass clazz = common::jni::find_class("com/github/eka2l1/emu/EmulatorActivity");
         jmethodID vibrate_method = env->GetStaticMethodID(clazz, "vibrate", "(I)Z");
-        jboolean result = env->CallStaticBooleanMethod(clazz, vibrate_method, (jint) millisecs);
+        jboolean result = env->CallStaticBooleanMethod(clazz, vibrate_method, (jint)millisecs);
     }
 }

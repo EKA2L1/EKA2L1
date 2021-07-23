@@ -39,22 +39,22 @@ namespace eka2l1::config {
     }
 
     static void serialize_app_setting(YAML::Emitter &emitter, const app_setting &setting) {
-        #define SETTING(name, variable, default_var)  emitter << YAML::Key << #name << YAML::Value << setting.variable;
-        #include <config/app_settings.inl>
-        #undef SETTING
+#define SETTING(name, variable, default_var) emitter << YAML::Key << #name << YAML::Value << setting.variable;
+#include <config/app_settings.inl>
+#undef SETTING
     }
 
     static void deserialize_app_setting(YAML::Node &node, app_setting &setting) {
-        #define SETTING(name, variable, default_val)                                         \
-            try {                                                                            \
-                setting.variable = node[#name].as<decltype(app_setting::variable)>();        \
-            } catch (std::exception &e) {                                                                  \
-                LOG_TRACE(CONFIG, "{}", e.what());  \
-                setting.variable = default_val;                                              \
-            }
-        
-        #include <config/app_settings.inl>
-        #undef SETTING
+#define SETTING(name, variable, default_val)                                  \
+    try {                                                                     \
+        setting.variable = node[#name].as<decltype(app_setting::variable)>(); \
+    } catch (std::exception & e) {                                            \
+        LOG_TRACE(CONFIG, "{}", e.what());                                    \
+        setting.variable = default_val;                                       \
+    }
+
+#include <config/app_settings.inl>
+#undef SETTING
     }
 
     app_settings::app_settings(config::state *conf)

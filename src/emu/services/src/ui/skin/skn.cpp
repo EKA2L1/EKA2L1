@@ -21,7 +21,7 @@
 #include <services/ui/skin/skn.h>
 
 namespace eka2l1::epoc {
-    skn_file::skn_file(common::ro_stream *stream, plat_ver platform_version, language lang)
+    skn_file::skn_file(common::ro_stream *stream, plat_ver platform_version, ::language lang)
         : master_chunk_size_(0)
         , master_chunk_count_(0)
         , crr_filename_id_(0)

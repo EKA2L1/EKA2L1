@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <services/framework.h>
 #include <kernel/server.h>
+#include <services/framework.h>
 
 namespace eka2l1 {
     class rights_server : public service::typical_server {

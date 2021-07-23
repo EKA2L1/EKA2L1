@@ -18,13 +18,13 @@
  */
 
 #include <common/cvt.h>
-#include <system/epoc.h>
 #include <kernel/kernel.h>
 #include <kernel/property.h>
 #include <services/etel/common.h>
 #include <services/etel/etel.h>
 #include <services/etel/phone.h>
 #include <services/sysagt/sysagt.h>
+#include <system/epoc.h>
 #include <utils/err.h>
 
 namespace eka2l1 {
@@ -175,7 +175,7 @@ namespace eka2l1 {
     void etel_session::get_phone_info_by_index(service::ipc_context *ctx) {
         epoc::etel_phone_info info;
         const std::int32_t index = *ctx->get_argument_value<std::int32_t>(1);
-        
+
         epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
         std::optional<std::uint32_t> real_index = mngr.get_entry_real_index(index, epoc::etel_entry_phone);
 

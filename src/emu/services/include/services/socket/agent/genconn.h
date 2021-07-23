@@ -22,7 +22,7 @@
 #include <services/socket/connection.h>
 
 namespace eka2l1::epoc::socket {
-    class generic_connect_agent: public connect_agent {
+    class generic_connect_agent : public connect_agent {
     public:
         explicit generic_connect_agent(socket_server *ss)
             : connect_agent(ss) {

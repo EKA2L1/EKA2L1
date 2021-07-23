@@ -25,7 +25,7 @@ namespace eka2l1::common::jni {
     extern JavaVM *virtual_machine;
 
     void init_classloader();
-    jclass find_class(const char* name);
+    jclass find_class(const char *name);
     JNIEnv *environment();
     jobject activity();
 }

@@ -21,8 +21,8 @@
 #include <scripting/instance.h>
 #include <scripting/message.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 
 #if ENABLE_PYTHON_SCRIPTING
 #include <pybind11/pybind11.h>
@@ -76,43 +76,43 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-	EKA2L1_EXPORT void symemu_free_ipc_msg(eka2l1::scripting::ipc_message_wrapper *msg) {
-        delete msg;
+EKA2L1_EXPORT void symemu_free_ipc_msg(eka2l1::scripting::ipc_message_wrapper *msg) {
+    delete msg;
+}
+
+EKA2L1_EXPORT eka2l1::scripting::ipc_message_wrapper *symemu_ipc_message_from_handle(const int guest_handle) {
+    eka2l1::ipc_msg_ptr msg = eka2l1::scripting::get_current_instance()->get_kernel_system()->get_msg(guest_handle);
+
+    if (!msg) {
+        return nullptr;
     }
 
-    EKA2L1_EXPORT eka2l1::scripting::ipc_message_wrapper *symemu_ipc_message_from_handle(const int guest_handle) {
-        eka2l1::ipc_msg_ptr msg = eka2l1::scripting::get_current_instance()->get_kernel_system()->get_msg(guest_handle);
+    return new eka2l1::scripting::ipc_message_wrapper(reinterpret_cast<std::uint64_t>(msg));
+}
 
-        if (!msg) {
-            return nullptr;
-        }
+EKA2L1_EXPORT int symemu_ipc_message_function(eka2l1::scripting::ipc_message_wrapper *msg) {
+    return msg->function();
+}
 
-        return new eka2l1::scripting::ipc_message_wrapper(reinterpret_cast<std::uint64_t>(msg));
-    }
+EKA2L1_EXPORT std::uint32_t symemu_ipc_message_arg(eka2l1::scripting::ipc_message_wrapper *msg, const int idx) {
+    return msg->arg(idx);
+}
 
-    EKA2L1_EXPORT int symemu_ipc_message_function(eka2l1::scripting::ipc_message_wrapper *msg) {
-        return msg->function();
-    }
+EKA2L1_EXPORT std::uint32_t symemu_ipc_message_flags(eka2l1::scripting::ipc_message_wrapper *msg) {
+    return msg->flags();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_ipc_message_arg(eka2l1::scripting::ipc_message_wrapper *msg, const int idx) {
-        return msg->arg(idx);
-    }
+EKA2L1_EXPORT std::uint32_t symemu_ipc_message_request_status_address(eka2l1::scripting::ipc_message_wrapper *msg) {
+    return msg->request_status_address();
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_ipc_message_flags(eka2l1::scripting::ipc_message_wrapper *msg) {
-        return msg->flags();
-    }
+EKA2L1_EXPORT eka2l1::scripting::thread *symemu_ipc_message_sender(eka2l1::scripting::ipc_message_wrapper *msg) {
+    eka2l1::kernel::thread *thh = msg->get_message_handler()->own_thr;
+    return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(thh));
+}
 
-    EKA2L1_EXPORT std::uint32_t symemu_ipc_message_request_status_address(eka2l1::scripting::ipc_message_wrapper *msg) {
-        return msg->request_status_address();
-    }
-
-    EKA2L1_EXPORT eka2l1::scripting::thread *symemu_ipc_message_sender(eka2l1::scripting::ipc_message_wrapper *msg) {
-        eka2l1::kernel::thread *thh = msg->get_message_handler()->own_thr;
-        return new eka2l1::scripting::thread(reinterpret_cast<std::uint64_t>(thh));
-    }
-
-    EKA2L1_EXPORT eka2l1::scripting::session_wrapper *symemu_ipc_message_session_wrapper(eka2l1::scripting::ipc_message_wrapper *msg) {
-        eka2l1::service::session *ss = msg->get_message_handler()->msg_session;
-        return new eka2l1::scripting::session_wrapper(reinterpret_cast<std::uint64_t>(ss));
-    }
+EKA2L1_EXPORT eka2l1::scripting::session_wrapper *symemu_ipc_message_session_wrapper(eka2l1::scripting::ipc_message_wrapper *msg) {
+    eka2l1::service::session *ss = msg->get_message_handler()->msg_session;
+    return new eka2l1::scripting::session_wrapper(reinterpret_cast<std::uint64_t>(ss));
+}
 }

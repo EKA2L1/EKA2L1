@@ -22,12 +22,12 @@
 
 #include <services/socket/common.h>
 #include <services/socket/connection.h>
-#include <services/socket/protocol.h>
 #include <services/socket/host.h>
+#include <services/socket/protocol.h>
 
-#include <services/framework.h>
 #include <common/container.h>
 #include <kernel/server.h>
+#include <services/framework.h>
 
 #include <utils/des.h>
 
@@ -36,13 +36,13 @@
 
 namespace eka2l1 {
     namespace epoc::socket {
-        class socket_connection_proxy: public socket_subsession {
+        class socket_connection_proxy : public socket_subsession {
         private:
             connection *conn_;
-            
+
         public:
             explicit socket_connection_proxy(socket_client_session *parent, connection *conn);
-            
+
             connection *get_connection() const {
                 return conn_;
             }
@@ -52,8 +52,8 @@ namespace eka2l1 {
                 return socket_subsession_type_connection;
             }
         };
-        
-        class socket_host_resolver: public socket_subsession {
+
+        class socket_host_resolver : public socket_subsession {
             std::unique_ptr<host_resolver> resolver_;
             connection *conn_;
 
@@ -73,7 +73,7 @@ namespace eka2l1 {
             }
         };
 
-        class socket_socket: public socket_subsession {
+        class socket_socket : public socket_subsession {
             std::unique_ptr<socket> sock_;
 
         protected:
@@ -131,7 +131,7 @@ namespace eka2l1 {
     };
 
     std::string get_socket_server_name_by_epocver(const epocver ver);
-    
+
     class socket_server : public service::typical_server {
         std::map<std::uint64_t, std::unique_ptr<epoc::socket::protocol>> protocols_;
         std::vector<std::unique_ptr<epoc::socket::connect_agent>> agents_;

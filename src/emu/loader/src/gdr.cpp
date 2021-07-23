@@ -153,7 +153,7 @@ namespace eka2l1::loader::gdr {
         if (read != size_of_beginning_header) {
             return false;
         }
-        
+
         std::uint32_t copyright_info_string_count = 0;
         if (stream->read(&copyright_info_string_count, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
             return false;
@@ -287,7 +287,7 @@ namespace eka2l1::loader::gdr {
         }
 
         original_guess_typeface_name.clear();
-        
+
         // Try to guess original typeface name.
         if (headers.size() > 1) {
             std::size_t length_overlap = 1;
@@ -384,7 +384,7 @@ namespace eka2l1::loader::gdr {
             if (offsets[i - section.header_.start_] >= 0x7FFF) {
                 // This character is filler
                 c.metric_ = &filler_metric;
-                
+
                 // Give it an empty character data.
                 c.data_.resize((filler_metric.move_in_pixels_ * filler_metric.height_in_pixels_ + 31) >> 5);
                 std::fill(c.data_.begin(), c.data_.end(), 0);
@@ -394,7 +394,7 @@ namespace eka2l1::loader::gdr {
                 std::uint16_t metric_index = 0;
                 std::uint8_t total_bit_for_index = 0;
 
-                #define GET_BIT_8(offset) ((byte_start[offset >> 3] >> (offset & 7)) & 1)
+#define GET_BIT_8(offset) ((byte_start[offset >> 3] >> (offset & 7)) & 1)
                 if (GET_BIT_8(bitoffset) == 0) {
                     total_bit_for_index = 7;
                 } else {
@@ -409,26 +409,25 @@ namespace eka2l1::loader::gdr {
                 }
 
                 c.metric_ = &metrics[metric_index];
-                
+
                 const std::uint16_t target_height = c.metric_->height_in_pixels_;
-                const std::uint16_t content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_ - 
-                    ((c.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : c.metric_->right_adjust_in_pixels_);
+                const std::uint16_t content_width = c.metric_->move_in_pixels_ - c.metric_->left_adj_in_pixels_ - ((c.metric_->right_adjust_in_pixels_ == 0xFF) ? 0 : c.metric_->right_adjust_in_pixels_);
                 std::uint16_t height_read = 0;
-            
+
                 c.data_.resize((target_height * content_width + 31) >> 5);
                 std::fill(c.data_.begin(), c.data_.end(), 0);
-        
-                while (height_read < target_height) {      
+
+                while (height_read < target_height) {
                     bool repeat_line = !GET_BIT_8(bitoffset);
                     bitoffset++;
-                    
+
                     std::uint16_t line_count = 0;
                     for (int i = 0; i < 4; i++) {
                         line_count |= GET_BIT_8(bitoffset) << i;
                         bitoffset++;
                     }
-                    
-                    for (std::uint16_t y = 0; y < (repeat_line ? 1 : line_count); y++) {          
+
+                    for (std::uint16_t y = 0; y < (repeat_line ? 1 : line_count); y++) {
                         for (std::uint16_t x = 0; x < content_width; x++) {
                             std::uint32_t current_pixel = ((y + height_read) * content_width + x);
                             std::uint8_t the_bit = GET_BIT_8(bitoffset);
@@ -441,16 +440,16 @@ namespace eka2l1::loader::gdr {
                             } else {
                                 c.data_[current_pixel >> 5] |= the_bit << (current_pixel & 31);
                             }
-                                        
+
                             bitoffset++;
                         }
                     }
-                    
+
                     // Align to next byte
                     height_read += line_count;
                 }
 
-                #undef GET_BIT_8
+#undef GET_BIT_8
             }
 
             section.chars_.push_back(std::move(c));
@@ -503,14 +502,14 @@ namespace eka2l1::loader::gdr {
                 store.font_bitmaps_[i].code_sections_[j].header_ = std::move(code_section_header_list_list[i][j]);
 
                 if (!parse_font_code_section_comps(stream, store.font_bitmaps_[i].metrics_, store.font_bitmaps_[i].filler_metric_,
-                    store.font_bitmaps_[i].code_sections_[j])) {
+                        store.font_bitmaps_[i].code_sections_[j])) {
                     return false;
                 }
 
                 scan_coverage(store.font_bitmaps_[i].code_sections_[j], store.font_bitmaps_[i].coverage_[0], store.font_bitmaps_[i].coverage_[1]);
             }
         }
-        
+
         // Sort all font bitmaps by UID
         std::sort(store.font_bitmaps_.begin(), store.font_bitmaps_.end(), [](const loader::gdr::font_bitmap &f1, const loader::gdr::font_bitmap &f2) {
             return f1.header_.uid_ < f2.header_.uid_;
@@ -525,8 +524,8 @@ namespace eka2l1::loader::gdr {
             store.typefaces_[i].analysed_style_ = 0;
 
             // Find all font bitmaps
-            for (auto &bitmap_header: store.typefaces_[i].header_.bitmap_headers_) {
-                auto result = std::lower_bound(store.font_bitmaps_.begin(), store.font_bitmaps_.end(), bitmap_header.uid_, 
+            for (auto &bitmap_header : store.typefaces_[i].header_.bitmap_headers_) {
+                auto result = std::lower_bound(store.font_bitmaps_.begin(), store.font_bitmaps_.end(), bitmap_header.uid_,
                     [](const loader::gdr::font_bitmap &b, const std::uint32_t uid) {
                         return b.header_.uid_ < uid;
                     });
@@ -544,12 +543,12 @@ namespace eka2l1::loader::gdr {
                 }
 
                 store.typefaces_[i].font_bitmaps_.push_back(&(*result));
-                
+
                 for (std::uint32_t j = 0; j < 4; j++) {
                     store.typefaces_[i].whole_coverage_[j] |= result->coverage_[j];
                 }
             }
-            
+
             if (!store.original_typeface_guess_name_.empty()) {
                 // Extract style flags name
                 std::u16string org_name = store.typefaces_[i].header_.name_;
@@ -570,7 +569,7 @@ namespace eka2l1::loader::gdr {
                         { u"p", 0 }
                     };
 
-                    for (auto &flag_search: FLAG_SEARCHS) {
+                    for (auto &flag_search : FLAG_SEARCHS) {
                         if (org_name == flag_search.first) {
                             store.typefaces_[i].analysed_style_ |= flag_search.second;
                             break;

@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <dispatch/def.h>
 #include <cstdint>
+#include <dispatch/def.h>
 
 namespace eka2l1::dispatch::sysutils {
     enum system_state {

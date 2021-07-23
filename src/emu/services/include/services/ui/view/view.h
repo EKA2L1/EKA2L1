@@ -36,7 +36,7 @@ namespace eka2l1 {
 
     enum view_opcode {
         view_opcode_first = 0,
-        view_opcode_create = 1, 
+        view_opcode_create = 1,
         view_opcode_add_view = 2,
         view_opcode_remove_view = 3,
         view_opcode_request_view_event = 4,

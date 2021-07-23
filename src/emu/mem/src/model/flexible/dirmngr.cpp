@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mem/model/flexible/dirmngr.h>
 #include <mem/control.h>
+#include <mem/model/flexible/dirmngr.h>
 
 namespace eka2l1::mem::flexible {
     page_directory_manager::page_directory_manager(const std::uint32_t max_dir_count) {
@@ -38,7 +38,7 @@ namespace eka2l1::mem::flexible {
                 return dirs_[i].get();
             }
         }
-        
+
         // No more directory for you, told the emulator to stop being greedy.
         return nullptr;
     }

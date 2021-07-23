@@ -79,7 +79,7 @@ namespace eka2l1::mem {
          */
         template <typename T>
         std::int32_t write_exclusive(const address addr, T value, T expected) {
-            auto *real_ptr = reinterpret_cast<volatile T*>(get_host_pointer(addr));
+            auto *real_ptr = reinterpret_cast<volatile T *>(get_host_pointer(addr));
 
             if (!real_ptr) {
                 return -1;

@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <kernel/common.h>
 #include <common/linked.h>
+#include <kernel/common.h>
 
 #include <mem/ptr.h>
 
@@ -119,7 +119,7 @@ namespace eka2l1 {
 
         std::atomic<std::uint16_t> ref_count;
         ipc_message_type type;
-        
+
         common::double_linked_queue_element session_msg_link;
         common::double_linked_queue_element delivered_msg_link;
 
@@ -133,5 +133,5 @@ namespace eka2l1 {
         }
     };
 
-    using ipc_msg_ptr = ipc_msg*;
+    using ipc_msg_ptr = ipc_msg *;
 }

@@ -17,12 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/centralrepo/centralrepo.h>
 #include <services/ui/skin/common.h>
 #include <services/ui/skin/settings.h>
-#include <services/centralrepo/centralrepo.h>
 
-#include <common/log.h>
 #include <common/cvt.h>
+#include <common/log.h>
 
 #include <system/devices.h>
 
@@ -73,7 +73,7 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        const std::string uid_in_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t*>(entry_->data.strd.data()),
+        const std::string uid_in_str = common::ucs2_to_utf8(std::u16string(reinterpret_cast<char16_t *>(entry_->data.strd.data()),
             entry_->data.strd.size() / 2));
 
         if (uid_in_str.length() <= 8 || uid_only) {

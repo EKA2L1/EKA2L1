@@ -164,7 +164,6 @@ namespace eka2l1::arm {
     }
 
     void dyncom_core::set_asid(std::uint8_t num) {
-
     }
 
     std::uint8_t dyncom_core::get_asid() const {

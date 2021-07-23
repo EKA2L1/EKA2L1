@@ -220,7 +220,7 @@ namespace eka2l1 {
         }
 
         common::ro_buf_stream aif_rawbuf_stream(data.data(), rsc_size);
-        loader::rsc_file aif_file(reinterpret_cast<common::ro_stream*>(&aif_rawbuf_stream));
+        loader::rsc_file aif_file(reinterpret_cast<common::ro_stream *>(&aif_rawbuf_stream));
 
         std::vector<std::uint8_t> real_parsing_data = aif_file.read(1);
         common::ro_buf_stream aif_info_stream(real_parsing_data.data(), real_parsing_data.size());
@@ -369,7 +369,7 @@ namespace eka2l1 {
     bool read_leagacy_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number drv,
         const language lang) {
         std::uint32_t header_pos = 0;
-        
+
         if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
             return false;
         }
@@ -422,11 +422,11 @@ namespace eka2l1 {
         };
 
         std::optional<std::u16string> cap = read_caption_list_and_find_best();
-        
+
         if (!cap) {
             return false;
         }
-        
+
         reg.mandatory_info.short_caption.assign(nullptr, cap.value());
         reg.mandatory_info.long_caption.assign(nullptr, cap.value());
         reg.icon_count = 0;
@@ -500,7 +500,7 @@ namespace eka2l1 {
             stream->seek(view_data_offset, common::seek_where::beg);
 
             view_data the_view_data;
-            
+
             if (stream->read(&the_view_data.uid_, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
                 return false;
             }
@@ -517,9 +517,9 @@ namespace eka2l1 {
             if (!cap_string) {
                 return false;
             }
-            
+
             the_view_data.caption_ = std::move(cap_string.value());
-            
+
             stream->seek(crr_pos, common::seek_where::beg);
         }
 
@@ -539,7 +539,7 @@ namespace eka2l1 {
             if (stream->read(&file_ownership_string_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
                 return false;
             }
-            
+
             const std::size_t crr_pos = stream->tell();
             stream->seek(file_ownership_string_offset, common::seek_where::beg);
 
@@ -552,7 +552,7 @@ namespace eka2l1 {
 
         return true;
     }
-    
+
     bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
         const language lang) {
         // Read the first 3 UIDS
@@ -608,7 +608,7 @@ namespace eka2l1 {
         if (aif_version < 2) {
             stream->seek(4 * sizeof(std::uint32_t), common::seek_where::beg);
             std::uint32_t header_pos = 0;
-            
+
             if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
                 return false;
             }
@@ -628,7 +628,7 @@ namespace eka2l1 {
             if (!count.internalize(*stream)) {
                 return false;
             }
-            
+
             icon_list.resize(count.value() * 2);
 
             for (std::size_t i = 0; i < count.value(); i++) {
@@ -636,7 +636,7 @@ namespace eka2l1 {
                 if (stream->read(&data_offset, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
                     return false;
                 }
-                
+
                 std::uint16_t num = 0;
                 if (stream->read(&num, sizeof(std::uint16_t)) != sizeof(std::uint16_t)) {
                     return false;
@@ -661,8 +661,7 @@ namespace eka2l1 {
                     icon_list[i * 2].bmp_ = nullptr;
                     icon_list[i * 2].bmp_rom_addr_ = rom_addr + data_offset;
 
-                    static constexpr std::size_t size_offset = offsetof(epoc::bitwise_bitmap, header_) +
-                        offsetof(loader::sbm_header, bitmap_size);
+                    static constexpr std::size_t size_offset = offsetof(epoc::bitwise_bitmap, header_) + offsetof(loader::sbm_header, bitmap_size);
 
                     stream->seek(size_offset, common::seek_where::cur);
                     std::uint32_t size_of_source = 0;
@@ -682,7 +681,7 @@ namespace eka2l1 {
                     icon_list[i * 2 + 1].bmp_ = nullptr;
                     icon_list[i * 2 + 1].bmp_rom_addr_ = icon_list[i * 2].bmp_rom_addr_ + size_of_source;
                 } else {
-                    auto read_and_create_bitmap = [&](const std::size_t index) { 
+                    auto read_and_create_bitmap = [&](const std::size_t index) {
                         loader::sbm_header bmp_header;
                         if (!bmp_header.internalize(*stream)) {
                             return false;
@@ -744,7 +743,7 @@ namespace eka2l1 {
 
             common::ro_buf_stream mbm_data_stream(mbm_data.data(), mbm_data.size());
 
-            loader::mbm_file icon_list_file(reinterpret_cast<common::ro_stream*>(&mbm_data_stream));
+            loader::mbm_file icon_list_file(reinterpret_cast<common::ro_stream *>(&mbm_data_stream));
             icon_list_file.do_read_headers();
 
             // Create FBS bitmap instances

@@ -76,7 +76,7 @@ namespace eka2l1::epoc {
     }
 
     static void window_group_process_uid_type_change_callback(void *userdata, const kernel::process_uid_type &type) {
-        epoc::window_group *group = reinterpret_cast<epoc::window_group*>(userdata);
+        epoc::window_group *group = reinterpret_cast<epoc::window_group *>(userdata);
 
         if (group) {
             group->on_owner_process_uid_type_change(std::get<2>(type));
@@ -93,7 +93,7 @@ namespace eka2l1::epoc {
         child = top.get();
 
         set_client_handle(client_handle);
-        
+
         kernel::process *current = client->get_client()->owning_process();
         kernel::process *mama = current->get_final_setting_process();
 
@@ -134,7 +134,7 @@ namespace eka2l1::epoc {
         dest_size = common::min<std::size_t>(data_vec.size(), dest_size);
         std::copy(data_vec.begin(), data_vec.begin() + dest_size, data);
     }
-    
+
     void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
         // Warn myself in the future!
         LOG_WARN(SERVICE_WINDOW, "Set cursor text is mostly a stubbed now");
@@ -167,7 +167,7 @@ namespace eka2l1::epoc {
 
     void window_group::set_name(service::ipc_context &context, ws_cmd &cmd) {
         std::optional<std::u16string> name_re;
-        
+
         if (cmd.header.cmd_len > 4) {
             struct ws_cmd_header_set_name_legacy {
                 std::uint32_t len;
@@ -175,8 +175,7 @@ namespace eka2l1::epoc {
             };
 
             kernel::process *requester = context.msg->own_thr->owning_process();
-            epoc::desc16 *des = reinterpret_cast<ws_cmd_header_set_name_legacy*>(cmd.data_ptr)->name_to_set.
-                get(requester);
+            epoc::desc16 *des = reinterpret_cast<ws_cmd_header_set_name_legacy *>(cmd.data_ptr)->name_to_set.get(requester);
 
             name_re = des->to_std_string(requester);
         } else {
@@ -191,7 +190,7 @@ namespace eka2l1::epoc {
         set_name(name_re.value());
         context.complete(epoc::error_none);
     }
-    
+
     void window_group::free(service::ipc_context &context, ws_cmd &cmd) {
         // Try to redraw the screen
         on_command_batch_done(context);
@@ -255,7 +254,7 @@ namespace eka2l1::epoc {
         case EWsWinOpSetName: {
             set_name(ctx, cmd);
             break;
-        }                   
+        }
 
         case EWsWinOpName: {
             ctx.write_arg(reply_slot, name);

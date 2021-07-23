@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <system/epoc.h>
-#include <system/hal.h>
 #include <kernel/common.h>
 #include <kernel/kernel.h>
-#include <services/window/window.h>
 #include <kernel/timing.h>
+#include <services/window/window.h>
+#include <system/epoc.h>
+#include <system/hal.h>
 
 #include <loader/rom.h>
 
@@ -301,7 +301,7 @@ namespace eka2l1::epoc {
         }
     };
 
-    struct keyboard_hal: public hal {
+    struct keyboard_hal : public hal {
         int get_info(int *a1, int *a2, const std::uint16_t device_num) {
             epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
             epoc::keyboard_info_v01 *info_ptr = reinterpret_cast<epoc::keyboard_info_v01 *>(
@@ -358,7 +358,7 @@ namespace eka2l1::epoc {
 
         return ret;
     }
-    
+
     static void fill_machine_info(eka2l1::system *sys, machine_info_v1 &info) {
         window_server *winserv = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
             eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
@@ -370,11 +370,11 @@ namespace eka2l1::epoc {
         info.display_id_ = 0;
         info.xy_input_size_pixels_ = crr_screen->size();
         info.display_size_pixels_ = crr_screen->size();
-        info.physical_screen_size_ = info.display_size_pixels_ * 15;    // In twips
+        info.physical_screen_size_ = info.display_size_pixels_ * 15; // In twips
         info.input_type_ = xy_input_type_pointer;
         info.keyboard_id_ = 0;
         info.keyboard_present_ = 1;
-        info.machine_unique_id_ = 0;        // TODO: Machine Unique ID here
+        info.machine_unique_id_ = 0; // TODO: Machine Unique ID here
         info.maximum_display_color_ = get_num_colors_from_display_mode(crr_screen->disp_mode);
         info.offset_to_display_in_pixels_ = eka2l1::point(0, 0);
         info.speed_factor_ = 1;
@@ -385,9 +385,9 @@ namespace eka2l1::epoc {
     }
 
     static int do_hal_machine_info(eka2l1::system *sys, void *data) {
-        epoc::des8 *buf = reinterpret_cast<epoc::des8*>(data);
+        epoc::des8 *buf = reinterpret_cast<epoc::des8 *>(data);
         kernel::process *pr = sys->get_kernel_system()->crr_process();
-        machine_info_v1 *info = reinterpret_cast<machine_info_v1*>(buf->get_pointer_raw(pr));
+        machine_info_v1 *info = reinterpret_cast<machine_info_v1 *>(buf->get_pointer_raw(pr));
 
         if (!info) {
             LOG_ERROR(SYSTEM, "Trying to get machine info but buffer is null!");
@@ -404,39 +404,39 @@ namespace eka2l1::epoc {
             return do_hal_machine_info(sys, data);
 
         case kernel::hal_data_eka1_memory_info: {
-            kern_hal *the_hal = reinterpret_cast<kern_hal*>(sys->get_hal(hal_category_kernel));
+            kern_hal *the_hal = reinterpret_cast<kern_hal *>(sys->get_hal(hal_category_kernel));
 
             if (!the_hal) {
                 return -1;
             }
 
-            return the_hal->memory_info(reinterpret_cast<int*>(data), nullptr, 0);
+            return the_hal->memory_info(reinterpret_cast<int *>(data), nullptr, 0);
         }
 
         case kernel::hal_data_eka1_manufacturer_hardware_rev:
-            *reinterpret_cast<std::uint32_t*>(data) = 1;
+            *reinterpret_cast<std::uint32_t *>(data) = 1;
             break;
 
         case kernel::hal_data_eka1_page_size:
-            *reinterpret_cast<std::uint32_t*>(data) = sys->get_memory_system()->get_page_size();
+            *reinterpret_cast<std::uint32_t *>(data) = sys->get_memory_system()->get_page_size();
             break;
 
         case kernel::hal_data_eka1_tick_period:
-            *reinterpret_cast<std::uint32_t*>(data) = 1000000 / epoc::TICK_TIMER_HZ;
+            *reinterpret_cast<std::uint32_t *>(data) = 1000000 / epoc::TICK_TIMER_HZ;
             break;
 
         case kernel::hal_data_eka1_display_contrast_max:
-            *reinterpret_cast<std::uint32_t*>(data) = HAL_CONTRAST_MAX;
+            *reinterpret_cast<std::uint32_t *>(data) = HAL_CONTRAST_MAX;
             break;
 
         case kernel::hal_data_eka1_screen_info: {
-            display_hal *the_hal = reinterpret_cast<display_hal*>(sys->get_hal(hal_category_display));
+            display_hal *the_hal = reinterpret_cast<display_hal *>(sys->get_hal(hal_category_display));
 
             if (!the_hal) {
                 return -1;
             }
 
-            return the_hal->current_screen_info(reinterpret_cast<int*>(data), nullptr, 0);
+            return the_hal->current_screen_info(reinterpret_cast<int *>(data), nullptr, 0);
         }
 
         default:

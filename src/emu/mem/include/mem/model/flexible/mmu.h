@@ -22,7 +22,7 @@
 #include <mem/mmu.h>
 
 namespace eka2l1::mem::flexible {
-    struct mmu_flexible: public mmu_base {
+    struct mmu_flexible : public mmu_base {
         page_directory *cur_dir_;
 
     public:

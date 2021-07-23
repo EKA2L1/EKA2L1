@@ -33,7 +33,7 @@ namespace eka2l1::common {
 namespace eka2l1::loader {
     static constexpr int const ROFS_MODERN_VERSION = 0x200;
 
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     struct rofs_header {
         char magic_[4];
         std::uint8_t header_size_;
@@ -51,13 +51,13 @@ namespace eka2l1::loader {
         std::uint32_t checksum_;
         std::uint32_t max_image_size_;
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     struct rofs_entry {
         std::uint16_t struct_size_;
-        std::uint32_t uids_[3];         ///< Only if rofs_format_version >= ROFS_MODERN_VERSION
-        std::uint32_t uid_check_;       ///< Only if rofs_format_version >= ROFS_MODERN_VERSION
-        std::uint8_t name_offset_;      ///< Offset form the start of this entry. Probably for fast lookup in the code
+        std::uint32_t uids_[3]; ///< Only if rofs_format_version >= ROFS_MODERN_VERSION
+        std::uint32_t uid_check_; ///< Only if rofs_format_version >= ROFS_MODERN_VERSION
+        std::uint8_t name_offset_; ///< Offset form the start of this entry. Probably for fast lookup in the code
         std::uint8_t att_;
         std::uint32_t file_size_;
         std::uint32_t file_addr_;

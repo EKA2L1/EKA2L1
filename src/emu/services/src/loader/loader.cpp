@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/context.h>
 #include <services/loader/loader.h>
 #include <services/loader/op.h>
-#include <services/context.h>
 
 #include <kernel/kernel.h>
 #include <utils/des.h>
@@ -78,9 +78,9 @@ namespace eka2l1 {
             process_name16 = info_eka1->full_path_.to_std_string(nullptr);
             process_args = ctx.get_argument_value<std::u16string>(1);
 
-            uid3 = info_eka1->uid3_;        
+            uid3 = info_eka1->uid3_;
             handle_owner = info_eka1->handle_owner_;
-            stack_size = 0;         // Eka1 does not allow custom stack size 
+            stack_size = 0; // Eka1 does not allow custom stack size
         } else {
             info = ctx.get_argument_data_from_descriptor<epoc::ldr_info>(0);
             process_name16 = ctx.get_argument_value<std::u16string>(1);
@@ -188,13 +188,13 @@ namespace eka2l1 {
         kernel::process *own_pr = ctx.msg->own_thr->owning_process();
 
         std::vector<common::pystr16> search_list;
-        
+
         if (info_eka1) {
             std::u16string search_list_str = info_eka1->search_path_.to_std_string(own_pr);
             search_list = get_additional_search_paths(search_list_str);
         }
 
-        for (auto &search_path: search_list) {
+        for (auto &search_path : search_list) {
             mngr->search_paths.insert(mngr->search_paths.begin(), search_path.std_str());
         }
 
@@ -218,7 +218,7 @@ namespace eka2l1 {
 
         if (info) {
             own_pr->signal_dll_lock(ctx.msg->own_thr);
-        
+
             info->handle = lib_handle_and_obj.first;
             ctx.write_data_to_descriptor_argument(0, *info);
         } else {
@@ -285,7 +285,7 @@ namespace eka2l1 {
         epoc::lib_info linfo;
         common::ro_buf_stream header_stream(header_data, header_size);
 
-        const std::int32_t err = epoc::get_image_info_from_stream(reinterpret_cast<common::ro_stream*>(&header_stream), linfo);
+        const std::int32_t err = epoc::get_image_info_from_stream(reinterpret_cast<common::ro_stream *>(&header_stream), linfo);
 
         if (err != epoc::error_none) {
             context.complete(err);
@@ -298,7 +298,7 @@ namespace eka2l1 {
             context.complete(epoc::error_argument);
             return;
         }
-        
+
         if (avail_size_write >= sizeof(epoc::lib_info2)) {
             epoc::lib_info2 linfo2;
             memcpy(&linfo2, &linfo, sizeof(epoc::lib_info));
@@ -328,7 +328,7 @@ namespace eka2l1 {
             return;
         }
         io_sys->delete_entry(lib_name.value());
-        
+
         ctx.complete(epoc::error_none);
     }
 

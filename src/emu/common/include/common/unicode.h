@@ -48,7 +48,7 @@ namespace eka2l1::common {
         }
 
         void reset();
-        
+
         inline bool encode_as_is(const std::uint16_t code) {
             return (code == 0x0000) || (code == 0x0009) || (code == 0x000A) || (code == 0x00D) || ((code >= 0x0020) && (code <= 0x007F));
         }
@@ -58,7 +58,7 @@ namespace eka2l1::common {
         std::int32_t static_window_index(std::uint16_t code);
     };
 
-    struct unicode_stream: public unicode_comp_state {
+    struct unicode_stream : public unicode_comp_state {
         int source_pointer;
         std::uint8_t *source_buf;
 
@@ -68,7 +68,7 @@ namespace eka2l1::common {
         std::uint8_t *dest_buf;
 
         int dest_size;
-        
+
         explicit unicode_stream()
             : source_pointer(0)
             , source_size(0)
@@ -105,7 +105,7 @@ namespace eka2l1::common {
         unicode_char_treatment_last_static = 263
     };
 
-    struct unicode_compressor: public unicode_stream {
+    struct unicode_compressor : public unicode_stream {
         struct action {
             std::uint16_t code_;
             std::int32_t treatment_;

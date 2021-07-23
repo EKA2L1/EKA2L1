@@ -30,12 +30,12 @@
 #include <services/centralrepo/centralrepo.h>
 #include <services/ui/cap/consts.h>
 #include <services/ui/cap/oom_app.h>
-#include <services/window/window.h>
 #include <services/window/classes/wingroup.h>
+#include <services/window/window.h>
 #include <utils/err.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 namespace eka2l1 {
@@ -199,7 +199,7 @@ namespace eka2l1 {
             hard_info.state_num = scr_config->hardware_states[i].state_number;
             hard_info.key_mode = scr_config->hardware_states[i].switch_keycode;
 
-            result.append(reinterpret_cast<char*>(&hard_info), sizeof(akn_hardware_info));
+            result.append(reinterpret_cast<char *>(&hard_info), sizeof(akn_hardware_info));
         }
 
         return result;
@@ -261,7 +261,7 @@ namespace eka2l1 {
     void oom_ui_app_server::init(kernel_system *kern, io_system *io, device_manager *mngr) {
         const std::lock_guard<std::mutex> guard(lock);
 
-        auto cenrep = reinterpret_cast<central_repo_server*>(kern->get_by_name<service::server>(
+        auto cenrep = reinterpret_cast<central_repo_server *>(kern->get_by_name<service::server>(
             CENTRAL_REPO_SERVER_NAME));
 
         sgc = std::make_unique<epoc::cap::sgc_server>();
@@ -270,18 +270,18 @@ namespace eka2l1 {
         if (cenrep) {
             coe_storage = std::make_unique<epoc::coe_data_storage>(cenrep, io, mngr);
 
-            const std::u16string EIKSRV_RSC_FILE_PATH = u"z:\\resource\\uiklaf\\eikpriv.rsc";        
+            const std::u16string EIKSRV_RSC_FILE_PATH = u"z:\\resource\\uiklaf\\eikpriv.rsc";
             const std::u16string designated_file = utils::get_nearest_lang_file(io, EIKSRV_RSC_FILE_PATH,
                 kern->get_current_language(), drive_z);
 
             symfile resource_priv = io->open_file(designated_file, READ_MODE | BIN_MODE);
             if (resource_priv) {
                 ro_file_stream resource_priv_fstream(resource_priv.get());
-                loader::rsc_file resource_priv_parser(reinterpret_cast<common::ro_stream*>(&resource_priv_fstream));
+                loader::rsc_file resource_priv_parser(reinterpret_cast<common::ro_stream *>(&resource_priv_fstream));
 
                 auto data = resource_priv_parser.read(epoc::FEP_RESOURCE_ID);
                 common::chunkyseri seri(data.data(), data.size(), common::chunkyseri_mode::SERI_MODE_READ);
-                
+
                 std::u16string dll_filename_fep;
                 loader::absorb_resource_string(seri, dll_filename_fep);
 
@@ -320,7 +320,7 @@ namespace eka2l1 {
 
         return std::nullopt;
     }
-    
+
     std::vector<akn_running_app_info> get_akn_app_infos(window_server *winsrv) {
         std::vector<akn_running_app_info> infos;
         epoc::screen *scr = winsrv->get_screens();
@@ -332,7 +332,7 @@ namespace eka2l1 {
                     infos.push_back(info.value());
                 }
 
-                group = reinterpret_cast<epoc::window_group*>(group->sibling);
+                group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 
             scr = scr->next;

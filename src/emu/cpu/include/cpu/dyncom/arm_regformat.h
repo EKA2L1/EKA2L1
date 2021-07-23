@@ -162,8 +162,8 @@ enum CP15Register {
     CP15_PID,
     CP15_CONTEXT_ID,
     CP15_THREAD_UPRW, // Thread ID register - User/Privileged Read/Write
-    CP15_THREAD_URO,  // Thread ID register - User Read Only (Privileged R/W)
-    CP15_THREAD_PRW,  // Thread ID register - Privileged R/W only.
+    CP15_THREAD_URO, // Thread ID register - User Read Only (Privileged R/W)
+    CP15_THREAD_PRW, // Thread ID register - Privileged R/W only.
 
     // c15 - Performance and TLB lockdown registers
     CP15_PERFORMANCE_MONITOR_CONTROL,

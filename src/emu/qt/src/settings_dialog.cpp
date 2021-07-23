@@ -17,27 +17,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ui_settings_dialog.h"
 #include <qt/settings_dialog.h>
 #include <qt/utils.h>
-#include "ui_settings_dialog.h"
 
 #include <common/algorithm.h>
-#include <config/config.h>
-#include <config/app_settings.h>
+#include <common/crypt.h>
 #include <common/fileutils.h>
 #include <common/language.h>
 #include <common/path.h>
-#include <common/crypt.h>
+#include <config/app_settings.h>
+#include <config/config.h>
 #include <cpu/arm_utils.h>
 #include <dispatch/dispatcher.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/input/emu_controller.h>
-#include <services/window/window.h>
-#include <services/window/screen.h>
-#include <services/window/classes/wingroup.h>
-#include <services/ui/cap/oom_app.h>
 #include <services/hwrm/def.h>
 #include <services/hwrm/power/power_def.h>
+#include <services/ui/cap/oom_app.h>
+#include <services/window/classes/wingroup.h>
+#include <services/window/screen.h>
+#include <services/window/window.h>
 
 #include <system/devices.h>
 #include <system/epoc.h>
@@ -47,12 +47,12 @@
 #include <utils/locale.h>
 #include <utils/system.h>
 
-#include <QtConcurrent/QtConcurrent>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QKeyEvent>
 #include <QMessageBox>
-#include <QInputDialog>
 #include <QSettings>
+#include <QtConcurrent/QtConcurrent>
 
 static constexpr qsizetype RTA_LOW_INDEX = 0;
 static constexpr qsizetype RTA_MID_INDEX = 1;
@@ -215,15 +215,14 @@ void make_default_keybind_profile(eka2l1::config::keybind_profile &profile) {
     profile.keybinds.push_back(bind);
 }
 
-settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller, eka2l1::config::app_settings *app_settings, eka2l1::config::state &configuration) :
-    QDialog(parent),
-    configuration_(configuration),
-    system_(sys),
-    controller_(controller),
-    app_settings_(app_settings),
-    target_bind_(nullptr),
-    ui_(new Ui::settings_dialog)
-{
+settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller, eka2l1::config::app_settings *app_settings, eka2l1::config::state &configuration)
+    : QDialog(parent)
+    , configuration_(configuration)
+    , system_(sys)
+    , controller_(controller)
+    , app_settings_(app_settings)
+    , target_bind_(nullptr)
+    , ui_(new Ui::settings_dialog) {
     setAttribute(Qt::WA_DeleteOnClose);
     ui_->setupUi(this);
 
@@ -259,7 +258,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
-    
+
     QVariant current_language_variant = settings.value(LANGUAGE_SETTING_NAME);
 
     QDir language_dir(":/languages/");
@@ -324,9 +323,9 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
         { ui_->control_bind_tag_btn, eka2l1::epoc::std_key_hash },
     };
 
-    QList<QPushButton*> need_buttons = target_bind_codes_.keys();
+    QList<QPushButton *> need_buttons = target_bind_codes_.keys();
 
-    for (QPushButton *&bind_widget: need_buttons) {
+    for (QPushButton *&bind_widget : need_buttons) {
         connect(bind_widget, &QPushButton::clicked, this, &settings_dialog::on_binding_button_clicked);
         bind_widget->installEventFilter(this);
     }
@@ -373,8 +372,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->control_profile_combobox, &QComboBox::textActivated, this, &settings_dialog::on_control_profile_choosen_another);
 }
 
-settings_dialog::~settings_dialog()
-{
+settings_dialog::~settings_dialog() {
     configuration_.serialize();
     delete ui_;
 }
@@ -477,8 +475,7 @@ void settings_dialog::update_device_settings() {
         for (std::size_t i = 0; i < device_mngr->total(); i++) {
             eka2l1::device *dvc = device_mngr->get(static_cast<std::uint8_t>(i));
             if (dvc) {
-                QString item_des = QString("%1 (%2 - %3)").arg(QString::fromUtf8(dvc->model.c_str()), QString::fromUtf8(dvc->firmware_code.c_str()),
-                                                               epocver_to_symbian_readable_name(dvc->ver));
+                QString item_des = QString("%1 (%2 - %3)").arg(QString::fromUtf8(dvc->model.c_str()), QString::fromUtf8(dvc->firmware_code.c_str()), epocver_to_symbian_readable_name(dvc->ver));
                 ui_->system_device_combo->addItem(item_des);
             }
         }
@@ -522,7 +519,7 @@ void settings_dialog::on_device_validate_requested() {
     block_box.setStandardButtons(QMessageBox::NoButton);
     block_box.show();
 
-    bool last_validate_state =  ui_->system_general_validate_dvc_btn->isEnabled();
+    bool last_validate_state = ui_->system_general_validate_dvc_btn->isEnabled();
     bool last_rescan_state = ui_->system_general_rescan_dvcs_btn->isEnabled();
 
     ui_->system_general_validate_dvc_btn->setDisabled(true);
@@ -559,7 +556,6 @@ void settings_dialog::on_device_rename_requested() {
         }
     }
 }
-
 
 void settings_dialog::on_rta_combo_choose(const int index) {
     eka2l1::ntimer *timing = system_->get_ntimer();
@@ -648,7 +644,7 @@ void settings_dialog::refresh_keybind_button(QPushButton *bind_widget) {
     ui_->touchscreen_disable_label->setVisible(false);
     bind_widget->setText(tr("Unbind"));
 
-    for (auto &keybind: configuration_.keybinds.keybinds) {
+    for (auto &keybind : configuration_.keybinds.keybinds) {
         if (keybind.target == target_bind_code) {
             bind_widget->setText(key_bind_entry_to_string(keybind));
         }
@@ -660,9 +656,9 @@ void settings_dialog::refresh_keybind_button(QPushButton *bind_widget) {
 }
 
 void settings_dialog::refresh_keybind_buttons() {
-    QList<QPushButton*> need_buttons = target_bind_codes_.keys();
+    QList<QPushButton *> need_buttons = target_bind_codes_.keys();
 
-    for (QPushButton *&bind_widget: need_buttons) {
+    for (QPushButton *&bind_widget : need_buttons) {
         refresh_keybind_button(bind_widget);
     }
 }
@@ -690,7 +686,7 @@ void settings_dialog::on_binding_button_clicked() {
         refresh_keybind_button(target_bind_);
     }
 
-    target_bind_ = qobject_cast<QPushButton*>(sender());
+    target_bind_ = qobject_cast<QPushButton *>(sender());
     target_bind_->setText(tr("Waiting for input"));
 }
 
@@ -725,7 +721,7 @@ bool settings_dialog::eventFilter(QObject *obj, QEvent *event) {
         std::optional<eka2l1::config::keybind> new_bind;
 
         if (event->type() == QEvent::KeyPress) {
-            QKeyEvent *key_event = reinterpret_cast<QKeyEvent*>(event);
+            QKeyEvent *key_event = reinterpret_cast<QKeyEvent *>(event);
 
             const int target_bind_code = target_bind_codes_[target_bind_];
             target_bind_->setText(QKeySequence(key_event->key()).toString());
@@ -748,7 +744,7 @@ bool settings_dialog::eventFilter(QObject *obj, QEvent *event) {
                 return false;
             }
 
-            QMouseEvent *mouse_event = reinterpret_cast<QMouseEvent*>(event);
+            QMouseEvent *mouse_event = reinterpret_cast<QMouseEvent *>(event);
             const std::uint32_t mouse_button_order = eka2l1::common::find_most_significant_bit_one(mouse_event->button()) + eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE;
             const int target_bind_code = target_bind_codes_[target_bind_];
 
@@ -800,8 +796,7 @@ void settings_dialog::on_controller_button_press(eka2l1::drivers::input_event ev
 
         if (win_serv) {
             win_serv->delete_key_mapping(target_bind_code);
-            win_serv->input_mapping.button_input_map[std::make_pair(event.button_.controller_, event.button_.button_)] =
-                    static_cast<eka2l1::epoc::std_scan_code>(target_bind_code);
+            win_serv->input_mapping.button_input_map[std::make_pair(event.button_.controller_, event.button_.button_)] = static_cast<eka2l1::epoc::std_scan_code>(target_bind_code);
         }
 
         set_or_add_binding(configuration_.keybinds, new_bind);

@@ -36,13 +36,13 @@ namespace eka2l1::mem::flexible {
      */
     struct memory_object {
     protected:
-        void *data_;                    ///< Pointer to the virtual memory allocated from host.
-        std::size_t page_occupied_;     ///< Number of pages this memory object occupied.
+        void *data_; ///< Pointer to the virtual memory allocated from host.
+        std::size_t page_occupied_; ///< Number of pages this memory object occupied.
 
         control_base *control_;
         bool external_;
 
-        std::vector<mapping*> mappings_;
+        std::vector<mapping *> mappings_;
 
     public:
         explicit memory_object(control_base *ctrl, const std::size_t page_count, void *external_host);

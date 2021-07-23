@@ -4,11 +4,11 @@
 #pragma warning(disable : 4200)
 #endif
 
-#include <cstddef>
 #include <common/types.h>
+#include <cstddef>
 
 struct ARMul_State;
-typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
+typedef unsigned int (*shtop_fp_t)(ARMul_State *cpu, unsigned int sht_oper);
 
 enum class TransExtData {
     COND = (1 << 0),
@@ -34,8 +34,8 @@ struct generic_arm_inst {
     std::uint32_t Rm;
     std::uint32_t Rn;
     std::uint32_t Rd;
-    std::uint8_t  op1;
-    std::uint8_t  op2;
+    std::uint8_t op1;
+    std::uint8_t op2;
 };
 
 struct adc_inst {
@@ -96,7 +96,7 @@ struct bx_inst {
 
 struct blx_inst {
     union {
-        std::int32_t  signed_immed_24;
+        std::int32_t signed_immed_24;
         std::uint32_t Rm;
     } val;
     unsigned int inst;
@@ -480,14 +480,14 @@ struct pkh_inst {
 #include <cpu/dyncom/vfp/vfpinstr.h>
 #undef VFP_INTERPRETER_STRUCT
 
-typedef void (*get_addr_fp_t)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr);
+typedef void (*get_addr_fp_t)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr);
 
 struct ldst_inst {
     unsigned int inst;
     get_addr_fp_t get_addr;
 };
 
-typedef arm_inst* ARM_INST_PTR;
+typedef arm_inst *ARM_INST_PTR;
 typedef ARM_INST_PTR (*transop_fp_t)(ARMul_State *, unsigned int, int);
 
 extern const transop_fp_t arm_instruction_trans[];

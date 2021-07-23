@@ -60,7 +60,7 @@ namespace eka2l1::epoc {
         ~window_group() override;
 
         void on_owner_process_uid_type_change(const std::uint32_t new_uid);
-		void set_name(const std::u16string &new_name);
+        void set_name(const std::u16string &new_name);
 
         // ===================== COMMAND OPCODES =======================
         void set_text_cursor(service::ipc_context &context, ws_cmd &cmd);

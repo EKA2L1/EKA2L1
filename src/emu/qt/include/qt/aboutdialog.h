@@ -24,11 +24,10 @@
 #include <QLabel>
 
 namespace Ui {
-class about_dialog;
+    class about_dialog;
 }
 
-class about_dialog : public QDialog
-{
+class about_dialog : public QDialog {
     Q_OBJECT
 
 private:

@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <services/bluetooth/protocols/btlink/btlink.h>
-#include <services/bluetooth/btmidman.h>
 #include <common/log.h>
+#include <services/bluetooth/btmidman.h>
+#include <services/bluetooth/protocols/btlink/btlink.h>
 
 namespace eka2l1::epoc::bt {
     btlink_host_resolver::btlink_host_resolver(btlink_protocol *papa)
@@ -34,7 +34,7 @@ namespace eka2l1::epoc::bt {
         papa_->get_midman()->device_name(name);
         return true;
     }
-    
+
     bool btlink_host_resolver::get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) {
         LOG_WARN(SERVICE_BLUETOOTH, "Get host by address stubbed to not found");
         return false;

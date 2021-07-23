@@ -18,10 +18,10 @@
  */
 
 #include <kernel/kernel.h>
+#include <kernel/property.h>
 #include <services/hwrm/def.h>
 #include <services/hwrm/vibration/vibration_data.h>
 #include <services/hwrm/vibration/vibration_def.h>
-#include <kernel/property.h>
 
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/repo.h>

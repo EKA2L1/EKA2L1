@@ -33,10 +33,10 @@ namespace eka2l1::common::jni {
         jmethodID get_classloader_method = env->GetStaticMethodID(clazz, "getAppClassLoader", "()Ljava/lang/ClassLoader;");
         c_classloader = env->NewGlobalRef(env->CallStaticObjectMethod(clazz, get_classloader_method));
         c_findclass_method = env->GetMethodID(classloader_class, "findClass",
-                                            "(Ljava/lang/String;)Ljava/lang/Class;");
+            "(Ljava/lang/String;)Ljava/lang/Class;");
     }
 
-    jclass find_class(const char* name) {
+    jclass find_class(const char *name) {
         JNIEnv *env = environment();
         return static_cast<jclass>(env->CallObjectMethod(c_classloader, c_findclass_method, env->NewStringUTF(name)));
     }
@@ -49,7 +49,7 @@ namespace eka2l1::common::jni {
             return nullptr;
         }
 
-        const int env_status = virtual_machine->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
+        const int env_status = virtual_machine->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
 
         if (env_status == JNI_EDETACHED) {
             if (virtual_machine->AttachCurrentThread(&env, nullptr) != 0) {

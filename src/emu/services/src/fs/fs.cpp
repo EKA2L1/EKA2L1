@@ -36,13 +36,13 @@
 #include <common/path.h>
 #include <common/wildcard.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
-#include <utils/err.h>
 #include <common/path.h>
 #include <common/pystr.h>
+#include <utils/err.h>
 
 #include <services/fs/sec.h>
 
@@ -114,7 +114,7 @@ namespace eka2l1 {
     }
 
     static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
-        const char16_t drive_dos_char = drive_to_char16(drive);        
+        const char16_t drive_dos_char = drive_to_char16(drive);
         const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
 
         return drive_u16 + get_private_path_trim_uid(pr);
@@ -127,7 +127,7 @@ namespace eka2l1 {
 
         if (is_separator(target_path[0])) {
             // Only append the root directory to the beginning
-            return eka2l1::add_path(eka2l1::root_name(session_path, true), target_path, true); 
+            return eka2l1::add_path(eka2l1::root_name(session_path, true), target_path, true);
         }
 
         // Check if the path has a root directory
@@ -149,7 +149,7 @@ namespace eka2l1 {
 
     fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, service::ipc_context *ctx)
         : typical_session(srv, suid, client_version) {
-            // Please don't remove the separator, absolute path needs this to determine root directory
+        // Please don't remove the separator, absolute path needs this to determine root directory
         kernel::process *pr = ctx->msg->own_thr->owning_process();
         const std::u16string root_name = eka2l1::root_name(pr->get_exe_path());
 
@@ -195,7 +195,7 @@ namespace eka2l1 {
                     epoc::fs_msg_ext_name,
                     epoc::fs_msg_startup_init_complete,
                     epoc::fs_msg_raw_disk_write,
-                    epoc::fs_msg_max_client_operations,         // virus scanner opcode
+                    epoc::fs_msg_max_client_operations, // virus scanner opcode
                     epoc::fs_msg_session_to_private,
                     epoc::fs_msg_private_path,
                     epoc::fs_msg_create_private_path,
@@ -230,10 +230,10 @@ namespace eka2l1 {
 
         switch (ctx->msg->function & 0xFF) {
 // For debug purpose, uncomment the log
-#define HANDLE_CLIENT_IPC(name, op, debug_func_str)     \
-    case (op): {                                        \
+#define HANDLE_CLIENT_IPC(name, op, debug_func_str)                    \
+    case (op): {                                                       \
         name(ctx); /*LOG_TRACE(SERVICE_EFSRV, "{}", debug_func_str);*/ \
-        break;                                          \
+        break;                                                         \
     }
 
             HANDLE_CLIENT_IPC(entry, epoc::fs_msg_entry, "Fs::Entry");
@@ -270,7 +270,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(create_private_path, epoc::fs_msg_create_private_path, "Fs::CreatePrivatePath");
             HANDLE_CLIENT_IPC(notify_change_ex, epoc::fs_msg_notify_change_ex, "Fs::NotifyChangeEx");
             HANDLE_CLIENT_IPC(notify_change, epoc::fs_msg_notify_change, "Fs::NotifyChange");
-            HANDLE_CLIENT_IPC(notify_change_cancel, epoc::fs_msg_notify_change_cancel, "Fs::NotifyChangeCancel");            // Same implementation on emulator.
+            HANDLE_CLIENT_IPC(notify_change_cancel, epoc::fs_msg_notify_change_cancel, "Fs::NotifyChangeCancel"); // Same implementation on emulator.
             HANDLE_CLIENT_IPC(notify_change_cancel_ex, epoc::fs_msg_notify_change_cancel_ex, "Fs::NotifyChangeCancelEx");
             HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
             HANDLE_CLIENT_IPC(rmdir, epoc::fs_msg_rmdir, "Fs::RmDir");
@@ -390,7 +390,7 @@ namespace eka2l1 {
             ctx->complete(epoc::error_permission_denied);
             return;
         }
-        
+
         io_system *io = ctx->sys->get_io_system();
 
         bool success = io->delete_entry(path);
@@ -423,7 +423,7 @@ namespace eka2l1 {
         ctx->write_arg(0, default_sys_path);
         ctx->complete(epoc::error_none);
     }
-    
+
     void fs_server::init() {
         if (flags & FLAG_INITED) {
             return;
@@ -613,8 +613,8 @@ namespace eka2l1 {
         notify_entries.clear();
         ctx->complete(epoc::error_none);
     }
-    
-    void fs_server_client::notify_change_cancel_ex(service::ipc_context *ctx) { 
+
+    void fs_server_client::notify_change_cancel_ex(service::ipc_context *ctx) {
         address request_status_addr = ctx->get_argument_value<address>(0).value();
         for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
             notify_entry entry = *it;

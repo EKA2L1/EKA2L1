@@ -186,7 +186,7 @@ namespace eka2l1 {
         eka2l1::rect dest_rect;
     };
 
-    struct ws_cmd_draw_bitmap3: public ws_cmd_draw_bitmap2 {
+    struct ws_cmd_draw_bitmap3 : public ws_cmd_draw_bitmap2 {
         eka2l1::rect source_rect;
     };
 

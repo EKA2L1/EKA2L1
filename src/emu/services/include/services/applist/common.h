@@ -20,8 +20,8 @@
 #pragma once
 
 #include <common/buffer.h>
-#include <utils/des.h>
 #include <cstdint>
+#include <utils/des.h>
 
 namespace eka2l1 {
     enum data_type_priority {
@@ -30,7 +30,7 @@ namespace eka2l1 {
         data_type_priority_normal = 0,
         data_type_priority_high = 10000
     };
-    
+
     struct data_type {
         std::int32_t priority_;
         std::string type_;

@@ -41,7 +41,7 @@ namespace eka2l1 {
     accessory_single_connection_subsession::accessory_single_connection_subsession(accessory_server *svr)
         : accessory_subsession(svr) {
     }
-    
+
     void accessory_single_connection_subsession::get_accessory_connection_status(service::ipc_context *ctx) {
         // NOTE: The third argument named flags is not considered here. Check again if troubles rise.
         LOG_TRACE(SERVICE_ACCESSORY, "GetAccessoryConnectionStatus stubbed to all not available");
@@ -51,7 +51,7 @@ namespace eka2l1 {
         ctx->write_data_to_descriptor_argument<epoc::acc::generic_id_array>(0, arr);
         ctx->complete(epoc::error_none);
     }
-    
+
     void accessory_single_connection_subsession::notify_new_accessory_connected(service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_ACCESSORY, "Notify new accessory connect stubbed (missing arugments)");
         accessory_connected_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
@@ -70,7 +70,7 @@ namespace eka2l1 {
                 get_accessory_connection_status(ctx);
                 break;
 
-            default:    
+            default:
                 LOG_ERROR(SERVICE_ACCESSORY, "Unimplemented opcode for Accessory single connection subsession 0x{:X}", ctx->msg->function);
                 break;
             }
@@ -96,11 +96,11 @@ namespace eka2l1 {
         kernel_system *kern = server<accessory_server>()->get_kernel_object_owner();
 
         if (kern->get_epoc_version() <= epocver::epoc93) {
-            switch (ctx->msg->function) {        
+            switch (ctx->msg->function) {
             case epoc::acc::opcode_s60v3_create_accessory_connection_subsession:
                 create_accessory_single_connection_subsession(ctx);
                 return;
-            
+
             default:
                 break;
             }

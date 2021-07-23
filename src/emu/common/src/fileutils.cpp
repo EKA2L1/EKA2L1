@@ -20,8 +20,8 @@
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
-#include <common/log.h>
 #include <common/fileutils.h>
+#include <common/log.h>
 #include <common/path.h>
 #include <common/platform.h>
 #include <common/time.h>
@@ -31,8 +31,8 @@
 #if EKA2L1_PLATFORM(WIN32)
 #include <Windows.h>
 #elif EKA2L1_PLATFORM(UNIX) || EKA2L1_PLATFORM(DARWIN)
-#include <sys/stat.h>
 #include <fnmatch.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -173,7 +173,7 @@ namespace eka2l1::common {
         if (handle == INVALID_HANDLE_VALUE) {
             handle = nullptr;
 
-            WIN32_FIND_DATA *find_data_casted = reinterpret_cast<WIN32_FIND_DATA*>(find_data);
+            WIN32_FIND_DATA *find_data_casted = reinterpret_cast<WIN32_FIND_DATA *>(find_data);
             delete find_data_casted;
         }
 #endif
@@ -382,7 +382,7 @@ namespace eka2l1::common {
         return false;
 #endif
     }
-    
+
     bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, std::atomic<int> *progress) {
         if (!exists(target_folder)) {
             return false;
@@ -419,7 +419,7 @@ namespace eka2l1::common {
                         continue;
 
                     std::string name_to_use = entry.name;
-                    
+
                     if (!is_measuring) {
                         const auto lowercased = common::lowercase_string(entry.name);
 
@@ -429,14 +429,14 @@ namespace eka2l1::common {
                                     if (!common::move_file(iterator.dir_name + entry.name, iterator.dir_name + lowercased)) {
                                         return false;
                                     }
-                                    
+
                                     if (progress) {
                                         total_copied += entry.size;
                                         *progress = static_cast<int>(total_copied * 100 / total_size);
                                     }
                                 }
                             }
-                            
+
                             name_to_use = lowercased;
                         }
                     }
@@ -448,8 +448,7 @@ namespace eka2l1::common {
                             total_size += entry.size;
                         } else {
                             if (!no_copy) {
-                                if (!common::copy_file(iterator.dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) +
-                                    eka2l1::get_separator() + name_to_use, true)) {
+                                if (!common::copy_file(iterator.dir_name + entry.name, eka2l1::add_path(dest_folder_to_reside, top_path) + eka2l1::get_separator() + name_to_use, true)) {
                                     return false;
                                 }
 
@@ -473,7 +472,7 @@ namespace eka2l1::common {
         return do_copy_stuffs(false);
     }
 
-    bool delete_folder(const std::string& target_folder) {
+    bool delete_folder(const std::string &target_folder) {
         common::dir_iterator iterator(target_folder);
         iterator.detail = true;
 

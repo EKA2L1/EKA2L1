@@ -24,7 +24,7 @@
 #include <kernel/thread.h>
 
 namespace eka2l1::kernel::legacy {
-    class sync_object_base: public kernel_obj {
+    class sync_object_base : public kernel_obj {
     private:
         common::roundabout waits_;
         common::roundabout suspended_;

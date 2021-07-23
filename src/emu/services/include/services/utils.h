@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <utils/version.h>
 #include <optional>
+#include <utils/version.h>
 
 namespace eka2l1 {
     class kernel_system;

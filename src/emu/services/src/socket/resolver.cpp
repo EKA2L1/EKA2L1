@@ -29,7 +29,7 @@ namespace eka2l1::epoc::socket {
         , resolver_(std::move(resolver))
         , conn_(conn) {
     }
-    
+
     void socket_host_resolver::get_host_name(service::ipc_context *ctx) {
         ctx->write_arg(0, resolver_->host_name());
         ctx->complete(epoc::error_none);
@@ -57,7 +57,7 @@ namespace eka2l1::epoc::socket {
         parent_->subsessions_.remove(id_);
         ctx->complete(epoc::error_none);
     }
-    
+
     void socket_host_resolver::dispatch(service::ipc_context *ctx) {
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {

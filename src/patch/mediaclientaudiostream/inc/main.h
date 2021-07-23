@@ -49,7 +49,8 @@ class CMMFMdaAudioOutputStream;
 
 class CMdaAudioOutputStream : public CBase
 #ifdef MMF_BASE_CLIENT_UTILITY
-                            , public MMMFClientUtility
+    ,
+                              public MMMFClientUtility
 #endif
 {
 public:
@@ -81,7 +82,7 @@ public:
     EXPORT_C TInt GetBytes();
     EXPORT_C void SetDataTypeL(TFourCC aAudioType);
     EXPORT_C TFourCC DataType() const;
-    
+
 #ifdef MMF_BASE_CLIENT_UTILITY
     EXPORT_C TInt RegisterAudioResourceNotification(MMMFAudioResourceNotificationCallback &aCallback, TUid aNotificationEventUid, const TDesC8 &aNotificationRegistrationData = KNullDesC8);
     EXPORT_C TInt CancelRegisterAudioResourceNotification(TUid aNotificationEventId);

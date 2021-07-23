@@ -50,7 +50,7 @@ namespace eka2l1 {
             uint32_t caps[2];
         };
 
-        #pragma pack(push, 1)
+#pragma pack(push, 1)
         struct rom_page_info {
             enum attrib : uint8_t {
                 pageable = 1 << 0
@@ -73,7 +73,7 @@ namespace eka2l1 {
 
             union {
                 struct {
-                    std::int64_t time;    
+                    std::int64_t time;
                     std::uint32_t time_high;
                 } eka2_diff0;
 
@@ -81,7 +81,7 @@ namespace eka2l1 {
                     std::uint8_t major;
                     std::uint8_t minor;
                     std::uint16_t build;
-                    std::int64_t time;  
+                    std::int64_t time;
                 } eka1_diff0;
             };
 
@@ -97,7 +97,7 @@ namespace eka2l1 {
             uint32_t checksum;
 
             union {
-                struct {                    
+                struct {
                     std::uint32_t hardware;
                     std::int64_t lang;
                     std::uint32_t kern_config_flags;
@@ -110,7 +110,7 @@ namespace eka2l1 {
                     std::uint32_t hardware;
                     std::int32_t size_x;
                     std::int32_t size_y;
-                    std::uint32_t bits_per_pixel; 
+                    std::uint32_t bits_per_pixel;
                 } eka1_diff1;
             };
 
@@ -161,7 +161,7 @@ namespace eka2l1 {
         };
 
         static_assert(sizeof(rom_header) == 512);
-        #pragma pack(pop)
+#pragma pack(pop)
 
         struct rom_section_header {
             uint8_t major;
@@ -249,6 +249,6 @@ namespace eka2l1 {
          */
         int defrag_rom(common::ro_stream *stream, common::wo_stream *dest_stream);
         bool dump_rom_files(common::ro_stream *stream, const std::string &dest_base, progress_changed_callback progress_cb = nullptr,
-                            cancel_requested_callback cancel_cb = nullptr);
+            cancel_requested_callback cancel_cb = nullptr);
     }
 }

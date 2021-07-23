@@ -26,18 +26,18 @@
 #define CHECK_VFP_ENABLED
 #define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
-void VFPInit(ARMul_State* state);
+void VFPInit(ARMul_State *state);
 
-std::int32_t  vfp_get_float(ARMul_State* state, std::uint32_t reg);
-void vfp_put_float(ARMul_State* state, std::int32_t  val, std::uint32_t reg);
-std::uint64_t  vfp_get_double(ARMul_State* state, std::uint32_t reg);
-void vfp_put_double(ARMul_State* state, std::uint64_t  val, std::uint32_t reg);
-void vfp_raise_exceptions(ARMul_State* state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr);
-std::uint32_t vfp_single_cpdo(ARMul_State* state, std::uint32_t inst, std::uint32_t fpscr);
-std::uint32_t vfp_double_cpdo(ARMul_State* state, std::uint32_t inst, std::uint32_t fpscr);
+std::int32_t vfp_get_float(ARMul_State *state, std::uint32_t reg);
+void vfp_put_float(ARMul_State *state, std::int32_t val, std::uint32_t reg);
+std::uint64_t vfp_get_double(ARMul_State *state, std::uint32_t reg);
+void vfp_put_double(ARMul_State *state, std::uint64_t val, std::uint32_t reg);
+void vfp_raise_exceptions(ARMul_State *state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr);
+std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr);
+std::uint32_t vfp_double_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr);
 
-void VMOVBRS(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t n, std::uint32_t *value);
-void VMOVBRRD(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2);
-void VMOVBRRSS(ARMul_State* state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2);
-void VMOVI(ARMul_State* state, std::uint32_t single, std::uint32_t d, std::uint32_t imm);
-void VMOVR(ARMul_State* state, std::uint32_t single, std::uint32_t d, std::uint32_t imm);
+void VMOVBRS(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t n, std::uint32_t *value);
+void VMOVBRRD(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2);
+void VMOVBRRSS(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t t2, std::uint32_t n, std::uint32_t *value1, std::uint32_t *value2);
+void VMOVI(ARMul_State *state, std::uint32_t single, std::uint32_t d, std::uint32_t imm);
+void VMOVR(ARMul_State *state, std::uint32_t single, std::uint32_t d, std::uint32_t imm);

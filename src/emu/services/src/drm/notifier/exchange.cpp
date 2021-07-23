@@ -111,8 +111,8 @@ namespace eka2l1 {
         }
 
         // Send to all sessions
-        for (auto &session: sessions) {
-            drm_notifier_client_session *ss = reinterpret_cast<drm_notifier_client_session*>(session.second.get());
+        for (auto &session : sessions) {
+            drm_notifier_client_session *ss = reinterpret_cast<drm_notifier_client_session *>(session.second.get());
             ss->receive_event(msg);
         }
 
@@ -120,7 +120,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::finish_listen(drm_event_message *msg) {
-        to_write_event_type_->assign(notify_.requester->owning_process(), reinterpret_cast<std::uint8_t*>(&msg->type_),
+        to_write_event_type_->assign(notify_.requester->owning_process(), reinterpret_cast<std::uint8_t *>(&msg->type_),
             sizeof(msg->type_));
 
         std::memcpy(to_write_data_, msg->data_.data(), msg->data_.size());
@@ -150,7 +150,7 @@ namespace eka2l1 {
     }
 
     bool drm_notifier_client_session::can_accept(drm_event_message *msg) {
-        for (const drm_accept_event_type &accept: accept_types_) {
+        for (const drm_accept_event_type &accept : accept_types_) {
             // We can accept if event type of the registered is same as the message.
             // Content URI of the registered is empty then this condition is a free pass.
             if ((accept.event_type_ == msg->type_) && ((accept.content_uri_.empty()) || (msg->data_ == accept.content_uri_))) {
@@ -174,7 +174,7 @@ namespace eka2l1 {
         msgs_.push(msg);
         return true;
     }
-    
+
     bool drm_notifier_client_session::register_event(const std::uint32_t type, const std::string uri) {
         for (std::size_t i = 0; i < accept_types_.size(); i++) {
             if ((accept_types_[i].event_type_ == type) && (accept_types_[i].content_uri_ == uri)) {

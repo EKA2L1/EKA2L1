@@ -191,7 +191,7 @@ namespace eka2l1::epoc {
         eka2l1::vec2 offset_to_first_usable_;
         eka2l1::vec2 size_usable_;
     };
-    
+
     enum keyboard_type : std::int32_t {
         keyboard_type_numpad = 0,
         keyboard_type_full = 1
@@ -205,7 +205,7 @@ namespace eka2l1::epoc {
     };
 #pragma pack(pop)
 
-    enum xy_input_type: std::uint32_t {
+    enum xy_input_type : std::uint32_t {
         xy_input_type_none,
         xy_input_type_pointer,
         xy_input_type_mouse,

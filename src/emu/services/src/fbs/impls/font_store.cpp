@@ -66,7 +66,7 @@ namespace eka2l1::epoc {
     }
 
     open_font_info *font_store::seek_the_font_by_uid(const epoc::uid the_uid) {
-        for (auto &info: open_font_store) {
+        for (auto &info : open_font_store) {
             if (info.adapter->unique_id(info.idx) == the_uid) {
                 return &info;
             }
@@ -81,7 +81,7 @@ namespace eka2l1::epoc {
         }
         return &open_font_store[index];
     }
-    
+
     open_font_info *font_store::seek_the_open_font(epoc::font_spec_base &spec) {
         open_font_info *best = nullptr;
         int best_score = -99999999;
@@ -109,15 +109,15 @@ namespace eka2l1::epoc {
             // Match the flags. This is also an important factor.
             if (info.face_attrib.style & epoc::open_font_face_attrib::italic) {
                 // Extra flags are not welcome
-                if ((static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::italic)) {
+                if ((static_cast<epoc::font_spec_v1 &>(spec).style.flags & epoc::font_style_base::italic)) {
                     score += 5000;
                 } else {
                     score -= 3000;
                 }
             }
 
-            if (info.face_attrib.style & epoc::open_font_face_attrib::bold) {    
-                if (static_cast<epoc::font_spec_v1&>(spec).style.flags & epoc::font_style_base::bold) {
+            if (info.face_attrib.style & epoc::open_font_face_attrib::bold) {
+                if (static_cast<epoc::font_spec_v1 &>(spec).style.flags & epoc::font_style_base::bold) {
                     score += 5000;
                 } else {
                     score -= 3000;

@@ -89,19 +89,19 @@ namespace eka2l1::config {
         bool fbs_enable_compression_queue{ false };
         bool enable_btrace{ false };
 
-        bool stop_warn_touch_disabled { false };
-        bool dump_imb_range_code { false };
-        bool hide_mouse_in_screen_space { false };
-        bool nearest_neighbor_filtering { true };
-        bool integer_scaling { true };
-        bool cpu_load_save { true };
-        bool mime_detection { true };
+        bool stop_warn_touch_disabled{ false };
+        bool dump_imb_range_code{ false };
+        bool hide_mouse_in_screen_space{ false };
+        bool nearest_neighbor_filtering{ true };
+        bool integer_scaling{ true };
+        bool cpu_load_save{ true };
+        bool mime_detection{ true };
 
-        std::atomic<bool> stepping { false };
+        std::atomic<bool> stepping{ false };
         std::string rtos_level;
 
-        bool ui_new_style { true };
-        bool cenrep_reset { false };
+        bool ui_new_style{ true };
+        bool cenrep_reset{ false };
 
         keybind_profile keybinds;
 

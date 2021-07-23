@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <common/uid.h>
 #include <cstdint>
 #include <mem/ptr.h>
-#include <common/uid.h>
 
 namespace eka2l1::kernel {
     class process;

@@ -86,7 +86,7 @@ namespace eka2l1 {
             name_ = "Empty";
 
         LOG_INFO(SERVICE_REMCON, "Remcon session set player type with name: {}, client type: {},"
-                 " player type: {}, player subtype: {}",
+                                 " player type: {}, player subtype: {}",
             name_, epoc::remcon::client_type_to_string(type_),
             epoc::remcon::player_type_to_string(information_.type_),
             epoc::remcon::player_subtype_to_string(information_.subtype_));

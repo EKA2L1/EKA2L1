@@ -23,8 +23,8 @@
 #include <e32svr.h>
 #endif
 
-#include <f32file.h>
 #include <e32std.h>
+#include <f32file.h>
 
 #include <Log.h>
 

@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <common/types.h>
 #include <common/log.h>
+#include <common/types.h>
 
 #include <scripting/emulog.h>
 
@@ -30,7 +30,7 @@ namespace eka2l1::scripting {
 }
 
 extern "C" {
-    EKA2L1_EXPORT void symemu_log(const char *format) {
-        LOG_INFO(eka2l1::SCRIPTING, "{}", format);
-    }
+EKA2L1_EXPORT void symemu_log(const char *format) {
+    LOG_INFO(eka2l1::SCRIPTING, "{}", format);
+}
 }

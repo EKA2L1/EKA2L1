@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <loader/sis.h>
 #include <loader/sis_common.h>
 #include <loader/sis_fields.h>
-#include <loader/sis.h>
 
 #include <cassert>
 #include <cstdio>
@@ -63,8 +63,7 @@ namespace eka2l1 {
                 return sis_type_new;
             }
 
-            if ((uid2 == static_cast<std::uint32_t>(epoc_sis_type::epocu6)) ||
-                (uid2 == static_cast<std::uint32_t>(epoc_sis_type::epoc6))) {
+            if ((uid2 == static_cast<std::uint32_t>(epoc_sis_type::epocu6)) || (uid2 == static_cast<std::uint32_t>(epoc_sis_type::epoc6))) {
                 return sis_type_old;
             }
 
@@ -78,7 +77,7 @@ namespace eka2l1 {
                 parser.parse_header();
 
             sis_contents cs;
-            
+
             if (is_stub) {
                 cs.controller = parser.parse_controller();
             } else {

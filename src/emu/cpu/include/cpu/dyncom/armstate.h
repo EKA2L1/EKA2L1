@@ -18,8 +18,8 @@
 #pragma once
 
 #include <array>
-#include <unordered_map>
 #include <common/types.h>
+#include <unordered_map>
 
 #include <cpu/dyncom/arm_regformat.h>
 
@@ -32,7 +32,10 @@ namespace eka2l1::arm {
 #define TRANS_CACHE_SIZE (64 * 1024 * 2000)
 
 // Signal levels
-enum { LOW = 0, HIGH = 1, LOWHIGH = 1, HIGHLOW = 2 };
+enum { LOW = 0,
+    HIGH = 1,
+    LOWHIGH = 1,
+    HIGHLOW = 2 };
 
 // Cache types
 enum {
@@ -139,10 +142,10 @@ enum : std::uint32_t {
 
 // Values for Emulate.
 enum {
-    STOP = 0,       // Stop
+    STOP = 0, // Stop
     CHANGEMODE = 1, // Change mode
-    ONCE = 2,       // Execute just one iteration
-    RUN = 3         // Continuous execution
+    ONCE = 2, // Execute just one iteration
+    RUN = 3 // Continuous execution
 };
 
 struct ARMul_State final {
@@ -194,12 +197,12 @@ public:
 
     std::array<std::uint32_t, 16> Reg{}; // The current register file
     std::array<std::uint32_t, 2> Reg_usr{};
-    std::array<std::uint32_t, 2> Reg_svc{};   // R13_SVC R14_SVC
+    std::array<std::uint32_t, 2> Reg_svc{}; // R13_SVC R14_SVC
     std::array<std::uint32_t, 2> Reg_abort{}; // R13_ABORT R14_ABORT
     std::array<std::uint32_t, 2> Reg_undef{}; // R13 UNDEF R14 UNDEF
-    std::array<std::uint32_t, 2> Reg_irq{};   // R13_IRQ R14_IRQ
-    std::array<std::uint32_t, 7> Reg_firq{};  // R8---R14 FIRQ
-    std::array<std::uint32_t, 7> Spsr{};      // The exception psr's
+    std::array<std::uint32_t, 2> Reg_irq{}; // R13_IRQ R14_IRQ
+    std::array<std::uint32_t, 7> Reg_firq{}; // R8---R14 FIRQ
+    std::array<std::uint32_t, 7> Spsr{}; // The exception psr's
     std::array<std::uint32_t, CP15_REGISTER_COUNT> CP15{};
 
     // FPSID, FPSCR, and FPEXC
@@ -211,7 +214,7 @@ public:
     std::array<std::uint32_t, 64> ExtReg{};
 
     std::uint32_t Emulate; // To start and stop emulation
-    std::uint32_t Cpsr;    // The current PSR
+    std::uint32_t Cpsr; // The current PSR
     std::uint32_t Spsr_copy;
     std::uint32_t phys_pc;
 
@@ -234,7 +237,7 @@ public:
     unsigned NtransSig;
     unsigned bigendSig;
     unsigned syscallSig;
-    
+
     char trans_cache_buf[TRANS_CACHE_SIZE];
     size_t trans_cache_buf_top = 0;
 

@@ -17,25 +17,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qt/aboutdialog.h>
 #include "ui_aboutdialog.h"
+#include <qt/aboutdialog.h>
 
-#include <yaml-cpp/yaml.h>
 #include <common/log.h>
 #include <common/version.h>
+#include <yaml-cpp/yaml.h>
 
 #include <QFile>
 
-about_dialog::about_dialog(QWidget *parent) :
-    QDialog(parent),
-    ui_(new Ui::about_dialog),
-    main_developer_label_(nullptr),
-    contributor_label_(nullptr),
-    icon_label_(nullptr),
-    honor_label_(nullptr),
-    translator_label_(nullptr),
-    version_label_(nullptr)
-{
+about_dialog::about_dialog(QWidget *parent)
+    : QDialog(parent)
+    , ui_(new Ui::about_dialog)
+    , main_developer_label_(nullptr)
+    , contributor_label_(nullptr)
+    , icon_label_(nullptr)
+    , honor_label_(nullptr)
+    , translator_label_(nullptr)
+    , version_label_(nullptr) {
     ui_->setupUi(this);
 
     // Load the whole file in for reading
@@ -63,7 +62,7 @@ about_dialog::about_dialog(QWidget *parent) :
     try {
         QString developer_str = tr("<b>Main developers:</b><br>");
 
-        for (const auto node: credit_yaml_tree["MainDevs"]) {
+        for (const auto node : credit_yaml_tree["MainDevs"]) {
             developer_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
         }
 
@@ -77,7 +76,7 @@ about_dialog::about_dialog(QWidget *parent) :
     try {
         QString contributor_str = tr("<b>Contributors:</b><br>");
 
-        for (const auto node: credit_yaml_tree["Contributors"]) {
+        for (const auto node : credit_yaml_tree["Contributors"]) {
             contributor_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
         }
 
@@ -91,7 +90,7 @@ about_dialog::about_dialog(QWidget *parent) :
     try {
         QString icon_str = tr("<b>Icon:</b><br>");
 
-        for (const auto node: credit_yaml_tree["Icon"]) {
+        for (const auto node : credit_yaml_tree["Icon"]) {
             icon_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
         }
 
@@ -105,7 +104,7 @@ about_dialog::about_dialog(QWidget *parent) :
     try {
         QString honor_str = tr("<b>Honors:</b><br>");
 
-        for (const auto node: credit_yaml_tree["Honors"]) {
+        for (const auto node : credit_yaml_tree["Honors"]) {
             honor_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
         }
 
@@ -119,7 +118,7 @@ about_dialog::about_dialog(QWidget *parent) :
     try {
         QString translator_str = tr("<b>Translators:</b><br>");
 
-        for (const auto node: credit_yaml_tree["TranslatorsDesktop"]) {
+        for (const auto node : credit_yaml_tree["TranslatorsDesktop"]) {
             translator_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
         }
 
@@ -131,8 +130,7 @@ about_dialog::about_dialog(QWidget *parent) :
     }
 }
 
-about_dialog::~about_dialog()
-{
+about_dialog::~about_dialog() {
     if (translator_label_)
         delete translator_label_;
 

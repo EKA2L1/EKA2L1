@@ -6,6 +6,7 @@
 
 #include <cstdint>
 
-enum class ARMDecodeStatus { SUCCESS, FAILURE };
+enum class ARMDecodeStatus { SUCCESS,
+    FAILURE };
 
-ARMDecodeStatus decode_arm_instruction(std::uint32_t instr, int* idx);
+ARMDecodeStatus decode_arm_instruction(std::uint32_t instr, int *idx);

@@ -25,9 +25,9 @@
 #include <common/version.h>
 #include <gdbstub/gdbstub.h>
 
+#include <dispatch/libraries/register.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
-#include <dispatch/libraries/register.h>
 
 #include <system/devices.h>
 
@@ -79,7 +79,7 @@ namespace eka2l1::desktop {
 
         if (dvcmngr->total() > 0) {
             symsys->startup();
-            
+
             if (conf.enable_gdbstub) {
                 symsys->get_gdb_stub()->set_server_port(conf.gdb_port);
             }
@@ -95,7 +95,7 @@ namespace eka2l1::desktop {
             symsys->mount(drive_c, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/c/"), io_attrib_internal);
             symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/d/"), io_attrib_internal);
             symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib_removeable);
-            
+
             on_system_reset(symsys.get());
             sys_reset_cbh = symsys->add_system_reset_callback([this](system *the_sys) {
                 on_system_reset(the_sys);
@@ -115,7 +115,7 @@ namespace eka2l1::desktop {
                 LOG_ERROR(FRONTEND_CMDLINE, "No current device is available. Stage two initialisation abort");
                 return false;
             }
-            
+
             LOG_INFO(FRONTEND_CMDLINE, "Device being used: {} ({})", dvc->model, dvc->firmware_code);
 
             // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
@@ -145,7 +145,7 @@ namespace eka2l1::desktop {
                 auto private_dir_c_persists = io->get_raw_path(u"C:\\Private\\10202be9\\persists\\");
                 auto private_dir_d_persists = io->get_raw_path(u"D:\\Private\\10202be9\\persists\\");
                 auto private_dir_e_persists = io->get_raw_path(u"E:\\Private\\10202be9\\persists\\");
-                
+
                 common::delete_folder(common::ucs2_to_utf8(*private_dir_c_persists));
                 common::delete_folder(common::ucs2_to_utf8(*private_dir_d_persists));
                 common::delete_folder(common::ucs2_to_utf8(*private_dir_e_persists));

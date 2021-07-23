@@ -21,9 +21,9 @@
 #include <common/algorithm.h>
 #include <common/buffer.h>
 #include <common/bytepair.h>
+#include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <common/cvt.h>
 
 #include <loader/rom.h>
 
@@ -312,7 +312,7 @@ namespace eka2l1::loader {
         static constexpr std::int64_t CHUNK_SIZE = 0x10000;
         std::vector<std::uint8_t> buffer;
         std::int64_t left = rom_parse->header.pageable_rom_start;
-        
+
         while (left > 0) {
             const std::int64_t take = common::min(left, CHUNK_SIZE);
             buffer.resize(take);
@@ -331,7 +331,8 @@ namespace eka2l1::loader {
         static constexpr std::uint32_t EKA_ROM_PAGE_SIZE = 0x1000;
 
         const std::uint32_t total_page_to_seek = (rom_parse->header.uncompress_size - rom_parse->header.pageable_rom_start
-            + EKA_ROM_PAGE_SIZE - 1) / EKA_ROM_PAGE_SIZE;
+                                                     + EKA_ROM_PAGE_SIZE - 1)
+            / EKA_ROM_PAGE_SIZE;
         const std::uint32_t page_start = rom_parse->header.pageable_rom_start / EKA_ROM_PAGE_SIZE;
 
         buffer.resize(EKA_ROM_PAGE_SIZE);
@@ -425,7 +426,7 @@ namespace eka2l1::loader {
         std::size_t &passed_size, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         eka2l1::create_directories(base);
 
-        for (auto &entry: dir.entries) {
+        for (auto &entry : dir.entries) {
             if (!(entry.attrib & 0x10) && (entry.size != 0)) {
                 if (!dump_rom_file(stream, entry, base, rom_base, passed_size, progress_cb, cancel_cb)) {
                     return false;
@@ -433,12 +434,11 @@ namespace eka2l1::loader {
             }
         }
 
-        for (auto &subdir: dir.subdirs) {
+        for (auto &subdir : dir.subdirs) {
             std::string new_base;
 
             if (common::is_platform_case_sensitive()) {
-                new_base = eka2l1::add_path(base, common::lowercase_string(common::ucs2_to_utf8(
-                    subdir.name)));
+                new_base = eka2l1::add_path(base, common::lowercase_string(common::ucs2_to_utf8(subdir.name)));
             } else {
                 new_base = eka2l1::add_path(base, common::ucs2_to_utf8(subdir.name));
             }
@@ -459,7 +459,7 @@ namespace eka2l1::loader {
 
         std::size_t passed_size = 0;
 
-        for (root_dir &rdir: rom_parse_result->root.root_dirs) {
+        for (root_dir &rdir : rom_parse_result->root.root_dirs) {
             if (!dump_rom_directory(stream, rdir.dir, dest_base, rom_parse_result->header.rom_base, passed_size, progress_cb, cancel_cb)) {
                 return false;
             }

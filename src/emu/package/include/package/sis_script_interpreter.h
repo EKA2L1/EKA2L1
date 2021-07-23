@@ -24,8 +24,8 @@
 
 #include <atomic>
 #include <functional>
-#include <string>
 #include <stack>
+#include <string>
 #include <vector>
 
 #include <loader/sis_fields.h>
@@ -62,7 +62,7 @@ namespace eka2l1 {
             sis_data *install_data;
             config::state *conf;
 
-            std::stack<sis_controller*> current_controllers;
+            std::stack<sis_controller *> current_controllers;
             std::vector<std::u16string> gathered_sis_paths;
 
             struct extract_target_info {
@@ -100,7 +100,7 @@ namespace eka2l1 {
              */
             int gasp_true_form_of_integral_expression(const sis_expression &expr);
 
-        protected:            
+        protected:
             bool interpret(sis_install_block &install_block, sis_registry_tree &parent_tree, std::uint16_t crr_blck_idx = 0);
             bool interpret(sis_controller *controller, sis_registry_tree &tree, const std::uint16_t base_data_idx);
 
@@ -131,9 +131,9 @@ namespace eka2l1 {
             bool extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx);
 
         public:
-            show_text_func show_text;                   ///< Hook function to display texts.
-            choose_lang_func choose_lang;               ///< Hook function to choose controller's language.
-            var_value_resolver_func var_resolver;       ///< Hook function to resolve SIS variable's value.
+            show_text_func show_text; ///< Hook function to display texts.
+            choose_lang_func choose_lang; ///< Hook function to choose controller's language.
+            var_value_resolver_func var_resolver; ///< Hook function to resolve SIS variable's value.
 
             explicit ss_interpreter(common::ro_stream *stream, io_system *io, manager::packages *mngr,
                 sis_controller *main_controller, sis_data *inst_data, drive_number install_drv);

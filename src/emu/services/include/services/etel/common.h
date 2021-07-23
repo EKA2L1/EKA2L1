@@ -32,7 +32,7 @@ namespace eka2l1 {
             etel_entry_line = 2
         };
     }
-    
+
     enum etel_legacy_level {
         ETEL_LEGACY_LEVEL_LEGACY,
         ETEL_LEGACY_LEVEL_TRANSITION,
@@ -115,12 +115,12 @@ namespace eka2l1::epoc {
         etel_mobile_phone_get_indicator = 20046,
         etel_mobile_phone_get_indicator_caps = 20047,
         etel_mobile_phone_get_network_caps = 20052,
-        etel_mobile_phone_get_network_registration_status = 20054, 
-        etel_mobile_phone_get_signal_strength = 20060, 
+        etel_mobile_phone_get_network_registration_status = 20054,
+        etel_mobile_phone_get_signal_strength = 20060,
         etel_mobile_phone_notify_network_registration_status_change = 20092,
         etel_mobile_phone_notify_signal_strength_change = 20097,
         etel_mobile_line_cancel_notify_status_change = 20524,
-        etel_mobile_phone_get_network_registration_status_cancel = 20554, 
+        etel_mobile_phone_get_network_registration_status_cancel = 20554,
         etel_mobile_phone_get_home_network = 22004,
         etel_mobile_phone_get_phone_id = 22012,
         etel_mobile_phone_get_subscriber_id = 22017,
