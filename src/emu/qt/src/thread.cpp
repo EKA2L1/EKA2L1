@@ -325,11 +325,11 @@ namespace eka2l1::desktop {
                                         "\t\t\t    eka2l1 --run 0x200412ED\n",
             app_specifier_option_handler);
         parser.add("--device", "Set a device to be ran, through the given firmware code. This device will also be saved in the configuration as the current device.\n"
-                               "Example: --device RH-29", device_set_option_handler);
+                               "\t\t\t Example: --device RH-29", device_set_option_handler);
         parser.add("--install, --i", "Install a SIS.", app_install_option_handler);
         parser.add("--remove, --r", "Remove an package.", package_remove_option_handler);
         parser.add("--fullscreen", "Display the emulator in fullscreen.", fullscreen_option_handler);
-        parser.add("--mount", "Load a folder as a Game Card ROM", mount_card_option_handler);
+        parser.add("--mount", "Load a folder/zip as a Game Card ROM.", mount_card_option_handler);
 
 #if ENABLE_PYTHON_SCRIPTING
         parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);

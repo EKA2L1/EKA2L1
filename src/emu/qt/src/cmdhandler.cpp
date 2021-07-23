@@ -281,8 +281,37 @@ bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdat
     }
 
     eka2l1::io_system *io = emu->symsys->get_io_system();
+
     io->unmount(drive_e);
-    io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, common::utf8_to_ucs2(path));
+
+    if (eka2l1::is_dir(path)) {
+        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, common::utf8_to_ucs2(path));
+    } else {
+        std::cout << "Mounting in progress. Please wait..." << std::endl;
+
+        eka2l1::zip_mount_error error = emu->symsys->mount_game_zip(drive_e, drive_media::physical, path, 0);
+        if (error != eka2l1::zip_mount_error_none) {
+            switch (error) {
+            case eka2l1::zip_mount_error_corrupt:
+                *err = "The given ZIP file is corrupted!";
+                break;
+
+            case eka2l1::zip_mount_error_no_system_folder:
+                *err = "The game dump does not have System folder in its root directory!";
+                break;
+
+            case eka2l1::zip_mount_error_not_zip:
+                *err = "The given file is not a ZIP file!";
+                break;
+
+            default:
+                *err = "Unidentified ZIP mount error.";
+                break;
+            }
+
+            return false;
+        }
+    }
 
     return true;
 }
