@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>EKA2L1 haqqında</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -21,32 +21,32 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="52"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- EKA2L1 Komandası&lt;/b&gt;&lt;br&gt;&lt;b&gt;Emulyator istifadə etdiyiniz üçün təşəkkürlər!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="63"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Əsas tərtibatçılar:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="77"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Töhfə verənlər:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="91"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Nişan:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="105"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Uğurlar:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="119"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Tərcüməçilər:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -62,7 +62,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="333"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;Tətbiq UID: 0x%1</translation>
     </message>
   </context>
   <context>
@@ -70,19 +70,19 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="20"/>
       <source>Device install wizard</source>
-      <translation type="unfinished">Device install wizard</translation>
+      <translation>Cihaz quraşdırma sehrbazı</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="55"/>
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Nəzər yetir</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>Quraşdırma metodunu seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
@@ -92,7 +92,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>Firmware (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -107,22 +107,22 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="115"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>Quraşdırmaq üçün firmware variantını seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="197"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>Quraşdırma tamamlandı</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="198"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>%1 cihazı (%2) uğurla quraşdırıldı!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="206"/>
       <source>The device has already been installed!</source>
-      <translation type="unfinished">The device has already been installed!</translation>
+      <translation>Cihaz artıq quraşdırılıb!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="210"/>
@@ -132,82 +132,82 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="214"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>"Firmware"də göstərilən FPSX fayllarından biri zədəlidir!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="218"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation type="unfinished">An unknown error has occured. Please contact the developers with your log!</translation>
+      <translation>Bilinməyən bir xəta baş verdi. Zəhmət olmasa jurnalınızla birgə tərtibatçılarla əlaqə saxlayın!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="222"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation type="unfinished">The disk space is insufficient to perform the device install! Please free your disk space!</translation>
+      <translation>Cihazın quraşdırılmasını həyata keçirmək üçün disk sahəsi yetərsizdir. Disk sahəsini boşaldın!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="226"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation type="unfinished">Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</translation>
+      <translation>Quraşdırma üçün göstərilən bəzi fayllar artıq mövcud deyil. Zəhmət olmasa quraşdırma tamamlanana qədər onları sağlam saxlayın!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="230"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation type="unfinished">The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</translation>
+      <translation>Firmware faylındakı ROFS zədəlidir! Firmware fayllarının zədəli olmadığına əmin olun.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="234"/>
       <source>Fail to copy ROM file!</source>
-      <translation type="unfinished">Fail to copy ROM file!</translation>
+      <translation>ROM faylı kopyalanmadı!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="238"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation type="unfinished">The provided ROM is corrupted! Please make sure your ROM is valid!</translation>
+      <translation>Göstərilən ROM zədəlidir! "ROM"unuzun etibarlı olduğuna əmin olun!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="242"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation type="unfinished">The provided RPKG is corrupted! Please make sure your RPKG is valid!</translation>
+      <translation>Göstərilən RPKG zədəlidir! "RPKG"nizin etibarlı olduğuna əmin olun!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="246"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation type="unfinished">The provided VPL file is invalid. Please check your firmware files again!</translation>
+      <translation>Göstərilən VPL faylı etibarsızdır. Zəhmət olmasa firmware fayllarınızı yenidən yoxlayın!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="254"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Quraşdırılmadı</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="263"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>VPL faylını seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="264"/>
       <source>VPL file (*.vpl)</source>
-      <translation type="unfinished">VPL file (*.vpl)</translation>
+      <translation>VPL faylı (*.vpl)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="273"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>ROM seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="274"/>
       <source>ROM file (*.rom *.ROM)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM)</translation>
+      <translation>ROM faylı (*.rom *.ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="298"/>
       <source>Choose the RPKG</source>
-      <translation type="unfinished">Choose the RPKG</translation>
+      <translation>RPKG seçin</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="299"/>
       <source>RPKG file (*.rpkg *.RPKG)</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG)</translation>
+      <translation>RPKG faylı (*.rpkg *.RPKG)</translation>
     </message>
   </context>
   <context>
@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>Tətbiq başladıcı əlçatmazdır.&lt;br&gt;Davam etmək üçün bir cihaz quraşdırın.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -235,7 +235,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>Ekranı döndər</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="112"/>
@@ -245,7 +245,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="118"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>Emulyasiya</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
@@ -265,7 +265,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Paket meneceri</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
@@ -280,7 +280,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="160"/>
       <source>Pause</source>
-      <translation>Fasilə ver</translation>
+      <translation>Fasilə</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="165"/>
@@ -325,17 +325,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="249"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>Qovluq</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="231"/>
       <source>Clear menu</source>
-      <translation type="unfinished">Clear menu</translation>
+      <translation>Menyunu təmizlə</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="293"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>Toxunaqlı ekran sıradan çıxarıldı</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="293"/>
@@ -346,12 +346,12 @@
       <location filename="../src/mainwindow.cpp" line="294"/>
       <location filename="../src/mainwindow.cpp" line="355"/>
       <source>Don&apos;t show this again</source>
-      <translation type="unfinished">Don&apos;t show this again</translation>
+      <translation>Bunu bir daha göstərmə</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="354"/>
       <source>No device installed</source>
-      <translation type="unfinished">No device installed</translation>
+      <translation>Qurulu cihaz yoxdur</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="354"/>
@@ -447,7 +447,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="905"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Quraşdırılmadı</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="905"/>
@@ -490,7 +490,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Paket meneceri</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -648,7 +648,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Nəzər yetir</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
@@ -673,7 +673,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="332"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation>Ən yaxın qonşu filterləməsini aktivləşdir</translation>
+      <translation>Ən yaxın qonşu filtrləməsini fəallaşdır</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="344"/>
@@ -688,12 +688,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="360"/>
       <source>Light</source>
-      <translation>İşıq</translation>
+      <translation>Açıq</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="365"/>
       <source>Dark</source>
-      <translation>Qaranlıq</translation>
+      <translation>Tünd</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="377"/>
@@ -741,7 +741,7 @@
       <location filename="../src/settings_dialog.ui" line="495"/>
       <location filename="../src/settings_dialog.ui" line="771"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>Yenidən adlandır</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="506"/>
@@ -791,7 +791,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="573"/>
       <source>Real-time accuracy</source>
-      <translation>Real-zamanlı dəqiqlik</translation>
+      <translation>Gerçək zamanlı dəqiqlik</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="581"/>
