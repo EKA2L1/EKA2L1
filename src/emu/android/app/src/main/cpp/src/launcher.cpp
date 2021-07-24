@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <android/bitmap.h>
 #include <android/launcher.h>
 #include <android/state.h>
 
@@ -26,11 +27,15 @@
 #include <common/fileutils.h>
 #include <common/language.h>
 #include <common/path.h>
+#include <loader/mif.h>
+#include <loader/svgb.h>
 #include <services/fbs/fbs.h>
 #include <system/installation/firmware.h>
 #include <system/installation/rpkg.h>
 #include <utils/locale.h>
 #include <utils/system.h>
+
+#include <document.h>
 
 namespace eka2l1::android {
 
@@ -61,12 +66,187 @@ namespace eka2l1::android {
         return info;
     }
 
-    std::optional<apa_app_masked_icon_bitmap> launcher::get_app_icon(std::uint32_t uid) {
+    static jobject make_new_bitmap(JNIEnv *env, std::uint32_t width, std::uint32_t height) {
+        jclass bitmapCls = env->FindClass("android/graphics/Bitmap");
+        jmethodID createBitmapFunction = env->GetStaticMethodID(bitmapCls,
+            "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+        jstring configName = env->NewStringUTF("ARGB_8888");
+        jclass bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
+        jmethodID valueOfBitmapConfigFunction = env->GetStaticMethodID(
+            bitmapConfigClass, "valueOf", "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
+
+        jobject bitmapConfig = env->CallStaticObjectMethod(bitmapConfigClass, valueOfBitmapConfigFunction,
+            configName);
+
+        jobject newBitmap = env->CallStaticObjectMethod(bitmapCls, createBitmapFunction, width,
+            height, bitmapConfig);
+
+        return newBitmap;
+    }
+
+    jobjectArray launcher::get_app_icon(JNIEnv *env, std::uint32_t uid) {
         apa_app_registry *reg = alserv->get_registration(uid);
         if (!reg) {
-            return std::nullopt;
+            return nullptr;
         }
-        return alserv->get_icon(*reg, 0);
+
+        jobjectArray jicons = env->NewObjectArray(2,
+            env->FindClass("android/graphics/Bitmap"),
+            nullptr);
+
+        std::string app_name = common::ucs2_to_utf8(reg->mandatory_info.long_caption.to_std_string(nullptr));
+        io_system *io = sys->get_io_system();
+
+        const std::u16string path_ext = eka2l1::common::lowercase_ucs2_string(eka2l1::path_extension(reg->icon_file_path));
+
+        if (path_ext == u".mif") {
+            eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
+            eka2l1::create_directories("cache");
+
+            if (file_route) {
+                eka2l1::ro_file_stream file_route_stream(file_route.get());
+                eka2l1::loader::mif_file file_mif_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
+
+                if (file_mif_parser.do_parse()) {
+                    std::vector<std::uint8_t> data;
+                    int dest_size = 0;
+                    if (file_mif_parser.read_mif_entry(0, nullptr, dest_size)) {
+                        data.resize(dest_size);
+                        file_mif_parser.read_mif_entry(0, data.data(), dest_size);
+
+                        const std::string cached_path = fmt::format("cache//debinarized_{}.svg", app_name);
+
+                        eka2l1::common::ro_buf_stream inside_stream(data.data(), data.size());
+                        std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream = std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
+
+                        eka2l1::loader::mif_icon_header header;
+                        inside_stream.read(&header, sizeof(eka2l1::loader::mif_icon_header));
+
+                        std::vector<eka2l1::loader::svgb_convert_error_description> errors;
+
+                        if (header.type == eka2l1::loader::mif_icon_type_svg) {
+                            std::unique_ptr<lunasvg::Document> document;
+                            if (!eka2l1::loader::convert_svgb_to_svg(inside_stream, *outfile_stream, errors)) {
+                                if (errors[0].reason_ == eka2l1::loader::svgb_convert_error_invalid_file) {
+                                    const char *char_data = reinterpret_cast<const char *>(data.data()) + sizeof(eka2l1::loader::mif_icon_header);
+                                    document = lunasvg::Document::loadFromData(char_data, data.size() - sizeof(eka2l1::loader::mif_icon_header));
+                                }
+                            } else {
+                                outfile_stream.reset();
+                                document = lunasvg::Document::loadFromFile(cached_path.c_str());
+                            }
+
+                            if (document) {
+                                std::uint32_t width = document->width();
+                                std::uint32_t height = document->height();
+                                jobject source_bitmap = make_new_bitmap(env, width, height);
+                                void *data_to_write = nullptr;
+                                int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
+                                if (result < 0) {
+                                    env->DeleteLocalRef(source_bitmap);
+                                    env->DeleteLocalRef(jicons);
+                                    return nullptr;
+                                }
+
+                                auto bitmap = lunasvg::Bitmap(reinterpret_cast<std::uint8_t *>(data_to_write), width, height, width * 4);
+                                lunasvg::Matrix matrix{ 1, 0, 0, 1, 0, 0 };
+                                document->render(bitmap, matrix, 0);
+
+                                AndroidBitmap_unlockPixels(env, source_bitmap);
+
+                                env->SetObjectArrayElement(jicons, 0, source_bitmap);
+                                return jicons;
+                            }
+                        } else {
+                            LOG_ERROR(eka2l1::FRONTEND_UI, "Unknown icon type {} for app {}", header.type, app_name);
+                        }
+                    }
+                }
+            }
+        } else if (path_ext == u".mbm") {
+            eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
+            if (file_route) {
+                eka2l1::ro_file_stream file_route_stream(file_route.get());
+                eka2l1::loader::mbm_file file_mbm_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
+
+                if (file_mbm_parser.do_read_headers() && !file_mbm_parser.sbm_headers.empty()) {
+                    eka2l1::loader::sbm_header *icon_header = &file_mbm_parser.sbm_headers[0];
+
+                    jobject source_bitmap = make_new_bitmap(env, icon_header->size_pixels.x,
+                        icon_header->size_pixels.y);
+                    void *data_to_write = nullptr;
+                    int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
+                    if (result < 0) {
+                        env->DeleteLocalRef(source_bitmap);
+                        env->DeleteLocalRef(jicons);
+                        return nullptr;
+                    }
+
+                    eka2l1::common::wo_buf_stream converted_write_stream(reinterpret_cast<std::uint8_t *>(data_to_write),
+                        icon_header->size_pixels.x * icon_header->size_pixels.y * 4);
+
+                    if (!eka2l1::epoc::convert_to_argb8888(fbsserv, file_mbm_parser, 0, converted_write_stream)) {
+                        env->DeleteLocalRef(source_bitmap);
+                    } else {
+                        AndroidBitmap_unlockPixels(env, source_bitmap);
+
+                        env->SetObjectArrayElement(jicons, 0, source_bitmap);
+                        return jicons;
+                    }
+                }
+            }
+        } else {
+            std::optional<eka2l1::apa_app_masked_icon_bitmap> icon_pair = alserv->get_icon(*reg, 0);
+
+            if (icon_pair.has_value()) {
+                eka2l1::epoc::bitwise_bitmap *main_bitmap = icon_pair->first;
+                jobject source_bitmap = make_new_bitmap(env, main_bitmap->header_.size_pixels.x,
+                    main_bitmap->header_.size_pixels.y);
+                void *data_to_write = nullptr;
+                int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
+                if (result < 0) {
+                    env->DeleteLocalRef(source_bitmap);
+                    env->DeleteLocalRef(jicons);
+                    return nullptr;
+                }
+
+                eka2l1::common::wo_buf_stream main_bitmap_buf(reinterpret_cast<std::uint8_t *>(data_to_write),
+                    main_bitmap->header_.size_pixels.x * main_bitmap->header_.size_pixels.y * 4);
+
+                if (!eka2l1::epoc::convert_to_argb8888(fbsserv, main_bitmap, main_bitmap_buf)) {
+                    LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load main icon of app {}", app_name);
+                    env->DeleteLocalRef(source_bitmap);
+                } else {
+                    AndroidBitmap_unlockPixels(env, source_bitmap);
+                    env->SetObjectArrayElement(jicons, 0, source_bitmap);
+                    if (icon_pair->second) {
+                        eka2l1::epoc::bitwise_bitmap *second_bitmap = icon_pair->second;
+
+                        jobject mask_bitmap = make_new_bitmap(env, main_bitmap->header_.size_pixels.x,
+                            main_bitmap->header_.size_pixels.y);
+                        result = AndroidBitmap_lockPixels(env, mask_bitmap, &data_to_write);
+                        if (result < 0) {
+                            env->DeleteLocalRef(mask_bitmap);
+                            return jicons;
+                        }
+
+                        eka2l1::common::wo_buf_stream second_bitmap_buf(reinterpret_cast<std::uint8_t *>(data_to_write),
+                            second_bitmap->header_.size_pixels.x * second_bitmap->header_.size_pixels.y * 4);
+
+                        if (!eka2l1::epoc::convert_to_argb8888(fbsserv, second_bitmap, second_bitmap_buf, true)) {
+                            LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load mask bitmap icon of app {}", app_name);
+                            env->DeleteLocalRef(mask_bitmap);
+                        } else {
+                            AndroidBitmap_unlockPixels(env, mask_bitmap);
+                            env->SetObjectArrayElement(jicons, 1, mask_bitmap);
+                        }
+                    }
+                    return jicons;
+                }
+            }
+        }
+        env->DeleteLocalRef(jicons);
+        return nullptr;
     }
 
     void launcher::launch_app(std::uint32_t uid) {

@@ -24,6 +24,7 @@ target_link_libraries(native-lib PRIVATE
         EGL
         glad
         jnigraphics
+        lunasvg
         epoc
         epockern
         epocpkg

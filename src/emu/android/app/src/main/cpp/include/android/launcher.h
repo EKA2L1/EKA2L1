@@ -49,7 +49,7 @@ namespace eka2l1::android {
         explicit launcher(eka2l1::system *sys);
 
         std::vector<std::string> get_apps();
-        std::optional<apa_app_masked_icon_bitmap> get_app_icon(std::uint32_t uid);
+        jobjectArray get_app_icon(JNIEnv *env, std::uint32_t uid);
         void launch_app(std::uint32_t uid);
         bool install_app(std::string &path);
         std::vector<std::string> get_devices();

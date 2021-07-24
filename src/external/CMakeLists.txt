@@ -138,6 +138,10 @@ if (NOT ANDROID)
     add_subdirectory(glfw)
 endif()
 
+if (ANDROID)
+    add_subdirectory(lunasvg)
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DPy_DEBUG)
     message("Add debug to prevent crash for PyBind11")
