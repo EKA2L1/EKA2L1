@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>Sobre EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -21,32 +21,32 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="52"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- Equipe EKA2L1&lt;/b&gt;&lt;br&gt;&lt;b&gt;Obrigado por usar o emulador!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="63"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Principais desenvolvedores:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="77"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Colaboradores:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="91"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Ícone:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="105"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Honras:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="119"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Tradutores:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -70,24 +70,24 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="20"/>
       <source>Device install wizard</source>
-      <translation type="unfinished">Device install wizard</translation>
+      <translation>Assistente de instalação do dispositivo</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="55"/>
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Localizar</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>Escolher método de instalação</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation type="unfinished">Device dump (RPKG + ROM)</translation>
+      <translation>Despejo de dispositivos (RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
@@ -107,37 +107,37 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="115"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>Escolha a variante de firmware para instalar</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="197"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>Instalação completa</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="198"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>O dispositivo %1 (%2) foi instalado com sucesso!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="206"/>
       <source>The device has already been installed!</source>
-      <translation type="unfinished">The device has already been installed!</translation>
+      <translation>O dispositivo já foi instalado!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="210"/>
       <source>Fail to determine product information from the dump!</source>
-      <translation type="unfinished">Fail to determine product information from the dump!</translation>
+      <translation>Falha ao determinar informações do produto!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="214"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>Um dos arquivos FPSX fornecidos no firmware está corrompido!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="218"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation type="unfinished">An unknown error has occured. Please contact the developers with your log!</translation>
+      <translation>Ocorreu um erro desconhecido. Por favor, entre em contato com os desenvolvedores com seu log!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="222"/>
@@ -648,7 +648,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Localizar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
