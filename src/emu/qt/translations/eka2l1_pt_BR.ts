@@ -142,72 +142,72 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="222"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation type="unfinished">The disk space is insufficient to perform the device install! Please free your disk space!</translation>
+      <translation>O espaço em disco é insuficiente para executar a instalação do dispositivo! Por favor, libere seu espaço em disco!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="226"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation type="unfinished">Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</translation>
+      <translation>Alguns arquivos fornecidos para instalação não existem mais. Por favor, mantenha-os intactos até que a instalação seja concluída!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="230"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation type="unfinished">The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</translation>
+      <translation>O ROFS no arquivo da firmware está corrompido! Certifique-se de que seus arquivos de firmware não estejam corrompidos.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="234"/>
       <source>Fail to copy ROM file!</source>
-      <translation type="unfinished">Fail to copy ROM file!</translation>
+      <translation>Falha ao copiar o arquivo ROM!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="238"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation type="unfinished">The provided ROM is corrupted! Please make sure your ROM is valid!</translation>
+      <translation>A ROM fornecida está corrompida! Por favor, certifique-se de que sua ROM é válida!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="242"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation type="unfinished">The provided RPKG is corrupted! Please make sure your RPKG is valid!</translation>
+      <translation>O RPKG fornecido está corrompido! Por favor, certifique-se de que o seu RPKG é válido!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="246"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation type="unfinished">The provided VPL file is invalid. Please check your firmware files again!</translation>
+      <translation>O arquivo VPL fornecido é inválido. Por favor, verifique seus arquivos de firmware novamente!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="254"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Falha na instalação</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="263"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>Escolha o arquivo VPL</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="264"/>
       <source>VPL file (*.vpl)</source>
-      <translation type="unfinished">VPL file (*.vpl)</translation>
+      <translation>Arquivo VPL (*.vpl)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="273"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>Selecione a ROM</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="274"/>
       <source>ROM file (*.rom *.ROM)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM)</translation>
+      <translation>Arquivo ROM (*.rom *.ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="298"/>
       <source>Choose the RPKG</source>
-      <translation type="unfinished">Choose the RPKG</translation>
+      <translation>Escolha o RPKG</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="299"/>
       <source>RPKG file (*.rpkg *.RPKG)</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG)</translation>
+      <translation>Arquivo RPKG (*.rpkg *.RPKG)</translation>
     </message>
   </context>
   <context>
@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>Iniciador de aplicativos indisponível.&lt;br&gt;Instale um dispositivo para continuar.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -235,7 +235,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>Girar a tela</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="112"/>
@@ -245,7 +245,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="118"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>Emulação</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
@@ -265,12 +265,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Gerenciador de Pacotes</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
       <source>Mount game card dump</source>
-      <translation type="unfinished">Mount game card dump</translation>
+      <translation>Montar cartão de jogo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
@@ -320,53 +320,53 @@
     <message>
       <location filename="../src/mainwindow.ui" line="209"/>
       <source>Recent dumps</source>
-      <translation type="unfinished">Recent dumps</translation>
+      <translation>Dumps recentes</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="249"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>Pasta</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="231"/>
       <source>Clear menu</source>
-      <translation type="unfinished">Clear menu</translation>
+      <translation>Limpar Menu</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="293"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>Touchscreen desativado</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="293"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation type="unfinished">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</translation>
+      <translation>Algumas das suas teclas de atalho estão associadas com os botões do mouse. Portanto, tela de toque emulada está desativada.&lt;br&gt;&lt;br&gt;&lt;b&gt;Nota:&lt;/b&gt;&lt;br&gt;O Touchscreen pode ser reativado religando os botões do mouse com as teclas de teclado.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="294"/>
       <location filename="../src/mainwindow.cpp" line="355"/>
       <source>Don&apos;t show this again</source>
-      <translation type="unfinished">Don&apos;t show this again</translation>
+      <translation>Não mostre isso novamente</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="354"/>
       <source>No device installed</source>
-      <translation type="unfinished">No device installed</translation>
+      <translation>Nenhum dispositivo instalado</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="354"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation type="unfinished">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</translation>
+      <translation>Você não instalou nenhum dispositivo. Por favor instale um dispositivo ou siga as instruções da página do Github wiki do EKA2L1.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="632"/>
       <source>Extracting game dump files</source>
-      <translation type="unfinished">Extracting game dump files</translation>
+      <translation>Extraindo arquivos de dump do jogo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="653"/>
       <source>Mounting aborted</source>
-      <translation type="unfinished">Mounting aborted</translation>
+      <translation>Montagem abortada</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="658"/>
@@ -447,7 +447,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="905"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Falha na instalação</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="905"/>
@@ -490,7 +490,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Gerenciador de Pacotes</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -761,32 +761,32 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="519"/>
       <source>Validate current device</source>
-      <translation type="unfinished">Validate current device</translation>
+      <translation>Validar dispositivo atual</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="531"/>
       <source>Hardware emulation</source>
-      <translation type="unfinished">Hardware emulation</translation>
+      <translation>Emulação de hardware</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="545"/>
       <source>CPU emulator</source>
-      <translation type="unfinished">CPU emulator</translation>
+      <translation>Emulador de CPU</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="553"/>
       <source>Dynarmic (CPU recompiler)</source>
-      <translation type="unfinished">Dynarmic (CPU recompiler)</translation>
+      <translation>Recompilador dinâmico</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="558"/>
       <source>Dyncom (CPU interpreter)</source>
-      <translation type="unfinished">Dyncom (CPU interpreter)</translation>
+      <translation>Dyncom (CPU interpreter)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="570"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-      <translation type="unfinished">Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</translation>
+      <translation>Escolha o nível de precisão para as operações de temporização.&lt;br&gt;Quanto maior o nível, mais energia a CPU é consumida, mas uma operação potencialmente mais rápida em alguns aplicativos!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="573"/>
@@ -811,22 +811,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="610"/>
       <source>Properties</source>
-      <translation type="unfinished">Properties</translation>
+      <translation>Propriedades</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="641"/>
       <source>Check</source>
-      <translation type="unfinished">Check</translation>
+      <translation>Verificar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="652"/>
       <source>Battery level (0 - 100)</source>
-      <translation type="unfinished">Battery level (0 - 100)</translation>
+      <translation>Nível da bateria (0 - 100)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="698"/>
       <source>System language</source>
-      <translation type="unfinished">System language</translation>
+      <translation>Idioma do Sistema</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="720"/>
@@ -836,67 +836,67 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="735"/>
       <source>Profile</source>
-      <translation type="unfinished">Profile</translation>
+      <translation>Perfil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="758"/>
       <source>Add</source>
-      <translation type="unfinished">Add</translation>
+      <translation>Adicionar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="784"/>
       <source>Delete</source>
-      <translation type="unfinished">Delete</translation>
+      <translation>Apagar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="803"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation type="unfinished">Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</translation>
+      <translation>Nota: Uma das combinações está associada com um botão do mouse, as funcionalidades da touchscreen serão desativadas.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="821"/>
       <source>Left softkey</source>
-      <translation type="unfinished">Left softkey</translation>
+      <translation>Softkey esquerda</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="859"/>
       <source>Up arrow</source>
-      <translation type="unfinished">Up arrow</translation>
+      <translation>Seta para cima</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="891"/>
       <source>Right softkey</source>
-      <translation type="unfinished">Right softkey</translation>
+      <translation>Softkey direita</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="927"/>
       <source>Left arrow</source>
-      <translation type="unfinished">Left arrow</translation>
+      <translation>Seta esquerda</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="959"/>
       <source>Middle softkey</source>
-      <translation type="unfinished">Middle softkey</translation>
+      <translation>Softkey do meio</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="991"/>
       <source>Right arrow</source>
-      <translation type="unfinished">Right arrow</translation>
+      <translation>Seta para direita</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1027"/>
       <source>Green softkey</source>
-      <translation type="unfinished">Green softkey</translation>
+      <translation>Softkey verde</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1059"/>
       <source>Down arrow</source>
-      <translation type="unfinished">Down arrow</translation>
+      <translation>Seta para baixo</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1091"/>
       <source>Red softkey</source>
-      <translation type="unfinished">Red softkey</translation>
+      <translation>Softkey vermelho</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1127"/>
@@ -956,39 +956,39 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="397"/>
       <source>Choose the data folder</source>
-      <translation type="unfinished">Choose the data folder</translation>
+      <translation>Escolher a pasta de dados</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="399"/>
       <location filename="../src/settings_dialog.cpp" line="1071"/>
       <location filename="../src/settings_dialog.cpp" line="1096"/>
       <source>Relaunch needed</source>
-      <translation type="unfinished">Relaunch needed</translation>
+      <translation>Reiniciar necessário</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="399"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation type="unfinished">This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</translation>
+      <translation>Esta alteração requer reiniciar o emulador.&lt;br&gt;Deseja continuar?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="517"/>
       <source>Please wait</source>
-      <translation type="unfinished">Please wait</translation>
+      <translation>Por favor, aguarde</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="518"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation type="unfinished">Validation is in process. Please do not exit or launch applications until this operation is done.</translation>
+      <translation>A validação está em processo. Por favor, não saia ou inicie aplicativos até que esta operação seja concluída.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="538"/>
       <source>Validation done!</source>
-      <translation type="unfinished">Validation done!</translation>
+      <translation>Validação concluída!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="538"/>
       <source>The validation has successfully completed!</source>
-      <translation type="unfinished">The validation has successfully completed!</translation>
+      <translation>A validação foi completada com sucesso!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="549"/>
