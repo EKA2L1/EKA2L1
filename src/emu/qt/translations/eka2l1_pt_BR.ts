@@ -92,7 +92,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>Firmware (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -371,57 +371,57 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="658"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>O arquivo está corrompido!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="663"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
-      <translation type="unfinished">The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</translation>
+      <translation>O ZIP não possui uma pasta do sistema na pasta raiz. A pasta do sistema deve existir em um backup de jogo.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="669"/>
       <source>The choosen file is not a ZIP file!</source>
-      <translation type="unfinished">The choosen file is not a ZIP file!</translation>
+      <translation>O arquivo escolhido não é um arquivo ZIP!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="683"/>
       <source>Game card problem</source>
-      <translation type="unfinished">Game card problem</translation>
+      <translation>Problema no cartão do jogo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="683"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation type="unfinished">The game card dump has case-sensitive files. This may cause problems with the emulator.</translation>
+      <translation>O despejo de cartucho tem arquivos que diferenciam maiúsculas de minúsculas. Isso pode causar problemas com o emulador.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="687"/>
       <source>Game card dump folder correction</source>
-      <translation type="unfinished">Game card dump folder correction</translation>
+      <translation>Correção de despejo de cartão do jogo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="687"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
+      <translation>O caminho selecionado parece estar incorreto.&lt;br&gt;Você quer que o emulador o corrija?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="743"/>
       <source>Choose the game card dump folder</source>
-      <translation type="unfinished">Choose the game card dump folder</translation>
+      <translation>Escolha a pasta de despejo de cartucho</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="763"/>
       <source>Choose the game card zip</source>
-      <translation type="unfinished">Choose the game card zip</translation>
+      <translation>Escolha o cartucho do jogo em zip</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="837"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>Documento</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="855"/>
       <source>Choose a language for the package</source>
-      <translation type="unfinished">Choose a language for the package</translation>
+      <translation>Escolha o idioma para este pacote</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="629"/>
@@ -432,17 +432,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="876"/>
       <source>Installing package progress</source>
-      <translation type="unfinished">Installing package progress</translation>
+      <translation>Instalando progresso do pacote</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="900"/>
       <source>Installation aborted</source>
-      <translation type="unfinished">Installation aborted</translation>
+      <translation>Instalação abortada</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="900"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>Instalação foi cancelada</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="905"/>
