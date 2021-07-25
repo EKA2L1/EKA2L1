@@ -24,6 +24,8 @@
 #include <mem/common.h>
 #include <mem/page.h>
 
+#include <memory>
+
 namespace eka2l1 {
     namespace config {
         struct state;
