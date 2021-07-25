@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <package/manager.h>
 
 #include <functional>
 #include <memory>
@@ -164,7 +165,7 @@ namespace eka2l1 {
         void load_scripts();
 
         bool set_device(const std::uint8_t idx);
-        bool install_package(std::u16string path, drive_number drv);
+        package::installation_result install_package(std::u16string path, drive_number drv);
 
         void request_exit();
         bool should_exit() const;

@@ -110,7 +110,7 @@ Java_com_github_eka2l1_emu_Emulator_touchScreen(JNIEnv *env, jclass clazz, jint 
     touch_screen(*state, x, y, action);
 }
 
-extern "C" JNIEXPORT jboolean JNICALL
+extern "C" JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_installApp(JNIEnv *env, jclass clazz, jstring path) {
     const char *cstr = env->GetStringUTFChars(path, nullptr);
     std::string cpath = std::string(cstr);

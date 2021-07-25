@@ -5,7 +5,8 @@ add_library(gdbstub
 set(LIBRARIES
         cpu
         epoc
-        epockern)
+        epockern
+        epocpkg)
 
 if (WIN32)
     set(LIBRARIES ${LIBRARIES} wsock32)

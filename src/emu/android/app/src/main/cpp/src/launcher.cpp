@@ -259,7 +259,7 @@ namespace eka2l1::android {
         kern->unlock();
     }
 
-    bool launcher::install_app(std::string &path) {
+    package::installation_result launcher::install_app(std::string &path) {
         std::u16string upath = common::utf8_to_ucs2(path);
 
         return sys->install_package(upath, drive_number::drive_e);

@@ -193,7 +193,7 @@ public class Emulator {
 
     public static native void touchScreen(int x, int y, int action);
 
-    public static native boolean installApp(String path);
+    public static native int installApp(String path);
 
     public static native String[] getDevices();
 

@@ -33,6 +33,7 @@ target_link_libraries(symemu PRIVATE common
         epockern
         epocio
         epocmem
+        epocpkg
         epocutils
         epocservs)
 

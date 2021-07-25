@@ -51,7 +51,7 @@ namespace eka2l1::android {
         std::vector<std::string> get_apps();
         jobjectArray get_app_icon(JNIEnv *env, std::uint32_t uid);
         void launch_app(std::uint32_t uid);
-        bool install_app(std::string &path);
+        package::installation_result install_app(std::string &path);
         std::vector<std::string> get_devices();
         void set_current_device(std::uint32_t id);
         void set_device_name(std::uint32_t id, const char *name);

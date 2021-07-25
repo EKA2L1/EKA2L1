@@ -26,4 +26,5 @@ target_link_libraries(epocdispatch PRIVATE
         drivers
         epoc
         epockern
+        epocpkg
         epocservs)

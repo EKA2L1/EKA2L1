@@ -68,7 +68,6 @@
 #include <config/app_settings.h>
 #include <config/config.h>
 
-#include <package/manager.h>
 #include <services/window/screen.h>
 #include <services/window/window.h>
 #include <system/devices.h>
@@ -475,7 +474,7 @@ namespace eka2l1 {
         void load_scripts();
         void do_state(common::chunkyseri &seri);
 
-        bool install_package(std::u16string path, drive_number drv);
+        package::installation_result install_package(std::u16string path, drive_number drv);
         bool load_rom(const std::string &path);
 
         void request_exit();
@@ -675,7 +674,7 @@ namespace eka2l1 {
         return 1;
     }
 
-    bool system_impl::install_package(std::u16string path, drive_number drv) {
+    package::installation_result system_impl::install_package(std::u16string path, drive_number drv) {
         return packages_->install_package(path, drv);
     }
 
@@ -1066,7 +1065,7 @@ namespace eka2l1 {
         return impl->load_scripts();
     }
 
-    bool system::install_package(std::u16string path, drive_number drv) {
+    package::installation_result system::install_package(std::u16string path, drive_number drv) {
         return impl->install_package(path, drv);
     }
 

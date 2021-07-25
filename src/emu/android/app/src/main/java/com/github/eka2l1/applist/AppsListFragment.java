@@ -196,7 +196,7 @@ public class AppsListFragment extends ListFragment {
     }
 
     private void installApp(String path) {
-        if (Emulator.installApp(path)) {
+        if (Emulator.installApp(path) == 0) {
             Toast.makeText(getContext(), R.string.completed, Toast.LENGTH_SHORT).show();
             restart();
         } else {
