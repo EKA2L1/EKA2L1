@@ -77,7 +77,7 @@
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation>Localizar</translation>
+      <translation>Navegar</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
@@ -270,7 +270,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
       <source>Mount game card dump</source>
-      <translation>Montar cartão de jogo</translation>
+      <translation>Montar cartucho de jogo</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
@@ -452,37 +452,37 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="905"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>Falha ao instalar o pacote no caminho: %1. Certifique-se de que o caminho aponta para um arquivo SIS/SISX válido.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="912"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>Instalação concluída</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="912"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>A língua foi instalada com sucesso</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="933"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>Escolher arquivos para instalar</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="933"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>Arquivo SIS (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1092"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>Falha ao carregar o tema!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1092"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>O arquivo de estilo tema escuro&apos;s pode ser encontrado&apos;t!</translation>
     </message>
   </context>
   <context>
@@ -515,42 +515,42 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>Unidades</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
       <source>Uninstall</source>
-      <translation type="unfinished">Uninstall</translation>
+      <translation>Desinstalar</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="94"/>
       <source>List files</source>
-      <translation type="unfinished">List files</translation>
+      <translation>Lista de arquivos</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Uninstall failed!</source>
-      <translation type="unfinished">Uninstall failed!</translation>
+      <translation>Falha ao Desinstalar!</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation type="unfinished">Failed to uninstall the package</translation>
+      <translation>Falha ao instalar o pacote</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="142"/>
       <source>%1&apos;s files</source>
-      <translation type="unfinished">%1&apos;s files</translation>
+      <translation>%1&apos;s arquivos</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="151"/>
       <source>Installed</source>
-      <translation type="unfinished">Installed</translation>
+      <translation>Instalado</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="155"/>
       <source>Delete on uninstall</source>
-      <translation type="unfinished">Delete on uninstall</translation>
+      <translation>Apagar ao desinstalar</translation>
     </message>
   </context>
   <context>
@@ -568,27 +568,27 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
-      <translation type="unfinished">Application</translation>
+      <translation>Aplicativo</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-500us)</source>
-      <translation type="unfinished">Time delay (0-500us)</translation>
+      <translation>Tempo de atraso (0-500us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="159"/>
       <source>Save screen scale and rotations</source>
-      <translation type="unfinished">Save screen scale and rotations</translation>
+      <translation>Salvar escala e rotação da tela</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="169"/>
       <source>Inherit these settings for child processes</source>
-      <translation type="unfinished">Inherit these settings for child processes</translation>
+      <translation>Herdar estas configurações para processos filhos</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="185"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; None</translation>
+      <translation>&lt;b&gt;Configuração para:&lt;/b&gt; Nenhuma</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="201"/>
@@ -638,37 +638,37 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="273"/>
       <source>Data</source>
-      <translation type="unfinished">Data</translation>
+      <translation>Dados</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="281"/>
       <source>Emulator data path</source>
-      <translation type="unfinished">Emulator data path</translation>
+      <translation>Caminho de dados do emulador</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
       <source>Browse</source>
-      <translation>Localizar</translation>
+      <translation>Navegar</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
       <source>Clear all UI configurations</source>
-      <translation type="unfinished">Clear all UI configurations</translation>
+      <translation>Limpar todas as configurações da interface</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="311"/>
       <source>Interface</source>
-      <translation type="unfinished">Interface</translation>
+      <translation>Interface</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="317"/>
       <source>Emulator display</source>
-      <translation type="unfinished">Emulator display</translation>
+      <translation>Exibição do emulador</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="325"/>
       <source>Hide mouse cursor</source>
-      <translation type="unfinished">Hide mouse cursor</translation>
+      <translation>Ocultar cursor do mouse</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="332"/>
@@ -678,7 +678,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="344"/>
       <source>User interface</source>
-      <translation type="unfinished">User interface</translation>
+      <translation>Interface do usuário</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="352"/>
@@ -703,7 +703,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Disable status bar</source>
-      <translation type="unfinished">Disable status bar</translation>
+      <translation>Ocultar a barra de status</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="400"/>
@@ -713,7 +713,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="406"/>
       <source>Audio</source>
-      <translation type="unfinished">Audio</translation>
+      <translation>Áudio</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="420"/>
@@ -735,7 +735,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="472"/>
       <source>Current</source>
-      <translation type="unfinished">Current</translation>
+      <translation>Atual</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="495"/>
@@ -993,72 +993,72 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="549"/>
       <source>Enter new device name</source>
-      <translation type="unfinished">Enter new device name</translation>
+      <translation>Insira o novo nome do dispositivo</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="645"/>
       <source>Unbind</source>
-      <translation type="unfinished">Unbind</translation>
+      <translation>Desvincular</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="690"/>
       <source>Waiting for input</source>
-      <translation type="unfinished">Waiting for input</translation>
+      <translation>Aguardando entrada</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="705"/>
       <location filename="../src/settings_dialog.cpp" line="751"/>
       <source>Mouse button %1</source>
-      <translation type="unfinished">Mouse button %1</translation>
+      <translation>Botão do Mouse %s</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="707"/>
       <location filename="../src/settings_dialog.cpp" line="793"/>
       <source>Controller %1 : Button %2</source>
-      <translation type="unfinished">Controller %1 : Button %2</translation>
+      <translation>Controlador %1 : Botão %2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="818"/>
       <location filename="../src/settings_dialog.cpp" line="842"/>
       <source>Enter profile name</source>
-      <translation type="unfinished">Enter profile name</translation>
+      <translation>Digite o nome do perfil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="826"/>
       <source>Profile creation failed</source>
-      <translation type="unfinished">Profile creation failed</translation>
+      <translation>Falha ao criar perfil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="826"/>
       <location filename="../src/settings_dialog.cpp" line="850"/>
       <source>A profile with that name already exists!</source>
-      <translation type="unfinished">A profile with that name already exists!</translation>
+      <translation>Já existe um perfil com este nome!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="850"/>
       <source>Profile rename failed</source>
-      <translation type="unfinished">Profile rename failed</translation>
+      <translation>Falha ao renomear perfil</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="865"/>
       <source>Profile deletion failed</source>
-      <translation type="unfinished">Profile deletion failed</translation>
+      <translation>Exclusão de perfil falhou</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="865"/>
       <source>This is the only profile left!</source>
-      <translation type="unfinished">This is the only profile left!</translation>
+      <translation>Este é o único perfil restante!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="899"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; %1</translation>
+      <translation>&lt;b&gt;Configuração para:&lt;/b&gt; %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="902"/>
       <location filename="../src/settings_dialog.cpp" line="907"/>
       <source>None</source>
-      <translation type="unfinished">None</translation>
+      <translation>Nenhum</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="998"/>
@@ -1078,52 +1078,52 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1010"/>
       <source>Unidentified error!</source>
-      <translation type="unfinished">Unidentified error!</translation>
+      <translation>Erro não identificado!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1017"/>
       <source>IMEI valid!</source>
-      <translation type="unfinished">IMEI valid!</translation>
+      <translation>IMEI válido!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1017"/>
       <source>The IMEI sequence is valid!</source>
-      <translation type="unfinished">The IMEI sequence is valid!</translation>
+      <translation>A sequência de IMEI é válida!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1020"/>
       <source>IMEI invalid!</source>
-      <translation type="unfinished">IMEI invalid!</translation>
+      <translation>IMEI válido!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1030"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-      <translation type="unfinished">Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</translation>
+      <translation>Seu IMEI é inválido porque: %1.&lt;br&gt;Você quer editar o IMEI atual em vez de fechar? Escolhendo &quot;Não&quot; irá salvar o valor atual do IMEI.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1032"/>
       <source>Cancel closing</source>
-      <translation type="unfinished">Cancel closing</translation>
+      <translation>Cancelar fechamento</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1071"/>
       <source>This change will be effective on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective on the next launch of the emulator.</translation>
+      <translation>Esta mudança será eficaz no próximo lançamento do emulador.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <source>Confirmation</source>
-      <translation type="unfinished">Confirmation</translation>
+      <translation>Confirmação</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation type="unfinished">Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</translation>
+      <translation>Você tem certeza disso? Seu tema atual será redefinido, todas as caixas de mensagem que foram desativadas serão reativadas e todas as montarias recentes serão apagadas.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1096"/>
       <source>The language will be updated on the next launch of the emulator.</source>
-      <translation type="unfinished">The language will be updated on the next launch of the emulator.</translation>
+      <translation>Esta mudança será eficaz no próximo lançamento do emulador.</translation>
     </message>
   </context>
 </TS>
