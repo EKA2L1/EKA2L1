@@ -108,6 +108,7 @@ namespace eka2l1::loader {
     SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_lhref);
     SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_dash_array);
     SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_un);
+    SVG_ATTR_DECODE_PROTOTYPE(svgb_decode_aspect_ratio);
 
     static const svg_attr SVGB_ATTRS[] = {
 
@@ -213,7 +214,7 @@ namespace eka2l1::loader {
         { "baseProfile", svgb_decode_string }, /* 89 */
 
         { "zoomAndPan", svgb_decode_un }, /* 90 */
-        { "preserveAspectRatio", svgb_decode_string }, /* 91 */
+        { "preserveAspectRatio", svgb_decode_aspect_ratio }, /* 91 */
         { "id", svgb_decode_string }, /* 92 */
         { "xml:base", svgb_decode_string }, /* 93 */
         { "xml:lang", svgb_decode_string }, /* 94 */
@@ -264,6 +265,7 @@ namespace eka2l1::loader {
     };
 
 #define SVG_ELEMENT_SVG 0
+#define SVG_ELEMENT_MEDIA_ANIMATION 47
 
     static const svg_element_attr SVG_ATTR_SVG[] = {
         { "xmlns", "http://www.w3.org/2000/svg" },
@@ -989,6 +991,26 @@ namespace eka2l1::loader {
         }
 
         return svgb_read_write_float_attr(state, attr, elem, in, out);
+    }
+
+    static bool svgb_decode_aspect_ratio(svgb_decode_state &state, const svg_attr *attr, const svg_element *elem, common::ro_stream &in, common::wo_stream &out) {
+        // TODO: Handle type attributes
+        if (elem->code_ == SVG_ELEMENT_SVG || elem->code_ == SVG_ELEMENT_MEDIA_ANIMATION) {
+            std::uint8_t align_type = 0;
+            if (in.read(&align_type, 1) != 1) {
+                state.add_error(in, svgb_convert_error_eof);
+                return false;
+            }
+
+            std::uint8_t meet_slice_type = 0;
+            if (in.read(&meet_slice_type, 1) != 1) {
+                state.add_error(in, svgb_convert_error_eof);
+                return false;
+            }
+            return true;
+        }
+
+        return svgb_decode_string(state, attr, elem, in, out);
     }
 
     /**
