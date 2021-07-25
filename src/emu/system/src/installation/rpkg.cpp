@@ -295,7 +295,9 @@ namespace eka2l1::loader {
             return device_installation_general_failure;
         }
 
-        progress_cb(9, 10);
+        if (progress_cb) {
+            progress_cb(9, 10);
+        }
 
         epocver ver = determine_rpkg_symbian_version(folder_extracted);
 
