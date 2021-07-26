@@ -173,40 +173,42 @@ namespace eka2l1::epoc::cap {
             return;
         }
 
-        if (state->orientation_specified()) {
-            // We can change orientation based on what is specified
-            const std::uint8_t landspace_bit = state->orientation_landscape();
+        std::int32_t final_mode = state->app_screen_mode_;
 
-            // Iterate through all window modes
-            for (int mode = 0; mode < group->scr->total_screen_mode(); mode++) {
-                auto screen_mode = group->scr->mode_info(mode);
+        if (final_mode < 0) {
+            if (state->orientation_specified()) {
+                // We can change orientation based on what is specified
+                const std::uint8_t landspace_bit = state->orientation_landscape();
 
-                if (((screen_mode->size.x > screen_mode->size.y) && landspace_bit)
-                    || ((screen_mode->size.x < screen_mode->size.y) && !landspace_bit)) {
-                    group->scr->set_screen_mode(graphics_driver_, mode);
+                // Iterate through all window modes
+                for (int mode = 0; mode < group->scr->total_screen_mode(); mode++) {
+                    auto screen_mode = group->scr->mode_info(mode);
 
-                    // Force a mode change
-                    const std::int32_t current_layout_state = hardware_layout_prop_->get_int();
-                    auto &hardware_state_array = group->scr->scr_config.hardware_states;
-
-                    for (std::size_t i = 0; i < hardware_state_array.size(); i++) {
-                        if (hardware_state_array[i].state_number == current_layout_state) {
-                            if (hardware_state_array[i].mode_normal == mode) {
-                                orientation_prop_->set_int(UIK_ORIENTATION_NORMAL);
-                            } else {
-                                orientation_prop_->set_int(UIK_ORIENTATION_ALTERNATE);
-                            }
-                        }
+                    if (((screen_mode->size.x > screen_mode->size.y) && landspace_bit)
+                        || ((screen_mode->size.x < screen_mode->size.y) && !landspace_bit)) {
+                        final_mode = mode;
+                        break;
                     }
-
-                    epoc::event the_event;
-                    the_event.type = static_cast<epoc::event_code>(HARDWARE_LAYOUT_SWITCH_UID);
-                    the_event.handle = 0;
-
-                    winserv_->send_event_to_window_groups(the_event);
+                }
+            }
+        } else {
+            for (int mode = 0; mode < group->scr->total_screen_mode(); mode++) {
+                const epoc::config::screen_mode *mode_info = group->scr->mode_info(mode);
+                if (mode_info && (mode_info->mode_number == final_mode)) {
+                    final_mode = mode;
                     break;
                 }
             }
+        }
+
+        if (final_mode >= 0) {
+            group->scr->set_screen_mode(graphics_driver_, final_mode);
+
+            epoc::event the_event;
+            the_event.type = static_cast<epoc::event_code>(DYNAMIC_LAYOUT_VARIANT_SWITCH_UID);
+            the_event.handle = 0;
+
+            winserv_->send_event_to_window_groups(the_event);
         }
     }
 
