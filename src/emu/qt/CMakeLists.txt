@@ -92,10 +92,18 @@ endif()
 
 target_include_directories(eka2l1_qt PUBLIC include)
 
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    set(EXCLUSIVE_QT_LIBRARIES
+        Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
+else()
+    set(EXCLUSIVE_QT_LIBRARIES
+        Qt${QT_VERSION_MAJOR}::OpenGL)
+endif()
+
 target_link_libraries(eka2l1_qt PRIVATE
-    Qt${QT_VERSION_MAJOR}::OpenGLWidgets
     Qt${QT_VERSION_MAJOR}::Svg
     Qt${QT_VERSION_MAJOR}::Widgets
+    ${EXCLUSIVE_QT_LIBRARIES}
     common
     config
     drivers
