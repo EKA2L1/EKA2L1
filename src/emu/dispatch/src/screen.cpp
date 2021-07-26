@@ -40,8 +40,10 @@ namespace eka2l1::dispatch {
         while (scr != nullptr) {
             if (scr->number == screen_number) {
                 // Update the DSA screen texture
-                const eka2l1::vec2 screen_size = scr->size();
-                const std::size_t buffer_size = scr->size().x * scr->size().y * 4;
+                const epoc::config::screen_mode &mode_info = scr->current_mode();
+
+                const eka2l1::vec2 screen_size = mode_info.size;
+                const std::size_t buffer_size = mode_info.size.x * mode_info.size.y * 4;
 
                 std::uint64_t next_vsync_us = 0;
                 scr->vsync(sys->get_ntimer(), next_vsync_us);
@@ -53,10 +55,12 @@ namespace eka2l1::dispatch {
                 std::unique_lock<std::mutex> guard(scr->screen_mutex);
 
                 if (!scr->dsa_texture) {
+                    const int max_square_width = common::max<int>(screen_size.x, screen_size.y);
+
                     kern->unlock();
                     guard.unlock();
 
-                    drivers::handle bitmap_handle = drivers::create_bitmap(driver, screen_size, epoc::get_bpp_from_display_mode(scr->disp_mode));
+                    drivers::handle bitmap_handle = drivers::create_bitmap(driver, eka2l1::vec2(max_square_width, max_square_width), epoc::get_bpp_from_display_mode(scr->disp_mode));
 
                     kern->lock();
                     guard.lock();

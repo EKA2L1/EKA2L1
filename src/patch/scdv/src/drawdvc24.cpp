@@ -26,8 +26,7 @@ TUint8 *CFbsTwentyfourBitDrawDevice::GetPixelStartAddress(TInt aX, TInt aY) cons
     TInt originalX = aX;
     TInt originalY = aY;
 
-    TransformCoordinateToPhysical(originalX, originalY, aX, aY);
-    return reinterpret_cast<TUint8 *>(iBuffer) + (aX * 3 + aY * PhysicalScanLineBytes());
+    return reinterpret_cast<TUint8 *>(iBuffer) + (aX * 3 + aY * ScanLineBytes());
 }
 
 TRgb CFbsTwentyfourBitDrawDevice::ReadPixel(TInt aX, TInt aY) const {
@@ -48,12 +47,11 @@ void CFbsTwentyfourBitDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
         PanicAtTheEndOfTheWorld();
 
     TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-    TInt increment = GetPixelIncrementUnit() * 3;
     TInt iterator = 0;
 
     while (iterator < aLength) {
         Mem::Copy(reinterpret_cast<TUint8 *>(aBuffer) + iterator * 3, pixelStart, 3);
-        pixelStart += increment;
+        pixelStart += 3;
     }
 }
 
@@ -115,7 +113,6 @@ void CFbsTwentyfourBitDrawDevice::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraph
 
 void CFbsTwentyfourBitDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
     TUint8 *pixelAddress = NULL;
-    TInt increment = GetPixelIncrementUnit() * 3;
 
     if (aLength > 32 || aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
@@ -129,7 +126,7 @@ void CFbsTwentyfourBitDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer
                 WriteRgbToAddress(pixelAddress, aColor, aDrawMode);
             }
 
-            pixelAddress += increment;
+            pixelAddress += 3;
         }
 
         aBuffer++;
@@ -138,7 +135,6 @@ void CFbsTwentyfourBitDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer
 
 void CFbsTwentyfourBitDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
     TUint8 *pixelAddress = NULL;
-    TInt increment = GetPixelIncrementUnit() * 3;
 
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
@@ -149,15 +145,13 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, 
         for (TInt x = aX; x < aX + aLength; x++) {
             // Try to reduce if calls pls
             WriteRgbToAddress(pixelAddress, aColor, aDrawMode);
-            pixelAddress += increment;
+            pixelAddress += 3;
         }
     }
 }
 
 void CFbsTwentyfourBitDrawDevice::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer) {
     TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
-    TInt increment = GetPixelIncrementUnit() * 3;
-
     TUint32 color24 = aColor.Color16M();
 
     if (aX + aLength > LongWidth())
@@ -177,15 +171,13 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLen
         *colorWord &= ~0xFFFFFF;
         *colorWord |= (rb & 0xff00ff) | (g & 0xff00);
 
-        pixelAddress += increment;
+        pixelAddress += 3;
         aMaskBuffer++;
     }
 }
 
 void CFbsTwentyfourBitDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode) {
     TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
-    TInt increment = GetPixelIncrementUnit() * 3;
-
     TUint8 *buffer8 = reinterpret_cast<TUint8 *>(aBuffer);
 
     if (aX + aLength > LongWidth())
@@ -195,7 +187,7 @@ void CFbsTwentyfourBitDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUin
         // Try to reduce if calls pls
         WriteRgbToAddress(pixelAddress, buffer8[0], buffer8[1], buffer8[2], aDrawMode);
 
-        pixelAddress += increment;
+        pixelAddress += 3;
         buffer8 += 3;
     }
 }

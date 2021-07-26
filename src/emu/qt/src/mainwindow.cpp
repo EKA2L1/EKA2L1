@@ -59,7 +59,7 @@
 #include <QSettings>
 #include <QtConcurrent/QtConcurrent>
 
-static constexpr const char *LAST_WINDOW_SIZE_SETTING = "lastWindowSize";
+static constexpr const char *LAST_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
 static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
 static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
@@ -73,6 +73,7 @@ static void advance_dsa_pos_around_origin(eka2l1::rect &origin_normal_rect, cons
 
     case 180:
         origin_normal_rect.top.x += origin_normal_rect.size.x;
+        origin_normal_rect.top.y += origin_normal_rect.size.y;
         break;
 
     case 270:
@@ -159,10 +160,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     dest.top = eka2l1::vec2(x, y);
     dest.size = eka2l1::vec2(width, height);
 
-    int normal_rotation = (crr_mode.rotation + scr->ui_rotation) % 360;
+    // 270 rotation clock-wise makes screen content comes from the top where camera lies, to down where the ports reside.
+    // That makes it a standard, non-flip landscape. 0 is obviously standard too. Therefore mode 90 and 180 needs flip.
+    int normal_rotation = (((crr_mode.rotation == 90) || (crr_mode.rotation == 180) ? 180 : 0) + scr->ui_rotation) % 360;
 
     if (scr->last_texture_access) {
-        cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
         advance_dsa_pos_around_origin(dest, normal_rotation);
 
         // Rotate back to original size
@@ -171,6 +173,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
             std::swap(src.size.x, src.size.y);
         }
 
+        cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
         cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(normal_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
     } else {
         advance_dsa_pos_around_origin(dest, scr->ui_rotation);
@@ -277,9 +280,9 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     ui_->status_bar->setVisible(!settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     active_screen_number_ = settings.value(SHOW_SCREEN_NUMBER_SETTINGS_NAME, 0).toInt();
 
-    QVariant size_variant = settings.value(LAST_WINDOW_SIZE_SETTING);
-    if (size_variant.isValid()) {
-        resize(size_variant.toSize());
+    QVariant geo_variant = settings.value(LAST_WINDOW_GEOMETRY_SETTING);
+    if (geo_variant.isValid()) {
+        restoreGeometry(geo_variant.toByteArray());
     }
 
     on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
@@ -390,7 +393,7 @@ eka2l1::config::app_setting *main_window::get_active_app_setting() {
 main_window::~main_window() {
     // Save last window size
     QSettings settings;
-    settings.setValue(LAST_WINDOW_SIZE_SETTING, size());
+    settings.setValue(LAST_WINDOW_GEOMETRY_SETTING, saveGeometry());
 
     if (applist_) {
         delete applist_;

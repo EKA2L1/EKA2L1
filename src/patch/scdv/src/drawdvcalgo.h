@@ -60,12 +60,6 @@ public:
     // END TODO
 
     virtual void MapColors(const TRect &aRect, const TRgb *aColors, TInt aNumPairs, TBool aMapForwards);
-
-    TInt GetPixelIncrementUnit() const;
-    TInt PhysicalScanLineBytes() const;
-
-    void TransformCoordinateToPhysical(TInt aX, TInt aY, TInt &aNewX, TInt &aNewY) const;
-
     virtual void ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const = 0;
 
     virtual TOrientation Orientation() {

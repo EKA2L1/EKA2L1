@@ -59,10 +59,6 @@ TInt CFbsDrawDeviceAlgorithm::ScanLineBytes() const {
     return scanLineBytes;
 }
 
-TInt CFbsDrawDeviceAlgorithm::PhysicalScanLineBytes() const {
-    return iScanLineWords << 2;
-}
-
 TInt CFbsDrawDeviceAlgorithm::LongWidth() const {
     if (iOrientation & 1) {
         const TSize size = SizeInPixels();
@@ -85,54 +81,6 @@ void CFbsDrawDeviceAlgorithm::OrientationsAvailable(TBool aOrientation[4]) {
     aOrientation[EOrientationRotate90] = ETrue;
     aOrientation[EOrientationRotate180] = ETrue;
     aOrientation[EOrientationRotate270] = ETrue;
-}
-
-TInt CFbsDrawDeviceAlgorithm::GetPixelIncrementUnit() const {
-    switch (iOrientation) {
-    case EOrientationNormal:
-        return 1;
-
-    case EOrientationRotate180:
-        return -1;
-
-    case EOrientationRotate90:
-        return -iLongWidth;
-
-    case EOrientationRotate270:
-        return iLongWidth;
-
-    default:
-        break;
-    }
-
-    return 1;
-}
-
-void CFbsDrawDeviceAlgorithm::TransformCoordinateToPhysical(TInt aX, TInt aY, TInt &aNewX, TInt &aNewY) const {
-    switch (iOrientation) {
-    case EOrientationRotate90:
-        aNewY = SizeInPixels().iHeight - aX - 1;
-        aNewX = aY;
-        break;
-
-    case EOrientationRotate180:
-        aNewX = SizeInPixels().iWidth - aX - 1;
-        aNewY = SizeInPixels().iHeight - aY - 1;
-        break;
-
-    case EOrientationRotate270:
-        aNewY = aX;
-        aNewX = SizeInPixels().iWidth - aY - 1;
-        break;
-
-    case EOrientationNormal:
-        aNewX = aX;
-        aNewY = aY;
-        break;
-
-    default:
-        break;
-    }
 }
 
 void PanicAtTheEndOfTheWorld() {

@@ -24,11 +24,7 @@
 #include "drawdvc32.h"
 
 TUint8 *CFbsThirtyTwoBitsDrawDevice::GetPixelStartAddress(TInt aX, TInt aY) const {
-    TInt originalX = aX;
-    TInt originalY = aY;
-
-    TransformCoordinateToPhysical(originalX, originalY, aX, aY);
-    return reinterpret_cast<TUint8 *>(iBuffer) + (aX * 4 + aY * PhysicalScanLineBytes());
+    return reinterpret_cast<TUint8 *>(iBuffer) + (aX * 4 + aY * ScanLineBytes());
 }
 
 TRgb CFbsThirtyTwoBitsDrawDevice::ReadPixel(TInt aX, TInt aY) const {
@@ -54,12 +50,11 @@ void CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
         PanicAtTheEndOfTheWorld();
 
     TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-    TInt increment = GetPixelIncrementUnit() * 4;
     TInt iterator = 0;
 
     while (iterator < aLength) {
         Mem::Copy(reinterpret_cast<TUint8 *>(aBuffer) + iterator * 4, pixelStart, 4);
-        pixelStart += increment;
+        pixelStart += 4;
     }
 }
 
@@ -180,7 +175,6 @@ void CFbsThirtyTwoBitsDrawDevice::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraph
 void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
     TUint8 *pixelAddress = NULL;
     PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
-    TInt increment = GetPixelIncrementUnit() * 4;
 
     if (aLength > 32 || aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
@@ -204,7 +198,7 @@ void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer
                 writeFunc(pixelAddress, red, green, blue, alpha);
             }
 
-            pixelAddress += increment;
+            pixelAddress += 4;
         }
 
         aBuffer++;
@@ -214,7 +208,6 @@ void CFbsThirtyTwoBitsDrawDevice::WriteBinary(TInt aX, TInt aY, TUint32 *aBuffer
 void CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, TInt aHeight, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
     TUint8 *pixelAddress = NULL;
     PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
-    TInt increment = GetPixelIncrementUnit() * 4;
 
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
@@ -234,7 +227,7 @@ void CFbsThirtyTwoBitsDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, 
         for (TInt x = aX; x < aX + aLength; x++) {
             // Try to reduce if calls pls
             writeFunc(pixelAddress, red, green, blue, alpha);
-            pixelAddress += increment;
+            pixelAddress += 4;
         }
     }
 }
@@ -246,7 +239,6 @@ void CFbsThirtyTwoBitsDrawDevice::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLen
 void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUint32 *aBuffer, CGraphicsContext::TDrawMode aDrawMode) {
     TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
     PWriteRgbToAddressFunc writeFunc = GetRgbWriteFunc(aDrawMode);
-    TInt increment = GetPixelIncrementUnit() * 4;
 
     TUint8 *buffer8 = reinterpret_cast<TUint8 *>(aBuffer);
 
@@ -257,7 +249,7 @@ void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUin
         // Try to reduce if calls pls
         writeFunc(pixelAddress, buffer8[0], buffer8[1], buffer8[2], buffer8[3]);
 
-        pixelAddress += increment;
+        pixelAddress += 4;
         buffer8 += 4;
     }
 }
