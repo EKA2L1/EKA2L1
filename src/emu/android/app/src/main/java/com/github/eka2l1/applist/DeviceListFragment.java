@@ -93,18 +93,18 @@ public class DeviceListFragment extends Fragment {
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.devices);
 
-        LinearLayout llFirmware = getActivity().findViewById(R.id.ll_firmware);
-        LinearLayout llRom = getActivity().findViewById(R.id.ll_rom);
-        llRpkg = getActivity().findViewById(R.id.ll_rpkg);
+        LinearLayout llFirmware = view.findViewById(R.id.ll_firmware);
+        LinearLayout llRom = view.findViewById(R.id.ll_rom);
+        llRpkg = view.findViewById(R.id.ll_rpkg);
 
-        tvVPL = getActivity().findViewById(R.id.tv_firmware);
-        tvRPKG = getActivity().findViewById(R.id.tv_rpkg);
-        tvROM = getActivity().findViewById(R.id.tv_rom);
-        tvRPKGNote = getActivity().findViewById(R.id.tv_additional_note);
+        tvVPL = view.findViewById(R.id.tv_firmware);
+        tvRPKG = view.findViewById(R.id.tv_rpkg);
+        tvROM = view.findViewById(R.id.tv_rom);
+        tvRPKGNote = view.findViewById(R.id.tv_additional_note);
 
         ArrayList<String> devices = new ArrayList<>(Arrays.asList(Emulator.getDevices()));
         deviceAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, devices);
-        Spinner spDevice = getActivity().findViewById(R.id.sp_device_list);
+        Spinner spDevice = view.findViewById(R.id.sp_device_list);
         spDevice.setAdapter(deviceAdapter);
         spDevice.setSelection(Emulator.getCurrentDevice(), false);
         spDevice.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -122,7 +122,7 @@ public class DeviceListFragment extends Fragment {
             }
         });
 
-        Button renameButton = getActivity().findViewById(R.id.bt_rename_device);
+        Button renameButton = view.findViewById(R.id.bt_rename_device);
         renameButton.setOnClickListener(v -> {
             AlertDialog.Builder inputNameBuilder = new AlertDialog.Builder(getContext());
             inputNameBuilder.setTitle(getString(R.string.enter_new_name));
@@ -148,7 +148,7 @@ public class DeviceListFragment extends Fragment {
             inputNameBuilder.show();
         });
 
-        ExpandableLayout recommendedDevicesLayout = getActivity().findViewById(R.id.ex_recommended_device);
+        ExpandableLayout recommendedDevicesLayout = view.findViewById(R.id.ex_recommended_device);
         recommendedDevicesLayout.parentLayout.setOnClickListener(v -> {
             if (recommendedDevicesLayout.isExpanded()) {
                 recommendedDevicesLayout.collapse();
@@ -157,7 +157,7 @@ public class DeviceListFragment extends Fragment {
             }
         });
 
-        Spinner spInstallMethod = getActivity().findViewById(R.id.sp_device_install_method);
+        Spinner spInstallMethod = view.findViewById(R.id.sp_device_install_method);
         spInstallMethod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -181,13 +181,13 @@ public class DeviceListFragment extends Fragment {
             }
         });
 
-        Button btRPKG = getActivity().findViewById(R.id.bt_rpkg);
+        Button btRPKG = view.findViewById(R.id.bt_rpkg);
         btRPKG.setOnClickListener(v -> openRpkgLauncher.launch(new String[]{".RPKG", ".rpkg"}));
-        Button btROM = getActivity().findViewById(R.id.bt_rom);
+        Button btROM = view.findViewById(R.id.bt_rom);
         btROM.setOnClickListener(v -> openRomLauncher.launch(new String[]{".ROM", ".rom"}));
-        Button btFirmware = getActivity().findViewById(R.id.bt_firmware);
+        Button btFirmware = view.findViewById(R.id.bt_firmware);
         btFirmware.setOnClickListener(v -> openVplLauncher.launch(new String[]{".VPL", ".vpl"}));
-        Button btInstall = getActivity().findViewById(R.id.bt_device_install);
+        Button btInstall = view.findViewById(R.id.bt_device_install);
         btInstall.setOnClickListener(v -> installDevice());
     }
 

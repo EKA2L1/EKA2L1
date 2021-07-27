@@ -83,7 +83,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
 
     private void setupButton(int resId, int index) {
         idToSymbianKey.put(resId, index);
-        Button button = getActivity().findViewById(resId);
+        Button button = getView().findViewById(resId);
         button.setOnClickListener(this);
     }
 
