@@ -248,9 +248,9 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                 std::vector<std::uint8_t> converted_data(icon_header->size_pixels.x * icon_header->size_pixels.y * 4);
                 eka2l1::common::wo_buf_stream converted_write_stream(converted_data.data(), converted_data.size());
 
-                if (eka2l1::epoc::convert_to_argb8888(fbss_, file_mbm_parser, 0, converted_write_stream)) {
+                if (eka2l1::epoc::convert_to_rgba8888(fbss_, file_mbm_parser, 0, converted_write_stream)) {
                     QImage main_bitmap_image(converted_data.data(), icon_header->size_pixels.x, icon_header->size_pixels.y,
-                        QImage::Format_ARGB32);
+                        QImage::Format_RGBA8888);
 
                     final_pixmap = QPixmap::fromImage(main_bitmap_image);
                     icon_pair_rendered = true;
@@ -266,11 +266,11 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
             std::vector<std::uint8_t> main_bitmap_data(main_bitmap_data_new_size);
             eka2l1::common::wo_buf_stream main_bitmap_buf(main_bitmap_data.data(), main_bitmap_data_new_size);
 
-            if (!eka2l1::epoc::convert_to_argb8888(fbss_, main_bitmap, main_bitmap_buf)) {
+            if (!eka2l1::epoc::convert_to_rgba8888(fbss_, main_bitmap, main_bitmap_buf)) {
                 LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load main icon of app {}", app_name.toStdString());
             } else {
                 QImage main_bitmap_image(main_bitmap_data.data(), main_bitmap->header_.size_pixels.x, main_bitmap->header_.size_pixels.y,
-                    QImage::Format_ARGB32);
+                    QImage::Format_RGBA8888);
 
                 if (icon_pair->second) {
                     eka2l1::epoc::bitwise_bitmap *second_bitmap = icon_pair->second;
@@ -278,11 +278,11 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
                     std::vector<std::uint8_t> second_bitmap_data(second_bitmap_data_new_size);
                     eka2l1::common::wo_buf_stream second_bitmap_buf(second_bitmap_data.data(), second_bitmap_data_new_size);
 
-                    if (!eka2l1::epoc::convert_to_argb8888(fbss_, second_bitmap, second_bitmap_buf, true)) {
+                    if (!eka2l1::epoc::convert_to_rgba8888(fbss_, second_bitmap, second_bitmap_buf, true)) {
                         LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load mask bitmap icon of app {}", app_name.toStdString());
                     } else {
                         QImage mask_bitmap_image(second_bitmap_data.data(), second_bitmap->header_.size_pixels.x, second_bitmap->header_.size_pixels.y,
-                            QImage::Format_ARGB32);
+                            QImage::Format_RGBA8888);
 
                         QImage mask_bitmap_alpha_image = mask_bitmap_image.createAlphaMask().convertToFormat(QImage::Format_Mono);
                         mask_bitmap_alpha_image.invertPixels();

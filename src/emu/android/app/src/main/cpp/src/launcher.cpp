@@ -58,10 +58,12 @@ namespace eka2l1::android {
         std::vector<apa_app_registry> &registerations = alserv->get_registerations();
         std::vector<std::string> info;
         for (auto &reg : registerations) {
-            std::string name = common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr));
-            std::string uid = std::to_string(reg.mandatory_info.uid);
-            info.push_back(uid);
-            info.push_back(name);
+            if (!reg.caps.is_hidden) {
+                std::string name = common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr));
+                std::string uid = std::to_string(reg.mandatory_info.uid);
+                info.push_back(uid);
+                info.push_back(name);
+            }
         }
         return info;
     }
@@ -185,7 +187,7 @@ namespace eka2l1::android {
                     eka2l1::common::wo_buf_stream converted_write_stream(reinterpret_cast<std::uint8_t *>(data_to_write),
                         icon_header->size_pixels.x * icon_header->size_pixels.y * 4);
 
-                    if (!eka2l1::epoc::convert_to_argb8888(fbsserv, file_mbm_parser, 0, converted_write_stream)) {
+                    if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, file_mbm_parser, 0, converted_write_stream)) {
                         env->DeleteLocalRef(source_bitmap);
                     } else {
                         AndroidBitmap_unlockPixels(env, source_bitmap);
@@ -213,7 +215,7 @@ namespace eka2l1::android {
                 eka2l1::common::wo_buf_stream main_bitmap_buf(reinterpret_cast<std::uint8_t *>(data_to_write),
                     main_bitmap->header_.size_pixels.x * main_bitmap->header_.size_pixels.y * 4);
 
-                if (!eka2l1::epoc::convert_to_argb8888(fbsserv, main_bitmap, main_bitmap_buf)) {
+                if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, main_bitmap, main_bitmap_buf)) {
                     LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load main icon of app {}", app_name);
                     env->DeleteLocalRef(source_bitmap);
                 } else {
@@ -233,7 +235,7 @@ namespace eka2l1::android {
                         eka2l1::common::wo_buf_stream second_bitmap_buf(reinterpret_cast<std::uint8_t *>(data_to_write),
                             second_bitmap->header_.size_pixels.x * second_bitmap->header_.size_pixels.y * 4);
 
-                        if (!eka2l1::epoc::convert_to_argb8888(fbsserv, second_bitmap, second_bitmap_buf, true)) {
+                        if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, second_bitmap, second_bitmap_buf, true)) {
                             LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load mask bitmap icon of app {}", app_name);
                             env->DeleteLocalRef(mask_bitmap);
                         } else {
@@ -503,8 +505,8 @@ namespace eka2l1::android {
                         std::swap(src.size.x, src.size.y);
                     }
 
-                    cmd_builder->set_texture_filter(scr->dsa_texture, filter, filter);
-                    cmd_builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(normal_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+                    builder->set_texture_filter(scr->dsa_texture, filter, filter);
+                    builder->draw_bitmap(scr->dsa_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(normal_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
                 } else {
                     advance_dsa_pos_around_origin(dest, scr->ui_rotation);
 
@@ -513,8 +515,8 @@ namespace eka2l1::android {
                         std::swap(src.size.x, src.size.y);
                     }
 
-                    cmd_builder->set_texture_filter(scr->screen_texture, filter, filter);
-                    cmd_builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
+                    builder->set_texture_filter(scr->screen_texture, filter, filter);
+                    builder->draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation), eka2l1::drivers::bitmap_draw_flag_no_flip);
                 }
 
                 scr->screen_mutex.unlock();

@@ -114,7 +114,7 @@ namespace eka2l1::epoc {
 
     bool save_bwbmp_to_file(const std::string &destination, bitwise_bitmap *bitmap, const char *base);
 
-    bool convert_to_argb8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp, const bool make_standard_mask = false);
-    bool convert_to_argb8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest, const bool make_standard_mask = false);
-    bool convert_to_argb8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask = false);
+    bool convert_to_rgba8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp, const bool make_standard_mask = false);
+    bool convert_to_rgba8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest, const bool make_standard_mask = false);
+    bool convert_to_rgba8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask = false);
 }
