@@ -11,13 +11,14 @@ if(ANDROID)
     endif()
 endif()
 
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     set(EXCLUSIVE_QT_COMPONENTS OpenGLWidgets)
 else()
     set(EXCLUSIVE_QT_COMPONENTS OpenGL)
 endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Svg ${EXCLUSIVE_QT_COMPONENTS} REQUIRED)
 
 # Make list of TS files, and add them to resources. Credits from Yuzu CMakeLists
