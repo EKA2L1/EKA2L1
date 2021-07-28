@@ -274,6 +274,7 @@ namespace eka2l1::epoc {
         }
 
         ws::uid add_capture_key_notifier_to_server(epoc::event_capture_key_notifier &notifier);
+        void send_screen_change_events(epoc::screen *scr);
 
         // We have been blessed with so much reflection that it's actually seems evil now.
         template <typename T>
@@ -477,6 +478,8 @@ namespace eka2l1 {
 
         void send_event_to_window_group(epoc::window_group *group, const epoc::event &evt);
         void send_event_to_window_groups(const epoc::event &evt);
+
+        void send_screen_change_events(epoc::screen *scr);
 
         void init_key_mappings();
     };

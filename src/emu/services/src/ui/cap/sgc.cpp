@@ -202,13 +202,7 @@ namespace eka2l1::epoc::cap {
         }
 
         if (final_mode >= 0) {
-            group->scr->set_screen_mode(graphics_driver_, final_mode);
-
-            epoc::event the_event;
-            the_event.type = static_cast<epoc::event_code>(DYNAMIC_LAYOUT_VARIANT_SWITCH_UID);
-            the_event.handle = 0;
-
-            winserv_->send_event_to_window_groups(the_event);
+            group->scr->set_screen_mode(winserv_, graphics_driver_, final_mode);
         }
     }
 

@@ -164,7 +164,7 @@ namespace eka2l1::epoc {
 
     void screen::redraw(drivers::graphics_driver *driver) {
         if (!screen_texture) {
-            set_screen_mode(driver, crr_mode);
+            set_screen_mode(nullptr, driver, crr_mode);
         }
 
         // Make command list first, and bind our screen bitmap
@@ -357,20 +357,23 @@ namespace eka2l1::epoc {
         return screen_mode_change_callbacks.remove(cb);
     }
 
-    void screen::set_screen_mode(drivers::graphics_driver *drv, const int mode) {
+    void screen::set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode) {
         const int old_mode = crr_mode;
-        bool should_fire_cb = false;
+        bool really_changed = false;
 
         if (crr_mode != mode) {
             LOG_TRACE(SERVICE_WINDOW, "Screen mode changed to {}", mode);
-            should_fire_cb = true;
+            really_changed = true;
         }
 
         crr_mode = mode;
         resize(drv, mode_info(mode)->size);
 
-        if (should_fire_cb) {
+        if (really_changed) {
             fire_screen_mode_change_callbacks(old_mode);
+
+            if (winserv)
+                winserv->send_screen_change_events(this);
         }
     }
 
@@ -421,7 +424,7 @@ namespace eka2l1::epoc {
         return static_cast<int>(scr_config.modes.size());
     }
 
-    void screen::set_rotation(drivers::graphics_driver *drv, const int rot) {
+    void screen::set_rotation(window_server *winserv, drivers::graphics_driver *drv, const int rot) {
         if (orientation_lock) {
             // Feel like we are at home
             ui_rotation = rot;
@@ -431,7 +434,7 @@ namespace eka2l1::epoc {
                 if (scr_config.modes[i].rotation == rot) {
                     // Reset the UI rotation
                     ui_rotation = 0;
-                    set_screen_mode(drv, static_cast<int>(i));
+                    set_screen_mode(winserv, drv, static_cast<int>(i));
                 }
             }
         }

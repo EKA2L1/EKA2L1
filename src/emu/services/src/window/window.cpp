@@ -1100,6 +1100,17 @@ namespace eka2l1::epoc {
 
         return id;
     }
+
+    void window_server_client::send_screen_change_events(epoc::screen *scr) {
+        for (auto &request: screen_changes) {
+            if (request.user->scr == scr) {
+                epoc::event evt;
+                evt.type = epoc::event_code::screen_change;
+
+                get_ws().send_event_to_window_group(reinterpret_cast<epoc::window_group*>(request.user), evt);
+            }
+        }
+    }
 }
 
 namespace eka2l1 {
@@ -1633,7 +1644,7 @@ namespace eka2l1 {
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0));
         epoc::screen *crr = screens;
-        crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
+        crr->set_screen_mode(this, get_graphics_driver(), crr->crr_mode);
 
         create_screen_buffer_for_dsa(kern, crr);
 
@@ -1644,7 +1655,7 @@ namespace eka2l1 {
             crr = crr->next;
 
             if ((crr->size().x != -1) && (crr->size().y != -1)) {
-                crr->set_screen_mode(get_graphics_driver(), crr->crr_mode);
+                crr->set_screen_mode(this, get_graphics_driver(), crr->crr_mode);
                 create_screen_buffer_for_dsa(kern, crr);
             }
         }
@@ -2097,6 +2108,14 @@ namespace eka2l1 {
             }
 
             scr = scr->next;
+        }
+    }
+
+    void window_server::send_screen_change_events(epoc::screen *scr) {
+        for (auto &[uid, cli]: clients) {
+            if (cli) {
+                cli->send_screen_change_events(scr);
+            }
         }
     }
 }

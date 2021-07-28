@@ -130,7 +130,7 @@ namespace eka2l1::epoc {
 
         explicit screen(const int number, epoc::config::screen &scr_conf);
 
-        void set_rotation(drivers::graphics_driver *drv, int rot);
+        void set_rotation(window_server *winserv, drivers::graphics_driver *drv, int rot);
         void set_orientation_lock(drivers::graphics_driver *drv, const bool lock);
 
         // ========================= UTILITIES FUNCTIONS ===========================
@@ -165,7 +165,7 @@ namespace eka2l1::epoc {
         /**
          * \brief Set screen mode.
          */
-        void set_screen_mode(drivers::graphics_driver *drv, const int mode);
+        void set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode);
 
         /**
          * \brief Resize the screen.

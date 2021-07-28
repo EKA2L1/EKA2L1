@@ -96,7 +96,7 @@ namespace eka2l1::epoc {
 
     void screen_device::set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         const int mode = *reinterpret_cast<int *>(cmd.data_ptr);
-        scr->set_screen_mode(client->get_ws().get_graphics_driver(), mode);
+        scr->set_screen_mode(&client->get_ws(), client->get_ws().get_graphics_driver(), mode);
     }
 
     void screen_device::get_screen_size_mode_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
