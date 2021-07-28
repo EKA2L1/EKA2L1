@@ -269,12 +269,13 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
         QTranslator translator;
         if (translator.load(":/languages/" + language_file_list[i])) {
             QString locale_name = translator.language();
+            QString filelocale_name = language_file_list[i].mid(7, language_file_list[i].length() - 10);
 
             if (!locale_name.isEmpty()) {
                 QLocale locale(locale_name);
-                ui_->interface_language_combo->addItem(locale.nativeLanguageName() + QString(" (%1)").arg(locale_name));
+                ui_->interface_language_combo->addItem(locale.nativeLanguageName() + QString(" (%1)").arg(filelocale_name));
 
-                if (current_language_variant.isValid() && (current_language_variant.toString() == locale_name)) {
+                if (current_language_variant.isValid() && (current_language_variant.toString() == filelocale_name)) {
                     ui_->interface_language_combo->setCurrentIndex(ui_->interface_language_combo->count() - 1);
                 }
             }
