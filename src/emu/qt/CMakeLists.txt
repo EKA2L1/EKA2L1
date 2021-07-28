@@ -25,6 +25,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Svg ${EXCLUS
 set(TS_FOLDER translations)
 
 file(GLOB_RECURSE TS_FILES ${TS_FOLDER}/*.ts)
+list(REMOVE_ITEM TS_FILES ${TS_FOLDER}/eka2l1.ts)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_create_translation(QM_FILES ${CMAKE_CURRENT_SOURCE_DIR} ${TS_FILES})
