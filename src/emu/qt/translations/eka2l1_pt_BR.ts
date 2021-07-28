@@ -746,7 +746,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="506"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-      <translation type="unfinished">Check for any unimported devices and correct existing one&apos;s infos.</translation>
+      <translation>Verifique qualquer dispositivo não importado e corrija as informações do existente.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="509"/>
