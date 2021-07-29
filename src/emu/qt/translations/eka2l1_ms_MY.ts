@@ -82,7 +82,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>Pilih kaedah pemasangan</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
@@ -92,7 +92,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>Perisian tegar (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -117,7 +117,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="198"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>Peranti telah berjaya dipasang!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="206"/>
