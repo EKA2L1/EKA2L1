@@ -6,7 +6,7 @@
     <message>
       <location filename="../src/aboutdialog.ui" line="14"/>
       <source>About EKA2L1</source>
-      <translation type="unfinished">About EKA2L1</translation>
+      <translation>关于EKA2L1</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.ui" line="69"/>
@@ -16,37 +16,37 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="49"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;提交 &lt;b&gt;%1&lt;/b&gt; 分支 &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="52"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018-EKA2L1 团队&lt;/b&gt;&lt;br&gt;&lt;b&gt;感谢您使用此模拟器！&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="63"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;主要开发者：&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="77"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;贡献者：&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="91"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;图标：&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="105"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;荣誉：&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="119"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;翻译：&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -62,7 +62,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="333"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;应用UID：0x%1</translation>
     </message>
   </context>
   <context>
@@ -70,29 +70,29 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="20"/>
       <source>Device install wizard</source>
-      <translation type="unfinished">Device install wizard</translation>
+      <translation>设备安装向导</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="55"/>
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>浏览</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>选择安装方式</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation type="unfinished">Device dump (RPKG + ROM)</translation>
+      <translation>设备转储(RRPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>固件(VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -107,37 +107,37 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="115"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>选择要安装的固件类型</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="197"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>安装完成</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="198"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>设备 %1 (%2) 已成功安装！</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="206"/>
       <source>The device has already been installed!</source>
-      <translation type="unfinished">The device has already been installed!</translation>
+      <translation>设备已经安装了！</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="210"/>
       <source>Fail to determine product information from the dump!</source>
-      <translation type="unfinished">Fail to determine product information from the dump!</translation>
+      <translation>无法确定来自转储文件的产品信息！</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="214"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>固件中提供的FPSX文件之一已损坏！</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="218"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation type="unfinished">An unknown error has occured. Please contact the developers with your log!</translation>
+      <translation>出现未知错误，请向开发者提交您的日志！</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="222"/>
@@ -648,7 +648,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>浏览</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
