@@ -27,8 +27,9 @@
 #endif
 
 namespace eka2l1::drivers {
-    cubeb_audio_driver::cubeb_audio_driver()
-        : context_(nullptr)
+    cubeb_audio_driver::cubeb_audio_driver(const std::uint32_t initial_master_volume)
+        : audio_driver(initial_master_volume)
+        , context_(nullptr)
         , init_(false) {
         if (cubeb_init(&context_, "EKA2L1 Audio Driver", nullptr) != CUBEB_OK) {
             LOG_CRITICAL(DRIVER_AUD, "Can't initialize Cubeb audio driver!");
@@ -66,6 +67,6 @@ namespace eka2l1::drivers {
             return nullptr;
         }
 
-        return std::make_unique<cubeb_audio_output_stream>(context_, sample_rate, channels, callback);
+        return std::make_unique<cubeb_audio_output_stream>(this, context_, sample_rate, channels, callback);
     }
 };

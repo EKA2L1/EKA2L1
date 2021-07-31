@@ -18,6 +18,7 @@
  */
 
 #include <drivers/audio/backend/cubeb/stream_cubeb.h>
+#include <drivers/audio/audio.h>
 
 #include <common/algorithm.h>
 #include <common/log.h>
@@ -33,11 +34,13 @@ namespace eka2l1::drivers {
     void state_callback_redirector(cubeb_stream *stream, void *user_data, cubeb_state state) {
     }
 
-    cubeb_audio_output_stream::cubeb_audio_output_stream(cubeb *context_, const std::uint32_t sample_rate,
+    cubeb_audio_output_stream::cubeb_audio_output_stream(audio_driver *driver, cubeb *context, const std::uint32_t sample_rate,
         const std::uint8_t channels, data_callback callback)
-        : stream_(nullptr)
+        : audio_output_stream(driver)
+        , stream_(nullptr)
         , callback_(callback)
-        , playing_(false) {
+        , playing_(false)
+        , volume_(1.0f) {
         cubeb_stream_params params;
         params.format = CUBEB_SAMPLE_S16LE;
         params.rate = sample_rate;
@@ -51,12 +54,12 @@ namespace eka2l1::drivers {
 #else
         minimum_latency = 100 * sample_rate / 1000; // Firefox default
 
-        if (cubeb_get_min_latency(context_, &params, &minimum_latency) != CUBEB_OK) {
+        if (cubeb_get_min_latency(context, &params, &minimum_latency) != CUBEB_OK) {
             LOG_ERROR(DRIVER_AUD, "Error trying to get minimum latency. Use default");
         }
 #endif
 
-        const auto result = cubeb_stream_init(context_, &stream_, "EKA2L1 StreamPeam",
+        const auto result = cubeb_stream_init(context, &stream_, "EKA2L1 StreamPeam",
             nullptr, nullptr, nullptr, &params, common::max<std::uint32_t>((channels == 1) ? 256U : 512U, minimum_latency),
             data_callback_redirector, state_callback_redirector, this);
 
@@ -103,10 +106,15 @@ namespace eka2l1::drivers {
     }
 
     bool cubeb_audio_output_stream::set_volume(const float volume) {
-        if (cubeb_stream_set_volume(stream_, volume) == CUBEB_OK) {
+        if (cubeb_stream_set_volume(stream_, volume * static_cast<float>(driver_->master_volume() / 100.0f)) == CUBEB_OK) {
+            volume_ = volume;
             return true;
         }
 
         return false;
+    }
+
+    float cubeb_audio_output_stream::get_volume() const {
+        return volume_;
     }
 }

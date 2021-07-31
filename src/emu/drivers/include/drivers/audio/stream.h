@@ -24,9 +24,16 @@
 
 namespace eka2l1::drivers {
     using data_callback = std::function<std::size_t(std::int16_t *, std::size_t)>;
+    class audio_driver;
 
     struct audio_output_stream {
-        virtual ~audio_output_stream() {}
+    protected:
+        audio_driver *driver_;
+        std::size_t grand_volume_change_callback_handle_;
+
+    public:
+        explicit audio_output_stream(audio_driver *driver);
+        virtual ~audio_output_stream();
 
         virtual bool start() = 0;
         virtual bool stop() = 0;
@@ -34,5 +41,6 @@ namespace eka2l1::drivers {
         virtual bool is_playing() = 0;
 
         virtual bool set_volume(const float volume) = 0;
+        virtual float get_volume() const = 0;
     };
 };

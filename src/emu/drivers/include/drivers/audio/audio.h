@@ -22,11 +22,30 @@
 #include <drivers/audio/stream.h>
 #include <drivers/driver.h>
 
+#include <common/container.h>
+
 #include <cstdint>
+#include <functional>
+#include <mutex>
 
 namespace eka2l1::drivers {
+    using master_audio_volume_change_callback = std::function<void(const std::uint32_t old, const std::uint32_t newv)>;
+
     class audio_driver : public driver {
+        friend struct audio_output_stream;
+
+    private:
+        common::identity_container<master_audio_volume_change_callback> master_volume_change_callbacks_;
+
+        std::uint32_t master_volume_ = 100;
+        std::mutex lock_;
+
+    protected:
+        std::size_t add_master_volume_change_callback(master_audio_volume_change_callback callback);
+        bool remove_master_volume_change_callback(const std::size_t handle);
+
     public:
+        explicit audio_driver(const std::uint32_t initial_master_volume = 100);
         virtual ~audio_driver() {}
 
         void run() override {}
@@ -48,6 +67,12 @@ namespace eka2l1::drivers {
             = 0;
 
         virtual std::uint32_t native_sample_rate() = 0;
+
+        std::uint32_t master_volume() const {
+            return master_volume_;
+        }
+
+        void master_volume(const std::uint32_t value);
     };
 
     enum class audio_driver_backend {
@@ -55,5 +80,5 @@ namespace eka2l1::drivers {
     };
 
     using audio_driver_instance = std::unique_ptr<audio_driver>;
-    audio_driver_instance make_audio_driver(const audio_driver_backend backend);
+    audio_driver_instance make_audio_driver(const audio_driver_backend backend, const std::uint32_t initial_master_vol = 100);
 }

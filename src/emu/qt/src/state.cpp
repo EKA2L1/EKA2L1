@@ -124,7 +124,7 @@ namespace eka2l1::desktop {
                 eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
 
             // Create audio driver
-            audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb);
+            audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb, conf.audio_master_volume);
             symsys->set_audio_driver(audio_driver.get());
 
             // Load patch libraries

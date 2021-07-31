@@ -54,26 +54,8 @@ namespace eka2l1::dispatch {
     }
 
     dsp_manager::dsp_manager()
-        : master_volume_(100)
-        , audren_sema_(nullptr) {
+        : audren_sema_(nullptr) {
         audren_sema_ = std::make_unique<dsp_epoc_audren_sema>();
-    }
-
-    void dsp_manager::master_volume(const std::uint32_t volume) {
-        master_volume_ = volume;
-
-        // Refresh the volumes
-        for (auto &medium_unq : mediums_) {
-            dsp_medium *medium = medium_unq.get();
-
-            if (medium) {
-                medium->volume(medium->volume());
-            }
-        }
-    }
-
-    std::uint32_t dsp_manager::master_volume() const {
-        return master_volume_.load();
     }
 
     dsp_medium::dsp_medium(dsp_manager *manager, const dsp_medium_type type)
@@ -92,10 +74,9 @@ namespace eka2l1::dispatch {
 
     void dsp_epoc_stream::volume(const std::uint32_t volume) {
         drivers::dsp_output_stream &out_stream = static_cast<drivers::dsp_output_stream &>(*ll_stream_);
-
         logical_volume_ = volume;
 
-        out_stream.volume(logical_volume_ * manager_->master_volume() / 100);
+        out_stream.volume(logical_volume_);
     }
 
     std::uint32_t dsp_epoc_stream::max_volume() const {
@@ -114,8 +95,7 @@ namespace eka2l1::dispatch {
 
     void dsp_epoc_player::volume(const std::uint32_t volume) {
         logical_volume_ = volume;
-        LOG_TRACE(eka2l1::FRONTEND_UI, "Volume adjusted to {}", logical_volume_ * manager_->master_volume() / 100);
-        impl_->set_volume(logical_volume_ * manager_->master_volume() / 100);
+        impl_->set_volume(logical_volume_);
     }
 
     std::uint32_t dsp_epoc_player::max_volume() const {

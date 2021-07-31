@@ -28,9 +28,10 @@ namespace eka2l1::drivers {
         cubeb_stream *stream_;
         data_callback callback_;
         bool playing_;
+        float volume_;
 
     public:
-        explicit cubeb_audio_output_stream(cubeb *context_, const std::uint32_t sample_rate,
+        explicit cubeb_audio_output_stream(audio_driver *driver, cubeb *context, const std::uint32_t sample_rate,
             const std::uint8_t channels, data_callback callback);
 
         ~cubeb_audio_output_stream() override;
@@ -43,5 +44,6 @@ namespace eka2l1::drivers {
         bool is_playing() override;
 
         bool set_volume(const float volume) override;
+        float get_volume() const override;
     };
 }

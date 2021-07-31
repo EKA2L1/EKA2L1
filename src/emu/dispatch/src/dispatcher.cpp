@@ -49,8 +49,6 @@ namespace eka2l1::dispatch {
         winserv_ = reinterpret_cast<eka2l1::window_server *>(kern->get_by_name<service::server>(
             eka2l1::get_winserv_name_by_epocver(kern->get_epoc_version())));
 
-        dsp_manager_.master_volume(kern->get_config()->audio_master_volume);
-
         // Set global variables
         timing_ = timing;
         libmngr_ = kern->get_lib_manager();

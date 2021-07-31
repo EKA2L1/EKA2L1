@@ -29,7 +29,7 @@
 #include <config/app_settings.h>
 #include <config/config.h>
 #include <cpu/arm_utils.h>
-#include <dispatch/dispatcher.h>
+#include <drivers/audio/audio.h>
 #include <drivers/graphics/emu_window.h>
 #include <drivers/input/emu_controller.h>
 #include <services/hwrm/def.h>
@@ -983,10 +983,9 @@ void settings_dialog::on_system_battery_slider_value_moved(int value) {
 void settings_dialog::on_master_volume_value_changed(int value) {
     ui_->system_audio_current_val_label->setText(QString("%1").arg(value));
 
-    eka2l1::dispatch::dispatcher *dispatcher = system_->get_dispatcher();
-    if (dispatcher) {
-        eka2l1::dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
-        manager.master_volume(static_cast<std::uint32_t>(value));
+    eka2l1::drivers::audio_driver *driver = system_->get_audio_driver();
+    if (driver) {
+        driver->master_volume(static_cast<std::uint32_t>(value));
 
         configuration_.audio_master_volume = value;
         configuration_.serialize();

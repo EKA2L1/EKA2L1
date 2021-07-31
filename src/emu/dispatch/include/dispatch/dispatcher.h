@@ -139,7 +139,6 @@ namespace eka2l1::dispatch {
 
     struct dsp_manager {
     private:
-        std::atomic<std::uint32_t> master_volume_;
         std::unique_ptr<dsp_epoc_audren_sema> audren_sema_;
         object_manager<dsp_medium> mediums_;
 
@@ -179,9 +178,6 @@ namespace eka2l1::dispatch {
         dsp_epoc_audren_sema *audio_renderer_semaphore() {
             return audren_sema_.get();
         }
-
-        void master_volume(const std::uint32_t volume);
-        std::uint32_t master_volume() const;
     };
 
     struct dispatcher {
