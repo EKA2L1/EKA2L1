@@ -1,4 +1,4 @@
-#version 330
+#version 140
 
 uniform sampler2D u_tex;
 uniform sampler2D u_mask;
@@ -7,7 +7,6 @@ uniform float u_flat;
 uniform vec4 u_color;
 
 in vec2 r_texcoord;
-
 out vec4 o_color;
 
 void main() {

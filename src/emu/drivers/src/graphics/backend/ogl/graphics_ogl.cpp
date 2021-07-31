@@ -121,6 +121,8 @@ namespace eka2l1::drivers {
         proj_loc = sprite_program->get_uniform_location("u_proj").value_or(-1);
         model_loc = sprite_program->get_uniform_location("u_model").value_or(-1);
         flip_loc = sprite_program->get_uniform_location("u_flip").value_or(-1);
+        in_position_loc = sprite_program->get_attrib_location("in_position").value_or(-1);
+        in_texcoord_loc = sprite_program->get_attrib_location("in_texcoord").value_or(-1);
 
         color_loc_fill = fill_program->get_uniform_location("u_color").value_or(-1);
         proj_loc_fill = fill_program->get_uniform_location("u_proj").value_or(-1);
@@ -134,6 +136,8 @@ namespace eka2l1::drivers {
         mask_loc_mask = mask_program->get_uniform_location("u_mask").value_or(-1);
         flip_loc_mask = mask_program->get_uniform_location("u_flip").value_or(-1);
         flat_blend_loc_mask = mask_program->get_uniform_location("u_flat").value_or(-1);
+        in_position_loc_mask = mask_program->get_attrib_location("in_position").value_or(-1);
+        in_texcoord_loc_mask = mask_program->get_attrib_location("in_texcoord").value_or(-1);
     }
 
     void ogl_graphics_driver::bind_swapchain_framebuf() {
@@ -299,9 +303,9 @@ namespace eka2l1::drivers {
         glBindBuffer(GL_ARRAY_BUFFER, sprite_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), nullptr, GL_STATIC_DRAW);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), vert_pointer, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(mask_bmp ? in_position_loc_mask : in_position_loc);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)0);
-        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(mask_bmp ? in_texcoord_loc_mask : in_texcoord_loc);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid *)(2 * sizeof(GLfloat)));
 
         if (mask_bmp) {

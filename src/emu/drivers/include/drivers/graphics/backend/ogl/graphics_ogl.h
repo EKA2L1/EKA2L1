@@ -83,6 +83,12 @@ namespace eka2l1::drivers {
         GLint flip_loc_mask;
         GLint flat_blend_loc_mask;
 
+        GLint in_position_loc;
+        GLint in_texcoord_loc;
+
+        GLint in_position_loc_mask;
+        GLint in_texcoord_loc_mask;
+
         ogl_state backup;
         std::atomic_bool should_stop;
 

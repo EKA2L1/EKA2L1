@@ -1,6 +1,6 @@
-#version 330
+#version 140
 
-layout (location = 0) in vec2 in_position;
+in vec2 in_position;
 
 uniform mat4 u_proj;
 uniform mat4 u_model;

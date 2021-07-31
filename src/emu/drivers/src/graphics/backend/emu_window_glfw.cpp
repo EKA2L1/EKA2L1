@@ -157,8 +157,8 @@ namespace eka2l1 {
 
             if (!emu_win) {
                 // Try to create OpenGL 3.1
-                const std::int32_t minor_to_try[] = { 2, 1 };
-                const int mode_to_try[] = { GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_ANY_PROFILE };
+                const std::int32_t minor_to_try[] = { 2, 1, 0 };
+                const int mode_to_try[] = { GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_ANY_PROFILE, GLFW_OPENGL_ANY_PROFILE };
 
                 for (std::size_t i = 0; i < sizeof(minor_to_try) / sizeof(std::int32_t); i++) {
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
