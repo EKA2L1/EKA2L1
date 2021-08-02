@@ -95,6 +95,7 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     list_widget_->setGridSize(ICON_GRID_SIZE + QSize(20, 20));
     list_widget_->setIconSize(ICON_GRID_SIZE);
     list_widget_->setViewMode(QListWidget::ViewMode::IconMode);
+    list_widget_->setMovement(QListWidget::Movement::Static);
 
     reload_whole_list();
 
@@ -327,6 +328,7 @@ void applist_widget::add_registeration_item(eka2l1::apa_app_registry &reg, const
     }
 
     QListWidgetItem *newItem = new applist_widget_item(final_icon, app_name, index, list_widget_);
+    newItem->setSizeHint(ICON_GRID_SIZE + QSize(20, 20));
     newItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
 
     // Sometimes app can't have full name. Just display it :)
