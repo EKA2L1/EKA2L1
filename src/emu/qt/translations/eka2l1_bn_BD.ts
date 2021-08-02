@@ -741,7 +741,7 @@
       <location filename="../src/settings_dialog.ui" line="495"/>
       <location filename="../src/settings_dialog.ui" line="771"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>পুনঃনামকরণ</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="506"/>
