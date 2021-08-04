@@ -246,12 +246,12 @@ namespace eka2l1::drivers {
                 return false;
             }
 
-            dest.resize(2 * frame->nb_samples * sizeof(std::uint16_t));
+            dest.resize(channels_ * frame->nb_samples * sizeof(std::uint16_t));
             timestamp_in_base_ = frame->best_effort_timestamp;
 
             if ((channels_ != codec_->channels) || (frame->format != AV_SAMPLE_FMT_S16)) {
                 SwrContext *swr = swr_alloc_set_opts(nullptr,
-                    AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16, freq_,
+                    (channels_ == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16, freq_,
                     frame->channel_layout, static_cast<AVSampleFormat>(frame->format), frame->sample_rate,
                     0, nullptr);
 
