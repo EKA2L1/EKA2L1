@@ -60,7 +60,7 @@
   <context>
     <name>applist_widget</name>
     <message>
-      <location filename="../src/applistwidget.cpp" line="333"/>
+      <location filename="../src/applistwidget.cpp" line="335"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
       <translation>&lt;br&gt;UID de la aplicación: 0x%1</translation>
     </message>
@@ -328,159 +328,159 @@
       <translation>Carpeta</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="231"/>
+      <location filename="../src/mainwindow.cpp" line="234"/>
       <source>Clear menu</source>
       <translation>Limpiar menú</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="293"/>
+      <location filename="../src/mainwindow.cpp" line="296"/>
       <source>Touchscreen disabled</source>
       <translation>Pantalla táctil deshabilitada</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="293"/>
+      <location filename="../src/mainwindow.cpp" line="296"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Algunos de sus controles actuales están asociados con los botones físicos del mouse. Por lo tanto, la emulación de la pantalla táctil está desactivada.&lt;br&gt;&lt;br&gt;&lt;b&gt;Nota:&lt;/b&gt;&lt;br&gt;La pantalla táctil puede ser reactivada si se remueven esos controles del mouse.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="294"/>
-      <location filename="../src/mainwindow.cpp" line="355"/>
+      <location filename="../src/mainwindow.cpp" line="297"/>
+      <location filename="../src/mainwindow.cpp" line="358"/>
       <source>Don&apos;t show this again</source>
       <translation>No mostrar esta ventana nuevamente</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="354"/>
+      <location filename="../src/mainwindow.cpp" line="357"/>
       <source>No device installed</source>
       <translation>No hay dispositivos instalados</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="354"/>
+      <location filename="../src/mainwindow.cpp" line="357"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>No hay ningún dispositivo instalado. Por favor, instale un dispositivo o siga las instrucciones de instalación en la Wiki de EKA2L1 en Github.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="632"/>
+      <location filename="../src/mainwindow.cpp" line="635"/>
       <source>Extracting game dump files</source>
       <translation>Extrayendo archivos del game dump</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="653"/>
+      <location filename="../src/mainwindow.cpp" line="656"/>
       <source>Mounting aborted</source>
       <translation>Montaje cancelado</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="658"/>
+      <location filename="../src/mainwindow.cpp" line="661"/>
       <source>The ZIP file is corrupted!</source>
       <translation>¡El archivo ZIP está corrupto!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="663"/>
+      <location filename="../src/mainwindow.cpp" line="666"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>El ZIP no tiene la carpeta System en el directorio raíz. La carpeta System debe existir en el dump del juego para funcionar.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="669"/>
+      <location filename="../src/mainwindow.cpp" line="672"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>¡El archivo elegido no es un archivo ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="683"/>
+      <location filename="../src/mainwindow.cpp" line="686"/>
       <source>Game card problem</source>
       <translation>Problema con la card del juego</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="683"/>
+      <location filename="../src/mainwindow.cpp" line="686"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>El card dump del juego tiene archivos sensibles a mayúsculas. Esto puede causar problemas con el emulador.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="687"/>
+      <location filename="../src/mainwindow.cpp" line="690"/>
       <source>Game card dump folder correction</source>
       <translation>Corrección de carpeta del card dump del juego</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="687"/>
+      <location filename="../src/mainwindow.cpp" line="690"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>La dirección seleccionada parece ser incorrecta.&lt;br&gt;¿Desea que el emulador la corrija?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="743"/>
+      <location filename="../src/mainwindow.cpp" line="746"/>
       <source>Choose the game card dump folder</source>
       <translation>Elegir la carpeta de la card dump del juego</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="763"/>
+      <location filename="../src/mainwindow.cpp" line="766"/>
       <source>Choose the game card zip</source>
       <translation>Elegir ZIP con el card del juego</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="837"/>
+      <location filename="../src/mainwindow.cpp" line="840"/>
       <source>Document</source>
       <translation>Documento</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="855"/>
+      <location filename="../src/mainwindow.cpp" line="858"/>
       <source>Choose a language for the package</source>
       <translation>Elija un idioma para este paquete (package)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="629"/>
-      <location filename="../src/mainwindow.cpp" line="873"/>
+      <location filename="../src/mainwindow.cpp" line="632"/>
+      <location filename="../src/mainwindow.cpp" line="876"/>
       <source>Cancel</source>
       <translation>Cancelar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="876"/>
+      <location filename="../src/mainwindow.cpp" line="879"/>
       <source>Installing package progress</source>
       <translation>Progreso de instalación del paquete (package)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="900"/>
+      <location filename="../src/mainwindow.cpp" line="903"/>
       <source>Installation aborted</source>
       <translation>Instalación cancelada</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="900"/>
+      <location filename="../src/mainwindow.cpp" line="903"/>
       <source>The installation has been canceled</source>
       <translation>La instalación ha sido cancelada</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="905"/>
+      <location filename="../src/mainwindow.cpp" line="908"/>
       <source>Installation failed</source>
       <translation>Instalación fallida</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="905"/>
+      <location filename="../src/mainwindow.cpp" line="908"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Fallo al instalar el paquete (package) en la dirección: %1. Asegúrese de que la dirección apunte a un archivo SIS/SISX válido.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="912"/>
+      <location filename="../src/mainwindow.cpp" line="915"/>
       <source>Installation success</source>
       <translation>Instalación exitosa</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="912"/>
+      <location filename="../src/mainwindow.cpp" line="915"/>
       <source>Package has been successfully installed</source>
       <translation>El paquete (package) ha sido instalado correctamente</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="933"/>
+      <location filename="../src/mainwindow.cpp" line="936"/>
       <source>Choose the file to install</source>
       <translation>Elegir el archivo a instalar</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="933"/>
+      <location filename="../src/mainwindow.cpp" line="936"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>Archivo SIS (*.sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1092"/>
+      <location filename="../src/mainwindow.cpp" line="1095"/>
       <source>Load theme failed!</source>
       <translation>¡Error al cargar el tema!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1092"/>
+      <location filename="../src/mainwindow.cpp" line="1095"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>¡No se ha encontrado el archivo del estilo de tema oscuro!</translation>
     </message>
@@ -954,109 +954,109 @@
       <translation type="unfinished">#</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="397"/>
+      <location filename="../src/settings_dialog.cpp" line="398"/>
       <source>Choose the data folder</source>
       <translation>Elegir la carpeta donde se guardaran los archivos del emulador</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="399"/>
+      <location filename="../src/settings_dialog.cpp" line="400"/>
       <location filename="../src/settings_dialog.cpp" line="1071"/>
       <location filename="../src/settings_dialog.cpp" line="1096"/>
       <source>Relaunch needed</source>
       <translation>Reinicio necesario</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="399"/>
+      <location filename="../src/settings_dialog.cpp" line="400"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
       <translation>Este cambio requiere reiniciar el emulador.&lt;br&gt;¿Desea continuar?</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="517"/>
+      <location filename="../src/settings_dialog.cpp" line="518"/>
       <source>Please wait</source>
       <translation>Espere por favor</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="518"/>
+      <location filename="../src/settings_dialog.cpp" line="519"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation>Validación en proceso. Por favor, no cierre o ejecute aplicaciones hasta que esta operación haya finalizado.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="538"/>
+      <location filename="../src/settings_dialog.cpp" line="539"/>
       <source>Validation done!</source>
       <translation>¡Validación terminada!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="538"/>
+      <location filename="../src/settings_dialog.cpp" line="539"/>
       <source>The validation has successfully completed!</source>
       <translation>¡La validación se ha completado con éxito!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="549"/>
+      <location filename="../src/settings_dialog.cpp" line="550"/>
       <source>Enter new device name</source>
       <translation>Introduzca el nombre del dispositivo</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="645"/>
+      <location filename="../src/settings_dialog.cpp" line="646"/>
       <source>Unbind</source>
       <translation>Desvincular</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="690"/>
+      <location filename="../src/settings_dialog.cpp" line="691"/>
       <source>Waiting for input</source>
       <translation>Esperando input (tecla o botón)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="705"/>
-      <location filename="../src/settings_dialog.cpp" line="751"/>
+      <location filename="../src/settings_dialog.cpp" line="706"/>
+      <location filename="../src/settings_dialog.cpp" line="752"/>
       <source>Mouse button %1</source>
       <translation>Botón del mouse %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="707"/>
-      <location filename="../src/settings_dialog.cpp" line="793"/>
+      <location filename="../src/settings_dialog.cpp" line="708"/>
+      <location filename="../src/settings_dialog.cpp" line="794"/>
       <source>Controller %1 : Button %2</source>
       <translation>Control %1 : Botón %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="818"/>
-      <location filename="../src/settings_dialog.cpp" line="842"/>
+      <location filename="../src/settings_dialog.cpp" line="819"/>
+      <location filename="../src/settings_dialog.cpp" line="843"/>
       <source>Enter profile name</source>
       <translation>Introduzca el nombre del perfil</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="826"/>
+      <location filename="../src/settings_dialog.cpp" line="827"/>
       <source>Profile creation failed</source>
       <translation>La creación del perfil ha fallado</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="826"/>
-      <location filename="../src/settings_dialog.cpp" line="850"/>
+      <location filename="../src/settings_dialog.cpp" line="827"/>
+      <location filename="../src/settings_dialog.cpp" line="851"/>
       <source>A profile with that name already exists!</source>
       <translation>¡Ya existe un perfil con ese nombre!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="850"/>
+      <location filename="../src/settings_dialog.cpp" line="851"/>
       <source>Profile rename failed</source>
       <translation>Error al renombrar el perfil</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="865"/>
+      <location filename="../src/settings_dialog.cpp" line="866"/>
       <source>Profile deletion failed</source>
       <translation>Error al borrar el perfil</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="865"/>
+      <location filename="../src/settings_dialog.cpp" line="866"/>
       <source>This is the only profile left!</source>
       <translation>¡Este es el único perfil que queda!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="899"/>
+      <location filename="../src/settings_dialog.cpp" line="900"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;Configuración para:&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="902"/>
-      <location filename="../src/settings_dialog.cpp" line="907"/>
+      <location filename="../src/settings_dialog.cpp" line="903"/>
+      <location filename="../src/settings_dialog.cpp" line="908"/>
       <source>None</source>
       <translation>Ninguno</translation>
     </message>
