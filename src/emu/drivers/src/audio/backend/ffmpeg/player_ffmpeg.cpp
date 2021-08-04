@@ -443,6 +443,8 @@ namespace eka2l1::drivers {
 
             return false;
         }
+
+        return true;
     }
 
     player_ffmpeg::player_ffmpeg(audio_driver *driver)
