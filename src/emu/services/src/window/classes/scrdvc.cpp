@@ -207,6 +207,17 @@ namespace eka2l1::epoc {
         ctx.complete(mode_list);
     }
 
+    void screen_device::set_app_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        int mode = *reinterpret_cast<int*>(cmd.data_ptr);
+        if (mode >= scr->total_screen_mode()) {
+            LOG_ERROR(SERVICE_WINDOW, "Trying to set screen mode number out of range!");
+            ctx.complete(epoc::error_argument);
+        }
+
+        local_screen_mode_ = mode;
+        ctx.complete(epoc::error_none);
+    }
+
     bool screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
@@ -337,6 +348,10 @@ namespace eka2l1::epoc {
 
         case ws_sd_op_get_rotation_list:
             get_rotation_list(ctx, cmd);
+            break;
+
+        case ws_sd_op_set_app_screen_mode:
+            set_app_screen_mode(ctx, cmd);
             break;
 
         default: {
