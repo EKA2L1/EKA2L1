@@ -344,8 +344,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->app_config_inherit_settings_child_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_inherit_settings_toggled);
 
     connect(ui_->interface_status_bar_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_status_bar_visibility_change);
-    connect(ui_->interface_theme_combo, &QComboBox::activated, this, &settings_dialog::on_theme_changed);
-    connect(ui_->interface_language_combo, &QComboBox::activated, this, &settings_dialog::on_ui_language_changed);
+    connect(ui_->interface_theme_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_theme_changed);
+    connect(ui_->interface_language_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_ui_language_changed);
 
     connect(ui_->debugging_cpu_read_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_read_toggled);
     connect(ui_->debugging_cpu_write_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cpu_write_toggled);
@@ -355,11 +355,11 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->debugging_enable_btrace_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_btrace_enable_toggled);
     connect(ui_->data_storage_browse_btn, &QPushButton::clicked, this, &settings_dialog::on_data_path_browse_clicked);
 
-    connect(ui_->system_device_combo, &QComboBox::activated, this, &settings_dialog::on_device_combo_choose);
+    connect(ui_->system_device_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_device_combo_choose);
     connect(ui_->system_device_current_rename_btn, &QPushButton::clicked, this, &settings_dialog::on_device_rename_requested);
-    connect(ui_->system_he_rta_combo, &QComboBox::activated, this, &settings_dialog::on_rta_combo_choose);
-    connect(ui_->system_he_cpu_combo, &QComboBox::activated, this, &settings_dialog::on_cpu_backend_changed);
-    connect(ui_->system_prop_lang_combobox, &QComboBox::activated, this, &settings_dialog::on_system_language_choose);
+    connect(ui_->system_he_rta_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_rta_combo_choose);
+    connect(ui_->system_he_cpu_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_cpu_backend_changed);
+    connect(ui_->system_prop_lang_combobox, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_system_language_choose);
     connect(ui_->system_general_validate_dvc_btn, &QPushButton::clicked, this, &settings_dialog::on_device_validate_requested);
     connect(ui_->system_general_rescan_dvcs_btn, &QPushButton::clicked, this, &settings_dialog::on_device_rescan_requested);
     connect(ui_->system_prop_bat_slider, &QSlider::valueChanged, this, &settings_dialog::on_system_battery_slider_value_moved);
@@ -545,7 +545,7 @@ void settings_dialog::on_device_rename_requested() {
         eka2l1::device *current_dvc = device_mngr->get(ui_->system_device_combo->currentIndex());
         if (current_dvc) {
             bool is_ok = false;
-            QString text_inside = QString::fromUtf8(current_dvc->model);
+            QString text_inside = QString::fromStdString(current_dvc->model);
 
             text_inside = QInputDialog::getText(this, tr("Enter new device name"), QString(), QLineEdit::Normal, text_inside, &is_ok);
             if (is_ok) {

@@ -22,7 +22,9 @@
 #include <qt/displaywidget.h>
 
 #include <QWindow>
-#include <QtOpenGLWidgets>
+#include <QOpenGLContext>
+#include <QKeyEvent>
+#include <QMouseEvent>
 
 display_widget::display_widget(QWidget *parent)
     : QWidget(parent)

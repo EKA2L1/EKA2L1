@@ -422,7 +422,7 @@ void main_window::refresh_current_device_label() {
     if (dvcmngr) {
         eka2l1::device *crr = dvcmngr->get_current();
         if (crr) {
-            current_device_label_->setText(QString("%1 (%2)").arg(QString::fromUtf8(crr->model.c_str()), QString::fromUtf8(crr->firmware_code)));
+            current_device_label_->setText(QString("%1 (%2)").arg(QString::fromStdString(crr->model.c_str()), QString::fromStdString(crr->firmware_code)));
         }
     }
 }
@@ -437,16 +437,16 @@ void main_window::on_settings_triggered() {
         settings_dialog_ = new settings_dialog(this, emulator_state_.symsys.get(), emulator_state_.joystick_controller.get(),
             emulator_state_.app_settings.get(), emulator_state_.conf);
 
-        connect(settings_dialog_.get(), &settings_dialog::cursor_visibility_change, this, &main_window::on_cursor_visibility_change);
-        connect(settings_dialog_.get(), &settings_dialog::status_bar_visibility_change, this, &main_window::on_status_bar_visibility_change);
-        connect(settings_dialog_.get(), &settings_dialog::relaunch, this, &main_window::on_relaunch_request);
-        connect(settings_dialog_.get(), &settings_dialog::restart, this, &main_window::on_device_set_requested);
-        connect(settings_dialog_.get(), &settings_dialog::theme_change_request, this, &main_window::on_theme_change_requested);
-        connect(settings_dialog_.get(), &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
-        connect(this, &main_window::app_launching, settings_dialog_.get(), &settings_dialog::on_app_launching);
-        connect(this, &main_window::controller_button_press, settings_dialog_.get(), &settings_dialog::on_controller_button_press);
-        connect(this, &main_window::screen_focus_group_changed, settings_dialog_.get(), &settings_dialog::refresh_app_configuration_details);
-        connect(this, &main_window::restart_requested, settings_dialog_.get(), &settings_dialog::on_restart_requested_from_main);
+        connect(settings_dialog_.data(), &settings_dialog::cursor_visibility_change, this, &main_window::on_cursor_visibility_change);
+        connect(settings_dialog_.data(), &settings_dialog::status_bar_visibility_change, this, &main_window::on_status_bar_visibility_change);
+        connect(settings_dialog_.data(), &settings_dialog::relaunch, this, &main_window::on_relaunch_request);
+        connect(settings_dialog_.data(), &settings_dialog::restart, this, &main_window::on_device_set_requested);
+        connect(settings_dialog_.data(), &settings_dialog::theme_change_request, this, &main_window::on_theme_change_requested);
+        connect(settings_dialog_.data(), &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
+        connect(this, &main_window::app_launching, settings_dialog_.data(), &settings_dialog::on_app_launching);
+        connect(this, &main_window::controller_button_press, settings_dialog_.data(), &settings_dialog::on_controller_button_press);
+        connect(this, &main_window::screen_focus_group_changed, settings_dialog_.data(), &settings_dialog::refresh_app_configuration_details);
+        connect(this, &main_window::restart_requested, settings_dialog_.data(), &settings_dialog::on_restart_requested_from_main);
 
         settings_dialog_->show();
     } else {
@@ -599,7 +599,7 @@ void main_window::refresh_recent_mounts() {
 
     std::size_t i = 0;
 
-    for (; i < eka2l1::common::min(recent_mount_folders.size(), static_cast<qsizetype>(MAX_RECENT_ENTRIES)); i++) {
+    for (; i < eka2l1::common::min<qsizetype>(static_cast<qsizetype>(recent_mount_folders.size()), static_cast<qsizetype>(MAX_RECENT_ENTRIES)); i++) {
         recent_mount_folder_actions_[i]->setText(QString("&%1 %2").arg(i + 1).arg(recent_mount_folders[i]));
         recent_mount_folder_actions_[i]->setData(recent_mount_folders[i]);
         recent_mount_folder_actions_[i]->setVisible(true);
@@ -619,9 +619,9 @@ void main_window::refresh_recent_mounts() {
 }
 
 void main_window::mount_game_card_dump(QString mount_path) {
-    if (eka2l1::is_separator(mount_path.back().unicode())) {
+    if (eka2l1::is_separator(static_cast<char16_t>(mount_path.back().unicode()))) {
         // We don't care much about the last separator. This is for system folder check ;)
-        mount_path.erase(mount_path.begin() + mount_path.size() - 1, mount_path.end());
+        mount_path.remove(mount_path.length() - 2, 2);
     }
 
     eka2l1::io_system *io = emulator_state_.symsys->get_io_system();
@@ -691,7 +691,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
                                                                                                                         "Do you want the emulator to correct it?"));
 
             if (result == QMessageBox::Yes) {
-                mount_path.erase(mount_path.begin() + mount_path.length() - 7, mount_path.end());
+                mount_path.remove(mount_path.length() - 8, 7);
             }
         }
     }

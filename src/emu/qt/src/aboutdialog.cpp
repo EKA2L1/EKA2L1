@@ -25,6 +25,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <QFile>
+#include <QTextStream>
 
 about_dialog::about_dialog(QWidget *parent)
     : QDialog(parent)
@@ -63,7 +64,7 @@ about_dialog::about_dialog(QWidget *parent)
         QString developer_str = tr("<b>Main developers:</b><br>");
 
         for (const auto node : credit_yaml_tree["MainDevs"]) {
-            developer_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
+            developer_str += QString::fromStdString("- " + node.as<std::string>() + "<br>");
         }
 
         main_developer_label_ = new QLabel(developer_str);
@@ -77,7 +78,7 @@ about_dialog::about_dialog(QWidget *parent)
         QString contributor_str = tr("<b>Contributors:</b><br>");
 
         for (const auto node : credit_yaml_tree["Contributors"]) {
-            contributor_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
+            contributor_str += QString::fromStdString("- " + node.as<std::string>() + "<br>");
         }
 
         contributor_label_ = new QLabel(contributor_str);
@@ -91,7 +92,7 @@ about_dialog::about_dialog(QWidget *parent)
         QString icon_str = tr("<b>Icon:</b><br>");
 
         for (const auto node : credit_yaml_tree["Icon"]) {
-            icon_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
+            icon_str += QString::fromStdString("- " + node.as<std::string>() + "<br>");
         }
 
         icon_label_ = new QLabel(icon_str);
@@ -105,7 +106,7 @@ about_dialog::about_dialog(QWidget *parent)
         QString honor_str = tr("<b>Honors:</b><br>");
 
         for (const auto node : credit_yaml_tree["Honors"]) {
-            honor_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
+            honor_str += QString::fromStdString("- " + node.as<std::string>() + "<br>");
         }
 
         honor_label_ = new QLabel(honor_str);
@@ -119,7 +120,7 @@ about_dialog::about_dialog(QWidget *parent)
         QString translator_str = tr("<b>Translators:</b><br>");
 
         for (const auto node : credit_yaml_tree["TranslatorsDesktop"]) {
-            translator_str += QString::fromUtf8("- " + node.as<std::string>() + "<br>");
+            translator_str += QString::fromStdString("- " + node.as<std::string>() + "<br>");
         }
 
         translator_label_ = new QLabel(translator_str);

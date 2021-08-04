@@ -60,7 +60,7 @@
 <context>
     <name>applist_widget</name>
     <message>
-        <location filename="../src/applistwidget.cpp" line="333"/>
+        <location filename="../src/applistwidget.cpp" line="335"/>
         <source>&lt;br&gt;App UID: 0x%1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -954,109 +954,109 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="397"/>
+        <location filename="../src/settings_dialog.cpp" line="398"/>
         <source>Choose the data folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="399"/>
+        <location filename="../src/settings_dialog.cpp" line="400"/>
         <location filename="../src/settings_dialog.cpp" line="1071"/>
         <location filename="../src/settings_dialog.cpp" line="1096"/>
         <source>Relaunch needed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="399"/>
+        <location filename="../src/settings_dialog.cpp" line="400"/>
         <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="517"/>
+        <location filename="../src/settings_dialog.cpp" line="518"/>
         <source>Please wait</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="518"/>
+        <location filename="../src/settings_dialog.cpp" line="519"/>
         <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="538"/>
+        <location filename="../src/settings_dialog.cpp" line="539"/>
         <source>Validation done!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="538"/>
+        <location filename="../src/settings_dialog.cpp" line="539"/>
         <source>The validation has successfully completed!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="549"/>
+        <location filename="../src/settings_dialog.cpp" line="550"/>
         <source>Enter new device name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="645"/>
+        <location filename="../src/settings_dialog.cpp" line="646"/>
         <source>Unbind</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="690"/>
+        <location filename="../src/settings_dialog.cpp" line="691"/>
         <source>Waiting for input</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="705"/>
-        <location filename="../src/settings_dialog.cpp" line="751"/>
+        <location filename="../src/settings_dialog.cpp" line="706"/>
+        <location filename="../src/settings_dialog.cpp" line="752"/>
         <source>Mouse button %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="707"/>
-        <location filename="../src/settings_dialog.cpp" line="793"/>
+        <location filename="../src/settings_dialog.cpp" line="708"/>
+        <location filename="../src/settings_dialog.cpp" line="794"/>
         <source>Controller %1 : Button %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="818"/>
-        <location filename="../src/settings_dialog.cpp" line="842"/>
+        <location filename="../src/settings_dialog.cpp" line="819"/>
+        <location filename="../src/settings_dialog.cpp" line="843"/>
         <source>Enter profile name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="826"/>
+        <location filename="../src/settings_dialog.cpp" line="827"/>
         <source>Profile creation failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="826"/>
-        <location filename="../src/settings_dialog.cpp" line="850"/>
+        <location filename="../src/settings_dialog.cpp" line="827"/>
+        <location filename="../src/settings_dialog.cpp" line="851"/>
         <source>A profile with that name already exists!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="850"/>
+        <location filename="../src/settings_dialog.cpp" line="851"/>
         <source>Profile rename failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="865"/>
+        <location filename="../src/settings_dialog.cpp" line="866"/>
         <source>Profile deletion failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="865"/>
+        <location filename="../src/settings_dialog.cpp" line="866"/>
         <source>This is the only profile left!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="899"/>
+        <location filename="../src/settings_dialog.cpp" line="900"/>
         <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="902"/>
-        <location filename="../src/settings_dialog.cpp" line="907"/>
+        <location filename="../src/settings_dialog.cpp" line="903"/>
+        <location filename="../src/settings_dialog.cpp" line="908"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>

@@ -56,7 +56,7 @@ device_install_dialog::device_install_dialog(QWidget *parent, eka2l1::device_man
 
     on_current_index_changed(ui->installation_combo->currentIndex());
 
-    connect(ui->installation_combo, &QComboBox::currentIndexChanged, this, &device_install_dialog::on_current_index_changed);
+    connect(ui->installation_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &device_install_dialog::on_current_index_changed);
     connect(ui->vpl_browse_btn, &QPushButton::clicked, this, &device_install_dialog::on_vpl_browse_triggered);
     connect(ui->rom_browse_btn, &QPushButton::clicked, this, &device_install_dialog::on_rom_browse_triggered);
     connect(ui->rpkg_browse_btn, &QPushButton::clicked, this, &device_install_dialog::on_rpkg_browse_triggered);
@@ -195,7 +195,7 @@ void device_install_dialog::on_install_triggered() {
         if (install_future.result() == eka2l1::device_installation_none) {
             eka2l1::device *lastest = device_mngr_->lastest();
             QMessageBox::information(leecher, tr("Installation completed"),
-                tr("Device %1 (%2) has been successfully installed!").arg(QString::fromUtf8(lastest->model), QString::fromUtf8(lastest->firmware_code)));
+                tr("Device %1 (%2) has been successfully installed!").arg(QString::fromStdString(lastest->model), QString::fromStdString(lastest->firmware_code)));
 
             emit new_device_added();
         } else {
