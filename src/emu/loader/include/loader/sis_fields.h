@@ -257,6 +257,7 @@ namespace eka2l1 {
         };
 
         enum class ss_op {
+            undefined = 0,
             install = 1,
             run = 2,
             text = 4,

@@ -588,8 +588,13 @@ namespace eka2l1 {
                     break;
                 }
 
+                case ss_op::undefined:
                 case ss_op::install: {
                     if (!skip_next_file) {
+                        if ((file->op == ss_op::undefined) && (!file->len || !file->uncompressed_len)) {
+                            break;
+                        }
+
                         bool lowered = false;
 
                         if (common::is_platform_case_sensitive()) {
