@@ -179,9 +179,13 @@ namespace eka2l1::drivers {
     }
 
     bool dsp_output_stream_ffmpeg::decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) {
-        //av_log_set_level(AV_LOG_ERROR);
-
         decoded_.clear();
+
+        if (original.empty() && queued_data_.empty()) {
+            // Nothing more to resolve
+            return false;
+        }
+
         queued_data_.insert(queued_data_.end(), original.begin(), original.end());
 
         if (!av_format_ || (state_ == STATE_NONE)) {
