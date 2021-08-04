@@ -27,6 +27,8 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 
+#include <optional>
+
 namespace eka2l1 {
     static const char *MMF_DEV_SERVER_NAME = "!MMFDevServer";
     static constexpr std::uint32_t MMF_BUFFER_SIZE_ALIGN = 0x800;
@@ -77,6 +79,25 @@ namespace eka2l1 {
         }
 
         return 8000;
+    }
+
+    const std::optional<std::uint32_t> mmf_format_to_fourcc(const std::uint32_t format) {
+        std::uint32_t target_fourcc = 0;
+
+        switch (format) {
+        case epoc::mmf_encoding_8bit_pcm:
+            target_fourcc = drivers::PCM8_FOUR_CC_CODE;
+            break;
+
+        case epoc::mmf_encoding_16bit_pcm:
+            target_fourcc = drivers::PCM16_FOUR_CC_CODE;
+            break;
+
+        default:
+            return std::nullopt;
+        }
+
+        return target_fourcc;
     }
 
     inline std::uint32_t duration_to_samples(const std::uint32_t duration_ms, const epoc::mmf_sample_rate rate) {
@@ -292,10 +313,18 @@ namespace eka2l1 {
             && (state_wanted != epoc::mmf_state_playing_recording)) {
             ctx->complete(epoc::error_not_supported);
         }
+
         std::uint32_t target_fourcc = state_settings->four_cc_;
 
         desired_state_ = state_wanted;
         init_stream_through_state();
+
+        if (!stream_->format(target_fourcc)) {
+            LOG_ERROR(SERVICE_MMFAUD, "Failed to set target audio format");
+            ctx->complete(epoc::error_general);
+
+            return;
+        }
 
         ctx->complete(epoc::error_none);
     }
@@ -366,31 +395,8 @@ namespace eka2l1 {
         conf_.buffer_size_ = static_cast<std::int32_t>(common::clamp(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX, static_cast<std::uint32_t>(conf_.buffer_size_)));
 
         const std::uint32_t freq = freq_enum_to_number(conf_.rate_);
-        std::uint32_t target_fourcc = 0;
-
-        switch (conf_.encoding_) {
-        case epoc::mmf_encoding_8bit_pcm:
-            target_fourcc = drivers::PCM8_FOUR_CC_CODE;
-            break;
-
-        case epoc::mmf_encoding_16bit_pcm:
-            target_fourcc = drivers::PCM16_FOUR_CC_CODE;
-            break;
-
-        default:
-            LOG_ERROR(SERVICE_MMFAUD, "Unsupported audio encoding {}", static_cast<int>(conf_.encoding_));
-            ctx->complete(epoc::error_not_supported);
-            return;
-        }
 
         stream_->set_properties(freq, conf_.channels_);
-        if (!stream_->format(target_fourcc)) {
-            LOG_ERROR(SERVICE_MMFAUD, "Failed to set target audio format");
-            ctx->complete(epoc::error_general);
-
-            return;
-        }
-
         ctx->complete(epoc::error_none);
     }
 
@@ -551,10 +557,10 @@ namespace eka2l1 {
         if (ver_use <= epocver::epoc94) {
             auto buf_old = (reinterpret_cast<epoc::mmf_dev_hw_buf_v1 *>(buffer_fill_buf_));
 
-            buf_old->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
+            buf_old->buffer_size_ = max_request_size_align;
             buf_old->request_size_ = max_request_size_align;
         } else {
-            buffer_fill_buf_->buffer_size_ = static_cast<std::uint32_t>(buffer_chunk_->max_size());
+            buffer_fill_buf_->buffer_size_ = max_request_size_align;
             buffer_fill_buf_->request_size_ = max_request_size_align;
         }
 
