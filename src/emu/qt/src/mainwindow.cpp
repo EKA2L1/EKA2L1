@@ -991,8 +991,9 @@ void main_window::make_default_binding_profile() {
 
     int entry_count = 0;
 
-    while ((ite.next_entry(entry) >= 0) && (entry.name != ".") && (entry.name != "..")) {
-        entry_count++;
+    while (ite.next_entry(entry) >= 0) {
+        if ((entry.name != ".") && (entry.name != ".."))
+            entry_count++;
     }
 
     if (!entry_count) {
