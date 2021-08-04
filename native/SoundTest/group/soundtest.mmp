@@ -1,0 +1,23 @@
+/*
+============================================================================
+ Name		: soundtest.mmp
+ Author	  : 
+ Copyright   : Your copyright notice
+ Description : This is the project specification file for soundtest.
+============================================================================
+*/
+
+TARGET		  soundtest.exe
+TARGETTYPE	  exe
+UID			 0 0xe0c5927a
+
+SYSTEMINCLUDE   \epoc32\include
+
+SOURCEPATH	  ..\src
+SOURCE		  soundtest.cpp
+
+LIBRARY		 euser.lib mmfdevsound.lib efsrv.lib
+
+DEBUGGABLE_UDEBONLY
+
+SECUREID 0xe0c5927a
