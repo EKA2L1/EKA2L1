@@ -167,17 +167,19 @@ namespace eka2l1::drivers {
             if ((decoded_.size() == 0) || (decoded_.size() == pointer_)) {
                 // Get the next buffer
                 encoded = buffers_.pop();
-
-                if (!encoded) {
-                    break;
-                }
-
                 pointer_ = 0;
 
+                bool need_more = true;
+
                 if (format_ == PCM16_FOUR_CC_CODE) {
-                    decoded_ = encoded.value();
+                    if (encoded) {
+                        decoded_ = encoded.value();
+                    } else {
+                        break;
+                    }
                 } else {
-                    decode_data(encoded.value(), decoded_);
+                    std::vector<std::uint8_t> empty;
+                    need_more = !decode_data(encoded ? encoded.value() : empty, decoded_);
                 }
 
                 // Callback that internal buffer has been copied
@@ -186,10 +188,14 @@ namespace eka2l1::drivers {
                     samples_copied_ += total_sample;
 
                     const std::lock_guard<std::mutex> guard(callback_lock_);
-                    if (buffer_copied_callback_) {
+                    if (buffer_copied_callback_ && (need_more_user_buffer() || need_more)) {
                         buffer_copied_callback_(buffer_copied_userdata_);
                     }
                 }
+            }
+
+            if (decoded_.empty()) {
+                break;
             }
 
             // We want to decode more

@@ -30,7 +30,7 @@ namespace eka2l1::drivers {
     using four_cc = std::uint32_t;
 
     constexpr four_cc make_four_cc(const char c1, const char c2, const char c3, const char c4) {
-        return ((c1 << 24) | (c2 << 16) | (c3 << 8) | c4);
+        return ((c4 << 24) | (c3 << 16) | (c2 << 8) | c1);
     }
 
     static constexpr four_cc AMR_FOUR_CC_CODE = make_four_cc(' ', 'A', 'M', 'R');

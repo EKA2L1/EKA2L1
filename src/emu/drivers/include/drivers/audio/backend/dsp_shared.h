@@ -45,11 +45,16 @@ namespace eka2l1::drivers {
 
         bool virtual_stop;
 
+    protected:
+        virtual bool need_more_user_buffer() {
+            return true;
+        }
+
     public:
         explicit dsp_output_stream_shared(drivers::audio_driver *aud);
         ~dsp_output_stream_shared() override;
 
-        virtual void decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) = 0;
+        virtual bool decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) = 0;
         std::size_t data_callback(std::int16_t *buffer, const std::size_t frame_count);
 
         bool write(const std::uint8_t *data, const std::uint32_t data_size) override;

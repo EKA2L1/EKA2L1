@@ -23,13 +23,30 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 }
+
+#include <vector>
 
 namespace eka2l1::drivers {
     struct dsp_output_stream_ffmpeg : public dsp_output_stream_shared {
     protected:
         AVCodecContext *codec_;
+        AVFormatContext *av_format_;
+        AVIOContext *io_;
+
+        std::uint8_t *custom_io_buffer_;
         std::uint64_t timestamp_in_base_;
+        std::vector<std::uint8_t> queued_data_;
+
+        enum state {
+            STATE_NONE,
+            STATE_FORMAT_OPENED,
+            STATE_FRAME_READING
+        } state_;
+
+    protected:
+        bool need_more_user_buffer() override;
 
     public:
         explicit dsp_output_stream_ffmpeg(drivers::audio_driver *aud);
@@ -38,6 +55,8 @@ namespace eka2l1::drivers {
         bool format(const four_cc fmt) override;
 
         void get_supported_formats(std::vector<four_cc> &cc_list) override;
-        void decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) override;
+        bool decode_data(dsp_buffer &original, std::vector<std::uint8_t> &dest) override;
+
+        int read_queued_data(std::uint8_t *buffer, int buffer_size);
     };
 }
