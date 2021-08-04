@@ -81,11 +81,19 @@ jobs:
           path: ../Qt
           key: ${{ runner.os }}-QtCache
 
-      - name: Install Qt
+      - name: Install Qt6 (Windows)
         uses: jurplel/install-qt-action@v2
         with:
           version: '6.1.1'
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
+        if: matrix.os == 'windows-latest'
+        
+      - name: Install Qt5 (Non-Windows)
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.15.2'
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+        if: matrix.os != 'windows-latest'
 
       - name: CMake configure
         run: cmake -B build -DCI=ON -DEKA2L1_ENABLE_UNEXPECTED_EXCEPTION_HANDLER=ON -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} -DCMAKE_BUILD_TYPE=${{ matrix.config }}
