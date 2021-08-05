@@ -30,6 +30,8 @@
 #include <config/config.h>
 #include <system/devices.h>
 
+#include <thread>
+
 #include <QFileDialog>
 #include <QFuture>
 #include <QtConcurrent/QtConcurrent>
