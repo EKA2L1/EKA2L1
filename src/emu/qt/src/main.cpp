@@ -27,7 +27,6 @@
 #include <QSettings>
 #include <QTranslator>
 
-#include <common/log.h>
 #include <memory>
 
 int main(int argc, char *argv[]) {
@@ -53,10 +52,12 @@ int main(int argc, char *argv[]) {
     if (!lang_loaded) {
         const QStringList ui_languages = QLocale::system().uiLanguages();
         for (const QString &locale : ui_languages) {
-            const QString base_name = "eka2l1_" + QLocale(locale).name();
+            const QString locale_name = QLocale(locale).name();
+            const QString base_name = "eka2l1_" + locale_name;
+
             if (translator.load(":/languages/" + base_name)) {
                 a.installTranslator(&translator);
-                settings.setValue(LANGUAGE_SETTING_NAME, translator.language());
+                settings.setValue(LANGUAGE_SETTING_NAME, locale_name);
 
                 break;
             }
