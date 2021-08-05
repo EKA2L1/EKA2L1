@@ -40,12 +40,12 @@ display_widget::display_widget(QWidget *parent)
     windowHandle()->setSurfaceType(QWindow::OpenGLSurface);
     windowHandle()->create();
 
-    static constexpr std::int32_t TOTAL_TRY = 2;
+    static constexpr std::int32_t TOTAL_TRY = 3;
 
     display_context_ = new QOpenGLContext;
 
-    QSurfaceFormat::OpenGLContextProfile total_profiles_to_try[TOTAL_TRY] = { QSurfaceFormat::CoreProfile, QSurfaceFormat::CompatibilityProfile };
-    int total_minor_to_try[TOTAL_TRY] = { 2, 1 };
+    QSurfaceFormat::OpenGLContextProfile total_profiles_to_try[TOTAL_TRY] = { QSurfaceFormat::CoreProfile, QSurfaceFormat::CompatibilityProfile, QSurfaceFormat::CompatibilityProfile };
+    int total_minor_to_try[TOTAL_TRY] = { 2, 1, 0 };
 
     bool success = false;
 
@@ -63,7 +63,7 @@ display_widget::display_widget(QWidget *parent)
     }
 
     if (!success) {
-        LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to create required OpenGL context (needed OpenGL 3.1 at minimum!");
+        LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to create required OpenGL context (needed OpenGL 3.0 at minimum!");
 
         delete display_context_;
         display_context_ = nullptr;
