@@ -101,7 +101,7 @@ public class AppsListFragment extends ListFragment {
         setHasOptionsMenu(true);
         setListAdapter(adapter);
         prepareApps();
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        ActionBar actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setTitle(R.string.app_name);
         FloatingActionButton fab = view.findViewById(R.id.fab);
@@ -284,7 +284,7 @@ public class AppsListFragment extends ListFragment {
     @Override
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getActivity().getMenuInflater();
+        MenuInflater inflater = requireActivity().getMenuInflater();
         inflater.inflate(R.menu.context_appslist, menu);
     }
 

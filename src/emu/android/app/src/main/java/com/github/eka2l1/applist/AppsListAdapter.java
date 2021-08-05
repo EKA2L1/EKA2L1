@@ -42,14 +42,12 @@ public class AppsListAdapter extends BaseAdapter implements Filterable {
     private List<AppItem> list;
     private List<AppItem> filteredList;
     private final LayoutInflater layoutInflater;
-    private Context context;
-    private AppFilter appFilter;
+    private final AppFilter appFilter;
 
     public AppsListAdapter(Context context) {
         this.list = new ArrayList<>();
         this.filteredList = new ArrayList<>();
         this.layoutInflater = LayoutInflater.from(context);
-        this.context = context;
         this.appFilter = new AppFilter();
     }
 
@@ -132,6 +130,7 @@ public class AppsListAdapter extends BaseAdapter implements Filterable {
             }
             return results;
         }
+
 
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {

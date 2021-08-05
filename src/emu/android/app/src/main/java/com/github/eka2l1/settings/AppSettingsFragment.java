@@ -41,7 +41,7 @@ public class AppSettingsFragment extends PreferenceFragmentCompat {
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        Bundle args = getArguments();
+        Bundle args = requireArguments();
         uid = args.getLong(APP_UID_KEY, 0);
         String uidStr = Long.toHexString(uid).toUpperCase();
         dataStore = AppDataStore.getAppStore(uidStr);
@@ -54,7 +54,7 @@ public class AppSettingsFragment extends PreferenceFragmentCompat {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setHasOptionsMenu(true);
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        ActionBar actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.settings);
     }

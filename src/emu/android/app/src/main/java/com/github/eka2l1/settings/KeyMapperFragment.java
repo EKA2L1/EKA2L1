@@ -41,7 +41,7 @@ import com.github.eka2l1.R;
 import com.github.eka2l1.emu.Keycode;
 
 public class KeyMapperFragment extends Fragment implements View.OnClickListener {
-    private static SparseIntArray idToSymbianKey = new SparseIntArray();
+    private static final SparseIntArray idToSymbianKey = new SparseIntArray();
     private static SparseIntArray androidToSymbian;
 
     @Override
@@ -53,7 +53,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setHasOptionsMenu(true);
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        ActionBar actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.pref_control_key_binding_sect_title);
 
@@ -83,7 +83,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
 
     private void setupButton(int resId, int index) {
         idToSymbianKey.put(resId, index);
-        Button button = getView().findViewById(resId);
+        Button button = requireView().findViewById(resId);
         button.setOnClickListener(this);
     }
 
@@ -101,7 +101,7 @@ public class KeyMapperFragment extends Fragment implements View.OnClickListener 
         if (id >= 0) {
             keyName = KeyEvent.keyCodeToString(androidToSymbian.keyAt(id));
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.mapping_dialog_title)
                 .setMessage(getString(R.string.mapping_dialog_message, keyName))
                 .setOnKeyListener((dialog, keyCode, event) -> {

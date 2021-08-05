@@ -59,7 +59,7 @@ public class PackageListFragment extends ListFragment {
         setHasOptionsMenu(true);
         setListAdapter(adapter);
         preparePackages();
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        ActionBar actionBar = ((AppCompatActivity) requireActivity()).getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.packages);
     }
@@ -71,7 +71,7 @@ public class PackageListFragment extends ListFragment {
     @Override
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getActivity().getMenuInflater();
+        MenuInflater inflater = requireActivity().getMenuInflater();
         inflater.inflate(R.menu.context_packagelist, menu);
     }
 

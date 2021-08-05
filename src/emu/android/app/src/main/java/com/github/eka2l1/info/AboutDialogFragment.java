@@ -54,7 +54,7 @@ public class AboutDialogFragment extends DialogFragment {
         int paddingHorizontal = (int) (density * 20);
         int paddingVertical = (int) (density * 14);
         tv.setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical);
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         builder.setTitle(R.string.app_name)
                 .setIcon(R.mipmap.ic_ducky)
                 .setView(tv);
