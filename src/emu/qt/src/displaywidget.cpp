@@ -56,6 +56,7 @@ display_widget::display_widget(QWidget *parent)
         format_needed.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
         format_needed.setSwapInterval(0);
 
+        display_context_->setFormat(format_needed);
         if (display_context_->create()) {
             success = true;
             break;
