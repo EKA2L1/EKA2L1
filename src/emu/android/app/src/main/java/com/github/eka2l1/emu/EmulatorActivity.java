@@ -92,12 +92,12 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         overlayView = new OverlayView(this);
         layout.addView(overlayView);
         SurfaceView surfaceView = findViewById(R.id.surface_view);
+        surfaceView.setFocusableInTouchMode(true);
+        surfaceView.setWillNotDraw(true);
+        surfaceView.getHolder().addCallback(this);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         context = this;
-
-        surfaceView.setWillNotDraw(true);
-        surfaceView.getHolder().addCallback(this);
 
         boolean keyboardEnabled = dataStore.getBoolean("enable-virtual-keyboard", true);
         boolean wakelockEnabled = dataStore.getBoolean("enable-wakelock", false);
@@ -360,8 +360,6 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
 
         public OverlayView(Context context) {
             super(context);
-            setWillNotDraw(false);
-            setFocusableInTouchMode(true);
         }
 
         @Override
