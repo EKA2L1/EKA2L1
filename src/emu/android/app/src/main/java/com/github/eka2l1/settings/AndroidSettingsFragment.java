@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
@@ -41,6 +42,13 @@ public class AndroidSettingsFragment extends PreferenceFragmentCompat {
         PreferenceManager preferenceManager = getPreferenceManager();
         preferenceManager.setPreferenceDataStore(dataStore);
         setPreferencesFromResource(R.xml.preferences_android, rootKey);
+        ListPreference themePreference = findPreference("theme");
+        themePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+            Bundle result = new Bundle();
+            result.putBoolean("restartNeeded", true);
+            getParentFragmentManager().setFragmentResult("request", result);
+            return true;
+        });
     }
 
     @Override

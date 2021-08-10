@@ -84,7 +84,7 @@ public class AppsListFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         adapter = new AppsListAdapter(getContext());
         compositeDisposable = new CompositeDisposable();
-        getParentFragmentManager().setFragmentResultListener("result", this, (key, bundle) -> {
+        getParentFragmentManager().setFragmentResultListener("request", this, (key, bundle) -> {
             restartNeeded = bundle.getBoolean("restartNeeded");
         });
     }

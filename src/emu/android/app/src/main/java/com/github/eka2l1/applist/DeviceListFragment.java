@@ -114,7 +114,7 @@ public class DeviceListFragment extends Fragment {
 
                 Bundle result = new Bundle();
                 result.putBoolean("restartNeeded", true);
-                getParentFragmentManager().setFragmentResult("result", result);
+                getParentFragmentManager().setFragmentResult("request", result);
             }
 
             @Override
