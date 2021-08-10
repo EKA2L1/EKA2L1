@@ -64,11 +64,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 
-public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder.Callback {
+public class EmulatorActivity extends AppCompatActivity {
     public static final String APP_UID_KEY = "appUid";
     public static final String APP_NAME_KEY = "appName";
 
     private static Vibrator vibrator;
+    @SuppressLint("StaticFieldLeak")
     private static Context context;
     private static boolean vibrationEnabled;
     private Toolbar toolbar;
@@ -82,6 +83,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
     private float displayHeight;
     private SparseIntArray androidToSymbian;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         AppDataStore dataStore = AppDataStore.getAndroidStore();
@@ -91,10 +93,15 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         FrameLayout layout = findViewById(R.id.emulator_container);
         overlayView = new OverlayView(this);
         layout.addView(overlayView);
+
+        ViewCallbacks callbacks = new ViewCallbacks();
         SurfaceView surfaceView = findViewById(R.id.surface_view);
         surfaceView.setFocusableInTouchMode(true);
         surfaceView.setWillNotDraw(true);
-        surfaceView.getHolder().addCallback(this);
+        surfaceView.setOnTouchListener(callbacks);
+        surfaceView.setOnKeyListener(callbacks);
+        surfaceView.getHolder().addCallback(callbacks);
+
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         context = this;
@@ -126,28 +133,6 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         displayWidth = display.getWidth();
         displayHeight = display.getHeight();
         androidToSymbian = KeyMapper.getArrayPref();
-    }
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        // Ignore it
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        displayWidth = width;
-        displayHeight = height;
-        updateScreenSize();
-        Emulator.surfaceChanged(holder.getSurface(), width, height);
-        if (!launched) {
-            Emulator.launchApp((int) uid);
-            launched = true;
-        }
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        Emulator.surfaceDestroyed();
     }
 
     @Override
@@ -334,6 +319,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         }
     }
 
+    @SuppressLint("unused")
     public static boolean vibrate(int duration) {
         if (!vibrationEnabled) {
             return false;
@@ -348,6 +334,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         return true;
     }
 
+    @SuppressLint("unused")
     public static ClassLoader getAppClassLoader() {
         return context.getClassLoader();
     }
@@ -356,26 +343,40 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
         return androidToSymbian.get(keyCode, Integer.MAX_VALUE);
     }
 
-    private class OverlayView extends View {
-
-        public OverlayView(Context context) {
-            super(context);
+    private class ViewCallbacks implements View.OnTouchListener, SurfaceHolder.Callback, View.OnKeyListener {
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            // Ignore it
         }
 
         @Override
-        protected void onDraw(Canvas canvas) {
-            if (keyboard != null) {
-                keyboard.paint(canvas);
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            displayWidth = width;
+            displayHeight = height;
+            updateScreenSize();
+            Emulator.surfaceChanged(holder.getSurface(), width, height);
+            if (!launched) {
+                Emulator.launchApp((int) uid);
+                launched = true;
             }
         }
 
         @Override
-        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            super.onSizeChanged(w, h, oldw, oldh);
-            updateScreenSize();
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            Emulator.surfaceDestroyed();
         }
 
         @Override
+        public boolean onKey(View v, int keyCode, KeyEvent event) {
+            switch (event.getAction()) {
+                case KeyEvent.ACTION_DOWN:
+                    return onKeyDown(keyCode, event);
+                case KeyEvent.ACTION_UP:
+                    return onKeyUp(keyCode, event);
+            }
+            return false;
+        }
+
         public boolean onKeyDown(int keyCode, KeyEvent event) {
             keyCode = convertAndroidKeyCode(keyCode);
             if (keyCode == Integer.MAX_VALUE) {
@@ -389,7 +390,6 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
             return true;
         }
 
-        @Override
         public boolean onKeyUp(int keyCode, KeyEvent event) {
             keyCode = convertAndroidKeyCode(keyCode);
             if (keyCode == Integer.MAX_VALUE) {
@@ -403,7 +403,7 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
 
         @Override
         @SuppressLint("ClickableViewAccessibility")
-        public boolean onTouchEvent(MotionEvent event) {
+        public boolean onTouch(View v, MotionEvent event) {
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     if (keyboard != null) {
@@ -454,6 +454,20 @@ public class EmulatorActivity extends AppCompatActivity implements SurfaceHolder
                     return false;
             }
             return true;
+        }
+    }
+
+    private class OverlayView extends View {
+
+        public OverlayView(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            if (keyboard != null) {
+                keyboard.paint(canvas);
+            }
         }
     }
 }
