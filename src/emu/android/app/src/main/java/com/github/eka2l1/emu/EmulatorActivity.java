@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020 EKA2L1 Team
+ * Copyright (c) 2019 Kharchenko Yury
  *
  * This file is part of EKA2L1 project.
  *
@@ -20,10 +21,11 @@
 package com.github.eka2l1.emu;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
-import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Process;
@@ -51,6 +53,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.github.eka2l1.R;
+import com.github.eka2l1.emu.overlay.OverlayView;
 import com.github.eka2l1.emu.overlay.VirtualKeyboard;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.settings.KeyMapper;
@@ -90,17 +93,16 @@ public class EmulatorActivity extends AppCompatActivity {
         setTheme(dataStore.getString("theme", "light"));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emulator);
-        FrameLayout layout = findViewById(R.id.emulator_container);
-        overlayView = new OverlayView(this);
-        layout.addView(overlayView);
+        overlayView = findViewById(R.id.overlay);
 
-        ViewCallbacks callbacks = new ViewCallbacks();
         SurfaceView surfaceView = findViewById(R.id.surface_view);
+        ViewCallbacks callbacks = new ViewCallbacks(surfaceView);
         surfaceView.setFocusableInTouchMode(true);
         surfaceView.setWillNotDraw(true);
         surfaceView.setOnTouchListener(callbacks);
         surfaceView.setOnKeyListener(callbacks);
         surfaceView.getHolder().addCallback(callbacks);
+        surfaceView.requestFocus();
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -117,6 +119,7 @@ public class EmulatorActivity extends AppCompatActivity {
 
         if (keyboardEnabled) {
             keyboard = new VirtualKeyboard(this);
+            overlayView.setOverlay(keyboard);
             setVirtualKeyboard();
         }
         if (!actionBarEnabled) {
@@ -344,6 +347,14 @@ public class EmulatorActivity extends AppCompatActivity {
     }
 
     private class ViewCallbacks implements View.OnTouchListener, SurfaceHolder.Callback, View.OnKeyListener {
+        private final View view;
+        private final FrameLayout rootView;
+
+        public ViewCallbacks(View view) {
+            this.view = view;
+            rootView = ((Activity) view.getContext()).findViewById(R.id.emulator_frame);
+        }
+
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
             // Ignore it
@@ -351,9 +362,13 @@ public class EmulatorActivity extends AppCompatActivity {
 
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            Rect offsetViewBounds = new Rect(0, 0, width, height);
+            rootView.offsetDescendantRectToMyCoords(view, offsetViewBounds);
+            overlayView.setTargetBounds(offsetViewBounds);
             displayWidth = width;
             displayHeight = height;
             updateScreenSize();
+
             Emulator.surfaceChanged(holder.getSurface(), width, height);
             if (!launched) {
                 Emulator.launchApp((int) uid);
@@ -457,17 +472,4 @@ public class EmulatorActivity extends AppCompatActivity {
         }
     }
 
-    private class OverlayView extends View {
-
-        public OverlayView(Context context) {
-            super(context);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            if (keyboard != null) {
-                keyboard.paint(canvas);
-            }
-        }
-    }
 }
