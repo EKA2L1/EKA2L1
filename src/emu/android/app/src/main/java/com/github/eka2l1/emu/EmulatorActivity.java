@@ -279,7 +279,7 @@ public class EmulatorActivity extends AppCompatActivity {
         keyboard.setColor(VirtualKeyboard.OUTLINE, vkAlpha | 0xFFFFFF);
         keyboard.setView(overlayView);
 
-        File keylayoutFile = new File(Emulator.EMULATOR_DIR, "keylayout");
+        File keylayoutFile = new File(Emulator.getEmulatorDir(), "keylayout");
         if (keylayoutFile.exists()) {
             try {
                 FileInputStream fis = new FileInputStream(keylayoutFile);

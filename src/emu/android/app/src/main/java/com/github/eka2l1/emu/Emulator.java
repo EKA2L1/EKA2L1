@@ -37,9 +37,6 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public class Emulator {
-    public static final String EMULATOR_DIR = Environment.getExternalStorageDirectory() + "/EKA2L1/";
-    public static final String COMPAT_DIR = EMULATOR_DIR + "compat/";
-
     public static final int INSTALL_DEVICE_ERROR_NONE = 0;
     public static final int INSTALL_DEVICE_ERROR_NOT_EXIST = 1;
     public static final int INSTALL_DEVICE_ERROR_INSUFFICENT = 2;
@@ -53,6 +50,8 @@ public class Emulator {
     public static final int INSTALL_DEVICE_ERROR_ROM_CORRUPTED = 10;
     public static final int INSTALL_DEVICE_ERROR_FPSX_CORRUPTED = 11;
 
+    private static String emulatorDir;
+    private static String compatDir;
     private static boolean init;
     private static boolean load;
 
@@ -61,11 +60,14 @@ public class Emulator {
     }
 
     public static void initializeFolders(Context context) {
-        File folder = new File(EMULATOR_DIR);
+        emulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
+        compatDir = emulatorDir + "compat/";
+
+        File folder = new File(emulatorDir);
         if (!folder.exists()) {
             folder.mkdirs();
         }
-        File nomedia = new File(EMULATOR_DIR, ".nomedia");
+        File nomedia = new File(emulatorDir, ".nomedia");
         if (!nomedia.exists()) {
             try {
                 nomedia.createNewFile();
@@ -79,12 +81,12 @@ public class Emulator {
         updateFolder(context, "patch", shouldUpdate);
         copyFolder(context, "compat", shouldUpdate);
 
-        setDirectory(EMULATOR_DIR);
+        setDirectory(emulatorDir);
     }
 
     private static boolean checkUpdate() {
         boolean result = false;
-        File versionFile = new File(EMULATOR_DIR, "version");
+        File versionFile = new File(emulatorDir, "version");
         String version = FileUtils.readFromFile(versionFile);
         if (!version.equals(BuildConfig.GIT_HASH)) {
             result = true;
@@ -94,20 +96,28 @@ public class Emulator {
     }
 
     private static void updateFolder(Context context, String folderName, boolean shouldUpdate) {
-        File patchFolder = new File(EMULATOR_DIR, folderName);
+        File patchFolder = new File(emulatorDir, folderName);
         if (shouldUpdate || !patchFolder.exists()) {
             if (patchFolder.exists()) {
                 FileUtils.deleteDirectory(patchFolder);
             }
-            FileUtils.copyAssetFolder(context, folderName, EMULATOR_DIR + folderName);
+            FileUtils.copyAssetFolder(context, folderName, emulatorDir + folderName);
         }
     }
 
     private static void copyFolder(Context context, String folderName, boolean shouldUpdate) {
-        File patchFolder = new File(EMULATOR_DIR, folderName);
+        File patchFolder = new File(emulatorDir, folderName);
         if (shouldUpdate || !patchFolder.exists()) {
-            FileUtils.copyAssetFolder(context, folderName, EMULATOR_DIR + folderName);
+            FileUtils.copyAssetFolder(context, folderName, emulatorDir + folderName);
         }
+    }
+
+    public static String getEmulatorDir() {
+        return emulatorDir;
+    }
+
+    public static String getCompatDir() {
+        return compatDir;
     }
 
     public static Single<ArrayList<AppItem>> getAppsList() {

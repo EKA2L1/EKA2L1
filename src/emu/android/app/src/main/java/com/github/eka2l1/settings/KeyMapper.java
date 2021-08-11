@@ -49,7 +49,7 @@ public class KeyMapper {
         Representer representer = new Representer(options);
         representer.addClassTag(KeyBind.class, Tag.MAP);
         Yaml yaml = new Yaml(new Constructor(KeyBind.class), representer, options);
-        File configFile = new File(Emulator.EMULATOR_DIR, "keybind.yml");
+        File configFile = new File(Emulator.getEmulatorDir(), "keybind.yml");
         try {
             FileWriter fileWriter = new FileWriter(configFile);
             yaml.dump(keyBinds, fileWriter);
@@ -63,7 +63,7 @@ public class KeyMapper {
     public static SparseIntArray getArrayPref() {
         SparseIntArray intArray = new SparseIntArray();
         Yaml yaml = new Yaml();
-        File configFile = new File(Emulator.EMULATOR_DIR, "keybind.yml");
+        File configFile = new File(Emulator.getEmulatorDir(), "keybind.yml");
         ArrayList<Object> keyBinds = null;
         try {
             FileInputStream fis = new FileInputStream(configFile);

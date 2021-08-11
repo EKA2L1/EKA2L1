@@ -27,7 +27,7 @@ import java.io.IOException;
 public class LogUtils {
 
     public static void writeLog() throws IOException {
-        File logFile = new File(Emulator.EMULATOR_DIR, "android.log");
+        File logFile = new File(Emulator.getEmulatorDir(), "android.log");
         if (logFile.exists()) {
             logFile.delete();
         }
