@@ -718,7 +718,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="420"/>
       <source>Volume</source>
-      <translation type="unfinished">Volume</translation>
+      <translation>Volume</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="443"/>
