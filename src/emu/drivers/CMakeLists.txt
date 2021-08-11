@@ -65,13 +65,11 @@ add_library(drivers
         ${DRIVERS_VULKAN_SRC})
 if (NOT ANDROID)
     target_sources(drivers PRIVATE
-        include/drivers/graphics/imgui_renderer.h
         include/drivers/graphics/backend/cursor_glfw.h
         include/drivers/graphics/backend/emu_window_glfw.h
         include/drivers/input/backend/emu_controller_glfw.h
         src/graphics/cursor.cpp
         src/graphics/emu_window.cpp
-        src/graphics/imgui_renderer.cpp
         src/graphics/backend/cursor_glfw.cpp
         src/graphics/backend/emu_window_glfw.cpp
         src/input/backend/emu_controller_glfw.cpp
@@ -84,7 +82,7 @@ endif()
 
 target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm)
 if (NOT ANDROID)
-    target_link_libraries(drivers PRIVATE imgui glfw nativefilediag)
+    target_link_libraries(drivers PRIVATE glfw nativefilediag)
 endif()
 
 target_include_directories(drivers PUBLIC include)
