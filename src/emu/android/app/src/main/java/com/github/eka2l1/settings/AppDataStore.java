@@ -25,10 +25,12 @@ import com.github.eka2l1.emu.Emulator;
 
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Represent;
 import org.yaml.snakeyaml.representer.Representer;
+import org.yaml.snakeyaml.resolver.Resolver;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,8 +48,10 @@ public class AppDataStore extends PreferenceDataStore {
     private AppDataStore(File file) {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        Constructor constructor = new Constructor();
         StringRepresenter representer = new StringRepresenter();
-        yaml = new Yaml(representer, options);
+        StringResolver resolver = new StringResolver();
+        yaml = new Yaml(constructor, representer, options, resolver);
         configFile = file;
         if (configFile.exists()) {
             try {
@@ -167,6 +171,16 @@ public class AppDataStore extends PreferenceDataStore {
                 }
                 return node;
             }
+        }
+    }
+
+    private static class StringResolver extends Resolver {
+        protected void addImplicitResolvers() {
+            this.addImplicitResolver(Tag.BOOL, BOOL, "yYnNtTfFoO");
+            this.addImplicitResolver(Tag.MERGE, MERGE, "<");
+            this.addImplicitResolver(Tag.NULL, NULL, "~nN\u0000");
+            this.addImplicitResolver(Tag.NULL, EMPTY, (String)null);
+            this.addImplicitResolver(Tag.YAML, YAML, "!&*");
         }
     }
 }

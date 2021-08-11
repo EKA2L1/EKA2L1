@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.github.eka2l1.settings.IntListPreference
+    <ListPreference
         android:defaultValue="-1"
         android:key="language"
         android:title="@string/pref_system_language_option_name" />
@@ -10,8 +10,8 @@
         android:entryValues="@array/pref_system_real_time_accuracy_values"
         android:key="rtos-level"
         android:title="@string/pref_system_real_time_accuracy_str" />
-    <com.github.eka2l1.settings.LongEditTextPreference
-        android:defaultValue="0"
+    <EditTextPreference
+        android:defaultValue="540806859904945"
         android:key="imei"
         android:title="@string/pref_hal_imei_option_name" />
 </PreferenceScreen>
