@@ -82,7 +82,7 @@ endif()
 
 target_link_libraries(drivers PRIVATE common cubeb ffmpeg glad glm)
 if (NOT ANDROID)
-    target_link_libraries(drivers PRIVATE glfw nativefilediag)
+    target_link_libraries(drivers PRIVATE glfw)
 endif()
 
 target_include_directories(drivers PUBLIC include)
