@@ -354,6 +354,13 @@ namespace eka2l1::epoc {
             set_app_screen_mode(ctx, cmd);
             break;
 
+        case ws_sd_op_copy_screen_to_bitmap:
+        case ws_sd_op_copy_screen_to_bitmap2:
+            LOG_TRACE(SERVICE_WINDOW, "Copy screen to bitmap stubbed");
+            ctx.complete(epoc::error_none);
+
+            break;
+
         default: {
             LOG_WARN(SERVICE_WINDOW, "Unimplemented IPC call for screen driver: 0x{:x}", cmd.header.op);
             break;
