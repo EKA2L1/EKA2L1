@@ -99,8 +99,8 @@ namespace eka2l1::epoc {
         }
 
         int tick_period(int *a1, int *a2, const std::uint16_t device_num) {
-            std::uint64_t *tick_period_in_microsecs = reinterpret_cast<std::uint64_t *>(a1);
-            *tick_period_in_microsecs = 1000000 / epoc::TICK_TIMER_HZ;
+            std::uint32_t *tick_period_in_microsecs = reinterpret_cast<std::uint32_t *>(a1);
+            *tick_period_in_microsecs = 1000000 / static_cast<std::uint32_t>(epoc::TICK_TIMER_HZ);
 
             return epoc::error_none;
         }
