@@ -151,7 +151,7 @@ namespace eka2l1::epoc {
         // The whole window for you!
         eka2l1::rect extent;
         extent.top = husband_->pos;
-        extent.size = husband_->scr->mode_info(husband_->scr->crr_mode)->size;
+        extent.size = husband_->size;
 
         state_ = state_running;
 
