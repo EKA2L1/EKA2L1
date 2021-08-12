@@ -41,6 +41,8 @@ public class MainActivity extends BaseActivity {
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Emulator.initializePath();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 

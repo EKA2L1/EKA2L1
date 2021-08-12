@@ -59,10 +59,12 @@ public class Emulator {
         System.loadLibrary("native-lib");
     }
 
-    public static void initializeFolders(Context context) {
+    public static void initializePath() {
         emulatorDir = Environment.getExternalStorageDirectory() + "/EKA2L1/";
         compatDir = emulatorDir + "compat/";
+    }
 
+    public static void initializeFolders(Context context) {
         File folder = new File(emulatorDir);
         if (!folder.exists()) {
             folder.mkdirs();
