@@ -163,23 +163,29 @@ namespace eka2l1::drivers {
 
         while (frame_wrote < frame_count) {
             std::optional<dsp_buffer> encoded;
+            bool exit_loop = false;
 
             if ((decoded_.size() == 0) || (decoded_.size() == pointer_)) {
                 // Get the next buffer
                 encoded = buffers_.pop();
-                pointer_ = 0;
-
                 bool need_more = true;
 
+                if ((format_ == PCM16_FOUR_CC_CODE) && !encoded) {
+                    exit_loop = true;
+                    break;
+                }
+
+                pointer_ = 0;
+
                 if (format_ == PCM16_FOUR_CC_CODE) {
-                    if (encoded) {
-                        decoded_ = encoded.value();
-                    } else {
-                        break;
-                    }
+                    decoded_ = encoded.value();
                 } else {
                     std::vector<std::uint8_t> empty;
                     need_more = !decode_data(encoded ? encoded.value() : empty, decoded_);
+                }
+
+                if (decoded_.empty()) {
+                    exit_loop = true;
                 }
 
                 // Callback that internal buffer has been copied
@@ -194,7 +200,7 @@ namespace eka2l1::drivers {
                 }
             }
 
-            if (decoded_.empty()) {
+            if (exit_loop) {
                 break;
             }
 
