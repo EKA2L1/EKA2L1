@@ -131,11 +131,19 @@ namespace eka2l1::hle {
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
         const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
 
-        codeseg_ptr cs = mngr.load(dll_name);
+        // Use parent drive first
+        const std::u16string dll_name_with_drive = eka2l1::root_name(parent_cs->get_full_path(), true) + dll_name;
+
+        codeseg_ptr cs = mngr.load(dll_name_with_drive);
 
         if (!cs) {
-            LOG_TRACE(KERNEL, "Can't find {}", dll_name8);
-            return false;
+            // Freestyle with the path this time.
+            cs = mngr.load(dll_name);
+
+            if (!cs) {
+                LOG_TRACE(KERNEL, "Can't find {}", dll_name8);
+                return false;
+            }
         }
 
         kernel::codeseg_dependency_info dependency_info;
