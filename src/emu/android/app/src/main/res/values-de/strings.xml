@@ -27,6 +27,7 @@
     <string name="no_device_installed">Bitte installieren Sie ein Gerät. Dateien und ROM eines Symbian-Gerätes werden für die Installation benötigt.\n\n<b>Hinweis:</b> Jede App benötigt ein geeignetes Symbian-Gerät, um zu laufen.</string>
     <string name="install_device_note_may_need_rpkg">Für S60v2-Geräte oder höher müssen Sie möglicherweise eine zusätzliche Datei namens RPKG bereitstellen. Die Pfadauswahl wird angezeigt, wenn das Installationsprogramm die Notwendigkeit dafür feststellt.</string>
     <string name="recommended_devices_to_install">Empfohlene Geräte zur Installation</string>
+    <string name="wiki_info">For more info about device install, please check out our wiki:</string>
     <string name="install_rpkg_corrupt">Diese RPKG-Datei ist beschädigt!</string>
     <string name="install_rpkg_file_not_found">Diese RPKG-Datei kann nicht geöffnet werden!</string>
     <string name="install_raw_dump_fail_to_copy">Kopieren der rohen Dump-Datei zum Zielort fehlgeschlagen!</string>
