@@ -649,6 +649,13 @@ namespace eka2l1::epoc {
         key_application_27
     };
 
+    enum dsa_terminate_reason {
+        dsa_terminate_cancel = 0,
+        dsa_terminate_region = 1,
+        dsa_terminate_screen_display_mode_change = 2,
+        dsa_terminate_rotation_change = 3
+    };
+
     static constexpr std::uint8_t WS_MAJOR_VER = 1;
     static constexpr std::uint8_t WS_MINOR_VER = 0;
     static constexpr std::uint16_t WS_OLDARCH_VER = 139;

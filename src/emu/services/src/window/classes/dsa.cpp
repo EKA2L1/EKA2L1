@@ -151,7 +151,7 @@ namespace eka2l1::epoc {
         // The whole window for you!
         eka2l1::rect extent;
         extent.top = husband_->pos;
-        extent.size = husband_->size;
+        extent.size = husband_->scr->mode_info(husband_->scr->crr_mode)->size;
 
         state_ = state_running;
 
@@ -173,6 +173,14 @@ namespace eka2l1::epoc {
         }
 
         dsa_must_stop_notify_.complete(epoc::error_cancel);
+    }
+
+    void dsa::abort(const std::int32_t reason) {
+        if (!dsa_must_abort_queue_->send(&reason, sizeof(reason))) {
+            LOG_ERROR(SERVICE_WINDOW, "Unable to send abort message code {} to client", reason);
+        }
+
+        do_cancel();
     }
 
     void dsa::get_sync_info(service::ipc_context &ctx, ws_cmd &cmd) {

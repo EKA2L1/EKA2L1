@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/window/classes/dsa.h>
 #include <services/window/classes/winbase.h>
 #include <services/window/classes/wingroup.h>
 #include <services/window/classes/winuser.h>
@@ -79,6 +80,25 @@ namespace eka2l1::epoc {
                 eka2l1::rect({ 0, 0 }, winuser->size), eka2l1::vec2(0, 0), 0.0f, 0);
 
             total_redrawed_++;
+
+            return false;
+        }
+    };
+
+    struct window_dsa_abort_walker: public window_tree_walker {
+        std::int32_t reason_;
+
+        explicit window_dsa_abort_walker(const std::int32_t reason)
+            : reason_(reason) {
+        }
+
+        bool do_it(window *win) {
+            if (win->type == window_kind::client) {
+                window_user *user = reinterpret_cast<window_user*>(win);
+                if (user->is_dsa_active()) {
+                    user->direct->abort(reason_);
+                }
+            }
 
             return false;
         }
@@ -357,6 +377,11 @@ namespace eka2l1::epoc {
         return screen_mode_change_callbacks.remove(cb);
     }
 
+    void screen::abort_all_dsas(const std::int32_t reason) {
+        window_dsa_abort_walker walker(reason);
+        root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+    }
+
     void screen::set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode) {
         const int old_mode = crr_mode;
         bool really_changed = false;
@@ -374,6 +399,15 @@ namespace eka2l1::epoc {
 
             if (winserv)
                 winserv->send_screen_change_events(this);
+
+            const epoc::config::screen_mode *modeinfo_o = mode_info(old_mode);
+            const epoc::config::screen_mode *modeinfo_n = mode_info(crr_mode);
+
+            if (modeinfo_o && modeinfo_n) {
+                if (modeinfo_o->size != modeinfo_n->size) {
+                    abort_all_dsas(dsa_terminate_rotation_change);
+                }
+            }
         }
     }
 

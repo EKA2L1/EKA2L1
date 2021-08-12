@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <services/window/classes/dsa.h>
 #include <services/window/classes/gctx.h>
 #include <services/window/classes/scrdvc.h>
 #include <services/window/classes/wingroup.h>
@@ -159,6 +160,11 @@ namespace eka2l1::epoc {
 
             // We need to invalidate the whole new window
             invalidate(bounding_rect());
+
+            // Force the DSA to abort. We don't do much drawings for now so forcefully discharge to refresh the size
+            if (is_dsa_active()) {
+                direct->abort(dsa_terminate_rotation_change);
+            }
         }
     }
 

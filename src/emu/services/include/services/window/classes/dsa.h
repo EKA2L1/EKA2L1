@@ -55,6 +55,7 @@ namespace eka2l1::epoc {
         ~dsa() override;
 
         void do_cancel();
+        void abort(const std::int32_t reason);
 
         void get_sync_info(service::ipc_context &ctx, ws_cmd &cmd);
         void request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd);

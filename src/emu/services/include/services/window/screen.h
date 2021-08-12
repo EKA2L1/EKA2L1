@@ -132,6 +132,7 @@ namespace eka2l1::epoc {
 
         void set_rotation(window_server *winserv, drivers::graphics_driver *drv, int rot);
         void set_orientation_lock(drivers::graphics_driver *drv, const bool lock);
+        void abort_all_dsas(const std::int32_t reason);
 
         // ========================= UTILITIES FUNCTIONS ===========================
         epoc::window_group *get_group_chain();
