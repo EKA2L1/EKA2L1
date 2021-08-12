@@ -142,7 +142,7 @@ namespace eka2l1::epoc {
             info.window_handle_valid_ = false;
             info.screen_address_valid_ = true;
             info.screen_address_ = scr->screen_buffer_chunk->base(nullptr).cast<void>();
-            info.screen_size_ = scr->current_mode().size;
+            info.screen_size_ = scr->size();
         }
 
         void get_video_info_from_scr_object(epoc::screen *scr, const epoc::display_mode &mode, epoc::video_info_v1 &info) {
