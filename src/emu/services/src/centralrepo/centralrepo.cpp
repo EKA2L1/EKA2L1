@@ -362,7 +362,8 @@ namespace eka2l1 {
 
         const std::u16string private_dir_persists = u":\\Private\\10202be9\\";
         const std::u16string firmcode = common::utf8_to_ucs2(common::lowercase_string(mngr->get_current()->firmware_code));
-        const std::u16string private_dir_persists_separate_firm = private_dir_persists + u"persists\\" + firmcode + u"\\";
+        const std::u16string private_dir_persists_glob = private_dir_persists + u"persists\\";
+        const std::u16string private_dir_persists_separate_firm = private_dir_persists_glob + firmcode + u"\\";
 
         // Temporary push rom drive so scan works
         avail_drives.push_back(rom_drv);
@@ -373,8 +374,14 @@ namespace eka2l1 {
 
             // Don't add separate firmware code on rom drive (it already did itself)
             std::vector<std::u16string> repo_folder_to_searches;
+
+            // Search priority:
+            // 1. Own device's persists folder. Many devices have their own configuration that goes to their own folder for avoiding conflicts
+            // 2. Persists folder globally. Sometimes device shipped with modified persists, but it does not store to device's own folder like emulator. We grab this second
+            // 3. TXT folder, this is the outer private folder of cenrep.
             if (drv != rom_drv) {
                 repo_folder_to_searches.push_back(repo_dir + private_dir_persists_separate_firm);
+                repo_folder_to_searches.push_back(repo_dir + private_dir_persists_glob);
             }
 
             repo_folder_to_searches.push_back(repo_dir + private_dir_persists);
