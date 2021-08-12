@@ -23,7 +23,9 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.InputType;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -156,6 +158,11 @@ public class DeviceListFragment extends Fragment {
                 recommendedDevicesLayout.expand();
             }
         });
+        TextView tvWikiInfo = view.findViewById(R.id.tv_wiki_info);
+        tvWikiInfo.setMovementMethod(LinkMovementMethod.getInstance());
+        String message = String.valueOf(getText(R.string.wiki_info)) +
+                getText(R.string.wiki_link);
+        tvWikiInfo.setText(Html.fromHtml(message));
 
         Spinner spInstallMethod = view.findViewById(R.id.sp_device_install_method);
         spInstallMethod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
