@@ -293,18 +293,6 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
-    void window::enable_focus_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
-        if (!(flags & flag_focus_change_report)) {
-            event_screen_group_focus_change_user event;
-            event.user = this;
-
-            client->add_event_notifier<event_screen_group_focus_change_user>(event);
-        }
-
-        flags |= flag_focus_change_report;
-        ctx.complete(epoc::error_none);
-    }
-
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         epoc::version cli_ver = client->client_version();
         kernel_system *kern = client->get_ws().get_kernel_system();
@@ -403,10 +391,6 @@ namespace eka2l1::epoc {
 
         case EWsWinOpEnableVisibilityChangeEvents:
             enable_visiblity_change_events(ctx, cmd);
-            return true;
-
-        case EWsWinOpEnableFocusChangeEvents:
-            enable_focus_change_events(ctx, cmd);
             return true;
 
         default: {

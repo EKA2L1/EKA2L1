@@ -305,8 +305,6 @@ namespace eka2l1::epoc {
             if (callback.second)
                 callback.second(callback.first, focus, property);
         }
-
-        // TODO: Fire this in window server too!
     }
 
     void screen::fire_screen_redraw_callbacks(const bool is_dsa) {

@@ -85,9 +85,6 @@ namespace eka2l1::epoc {
         event_control when;
     };
 
-    struct event_screen_group_focus_change_user: public event_notifier_base {
-    };
-
     enum class event_key_capture_type {
         normal,
         up_and_downs
@@ -178,7 +175,6 @@ namespace eka2l1::epoc {
         nof_container<epoc::event_mod_notifier_user> mod_notifies;
         nof_container<epoc::event_screen_change_user> screen_changes;
         nof_container<epoc::event_error_msg_user> error_notifies;
-        nof_container<epoc::event_screen_group_focus_change_user> group_focus_change_notifies;
 
         void create_screen_device(service::ipc_context &ctx, ws_cmd &cmd);
         void create_dsa(service::ipc_context &ctx, ws_cmd &cmd);
@@ -294,10 +290,9 @@ namespace eka2l1::epoc {
             } else if constexpr (std::is_same_v<T, epoc::event_error_msg_user>) {
                 error_notifies.emplace(std::move(evt));
                 return static_cast<ws::uid>(error_notifies.size());
-            } else if constexpr (std::is_same_v<T, epoc::event_screen_group_focus_change_user>) {
-                group_focus_change_notifies.emplace(std::move(evt));
-                return static_cast<ws::uid>(group_focus_change_notifies.size());
-            } else if constexpr (std::is_same_v<T, epoc::event_screen_group_focus_change_user>) {
+            } else if constexpr (std::is_same_v<T, epoc::event_capture_key_notifier>) {
+                return add_capture_key_notifier_to_server(evt);
+            } else {
                 throw std::runtime_error("Unsupported event notifier type!");
             }
         }
