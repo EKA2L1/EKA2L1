@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat">
         <!-- Customize your theme here. -->
@@ -6,6 +6,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="spinnerColor">@color/dark_color_spinner</item>
+        <item name="android:navigationBarColor" tools:ignore="NewApi">@android:color/black</item>
     </style>
 
     <style name="AppTheme.Light" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -25,6 +26,7 @@
         <item name="textAppearancePopupMenuHeader">@style/PopupMenuTextAppearanceHeader</item>
         <item name="textAppearanceSmallPopupMenu">@style/PopupMenuTextAppearanceSmall</item>
         <item name="textAppearanceLargePopupMenu">@style/PopupMenuTextAppearanceLarge</item>
+        <item name="android:navigationBarColor" tools:ignore="NewApi">@android:color/black</item>
     </style>
 
     <style name="AppTheme.OverflowMenu" parent="@style/Widget.AppCompat.PopupMenu.Overflow">
