@@ -83,7 +83,7 @@ namespace eka2l1 {
     }
 
     void connmonitor_client_session::get_connection_count(eka2l1::service::ipc_context *ctx) {
-        std::uint8_t connection_count = 1;
+        std::uint32_t connection_count = 1;
 
         ctx->write_data_to_descriptor_argument(0, connection_count);
         ctx->complete(epoc::error_none);
@@ -100,6 +100,7 @@ namespace eka2l1 {
 
         *connection_id_ptr = bearer_id_gprs;
         *subconnection_count_ptr = 1;
+
         ctx->complete(epoc::error_none);
     }
 
