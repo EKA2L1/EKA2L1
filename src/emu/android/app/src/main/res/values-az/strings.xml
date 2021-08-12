@@ -27,6 +27,7 @@
     <string name="no_device_installed">Bir cihaz quraşdırın. Symbian cihazın ROM və fayllarını quraşdırma üçün lazımdır.\n\n<b>Qeyd:</b>Hər bir tətbiqin işləməsi üçün uyğun bir Symbian cihazına ehtiyacı var.</string>
     <string name="install_device_note_may_need_rpkg">S60v2 və üst cihazlar üçün, əlavə bir RPKG adlı fayl təmin etməlisiniz. Yükləyici, buna ehtiyac olduğunu aşkarlasa fayl seçici açılacaq.</string>
     <string name="recommended_devices_to_install">Quraşdırmaq üçün təklif edilən cihazlar</string>
+    <string name="wiki_info">For more info about device install, please check out our wiki:</string>
     <string name="install_rpkg_corrupt">Verilən RPKG faylı zədəlidir!</string>
     <string name="install_rpkg_file_not_found">Göstərilən RPKG faylı açıla bilmir!</string>
     <string name="install_raw_dump_fail_to_copy">Raw dump fayllarını hədəf təyinata kopyalamaq alınmadı!</string>
