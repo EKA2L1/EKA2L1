@@ -54,7 +54,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="43"/>
       <source>Search</source>
-      <translation type="unfinished">Search</translation>
+      <translation>සොයන්න</translation>
     </message>
   </context>
   <context>
@@ -97,7 +97,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation type="unfinished">Install</translation>
+      <translation>ස්ථාපනය කරන්න</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
@@ -225,7 +225,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation type="unfinished">Install</translation>
+      <translation>ස්ථාපනය කරන්න</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="96"/>
@@ -250,7 +250,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
       <source>About</source>
-      <translation type="unfinished">About</translation>
+      <translation>පිලිබඳව</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="137"/>
@@ -275,7 +275,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
       <source>Settings</source>
-      <translation type="unfinished">Settings</translation>
+      <translation>සැකසුම්</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="160"/>
@@ -495,7 +495,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
       <source>Search</source>
-      <translation type="unfinished">Search</translation>
+      <translation>සොයන්න</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
@@ -558,7 +558,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="20"/>
       <source>Settings</source>
-      <translation type="unfinished">Settings</translation>
+      <translation>සැකසුම්</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="36"/>
@@ -683,7 +683,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="352"/>
       <source>Theme</source>
-      <translation type="unfinished">Theme</translation>
+      <translation>තේමාව</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="360"/>
@@ -693,7 +693,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="365"/>
       <source>Dark</source>
-      <translation type="unfinished">Dark</translation>
+      <translation>අඳුරු</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="377"/>
@@ -708,7 +708,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="400"/>
       <source>System</source>
-      <translation type="unfinished">System</translation>
+      <translation>පද්ධතිය</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="406"/>
@@ -730,7 +730,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="455"/>
       <source>Devices</source>
-      <translation type="unfinished">Devices</translation>
+      <translation>උපාංග</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="472"/>
