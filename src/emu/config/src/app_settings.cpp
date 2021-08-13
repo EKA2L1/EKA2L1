@@ -49,7 +49,7 @@ namespace eka2l1::config {
     try {                                                                     \
         setting.variable = node[#name].as<decltype(app_setting::variable)>(); \
     } catch (std::exception & e) {                                            \
-        //LOG_TRACE(CONFIG, "{}", e.what());                                  \
+        /*LOG_TRACE(CONFIG, "{}", e.what());*/                                \
         setting.variable = default_val;                                       \
     }
 
