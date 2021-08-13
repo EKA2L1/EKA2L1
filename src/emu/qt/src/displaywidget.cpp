@@ -44,7 +44,7 @@ display_widget::display_widget(QWidget *parent)
 
     display_context_ = new QOpenGLContext;
 
-    QSurfaceFormat::OpenGLContextProfile total_profiles_to_try[TOTAL_TRY] = { QSurfaceFormat::CoreProfile, QSurfaceFormat::CompatibilityProfile, QSurfaceFormat::CompatibilityProfile };
+    QSurfaceFormat::OpenGLContextProfile total_profiles_to_try[TOTAL_TRY] = { QSurfaceFormat::CoreProfile, QSurfaceFormat::NoProfile, QSurfaceFormat::NoProfile };
     int total_minor_to_try[TOTAL_TRY] = { 2, 1, 0 };
 
     bool success = false;
