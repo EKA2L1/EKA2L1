@@ -343,6 +343,28 @@ bool device_set_option_handler(eka2l1::common::arg_parser *parser, void *userdat
     return found;
 }
 
+bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    const char *profile = parser->next_token();
+
+    if (!profile) {
+        *err = "No keybind profile specified";
+        return true;
+    }
+
+    // Check if profile exists
+    const std::string profile_path = fmt::format("bindings//{}.yml", profile);
+    if (!eka2l1::exists(profile_path)) {
+        *err = "No profile with name {} exists";
+        return true;
+    }
+
+    emu->conf.current_keybind_profile = profile;
+    emu->conf.keybinds.deserialize(profile_path);
+
+    return true;
+}
+
 #if ENABLE_PYTHON_SCRIPTING
 bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     try {
