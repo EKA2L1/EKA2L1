@@ -374,7 +374,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->control_profile_add_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_add_clicked);
     connect(ui_->control_profile_rename_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_rename_clicked);
     connect(ui_->control_profile_delete_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_delete_clicked);
-    connect(ui_->control_profile_combobox, &QComboBox::activated, this, &settings_dialog::on_control_profile_choosen_another);
+    connect(ui_->control_profile_combobox, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_control_profile_choosen_another);
 }
 
 settings_dialog::~settings_dialog() {
