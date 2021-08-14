@@ -980,8 +980,8 @@
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="404"/>
-        <location filename="../src/settings_dialog.cpp" line="1075"/>
-        <location filename="../src/settings_dialog.cpp" line="1100"/>
+        <location filename="../src/settings_dialog.cpp" line="1079"/>
+        <location filename="../src/settings_dialog.cpp" line="1104"/>
         <source>Relaunch needed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1070,83 +1070,83 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="904"/>
+        <location filename="../src/settings_dialog.cpp" line="908"/>
         <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="907"/>
-        <location filename="../src/settings_dialog.cpp" line="912"/>
+        <location filename="../src/settings_dialog.cpp" line="911"/>
+        <location filename="../src/settings_dialog.cpp" line="916"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1002"/>
+        <location filename="../src/settings_dialog.cpp" line="1006"/>
         <source>IMEI sequence contains non-numeric character!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1005"/>
+        <location filename="../src/settings_dialog.cpp" line="1009"/>
         <source>IMEI sequence has invalid sum!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1008"/>
+        <location filename="../src/settings_dialog.cpp" line="1012"/>
         <source>IMEI sequence length must be 15!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1014"/>
+        <location filename="../src/settings_dialog.cpp" line="1018"/>
         <source>Unidentified error!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1021"/>
+        <location filename="../src/settings_dialog.cpp" line="1025"/>
         <source>IMEI valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1021"/>
+        <location filename="../src/settings_dialog.cpp" line="1025"/>
         <source>The IMEI sequence is valid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1024"/>
+        <location filename="../src/settings_dialog.cpp" line="1028"/>
         <source>IMEI invalid!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1034"/>
+        <location filename="../src/settings_dialog.cpp" line="1038"/>
         <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1036"/>
+        <location filename="../src/settings_dialog.cpp" line="1040"/>
         <source>Cancel closing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1075"/>
+        <location filename="../src/settings_dialog.cpp" line="1079"/>
         <source>This change will be effective on the next launch of the emulator.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1083"/>
+        <location filename="../src/settings_dialog.cpp" line="1087"/>
         <source>Confirmation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1083"/>
+        <location filename="../src/settings_dialog.cpp" line="1087"/>
         <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1100"/>
+        <location filename="../src/settings_dialog.cpp" line="1104"/>
         <source>The language will be updated on the next launch of the emulator.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/settings_dialog.cpp" line="1120"/>
+        <location filename="../src/settings_dialog.cpp" line="1124"/>
         <source>Pick the screen background color</source>
         <translation type="unfinished"></translation>
     </message>

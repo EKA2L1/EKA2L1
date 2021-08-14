@@ -102,7 +102,7 @@ private slots:
     void on_control_profile_add_clicked();
     void on_control_profile_rename_clicked();
     void on_control_profile_delete_clicked();
-    void on_control_profile_choosen_another(const QString &text);
+    void on_control_profile_choosen_another(int index);
     void on_binding_button_clicked();
     void on_background_color_pick_button_clicked();
 

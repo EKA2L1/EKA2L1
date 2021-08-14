@@ -268,18 +268,18 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 
     QStringList language_file_list = language_dir.entryList();
     for (qsizetype i = 0; i < language_file_list.count(); i++) {
+        if (!language_file_list[i].startsWith("eka2l1_")) {
+            continue;
+        }
+
         QTranslator translator;
         if (translator.load(":/languages/" + language_file_list[i])) {
-            QString locale_name = translator.language();
             QString filelocale_name = language_file_list[i].mid(7, language_file_list[i].length() - 10);
+            QLocale locale(filelocale_name);
+            ui_->interface_language_combo->addItem(locale.nativeLanguageName() + QString(" (%1)").arg(filelocale_name));
 
-            if (!locale_name.isEmpty()) {
-                QLocale locale(locale_name);
-                ui_->interface_language_combo->addItem(locale.nativeLanguageName() + QString(" (%1)").arg(filelocale_name));
-
-                if (current_language_variant.isValid() && (current_language_variant.toString() == filelocale_name)) {
-                    ui_->interface_language_combo->setCurrentIndex(ui_->interface_language_combo->count() - 1);
-                }
+            if (current_language_variant.isValid() && (current_language_variant.toString() == filelocale_name)) {
+                ui_->interface_language_combo->setCurrentIndex(ui_->interface_language_combo->count() - 1);
             }
         }
     }
@@ -374,7 +374,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->control_profile_add_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_add_clicked);
     connect(ui_->control_profile_rename_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_rename_clicked);
     connect(ui_->control_profile_delete_btn, &QPushButton::clicked, this, &settings_dialog::on_control_profile_delete_clicked);
-    connect(ui_->control_profile_combobox, &QComboBox::textActivated, this, &settings_dialog::on_control_profile_choosen_another);
+    connect(ui_->control_profile_combobox, &QComboBox::activated, this, &settings_dialog::on_control_profile_choosen_another);
 }
 
 settings_dialog::~settings_dialog() {
@@ -884,8 +884,12 @@ void settings_dialog::on_control_profile_delete_clicked() {
     }
 }
 
-void settings_dialog::on_control_profile_choosen_another(const QString &text) {
-    configuration_.current_keybind_profile = text.toStdString();
+void settings_dialog::on_control_profile_choosen_another(int index) {
+    configuration_.current_keybind_profile = ui_->control_profile_combobox->itemText(index).toStdString();
+    if (configuration_.current_keybind_profile.empty()) {
+        return;
+    }
+
     configuration_.serialize(false);
     configuration_.deserialize(true);
 
