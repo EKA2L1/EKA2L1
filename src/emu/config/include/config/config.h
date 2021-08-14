@@ -56,8 +56,6 @@ namespace eka2l1::config {
     };
 
     struct state {
-        float menu_height = 0;
-        int bkg_transparency{ 129 };
         float ui_scale{ 1.0 };
         std::string bkg_path;
         std::string font_path;
@@ -108,6 +106,8 @@ namespace eka2l1::config {
         std::string imei{ DEFAULT_IMI };
         std::string mmc_id{ DEFAULT_MMC_ID };
         std::string current_keybind_profile{ "default" };
+
+        std::atomic<std::uint32_t> display_background_color{ 0xFFD0D0D0 };
 
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);

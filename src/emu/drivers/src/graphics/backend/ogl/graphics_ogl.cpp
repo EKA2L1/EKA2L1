@@ -20,6 +20,7 @@
 #include <common/algorithm.h>
 #include <common/log.h>
 #include <common/platform.h>
+#include <common/rgb.h>
 #include <fstream>
 #include <sstream>
 
@@ -661,15 +662,11 @@ namespace eka2l1::drivers {
         helper.pop(color_to_clear);
         helper.pop(clear_bits);
 
-        eka2l1::vecx<float, 4> color_converted({ ((color_to_clear & 0xFF000000) >> 24) / 255.0f,
-            ((color_to_clear & 0x00FF0000) >> 16) / 255.0f,
-            ((color_to_clear & 0x0000FF00) >> 8) / 255.0f,
-            (color_to_clear & 0x000000FF) / 255.0f });
-
+        eka2l1::vecx<std::uint8_t, 4> color_converted = common::rgba_to_vec(color_to_clear);
         std::uint32_t gl_flags = 0;
 
         if (clear_bits & draw_buffer_bit_color_buffer) {
-            glClearColor(color_converted[0], color_converted[1], color_converted[2], color_converted[3]);
+            glClearColor(color_converted[0] / 255.0f, color_converted[1] / 255.0f, color_converted[2] / 255.0f, color_converted[3] / 255.0f);
             gl_flags |= GL_COLOR_BUFFER_BIT;
         }
 

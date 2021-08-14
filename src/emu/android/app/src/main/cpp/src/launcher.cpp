@@ -460,7 +460,7 @@ namespace eka2l1::android {
             builder->backup_state();
             builder->bind_bitmap(0);
 
-            builder->clear({ 0xFF, 0xD0, 0xD0, 0xD0 }, drivers::draw_buffer_bit_color_buffer);
+            builder->clear({ 0xD0, 0xD0, 0xD0, 0xFF }, drivers::draw_buffer_bit_color_buffer);
             builder->set_cull_mode(false);
             builder->set_depth(false);
             //builder->set_clipping(true);

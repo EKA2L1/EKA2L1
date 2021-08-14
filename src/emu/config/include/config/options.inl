@@ -29,8 +29,6 @@
 #define DEFAULT_MMC_ID "00000000-00000000-00000000-00000000"
 #endif
 
-OPTION(ui-scale, ui_scale, 1.0f)
-OPTION(bkg-alpha, bkg_transparency, 129)
 OPTION(bkg-path, bkg_path, "")
 OPTION(font, font_path, "")
 OPTION(log-read, log_read, false)
