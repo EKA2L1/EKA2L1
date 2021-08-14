@@ -97,7 +97,7 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
     }
 
     display_widget *widget = static_cast<display_widget *>(state_ptr->window);
-    widget->setMinimumSize(new_minsize);
+    widget->setMinimumSize(new_minsize / widget->devicePixelRatioF());
 }
 
 static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
