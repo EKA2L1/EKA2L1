@@ -27,7 +27,7 @@
     <string name="no_device_installed">Bitte installieren Sie ein Gerät. Dateien und ROM eines Symbian-Gerätes werden für die Installation benötigt.\n\n<b>Hinweis:</b> Jede App benötigt ein geeignetes Symbian-Gerät, um zu laufen.</string>
     <string name="install_device_note_may_need_rpkg">Für S60v2-Geräte oder höher müssen Sie möglicherweise eine zusätzliche Datei namens RPKG bereitstellen. Die Pfadauswahl wird angezeigt, wenn das Installationsprogramm die Notwendigkeit dafür feststellt.</string>
     <string name="recommended_devices_to_install">Empfohlene Geräte zur Installation</string>
-    <string name="wiki_info">For more info about device install, please check out our wiki:</string>
+    <string name="wiki_info">Für weitere Informationen zur Geräteinstallation schauen Sie sich bitte unser Wiki an:</string>
     <string name="install_rpkg_corrupt">Diese RPKG-Datei ist beschädigt!</string>
     <string name="install_rpkg_file_not_found">Diese RPKG-Datei kann nicht geöffnet werden!</string>
     <string name="install_raw_dump_fail_to_copy">Kopieren der rohen Dump-Datei zum Zielort fehlgeschlagen!</string>
@@ -43,9 +43,9 @@
     <string name="pref_system_title">System</string>
     <string name="pref_control_key_binding_sect_title">Tastenbelegung</string>
     <string name="pref_theme">Design</string>
-    <string name="pref_theme_light">Leicht</string>
+    <string name="pref_theme_light">Hell</string>
     <string name="pref_theme_dark">Dunkel</string>
-    <string name="pref_enable_virtual_keyboard">Verfügbare Bildschirmtastatur</string>
+    <string name="pref_enable_virtual_keyboard">Virtuelle Tastatur aktivieren</string>
     <string name="pref_enable_actionbar">Aktionsleiste einschalten</string>
     <string name="pref_enable_statusbar">Statusleiste einschalten</string>
     <string name="pref_wakelock">Bildschirm eingeschaltet lassen</string>
@@ -71,7 +71,7 @@
     <string name="hide_buttons">Schaltflächen ausblenden</string>
     <string name="confirmation_required">Bestätigung erforderlich</string>
     <string name="force_close_confirmation">Ein erzwungenes Schließen der Anwendung kann zu Datenverlusten führen oder sie sogar komplett zerstören!\nFortfahren?</string>
-    <string name="log_saved">Protokollierung wurde deaktiviert</string>
+    <string name="log_saved">Das Protokoll wurde gespeichert</string>
     <string name="about_icon_by">&lt;BR&gt;Icon von: </string>
     <string name="version">Version: </string>
     <string name="recommended_devices_note"><b>Hinweis:</b> Es wird empfohlen, die Firmware für die Installation von Geräten ab S60v3 und höher zu verwenden.</string>
