@@ -47,6 +47,7 @@
 #include <utils/locale.h>
 #include <utils/system.h>
 
+#include <QColorDialog>
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QKeyEvent>
@@ -258,6 +259,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     ui_->interface_theme_combo->setCurrentIndex(settings.value(THEME_SETTING_NAME, 0).toInt());
+    ui_->emulator_display_true_size_checkbox->setChecked(settings.value(TRUE_SIZE_RESIZE_SETTING_NAME, false).toBool());
 
     QVariant current_language_variant = settings.value(LANGUAGE_SETTING_NAME);
 
@@ -337,6 +339,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
 
     connect(ui_->emulator_display_nearest_neightbor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_nearest_neighbor_toggled);
     connect(ui_->emulator_display_hide_cursor_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_cursor_visibility_change);
+    connect(ui_->emulator_display_true_size_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_true_size_enable_toogled);
+    connect(ui_->emulator_display_bgc_pick_btn, &QPushButton::clicked, this, &settings_dialog::on_background_color_pick_button_clicked);
 
     connect(ui_->general_clear_ui_config_btn, &QPushButton::clicked, this, &settings_dialog::on_ui_clear_all_configs_clicked);
     connect(ui_->app_config_fps_slider, &QSlider::valueChanged, this, &settings_dialog::on_fps_slider_value_changed);
@@ -1095,4 +1099,43 @@ void settings_dialog::on_ui_language_changed(int index) {
 
         QMessageBox::information(this, tr("Relaunch needed"), tr("The language will be updated on the next launch of the emulator."));
     }
+}
+
+void settings_dialog::on_true_size_enable_toogled(bool val) {
+    QSettings settings;
+    settings.setValue(TRUE_SIZE_RESIZE_SETTING_NAME, val);
+
+    emit minimum_display_size_change();
+}
+
+void settings_dialog::on_background_color_pick_button_clicked() {
+    const QColor grayish_color = QColor(0xD0, 0xD0, 0xD0);
+
+    QSettings settings;
+    QColor default_color = settings.value(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, grayish_color).value<QColor>();
+    QColor choosen_color = default_color;
+
+    QColorDialog *dialog = new QColorDialog(default_color, this);
+
+    dialog->setWindowTitle(tr("Pick the screen background color"));
+    dialog->setOption(QColorDialog::DontUseNativeDialog, false);
+
+    // Add the current color and default color, user can roll back if they want
+    dialog->setCustomColor(0, grayish_color);
+    dialog->setCustomColor(1, default_color);
+    
+    connect(dialog, &QColorDialog::currentColorChanged, [&](QColor current_color) {
+        configuration_.display_background_color = current_color.rgba();
+    });
+
+    connect(dialog, &QColorDialog::colorSelected, [&](QColor selected_color) {
+        choosen_color = selected_color;
+    });
+
+    dialog->exec();
+
+    configuration_.display_background_color = choosen_color.rgba();
+    settings.setValue(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, choosen_color);
+
+    delete dialog;
 }

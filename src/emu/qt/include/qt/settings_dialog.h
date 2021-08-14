@@ -52,6 +52,8 @@ namespace eka2l1 {
 }
 
 static constexpr const char *STATUS_BAR_HIDDEN_SETTING_NAME = "statusBarHidden";
+static constexpr const char *TRUE_SIZE_RESIZE_SETTING_NAME = "trueSizeResizeEnabled";
+static constexpr const char *BACKGROUND_COLOR_DISPLAY_SETTING_NAME = "backgroundDisplayColor";
 static constexpr const char *THEME_SETTING_NAME = "theme";
 
 void make_default_keybind_profile(eka2l1::config::keybind_profile &profile);
@@ -95,12 +97,14 @@ private slots:
     void on_status_bar_visibility_change(bool val);
     void on_data_path_browse_clicked();
     void on_tab_changed(int index);
+    void on_true_size_enable_toogled(bool val);
 
     void on_control_profile_add_clicked();
     void on_control_profile_rename_clicked();
     void on_control_profile_delete_clicked();
     void on_control_profile_choosen_another(const QString &text);
     void on_binding_button_clicked();
+    void on_background_color_pick_button_clicked();
 
     void on_device_combo_choose(const int index);
     void on_device_rename_requested();
@@ -132,6 +136,7 @@ signals:
     void restart(const int index);
     void active_app_setting_changed();
     void theme_change_request(const QString &theme_name);
+    void minimum_display_size_change();
 
 public:
     explicit settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::drivers::emu_controller *controller,

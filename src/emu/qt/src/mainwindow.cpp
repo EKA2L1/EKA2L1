@@ -37,6 +37,7 @@
 #include <common/language.h>
 #include <common/path.h>
 #include <common/platform.h>
+#include <common/rgb.h>
 
 #include <config/app_settings.h>
 
@@ -96,8 +97,15 @@ static void mode_change_screen(void *userdata, eka2l1::epoc::screen *scr, const 
         new_minsize = QSize(scr->current_mode().size.y, scr->current_mode().size.x);
     }
 
+    QSettings settings;
+    QVariant allow_true_size_variant = settings.value(TRUE_SIZE_RESIZE_SETTING_NAME, false);
+
     display_widget *widget = static_cast<display_widget *>(state_ptr->window);
-    widget->setMinimumSize(new_minsize / widget->devicePixelRatioF());
+    if (allow_true_size_variant.toBool()) {
+        new_minsize /= widget->devicePixelRatioF();
+    }
+
+    widget->setMinimumSize(new_minsize);
 }
 
 static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, const bool is_dsa) {
@@ -127,7 +135,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     cmd_builder->backup_state();
 
-    cmd_builder->clear({ 0xFF, 0xD0, 0xD0, 0xD0 }, eka2l1::drivers::draw_buffer_bit_color_buffer);
+    eka2l1::vecx<std::uint8_t, 4> color_clear = eka2l1::common::rgba_to_vec(state.conf.display_background_color.load());
+
+    // The format that is stored is same as how it's present in HTML ARGB (from lowest to highest bytes)
+    // The normal one that emulator assumes is ABGR (from lowest to highest bytes too)
+    cmd_builder->clear({ color_clear[2], color_clear[1], color_clear[0], color_clear[3]}, eka2l1::drivers::draw_buffer_bit_color_buffer);
     cmd_builder->set_cull_mode(false);
     cmd_builder->set_depth(false);
     cmd_builder->set_viewport(viewport);
@@ -304,6 +316,9 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
             }
         }
     }
+    
+    QColor default_color = settings.value(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, QColor(0xD0, 0xD0, 0xD0)).value<QColor>();
+    emulator_state_.conf.display_background_color = default_color.rgba();
 
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
@@ -442,6 +457,7 @@ void main_window::on_settings_triggered() {
         connect(settings_dialog_.data(), &settings_dialog::relaunch, this, &main_window::on_relaunch_request);
         connect(settings_dialog_.data(), &settings_dialog::restart, this, &main_window::on_device_set_requested);
         connect(settings_dialog_.data(), &settings_dialog::theme_change_request, this, &main_window::on_theme_change_requested);
+        connect(settings_dialog_.data(), &settings_dialog::minimum_display_size_change, this, &main_window::force_update_display_minimum_size);
         connect(settings_dialog_.data(), &settings_dialog::active_app_setting_changed, this, &main_window::on_app_setting_changed, Qt::DirectConnection);
         connect(this, &main_window::app_launching, settings_dialog_.data(), &settings_dialog::on_app_launching);
         connect(this, &main_window::controller_button_press, settings_dialog_.data(), &settings_dialog::on_controller_button_press);
@@ -1108,4 +1124,12 @@ void main_window::on_theme_change_requested(const QString &text) {
             }
         }
     }
+}
+
+void main_window::force_update_display_minimum_size() {
+    if (!displayer_ || !displayer_->isVisible()) {
+        return;
+    }
+
+    mode_change_screen(&emulator_state_, get_current_active_screen(), 0);
 }

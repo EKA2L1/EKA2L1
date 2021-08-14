@@ -131,6 +131,7 @@ private slots:
     void on_relaunch_request();
 
     void on_theme_change_requested(const QString &text);
+    void force_update_display_minimum_size();
 
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>679</height>
+    <height>702</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="general_widget">
       <attribute name="title">
@@ -318,7 +318,54 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
           <item row="0" column="0">
-           <layout class="QVBoxLayout" name="emulator_display_layout">
+           <layout class="QVBoxLayout" name="emulator_display_layout" stretch="1,1,1,1">
+            <item>
+             <widget class="QWidget" name="emulator_display_bgc_choose_widget" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <property name="spacing">
+                <number>7</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>1</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>1</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="emulator_display_bgc_desc_label">
+                 <property name="text">
+                  <string>Background color</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="emulator_display_bgc_pick_btn">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Pick</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
             <item>
              <widget class="QCheckBox" name="emulator_display_hide_cursor_checkbox">
               <property name="text">
@@ -333,6 +380,16 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QCheckBox" name="emulator_display_true_size_checkbox">
+              <property name="toolTip">
+               <string>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen's size, multiply with the system display scale, to suit most users's eyes</string>
+              </property>
+              <property name="text">
+               <string>Allow resizing display to phone screen's true size in pixels</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -343,7 +400,7 @@
          <property name="title">
           <string>User interface</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_4">
+         <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,1,1">
           <item row="1" column="0">
            <layout class="QHBoxLayout" name="interface_theme_layout">
             <item>
