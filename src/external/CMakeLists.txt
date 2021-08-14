@@ -79,7 +79,8 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
                 BINARY_DIR "${LUA_BINARY_DIR}/src"
                 BUILD_COMMAND "${LUA_BINARY_DIR}/src/msvcbuild.bat"
                 INSTALL_COMMAND ""
-                )
+                BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/lua51.dll"
+                BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/lua51.lib")
 
         set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/lua51.dll" PARENT_SCOPE)
 
@@ -95,6 +96,8 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
             BINARY_DIR "${LUA_BINARY_DIR}/src"
             BUILD_COMMAND cd ${LUA_BINARY_DIR} && ${CMAKE_MAKE_PROGRAM}
             INSTALL_COMMAND ""
+            BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/libluajit.so"
+            BUILD_BYPRODUCTS "${LUA_BINARY_DIR}/src/libluajit.a"
         )
 
         set(LUA_DLL_PATH "${LUA_BINARY_DIR}/src/libluajit.so" PARENT_SCOPE)
