@@ -1001,6 +1001,11 @@ void main_window::make_default_binding_profile() {
         make_default_keybind_profile(emulator_state_.conf.keybinds);
 
         emulator_state_.conf.serialize();
+
+        eka2l1::window_server *server = get_window_server_through_system(emulator_state_.symsys.get());
+        if (server) {
+            server->init_key_mappings();
+        }
     }
 }
 
