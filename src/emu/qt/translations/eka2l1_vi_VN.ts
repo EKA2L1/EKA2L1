@@ -14,37 +14,37 @@
       <translation type="unfinished">EKA2L1</translation>
     </message>
     <message>
-      <location filename="../src/aboutdialog.cpp" line="49"/>
+      <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
       <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; nhánh &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
-      <location filename="../src/aboutdialog.cpp" line="52"/>
+      <location filename="../src/aboutdialog.cpp" line="53"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
       <translation>&lt;b&gt;(C) 2018- Nhóm EKA2L1&lt;/b&gt;&lt;br&gt;&lt;b&gt;Cảm ơn bạn đã sử dụng trình giả lập!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
-      <location filename="../src/aboutdialog.cpp" line="63"/>
+      <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
       <translation>&lt;b&gt;Nhà phát triển chính:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
-      <location filename="../src/aboutdialog.cpp" line="77"/>
+      <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
       <translation>&lt;b&gt;Cộng tác viên:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
-      <location filename="../src/aboutdialog.cpp" line="91"/>
+      <location filename="../src/aboutdialog.cpp" line="92"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
       <translation>&lt;b&gt;Biểu tượng:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
-      <location filename="../src/aboutdialog.cpp" line="105"/>
+      <location filename="../src/aboutdialog.cpp" line="106"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
       <translation>&lt;b&gt;Nhà đóng góp:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
-      <location filename="../src/aboutdialog.cpp" line="119"/>
+      <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
       <translation>&lt;b&gt;Dịch thuật viên:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
@@ -105,107 +105,107 @@
       <translation>Huỷ</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="115"/>
+      <location filename="../src/device_install_dialog.cpp" line="117"/>
       <source>Choose the firmware variant to install</source>
       <translation>Chọn bản firmware để cài đặt</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="197"/>
+      <location filename="../src/device_install_dialog.cpp" line="199"/>
       <source>Installation completed</source>
       <translation>Cài đặt hoàn thành</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="198"/>
+      <location filename="../src/device_install_dialog.cpp" line="200"/>
       <source>Device %1 (%2) has been successfully installed!</source>
       <translation>Thiết bị %1 (%2) đã được cài đặt thành công!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="206"/>
+      <location filename="../src/device_install_dialog.cpp" line="208"/>
       <source>The device has already been installed!</source>
       <translation>Thiết bị đã được cài đặt trước đó!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="210"/>
+      <location filename="../src/device_install_dialog.cpp" line="212"/>
       <source>Fail to determine product information from the dump!</source>
       <translation>Không xác định được thông tin mẫu máy!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="214"/>
+      <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
       <translation>Một trong số các tệp tin FPSX trong firmware bị hỏng!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="218"/>
+      <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
       <translation>Mỗi lỗi nào đó đã xảy ra. Xin hãy liên hệ với các nhà phát triển kèm theo log!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="222"/>
+      <location filename="../src/device_install_dialog.cpp" line="224"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
       <translation>Không gian đĩa không đủ trống để cài đặt thiết bị! Xin hãy mở rộng bộ nhớ đĩa của bạn!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="226"/>
+      <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
       <translation>Một trong số các tệp tin được đưa cho trình cài đặt không còn tồn tại. Xin hãy giữ yên chúng cho tới khi trình cài đặt làm xong việc!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="230"/>
+      <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
       <translation>ROFS trong tệp firmware bị hỏng! Xin hãy chắc chắn rằng các tệp firmware của bạn không bị lỗi.</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="234"/>
+      <location filename="../src/device_install_dialog.cpp" line="236"/>
       <source>Fail to copy ROM file!</source>
       <translation>Sao chép tệp ROM không thành công!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="238"/>
+      <location filename="../src/device_install_dialog.cpp" line="240"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
       <translation>ROM được cho bị hỏng! Xin hãy chắc chắn rằng ROM của bạn hoàn toàn hợp lệ!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="242"/>
+      <location filename="../src/device_install_dialog.cpp" line="244"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
       <translation>RPKG được cho bị hỏng! Xin hãy chắc chắn rằng RPKG của bạn hoàn toàn hợp lệ!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="246"/>
+      <location filename="../src/device_install_dialog.cpp" line="248"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
       <translation>VPL được cho bị hỏng! Xin hãy kiểm tra lại các tệp firmware!</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="254"/>
+      <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
       <translation>Cài đặt thất bại</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="263"/>
+      <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
       <translation>Chọn tệp VPL</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="264"/>
+      <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl)</source>
       <translation>Tệp VPL (*.vpl)</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="273"/>
+      <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
       <translation>Chọn tệp ROM</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="274"/>
+      <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM)</source>
       <translation>Tệp ROM (*.rom *.ROM)</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="298"/>
+      <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
       <translation>Chọn tệp RPKG</translation>
     </message>
     <message>
-      <location filename="../src/device_install_dialog.cpp" line="299"/>
+      <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG)</source>
       <translation>Tệp RPKG (*.rpkg *.RPKG)</translation>
     </message>
@@ -328,159 +328,159 @@
       <translation>Thư mục</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="234"/>
+      <location filename="../src/mainwindow.cpp" line="246"/>
       <source>Clear menu</source>
       <translation>Làm rỗng menu</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="296"/>
+      <location filename="../src/mainwindow.cpp" line="308"/>
       <source>Touchscreen disabled</source>
       <translation>Màn hình cảm ứng bị vô hiệu hóa</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="296"/>
+      <location filename="../src/mainwindow.cpp" line="308"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
       <translation>Một vài nối phím của bạn có liên quan tới các nút nhấn chuột. Vì vậy, màn hình cảm ứng của thiết bị giả lập bị vô hiệu hóa.&lt;br&gt;&lt;br&gt;&lt;b&gt;Mẹo:&lt;/b&gt;&lt;br&gt;Màn hình cảm ứng có thể được bật lại khi bạn nối phím với bàn phím thay vì chuột.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="297"/>
-      <location filename="../src/mainwindow.cpp" line="358"/>
+      <location filename="../src/mainwindow.cpp" line="309"/>
+      <location filename="../src/mainwindow.cpp" line="373"/>
       <source>Don&apos;t show this again</source>
       <translation>Đừng hiện lại lần nữa</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="357"/>
+      <location filename="../src/mainwindow.cpp" line="372"/>
       <source>No device installed</source>
       <translation>Không thiết bị nào được cài đặt</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="357"/>
+      <location filename="../src/mainwindow.cpp" line="372"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
       <translation>Bạn chưa cái đặt một thiết bị nào. Xin lãy cài đặt một thiết bị hoặc làm theo chỉ dẫn cài đặt trên trang Github wiki của EKA2L1.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="635"/>
+      <location filename="../src/mainwindow.cpp" line="651"/>
       <source>Extracting game dump files</source>
       <translation>Giải nén các tệp của game dump</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="656"/>
+      <location filename="../src/mainwindow.cpp" line="672"/>
       <source>Mounting aborted</source>
       <translation>Quá trình nhập bị hủy</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="661"/>
+      <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP file is corrupted!</source>
       <translation>Tệp ZIP bị hỏng!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="666"/>
+      <location filename="../src/mainwindow.cpp" line="682"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
       <translation>Tệp ZIP không có thư mục System trong thư mục mẹ. Thư mục System phải tồn tại trong một game dump.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="672"/>
+      <location filename="../src/mainwindow.cpp" line="688"/>
       <source>The choosen file is not a ZIP file!</source>
       <translation>File được chọn không phải là file ZIP!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="686"/>
+      <location filename="../src/mainwindow.cpp" line="702"/>
       <source>Game card problem</source>
       <translation>Vấn đề về thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="686"/>
+      <location filename="../src/mainwindow.cpp" line="702"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
       <translation>Dump của thẻ game có tệp tên chứa chữ in hoa. Nó có thể gây ra vấn đề với giả lập.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="690"/>
+      <location filename="../src/mainwindow.cpp" line="706"/>
       <source>Game card dump folder correction</source>
       <translation>Sửa thư mục dump thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="690"/>
+      <location filename="../src/mainwindow.cpp" line="706"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
       <translation>Đường dẫn được chọn có vẻ sai sai.&lt;br&gt;Bạn có muốn giả lập giúp sửa lại nó không?</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="746"/>
+      <location filename="../src/mainwindow.cpp" line="762"/>
       <source>Choose the game card dump folder</source>
       <translation>Chọn thư mục chứa dump thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="766"/>
+      <location filename="../src/mainwindow.cpp" line="782"/>
       <source>Choose the game card zip</source>
       <translation>Chọn zip thẻ game</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="840"/>
+      <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
       <translation>Tài liệu</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="858"/>
+      <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
       <translation>Chọn ngôn ngữ cho gói cài đặt này</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="632"/>
-      <location filename="../src/mainwindow.cpp" line="876"/>
+      <location filename="../src/mainwindow.cpp" line="648"/>
+      <location filename="../src/mainwindow.cpp" line="892"/>
       <source>Cancel</source>
       <translation>Huỷ</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="879"/>
+      <location filename="../src/mainwindow.cpp" line="895"/>
       <source>Installing package progress</source>
       <translation>Tiến trình cài đặt gói</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="903"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
       <translation>Cài đặt bị hủy bỏ</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="903"/>
+      <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
       <translation>Việc cài đặt đã bị hủy</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="908"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
       <translation>Cài đặt thất bại</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="908"/>
+      <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
       <translation>Lỗi cài đặt ứng dụng ở đường dẫn: %1. Chắc chắn rằng đường đẫn trỏ tới một tệp SIS/SISX hợp lệ.</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
       <translation>Cài đặt thành công</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="915"/>
+      <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
       <translation>Gói ứng dụng đã được cài đặt thành công</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="936"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
       <translation>Chọn tệp để cài đặt</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="936"/>
+      <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
       <translation>Tệp SIS (*sis *.sisx)</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1095"/>
+      <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>Load theme failed!</source>
       <translation>Nhập giao diện thất bại!</translation>
     </message>
     <message>
-      <location filename="../src/mainwindow.cpp" line="1095"/>
+      <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
       <translation>Tệp mẫu điệu của giao diện tối không thể được tìm thấy!</translation>
     </message>
@@ -666,464 +666,489 @@
       <translation>Màn hình giả lập</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="325"/>
+      <location filename="../src/settings_dialog.ui" line="349"/>
+      <source>Background color</source>
+      <translation type="unfinished">Background color</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="362"/>
+      <source>Pick</source>
+      <translation type="unfinished">Pick</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="372"/>
       <source>Hide mouse cursor</source>
       <translation>Ẩn con trỏ chuột</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="332"/>
+      <location filename="../src/settings_dialog.ui" line="379"/>
       <source>Enable nearest neighbor filtering</source>
       <translation>Bật màng lọc hàng xóm gần nhất</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="344"/>
+      <location filename="../src/settings_dialog.ui" line="386"/>
+      <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
+      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="389"/>
+      <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
+      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.ui" line="401"/>
       <source>User interface</source>
       <translation>Giao diện người dùng</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="352"/>
+      <location filename="../src/settings_dialog.ui" line="409"/>
       <source>Theme</source>
       <translation>Chủ đề</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="360"/>
+      <location filename="../src/settings_dialog.ui" line="417"/>
       <source>Light</source>
       <translation>Sáng</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="365"/>
+      <location filename="../src/settings_dialog.ui" line="422"/>
       <source>Dark</source>
       <translation>Tối</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="377"/>
+      <location filename="../src/settings_dialog.ui" line="434"/>
       <source>Language</source>
       <translation>Ngôn ngữ</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="389"/>
+      <location filename="../src/settings_dialog.ui" line="446"/>
       <source>Disable status bar</source>
       <translation>Ẩn thanh trạng thái</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="400"/>
+      <location filename="../src/settings_dialog.ui" line="457"/>
       <source>System</source>
       <translation>Hệ thống</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="406"/>
+      <location filename="../src/settings_dialog.ui" line="463"/>
       <source>Audio</source>
       <translation>Âm thanh</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="420"/>
+      <location filename="../src/settings_dialog.ui" line="477"/>
       <source>Volume</source>
       <translation>Âm lượng</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="443"/>
-      <location filename="../src/settings_dialog.ui" line="681"/>
-      <location filename="../src/settings_dialog.ui" line="1453"/>
+      <location filename="../src/settings_dialog.ui" line="500"/>
+      <location filename="../src/settings_dialog.ui" line="738"/>
+      <location filename="../src/settings_dialog.ui" line="1510"/>
       <source>0</source>
       <translation type="unfinished">0</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="455"/>
+      <location filename="../src/settings_dialog.ui" line="512"/>
       <source>Devices</source>
       <translation>Thiết bị</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="472"/>
+      <location filename="../src/settings_dialog.ui" line="529"/>
       <source>Current</source>
       <translation>Hiện tại</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="495"/>
-      <location filename="../src/settings_dialog.ui" line="771"/>
+      <location filename="../src/settings_dialog.ui" line="552"/>
+      <location filename="../src/settings_dialog.ui" line="828"/>
       <source>Rename</source>
       <translation>Đổi tên</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="506"/>
+      <location filename="../src/settings_dialog.ui" line="563"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
       <translation>Kiểm tra xem có thiết bị nào chưa được thêm hay không và sửa thông tin của các thiết bị đã có.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="509"/>
+      <location filename="../src/settings_dialog.ui" line="566"/>
       <source>Rescan devices</source>
       <translation>Quét lại các thiết bị</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="516"/>
+      <location filename="../src/settings_dialog.ui" line="573"/>
       <source>Check for faults in current device and fix them so that EKA2L1 can emulate the device.</source>
       <translation>Kiểm tra và sửa lỗi của thiết bị hiện tại để EKA2L1 có thể giả lập thiết bị.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="519"/>
+      <location filename="../src/settings_dialog.ui" line="576"/>
       <source>Validate current device</source>
       <translation>Kiểm tra thiết bị hiện tại</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="531"/>
+      <location filename="../src/settings_dialog.ui" line="588"/>
       <source>Hardware emulation</source>
       <translation>Giả lập phần cứng</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="545"/>
+      <location filename="../src/settings_dialog.ui" line="602"/>
       <source>CPU emulator</source>
       <translation>Giả lập CPU</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="553"/>
+      <location filename="../src/settings_dialog.ui" line="610"/>
       <source>Dynarmic (CPU recompiler)</source>
       <translation>Dynarmic (CPU dịch nhanh)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="558"/>
+      <location filename="../src/settings_dialog.ui" line="615"/>
       <source>Dyncom (CPU interpreter)</source>
       <translation>Dyncom (CPU dịch chậm)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="570"/>
+      <location filename="../src/settings_dialog.ui" line="627"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
       <translation>Chọn mức độ chuẩn xác cho các quá trình liên quan đến thời gian.&lt;br&gt;Mức độ càng cao, CPU càng tiêu nhiều năng lượng, nhưng một số quá trình có thể nhanh hơn trong vài ứng dụng!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="573"/>
+      <location filename="../src/settings_dialog.ui" line="630"/>
       <source>Real-time accuracy</source>
       <translation>Độ chính xác về thời gian thực</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="581"/>
+      <location filename="../src/settings_dialog.ui" line="638"/>
       <source>Low</source>
       <translation>Thấp</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="586"/>
+      <location filename="../src/settings_dialog.ui" line="643"/>
       <source>Mid</source>
       <translation>Trung</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="591"/>
+      <location filename="../src/settings_dialog.ui" line="648"/>
       <source>High</source>
       <translation>Cao</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="610"/>
+      <location filename="../src/settings_dialog.ui" line="667"/>
       <source>Properties</source>
       <translation>Các thuộc tính</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="641"/>
+      <location filename="../src/settings_dialog.ui" line="698"/>
       <source>Check</source>
       <translation>Kiểm tra</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="652"/>
+      <location filename="../src/settings_dialog.ui" line="709"/>
       <source>Battery level (0 - 100)</source>
       <translation>Dung lượng pin (0 - 100)</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="698"/>
+      <location filename="../src/settings_dialog.ui" line="755"/>
       <source>System language</source>
       <translation>Ngôn ngữ hệ thống</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="720"/>
+      <location filename="../src/settings_dialog.ui" line="777"/>
       <source>Control</source>
       <translation>Điều khiển</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="735"/>
+      <location filename="../src/settings_dialog.ui" line="792"/>
       <source>Profile</source>
       <translation>Hồ sơ</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="758"/>
+      <location filename="../src/settings_dialog.ui" line="815"/>
       <source>Add</source>
       <translation>Thêm</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="784"/>
+      <location filename="../src/settings_dialog.ui" line="841"/>
       <source>Delete</source>
       <translation>Xóa</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="803"/>
+      <location filename="../src/settings_dialog.ui" line="860"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
       <translation>Mẹo: Một số những nối phím của bạn có liên quan đến nút nhấn chuột, các chức năng màn hình cảm ứng sẽ bị vô hiệu hóa.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="821"/>
+      <location filename="../src/settings_dialog.ui" line="878"/>
       <source>Left softkey</source>
       <translation>Phím menu</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="859"/>
+      <location filename="../src/settings_dialog.ui" line="916"/>
       <source>Up arrow</source>
       <translation>Lên</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="891"/>
+      <location filename="../src/settings_dialog.ui" line="948"/>
       <source>Right softkey</source>
       <translation>Phải</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="927"/>
+      <location filename="../src/settings_dialog.ui" line="984"/>
       <source>Left arrow</source>
       <translation>Trái</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="959"/>
+      <location filename="../src/settings_dialog.ui" line="1016"/>
       <source>Middle softkey</source>
       <translation>Phím giữa</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="991"/>
+      <location filename="../src/settings_dialog.ui" line="1048"/>
       <source>Right arrow</source>
       <translation>Phải</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1027"/>
+      <location filename="../src/settings_dialog.ui" line="1084"/>
       <source>Green softkey</source>
       <translation>Phím gọi</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1059"/>
+      <location filename="../src/settings_dialog.ui" line="1116"/>
       <source>Down arrow</source>
       <translation>Xuống</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1091"/>
+      <location filename="../src/settings_dialog.ui" line="1148"/>
       <source>Red softkey</source>
       <translation>Phím hủy gọi/nguồn</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1127"/>
+      <location filename="../src/settings_dialog.ui" line="1184"/>
       <source>1</source>
       <translation type="unfinished">1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1159"/>
+      <location filename="../src/settings_dialog.ui" line="1216"/>
       <source>2</source>
       <translation type="unfinished">2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1191"/>
+      <location filename="../src/settings_dialog.ui" line="1248"/>
       <source>3</source>
       <translation type="unfinished">3</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1227"/>
+      <location filename="../src/settings_dialog.ui" line="1284"/>
       <source>4</source>
       <translation type="unfinished">4</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1259"/>
+      <location filename="../src/settings_dialog.ui" line="1316"/>
       <source>5</source>
       <translation type="unfinished">5</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1291"/>
+      <location filename="../src/settings_dialog.ui" line="1348"/>
       <source>6</source>
       <translation type="unfinished">6</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1321"/>
+      <location filename="../src/settings_dialog.ui" line="1378"/>
       <source>7</source>
       <translation type="unfinished">7</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1353"/>
+      <location filename="../src/settings_dialog.ui" line="1410"/>
       <source>8</source>
       <translation type="unfinished">8</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1385"/>
+      <location filename="../src/settings_dialog.ui" line="1442"/>
       <source>9</source>
       <translation type="unfinished">9</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1421"/>
+      <location filename="../src/settings_dialog.ui" line="1478"/>
       <source>*</source>
       <translation type="unfinished">*</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.ui" line="1485"/>
+      <location filename="../src/settings_dialog.ui" line="1542"/>
       <source>#</source>
       <translation type="unfinished">#</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="398"/>
+      <location filename="../src/settings_dialog.cpp" line="402"/>
       <source>Choose the data folder</source>
       <translation>Chọn thư mục lưu dữ liệu</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="400"/>
-      <location filename="../src/settings_dialog.cpp" line="1071"/>
-      <location filename="../src/settings_dialog.cpp" line="1096"/>
+      <location filename="../src/settings_dialog.cpp" line="404"/>
+      <location filename="../src/settings_dialog.cpp" line="1079"/>
+      <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>Relaunch needed</source>
       <translation>Cần khởi động lại</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="400"/>
+      <location filename="../src/settings_dialog.cpp" line="404"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
       <translation>Sự thay đổi này yêu cầu cần khởi động lại trình giả lập.&lt;br&gt;Bạn có muốn tiếp tục?</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="518"/>
+      <location filename="../src/settings_dialog.cpp" line="522"/>
       <source>Please wait</source>
       <translation>Xin hãy chờ</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="519"/>
+      <location filename="../src/settings_dialog.cpp" line="523"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
       <translation>Quá trình kiểm tra đang được diễn ra. Xin hãy không thoát hoặc khởi động các ứng dụng giả lập khác cho tới khi quá trình này hoàn thành.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="539"/>
+      <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation done!</source>
       <translation>Kiểm tra hoàn thành!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="539"/>
+      <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>The validation has successfully completed!</source>
       <translation>Đã thành công kiểm tra!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="550"/>
+      <location filename="../src/settings_dialog.cpp" line="554"/>
       <source>Enter new device name</source>
       <translation>Nhập tên thiết bị mới</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="646"/>
+      <location filename="../src/settings_dialog.cpp" line="650"/>
       <source>Unbind</source>
       <translation>Hủy nối</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="691"/>
+      <location filename="../src/settings_dialog.cpp" line="695"/>
       <source>Waiting for input</source>
       <translation>Đang chờ nhập</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="706"/>
-      <location filename="../src/settings_dialog.cpp" line="752"/>
+      <location filename="../src/settings_dialog.cpp" line="710"/>
+      <location filename="../src/settings_dialog.cpp" line="756"/>
       <source>Mouse button %1</source>
       <translation>Phím nhấn chuột %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="708"/>
-      <location filename="../src/settings_dialog.cpp" line="794"/>
+      <location filename="../src/settings_dialog.cpp" line="712"/>
+      <location filename="../src/settings_dialog.cpp" line="798"/>
       <source>Controller %1 : Button %2</source>
       <translation>Tay cầm %1 : Nút %2</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="819"/>
-      <location filename="../src/settings_dialog.cpp" line="843"/>
+      <location filename="../src/settings_dialog.cpp" line="823"/>
+      <location filename="../src/settings_dialog.cpp" line="847"/>
       <source>Enter profile name</source>
       <translation>Nhập tên hồ sơ</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="827"/>
+      <location filename="../src/settings_dialog.cpp" line="831"/>
       <source>Profile creation failed</source>
       <translation>Tạo hồ sơ thất bại</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="827"/>
-      <location filename="../src/settings_dialog.cpp" line="851"/>
+      <location filename="../src/settings_dialog.cpp" line="831"/>
+      <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>A profile with that name already exists!</source>
       <translation>Một hồ sơ cùng tên đã tồn tại!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="851"/>
+      <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>Profile rename failed</source>
       <translation>Đổi tên hồ sơ thất bại</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="866"/>
+      <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>Profile deletion failed</source>
       <translation>Xóa hồ sơ thất bại</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="866"/>
+      <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>This is the only profile left!</source>
       <translation>Đây là hồ sơ cuối cùng!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="900"/>
+      <location filename="../src/settings_dialog.cpp" line="908"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
       <translation>&lt;b&gt;Tinh chỉnh cho:&lt;/b&gt; %1</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="903"/>
-      <location filename="../src/settings_dialog.cpp" line="908"/>
+      <location filename="../src/settings_dialog.cpp" line="911"/>
+      <location filename="../src/settings_dialog.cpp" line="916"/>
       <source>None</source>
       <translation>Rỗng</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="998"/>
+      <location filename="../src/settings_dialog.cpp" line="1006"/>
       <source>IMEI sequence contains non-numeric character!</source>
       <translation>Dãy IMEI chứa kí tự không phải là số!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1001"/>
+      <location filename="../src/settings_dialog.cpp" line="1009"/>
       <source>IMEI sequence has invalid sum!</source>
       <translation>Dãy IMEI có tổng không hợp lệ!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1004"/>
+      <location filename="../src/settings_dialog.cpp" line="1012"/>
       <source>IMEI sequence length must be 15!</source>
       <translation>Độ dài dãy IMEI phải là 15!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1010"/>
+      <location filename="../src/settings_dialog.cpp" line="1018"/>
       <source>Unidentified error!</source>
       <translation>Lỗi không xác định!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1017"/>
+      <location filename="../src/settings_dialog.cpp" line="1025"/>
       <source>IMEI valid!</source>
       <translation>IMEI hợp lệ!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1017"/>
+      <location filename="../src/settings_dialog.cpp" line="1025"/>
       <source>The IMEI sequence is valid!</source>
       <translation>Dãy IMEI hợp lệ!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1020"/>
+      <location filename="../src/settings_dialog.cpp" line="1028"/>
       <source>IMEI invalid!</source>
       <translation>IMEI không hợp lệ!</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1030"/>
+      <location filename="../src/settings_dialog.cpp" line="1038"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
       <translation>Dãy IMEI của bạn không hợp lệ vì: %1.&lt;br&gt;Bạn có muốn sửa IMEI hiện tại thay vì đóng cửa sổ? Chọn &quot;Không&quot; sẽ lưu dãy IMEI hiện tại.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1032"/>
+      <location filename="../src/settings_dialog.cpp" line="1040"/>
       <source>Cancel closing</source>
       <translation>Hủy đóng</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1071"/>
+      <location filename="../src/settings_dialog.cpp" line="1079"/>
       <source>This change will be effective on the next launch of the emulator.</source>
       <translation>Thay đổi này sẽ có hiệu lực vào lần khởi động tiếp theo của giả lập.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1079"/>
+      <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Confirmation</source>
       <translation>Xác nhận</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1079"/>
+      <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
       <translation>Bạn có chắc chắn không? Giao diện hiện tại sẽ được đặt lại, tất cả những cửa sổ đã được vô hiệu hóa trước đó sẽ được hủy vô hiệu hóa, và những lần nhập gần đây sẽ được xóa sạch.</translation>
     </message>
     <message>
-      <location filename="../src/settings_dialog.cpp" line="1096"/>
+      <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>The language will be updated on the next launch of the emulator.</source>
       <translation>Ngôn ngữ sẽ được cập nhật vào lần khởi động tiếp theo của giả lập.</translation>
+    </message>
+    <message>
+      <location filename="../src/settings_dialog.cpp" line="1124"/>
+      <source>Pick the screen background color</source>
+      <translation type="unfinished">Pick the screen background color</translation>
     </message>
   </context>
 </TS>
