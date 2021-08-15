@@ -668,12 +668,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="349"/>
       <source>Background color</source>
-      <translation type="unfinished">Background color</translation>
+      <translation>背景颜色</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="362"/>
       <source>Pick</source>
-      <translation type="unfinished">Pick</translation>
+      <translation>选取</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="372"/>
@@ -688,12 +688,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>默认情况下，模拟器只允许调整模拟器显示到手机屏幕的最小尺寸与系统显示尺寸的倍数，以适应大多数用户的眼睛。</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>允许调整显示到手机屏幕的真大小像素</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
@@ -1148,7 +1148,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1124"/>
       <source>Pick the screen background color</source>
-      <translation type="unfinished">Pick the screen background color</translation>
+      <translation>选取屏幕背景颜色</translation>
     </message>
   </context>
 </TS>
