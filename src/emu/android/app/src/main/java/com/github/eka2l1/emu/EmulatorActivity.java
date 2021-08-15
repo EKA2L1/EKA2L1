@@ -427,9 +427,10 @@ public class EmulatorActivity extends AppCompatActivity {
                 case MotionEvent.ACTION_POINTER_DOWN:
                     int index = event.getActionIndex();
                     int id = event.getPointerId(index);
-                    if ((keyboard == null || !keyboard.pointerPressed(id, event.getX(index), event.getY(index)))
-                            && id == 0) {
-                        Emulator.touchScreen((int) event.getX(), (int) event.getY(), 0);
+                    float x = event.getX(index);
+                    float y = event.getY(index);
+                    if ((keyboard == null || !keyboard.pointerPressed(id, x, y)) && id == 0) {
+                        Emulator.touchScreen((int) x, (int) y, 0);
                     }
                     break;
                 case MotionEvent.ACTION_MOVE:
@@ -438,21 +439,22 @@ public class EmulatorActivity extends AppCompatActivity {
                     for (int h = 0; h < historySize; h++) {
                         for (int p = 0; p < pointerCount; p++) {
                             id = event.getPointerId(p);
-                            if ((keyboard == null || !keyboard.pointerDragged(id, event.getHistoricalX(p, h), event.getHistoricalY(p, h)))
-                                    && id == 0) {
-                                Emulator.touchScreen((int) event.getHistoricalX(p, h),
-                                        (int) event.getHistoricalY(p, h), 1);
+                            x = event.getHistoricalX(p, h);
+                            y = event.getHistoricalY(p, h);
+                            if ((keyboard == null || !keyboard.pointerDragged(id, x, y)) && id == 0) {
+                                Emulator.touchScreen((int) x, (int) y, 1);
                             }
                         }
                     }
                     for (int p = 0; p < pointerCount; p++) {
                         id = event.getPointerId(p);
-                        if ((keyboard == null || !keyboard.pointerDragged(id, event.getX(p), event.getY(p)))
-                                && id == 0) {
-                            Emulator.touchScreen((int) event.getX(p), (int) event.getX(p), 1);
+                        x = event.getX(p);
+                        y = event.getY(p);
+                        if ((keyboard == null || !keyboard.pointerDragged(id, x, y)) && id == 0) {
+                            Emulator.touchScreen((int) x, (int) y, 1);
                         }
                     }
-                    break;
+                break;
                 case MotionEvent.ACTION_UP:
                     if (keyboard != null) {
                         keyboard.hide();
@@ -460,9 +462,10 @@ public class EmulatorActivity extends AppCompatActivity {
                 case MotionEvent.ACTION_POINTER_UP:
                     index = event.getActionIndex();
                     id = event.getPointerId(index);
-                    if ((keyboard == null || !keyboard.pointerReleased(id, event.getX(index), event.getY(index)))
-                            && id == 0) {
-                        Emulator.touchScreen((int) event.getX(), (int) event.getY(), 2);
+                    x = event.getX(index);
+                    y = event.getY(index);
+                    if ((keyboard == null || !keyboard.pointerReleased(id, x, y)) && id == 0) {
+                        Emulator.touchScreen((int) x, (int) y, 2);
                     }
                     break;
                 default:
