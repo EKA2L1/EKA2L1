@@ -97,10 +97,11 @@ namespace eka2l1::desktop {
             symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(conf.storage, "/drives/e/"), io_attrib_removeable);
 
             on_system_reset(symsys.get());
-            sys_reset_cbh = symsys->add_system_reset_callback([this](system *the_sys) {
-                on_system_reset(the_sys);
-            });
         }
+
+        sys_reset_cbh = symsys->add_system_reset_callback([this](system *the_sys) {
+            on_system_reset(the_sys);
+        });
 
         first_time = true;
         stage_two_inited = false;
