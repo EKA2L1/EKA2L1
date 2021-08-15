@@ -77,11 +77,8 @@ namespace eka2l1 {
         }
 
         bool operator==(const eka2l1::vecx<T, SIZE> &v) {
-            for (std::size_t i = 0; i < SIZE; i++) {
-                if (elements[i] != v.elements[i]) {
-                    return false;
-                }
-            }
+            if (!std::equal(v.elements.begin(), v.elements.end(), elements.begin()))
+                return false;
 
             return true;
         }

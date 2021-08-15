@@ -863,13 +863,13 @@ namespace eka2l1 {
         ImGui::Begin(pref_title.c_str(), &should_show_preferences);
 
         using show_func = std::function<void(imgui_debugger *)>;
-        std::vector<std::pair<std::string, show_func>> all_prefs = {
+        std::array<std::pair<std::string, show_func>, 5> all_prefs = { {
             { common::get_localised_string(localised_strings, "pref_general_title"), &imgui_debugger::show_pref_general },
             { common::get_localised_string(localised_strings, "pref_system_title"), &imgui_debugger::show_pref_system },
             { common::get_localised_string(localised_strings, "pref_control_title"), &imgui_debugger::show_pref_control },
             { common::get_localised_string(localised_strings, "pref_personalize_title"), &imgui_debugger::show_pref_personalisation },
             { "HAL", &imgui_debugger::show_pref_hal }
-        };
+        } };
 
         for (std::size_t i = 0; i < all_prefs.size(); i++) {
             bool pushed_color = false;

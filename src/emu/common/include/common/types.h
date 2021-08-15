@@ -22,7 +22,7 @@
 #include <functional>
 #include <string>
 
-#define FOUND_STR(x) x != std::string::npos
+#define FOUND_STR(x) (x) != std::string::npos
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #if defined(_MSC_VER)
