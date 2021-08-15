@@ -533,16 +533,16 @@ namespace eka2l1::hle {
             return false;
         }
 
-        for (auto &patch : patches_) {
-            if (does_condition_meet_for_patch(original, patch, true)) {
-                if (!patch.patch_) {
+        for (std::size_t i = 0; i < patches_.size(); i++) {
+            if (does_condition_meet_for_patch(original, patches_[i], true)) {
+                if (!patches_[i].patch_) {
                     patch_pending_entry entry;
-                    entry.info_ = &patch;
+                    entry.info_index_ = i;
                     entry.dest_ = original;
 
                     patch_pendings_.push_back(entry);
                 } else {
-                    patch_original_codeseg(patch.routes_, kern_->get_memory_system(), patch.patch_,
+                    patch_original_codeseg(patches_[i].routes_, kern_->get_memory_system(), patches_[i].patch_,
                         original);
                 }
 
@@ -555,7 +555,12 @@ namespace eka2l1::hle {
 
     void lib_manager::apply_pending_patches() {
         for (auto &pending_entry : patch_pendings_) {
-            patch_original_codeseg(pending_entry.info_->routes_, kern_->get_memory_system(), pending_entry.info_->patch_,
+            if (pending_entry.info_index_ >= patches_.size()) {
+                continue;
+            }
+
+            patch_info &info = patches_[pending_entry.info_index_];
+            patch_original_codeseg(info.routes_, kern_->get_memory_system(), info.patch_,
                 pending_entry.dest_);
         }
     }

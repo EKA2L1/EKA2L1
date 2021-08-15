@@ -111,7 +111,7 @@ namespace eka2l1 {
 
         struct patch_pending_entry {
             codeseg_ptr dest_;
-            patch_info *info_;
+            std::size_t info_index_;
         };
 
         /**
