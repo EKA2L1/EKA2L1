@@ -106,8 +106,10 @@ namespace eka2l1::epoc {
         set_client_handle(client_handle);
     }
 
-    window_user::~window_user() {
+    window_user::~window_user() {        
+        remove_from_sibling_list();
         wipeout();
+
         client->remove_redraws(this);
     }
 
@@ -417,11 +419,7 @@ namespace eka2l1::epoc {
     void window_user::free(service::ipc_context &context, ws_cmd &cmd) {
         // Try to redraw the screen
         on_command_batch_done(context);
-
         set_visible(false);
-        remove_from_sibling_list();
-
-        wipeout();
 
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);

@@ -292,7 +292,9 @@ namespace eka2l1::epoc {
 
         if (old_focus != focus || new_focus_screen) {
             if (old_focus && (old_focus != closing_group) && is_me_currently_focus) {
-                old_focus->last_refresh_rate = focus->scr->refresh_rate;
+                if (focus)
+                    old_focus->last_refresh_rate = focus->scr->refresh_rate;
+
                 old_focus->lost_focus();
             }
 
