@@ -178,8 +178,6 @@ namespace eka2l1::kernel {
 
         std::int32_t generation_;
 
-        // Это оскорбления, первое слово оскорбляет человека, а второе говорят для
-        // увеличения эмоций.
         common::identity_container<process_uid_type_change_callback_elem> uid_change_callbacks;
 
     protected:

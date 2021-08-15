@@ -71,7 +71,6 @@ namespace eka2l1 {
 
             bool skip_next_file{ false };
 
-            bool appprop(const sis_uid uid, sis_property prop);
             bool package(const sis_uid &uid);
 
             /**

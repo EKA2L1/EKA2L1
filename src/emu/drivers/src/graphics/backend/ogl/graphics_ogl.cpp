@@ -48,7 +48,7 @@ namespace eka2l1::drivers {
         glGetIntegerv(GL_MAJOR_VERSION, &major_gl);
 
         if (!is_gles && (major_gl < 4)) {
-            std::list<std::string> GL_REQUIRED_EXTENSIONS = {
+            std::vector<std::string> GL_REQUIRED_EXTENSIONS = {
                 "GL_ARB_draw_elements_base_vertex"
             };
 

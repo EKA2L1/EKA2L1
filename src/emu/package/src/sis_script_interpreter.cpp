@@ -51,10 +51,6 @@ namespace eka2l1 {
             return common::ucs2_to_utf8(raw_path);
         }
 
-        bool ss_interpreter::appprop(sis_uid uid, sis_property prop) {
-            return false;
-        }
-
         bool ss_interpreter::package(const sis_uid &uid) {
             if (mngr->installed(uid.uid)) {
                 return true;
