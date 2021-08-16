@@ -707,7 +707,7 @@ QString settings_dialog::key_bind_entry_to_string(eka2l1::config::keybind &bind)
     if (bind.source.type == eka2l1::config::KEYBIND_TYPE_KEY) {
         return QKeySequence(bind.source.data.keycode).toString();
     } else if (bind.source.type == eka2l1::config::KEYBIND_TYPE_MOUSE) {
-        return tr("Mouse button %1").arg(bind.source.data.keycode - eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE);
+        return tr("Mouse button %1").arg(bind.source.data.keycode);
     } else if (bind.source.type == eka2l1::config::KEYBIND_TYPE_CONTROLLER) {
         QString first_result = tr("Controller %1 : Button %2").arg(bind.source.data.button.controller_id);
         // Backend may not be able to initialized, so should do a check
@@ -750,16 +750,16 @@ bool settings_dialog::eventFilter(QObject *obj, QEvent *event) {
             }
 
             QMouseEvent *mouse_event = reinterpret_cast<QMouseEvent *>(event);
-            const std::uint32_t mouse_button_order = eka2l1::common::find_most_significant_bit_one(mouse_event->button()) + eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE;
+            const std::uint32_t mouse_button_order = eka2l1::common::find_most_significant_bit_one(mouse_event->button());
             const int target_bind_code = target_bind_codes_[target_bind_];
 
-            target_bind_->setText(tr("Mouse button %1").arg(mouse_button_order - eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE));
+            target_bind_->setText(tr("Mouse button %1").arg(mouse_button_order));
 
             eka2l1::window_server *win_serv = get_window_server_through_system(system_);
 
             if (win_serv) {
                 win_serv->delete_key_mapping(target_bind_code);
-                win_serv->input_mapping.key_input_map[mouse_button_order] = static_cast<eka2l1::epoc::std_scan_code>(target_bind_code);
+                win_serv->input_mapping.key_input_map[mouse_button_order + eka2l1::epoc::KEYBIND_TYPE_MOUSE_CODE_BASE] = static_cast<eka2l1::epoc::std_scan_code>(target_bind_code);
             }
 
             new_bind = std::make_optional<eka2l1::config::keybind>();
