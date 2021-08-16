@@ -367,7 +367,7 @@ namespace eka2l1::epoc {
 
             std::int32_t head = 0;
             if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
-                std::int32_t head = current_def->next_hash_;
+                head = current_def->next_hash_;
             }
             std::memcpy(current_def, &def, definition_size);
 

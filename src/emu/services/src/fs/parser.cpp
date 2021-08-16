@@ -58,7 +58,7 @@ namespace eka2l1 {
         parse_.name_buf = result;
     }
 
-    void file_parser::parse_part(std::uint32_t type, std::u16string name) {
+    void file_parser::parse_part(std::uint32_t type, const std::u16string &name) {
         switch (type) {
         case file_parse_type::file_parse_drive:
             parse_drive(name);
@@ -81,7 +81,7 @@ namespace eka2l1 {
         }
     }
 
-    void file_parser::parse_drive(std::u16string name) {
+    void file_parser::parse_drive(const std::u16string &name) {
         if (name.length() < 2 || name.at(1) != ':') {
             return;
         }
@@ -91,7 +91,7 @@ namespace eka2l1 {
         }
     }
 
-    void file_parser::parse_path(std::u16string name) {
+    void file_parser::parse_path(const std::u16string &name) {
         std::size_t pos_start = name.find('\\');
         if (pos_start == std::string::npos) {
             return;
@@ -103,7 +103,7 @@ namespace eka2l1 {
         }
     }
 
-    void file_parser::parse_name(std::u16string name) {
+    void file_parser::parse_name(const std::u16string &name) {
         std::u16string fname = eka2l1::filename(name, true); 
         std::size_t pos_end = fname.find_last_of('.');
         if (pos_end != std::string::npos) {
@@ -126,7 +126,7 @@ namespace eka2l1 {
         }
     }
 
-    void file_parser::parse_ext(std::u16string name) {
+    void file_parser::parse_ext(const std::u16string &name) {
         std::u16string ext = eka2l1::path_extension(name);
         if (ext.length() == 0) {
             return;

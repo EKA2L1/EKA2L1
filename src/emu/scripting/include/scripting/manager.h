@@ -165,9 +165,9 @@ namespace eka2l1::manager {
          * \param process_uid       The UID of the process we wants to invoke this hook.
          * \param func              The hook.
          */
-        void register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func);
-        void register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func);
-        void register_ipc(const std::string &server_name, const int opcode, const int invoke_when, ipc_operation_func func);
+        void register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, const breakpoint_hit_func &func);
+        void register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const breakpoint_hit_func &func);
+        void register_ipc(const std::string &server_name, const int opcode, const int invoke_when, const ipc_operation_func &func);
 
         bool call_breakpoints(const std::uint32_t addr, const std::uint32_t process_uid);
 

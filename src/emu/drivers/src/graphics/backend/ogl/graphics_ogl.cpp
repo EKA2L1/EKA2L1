@@ -48,7 +48,7 @@ namespace eka2l1::drivers {
         glGetIntegerv(GL_MAJOR_VERSION, &major_gl);
 
         if (!is_gles && (major_gl < 4)) {
-            std::vector<std::string> GL_REQUIRED_EXTENSIONS = {
+            std::array<std::string, 1> GL_REQUIRED_EXTENSIONS = {
                 "GL_ARB_draw_elements_base_vertex"
             };
 
@@ -57,11 +57,12 @@ namespace eka2l1::drivers {
 
             for(std::int32_t i = 0; i < ext_count; i++) {
                 const GLubyte *next_extension = glGetStringi(GL_EXTENSIONS, i);
-                auto ite = std::find(GL_REQUIRED_EXTENSIONS.begin(), GL_REQUIRED_EXTENSIONS.end(), 
+                auto it = std::find(GL_REQUIRED_EXTENSIONS.begin(), GL_REQUIRED_EXTENSIONS.end(), 
                     std::string(reinterpret_cast<const char*>(next_extension)));
 
-                if (ite != GL_REQUIRED_EXTENSIONS.end()) {
-                    GL_REQUIRED_EXTENSIONS.erase(ite);
+                if (it != GL_REQUIRED_EXTENSIONS.end()) {
+                    auto idx = std::distance(GL_REQUIRED_EXTENSIONS.begin(), it);
+                    GL_REQUIRED_EXTENSIONS[idx] = nullptr;
                 }
             }
 

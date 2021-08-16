@@ -226,7 +226,7 @@ namespace eka2l1::manager {
         return fine;
     }
 
-    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, ipc_operation_func func) {
+    void scripts::register_ipc(const std::string &server_name, const int opcode, const int invoke_when, const ipc_operation_func &func) {
         ipc_functions[server_name][(static_cast<std::uint64_t>(opcode) | (static_cast<std::uint64_t>(invoke_when) << 32))].push_back(func);
     }
 
@@ -296,7 +296,7 @@ namespace eka2l1::manager {
         }
     }
 
-    void scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, breakpoint_hit_func func) {
+    void scripts::register_library_hook(const std::string &name, const std::uint32_t ord, const std::uint32_t process_uid, const breakpoint_hit_func &func) {
         const std::string lib_name_lower = common::lowercase_string(name);
 
         breakpoint_info info;
@@ -309,7 +309,7 @@ namespace eka2l1::manager {
         breakpoint_wait_patch.push_back(info);
     }
 
-    void scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, breakpoint_hit_func func) {
+    void scripts::register_breakpoint(const std::string &lib_name, const uint32_t addr, const std::uint32_t process_uid, const breakpoint_hit_func &func) {
         const std::string lib_name_lower = common::lowercase_string(lib_name);
 
         breakpoint_info info;

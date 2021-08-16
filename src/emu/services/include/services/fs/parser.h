@@ -38,11 +38,11 @@ namespace eka2l1 {
         file_parse parse_;
         bool done;
 
-        void parse_part(std::uint32_t type, std::u16string name);
-        void parse_drive(std::u16string name);
-        void parse_path(std::u16string name);
-        void parse_name(std::u16string name);
-        void parse_ext(std::u16string name);
+        void parse_part(std::uint32_t type, const std::u16string &name);
+        void parse_drive(const std::u16string &name);
+        void parse_path(const std::u16string &name);
+        void parse_name(const std::u16string &name);
+        void parse_ext(const std::u16string &name);
 
     public:
         file_parser(std::u16string name, std::u16string related, file_parse parse);
