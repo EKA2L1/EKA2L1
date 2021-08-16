@@ -35,6 +35,7 @@
 #include <loader/svgb.h>
 
 static QSize ICON_GRID_SIZE = QSize(64, 64);
+static QSize ICON_GRID_SPACING_SIZE = QSize(20, 20);
 
 applist_search_bar::applist_search_bar(QWidget *parent)
     : QWidget(parent) {
@@ -92,10 +93,11 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     list_widget_->setFlow(QListWidget::Flow::LeftToRight);
     list_widget_->setResizeMode(QListWidget::ResizeMode::Adjust);
     list_widget_->setSpacing(100);
-    list_widget_->setGridSize(ICON_GRID_SIZE + QSize(20, 20));
+    list_widget_->setGridSize(ICON_GRID_SIZE + ICON_GRID_SPACING_SIZE);
     list_widget_->setIconSize(ICON_GRID_SIZE);
     list_widget_->setViewMode(QListWidget::ViewMode::IconMode);
     list_widget_->setMovement(QListWidget::Movement::Static);
+    list_widget_->setMinimumHeight(ICON_GRID_SIZE.height() + ICON_GRID_SPACING_SIZE.height() + 200);
 
     reload_whole_list();
 
@@ -133,6 +135,10 @@ void applist_widget::on_search_content_changed(QString content) {
 
     for (QListWidgetItem *item : matches) {
         item->setHidden(false);
+    }
+
+    if (matches.size() >= 1) {
+        list_widget_->scrollToItem(matches.front());
     }
 }
 
