@@ -60,7 +60,10 @@
 #include <QSettings>
 #include <QtConcurrent/QtConcurrent>
 
-static constexpr const char *LAST_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
+static constexpr const char *LAST_UI_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
+static constexpr const char *LAST_UI_WINDOW_STATE = "lastWindowState";
+static constexpr const char *LAST_EMULATED_DISPLAY_GEOMETRY_SETTING = "lastEmulatedDisplayGeometry";
+static constexpr const char *LAST_EMULATED_DISPLAY_STATE = "lastEmulatedDisplayState";
 static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
 static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
@@ -278,6 +281,11 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     make_default_binding_profile();
     refresh_mount_availbility();
 
+    eka2l1::window_server *server = get_window_server_through_system(emulator_state_.symsys.get());
+    if (server) {
+        server->init_key_mappings();
+    }
+
     rotate_group_ = new QActionGroup(this);
     rotate_group_->addAction(ui_->action_rotate_0);
     rotate_group_->addAction(ui_->action_rotate_90);
@@ -292,11 +300,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     ui_->status_bar->setVisible(!settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
     active_screen_number_ = settings.value(SHOW_SCREEN_NUMBER_SETTINGS_NAME, 0).toInt();
 
-    QVariant geo_variant = settings.value(LAST_WINDOW_GEOMETRY_SETTING);
-    if (geo_variant.isValid()) {
-        restoreGeometry(geo_variant.toByteArray());
-    }
-
+    restore_ui_layouts();
     on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
 
     QVariant no_notify_install = settings.value(NO_TOUCHSCREEN_DISABLE_WARN_SETTING);
@@ -406,10 +410,6 @@ eka2l1::config::app_setting *main_window::get_active_app_setting() {
 }
 
 main_window::~main_window() {
-    // Save last window size
-    QSettings settings;
-    settings.setValue(LAST_WINDOW_GEOMETRY_SETTING, saveGeometry());
-
     if (applist_) {
         delete applist_;
     }
@@ -482,6 +482,8 @@ void main_window::on_package_manager_triggered() {
 
 void main_window::on_device_set_requested(const int index) {
     ui_->action_rotate_drop_menu->setEnabled(false);
+
+    save_ui_layouts();
     displayer_->setVisible(false);
 
     eka2l1::system *system = emulator_state_.symsys.get();
@@ -511,6 +513,7 @@ void main_window::on_device_set_requested(const int index) {
         }
     }
 
+    restore_ui_layouts();
     setup_app_list();
     refresh_current_device_label();
     refresh_mount_availbility();
@@ -590,6 +593,8 @@ void main_window::on_fullscreen_toogled(bool checked) {
     }
 
     if (checked) {
+        save_ui_layouts();
+
         ui_->status_bar->hide();
         ui_->menu_bar->setVisible(false);
 
@@ -816,8 +821,12 @@ void main_window::switch_to_game_display_mode() {
     else
         ui_->label_al_not_available->setVisible(false);
 
+    save_ui_layouts();
+
     displayer_->setVisible(true);
     displayer_->setFocus();
+
+    restore_ui_layouts();
 
     ui_->action_pause->setEnabled(true);
     ui_->action_restart->setEnabled(true);
@@ -995,6 +1004,10 @@ void main_window::dropEvent(QDropEvent *event) {
     }
 }
 
+void main_window::closeEvent(QCloseEvent *event) {
+    save_ui_layouts();
+}
+
 bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) {
     emit controller_button_press(event);
     return (displayer_ && displayer_->isVisible() && displayer_->hasFocus());
@@ -1017,11 +1030,6 @@ void main_window::make_default_binding_profile() {
         make_default_keybind_profile(emulator_state_.conf.keybinds);
 
         emulator_state_.conf.serialize();
-
-        eka2l1::window_server *server = get_window_server_through_system(emulator_state_.symsys.get());
-        if (server) {
-            server->init_key_mappings();
-        }
     }
 }
 
@@ -1132,4 +1140,30 @@ void main_window::force_update_display_minimum_size() {
     }
 
     mode_change_screen(&emulator_state_, get_current_active_screen(), 0);
+}
+
+void main_window::save_ui_layouts() {
+    QSettings settings;
+
+    if (displayer_->isVisible()) {
+        settings.setValue(LAST_EMULATED_DISPLAY_GEOMETRY_SETTING, saveGeometry());
+    } else {
+        settings.setValue(LAST_UI_WINDOW_GEOMETRY_SETTING, saveGeometry());
+    }
+}
+
+void main_window::restore_ui_layouts() {
+    QSettings settings;
+    QVariant geo_variant;
+    QVariant state_variant;
+
+    if (displayer_->isVisible()) {
+        geo_variant = settings.value(LAST_EMULATED_DISPLAY_GEOMETRY_SETTING);
+    } else {
+        geo_variant = settings.value(LAST_UI_WINDOW_GEOMETRY_SETTING);
+    }
+
+    if (geo_variant.isValid()) {
+        restoreGeometry(geo_variant.toByteArray());
+    }
 }

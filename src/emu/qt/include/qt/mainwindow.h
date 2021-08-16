@@ -102,6 +102,9 @@ private:
     eka2l1::epoc::screen *get_current_active_screen();
     eka2l1::config::app_setting *get_active_app_setting();
 
+    void save_ui_layouts();
+    void restore_ui_layouts();
+
 private slots:
     void on_about_triggered();
     void on_settings_triggered();
@@ -150,6 +153,7 @@ public:
     void resizeEvent(QResizeEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
     void setup_and_switch_to_game_mode();
 
