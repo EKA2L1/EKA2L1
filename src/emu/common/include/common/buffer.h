@@ -263,7 +263,11 @@ namespace eka2l1 {
                 }
                 }
 
+#ifdef _MSC_VER
+                _fseeki64(fi_, static_cast<long>(amount), flags);
+#else
                 fseek(fi_, static_cast<long>(amount), flags);
+#endif
             }
 
             std::uint64_t left() override {
@@ -271,7 +275,11 @@ namespace eka2l1 {
             }
 
             std::uint64_t tell() const override {
+#ifdef _MSC_VER
+                return _ftelli64(fi_);
+#else
                 return ftell(fi_);
+#endif
             }
 
             std::uint64_t size() override {
