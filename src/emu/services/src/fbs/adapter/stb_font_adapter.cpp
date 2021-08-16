@@ -308,7 +308,7 @@ namespace eka2l1::epoc::adapter {
         stbtt_FreeBitmap(data, nullptr);
     }
 
-    std::int32_t stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+    std::int32_t stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 &atlas_size) {
         std::unique_ptr<stbtt_pack_context> context = std::make_unique<stbtt_pack_context>();
         if (stbtt_PackBegin(context.get(), atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr) == 0) {
             return -1;

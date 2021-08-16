@@ -1240,7 +1240,7 @@ namespace eka2l1 {
         std::uint32_t total_prop{ 0 };
         std::uint32_t total_process{ 0 };
 
-        kernel_info() {}
+        kernel_info() = default;
     };
 
     void kernel_system::do_state(common::chunkyseri &seri) {

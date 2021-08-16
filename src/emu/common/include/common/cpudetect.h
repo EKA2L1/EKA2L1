@@ -98,8 +98,7 @@ namespace eka2l1::common {
         } sQuirks;
 
         // Call Detect()
-        explicit cpu_info() {
-        }
+        explicit cpu_info() = default;
 
         // Detects the various cpu features
         void detect();

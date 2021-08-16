@@ -150,7 +150,7 @@ namespace eka2l1 {
          * 
          * @returns     True on success.
          */
-        bool register_event(const std::uint32_t type, const std::string uri);
+        bool register_event(const std::uint32_t type, const std::string &uri);
 
         /**
          * @brief       Unegister DRM event to be accepted to notify.
@@ -160,6 +160,6 @@ namespace eka2l1 {
          * 
          * @returns     True on success.
          */
-        bool unregister_event(const std::uint32_t type, const std::string uri);
+        bool unregister_event(const std::uint32_t type, const std::string &uri);
     };
 }

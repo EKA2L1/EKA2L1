@@ -323,7 +323,7 @@ namespace eka2l1::epoc {
          */
         akns_item_def *get_item_definition(const epoc::pid &id);
 
-        bool store_scalable_gfx(const pid item_id, const skn_layout_info layout_info, fbsbitmap *bmp, fbsbitmap *mask);
+        bool store_scalable_gfx(const pid item_id, const skn_layout_info &layout_info, fbsbitmap *bmp, fbsbitmap *mask);
 
         const std::uint32_t level() const {
             return level_;

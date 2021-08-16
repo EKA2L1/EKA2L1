@@ -100,7 +100,7 @@ namespace eka2l1 {
 
         void store_scalable_gfx(
             const epoc::pid item_id,
-            const epoc::skn_layout_info layout_info,
+            const epoc::skn_layout_info &layout_info,
             const std::uint32_t bmp_handle,
             const std::uint32_t msk_handle);
 

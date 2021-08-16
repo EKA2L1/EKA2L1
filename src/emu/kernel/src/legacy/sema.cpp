@@ -20,7 +20,7 @@
 #include <kernel/legacy/sema.h>
 
 namespace eka2l1::kernel::legacy {
-    semaphore::semaphore(kernel_system *kern, const std::string sema_name, const std::int32_t initial_count,
+    semaphore::semaphore(kernel_system *kern, const std::string &sema_name, const std::int32_t initial_count,
         kernel::access_type access)
         : sync_object_base(kern, sema_name, initial_count, access) {
         obj_type = kernel::object_type::sema;

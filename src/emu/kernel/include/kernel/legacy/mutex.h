@@ -24,7 +24,7 @@
 namespace eka2l1::kernel::legacy {
     class mutex: public sync_object_base {
     public:
-        explicit mutex(kernel_system *kern, const std::string mut_name, kernel::access_type access = access_type::local_access);
+        explicit mutex(kernel_system *kern, const std::string &mut_name, kernel::access_type access = access_type::local_access);
         
         void wait();
         void signal();

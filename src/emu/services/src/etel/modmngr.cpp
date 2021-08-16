@@ -30,8 +30,7 @@
 #include <vfs/vfs.h>
 
 namespace eka2l1::epoc::etel {
-    module_manager::module_manager() {
-    }
+    module_manager::module_manager() = default;
 
     bool module_manager::load_tsy(kernel_system *kern, io_system *io, const kernel::uid borrowed_session, const std::string &module_name) {
         const std::string module_lowercased = common::lowercase_string(eka2l1::replace_extension(eka2l1::filename(module_name), ""));

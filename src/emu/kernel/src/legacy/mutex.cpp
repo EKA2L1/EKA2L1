@@ -20,7 +20,7 @@
 #include <kernel/legacy/mutex.h>
 
 namespace eka2l1::kernel::legacy {
-    mutex::mutex(kernel_system *kern, const std::string mut_name, kernel::access_type access)
+    mutex::mutex(kernel_system *kern, const std::string &mut_name, kernel::access_type access)
         : sync_object_base(kern, mut_name, 1, access) {
         obj_type = kernel::object_type::mutex;
     }

@@ -28,11 +28,10 @@
 #include <config/config.h>
 
 namespace eka2l1::service {
-    server::~server() {
-    }
+    server::~server() = default;
 
     // Create a server with name
-    server::server(kernel_system *kern, system *sys, kernel::thread *owner, const std::string name, bool hle, bool unhandle_callback_enable, const service::share_mode shmode)
+    server::server(kernel_system *kern, system *sys, kernel::thread *owner, const std::string &name, bool hle, bool unhandle_callback_enable, const service::share_mode shmode)
         : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
         , sys(sys)
         , hle(hle)

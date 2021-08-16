@@ -20,8 +20,7 @@
 #include <mem/model/flexible/chnkmngr.h>
 
 namespace eka2l1::mem::flexible {
-    chunk_manager::chunk_manager() {
-    }
+    chunk_manager::chunk_manager() = default;
 
     flexible_mem_model_chunk *chunk_manager::new_chunk(control_base *ctrl, const asid id) {
         for (std::size_t i = 0; i < chunks_.size(); i++) {

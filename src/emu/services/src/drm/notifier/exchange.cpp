@@ -175,7 +175,7 @@ namespace eka2l1 {
         return true;
     }
     
-    bool drm_notifier_client_session::register_event(const std::uint32_t type, const std::string uri) {
+    bool drm_notifier_client_session::register_event(const std::uint32_t type, const std::string &uri) {
         for (std::size_t i = 0; i < accept_types_.size(); i++) {
             if ((accept_types_[i].event_type_ == type) && (accept_types_[i].content_uri_ == uri)) {
                 return false;
@@ -186,7 +186,7 @@ namespace eka2l1 {
         return true;
     }
 
-    bool drm_notifier_client_session::unregister_event(const std::uint32_t type, const std::string uri) {
+    bool drm_notifier_client_session::unregister_event(const std::uint32_t type, const std::string &uri) {
         for (std::size_t i = 0; i < accept_types_.size(); i++) {
             if ((accept_types_[i].event_type_ == type) && (accept_types_[i].content_uri_ == uri)) {
                 accept_types_.erase(accept_types_.begin() + i);

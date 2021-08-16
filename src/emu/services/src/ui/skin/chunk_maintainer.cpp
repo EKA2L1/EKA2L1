@@ -857,7 +857,7 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    bool akn_skin_chunk_maintainer::store_scalable_gfx(const pid item_id, const skn_layout_info layout_info, fbsbitmap *bmp, fbsbitmap *msk) {
+    bool akn_skin_chunk_maintainer::store_scalable_gfx(const pid item_id, const skn_layout_info &layout_info, fbsbitmap *bmp, fbsbitmap *msk) {
         bitmap_store_->store_bitmap(bmp);
         if (msk) {
             bitmap_store_->store_bitmap(msk);

@@ -418,7 +418,7 @@ namespace eka2l1 {
             void switch_stream();
             void set_alternative_stream(std::shared_ptr<std::istream> astream);
 
-            explicit sis_parser(const std::string name);
+            explicit sis_parser(const std::string &name);
             sis_header parse_header();
 
             // Parse a compressed block. Inflate the block if needed

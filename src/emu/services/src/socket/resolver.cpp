@@ -76,11 +76,6 @@ namespace eka2l1::epoc::socket {
             default:
                 break;
             }
-        } else {
-            switch (ctx->msg->function) {
-            default:
-                break;
-            }
         }
 
         LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket host resolver opcode: {}", ctx->msg->function);

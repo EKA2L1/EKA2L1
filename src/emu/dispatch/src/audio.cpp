@@ -58,9 +58,7 @@ namespace eka2l1::dispatch {
         , audren_sema_(sema) {
     }
 
-    dsp_epoc_stream::~dsp_epoc_stream() {
-        
-    }
+    dsp_epoc_stream::~dsp_epoc_stream() = default;
 
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_player_inst, const std::uint32_t init_flags) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();

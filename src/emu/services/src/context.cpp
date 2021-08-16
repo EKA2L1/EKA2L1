@@ -31,8 +31,7 @@
 
 namespace eka2l1 {
     namespace service {
-        ipc_context::ipc_context() {
-        }
+        ipc_context::ipc_context() = default;
 
         ipc_context::~ipc_context() {
             if (auto_deref)

@@ -48,7 +48,7 @@ namespace eka2l1 {
         std::uint32_t idcounter{ 0 };
         std::unordered_map<std::uint32_t, central_repo_client_subsession> client_subsessions;
 
-        central_repo_client_session() {}
+        central_repo_client_session() = default;
 
         void handle_message(service::ipc_context *ctx);
 

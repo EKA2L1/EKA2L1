@@ -159,7 +159,7 @@ namespace eka2l1::service {
             return obj_con.remove(reinterpret_cast<epoc::ref_count_object *>(obj));
         }
 
-        explicit typical_server(system *sys, const std::string name);
+        explicit typical_server(system *sys, const std::string &name);
         void process_accepted_msg() override;
 
         void disconnect(service::ipc_context &ctx) override;

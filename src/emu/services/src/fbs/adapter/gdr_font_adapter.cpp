@@ -325,7 +325,7 @@ namespace eka2l1::epoc::adapter {
         }
     }
 
-    std::int32_t gdr_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+    std::int32_t gdr_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 &atlas_size) {
         gdr_font_atlas_pack_context context;
         context.pack_context_ = std::make_unique<stbrp_context>();
         context.pack_nodes_.resize(atlas_size.y);

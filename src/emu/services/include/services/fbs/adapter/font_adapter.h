@@ -79,7 +79,7 @@ namespace eka2l1::epoc::adapter {
          * 
          * @returns Handle to the atlas get context. -1 on failure.
          */
-        virtual std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) = 0;
+        virtual std::int32_t begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 &atlas_size) = 0;
 
         /**
          * \brief Get an atlas contains glyphs bitmap.

@@ -147,7 +147,7 @@ namespace eka2l1 {
 
         public:
             explicit inflater(bit_input &input);
-            ~inflater() {}
+            ~inflater() = default;
 
             void init();
 

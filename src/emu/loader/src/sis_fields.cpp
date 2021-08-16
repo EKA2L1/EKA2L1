@@ -49,7 +49,7 @@ namespace eka2l1 {
             }
         }
 
-        sis_parser::sis_parser(const std::string name) {
+        sis_parser::sis_parser(const std::string &name) {
             stream = std::make_shared<std::ifstream>(name, std::ifstream::binary);
         }
 
