@@ -95,7 +95,7 @@ namespace eka2l1::manager {
         }
 
         modules.clear();
-        interpreter.release();
+        interpreter.reset();
     }
 
     bool scripts::import_module(const std::string &path) {
