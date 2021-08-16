@@ -444,7 +444,7 @@ namespace eka2l1::epoc {
             message_ready_event msg_ready_evt_;
         };
 
-        event() {}
+        event() = default;
         event(const std::uint32_t handle, event_code evt_code);
 
         void operator=(const event &rhs) {

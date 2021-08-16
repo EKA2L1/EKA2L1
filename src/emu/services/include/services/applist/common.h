@@ -89,7 +89,7 @@ namespace eka2l1 {
 
         int reserved;
 
-        explicit apa_capability() {}
+        explicit apa_capability() = default;
         bool internalize(common::ro_stream &stream);
     };
 

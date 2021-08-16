@@ -94,7 +94,7 @@ namespace eka2l1 {
     struct vec2 {
         int x, y;
 
-        vec2() {}
+        vec2() = default;
 
         vec2(const int d)
             : x(d)
@@ -156,7 +156,7 @@ namespace eka2l1 {
     struct vec3 : public vec2 {
         int z;
 
-        vec3() {}
+        vec3() = default;
 
         vec3(const int x, const int y, const int z)
             : vec2(x, y)

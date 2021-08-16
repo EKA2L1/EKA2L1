@@ -31,9 +31,8 @@ namespace eka2l1::scripting {
             : state_(state) {
         }
 
-        ~luacpp_state() {
-            //if (state_)
-            //    lua_close(state_);
-        }
+        ~luacpp_state() = default;
+        //if (state_)
+        //    lua_close(state_);
     };
 }

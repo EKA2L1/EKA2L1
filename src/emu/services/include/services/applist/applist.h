@@ -57,7 +57,7 @@ namespace eka2l1 {
         epoc::apa_app_caption short_caption; ///< Short version of the caption
         epoc::apa_app_caption long_caption; ///< Long caption of the app
 
-        explicit apa_app_info() {}
+        explicit apa_app_info() = default;
     };
 
     struct apa_app_icon {

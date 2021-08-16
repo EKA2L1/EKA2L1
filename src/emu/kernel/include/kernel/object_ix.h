@@ -64,7 +64,7 @@ namespace eka2l1 {
             kernel_system *kern;
 
         public:
-            explicit object_ix() {}
+            explicit object_ix() = default;
             explicit object_ix(kernel_system *kern, handle_array_owner owner);
 
             void do_state(common::chunkyseri &seri);

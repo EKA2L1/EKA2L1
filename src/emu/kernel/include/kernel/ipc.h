@@ -71,7 +71,7 @@ namespace eka2l1 {
         int args[4];
         int flag;
 
-        ipc_arg() {}
+        ipc_arg() = default;
 
         ipc_arg(int arg0, const int flag);
         ipc_arg(int arg0, int arg1, const int flag);
