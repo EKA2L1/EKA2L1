@@ -15,6 +15,7 @@
     <string name="exit">Sair</string>
     <string name="rename">Renomear</string>
     <string name="save_log">Salvar log</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Instalar</string>
     <string name="device_dump">Despejo de dispositivo</string>
     <string name="path_to_rpkg">Caminho para RPKG</string>
