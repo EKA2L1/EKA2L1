@@ -15,6 +15,7 @@
     <string name="exit">Esci</string>
     <string name="rename">Rinomina</string>
     <string name="save_log">Salva log</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Installa</string>
     <string name="device_dump">Dump dispositivo</string>
     <string name="path_to_rpkg">Percorso RPKG</string>
