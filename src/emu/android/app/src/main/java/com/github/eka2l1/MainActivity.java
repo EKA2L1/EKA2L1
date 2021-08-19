@@ -21,12 +21,16 @@ package com.github.eka2l1;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 
@@ -57,12 +61,28 @@ public class MainActivity extends BaseActivity {
     }
 
     private void initialize() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
+        if (configurationInfo.reqGlEsVersion < 0x30000) {
+            showOpenGLDialog();
+            return;
+        }
+
         Emulator.initializeFolders(this);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         AppsListFragment appsListFragment = new AppsListFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, appsListFragment).commitNowAllowingStateLoss();
+    }
+
+    private void showOpenGLDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.error)
+                .setCancelable(false)
+                .setMessage(R.string.opengl_required)
+                .setPositiveButton(android.R.string.ok, (d, w) -> finish())
+                .show();
     }
 
     @Override
