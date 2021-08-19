@@ -15,6 +15,7 @@
     <string name="exit">පිටවන්න</string>
     <string name="rename">Rename</string>
     <string name="save_log">Save log</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">ස්ථාපනය කරන්න</string>
     <string name="device_dump">Device dump</string>
     <string name="path_to_rpkg">Path to RPKG</string>
