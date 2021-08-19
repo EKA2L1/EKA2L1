@@ -15,6 +15,7 @@
     <string name="exit">Çıkış</string>
     <string name="rename">Adlandır</string>
     <string name="save_log">Günlüğü kaydet</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Kur</string>
     <string name="device_dump">Cihaz dökümü</string>
     <string name="path_to_rpkg">RPKG Yolu</string>
