@@ -81,6 +81,7 @@ namespace eka2l1::android {
                 LOG_INFO(FRONTEND_CMDLINE, "We are setting the default device back to the first device on the installed list for you");
 
                 conf.device = 0;
+                symsys->rescan_devices(drive_z);
                 symsys->set_device(0);
             }
 

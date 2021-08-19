@@ -296,15 +296,11 @@ namespace eka2l1 {
             {
                 start_access();
 
-                std::optional<eka2l1::drive> drventry = io_->get_drive_entry(romdrv);
-                if (!drventry.has_value()) {
-                    end_access();
-                    return false;
-                }
-
                 dvcmngr_->clear();
 
-                common::dir_iterator ite(drventry->real_path);
+                std::string rom_drive_name = std::string(1, drive_to_char16(romdrv));
+                std::string root_z_path = add_path(conf_->storage, "drives/" + rom_drive_name + "/");
+                common::dir_iterator ite(root_z_path);
                 ite.detail = true;
 
                 common::dir_entry firm_entry;
@@ -312,13 +308,21 @@ namespace eka2l1 {
                 while (ite.next_entry(firm_entry) == 0) {
                     if ((firm_entry.type == common::file_type::FILE_DIRECTORY) && (firm_entry.name != ".")
                         && (firm_entry.name != "..")) {
-                        const std::string full_entry_path = eka2l1::add_path(drventry->real_path,
+                        const std::string full_entry_path = eka2l1::add_path(root_z_path,
                             firm_entry.name);
 
                         const epocver ver = loader::determine_rpkg_symbian_version(full_entry_path);
 
                         std::string manu, firm_name, model;
                         loader::determine_rpkg_product_info(full_entry_path, manu, firm_name, model);
+
+                        const std::string rom_directory = eka2l1::add_path(conf_->storage, eka2l1::add_path("roms", firm_name + "\\"));
+                        const std::string rom_file = eka2l1::add_path(rom_directory, "SYM.ROM");
+                        if (!eka2l1::exists(rom_file)) {
+                            eka2l1::common::delete_folder(rom_directory);
+                            eka2l1::common::delete_folder(full_entry_path);
+                            continue;
+                        }
 
                         LOG_INFO(SYSTEM, "Found a device: {} ({})", model, firm_name);
 

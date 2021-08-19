@@ -473,6 +473,10 @@ namespace eka2l1::common {
     }
 
     bool delete_folder(const std::string &target_folder) {
+        if (!eka2l1::exists(target_folder)) {
+            return true;
+        }
+
         common::dir_iterator iterator(target_folder);
         iterator.detail = true;
 
