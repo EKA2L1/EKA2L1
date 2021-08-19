@@ -322,7 +322,7 @@ namespace eka2l1 {
 
                         LOG_INFO(SYSTEM, "Found a device: {} ({})", model, firm_name);
 
-                        if (!dvcmngr_->add_new_device(firm_name, model, manu, ver, 0)) {
+                        if (dvcmngr_->add_new_device(firm_name, model, manu, ver, 0) != add_device_none) {
                             LOG_ERROR(SYSTEM, "Unable to add this device, silently ignore!");
                         } else {
                             actually_found = true;

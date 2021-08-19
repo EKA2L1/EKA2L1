@@ -451,37 +451,38 @@ namespace eka2l1 {
 
         if (!loader::determine_rpkg_product_info(drives_z_temp_path, manufacturer, firmcode, model)) {
             LOG_ERROR(SYSTEM, "Revert all changes");
-            eka2l1::common::remove(drives_z_temp_path);
+            eka2l1::common::delete_folder(drives_z_temp_path);
 
             return device_installation_determine_product_failure;
         }
 
-        auto firmcode_low = common::lowercase_string(firmcode);
-
-        const std::string target_rom_path = eka2l1::add_path(rom_resident_path, firmcode_low + "\\SYM.ROM");
         const std::string current_temp_rom = eka2l1::add_path(rom_resident_path, "SYM.ROM");
 
-        // Rename temp folder to its product code
-        eka2l1::create_directories(eka2l1::file_directory(target_rom_path));
-        common::move_file(drives_z_temp_path, add_path(drives_z_path, firmcode_low + "\\"));
-        common::move_file(current_temp_rom, target_rom_path);
+        if (dvcmngr->get(firmcode)) {
+            LOG_ERROR(SYSTEM, "The device already exists, revert all changes");
+            eka2l1::common::delete_folder(drives_z_temp_path);
+            eka2l1::common::remove(current_temp_rom);
 
+            return device_installation_already_exist;
+        }
+
+        auto firmcode_low = common::lowercase_string(firmcode);
+
+        // Rename temp folder to its product code
+        common::move_file(drives_z_temp_path, add_path(drives_z_path, firmcode_low + "\\"));
         const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
-            eka2l1::common::remove(add_path(drives_z_path, firmcode_low + "\\"));
-
-            switch (err_adddvc) {
-            case add_device_existed:
-                return device_installation_already_exist;
-
-            default:
-                break;
-            }
+            eka2l1::common::delete_folder(add_path(drives_z_path, firmcode_low + "\\"));
+            eka2l1::common::remove(current_temp_rom);
 
             return device_installation_general_failure;
         }
+
+        const std::string target_rom_path = eka2l1::add_path(rom_resident_path, firmcode_low + "\\SYM.ROM");
+        eka2l1::create_directories(eka2l1::file_directory(target_rom_path));
+        common::move_file(current_temp_rom, target_rom_path);
 
         if (progress_callback) {
             progress_callback(1, 1);

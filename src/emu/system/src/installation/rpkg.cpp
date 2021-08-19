@@ -152,6 +152,13 @@ namespace eka2l1::loader {
             return device_installation_determine_product_failure;
         }
 
+        if (dvcmngr->get(firmcode)) {
+            LOG_ERROR(SYSTEM, "The device already exists, revert all changes");
+            eka2l1::common::delete_folder(temp_z_path);
+
+            return device_installation_already_exist;
+        }
+
         auto firmcode_low = common::lowercase_string(firmcode);
 
         // Rename temp folder to its product code
@@ -161,14 +168,6 @@ namespace eka2l1::loader {
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
             common::delete_folder(add_path(drives_z_resident_path, firmcode_low + "\\"));
-
-            switch (err_adddvc) {
-            case add_device_existed:
-                return device_installation_already_exist;
-
-            default:
-                break;
-            }
 
             return device_installation_general_failure;
         }
@@ -307,29 +306,28 @@ namespace eka2l1::loader {
 
         if (!determine_rpkg_product_info(folder_extracted, manufacturer, firmcode, model)) {
             LOG_ERROR(SYSTEM, "Revert all changes");
-            common::delete_folder(add_path(devices_rom_path, "\\temp\\"));
+            common::delete_folder(folder_extracted);
 
             return device_installation_determine_product_failure;
+        }
+
+        if (dvcmngr->get(firmcode)) {
+            LOG_ERROR(SYSTEM, "The device already exists, revert all changes");
+            common::delete_folder(folder_extracted);
+
+            return device_installation_already_exist;
         }
 
         auto firmcode_low = common::lowercase_string(firmcode);
         firmware_code_ret = firmcode_low;
 
         // Rename temp folder to its product code
-        eka2l1::common::move_file(add_path(devices_rom_path, "\\temp\\"), add_path(devices_rom_path, firmcode_low + "\\"));
+        eka2l1::common::move_file(folder_extracted, add_path(devices_rom_path, firmcode_low + "\\"));
         const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
             common::delete_folder(add_path(devices_rom_path, firmcode_low + "\\"));
-
-            switch (err_adddvc) {
-            case add_device_existed:
-                return device_installation_already_exist;
-
-            default:
-                break;
-            }
 
             return device_installation_general_failure;
         }
