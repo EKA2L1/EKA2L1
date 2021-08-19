@@ -15,6 +15,7 @@
     <string name="exit">خروج</string>
     <string name="rename">Rename</string>
     <string name="save_log">سجلات الحفظ</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Install</string>
     <string name="device_dump">Device dump</string>
     <string name="path_to_rpkg">المسار إلى RPKG</string>
