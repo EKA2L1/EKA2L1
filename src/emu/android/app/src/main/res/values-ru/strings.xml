@@ -15,6 +15,7 @@
     <string name="exit">Выход</string>
     <string name="rename">Переименовать</string>
     <string name="save_log">Сохранить лог</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Установить</string>
     <string name="device_dump">Дамп устройства</string>
     <string name="path_to_rpkg">Путь к RPKG</string>
