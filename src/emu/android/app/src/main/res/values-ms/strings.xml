@@ -15,6 +15,7 @@
     <string name="exit">Keluar</string>
     <string name="rename">Namakan semula</string>
     <string name="save_log">Simpan log</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Pasang</string>
     <string name="device_dump">Longgakan peranti</string>
     <string name="path_to_rpkg">Arah ke RPKG</string>
