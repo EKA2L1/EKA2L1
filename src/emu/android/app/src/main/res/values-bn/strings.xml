@@ -15,6 +15,7 @@
     <string name="exit">প্রস্থান করুন</string>
     <string name="rename">পুনঃনামকরণ</string>
     <string name="save_log">লগ সংরক্ষণ করুন</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">ইনস্টল</string>
     <string name="device_dump">ডিভাইস ডাম্প</string>
     <string name="path_to_rpkg">RPKG খোঁজার স্থান</string>
