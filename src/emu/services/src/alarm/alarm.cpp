@@ -44,7 +44,8 @@ namespace eka2l1 {
 
     alarm_session::alarm_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
-        : service::typical_session(serv, ss_id, client_version) {
+        : service::typical_session(serv, ss_id, client_version)
+        , change_alarm_id_fill(nullptr) {
         transfer_buf.reserve(100);
     }
 
@@ -56,6 +57,14 @@ namespace eka2l1 {
 
         case alarm_fetch_transfer_buffer:
             fetch_transfer_buffer(ctx);
+            break;
+
+        case alarm_notify_change:
+            notify_change(ctx);
+            break;
+
+        case alarm_notify_change_cancel:
+            notify_change_cancel(ctx);
             break;
 
         default:
@@ -80,6 +89,16 @@ namespace eka2l1 {
 
     void alarm_session::fetch_transfer_buffer(service::ipc_context *ctx) {
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&transfer_buf[0]), static_cast<std::uint32_t>(transfer_buf.size()));
+        ctx->complete(epoc::error_none);
+    }
+
+    void alarm_session::notify_change(service::ipc_context *ctx) {
+        change_alarm_id_fill = ctx->get_descriptor_argument_ptr(0);
+        change_notify_info = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void alarm_session::notify_change_cancel(service::ipc_context *ctx) {
+        change_notify_info.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }
 }
