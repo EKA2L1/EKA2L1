@@ -207,7 +207,10 @@ namespace eka2l1 {
             CREATE_SERVER(sys, remcon_server);
             CREATE_SERVER(sys, etel_server);
             CREATE_SERVER(sys, notifier_server);
-            //CREATE_SERVER(sys, msv_server);
+
+            if (sys->get_symbian_version_use() == epocver::epoc6)
+                CREATE_SERVER(sys, msv_server);
+
             CREATE_SERVER(sys, sensor_server);
             CREATE_SERVER(sys, connmonitor_server);
             CREATE_SERVER(sys, nifman_server);

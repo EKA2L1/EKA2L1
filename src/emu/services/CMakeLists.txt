@@ -78,6 +78,9 @@ add_library(epocservs
         include/services/loader/loader.h
         include/services/install/install.h
         include/services/loader/op.h
+        include/services/msv/cache.h
+        include/services/msv/common.h
+        include/services/msv/entry.h
         include/services/msv/msv.h
         include/services/notifier/notifier.h
         include/services/notifier/queries.h
@@ -202,6 +205,7 @@ add_library(epocservs
         src/hwrm/vibration/vibration.cpp
         src/install/install.cpp
         src/loader/loader.cpp
+        src/msv/cache.cpp
         src/msv/entry.cpp
         src/msv/msv.cpp
         src/msv/registry.cpp
@@ -287,4 +291,5 @@ target_link_libraries(epocservs PRIVATE
         epocpkg
         drivers
         stb
-        xxHash)
+        xxHash
+        sqlite3)

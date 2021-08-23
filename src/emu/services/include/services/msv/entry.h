@@ -19,8 +19,10 @@
 
 #pragma once
 
-#include <common/types.h>
-#include <common/uid.h>
+#include <services/msv/common.h>
+#include <services/msv/cache.h>
+
+#include <sqlite3.h>
 
 #include <cstdint>
 #include <optional>
@@ -31,64 +33,57 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc::msv {
-    struct entry {
-        std::uint32_t id_;
-        std::int32_t parent_id_;
-        std::uint32_t service_id_;
-        epoc::uid type_uid_;
-        epoc::uid mtm_uid_;
-        std::uint32_t data_;
-        std::u16string description_;
-        std::u16string details_;
-        std::uint64_t time_;
-
-        enum flag {
-            STATUS_PRESENT = 1 << 0,
-            STATUS_DELETED = 1 << 1,
-            STATUS_CORRUPTED = 1 << 2
-        };
-
-        std::uint32_t flags_;
-    };
-
     struct entry_indexer {
-        std::vector<entry> entries_;
-
+    protected:
         io_system *io_;
         drive_number rom_drv_;
         language preferred_lang_;
         std::u16string msg_dir_;
 
-    protected:
+        common::roundabout folders_;
+        entry root_entry_;
+
         bool create_standard_entries(drive_number crr_drive);
-        bool create_root_entry();
-
-        bool update_entries_file(const std::size_t entry_pos_start);
-        bool load_entries_file(drive_number crr_drive);
-
-        std::optional<std::u16string> get_entry_data_file(entry &ent);
-
-        /**
-         * \brief       Save this entry body data to correspond store.
-         * \param       ent   The entry to save.
-         * 
-         * \returns     True on success.
-         */
-        bool save_entry_data(entry &ent);
-
-        /**
-         * \brief       Load this entry body data from correspond store.
-         * \param       ent The entry to load. ID and parent ID must be presented/
-         * 
-         * \returns     True on success.
-         */
-        bool load_entry_data(entry &ent);
+        std::vector<entry *> get_entries_by_parent_through_cache(const std::uint32_t visible_folder, const std::uint32_t parent_id);
 
     public:
         explicit entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang);
-        bool add_entry(entry &ent);
+        virtual ~entry_indexer();
 
-        entry *get_entry(const std::uint32_t id);
-        std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id);
+        virtual entry *add_entry(entry &ent);
+        virtual entry *get_entry(const std::uint32_t id);
+        virtual bool change_entry(entry &ent);
+
+        virtual std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id) = 0;
+        std::optional<std::u16string> get_entry_data_file(entry &ent);
+    };
+
+    struct sql_entry_indexer: public entry_indexer {
+    private:
+        sqlite3 *database_;
+        sqlite3_stmt *create_entry_stmt_;
+        sqlite3_stmt *change_entry_stmt_;
+        sqlite3_stmt *visible_folder_find_stmt_;
+        sqlite3_stmt *find_entry_stmt_;
+        sqlite3_stmt *query_child_entries_stmt_;
+
+        std::uint32_t id_counter_;
+
+        bool load_or_create_databases(bool &newly_created);
+        bool collect_children_entries(const msv_id parent_id, std::vector<entry> &entries);
+        void fill_entry_information(entry &ent, sqlite3_stmt *stmt, const bool have_extra_id = false);
+
+        msv_id get_suitable_visible_parent_id(const msv_id parent_id);
+        bool add_or_change_entry(entry &ent, entry *&result, const bool is_add);
+
+    public:
+        explicit sql_entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang);
+        ~sql_entry_indexer() override;
+        
+        entry *add_entry(entry &ent) override;
+        entry *get_entry(const std::uint32_t id) override;
+        bool change_entry(entry &ent) override;
+
+        std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id) override;
     };
 }

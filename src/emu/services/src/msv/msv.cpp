@@ -99,13 +99,14 @@ namespace eka2l1 {
         }
 
         if (kern->is_eka1()) {
-            reg_.set_list_path(u"C:\\System\\mtm\\Mtm Registry v2");
+            reg_.set_list_path(u"C:\\System\\mtm\\" + common::utf8_to_ucs2(mngr->get_current()->firmware_code)
+                + u"\\Mtm Registry v2");
         }
 
         reg_.load_mtm_list();
         install_rom_mtm_modules();
 
-        indexer_ = std::make_unique<epoc::msv::entry_indexer>(io, message_folder_, sys->get_system_language());
+        indexer_ = std::make_unique<epoc::msv::sql_entry_indexer>(io, message_folder_, sys->get_system_language());
 
         inited_ = true;
     }
@@ -125,6 +126,13 @@ namespace eka2l1 {
 
         sess->queue(ready);
         context.complete(epoc::error_none);
+    }
+
+    void msv_server::queue(msv_event_data &evt) {
+        for (auto &session: sessions) {
+            msv_client_session *cli = reinterpret_cast<msv_client_session*>(session.second.get());
+            cli->queue(evt);
+        }
     }
 
     msv_client_session::msv_client_session(service::typical_server *serv, const kernel::uid ss_id,
@@ -257,6 +265,46 @@ namespace eka2l1 {
             get_message_drive(ctx);
             break;
 
+        case msv_read_store:
+            read_store(ctx);
+            break;
+
+        case msv_lock_store:
+            lock_store(ctx);
+            break;
+
+        case msv_release_store:
+            release_store(ctx);
+            break;
+
+        case msv_dec_store_reader_count:
+            dec_store_read_count(ctx);
+            break;
+
+        case msv_will_you_take_more_work:
+            will_you_take_more_work(ctx);
+            break;
+
+        case msv_operation_data:
+            operation_data(ctx);
+            break;
+
+        case msv_change_entry:
+            change_entry(ctx);
+            break;
+
+        case msv_create_entry:
+            create_entry(ctx);
+            break;
+
+        case msv_operation_progress:
+            operation_info(ctx, false);
+            break;
+
+        case msv_operation_completion:
+            operation_info(ctx, true);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_MSV, "Unimplemented opcode for MsvServer 0x{:X}", ctx->msg->function);
             break;
@@ -326,29 +374,51 @@ namespace eka2l1 {
         }
     }
 
-    static void pack_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+    static void absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
         epoc::msv::entry_data data_str;
-        data_str.data_ = ent.data_;
-        data_str.date_ = common::convert_microsecs_epoch_to_0ad(ent.time_);
-        data_str.id_ = ent.id_;
-        data_str.parent_id_ = ent.parent_id_;
-        data_str.service_id_ = ent.service_id_;
-        data_str.mtm_uid_ = ent.mtm_uid_;
-        data_str.type_uid_ = ent.type_uid_;
+        if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
+            data_str.data_ = ent.data_;
+            data_str.date_ = ent.time_;
+            data_str.id_ = ent.id_;
+            data_str.parent_id_ = ent.parent_id_;
+            data_str.service_id_ = ent.service_id_;
+            data_str.mtm_uid_ = ent.mtm_uid_;
+            data_str.type_uid_ = ent.type_uid_;
+            data_str.bio_type_ = ent.bio_type_;
+            data_str.size_ = ent.size_;
+
+            data_str.description_.set_length(nullptr, static_cast<std::uint32_t>(ent.description_.length()));
+            data_str.details_.set_length(nullptr, static_cast<std::uint32_t>(ent.details_.length()));
+        }
 
         seri.absorb_impl(reinterpret_cast<std::uint8_t *>(&data_str), sizeof(epoc::msv::entry_data));
 
-        pad_out_data(seri);
-        seri.absorb(ent.description_);
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) {
+            ent.data_ = data_str.data_;
+            ent.time_ = data_str.date_;
+            ent.id_ = data_str.id_;
+            ent.parent_id_ = data_str.parent_id_;
+            ent.service_id_ = data_str.service_id_;
+            ent.mtm_uid_ = data_str.mtm_uid_;
+            ent.type_uid_ = data_str.type_uid_;
+            ent.bio_type_ = data_str.bio_type_;
+            ent.size_ = data_str.size_;
+
+            ent.description_.resize(data_str.description_.get_length());
+            ent.details_.resize(data_str.details_.get_length());
+        }
 
         pad_out_data(seri);
-        seri.absorb(ent.details_);
+        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(ent.description_.data()), ent.description_.length() * sizeof(char16_t));
+
+        pad_out_data(seri);
+        seri.absorb_impl(reinterpret_cast<std::uint8_t*>(ent.details_.data()), ent.details_.length() * sizeof(char16_t));
 
         pad_out_data(seri);
     }
 
-    static void pack_entry_and_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
-        pack_entry_to_buffer(seri, ent);
+    static void absorb_entry_and_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+        absorb_entry_to_buffer(seri, ent);
         seri.absorb(ent.service_id_);
     }
 
@@ -377,7 +447,7 @@ namespace eka2l1 {
         }
 
         common::chunkyseri seri(buffer, buffer_max_size, common::SERI_MODE_MEASURE);
-        pack_entry_to_buffer(seri, *ent);
+        absorb_entry_and_service_id_to_buffer(seri, *ent);
 
         if (seri.size() > buffer_max_size) {
             ctx->complete(epoc::error_overflow);
@@ -385,9 +455,15 @@ namespace eka2l1 {
         }
 
         seri = common::chunkyseri(buffer, buffer_max_size, common::SERI_MODE_WRITE);
-        pack_entry_to_buffer(seri, *ent);
+        absorb_entry_and_service_id_to_buffer(seri, *ent);
 
         ctx->set_descriptor_argument_length(1, static_cast<std::uint32_t>(seri.size()));
+        
+        // Slot 2 is usually service ID on old MSV
+        if (ctx->get_descriptor_argument_ptr(2)) {
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(2, ent->service_id_);
+        }
+
         ctx->complete(epoc::error_none);
     }
 
@@ -427,7 +503,7 @@ namespace eka2l1 {
 
         while ((written < buffer_max_size) && (!child_entries_.empty())) {
             common::chunkyseri measurer(nullptr, 0x1000, common::SERI_MODE_MEASURE);
-            pack_entry_to_buffer(measurer, *child_entries_.back());
+            absorb_entry_to_buffer(measurer, *child_entries_.back());
 
             if (measurer.size() + written > buffer_max_size) {
                 is_overflow = true;
@@ -435,7 +511,7 @@ namespace eka2l1 {
             }
 
             // Start writing to this buffer
-            pack_entry_to_buffer(seri, *child_entries_.back());
+            absorb_entry_to_buffer(seri, *child_entries_.back());
 
             details->child_count_in_array_++;
 
@@ -647,5 +723,286 @@ namespace eka2l1 {
 
         comp->filename_ = path.value();
         ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::read_store(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!store_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
+        epoc::msv::entry *ent = indexer->get_entry(store_id.value());
+        if (!ent) {
+            LOG_ERROR(SERVICE_MSV, "Entry with ID 0x{:X} does not exist", store_id.value());
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+
+        if (ent->store_lock()) {
+            ctx->complete(epoc::error_permission_denied);
+            return;
+        }
+
+        ent->read_count_++;
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::lock_store(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!store_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
+        epoc::msv::entry *ent = indexer->get_entry(store_id.value());
+        if (!ent) {
+            LOG_ERROR(SERVICE_MSV, "Entry with ID 0x{:X} does not exist", store_id.value());
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+
+        if (ent->store_lock()) {
+            ctx->complete(epoc::error_locked);
+            return;
+        }
+
+        ent->store_lock(true);
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::release_store(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!store_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
+        epoc::msv::entry *ent = indexer->get_entry(store_id.value());
+        if (!ent) {
+            LOG_ERROR(SERVICE_MSV, "Entry with ID 0x{:X} does not exist", store_id.value());
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+
+        if (!ent->store_lock()) {
+            LOG_ERROR(SERVICE_MSV, "Store ID 0x{:X} not locked to release", store_id.value());
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        ent->store_lock(false);
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::dec_store_read_count(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
+        if (!store_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
+        epoc::msv::entry *ent = indexer->get_entry(store_id.value());
+        if (!ent) {
+            LOG_ERROR(SERVICE_MSV, "Entry with ID 0x{:X} does not exist", store_id.value());
+            ctx->complete(epoc::error_not_found);
+
+            return;
+        }
+
+        if (ent->read_count_ == 0) {
+            LOG_ERROR(SERVICE_MSV, "Read count is already zero and can't be decreased more! (id=0x{:X})", store_id.value());
+            ctx->complete(epoc::error_general);
+            return;
+        }
+
+        ent->read_count_--;
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::will_you_take_more_work(service::ipc_context *ctx) {
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::operation_data(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+        std::uint8_t *operation_buffer_ptr = ctx->get_descriptor_argument_ptr(1);
+        std::size_t operation_buffer_size = ctx->get_argument_data_size(1);
+
+        if (!operation_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (!operation_buffer_ptr || !operation_buffer_size) {
+            LOG_WARN(SERVICE_MSV, "Operation data buffer is empty, clearing it out");
+
+            auto ite = operation_buffers_.find(operation_id.value());
+            if (ite != operation_buffers_.end()) {
+                operation_buffers_.erase(ite);
+            }
+        } else {
+            operation_buffer &mee = operation_buffers_[operation_id.value()];
+            mee.resize(operation_buffer_size);
+
+            std::memcpy(mee.data(), operation_buffer_ptr, operation_buffer_size);
+        }
+
+        ctx->complete(epoc::error_none);
+    }
+
+    bool msv_client_session::claim_operation_buffer(const std::uint32_t operation_id, operation_buffer &buffer) {
+        auto ite = operation_buffers_.find(operation_id);
+        if (ite != operation_buffers_.end()) {
+            buffer = std::move(ite->second);
+            operation_buffers_.erase(ite);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void msv_client_session::create_entry(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+
+        // TODO: Consider the second argument in newer version for security.
+        if (!operation_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        operation_buffer buffer;
+        if (!claim_operation_buffer(operation_id.value(), buffer)) {
+            LOG_ERROR(SERVICE_MSV, "No buffer correspond with operation ID 0x{:X} to create entry", operation_id.value());
+            ctx->complete(epoc::error_argument);
+
+            return;
+        }
+
+        epoc::msv::entry target_entry;
+
+        common::chunkyseri seri(buffer.data(), buffer.size(), common::SERI_MODE_READ);
+        absorb_entry_to_buffer(seri, target_entry);
+
+        msv_server *serv = server<msv_server>();
+        epoc::msv::entry *final_entry = serv->indexer_->add_entry(target_entry);
+        
+        epoc::msv::local_operation_progress progress;
+        progress.operation_ = epoc::msv::local_operation_new;
+        progress.number_of_entries_ = 1;
+
+        if (!final_entry) {
+            LOG_ERROR(SERVICE_MSV, "Error adding entry!");
+
+            progress.number_failed_++;
+            progress.number_remaining_ = 1;
+            progress.error_ = epoc::error_general;
+        } else {
+            progress.mid_ = final_entry->id_;
+            progress.number_completed_++;
+
+            // Queue entry added event
+            msv_event_data created;
+            created.nof_ = epoc::msv::change_notification_type_entries_created;
+            created.arg1_ = final_entry->id_;
+            created.arg2_ = final_entry->parent_id_;
+
+            serv->queue(created);
+        }
+
+        // Report progress
+        operation_buffer &progress_buffer = progress_buffers_[operation_id.value()];
+        progress_buffer.resize(sizeof(progress));
+        std::memcpy(progress_buffer.data(), &progress, sizeof(progress));
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::change_entry(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+
+        // TODO: Consider the second argument in newer version for security.
+        if (!operation_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        operation_buffer buffer;
+        if (!claim_operation_buffer(operation_id.value(), buffer)) {
+            LOG_ERROR(SERVICE_MSV, "No buffer correspond with operation ID 0x{:X} to create entry", operation_id.value());
+            ctx->complete(epoc::error_argument);
+
+            return;
+        }
+
+        epoc::msv::entry target_entry;
+
+        common::chunkyseri seri(buffer.data(), buffer.size(), common::SERI_MODE_READ);
+        absorb_entry_to_buffer(seri, target_entry);
+
+        msv_server *serv = server<msv_server>();
+        const bool result = serv->indexer_->change_entry(target_entry);
+        
+        epoc::msv::local_operation_progress progress;
+        progress.operation_ = epoc::msv::local_operation_changed;
+        progress.number_of_entries_ = 1;
+
+        if (!result) {
+            LOG_ERROR(SERVICE_MSV, "Error changing entry!");
+
+            progress.number_failed_++;
+            progress.number_remaining_ = 1;
+            progress.error_ = epoc::error_general;
+        } else {
+            progress.mid_ = target_entry.id_;
+            progress.number_completed_++;
+
+            // Queue entry changed event
+            msv_event_data created;
+            created.nof_ = epoc::msv::change_notification_type_entries_changed;
+            created.arg1_ = target_entry.id_;
+            created.arg2_ = target_entry.parent_id_;
+
+            serv->queue(created);
+        }
+
+        // Report progress
+        operation_buffer &progress_buffer = progress_buffers_[operation_id.value()];
+        progress_buffer.resize(sizeof(progress));
+        std::memcpy(progress_buffer.data(), &progress, sizeof(progress));
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void msv_client_session::operation_info(service::ipc_context *ctx, const bool is_complete) {
+        std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
+        
+        if (!operation_id.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        auto ite = progress_buffers_.find(operation_id.value());
+        if (ite == progress_buffers_.end()) {
+            LOG_ERROR(SERVICE_MSV, "Progress buffer for operation 0x{:X} is not ready!", operation_id.value());
+
+            ctx->complete(epoc::error_not_ready);
+            return;
+        }
+
+        ctx->write_data_to_descriptor_argument(1, ite->second.data(), static_cast<std::uint32_t>(ite->second.size()));
+        ctx->complete(static_cast<int>(ite->second.size()));
+
+        if (is_complete) {
+            progress_buffers_.erase(ite);
+        }
     }
 }
