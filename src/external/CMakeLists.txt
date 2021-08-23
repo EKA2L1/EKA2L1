@@ -234,6 +234,14 @@ add_subdirectory(libfat)
 set(ENABLE_TESTING OFF CACHE BOOL "Build mbed TLS tests." FORCE)
 add_subdirectory(mbedtls)
 
+# SQLite3
+add_library(sqlite3
+    sqlite3/sqlite3.c
+    sqlite3/sqlite3.h
+    sqlite3/sqlite3ext.h)
+
+target_include_directories(sqlite3 PUBLIC sqlite3)
+
 set (capstone_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/capstone/include" PARENT_SCOPE)
 set (YAML_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp/include" PARENT_SCOPE)
 set (LIBCXXABI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi/include" PARENT_SCOPE)
