@@ -122,12 +122,6 @@ target_link_libraries(eka2l1_qt PRIVATE
     gdbstub
     yaml-cpp)
 
-set_target_properties(eka2l1_qt PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER my.github.eka2l1
-    MACOSX_BUNDLE_BUNDLE_VERSION 0.0.4.2
-    MACOSX_BUNDLE_SHORT_VERSION_STRING 0.0.4.2
-)
-
 set_target_properties(eka2l1_qt PROPERTIES OUTPUT_NAME eka2l1_qt
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -166,6 +160,40 @@ if (EKA2L1_ENABLE_SCRIPTING_ABILITY)
         else()
             target_link_libraries(eka2l1_qt PRIVATE symemu)
         endif()
+endif()
+
+if(APPLE)
+    set_target_properties(eka2l1_qt PROPERTIES
+       MACOSX_BUNDLE True
+       MACOSX_BUNDLE_GUI_IDENTIFIER my.github.eka2l1
+       MACOSX_BUNDLE_BUNDLE_VERSION 0.0.4.2
+       MACOSX_BUNDLE_SHORT_VERSION_STRING 0.0.4.2
+       MACOSX_BUNDLE_ICON_FILE duck.icns
+       XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_SOURCE_DIR}/EKA2L1.entitlements"
+       XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep --options=runtime"
+       OUTPUT_NAME EKA2L1
+    )
+    # Copy Qt plugins into the bundle
+    get_target_property(qtcocoa_location Qt5::QCocoaIntegrationPlugin LOCATION)
+    target_sources(eka2l1_qt PRIVATE "${qtcocoa_location}")
+    set_source_files_properties("${qtcocoa_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/platforms)
+
+    get_target_property(qtmacstyle_location Qt5::QMacStylePlugin LOCATION)
+    target_sources(eka2l1_qt PRIVATE "${qtmacstyle_location}")
+    set_source_files_properties("${qtmacstyle_location}" PROPERTIES MACOSX_PACKAGE_LOCATION MacOS/styles)
+
+    # Copy icon into the bundle
+    target_sources(eka2l1_qt PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/duck.icns")
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/duck.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+
+    # Update library references to make the bundle portable
+    include(DolphinPostprocessBundle)
+    dolphin_postprocess_bundle(eka2l1_qt)
+    # Fix rpath
+    add_custom_command(TARGET eka2l1_qt
+       POST_BUILD COMMAND
+       ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/"
+       $<TARGET_FILE:eka2l1_qt>)
 endif()
 
 if(QT_VERSION_MAJOR EQUAL 6)

@@ -210,6 +210,9 @@ add_subdirectory(cubeb)
 
 # FFMPEG
 add_subdirectory(ffmpeg)
+if (APPLE)
+    target_link_libraries(ffmpeg INTERFACE "-framework CoreVideo" "iconv")
+endif()
 
 option(CAPSTONE_BUILD_SHARED "Build shared library" OFF)
 option(CAPSTONE_BUILD_TESTS "Build tests" OFF)
