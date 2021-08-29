@@ -15,7 +15,7 @@
     <string name="exit">Keluar</string>
     <string name="rename">Ganti nama</string>
     <string name="save_log">Simpan log</string>
-    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
+    <string name="opengl_required">Aplikasi ini memerlukan OpenGL ES 3.0+.</string>
     <string name="install">Instal</string>
     <string name="device_dump">Dump perangkat</string>
     <string name="path_to_rpkg">Jalur ke RPKG</string>
@@ -28,7 +28,7 @@
     <string name="no_device_installed">Harap instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, diperlukan file tambahan yang bernama RPKG. Jika perangkat tersebut terdeteksi maka muncul permintaan untuk memasukkan file tersebut.</string>
     <string name="recommended_devices_to_install">Rekomendasi firmware perangkat untuk diinstal</string>
-    <string name="wiki_info">For more info about device install, please check out our wiki:</string>
+    <string name="wiki_info">Untuk informasi lebih lanjut mengenai pemasangan perangkat, silakan kunjungi wiki kami:</string>
     <string name="install_rpkg_corrupt">File RPKG yang disediakan telah rusak!</string>
     <string name="install_rpkg_file_not_found">File RPKG tidak bisa dibuka!</string>
     <string name="install_raw_dump_fail_to_copy">Gagal menyalin file raw dump ke tempat tujuan!</string>
