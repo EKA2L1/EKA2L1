@@ -151,7 +151,6 @@ namespace eka2l1 {
         : typical_session(srv, suid, client_version) {
             // Please don't remove the separator, absolute path needs this to determine root directory
         kernel::process *pr = ctx->msg->own_thr->owning_process();
-        const std::u16string root_name = eka2l1::root_name(pr->get_exe_path());
 
         if (server<fs_server>()->kern->is_eka1()) {
             ss_path = server<fs_server>()->default_sys_path;

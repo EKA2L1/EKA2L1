@@ -36,7 +36,7 @@ namespace eka2l1::mem {
             return nullptr;
         }
 
-        return &pages_.at(idx);
+        return &pages_[idx];
     }
 
     page_directory::page_directory(const std::size_t page_size, const asid id)

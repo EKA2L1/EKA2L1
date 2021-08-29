@@ -102,7 +102,7 @@ namespace eka2l1::drivers {
         virtual_stop = true;
 
         // Discard all buffers
-        while (auto buffer = buffers_.pop()) {
+        while (buffers_.pop()) {
         }
 
         return true;

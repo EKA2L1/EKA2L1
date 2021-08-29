@@ -44,7 +44,7 @@ struct function {
     function_name dename;
     uint32_t id;
 
-    function() {}
+    function() = default;
     function(function_name name, uint32_t sid)
         : dename(name)
         , id(sid) {}
@@ -59,7 +59,7 @@ void list_all_libs() {
         fs::path fdir = fs::path(f);
 
         if (fs::is_regular_file(fdir) && fdir.extension().string() == ".idt") {
-            libs.push_back(fs::path(f));
+            libs.emplace_back(f);
         }
     }
 }
@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
         list_all_libs();
     } else {
         for (auto i = 1; i < argc; i++) {
-            libs.push_back(fs::path(argv[i]));
+            libs.emplace_back(argv[i]);
         }
     }
 

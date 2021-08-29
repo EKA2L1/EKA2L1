@@ -146,7 +146,7 @@ namespace eka2l1::epoc::cap {
 
         if (new_one_if_not_exist) {
             // Create new one
-            states_.push_back(wg_state());
+            states_.emplace_back();
             states_.back().id_ = wg_id;
 
             return &states_.back();

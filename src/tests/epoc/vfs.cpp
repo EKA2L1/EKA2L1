@@ -13,8 +13,7 @@ struct io_scope_guard {
         io->add_filesystem(physical_fs);
     }
 
-    ~io_scope_guard() {
-    }
+    ~io_scope_guard() = default;
 };
 
 TEST_CASE("get_physical", "vfs") {

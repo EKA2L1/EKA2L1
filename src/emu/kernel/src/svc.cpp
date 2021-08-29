@@ -689,9 +689,6 @@ namespace eka2l1::epoc {
     BRIDGE_FUNC(void, message_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> cage) {
         process_ptr crr = kern->crr_process();
 
-        std::string exit_cage = cage.get(crr)->to_std_string(kern->crr_process());
-        std::optional<std::string> exit_description;
-
         ipc_msg_ptr msg = kern->get_msg(h);
 
         std::string exit_category = "None";

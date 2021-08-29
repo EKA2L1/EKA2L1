@@ -25,8 +25,7 @@
 #include <drivers/itc.h>
 
 namespace eka2l1::renderer {
-    spritesheet::spritesheet() {
-    }
+    spritesheet::spritesheet() = default;
 
     bool spritesheet::parse_metadata(const std::string &path) {
         pugi::xml_document doc;

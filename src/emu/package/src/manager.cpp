@@ -443,9 +443,6 @@ namespace eka2l1 {
                 return false;
             }
 
-            // Delete registry file
-            const std::u16string vpath = get_virtual_registry_regfile(residing_, pkg.uid, pkg.index);
-
             // Delete associated controllers
             for (std::size_t i = 0; i < pkg.controller_infos.size(); i++) {
                 const std::u16string ctrl_path = add_path(get_virtual_registry_folder(residing_, pkg.uid),
