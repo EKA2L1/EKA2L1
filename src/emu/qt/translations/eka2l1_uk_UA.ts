@@ -142,12 +142,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation type="unfinished">The disk space is insufficient to perform the device install! Please free your disk space!</translation>
+      <translation>На диску недостатньо місця, щоб виконати встановлення пристрою! Будь ласка, звільніть місце на диску!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation type="unfinished">Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</translation>
+      <translation>Деякі файли, надані для встановлення, більше не існують. Будь ласка, зберігайте їх у цілості, поки встановлення не завершиться!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
