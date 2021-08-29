@@ -132,12 +132,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>Один із файлів FPSX, що містяться в прошивці, пошкоджено!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation type="unfinished">An unknown error has occured. Please contact the developers with your log!</translation>
+      <translation>Сталася невідома помилка. Будь ласка, зв'яжіться з розробниками зі своїм логом!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
