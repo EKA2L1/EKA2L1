@@ -152,62 +152,62 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation type="unfinished">The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</translation>
+      <translation>ROFS у файлі прошивки пошкоджено! Будь ласка, переконайтеся, що файли вашої прошивки не пошкоджені.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
       <source>Fail to copy ROM file!</source>
-      <translation type="unfinished">Fail to copy ROM file!</translation>
+      <translation>Не вдалося скопіювати файл ROM!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="240"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation type="unfinished">The provided ROM is corrupted! Please make sure your ROM is valid!</translation>
+      <translation>Наданий ROM пошкоджено! Будь ласка, переконайтеся, що ваш ROM дійсний!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="244"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation type="unfinished">The provided RPKG is corrupted! Please make sure your RPKG is valid!</translation>
+      <translation>Наданий RPKG пошкоджено! Будь ласка, переконайтеся, що ваш RPKG дійсний!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="248"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation type="unfinished">The provided VPL file is invalid. Please check your firmware files again!</translation>
+      <translation>Наданий файл VPL недійсний. Будь ласка, перевірте файли вашої прошивки ще раз!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Помилка встановлення</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>Виберіть VPL файл</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl)</source>
-      <translation type="unfinished">VPL file (*.vpl)</translation>
+      <translation>Файл VPL (*.vpl)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>Виберіть ROM</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM)</translation>
+      <translation>Файл ROM (*.rom *.ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
-      <translation type="unfinished">Choose the RPKG</translation>
+      <translation>Виберіть RPKG</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG)</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG)</translation>
+      <translation>Файл RPKG (*.rpkg *.RPKG)</translation>
     </message>
   </context>
   <context>
@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>Панель запуску застосунків недоступна.&lt;br&gt;Установіть пристрій, щоб продовжити.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -235,7 +235,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>Повернути екран</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="112"/>
@@ -245,7 +245,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="118"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>Емуляція</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
@@ -265,12 +265,12 @@
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Керування пакетами</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
       <source>Mount game card dump</source>
-      <translation type="unfinished">Mount game card dump</translation>
+      <translation>Монтувати дамп ігрової картки</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
@@ -320,7 +320,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="209"/>
       <source>Recent dumps</source>
-      <translation type="unfinished">Recent dumps</translation>
+      <translation>Недавні дампи</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="249"/>
@@ -330,48 +330,48 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="246"/>
       <source>Clear menu</source>
-      <translation type="unfinished">Clear menu</translation>
+      <translation>Очистити меню</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="308"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>Сенсорний екран вимкнено</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="308"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation type="unfinished">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</translation>
+      <translation>Деякі з ваших поточних сполучень клавіш пов'язані з кнопками миші. Тому емульований сенсорний екран вимкнено.&lt;br&gt;&lt;br&gt;&lt;b&gt;Примітка:&lt;/b&gt;&lt;br&gt;Сенсорний екран можна повторно ввімкнути, підмінивши кнопки миші клавішами клавіатури.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="309"/>
       <location filename="../src/mainwindow.cpp" line="373"/>
       <source>Don&apos;t show this again</source>
-      <translation type="unfinished">Don&apos;t show this again</translation>
+      <translation>Не показувати це знову</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="372"/>
       <source>No device installed</source>
-      <translation type="unfinished">No device installed</translation>
+      <translation>Немає встановлених пристроїв</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="372"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation type="unfinished">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</translation>
+      <translation>Ви не встановили жодного пристрою. Будь ласка, встановіть пристрій або дотримуйтесь інструкцій зі встановлення на сторінці EKA2L1 у GitHub Wiki.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="651"/>
       <source>Extracting game dump files</source>
-      <translation type="unfinished">Extracting game dump files</translation>
+      <translation>Видобування файлів ігрового дампу</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="672"/>
       <source>Mounting aborted</source>
-      <translation type="unfinished">Mounting aborted</translation>
+      <translation>Монтування перервано</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>Файл ZIP пошкоджено!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="682"/>
@@ -381,12 +381,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="688"/>
       <source>The choosen file is not a ZIP file!</source>
-      <translation type="unfinished">The choosen file is not a ZIP file!</translation>
+      <translation>Вибраний файл не є файлом ZIP!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
       <source>Game card problem</source>
-      <translation type="unfinished">Game card problem</translation>
+      <translation>Проблема з ігровою карткою</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
@@ -447,7 +447,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Помилка встановлення</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
@@ -490,7 +490,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Керування пакетами</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
