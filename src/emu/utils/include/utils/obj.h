@@ -77,5 +77,13 @@ namespace eka2l1::epoc {
         ref_count_object *operator[](handle obj_handle) {
             return get_raw(obj_handle);
         }
+
+        decltype(objects)::iterator begin() {
+            return objects.begin();
+        }
+
+        decltype(objects)::iterator end() {
+            return objects.end();
+        }
     };
 }

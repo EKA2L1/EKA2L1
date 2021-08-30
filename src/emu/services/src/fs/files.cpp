@@ -524,8 +524,16 @@ namespace eka2l1 {
         // Reset its status, so seek back, this is just in case it got used again
         vfs_file->seek(0, file_seek_mode::beg);
 
-        auto &node_attrib = server<fs_server>()->attribs[vfs_file->file_name()];
-        node_attrib.decrement_use(ctx->msg->own_thr->owning_process()->unique_id());
+        const std::u16string filename = vfs_file->file_name();
+        fs_server *serv = server<fs_server>();
+
+        auto ite = serv->attribs.find(filename);
+        if (ite != serv->attribs.end()) {
+            ite->second.decrement_use(node->process);
+            if (ite->second.use_count == 0) {
+                serv->attribs.erase(ite);
+            }
+        }
 
         obj_table_.remove(*handle_res);
         ctx->complete(epoc::error_none);
@@ -602,7 +610,7 @@ namespace eka2l1 {
         file *f = reinterpret_cast<file *>(node->vfs_node.get());
 
         auto &node_attrib = server<fs_server>()->attribs[f->file_name()];
-        node_attrib.increment_use(ctx->msg->own_thr->owning_process()->unique_id());
+        node_attrib.increment_use(node->process);
 
         ctx->write_data_to_descriptor_argument<epoc::handle>(3, dup_handle);
         ctx->complete(epoc::error_none);
@@ -868,6 +876,7 @@ namespace eka2l1 {
 
         new_node->mix_mode = real_mode;
         new_node->open_mode = access_mode;
+        new_node->process = own_pr_uid;
 
         return obj_table_.add(new_node);
     }

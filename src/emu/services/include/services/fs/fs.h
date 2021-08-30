@@ -82,7 +82,6 @@ namespace eka2l1 {
         int open_mode;
         bool temporary = false;
 
-        bool exclusive{ false };
         kernel::uid process{ 0 };
 
         void deref() override;
@@ -183,6 +182,9 @@ namespace eka2l1 {
         void drive_list(service::ipc_context *ctx);
         void drive(service::ipc_context *ctx);
         void volume(service::ipc_context *ctx);
+        void is_file_opened(service::ipc_context *ctx);
+
+        bool is_file_opened_here(const std::u16string &path);
 
         enum class notify_type {
             entry = 1,
@@ -327,5 +329,6 @@ namespace eka2l1 {
         }
 
         file *get_file(const kernel::uid session_uid, const std::uint32_t handle);
+        bool is_file_opened(const std::u16string &path);
     };
 }

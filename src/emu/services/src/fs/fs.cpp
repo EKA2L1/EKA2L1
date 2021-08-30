@@ -289,6 +289,7 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(query_drive_info_ext, epoc::fs_msg_query_volume_info_ext, "Fs::QueryVolumeInfoExt");
             HANDLE_CLIENT_IPC(server<fs_server>()->set_default_system_path, epoc::fs_msg_set_default_path, "Fs::SetDefaultPath");
             HANDLE_CLIENT_IPC(server<fs_server>()->get_default_system_path, epoc::fs_msg_default_path, "Fs::DefaultPath");
+            HANDLE_CLIENT_IPC(is_file_opened, epoc::fs_msg_is_file_open, "Fs::IsFileOpen");
 
         case epoc::fs_msg_base_close:
             if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
@@ -422,6 +423,16 @@ namespace eka2l1 {
     void fs_server::get_default_system_path(service::ipc_context *ctx) {
         ctx->write_arg(0, default_sys_path);
         ctx->complete(epoc::error_none);
+    }
+
+    bool fs_server::is_file_opened(const std::u16string &path) {
+        for (auto &[path_attrib, attrib] : attribs) {
+            if (common::compare_ignore_case(path_attrib, path) == 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void fs_server::init() {
@@ -806,5 +817,20 @@ namespace eka2l1 {
             LOG_WARN(SERVICE_EFSRV, "Unhandled close type for node type {}", static_cast<int>(node->vfs_node->type));
             break;
         }
+    }
+
+    void fs_server_client::is_file_opened(service::ipc_context *ctx) {
+        std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
+
+        if (!path) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        std::u16string final_path = get_full_symbian_path(ss_path, path.value());
+        const std::int32_t result = server<fs_server>()->is_file_opened(final_path);
+
+        ctx->write_data_to_descriptor_argument<std::int32_t>(1, result);
+        ctx->complete(epoc::error_none);
     }
 }
