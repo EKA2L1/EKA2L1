@@ -331,6 +331,44 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>(slot_ptr->data.size());
     }
 
+    BRIDGE_FUNC(std::int32_t, process_set_handle_parameter, kernel::handle process, std::int32_t slot_num, kernel::handle target) {
+        kernel::process *pr = kern->get<kernel::process>(process);
+        if (!pr) {
+            return epoc::error_bad_handle;
+        }
+
+        if (slot_num >= 16 || slot_num < 0) {
+            LOG_ERROR(KERNEL, "Invalid slot (slot: {} >= 16 or < 0)", slot_num);
+            return epoc::error_argument;
+        }
+
+        const bool result = pr->set_arg_slot(static_cast<std::uint8_t>(slot_num), reinterpret_cast<std::uint8_t*>(&target), 4, true);
+
+        if (!result) {
+            LOG_ERROR(KERNEL, "Parameter slot used, slot number: {}", slot_num);
+            return epoc::error_in_use;
+        }
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(kernel::handle, process_get_handle_parameter, std::int32_t slot_num, kernel::object_type obj_type, kernel::owner_type own) {
+        kernel::process *pr = kern->crr_process();
+
+        if (slot_num >= 16 || slot_num < 0) {
+            LOG_ERROR(KERNEL, "Invalid slot (slot: {} >= 16 or < 0)", slot_num);
+            return epoc::error_argument;
+        }
+
+        std::optional<kernel::handle> result = pr->get_handle_from_arg_slot(static_cast<std::uint8_t>(slot_num), obj_type, own);
+
+        if (!result.has_value()) {
+            return epoc::error_not_found;
+        }
+
+        return result.value();
+    }
+
     BRIDGE_FUNC(std::int32_t, process_get_data_parameter, std::int32_t slot_num, eka2l1::ptr<std::uint8_t> data_ptr, std::int32_t length) {
         kernel::process *pr = kern->crr_process();
 
@@ -5545,7 +5583,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC6, property_find_get_bin),
         BRIDGE_REGISTER(0xC7, property_find_set_int),
         BRIDGE_REGISTER(0xC8, property_find_set_bin),
+        BRIDGE_REGISTER(0xCE, process_set_handle_parameter),
         BRIDGE_REGISTER(0xCF, process_set_data_parameter),
+        BRIDGE_REGISTER(0xD0, process_get_handle_parameter),
         BRIDGE_REGISTER(0xD1, process_get_data_parameter),
         BRIDGE_REGISTER(0xD2, process_data_parameter_length),
         BRIDGE_REGISTER(0xDB, plat_sec_diagnostic),
@@ -5707,7 +5747,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC5, property_find_get_bin),
         BRIDGE_REGISTER(0xC6, property_find_set_int),
         BRIDGE_REGISTER(0xC7, property_find_set_bin),
+        BRIDGE_REGISTER(0xCD, process_set_handle_parameter),
         BRIDGE_REGISTER(0xCE, process_set_data_parameter),
+        BRIDGE_REGISTER(0xCF, process_get_handle_parameter),
         BRIDGE_REGISTER(0xD0, process_get_data_parameter),
         BRIDGE_REGISTER(0xD1, process_data_parameter_length),
         BRIDGE_REGISTER(0xDA, plat_sec_diagnostic),

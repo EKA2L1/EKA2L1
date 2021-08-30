@@ -63,6 +63,8 @@ namespace eka2l1::kernel {
 
     struct pass_arg {
         bool used = false;
+        kernel::kernel_obj *obj = nullptr;
+
         std::vector<std::uint8_t> data;
 
         void do_state(common::chunkyseri &seri);
@@ -230,8 +232,9 @@ namespace eka2l1::kernel {
         std::string name() const override;
         void rename(const std::string &new_name) override;
 
-        void set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size);
+        bool set_arg_slot(uint8_t slot, std::uint8_t *data, size_t data_size, const bool is_handle = false);
         std::optional<pass_arg> get_arg_slot(uint8_t slot);
+        std::optional<kernel::handle> get_handle_from_arg_slot(const std::uint8_t slot, kernel::object_type obj_type, kernel::owner_type new_handle_owner);
 
         void mark_slot_free(std::uint8_t slot) {
             assert(slot < 16);

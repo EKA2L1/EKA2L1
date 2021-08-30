@@ -259,15 +259,53 @@ namespace eka2l1::kernel {
         generation_ = refresh_generation();
     }
 
-    void process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size) {
-        if (slot >= 16 || args[slot].used) {
-            return;
+    bool process::set_arg_slot(std::uint8_t slot, std::uint8_t *data, std::size_t data_size, const bool is_handle) {
+        if ((slot >= 16) || args[slot].used) {
+            return false;
         }
 
         args[slot].data.resize(data_size);
         args[slot].used = true;
 
+        if (is_handle) {
+            args[slot].obj = kern->get_kernel_obj_raw(*reinterpret_cast<kernel::handle*>(data), kern->crr_thread());
+            args[slot].obj->increase_access_count();
+        } else {
+            args[slot].obj = nullptr;
+        }
+
         std::copy(data, data + data_size, args[slot].data.begin());
+
+        return true;
+    }
+
+    std::optional<kernel::handle> process::get_handle_from_arg_slot(const std::uint8_t slot, kernel::object_type obj_type, kernel::owner_type new_handle_owner) {
+        kernel::kernel_obj *obj = nullptr;
+        if (!parent_process_) {
+            LOG_ERROR(KERNEL, "This process is a wild child, can't get handle from environment argument!");
+            return std::nullopt;
+        }
+
+        if ((slot >= 16) || !args[slot].used || !args[slot].obj) {
+            return std::nullopt;
+        }
+
+        obj = args[slot].obj;
+
+        if (obj->get_object_type() != obj_type) {
+            LOG_ERROR(KERNEL, "Handle points to object with wrong requested type! (objtype={}, requested={})", static_cast<int>(obj->get_object_type()), static_cast<int>(obj_type));
+            return std::nullopt;
+        }
+
+        // Add it to our process
+        kernel::handle h = kern->mirror(obj, new_handle_owner);
+        obj->decrease_access_count();
+
+        args[slot].obj = nullptr;
+        args[slot].data.clear();
+        args[slot].used = false;
+
+        return h;
     }
 
     std::optional<pass_arg> process::get_arg_slot(uint8_t slot) {
