@@ -61,16 +61,55 @@ namespace eka2l1 {
     }
 
     void backup_client_session::backup_operation_ready(service::ipc_context *ctx) {
-        if (!nof_.empty()) {
+        if (!backup_operation_nof_.empty()) {
             ctx->complete(epoc::error_in_use);
             return;
         }
 
-        nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+        backup_operation_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void backup_client_session::event_ready(service::ipc_context *ctx) {
+        if (!event_operation_nof_.empty()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
+        event_operation_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void backup_client_session::notify_lock_change(service::ipc_context *ctx) {
+        std::optional<std::u16string> filename = ctx->get_argument_value<std::u16string>(1);
+        std::optional<std::uint32_t> flags = ctx->get_argument_value<std::uint32_t>(2);
+
+        if (!filename.has_value() || !flags.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        for (std::size_t i = 0; i < lock_notify_requests_.size(); i++) {
+            if (common::compare_ignore_case(lock_notify_requests_[i].filename_, filename.value()) == 0) {
+                ctx->complete(epoc::error_already_exists);
+                return;
+            }
+        }
+
+        lock_notify_requests_.push_back(backup_lock_notify_request { filename.value(), flags.value() });
+        ctx->complete(epoc::error_none);
     }
 
     void backup_client_session::fetch(service::ipc_context *ctx) {
+        bool should_stub_complete = true;
+
         switch (ctx->msg->function) {
+        case EBakOpCodeEventReady:
+            event_ready(ctx);
+            return;
+
+        case EBakOpCodeNotifyLockChange:
+            notify_lock_change(ctx);
+            return;
+
         case EBakOpCodeSetBackupOperationObserverIsPresent:
             set_backup_operation_observer_present(ctx);
             return;

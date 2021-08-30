@@ -23,6 +23,8 @@
 #include <services/framework.h>
 #include <utils/reqsts.h>
 
+#include <string>
+
 namespace eka2l1 {
     enum TBaBakOpCode {
         EBakOpCodeEventReady = 20, // EBakOpCodeStartNotifications,
@@ -49,6 +51,11 @@ namespace eka2l1 {
         void connect(service::ipc_context &context) override;
     };
 
+    struct backup_lock_notify_request {
+        std::u16string filename_;
+        std::uint32_t flags_;
+    };
+
     struct backup_client_session : public service::typical_session {
     private:
         enum {
@@ -56,7 +63,11 @@ namespace eka2l1 {
         };
 
         std::uint32_t flags_;
-        epoc::notify_info nof_;
+
+        epoc::notify_info backup_operation_nof_;
+        epoc::notify_info event_operation_nof_;
+
+        std::vector<backup_lock_notify_request> lock_notify_requests_;
 
     public:
         explicit backup_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
@@ -65,5 +76,7 @@ namespace eka2l1 {
         void get_backup_operation_state(service::ipc_context *ctx);
         void set_backup_operation_observer_present(service::ipc_context *ctx);
         void backup_operation_ready(service::ipc_context *ctx);
+        void event_ready(service::ipc_context *ctx);
+        void notify_lock_change(service::ipc_context *ctx);
     };
 }
