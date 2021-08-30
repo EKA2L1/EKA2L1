@@ -97,7 +97,7 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
       <source>Install</source>
-      <translation type="unfinished">Install</translation>
+      <translation>تثبيت</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="138"/>
@@ -225,7 +225,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="73"/>
       <source>Install</source>
-      <translation type="unfinished">Install</translation>
+      <translation>تثبيت</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="96"/>
@@ -250,7 +250,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
       <source>About</source>
-      <translation type="unfinished">About</translation>
+      <translation>حول</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="137"/>
@@ -683,7 +683,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="379"/>
       <source>Enable nearest neighbor filtering</source>
-      <translation type="unfinished">Enable nearest neighbor filtering</translation>
+      <translation>تفعيل تصفية أقرب جار</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
@@ -718,7 +718,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="434"/>
       <source>Language</source>
-      <translation type="unfinished">Language</translation>
+      <translation>اللغة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="446"/>
@@ -728,7 +728,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="457"/>
       <source>System</source>
-      <translation type="unfinished">System</translation>
+      <translation>النظام</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="463"/>
@@ -761,7 +761,7 @@
       <location filename="../src/settings_dialog.ui" line="552"/>
       <location filename="../src/settings_dialog.ui" line="828"/>
       <source>Rename</source>
-      <translation type="unfinished">Rename</translation>
+      <translation>إعادة التسمية</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
@@ -811,22 +811,22 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="630"/>
       <source>Real-time accuracy</source>
-      <translation type="unfinished">Real-time accuracy</translation>
+      <translation>الدقة في الوقت الحقيقي</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="638"/>
       <source>Low</source>
-      <translation type="unfinished">Low</translation>
+      <translation>منخفض</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="643"/>
       <source>Mid</source>
-      <translation type="unfinished">Mid</translation>
+      <translation>متوسط</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="648"/>
       <source>High</source>
-      <translation type="unfinished">High</translation>
+      <translation>عالية</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="667"/>
