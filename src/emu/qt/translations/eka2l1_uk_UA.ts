@@ -325,7 +325,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="249"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>Тека</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="246"/>
