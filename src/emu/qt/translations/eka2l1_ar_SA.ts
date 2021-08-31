@@ -177,37 +177,37 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>فشل التثبيت</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>اختر ملف VPN</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl)</source>
-      <translation type="unfinished">VPL file (*.vpl)</translation>
+      <translation>ملف VPL (*.vpl)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>اختر ROM</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM)</translation>
+      <translation>ملف ROM (*.rom *.ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
-      <translation type="unfinished">Choose the RPKG</translation>
+      <translation>اختر RPKG</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG)</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG)</translation>
+      <translation>ملف RPKG (*.rpkg *.RPKG)</translation>
     </message>
   </context>
   <context>
@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>مشغل التطبيقات غير متوفر.&lt;br&gt;قم بتثبيت جهاز للمتابعة.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -235,7 +235,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>تدوير الشاشة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="112"/>
@@ -245,7 +245,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="118"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>المحاكاة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
@@ -255,22 +255,22 @@
     <message>
       <location filename="../src/mainwindow.ui" line="137"/>
       <source>Package</source>
-      <translation type="unfinished">Package</translation>
+      <translation>الحزمة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="142"/>
       <source>Device</source>
-      <translation type="unfinished">Device</translation>
+      <translation>الجهاز</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>مدير الحزم</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
       <source>Mount game card dump</source>
-      <translation type="unfinished">Mount game card dump</translation>
+      <translation>تحميل dump بطاقات اللعبة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
@@ -280,17 +280,17 @@
     <message>
       <location filename="../src/mainwindow.ui" line="160"/>
       <source>Pause</source>
-      <translation type="unfinished">Pause</translation>
+      <translation>ايقاف</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="165"/>
       <source>Stop</source>
-      <translation type="unfinished">Stop</translation>
+      <translation>توقف</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="170"/>
       <source>Restart</source>
-      <translation type="unfinished">Restart</translation>
+      <translation>إعادة التشغيل</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="175"/>
@@ -300,27 +300,27 @@
     <message>
       <location filename="../src/mainwindow.ui" line="180"/>
       <source>Mutexes</source>
-      <translation type="unfinished">Mutexes</translation>
+      <translation>Mutexes</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="185"/>
       <source>Chunks</source>
-      <translation type="unfinished">Chunks</translation>
+      <translation>القطع</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="190"/>
       <source>Window tree</source>
-      <translation type="unfinished">Window tree</translation>
+      <translation>شجرة النافذة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="198"/>
       <source>Fullscreen</source>
-      <translation type="unfinished">Fullscreen</translation>
+      <translation>ملء الشاشة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="209"/>
       <source>Recent dumps</source>
-      <translation type="unfinished">Recent dumps</translation>
+      <translation>Dumps الحديثة</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="249"/>
@@ -442,47 +442,47 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>تم إلغاء التثبيت</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>فشل التثبيت</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>فشل في تثبيت الحزمة على المسار: %1. تأكد من أن المسار يشير إلى ملف SIS/SISX صالح.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>تم التثبيت بنجاح</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>تم تثبيت الحزمة بنجاح</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>اختر الملف الذي سيتم تثبيته</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>ملف SIS (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>فشل تحميل السمة!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>يمكن العثور على السمة المظلمة&apos;ملف النمط s&apos;t!</translation>
     </message>
   </context>
   <context>
@@ -490,7 +490,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>مدير الحزم</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
@@ -500,7 +500,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
       <source>UID</source>
-      <translation type="unfinished">UID</translation>
+      <translation>المعرف الفريد</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
@@ -510,47 +510,47 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="76"/>
       <source>Vendor</source>
-      <translation type="unfinished">Vendor</translation>
+      <translation>المورد</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>الأقراص</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
       <source>Uninstall</source>
-      <translation type="unfinished">Uninstall</translation>
+      <translation>إلغاء التثبيت</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="94"/>
       <source>List files</source>
-      <translation type="unfinished">List files</translation>
+      <translation>قائمة الملفات</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Uninstall failed!</source>
-      <translation type="unfinished">Uninstall failed!</translation>
+      <translation>فشل الغاء التثبيت!</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation type="unfinished">Failed to uninstall the package</translation>
+      <translation>فشل إلغاء تثبيت الحزمة</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="142"/>
       <source>%1&apos;s files</source>
-      <translation type="unfinished">%1&apos;s files</translation>
+      <translation>%1&apos;ملفات</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="151"/>
       <source>Installed</source>
-      <translation type="unfinished">Installed</translation>
+      <translation>مثبت</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="155"/>
       <source>Delete on uninstall</source>
-      <translation type="unfinished">Delete on uninstall</translation>
+      <translation>حذف عند إلغاء التثبيت</translation>
     </message>
   </context>
   <context>
@@ -568,82 +568,82 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="48"/>
       <source>Application</source>
-      <translation type="unfinished">Application</translation>
+      <translation>التطبيق</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="120"/>
       <source>Time delay (0-500us)</source>
-      <translation type="unfinished">Time delay (0-500us)</translation>
+      <translation>وقت التأخير (0-500us)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="159"/>
       <source>Save screen scale and rotations</source>
-      <translation type="unfinished">Save screen scale and rotations</translation>
+      <translation>حفظ مقياس الشاشة وتدويرها</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="169"/>
       <source>Inherit these settings for child processes</source>
-      <translation type="unfinished">Inherit these settings for child processes</translation>
+      <translation>ورث هذه الإعدادات للعمليات الفرعية</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="185"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; None</translation>
+      <translation>&lt;b&gt;اعدادات لـ:&lt;/b&gt; لا يوجد</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="201"/>
       <source>Debugging</source>
-      <translation type="unfinished">Debugging</translation>
+      <translation>تصحيح الأخطاء</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="213"/>
       <source>CPU read</source>
-      <translation type="unfinished">CPU read</translation>
+      <translation>قراءة المعالج</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="220"/>
       <source>CPU write</source>
-      <translation type="unfinished">CPU write</translation>
+      <translation>كتابة المعالج</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="227"/>
       <source>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</source>
-      <translation type="unfinished">This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</translation>
+      <translation>هذا الخيار لن يتم حفظه بعد إيقاف المحاكي. غير فعال عند تمكين GDBStub.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="230"/>
       <source>CPU step</source>
-      <translation type="unfinished">CPU step</translation>
+      <translation>خطوة المعالج</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="243"/>
       <source>System calls</source>
-      <translation type="unfinished">System calls</translation>
+      <translation>مكالمات النظام</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="250"/>
       <source>IPC</source>
-      <translation type="unfinished">IPC</translation>
+      <translation>IPC</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="257"/>
       <source>Enable kernel tracing that is used in driver. Slowdown expected on enable.</source>
-      <translation type="unfinished">Enable kernel tracing that is used in driver. Slowdown expected on enable.</translation>
+      <translation>تمكين تتبع النواة المستخدمة في التشغيل. التباطؤ المتوقع عند التمكين.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="260"/>
       <source>Enable B-Trace</source>
-      <translation type="unfinished">Enable B-Trace</translation>
+      <translation>تمكين B-Trace</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="273"/>
       <source>Data</source>
-      <translation type="unfinished">Data</translation>
+      <translation>البيانات</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="281"/>
       <source>Emulator data path</source>
-      <translation type="unfinished">Emulator data path</translation>
+      <translation>مسار بيانات المحاكاة</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
@@ -653,12 +653,12 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
       <source>Clear all UI configurations</source>
-      <translation type="unfinished">Clear all UI configurations</translation>
+      <translation>مسح كافة إعدادات واجهة المستخدم</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="311"/>
       <source>Interface</source>
-      <translation type="unfinished">Interface</translation>
+      <translation>واجهة المستخدم</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="317"/>
