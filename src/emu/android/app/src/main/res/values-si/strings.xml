@@ -1,32 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="error">Error</string>
-    <string name="no_data">No data</string>
-    <string name="search">Search</string>
-    <string name="about">About</string>
-    <string name="settings">Settings</string>
+    <string name="error">දෝෂය</string>
+    <string name="no_data">දත්ත නැත</string>
+    <string name="search">සොයන්න</string>
+    <string name="about">පිලිබඳව</string>
+    <string name="settings">සැකසුම්</string>
     <string name="packages">Packages</string>
-    <string name="devices">Devices</string>
+    <string name="devices">උපාංග</string>
     <string name="processing">Processing...</string>
     <string name="completed">Completed!</string>
-    <string name="remove">Remove</string>
+    <string name="remove">ඉවත් කරන්න</string>
     <string name="mount_sd">Mount MMC/SD card</string>
     <string name="no_devices_found">No devices found</string>
-    <string name="exit">Exit</string>
+    <string name="exit">පිටවන්න</string>
     <string name="rename">Rename</string>
     <string name="save_log">Save log</string>
-    <string name="install">Install</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
+    <string name="install">ස්ථාපනය කරන්න</string>
     <string name="device_dump">Device dump</string>
     <string name="path_to_rpkg">Path to RPKG</string>
     <string name="path_to_rom">Path to ROM</string>
     <string name="firmware">Firmware</string>
     <string name="path_to_firmware">Path to VPL</string>
     <string name="install_method">Install method</string>
-    <string name="enter_new_name">Enter new name</string>
+    <string name="enter_new_name">අලුත් නමක් ඇතුල් කරන්න</string>
     <string name="no_device_dialog_title">No device installed!</string>
     <string name="no_device_installed">Please install a device. Files and ROM of a Symbian device are needed for the installation.\n\n<b>Note:</b> Each app will need suitable Symbian device to run.</string>
     <string name="install_device_note_may_need_rpkg">For S60v2 devices or higher, you may need to provide additional file called RPKG. The path chooser will pop up if the installer detects the need for it.</string>
     <string name="recommended_devices_to_install">Recommend devices to install</string>
+    <string name="wiki_info">For more info about device install, please check out our wiki:</string>
     <string name="install_rpkg_corrupt">The RPKG file provided is corrupt!</string>
     <string name="install_rpkg_file_not_found">RPKG file specified can\'t be opened!</string>
     <string name="install_raw_dump_fail_to_copy">Fail to copy raw dump files to target destination!</string>
@@ -39,11 +41,11 @@
     <string name="install_device_rom_corrupt_msg">ROM file is corrupted!</string>
     <string name="install_device_fpsx_corrupt_msg">FPSX file is corrupted!</string>
     <string name="pref_general_title">General</string>
-    <string name="pref_system_title">System</string>
+    <string name="pref_system_title">පද්ධතිය</string>
     <string name="pref_control_key_binding_sect_title">Key binding</string>
-    <string name="pref_theme">Theme</string>
+    <string name="pref_theme">තේමාව</string>
     <string name="pref_theme_light">Light</string>
-    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_theme_dark">අඳුරු</string>
     <string name="pref_enable_virtual_keyboard">Enable virtual keyboard</string>
     <string name="pref_enable_actionbar">Enable ActionBar</string>
     <string name="pref_enable_statusbar">Enable statusbar</string>
@@ -72,6 +74,6 @@
     <string name="force_close_confirmation">Force-closing the application may result in data loss or even break it completely!\nProceed?</string>
     <string name="log_saved">Log has been saved</string>
     <string name="about_icon_by">&lt;BR&gt;Icon by: </string>
-    <string name="version">Version: </string>
+    <string name="version">අනුවාදය: </string>
     <string name="recommended_devices_note"><b>Note:</b> It\'s recommended to use firmware for installation of devices from S60v3 and above.</string>
 </resources>
