@@ -147,6 +147,15 @@ namespace eka2l1::android {
                 conf.serialize();
             }
 
+            // Uncomment after MTM reset changes for a while
+            if (!conf.mtm_reset) {
+                auto private_mtm_c_path = io->get_raw_path(u"C:\\Private\\1000484b\\");
+                common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
+
+                conf.mtm_reset = true;
+                conf.serialize();
+            }
+
             manager::packages *pkgmngr = symsys->get_packages();
 
             pkgmngr->load_registries();

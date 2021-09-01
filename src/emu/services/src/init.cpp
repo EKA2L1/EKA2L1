@@ -206,12 +206,12 @@ namespace eka2l1 {
             CREATE_SERVER(sys, remcon_server);
             CREATE_SERVER(sys, etel_server);
             CREATE_SERVER(sys, notifier_server);
-            CREATE_SERVER(sys, msv_server);
+            //CREATE_SERVER(sys, msv_server);
             CREATE_SERVER(sys, sensor_server);
             CREATE_SERVER(sys, connmonitor_server);
             CREATE_SERVER(sys, nifman_server);
             CREATE_SERVER(sys, drm_notifier_server);
-            CREATE_SERVER(sys, sendas_server);
+            //CREATE_SERVER(sys, sendas_server);
             CREATE_SERVER(sys, sisregistry_server);
             CREATE_SERVER(sys, alarm_server);
             //CREATE_SERVER(sys, uiss_server);

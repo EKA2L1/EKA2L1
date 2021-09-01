@@ -100,6 +100,7 @@ namespace eka2l1::config {
 
         bool ui_new_style{ true };
         bool cenrep_reset{ false };
+        bool mtm_reset{ false };
 
         keybind_profile keybinds;
 

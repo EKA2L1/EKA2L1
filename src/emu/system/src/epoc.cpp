@@ -298,7 +298,7 @@ namespace eka2l1 {
 
                 dvcmngr_->clear();
 
-                std::string rom_drive_name = std::string(1, drive_to_char16(romdrv));
+                std::string rom_drive_name = std::string(1, static_cast<char>(drive_to_char16(romdrv)));
                 std::string root_z_path = add_path(conf_->storage, "drives/" + rom_drive_name + "/");
                 common::dir_iterator ite(root_z_path);
                 ite.detail = true;
