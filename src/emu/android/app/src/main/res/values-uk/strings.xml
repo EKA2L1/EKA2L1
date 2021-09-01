@@ -15,6 +15,7 @@
     <string name="exit">Вихід</string>
     <string name="rename">Перейменувати</string>
     <string name="save_log">Зберегти лог</string>
+    <string name="opengl_required">Застосунок потребує OpenGL ES 3.0+.</string>
     <string name="install">Установити</string>
     <string name="device_dump">Вмістище пам\'яті пристрою</string>
     <string name="path_to_rpkg">Шлях до RPKG</string>
@@ -27,6 +28,7 @@
     <string name="no_device_installed">Будь ласка, встановіть пристрій. Для встановлення потрібні файли та ПЗП (ROM) пристрою Symbian.\n\n<b>Примітка:</b> Кожному застосунку для запуску знадобиться відповідний пристрій Symbian.</string>
     <string name="install_device_note_may_need_rpkg">Для пристроїв S60v2 чи вище вам може знадобитися надати додатковий файл під назвою RPKG. Засіб вибору шляху з\'явиться, якщо встановник виявить необхідність у ньому.</string>
     <string name="recommended_devices_to_install">Рекомендовані пристрої для встановлення</string>
+    <string name="wiki_info">Для отримання додаткової інформації про встановлення пристроїв, будь ласка, відвідайте нашу вікі:</string>
     <string name="install_rpkg_corrupt">Наданий RPKG файл пошкоджений!</string>
     <string name="install_rpkg_file_not_found">Зазначений файл RPKG не можна відкрити!</string>
     <string name="install_raw_dump_fail_to_copy">Не вдалося скопіювати файли необробленого вмістища пам\'яті до цільового місця призначення!</string>

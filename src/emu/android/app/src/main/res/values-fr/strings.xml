@@ -15,6 +15,7 @@
     <string name="exit">Quitter</string>
     <string name="rename">Renommer</string>
     <string name="save_log">Sauvegarder les logs</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Installer</string>
     <string name="device_dump">Dump de l\'appareil</string>
     <string name="path_to_rpkg">Chemin d\'accès au RPKG</string>
@@ -27,6 +28,7 @@
     <string name="no_device_installed">Veuillez installer un appareil. Les fichiers et la ROM d\'un appareil Symbian sont nécessaires pour l\'installation.\n\n<b>Remarque :</b> Chaque application aura besoin d\'un appareil Symbian approprié pour fonctionner.</string>
     <string name="install_device_note_may_need_rpkg">Pour les appareils S60v2 ou supérieurs, vous devrez peut-être fournir un fichier supplémentaire appelé RPKG. Le sélecteur de chemin s\'affichera si le programme d\'installation en détecte la nécessité.</string>
     <string name="recommended_devices_to_install">Recommander des dispositifs à installer</string>
+    <string name="wiki_info">For more info about device install, please check out our wiki:</string>
     <string name="install_rpkg_corrupt">Le fichier RPKG fourni est corrompu !</string>
     <string name="install_rpkg_file_not_found">Le fichier RPKG spécifié ne peut pas être ouvert !</string>
     <string name="install_raw_dump_fail_to_copy">Impossible de copier les fichiers de sauvegarde bruts vers la destination cible !</string>

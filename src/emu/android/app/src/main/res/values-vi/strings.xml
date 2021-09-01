@@ -15,6 +15,7 @@
     <string name="exit">Thoát</string>
     <string name="rename">Đổi tên</string>
     <string name="save_log">Lưu log</string>
+    <string name="opengl_required">The app requires OpenGL ES 3.0+.</string>
     <string name="install">Cài đặt</string>
     <string name="device_dump">Dump của thiết bị</string>
     <string name="path_to_rpkg">Đường dẫn tới RPKG</string>
@@ -27,6 +28,7 @@
     <string name="no_device_installed">Hãy cài đặt một thiết bị. Các tệp tin và ROM của một thiết bị Symbian cần thiết cho quá trình cài đặt.\n\n<b>Lưu ý:</b> Mỗi ứng dụng sẽ cần một thiết bị Symbian thích hợp để khởi chạy.</string>
     <string name="install_device_note_may_need_rpkg">Với các thiết bị S60v2 hoặc cao hơn, bạn có thể cần đến một file nữa tên là RPKG. Nút chọn đường dẫn sẽ xuất hiện nếu trình cài đặt phát hiện ra nó cần thiết.</string>
     <string name="recommended_devices_to_install">Những thiết bị nên cài đặt</string>
+    <string name="wiki_info">For more info about device install, please check out our wiki:</string>
     <string name="install_rpkg_corrupt">File RPKG mà bạn cung cấp đã bị lỗi!</string>
     <string name="install_rpkg_file_not_found">File RPKG hiện tại không mở được!</string>
     <string name="install_raw_dump_fail_to_copy">Copy file raw dump tới đích đến lỗi!</string>
