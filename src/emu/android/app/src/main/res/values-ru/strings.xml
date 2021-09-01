@@ -15,6 +15,7 @@
     <string name="exit">Выход</string>
     <string name="rename">Переименовать</string>
     <string name="save_log">Сохранить лог</string>
+    <string name="opengl_required">Приложение требует OpenGL ES 3.0+.</string>
     <string name="install">Установить</string>
     <string name="device_dump">Дамп устройства</string>
     <string name="path_to_rpkg">Путь к RPKG</string>
@@ -27,6 +28,7 @@
     <string name="no_device_installed">Пожалуйста, установите устройство. Для установки необходимы файлы и ROM устройства Symbian.\n\n<b>Примечание:</b> Каждому приложению для запуска потребуется подходящее устройство Symbian.</string>
     <string name="install_device_note_may_need_rpkg">Для устройств S60v2 или выше вам может потребоваться предоставить дополнительный файл RPKG. Всплывающее окно появится, если установщик определит необходимость в этом.</string>
     <string name="recommended_devices_to_install">Рекомендованные устройства для установки</string>
+    <string name="wiki_info">Для получения дополнительной информации об установке устройств, пожалуйста, посетите нашу вики:</string>
     <string name="install_rpkg_corrupt">Указанный файл RPKG поврежден!</string>
     <string name="install_rpkg_file_not_found">Указанный RPKG файл не может быть открыт!</string>
     <string name="install_raw_dump_fail_to_copy">Не удалось скопировать сырой дамп файлов!</string>
