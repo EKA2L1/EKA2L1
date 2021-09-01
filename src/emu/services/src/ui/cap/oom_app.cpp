@@ -132,6 +132,11 @@ namespace eka2l1 {
             server<oom_ui_app_server>()->update_key_block_mode(*ctx);
             break;
 
+        case akns_get_alias_key_code:
+            // TODO: More handling!
+            ctx->complete(epoc::error_none);
+            break;
+
         default: {
             LOG_WARN(SERVICE_UI, "Unimplemented opcode for OOM AKNCAP server: 0x{:X}, fake return with epoc::error_none", ctx->msg->function);
             ctx->complete(epoc::error_none);
