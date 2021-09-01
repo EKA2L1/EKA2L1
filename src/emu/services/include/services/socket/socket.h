@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <utils/reqsts.h>
+
 #include <cstddef>
 #include <cstdint>
 
@@ -40,6 +42,8 @@ namespace eka2l1::epoc::socket {
 
     struct socket {
     public:
+        virtual ~socket() = default;
+
         /**
          * @brief Get an option available from current socket.
          * 
@@ -65,5 +69,45 @@ namespace eka2l1::epoc::socket {
          */
         virtual bool set_option(const std::uint32_t option_id, const std::uint32_t option_family,
             std::uint8_t *buffer, const std::size_t avail_size);
+
+        /**
+         * @brief Perform asynchronous I/O control operation.
+         * 
+         * @param command           The command number to execute.
+         * @param complete_info     Notify info signals the completion of this control operation.
+         * @param buffer            Pointer to a buffer which data can be sent/received through.
+         * @param available_size    The input size that the upper buffer can hold.
+         * @param max_buffer_size   The maximum size that the upper buffer can hold.
+         * @param level             Control operation level.
+         */
+        virtual void ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
+            const std::size_t available_size, const std::size_t max_buffer_size, const std::uint32_t level);
+
+        /**
+         * @brief Perform binding this address to local desired address.
+         * 
+         * @param sockaddr_buffer        Buffer containing the information about the address, different per socket implementation.
+         * @param available_size         Size of the socket address buffer.
+         * 
+         * @returns 0 on success, else Symbian specific error code.
+         */
+        virtual std::int32_t bind(const std::uint8_t *sockaddr_buffer, const std::size_t available_size);
+
+        /**
+         * @brief Send data to remote host, on a non-connected or connected socket.
+         * 
+         * If a socket is not connected, sockaddr_buffer must not be NULL and points to a valid buffer containg
+         * information about remote host address.
+         * 
+         * @param   data                    Data to send to remote host.
+         * @param   data_size               Size of data to send, also the size of data buffer.
+         * @param   sent_size               Optional arugment that contains the amount of data sent. Can be NULL.
+         * @param   sockaddr_buffer         The address to send the data to. On a connected socket, this address will be used if not NULL.
+         * @param   sockaddr_buffer_size    Size of the socket address buffer. Ignored if sockaddr_buffer is NULL.
+         * @param   flags                   Flags that specified how to process this packet.
+         * @param   complete_info           A notify info that is signaled when the sent is done, can contain the error code.
+         */
+        virtual void send(const std::uint8_t *data, const std::size_t data_size, std::size_t *sent_size, const std::uint8_t *sockaddr_buffer,
+            const std::size_t sockaddr_buffer_size, const std::uint32_t flags, epoc::notify_info &complete_info);
     };
 }

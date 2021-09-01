@@ -90,6 +90,9 @@ add_library(epocservs
         include/services/shutdown/shutdown.h
         include/services/sisregistry/common.h
         include/services/sisregistry/sisregistry.h
+        include/services/sms/protocols/common.h
+        include/services/sms/protocols/datagram.h
+        include/services/sms/protocols/overall.h
         include/services/sms/sa/sa.h
         include/services/sms/sendas/sendas.h
         include/services/socket/agent/genconn.h
@@ -210,6 +213,8 @@ add_library(epocservs
         src/sensor/sensor.cpp
         src/shutdown/shutdown.cpp
         src/sisregistry/sisregistry.cpp
+        src/sms/protocols/datagram.cpp
+        src/sms/protocols/overall.cpp
         src/sms/sa/sa.cpp
         src/sms/sendas/sendas.cpp
         src/socket/agent/genconn.cpp

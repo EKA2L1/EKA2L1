@@ -31,7 +31,8 @@ namespace eka2l1 {
 
 namespace eka2l1::epoc::socket {
     struct saddress {
-        std::uint8_t dat_[32];
+        std::uint32_t family_;
+        std::uint32_t port_;
     };
 
     static constexpr std::uint32_t SOCKET_OPTION_FAMILY_BASE = 1;

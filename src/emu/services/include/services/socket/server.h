@@ -79,6 +79,9 @@ namespace eka2l1 {
         protected:
             void get_option(service::ipc_context *ctx);
             void set_option(service::ipc_context *ctx);
+            void bind(service::ipc_context *ctx);
+            void write(service::ipc_context *ctx);
+            void ioctl(service::ipc_context *ctx);
             void close(service::ipc_context *ctx);
 
         public:
@@ -95,7 +98,10 @@ namespace eka2l1 {
     enum socket_opcode {
         socket_pr_find = 0x02,
         socket_so_create = 0x06,
+        socket_so_write = 0xE,
+        socket_so_bind = 0x14,
         socket_so_get_opt = 0x18,
+        socket_so_ioctl = 0x19,
         socket_so_close = 0x1D,
         socket_hr_open = 0x28,
         socket_hr_open_with_connection = 0x3E,
