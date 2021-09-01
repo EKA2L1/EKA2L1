@@ -299,6 +299,14 @@ namespace eka2l1::epoc {
         std::uint32_t thread_id_;
     };
 
+    enum time_set_mode {
+        time_set_time = 1,
+        time_set_offset = 2,
+        time_set_allow_time_reversal = 4,
+        time_set_local_time = 16,
+        time_set_secure = 32
+    };
+
     ///> @brief The SVC map for Symbian S60v3.
     extern const eka2l1::hle::func_map svc_register_funcs_v93;
 

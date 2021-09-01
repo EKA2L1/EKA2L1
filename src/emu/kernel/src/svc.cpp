@@ -654,7 +654,8 @@ namespace eka2l1::epoc {
         std::uint32_t mode, std::uint32_t changes) {
         std::uint64_t *time = time_ptr.get(kern->crr_process());
 
-        kern->set_base_time(*time - kern->get_ntimer()->microseconds());
+        if (mode & time_set_time)
+            kern->set_base_time(*time - kern->get_ntimer()->microseconds());
 
         return epoc::error_none;
     }
