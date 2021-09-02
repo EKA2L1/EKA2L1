@@ -155,6 +155,15 @@ namespace eka2l1::android {
                 conf.mtm_reset = true;
                 conf.serialize();
             }
+            
+            if (!conf.mtm_reset_2) {
+                auto private_mtm_c_path = io->get_raw_path(u"C:\\System\\Mtm\\");
+
+                common::delete_folder(common::ucs2_to_utf8(*private_mtm_c_path));
+
+                conf.mtm_reset_2 = true;
+                conf.serialize();
+            }
 
             manager::packages *pkgmngr = symsys->get_packages();
 
