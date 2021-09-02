@@ -5942,6 +5942,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8000DF, property_get_int),
         BRIDGE_REGISTER(0x8000E2, property_find_set_int),
         BRIDGE_REGISTER(0x8000E4, message_get_des_length),
+        BRIDGE_REGISTER(0x8000E5, message_get_des_max_length),
         BRIDGE_REGISTER(0x8000E6, message_ipc_copy_eka1),
         BRIDGE_REGISTER(0x8000EA, message_queue_notify_space_available),
         BRIDGE_REGISTER(0x8000EB, message_queue_notify_data_available),
