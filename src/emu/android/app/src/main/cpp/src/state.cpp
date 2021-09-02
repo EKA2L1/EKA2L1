@@ -132,9 +132,9 @@ namespace eka2l1::android {
             libmngr->load_patch_libraries(".//patch//");
             dispatch::libraries::register_functions(kern, disp);
 
-            if (!conf.cenrep_reset) {
-                io_system *io = symsys->get_io_system();
+            io_system *io = symsys->get_io_system();
 
+            if (!conf.cenrep_reset) {
                 auto private_dir_c_persists = io->get_raw_path(u"C:\\Private\\10202be9\\persists\\");
                 auto private_dir_d_persists = io->get_raw_path(u"D:\\Private\\10202be9\\persists\\");
                 auto private_dir_e_persists = io->get_raw_path(u"E:\\Private\\10202be9\\persists\\");
