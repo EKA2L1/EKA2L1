@@ -416,7 +416,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>Документ</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="874"/>
