@@ -693,7 +693,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>Дозволити зміну розміру дисплея до справжнього розміру екрана телефона в пікселях</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
@@ -755,7 +755,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="529"/>
       <source>Current</source>
-      <translation type="unfinished">Current</translation>
+      <translation>Поточний</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="552"/>
@@ -1041,12 +1041,12 @@
       <location filename="../src/settings_dialog.cpp" line="823"/>
       <location filename="../src/settings_dialog.cpp" line="847"/>
       <source>Enter profile name</source>
-      <translation type="unfinished">Enter profile name</translation>
+      <translation>Уведіть ім'я профілю</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="831"/>
       <source>Profile creation failed</source>
-      <translation type="unfinished">Profile creation failed</translation>
+      <translation>Не вдалося створити профіль</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="831"/>
@@ -1057,22 +1057,22 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>Profile rename failed</source>
-      <translation type="unfinished">Profile rename failed</translation>
+      <translation>Не вдалося перейменувати профіль</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>Profile deletion failed</source>
-      <translation type="unfinished">Profile deletion failed</translation>
+      <translation>Не вдалося видалити профіль</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="870"/>
       <source>This is the only profile left!</source>
-      <translation type="unfinished">This is the only profile left!</translation>
+      <translation>Це єдиний наявний профіль!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="908"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; %1</translation>
+      <translation>&lt;b&gt;Конфігурація для:&lt;/b&gt; %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="911"/>
@@ -1103,7 +1103,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
       <source>IMEI valid!</source>
-      <translation type="unfinished">IMEI valid!</translation>
+      <translation>IMEI дійсний!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
@@ -1113,7 +1113,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1028"/>
       <source>IMEI invalid!</source>
-      <translation type="unfinished">IMEI invalid!</translation>
+      <translation>IMEI недійсний!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1038"/>
@@ -1133,7 +1133,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Confirmation</source>
-      <translation type="unfinished">Confirmation</translation>
+      <translation>Підтвердження</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
@@ -1148,7 +1148,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1124"/>
       <source>Pick the screen background color</source>
-      <translation type="unfinished">Pick the screen background color</translation>
+      <translation>Виберіть колір тла екрана</translation>
     </message>
   </context>
 </TS>
