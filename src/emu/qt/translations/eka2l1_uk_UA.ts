@@ -766,7 +766,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="563"/>
       <source>Check for any unimported devices and correct existing one&apos;s infos.</source>
-      <translation type="unfinished">Check for any unimported devices and correct existing one&apos;s infos.</translation>
+      <translation>Перевірте, чи немає неімпортованих пристроїв, і виправте інформацію про наявні.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="566"/>
@@ -781,32 +781,32 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="576"/>
       <source>Validate current device</source>
-      <translation type="unfinished">Validate current device</translation>
+      <translation>Перевірити поточний пристрій</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="588"/>
       <source>Hardware emulation</source>
-      <translation type="unfinished">Hardware emulation</translation>
+      <translation>Емуляція обладнання</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="602"/>
       <source>CPU emulator</source>
-      <translation type="unfinished">CPU emulator</translation>
+      <translation>Емулятор ЦП</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="610"/>
       <source>Dynarmic (CPU recompiler)</source>
-      <translation type="unfinished">Dynarmic (CPU recompiler)</translation>
+      <translation>Dynarmic (рекомпілятор ЦП)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="615"/>
       <source>Dyncom (CPU interpreter)</source>
-      <translation type="unfinished">Dyncom (CPU interpreter)</translation>
+      <translation>Dyncom (інтерпретатор ЦП)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="627"/>
       <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-      <translation type="unfinished">Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</translation>
+      <translation>Виберіть рівень точності для операцій із часовими періодами.&lt;br&gt;Що вищий рівень, то більше споживається потужність процесора, але потенційно швидша робота в деяких застосунках!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="630"/>
@@ -831,7 +831,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="667"/>
       <source>Properties</source>
-      <translation type="unfinished">Properties</translation>
+      <translation>Параметри</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="698"/>
@@ -871,52 +871,52 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="860"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation type="unfinished">Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</translation>
+      <translation>Примітка: Одна з прив'язок пов'язана з кнопкою миші, функціональні можливості сенсорного екрана буде вимкнено.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
       <source>Left softkey</source>
-      <translation type="unfinished">Left softkey</translation>
+      <translation>Ліва функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="916"/>
       <source>Up arrow</source>
-      <translation type="unfinished">Up arrow</translation>
+      <translation>Стрілка вгору</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="948"/>
       <source>Right softkey</source>
-      <translation type="unfinished">Right softkey</translation>
+      <translation>Права функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="984"/>
       <source>Left arrow</source>
-      <translation type="unfinished">Left arrow</translation>
+      <translation>Стрілка ліворуч</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1016"/>
       <source>Middle softkey</source>
-      <translation type="unfinished">Middle softkey</translation>
+      <translation>Середня функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1048"/>
       <source>Right arrow</source>
-      <translation type="unfinished">Right arrow</translation>
+      <translation>Стрілка праворуч</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1084"/>
       <source>Green softkey</source>
-      <translation type="unfinished">Green softkey</translation>
+      <translation>Зелена функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1116"/>
       <source>Down arrow</source>
-      <translation type="unfinished">Down arrow</translation>
+      <translation>Стрілка вниз</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1148"/>
       <source>Red softkey</source>
-      <translation type="unfinished">Red softkey</translation>
+      <translation>Червона функціональна клавіша</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="1184"/>
@@ -976,19 +976,19 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="402"/>
       <source>Choose the data folder</source>
-      <translation type="unfinished">Choose the data folder</translation>
+      <translation>Виберіть теку даних</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>Relaunch needed</source>
-      <translation type="unfinished">Relaunch needed</translation>
+      <translation>Потрібен перезапуск</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation type="unfinished">This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</translation>
+      <translation>Ця зміна потребує перезапуску емулятора.&lt;br&gt;Ви хочете продовжити?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="522"/>
@@ -998,7 +998,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="523"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation type="unfinished">Validation is in process. Please do not exit or launch applications until this operation is done.</translation>
+      <translation>Перевірка в процесі. Будь ласка, не виходьте чи не запускайте застосунки, доки ця операція не буде завершена.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="543"/>
@@ -1029,13 +1029,13 @@
       <location filename="../src/settings_dialog.cpp" line="710"/>
       <location filename="../src/settings_dialog.cpp" line="756"/>
       <source>Mouse button %1</source>
-      <translation type="unfinished">Mouse button %1</translation>
+      <translation>Кнопка миші %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="712"/>
       <location filename="../src/settings_dialog.cpp" line="798"/>
       <source>Controller %1 : Button %2</source>
-      <translation type="unfinished">Controller %1 : Button %2</translation>
+      <translation>Контролер %1 : Кнопка %2</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="823"/>
@@ -1052,7 +1052,7 @@
       <location filename="../src/settings_dialog.cpp" line="831"/>
       <location filename="../src/settings_dialog.cpp" line="855"/>
       <source>A profile with that name already exists!</source>
-      <translation type="unfinished">A profile with that name already exists!</translation>
+      <translation>Профіль з таким ім'ям уже існує!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="855"/>
@@ -1078,7 +1078,7 @@
       <location filename="../src/settings_dialog.cpp" line="911"/>
       <location filename="../src/settings_dialog.cpp" line="916"/>
       <source>None</source>
-      <translation type="unfinished">None</translation>
+      <translation>Немає</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1006"/>
@@ -1098,7 +1098,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1018"/>
       <source>Unidentified error!</source>
-      <translation type="unfinished">Unidentified error!</translation>
+      <translation>Невідома помилка!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
@@ -1108,7 +1108,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
       <source>The IMEI sequence is valid!</source>
-      <translation type="unfinished">The IMEI sequence is valid!</translation>
+      <translation>Послідовність IMEI дійсна!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1028"/>
@@ -1118,17 +1118,17 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1038"/>
       <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-      <translation type="unfinished">Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</translation>
+      <translation>Ваш IMEI недійсний, тому що: %1.&lt;br&gt;Ви хочете редагувати поточний IMEI замість закриття? Вибір "Ні" збереже поточне значення IMEI.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1040"/>
       <source>Cancel closing</source>
-      <translation type="unfinished">Cancel closing</translation>
+      <translation>Скасувати закриття</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1079"/>
       <source>This change will be effective on the next launch of the emulator.</source>
-      <translation type="unfinished">This change will be effective on the next launch of the emulator.</translation>
+      <translation>Ця зміна набуде чинності після наступного запуску емулятора.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
@@ -1138,12 +1138,12 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation type="unfinished">Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</translation>
+      <translation>Ви впевнені в цьому? Вашу поточну тему буде скинуто, всі вікна повідомлень, що були вимкнені, буде ввімкнено, і всі недавні монтування буде очищено.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
       <source>The language will be updated on the next launch of the emulator.</source>
-      <translation type="unfinished">The language will be updated on the next launch of the emulator.</translation>
+      <translation>Мову буде оновлено після наступного запуску емулятора.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1124"/>
