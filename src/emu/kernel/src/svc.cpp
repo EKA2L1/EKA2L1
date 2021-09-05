@@ -5901,6 +5901,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x8E, locked_dec_32),
         BRIDGE_REGISTER(0xB8, user_svr_rom_root_dir_address),
         BRIDGE_REGISTER(0xBC, user_svr_rom_header_address),
+        BRIDGE_REGISTER(0xBE, math_rand),
         BRIDGE_REGISTER(0xFE, static_call_list),
         BRIDGE_REGISTER(0x800010, library_lookup_eka1),
         BRIDGE_REGISTER(0x800011, library_entry_point),
