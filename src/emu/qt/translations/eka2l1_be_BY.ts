@@ -21,32 +21,32 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
       <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;(C) 2018- Каманда EKA2L1&lt;/b&gt;&lt;br&gt;&lt;b&gt;Дзякуем Вам за выкарыстанне эмулятара!&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="64"/>
       <source>&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Main developers:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Галоўныя распрацоўшчыкі:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="78"/>
       <source>&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Contributors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Памочнікі:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="92"/>
       <source>&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Icon:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Абразок:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="106"/>
       <source>&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Honors:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Падзяка:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="120"/>
       <source>&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;b&gt;Translators:&lt;/b&gt;&lt;br&gt;</translation>
+      <translation>&lt;b&gt;Перакладчыкі:&lt;/b&gt;&lt;br&gt;</translation>
     </message>
   </context>
   <context>
@@ -62,7 +62,7 @@
     <message>
       <location filename="../src/applistwidget.cpp" line="335"/>
       <source>&lt;br&gt;App UID: 0x%1</source>
-      <translation type="unfinished">&lt;br&gt;App UID: 0x%1</translation>
+      <translation>&lt;br&gt;UID дастасавання: 0x%1</translation>
     </message>
   </context>
   <context>
@@ -70,29 +70,29 @@
     <message>
       <location filename="../src/device_install_dialog.ui" line="20"/>
       <source>Device install wizard</source>
-      <translation type="unfinished">Device install wizard</translation>
+      <translation>Майстар усталёўкі прылады</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="55"/>
       <location filename="../src/device_install_dialog.ui" line="174"/>
       <location filename="../src/device_install_dialog.ui" line="207"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Агляд</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="80"/>
       <source>Choose the installation method</source>
-      <translation type="unfinished">Choose the installation method</translation>
+      <translation>Выберыце спосаб усталёўкі</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="94"/>
       <source>Device dump (RPKG + ROM)</source>
-      <translation type="unfinished">Device dump (RPKG + ROM)</translation>
+      <translation>Дамп прылады (RPKG + ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="99"/>
       <source>Firmware (VPL)</source>
-      <translation type="unfinished">Firmware (VPL)</translation>
+      <translation>Прашыўка (VPL)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -107,107 +107,107 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="117"/>
       <source>Choose the firmware variant to install</source>
-      <translation type="unfinished">Choose the firmware variant to install</translation>
+      <translation>Выберыце варыянт прашыўкі для ўсталёўкі</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="199"/>
       <source>Installation completed</source>
-      <translation type="unfinished">Installation completed</translation>
+      <translation>Усталёўка завершана</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="200"/>
       <source>Device %1 (%2) has been successfully installed!</source>
-      <translation type="unfinished">Device %1 (%2) has been successfully installed!</translation>
+      <translation>Прылада %1 (%2) паспяхова ўсталявана!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="208"/>
       <source>The device has already been installed!</source>
-      <translation type="unfinished">The device has already been installed!</translation>
+      <translation>Прылада ўжо ўсталявана!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="212"/>
       <source>Fail to determine product information from the dump!</source>
-      <translation type="unfinished">Fail to determine product information from the dump!</translation>
+      <translation>Не ўдалося вызначыць інфармацыю аб прадукце з дампу!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="216"/>
       <source>One of the FPSX files provided in the firmware is corrupted!</source>
-      <translation type="unfinished">One of the FPSX files provided in the firmware is corrupted!</translation>
+      <translation>Адзін з файлаў FPSX, змешчаны ў прашыўцы, пашкоджаны!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation type="unfinished">An unknown error has occured. Please contact the developers with your log!</translation>
+      <translation>Адбылася невядомая памылка. Калі ласка, звяжыцеся з распрацоўшчыкамі са сваім логам!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
       <source>The disk space is insufficient to perform the device install! Please free your disk space!</source>
-      <translation type="unfinished">The disk space is insufficient to perform the device install! Please free your disk space!</translation>
+      <translation>На дыску недастаткова месцы, каб выканаць усталёўку прылады! Калі ласка, вызваліце месца на дыску!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="228"/>
       <source>Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</source>
-      <translation type="unfinished">Some files provided for installation do not exist anymore. Please keep them intact until the installation is done!</translation>
+      <translation>Некаторыя файлы, пададзеныя для ўсталёўкі, больш не існуюць. Калі ласка, захоўвайце іх у цэласці, пакуль усталёўка не завершыцца!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="232"/>
       <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-      <translation type="unfinished">The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</translation>
+      <translation>ROFS у файле прашыўкі пашкоджаны! Калі ласка, пераканайцеся, што файлы вашай прашыўкі не пашкоджаныя.</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="236"/>
       <source>Fail to copy ROM file!</source>
-      <translation type="unfinished">Fail to copy ROM file!</translation>
+      <translation>Не ўдалося скапіяваць файл ROM!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="240"/>
       <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-      <translation type="unfinished">The provided ROM is corrupted! Please make sure your ROM is valid!</translation>
+      <translation>Пададзены ROM пашкоджаны! Калі ласка, пераканайцеся, што ваш ROM сапраўдны!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="244"/>
       <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-      <translation type="unfinished">The provided RPKG is corrupted! Please make sure your RPKG is valid!</translation>
+      <translation>Пададзены RPKG пашкоджаны! Калі ласка, пераканайцеся, што ваш RPKG сапраўдны!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="248"/>
       <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-      <translation type="unfinished">The provided VPL file is invalid. Please check your firmware files again!</translation>
+      <translation>Пададзены файл VPL несапраўдны. Калі ласка, праверце файлы вашай прашыўкі яшчэ раз!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Не ўдалося ўсталяваць</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation type="unfinished">Choose VPL file</translation>
+      <translation>Выберыце файл VPL</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
       <source>VPL file (*.vpl)</source>
-      <translation type="unfinished">VPL file (*.vpl)</translation>
+      <translation>Файл VPL (*.vpl)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="275"/>
       <source>Choose the ROM</source>
-      <translation type="unfinished">Choose the ROM</translation>
+      <translation>Выберыце ROM</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="276"/>
       <source>ROM file (*.rom *.ROM)</source>
-      <translation type="unfinished">ROM file (*.rom *.ROM)</translation>
+      <translation>Файл ROM (*.rom *.ROM)</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="300"/>
       <source>Choose the RPKG</source>
-      <translation type="unfinished">Choose the RPKG</translation>
+      <translation>Выберыце RPKG</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="301"/>
       <source>RPKG file (*.rpkg *.RPKG)</source>
-      <translation type="unfinished">RPKG file (*.rpkg *.RPKG)</translation>
+      <translation>Файл RPKG (*.rpkg *.RPKG)</translation>
     </message>
   </context>
   <context>
@@ -447,7 +447,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
-      <translation type="unfinished">Installation failed</translation>
+      <translation>Не ўдалося ўсталяваць</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
@@ -648,7 +648,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
       <source>Browse</source>
-      <translation type="unfinished">Browse</translation>
+      <translation>Агляд</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
