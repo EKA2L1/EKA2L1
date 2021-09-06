@@ -16,7 +16,7 @@
     <message>
       <location filename="../src/aboutdialog.cpp" line="50"/>
       <source>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</source>
-      <translation type="unfinished">&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
+      <translation>&lt;i&gt;Commit &lt;b&gt;%1&lt;/b&gt; branch &lt;b&gt;%2&lt;/b&gt;&lt;i&gt;&lt;br&gt;</translation>
     </message>
     <message>
       <location filename="../src/aboutdialog.cpp" line="53"/>
@@ -688,7 +688,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>За промовчанням, емулятор дозволяє змінювати розмір дисплея емулятора тільки до найменшого значення розміру екрана телефона, помноженого на системний масштаб дисплея, щоб задовольнити очі більшості користувачів</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
