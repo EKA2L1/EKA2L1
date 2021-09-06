@@ -371,7 +371,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>Berkas ZIP rusak!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="682"/>
@@ -381,12 +381,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="688"/>
       <source>The choosen file is not a ZIP file!</source>
-      <translation type="unfinished">The choosen file is not a ZIP file!</translation>
+      <translation>Berkas yang dipilih bukan berkas ZIP!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
       <source>Game card problem</source>
-      <translation type="unfinished">Game card problem</translation>
+      <translation>Kartu permainan bermasalah</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
@@ -396,32 +396,32 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>Game card dump folder correction</source>
-      <translation type="unfinished">Game card dump folder correction</translation>
+      <translation>Pembetulan folder dump kartu permainan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
+      <translation>Jalur yang dipilih terlihat tidak tepat.&lt;br&gt;Ingin dibetulkan langsung oleh emulator?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="762"/>
       <source>Choose the game card dump folder</source>
-      <translation type="unfinished">Choose the game card dump folder</translation>
+      <translation>Pilih folder dump kartu permainan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="782"/>
       <source>Choose the game card zip</source>
-      <translation type="unfinished">Choose the game card zip</translation>
+      <translation>Pilih ZIP kartu permainan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>Dokumen</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
-      <translation type="unfinished">Choose a language for the package</translation>
+      <translation>Pilih bahasa untuk paket</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="648"/>
@@ -437,12 +437,12 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
-      <translation type="unfinished">Installation aborted</translation>
+      <translation>Pemasangan dibantut</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>Pemasangan telah dibatalkan</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
@@ -452,37 +452,37 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>Gagal memasang paket pada jalur: %1. Pastikan jalurnya ke berkas SIS/SISX yang sahih.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>Pemasangan berhasil</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>Paket telah berhasil dipasang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>Pilih berkas untuk dipasang</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>Berkas SIS (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>Gagal memuat tema!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>Berkas tema gelap tidak ditemukan!</translation>
     </message>
   </context>
   <context>
@@ -500,7 +500,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
       <source>UID</source>
-      <translation type="unfinished">UID</translation>
+      <translation>UID</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
@@ -515,7 +515,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>Kandar (Drive)</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
