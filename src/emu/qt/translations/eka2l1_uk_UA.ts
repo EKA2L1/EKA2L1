@@ -177,12 +177,12 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="256"/>
       <source>Installation failed</source>
-      <translation>Помилка встановлення</translation>
+      <translation>Не вдалося встановити</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="265"/>
       <source>Choose VPL file</source>
-      <translation>Виберіть VPL файл</translation>
+      <translation>Виберіть файл VPL</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="266"/>
@@ -447,7 +447,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Installation failed</source>
-      <translation>Помилка встановлення</translation>
+      <translation>Не вдалося встановити</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
