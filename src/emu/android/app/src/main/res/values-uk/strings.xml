@@ -17,7 +17,7 @@
     <string name="save_log">Зберегти лог</string>
     <string name="opengl_required">Застосунок потребує OpenGL ES 3.0+.</string>
     <string name="install">Установити</string>
-    <string name="device_dump">Вмістище пам\'яті пристрою</string>
+    <string name="device_dump">Дамп пристрою</string>
     <string name="path_to_rpkg">Шлях до RPKG</string>
     <string name="path_to_rom">Шлях до ROM</string>
     <string name="firmware">Прошивка</string>
@@ -31,9 +31,9 @@
     <string name="wiki_info">Для отримання додаткової інформації про встановлення пристроїв, будь ласка, відвідайте нашу вікі:</string>
     <string name="install_rpkg_corrupt">Наданий RPKG файл пошкоджений!</string>
     <string name="install_rpkg_file_not_found">Зазначений файл RPKG не можна відкрити!</string>
-    <string name="install_raw_dump_fail_to_copy">Не вдалося скопіювати файли необробленого вмістища пам\'яті до цільового місця призначення!</string>
+    <string name="install_raw_dump_fail_to_copy">Не вдалося скопіювати файли необробленого дампу до цільового місця призначення!</string>
     <string name="install_rom_fail_to_copy">Не вдалося скопіювати ROM до цільового місця призначення!</string>
-    <string name="install_rpkg_insufficent_size">RPKG файл занадто малий, мабуть ви не закінчили зняття РОМу!</string>
+    <string name="install_rpkg_insufficent_size">RPKG файл занадто малий, мабуть, ви не закінчили зняття дампу!</string>
     <string name="install_already_exist">Пристрій для встановлення вже існує!</string>
     <string name="install_product_determine_fail">Не вдалося визначити інформацію про продукт!</string>
     <string name="install_device_vpl_invalid_msg">Файл опису прошивки (VPL) недійсний!</string>
