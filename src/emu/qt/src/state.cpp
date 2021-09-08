@@ -35,6 +35,7 @@
 #include <kernel/libmanager.h>
 
 #include <services/window/window.h>
+#include <services/init.h>
 
 #include <qt/state.h>
 
@@ -138,6 +139,7 @@ namespace eka2l1::desktop {
 
             libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
             dispatch::libraries::register_functions(kern, disp);
+            service::init_services_post_bootup(symsys.get());
 
             io_system *io = symsys->get_io_system();
 
@@ -200,6 +202,8 @@ namespace eka2l1::desktop {
 
             libmngr->load_patch_libraries(PATCH_FOLDER_PATH);
             dispatch::libraries::register_functions(kern, disp);
+
+            service::init_services_post_bootup(the_sys);
         }
     }
 }

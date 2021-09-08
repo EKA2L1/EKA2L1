@@ -26,5 +26,6 @@ namespace eka2l1 {
     namespace service {
         /*! \brief Initialize all services and properties. */
         void init_services(system *sys);
+        void init_services_post_bootup(system *sys);
     }
 }

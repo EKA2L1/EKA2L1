@@ -480,7 +480,7 @@ namespace eka2l1 {
 
             parent.signed_ = 1;
             parent.signed_by_sucert = 0;
-            parent.trust_timestamp = common::get_current_time_in_microseconds_since_1ad();
+            parent.trust_timestamp = common::get_current_utc_time_in_microseconds_since_0ad();
             parent.current_drives = parent.drives;
             parent.trust_status_value.revocation_status = package::revocation_ocsp_good;
             parent.trust_status_value.validation_status = package::validation_validated;

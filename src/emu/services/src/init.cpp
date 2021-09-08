@@ -50,6 +50,7 @@
 #include <services/sensor/sensor.h>
 #include <services/shutdown/shutdown.h>
 #include <services/sisregistry/sisregistry.h>
+#include <services/sms/settings.h>
 #include <services/sms/sa/sa.h>
 #include <services/sms/sendas/sendas.h>
 #include <services/socket/server.h>
@@ -254,6 +255,10 @@ namespace eka2l1 {
             }
 
             epoc::initialize_system_properties(sys, cfg);
+        }
+        
+        void init_services_post_bootup(system *sys) {
+            epoc::supply_sim_settings(sys);
         }
     }
 }

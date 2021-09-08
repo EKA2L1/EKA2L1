@@ -33,6 +33,7 @@
 #include <kernel/libmanager.h>
 
 #include <services/window/window.h>
+#include <services/init.h>
 
 namespace eka2l1::android {
     emulator::emulator()
@@ -131,6 +132,8 @@ namespace eka2l1::android {
 
             libmngr->load_patch_libraries(".//patch//");
             dispatch::libraries::register_functions(kern, disp);
+
+            service::init_services_post_bootup(symsys.get());
 
             io_system *io = symsys->get_io_system();
 
