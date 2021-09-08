@@ -35,16 +35,16 @@
 #endif
 
 namespace eka2l1::common {
-    std::uint64_t get_current_time_in_microseconds_since_epoch() {
+    std::uint64_t get_current_utc_time_in_microseconds_since_epoch() {
         return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
-    std::uint64_t get_current_time_in_microseconds_since_1ad() {
+    std::uint64_t get_current_utc_time_in_microseconds_since_0ad() {
         return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
             + ad_epoc_dist_microsecs;
     }
 
-    std::uint64_t get_current_time_in_nanoseconds_since_epoch() {
+    std::uint64_t get_current_utc_time_in_nanoseconds_since_epoch() {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
@@ -86,12 +86,12 @@ namespace eka2l1::common {
         }
 
         void start() override {
-            start_ = get_current_time_in_microseconds_since_epoch();
+            start_ = get_current_utc_time_in_microseconds_since_epoch();
             end_ = 0;
         }
 
         void stop() override {
-            end_ = get_current_time_in_microseconds_since_epoch();
+            end_ = get_current_utc_time_in_microseconds_since_epoch();
         }
 
         bool set_target_frequency(const std::uint32_t freq) override {
@@ -105,7 +105,7 @@ namespace eka2l1::common {
 
         std::uint64_t microseconds() override {
             if (end_ == 0) {
-                return get_current_time_in_microseconds_since_epoch() - start_;
+                return get_current_utc_time_in_microseconds_since_epoch() - start_;
             }
 
             return end_ - start_;
@@ -113,7 +113,7 @@ namespace eka2l1::common {
 
         std::uint64_t nanoseconds() override {
             if (end_ == 0) {
-                return get_current_time_in_nanoseconds_since_epoch() - start_;
+                return get_current_utc_time_in_nanoseconds_since_epoch() - start_;
             }
 
             return end_ - start_;

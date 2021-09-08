@@ -317,7 +317,7 @@ namespace eka2l1::epoc::msv {
         root_entry.type_uid_ = MTM_SERVICE_UID_ROOT;
         root_entry.parent_id_ = epoc::error_not_found;
         root_entry.data_ = 0;
-        root_entry.time_ = common::get_current_time_in_microseconds_since_epoch();
+        root_entry.time_ = common::get_current_utc_time_in_microseconds_since_epoch();
 
         return add_entry(root_entry);
     }
@@ -369,7 +369,7 @@ namespace eka2l1::epoc::msv {
             loader::absorb_resource_string(seri, ent.description_);
             loader::absorb_resource_string(seri, ent.details_);
 
-            ent.time_ = common::get_current_time_in_microseconds_since_epoch();
+            ent.time_ = common::get_current_utc_time_in_microseconds_since_epoch();
 
             if (!add_entry(ent)) {
                 return false;

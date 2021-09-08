@@ -195,7 +195,7 @@ namespace eka2l1::epoc {
         }
 
         std::int64_t idx = 0;
-        std::uint64_t crr_timestamp = common::get_current_time_in_microseconds_since_1ad();
+        std::uint64_t crr_timestamp = common::get_current_utc_time_in_microseconds_since_0ad();
 
         std::uint64_t hash = 0;
 

@@ -151,7 +151,7 @@ namespace eka2l1 {
             return crr_pos;
         }
 
-        std::uint64_t last_modify_since_1ad() override {
+        std::uint64_t last_modify_since_0ad() override {
             if (parent->header.rom_base == loader::EKA1_ROM_BASE) {
                 return parent->header.eka1_diff0.time;
             }
@@ -417,7 +417,7 @@ namespace eka2l1 {
             return (err_code != 0) ? false : true;
         }
 
-        std::uint64_t last_modify_since_1ad() override {
+        std::uint64_t last_modify_since_0ad() override {
             return common::get_last_modifiy_since_ad(physical_path);
         }
 

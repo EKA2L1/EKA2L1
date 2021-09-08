@@ -29,8 +29,8 @@
 namespace eka2l1::common {
     enum : uint64_t {
         microsecs_per_sec = 1000000,
-        ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec,
-        ad_win32_epoch_dist_microsecs = (1601 * 365 * 24 * 60) * microsecs_per_sec
+        ad_epoc_dist_microsecs = 62168256000 * microsecs_per_sec,
+        ad_win32_epoch_dist_microsecs = 50523782400 * microsecs_per_sec
     };
 
     inline std::uint64_t us_to_ns(const std::uint64_t us) {
@@ -41,20 +41,20 @@ namespace eka2l1::common {
      * @brief Get total seconds esclaped in microseconds since 1/1/1970.
      * @returns A 64-bit number indicates the total microseconds.
      */
-    std::uint64_t get_current_time_in_microseconds_since_epoch();
+    std::uint64_t get_current_utc_time_in_microseconds_since_epoch();
 
     /**
      * @brief Get total seconds esclaped in microseconds since 1/1/1970.
      * @returns A 64-bit number indicates the total microseconds.
      */
-    std::uint64_t get_current_time_in_nanoseconds_since_epoch();
+    std::uint64_t get_current_utc_time_in_nanoseconds_since_epoch();
 
     /**
-     * @brief Get total seconds esclaped in microseconds since 1/1/1AD
+     * @brief Get total seconds esclaped in microseconds since 0AD
      * @returns A 64-bit number indicates the total microseconds.
      */
-    std::uint64_t get_current_time_in_microseconds_since_1ad();
-    std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t nsecs);
+    std::uint64_t get_current_utc_time_in_microseconds_since_0ad();
+    std::uint64_t convert_microsecs_epoch_to_0ad(const std::uint64_t nsecs);
     std::uint64_t convert_microsecs_win32_1601_epoch_to_1ad(const std::uint64_t nsecs);
 
     /**

@@ -467,7 +467,7 @@ namespace eka2l1::epoc {
 
         epoc::event evt(group->get_client_handle(), epoc::event_code::event_messages_ready);
 
-        evt.time = common::get_current_time_in_microseconds_since_1ad();
+        evt.time = ctx.sys->get_kernel_system()->home_time();
         evt.msg_ready_evt_.window_group_id = group->id;
         evt.msg_ready_evt_.message_uid = msg->uid;
         evt.msg_ready_evt_.message_parameters_size = msg->data_length;
@@ -1514,7 +1514,7 @@ namespace eka2l1 {
             return;
         }
 
-        evt.time_ = kern->home_time();
+        evt.time_ = kern->universal_time();
 
         handle_input_from_driver(evt);
     }
@@ -1523,7 +1523,7 @@ namespace eka2l1 {
         epoc::event guest_event;
 
         epoc::window *root_current = get_current_focus_screen()->root->child;
-        guest_event.time = kern->home_time();
+        guest_event.time = kern->universal_time();
 
         if (!root_current) {
             return;
@@ -1844,7 +1844,7 @@ namespace eka2l1 {
                 repeatable_evt.type = epoc::event_code::key;
 
                 repeatable_evt.handle = get_focus()->client_handle;
-                repeatable_evt.time = kern->home_time();
+                repeatable_evt.time = kern->universal_time();
                 repeatable_evt.key_evt_.code = code;
                 repeatable_evt.key_evt_.scancode = scancode;
                 repeatable_evt.key_evt_.repeats = 1;

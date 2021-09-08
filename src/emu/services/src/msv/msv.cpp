@@ -329,7 +329,7 @@ namespace eka2l1 {
     static void pack_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
         epoc::msv::entry_data data_str;
         data_str.data_ = ent.data_;
-        data_str.date_ = common::convert_microsecs_epoch_to_1ad(ent.time_);
+        data_str.date_ = common::convert_microsecs_epoch_to_0ad(ent.time_);
         data_str.id_ = ent.id_;
         data_str.parent_id_ = ent.parent_id_;
         data_str.service_id_ = ent.service_id_;

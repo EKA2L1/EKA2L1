@@ -32,7 +32,7 @@ namespace eka2l1::epoc {
     event::event(const std::uint32_t handle, event_code evt_code)
         : handle(handle)
         , type(evt_code)
-        , time(common::get_current_time_in_microseconds_since_1ad()) {
+        , time(common::get_current_utc_time_in_microseconds_since_0ad()) {
     }
 
     bool is_display_mode_color(const epoc::display_mode disp_mode) {

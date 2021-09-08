@@ -869,7 +869,7 @@ namespace eka2l1::epoc {
             msk ? msk->id : 0,
             layout_info.layout_type,
             false,
-            common::get_current_time_in_microseconds_since_1ad(),
+            common::get_current_utc_time_in_microseconds_since_0ad(),
             layout_info.layout_size
         };
         const std::uint8_t *new_data = reinterpret_cast<const std::uint8_t *>(&def);

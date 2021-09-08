@@ -156,7 +156,9 @@ namespace eka2l1 {
         });
 
         // Get base time
-        base_time_ = common::get_current_time_in_microseconds_since_1ad();
+        base_time_ = common::get_current_utc_time_in_microseconds_since_0ad();
+        utc_offset_ = common::get_current_utc_offset();
+
         locale_ = std::make_unique<std::locale>("");
 
         dll_global_data_chunk_ = nullptr;
@@ -1249,8 +1251,16 @@ namespace eka2l1 {
         }
     }
 
-    std::uint64_t kernel_system::home_time() {
+    std::uint64_t kernel_system::universal_time() {
         return base_time_ + timing_->microseconds();
+    }
+
+    std::uint64_t kernel_system::home_time() {
+        return universal_time() + utc_offset_ * common::microsecs_per_sec;
+    }
+
+    std::int32_t kernel_system::utc_offset() {
+        return utc_offset_;
     }
 
     void kernel_system::set_base_time(std::uint64_t time) {

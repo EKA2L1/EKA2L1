@@ -304,7 +304,9 @@ namespace eka2l1 {
 
         mutable std::atomic<kernel::uid> uid_counter_;
         void *rom_map_;
+
         std::uint64_t base_time_;
+        std::int32_t utc_offset_;
 
         epocver kern_ver_;
         language lang_;
@@ -397,7 +399,9 @@ namespace eka2l1 {
         ldd::factory_instantiate_func suitable_ldd_instantiate_func(const char *name);
 
         kernel::uid next_uid() const;
+        std::uint64_t universal_time();
         std::uint64_t home_time();
+        std::int32_t utc_offset();
         void set_base_time(std::uint64_t time);
 
         void reschedule();

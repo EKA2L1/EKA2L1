@@ -163,7 +163,7 @@ namespace eka2l1::epoc {
 
             if (!dont_send_extra_key_event) {
                 extra_event.key_evt_.code = the_code;
-                extra_event.time = kern->home_time();
+                extra_event.time = kern->universal_time();
 
                 if (repeatable)
                     extra_event.key_evt_.modifiers = event_modifier_repeatable;

@@ -414,7 +414,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
-        const std::uint64_t tnow = common::get_current_time_in_microseconds_since_epoch();
+        const std::uint64_t tnow = common::get_current_utc_time_in_microseconds_since_epoch();
 
         std::uint64_t delta = tnow - last_vsync;
 

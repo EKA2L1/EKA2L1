@@ -106,7 +106,7 @@ namespace eka2l1 {
         }
 
         file *the_file = reinterpret_cast<file *>(node->vfs_node.get());
-        epoc::time last_modified{ the_file->last_modify_since_1ad() };
+        epoc::time last_modified{ the_file->last_modify_since_0ad() };
 
         ctx->write_data_to_descriptor_argument<epoc::time>(0, last_modified);
         ctx->complete(epoc::error_none);
