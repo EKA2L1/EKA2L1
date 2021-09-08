@@ -33,13 +33,77 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
-    bool system_agent_event_queue::listen(system_agent_notify_info &info) {
-        if (!info_.woke_target_.empty()) {
-            return false;
+    void system_agent_server::listen(system_agent_notify_info &info) {
+        queue_.listen(info);
+    }
+
+    void system_agent_server::notify(const std::uint32_t uid, const std::uint32_t state) {
+        queue_.notify(uid, state);
+    }
+
+    void system_agent_server::deque(system_agent_notify_info &info) {
+        queue_.deque(info);
+    }
+
+    void system_agent_server::set_event_buffering(const bool enabled, const std::uint32_t intervals) {
+        queue_.buffering_ = enabled;
+        queue_.time_expire_ = intervals;
+    }
+
+    void system_agent_event_queue::listen(system_agent_notify_info &info) {
+        const std::lock_guard<std::mutex> guard(mut_);
+
+        if (!info.woke_target_.empty()) {
+            return;
         }
 
-        info_ = std::move(info);
-        return true;
+        infos_.push_back(&info);
+    }
+
+    void system_agent_event_queue::notify(const std::uint32_t uid, const std::uint32_t state) {
+        const std::lock_guard<std::mutex> guard(mut_);
+
+        for (system_agent_notify_info *info: infos_) {
+            if (info->woke_target_.empty()) {
+                continue;
+            }
+
+            if ((info->uid_nof_ == 0xFFFFFFFF) || (info->uid_nof_ == uid)) {
+                kernel::process *pr = info->woke_target_.requester->owning_process();
+                if (!pr) {
+                    LOG_ERROR(SERVICE_SYSAGT, "Awake target does not have a parent process!");
+                    return;
+                }
+
+                std::uint32_t *uid_ptr = reinterpret_cast<std::uint32_t*>(info->target_uid_->get_pointer(pr));
+                std::uint32_t *state_ptr = reinterpret_cast<std::uint32_t*>(info->state_value_->get_pointer(pr));
+
+                if (!uid_ptr) {
+                    LOG_ERROR(SERVICE_SYSAGT, "Pointer to fill event UID is unavailable!");
+                } else {
+                    *uid_ptr = uid;
+                }
+                
+                if (!state_ptr) {
+                    LOG_ERROR(SERVICE_SYSAGT, "Pointer to fill event state is unavailable!");
+                } else {
+                    *state_ptr = state;
+                }
+
+                info->woke_target_.complete(epoc::error_none);
+            }
+        }
+
+        infos_.clear();
+    }
+    
+    void system_agent_event_queue::deque(system_agent_notify_info &info) {
+        const std::lock_guard<std::mutex> guard(mut_);
+        auto ite = std::find(infos_.begin(), infos_.end(), &info);
+
+        if (ite != infos_.end()) {
+            infos_.erase(ite);
+        }
     }
 
     system_agent_session::system_agent_session(service::typical_server *serv, const kernel::uid ss_id,
@@ -129,10 +193,13 @@ namespace eka2l1 {
             return;
         }
 
-        system_agent_notify_info info;
+        if (!info_.woke_target_.empty()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
 
         if (any) {
-            info.uid_nof_ = 0xFFFFFFFF;
+            info_.uid_nof_ = 0xFFFFFFFF;
         } else {
             std::uint32_t *uid_to_nof_ptr = reinterpret_cast<std::uint32_t *>(uid_des->get_pointer(own_pr));
             if (!uid_to_nof_ptr) {
@@ -140,22 +207,20 @@ namespace eka2l1 {
                 return;
             }
 
-            info.uid_nof_ = *uid_to_nof_ptr;
+            info_.uid_nof_ = *uid_to_nof_ptr;
         }
 
-        info.state_value_ = state_des;
-        info.target_uid_ = uid_des;
-        info.woke_target_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+        info_.state_value_ = state_des;
+        info_.target_uid_ = uid_des;
+        info_.woke_target_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
 
-        if (!queue_.listen(info)) {
-            ctx->complete(epoc::error_in_use);
-            return;
-        }
+        server<system_agent_server>()->listen(info_);
     }
 
     void system_agent_session::notify_event_cancel(service::ipc_context *ctx) {
-        if (!queue_.info_.woke_target_.empty()) {
-            queue_.info_.woke_target_.complete(epoc::error_cancel);
+        if (!info_.woke_target_.empty()) {
+            info_.woke_target_.complete(epoc::error_cancel);
+            server<system_agent_server>()->deque(info_);
         }
 
         ctx->complete(epoc::error_none);
@@ -170,8 +235,34 @@ namespace eka2l1 {
             return;
         }
 
-        queue_.buffering_ = static_cast<bool>(enabled.value());
-        queue_.time_expire_ = interval_in_secs.value();
+        server<system_agent_server>()->set_event_buffering(static_cast<bool>(enabled.value()),
+            interval_in_secs.value());
+
+        ctx->complete(epoc::error_none);
+    }
+
+    void system_agent_session::set_state(service::ipc_context *ctx) {
+        std::optional<std::uint32_t> uid = ctx->get_argument_value<std::uint32_t>(0);
+        std::optional<std::uint32_t> new_state = ctx->get_argument_value<std::uint32_t>(1);
+
+        if (!uid.has_value() || !new_state.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        
+        kernel_system *kern = ctx->sys->get_kernel_system();
+        property_ptr prop = kern->get_prop(SYSTEM_AGENT_PROPERTY_CATEGORY, uid.value());
+
+        if (!prop) {
+            prop = kern->create<service::property>();
+            prop->first = SYSTEM_AGENT_PROPERTY_CATEGORY;
+            prop->second = uid.value();
+
+            prop->define(service::property_type::int_data, 4);
+        }
+
+        prop->set_int(static_cast<int>(new_state.value()));
+        server<system_agent_server>()->notify(uid.value(), new_state.value());
 
         ctx->complete(epoc::error_none);
     }
@@ -196,6 +287,10 @@ namespace eka2l1 {
 
         case system_agent_set_event_buffer_enabled:
             set_event_buffering(ctx);
+            break;
+
+        case system_agent_set_state:
+            set_state(ctx);
             break;
 
         default:

@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <map>
 #include <vector>
+#include <mutex>
 
 #include <services/framework.h>
 
@@ -43,6 +44,7 @@ namespace eka2l1 {
         system_agent_notify_on_any_event = 3,
         system_agent_notify_on_cond = 4,
         system_agent_notify_event_cancel = 5,
+        system_agent_set_state = 9,
         system_agent_set_event_buffer_enabled = 10
     };
 
@@ -60,30 +62,41 @@ namespace eka2l1 {
         }
     };
 
-    class system_agent_server : public service::typical_server {
-    public:
-        explicit system_agent_server(eka2l1::system *sys);
-
-        void connect(service::ipc_context &context) override;
-    };
-
     struct system_agent_event_queue {
-        system_agent_notify_info info_;
+        std::vector<system_agent_notify_info*> infos_;
         bool buffering_;
 
         std::uint64_t time_expire_;
+        std::mutex mut_;
 
         explicit system_agent_event_queue()
             : buffering_(false)
             , time_expire_(0) {
         }
 
-        bool listen(system_agent_notify_info &info);
+        void listen(system_agent_notify_info &info);
+        void notify(const std::uint32_t uid, const std::uint32_t state);
+        void deque(system_agent_notify_info &info);
+    };
+
+    class system_agent_server : public service::typical_server {
+    private:        
+        system_agent_event_queue queue_;
+
+    public:
+        explicit system_agent_server(eka2l1::system *sys);
+
+        void connect(service::ipc_context &context) override;
+
+        void listen(system_agent_notify_info &info);
+        void deque(system_agent_notify_info &info);
+        void notify(const std::uint32_t uid, const std::uint32_t state);
+        void set_event_buffering(const bool enabled, const std::uint32_t intervals);
     };
 
     struct system_agent_session : public service::typical_session {
-    protected:
-        system_agent_event_queue queue_;
+    private:
+        system_agent_notify_info info_;
 
     public:
         explicit system_agent_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
@@ -93,6 +106,7 @@ namespace eka2l1 {
         void notify_event(service::ipc_context *ctx, const bool any);
         void notify_event_cancel(service::ipc_context *ctx);
         void set_event_buffering(service::ipc_context *ctx);
+        void set_state(service::ipc_context *ctx);
 
         void fetch(service::ipc_context *ctx) override;
     };

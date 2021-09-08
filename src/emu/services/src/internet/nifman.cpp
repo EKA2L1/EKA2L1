@@ -58,7 +58,7 @@ namespace eka2l1 {
         // Find this connect agent in socket server
         socket_server *ssock = server<nifman_server>()->get_socket_server();
         if (!ssock) {
-            LOG_ERROR(SERVICE_NIFMAN, "Nifman requires HLE Socket server to be present!");
+            LOG_ERROR(SERVICE_INTERNET, "Nifman requires HLE Socket server to be present!");
             ctx->complete(epoc::error_not_supported);
 
             return;
@@ -66,7 +66,7 @@ namespace eka2l1 {
 
         agent_ = ssock->get_connect_agent(agt_name.value());
         if (!agent_) {
-            LOG_ERROR(SERVICE_NIFMAN, "Agent with name {} not found!", common::ucs2_to_utf8(agt_name.value()));
+            LOG_ERROR(SERVICE_INTERNET, "Agent with name {} not found!", common::ucs2_to_utf8(agt_name.value()));
             ctx->complete(epoc::error_not_found);
 
             return;
@@ -79,7 +79,7 @@ namespace eka2l1 {
         if (!conn_) {
             // TODO: In morden RConnection docs (the replacement of this server), it said that you can't query
             // settings when no connection is yet to be established... Or no call Start()
-            // LOG_ERROR(SERVICE_NIFMAN, "No connection has been established to get setting");
+            // LOG_ERROR(SERVICE_INTERNET, "No connection has been established to get setting");
             ctx->complete(epoc::error_not_ready);
             return;
         }
@@ -104,7 +104,7 @@ namespace eka2l1 {
 
         const std::size_t res = conn_->get_setting(setting_name, type, dest_buffer, max_size);
         if (res == static_cast<std::size_t>(-1)) {
-            LOG_ERROR(SERVICE_NIFMAN, "Fail to get setting of a connection!");
+            LOG_ERROR(SERVICE_INTERNET, "Fail to get setting of a connection!");
             ctx->complete(epoc::error_general);
 
             return;
@@ -125,7 +125,7 @@ namespace eka2l1 {
             return;
 
         default:
-            LOG_ERROR(SERVICE_NIFMAN, "Unimplemented opcode for NifMan 0x{:X}, complete all", ctx->msg->function);
+            LOG_ERROR(SERVICE_INTERNET, "Unimplemented opcode for NifMan 0x{:X}, complete all", ctx->msg->function);
             ctx->complete(epoc::error_none);
 
             break;

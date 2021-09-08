@@ -18,6 +18,7 @@
  */
 
 #include <services/internet/protocols/overall.h>
+#include <services/internet/protocols/tcp/tcp.h>
 #include <services/internet/protocols/udp/udp.h>
 #include <services/socket/server.h>
 
@@ -26,9 +27,14 @@
 namespace eka2l1::epoc::internet {
     void add_internet_stack_protocols(socket_server *sock, const bool oldarch) {
         std::unique_ptr<epoc::socket::protocol> udp_pr = std::make_unique<udp_protocol>(oldarch);
+        std::unique_ptr<epoc::socket::protocol> tcp_pr = std::make_unique<tcp_protocol>(oldarch);
 
         if (!sock->add_protocol(udp_pr)) {
             LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add INET UDP protocol");
+        }
+
+        if (!sock->add_protocol(tcp_pr)) {
+            LOG_ERROR(SERVICE_BLUETOOTH, "Failed to add INET TCP protocol");
         }
     }
 }

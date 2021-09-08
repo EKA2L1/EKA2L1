@@ -18,28 +18,28 @@
  */
 
 #include <common/log.h>
-#include <services/internet/protocols/udp/udp.h>
+#include <services/internet/protocols/tcp/tcp.h>
 
 namespace eka2l1::epoc::internet {
-    udp_host_resolver::udp_host_resolver(udp_protocol *papa)
+    tcp_host_resolver::tcp_host_resolver(tcp_protocol *papa)
         : papa_(papa) {
     }
 
-    std::u16string udp_host_resolver::host_name() const {
+    std::u16string tcp_host_resolver::host_name() const {
         // I don't think this has much meaning
         return u"";
     }
 
-    bool udp_host_resolver::host_name(const std::u16string &name) {
+    bool tcp_host_resolver::host_name(const std::u16string &name) {
         return true;
     }
 
-    bool udp_host_resolver::get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) {
+    bool tcp_host_resolver::get_by_address(epoc::socket::saddress &addr, epoc::socket::name_entry &result) {
         LOG_WARN(SERVICE_INTERNET, "Get host by address stubbed to not found");
         return false;
     }
 
-    bool udp_host_resolver::get_by_name(epoc::socket::name_entry &supply_and_result) {
+    bool tcp_host_resolver::get_by_name(epoc::socket::name_entry &supply_and_result) {
         LOG_WARN(SERVICE_INTERNET, "Get host by name stubbed to not found");
         return false;
     }
