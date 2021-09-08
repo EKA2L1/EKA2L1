@@ -215,7 +215,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="50"/>
       <source>App launcher is unavailable.&lt;br&gt;Install a device to continue.</source>
-      <translation type="unfinished">App launcher is unavailable.&lt;br&gt;Install a device to continue.</translation>
+      <translation>Панэль запуску дастасаванняў недаступная.&lt;br&gt;Усталюйце прыладу, каб працягнуць.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="69"/>
@@ -235,7 +235,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="100"/>
       <source>Rotate screen</source>
-      <translation type="unfinished">Rotate screen</translation>
+      <translation>Павярнуць экран</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="112"/>
@@ -245,7 +245,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="118"/>
       <source>Emulation</source>
-      <translation type="unfinished">Emulation</translation>
+      <translation>Эмуляцыя</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="132"/>
@@ -265,7 +265,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="147"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Кіраванне пакетамі</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
@@ -490,7 +490,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="17"/>
       <source>Package manager</source>
-      <translation type="unfinished">Package manager</translation>
+      <translation>Кіраванне пакетамі</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="29"/>
