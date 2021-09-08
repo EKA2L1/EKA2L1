@@ -38,13 +38,15 @@ namespace eka2l1::drivers {
 
     bool dsp_output_stream_shared::set_properties(const std::uint32_t freq, const std::uint8_t channels) {
         // Doc said: Writing to the stream must have stopped before you call this function.
-        if (buffers_.size() > 0) {
-            return false;
-        }
-
         if ((channels_ == channels) && (freq_ == freq)) {
             return true;
         }
+
+        if ((channels == 0) || (freq == 0)) {
+            return true;
+        }
+
+        bool was_already_stopped = virtual_stop;
 
         if (stream_) {
             stream_->stop();
@@ -61,6 +63,10 @@ namespace eka2l1::drivers {
         if (stream_)
             stream_->set_volume(static_cast<float>(volume_) / 100.0f);
 
+        if (!was_already_stopped) {
+            stream_->start();
+        }
+
         return true;
     }
 
@@ -75,8 +81,18 @@ namespace eka2l1::drivers {
     }
 
     bool dsp_output_stream_shared::start() {
-        if (!stream_)
-            return true;
+        if (!stream_) {
+            channels_ = 1;
+            freq_ = 8000;
+
+            // Create default stream. This follows default MMFDevSound default setting closely
+            // Even though this is a generic stream... ;)
+            stream_ = aud_->new_output_stream(8000, 1, [this](std::int16_t *buffer, const std::size_t nb_frames) {
+                return data_callback(buffer, nb_frames);
+            });
+
+            virtual_stop = true;
+        }
 
         if (virtual_stop) {
             if (!stream_->start()) {
