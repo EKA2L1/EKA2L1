@@ -47,7 +47,6 @@
 #include <utils/locale.h>
 #include <utils/system.h>
 
-#include <chrono>
 #include <ctime>
 #include <utils/err.h>
 
@@ -621,14 +620,8 @@ namespace eka2l1::epoc {
     */
 
     BRIDGE_FUNC(std::int32_t, utc_offset) {
-        // TODO: Users and apps can set this
-        return common::get_current_utc_offset();
+        return kern->utc_offset();
     }
-
-    enum : uint64_t {
-        microsecs_per_sec = 1000000,
-        ad_epoc_dist_microsecs = 62167132800 * microsecs_per_sec
-    };
 
     // TODO (pent0): kernel's home time is currently not accurate enough.
     BRIDGE_FUNC(std::int32_t, time_now, eka2l1::ptr<std::uint64_t> time_ptr, eka2l1::ptr<std::int32_t> utc_offset_ptr) {
@@ -638,8 +631,8 @@ namespace eka2l1::epoc {
         std::int32_t *offset = utc_offset_ptr.get(kern->crr_process());
 
         // The time is since EPOC, we need to convert it to first of AD
-        *time = kern->home_time();
-        *offset = common::get_current_utc_offset();
+        *time = kern->universal_time();
+        *offset = kern->utc_offset();
 
         if (kern->is_eka1()) {
             // Let it sleeps a bit. There should be some delay...
@@ -2663,12 +2656,43 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(void, timer_at_utc, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint64_t *us_at) {
         timer_ptr timer = kern->get<kernel::timer>(h);
+        epoc::request_status *sts_real = req_sts.get(kern->crr_process());
 
-        if (!timer || !us_at) {
+        if (!timer || !us_at || !sts_real) {
             return;
         }
 
-        timer->after(kern->crr_thread(), req_sts, *us_at - common::get_current_time_in_microseconds_since_1ad());
+        const std::uint64_t stamp = kern->universal_time();
+
+        if (*us_at < stamp) {
+            sts_real->set(epoc::error_underflow, kern->is_eka1());
+            kern->crr_thread()->signal_request();
+
+            return;
+        }
+
+        timer->after(kern->crr_thread(), req_sts, *us_at - stamp);
+    }
+
+    BRIDGE_FUNC(void, timer_at_eka1, eka2l1::ptr<epoc::request_status> req_sts, std::uint64_t *us_at, kernel::handle h) {
+        timer_ptr timer = kern->get<kernel::timer>(h);
+        epoc::request_status *sts_real = req_sts.get(kern->crr_process());
+
+        if (!timer || !us_at || !sts_real) {
+            return;
+        }
+
+        std::uint64_t req_utc_time = *us_at - kern->utc_offset() * common::microsecs_per_sec;
+        const std::uint64_t stamp = kern->universal_time();
+
+        if (req_utc_time < stamp) {
+            sts_real->set(epoc::error_underflow, kern->is_eka1());
+            kern->crr_thread()->signal_request();
+
+            return;
+        }
+
+        timer->after(kern->crr_thread(), req_sts, req_utc_time - stamp);
     }
 
     BRIDGE_FUNC(void, timer_cancel, kernel::handle h) {
@@ -2684,14 +2708,14 @@ namespace eka2l1::epoc {
     static constexpr std::uint32_t TICK_MASK = ~0b1;
 
     BRIDGE_FUNC(std::uint32_t, fast_counter) {
-        const std::uint64_t DEFAULT_FAST_COUNTER_PERIOD = (microsecs_per_sec / epoc::HIGH_RES_TIMER_HZ);
+        const std::uint64_t DEFAULT_FAST_COUNTER_PERIOD = (common::microsecs_per_sec / epoc::HIGH_RES_TIMER_HZ);
 
         ntimer *timing = kern->get_ntimer();
         return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_FAST_COUNTER_PERIOD);
     }
 
     BRIDGE_FUNC(std::uint32_t, ntick_count) {
-        const std::uint64_t DEFAULT_NTICK_PERIOD = (microsecs_per_sec / epoc::NANOKERNEL_HZ);
+        const std::uint64_t DEFAULT_NTICK_PERIOD = (common::microsecs_per_sec / epoc::NANOKERNEL_HZ);
 
         ntimer *timing = kern->get_ntimer();
         return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_NTICK_PERIOD);
@@ -2734,6 +2758,10 @@ namespace eka2l1::epoc {
         }
 
         return epoc::error_none;
+    }
+
+    BRIDGE_FUNC(std::int32_t, change_notifier_logon_eka1, eka2l1::ptr<epoc::request_status> reqsts, kernel::handle h) {
+        return change_notifier_logon(kern, h, reqsts);
     }
 
     BRIDGE_FUNC(std::int32_t, change_notifier_logoff, kernel::handle h) {
@@ -4470,6 +4498,22 @@ namespace eka2l1::epoc {
         finish_status_request_eka1(target_thread, finish_signal, epoc::error_none);
         return epoc::error_none;
     }
+    
+    std::int32_t change_notifier_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,
+        epoc::request_status *finish_signal, kernel::thread *target_thread) {
+        // arg1 = global/local, arg0 = handle
+        kernel::access_type access_of_mut = (create_info->arg1_ == epoc::eka1_executor::NO_NAME_AVAIL_ADDR) ? kernel::access_type::local_access : kernel::access_type::global_access;
+        kernel::process *target_process = target_thread->owning_process();
+
+        const kernel::handle h = kern->create_and_add<kernel::change_notifier>(get_handle_owner_from_eka1_attribute(attribute)).first;
+
+        if (h == kernel::INVALID_HANDLE) {
+            finish_status_request_eka1(target_thread, finish_signal, epoc::error_general);
+            return epoc::error_general;
+        }
+
+        return do_handle_write(kern, create_info, finish_signal, target_thread, h);
+    }
 
     BRIDGE_FUNC(std::int32_t, the_executor_eka1, const std::uint32_t attribute, epoc::eka1_executor *create_info,
         epoc::request_status *finish_signal) {
@@ -4935,6 +4979,9 @@ namespace eka2l1::epoc {
 
             case epoc::eka1_executor::execute_v81a_msgqueue_cancel_data_available:
                 return msgqueue_cancel_data_available_eka1(kern, attribute, create_info, finish_signal, crr_thread);
+
+            case epoc::eka1_executor::execute_v81a_create_change_notifier:
+                return change_notifier_create_eka1(kern, attribute, create_info, finish_signal, crr_thread);
 
             default:
                 LOG_ERROR(KERNEL, "Unimplemented object executor for function 0x{:X}", attribute & 0xFF);
@@ -5913,6 +5960,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x80002C, semaphore_signal_n_eka1),
         BRIDGE_REGISTER(0x80002D, server_find_next),
         BRIDGE_REGISTER(0x800033, thread_find_next),
+        BRIDGE_REGISTER(0x80004B, change_notifier_logon_eka1),
+        BRIDGE_REGISTER(0x80004C, change_notifier_logoff),
         BRIDGE_REGISTER(0x800054, des8_match),
         BRIDGE_REGISTER(0x800055, des16_match),
         BRIDGE_REGISTER(0x800056, desc8_find),
@@ -5960,6 +6009,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
+        BRIDGE_REGISTER(0xC00049, timer_at_eka1),
         BRIDGE_REGISTER(0xC0004E, request_signal),
         BRIDGE_REGISTER(0xC0005E, after),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),
@@ -6068,6 +6118,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0xC00046, thread_request_complete_eka1),
         BRIDGE_REGISTER(0xC00047, timer_cancel),
         BRIDGE_REGISTER(0xC00048, timer_after_eka1),
+        BRIDGE_REGISTER(0xC00049, timer_at_eka1),
         BRIDGE_REGISTER(0xC0004E, request_signal),
         BRIDGE_REGISTER(0xC0005E, after),
         BRIDGE_REGISTER(0xC0006B, message_complete_eka1),

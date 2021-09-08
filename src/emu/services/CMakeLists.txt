@@ -217,6 +217,7 @@ add_library(epocservs
         src/sms/protocols/overall.cpp
         src/sms/sa/sa.cpp
         src/sms/sendas/sendas.cpp
+        src/sms/settings.cpp
         src/socket/agent/genconn.cpp
         src/socket/connection.cpp
         src/socket/protocol.cpp
