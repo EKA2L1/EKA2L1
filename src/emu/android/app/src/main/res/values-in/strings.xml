@@ -27,7 +27,7 @@
     <string name="no_device_dialog_title">Tak ada perangkat terpasang!</string>
     <string name="no_device_installed">Harap instal firmware perangkat. File dan ROM dari perangkat Symbian diperlukan untuk penginstalan. \n\n<b>Catatan:</b> Setiap aplikasi memerlukan perangkat Symbian yang cocok untuk menjalankannya.</string>
     <string name="install_device_note_may_need_rpkg">Untuk perangkat S60v2 atau lebih tinggi, diperlukan file tambahan yang bernama RPKG. Jika perangkat tersebut terdeteksi maka muncul permintaan untuk memasukkan file tersebut.</string>
-    <string name="recommended_devices_to_install">Perangkat yang dianjurkan dipasang</string>
+    <string name="recommended_devices_to_install">Perangkat anjuran untuk dipasang</string>
     <string name="wiki_info">Untuk informasi lebih lanjut mengenai pemasangan perangkat, silakan kunjungi wiki kami:</string>
     <string name="install_rpkg_corrupt">Berkas RPKG yang disediakan rusak!</string>
     <string name="install_rpkg_file_not_found">File RPKG tidak bisa dibuka!</string>
