@@ -167,8 +167,9 @@ namespace eka2l1::common {
             name_wildcard += "\\*";
         }
 
-        handle = reinterpret_cast<void *>(FindFirstFileA(name_wildcard.c_str(),
-            reinterpret_cast<LPWIN32_FIND_DATA>(find_data)));
+        handle = reinterpret_cast<void *>(FindFirstFileExA(name_wildcard.c_str(), FindExInfoBasic,
+            reinterpret_cast<LPWIN32_FIND_DATA>(find_data), FindExSearchNameMatch, NULL,
+            FIND_FIRST_EX_LARGE_FETCH));
 
         if (handle == INVALID_HANDLE_VALUE) {
             handle = nullptr;
@@ -195,7 +196,7 @@ namespace eka2l1::common {
 
     void dir_iterator::cycles_to_next_entry() {
 #if EKA2L1_PLATFORM(WIN32)
-        DWORD result = FindNextFile(reinterpret_cast<HANDLE>(handle),
+        DWORD result = FindNextFileA(reinterpret_cast<HANDLE>(handle),
             reinterpret_cast<LPWIN32_FIND_DATA>(find_data));
 
         if (result == 0) {
