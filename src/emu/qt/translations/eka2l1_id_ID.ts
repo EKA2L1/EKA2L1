@@ -137,7 +137,7 @@
     <message>
       <location filename="../src/device_install_dialog.cpp" line="220"/>
       <source>An unknown error has occured. Please contact the developers with your log!</source>
-      <translation>Terjadi kesalahan yang tak diketahui. Tolong hubungi pengembang dengan catatan Anda!</translation>
+      <translation>Terjadi kegalatan (error) tak diketahui. Tolong hubungi pengembang dengan catatan (log) Anda!</translation>
     </message>
     <message>
       <location filename="../src/device_install_dialog.cpp" line="224"/>
@@ -588,7 +588,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="185"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; None</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; None</translation>
+      <translation>&lt;b&gt;Setelan untuk:&lt;/b&gt; Tak ada</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="201"/>
@@ -841,7 +841,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="709"/>
       <source>Battery level (0 - 100)</source>
-      <translation type="unfinished">Battery level (0 - 100)</translation>
+      <translation>Tingkat baterai (0 - 100)</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="755"/>
@@ -871,7 +871,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="860"/>
       <source>Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</source>
-      <translation type="unfinished">Note: One of the bindings is associated with a mouse button, touchscreen functionalities will be disabled.</translation>
+      <translation>Catatan: Salah satu tombol ada yang dipautkan ke tombol tetikus, kebergunaan layar sentuh akan dinonaktifkan.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="878"/>
@@ -976,7 +976,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="402"/>
       <source>Choose the data folder</source>
-      <translation type="unfinished">Choose the data folder</translation>
+      <translation>Pilih folder data</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
@@ -988,7 +988,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="404"/>
       <source>This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</source>
-      <translation type="unfinished">This change requires relaunching the emulator.&lt;br&gt;Do you want to continue?</translation>
+      <translation>Perubahan ini perlu peluncuran ulang pada emulator.&lt;br&gt;Anda ingin lanjut?</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="522"/>
@@ -998,17 +998,17 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="523"/>
       <source>Validation is in process. Please do not exit or launch applications until this operation is done.</source>
-      <translation type="unfinished">Validation is in process. Please do not exit or launch applications until this operation is done.</translation>
+      <translation>Pengesahan sedang berlangsung. Mohon jangan keluar atau luncurkan aplikasi sampai ini selesai.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>Validation done!</source>
-      <translation type="unfinished">Validation done!</translation>
+      <translation>Pengesahan selesai!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="543"/>
       <source>The validation has successfully completed!</source>
-      <translation type="unfinished">The validation has successfully completed!</translation>
+      <translation>Pengesahan telah berhasil dilengkapi!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="554"/>
@@ -1018,7 +1018,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="650"/>
       <source>Unbind</source>
-      <translation>Lerai kunci</translation>
+      <translation>Lerai tombol</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="695"/>
@@ -1072,7 +1072,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="908"/>
       <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
-      <translation type="unfinished">&lt;b&gt;Configuration for:&lt;/b&gt; %1</translation>
+      <translation>&lt;b&gt;Setelan untuk:&lt;/b&gt; %1</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="911"/>
@@ -1098,7 +1098,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1018"/>
       <source>Unidentified error!</source>
-      <translation>Galat (error) tak dikenal!</translation>
+      <translation>Galat tak dikenal!</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1025"/>
