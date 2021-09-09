@@ -270,7 +270,7 @@
     <message>
       <location filename="../src/mainwindow.ui" line="80"/>
       <source>Mount game card dump</source>
-      <translation type="unfinished">Mount game card dump</translation>
+      <translation>Мантаваць дамп гульнявой карткі</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="152"/>
@@ -320,22 +320,22 @@
     <message>
       <location filename="../src/mainwindow.ui" line="209"/>
       <source>Recent dumps</source>
-      <translation type="unfinished">Recent dumps</translation>
+      <translation>Нядаўнія дампы</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.ui" line="249"/>
       <source>Folder</source>
-      <translation type="unfinished">Folder</translation>
+      <translation>Тэчка</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="246"/>
       <source>Clear menu</source>
-      <translation type="unfinished">Clear menu</translation>
+      <translation>Ачысціць меню</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="308"/>
       <source>Touchscreen disabled</source>
-      <translation type="unfinished">Touchscreen disabled</translation>
+      <translation>Сэнсарны экран адключаны</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="308"/>
@@ -346,12 +346,12 @@
       <location filename="../src/mainwindow.cpp" line="309"/>
       <location filename="../src/mainwindow.cpp" line="373"/>
       <source>Don&apos;t show this again</source>
-      <translation type="unfinished">Don&apos;t show this again</translation>
+      <translation>Не паказваць гэта зноў</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="372"/>
       <source>No device installed</source>
-      <translation type="unfinished">No device installed</translation>
+      <translation>Няма ўсталяваных прылад</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="372"/>
