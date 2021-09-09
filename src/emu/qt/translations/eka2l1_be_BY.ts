@@ -340,7 +340,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="308"/>
       <source>Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</source>
-      <translation type="unfinished">Some of your current keybinds are associated with mouse buttons. Therefore emulated touchscreen is disabled.&lt;br&gt;&lt;br&gt;&lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;Touchscreen can be re-enabled by rebinding mouse buttons with keyboard keys.</translation>
+      <translation>Некаторыя з вашых бягучых спалучэнняў клавіш звязаныя з кнопкамі мышы. Таму эмуляваны сэнсарны экран адключаны.&lt;br&gt;&lt;br&gt;&lt;b&gt;Заўвага:&lt;/b&gt;&lt;br&gt;Сэнсарны экран можна паўторна ўключыць, падмяніўшы кнопкі мышы клавішамі клавіятуры.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="309"/>
@@ -356,7 +356,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="372"/>
       <source>You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</source>
-      <translation type="unfinished">You have not installed any device. Please install a device or follow the installation instructions on EKA2L1&apos;s GitHub wiki page.</translation>
+      <translation>Вы не ўсталявалі ніводнай прылады. Калі ласка, усталюйце прыладу або прытрымлівайцеся інструкцый з усталёўкі на старонцы EKA2L1 у GitHub wiki.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="651"/>
