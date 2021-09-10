@@ -797,7 +797,7 @@ namespace eka2l1::loader {
         std::uint8_t length = static_cast<std::uint8_t>(str.length());
         seri.absorb(length);
 
-        if (seri.size() & 0x1) {
+        if ((length != 0) && (seri.size() & 0x1)) {
             std::uint8_t padding = 0;
             seri.absorb(padding);
         }
