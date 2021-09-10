@@ -48,11 +48,11 @@ namespace eka2l1::common {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
-    std::uint64_t convert_microsecs_epoch_to_1ad(const std::uint64_t micsecs) {
+    std::uint64_t convert_microsecs_epoch_to_0ad(const std::uint64_t micsecs) {
         return micsecs * microsecs_per_sec + ad_epoc_dist_microsecs;
     }
 
-    std::uint64_t convert_microsecs_win32_1601_epoch_to_1ad(const std::uint64_t micsecs) {
+    std::uint64_t convert_microsecs_win32_1601_epoch_to_0ad(const std::uint64_t micsecs) {
         return micsecs / 10 + ad_win32_epoch_dist_microsecs;
     }
 

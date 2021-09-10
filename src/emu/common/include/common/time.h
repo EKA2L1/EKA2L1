@@ -55,7 +55,7 @@ namespace eka2l1::common {
      */
     std::uint64_t get_current_utc_time_in_microseconds_since_0ad();
     std::uint64_t convert_microsecs_epoch_to_0ad(const std::uint64_t nsecs);
-    std::uint64_t convert_microsecs_win32_1601_epoch_to_1ad(const std::uint64_t nsecs);
+    std::uint64_t convert_microsecs_win32_1601_epoch_to_0ad(const std::uint64_t nsecs);
 
     /**
      * @brief Get host's UTC offset.

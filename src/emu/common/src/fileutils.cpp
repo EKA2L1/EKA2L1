@@ -361,7 +361,7 @@ namespace eka2l1::common {
         FILETIME last_modify_time = attrib_data.ftLastWriteTime;
 
         // 100 nanoseconds = 0.1 microseconds
-        return convert_microsecs_win32_1601_epoch_to_1ad(
+        return convert_microsecs_win32_1601_epoch_to_0ad(
             static_cast<std::uint64_t>(last_modify_time.dwLowDateTime) | (static_cast<std::uint64_t>(last_modify_time.dwHighDateTime) << 32));
 #else
         const std::string name_utf8 = common::ucs2_to_utf8(path);
@@ -372,7 +372,7 @@ namespace eka2l1::common {
             return 0xFFFFFFFFFFFFFFFF;
         }
 
-        return convert_microsecs_epoch_to_1ad(static_cast<std::uint64_t>(st.st_mtime));
+        return convert_microsecs_epoch_to_0ad(static_cast<std::uint64_t>(st.st_mtime));
 #endif
     }
 
