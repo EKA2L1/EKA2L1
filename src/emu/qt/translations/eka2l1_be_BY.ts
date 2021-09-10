@@ -361,17 +361,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="651"/>
       <source>Extracting game dump files</source>
-      <translation type="unfinished">Extracting game dump files</translation>
+      <translation>Выманне файлаў гульнявога дампу</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="672"/>
       <source>Mounting aborted</source>
-      <translation type="unfinished">Mounting aborted</translation>
+      <translation>Мантаванне перапынена</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="677"/>
       <source>The ZIP file is corrupted!</source>
-      <translation type="unfinished">The ZIP file is corrupted!</translation>
+      <translation>Файл ZIP пашкоджаны!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="682"/>
