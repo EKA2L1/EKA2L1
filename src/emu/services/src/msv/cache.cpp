@@ -28,11 +28,11 @@ namespace eka2l1::epoc::msv {
 
     entry *entry_range_table::add(entry &ent, const bool extend_range) {
         if (get(ent.id_)) {
-            return false;
+            return nullptr;
         }
 
         if (!extend_range && ((ent.id_ < min_) || (ent.id_ > max_))) {
-            return false;
+            return nullptr;
         }
 
         entries_.push_back(ent);

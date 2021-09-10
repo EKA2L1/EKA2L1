@@ -703,7 +703,7 @@ namespace eka2l1::epoc::msv {
 
                 if (sqlite3_prepare(database_, FIND_ENTRY_STR_STM, -1, &find_entry_stmt_, nullptr) != SQLITE_OK) {
                     LOG_ERROR(SERVICE_MSV, "Unable to prepare find entry statement!");
-                    return false;
+                    return nullptr;
                 }
             }
 
