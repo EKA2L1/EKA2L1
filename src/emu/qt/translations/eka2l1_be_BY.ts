@@ -376,17 +376,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="682"/>
       <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
-      <translation type="unfinished">The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</translation>
+      <translation>ZIP не змяшчае сістэмнай тэчкі ў каранёвай тэчцы. Сістэмная тэчка павінна знаходзіцца ў дампе гульні.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="688"/>
       <source>The choosen file is not a ZIP file!</source>
-      <translation type="unfinished">The choosen file is not a ZIP file!</translation>
+      <translation>Выбраны файл не з'яўляецца файлам ZIP!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
       <source>Game card problem</source>
-      <translation type="unfinished">Game card problem</translation>
+      <translation>Праблема з гульнявой карткай</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
@@ -396,32 +396,32 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>Game card dump folder correction</source>
-      <translation type="unfinished">Game card dump folder correction</translation>
+      <translation>Выпраўленне тэчкі з дампам гульнявой карткі</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
       <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-      <translation type="unfinished">The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</translation>
+      <translation>Здаецца, выбраны шлях няправільны.&lt;br&gt;Вы хочаце, каб эмулятар выправіў яго?</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="762"/>
       <source>Choose the game card dump folder</source>
-      <translation type="unfinished">Choose the game card dump folder</translation>
+      <translation>Выберыце тэчку з дампам гульнявой карткі</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="782"/>
       <source>Choose the game card zip</source>
-      <translation type="unfinished">Choose the game card zip</translation>
+      <translation>Выберыце архіў ZIP з гульнявой карткай</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="856"/>
       <source>Document</source>
-      <translation type="unfinished">Document</translation>
+      <translation>Дакумент</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="874"/>
       <source>Choose a language for the package</source>
-      <translation type="unfinished">Choose a language for the package</translation>
+      <translation>Выберыце мову для пакета</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="648"/>
@@ -432,17 +432,17 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="895"/>
       <source>Installing package progress</source>
-      <translation type="unfinished">Installing package progress</translation>
+      <translation>Прагрэс усталёўкі пакета</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>Installation aborted</source>
-      <translation type="unfinished">Installation aborted</translation>
+      <translation>Усталёўка перапынена</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="919"/>
       <source>The installation has been canceled</source>
-      <translation type="unfinished">The installation has been canceled</translation>
+      <translation>Усталёўка скасавана</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
@@ -452,37 +452,37 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="924"/>
       <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-      <translation type="unfinished">Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</translation>
+      <translation>Не ўдалося ўсталяваць пакет па шляху: %1. Пераканайцеся, што шлях указвае на сапраўдны файл SIS/SISX.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Installation success</source>
-      <translation type="unfinished">Installation success</translation>
+      <translation>Усталёўка паспяховая</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="931"/>
       <source>Package has been successfully installed</source>
-      <translation type="unfinished">Package has been successfully installed</translation>
+      <translation>Пакет паспяхова ўсталяваны</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>Choose the file to install</source>
-      <translation type="unfinished">Choose the file to install</translation>
+      <translation>Выберыце файл для ўсталёўкі</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="952"/>
       <source>SIS file (*.sis *.sisx)</source>
-      <translation type="unfinished">SIS file (*.sis *.sisx)</translation>
+      <translation>Файл SIS (*.sis *.sisx)</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>Load theme failed!</source>
-      <translation type="unfinished">Load theme failed!</translation>
+      <translation>Не ўдалося загрузіць тэму!</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="1117"/>
       <source>The Dark theme&apos;s style file can&apos;t be found!</source>
-      <translation type="unfinished">The Dark theme&apos;s style file can&apos;t be found!</translation>
+      <translation>Не атрымоўваецца знайсці файл стылю цёмнай тэмы!</translation>
     </message>
   </context>
   <context>
@@ -500,7 +500,7 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="66"/>
       <source>UID</source>
-      <translation type="unfinished">UID</translation>
+      <translation>UID</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="71"/>
@@ -515,37 +515,37 @@
     <message>
       <location filename="../src/package_manager_dialog.ui" line="81"/>
       <source>Drives</source>
-      <translation type="unfinished">Drives</translation>
+      <translation>Дыскі</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="89"/>
       <source>Uninstall</source>
-      <translation type="unfinished">Uninstall</translation>
+      <translation>Выдаліць</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.ui" line="94"/>
       <source>List files</source>
-      <translation type="unfinished">List files</translation>
+      <translation>Спіс файлаў</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Uninstall failed!</source>
-      <translation type="unfinished">Uninstall failed!</translation>
+      <translation>Не ўдалося выдаліць!</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="126"/>
       <source>Failed to uninstall the package</source>
-      <translation type="unfinished">Failed to uninstall the package</translation>
+      <translation>Не ўдалося ўсталяваць пакет</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="142"/>
       <source>%1&apos;s files</source>
-      <translation type="unfinished">%1&apos;s files</translation>
+      <translation>Файлы %1</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="151"/>
       <source>Installed</source>
-      <translation type="unfinished">Installed</translation>
+      <translation>Усталявана</translation>
     </message>
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="155"/>
