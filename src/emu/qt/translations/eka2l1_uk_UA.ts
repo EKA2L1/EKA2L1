@@ -550,7 +550,7 @@
     <message>
       <location filename="../src/package_manager_dialog.cpp" line="155"/>
       <source>Delete on uninstall</source>
-      <translation>Видалити після видалення</translation>
+      <translation>Вилучити після видалення</translation>
     </message>
   </context>
   <context>
