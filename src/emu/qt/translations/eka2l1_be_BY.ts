@@ -391,7 +391,7 @@
     <message>
       <location filename="../src/mainwindow.cpp" line="702"/>
       <source>The game card dump has case-sensitive files. This may cause problems with the emulator.</source>
-      <translation type="unfinished">The game card dump has case-sensitive files. This may cause problems with the emulator.</translation>
+      <translation>Дамп гульнявой карткі змяшчае чуллівыя да рэгістра файлы. Гэта можа спрычыніцца праблемам з эмулятарам.</translation>
     </message>
     <message>
       <location filename="../src/mainwindow.cpp" line="706"/>
