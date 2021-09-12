@@ -643,7 +643,7 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="281"/>
       <source>Emulator data path</source>
-      <translation type="unfinished">Emulator data path</translation>
+      <translation>Шлях да дадзеных эмулятара</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="291"/>
@@ -653,32 +653,32 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="300"/>
       <source>Clear all UI configurations</source>
-      <translation type="unfinished">Clear all UI configurations</translation>
+      <translation>Ачысціць усе налады інтэрфейсу</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="311"/>
       <source>Interface</source>
-      <translation type="unfinished">Interface</translation>
+      <translation>Інтэрфейс</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="317"/>
       <source>Emulator display</source>
-      <translation type="unfinished">Emulator display</translation>
+      <translation>Дысплэй эмулятара</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="349"/>
       <source>Background color</source>
-      <translation type="unfinished">Background color</translation>
+      <translation>Колер фону</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="362"/>
       <source>Pick</source>
-      <translation type="unfinished">Pick</translation>
+      <translation>Выбраць</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="372"/>
       <source>Hide mouse cursor</source>
-      <translation type="unfinished">Hide mouse cursor</translation>
+      <translation>Хаваць курсор мышы</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="379"/>
@@ -688,17 +688,17 @@
     <message>
       <location filename="../src/settings_dialog.ui" line="386"/>
       <source>By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</source>
-      <translation type="unfinished">By default, the emulator only allows resizing the emulator display to the minimum of the phone screen&apos;s size, multiply with the system display scale, to suit most users&apos;s eyes</translation>
+      <translation>Па змаўчанні, эмулятар дазваляе змяняць памер дысплэя эмулятара толькі да найменшага значэння памеру экрана тэлефона, памножанага на сістэмны маштаб дысплэя, каб задаволіць вочы большасці карыстальнікаў</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="389"/>
       <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-      <translation type="unfinished">Allow resizing display to phone screen&apos;s true size in pixels</translation>
+      <translation>Дазволіць змену памеру дысплэя да сапраўднага памеру экрана тэлефона ў пікселях</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="401"/>
       <source>User interface</source>
-      <translation type="unfinished">User interface</translation>
+      <translation>Карыстацкі інтэрфейс</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.ui" line="409"/>
