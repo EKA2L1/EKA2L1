@@ -1138,7 +1138,7 @@
     <message>
       <location filename="../src/settings_dialog.cpp" line="1087"/>
       <source>Are you sure about this? Your current theme will be reset, all message boxes that have been disabled will be re-enabled, and all recent mounts will be cleared.</source>
-      <translation>Ви впевнені в цьому? Вашу поточну тему буде скинуто, всі вікна повідомлень, що були вимкнені, буде ввімкнено, і всі недавні монтування буде очищено.</translation>
+      <translation>Ви впевнені в цьому? Вашу поточну тему буде скинуто, всі вікна повідомлень, що були вимкнені, буде знову ввімкнено, і всі недавні монтування буде очищено.</translation>
     </message>
     <message>
       <location filename="../src/settings_dialog.cpp" line="1104"/>
